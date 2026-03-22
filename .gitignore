@@ -19,7 +19,6 @@ backend/test_output.txt
 **/*.iml
 
 # IDEs
-**/.vscode/
 **/.idea/
 
 # OS

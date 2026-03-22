@@ -1,0 +1,46 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Launch Lumbarong",
+      "type": "msedge",
+      "request": "launch",
+      "url": "http://localhost:3000",
+      "webRoot": "${workspaceFolder}/frontend",
+      "preLaunchTask": "Launch System",
+      "presentation": {
+        "hidden": false,
+        "group": "lumbarong"
+      }
+    },
+    {
+      "name": "Launch Lumbarong Mobile (Simulated)",
+      "type": "msedge",
+      "request": "launch",
+      "url": "http://localhost:3000",
+      "webRoot": "${workspaceFolder}/frontend",
+      "preLaunchTask": "Launch System",
+      "runtimeArgs": [
+        "--window-size=400,850",
+        "--user-agent=Mozilla/5.0 (Linux; Android 13; SM-S901B) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/112.0.0.0 Mobile Safari/537.36"
+      ],
+      "presentation": {
+        "hidden": false,
+        "group": "lumbarong"
+      }
+    },
+    {
+      "name": "Launch Lumbarong Mobile (Native Android)",
+      "type": "node",
+      "request": "launch",
+      "runtimeExecutable": "npx",
+      "runtimeArgs": ["cap", "run", "android"],
+      "cwd": "${workspaceFolder}/frontend",
+      "preLaunchTask": "Start Backend",
+      "presentation": {
+        "hidden": false,
+        "group": "lumbarong"
+      }
+    }
+  ]
+}
