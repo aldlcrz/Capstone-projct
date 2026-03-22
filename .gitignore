@@ -1,0 +1,28 @@
+# Node.js
+**/node_modules/
+backend/.env
+frontend/.env
+frontend/.env.local
+frontend/.env.development.local
+frontend/.env.test.local
+frontend/.env.production.local
+frontend/.next/
+backend/test_output.txt
+
+# Flutter
+**/build/
+**/.dart_tool/
+**/.flutter-plugins
+**/.flutter-plugins-dependencies
+**/.metadata
+**/.packages
+**/*.iml
+
+# IDEs
+**/.vscode/
+**/.idea/
+
+# OS
+.DS_Store
+Thumbs.db
+*.log

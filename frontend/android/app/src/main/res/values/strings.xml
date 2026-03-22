@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">lumbarong</string>
+    <string name="title_activity_main">lumbarong</string>
+    <string name="package_name">app.lumbarong.com</string>
+    <string name="custom_url_scheme">app.lumbarong.com</string>
+</resources>

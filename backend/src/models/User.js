@@ -1,0 +1,70 @@
+const { DataTypes } = require('sequelize');
+const sequelize = require('../config/db');
+
+const User = sequelize.define('User', {
+  id: {
+    type: DataTypes.UUID,
+    defaultValue: DataTypes.UUIDV4,
+    primaryKey: true,
+  },
+  name: {
+    type: DataTypes.STRING,
+    allowNull: false,
+  },
+  email: {
+    type: DataTypes.STRING,
+    allowNull: false,
+    unique: true,
+    validate: {
+      isEmail: true,
+    },
+  },
+  password: {
+    type: DataTypes.STRING,
+    allowNull: false,
+  },
+  role: {
+    type: DataTypes.ENUM('customer', 'seller', 'admin'),
+    defaultValue: 'customer',
+  },
+  isVerified: {
+    type: DataTypes.BOOLEAN,
+    defaultValue: false, // Used for seller verification
+  },
+  profilePhoto: {
+    type: DataTypes.STRING,
+    allowNull: true,
+  },
+  indigencyCertificate: {
+    type: DataTypes.STRING,
+    allowNull: true, // Required for community verification
+  },
+  validId: {
+    type: DataTypes.STRING,
+    allowNull: true, 
+  },
+  mobileNumber: {
+    type: DataTypes.STRING,
+    allowNull: true,
+  },
+  gcashNumber: {
+    type: DataTypes.STRING,
+    allowNull: true,
+  },
+  gcashQrCode: {
+    type: DataTypes.STRING,
+    allowNull: true,
+  },
+  isAdult: {
+    type: DataTypes.BOOLEAN,
+    defaultValue: false,
+  },
+  fcmToken: {
+    type: DataTypes.STRING,
+    allowNull: true,
+  },
+}, {
+  timestamps: true,
+});
+
+module.exports = User;

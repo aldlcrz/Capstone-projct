@@ -1,0 +1,237 @@
+"use client";
+import React, { useState, useEffect } from "react";
+import CustomerLayout from "@/components/CustomerLayout";
+import Image from "next/image";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { 
+  Search, 
+  ChevronRight, 
+  SlidersHorizontal, 
+  Star,
+  RefreshCw,
+  ShoppingCart,
+  ArrowRight
+} from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
+import { api, BACKEND_URL } from "@/lib/api";
+import { useSocket } from "@/context/SocketContext";
+
+const categories = ["ALL", "FORMAL", "CASUAL", "TRADITIONAL", "MODERN ELITE", "CUSTOM CRAFT"];
+
+export default function ShopPage() {
+  const router = useRouter();
+  const [activeCategory, setActiveCategory] = useState("ALL");
+  const [products, setProducts] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  const { socket } = useSocket();
+
+  const fetchProducts = async () => {
+    try {
+      setLoading(true);
+      const res = await api.get("/products");
+      setProducts(res.data);
+    } catch (err) {
+      console.error("Failed to fetch products from backend.");
+      setProducts([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchProducts();
+  }, []);
+
+  useEffect(() => {
+    if (socket) {
+      socket.on("inventory_updated", (data) => {
+        // Update product state if current product exists in the list
+        setProducts(prev => prev.map(p => 
+          p.id === data.product.id ? { ...p, ...data.product } : p
+        ));
+      });
+      
+      socket.on("stats_update", fetchProducts);
+      socket.on("order_created", fetchProducts); // Refresh to account for stock changes
+    }
+    
+    return () => {
+       if (socket) {
+         socket.off("inventory_updated");
+         socket.off("stats_update");
+         socket.off("order_created");
+       }
+    };
+  }, [socket]);
+
+  const getProductImages = (product) => {
+    // If it's already an array, just take the first item
+    if (Array.isArray(product?.image) && product.image.length > 0) {
+      return product.image.filter(Boolean);
+    }
+    
+    // If it's a string, we need to check if it's a stringified JSON array
+    if (typeof product?.image === 'string') {
+      try {
+        if (product.image.startsWith('[')) {
+          const parsed = JSON.parse(product.image);
+          if (Array.isArray(parsed) && parsed.length > 0) {
+            return parsed.filter(Boolean);
+          }
+        } else {
+          // If it's just a regular string URL, return it directly
+          return [product.image];
+        }
+      } catch (e) {
+         return [];
+      }
+    }
+    
+    // Fallback
+    return [];
+  };
+
+  // Safe image extractor utility to fix the '[' parsing bug
+  const getImageUrl = (product) => {
+    return getProductImages(product)[0] || "/images/placeholder.png";
+  };
+
+  const addToCart = (product) => {
+    const cart = JSON.parse(localStorage.getItem("cart") || "[]");
+    const existing = cart.find(item => item.id === product.id && item.size === "M");
+    if (existing) {
+      existing.quantity += 1;
+    } else {
+      cart.push({ 
+        id: product.id, 
+        name: product.name, 
+        price: `₱${(product.price || 0).toLocaleString()}`,
+        category: product.category, 
+        artisan: product.artisan, 
+        image: getProductImages(product), 
+        size: "M", 
+        quantity: 1 
+      });
+    }
+    localStorage.setItem("cart", JSON.stringify(cart));
+    window.dispatchEvent(new Event('storage'));
+  };
+
+  const handleBuyNow = (product) => {
+    localStorage.setItem("checkout_mode", "buy_now");
+    localStorage.setItem("checkout_item", JSON.stringify({
+      id: product.id,
+      productId: product.id,
+      name: product.name,
+      price: `₱${(product.price || 0).toLocaleString()}`,
+      image: getProductImages(product),
+      quantity: 1,
+      size: "M",
+      artisan: product.artisan,
+      category: product.category,
+    }));
+    router.push("/checkout?mode=buy_now");
+  };
+
+  return (
+    <CustomerLayout>
+      <div className="space-y-10 mb-20">
+        
+        {/* ── WELCOME ── */}
+        <div style={{ textAlign: "center", padding: "32px 0 8px" }}>
+          <h1 style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: 34, fontWeight: 600, color: "#1a1208", letterSpacing: "-0.01em" }}>
+            Welcome to <em style={{ color: "#c0392b", fontStyle: "italic" }}>Lumbarong</em>
+          </h1>
+        </div>
+
+        {/* Categories, Search & Filter Bar */}
+        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6 pb-2">
+          {/* Pills Navigation */}
+          <div className="flex flex-wrap items-center gap-3 overflow-x-auto pb-2 scrollbar-none snap-x">
+            {categories.map((cat) => (
+              <button 
+                key={cat}
+                onClick={() => setActiveCategory(cat)}
+                className={`px-6 py-2.5 rounded-[2rem] text-[10px] font-extrabold uppercase tracking-[0.15em] transition-all whitespace-nowrap snap-start border ${
+                  activeCategory === cat 
+                    ? 'bg-[#1A1A1A] border-[#1A1A1A] text-white shadow-md' 
+                    : 'bg-white border-[var(--border)] text-[#2A2A2A] hover:border-[#1A1A1A]'
+                }`}
+              >
+                {cat}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Product Grid - Denser Minimalist Layout */}
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 sm:gap-4 lg:gap-5">
+          <AnimatePresence>
+            {loading ? (
+               <div className="col-span-full py-32 text-center text-[var(--muted)] opacity-50 italic animate-pulse">Loading collection...</div>
+            ) : products.filter(p => activeCategory === "ALL" || p.category === activeCategory).map((product, i) => (
+              <motion.div 
+                key={product.id}
+                initial={{ opacity: 0, y: 15 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.95 }}
+                transition={{ delay: i * 0.05 }}
+                className="group relative flex flex-col bg-white rounded-sm shadow-sm hover:-translate-y-1 hover:shadow-lg border border-transparent hover:border-[var(--rust)] transition-all duration-300"
+              >
+                {/* Image Area - Minimal Square */}
+                <div className="relative w-full aspect-square bg-[#F7F3EE] overflow-hidden rounded-t-sm group/img pointer-events-auto">
+                  <Link href={`/products/${product.id}`} className="absolute inset-0 block z-0" aria-label={`View ${product.name} details`}>
+                    <Image 
+                      src={getImageUrl(product)} 
+                      alt={product.name} 
+                      fill 
+                      unoptimized
+                      sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                      className="object-cover group-hover/img:scale-105 transition-transform duration-700 mix-blend-multiply opacity-90 group-hover/img:opacity-100" 
+                    />
+                  </Link>
+                  {/* Add to Cart / Buy Now Overlay */}
+                  <div className="absolute inset-x-2 bottom-2 translate-y-0 opacity-100 lg:translate-y-8 lg:opacity-0 lg:group-hover/img:translate-y-0 lg:group-hover/img:opacity-100 transition-all duration-300 z-20 space-y-1.5 pointer-events-auto lg:pointer-events-none lg:group-hover/img:pointer-events-auto">
+                    <button 
+                      onClick={(e) => { e.preventDefault(); handleBuyNow(product); }}
+                      className="w-full bg-[var(--rust)] text-white py-2 rounded-sm text-[10px] leading-none font-bold uppercase tracking-wider flex items-center justify-center gap-1.5 shadow-md hover:bg-[#b03b25] transition-colors"
+                    >
+                      <ArrowRight className="w-3.5 h-3.5" /> Buy Now
+                    </button>
+                    <button 
+                      onClick={(e) => { e.preventDefault(); addToCart(product); }}
+                      className="w-full bg-white/95 text-[var(--charcoal)] py-2 rounded-sm text-[10px] leading-none font-bold uppercase tracking-wider flex items-center justify-center gap-1.5 shadow-md hover:bg-white transition-colors border border-gray-100"
+                    >
+                      <ShoppingCart className="w-3.5 h-3.5" /> Add to Cart
+                    </button>
+                  </div>
+                </div>
+
+                {/* Details Area */}
+                <div className="px-2 pb-3 pt-2 space-y-1 flex-1 flex flex-col justify-between">
+                  <Link href={`/products/${product.id}`} className="block flex-1">
+                    <h3 className="text-[13px] leading-tight font-medium text-[#222] group-hover:text-[var(--rust)] transition-colors line-clamp-2 min-h-[36px]">{product.name}</h3>
+                  </Link>
+                  
+                  <div className="flex flex-col mt-1 space-y-1">
+                     <span className="text-[16px] font-medium text-[var(--rust)]">₱{(product.price || 0).toLocaleString()}</span>
+                     <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-1">
+                           <Star className="w-2.5 h-2.5 fill-yellow-400 text-yellow-400" />
+                           <span className="text-[10px] text-[#757575]">{product.rating ? Number(product.rating).toFixed(1) : "5.0"}</span>
+                        </div>
+                        <span className="text-[10px] text-[#757575] line-clamp-1">{product.artisan || "Trusted Seller"}</span>
+                     </div>
+                  </div>
+                </div>
+              </motion.div>
+            ))}
+          </AnimatePresence>
+        </div>
+
+      </div>
+    </CustomerLayout>
+  );
+}

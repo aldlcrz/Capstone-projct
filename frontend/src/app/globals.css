@@ -1,0 +1,136 @@
+@import "tailwindcss";
+
+:root {
+  /* Colors */
+  --cream: #F7F3EE;
+  --warm-white: #FDFAF7;
+  --charcoal: #1C1917;
+  --bark: #3D2B1F;
+  --rust: #C0422A;
+  --rust-light: #E8604A;
+  --sand: #D4B896;
+  --sage: #8FA882;
+  --muted: #8C7B70;
+  --border: #E5DDD5;
+  --input-bg: #F9F6F2;
+  --green: #4A9E6A;
+  --amber: #C47C1A;
+  --blue: #3B7FD4;
+
+  /* Misc */
+  --shadow-artisan: 0 10px 40px rgba(60, 40, 20, 0.06);
+
+  /* Safe Area Insets for Mobile */
+  --safe-top: env(safe-area-inset-top, 0px);
+  --safe-right: env(safe-area-inset-right, 0px);
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+  --safe-left: env(safe-area-inset-left, 0px);
+}
+
+.pb-safe {
+  padding-bottom: var(--safe-bottom);
+}
+
+.pt-safe {
+  padding-top: var(--safe-top);
+}
+
+body {
+  background-color: var(--cream);
+  color: var(--charcoal);
+  font-family: 'Inter', sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Fix browser autofill styling */
+input:-webkit-autofill,
+input:-webkit-autofill:hover, 
+input:-webkit-autofill:focus, 
+input:-webkit-autofill:active{
+    -webkit-box-shadow: 0 0 0 30px var(--input-bg) inset !important;
+    -webkit-text-fill-color: var(--charcoal) !important;
+    transition: background-color 5000s ease-in-out 0s;
+}
+
+@layer components {
+  .btn-primary {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    padding: 0.625rem 1.5rem;
+    font-weight: 500;
+    color: white;
+    border-radius: 0.5rem;
+    transition: all 300ms ease;
+    background-color: var(--bark);
+  }
+
+  .btn-primary:hover {
+    background: linear-gradient(135deg, var(--rust-light), var(--rust));
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(192, 66, 42, 0.2);
+  }
+
+  .artisan-card {
+    background-color: white;
+    border: 1px solid var(--border);
+    border-radius: 1rem;
+    padding: 1.5rem;
+    transition: all 300ms ease;
+    box-shadow: var(--shadow-artisan);
+  }
+
+  .eyebrow {
+    color: var(--rust);
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    margin-bottom: 0.75rem;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+  }
+
+  .eyebrow::before {
+    content: '';
+    width: 2rem;
+    height: 2px;
+    background-color: var(--rust);
+  }
+
+  .nav-item-active {
+    border-left-width: 4px;
+    border-color: var(--rust);
+    background-color: rgba(192, 66, 42, 0.09);
+  }
+}
+
+/* Animations */
+@keyframes fadeDown {
+  from { opacity: 0; transform: translateY(-14px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(16px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes rowIn {
+  from { opacity: 0; transform: translateX(6px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+.animate-fade-down {
+  animation: fadeDown 0.55s ease forwards;
+}
+
+.animate-fade-up {
+  animation: fadeUp 0.55s ease forwards;
+}
+
+.animate-row-in {
+  animation: rowIn 0.35s ease forwards;
+}

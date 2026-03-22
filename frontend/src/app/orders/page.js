@@ -1,0 +1,461 @@
+"use client";
+import React, { useState, useEffect } from "react";
+import CustomerLayout from "@/components/CustomerLayout";
+import { 
+  Copy, 
+  Calendar, 
+  Search, 
+  RefreshCw,
+  Clock,
+  Star,
+  ChevronRight,
+  Package,
+  ShoppingBag,
+  Loader2,
+  X,
+  MapPin,
+  CreditCard
+} from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
+import { api } from "@/lib/api";
+import { useSocket } from "@/context/SocketContext";
+
+export default function OrdersPage() {
+  const [orders, setOrders] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [activeTab, setActiveTab] = useState("ALL");
+  const [searchQuery, setSearchQuery] = useState("");
+  const [selectedOrder, setSelectedOrder] = useState(null);
+
+  const tabs = ["ALL", "PENDING", "TO SHIP", "TO RECEIVE", "COMPLETED", "CANCELLED"];
+
+  // Helper mappings
+  const getDisplayStatus = (status) => {
+    switch (status?.toLowerCase()) {
+      case "pending": return "PENDING";
+      case "processing":
+      case "to ship": return "TO SHIP";
+      case "shipped":
+      case "to receive": return "TO RECEIVE";
+      case "delivered": return "DELIVERED";
+      case "completed": return "COMPLETED";
+      case "cancelled": return "CANCELLED";
+      default: return "PENDING";
+    }
+  };
+
+  const getStatusStyle = (status) => {
+    switch (getDisplayStatus(status)) {
+      case 'PENDING': 
+        return { border: 'border-yellow-200', text: 'text-yellow-600', dot: 'bg-yellow-500' };
+      case 'TO SHIP': 
+        return { border: 'border-blue-200', text: 'text-blue-600', dot: 'bg-blue-500' };
+      case 'TO RECEIVE': 
+        return { border: 'border-blue-200', text: 'text-blue-600', dot: 'bg-blue-500' };
+      case 'DELIVERED':
+        return { border: 'border-green-200', text: 'text-green-600', dot: 'bg-green-500' };
+      case 'COMPLETED': 
+        return { border: 'border-green-400', text: 'text-green-700', dot: 'bg-green-600' };
+      case 'CANCELLED': 
+        return { border: 'border-red-200', text: 'text-red-500', dot: 'bg-red-500' };
+      default: 
+        return { border: 'border-gray-200', text: 'text-gray-500', dot: 'bg-gray-500' };
+    }
+  };
+
+  const fetchOrders = async () => {
+    try {
+      setLoading(true);
+      const response = await api.get("/orders/my-orders");
+      setOrders(response.data);
+    } catch (error) {
+      console.error("Failed to fetch orders:", error);
+      setOrders([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleCancelOrder = async (orderId) => {
+    if (!confirm("Are you sure you want to cancel this order?")) return;
+    try {
+      await api.patch(`/orders/${orderId}/cancel`, {});
+      fetchOrders(); 
+    } catch (error) {
+      alert("Failed to cancel order. Please try again.");
+    }
+  };
+
+  const { socket } = useSocket();
+
+  useEffect(() => {
+    fetchOrders();
+
+    if (socket) {
+        socket.on('order_status_update', (data) => {
+          setOrders(prev => prev.map(order => 
+            order.id === data.orderId ? { ...order, status: data.status } : order
+          ));
+        });
+
+        socket.on('new_order_confirmed', fetchOrders);
+    }
+
+    return () => {
+        if (socket) {
+            socket.off('order_status_update');
+            socket.off('new_order_confirmed');
+        }
+    };
+  }, [socket]);
+
+  const filteredOrders = orders.filter(order => {
+    const matchesTab = activeTab === "ALL" || getDisplayStatus(order.status) === activeTab;
+    const matchesSearch = String(order.id).includes(searchQuery) || order.items?.some(i => i.product?.name?.toLowerCase().includes(searchQuery.toLowerCase()));
+    return matchesTab && matchesSearch;
+  });
+
+  const getSafeImage = (imgSrc) => {
+    if (!imgSrc) return null;
+    if (typeof imgSrc === 'string' && imgSrc.startsWith('[')) {
+      try { const parsed = JSON.parse(imgSrc); return parsed[0]; } catch (e) { return imgSrc; }
+    }
+    return Array.isArray(imgSrc) ? imgSrc[0] : imgSrc;
+  };
+
+  return (
+    <CustomerLayout>
+      <div className="max-w-[1024px] mx-auto space-y-6 mb-20 px-4 md:px-0">
+        
+        {/* Top Header Row with Title and Search/Refresh */}
+        <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-6 pb-6">
+           {/* Left Title Area */}
+           <div className="space-y-4">
+              <div className="flex items-center gap-3">
+                 <span className="w-6 h-[2px] bg-[var(--rust)]"></span>
+                 <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-[var(--rust)]">MY ACCOUNT</span>
+              </div>
+              <h1 className="font-serif text-5xl font-bold tracking-tight text-[#2A2A2A]">
+                 My <span className="text-[var(--rust)] italic font-medium">Orders</span>
+              </h1>
+           </div>
+
+           {/* Right Search Area */}
+           <div className="flex items-center gap-3 shrink-0">
+              <div className="relative group w-full sm:w-80">
+                 <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--muted)]" />
+                 <input 
+                   type="text" 
+                   value={searchQuery}
+                   onChange={e => setSearchQuery(e.target.value)}
+                   placeholder="Search by order or product..." 
+                   className="w-full pl-11 pr-5 py-3 bg-white border border-[var(--border)] rounded-xl text-xs font-medium text-[#2A2A2A] placeholder:text-[var(--muted)] outline-none focus:border-[var(--rust)] focus:ring-1 focus:ring-[var(--rust)] transition-all shadow-sm" 
+                 />
+              </div>
+              <button onClick={fetchOrders} className="p-3 bg-white border border-[var(--border)] rounded-xl hover:text-[var(--rust)] hover:bg-[#FDFCFB] transition-colors shadow-sm active:scale-95">
+                 <RefreshCw className="w-5 h-5 text-[var(--muted)] hover:text-[var(--rust)] transition-all" />
+              </button>
+           </div>
+        </div>
+
+        {/* Tabs Row (Separate block below Title/Search) */}
+        <div className="border-b border-[var(--border)] overflow-x-auto scrollbar-none">
+          <div className="flex gap-1">
+             {tabs.map(tab => (
+                <button
+                  key={tab}
+                  onClick={() => setActiveTab(tab)}
+                  className={`px-6 py-4 text-[10px] sm:text-xs font-bold uppercase tracking-[0.1em] transition-all whitespace-nowrap border-b-2 ${
+                    activeTab === tab 
+                    ? 'border-[var(--rust)] text-[var(--rust)]' 
+                    : 'border-transparent text-[#2A2A2A]/40 hover:text-[#2A2A2A]'
+                  }`}
+                >
+                   {tab}
+                </button>
+             ))}
+          </div>
+        </div>
+
+        {/* Space below header */}
+        <div className="h-4"></div>
+
+        {/* Orders List */}
+        <div className="space-y-6">
+           {loading ? (
+             <div className="py-24 text-center">
+                <Loader2 className="w-10 h-10 animate-spin mx-auto text-[var(--muted)] opacity-50 mb-4" />
+                <p className="text-sm font-bold uppercase tracking-widest text-[var(--muted)]">Loading Orders...</p>
+             </div>
+           ) : filteredOrders.length === 0 ? (
+             <div className="py-24 text-center bg-white rounded-[1.5rem] border border-[var(--border)] shadow-sm">
+                <ShoppingBag className="w-16 h-16 mx-auto text-[var(--muted)] opacity-20 mb-6" />
+                <h3 className="text-2xl font-serif font-bold text-[#2A2A2A] mb-2">No Records Found</h3>
+                <p className="text-sm text-[var(--muted)] italic">No orders found matching your current filter.</p>
+             </div>
+           ) : (
+             <AnimatePresence>
+               {filteredOrders.map((order, idx) => {
+                 const displayStatus = getDisplayStatus(order.status);
+                 const sProps = getStatusStyle(order.status);
+                 
+                 return (
+                   <motion.div 
+                     key={order.id}
+                     initial={{ opacity: 0, y: 15 }}
+                     animate={{ opacity: 1, y: 0 }}
+                     exit={{ opacity: 0, scale: 0.98 }}
+                     transition={{ delay: idx * 0.05 }}
+                     className="bg-white rounded-[1.5rem] border border-[var(--border)] shadow-sm overflow-hidden"
+                   >
+                     {/* Card Header Row */}
+                     <div className="px-5 sm:px-8 py-4 border-b border-[var(--border)] flex flex-wrap items-center justify-between gap-4">
+                        <div className="flex flex-wrap items-center gap-4 sm:gap-6 text-xs font-bold uppercase tracking-wider text-[var(--muted)]">
+                           <div className="flex items-center gap-1.5">
+                             ORDER ID <span className="text-[#2A2A2A] tracking-normal">LB-2024-{order.id.toString().padStart(4, '0')}</span>
+                             <button className="ml-1 hover:text-[var(--rust)] transition-colors"><Copy className="w-3.5 h-3.5 opacity-60" /></button>
+                           </div>
+                           <div className="w-px h-3 bg-[var(--border)] hidden sm:block" />
+                           <div className="flex items-center gap-1.5 opacity-80">
+                             <Calendar className="w-3.5 h-3.5" /> 
+                             {new Date(order.createdAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}
+                           </div>
+                        </div>
+
+                        {/* Status Pill */}
+                        <div className={`px-3 sm:px-4 py-1.5 rounded-full border flex items-center gap-2 text-[10px] font-extrabold uppercase tracking-widest ${sProps.border} ${sProps.text} bg-white`}>
+                           <div className={`w-1.5 h-1.5 rounded-full ${sProps.dot}`} /> {displayStatus}
+                        </div>
+                     </div>
+
+                     {/* Card Body - Dual Container */}
+                     <div className="p-5 sm:p-8 flex flex-col lg:flex-row gap-6 lg:gap-8">
+                        
+                        {/* LEFT: Items List (Usually 1, but we map if > 1) */}
+                        <div className="flex-1 space-y-4">
+                           {order.items?.map((item, i) => {
+                             const priceNum = parseFloat(item.price?.toString().replace(/[^0-9.]/g, '') || 0);
+                             return (
+                               <div key={i} className="bg-[#FDFBF9] rounded-2xl p-4 sm:p-5 flex flex-col sm:flex-row items-center gap-4 sm:gap-6 border border-[var(--cream)] shadow-sm">
+                                  {/* Thumbnail */}
+                                  <div className="w-16 h-16 sm:w-20 sm:h-20 bg-white border border-[var(--border)] flex items-center justify-center rounded-xl shrink-0 p-1">
+                                     {item.product?.image ? (
+                                        <img src={getSafeImage(item.product.image)} alt={item.product.name} className="w-full h-full object-cover rounded-md" />
+                                     ) : (
+                                        <Package className="w-6 h-6 text-gray-300" />
+                                     )}
+                                  </div>
+                                  
+                                  {/* Item Details */}
+                                  <div className="flex-1 flex flex-col sm:flex-row items-center sm:items-start justify-between w-full gap-4 text-center sm:text-left">
+                                     <div className="space-y-2.5">
+                                        <div className="text-[15px] font-bold text-[#2A2A2A]">{item.product?.name || "Lumbarong Product"}</div>
+                                        <div className="flex items-center justify-center sm:justify-start gap-2">
+                                           <span className="bg-[#EAE5DF] text-[#2A2A2A]/70 px-2.5 py-1 rounded text-[10px] font-bold uppercase tracking-widest shadow-sm">Qty: {item.quantity}</span>
+                                           <span className="bg-[#EAE5DF] text-[#2A2A2A]/70 px-2.5 py-1 rounded text-[10px] font-bold uppercase tracking-widest shadow-sm">Size: {item.size || "M"}</span>
+                                        </div>
+                                     </div>
+                                     {/* Item Price */}
+                                     <div className="font-serif text-[18px] sm:text-[20px] font-bold text-[var(--rust)]">
+                                        ₱{(priceNum || 0).toLocaleString()}
+                                     </div>
+                                  </div>
+                               </div>
+                             );
+                           })}
+                        </div>
+                        
+                        {/* RIGHT: Actions & Totals */}
+                        <div className="lg:w-64 shrink-0 flex flex-col lg:items-end border-t lg:border-t-0 lg:border-l border-[var(--border)] pt-6 lg:pt-0 lg:pl-8 mt-2 lg:mt-0">
+                           <div className="w-full flex lg:flex-col justify-between items-center lg:items-end gap-1 mb-6">
+                              <span className="text-[10px] font-extrabold uppercase tracking-[0.2em] text-[var(--muted)] opacity-60">ORDER TOTAL</span>
+                              <div className="text-right">
+                                <div className="font-serif text-[28px] lg:text-[32px] font-bold text-[var(--rust)] leading-none mb-1">₱{(order.totalAmount || 0).toLocaleString()}</div>
+                                <div className="text-[10px] text-[var(--muted)] tracking-wider">{order.items?.length || 1} item{(order.items?.length || 1) !== 1 ? 's' : ''}</div>
+                              </div>
+                           </div>
+
+                           <div className="w-full space-y-3">
+                              {/* Primary Action Button: View Details */}
+                              <button 
+                                onClick={() => setSelectedOrder(order)}
+                                className="w-full py-3.5 bg-[#2A1E14] hover:bg-[#1C140D] text-white rounded-xl text-[10px] font-extrabold uppercase tracking-[0.15em] transition-colors shadow-md flex items-center justify-center gap-2 group"
+                              >
+                                 View Details <ChevronRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
+                              </button>
+
+                              {/* Secondary Action: Rate if completed */}
+                              {displayStatus === "COMPLETED" && (
+                                 <button className="w-full py-3.5 bg-[#F6F4F0] hover:bg-[#EAE5DF] text-[#2A2A2A]/70 border border-[var(--border)] rounded-xl text-[10px] font-extrabold uppercase tracking-[0.15em] transition-colors flex items-center justify-center gap-2 group shadow-sm">
+                                    <Star className="w-3.5 h-3.5" /> Rate Products
+                                 </button>
+                               )}
+
+                               {displayStatus === "DELIVERED" && (
+                                 <button 
+                                   onClick={() => {
+                                      const reason = prompt("Enter reason for return:");
+                                      if (reason) {
+                                         api.post("/returns", { orderId: order.id, reason })
+                                           .then(() => alert("Return request submitted."))
+                                           .catch(err => alert("Failed to submit return: " + (err.response?.data?.message || err.message)));
+                                      }
+                                   }}
+                                   className="w-full py-3.5 bg-white hover:bg-red-50 text-red-600 border border-red-100 rounded-xl text-[10px] font-extrabold uppercase tracking-[0.15em] transition-colors flex items-center justify-center gap-2 group shadow-sm"
+                                 >
+                                    <RefreshCw className="w-3.5 h-3.5" /> Request Return
+                                 </button>
+                               )}
+
+                               {displayStatus === "CANCELLED" && (
+                                 <div className="text-center text-[10px] italic text-red-500/60 mt-2 bg-red-50 py-2 rounded-lg border border-red-100 uppercase tracking-widest font-bold">Order Cancelled</div>
+                               )}
+
+                               {displayStatus === "PENDING" && (
+                                 <button 
+                                   onClick={(e) => {
+                                     e.stopPropagation();
+                                     handleCancelOrder(order.id);
+                                   }}
+                                   className="w-full py-3.5 bg-white hover:bg-red-50 text-red-500 border border-red-100 rounded-xl text-[10px] font-extrabold uppercase tracking-[0.15em] transition-colors shadow-sm flex items-center justify-center gap-2 group mt-2"
+                                 >
+                                    <X className="w-3.5 h-3.5 group-hover:rotate-90 transition-transform" /> Cancel Order
+                                 </button>
+                               )}
+
+                              {/* Minor Info text */}
+                              {displayStatus !== "CANCELLED" && displayStatus !== "COMPLETED" && displayStatus !== "PENDING" && (
+                                 <div className="text-center text-[10px] italic text-[var(--muted)] opacity-60 mt-2">Cancellation not available</div>
+                              )}
+                           </div>
+                        </div>
+
+                     </div>
+                   </motion.div>
+                 );
+               })}
+             </AnimatePresence>
+           )}
+         </div>
+      </div>
+
+      {/* Order Details Modal Overlay */}
+      <AnimatePresence>
+        {selectedOrder && (
+          <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-6 overflow-hidden">
+            {/* Backdrop */}
+            <motion.div 
+               initial={{ opacity: 0 }} 
+               animate={{ opacity: 1 }} 
+               exit={{ opacity: 0 }}
+               onClick={() => setSelectedOrder(null)}
+               className="absolute inset-0 bg-[#2A1E14]/60 backdrop-blur-sm"
+            />
+            
+            {/* Modal Content */}
+            <motion.div 
+               initial={{ opacity: 0, scale: 0.95, y: 20 }}
+               animate={{ opacity: 1, scale: 1, y: 0 }}
+               exit={{ opacity: 0, scale: 0.95, y: 20 }}
+               className="bg-white w-full max-w-2xl max-h-[90vh] rounded-[2rem] shadow-2xl relative z-10 overflow-hidden flex flex-col border border-white/20"
+            >
+               {/* Modal Header */}
+               <div className="px-8 py-6 border-b border-[var(--border)] flex items-center justify-between bg-[#FDFCFB]">
+                  <div>
+                    <h2 className="font-serif text-2xl font-bold text-[#2A2A2A]">Order Details</h2>
+                    <p className="text-[10px] font-bold text-[var(--muted)] uppercase tracking-widest mt-1">
+                      LB-2024-{selectedOrder.id.toString().padStart(4, '0')} • {new Date(selectedOrder.createdAt).toLocaleDateString()}
+                    </p>
+                  </div>
+                  <button 
+                    onClick={() => setSelectedOrder(null)}
+                    className="p-2.5 bg-white border border-[var(--border)] rounded-xl hover:text-[var(--rust)] transition-all active:scale-90 shadow-sm"
+                  >
+                    <X className="w-5 h-5" />
+                  </button>
+               </div>
+
+               {/* Modal Body (Scrollable) */}
+               <div className="flex-1 overflow-y-auto p-8 space-y-8 artisan-scrollbar">
+                  
+                  {/* Shipping & Payment Section */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                     <div className="space-y-3">
+                        <div className="flex items-center gap-2 text-[10px] font-extrabold text-[var(--rust)] uppercase tracking-widest opacity-80">
+                           <MapPin className="w-3 h-3" /> SHIPPING ADDRESS
+                        </div>
+                        <div className="bg-[#FDFBF9] p-4 rounded-2xl border border-[var(--cream)] shadow-sm">
+                           <div className="font-bold text-[#2A2A2A] text-sm mb-1">{selectedOrder.shippingAddress?.name}</div>
+                           <div className="text-[10px] font-bold text-[var(--rust)] mb-2">{selectedOrder.shippingAddress?.phone}</div>
+                           <div className="text-xs text-[var(--muted)] leading-relaxed">
+                              {selectedOrder.shippingAddress?.houseNo} {selectedOrder.shippingAddress?.street}, <br />
+                              Brgy. {selectedOrder.shippingAddress?.barangay}, {selectedOrder.shippingAddress?.city}, <br />
+                              {selectedOrder.shippingAddress?.province}, {selectedOrder.shippingAddress?.postalCode}
+                           </div>
+                           {selectedOrder.shippingAddress?.latitude && (
+                             <div className="mt-3 pt-3 border-t border-[var(--border)] flex items-center gap-2 text-[9px] font-bold text-[var(--rust)] uppercase tracking-widest">
+                                <MapPin className="w-3 h-3" /> Pinned: {selectedOrder.shippingAddress.latitude.toFixed(4)}, {selectedOrder.shippingAddress.longitude.toFixed(4)}
+                             </div>
+                           )}
+                        </div>
+                     </div>
+                     <div className="space-y-3">
+                        <div className="flex items-center gap-2 text-[10px] font-extrabold text-[var(--rust)] uppercase tracking-widest opacity-80">
+                           <CreditCard className="w-3 h-3" /> PAYMENT METHOD
+                        </div>
+                        <div className="bg-[#FDFBF9] p-4 rounded-2xl border border-[var(--cream)] shadow-sm">
+                           <div className="font-bold text-[#2A2A2A] text-sm mb-1">{selectedOrder.paymentMethod || "GCash"}</div>
+                           <div className="text-xs text-[var(--muted)]">Reference: <span className="font-mono text-[var(--rust)]">{selectedOrder.paymentReference || "N/A"}</span></div>
+                        </div>
+                     </div>
+                  </div>
+
+                  {/* Order Status Timeline (Simple) */}
+                  <div className="space-y-4">
+                     <div className="flex items-center gap-2 text-[10px] font-extrabold text-[var(--rust)] uppercase tracking-widest opacity-80">
+                        <Clock className="w-3 h-3" /> ORDER STATUS
+                     </div>
+                     <div className="flex items-center gap-4 px-4">
+                        <div className={`px-4 py-2 rounded-full border text-[10px] font-bold uppercase tracking-widest ${getStatusStyle(selectedOrder.status).border} ${getStatusStyle(selectedOrder.status).text}`}>
+                           {selectedOrder.status}
+                        </div>
+                        <div className="flex-1 h-px bg-[var(--border)]" />
+                     </div>
+                  </div>
+
+                  {/* Items List */}
+                  <div className="space-y-4">
+                     <div className="flex items-center gap-2 text-[10px] font-extrabold text-[var(--rust)] uppercase tracking-widest opacity-80">
+                        <ShoppingBag className="w-3 h-3" /> PURCHASED ITEMS
+                     </div>
+                     <div className="space-y-3">
+                        {selectedOrder.items?.map((item, i) => (
+                           <div key={i} className="flex gap-4 p-4 bg-white border border-[var(--border)] rounded-2xl shadow-sm">
+                              <div className="w-14 h-14 bg-[#FDFBF9] rounded-xl border border-[var(--border)] flex items-center justify-center p-1 shrink-0 overflow-hidden">
+                                 <img src={getSafeImage(item.product?.image)} alt="" className="w-full h-full object-cover rounded-lg" />
+                              </div>
+                              <div className="flex-1 min-w-0">
+                                 <div className="font-bold text-[#2A2A2A] text-sm truncate">{item.product?.name}</div>
+                                 <div className="text-[10px] text-[var(--muted)] mt-0.5">Qty: {item.quantity} • Size: {item.size}</div>
+                              </div>
+                              <div className="text-right">
+                                 <div className="font-serif font-bold text-[16px] text-[var(--rust)]">₱{(parseFloat(item.price) || 0).toLocaleString()}</div>
+                              </div>
+                           </div>
+                        ))}
+                     </div>
+                  </div>
+               </div>
+
+               {/* Modal Footer */}
+               <div className="px-8 py-6 bg-[#FDFCFB] border-t border-[var(--border)] flex items-center justify-between">
+                  <span className="text-[10px] font-bold text-[var(--muted)] uppercase tracking-widest">SUBTOTAL AMOUNT</span>
+                  <div className="font-serif text-3xl font-bold text-[var(--rust)]">₱{(selectedOrder.totalAmount || 0).toLocaleString()}</div>
+               </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+    </CustomerLayout>
+  );
+}
