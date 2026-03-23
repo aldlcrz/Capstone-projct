@@ -9,7 +9,7 @@ const {
   getSellerStats,
 } = require('../controllers/productController');
 const router = express.Router();
-const { protect, authorize } = require('../middleware/auth');
+const { protect, authorize } = require('../middleware/authMiddleware');
 const multer = require('multer');
 const upload = multer({ dest: 'uploads/products/' }); // Placeholder for local storage
 

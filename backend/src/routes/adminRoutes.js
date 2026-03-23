@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const adminController = require('../controllers/adminController');
-const { protect, authorize } = require('../middleware/auth');
+const { protect, authorize } = require('../middleware/authMiddleware');
 
 router.get('/stats', protect, authorize('admin'), adminController.getGlobalStats);
 router.get('/pending-sellers', protect, authorize('admin'), adminController.getPendingSellers);

@@ -1,7 +1,7 @@
 "use client";
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import CustomerLayout from "@/components/CustomerLayout";
-import { MessageCircle, Search, Store, Send, User, ChevronRight } from "lucide-react";
+import { MessageCircle, Search, Store, Send, User, ChevronRight, Loader2 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useSearchParams } from "next/navigation";
 import { api } from "@/lib/api";
@@ -25,6 +25,7 @@ function MessagesThreadManager() {
   const [messages, setMessages] = useState([]);
   const [newMessage, setNewMessage] = useState("");
   const [loading, setLoading] = useState(true);
+  const [isSending, setIsSending] = useState(false);
   const [typingStatus, setTypingStatus] = useState({ isTyping: false, senderId: null });
 
   const { socket } = useSocket();
@@ -105,8 +106,9 @@ function MessagesThreadManager() {
 
   const handleSendMessage = async (e) => {
     e.preventDefault();
-    if (!newMessage.trim() || !activeThread) return;
+    if (!newMessage.trim() || !activeThread || isSending) return;
 
+    setIsSending(true);
     try {
       const res = await api.post("/chat", {
         recipientId: activeThread.id,
@@ -125,6 +127,8 @@ function MessagesThreadManager() {
       setNewMessage("");
     } catch (err) {
       console.error("Failed to send message");
+    } finally {
+      setIsSending(false);
     }
   };
 
@@ -137,6 +141,7 @@ function MessagesThreadManager() {
       newMessage={newMessage}
       setNewMessage={setNewMessage}
       loading={loading}
+      isSending={isSending}
       typingStatus={typingStatus}
       fetchMessages={fetchMessages}
       handleSendMessage={handleSendMessage}
@@ -152,11 +157,18 @@ function MessagesUI({
   newMessage, 
   setNewMessage, 
   loading, 
+  isSending,
   typingStatus, 
   fetchMessages, 
   handleSendMessage 
 }) {
     const { socket } = useSocket();
+    const messagesEndRef = useRef(null);
+
+    useEffect(() => {
+        messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    }, [messages]);
+
     return (
     <CustomerLayout>
       <div className="max-w-7xl mx-auto h-[calc(100vh-140px)] flex flex-col md:flex-row gap-8">
@@ -264,6 +276,7 @@ function MessagesUI({
                     </motion.div>
                   );
                 })}
+                <div ref={messagesEndRef} />
               </div>
 
               <form onSubmit={handleSendMessage} className="p-6 border-t border-[var(--border)] bg-gray-50 flex gap-4">
@@ -279,8 +292,8 @@ function MessagesUI({
                   placeholder="Type your message to the artisan..." 
                   className="flex-1 px-5 py-4 bg-white border border-[var(--border)] rounded-2xl focus:outline-none focus:border-[var(--rust)] transition-all font-sans text-sm"
                 />
-                <button type="submit" className="p-4 bg-[var(--bark)] text-white rounded-2xl hover:bg-[var(--rust)] transition-all shadow-lg active:scale-95">
-                  <Send className="w-6 h-6" />
+                <button type="submit" disabled={isSending} className="p-4 bg-[var(--bark)] text-white rounded-2xl hover:bg-[var(--rust)] transition-all shadow-lg active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center">
+                  {isSending ? <Loader2 className="w-6 h-6 animate-spin" /> : <Send className="w-6 h-6" />}
                 </button>
               </form>
             </div>

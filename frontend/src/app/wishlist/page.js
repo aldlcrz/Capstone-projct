@@ -11,9 +11,7 @@ import {
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
-import axios from "axios";
-
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api/v1";
+import { api, getApiErrorMessage } from "@/lib/api";
 
 export default function WishlistPage() {
   const [wishlistItems, setWishlistItems] = useState([]);
@@ -32,9 +30,7 @@ export default function WishlistPage() {
         return;
       }
 
-      const response = await axios.get(`${API_BASE_URL}/wishlist`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      const response = await api.get('/wishlist');
       setWishlistItems(response.data);
       setLoading(false);
     } catch (err) {
@@ -47,13 +43,11 @@ export default function WishlistPage() {
   const removeFromWishlist = async (productId) => {
     try {
       const token = localStorage.getItem("token");
-      await axios.post(`${API_BASE_URL}/wishlist/toggle`, { productId }, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      await api.post('/wishlist/toggle', { productId });
       setWishlistItems(prev => prev.filter(item => item.productId !== productId));
     } catch (err) {
       console.error("Remove Wishlist Error:", err);
-      alert("Could not remove item from wishlist.");
+      setError(getApiErrorMessage(err, "Could not remove item from wishlist."));
     }
   };
 

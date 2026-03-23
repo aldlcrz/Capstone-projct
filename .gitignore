@@ -25,3 +25,16 @@ backend/test_output.txt
 .DS_Store
 Thumbs.db
 *.log
+
+# Debug/test artifacts
+backend/auth_result.json
+backend/order_result.json
+backend/*.txt
+backend/tests/*.txt
+
+# Uploads (use Cloudinary instead)
+backend/uploads/
+backend/public/uploads/
+
+# Tmp scripts
+backend/tmp/

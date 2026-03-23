@@ -51,6 +51,11 @@ export default function RegisterPage() {
       return;
     }
 
+    if (formData.password !== formData.confirmPassword) {
+       setError("Passwords do not match.");
+       return;
+    }
+
     if (step === 1) setStep(2);
   };
 
@@ -213,6 +218,16 @@ export default function RegisterPage() {
                         </motion.span>
                       </AnimatePresence>
                     </button>
+                  </div>
+                </motion.div>
+
+                <motion.div variants={itemVariants} className="space-y-2">
+                  <label style={labelStyle}>Confirm Password</label>
+                  <div className="relative">
+                    <Lock className="absolute left-6 top-1/2 -translate-y-1/2 w-4 h-4" style={{ color: "var(--border)" }} />
+                    <input type={showPassword ? "text" : "password"} style={{ ...inputStyle, paddingRight: "3.5rem" }} placeholder="••••••••••••" required value={formData.confirmPassword} name="register_confirm_password" autoComplete="new-password"
+                      onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
+                      onFocus={handleFocus} onBlur={handleBlur} />
                   </div>
                 </motion.div>
 

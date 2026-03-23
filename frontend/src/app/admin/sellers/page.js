@@ -11,6 +11,8 @@ export default function AdminSellersPage() {
   const [loading, setLoading] = useState(true);
   const [selectedSeller, setSelectedSeller] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [error, setError] = useState(null);
+  const [success, setSuccess] = useState(null);
 
   const { socket } = useSocket();
 
@@ -47,14 +49,17 @@ export default function AdminSellersPage() {
 
   const verifySeller = async (id) => {
     if(!confirm("Verify this artisan for the Lumban community?")) return;
+    setError(null); setSuccess(null);
     try {
       await api.put(`/admin/verify-seller/${id}`, {}, {
         headers: { Authorization: `Bearer ${localStorage.getItem("token")}` }
       });
-      alert("Seller verified!");
+      setSuccess("Seller verified successfully!");
       fetchSellers();
+      setTimeout(() => setSuccess(null), 3000);
     } catch (err) {
-      alert("Verification failed.");
+      setError(err.response?.data?.message || "Verification failed.");
+      setTimeout(() => setError(null), 3000);
     }
   };
 
@@ -73,6 +78,20 @@ export default function AdminSellersPage() {
             <input type="text" placeholder="Search sellers..." className="w-full pl-10 pr-4 py-2 border border-[var(--border)] rounded-xl outline-none" />
           </div>
         </div>
+
+        {/* Alerts */}
+        <AnimatePresence>
+          {error && (
+            <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} className="p-4 bg-red-50 border border-red-200 text-red-700 rounded-xl text-sm font-bold flex items-center gap-2">
+              <XCircle className="w-4 h-4" /> {error}
+            </motion.div>
+          )}
+          {success && (
+            <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} className="p-4 bg-green-50 border border-green-200 text-green-700 rounded-xl text-sm font-bold flex items-center gap-2">
+              <CheckCircle className="w-4 h-4" /> {success}
+            </motion.div>
+          )}
+        </AnimatePresence>
 
         {loading ? (
           <div className="artisan-card p-20 text-center text-[var(--muted)] animate-pulse">Scanning community applications...</div>

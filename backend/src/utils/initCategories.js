@@ -1,4 +1,4 @@
-const { Category } = require('../models/Product');
+const { Category } = require('../models');
 
 const defaultCategories = [
     { name: 'Barong Tagalog', description: 'Traditional Filipino formal wear for men.' },

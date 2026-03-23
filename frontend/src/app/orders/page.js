@@ -14,7 +14,9 @@ import {
   Loader2,
   X,
   MapPin,
-  CreditCard
+  CreditCard,
+  CheckCircle,
+  XCircle
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { api } from "@/lib/api";
@@ -26,6 +28,8 @@ export default function OrdersPage() {
   const [activeTab, setActiveTab] = useState("ALL");
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedOrder, setSelectedOrder] = useState(null);
+  const [error, setError] = useState(null);
+  const [success, setSuccess] = useState(null);
 
   const tabs = ["ALL", "PENDING", "TO SHIP", "TO RECEIVE", "COMPLETED", "CANCELLED"];
 
@@ -78,11 +82,15 @@ export default function OrdersPage() {
 
   const handleCancelOrder = async (orderId) => {
     if (!confirm("Are you sure you want to cancel this order?")) return;
+    setError(null); setSuccess(null);
     try {
       await api.patch(`/orders/${orderId}/cancel`, {});
+      setSuccess("Order cancelled successfully.");
+      setTimeout(() => setSuccess(null), 3000);
       fetchOrders(); 
-    } catch (error) {
-      alert("Failed to cancel order. Please try again.");
+    } catch (err) {
+      setError(err.response?.data?.message || "Failed to cancel order. Please try again.");
+      setTimeout(() => setError(null), 3000);
     }
   };
 
@@ -157,6 +165,20 @@ export default function OrdersPage() {
               </button>
            </div>
         </div>
+
+        {/* Alerts */}
+        <AnimatePresence>
+          {error && (
+            <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} className="p-4 bg-red-50 border border-red-200 text-red-700 rounded-[1rem] text-sm font-bold flex items-center gap-2 mb-6">
+              <XCircle className="w-5 h-5 text-red-500" /> {error}
+            </motion.div>
+          )}
+          {success && (
+            <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} className="p-4 bg-green-50 border border-green-200 text-green-700 rounded-[1rem] text-sm font-bold flex items-center gap-2 mb-6">
+              <CheckCircle className="w-5 h-5 text-green-500" /> {success}
+            </motion.div>
+          )}
+        </AnimatePresence>
 
         {/* Tabs Row (Separate block below Title/Search) */}
         <div className="border-b border-[var(--border)] overflow-x-auto scrollbar-none">
@@ -296,9 +318,16 @@ export default function OrdersPage() {
                                    onClick={() => {
                                       const reason = prompt("Enter reason for return:");
                                       if (reason) {
+                                         setError(null); setSuccess(null);
                                          api.post("/returns", { orderId: order.id, reason })
-                                           .then(() => alert("Return request submitted."))
-                                           .catch(err => alert("Failed to submit return: " + (err.response?.data?.message || err.message)));
+                                           .then(() => {
+                                              setSuccess("Return request submitted.");
+                                              setTimeout(() => setSuccess(null), 3000);
+                                           })
+                                           .catch(err => {
+                                              setError("Failed to submit return: " + (err.response?.data?.message || err.message));
+                                              setTimeout(() => setError(null), 4000);
+                                           });
                                       }
                                    }}
                                    className="w-full py-3.5 bg-white hover:bg-red-50 text-red-600 border border-red-100 rounded-xl text-[10px] font-extrabold uppercase tracking-[0.15em] transition-colors flex items-center justify-center gap-2 group shadow-sm"

@@ -1,8 +1,8 @@
 "use client";
 import React, { useState, useEffect } from "react";
 import AdminLayout from "@/components/AdminLayout";
-import { ShoppingBag, Search, Filter, TrendingUp, Store, Package, Trash2, Eye, LayoutGrid, List as ListIcon, CheckCircle2 } from "lucide-react";
-import { motion } from "framer-motion";
+import { ShoppingBag, Search, Filter, TrendingUp, Store, Package, Trash2, Eye, LayoutGrid, List as ListIcon, CheckCircle2, XCircle } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
 import { api, BACKEND_URL } from "@/lib/api";
 import { io } from "socket.io-client";
 
@@ -13,6 +13,8 @@ export default function AdminProducts() {
   const [activeTab, setActiveTab] = useState("products"); // "products" or "categories"
   const [newCategory, setNewCategory] = useState({ name: "", description: "" });
   const [searchQuery, setSearchQuery] = useState("");
+  const [error, setError] = useState(null);
+  const [success, setSuccess] = useState(null);
 
   const fetchProducts = async () => {
     try {
@@ -49,33 +51,45 @@ export default function AdminProducts() {
 
   const deleteProduct = async (id) => {
     if(!confirm("Are you sure you want to remove this product from the global marketplace?")) return;
+    setError(null); setSuccess(null);
     try {
       await api.delete(`/products/${id}`);
+      setSuccess("Product deleted successfully.");
+      setTimeout(() => setSuccess(null), 3000);
       fetchData();
     } catch (err) {
-      alert("Failed to delete product.");
+      setError(err.response?.data?.message || "Failed to delete product.");
+      setTimeout(() => setError(null), 3000);
     }
   };
 
   const handleAddCategory = async (e) => {
     e.preventDefault();
     if (!newCategory.name) return;
+    setError(null); setSuccess(null);
     try {
       await api.post("/categories", newCategory);
       setNewCategory({ name: "", description: "" });
+      setSuccess("Category added successfully.");
+      setTimeout(() => setSuccess(null), 3000);
       fetchCategories();
     } catch (err) {
-      alert(err.response?.data?.message || "Failed to add category");
+      setError(err.response?.data?.message || "Failed to add category.");
+      setTimeout(() => setError(null), 3000);
     }
   };
 
   const handleDeleteCategory = async (id) => {
     if (!confirm("Are you sure? This will only work if no products belong to this category.")) return;
+    setError(null); setSuccess(null);
     try {
       await api.delete(`/categories/${id}`);
+      setSuccess("Category deleted successfully.");
+      setTimeout(() => setSuccess(null), 3000);
       fetchCategories();
     } catch (err) {
-      alert(err.response?.data?.message || "Failed to delete category");
+      setError(err.response?.data?.message || "Failed to delete category.");
+      setTimeout(() => setError(null), 3000);
     }
   };
 
@@ -113,6 +127,20 @@ export default function AdminProducts() {
              </button>
           </div>
         </div>
+
+        {/* Alerts */}
+        <AnimatePresence>
+          {error && (
+            <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} className="p-4 bg-red-50 border border-red-200 text-red-700 rounded-xl text-sm font-bold flex items-center gap-2 mb-4">
+              <XCircle className="w-4 h-4 text-red-700" /> {error}
+            </motion.div>
+          )}
+          {success && (
+            <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} className="p-4 bg-green-50 border border-green-200 text-green-700 rounded-xl text-sm font-bold flex items-center gap-2 mb-4">
+              <CheckCircle2 className="w-4 h-4 text-green-700" /> {success}
+            </motion.div>
+          )}
+        </AnimatePresence>
 
         {activeTab === "products" ? (
           <>

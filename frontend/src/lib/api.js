@@ -1,9 +1,14 @@
 import axios from "axios";
+import { Capacitor } from "@capacitor/core";
 
 const trimTrailingSlash = (value) => value.replace(/\/+$/, "");
 
+// Mobile Emulators use 10.0.2.2 to reach the host machine's localhost
+const isNative = typeof window !== "undefined" && Capacitor.isNativePlatform();
+const DEFAULT_URL = isNative ? "http://10.0.2.2:5000" : "http://127.0.0.1:5000";
+
 export const BACKEND_URL = trimTrailingSlash(
-  process.env.NEXT_PUBLIC_BACKEND_URL || "http://127.0.0.1:5000"
+  process.env.NEXT_PUBLIC_BACKEND_URL || DEFAULT_URL
 );
 
 export const api = axios.create({

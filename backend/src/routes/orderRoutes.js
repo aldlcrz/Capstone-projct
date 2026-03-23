@@ -1,7 +1,7 @@
 const express = require('express');
 const { createOrder, getMyOrders, getSellerOrders, updateOrderStatus, cancelOrder } = require('../controllers/orderController');
 const router = express.Router();
-const { protect, authorize } = require('../middleware/auth');
+const { protect, authorize } = require('../middleware/authMiddleware');
 const multer = require('multer');
 const upload = multer({ dest: 'uploads/payments/' });
 

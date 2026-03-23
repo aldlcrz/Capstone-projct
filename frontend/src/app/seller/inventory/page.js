@@ -16,7 +16,8 @@ import {
   LayoutGrid,
   List as ListIcon,
   CheckCircle,
-  AlertTriangle
+  AlertTriangle,
+  XCircle
 } from "lucide-react";
 import { usePathname, useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
@@ -30,6 +31,8 @@ export default function InventoryPage() {
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [view, setView] = useState("list");
+  const [error, setError] = useState(null);
+  const [success, setSuccess] = useState(null);
 
   const fetchProducts = async () => {
     try {
@@ -64,13 +67,17 @@ export default function InventoryPage() {
 
   const deleteProduct = async (id) => {
     if(!confirm("Are you sure you want to remove this masterpiece?")) return;
+    setError(null); setSuccess(null);
     try {
       await api.delete(`/products/${id}`, {
         headers: { Authorization: `Bearer ${localStorage.getItem("token")}` }
       });
+      setSuccess("Product deleted successfully.");
+      setTimeout(() => setSuccess(null), 3000);
       fetchProducts();
     } catch (err) {
-      alert("Failed to delete product.");
+      setError(err.response?.data?.message || "Failed to delete product.");
+      setTimeout(() => setError(null), 3000);
     }
   };
 
@@ -91,6 +98,20 @@ export default function InventoryPage() {
             </Link>
           </div>
         </div>
+
+        {/* Alerts */}
+        <AnimatePresence>
+          {error && (
+            <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} className="p-4 bg-red-50 border border-red-200 text-red-700 rounded-xl text-sm font-bold flex items-center gap-2 mt-4">
+              <XCircle className="w-4 h-4" /> {error}
+            </motion.div>
+          )}
+          {success && (
+            <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} className="p-4 bg-green-50 border border-green-200 text-green-700 rounded-xl text-sm font-bold flex items-center gap-2 mt-4">
+              <CheckCircle className="w-4 h-4" /> {success}
+            </motion.div>
+          )}
+        </AnimatePresence>
 
         {/* Filters and Search */}
         <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-6 pt-4 animate-fade-up">
