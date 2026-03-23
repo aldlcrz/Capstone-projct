@@ -14,15 +14,43 @@ exports.getAddresses = async (req, res) => {
 
 exports.createAddress = async (req, res) => {
   try {
-    const { isDefault } = req.body;
+    const { 
+      recipientName, phone, houseNo, street, barangay, city, province, postalCode, isDefault 
+    } = req.body;
+
+    // Strict Integrity Guards
+    if (!recipientName || !phone || !barangay || !city || !province) {
+      return res.status(400).json({ message: 'Essential registry fields are missing' });
+    }
+
+    if (recipientName.length > 50) return res.status(400).json({ message: 'Recipient name too long' });
     
+    const phoneDigits = phone.replace(/\D/g, "");
+    if (!/^09\d{9}$/.test(phoneDigits)) {
+      return res.status(400).json({ message: 'Invalid 11-digit Philippine mobile number' });
+    }
+
+    if (postalCode && !/^\d{4}$/.test(postalCode.replace(/\D/g, ""))) {
+      return res.status(400).json({ message: 'Postal code must be 4 digits' });
+    }
+
     if (isDefault) {
       await Address.update({ isDefault: false }, { where: { userId: req.user.id } });
     }
 
     const address = await Address.create({
-      ...req.body,
-      userId: req.user.id
+      recipientName,
+      phone: phoneDigits,
+      houseNo: houseNo || null,
+      street: street || null,
+      barangay,
+      city,
+      province,
+      postalCode: postalCode ? postalCode.replace(/\D/g, "") : null,
+      userId: req.user.id,
+      latitude: req.body.latitude || null,
+      longitude: req.body.longitude || null,
+      isDefault: isDefault || false
     });
 
     res.status(201).json(address);
@@ -33,12 +61,33 @@ exports.createAddress = async (req, res) => {
 
 exports.updateAddress = async (req, res) => {
   try {
-    const { isDefault } = req.body;
     const address = await Address.findOne({
       where: { id: req.params.id, userId: req.user.id }
     });
 
     if (!address) return res.status(404).json({ message: 'Address not found' });
+
+    const { 
+      recipientName, phone, houseNo, street, barangay, city, province, postalCode, isDefault 
+    } = req.body;
+
+    if (recipientName && recipientName.length > 50) return res.status(400).json({ message: 'Recipient name too long' });
+    
+    if (phone) {
+      const phoneDigits = phone.replace(/\D/g, "");
+      if (!/^09\d{9}$/.test(phoneDigits)) {
+        return res.status(400).json({ message: 'Invalid 11-digit Philippine mobile number' });
+      }
+      req.body.phone = phoneDigits;
+    }
+
+    if (postalCode) {
+      const pcDigits = postalCode.replace(/\D/g, "");
+      if (!/^\d{4}$/.test(pcDigits)) {
+        return res.status(400).json({ message: 'Postal code must be 4 digits' });
+      }
+      req.body.postalCode = pcDigits;
+    }
 
     if (isDefault && !address.isDefault) {
       await Address.update({ isDefault: false }, { where: { userId: req.user.id } });

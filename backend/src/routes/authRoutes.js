@@ -1,5 +1,5 @@
 const express = require('express');
-const { register, login, getProfile } = require('../controllers/authController');
+const { register, login, forgotPassword, resetPassword, getProfile } = require('../controllers/authController');
 const upload = require('../middleware/uploadMiddleware');
 const router = express.Router();
 
@@ -13,6 +13,8 @@ router.post(
   register
 );
 router.post('/login', login);
+router.post('/forgot-password', forgotPassword);
+router.post('/reset-password', resetPassword);
 // router.get('/profile', verifyToken, getProfile); // placeholder for auth middleware
 
 module.exports = router;

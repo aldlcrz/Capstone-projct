@@ -1,6 +1,6 @@
 const bcrypt = require('bcryptjs');
 const sequelize = require('../src/config/db');
-const { User, Category, Product, ProductImage, ProductSize } = require('../src/models');
+const { User, Category, Product } = require('../src/models');
 
 const seedData = async () => {
     try {
@@ -86,18 +86,14 @@ const seedData = async () => {
             stock: 5,
             category: 'Barong Tagalog',
             sellerId: seller.id,
-            status: 'approved'
+            status: 'approved',
+            image: [
+                'https://images.unsplash.com/photo-1544441893-675973e31985?auto=format&fit=crop&w=800&q=80',
+                'https://images.unsplash.com/photo-1507679799987-c73779587ccf?auto=format&fit=crop&w=800&q=80',
+                'https://images.unsplash.com/photo-1519222970733-f546218fa6d7?auto=format&fit=crop&w=800&q=80'
+            ],
+            sizes: ['M', 'L', 'XL']
         });
-        await ProductImage.bulkCreate([
-            { url: 'https://images.unsplash.com/photo-1544441893-675973e31985?auto=format&fit=crop&w=800&q=80', ProductId: product1.id },
-            { url: 'https://images.unsplash.com/photo-1507679799987-c73779587ccf?auto=format&fit=crop&w=800&q=80', ProductId: product1.id },
-            { url: 'https://images.unsplash.com/photo-1519222970733-f546218fa6d7?auto=format&fit=crop&w=800&q=80', ProductId: product1.id }
-        ]);
-        await ProductSize.bulkCreate([
-            { size: 'M', ProductId: product1.id },
-            { size: 'L', ProductId: product1.id },
-            { size: 'XL', ProductId: product1.id }
-        ]);
 
         const product2 = await Product.create({
             name: 'Modern Filipiniana Gown',
@@ -106,21 +102,17 @@ const seedData = async () => {
             stock: 3,
             category: 'Filipiniana Dresses',
             sellerId: seller.id,
-            status: 'approved'
+            status: 'approved',
+            image: ['https://images.unsplash.com/photo-1595777457583-95e059eb59c0?auto=format&fit=crop&w=500&q=60'],
+            sizes: ['S', 'M']
         });
-        await ProductImage.bulkCreate([
-            { url: 'https://images.unsplash.com/photo-1595777457583-95e059eb59c0?auto=format&fit=crop&w=500&q=60', ProductId: product2.id }
-        ]);
-        await ProductSize.bulkCreate([
-            { size: 'S', ProductId: product2.id },
-            { size: 'M', ProductId: product2.id }
-        ]);
 
         const pendingProduct = await Product.create({
             name: 'Executive Semi-Calado Barong',
             description: 'A premium hand-embroidered piece pending approval.',
             price: 12500,
             stock: 3,
+            category: 'Barong Tagalog',
             sellerId: seller.id,
             status: 'pending'
         });

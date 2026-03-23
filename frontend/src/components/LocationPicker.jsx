@@ -46,13 +46,28 @@ function MapEvents({ onLocationSelect, markerPosition, setMarkerPosition }) {
 export default function LocationPicker({ 
   onLocationFound, 
   initialLat = 14.2952, // Default to Lumban, Laguna approx
-  initialLng = 121.4647
+  initialLng = 121.4647,
+  autoLocate = true
 }) {
   const [position, setPosition] = useState([initialLat, initialLng]);
   const [searchQuery, setSearchQuery] = useState('');
   const [searching, setSearching] = useState(false);
   const [addressDetails, setAddressDetails] = useState('');
   const mapRef = useRef(null);
+  const initialLocateRef = useRef(false);
+
+  // Auto-locate user on mount if requested
+  useEffect(() => {
+    if (autoLocate && !initialLocateRef.current) {
+        initialLocateRef.current = true;
+        
+        // Slight timeout to ensure map context is ready
+        const timer = setTimeout(() => {
+            handleCurrentLocation();
+        }, 800);
+        return () => clearTimeout(timer);
+    }
+  }, [autoLocate]);
 
   // Auto-fetch details if initial position changes externally
   useEffect(() => {

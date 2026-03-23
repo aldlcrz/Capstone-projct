@@ -1,14 +1,14 @@
 "use client";
 import React, { useState, useEffect } from "react";
-import { useParams, useRouter } from "next/navigation";
+import { useSearchParams, useRouter } from "next/navigation";
 import SellerLayout from "./SellerLayout";
 import { ArrowLeft, Mail, Phone, MapPin, Calendar, Clock, ShoppingBag, MessageCircle, Package, Receipt } from "lucide-react";
 import { motion } from "framer-motion";
 import { api } from "@/lib/api";
 
 export default function SellerCustomerClient() {
-  const params = useParams();
-  const id = params?.id;
+  const searchParams = useSearchParams();
+  const id = searchParams.get("id");
   const router = useRouter();
   
   const [customer, setCustomer] = useState(null);
@@ -16,7 +16,10 @@ export default function SellerCustomerClient() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (!id) return;
+    if (!id) {
+      setLoading(false);
+      return;
+    }
     const fetchCustomerData = async () => {
       try {
         const res = await api.get("/orders/seller");
@@ -46,6 +49,12 @@ export default function SellerCustomerClient() {
   if (loading) return (
     <SellerLayout>
       <div className="py-24 text-center text-[var(--muted)] animate-pulse italic">Retrieving patron portfolio...</div>
+    </SellerLayout>
+  );
+
+  if (!id) return (
+    <SellerLayout>
+      <div className="py-24 text-center text-[var(--muted)]">Select a patron from the registry to view a portfolio.</div>
     </SellerLayout>
   );
 

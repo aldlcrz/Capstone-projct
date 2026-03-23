@@ -1,6 +1,13 @@
 const jwt = require('jsonwebtoken');
 const { User } = require('../models');
 
+const isTokenStale = (decoded, user) => {
+    if (!decoded?.iat || !user?.passwordChangedAt) return false;
+
+    const passwordChangedAtSeconds = Math.floor(new Date(user.passwordChangedAt).getTime() / 1000);
+    return passwordChangedAtSeconds > decoded.iat;
+};
+
 // 1. Combined middleware (used by wishlist, return, upload)
 const authMiddleware = (roles = []) => {
     return async (req, res, next) => {
@@ -15,6 +22,9 @@ const authMiddleware = (roles = []) => {
             const decoded = jwt.verify(token, process.env.JWT_SECRET || 'lumbarong_secret_key_2026');
             const user = await User.findByPk(decoded.id || decoded.userId);
             if (!user) return res.status(401).json({ message: 'User not found' });
+            if (isTokenStale(decoded, user)) {
+                return res.status(401).json({ message: 'Token is no longer valid. Please log in again' });
+            }
 
             req.user = user;
 
@@ -42,6 +52,9 @@ authMiddleware.protect = async (req, res, next) => {
         const user = await User.findByPk(decoded.id || decoded.userId);
         
         if (!user) return res.status(401).json({ message: 'User not found' });
+        if (isTokenStale(decoded, user)) {
+            return res.status(401).json({ message: 'Token is no longer valid. Please log in again' });
+        }
         
         req.user = user;
         next();

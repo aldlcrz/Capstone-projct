@@ -245,7 +245,7 @@ function MessagesUI({
                   </div>
                 </div>
                 <button 
-                   onClick={() => window.location.href = `/shop/${activeThread.id}`}
+                   onClick={() => window.location.href = `/shop?id=${activeThread.id}`}
                    className="flex items-center gap-2 px-4 py-2 border border-[var(--border)] rounded-xl text-[10px] font-bold uppercase tracking-widest hover:border-[var(--rust)] hover:text-[var(--rust)] transition-all"
                 >
                   <Store className="w-3.5 h-3.5" /> View Shop

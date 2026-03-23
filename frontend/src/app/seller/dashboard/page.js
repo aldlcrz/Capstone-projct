@@ -87,6 +87,21 @@ export default function SellerDashboard() {
     return () => socket.disconnect();
   }, []);
 
+  const handleExportReport = () => {
+    const csvContent = "data:text/csv;charset=utf-8,Metric,Value\n" 
+      + `Total Revenue,₱${(stats?.revenue || 0).toLocaleString()}\n`
+      + `Total Orders,${stats?.orders || 0}\n`
+      + `Active Inquiries,${stats?.inquiries || 0}\n`
+      + `Total Products,${stats?.products || 0}`;
+    const encodedUri = encodeURI(csvContent);
+    const link = document.createElement("a");
+    link.setAttribute("href", encodedUri);
+    link.setAttribute("download", `workshop_performance_${new Date().toLocaleDateString()}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+  };
+
   if (!mounted) return null;
 
   return (
@@ -110,7 +125,7 @@ export default function SellerDashboard() {
             <button className="px-5 py-3 bg-white border border-[var(--border)] rounded-xl flex items-center gap-2 text-xs font-bold uppercase tracking-widest hover:border-[var(--rust)] hover:text-[var(--rust)] transition-all">
               <Calendar className="w-4 h-4" /> This Month
             </button>
-            <button className="px-5 py-3 bg-[var(--bark)] text-white rounded-xl flex items-center gap-2 text-xs font-bold uppercase tracking-widest hover:bg-[var(--rust)] transition-all shadow-md">
+            <button onClick={handleExportReport} className="px-5 py-3 bg-[var(--bark)] text-white rounded-xl flex items-center gap-2 text-xs font-bold uppercase tracking-widest hover:bg-[var(--rust)] transition-all shadow-md">
               <FileDown className="w-4 h-4" /> Export (.xlsx)
             </button>
           </div>
@@ -136,7 +151,7 @@ export default function SellerDashboard() {
 
           <div className="flex-1">
             <ResponsiveContainer width="100%" height="100%">
-              <AreaChart data={salesData}>
+              <AreaChart data={stats.performance && stats.performance.length > 0 ? stats.performance : salesData}>
                 <defs>
                   <linearGradient id="colorSalesPremium" x1="0" y1="0" x2="0" y2="1">
                     <stop offset="5%" stopColor="#C0422A" stopOpacity={0.15}/>

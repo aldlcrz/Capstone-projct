@@ -16,7 +16,10 @@ const ensureDatabaseIntegrity = async () => {
     gcashNumber: { type: DataTypes.STRING, allowNull: true },
     gcashQrCode: { type: DataTypes.STRING, allowNull: true },
     isAdult: { type: DataTypes.BOOLEAN, defaultValue: false },
-    fcmToken: { type: DataTypes.STRING, allowNull: true }
+    fcmToken: { type: DataTypes.STRING, allowNull: true },
+    resetPasswordToken: { type: DataTypes.STRING, allowNull: true },
+    resetPasswordExpires: { type: DataTypes.DATE, allowNull: true },
+    passwordChangedAt: { type: DataTypes.DATE, allowNull: true }
   };
 
   for (const [columnName, definition] of Object.entries(userColumns)) {

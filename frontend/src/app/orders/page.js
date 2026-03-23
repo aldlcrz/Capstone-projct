@@ -414,12 +414,23 @@ export default function OrdersPage() {
                            <MapPin className="w-3 h-3" /> SHIPPING ADDRESS
                         </div>
                         <div className="bg-[#FDFBF9] p-4 rounded-2xl border border-[var(--cream)] shadow-sm">
-                           <div className="font-bold text-[#2A2A2A] text-sm mb-1">{selectedOrder.shippingAddress?.name}</div>
-                           <div className="text-[10px] font-bold text-[var(--rust)] mb-2">{selectedOrder.shippingAddress?.phone}</div>
-                           <div className="text-xs text-[var(--muted)] leading-relaxed">
-                              {selectedOrder.shippingAddress?.houseNo} {selectedOrder.shippingAddress?.street}, <br />
-                              Brgy. {selectedOrder.shippingAddress?.barangay}, {selectedOrder.shippingAddress?.city}, <br />
-                              {selectedOrder.shippingAddress?.province}, {selectedOrder.shippingAddress?.postalCode}
+                           <div className="font-bold text-[#2A2A2A] text-sm mb-1">{selectedOrder.shippingAddress?.name || "Registry Name Missing"}</div>
+                           <div className="text-[10px] font-bold text-[var(--rust)] mb-2">{selectedOrder.shippingAddress?.phone || "Phone Missing"}</div>
+                           <div className="text-xs text-[var(--muted)] leading-relaxed min-h-[3rem]">
+                              {!(selectedOrder.shippingAddress?.houseNo || selectedOrder.shippingAddress?.street || selectedOrder.shippingAddress?.barangay) ? (
+                                <div className="italic opacity-40 py-2 uppercase text-[9px] font-bold tracking-widest text-[#2A2118]">Archived Registry Data Unavailable</div>
+                              ) : (
+                                <>
+                                  {selectedOrder.shippingAddress?.houseNo && <span>{selectedOrder.shippingAddress.houseNo} </span>}
+                                  {selectedOrder.shippingAddress?.street && <span>{selectedOrder.shippingAddress.street}, </span>}
+                                  <br />
+                                  {selectedOrder.shippingAddress?.barangay && <span>Brgy. {selectedOrder.shippingAddress.barangay}, </span>}
+                                  {selectedOrder.shippingAddress?.city && <span>{selectedOrder.shippingAddress.city}, </span>}
+                                  <br />
+                                  {selectedOrder.shippingAddress?.province && <span>{selectedOrder.shippingAddress.province}, </span>}
+                                  {selectedOrder.shippingAddress?.postalCode && <span>{selectedOrder.shippingAddress.postalCode}</span>}
+                                </>
+                              )}
                            </div>
                            {selectedOrder.shippingAddress?.latitude && (
                              <div className="mt-3 pt-3 border-t border-[var(--border)] flex items-center gap-2 text-[9px] font-bold text-[var(--rust)] uppercase tracking-widest">
@@ -468,7 +479,7 @@ export default function OrdersPage() {
                                  <div className="text-[10px] text-[var(--muted)] mt-0.5">Qty: {item.quantity} • Size: {item.size}</div>
                               </div>
                               <div className="text-right">
-                                 <div className="font-serif font-bold text-[16px] text-[var(--rust)]">₱{(parseFloat(item.price) || 0).toLocaleString()}</div>
+                                 <div className="font-serif font-bold text-[16px] text-[var(--rust)]">₱{Number(item.price || 0).toLocaleString()}</div>
                               </div>
                            </div>
                         ))}
@@ -479,7 +490,7 @@ export default function OrdersPage() {
                {/* Modal Footer */}
                <div className="px-8 py-6 bg-[#FDFCFB] border-t border-[var(--border)] flex items-center justify-between">
                   <span className="text-[10px] font-bold text-[var(--muted)] uppercase tracking-widest">SUBTOTAL AMOUNT</span>
-                  <div className="font-serif text-3xl font-bold text-[var(--rust)]">₱{(selectedOrder.totalAmount || 0).toLocaleString()}</div>
+                  <div className="font-serif text-3xl font-bold text-[var(--rust)]">₱{Number(selectedOrder.totalAmount || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</div>
                </div>
             </motion.div>
           </div>

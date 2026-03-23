@@ -3,6 +3,7 @@ import React, { useState } from "react";
 import Link from "next/link";
 import { User, Mail, Lock, Upload, ArrowRight, Loader2, CheckCircle2, ShieldCheck, ShoppingBag, Eye, EyeOff } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import { usePathname, useRouter } from "next/navigation";
 import { api, getApiErrorMessage } from "@/lib/api";
 
 const cardVariants = {
@@ -30,6 +31,7 @@ export default function RegisterPage() {
   const [sellerData, setSellerData] = useState({ mobileNumber: "", gcashNumber: "", isAdult: false });
   const [error, setError] = useState("");
   const [showPassword, setShowPassword] = useState(false);
+  const router = useRouter();
 
   const handleNext = (e) => {
     e.preventDefault();
@@ -40,9 +42,19 @@ export default function RegisterPage() {
       return;
     }
 
+    if (formData.name.length > 50) {
+      setError("Registry name cannot exceed 50 characters.");
+      return;
+    }
+
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!formData.email.trim() || !emailRegex.test(formData.email)) {
       setError("Please provide a valid secure email address.");
+      return;
+    }
+
+    if (formData.email.length > 100) {
+      setError("Email address is too long.");
       return;
     }
 
@@ -50,10 +62,15 @@ export default function RegisterPage() {
       setError("Security key must be at least 6 characters.");
       return;
     }
+    
+    if (formData.password.length > 32) {
+      setError("Security key cannot exceed 32 characters.");
+      return;
+    }
 
     if (formData.password !== formData.confirmPassword) {
-       setError("Passwords do not match.");
-       return;
+      setError("Passwords do not match.");
+      return;
     }
 
     if (step === 1) setStep(2);
@@ -128,6 +145,13 @@ export default function RegisterPage() {
       <div className="absolute bottom-0 left-0 w-[400px] h-[400px] rounded-full translate-y-1/2 -translate-x-1/3 blur-3xl pointer-events-none"
         style={{ background: "var(--sand, #D4B896)", opacity: 0.12 }} />
 
+      <button 
+        onClick={() => router.back()}
+        className="absolute top-6 left-6 md:top-10 md:left-10 p-3 bg-white rounded-2xl shadow-[0_8px_30px_rgba(0,0,0,0.04)] text-[var(--muted)] hover:text-[var(--rust)] hover:scale-105 transition-all z-50 flex items-center justify-center border border-[var(--border)]"
+      >
+        <ArrowRight className="w-5 h-5 rotate-180" />
+      </button>
+
       <motion.div
         variants={cardVariants}
         initial="hidden"
@@ -144,7 +168,7 @@ export default function RegisterPage() {
               </span>
             </Link>
             <div className="text-[9px] font-bold uppercase tracking-[0.3em]" style={{ color: "var(--muted, #8C7B70)" }}>
-              Heritage Registry Enrollment
+              LumbaRong Registration
             </div>
 
             {/* Progress Steps */}
@@ -186,7 +210,8 @@ export default function RegisterPage() {
                   <label style={labelStyle}>Registry Name</label>
                   <div className="relative">
                     <User className="absolute left-6 top-1/2 -translate-y-1/2 w-4 h-4" style={{ color: "var(--border)" }} />
-                    <input type="text" style={inputStyle} placeholder="Ailo Dela Cruz" required value={formData.name} name="register_name" autoComplete="off"
+                    <input type="text" style={inputStyle} placeholder="" required value={formData.name} name="register_name" autoComplete="off"
+                      maxLength={50}
                       onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                       onFocus={handleFocus} onBlur={handleBlur} />
                   </div>
@@ -196,7 +221,8 @@ export default function RegisterPage() {
                   <label style={labelStyle}>Secure Email</label>
                   <div className="relative">
                     <Mail className="absolute left-6 top-1/2 -translate-y-1/2 w-4 h-4" style={{ color: "var(--border)" }} />
-                    <input type="email" style={inputStyle} placeholder="ailo@gmail.com" required value={formData.email} name="register_email" autoComplete="off"
+                    <input type="email" style={inputStyle} placeholder="" required value={formData.email} name="register_email" autoComplete="off"
+                      maxLength={100}
                       onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                       onFocus={handleFocus} onBlur={handleBlur} />
                   </div>
@@ -207,6 +233,7 @@ export default function RegisterPage() {
                   <div className="relative">
                     <Lock className="absolute left-6 top-1/2 -translate-y-1/2 w-4 h-4" style={{ color: "var(--border)" }} />
                     <input type={showPassword ? "text" : "password"} style={{ ...inputStyle, paddingRight: "3.5rem" }} placeholder="••••••••••••" required value={formData.password} name="register_password" autoComplete="new-password"
+                      maxLength={32}
                       onChange={(e) => setFormData({ ...formData, password: e.target.value })}
                       onFocus={handleFocus} onBlur={handleBlur} />
                     <button type="button" onClick={() => setShowPassword(!showPassword)}
@@ -226,6 +253,7 @@ export default function RegisterPage() {
                   <div className="relative">
                     <Lock className="absolute left-6 top-1/2 -translate-y-1/2 w-4 h-4" style={{ color: "var(--border)" }} />
                     <input type={showPassword ? "text" : "password"} style={{ ...inputStyle, paddingRight: "3.5rem" }} placeholder="••••••••••••" required value={formData.confirmPassword} name="register_confirm_password" autoComplete="new-password"
+                      maxLength={32}
                       onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
                       onFocus={handleFocus} onBlur={handleBlur} />
                   </div>
@@ -237,7 +265,7 @@ export default function RegisterPage() {
                     style={{ padding: "1.125rem", borderRadius: "9999px", background: "var(--bark, #3D2B1F)", boxShadow: "0 8px 24px rgba(60,43,31,0.18)", transition: "background 0.3s" }}
                     onMouseEnter={(e) => { e.currentTarget.style.background = "var(--rust, #C0422A)"; }}
                     onMouseLeave={(e) => { e.currentTarget.style.background = "var(--bark, #3D2B1F)"; }}>
-                    Continue Enrollment <ArrowRight className="w-4 h-4" />
+                    Continue <ArrowRight className="w-4 h-4" />
                   </motion.button>
                 </motion.div>
               </motion.form>
@@ -285,7 +313,8 @@ export default function RegisterPage() {
                           placeholder={field.placeholder}
                           value={sellerData[field.key]}
                           autoComplete="off"
-                          onChange={(e) => setSellerData({ ...sellerData, [field.key]: e.target.value })}
+                          maxLength={11}
+                          onChange={(e) => setSellerData({ ...sellerData, [field.key]: e.target.value.replace(/\D/g, "").slice(0, 11) })}
                           onFocus={handleFocus} onBlur={handleBlur} />
                       </div>
                     ))}

@@ -44,7 +44,7 @@ flutter pub get
 3. **Frontend**: Open `frontend` folder and run `npm run dev`.
 4. **Mobile**: Open `flutter_app` folder and run `flutter run`.
 
-You can also use the **Run and Debug** (Ctrl+Shift+D) tab in VS Code and select **Full Web System** to start both servers at once.
+You can also use the **Run and Debug** (Ctrl+Shift+D) tab in VS Code and select **Launch Lumbarong** to start the web app with both backend and frontend tasks.
 
 ## 5. Manual Database Import (Optional)
 If you prefer not to use the seeding script, you can import the provided SQL file manually:

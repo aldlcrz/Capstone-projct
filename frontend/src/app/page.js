@@ -49,10 +49,10 @@ export default function LandingPage() {
         {/* Desktop Navigation */}
         <nav className="hidden lg:flex items-center gap-10">
           {[
-            { href: "/heritage-guide", label: "GUIDE" },
-            { href: "/about", label: "ABOUT US" },
-            { href: "/privacy-policy", label: "PRIVACY POLICY" },
-            { href: "/terms", label: "TERMS OF USE" },
+            { href: "/heritage-guide", label: "SHOPPING GUIDE" },
+            { href: "/about", label: "WHO WE ARE" },
+            { href: "/privacy-policy", label: "PRIVACY" },
+            { href: "/terms", label: "TERMS" },
           ].map((item) => (
             <Link
               key={item.href}
@@ -166,8 +166,7 @@ export default function LandingPage() {
             variants={itemVariants}
             className="text-[#D4B896]/80 text-sm md:text-base leading-relaxed mb-10 font-medium max-w-[440px] italic pr-4"
           >
-            Connect directly with master embroiderers of Lumban. Authentic,
-            high-quality traditional wear delivered to your doorstep.
+            Buy directly from the makers of Barong. High quality, handmade clothes sent to your home.
           </motion.p>
 
           {/* CTA */}
@@ -176,7 +175,7 @@ export default function LandingPage() {
               href="/login"
               className="inline-flex items-center justify-center w-full sm:w-auto gap-3 bg-[#C0422A] text-white px-8 py-4 rounded-full text-[10px] font-bold tracking-[0.2em] uppercase hover:bg-[#E8604A] hover:scale-105 transition-all duration-300 shadow-xl shadow-[#C0422A]/40 mb-16"
             >
-              Start Your Heritage Journey <ArrowRight className="w-4 h-4" />
+              Start Shopping <ArrowRight className="w-4 h-4" />
             </Link>
           </motion.div>
 

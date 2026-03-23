@@ -26,6 +26,9 @@ Follow these steps to deploy your application to the cloud.
     - `DB_DIALECT`: `mysql`
     - `JWT_SECRET`: A long random string
     - `FRONTEND_URL`: Your Vercel URL (add this *after* the frontend is deployed)
+    - `RESEND_API_KEY`: Optional, required for production password reset emails
+    - `MAIL_FROM`: Optional, required with `RESEND_API_KEY` (for example `Lumbarong <onboarding@resend.dev>`)
+    - `PASSWORD_RESET_TTL_MINUTES`: Optional, defaults to `60`
 
 ## 3. Frontend (Vercel)
 1.  Connect your GitHub repository to [Vercel](https://vercel.com/).

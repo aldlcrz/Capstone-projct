@@ -1,15 +1,27 @@
 const bcrypt = require('bcryptjs');
+const crypto = require('crypto');
 const jwt = require('jsonwebtoken');
+const { Op } = require('sequelize');
 const { User } = require('../models');
 const socketUtility = require('../utils/socketUtility');
+const { sendPasswordResetEmail } = require('../utils/emailService');
+
+const RESET_PASSWORD_WINDOW_MINUTES = Number(process.env.PASSWORD_RESET_TTL_MINUTES || 60);
+const GENERIC_PASSWORD_RESET_MESSAGE = 'If an account with that email exists, a password reset link has been sent.';
+
+const trimTrailingSlash = (value) => String(value || '').replace(/\/+$/, '');
+const hashResetToken = (token) => crypto.createHash('sha256').update(token).digest('hex');
+const buildResetUrl = (token) => {
+  const frontendUrl = trimTrailingSlash(process.env.FRONTEND_URL || 'http://127.0.0.1:3000');
+  return `${frontendUrl}/reset-password?token=${encodeURIComponent(token)}`;
+};
 
 exports.register = async (req, res) => {
   try {
     const { name, email, password, role, mobileNumber, gcashNumber, isAdult } = req.body;
     
-    // Core Validations
-    if (!name || !email || !password) {
-      return res.status(400).json({ message: 'Name, email, and password are required' });
+    if (name.length > 50) {
+      return res.status(400).json({ message: 'Name cannot exceed 50 characters' });
     }
 
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -17,8 +29,12 @@ exports.register = async (req, res) => {
       return res.status(400).json({ message: 'Please provide a valid email address' });
     }
 
-    if (password.length < 6) {
-      return res.status(400).json({ message: 'Password must be at least 6 characters long' });
+    if (email.length > 100) {
+      return res.status(400).json({ message: 'Email cannot exceed 100 characters' });
+    }
+
+    if (password.length < 6 || password.length > 32) {
+      return res.status(400).json({ message: 'Password must be between 6 and 32 characters long' });
     }
 
     // Role-specific Validations (Seller)
@@ -115,6 +131,86 @@ exports.login = async (req, res) => {
     });
   } catch (error) {
     res.status(500).json({ message: error.message });
+  }
+};
+
+exports.forgotPassword = async (req, res) => {
+  const email = String(req.body?.email || '').trim();
+
+  if (!email) {
+    return res.status(400).json({ message: 'Email is required' });
+  }
+
+  let user = null;
+
+  try {
+    user = await User.findOne({ where: { email } });
+
+    if (!user) {
+      return res.status(200).json({ message: GENERIC_PASSWORD_RESET_MESSAGE });
+    }
+
+    const resetToken = crypto.randomBytes(32).toString('hex');
+    user.resetPasswordToken = hashResetToken(resetToken);
+    user.resetPasswordExpires = new Date(Date.now() + RESET_PASSWORD_WINDOW_MINUTES * 60 * 1000);
+    await user.save();
+
+    await sendPasswordResetEmail({
+      email: user.email,
+      name: user.name,
+      resetUrl: buildResetUrl(resetToken),
+      expiresInMinutes: RESET_PASSWORD_WINDOW_MINUTES,
+    });
+
+    return res.status(200).json({ message: GENERIC_PASSWORD_RESET_MESSAGE });
+  } catch (error) {
+    if (user) {
+      user.resetPasswordToken = null;
+      user.resetPasswordExpires = null;
+      await user.save();
+    }
+
+    return res.status(500).json({ message: 'Unable to send a password reset link right now' });
+  }
+};
+
+exports.resetPassword = async (req, res) => {
+  try {
+    const token = String(req.body?.token || '').trim();
+    const password = String(req.body?.password || '');
+
+    if (!token || !password) {
+      return res.status(400).json({ message: 'Reset token and new password are required' });
+    }
+
+    if (password.length < 6 || password.length > 32) {
+      return res.status(400).json({ message: 'Password must be between 6 and 32 characters long' });
+    }
+
+    const user = await User.findOne({
+      where: {
+        resetPasswordToken: hashResetToken(token),
+        resetPasswordExpires: {
+          [Op.gt]: new Date(),
+        },
+      },
+    });
+
+    if (!user) {
+      return res.status(400).json({ message: 'Reset link is invalid or has expired' });
+    }
+
+    user.password = await bcrypt.hash(password, 10);
+    user.resetPasswordToken = null;
+    user.resetPasswordExpires = null;
+    user.passwordChangedAt = new Date();
+    await user.save();
+
+    socketUtility.emitUserUpdated(user, { action: 'password_reset' });
+
+    return res.status(200).json({ message: 'Password reset successful' });
+  } catch (error) {
+    return res.status(500).json({ message: 'Unable to reset password right now' });
   }
 };
 

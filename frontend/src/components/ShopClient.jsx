@@ -1,6 +1,6 @@
 "use client";
 import React, { useState, useEffect } from "react";
-import { useParams, useRouter } from "next/navigation";
+import { useSearchParams, useRouter } from "next/navigation";
 import CustomerLayout from "./CustomerLayout";
 import Image from "next/image";
 import Link from "next/link";
@@ -8,6 +8,7 @@ import {
   Star, 
   MapPin, 
   MessageCircle, 
+  Plus,
   Loader2, 
   ChevronRight,
   Clock,
@@ -17,8 +18,8 @@ import {
 import { api } from "@/lib/api";
 
 export default function ShopClient() {
-  const params = useParams();
-  const id = params?.id;
+  const searchParams = useSearchParams();
+  const id = searchParams.get("id");
   const router = useRouter();
   
   const [seller, setSeller] = useState(null);
@@ -26,7 +27,10 @@ export default function ShopClient() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (!id) return;
+    if (!id) {
+      setLoading(false);
+      return;
+    }
     const fetchShopData = async () => {
       try {
         const [sellerRes, productsRes] = await Promise.all([
@@ -67,6 +71,14 @@ export default function ShopClient() {
            <p className="font-serif italic text-[var(--muted)]">Opening artisan workshop...</p>
         </div>
      </CustomerLayout>
+  );
+
+  if (!id) return (
+    <CustomerLayout>
+      <div className="h-[70vh] flex items-center justify-center px-4 text-center text-[var(--muted)]">
+        Select a shop first to open its collection.
+      </div>
+    </CustomerLayout>
   );
 
   return (
@@ -158,7 +170,7 @@ export default function ShopClient() {
 
            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
               {products.map((product) => (
-                <Link key={product.id} href={`/products/${product.id}`} className="group bg-white rounded-sm shadow-sm hover:shadow-md transition-all h-full flex flex-col border border-transparent hover:border-[var(--rust)]/10">
+                <Link key={product.id} href={`/products?id=${product.id}`} className="group bg-white rounded-sm shadow-sm hover:shadow-md transition-all h-full flex flex-col border border-transparent hover:border-[var(--rust)]/10">
                   <div className="relative aspect-[3/4] overflow-hidden bg-[#fafafa]">
                     <Image 
                       src={Array.isArray(product.image) ? (typeof product.image[0] === 'string' ? product.image[0] : product.image[0]?.url) : product.image || "/images/placeholder.png"} 

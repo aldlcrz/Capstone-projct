@@ -1,6 +1,6 @@
 "use client";
 import React, { useState, useEffect, useCallback } from "react";
-import { useParams, useRouter } from "next/navigation";
+import { useSearchParams, useRouter } from "next/navigation";
 import CustomerLayout from "./CustomerLayout";
 import Image from "next/image";
 import Link from "next/link";
@@ -18,14 +18,28 @@ import { useSocket } from "@/context/SocketContext";
 import { normalizeProductImages, normalizeProductSizes } from "@/lib/productImages";
 
 export default function ProductDetailClient() {
-  const params = useParams();
-  const id = params?.id;
+  const searchParams = useSearchParams();
+  const id = searchParams.get("id");
   const router = useRouter();
   const [product, setProduct] = useState(null);
   const [loading, setLoading] = useState(true);
   const [selectedSize, setSelectedSize] = useState("M");
   const [quantity, setQuantity] = useState(1);
   const [activeImage, setActiveImage] = useState(0);
+  const [userRole, setUserRole] = useState(null);
+
+  useEffect(() => {
+    try {
+      const stored = JSON.parse(localStorage.getItem("user") || "{}");
+      setUserRole(stored.role || "customer");
+    } catch(e) {
+      setUserRole("customer");
+    }
+  }, []);
+
+  const isRestricted = userRole === "admin" || userRole === "seller";
+  const showActions = !isRestricted; 
+
 
   const fetchProduct = useCallback(async () => {
     try {
@@ -62,7 +76,10 @@ export default function ProductDetailClient() {
   const { socket } = useSocket();
 
   useEffect(() => {
-    if (!id) return;
+    if (!id) {
+      setLoading(false);
+      return;
+    }
     fetchProduct();
 
     if (socket) {
@@ -131,6 +148,14 @@ export default function ProductDetailClient() {
            <Loader2 className="w-10 h-10 animate-spin text-[var(--rust)] opacity-50" />
         </div>
      </CustomerLayout>
+  );
+
+  if (!id) return (
+    <CustomerLayout>
+      <div className="h-[70vh] flex items-center justify-center px-4 text-center text-[var(--muted)]">
+        Select a product first to view its details.
+      </div>
+    </CustomerLayout>
   );
 
   const sizeOptions = normalizeProductSizes(product?.sizes);
@@ -256,14 +281,21 @@ export default function ProductDetailClient() {
                     </div>
                   </div>
                 </div>
-                <div className="flex items-center gap-3 pt-8 pb-4">
-                  <button onClick={handleAddToCart} className="flex items-center justify-center gap-2 px-6 py-3 border border-[var(--rust)] bg-[#ffedea] text-[var(--rust)] rounded-sm font-medium hover:bg-[#ffece8] transition-colors focus:outline-none min-w-[200px]">
-                     <ShoppingCart className="w-5 h-5 opacity-90" /> Add To Cart
-                  </button>
-                  <button onClick={handleBuyNow} className="flex items-center justify-center px-6 py-3 bg-[var(--rust)] text-white rounded-sm font-medium hover:bg-[#b03b25] transition-colors focus:outline-none min-w-[150px]">
-                     Buy Now
-                  </button>
-                </div>
+                {showActions && (
+                  <div className="flex items-center gap-3 pt-8 pb-4">
+                    <button onClick={handleAddToCart} className="flex items-center justify-center gap-2 px-6 py-3 border border-[var(--rust)] bg-[#ffedea] text-[var(--rust)] rounded-sm font-medium hover:bg-[#ffece8] transition-colors focus:outline-none min-w-[200px]">
+                      <ShoppingCart className="w-5 h-5 opacity-90" /> Add To Cart
+                    </button>
+                    <button onClick={handleBuyNow} className="flex items-center justify-center px-6 py-3 bg-[var(--rust)] text-white rounded-sm font-medium hover:bg-[#b03b25] transition-colors focus:outline-none min-w-[150px]">
+                      Buy Now
+                    </button>
+                  </div>
+                )}
+                {isRestricted && (
+                  <div className="mt-8 p-4 bg-gray-50 border border-gray-100 rounded-sm text-[13px] text-[var(--muted)] italic">
+                    Purchase actions are disabled for {userRole === 'admin' ? 'Administrators' : 'Sellers'}.
+                  </div>
+                )}
               </div>
             </div>
           </div>
@@ -274,14 +306,16 @@ export default function ProductDetailClient() {
              <div className="flex-1 flex flex-col justify-center border-r border-gray-200 pr-6 pl-2">
                 <div className="text-[15px] font-medium text-[#222] mb-1">{product.artisan || "Lumban Master Craft"}</div>
                 <div className="text-[#757575] text-[12px] mb-3">Active 5 minutes ago</div>
-                <div className="flex gap-2">
-                   <Link href={`/messages?sellerId=${product.sellerId || 1}&sellerName=${product.artisan || "Lumban Master Craft"}`} className="lex items-center justify-center gap-1.5 px-3 py-1.5 border border-[#e8e8e8] text-[#555] bg-[#fff] hover:bg-[#f8f8f8] rounded-sm text-xs font-medium transition-colors min-w-[100px]">
-                      <MessageCircle className="w-3.5 h-3.5 text-[#ee4d2d]" /> Chat Now
-                   </Link>
-                   <Link href={`/shop/${product.sellerId || 1}`} className="flex items-center justify-center gap-1.5 px-3 py-1.5 border border-[#e8e8e8] text-[#555] bg-[#fff] hover:bg-[#f8f8f8] rounded-sm text-xs font-medium transition-colors min-w-[100px]">
-                      <ShoppingCart className="w-3.5 h-3.5 text-[#666]" /> View Shop
-                   </Link>
-                </div>
+                {showActions && (
+                  <div className="flex gap-2">
+                    <Link href={`/messages?sellerId=${product.sellerId || 1}&sellerName=${product.artisan || "Lumban Master Craft"}`} className="lex items-center justify-center gap-1.5 px-3 py-1.5 border border-[#e8e8e8] text-[#555] bg-[#fff] hover:bg-[#f8f8f8] rounded-sm text-xs font-medium transition-colors min-w-[100px]">
+                       <MessageCircle className="w-3.5 h-3.5 text-[#ee4d2d]" /> Chat Now
+                    </Link>
+                     <Link href={`/shop?id=${product.sellerId || 1}`} className="flex items-center justify-center gap-1.5 px-3 py-1.5 border border-[#e8e8e8] text-[#555] bg-[#fff] hover:bg-[#f8f8f8] rounded-sm text-xs font-medium transition-colors min-w-[100px]">
+                       <ShoppingCart className="w-3.5 h-3.5 text-[#666]" /> View Shop
+                    </Link>
+                  </div>
+                )}
              </div>
              <div className="flex-1 pl-6 grid grid-cols-2 gap-y-3 gap-x-8 text-[13px]">
                 <div className="flex justify-between"><span className="text-[#757575]">Ratings</span> <span className="text-[var(--rust)]">523</span></div>

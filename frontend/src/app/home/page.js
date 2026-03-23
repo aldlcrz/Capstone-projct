@@ -17,13 +17,26 @@ import { motion, AnimatePresence } from "framer-motion";
 import { api, BACKEND_URL } from "@/lib/api";
 import { useSocket } from "@/context/SocketContext";
 
-const categories = ["ALL", "FORMAL", "CASUAL", "TRADITIONAL", "MODERN ELITE", "CUSTOM CRAFT"];
+const categories = ["ALL", "FORMAL", "CASUAL", "TRADITIONAL", "MODERN", "CUSTOM"];
 
 export default function ShopPage() {
   const router = useRouter();
   const [activeCategory, setActiveCategory] = useState("ALL");
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [userRole, setUserRole] = useState(null);
+
+  useEffect(() => {
+    try {
+      const stored = JSON.parse(localStorage.getItem("user") || "{}");
+      setUserRole(stored.role || "customer");
+    } catch(e) {
+      setUserRole("customer");
+    }
+  }, []);
+
+  const showActions = userRole !== "admin" && userRole !== "seller";
+
 
   const { socket } = useSocket();
 
@@ -170,8 +183,8 @@ export default function ShopPage() {
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 sm:gap-4 lg:gap-5">
           <AnimatePresence>
             {loading ? (
-               <div className="col-span-full py-32 text-center text-[var(--muted)] opacity-50 italic animate-pulse">Loading collection...</div>
-            ) : products.filter(p => activeCategory === "ALL" || p.category === activeCategory).map((product, i) => (
+               <div className="col-span-full py-32 text-center text-[var(--muted)] opacity-50 italic animate-pulse">Loading items...</div>
+            ) : products.filter(p => activeCategory === "ALL" || (p.category && p.category.toString().toUpperCase() === activeCategory.toUpperCase())).map((product, i) => (
               <motion.div 
                 key={product.id}
                 initial={{ opacity: 0, y: 15 }}
@@ -182,7 +195,7 @@ export default function ShopPage() {
               >
                 {/* Image Area - Minimal Square */}
                 <div className="relative w-full aspect-square bg-[#F7F3EE] overflow-hidden rounded-t-sm group/img pointer-events-auto">
-                  <Link href={`/products/${product.id}`} className="absolute inset-0 block z-0" aria-label={`View ${product.name} details`}>
+                  <Link href={`/products?id=${product.id}`} className="absolute inset-0 block z-0" aria-label={`View ${product.name} details`}>
                     <Image 
                       src={getImageUrl(product)} 
                       alt={product.name} 
@@ -193,25 +206,27 @@ export default function ShopPage() {
                     />
                   </Link>
                   {/* Add to Cart / Buy Now Overlay */}
-                  <div className="absolute inset-x-2 bottom-2 translate-y-0 opacity-100 lg:translate-y-8 lg:opacity-0 lg:group-hover/img:translate-y-0 lg:group-hover/img:opacity-100 transition-all duration-300 z-20 space-y-1.5 pointer-events-auto lg:pointer-events-none lg:group-hover/img:pointer-events-auto">
-                    <button 
-                      onClick={(e) => { e.preventDefault(); handleBuyNow(product); }}
-                      className="w-full bg-[var(--rust)] text-white py-2 rounded-sm text-[10px] leading-none font-bold uppercase tracking-wider flex items-center justify-center gap-1.5 shadow-md hover:bg-[#b03b25] transition-colors"
-                    >
-                      <ArrowRight className="w-3.5 h-3.5" /> Buy Now
-                    </button>
-                    <button 
-                      onClick={(e) => { e.preventDefault(); addToCart(product); }}
-                      className="w-full bg-white/95 text-[var(--charcoal)] py-2 rounded-sm text-[10px] leading-none font-bold uppercase tracking-wider flex items-center justify-center gap-1.5 shadow-md hover:bg-white transition-colors border border-gray-100"
-                    >
-                      <ShoppingCart className="w-3.5 h-3.5" /> Add to Cart
-                    </button>
-                  </div>
+                  {showActions && (
+                    <div className="absolute inset-x-2 bottom-2 translate-y-0 opacity-100 lg:translate-y-8 lg:opacity-0 lg:group-hover/img:translate-y-0 lg:group-hover/img:opacity-100 transition-all duration-300 z-20 space-y-1.5 pointer-events-auto lg:pointer-events-none lg:group-hover/img:pointer-events-auto">
+                      <button 
+                        onClick={(e) => { e.preventDefault(); handleBuyNow(product); }}
+                        className="w-full bg-[var(--rust)] text-white py-2 rounded-sm text-[10px] leading-none font-bold uppercase tracking-wider flex items-center justify-center gap-1.5 shadow-md hover:bg-[#b03b25] transition-colors"
+                      >
+                        <ArrowRight className="w-3.5 h-3.5" /> Buy Now
+                      </button>
+                      <button 
+                        onClick={(e) => { e.preventDefault(); addToCart(product); }}
+                        className="w-full bg-white/95 text-[var(--charcoal)] py-2 rounded-sm text-[10px] leading-none font-bold uppercase tracking-wider flex items-center justify-center gap-1.5 shadow-md hover:bg-white transition-colors border border-gray-100"
+                      >
+                        <ShoppingCart className="w-3.5 h-3.5" /> Add to Cart
+                      </button>
+                    </div>
+                  )}
                 </div>
 
                 {/* Details Area */}
                 <div className="px-2 pb-3 pt-2 space-y-1 flex-1 flex flex-col justify-between">
-                  <Link href={`/products/${product.id}`} className="block flex-1">
+                  <Link href={`/products?id=${product.id}`} className="block flex-1">
                     <h3 className="text-[13px] leading-tight font-medium text-[#222] group-hover:text-[var(--rust)] transition-colors line-clamp-2 min-h-[36px]">{product.name}</h3>
                   </Link>
                   

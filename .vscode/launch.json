@@ -2,6 +2,32 @@
   "version": "0.2.0",
   "configurations": [
     {
+      "name": "Backend Server (Express)",
+      "type": "node",
+      "request": "launch",
+      "cwd": "${workspaceFolder}/backend",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["run", "dev"],
+      "console": "integratedTerminal",
+      "presentation": {
+        "group": "lumbarong",
+        "order": 1
+      }
+    },
+    {
+      "name": "Frontend Server (Next.js)",
+      "type": "node",
+      "request": "launch",
+      "cwd": "${workspaceFolder}/frontend",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["run", "dev"],
+      "console": "integratedTerminal",
+      "presentation": {
+        "group": "lumbarong",
+        "order": 2
+      }
+    },
+    {
       "name": "Launch Lumbarong",
       "type": "msedge",
       "request": "launch",
@@ -9,8 +35,8 @@
       "webRoot": "${workspaceFolder}/frontend",
       "preLaunchTask": "Launch System",
       "presentation": {
-        "hidden": false,
-        "group": "lumbarong"
+        "group": "lumbarong",
+        "order": 3
       }
     },
     {
@@ -25,8 +51,8 @@
         "--user-agent=Mozilla/5.0 (Linux; Android 13; SM-S901B) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/112.0.0.0 Mobile Safari/537.36"
       ],
       "presentation": {
-        "hidden": false,
-        "group": "lumbarong"
+        "group": "lumbarong",
+        "order": 4
       }
     },
     {
@@ -34,12 +60,52 @@
       "type": "node",
       "request": "launch",
       "runtimeExecutable": "npx",
-      "runtimeArgs": ["cap", "run", "android"],
+      "runtimeArgs": [
+        "cap",
+        "run",
+        "android"
+      ],
       "cwd": "${workspaceFolder}/frontend",
       "preLaunchTask": "Start Backend",
       "presentation": {
-        "hidden": false,
-        "group": "lumbarong"
+        "group": "lumbarong",
+        "order": 5
+      }
+    },
+    {
+      "name": "flutter_app",
+      "type": "node",
+      "request": "launch",
+      "runtimeExecutable": "flutter",
+      "runtimeArgs": ["run"],
+      "cwd": "${workspaceFolder}/flutter_app_ARCHIVE",
+      "presentation": {
+        "group": "lumbarong",
+        "order": 6
+      }
+    },
+    {
+      "name": "flutter_app (profile mode)",
+      "type": "node",
+      "request": "launch",
+      "runtimeExecutable": "flutter",
+      "runtimeArgs": ["run", "--profile"],
+      "cwd": "${workspaceFolder}/flutter_app_ARCHIVE",
+      "presentation": {
+        "group": "lumbarong",
+        "order": 7
+      }
+    },
+    {
+      "name": "flutter_app (release mode)",
+      "type": "node",
+      "request": "launch",
+      "runtimeExecutable": "flutter",
+      "runtimeArgs": ["run", "--release"],
+      "cwd": "${workspaceFolder}/flutter_app_ARCHIVE",
+      "presentation": {
+        "group": "lumbarong",
+        "order": 8
       }
     }
   ]

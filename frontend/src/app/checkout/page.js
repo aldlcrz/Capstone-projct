@@ -59,6 +59,9 @@ export default function CheckoutPage() {
   const [savedAddresses, setSavedAddresses] = useState([]);
   const [showAddressBook, setShowAddressBook] = useState(false);
   const [selectedOrder, setSelectedOrder] = useState(null);
+  const [isNewAddress, setIsNewAddress] = useState(false);
+  const [addressLoaded, setAddressLoaded] = useState(false);
+
 
   // Address Book Management
   const [addrForm, setAddrForm] = useState({ recipientName: "", phone: "", houseNo: "", street: "", barangay: "", city: "", province: "", postalCode: "", isDefault: false, latitude: null, longitude: null });
@@ -100,7 +103,7 @@ export default function CheckoutPage() {
 
     const fetchSavedAddresses = async () => {
       const data = await refreshAddresses();
-      const defaultAddr = data.find(a => a.isDefault);
+      const defaultAddr = data.find(a => a.isDefault) || data[0];
       if (defaultAddr) {
         setAddress({
           name: defaultAddr.recipientName,
@@ -114,9 +117,14 @@ export default function CheckoutPage() {
           latitude: defaultAddr.latitude,
           longitude: defaultAddr.longitude
         });
+        setIsNewAddress(false);
+      } else {
+        setIsNewAddress(true);
       }
+      setAddressLoaded(true);
     };
     fetchSavedAddresses();
+
   }, [currentStep]);
 
   const openAddrForm = (addr = null) => {
@@ -171,13 +179,16 @@ export default function CheckoutPage() {
       latitude: addr.latitude,
       longitude: addr.longitude
     });
+    setIsNewAddress(false);
     setShowAddressBook(false);
   };
 
-  const subtotal = cartItems.reduce((acc, item) => acc + (parseFloat(item.price || 0) * item.quantity), 0);
-  const shipping = cartItems.reduce((max, item) => Math.max(max, parseFloat(item.shippingFee || 0)), 0);
+
+  const subtotal = cartItems.reduce((acc, item) => acc + (parsePrice(item.price) * item.quantity), 0);
+  const shipping = cartItems.reduce((max, item) => Math.max(max, parsePrice(item.shippingFee)), 0);
   const maxDays = cartItems.reduce((max, item) => Math.max(max, parseInt(item.shippingDays || 3)), 0);
   const total = subtotal + shipping;
+
   const isGcashPayment = paymentMethod === "GCash";
   const isBuyNowMode = mode === "buy_now";
 
@@ -191,11 +202,28 @@ export default function CheckoutPage() {
        }
        setCurrentStep(2);
     } else if (currentStep === 2) {
-       if (isGcashPayment && (!gcashRef || !screenshot)) {
+        if (isGcashPayment) {
+          const digitsOnly = gcashRef.replace(/\D/g, "");
+          if (!digitsOnly || digitsOnly.length < 8) {
+            alert("GCash reference must be at least 8 digits long.");
+            setShowValidation(true);
+            return;
+          }
+          if (!screenshot) {
+            setShowValidation(true);
+            return;
+          }
+        }
+        
+        // Final contact validation before handoff
+        const phoneDigits = address.phone.replace(/\D/g, "");
+        if (!/^09\d{9}$/.test(phoneDigits)) {
+          alert("Please provide a valid 11-digit Philippine mobile number (09...).");
           setShowValidation(true);
           return;
-       }
-       handlePlaceOrder();
+        }
+
+        handlePlaceOrder();
     }
   };
 
@@ -215,6 +243,33 @@ export default function CheckoutPage() {
     }
 
     try {
+      // First, attempt to save the address to the user's permanent address book if it's new
+      // We check if an address with the same houseNo already exists to avoid duplicates
+      if (address.houseNo && address.street) {
+        const existing = savedAddresses.find(a => 
+          a.houseNo === address.houseNo && a.street === address.street && a.barangay === address.barangay
+        );
+        if (!existing) {
+          try {
+            await api.post("/addresses", {
+              recipientName: address.name,
+              phone: address.phone,
+              houseNo: address.houseNo,
+              street: address.street,
+              barangay: address.barangay,
+              city: address.city,
+              province: address.province,
+              postalCode: address.postalCode,
+              latitude: address.latitude,
+              longitude: address.longitude,
+              isDefault: savedAddresses.length === 0
+            });
+          } catch (e) {
+            console.warn("Failed to auto-save address to book, proceeding with order anyway.");
+          }
+        }
+      }
+
       const token = localStorage.getItem("token");
       const response = await api.post("/orders", formData, {
         headers: { 
@@ -309,83 +364,118 @@ export default function CheckoutPage() {
                         exit={{ opacity: 0, x: 20 }}
                         className={`artisan-card border-2 border-transparent hover:border-[var(--rust)]/10 transition-all bg-white/80 backdrop-blur-xl ${isBuyNowMode ? 'p-8 space-y-8 shadow-lg' : 'p-12 space-y-10 shadow-xl'}`}
                       >
-                         <h3 className={`font-serif font-bold text-[var(--charcoal)] tracking-tight flex items-center gap-4 ${isBuyNowMode ? 'text-[1.9rem]' : 'text-3xl'}`}>
-                            <div className={`bg-[var(--rust)] text-white flex items-center justify-center shadow-lg ${isBuyNowMode ? 'w-10 h-10 rounded-xl' : 'w-12 h-12 rounded-2xl rotate-3'}`}><MapPin className={`${isBuyNowMode ? 'w-5 h-5' : 'w-6 h-6'}`} /></div>
-                            Shipment Registry
-                            <button 
-                              type="button"
-                              onClick={() => setShowAddressBook(true)}
-                              className="ml-auto flex items-center gap-2 text-[10px] font-extrabold uppercase tracking-widest text-[var(--rust)] hover:bg-[var(--rust)]/5 px-4 py-2 rounded-xl border border-[var(--rust)]/20 transition-all font-sans"
-                            >
-                               <BookOpen className="w-3.5 h-3.5" /> Address Book
-                            </button>
-                         </h3>
-                         <div className={`grid grid-cols-1 md:grid-cols-2 ${isBuyNowMode ? 'gap-6 pt-2' : 'gap-8 pt-4'}`}>
-                            <InputGroup compact={isBuyNowMode} label="Full Name" placeholder="Enter recipient name" value={address.name} onChange={(e) => setAddress({...address, name: e.target.value})} icon={<UserIcon className="w-4 h-4" />} />
-                            <InputGroup compact={isBuyNowMode} label="Phone Number" placeholder="09XXXXXXXXX" value={address.phone} onChange={(e) => setAddress({...address, phone: e.target.value})} icon={<Phone className="w-4 h-4" />} />
-                            
-                            <InputGroup compact={isBuyNowMode} label="House No. / Building" placeholder="Bldg/House Number" value={address.houseNo} onChange={(e) => setAddress({...address, houseNo: e.target.value})} icon={<MapPin className="w-4 h-4" />} />
-                            <InputGroup compact={isBuyNowMode} label="Street" placeholder="Street Name" value={address.street} onChange={(e) => setAddress({...address, street: e.target.value})} icon={<MapPin className="w-4 h-4" />} />
-                            
-                            <InputGroup compact={isBuyNowMode} label="Barangay" placeholder="Barangay Name" value={address.barangay} onChange={(e) => setAddress({...address, barangay: e.target.value})} icon={<MapPin className="w-4 h-4" />} />
-                            <InputGroup compact={isBuyNowMode} label="City / Municipality" placeholder="Your City" value={address.city} onChange={(e) => setAddress({...address, city: e.target.value})} icon={<MapPin className="w-4 h-4" />} />
-                            
-                            <InputGroup compact={isBuyNowMode} label="Province" placeholder="Your Province" value={address.province} onChange={(e) => setAddress({...address, province: e.target.value})} icon={<MapPin className="w-4 h-4" />} />
-                            <InputGroup compact={isBuyNowMode} label="Postal Code" placeholder="ZIP Code" value={address.postalCode} onChange={(e) => setAddress({...address, postalCode: e.target.value})} icon={<MapPin className="w-4 h-4" />} />
-                            
-                             <div className="md:col-span-2">
-                               <button 
-                                 type="button"
-                                 onClick={() => setShowMap(v => !v)}
-                                 className={`w-full py-4 border-2 border-dashed rounded-2xl flex items-center justify-center gap-3 text-[10px] font-bold uppercase tracking-widest transition-all ${
-                                   showMap
-                                     ? 'bg-[var(--rust)] border-[var(--rust)] text-white'
-                                     : address.latitude
-                                     ? 'bg-green-50 border-green-500 text-green-700'
-                                     : 'bg-[var(--input-bg)] border-[var(--border)] text-[var(--muted)] hover:border-[var(--rust)] hover:text-[var(--rust)]'
-                                 }`}
-                               >
-                                 {showMap ? (
-                                   <><MapPin className="w-4 h-4" /> Hide Interactive Map</>
-                                 ) : address.latitude ? (
-                                   <><CheckCircle2 className="w-4 h-4" /> Location Pinned ({address.latitude.toFixed(4)}, {address.longitude.toFixed(4)})</>
-                                 ) : (
-                                   <><MapPin className="w-4 h-4" /> Drop Precise Map Pin (Optional)</>
-                                 )}
-                               </button>
-
-                               <AnimatePresence>
-                                 {showMap && (
-                                   <motion.div
-                                     initial={{ opacity: 0, height: 0 }}
-                                     animate={{ opacity: 1, height: "auto" }}
-                                     exit={{ opacity: 0, height: 0 }}
-                                     transition={{ duration: 0.3 }}
-                                     className="overflow-hidden mt-4"
-                                   >
-                                     <div className="text-[10px] font-bold uppercase tracking-widest text-[var(--muted)] mb-3 ml-1">Interactive Heritage Map</div>
-                                     <LocationPickerMap
-                                       initialLat={address.latitude || 14.2952}
-                                       initialLng={address.longitude || 121.4647}
-                                       onLocationFound={({ lat, lng, address: geo }) => {
-                                         setAddress(prev => ({
-                                           ...prev,
-                                           latitude: lat,
-                                           longitude: lng,
-                                           street: geo.street || prev.street,
-                                           barangay: geo.barangay || prev.barangay,
-                                           city: geo.city || prev.city,
-                                           province: geo.province || prev.province,
-                                           postalCode: geo.postalCode || prev.postalCode,
-                                         }));
-                                       }}
-                                     />
-                                   </motion.div>
-                                 )}
-                               </AnimatePresence>
-                             </div>
+                         <div className="flex items-center justify-between mb-2">
+                           <h3 className={`font-serif font-bold text-[var(--charcoal)] tracking-tight flex items-center gap-4 ${isBuyNowMode ? 'text-[1.9rem]' : 'text-3xl'}`}>
+                              <div className={`bg-[var(--rust)] text-white flex items-center justify-center shadow-lg ${isBuyNowMode ? 'w-10 h-10 rounded-xl' : 'w-12 h-12 rounded-2xl rotate-3'}`}><MapPin className={`${isBuyNowMode ? 'w-5 h-5' : 'w-6 h-6'}`} /></div>
+                              Shipment Registry
+                           </h3>
+                           <div className="flex items-center gap-3">
+                              {!isNewAddress && (
+                                <button 
+                                  type="button"
+                                  onClick={() => setIsNewAddress(true)}
+                                  className="text-[10px] font-extrabold uppercase tracking-widest text-[var(--muted)] hover:text-[var(--rust)] px-4 py-2 transition-all font-sans"
+                                >
+                                   Use Different Address
+                                </button>
+                              )}
+                              <button 
+                                type="button"
+                                onClick={() => setShowAddressBook(true)}
+                                className="flex items-center gap-2 text-[10px] font-extrabold uppercase tracking-widest text-[var(--rust)] hover:bg-[var(--rust)]/5 px-4 py-2 rounded-xl border border-[var(--rust)]/20 transition-all font-sans"
+                              >
+                                 <BookOpen className="w-3.5 h-3.5" /> Address Book
+                              </button>
+                           </div>
                          </div>
+
+                         {!isNewAddress && address.name ? (
+                           <div className="bg-[var(--cream)]/30 border border-[var(--rust)]/10 rounded-3xl p-8 flex items-start gap-6 group transition-all hover:bg-white hover:shadow-lg">
+                              <div className="w-14 h-14 bg-white rounded-2xl flex items-center justify-center shadow-sm shrink-0 border border-[var(--rust)]/5">
+                                 <MapPin className="w-6 h-6 text-[var(--rust)]" />
+                              </div>
+                              <div className="space-y-2 flex-1">
+                                 <div className="flex items-center justify-between">
+                                    <span className="text-[10px] font-bold text-[var(--rust)] uppercase tracking-[0.2em]">Fulfillment Node Active</span>
+                                    {address.latitude && <span className="text-[8px] font-bold text-green-600 bg-green-50 px-2 py-1 rounded-lg uppercase tracking-widest flex items-center gap-1"><CheckCircle2 className="w-2 h-2" /> GIS Verified</span>}
+                                 </div>
+                                 <div className="text-xl font-serif font-bold text-[var(--charcoal)]">{address.name}</div>
+                                 <div className="text-xs font-bold text-[var(--muted)] tracking-widest mb-2">{address.phone}</div>
+                                 <p className="text-sm text-[var(--muted)] leading-relaxed italic">
+                                    {address.houseNo} {address.street}, {address.barangay},<br />
+                                    {address.city}, {address.province} {address.postalCode}
+                                 </p>
+                              </div>
+                           </div>
+                         ) : (
+                           <div className={`grid grid-cols-1 md:grid-cols-2 ${isBuyNowMode ? 'gap-6 pt-2' : 'gap-8 pt-4'}`}>
+                              <InputGroup compact={isBuyNowMode} label="Full Name" placeholder="Enter recipient name" value={address.name} onChange={(e) => setAddress({...address, name: e.target.value.slice(0, 50)})} icon={<UserIcon className="w-4 h-4" />} />
+                              <InputGroup compact={isBuyNowMode} label="Phone Number" placeholder="09XXXXXXXXX" value={address.phone} onChange={(e) => setAddress({...address, phone: e.target.value.replace(/\D/g, "").slice(0, 11)})} icon={<Phone className="w-4 h-4" />} />
+                              
+                              <InputGroup compact={isBuyNowMode} label="House No. / Building" placeholder="Bldg/House Number" value={address.houseNo} onChange={(e) => setAddress({...address, houseNo: e.target.value.slice(0, 20)})} icon={<MapPin className="w-4 h-4" />} />
+                              <InputGroup compact={isBuyNowMode} label="Street" placeholder="Street Name" value={address.street} onChange={(e) => setAddress({...address, street: e.target.value.slice(0, 100)})} icon={<MapPin className="w-4 h-4" />} />
+                              
+                              <InputGroup compact={isBuyNowMode} label="Barangay" placeholder="Barangay Name" value={address.barangay} onChange={(e) => setAddress({...address, barangay: e.target.value.slice(0, 50)})} icon={<MapPin className="w-4 h-4" />} />
+                              <InputGroup compact={isBuyNowMode} label="City / Municipality" placeholder="Your City" value={address.city} onChange={(e) => setAddress({...address, city: e.target.value.slice(0, 50)})} icon={<MapPin className="w-4 h-4" />} />
+                              
+                              <InputGroup compact={isBuyNowMode} label="Province" placeholder="Your Province" value={address.province} onChange={(e) => setAddress({...address, province: e.target.value.slice(0, 50)})} icon={<MapPin className="w-4 h-4" />} />
+                              <InputGroup compact={isBuyNowMode} label="Postal Code" placeholder="ZIP Code" value={address.postalCode} onChange={(e) => setAddress({...address, postalCode: e.target.value.replace(/\D/g, "").slice(0, 4)})} icon={<MapPin className="w-4 h-4" />} />
+                              
+                               <div className="md:col-span-2">
+                                 <button 
+                                   type="button"
+                                   onClick={() => setShowMap(v => !v)}
+                                   className={`w-full py-4 border-2 border-dashed rounded-2xl flex items-center justify-center gap-3 text-[10px] font-bold uppercase tracking-widest transition-all ${
+                                     showMap
+                                       ? 'bg-[var(--rust)] border-[var(--rust)] text-white'
+                                       : address.latitude
+                                       ? 'bg-green-50 border-green-500 text-green-700'
+                                       : 'bg-[var(--input-bg)] border-[var(--border)] text-[var(--muted)] hover:border-[var(--rust)] hover:text-[var(--rust)]'
+                                   }`}
+                                 >
+                                   {showMap ? (
+                                     <><MapPin className="w-4 h-4" /> Hide Interactive Map</>
+                                   ) : address.latitude ? (
+                                     <><CheckCircle2 className="w-4 h-4" /> Location Pinned ({address.latitude.toFixed(4)}, {address.longitude.toFixed(4)})</>
+                                   ) : (
+                                     <><MapPin className="w-4 h-4" /> Drop Precise Map Pin (Optional)</>
+                                   )}
+                                 </button>
+  
+                                 <AnimatePresence>
+                                   {showMap && (
+                                     <motion.div
+                                       initial={{ opacity: 0, height: 0 }}
+                                       animate={{ opacity: 1, height: "auto" }}
+                                       exit={{ opacity: 0, height: 0 }}
+                                       transition={{ duration: 0.3 }}
+                                       className="overflow-hidden mt-4"
+                                     >
+                                       <div className="text-[10px] font-bold uppercase tracking-widest text-[var(--muted)] mb-3 ml-1">Interactive Heritage Map</div>
+                                       <LocationPickerMap
+                                         initialLat={address.latitude || 14.2952}
+                                         initialLng={address.longitude || 121.4647}
+                                         onLocationFound={({ lat, lng, address: geo }) => {
+                                           setAddress(prev => ({
+                                             ...prev,
+                                             latitude: lat,
+                                             longitude: lng,
+                                             street: geo.street || prev.street,
+                                             barangay: geo.barangay || prev.barangay,
+                                             city: geo.city || prev.city,
+                                             province: geo.province || prev.province,
+                                             postalCode: geo.postalCode || prev.postalCode,
+                                           }));
+                                         }}
+                                       />
+                                     </motion.div>
+                                   )}
+                                 </AnimatePresence>
+                               </div>
+                           </div>
+                         )}
                       </motion.div>
+
                     )}
 
                     {currentStep === 2 && (
@@ -456,7 +546,7 @@ export default function CheckoutPage() {
                           </div>
 
                           <div className={`grid grid-cols-1 md:grid-cols-2 ${isBuyNowMode ? 'gap-6 pt-2' : 'gap-10 pt-6'}`}>
-                             <InputGroup compact={isBuyNowMode} label="8-Digit Transaction Reference" placeholder="Scan result reference..." value={gcashRef} onChange={(e) => setGcashRef(e.target.value)} icon={<Lock className="w-4 h-4" />} />
+                             <InputGroup compact={isBuyNowMode} label="GCash Reference No." placeholder="Enter transaction digits..." value={gcashRef} onChange={(e) => setGcashRef(e.target.value.replace(/\D/g, "").slice(0, 16))} icon={<Lock className="w-4 h-4" />} />
                              <div className="space-y-4">
                                 <label className="text-[10px] font-bold uppercase tracking-widest text-[var(--muted)] ml-1">Fulfillment Proof Screenshot</label>
                                 <button 
@@ -494,53 +584,50 @@ export default function CheckoutPage() {
                         </motion.div>
                     )}
                   </AnimatePresence>
-               </div>
-
-               {/* Right: Real-time Order Monitor */}
+               </div>               {/* Right: Real-time Order Monitor */}
                <div className={isBuyNowMode ? 'lg:col-span-5 lg:sticky lg:top-20 space-y-6' : 'lg:col-span-4 lg:sticky lg:top-24 space-y-8'}>
-                  <div className={`artisan-card p-0 overflow-hidden border-none bg-[var(--charcoal)] text-white relative ${isBuyNowMode ? 'shadow-2xl' : 'shadow-3xl'}`}>
-                     <div className="absolute top-0 right-0 p-12 opacity-5 translate-x-1/3 -translate-y-1/3"><ShoppingCart className="w-48 h-48" /></div>
+                  <div className={`artisan-card p-0 overflow-hidden border-2 border-[var(--rust)]/10 bg-white relative ${isBuyNowMode ? 'shadow-2xl' : 'shadow-3xl'}`}>
                      
                      <div className={`relative z-10 ${isBuyNowMode ? 'p-8 space-y-6' : 'p-10 space-y-8'}`}>
-                        <div className={`flex items-center justify-between border-b border-white/10 ${isBuyNowMode ? 'pb-4' : 'pb-6'}`}>
-                           <h3 className="text-xs font-bold uppercase tracking-[0.3em] text-white/40 italic">Commissions Overview</h3>
-                           <div className="px-3 py-1 bg-white/10 rounded-lg text-[9px] font-bold uppercase tracking-widest">{cartItems.length} Piece{cartItems.length > 1 ? 's' : ''}</div>
+                        <div className={`flex items-center justify-between border-b border-[var(--border)] ${isBuyNowMode ? 'pb-4' : 'pb-6'}`}>
+                           <h3 className="text-[10px] font-bold uppercase tracking-[0.3em] text-[var(--muted)]">Commissions Overview</h3>
+                           <div className="px-3 py-1 bg-[var(--rust)] text-white rounded-lg text-[9px] font-bold uppercase tracking-widest leading-none flex items-center">{cartItems.length} {cartItems.length > 1 ? 'Pieces' : 'Piece'}</div>
                         </div>
 
                         <div className={`overflow-y-auto pr-2 custom-scrollbar ${isBuyNowMode ? 'space-y-4 max-h-[240px]' : 'space-y-6 max-h-[300px]'}`}>
                            {cartItems.map((item, idx) => (
                               <div key={idx} className={`flex group ${isBuyNowMode ? 'gap-4' : 'gap-5'}`}>
-                                 <div className={`bg-white/10 relative overflow-hidden shrink-0 border border-white/5 shadow-inner ${isBuyNowMode ? 'w-14 h-[4.5rem] rounded-lg' : 'w-16 h-20 rounded-xl'}`}>
-                                    <img src={item.image?.[0] || item.image || item.product?.image?.[0]} alt={item.name} className="w-full h-full object-cover opacity-60 group-hover:opacity-100 transition-opacity" />
+                                 <div className={`bg-[var(--cream)]/30 relative overflow-hidden shrink-0 border border-[var(--border)] shadow-sm ${isBuyNowMode ? 'w-14 h-[4.5rem] rounded-lg' : 'w-16 h-20 rounded-xl'}`}>
+                                    <img src={item.image?.[0] || item.image || item.product?.image?.[0]} alt={item.name} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" />
                                  </div>
                                  <div className="flex-1 space-y-1">
-                                    <div className={`font-bold tracking-tight line-clamp-1 group-hover:text-[var(--rust)] transition-colors ${isBuyNowMode ? 'text-[0.95rem]' : 'text-sm'}`}>{item.name}</div>
-                                    <div className="text-[9px] font-bold text-white/40 uppercase tracking-widest">
-                                      {item.variation && <span className="text-[var(--rust)]">{item.variation} • </span>}
-                                      Master-Fit: {item.size} • Qty: {item.quantity}
+                                    <div className={`font-bold tracking-tight line-clamp-2 text-[var(--charcoal)] leading-tight ${isBuyNowMode ? 'text-[0.95rem]' : 'text-sm'}`}>{item.name}</div>
+                                    <div className="text-[9px] font-bold text-[var(--muted)] uppercase tracking-widest flex items-center gap-2">
+                                      {item.variation && <><span className="text-[var(--rust)]">{item.variation}</span> <div className="w-1 h-1 rounded-full bg-[var(--muted)]/30" /></>}
+                                      {item.size} • Qty {item.quantity}
                                     </div>
-                                    <div className="text-xs font-serif font-bold text-[var(--rust)] tracking-tight">₱{(parsePrice(item.price) * item.quantity).toLocaleString()}</div>
+                                    <div className="text-xs font-serif font-bold text-[var(--rust)] tracking-tight">₱{(parsePrice(item.price)).toLocaleString()}</div>
                                  </div>
                               </div>
                            ))}
                         </div>
 
-                        <div className={`border-t border-white/10 space-y-4 ${isBuyNowMode ? 'pt-6' : 'pt-8'}`}>
-                           <div className="flex justify-between items-center text-[10px] font-bold uppercase tracking-widest text-white/40">
+                        <div className={`border-t border-[var(--border)] space-y-4 ${isBuyNowMode ? 'pt-6' : 'pt-8'}`}>
+                           <div className="flex justify-between items-center text-[10px] font-bold uppercase tracking-widest text-[var(--muted)]">
                               <span>Heritage Value</span>
-                              <span className="text-white">₱{subtotal.toLocaleString()}</span>
+                              <span className="text-[var(--charcoal)] font-extrabold">₱{subtotal.toLocaleString()}</span>
                            </div>
-                           <div className="flex justify-between items-center text-[10px] font-bold uppercase tracking-widest text-white/40">
-                              <span>Estimated Arrival</span>
-                              <span className="text-white">{maxDays || 3}-{Number(maxDays || 3) + 2} business days</span>
-                           </div>
-                           <div className="flex justify-between items-center text-[10px] font-bold uppercase tracking-widest text-white/40">
+                           <div className="flex justify-between items-center text-[10px] font-bold uppercase tracking-widest text-[var(--muted)]">
                               <span>Courier Logistics</span>
-                              <span className="text-white">₱{shipping.toLocaleString()}</span>
+                              <span className="text-green-600 font-extrabold">{shipping > 0 ? `₱${shipping.toLocaleString()}` : "FREE"}</span>
                            </div>
-                           <div className="pt-6 flex justify-between items-end">
-                              <span className="text-xs font-bold uppercase tracking-[0.3em] mb-1 opacity-50">Final Due</span>
-                              <span className={`font-serif font-bold text-[var(--rust)] tracking-tighter shadow-sm ${isBuyNowMode ? 'text-4xl' : 'text-5xl'}`}>₱{total.toLocaleString()}</span>
+                           <div className="flex justify-between items-center text-[10px] font-bold uppercase tracking-widest text-[var(--muted)]">
+                              <span>Estimated Arrival</span>
+                              <span className="text-[var(--charcoal)] font-extrabold">{maxDays || 3}-{Number(maxDays || 3) + 2} Days</span>
+                           </div>
+                           <div className="pt-2 flex justify-between items-end border-t border-[var(--border)] border-dashed mt-2 pt-6">
+                              <span className="text-[11px] font-bold uppercase tracking-[0.3em] text-[var(--charcoal)]">Final Due</span>
+                              <span className={`font-serif font-bold text-[var(--rust)] tracking-tighter ${isBuyNowMode ? 'text-4xl' : 'text-5xl'}`}>₱{total.toLocaleString()}</span>
                            </div>
                         </div>
                      </div>
@@ -548,7 +635,7 @@ export default function CheckoutPage() {
                      <button 
                        onClick={handleNext}
                        disabled={loading}
-                       className={`w-full bg-[var(--rust)] text-xs font-extrabold uppercase tracking-[0.3em] flex items-center justify-center gap-3 active:scale-95 transition-all overflow-hidden relative group/btn disabled:opacity-50 z-20 ${isBuyNowMode ? 'py-5' : 'py-7'}`}
+                       className={`w-full bg-[var(--rust)] text-[10px] font-extrabold uppercase tracking-[0.3em] flex items-center justify-center gap-3 active:scale-95 transition-all overflow-hidden relative group/btn disabled:opacity-50 z-20 ${isBuyNowMode ? 'py-5' : 'py-7'}`}
                      >
                         <div className="absolute inset-0 bg-white/10 translate-x-[-100%] group-hover/btn:translate-x-[100%] transition-transform duration-1000" />
                         {loading ? <Loader2 className="w-6 h-6 animate-spin mx-auto" /> : (
@@ -556,6 +643,7 @@ export default function CheckoutPage() {
                         )}
                      </button>
                   </div>
+
 
                   <div className={`artisan-card bg-green-50/50 border-green-100 text-green-800 flex items-start gap-5 shadow-inner ${isBuyNowMode ? 'p-6' : 'p-8'}`}>
                      <ShieldCheck className="w-8 h-8 shrink-0 mt-1 opacity-60" />

@@ -17,27 +17,45 @@ import {
   X 
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import { api } from "@/lib/api";
+import { useSocket } from "@/context/SocketContext";
+import {
+  formatNotificationTime,
+  getNotificationHref,
+  getNotificationTypeKey,
+  getNotificationTypeLabel,
+  normalizeNotification,
+} from "@/lib/notifications";
+import { Loader2 } from "lucide-react";
 
 const sidebarData = [
-  { group: "PLATFORM MONITORING", items: [
+  { group: "SYSTEM STATUS", items: [
     { label: "Dashboard", icon: <BarChart3 className="w-5 h-5" />, path: "/admin/dashboard" },
-    { label: "Recent Activity", icon: <ChevronRight className="w-5 h-5" />, path: "/admin/activity" },
+    { label: "Recent Updates", icon: <ChevronRight className="w-5 h-5" />, path: "/admin/activity" },
   ]},
-  { group: "USER MANAGEMENT", items: [
+  { group: "USER MANAGER", items: [
     { label: "Customers", icon: <Users className="w-5 h-5" />, path: "/admin/users" },
-    { label: "Seller Verification", icon: <Store className="w-5 h-5" />, path: "/admin/sellers" },
+    { label: "Seller Requests", icon: <Store className="w-5 h-5" />, path: "/admin/sellers" },
   ]},
-  { group: "CONTENT MODERATION", items: [
-    { label: "Global Products", icon: <ShoppingBag className="w-5 h-5" />, path: "/admin/products" },
+  { group: "PRODUCT CONTROL", items: [
+    { label: "All Products", icon: <ShoppingBag className="w-5 h-5" />, path: "/admin/products" },
   ]},
-  { group: "SYSTEM SETTINGS", items: [
-    { label: "Revenue Targets", icon: <Settings className="w-5 h-5" />, path: "/admin/settings" },
+  { group: "APP SETTINGS", items: [
+    { label: "Sales Goals", icon: <Settings className="w-5 h-5" />, path: "/admin/settings" },
   ]},
 ];
 
+const mobileNavItems = [
+  { label: "Dashboard", icon: <BarChart3 />, path: "/admin/dashboard" },
+  { label: "Customers", icon: <Users />, path: "/admin/users" },
+  { label: "Products", icon: <ShoppingBag />, path: "/admin/products" },
+  { label: "Settings", icon: <Settings />, path: "/admin/settings" },
+];
+
+import MobileBottomNav from "./MobileBottomNav";
+
 export default function AdminLayout({ children }) {
   const pathname = usePathname();
-  const [mobileMenu, setMobileMenu] = useState(false);
   const [user, setUser] = useState(null);
 
   React.useEffect(() => {
@@ -55,9 +73,47 @@ export default function AdminLayout({ children }) {
     setUser(storedUser);
   }, []);
 
+  const [notificationsOpen, setNotificationsOpen] = useState(false);
+  const [notifications, setNotifications] = useState([]);
+  const [notificationsLoading, setNotificationsLoading] = useState(false);
+
+  const { socket } = useSocket();
+
+  const fetchNotifications = React.useCallback(async ({ silent = false } = {}) => {
+    const token = localStorage.getItem("token");
+    if (!token) return;
+    if (!silent) setNotificationsLoading(true);
+    try {
+      const res = await api.get("/notifications");
+      setNotifications(Array.isArray(res.data) ? res.data.map(normalizeNotification) : []);
+    } catch (error) {
+    } finally {
+      if (!silent) setNotificationsLoading(false);
+    }
+  }, []);
+
+  React.useEffect(() => {
+    fetchNotifications({ silent: true });
+    if (socket) {
+      socket.on('new_notification', (incoming) => {
+        setNotifications(prev => [normalizeNotification(incoming), ...prev]);
+      });
+    }
+    return () => { if (socket) socket.off('new_notification'); };
+  }, [socket, fetchNotifications]);
+
+  const unreadCount = notifications.filter(n => !n.read).length;
+
+  const handleNotificationClick = async (notification) => {
+    if (!notification.read) {
+      try { await api.put(`/notifications/${notification.id}/read`, {}); } catch (e) {}
+    }
+    setNotificationsOpen(false);
+  };
+
   const handleLogout = () => {
     localStorage.clear();
-    window.location.href = "/login";
+    window.location.href = "/";
   };
 
   return (
@@ -74,7 +130,7 @@ export default function AdminLayout({ children }) {
               LUMBARONG
             </Link>
             <div className="flex items-center gap-1.5 mt-2 px-1 text-[var(--rust)] font-bold tracking-widest text-[10px]">
-              <ShieldCheck className="w-3 h-3" /> ADMINISTRATION
+              <ShieldCheck className="w-3 h-3" /> CONTROL PANEL
             </div>
           </div>
 
@@ -117,9 +173,9 @@ export default function AdminLayout({ children }) {
             </div>
             <button 
               onClick={handleLogout}
-              className="flex items-center gap-3 w-full px-4 py-3.5 bg-red-50 text-red-600 rounded-xl hover:bg-red-100 transition-all font-bold text-xs tracking-widest"
+              className="flex items-center gap-3 w-full px-4 py-3.5 bg-red-50 text-red-600 rounded-xl hover:bg-red-100 transition-all font-bold text-xs tracking-widest uppercase"
             >
-              <LogOut className="w-4 h-4" /> LOGOUT SESSION
+              <LogOut className="w-4 h-4" /> LOG OUT
             </button>
           </div>
         </div>
@@ -131,21 +187,7 @@ export default function AdminLayout({ children }) {
         <header className="sticky top-0 z-40 bg-white/80 backdrop-blur-md border-b border-[var(--border)] h-[72px] flex items-center shrink-0">
           <div className="container mx-auto px-10 flex items-center justify-between">
             <div className="flex items-center gap-4 lg:flex-1">
-              <button 
-                onClick={() => setMobileMenu(true)} 
-                className="lg:hidden p-2 hover:bg-[var(--cream)] rounded-lg transition-all"
-              >
-                <Menu className="w-5 h-5 text-[var(--muted)]" />
-              </button>
-              
-              <div className="hidden lg:flex items-center bg-[var(--input-bg)] w-full max-w-lg rounded-xl px-4 py-2.5 border border-transparent focus-within:border-[var(--rust)] focus-within:bg-white transition-all">
-                <Search className="w-4 h-4 text-[var(--muted)] mr-3" />
-                <input 
-                  type="text" 
-                  placeholder="Global system search..." 
-                  className="bg-transparent w-full text-sm outline-none text-[var(--charcoal)]"
-                />
-              </div>
+              {/* Search logic disabled based on UI polish request */}
             </div>
 
             <div className="flex items-center gap-4">
@@ -156,11 +198,46 @@ export default function AdminLayout({ children }) {
                 </div>
               </div>
               <div className="w-[1px] h-8 bg-[var(--border)] hidden md:block mx-2" />
-              <button className="relative w-10 h-10 flex items-center justify-center rounded-xl bg-[var(--cream)] text-[var(--charcoal)] hover:text-[var(--rust)] transition-all">
-                <Bell className="w-5 h-5" />
-                <span className="absolute top-2.5 right-2.5 w-2 h-2 bg-[var(--rust)] rounded-full border-2 border-white" />
-              </button>
-              <div className="text-sm font-bold ml-2">Mar 19, 2026</div>
+              <div className="relative">
+                <button 
+                  onClick={() => { setNotificationsOpen(!notificationsOpen); if(!notificationsOpen) fetchNotifications(); }}
+                  className="relative w-10 h-10 flex items-center justify-center rounded-xl bg-[var(--cream)] text-[var(--charcoal)] hover:text-[var(--rust)] transition-all"
+                >
+                  <Bell className="w-5 h-5" />
+                  {unreadCount > 0 && <span className="absolute top-2.5 right-2.5 w-2 h-2 bg-[var(--rust)] rounded-full border-2 border-white" />}
+                </button>
+                
+                <AnimatePresence>
+                  {notificationsOpen && (
+                    <motion.div
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: 10 }}
+                      className="absolute right-0 top-full mt-4 w-80 bg-white rounded-2xl shadow-2xl border border-[var(--border)] overflow-hidden z-50"
+                    >
+                      <div className="p-4 border-b border-[var(--border)] font-bold text-xs uppercase tracking-widest text-[var(--rust)] bg-gray-50">Notifications</div>
+                      <div className="max-h-96 overflow-y-auto">
+                        {notificationsLoading ? (
+                          <div className="p-8 flex justify-center"><Loader2 className="w-6 h-6 animate-spin text-[var(--rust)]" /></div>
+                        ) : notifications.length === 0 ? (
+                          <div className="p-8 text-center text-[10px] uppercase font-bold text-[var(--muted)]">No alerts detected</div>
+                        ) : (
+                          notifications.slice(0, 5).map(n => (
+                            <button key={n.id} onClick={() => handleNotificationClick(n)} className={`w-full p-4 text-left border-b border-[var(--border)] hover:bg-gray-50 flex flex-col gap-1 ${n.read ? 'opacity-60' : 'bg-red-50/20'}`}>
+                              <div className="text-[10px] font-bold text-[var(--rust)] uppercase">{n.title}</div>
+                              <div className="text-[11px] font-medium text-[var(--charcoal)] line-clamp-2">{n.message}</div>
+                              <div className="text-[8px] text-[var(--muted)] font-bold">{formatNotificationTime(n.createdAt)}</div>
+                            </button>
+                          ))
+                        )}
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
+              <div className="text-sm font-bold ml-2">
+                {new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+              </div>
             </div>
           </div>
         </header>
@@ -171,37 +248,10 @@ export default function AdminLayout({ children }) {
             {children}
           </div>
         </main>
+
+        <MobileBottomNav items={mobileNavItems} />
       </div>
 
-      {/* Mobile Sidebar Overlay */}
-      <AnimatePresence>
-        {mobileMenu && (
-          <>
-            <motion.div 
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              onClick={() => setMobileMenu(false)}
-              className="fixed inset-0 z-50 bg-[#1C1917]/40 backdrop-blur-sm lg:hidden"
-            />
-            <motion.aside 
-              initial={{ x: -280 }}
-              animate={{ x: 0 }}
-              exit={{ x: -280 }}
-              className="fixed left-0 top-0 bottom-0 z-50 w-[280px] bg-white lg:hidden overflow-y-auto shadow-2xl"
-            >
-              {/* Similar sidebar content for mobile */}
-              <div className="p-8">
-                <div className="flex items-center justify-between mb-10">
-                  <div className="font-serif text-2xl font-bold">LUMBARONG</div>
-                  <button onClick={() => setMobileMenu(false)} className="p-2"><X className="w-5 h-5" /></button>
-                </div>
-                {/* Repurpose sidebar data mapping here */}
-              </div>
-            </motion.aside>
-          </>
-        )}
-      </AnimatePresence>
     </div>
   );
 }

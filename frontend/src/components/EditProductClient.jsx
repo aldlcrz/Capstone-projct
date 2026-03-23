@@ -5,12 +5,13 @@ import { Upload, Plus, X, Loader2, ArrowLeft, Save, Camera, Image as ImageIcon }
 import { motion } from "framer-motion";
 import { api } from "@/lib/api";
 import Link from "next/link";
-import { useParams, useRouter } from "next/navigation";
+import { useSearchParams, useRouter } from "next/navigation";
 import { Camera as CapCamera, CameraResultType } from "@capacitor/camera";
 import { Capacitor } from "@capacitor/core";
 
 export default function EditProductClient() {
-  const { id } = useParams();
+  const searchParams = useSearchParams();
+  const id = searchParams.get("id");
   const router = useRouter();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -29,6 +30,11 @@ export default function EditProductClient() {
   const [newVariations, setNewVariations] = useState([]);
 
   useEffect(() => {
+    if (!id) {
+      setLoading(false);
+      return;
+    }
+
     const fetchProduct = async () => {
       try {
         const res = await api.get(`/products/${id}`);
@@ -51,6 +57,30 @@ export default function EditProductClient() {
     };
     fetchProduct();
   }, [id]);
+
+  if (loading) {
+    return (
+      <SellerLayout>
+        <div className="py-24 text-center text-[var(--muted)] animate-pulse italic">Loading product editor...</div>
+      </SellerLayout>
+    );
+  }
+
+  if (!id) {
+    return (
+      <SellerLayout>
+        <div className="space-y-6">
+          <Link href="/seller/inventory" className="inline-flex items-center gap-2 text-sm text-[var(--rust)] hover:underline">
+            <ArrowLeft className="w-4 h-4" />
+            Back to Inventory
+          </Link>
+          <div className="py-20 text-center text-[var(--muted)]">
+            Select a product from inventory before opening the editor.
+          </div>
+        </div>
+      </SellerLayout>
+    );
+  }
 
   const handleAddVariation = () => {
     setNewVariations([...newVariations, { file: null, preview: null, variation: "" }]);
@@ -143,14 +173,6 @@ export default function EditProductClient() {
     }
   };
 
-  if (loading) return (
-    <SellerLayout>
-      <div className="h-[60vh] flex items-center justify-center">
-        <Loader2 className="w-10 h-10 animate-spin text-[var(--rust)] opacity-30" />
-      </div>
-    </SellerLayout>
-  );
-
   return (
     <SellerLayout>
       <div className="max-w-5xl mx-auto mb-20 animate-fade-in">
@@ -168,25 +190,28 @@ export default function EditProductClient() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                 <div className="space-y-2">
                   <label className="text-[10px] font-bold uppercase tracking-widest text-[var(--muted)] ml-1">Masterpiece Name</label>
-                  <input 
-                    type="text" 
-                    value={formData.name}
-                    onChange={(e) => setFormData({...formData, name: e.target.value})}
-                    className="w-full bg-[var(--input-bg)] border-none rounded-2xl p-5 text-sm font-medium focus:ring-2 focus:ring-[var(--rust)]/20 transition-all placeholder:opacity-30"
-                    placeholder="e.g., Premium Lumban Silk Barong"
-                    required
-                  />
+                    <input 
+                      type="text" 
+                      value={formData.name}
+                      maxLength={100}
+                      onChange={(e) => setFormData({...formData, name: e.target.value})}
+                      className="w-full bg-[var(--input-bg)] border-none rounded-2xl p-5 text-sm font-medium focus:ring-2 focus:ring-[var(--rust)]/20 transition-all placeholder:opacity-30"
+                      placeholder="e.g., Premium Lumban Silk Barong"
+                      required
+                    />
                 </div>
                 <div className="space-y-2">
                   <label className="text-[10px] font-bold uppercase tracking-widest text-[var(--muted)] ml-1">Valuation (PHP)</label>
-                  <input 
-                    type="number" 
-                    value={formData.price}
-                    onChange={(e) => setFormData({...formData, price: e.target.value})}
-                    className="w-full bg-[var(--input-bg)] border-none rounded-2xl p-5 text-sm font-medium focus:ring-2 focus:ring-[var(--rust)]/20 transition-all placeholder:opacity-30"
-                    placeholder="0.00"
-                    required
-                  />
+                    <input 
+                      type="number" 
+                      min="0.01"
+                      step="0.01"
+                      value={formData.price}
+                      onChange={(e) => setFormData({...formData, price: e.target.value})}
+                      className="w-full bg-[var(--input-bg)] border-none rounded-2xl p-5 text-sm font-medium focus:ring-2 focus:ring-[var(--rust)]/20 transition-all placeholder:opacity-30"
+                      placeholder="0.00"
+                      required
+                    />
                 </div>
                 <div className="space-y-2">
                   <label className="text-[10px] font-bold uppercase tracking-widest text-[var(--muted)] ml-1">Category</label>
@@ -204,45 +229,52 @@ export default function EditProductClient() {
                 </div>
                 <div className="space-y-2">
                   <label className="text-[10px] font-bold uppercase tracking-widest text-[var(--muted)] ml-1">Inventory Level</label>
-                  <input 
-                    type="number" 
-                    value={formData.stock}
-                    onChange={(e) => setFormData({...formData, stock: e.target.value})}
-                    className="w-full bg-[var(--input-bg)] border-none rounded-2xl p-5 text-sm font-medium focus:ring-2 focus:ring-[var(--rust)]/20 transition-all placeholder:opacity-30"
-                    placeholder="Quantity in stock"
-                  />
+                    <input 
+                      type="number" 
+                      min="0"
+                      step="1"
+                      value={formData.stock}
+                      onChange={(e) => setFormData({...formData, stock: e.target.value})}
+                      className="w-full bg-[var(--input-bg)] border-none rounded-2xl p-5 text-sm font-medium focus:ring-2 focus:ring-[var(--rust)]/20 transition-all placeholder:opacity-30"
+                      placeholder="Quantity in stock"
+                    />
                 </div>
                 <div className="space-y-2">
                   <label className="text-[10px] font-bold uppercase tracking-widest text-[var(--muted)] ml-1">Shipping Fee (PHP)</label>
-                  <input 
-                    type="number" 
-                    value={formData.shippingFee}
-                    onChange={(e) => setFormData({...formData, shippingFee: e.target.value})}
-                    className="w-full bg-[var(--input-bg)] border-none rounded-2xl p-5 text-sm font-medium focus:ring-2 focus:ring-[var(--rust)]/20 transition-all placeholder:opacity-30"
-                    placeholder="0.00"
-                  />
+                    <input 
+                      type="number" 
+                      min="0"
+                      step="0.01"
+                      value={formData.shippingFee}
+                      onChange={(e) => setFormData({...formData, shippingFee: e.target.value})}
+                      className="w-full bg-[var(--input-bg)] border-none rounded-2xl p-5 text-sm font-medium focus:ring-2 focus:ring-[var(--rust)]/20 transition-all placeholder:opacity-30"
+                      placeholder="0.00"
+                    />
                 </div>
                 <div className="space-y-2">
                   <label className="text-[10px] font-bold uppercase tracking-widest text-[var(--muted)] ml-1">Shipping Days</label>
-                  <input 
-                    type="number" 
-                    value={formData.shippingDays}
-                    onChange={(e) => setFormData({...formData, shippingDays: e.target.value})}
-                    className="w-full bg-[var(--input-bg)] border-none rounded-2xl p-5 text-sm font-medium focus:ring-2 focus:ring-[var(--rust)]/20 transition-all placeholder:opacity-30"
-                    placeholder="Estimated delivery days"
-                  />
+                    <input 
+                      type="number" 
+                      min="1"
+                      step="1"
+                      value={formData.shippingDays}
+                      onChange={(e) => setFormData({...formData, shippingDays: e.target.value})}
+                      className="w-full bg-[var(--input-bg)] border-none rounded-2xl p-5 text-sm font-medium focus:ring-2 focus:ring-[var(--rust)]/20 transition-all placeholder:opacity-30"
+                      placeholder="Estimated delivery days"
+                    />
                 </div>
               </div>
 
               <div className="space-y-2">
                 <label className="text-[10px] font-bold uppercase tracking-widest text-[var(--muted)] ml-1">Artisan Narrative</label>
-                <textarea 
-                  value={formData.description}
-                  onChange={(e) => setFormData({...formData, description: e.target.value})}
-                  className="w-full bg-[var(--input-bg)] border-none rounded-2xl p-5 text-sm font-medium focus:ring-2 focus:ring-[var(--rust)]/20 transition-all min-h-[150px] resize-none placeholder:opacity-30"
-                  placeholder="Describe the craftsmanship and materials of this piece..."
-                  required
-                />
+                  <textarea 
+                    value={formData.description}
+                    maxLength={2000}
+                    onChange={(e) => setFormData({...formData, description: e.target.value})}
+                    className="w-full bg-[var(--input-bg)] border-none rounded-2xl p-5 text-sm font-medium focus:ring-2 focus:ring-[var(--rust)]/20 transition-all min-h-[150px] resize-none placeholder:opacity-30"
+                    placeholder="Describe the craftsmanship and materials of this piece..."
+                    required
+                  />
               </div>
 
               <div className="space-y-6 pt-4">

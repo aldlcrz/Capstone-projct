@@ -42,6 +42,14 @@ export default function AdminSettings() {
     try {
       setIsSaving(true);
       setError(null);
+      // Frontend Guardian
+      if (commissionRate < 0 || commissionRate > 100) {
+        throw new Error("Commission rate must be between 0 and 100%");
+      }
+      if (revenueTarget < 0) {
+        throw new Error("Growth target cannot be negative");
+      }
+
       await api.put("/admin/settings", {
         revenueTarget,
         commissionRate,
@@ -57,13 +65,23 @@ export default function AdminSettings() {
     }
   };
 
+  const handlePurgeCache = async () => {
+    if (!window.confirm("Are you sure you want to wipe platform temporary caches? This action will reset live session counters.")) return;
+    try {
+      await api.delete("/admin/purge-cache");
+      alert("Platform caches purged successfully!");
+    } catch (err) {
+      alert("Failed to purge platform caches.");
+    }
+  };
+
   return (
     <AdminLayout>
       <div className="max-w-6xl mx-auto space-y-12 mb-20 animate-fade-in">
         <div>
-          <div className="eyebrow">Enterprise Governance</div>
+          <div className="eyebrow">Main App Settings</div>
           <h1 className="font-serif text-4xl font-bold tracking-tight text-[var(--charcoal)] uppercase">
-            Platform <span className="text-[var(--rust)] italic lowercase">Parameters</span>
+            App <span className="text-[var(--rust)] italic lowercase">Settings</span>
           </h1>
         </div>
 
@@ -74,8 +92,8 @@ export default function AdminSettings() {
             <div className="artisan-card p-12 space-y-10 shadow-2xl relative overflow-hidden bg-white">
                <div className="absolute top-0 right-0 p-10 opacity-5 group-hover:scale-110 transition-transform"><Target className="w-24 h-24" /></div>
                <div>
-                  <h3 className="text-xl font-bold text-[var(--charcoal)] mb-2 flex items-center gap-3"><TrendingUp className="w-6 h-6 text-[var(--rust)]" /> Fiscal Performance Goals</h3>
-                  <p className="text-xs text-[var(--muted)] tracking-wider uppercase font-bold opacity-60">Set quarterly revenue milestones for the Lumban heritage marketplace.</p>
+                  <h3 className="text-xl font-bold text-[var(--charcoal)] mb-2 flex items-center gap-3"><TrendingUp className="w-6 h-6 text-[var(--rust)]" /> Sales Goals</h3>
+                  <p className="text-xs text-[var(--muted)] tracking-wider uppercase font-bold opacity-60">Set the target amount of money we want to make this month.</p>
                </div>
 
                <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
@@ -92,7 +110,7 @@ export default function AdminSettings() {
                      </div>
                   </div>
                   <div className="space-y-4">
-                     <label className="text-[10px] font-bold text-[var(--muted)] uppercase tracking-[0.2em] flex items-center gap-2">Artisan Support Rate (%)</label>
+                     <label className="text-[10px] font-bold text-[var(--muted)] uppercase tracking-[0.2em] flex items-center gap-2">Seller Fee Rate (%)</label>
                      <div className="relative group">
                         <input 
                            type="number" 
@@ -112,7 +130,7 @@ export default function AdminSettings() {
                      className="btn-primary px-10 py-4 shadow-xl flex items-center gap-2"
                    >
                       {isSaving ? <Loader2 className="w-4.5 h-4.5 animate-spin" /> : <Save className="w-4.5 h-4.5" />}
-                      {isSaving ? "Synchronizing..." : "Sync Global Governance"}
+                      {isSaving ? "Saving..." : "Save All Settings"}
                    </button>
                 </div>
 
@@ -126,24 +144,24 @@ export default function AdminSettings() {
 
             {/* Platform Policy Sliders */}
             <div className="artisan-card p-10 space-y-8 bg-white/50 backdrop-blur-md shadow-2xl">
-               <h3 className="text-xl font-bold flex items-center gap-3"><ShieldCheck className="w-6 h-6 text-[var(--rust)]" /> Security & Policy Matrix</h3>
+               <h3 className="text-xl font-bold flex items-center gap-3"><ShieldCheck className="w-6 h-6 text-[var(--rust)]" /> App Rules</h3>
                
                <div className="divide-y divide-[var(--border)]">
                   <PolicySwitch 
-                    label="Artisan Verification Wall" 
-                    desc="Require manual document audit for all new workshop registrations."
+                    label="Check Seller ID" 
+                    desc="Ask for IDs when a new seller signs up."
                     active={verificationRequired}
                     toggle={() => setVerificationRequired(!verificationRequired)}
                   />
                    <PolicySwitch 
-                     label="Automated Support Threads" 
-                     desc="Enable heritage-AI assisted initial responses for common inquiries."
+                     label="Auto Help" 
+                     desc="Use AI to answer common questions for customers."
                      active={automatedSupport}
                      toggle={() => setAutomatedSupport(!automatedSupport)}
                    />
                    <PolicySwitch 
-                     label="Public Revenue Ledger" 
-                     desc="Display global earnings statistics on the public landing page hero."
+                     label="Show Stats on Start Page" 
+                     desc="Show total sales amount on the public landing page."
                      active={publicLedger}
                      toggle={() => setPublicLedger(!publicLedger)}
                    />
@@ -156,7 +174,7 @@ export default function AdminSettings() {
              <div className="artisan-card p-8 bg-[var(--bark)] text-white shadow-2xl relative overflow-hidden group">
                 <div className="absolute top-0 right-0 p-8 opacity-10 group-hover:rotate-12 transition-transform"><Clock className="w-20 h-20" /></div>
                 <div className="space-y-6 relative z-10">
-                   <h3 className="font-serif text-xl font-bold italic tracking-tight underline decoration-[var(--rust)] underline-offset-8">Audit Log Snapshot</h3>
+                   <h3 className="font-serif text-xl font-bold italic tracking-tight underline decoration-[var(--rust)] underline-offset-8">Recent Changes</h3>
                    <div className="space-y-4">
                       <AuditItem user="Root Admin" action="Updated verification flag" time="2h ago" />
                       <AuditItem user="System" action="Monthly stats broadcast" time="5h ago" />
@@ -167,9 +185,9 @@ export default function AdminSettings() {
              </div>
 
              <div className="artisan-card p-8 border-2 border-red-100 bg-red-50/50 space-y-6 shadow-sm">
-                <div className="text-xs font-bold text-red-600 uppercase tracking-widest flex items-center gap-2 border-b border-red-100 pb-2"><Trash2 className="w-4 h-4" /> Termination Zone</div>
-                <p className="text-[10px] text-red-700/60 leading-relaxed font-bold">This section is for high-level database purges and infrastructure resets. Procedural caution is mandatory.</p>
-                <button className="w-full py-3 bg-red-600 text-white rounded-xl text-[10px] font-bold uppercase tracking-widest shadow-xl hover:bg-red-700 transition-all">Wipe Platform Temporary Caches</button>
+                <div className="text-xs font-bold text-red-600 uppercase tracking-widest flex items-center gap-2 border-b border-red-100 pb-2"><Trash2 className="w-4 h-4" /> Danger Zone</div>
+                <p className="text-[10px] text-red-700/60 leading-relaxed font-bold">This section is for clearing data. Please be very careful here.</p>
+                <button onClick={handlePurgeCache} className="w-full py-3 bg-red-600 text-white rounded-xl text-[10px] font-bold uppercase tracking-widest shadow-xl hover:bg-red-700 transition-all">Clear App Cache</button>
              </div>
           </div>
         </div>

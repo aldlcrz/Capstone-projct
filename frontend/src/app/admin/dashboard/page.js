@@ -105,6 +105,18 @@ export default function AdminDashboard() {
     };
   }, [socket]);
 
+  const handleDownloadReport = () => {
+    const csvContent = "data:text/csv;charset=utf-8,Metric,Value\n" 
+      + Object.entries(stats).map(e => `${e[0]},${e[1]}`).join("\n");
+    const encodedUri = encodeURI(csvContent);
+    const link = document.createElement("a");
+    link.setAttribute("href", encodedUri);
+    link.setAttribute("download", `lumba_rong_report_${new Date().toLocaleDateString()}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+  };
+
   if (!mounted) return null;
 
   return (
@@ -122,7 +134,7 @@ export default function AdminDashboard() {
             <button className="px-5 py-2.5 bg-white border border-[var(--border)] rounded-xl text-xs font-bold uppercase tracking-widest hover:border-[var(--rust)] hover:text-[var(--rust)] transition-all">
               Filter: Today
             </button>
-            <button className="px-5 py-2.5 bg-[var(--bark)] text-white rounded-xl text-xs font-bold uppercase tracking-widest hover:bg-[var(--rust)] transition-all">
+            <button onClick={handleDownloadReport} className="px-5 py-2.5 bg-[var(--bark)] text-white rounded-xl text-xs font-bold uppercase tracking-widest hover:bg-[var(--rust)] transition-all">
               Download Report
             </button>
           </div>

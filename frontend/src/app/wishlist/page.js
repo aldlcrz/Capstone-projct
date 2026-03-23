@@ -198,7 +198,7 @@ export default function WishlistPage() {
                                </span>
                             </div>
                             <Link 
-                               href={`/products/${item.productId}`}
+                               href={`/products?id=${item.productId}`}
                                className="text-[10px] font-extrabold text-[#1A1A1A] uppercase tracking-widest flex items-center gap-2 hover:text-[var(--rust)] transition-colors"
                             >
                                View Details <ArrowRight className="w-3 h-3" />

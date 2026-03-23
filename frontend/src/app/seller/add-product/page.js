@@ -136,6 +136,7 @@ export default function AddProductPage() {
                 <input 
                   type="text" 
                   required
+                  maxLength={100}
                   className="w-full px-4 py-3 bg-[var(--input-bg)] border border-[var(--border)] rounded-xl focus:outline-none focus:border-[var(--rust)] transition-all"
                   placeholder="e.g. Pina-Silk Formal Barong"
                   value={formData.name}
@@ -146,6 +147,7 @@ export default function AddProductPage() {
                 <label className="text-[10px] font-bold uppercase tracking-widest text-[var(--muted)]">Description</label>
                 <textarea 
                   required
+                  maxLength={2000}
                   rows={4}
                   className="w-full px-4 py-3 bg-[var(--input-bg)] border border-[var(--border)] rounded-xl focus:outline-none focus:border-[var(--rust)] transition-all resize-none"
                   placeholder="Describe the artisan craft, materials, and history..."
@@ -164,6 +166,7 @@ export default function AddProductPage() {
                     type="number" 
                     required
                     min="1"
+                    step="0.01"
                     className="w-full px-4 py-3 bg-[var(--input-bg)] border border-[var(--border)] rounded-xl focus:outline-none focus:border-[var(--rust)] transition-all"
                     placeholder="2500"
                     value={formData.price}
@@ -176,6 +179,7 @@ export default function AddProductPage() {
                     type="number" 
                     required
                     min="0"
+                    step="1"
                     className="w-full px-4 py-3 bg-[var(--input-bg)] border border-[var(--border)] rounded-xl focus:outline-none focus:border-[var(--rust)] transition-all"
                     placeholder="10"
                     value={formData.stock}
@@ -187,6 +191,7 @@ export default function AddProductPage() {
                   <input 
                     type="number" 
                     min="0"
+                    step="0.01"
                     className="w-full px-4 py-3 bg-[var(--input-bg)] border border-[var(--border)] rounded-xl focus:outline-none focus:border-[var(--rust)] transition-all"
                     placeholder="0"
                     value={formData.shippingFee}
@@ -198,6 +203,7 @@ export default function AddProductPage() {
                   <input 
                     type="number" 
                     min="1"
+                    step="1"
                     className="w-full px-4 py-3 bg-[var(--input-bg)] border border-[var(--border)] rounded-xl focus:outline-none focus:border-[var(--rust)] transition-all"
                     placeholder="3–7 days"
                     value={formData.shippingDays}

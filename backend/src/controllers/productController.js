@@ -1,4 +1,4 @@
-const { Product, User, Order, Message } = require('../models');
+const { Product, User, Order, Message, sequelize } = require('../models');
 const { Op } = require('sequelize');
 const { emitInventoryUpdated } = require('../utils/socketUtility');
 
@@ -142,8 +142,16 @@ exports.createProduct = async (req, res) => {
       return res.status(400).json({ message: 'Price must be a positive number' });
     }
 
-    if (Math.floor(Number(stock)) < 0) {
-      return res.status(400).json({ message: 'Stock cannot be negative' });
+    if (!Number.isInteger(Number(stock)) || Number(stock) < 0) {
+      return res.status(400).json({ message: 'Stock must be a non-negative integer' });
+    }
+
+    if (shippingFee !== undefined && (isNaN(Number(shippingFee)) || Number(shippingFee) < 0)) {
+      return res.status(400).json({ message: 'Shipping fee cannot be negative' });
+    }
+
+    if (shippingDays !== undefined && (!Number.isInteger(Number(shippingDays)) || Number(shippingDays) < 1)) {
+      return res.status(400).json({ message: 'Shipping days must be at least 1 day' });
     }
     
     let images = [];
@@ -191,8 +199,16 @@ exports.updateProduct = async (req, res) => {
       return res.status(400).json({ message: 'Price must be a positive number' });
     }
 
-    if (stock !== undefined && Math.floor(Number(stock)) < 0) {
-      return res.status(400).json({ message: 'Stock cannot be negative' });
+    if (stock !== undefined && (!Number.isInteger(Number(stock)) || Number(stock) < 0)) {
+      return res.status(400).json({ message: 'Stock must be a non-negative integer' });
+    }
+
+    if (shippingFee !== undefined && (isNaN(Number(shippingFee)) || Number(shippingFee) < 0)) {
+      return res.status(400).json({ message: 'Shipping fee cannot be negative' });
+    }
+
+    if (shippingDays !== undefined && (!Number.isInteger(Number(shippingDays)) || Number(shippingDays) < 1)) {
+      return res.status(400).json({ message: 'Shipping days must be at least 1 day' });
     }
 
     let images = product.image;
@@ -275,6 +291,29 @@ exports.getSellerStats = async (req, res) => {
       }),
     ]);
 
+    // For performance, let's group orders by month for the last 6 months
+    const sixMonthsAgo = new Date();
+    sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);
+
+    const salesTrend = await Order.findAll({
+      attributes: [
+        [sequelize.fn('MONTHNAME', sequelize.col('createdAt')), 'month'],
+        [sequelize.fn('SUM', sequelize.col('totalAmount')), 'total'],
+      ],
+      where: {
+        sellerId,
+        status: { [Op.ne]: 'Cancelled' },
+        createdAt: { [Op.gte]: sixMonthsAgo }
+      },
+      group: [sequelize.fn('MONTH', sequelize.col('createdAt')), 'month'],
+      order: [[sequelize.fn('MONTH', sequelize.col('createdAt')), 'ASC']]
+    });
+
+    const performanceData = salesTrend.map(s => ({
+      name: s.getDataValue('month').substring(0, 3),
+      sales: Number(s.getDataValue('total') || 0)
+    }));
+
     res.status(200).json({
       revenue: Number(totalRevenue || 0),
       orders: totalOrders,
@@ -284,7 +323,9 @@ exports.getSellerStats = async (req, res) => {
       totalOrders,
       totalInventory,
       lowStock,
-      performance: [42, 38, 51, 46, 59, 74, 68],
+      performance: performanceData.length > 0 ? performanceData : [
+        { name: 'Jan', sales: 0 }, { name: 'Feb', sales: 0 }, { name: 'Mar', sales: 0 }
+      ],
     });
   } catch (error) {
     res.status(500).json({ message: error.message });

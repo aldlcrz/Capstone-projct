@@ -3,6 +3,7 @@ import React, { useState } from "react";
 import Link from "next/link";
 import { Mail, Lock, ArrowRight, Loader2, Eye, EyeOff, ShieldCheck } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import { useRouter } from "next/navigation";
 import { api, getApiErrorMessage } from "@/lib/api";
 
 const containerVariants = {
@@ -35,6 +36,7 @@ export default function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
+  const router = useRouter();
 
   const handleLogin = async (e) => {
     e.preventDefault();
@@ -85,6 +87,13 @@ export default function LoginPage() {
         style={{ background: "var(--rust, #C0422A)", opacity: 0.04 }} />
       <div className="absolute bottom-0 left-0 w-[380px] h-[380px] rounded-full translate-y-1/2 -translate-x-1/3 blur-3xl pointer-events-none"
         style={{ background: "var(--sand, #D4B896)", opacity: 0.12 }} />
+
+      <button 
+        onClick={() => router.back()}
+        className="absolute top-6 left-6 md:top-10 md:left-10 p-3 bg-white rounded-2xl shadow-[0_8px_30px_rgba(0,0,0,0.04)] text-[var(--muted)] hover:text-[var(--rust)] hover:scale-105 transition-all z-50 flex items-center justify-center border border-[var(--border)]"
+      >
+        <ArrowRight className="w-5 h-5 rotate-180" />
+      </button>
 
       {/* Card */}
       <motion.div
@@ -146,7 +155,7 @@ export default function LoginPage() {
                   name="email"
                   autoComplete="off"
                   className="w-full text-sm font-medium outline-none transition-all duration-300 placeholder:text-gray-300"
-                  placeholder="ailodelacruz@gmail.com"
+                  placeholder=""
                   required
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
@@ -170,7 +179,7 @@ export default function LoginPage() {
                   style={{ color: "var(--muted, #8C7B70)" }}>
                   Password
                 </label>
-                <Link href="#"
+                <Link href="/forgot-password"
                   className="text-[9px] font-bold uppercase tracking-widest hover:opacity-70 transition-opacity"
                   style={{ color: "var(--rust, #C0422A)" }}>
                   Forgot Password?

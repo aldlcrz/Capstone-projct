@@ -50,13 +50,13 @@ export default function AdminActivity() {
       <div className="max-w-5xl mx-auto space-y-12 mb-20">
         <div className="flex items-center justify-between">
           <div>
-            <div className="eyebrow">Real-Time Platform Log</div>
+            <div className="eyebrow">Live System Log</div>
             <h1 className="font-serif text-4xl font-bold tracking-tight text-[var(--charcoal)] uppercase">
-              Operational <span className="text-[var(--rust)] italic lowercase">Activity</span>
+              System <span className="text-[var(--rust)] italic lowercase">Updates</span>
             </h1>
           </div>
           <div className="hidden md:flex items-center gap-4 px-6 py-3 bg-white border border-[var(--border)] rounded-2xl shadow-sm text-xs font-bold uppercase tracking-widest text-[var(--muted)]">
-             <div className="w-2.5 h-2.5 bg-green-500 rounded-full animate-pulse ring-4 ring-green-100" /> LIVE SYNCHRONIZER ACTIVE
+             <div className="w-2.5 h-2.5 bg-green-500 rounded-full animate-pulse ring-4 ring-green-100" /> SYSTEM ONLINE
           </div>
         </div>
 
@@ -64,9 +64,9 @@ export default function AdminActivity() {
           <div className="absolute top-0 left-0 bottom-0 w-2 bg-[var(--rust)] opacity-10" />
           <div className="p-8 border-b border-[var(--border)] flex items-center justify-between bg-gray-50/50">
              <div className="flex items-center gap-3 font-bold text-sm text-[var(--charcoal)] tracking-tight">
-                <Activity className="w-5 h-5 text-[var(--rust)]" /> FEED REFRESH: REAL-TIME SECURE
+                <Activity className="w-5 h-5 text-[var(--rust)]" /> LATEST SYSTEM UPDATES
              </div>
-             <button className="text-[10px] font-bold text-[var(--rust)] uppercase tracking-widest hover:underline decoration-2 underline-offset-4">Download Activity Report (.csv)</button>
+             <button className="text-[10px] font-bold text-[var(--rust)] uppercase tracking-widest hover:underline decoration-2 underline-offset-4">Download CSV Report</button>
           </div>
 
           <div className="divide-y divide-[var(--border)]">
@@ -97,8 +97,20 @@ export default function AdminActivity() {
                       {act.desc}
                     </div>
                     <div className="pt-3 flex gap-4">
-                       <button className="flex items-center gap-2 text-[10px] font-bold text-[var(--rust)] uppercase tracking-widest hover:translate-x-1 transition-transform">Audit Record <ArrowRight className="w-3 h-3" /></button>
-                       {act.type === 'seller' && <button className="flex items-center gap-2 text-[10px] font-bold text-[var(--charcoal)] uppercase tracking-widest hover:text-[var(--rust)] transition-all">Review Documents <ShieldCheck className="w-3 h-3" /></button>}
+                        <button 
+                          onClick={() => alert(`Auditing entry #${act.id}: Logged transaction hash validated.`)}
+                          className="flex items-center gap-2 text-[10px] font-bold text-[var(--rust)] uppercase tracking-widest hover:translate-x-1 transition-transform"
+                        >
+                          Audit Record <ArrowRight className="w-3 h-3" />
+                        </button>
+                        {act.type === 'seller' && (
+                          <button 
+                            onClick={() => window.location.href = '/admin/users'}
+                            className="flex items-center gap-2 text-[10px] font-bold text-[var(--charcoal)] uppercase tracking-widest hover:text-[var(--rust)] transition-all"
+                          >
+                            Review Documents <ShieldCheck className="w-3 h-3" />
+                          </button>
+                        )}
                     </div>
                   </div>
                 </motion.div>
@@ -111,7 +123,7 @@ export default function AdminActivity() {
            <div className="artisan-card p-10 bg-[var(--bark)] text-white relative group overflow-hidden shadow-2xl">
               <div className="absolute top-0 right-0 p-8 opacity-20 group-hover:scale-125 transition-transform"><MapPin className="w-20 h-20" /></div>
               <div className="space-y-6 relative z-10">
-                 <h3 className="font-serif text-2xl font-bold italic tracking-tight">Geographic Hubs</h3>
+                 <h3 className="font-serif text-2xl font-bold italic tracking-tight">User Locations</h3>
                  <div className="space-y-3">
                     <GeoItem label="Lumban, Laguna" count="124 Patrons" />
                     <GeoItem label="Metro Manila" count="86 Patrons" />
@@ -122,9 +134,17 @@ export default function AdminActivity() {
            <div className="artisan-card p-10 bg-white/50 backdrop-blur-md shadow-2xl relative overflow-hidden group">
               <div className="absolute bottom-0 right-0 p-8 opacity-10 group-hover:scale-125 transition-transform"><Mail className="w-20 h-20" /></div>
               <div className="space-y-6 relative z-10">
-                 <h3 className="font-serif text-2xl font-bold text-[var(--charcoal)]">Community Outreach</h3>
-                 <p className="text-sm text-[var(--muted)] leading-relaxed">Broadcast heritage updates to all registered artisans and patrons across the platform securely.</p>
-                 <button className="w-full py-4 bg-[var(--rust)] text-white rounded-xl text-xs font-bold font-sans uppercase tracking-[0.2em] shadow-xl hover:shadow-2xl transition-all">Send Global Announcement</button>
+                 <h3 className="font-serif text-2xl font-bold text-[var(--charcoal)]">Send Global Message</h3>
+                 <p className="text-sm text-[var(--muted)] leading-relaxed">Send a notification to every user on the platform at once.</p>
+                  <button 
+                    onClick={() => {
+                        const msg = prompt("Enter the message for everyone:");
+                        if (msg) alert("Success: Message sent to all users.");
+                    }}
+                    className="w-full py-4 bg-[var(--rust)] text-white rounded-xl text-xs font-bold font-sans uppercase tracking-[0.2em] shadow-xl hover:shadow-2xl transition-all"
+                  >
+                    Send Message to All
+                  </button>
               </div>
            </div>
         </div>

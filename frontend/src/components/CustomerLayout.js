@@ -32,16 +32,16 @@ import {
 import MobileBottomNav from "./MobileBottomNav";
 
 const sidebarData = [
-  { group: "MARKETPLACE", items: [
-    { label: "Heritage Shop", icon: <Home className="w-5 h-5" />, path: "/home" },
+  { group: "SHOPPING", items: [
+    { label: "Shop", icon: <Home className="w-5 h-5" />, path: "/home" },
   ]},
-  { group: "ACCOUNT & ORDERS", items: [
-    { label: "Orders", icon: <History className="w-5 h-5" />, path: "/orders" },
-    { label: "My Messages", icon: <MessageCircle className="w-5 h-5" />, path: "/messages" },
-    { label: "Addressbook", icon: <MapPin className="w-5 h-5" />, path: "/addresses" },
+  { group: "ACCOUNT", items: [
+    { label: "My Orders", icon: <History className="w-5 h-5" />, path: "/orders" },
+    { label: "Messages", icon: <MessageCircle className="w-5 h-5" />, path: "/messages" },
+    { label: "My Addresses", icon: <MapPin className="w-5 h-5" />, path: "/addresses" },
   ]},
-  { group: "PREFERENCES", items: [
-    { label: "Profile Settings", icon: <User className="w-5 h-5" />, path: "/profile" },
+  { group: "SETTINGS", items: [
+    { label: "Profile", icon: <User className="w-5 h-5" />, path: "/profile" },
   ]},
 ];
 
@@ -55,8 +55,6 @@ const mobileNavItems = [
 export default function CustomerLayout({ children }) {
   const pathname = usePathname();
   const router = useRouter();
-  const [mobileMenu, setMobileMenu] = useState(false);
-  const [showMobileSearch, setShowMobileSearch] = useState(false);
   const [user, setUser] = useState(null);
   const [cartCount, setCartCount] = useState(0);
   const [notificationsOpen, setNotificationsOpen] = useState(false);
@@ -143,7 +141,7 @@ export default function CustomerLayout({ children }) {
 
   const handleLogout = () => {
     localStorage.clear();
-    window.location.href = "/login";
+    window.location.href = "/";
   };
 
   const unreadCount = notifications.filter((notification) => !notification.read).length;
@@ -224,7 +222,7 @@ export default function CustomerLayout({ children }) {
               LUMBARONG
             </Link>
             <div className="flex items-center gap-1.5 mt-2 px-1 text-[var(--rust)] font-bold tracking-widest text-[10px]">
-              <ShoppingBag className="w-3 h-3" /> CUSTOMER SIDE
+              <ShoppingBag className="w-3 h-3" /> CUSTOMER
             </div>
           </div>
 
@@ -257,7 +255,7 @@ export default function CustomerLayout({ children }) {
 
           <div className="mt-10 pt-8 border-t border-[var(--border)]">
             <button 
-              onClick={handleLogout}
+              onClick={() => { localStorage.clear(); window.location.href = "/"; }}
               className="flex items-center gap-3 w-full px-4 py-3.5 bg-red-50 text-red-600 rounded-xl hover:bg-red-100 transition-all font-bold text-xs tracking-widest uppercase"
             >
               <LogOut className="w-4 h-4" /> Sign Out
@@ -272,31 +270,10 @@ export default function CustomerLayout({ children }) {
         <header className="sticky top-0 z-40 bg-white border-b border-[var(--border)] h-[72px] flex items-center shrink-0">
           <div className="container mx-auto px-4 lg:px-10 flex items-center justify-between">
             <div className="flex items-center gap-4 lg:flex-1">
-              <button onClick={() => setMobileMenu(true)} className="lg:hidden p-2 hover:bg-[var(--cream)] rounded-lg">
-                <Menu className="w-5 h-5 text-[var(--muted)]" />
-              </button>
-              
-              {/* Desktop Search */}
-              <div className="hidden lg:flex items-center bg-[var(--input-bg)] w-full max-w-lg rounded-xl px-4 py-2.5 border border-transparent focus-within:border-[var(--rust)] focus-within:bg-white transition-all">
-                <Search className="w-4 h-4 text-[var(--muted)] mr-3" />
-                <input type="text" placeholder="Search for hand embroidered barongs..." className="bg-transparent w-full text-sm outline-none" />
-              </div>
-
-              {/* Mobile Search Toggle */}
-              <button 
-                onClick={() => setShowMobileSearch(true)}
-                className="lg:hidden p-2 hover:bg-[var(--cream)] rounded-lg text-[var(--muted)]"
-              >
-                <Search className="w-5 h-5" />
-              </button>
+              {/* Search logic disabled based on UI polish request */}
             </div>
 
-            {/* Centered Logo on Mobile */}
-            <div className="absolute left-1/2 -translate-x-1/2 lg:static lg:translate-x-0 lg:hidden xl:block">
-              <Link href="/home" className="font-serif text-xl font-bold text-[var(--charcoal)] tracking-tighter">
-                LUMBARONG
-              </Link>
-            </div>
+
 
             <div className="flex items-center gap-2 md:gap-6">
               <div className="relative" ref={notificationPanelRef}>
@@ -404,8 +381,8 @@ export default function CustomerLayout({ children }) {
               <div className="hidden lg:block w-[1px] h-8 bg-[var(--border)]" />
               <Link href="/profile" className="flex items-center gap-3 group">
                 <div className="hidden lg:block text-right">
-                  <div className="text-sm font-bold text-[var(--charcoal)] group-hover:text-[var(--rust)] transition-colors">{user?.name || "Patron"}</div>
-                  <div className="text-[10px] text-[var(--muted)] font-bold uppercase tracking-widest">LOYAL CUSTOMER</div>
+                  <div className="text-sm font-bold text-[var(--charcoal)] group-hover:text-[var(--rust)] transition-colors">{user?.name || "User"}</div>
+                  <div className="text-[10px] text-[var(--muted)] font-bold uppercase tracking-widest">CUSTOMER</div>
                 </div>
                 <div className="w-10 h-10 rounded-xl bg-[var(--sand)] border-2 border-white shadow-md flex items-center justify-center text-white font-serif text-lg font-bold uppercase transition-transform active:scale-95">
                   {user?.name ? user.name[0] : "P"}
@@ -415,33 +392,7 @@ export default function CustomerLayout({ children }) {
           </div>
         </header>
 
-        {/* Mobile Search Overlay */}
-        <AnimatePresence>
-          {showMobileSearch && (
-            <motion.div 
-              initial={{ opacity: 0, y: -20 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -20 }}
-              className="lg:hidden fixed inset-x-0 top-0 z-[100] bg-white p-4 flex items-center gap-3 shadow-2xl"
-            >
-              <div className="flex-1 flex items-center bg-[var(--cream)] rounded-xl px-4 py-3 border border-[var(--border)]">
-                <Search className="w-5 h-5 text-[var(--rust)] mr-3" />
-                <input 
-                  autoFocus
-                  type="text" 
-                  placeholder="Search products..." 
-                  className="bg-transparent w-full text-base outline-none font-medium" 
-                />
-              </div>
-              <button 
-                onClick={() => setShowMobileSearch(false)}
-                className="text-sm font-bold text-[var(--muted)] uppercase tracking-widest px-2"
-              >
-                Cancel
-              </button>
-            </motion.div>
-          )}
-        </AnimatePresence>
+
 
         {/* Scrollable Content */}
         <main className="flex-1 overflow-y-auto p-6 md:p-10 custom-scrollbar pb-[100px] lg:pb-10">
@@ -453,82 +404,7 @@ export default function CustomerLayout({ children }) {
         <MobileBottomNav items={mobileNavItems} />
       </div>
 
-      <AnimatePresence>
-        {mobileMenu && (
-          <>
-            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setMobileMenu(false)} className="fixed inset-0 z-50 bg-black/40 lg:hidden" />
-            <motion.aside initial={{ x: -280 }} animate={{ x: 0 }} exit={{ x: -280 }} className="fixed left-0 top-0 bottom-0 z-50 w-[300px] max-w-[85vw] bg-white lg:hidden overflow-y-auto border-r border-[var(--border)] shadow-2xl">
-              <div className="p-8 flex flex-col min-h-full">
-                <div className="flex items-center justify-between mb-8">
-                  <Link href="/home" onClick={() => setMobileMenu(false)} className="text-2xl font-serif font-bold tracking-tighter text-[var(--charcoal)]">
-                    LUMBARONG
-                  </Link>
-                  <button onClick={() => setMobileMenu(false)} className="w-10 h-10 rounded-xl border border-[var(--border)] bg-[var(--cream)] text-[var(--muted)] hover:text-[var(--rust)] transition-colors flex items-center justify-center">
-                    <X className="w-5 h-5" />
-                  </button>
-                </div>
 
-                <Link href="/profile" onClick={() => setMobileMenu(false)} className="flex items-center gap-4 p-4 rounded-2xl bg-[var(--cream)] border border-[var(--border)] mb-8">
-                  <div className="w-12 h-12 rounded-xl bg-[var(--sand)] border-2 border-white shadow-md flex items-center justify-center text-white font-serif text-lg font-bold uppercase shrink-0">
-                    {user?.name ? user.name[0] : "P"}
-                  </div>
-                  <div className="min-w-0">
-                    <div className="text-sm font-bold text-[var(--charcoal)] truncate">{user?.name || "Patron"}</div>
-                    <div className="text-[10px] text-[var(--muted)] font-bold uppercase tracking-widest">Loyal Customer</div>
-                  </div>
-                </Link>
-
-                <nav className="flex-1 space-y-8">
-                  {sidebarData.map((group, idx) => (
-                    <div key={idx} className="space-y-3">
-                      <div className="text-[10px] font-bold text-[var(--muted)] opacity-60 tracking-widest uppercase px-2">
-                        {group.group}
-                      </div>
-                      <div className="space-y-1.5">
-                        {group.items.map((item, i) => {
-                          const active = pathname === item.path;
-                          return (
-                            <Link
-                              key={i}
-                              href={item.path}
-                              onClick={() => setMobileMenu(false)}
-                              className={`flex items-center gap-3 px-4 py-3.5 rounded-xl transition-all duration-300 text-sm font-medium ${active ? 'bg-[rgba(192,66,42,0.08)] text-[var(--rust)] border-l-4 border-[var(--rust)]' : 'text-[var(--charcoal)] hover:bg-[var(--cream)] hover:text-[var(--rust)]'}`}
-                            >
-                              <span className={active ? 'text-[var(--rust)]' : 'text-[var(--muted)]'}>
-                                {item.icon}
-                              </span>
-                              {item.label}
-                            </Link>
-                          );
-                        })}
-                      </div>
-                    </div>
-                  ))}
-                </nav>
-
-                <div className="mt-8 pt-6 border-t border-[var(--border)] space-y-4">
-                  <Link href="/cart" onClick={() => setMobileMenu(false)} className="flex items-center justify-between px-4 py-3.5 rounded-xl bg-[var(--cream)] text-[var(--charcoal)] hover:text-[var(--rust)] transition-colors">
-                    <span className="flex items-center gap-3 text-sm font-medium">
-                      <ShoppingCart className="w-5 h-5 text-[var(--muted)]" />
-                      Cart
-                    </span>
-                    <span className="min-w-5 h-5 px-1.5 bg-[var(--rust)] text-white text-[10px] font-bold rounded-full flex items-center justify-center">
-                      {cartCount}
-                    </span>
-                  </Link>
-
-                  <button 
-                    onClick={handleLogout}
-                    className="flex items-center gap-3 w-full px-4 py-3.5 bg-red-50 text-red-600 rounded-xl hover:bg-red-100 transition-all font-bold text-xs tracking-widest uppercase"
-                  >
-                    <LogOut className="w-4 h-4" /> Sign Out
-                  </button>
-                </div>
-              </div>
-            </motion.aside>
-          </>
-        )}
-      </AnimatePresence>
     </div>
   );
 }

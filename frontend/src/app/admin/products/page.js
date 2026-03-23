@@ -3,10 +3,12 @@ import React, { useState, useEffect } from "react";
 import AdminLayout from "@/components/AdminLayout";
 import { ShoppingBag, Search, Filter, TrendingUp, Store, Package, Trash2, Eye, LayoutGrid, List as ListIcon, CheckCircle2, XCircle } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import { useRouter } from "next/navigation";
 import { api, BACKEND_URL } from "@/lib/api";
 import { io } from "socket.io-client";
 
 export default function AdminProducts() {
+  const router = useRouter();
   const [products, setProducts] = useState([]);
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -199,7 +201,7 @@ export default function AdminProducts() {
                             </td>
                             <td className="px-8 py-6 text-right">
                                <div className="flex items-center justify-end gap-2">
-                                  <button onClick={() => window.open(`/products/${product.id}`, '_blank')} className="p-2.5 bg-white text-[var(--muted)] hover:text-[var(--rust)] rounded-lg transition-all border border-[var(--border)] shadow-sm hover:border-[var(--rust)]" title="View Listing"><Eye className="w-4 h-4" /></button>
+                                  <button onClick={() => router.push(`/products?id=${product.id}`)} className="p-2.5 bg-white text-[var(--muted)] hover:text-[var(--rust)] rounded-lg transition-all border border-[var(--border)] shadow-sm hover:border-[var(--rust)]" title="View Listing"><Eye className="w-4 h-4" /></button>
                                   <button onClick={() => deleteProduct(product.id)} className="p-2.5 bg-red-50 text-red-600 hover:bg-red-100 rounded-lg transition-all border border-red-100 shadow-sm" title="Revoke Listing"><Trash2 className="w-4 h-4" /></button>
                                </div>
                             </td>

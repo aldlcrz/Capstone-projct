@@ -33,6 +33,7 @@ export default function InventoryPage() {
   const [view, setView] = useState("list");
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(null);
+  const [searchTerm, setSearchTerm] = useState("");
 
   const fetchProducts = async () => {
     try {
@@ -117,7 +118,13 @@ export default function InventoryPage() {
         <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-6 pt-4 animate-fade-up">
            <div className="flex items-center bg-white w-full max-w-xl rounded-2xl px-5 py-4 border border-[var(--border)] focus-within:border-[var(--rust)] shadow-sm transition-all group">
               <Search className="w-5 h-5 text-[var(--muted)] mr-4 group-focus-within:text-[var(--rust)] transition-colors" />
-              <input type="text" placeholder="Filter your mastercrafts by name..." className="bg-transparent w-full text-sm outline-none font-medium" />
+              <input 
+                type="text" 
+                placeholder="Filter your mastercrafts by name..." 
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="bg-transparent w-full text-sm outline-none font-medium" 
+              />
            </div>
 
            <div className="flex items-center gap-4">
@@ -142,7 +149,9 @@ export default function InventoryPage() {
           </div>
         ) : (
           <div className={`grid ${view === "list" ? "grid-cols-1" : "grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"} gap-6`}>
-            {products.map((product, i) => {
+            {products
+              .filter(p => p.name.toLowerCase().includes(searchTerm.toLowerCase()) || p.category.toLowerCase().includes(searchTerm.toLowerCase()))
+              .map((product, i) => {
               const status = product.stock > 5 ? 'Active' : product.stock > 0 ? 'Low Stock' : 'Out of Stock';
               return (
               <motion.div 
@@ -192,7 +201,7 @@ export default function InventoryPage() {
                       </div>
                       <div className="flex gap-1.5">
                         <button 
-                          onClick={() => router.push(`/seller/inventory/${product.id}/edit`)}
+                          onClick={() => router.push(`/seller/inventory/edit?id=${product.id}`)}
                           className="p-2 hover:bg-[var(--cream)] rounded-lg transition-all text-[var(--muted)] hover:text-[var(--rust)]" 
                           title="Edit Listing"
                         >
