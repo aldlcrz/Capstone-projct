@@ -1,7 +1,7 @@
 "use client";
 import React, { useState, useEffect, useRef } from "react";
 import CustomerLayout from "@/components/CustomerLayout";
-import { MessageCircle, Search, Store, Send, User, ChevronRight, Loader2 } from "lucide-react";
+import { MessageCircle, Search, Store, Send, Loader2 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useSearchParams } from "next/navigation";
 import { api } from "@/lib/api";
@@ -67,13 +67,16 @@ function MessagesThreadManager() {
 
     if (socket) {
       socket.on("receive_message", (msg) => {
-        if (activeThread && (String(msg.senderId) === String(activeThread.id) || String(msg.recipientId) === String(activeThread.id))) {
+        if (activeThread && (
+          String(msg.senderId) === String(activeThread.otherUser?.id) ||
+          String(msg.receiverId) === String(activeThread.otherUser?.id)
+        )) {
           setMessages(prev => [...prev, msg]);
         }
       });
 
       socket.on("typing_status", (data) => {
-        if (activeThread && String(data.senderId) === String(activeThread.id)) {
+        if (activeThread && String(data.senderId) === String(activeThread.otherUser?.id)) {
           setTypingStatus(data);
           setTimeout(() => setTypingStatus({ isTyping: false, senderId: null }), 3000);
         }

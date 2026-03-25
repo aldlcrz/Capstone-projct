@@ -126,7 +126,7 @@ export default function SellerCustomerClient() {
                   </span>
                 </div>
               </div>
-              <button onClick={() => router.push('/seller/messages')} className="w-full btn-primary py-5 rounded-2xl flex items-center justify-center gap-3 text-xs font-bold uppercase tracking-widest">
+              <button onClick={() => router.push(`/seller/messages?customerId=${customer.id}&customerName=${encodeURIComponent(customer.name)}`)} className="w-full btn-primary py-5 rounded-2xl flex items-center justify-center gap-3 text-xs font-bold uppercase tracking-widest">
                 <MessageCircle className="w-4 h-4" /> Message Patron
               </button>
             </div>

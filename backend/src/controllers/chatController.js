@@ -20,7 +20,7 @@ exports.sendMessage = async (req, res) => {
         });
 
         const populatedMessage = await Message.findByPk(message.id, {
-            include: [{ model: User, as: 'sender', attributes: ['id', 'name', 'profileImage'] }]
+            include: [{ model: User, as: 'sender', attributes: ['id', 'name', 'role', 'profilePhoto'] }]
         });
 
         // REAL-TIME: Notify Stakeholders
@@ -122,8 +122,8 @@ exports.getConversations = async (req, res) => {
                 },
                 order: [['createdAt', 'DESC']],
                 include: [
-                    { model: User, as: 'sender', attributes: ['id', 'name', 'shopName', 'profileImage'] },
-                    { model: User, as: 'receiver', attributes: ['id', 'name', 'shopName', 'profileImage'] }
+                    { model: User, as: 'sender', attributes: ['id', 'name', 'shopName', 'profilePhoto', 'role'] },
+                    { model: User, as: 'receiver', attributes: ['id', 'name', 'shopName', 'profilePhoto', 'role'] }
                 ]
             });
 

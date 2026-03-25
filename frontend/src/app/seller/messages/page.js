@@ -1,12 +1,26 @@
 "use client";
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, Suspense } from "react";
 import SellerLayout from "@/components/SellerLayout";
 import { MessageCircle, Search, MoreVertical, Send, Loader2 } from "lucide-react";
 import { motion } from "framer-motion";
 import { api } from "@/lib/api";
 import { useSocket } from "@/context/SocketContext";
+import { useSearchParams } from "next/navigation";
 
-export default function SellerMessages() {
+export default function SellerMessagesPage() {
+  return (
+    <Suspense fallback={<SellerLayout><div className="py-24 text-center text-[var(--muted)] animate-pulse italic">Synchronizing threads...</div></SellerLayout>}>
+      <SellerMessages />
+    </Suspense>
+  );
+}
+
+function SellerMessages() {
+  const searchParams = useSearchParams();
+  // Support both ?userId= (from customer list) and ?customerId= (from customer detail)
+  const customerIdParam = searchParams.get("customerId") || searchParams.get("userId");
+  const customerNameParam = searchParams.get("customerName");
+
   const [threads, setThreads] = useState([]);
   const [activeThread, setActiveThread] = useState(null);
   const [messages, setMessages] = useState([]);
@@ -19,41 +33,79 @@ export default function SellerMessages() {
   const fetchThreads = async () => {
     try {
       const res = await api.get("/chat/threads");
-      setThreads(res.data);
+      return res.data;
     } catch (err) {
       console.error("Failed to fetch threads", err?.response?.data || err.message);
-    } finally {
-      setLoading(false);
+      return [];
     }
   };
 
+  // On mount: load threads, then auto-open if a customerId is in the URL
   useEffect(() => {
-    fetchThreads();
-  }, []);
+    const init = async () => {
+      const allThreads = await fetchThreads();
+      setThreads(allThreads);
+      setLoading(false);
 
+      if (customerIdParam) {
+        const existing = allThreads.find(t => String(t.otherUser?.id) === String(customerIdParam));
+        if (existing) {
+          // Already have a conversation — open it directly
+          await openThread(existing);
+        } else {
+          // No conversation yet — create a ghost thread so the seller can send the first message
+          const ghost = {
+            otherUser: { id: customerIdParam, name: decodeURIComponent(customerNameParam || "Customer"), role: "customer" },
+            lastMessage: null,
+            timestamp: null,
+            unreadCount: 0,
+            isGhost: true
+          };
+          setActiveThread(ghost);
+          setMessages([]);
+          // Add ghost to thread list so it shows in sidebar
+          setThreads([ghost, ...allThreads]);
+        }
+      } else if (allThreads.length > 0) {
+        await openThread(allThreads[0]);
+      }
+    };
+    init();
+  }, [customerIdParam]);
+
+  // Socket: real-time message delivery
   useEffect(() => {
     if (!socket) return;
 
     const handleNewMessage = (msg) => {
-      if (activeThread && (
-        String(msg.senderId) === String(activeThread.otherUser.id) ||
-        String(msg.receiverId) === String(activeThread.otherUser.id)
-      )) {
-        setMessages(prev => [...prev, msg]);
-      }
-      fetchThreads();
+      setActiveThread(current => {
+        if (current && (
+          String(msg.senderId) === String(current.otherUser?.id) ||
+          String(msg.receiverId) === String(current.otherUser?.id)
+        )) {
+          setMessages(prev => [...prev, msg]);
+        }
+        return current;
+      });
+      // Refresh thread list to update last message + unread counts
+      fetchThreads().then(setThreads);
     };
 
     socket.on("receive_message", handleNewMessage);
     return () => socket.off("receive_message", handleNewMessage);
-  }, [socket, activeThread]);
+  }, [socket]);
 
+  // Auto-scroll
   useEffect(() => {
     scrollRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
-  const fetchMessages = async (thread) => {
+  const openThread = async (thread) => {
     setActiveThread(thread);
+    if (thread.isGhost) {
+      setMessages([]);
+      return;
+    }
     try {
       const res = await api.get(`/chat/conversation/${thread.otherUser.id}`);
       setMessages(res.data);
@@ -72,9 +124,19 @@ export default function SellerMessages() {
         receiverId: activeThread.otherUser.id,
         content: newMessage
       });
+
+      // Convert ghost thread to real thread after first message
+      if (activeThread.isGhost) {
+        const realThread = { ...activeThread, isGhost: false, lastMessage: newMessage, timestamp: new Date().toISOString() };
+        setActiveThread(realThread);
+        setThreads(prev => [realThread, ...prev.filter(t => t.otherUser?.id !== activeThread.otherUser?.id)]);
+      }
+
       setMessages(prev => [...prev, res.data]);
       setNewMessage("");
-      fetchThreads();
+      fetchThreads().then(allThreads => {
+        setThreads(allThreads);
+      });
     } catch (err) {
       console.error("Failed to send message", err?.response?.data || err.message);
     } finally {
@@ -119,7 +181,7 @@ export default function SellerMessages() {
             ) : threads.map((thread) => (
               <button
                 key={thread.otherUser.id}
-                onClick={() => fetchMessages(thread)}
+                onClick={() => openThread(thread)}
                 className={`w-full p-5 rounded-2xl flex items-start gap-4 transition-all duration-300 text-left ${
                   activeThread?.otherUser?.id === thread.otherUser.id
                     ? "bg-white shadow-xl ring-2 ring-[var(--rust)] scale-[1.02]"
@@ -135,13 +197,13 @@ export default function SellerMessages() {
                       {thread.otherUser.name || "Patron"}
                     </div>
                     <div className="text-[9px] font-bold text-[var(--muted)] whitespace-nowrap ml-2">
-                      {thread.timestamp
+                      {thread.isGhost ? "New" : thread.timestamp
                         ? new Date(thread.timestamp).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
                         : ""}
                     </div>
                   </div>
                   <div className="text-[11px] text-[var(--muted)] line-clamp-1 opacity-70 italic">
-                    {thread.lastMessage || "Start of conversation"}
+                    {thread.isGhost ? "Start new conversation" : (thread.lastMessage || "Start of conversation")}
                   </div>
                   {thread.unreadCount > 0 && (
                     <div className="mt-1.5 inline-flex h-4 min-w-4 px-1 items-center justify-center bg-[var(--rust)] text-white text-[8px] font-bold rounded-full">
@@ -168,8 +230,11 @@ export default function SellerMessages() {
                       {activeThread.otherUser.name}
                     </div>
                     <div className="text-[10px] text-green-600 font-bold uppercase tracking-widest flex items-center gap-1.5">
-                      <span className="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse" />
-                      Active Patron
+                      {activeThread.isGhost ? (
+                        <span className="text-amber-600">● New Conversation</span>
+                      ) : (
+                        <><span className="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse" /> Active Patron</>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -179,11 +244,13 @@ export default function SellerMessages() {
               </div>
 
               <div className="flex-1 overflow-y-auto p-10 space-y-6 bg-[var(--cream)]/20 custom-scrollbar">
-                <div className="text-center">
-                  <span className="bg-white px-4 py-1.5 rounded-full border border-[var(--border)] text-[8px] font-bold uppercase tracking-widest text-[var(--muted)] shadow-sm">
-                    Heritage Thread Active
-                  </span>
-                </div>
+                {messages.length === 0 && (
+                  <div className="text-center py-8">
+                    <span className="bg-white px-4 py-2 rounded-full border border-[var(--border)] text-[9px] font-bold uppercase tracking-widest text-[var(--muted)] shadow-sm">
+                      {activeThread.isGhost ? "Send your first message below" : "Heritage Thread Active"}
+                    </span>
+                  </div>
+                )}
 
                 {messages.map((msg, i) => {
                   const isMine = String(msg.senderId) === String(myId);
@@ -218,7 +285,7 @@ export default function SellerMessages() {
                     value={newMessage}
                     onChange={(e) => setNewMessage(e.target.value)}
                     onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); sendMessage(e); } }}
-                    placeholder="Type your heritage response..."
+                    placeholder={activeThread.isGhost ? `Start a conversation with ${activeThread.otherUser.name}...` : "Type your heritage response..."}
                     rows={1}
                     className="flex-1 bg-transparent border-none outline-none text-sm font-medium italic resize-none py-1"
                   />
