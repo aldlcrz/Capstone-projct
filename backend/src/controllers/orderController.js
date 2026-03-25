@@ -68,11 +68,33 @@ exports.createOrder = async (req, res) => {
   let committed = false;
 
   try {
-    let { items, shippingAddress, paymentMethod, paymentReference, paymentProof } = req.body;
+    let { items, shippingAddress, addressId, paymentMethod, paymentReference, paymentProof } = req.body;
     const customerId = req.user.id;
 
     if (typeof items === 'string') items = JSON.parse(items);
-    if (typeof shippingAddress === 'string') shippingAddress = JSON.parse(shippingAddress);
+    
+    if (addressId && !shippingAddress) {
+      const Address = require('../models').Address;
+      const addressRecord = await Address.findOne({ where: { id: addressId, userId: customerId } });
+      if (!addressRecord) {
+        throw createHttpError(404, 'Selected address not found');
+      }
+      shippingAddress = {
+        name: addressRecord.recipientName || addressRecord.fullName,
+        street: addressRecord.street,
+        city: addressRecord.city,
+        postalCode: addressRecord.postalCode,
+        phone: addressRecord.phone || addressRecord.phoneNumber,
+        province: addressRecord.province,
+        barangay: addressRecord.barangay
+      };
+    } else if (typeof shippingAddress === 'string') {
+      shippingAddress = JSON.parse(shippingAddress);
+    }
+
+    if (!shippingAddress) {
+      throw createHttpError(400, 'Shipping address or addressId is required');
+    }
 
     if (!Array.isArray(items) || items.length === 0) {
       throw createHttpError(400, 'Order items are required');
@@ -82,6 +104,16 @@ exports.createOrder = async (req, res) => {
     if (!validPaymentMethods.includes(paymentMethod)) {
       throw createHttpError(400, 'Invalid payment method selected');
     }
+
+    if (paymentMethod === 'GCash' || paymentMethod === 'Maya') {
+      const refStr = String(paymentReference || '').trim();
+      const refRegex = /^\d{8,16}$/;
+      if (!refRegex.test(refStr)) {
+        throw createHttpError(400, 'Payment reference number must be between 8 and 16 digits');
+      }
+      paymentReference = refStr;
+    }
+
 
     const preparedItems = [];
     let calculatedTotalPrice = 0;

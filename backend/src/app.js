@@ -81,4 +81,8 @@ app.use('/api/v1/wishlist', wishlistRoutes);
 app.use('/api/v1/returns', returnRoutes);
 app.use('/api/v1/users', userRoutes);
 
+// Global Error Handler
+const errorHandler = require('./middleware/errorHandler');
+app.use(errorHandler);
+
 module.exports = { app, server };

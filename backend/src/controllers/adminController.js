@@ -100,6 +100,8 @@ exports.verifySeller = async (req, res) => {
     };
 
     emitUserUpdated(publicUser, { action: 'verified' });
+    emitDashboardUpdate();
+    
     await sendNotification(
       user.id,
       'Seller verification approved',

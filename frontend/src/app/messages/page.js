@@ -38,26 +38,24 @@ function MessagesThreadManager() {
 
         // Handle incoming sellerId from inquiry
         if (sellerIdParam) {
-          const existingThread = allThreads.find(t => String(t.id) === String(sellerIdParam));
+          const existingThread = allThreads.find(t => String(t.otherUser?.id) === String(sellerIdParam));
           if (existingThread) {
             setActiveThread(existingThread);
             fetchMessages(existingThread);
           } else {
             // Create a "ghost" thread for new inquiry
-            const ghostThread = { 
-              id: sellerIdParam, 
-              name: sellerNameParam || "Artisan Workshop", 
-              role: "seller",
-              isGhost: true 
+            const ghostThread = {
+              otherUser: { id: sellerIdParam, name: sellerNameParam || "Artisan Workshop", role: "seller" },
+              isGhost: true
             };
             setActiveThread(ghostThread);
             setMessages([]);
           }
         } else if (allThreads.length > 0) {
-            setActiveThread(allThreads[0]);
-            fetchMessages(allThreads[0]);
+          setActiveThread(allThreads[0]);
+          fetchMessages(allThreads[0]);
         }
-        
+
         setThreads(allThreads);
       } catch (err) {
         console.error("Failed to fetch threads");
@@ -97,7 +95,7 @@ function MessagesThreadManager() {
       return;
     }
     try {
-      const res = await api.get(`/chat/${thread.id}`);
+      const res = await api.get(`/chat/conversation/${thread.otherUser.id}`);
       setMessages(res.data);
     } catch (err) {
       console.error("Failed to fetch messages");
@@ -110,16 +108,14 @@ function MessagesThreadManager() {
 
     setIsSending(true);
     try {
-      const res = await api.post("/chat", {
-        recipientId: activeThread.id,
+      const res = await api.post("/chat/send", {
+        receiverId: activeThread.otherUser.id,
         content: newMessage
-      }, {
-        headers: { Authorization: `Bearer ${localStorage.getItem("token")}` }
       });
-      
+
       if (activeThread.isGhost) {
         const realThread = { ...activeThread, isGhost: false };
-        setThreads(prev => [realThread, ...prev.filter(t => t.id !== activeThread.id)]);
+        setThreads(prev => [realThread, ...prev.filter(t => t.otherUser?.id !== activeThread.otherUser?.id)]);
         setActiveThread(realThread);
       }
 
@@ -133,7 +129,7 @@ function MessagesThreadManager() {
   };
 
   return (
-    <MessagesUI 
+    <MessagesUI
       threads={threads}
       activeThread={activeThread}
       messages={messages}
@@ -149,27 +145,27 @@ function MessagesThreadManager() {
   );
 }
 
-function MessagesUI({ 
-  threads, 
-  activeThread, 
-  messages, 
-  setMessages, 
-  newMessage, 
-  setNewMessage, 
-  loading, 
+function MessagesUI({
+  threads,
+  activeThread,
+  messages,
+  setMessages,
+  newMessage,
+  setNewMessage,
+  loading,
   isSending,
-  typingStatus, 
-  fetchMessages, 
-  handleSendMessage 
+  typingStatus,
+  fetchMessages,
+  handleSendMessage
 }) {
-    const { socket } = useSocket();
-    const messagesEndRef = useRef(null);
+  const { socket } = useSocket();
+  const messagesEndRef = useRef(null);
 
-    useEffect(() => {
-        messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-    }, [messages]);
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [messages]);
 
-    return (
+  return (
     <CustomerLayout>
       <div className="max-w-7xl mx-auto h-[calc(100vh-140px)] flex flex-col md:flex-row gap-8">
         {/* Thread List */}
@@ -185,9 +181,9 @@ function MessagesUI({
             <div className="p-4 border-b border-[var(--border)] bg-[var(--input-bg)]">
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--muted)]" />
-                <input 
-                  type="text" 
-                  placeholder="Search artisans..." 
+                <input
+                  type="text"
+                  placeholder="Search artisans..."
                   className="w-full pl-10 pr-4 py-2 text-sm bg-white border border-[var(--border)] rounded-xl outline-none focus:border-[var(--rust)]"
                 />
               </div>
@@ -200,20 +196,29 @@ function MessagesUI({
                 <div className="p-10 text-center text-[var(--muted)] text-sm italic">No active conversations found</div>
               ) : (
                 threads.map((thread) => (
-                  <button 
-                    key={thread.id}
+                  <button
+                    key={thread.otherUser?.id || thread.otherUser?.id}
                     onClick={() => fetchMessages(thread)}
-                    className={`w-full p-6 flex items-start gap-4 text-left border-b border-[var(--border)] transition-all hover:bg-[var(--cream)] ${activeThread?.id === thread.id ? 'bg-[rgba(192,66,42,0.05)] border-l-4 border-l-[var(--rust)] shadow-sm' : ''}`}
+                    className={`w-full p-6 flex items-start gap-4 text-left border-b border-[var(--border)] transition-all hover:bg-[var(--cream)] ${activeThread?.otherUser?.id === thread.otherUser?.id ? 'bg-[rgba(192,66,42,0.05)] border-l-4 border-l-[var(--rust)] shadow-sm' : ''}`}
                   >
                     <div className="w-12 h-12 bg-[var(--bark)] rounded-2xl flex items-center justify-center text-white font-serif text-lg font-bold">
-                      {thread.name?.[0] || 'A'}
+                      {thread.otherUser?.name?.[0] || 'A'}
                     </div>
                     <div className="flex-1 min-w-0">
                       <div className="flex justify-between items-center mb-1">
-                        <span className="font-bold text-sm truncate">{thread.name}</span>
-                        <span className="text-[10px] text-[var(--muted)] opacity-60">{thread.isGhost ? "New" : "Active"}</span>
+                        <span className="font-bold text-sm truncate">{thread.otherUser?.name || 'Artisan'}</span>
+                        <span className="text-[10px] text-[var(--muted)] opacity-60">
+                          {thread.isGhost ? "New" : thread.timestamp ? new Date(thread.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : "Active"}
+                        </span>
                       </div>
-                      <p className="text-xs text-[var(--muted)] line-clamp-1 italic tracking-tight">{thread.isGhost ? "Start a new conversation" : "Active thread - click to view messages"}</p>
+                      <p className="text-xs text-[var(--muted)] line-clamp-1 italic tracking-tight">
+                        {thread.isGhost ? "Start a new conversation" : (thread.lastMessage || "Click to view messages")}
+                      </p>
+                      {thread.unreadCount > 0 && (
+                        <div className="mt-1 inline-flex h-4 min-w-4 px-1 items-center justify-center bg-[var(--rust)] text-white text-[8px] font-bold rounded-full">
+                          {thread.unreadCount}
+                        </div>
+                      )}
                     </div>
                   </button>
                 ))
@@ -229,10 +234,10 @@ function MessagesUI({
               <div className="p-6 border-b border-[var(--border)] flex items-center justify-between bg-white z-10">
                 <div className="flex items-center gap-4">
                   <div className="w-10 h-10 bg-[var(--bark)] rounded-xl flex items-center justify-center text-white font-serif text-base font-bold">
-                    {activeThread.name?.[0] || 'A'}
+                    {activeThread.otherUser?.name?.[0] || 'A'}
                   </div>
                   <div>
-                    <h2 className="text-base font-bold text-[var(--charcoal)]">{activeThread.name}</h2>
+                    <h2 className="text-base font-bold text-[var(--charcoal)]">{activeThread.otherUser?.name || 'Artisan'}</h2>
                     <div className="text-[10px] text-green-600 font-bold uppercase tracking-widest flex items-center gap-1.5">
                       {typingStatus.isTyping ? (
                         <span className="text-[var(--rust)] animate-pulse">ARTISAN IS TYPING...</span>
@@ -244,9 +249,9 @@ function MessagesUI({
                     </div>
                   </div>
                 </div>
-                <button 
-                   onClick={() => window.location.href = `/shop?id=${activeThread.id}`}
-                   className="flex items-center gap-2 px-4 py-2 border border-[var(--border)] rounded-xl text-[10px] font-bold uppercase tracking-widest hover:border-[var(--rust)] hover:text-[var(--rust)] transition-all"
+                <button
+                  onClick={() => window.location.href = `/shop?id=${activeThread.otherUser?.id}`}
+                  className="flex items-center gap-2 px-4 py-2 border border-[var(--border)] rounded-xl text-[10px] font-bold uppercase tracking-widest hover:border-[var(--rust)] hover:text-[var(--rust)] transition-all"
                 >
                   <Store className="w-3.5 h-3.5" /> View Shop
                 </button>
@@ -256,12 +261,12 @@ function MessagesUI({
                 <div className="text-center py-4 border-b border-[var(--border)] mb-4">
                   <span className="bg-white px-4 py-1.5 rounded-full border border-[var(--border)] text-[8px] font-bold uppercase tracking-widest text-[var(--muted)]">Secure Heritage Thread Opened</span>
                 </div>
-                
+
                 {messages.map((msg, i) => {
                   const storedUser = JSON.parse(localStorage.getItem("user") || "{}");
                   const isMe = String(msg.senderId) === String(storedUser.id);
                   return (
-                    <motion.div 
+                    <motion.div
                       key={i}
                       initial={{ opacity: 0, x: isMe ? 10 : -10 }}
                       animate={{ opacity: 1, x: 0 }}
@@ -280,16 +285,16 @@ function MessagesUI({
               </div>
 
               <form onSubmit={handleSendMessage} className="p-6 border-t border-[var(--border)] bg-gray-50 flex gap-4">
-                <input 
-                  type="text" 
+                <input
+                  type="text"
                   value={newMessage}
                   onChange={(e) => {
                     setNewMessage(e.target.value);
                     if (socket && activeThread) {
-                      socket.emit("typing", { receiverId: activeThread.id, isTyping: true });
+                      socket.emit("typing", { receiverId: activeThread.otherUser?.id, isTyping: true });
                     }
                   }}
-                  placeholder="Type your message to the artisan..." 
+                  placeholder="Type your message to the artisan..."
                   className="flex-1 px-5 py-4 bg-white border border-[var(--border)] rounded-2xl focus:outline-none focus:border-[var(--rust)] transition-all font-sans text-sm"
                 />
                 <button type="submit" disabled={isSending} className="p-4 bg-[var(--bark)] text-white rounded-2xl hover:bg-[var(--rust)] transition-all shadow-lg active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center">

@@ -317,7 +317,7 @@ export default function AdminDashboard() {
               icon={<UserPlus className="w-4 h-4 text-green-600" />} 
               bg="bg-green-100" 
               title="New Seller Registered" 
-              desc="Mang Jose Artisan from Lumban applied for verification" 
+              desc="A new user applied for seller verification" 
               time="2 min ago" 
             />
             <ActivityItem 

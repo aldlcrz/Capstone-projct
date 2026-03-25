@@ -48,7 +48,7 @@ export default function AdminSellersPage() {
   }, [socket]);
 
   const verifySeller = async (id) => {
-    if(!confirm("Verify this artisan for the Lumban community?")) return;
+    if(!confirm("Verify this seller for the Lumban community?")) return;
     setError(null); setSuccess(null);
     try {
       await api.put(`/admin/verify-seller/${id}`, {}, {
@@ -99,7 +99,7 @@ export default function AdminSellersPage() {
           <div className="artisan-card p-20 text-center space-y-4">
              <div className="w-16 h-16 bg-green-50 text-green-600 rounded-full flex items-center justify-center mx-auto"><CheckCircle className="w-8 h-8" /></div>
              <h3 className="text-xl font-bold">Queue is empty</h3>
-             <p className="text-[var(--muted)]">All artisan sellers are currently verified.</p>
+             <p className="text-[var(--muted)]">All sellers are currently verified.</p>
           </div>
         ) : (
           <div className="grid grid-cols-1 gap-6">
@@ -139,7 +139,7 @@ export default function AdminSellersPage() {
                     onClick={() => verifySeller(seller.id)}
                     className="px-5 py-3 bg-[var(--bark)] text-white rounded-xl flex items-center gap-2 text-xs font-bold uppercase tracking-widest hover:bg-green-600 transition-all shadow-md group"
                   >
-                    <ShieldCheck className="w-4 h-4 group-hover:rotate-12 transition-transform" /> Approve Artisan
+                    <ShieldCheck className="w-4 h-4 group-hover:rotate-12 transition-transform" /> Approve Seller
                   </button>
                 </div>
               </motion.div>
@@ -192,15 +192,15 @@ export default function AdminSellersPage() {
                 >
                   Back to Queue
                 </button>
-                <button 
-                  onClick={() => {
-                    verifySeller(selectedSeller.id);
-                    setIsModalOpen(false);
-                  }}
-                  className="px-8 py-3 bg-[var(--bark)] text-white rounded-xl text-sm font-bold uppercase tracking-widest hover:bg-green-600 transition-all shadow-lg"
-                >
-                  Approve Artisan
-                </button>
+                  <button 
+                    onClick={() => {
+                      verifySeller(selectedSeller.id);
+                      setIsModalOpen(false);
+                    }}
+                    className="px-8 py-3 bg-[var(--bark)] text-white rounded-xl text-sm font-bold uppercase tracking-widest hover:bg-green-600 transition-all shadow-lg"
+                  >
+                    Approve Seller
+                  </button>
               </div>
             </motion.div>
           </div>

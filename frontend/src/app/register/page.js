@@ -62,7 +62,7 @@ export default function RegisterPage() {
       setError("Security key must be at least 6 characters.");
       return;
     }
-    
+
     if (formData.password.length > 32) {
       setError("Security key cannot exceed 32 characters.");
       return;
@@ -145,7 +145,7 @@ export default function RegisterPage() {
       <div className="absolute bottom-0 left-0 w-[400px] h-[400px] rounded-full translate-y-1/2 -translate-x-1/3 blur-3xl pointer-events-none"
         style={{ background: "var(--sand, #D4B896)", opacity: 0.12 }} />
 
-      <button 
+      <button
         onClick={() => router.back()}
         className="absolute top-6 left-6 md:top-10 md:left-10 p-3 bg-white rounded-2xl shadow-[0_8px_30px_rgba(0,0,0,0.04)] text-[var(--muted)] hover:text-[var(--rust)] hover:scale-105 transition-all z-50 flex items-center justify-center border border-[var(--border)]"
       >
@@ -291,7 +291,7 @@ export default function RegisterPage() {
                           {role === "customer" ? <User className="w-5 h-5" /> : <ShoppingBag className="w-5 h-5" />}
                         </div>
                         <span className="font-bold text-[9px] uppercase tracking-[0.2em]" style={{ color: "var(--charcoal)" }}>
-                          {role === "customer" ? "Member" : "Artisan"}
+                          {role === "customer" ? "User" : "Seller"}
                         </span>
                         {formData.role === role && <div className="absolute top-2 right-2"><CheckCircle2 className="w-3 h-3" style={{ color: "var(--rust)" }} /></div>}
                       </button>
@@ -321,7 +321,7 @@ export default function RegisterPage() {
                   </div>
 
                   <div className="space-y-3">
-                    <label style={labelStyle}>Required Artifacts</label>
+                    <label style={labelStyle}>Requirements</label>
                     <div className="grid grid-cols-3 gap-3">
                       {[
                         { id: "cert", label: "Indigency", file: certificate, set: setCertificate },
@@ -369,7 +369,7 @@ export default function RegisterPage() {
                     style={{ padding: "1.125rem", borderRadius: "9999px", background: "var(--rust, #C0422A)", boxShadow: "0 8px 24px rgba(192,66,42,0.2)", transition: "background 0.3s" }}
                     onMouseEnter={(e) => { e.currentTarget.style.background = "var(--rust-light, #E8604A)"; }}
                     onMouseLeave={(e) => { e.currentTarget.style.background = "var(--rust, #C0422A)"; }}>
-                    {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : "Finalize Registry Access"}
+                    {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : "Sign Up"}
                   </motion.button>
                 </div>
               </motion.form>

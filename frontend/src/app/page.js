@@ -145,7 +145,7 @@ export default function LandingPage() {
             <div className="inline-flex items-center gap-2 border border-[#C0422A]/50 bg-[#C0422A]/10 backdrop-blur-sm px-3 py-1.5 rounded-full mb-6 mt-4 md:mt-0">
               <span className="w-1.5 h-1.5 rounded-full bg-[#C0422A] animate-pulse" />
               <span className="text-[#E8604A] text-[9px] font-extrabold tracking-[0.22em] uppercase">
-                Direct Artisan Access
+                Direct Seller Access
               </span>
             </div>
           </motion.div>

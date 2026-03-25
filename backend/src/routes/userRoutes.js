@@ -12,5 +12,6 @@ router.put('/addresses/:id', protect, userController.updateAddress);
 router.delete('/addresses/:id', protect, userController.deleteAddress);
 router.patch('/addresses/:id/default', protect, userController.setDefaultAddress);
 router.patch('/fcm-token', protect, userController.updateFcmToken);
+router.put('/change-password', protect, userController.changePassword);
 
 module.exports = router;

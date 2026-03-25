@@ -291,41 +291,50 @@ exports.getSellerStats = async (req, res) => {
       }),
     ]);
 
-    // For performance, let's group orders by month for the last 6 months
+    // Group orders by month for the last 6 months
     const sixMonthsAgo = new Date();
-    sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);
+    sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 5); // Start of the 6-month window
+    sixMonthsAgo.setDate(1);
+    sixMonthsAgo.setHours(0, 0, 0, 0);
 
-    const salesTrend = await Order.findAll({
-      attributes: [
-        [sequelize.fn('MONTHNAME', sequelize.col('createdAt')), 'month'],
-        [sequelize.fn('SUM', sequelize.col('totalAmount')), 'total'],
-      ],
+    const ordersTrend = await Order.findAll({
+      attributes: ['totalAmount', 'createdAt'],
       where: {
         sellerId,
         status: { [Op.ne]: 'Cancelled' },
         createdAt: { [Op.gte]: sixMonthsAgo }
       },
-      group: [sequelize.fn('MONTH', sequelize.col('createdAt')), 'month'],
-      order: [[sequelize.fn('MONTH', sequelize.col('createdAt')), 'ASC']]
+      order: [['createdAt', 'ASC']]
     });
 
-    const performanceData = salesTrend.map(s => ({
-      name: s.getDataValue('month').substring(0, 3),
-      sales: Number(s.getDataValue('total') || 0)
-    }));
+    const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+    const performanceMap = {};
+    
+    // Initialize last 6 months with 0
+    for (let i = 0; i < 6; i++) {
+      const d = new Date();
+      d.setMonth(d.getMonth() - i);
+      performanceMap[monthNames[d.getMonth()]] = 0;
+    }
+
+    ordersTrend.forEach(o => {
+      const m = monthNames[new Date(o.createdAt).getMonth()];
+      if (performanceMap[m] !== undefined) {
+        performanceMap[m] += Number(o.totalAmount || 0);
+      }
+    });
+
+    const performanceData = Object.keys(performanceMap)
+      .map(name => ({ name, sales: performanceMap[name] }))
+      .reverse(); // Standard chronological order
 
     res.status(200).json({
       revenue: Number(totalRevenue || 0),
       orders: totalOrders,
       inquiries,
       products: totalInventory,
-      totalRevenue: Number(totalRevenue || 0),
-      totalOrders,
-      totalInventory,
       lowStock,
-      performance: performanceData.length > 0 ? performanceData : [
-        { name: 'Jan', sales: 0 }, { name: 'Feb', sales: 0 }, { name: 'Mar', sales: 0 }
-      ],
+      performance: performanceData
     });
   } catch (error) {
     res.status(500).json({ message: error.message });

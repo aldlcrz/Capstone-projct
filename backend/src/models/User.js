@@ -77,6 +77,12 @@ const User = sequelize.define('User', {
   },
 }, {
   timestamps: true,
+  indexes: [
+    {
+      unique: true,
+      fields: ['email']
+    }
+  ]
 });
 
 module.exports = User;

@@ -292,7 +292,7 @@ export default function CheckoutPage() {
       localStorage.removeItem("checkout_items");
       localStorage.removeItem("checkout_item");
     } catch (err) {
-      console.error("Artisan order placement failed:", err);
+      console.error("Seller order placement failed:", err);
       alert(err.response?.data?.message || "Failed to transmit commission to registry.");
       setLoading(false);
     }
@@ -322,7 +322,7 @@ export default function CheckoutPage() {
             <p className={`text-[var(--muted)] leading-relaxed ${isBuyNowMode ? 'text-sm mt-3 max-w-xl' : 'text-sm mt-4 max-w-2xl'}`}>
               {isBuyNowMode
                 ? 'A tighter single-item checkout with clearer shipping, payment, and order summary sections.'
-                : 'Complete your shipping and payment details to place your order with the artisan registry.'}
+                : 'Complete your shipping and payment details to place your order with the seller registry.'}
             </p>
           </div>
           
@@ -537,7 +537,7 @@ export default function CheckoutPage() {
                                 <div>
                                    <div className="text-[10px] font-extrabold text-blue-600 uppercase tracking-[0.3em] mb-1">GCash Direct Pay Registry</div>
                                    <div className={`font-serif font-bold text-blue-900 tracking-tight ${isBuyNowMode ? 'text-[1.75rem]' : 'text-3xl'}`}>0912 345 6789</div>
-                                   <div className="text-xs font-bold text-blue-800 opacity-60 uppercase tracking-widest mt-1">Jose Artisans Co-op Portal</div>
+                                   <div className="text-xs font-bold text-blue-800 opacity-60 uppercase tracking-widest mt-1">Jose Sellers Co-op Portal</div>
                                 </div>
                                 <div className={`bg-white/60 border border-blue-100 inline-block font-serif font-bold text-blue-900 underline decoration-double decoration-blue-300 ${isBuyNowMode ? 'p-3 rounded-lg text-lg' : 'p-4 rounded-xl text-xl'}`}>
                                    Amount: ₱{total.toLocaleString()}
@@ -649,7 +649,7 @@ export default function CheckoutPage() {
                      <ShieldCheck className="w-8 h-8 shrink-0 mt-1 opacity-60" />
                      <div className="space-y-2">
                         <div className="text-[10px] font-bold uppercase tracking-widest">Escrow Protection Protocol</div>
-                        <p className="text-[10px] font-medium leading-relaxed opacity-80 italic">Funds are securely captured and released to artisans only upon digital confirmation of heritage artifact receipt. Your patronage is fully protected.</p>
+                        <p className="text-[10px] font-medium leading-relaxed opacity-80 italic">Funds are securely captured and released to sellers only upon digital confirmation of heritage artifact receipt. Your customer patronage is fully protected.</p>
                      </div>
                   </div>
                </div>
@@ -678,7 +678,7 @@ export default function CheckoutPage() {
                      Commission <span className="text-[var(--rust)] italic lowercase">Confirmed</span>
                    </h2>
                    <p className={`text-[var(--muted)] max-w-xl mx-auto italic leading-relaxed font-medium px-4 ${isBuyNowMode ? 'text-base' : 'text-lg'}`}>
-                     The artisan workshop has been notified of your acquisition. Your heritage order is now entering the logistics registry for premium LUMBÁN dispatch.
+                     The seller workshop has been notified of your acquisition. Your heritage order is now entering the logistics registry for premium LUMBÁN dispatch.
                    </p>
                 </div>
 

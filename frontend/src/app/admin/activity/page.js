@@ -9,8 +9,8 @@ import { io } from "socket.io-client";
 export default function AdminActivity() {
   const [activities, setActivities] = useState([
     { id: 1, type: 'order', label: 'New Commission Placed', user: 'Maria Santos', desc: 'Pina-Silk Lumban Barong', time: '2 mins ago', color: 'bg-green-500' },
-    { id: 2, type: 'seller', label: 'New Artisan Application', user: 'Jose Artisans', desc: 'Awaiting Document Review', time: '15 mins ago', color: 'bg-[var(--rust)]' },
-    { id: 3, type: 'user', label: 'New Patron Registration', user: 'Ricardo Dalisay', desc: 'Customer from Laguna', time: '1 hour ago', color: 'bg-blue-500' },
+    { id: 2, type: 'seller', label: 'New Seller Application', user: 'Jose Sellers', desc: 'Awaiting Document Review', time: '15 mins ago', color: 'bg-[var(--rust)]' },
+    { id: 3, type: 'user', label: 'New Customer Registration', user: 'Ricardo Dalisay', desc: 'Customer from Laguna', time: '1 hour ago', color: 'bg-blue-500' },
   ]);
 
   useEffect(() => {
@@ -34,7 +34,7 @@ export default function AdminActivity() {
             id: Date.now(),
             type: 'order',
             label: 'New Heritage Commission',
-            user: 'Lumban Patron',
+            user: 'Lumban Customer',
             desc: `Created order #LB-${order.id.toString().padStart(6, '0')}`,
             time: 'Just now',
             color: 'bg-green-500 font-bold'
@@ -71,7 +71,7 @@ export default function AdminActivity() {
 
           <div className="divide-y divide-[var(--border)]">
             <AnimatePresence initial={false}>
-              {activities.map((act) => (
+                {activities.map((act) => (
                 <motion.div 
                   key={act.id}
                   initial={{ opacity: 0, height: 0, x: -20 }}
@@ -105,7 +105,7 @@ export default function AdminActivity() {
                         </button>
                         {act.type === 'seller' && (
                           <button 
-                            onClick={() => window.location.href = '/admin/users'}
+                            onClick={() => window.location.href = '/admin/sellers'}
                             className="flex items-center gap-2 text-[10px] font-bold text-[var(--charcoal)] uppercase tracking-widest hover:text-[var(--rust)] transition-all"
                           >
                             Review Documents <ShieldCheck className="w-3 h-3" />
@@ -125,8 +125,8 @@ export default function AdminActivity() {
               <div className="space-y-6 relative z-10">
                  <h3 className="font-serif text-2xl font-bold italic tracking-tight">User Locations</h3>
                  <div className="space-y-3">
-                    <GeoItem label="Lumban, Laguna" count="124 Patrons" />
-                    <GeoItem label="Metro Manila" count="86 Patrons" />
+                    <GeoItem label="Lumban, Laguna" count="124 Customers" />
+                    <GeoItem label="Metro Manila" count="86 Customers" />
                     <GeoItem label="Global Units" count="12 Commissions" />
                  </div>
               </div>

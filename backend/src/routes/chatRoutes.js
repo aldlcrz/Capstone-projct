@@ -1,12 +1,19 @@
 const express = require('express');
 const router = express.Router();
-const messageController = require('../controllers/messageController');
-const { protect } = require('../middleware/authMiddleware');
+const chatController = require('../controllers/chatController');
+const auth = require('../middleware/authMiddleware');
 
-router.get('/threads', protect, messageController.getChatThreads);
-router.get('/messages/:otherId', protect, messageController.getMessages);
-router.post('/send', protect, messageController.sendMessage);
-router.get('/:otherId', protect, messageController.getMessages);
-router.post('/', protect, messageController.sendMessage);
+// Conversations list (threads)
+router.get('/threads', auth.protect, chatController.getConversations);
+router.get('/conversations', auth.protect, chatController.getConversations);
+
+// Messages in a specific conversation
+router.get('/conversation/:otherUserId', auth.protect, chatController.getConversation);
+router.get('/messages/:otherUserId', auth.protect, chatController.getConversation);
+router.get('/:otherUserId', auth.protect, chatController.getConversation);
+
+// Send a message
+router.post('/send', auth.protect, chatController.sendMessage);
+router.post('/', auth.protect, chatController.sendMessage);
 
 module.exports = router;

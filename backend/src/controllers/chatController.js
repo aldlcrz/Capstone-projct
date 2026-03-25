@@ -1,7 +1,4 @@
-const Message = require('../models/Message');
-const User = require('../models/User');
-const { Order, OrderItem } = require('../models/Order');
-const { Product } = require('../models/Product');
+const { Message, User, Order, OrderItem, Product } = require('../models');
 const { Op } = require('sequelize');
 const socketUtility = require('../utils/socketUtility');
 
@@ -59,12 +56,12 @@ exports.getConversation = async (req, res) => {
 
         // Mark as read
         await Message.update(
-            { isRead: true },
+            { read: true },
             {
                 where: {
                     senderId: otherUserId,
                     receiverId: userId,
-                    isRead: false
+                    read: false
                 }
             }
         );
@@ -134,7 +131,7 @@ exports.getConversations = async (req, res) => {
                 where: {
                     senderId: otherId,
                     receiverId: userId,
-                    isRead: false
+                    read: false
                 }
             });
 

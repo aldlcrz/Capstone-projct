@@ -157,3 +157,41 @@ exports.updateFcmToken = async (req, res) => {
         res.status(500).json({ message: 'Error updating push token', error: err.message });
     }
 };
+
+const bcrypt = require('bcryptjs');
+
+exports.changePassword = async (req, res) => {
+    try {
+        const { oldPassword, newPassword } = req.body;
+
+        if (!oldPassword || !newPassword) {
+            return res.status(400).json({ message: 'Old password and new password are required' });
+        }
+
+        if (newPassword.length < 6 || newPassword.length > 32) {
+            return res.status(400).json({ message: 'New password must be between 6 and 32 characters long' });
+        }
+
+        const user = await User.findByPk(req.user.id);
+        if (!user) {
+            return res.status(404).json({ message: 'User not found' });
+        }
+
+        // Verify old password
+        const isMatch = await bcrypt.compare(oldPassword, user.password);
+        if (!isMatch) {
+            return res.status(400).json({ message: 'Incorrect old password' });
+        }
+
+        // Hash new password
+        user.password = await bcrypt.hash(newPassword, 10);
+        user.passwordChangedAt = new Date();
+        await user.save();
+
+        res.json({ message: 'Password changed successfully' });
+    } catch (err) {
+        console.error('changePassword Error:', err);
+        res.status(500).json({ message: 'Error changing password', error: err.message });
+    }
+};
+
