@@ -8,7 +8,7 @@ import { io } from "socket.io-client";
 
 export default function AdminActivity() {
   const [activities, setActivities] = useState([
-    { id: 1, type: 'order', label: 'New Commission Placed', user: 'Maria Santos', desc: 'Pina-Silk Lumban Barong', time: '2 mins ago', color: 'bg-green-500' },
+    { id: 1, type: 'order', label: 'New Order Placed', user: 'Maria Santos', desc: 'Pina-Silk Lumban Barong', time: '2 mins ago', color: 'bg-green-500' },
     { id: 2, type: 'seller', label: 'New Seller Application', user: 'Jose Sellers', desc: 'Awaiting Document Review', time: '15 mins ago', color: 'bg-[var(--rust)]' },
     { id: 3, type: 'user', label: 'New Customer Registration', user: 'Ricardo Dalisay', desc: 'Customer from Laguna', time: '1 hour ago', color: 'bg-blue-500' },
   ]);
@@ -20,7 +20,7 @@ export default function AdminActivity() {
         const newAct = {
             id: Date.now(),
             type: data?.type || 'platform',
-            label: data?.type === 'order' ? 'Commission Update' : 'Workshop Activity',
+            label: data?.type === 'order' ? 'Order Update' : 'Workshop Activity',
             user: 'Community Member',
             desc: 'Real-time platform synchronization detected.',
             time: 'Just now',
@@ -33,7 +33,7 @@ export default function AdminActivity() {
         const newAct = {
             id: Date.now(),
             type: 'order',
-            label: 'New Heritage Commission',
+            label: 'New Heritage Order',
             user: 'Lumban Customer',
             desc: `Created order #LB-${order.id.toString().padStart(6, '0')}`,
             time: 'Just now',
@@ -127,7 +127,7 @@ export default function AdminActivity() {
                  <div className="space-y-3">
                     <GeoItem label="Lumban, Laguna" count="124 Customers" />
                     <GeoItem label="Metro Manila" count="86 Customers" />
-                    <GeoItem label="Global Units" count="12 Commissions" />
+                    <GeoItem label="Global Units" count="12 Orders" />
                  </div>
               </div>
            </div>

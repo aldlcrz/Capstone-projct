@@ -44,7 +44,7 @@ export default function AdminSettings() {
       setError(null);
       // Frontend Guardian
       if (commissionRate < 0 || commissionRate > 100) {
-        throw new Error("Commission rate must be between 0 and 100%");
+        throw new Error("Order rate must be between 0 and 100%");
       }
       if (revenueTarget < 0) {
         throw new Error("Growth target cannot be negative");

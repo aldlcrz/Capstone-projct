@@ -25,6 +25,7 @@ import { motion, AnimatePresence } from "framer-motion";
 // No static products; data is fetched from the backend on mount and updated via Socket.IO.
 import { api } from "@/lib/api";
 import { useSocket } from "@/context/SocketContext";
+import { getProductImageSrc } from "@/lib/productImages";
 
 export default function InventoryPage() {
   const router = useRouter();
@@ -163,7 +164,12 @@ export default function InventoryPage() {
               >
                 {/* Product Image */}
                 <div className={`relative shrink-0 overflow-hidden bg-[var(--cream)] rounded-xl border border-[var(--border)] ${view === "list" ? 'w-24 h-24' : 'w-full h-64 border-none border-b rounded-none'}`}>
-                   {product.image?.[0] ? <img src={product.image[0]} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-1000" /> : <div className="w-full h-full flex items-center justify-center"><Package className="w-8 h-8 text-[var(--border)]" /></div>}
+                   <img 
+                     src={getProductImageSrc(product.image)} 
+                     className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-1000" 
+                     alt={product.name}
+                     onError={(e) => { e.target.src = "/images/placeholder.png"; if (!e.target.dataset.tried) { e.target.dataset.tried = true; e.target.src = "/images/placeholder.png"; } }}
+                   />
                 </div>
 
                 {/* Content */}

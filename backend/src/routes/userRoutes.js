@@ -14,4 +14,7 @@ router.patch('/addresses/:id/default', protect, userController.setDefaultAddress
 router.patch('/fcm-token', protect, userController.updateFcmToken);
 router.put('/change-password', protect, userController.changePassword);
 
+// Public route for shop details
+router.get('/seller/:id', userController.getSellerInfo);
+
 module.exports = router;

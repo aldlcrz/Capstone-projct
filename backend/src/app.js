@@ -19,7 +19,10 @@ const io = new Server(server, {
 });
 
 // Middleware
-app.use(helmet({ contentSecurityPolicy: false }));
+app.use(helmet({ 
+  contentSecurityPolicy: false,
+  crossOriginResourcePolicy: { policy: "cross-origin" }
+}));
 const allowedOrigins = [
   'http://localhost:3000',
   'http://localhost:3001',

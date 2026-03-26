@@ -60,9 +60,9 @@ export default function TermsPage() {
             By accessing the Lumbarong marketplace, you agree to be bound by these Terms of Use. If you do not agree, do not use the platform.
           </p>
 
-          <h2 className="font-serif text-2xl font-bold text-[var(--charcoal)] pt-6">Patron Responsibilities</h2>
+          <h2 className="font-serif text-2xl font-bold text-[var(--charcoal)] pt-6">Customer Responsibilities</h2>
           <p className="font-sans leading-relaxed">
-            Patrons agree to provide accurate payment information, upload valid and authentic proof of transactions, and communicate respectfully with artisans through the in-app chat.
+            Customers agree to provide accurate payment information, upload valid and authentic proof of transactions, and communicate respectfully with artisans through the in-app chat.
           </p>
 
           <h2 className="font-serif text-2xl font-bold text-[var(--charcoal)] pt-6">Artisan Obligations</h2>

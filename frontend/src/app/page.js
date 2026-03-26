@@ -49,10 +49,10 @@ export default function LandingPage() {
         {/* Desktop Navigation */}
         <nav className="hidden lg:flex items-center gap-10">
           {[
-            { href: "/heritage-guide", label: "SHOPPING GUIDE" },
-            { href: "/about", label: "WHO WE ARE" },
-            { href: "/privacy-policy", label: "PRIVACY" },
-            { href: "/terms", label: "TERMS" },
+            { href: "/heritage-guide", label: "GUIDE" },
+            { href: "/about", label: "ABOUT US" },
+            { href: "/privacy-policy", label: "PRIVACY POLICY" },
+            { href: "/terms", label: "TERMS OF USE" },
           ].map((item) => (
             <Link
               key={item.href}

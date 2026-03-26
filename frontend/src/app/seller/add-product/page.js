@@ -20,6 +20,28 @@ export default function AddProductPage() {
     shippingDays: ""
   });
   const [variations, setVariations] = useState([]); // Array of { file, label, preview }
+  const [categories, setCategories] = useState([]);
+  const [fetchingCategories, setFetchingCategories] = useState(true);
+
+  React.useEffect(() => {
+    const fetchCategories = async () => {
+      try {
+        const res = await api.get("/categories");
+        setCategories(res.data);
+      } catch (err) {
+        console.error("Failed to fetch categories");
+        setCategories([
+          { name: "Formal" },
+          { name: "Casual" },
+          { name: "Traditional" },
+          { name: "Modern Elite" }
+        ]);
+      } finally {
+        setFetchingCategories(false);
+      }
+    };
+    fetchCategories();
+  }, []);
 
   const handleImageChange = (e) => {
     const files = Array.from(e.target.files);
@@ -284,18 +306,24 @@ export default function AddProductPage() {
                 </div>
               </div>
 
-              <div className="space-y-2">
-                <label className="text-[10px] font-bold uppercase tracking-widest text-[var(--muted)]">Category</label>
-                <select 
-                  className="w-full px-4 py-3 bg-[var(--input-bg)] border border-[var(--border)] rounded-xl focus:outline-none focus:border-[var(--rust)] transition-all font-medium"
-                  value={formData.category}
-                  onChange={(e) => setFormData({...formData, category: e.target.value})}
-                >
-                  <option>Formal</option>
-                  <option>Casual</option>
-                  <option>Traditional</option>
-                  <option>Modern Elite</option>
-                </select>
+              <div className="space-y-4">
+                <label className="text-[10px] font-bold uppercase tracking-widest text-[var(--muted)] ml-2">Category</label>
+                <div className="relative group">
+                  <select 
+                    required
+                    className="w-full px-6 py-4 bg-white border-2 border-[var(--rust)]/60 rounded-2xl focus:outline-none focus:border-[var(--rust)] transition-all font-serif text-lg font-bold text-[var(--charcoal)] appearance-none cursor-pointer shadow-lg shadow-red-900/5 group-hover:border-[var(--rust)]"
+                    value={formData.category}
+                    onChange={(e) => setFormData({...formData, category: e.target.value})}
+                  >
+                    <option value="" disabled>Select Heritage Sector</option>
+                    {categories.map((cat, idx) => (
+                      <option key={idx} value={cat.name}>{cat.name}</option>
+                    ))}
+                  </select>
+                  <div className="absolute right-6 top-1/2 -translate-y-1/2 pointer-events-none text-[var(--rust)]">
+                    <Plus className="w-5 h-5 rotate-45" />
+                  </div>
+                </div>
               </div>
             </div>
 

@@ -16,6 +16,7 @@ import {
   CheckCircle2
 } from "lucide-react";
 import { api } from "@/lib/api";
+import { getProductImageSrc } from "@/lib/productImages";
 
 export default function ShopClient() {
   const searchParams = useSearchParams();
@@ -35,7 +36,7 @@ export default function ShopClient() {
       try {
         const [sellerRes, productsRes] = await Promise.all([
           api.get(`/users/seller/${id}`),
-          api.get(`/products/seller/${id}`)
+          api.get(`/products?seller=${id}`)
         ]);
         setSeller(sellerRes.data);
         setProducts(productsRes.data);
@@ -173,18 +174,7 @@ export default function ShopClient() {
               <Link key={product.id} href={`/products?id=${product.id}`} className="group bg-white rounded-sm shadow-sm hover:shadow-md transition-all h-full flex flex-col border border-transparent hover:border-[var(--rust)]/10">
                 <div className="relative aspect-[3/4] overflow-hidden bg-[#fafafa]">
                   <Image
-                    src={(() => {
-                      let raw;
-                      if (Array.isArray(product.image)) {
-                        const first = product.image[0];
-                        raw = typeof first === 'string' ? first : (first && first.url);
-                      } else if (product.image && typeof product.image === 'object') {
-                        raw = product.image.url;
-                      } else {
-                        raw = product.image;
-                      }
-                      return (typeof raw === 'string' && raw) ? raw : "/images/placeholder.png";
-                    })()}
+                    src={getProductImageSrc(product.image)}
                     alt={product.name}
                     fill
                     className="object-cover group-hover:scale-105 transition-transform duration-500"

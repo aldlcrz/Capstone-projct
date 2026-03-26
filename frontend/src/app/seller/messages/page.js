@@ -83,12 +83,15 @@ function SellerMessages() {
           String(msg.senderId) === String(current.otherUser?.id) ||
           String(msg.receiverId) === String(current.otherUser?.id)
         )) {
-          setMessages(prev => [...prev, msg]);
+          setMessages(prev => {
+            if (prev.some(m => m.id === msg.id)) return prev;
+            return [...prev, msg];
+          });
         }
         return current;
       });
       // Refresh thread list to update last message + unread counts
-      fetchThreads().then(setThreads);
+      fetchThreads().then(setThreads).catch(() => {});
     };
 
     socket.on("receive_message", handleNewMessage);
@@ -156,7 +159,7 @@ function SellerMessages() {
           <div className="p-8 border-b border-[var(--border)]">
             <div className="eyebrow !mb-2">Heritage Support</div>
             <h2 className="font-serif text-2xl font-bold text-[var(--charcoal)] mb-6">
-              Patron <span className="text-[var(--rust)] italic lowercase">Inquiries</span>
+              Customer <span className="text-[var(--rust)] italic lowercase">Inquiries</span>
             </h2>
             <div className="relative">
               <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--muted)]" />
@@ -193,8 +196,13 @@ function SellerMessages() {
                 </div>
                 <div className="flex-1 min-w-0">
                   <div className="flex justify-between items-center mb-1">
-                    <div className="text-sm font-bold text-[var(--charcoal)] truncate">
-                      {thread.otherUser.name || "Patron"}
+                    <div className="flex items-center gap-2 mb-1">
+                      <div className="text-sm font-bold text-[var(--charcoal)] truncate">
+                        {thread.otherUser.name || "Customer"}
+                      </div>
+                      <span className={`text-[7px] px-1 py-0 rounded font-bold uppercase tracking-tight shadow-sm ${thread.otherUser.role === 'seller' ? 'bg-[var(--rust)] text-white' : 'bg-[var(--bark)] text-white'}`}>
+                        {thread.otherUser.role}
+                      </span>
                     </div>
                     <div className="text-[9px] font-bold text-[var(--muted)] whitespace-nowrap ml-2">
                       {thread.isGhost ? "New" : thread.timestamp
@@ -226,14 +234,17 @@ function SellerMessages() {
                     {activeThread.otherUser.name?.[0] || "?"}
                   </div>
                   <div>
-                    <div className="text-lg font-bold text-[var(--charcoal)]">
-                      {activeThread.otherUser.name}
+                    <div className="flex items-center gap-2">
+                       <h2 className="text-lg font-bold text-[var(--charcoal)]">{activeThread.otherUser.name}</h2>
+                       <span className={`text-[10px] px-2 py-0.5 rounded font-bold uppercase tracking-widest ${activeThread.otherUser.role === 'seller' ? 'bg-[var(--rust)] text-white' : 'bg-[var(--bark)] text-white'}`}>
+                          {activeThread.otherUser.role}
+                       </span>
                     </div>
-                    <div className="text-[10px] text-green-600 font-bold uppercase tracking-widest flex items-center gap-1.5">
+                    <div className="text-[10px] text-green-600 font-bold uppercase tracking-widest flex items-center gap-1.5 mt-1">
                       {activeThread.isGhost ? (
-                        <span className="text-amber-600">● New Conversation</span>
+                        <span className="text-amber-600">● New Inquiry</span>
                       ) : (
-                        <><span className="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse" /> Active Patron</>
+                        <><span className="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse" /> Active Session</>
                       )}
                     </div>
                   </div>
@@ -253,26 +264,42 @@ function SellerMessages() {
                 )}
 
                 {messages.map((msg, i) => {
-                  const isMine = String(msg.senderId) === String(myId);
+                  const isMine = String(msg.senderId || msg.sender?.id) === String(myId);
+                  const senderName = isMine ? 'You' : (msg.sender?.name || activeThread.otherUser.name || 'Customer');
+
                   return (
                     <motion.div
                       key={i}
-                      initial={{ opacity: 0, y: 8, scale: 0.96 }}
-                      animate={{ opacity: 1, y: 0, scale: 1 }}
-                      className={`flex ${isMine ? "justify-end" : "justify-start"}`}
+                      initial={{ opacity: 0, scale: 0.98 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      className={`flex ${isMine ? 'justify-end' : 'justify-start'} gap-3 mb-6`}
                     >
-                      <div className={`max-w-md p-5 rounded-3xl shadow-lg font-medium text-sm leading-relaxed border-4 border-white ${
-                        isMine
-                          ? "bg-[var(--rust)] text-white rounded-tr-none"
-                          : "bg-white text-[var(--charcoal)] rounded-tl-none"
-                      }`}>
-                        {msg.content}
-                        <div className={`text-[8px] mt-2 font-bold uppercase tracking-wider opacity-60 ${isMine ? "text-white" : "text-[var(--muted)]"}`}>
-                          {msg.createdAt
-                            ? new Date(msg.createdAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
-                            : "Just now"}
+                      {!isMine && (
+                        <div title={senderName} className="w-8 h-8 rounded-full bg-[var(--bark)] text-white flex items-center justify-center text-[10px] font-bold shrink-0 shadow-sm">
+                          {senderName[0]}
+                        </div>
+                      )}
+
+                      <div className={`flex flex-col ${isMine ? 'items-end' : 'items-start'} max-w-[70%]`}>
+                        <div className={`p-5 rounded-2xl shadow-lg font-medium text-sm leading-relaxed border-4 border-white ${
+                          isMine
+                            ? "bg-[var(--rust)] text-white rounded-tr-none"
+                            : "bg-white text-[var(--charcoal)] rounded-tl-none"
+                        }`}>
+                          {msg.content}
+                          <div className={`text-[8px] mt-2 font-bold uppercase tracking-wider opacity-60 ${isMine ? "text-white" : "text-[var(--muted)]"}`}>
+                            {msg.createdAt
+                              ? new Date(msg.createdAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
+                              : "Just now"}
+                          </div>
                         </div>
                       </div>
+
+                      {isMine && (
+                        <div className="w-8 h-8 rounded-full bg-[var(--rust)] text-white flex items-center justify-center text-[10px] font-bold shrink-0 shadow-md">
+                          {(typeof window !== 'undefined' ? JSON.parse(localStorage.getItem('user') || '{}').name?.[0] : 'S') || 'S'}
+                        </div>
+                      )}
                     </motion.div>
                   );
                 })}
@@ -307,7 +334,7 @@ function SellerMessages() {
               <div>
                 <h3 className="font-serif text-3xl font-bold opacity-60">Workshop Communication</h3>
                 <p className="max-w-xs text-[var(--muted)] font-medium leading-relaxed italic mt-2">
-                  Select a patron thread on the left to begin your mastercraft dialogue.
+                  Select a customer thread on the left to begin your mastercraft dialogue.
                 </p>
               </div>
             </div>

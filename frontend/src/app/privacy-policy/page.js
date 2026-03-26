@@ -57,13 +57,13 @@ export default function PrivacyPolicyPage() {
         <div className="prose prose-lg text-[var(--muted)] space-y-6 bg-white p-12 rounded-[2rem] shadow-xl artisan-card">
           <h2 className="font-serif text-2xl font-bold text-[var(--charcoal)]">Information We Collect</h2>
           <p className="font-sans leading-relaxed">
-            When you register as a patron or artisan, we collect identifying information such as your name, contact details, shipping address, and necessary verification documents (e.g., Certificates of Indigency for artisans).
+            When you register as a customer or artisan, we collect identifying information such as your name, contact details, shipping address, and necessary verification documents (e.g., Certificates of Indigency for artisans).
           </p>
 
           <h2 className="font-serif text-2xl font-bold text-[var(--charcoal)] pt-6">How We Use Your Data</h2>
           <ul className="list-disc pl-6 space-y-2">
             <li>To process and fulfill your heritage orders securely.</li>
-            <li>To facilitate real-time chat communication between patrons and artisans.</li>
+            <li>To facilitate real-time chat communication between customers and artisans.</li>
             <li>To verify artisan credentials and maintain the integrity of our marketplace.</li>
             <li>To improve the Lumbarong platform and your browsing experience.</li>
           </ul>

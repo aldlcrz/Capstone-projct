@@ -42,6 +42,14 @@ const configureSocketServer = (ioServer) => {
       console.log(`Socket disconnected: ${socket.id}`);
     });
 
+    socket.on('join_room', (roomName) => {
+      // Allows fallback join mechanism if handshakes aren't supplying tokens from frontend
+      if (roomName) {
+         socket.join(roomName);
+         console.log(`Socket ${socket.id} joined room: ${roomName}`);
+      }
+    });
+
     // Typing Indicators
     socket.on('typing', (data) => {
       // data: { receiverId, isTyping }

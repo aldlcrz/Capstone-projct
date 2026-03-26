@@ -54,6 +54,7 @@ export default function SellerLayout({ children }) {
   const [user, setUser] = useState(null);
   const [notifications, setNotifications] = useState([]);
   const [unreadCount, setUnreadCount] = useState(0);
+  const [isPopoutOpen, setIsPopoutOpen] = useState(false);
   const { socket } = useSocket();
 
   const fetchNotifications = React.useCallback(async () => {
@@ -96,6 +97,16 @@ export default function SellerLayout({ children }) {
       }
     };
   }, [socket, fetchNotifications]);
+
+  const markAsRead = async (id) => {
+    try {
+      await api.put(`/notifications/${id}/read`);
+      setNotifications(prev => prev.map(n => n.id === id ? { ...n, read: true } : n));
+      setUnreadCount(prev => Math.max(0, prev - 1));
+    } catch (error) {
+      console.error("Failed to mark notification as read");
+    }
+  };
 
   const isVerified = user?.isVerified;
 
@@ -168,10 +179,106 @@ export default function SellerLayout({ children }) {
 
 
             <div className="flex items-center gap-2 md:gap-6">
-              <button className="relative w-10 h-10 flex items-center justify-center rounded-xl bg-[var(--cream)] text-[var(--charcoal)] hover:text-[var(--rust)]">
-                <Bell className="w-5 h-5" />
-                <span className="absolute top-2.5 right-2.5 w-2 h-2 bg-[var(--rust)] rounded-full border-2 border-white" />
-              </button>
+              <div className="relative">
+                <button 
+                  onClick={() => setIsPopoutOpen(!isPopoutOpen)}
+                  className={`relative w-10 h-10 flex items-center justify-center rounded-xl transition-all ${isPopoutOpen ? 'bg-[var(--rust)] text-white shadow-lg' : 'bg-[var(--cream)] text-[var(--charcoal)] hover:text-[var(--rust)]'}`}
+                >
+                  <Bell className="w-5 h-5" />
+                  {unreadCount > 0 && (
+                    <span className="absolute -top-1.5 -right-1.5 min-w-[20px] h-5 px-1 bg-[var(--rust)] text-white text-[10px] font-black flex items-center justify-center rounded-full border-2 border-white shadow-sm scale-110">
+                      {unreadCount}
+                    </span>
+                  )}
+                </button>
+
+                {/* Notifications Popout */}
+                <AnimatePresence>
+                  {isPopoutOpen && (
+                    <>
+                      <motion.div 
+                        initial={{ opacity: 0 }} 
+                        animate={{ opacity: 1 }} 
+                        exit={{ opacity: 0 }}
+                        onClick={() => setIsPopoutOpen(false)}
+                        className="fixed inset-0 z-40 bg-black/5 backdrop-blur-[2px]"
+                      />
+                      <motion.div
+                        initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                        animate={{ opacity: 1, y: 0, scale: 1 }}
+                        exit={{ opacity: 0, y: 10, scale: 0.95 }}
+                        className="absolute right-0 mt-3 w-80 md:w-96 max-h-[500px] bg-white rounded-2xl shadow-2xl border border-[var(--border)] overflow-hidden z-50 flex flex-col"
+                      >
+                        <div className="p-5 border-b border-[var(--border)] flex items-center justify-between bg-stone-50/50">
+                          <h3 className="font-serif font-bold text-[var(--charcoal)]">Artisan Alerts</h3>
+                          <span className="text-[10px] font-black tracking-widest text-[var(--muted)] opacity-50 uppercase">{unreadCount} New</span>
+                        </div>
+                        <div className="flex-1 overflow-y-auto custom-scrollbar p-2">
+                          {notifications.length === 0 ? (
+                            <div className="py-20 text-center space-y-3">
+                              <Bell className="w-8 h-8 mx-auto text-[var(--muted)] opacity-20" />
+                              <div className="text-sm font-medium text-[var(--muted)]">All quiet in the workshop.</div>
+                            </div>
+                          ) : (
+                            <div className="space-y-1">
+                              {notifications.map((notif) => {
+                                const n = normalizeNotification(notif);
+                                return (
+                                  <div 
+                                    key={notif.id} 
+                                    className={`relative p-4 rounded-xl transition-all group ${!n.read ? 'bg-[var(--cream)]/40 hover:bg-[var(--cream)]/60' : 'hover:bg-stone-50'}`}
+                                  >
+                                    {!n.read && <div className="absolute left-2 top-1/2 -translate-y-1/2 w-1.5 h-1.5 bg-[var(--rust)] rounded-full" />}
+                                    <div className="pl-3 space-y-1">
+                                      <div className="flex items-start justify-between gap-2">
+                                        <div className="text-xs font-bold text-[var(--charcoal)] leading-tight">{n.title}</div>
+                                        <div className="text-[9px] font-bold text-[var(--muted)] opacity-50 whitespace-nowrap pt-0.5 uppercase tracking-tighter">
+                                          {formatNotificationTime(n.createdAt)}
+                                        </div>
+                                      </div>
+                                      <p className="text-[11px] text-[var(--muted)] leading-relaxed line-clamp-2">{n.message}</p>
+                                      
+                                      <div className="flex items-center gap-3 pt-2">
+                                        {n.link && (
+                                          <Link 
+                                            href={n.link} 
+                                            onClick={() => setIsPopoutOpen(false)}
+                                            className="text-[10px] font-bold text-[var(--rust)] hover:underline flex items-center gap-1"
+                                          >
+                                            View Details <ArrowRight className="w-3 h-3" />
+                                          </Link>
+                                        )}
+                                        {!n.read && (
+                                          <button 
+                                            onClick={() => markAsRead(notif.id)}
+                                            className="text-[10px] font-bold text-[var(--muted)] hover:text-[var(--rust)] transition-colors ml-auto"
+                                          >
+                                            Mark as read
+                                          </button>
+                                        )}
+                                      </div>
+                                    </div>
+                                  </div>
+                                );
+                              })}
+                            </div>
+                          )}
+                        </div>
+                        {notifications.length > 0 && (
+                          <div className="p-4 bg-stone-50 border-t border-[var(--border)] text-center">
+                             <button 
+                               onClick={() => setIsPopoutOpen(false)}
+                               className="text-[10px] font-bold uppercase tracking-widest text-[var(--muted)] hover:text-[var(--rust)] transition-colors"
+                             >
+                               Close Alerts
+                             </button>
+                          </div>
+                        )}
+                      </motion.div>
+                    </>
+                  )}
+                </AnimatePresence>
+              </div>
               <div className="hidden lg:block w-[1px] h-8 bg-[var(--border)]" />
               <Link href="/seller/profile" className="flex items-center gap-3 group">
                 <div className="hidden lg:block text-right">

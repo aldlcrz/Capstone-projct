@@ -56,6 +56,7 @@ const serializeProduct = (req, product) => {
     ...plainProduct,
     sizes: parseStoredList(plainProduct.sizes).filter(Boolean),
     image: images,
+    artisan: plainProduct.seller ? plainProduct.seller.name : undefined
   };
 };
 
@@ -193,7 +194,7 @@ exports.updateProduct = async (req, res) => {
       return res.status(404).json({ message: 'Product not found or access denied' });
     }
 
-    const { name, description, price, sizes, category, stock, variationNames, shippingFee, shippingDays } = req.body;
+    const { name, description, price, sizes, category, stock, variationNames, existingImages, shippingFee, shippingDays } = req.body;
 
     if (price !== undefined && Number(price) <= 0) {
       return res.status(400).json({ message: 'Price must be a positive number' });
@@ -211,16 +212,22 @@ exports.updateProduct = async (req, res) => {
       return res.status(400).json({ message: 'Shipping days must be at least 1 day' });
     }
 
-    let images = product.image;
+    let images = parseStoredList(product.image);
+    if (existingImages) {
+      images = Array.isArray(existingImages) ? existingImages : JSON.parse(existingImages);
+    }
+
     if (req.files && req.files.length > 0) {
       const labels = Array.isArray(variationNames) 
         ? variationNames 
         : JSON.parse(variationNames || '[]');
       
-      images = req.files.map((file, index) => ({
+      const newImages = req.files.map((file, index) => ({
         url: `/uploads/products/${file.filename}`,
-        variation: labels[index] || `Variation ${index + 1}`
+        variation: labels[index] || `Variation ${images.length + index + 1}`
       }));
+      
+      images = [...images, ...newImages];
     }
 
     await product.update({

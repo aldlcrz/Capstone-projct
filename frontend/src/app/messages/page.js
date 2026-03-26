@@ -19,6 +19,10 @@ function MessagesThreadManager() {
   const searchParams = useSearchParams();
   const sellerIdParam = searchParams.get("sellerId");
   const sellerNameParam = searchParams.get("sellerName");
+  const productIdParam = searchParams.get("productId");
+  const productNameParam = searchParams.get("productName");
+  const productImageParam = searchParams.get("productImage");
+  const productPriceParam = searchParams.get("productPrice");
 
   const [threads, setThreads] = useState([]);
   const [activeThread, setActiveThread] = useState(null);
@@ -46,10 +50,19 @@ function MessagesThreadManager() {
             // Create a "ghost" thread for new inquiry
             const ghostThread = {
               otherUser: { id: sellerIdParam, name: sellerNameParam || "Artisan Workshop", role: "seller" },
-              isGhost: true
+              isGhost: true,
+              productContext: productIdParam ? {
+                id: productIdParam,
+                name: productNameParam,
+                image: productImageParam,
+                price: productPriceParam
+              } : null
             };
             setActiveThread(ghostThread);
             setMessages([]);
+            if (productNameParam) {
+              setNewMessage(`I am inquiring about this masterpiece: ${productNameParam}. Is it currently available for my heritage collection?`);
+            }
           }
         } else if (allThreads.length > 0) {
           setActiveThread(allThreads[0]);
@@ -66,21 +79,39 @@ function MessagesThreadManager() {
     fetchThreads();
 
     if (socket) {
-      socket.on("receive_message", (msg) => {
-        if (activeThread && (
-          String(msg.senderId) === String(activeThread.otherUser?.id) ||
-          String(msg.receiverId) === String(activeThread.otherUser?.id)
-        )) {
-          setMessages(prev => [...prev, msg]);
-        }
-      });
+      const handleIncomingMessage = (msg) => {
+        // Use functional state updates to avoid stale closures with activeThread
+        setActiveThread(current => {
+          if (current && (
+            String(msg.senderId) === String(current.otherUser?.id) ||
+            String(msg.receiverId) === String(current.otherUser?.id)
+          )) {
+            setMessages(prev => {
+              // Deduplicate: Don't add if already exists (avoids double append for my own sent messages)
+              if (prev.some(m => m.id === msg.id)) return prev;
+              return [...prev, msg];
+            });
+          }
+          return current;
+        });
 
-      socket.on("typing_status", (data) => {
-        if (activeThread && String(data.senderId) === String(activeThread.otherUser?.id)) {
-          setTypingStatus(data);
-          setTimeout(() => setTypingStatus({ isTyping: false, senderId: null }), 3000);
-        }
-      });
+        // Always update sidebar
+        api.get("/chat/threads").then(res => setThreads(res.data)).catch(() => {});
+      };
+
+      socket.on("receive_message", handleIncomingMessage);
+
+      const handleTyping = (data) => {
+        setActiveThread(current => {
+          if (current && String(data.senderId) === String(current.otherUser?.id)) {
+            setTypingStatus(data);
+            setTimeout(() => setTypingStatus({ isTyping: false, senderId: null }), 3000);
+          }
+          return current;
+        });
+      };
+
+      socket.on("typing_status", handleTyping);
     }
 
     return () => {
@@ -209,8 +240,13 @@ function MessagesUI({
                     </div>
                     <div className="flex-1 min-w-0">
                       <div className="flex justify-between items-center mb-1">
-                        <span className="font-bold text-sm truncate">{thread.otherUser?.name || 'Artisan'}</span>
-                        <span className="text-[10px] text-[var(--muted)] opacity-60">
+                        <div className="flex items-center gap-2">
+                          <span className="font-bold text-sm truncate">{thread.otherUser?.name || 'Artisan'}</span>
+                          <span className={`text-[8px] px-1.5 py-0.5 rounded font-bold uppercase tracking-tight shadow-sm ${thread.otherUser?.role === 'seller' ? 'bg-[var(--rust)] text-white' : 'bg-[var(--bark)] text-white'}`}>
+                            {thread.otherUser?.role || 'User'}
+                          </span>
+                        </div>
+                        <span className="text-[10px] text-[var(--muted)] opacity-60 ml-2">
                           {thread.isGhost ? "New" : thread.timestamp ? new Date(thread.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : "Active"}
                         </span>
                       </div>
@@ -240,13 +276,18 @@ function MessagesUI({
                     {activeThread.otherUser?.name?.[0] || 'A'}
                   </div>
                   <div>
-                    <h2 className="text-base font-bold text-[var(--charcoal)]">{activeThread.otherUser?.name || 'Artisan'}</h2>
-                    <div className="text-[10px] text-green-600 font-bold uppercase tracking-widest flex items-center gap-1.5">
+                    <div className="flex items-center gap-2">
+                      <h2 className="text-base font-bold text-[var(--charcoal)]">{activeThread.otherUser?.name || 'Artisan'}</h2>
+                      <span className={`text-[10px] px-2 py-0.5 rounded font-bold uppercase tracking-widest ${activeThread.otherUser?.role === 'seller' ? 'bg-[var(--rust)] text-white' : 'bg-[var(--bark)] text-white'}`}>
+                        {activeThread.otherUser?.role}
+                      </span>
+                    </div>
+                    <div className="text-[10px] text-green-600 font-bold uppercase tracking-widest flex items-center gap-1.5 mt-1">
                       {typingStatus.isTyping ? (
-                        <span className="text-[var(--rust)] animate-pulse">ARTISAN IS TYPING...</span>
+                        <span className="text-[var(--rust)] animate-pulse">TYPING...</span>
                       ) : (
                         <>
-                          <span className="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse" /> VERIFIED ARTISAN
+                          <span className="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse" /> ONLINE
                         </>
                       )}
                     </div>
@@ -261,26 +302,62 @@ function MessagesUI({
               </div>
 
               <div className="flex-1 p-8 overflow-y-auto custom-scrollbar space-y-8 bg-[#FDFBF9]">
+                {activeThread?.productContext && (
+                  <div className="mx-8 mt-4 mb-8 bg-white border border-[var(--border)] rounded-2xl p-4 flex items-center gap-4 shadow-sm animate-pulse-slow">
+                    <div className="w-16 h-16 relative bg-[var(--cream)] rounded-xl overflow-hidden shrink-0 border border-[var(--border)]">
+                      <img src={activeThread.productContext.image} alt="Inquiry product" className="object-cover w-full h-full" />
+                    </div>
+                    <div className="flex-1">
+                      <div className="text-[10px] font-bold text-[var(--rust)] uppercase tracking-widest mb-1">Inquiring About</div>
+                      <h3 className="text-sm font-bold text-[var(--charcoal)] truncate max-w-[300px]">{activeThread.productContext.name}</h3>
+                      <div className="text-xs font-serif font-bold text-[var(--rust)] mt-0.5">₱{Number(activeThread.productContext.price).toLocaleString()}</div>
+                    </div>
+                    <button 
+                      onClick={() => window.location.href = `/product?id=${activeThread.productContext.id}`}
+                      className="px-4 py-2 bg-[var(--bark)] text-white text-[10px] font-bold uppercase tracking-widest rounded-xl hover:bg-[var(--rust)] transition-all"
+                    >
+                      View Details
+                    </button>
+                  </div>
+                )}
+
                 <div className="text-center py-4 border-b border-[var(--border)] mb-4">
                   <span className="bg-white px-4 py-1.5 rounded-full border border-[var(--border)] text-[8px] font-bold uppercase tracking-widest text-[var(--muted)]">Secure Heritage Thread Opened</span>
                 </div>
 
                 {messages.map((msg, i) => {
                   const storedUser = JSON.parse(localStorage.getItem("user") || "{}");
-                  const isMe = String(msg.senderId) === String(storedUser.id);
+                  const msgSenderId = msg.senderId || msg.sender?.id;
+                  const isMe = String(msgSenderId) === String(storedUser.id);
+                  const senderName = msg.sender?.name || activeThread.otherUser?.name || 'User';
+
                   return (
                     <motion.div
                       key={i}
                       initial={{ opacity: 0, x: isMe ? 10 : -10 }}
                       animate={{ opacity: 1, x: 0 }}
-                      className={`flex ${isMe ? 'justify-end' : 'justify-start'}`}
+                      className={`flex ${isMe ? 'justify-end' : 'items-end'} gap-3 mb-6`}
                     >
-                      <div className={`max-w-[70%] p-5 rounded-2xl shadow-sm border border-[var(--border)] ${isMe ? 'bg-[var(--rust)] text-white rounded-br-none border-transparent' : 'bg-white text-[var(--charcoal)] rounded-bl-none'}`}>
-                        <div className="text-sm font-sans leading-relaxed">{msg.content}</div>
-                        <div className={`mt-2 text-[8px] font-bold uppercase tracking-widest ${isMe ? 'text-white/40' : 'text-[var(--muted)]'}`}>
-                          {msg.createdAt ? new Date(msg.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : "Just now"}
+                      {!isMe && (
+                        <div title={senderName} className="w-8 h-8 rounded-full bg-[var(--bark)] text-white flex items-center justify-center text-[10px] font-bold shrink-0 shadow-sm">
+                          {senderName[0]}
+                        </div>
+                      )}
+                      
+                      <div className={`flex flex-col ${isMe ? 'items-end' : 'items-start'} max-w-[70%]`}>
+                        <div className={`p-5 rounded-2xl shadow-sm border border-[var(--border)] ${isMe ? 'bg-[var(--rust)] text-white rounded-tr-none border-transparent' : 'bg-white text-[var(--charcoal)] rounded-tl-none'}`}>
+                          <div className="text-sm font-sans leading-relaxed">{msg.content}</div>
+                          <div className={`mt-2 text-[8px] font-bold uppercase tracking-widest ${isMe ? 'text-white/40' : 'text-[var(--muted)]'}`}>
+                            {msg.createdAt ? new Date(msg.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : "Just now"}
+                          </div>
                         </div>
                       </div>
+
+                      {isMe && (
+                        <div className="w-8 h-8 rounded-full bg-[var(--rust)] text-white flex items-center justify-center text-[10px] font-bold shrink-0 shadow-md">
+                          {storedUser.name?.[0] || 'M'}
+                        </div>
+                      )}
                     </motion.div>
                   );
                 })}

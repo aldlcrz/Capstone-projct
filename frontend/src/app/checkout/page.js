@@ -27,6 +27,7 @@ import {
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { api } from "@/lib/api";
+import { getProductImageSrc } from "@/lib/productImages";
 import dynamic from "next/dynamic";
 
 const LocationPickerMap = dynamic(() => import("@/components/LocationPicker"), { ssr: false });
@@ -293,7 +294,7 @@ export default function CheckoutPage() {
       localStorage.removeItem("checkout_item");
     } catch (err) {
       console.error("Seller order placement failed:", err);
-      alert(err.response?.data?.message || "Failed to transmit commission to registry.");
+      alert(err.response?.data?.message || "Failed to transmit order to registry.");
       setLoading(false);
     }
   };
@@ -590,7 +591,7 @@ export default function CheckoutPage() {
                      
                      <div className={`relative z-10 ${isBuyNowMode ? 'p-8 space-y-6' : 'p-10 space-y-8'}`}>
                         <div className={`flex items-center justify-between border-b border-[var(--border)] ${isBuyNowMode ? 'pb-4' : 'pb-6'}`}>
-                           <h3 className="text-[10px] font-bold uppercase tracking-[0.3em] text-[var(--muted)]">Commissions Overview</h3>
+                           <h3 className="text-[10px] font-bold uppercase tracking-[0.3em] text-[var(--muted)]">Orders Overview</h3>
                            <div className="px-3 py-1 bg-[var(--rust)] text-white rounded-lg text-[9px] font-bold uppercase tracking-widest leading-none flex items-center">{cartItems.length} {cartItems.length > 1 ? 'Pieces' : 'Piece'}</div>
                         </div>
 
@@ -598,7 +599,11 @@ export default function CheckoutPage() {
                            {cartItems.map((item, idx) => (
                               <div key={idx} className={`flex group ${isBuyNowMode ? 'gap-4' : 'gap-5'}`}>
                                  <div className={`bg-[var(--cream)]/30 relative overflow-hidden shrink-0 border border-[var(--border)] shadow-sm ${isBuyNowMode ? 'w-14 h-[4.5rem] rounded-lg' : 'w-16 h-20 rounded-xl'}`}>
-                                    <img src={item.image?.[0] || item.image || item.product?.image?.[0]} alt={item.name} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" />
+                                    <img                                        src={getProductImageSrc(item.image || item.product?.image)} 
+                                       alt={item.name} 
+                                       className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
+                                       onError={(e) => { e.target.src = "/images/placeholder.png"; }}
+                                     />
                                  </div>
                                  <div className="flex-1 space-y-1">
                                     <div className={`font-bold tracking-tight line-clamp-2 text-[var(--charcoal)] leading-tight ${isBuyNowMode ? 'text-[0.95rem]' : 'text-sm'}`}>{item.name}</div>
@@ -649,7 +654,7 @@ export default function CheckoutPage() {
                      <ShieldCheck className="w-8 h-8 shrink-0 mt-1 opacity-60" />
                      <div className="space-y-2">
                         <div className="text-[10px] font-bold uppercase tracking-widest">Escrow Protection Protocol</div>
-                        <p className="text-[10px] font-medium leading-relaxed opacity-80 italic">Funds are securely captured and released to sellers only upon digital confirmation of heritage artifact receipt. Your customer patronage is fully protected.</p>
+                        <p className="text-[10px] font-medium leading-relaxed opacity-80 italic">Funds are securely captured and released to sellers only upon digital confirmation of heritage artifact receipt. Your purchase is fully protected.</p>
                      </div>
                   </div>
                </div>
@@ -675,7 +680,7 @@ export default function CheckoutPage() {
 
                 <div className="space-y-6 px-6">
                    <h2 className={`font-serif font-bold text-[var(--charcoal)] tracking-tighter uppercase ${isBuyNowMode ? 'text-4xl md:text-5xl' : 'text-6xl'}`}>
-                     Commission <span className="text-[var(--rust)] italic lowercase">Confirmed</span>
+                     Order <span className="text-[var(--rust)] italic lowercase">Confirmed</span>
                    </h2>
                    <p className={`text-[var(--muted)] max-w-xl mx-auto italic leading-relaxed font-medium px-4 ${isBuyNowMode ? 'text-base' : 'text-lg'}`}>
                      The seller workshop has been notified of your acquisition. Your heritage order is now entering the logistics registry for premium LUMBÁN dispatch.

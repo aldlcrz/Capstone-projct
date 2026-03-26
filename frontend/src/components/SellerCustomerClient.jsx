@@ -48,13 +48,13 @@ export default function SellerCustomerClient() {
 
   if (loading) return (
     <SellerLayout>
-      <div className="py-24 text-center text-[var(--muted)] animate-pulse italic">Retrieving patron portfolio...</div>
+      <div className="py-24 text-center text-[var(--muted)] animate-pulse italic">Retrieving customer portfolio...</div>
     </SellerLayout>
   );
 
   if (!id) return (
     <SellerLayout>
-      <div className="py-24 text-center text-[var(--muted)]">Select a patron from the registry to view a portfolio.</div>
+      <div className="py-24 text-center text-[var(--muted)]">Select a customer from the registry to view a portfolio.</div>
     </SellerLayout>
   );
 
@@ -70,7 +70,7 @@ export default function SellerCustomerClient() {
         <div className="artisan-card py-24 text-center space-y-4 shadow-sm">
            <div className="w-16 h-16 bg-[var(--cream)] rounded-full flex items-center justify-center mx-auto mb-6"><Receipt className="w-8 h-8 text-[var(--muted)]" /></div>
            <h3 className="font-serif text-3xl font-bold tracking-tight text-[var(--charcoal)]">No Portfolio Found</h3>
-           <p className="text-[var(--muted)] max-w-sm mx-auto">We couldn't locate any commissions linked to this patron in your workshop registry.</p>
+           <p className="text-[var(--muted)] max-w-sm mx-auto">We couldn't locate any orders linked to this customer in your workshop registry.</p>
         </div>
       </div>
     </SellerLayout>
@@ -96,13 +96,13 @@ export default function SellerCustomerClient() {
                 </div>
                 <div>
                   <h2 className="font-serif text-3xl font-bold text-[var(--charcoal)] tracking-tight">{customer.name}</h2>
-                  <div className="text-[10px] font-bold uppercase tracking-widest text-[var(--muted)] opacity-60 mt-1">Acclaimed Patron</div>
+                  <div className="text-[10px] font-bold uppercase tracking-widest text-[var(--muted)] opacity-60 mt-1">Acclaimed Customer</div>
                 </div>
               </div>
               <div className="grid grid-cols-2 gap-4 pt-4 border-t border-[var(--border)]">
                  <div className="bg-white p-4 rounded-2xl shadow-sm border border-[var(--border)] text-center">
                     <div className="text-3xl font-serif font-bold text-[var(--rust)]">{orders.length}</div>
-                    <div className="text-[8px] font-bold uppercase tracking-[0.2em] text-[var(--muted)] mt-1">Commissions</div>
+                    <div className="text-[8px] font-bold uppercase tracking-[0.2em] text-[var(--muted)] mt-1">Orders</div>
                  </div>
                  <div className="bg-white p-4 rounded-2xl shadow-sm border border-[var(--border)] text-center">
                     <div className="text-2xl font-serif font-bold text-[var(--charcoal)] mt-1">₱{totalSpent.toLocaleString()}</div>
@@ -127,7 +127,7 @@ export default function SellerCustomerClient() {
                 </div>
               </div>
               <button onClick={() => router.push(`/seller/messages?customerId=${customer.id}&customerName=${encodeURIComponent(customer.name)}`)} className="w-full btn-primary py-5 rounded-2xl flex items-center justify-center gap-3 text-xs font-bold uppercase tracking-widest">
-                <MessageCircle className="w-4 h-4" /> Message Patron
+                <MessageCircle className="w-4 h-4" /> Message Customer
               </button>
             </div>
           </div>
@@ -135,7 +135,7 @@ export default function SellerCustomerClient() {
           <div className="xl:col-span-8 space-y-6">
             <div className="flex items-end justify-between px-2">
               <div>
-                <h3 className="font-serif text-3xl font-bold text-[var(--charcoal)] tracking-tight">Commission <span className="text-[var(--rust)] italic">History</span></h3>
+                <h3 className="font-serif text-3xl font-bold text-[var(--charcoal)] tracking-tight">Order <span className="text-[var(--rust)] italic">History</span></h3>
                 <div className="text-[10px] font-bold uppercase tracking-widest text-[var(--muted)] mt-1 ml-1 flex items-center gap-2">
                   <Clock className="w-3.5 h-3.5" /> Timeline Sequence
                 </div>

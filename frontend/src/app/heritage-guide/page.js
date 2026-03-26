@@ -132,7 +132,7 @@ export default function HeritageGuidePage() {
               Preserving the Legacy
             </h2>
             <p className="font-medium italic" style={{ color: "var(--muted)" }}>
-              How to care for your commissioned masterpiece.
+              How to care for your ordered masterpiece.
             </p>
           </div>
           <div className="container mx-auto px-6 grid grid-cols-1 md:grid-cols-3 gap-8 max-w-5xl">

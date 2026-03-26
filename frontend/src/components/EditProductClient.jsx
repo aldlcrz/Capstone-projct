@@ -28,6 +28,24 @@ export default function EditProductClient() {
   });
 
   const [newVariations, setNewVariations] = useState([]);
+  const [categoriesList, setCategoriesList] = useState([]);
+
+  useEffect(() => {
+    const fetchCategories = async () => {
+      try {
+        const res = await api.get("/categories");
+        setCategoriesList(res.data);
+      } catch (err) {
+        setCategoriesList([
+          { name: "Formal" },
+          { name: "Casual" },
+          { name: "Traditional" },
+          { name: "Modern Elite" }
+        ]);
+      }
+    };
+    fetchCategories();
+  }, []);
 
   useEffect(() => {
     if (!id) {
@@ -152,6 +170,7 @@ export default function EditProductClient() {
       // Keep track of which variations are being added
       const variationNames = newVariations.map(v => v.variation);
       form.append("variationNames", JSON.stringify(variationNames));
+      form.append("existingImages", JSON.stringify(formData.images));
 
       newVariations.forEach((v) => {
         if (v.file) {
@@ -213,19 +232,24 @@ export default function EditProductClient() {
                       required
                     />
                 </div>
-                <div className="space-y-2">
-                  <label className="text-[10px] font-bold uppercase tracking-widest text-[var(--muted)] ml-1">Category</label>
-                  <select 
-                    value={formData.category}
-                    onChange={(e) => setFormData({...formData, category: e.target.value})}
-                    className="w-full bg-[var(--input-bg)] border-none rounded-2xl p-5 text-sm font-medium focus:ring-2 focus:ring-[var(--rust)]/20 transition-all cursor-pointer"
-                    required
-                  >
-                    <option value="">Select Category</option>
-                    <option value="Barong Tagalog">Barong Tagalog</option>
-                    <option value="Filipiniana">Filipiniana</option>
-                    <option value="Accessories">Accessories</option>
-                  </select>
+                <div className="space-y-4">
+                  <label className="text-[10px] font-bold uppercase tracking-widest text-[var(--muted)] ml-2">Category Sector</label>
+                  <div className="relative group">
+                    <select 
+                      value={formData.category}
+                      onChange={(e) => setFormData({...formData, category: e.target.value})}
+                      className="w-full px-6 py-4 bg-white border-2 border-[var(--rust)]/60 rounded-2xl focus:outline-none focus:border-[var(--rust)] transition-all font-serif text-lg font-bold text-[var(--charcoal)] appearance-none cursor-pointer shadow-lg shadow-red-900/5 group-hover:border-[var(--rust)]"
+                      required
+                    >
+                      <option value="" disabled>Select Sector</option>
+                      {categoriesList.map((cat, idx) => (
+                        <option key={idx} value={cat.name}>{cat.name}</option>
+                      ))}
+                    </select>
+                    <div className="absolute right-6 top-1/2 -translate-y-1/2 pointer-events-none text-[var(--rust)]">
+                      <Plus className="w-5 h-5 rotate-45" />
+                    </div>
+                  </div>
                 </div>
                 <div className="space-y-2">
                   <label className="text-[10px] font-bold uppercase tracking-widest text-[var(--muted)] ml-1">Inventory Level</label>
@@ -276,6 +300,64 @@ export default function EditProductClient() {
                     required
                   />
               </div>
+
+              {formData.images && formData.images.length > 0 && (
+                <div className="space-y-6 pt-4 border-b border-[var(--border)] pb-8">
+                  <div className="flex items-center justify-between">
+                     <label className="text-[10px] font-bold uppercase tracking-widest text-[var(--muted)] ml-1">Existing Portfolio Variations</label>
+                  </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                    {formData.images.map((img, i) => {
+                      // Normalize the image URL if it's an object from the backend
+                      const imgUrl = (typeof img === 'string') ? img : (img.url ? (img.url.url || img.url) : "");
+                      
+                      // Sometimes backend sends absolute URLs that are fine, 
+                      // or relative paths without the backend domain. The native img tag in frontend 
+                      // might need getProductImageSrc if it's not absolute.
+                      // Since we relaxed CORS, the raw url from backend is perfectly fine if it's absolute.
+                      // If it's a relative path starting with /uploads, we can prefix it or just let the proxy handle it.
+                      // Actually, next.config.mjs allows it, but regular img tags will request to localhost:3000/uploads
+                      // which will fail!
+                      // Let's import getProductImageSrc and use it or just construct it:
+                      
+                      const resolvedUrl = imgUrl.startsWith('http') ? imgUrl : `http://127.0.0.1:5000${imgUrl}`;
+                      
+                      return (
+                      <div key={i} className="bg-[var(--input-bg)] p-4 rounded-[2rem] border border-[var(--border)] relative space-y-4 animate-fade-in">
+                        <button 
+                          type="button"
+                          onClick={() => {
+                            const newImages = [...formData.images];
+                            newImages.splice(i, 1);
+                            setFormData({...formData, images: newImages});
+                          }}
+                          className="absolute -top-2 -right-2 w-8 h-8 bg-white rounded-full shadow-lg border border-[var(--border)] flex items-center justify-center text-[var(--muted)] hover:text-red-500 transition-colors z-10"
+                        >
+                          <X className="w-4 h-4" />
+                        </button>
+                        <div className="aspect-[4/5] bg-white rounded-2xl overflow-hidden relative border border-[var(--border)]">
+                          <img src={resolvedUrl} alt="Existing Variation" className="w-full h-full object-cover" />
+                        </div>
+                        <input 
+                          type="text"
+                          value={(typeof img === 'string' ? "Variation" : img.variation) || ""}
+                          onChange={(e) => {
+                             const newImages = [...formData.images];
+                             if (typeof newImages[i] === 'string') {
+                               newImages[i] = { url: newImages[i], variation: e.target.value };
+                             } else {
+                               newImages[i] = { ...newImages[i], variation: e.target.value };
+                             }
+                             setFormData({...formData, images: newImages});
+                          }}
+                          className="w-full bg-white border-none rounded-xl p-3 text-[11px] font-bold uppercase tracking-wider text-center shadow-sm"
+                          placeholder="Variation Name"
+                        />
+                      </div>
+                    )})}
+                  </div>
+                </div>
+              )}
 
               <div className="space-y-6 pt-4">
                 <div className="flex items-center justify-between">

@@ -222,7 +222,7 @@ export default function CustomerLayout({ children }) {
               LUMBARONG
             </Link>
             <div className="flex items-center gap-1.5 mt-2 px-1 text-[var(--rust)] font-bold tracking-widest text-[10px]">
-              <ShoppingBag className="w-3 h-3" /> CUSTOMER
+              <ShoppingBag className="w-3 h-3" /> BUYER
             </div>
           </div>
 
@@ -382,7 +382,7 @@ export default function CustomerLayout({ children }) {
               <Link href="/profile" className="flex items-center gap-3 group">
                 <div className="hidden lg:block text-right">
                   <div className="text-sm font-bold text-[var(--charcoal)] group-hover:text-[var(--rust)] transition-colors">{user?.name || "User"}</div>
-                  <div className="text-[10px] text-[var(--muted)] font-bold uppercase tracking-widest">CUSTOMER</div>
+                   <div className="text-[10px] text-[var(--muted)] font-bold uppercase tracking-widest">BUYER</div>
                 </div>
                 <div className="w-10 h-10 rounded-xl bg-[var(--sand)] border-2 border-white shadow-md flex items-center justify-center text-white font-serif text-lg font-bold uppercase transition-transform active:scale-95">
                   {user?.name ? user.name[0] : "P"}

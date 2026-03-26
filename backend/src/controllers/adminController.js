@@ -137,7 +137,7 @@ exports.updateSettings = async (req, res) => {
     if (updates.commissionRate !== undefined) {
       const rate = parseFloat(updates.commissionRate);
       if (isNaN(rate) || rate < 0 || rate > 100) {
-        return res.status(400).json({ message: 'Commission rate must be between 0 and 100.' });
+        return res.status(400).json({ message: 'Order rate must be between 0 and 100.' });
       }
     }
 

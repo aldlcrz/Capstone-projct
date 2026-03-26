@@ -11,6 +11,7 @@ import {
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
+import { getProductImageSrc } from "@/lib/productImages";
 
 export default function CartPage() {
   const [cartItems, setCartItems] = useState([]);
@@ -103,14 +104,6 @@ export default function CartPage() {
     return parseFloat(String(price || "0").replace(/[^0-9.]/g, '')) || 0;
   };
 
-  const getSafeImage = (imgSrc) => {
-    if (!imgSrc) return null;
-    if (Array.isArray(imgSrc)) return imgSrc[0];
-    if (typeof imgSrc === 'string' && imgSrc.startsWith('[')) {
-      try { return JSON.parse(imgSrc)[0]; } catch(e) { return imgSrc; }
-    }
-    return imgSrc;
-  };
 
   const numShops = Object.keys(groupedItems).length;
 
@@ -203,11 +196,12 @@ export default function CartPage() {
                                              className="w-4 h-4 rounded border-[#D1D1D1] text-[var(--rust)] focus:ring-[var(--rust)] cursor-pointer shrink-0" 
                                           />
                                           <div className="w-16 h-16 sm:w-20 sm:h-20 bg-[#FDFBF9] border border-[var(--border)] rounded-xl overflow-hidden shrink-0 flex items-center justify-center p-1">
-                                             {getSafeImage(item.image) ? (
-                                                <img src={getSafeImage(item.image)} alt={item.name} className="w-full h-full object-cover rounded-lg" />
-                                             ) : (
-                                                <ShoppingBag className="w-6 h-6 text-gray-200" />
-                                             )}
+                                             <img 
+                                                src={getProductImageSrc(item.image)} 
+                                                alt={item.name} 
+                                                className="w-full h-full object-cover rounded-lg" 
+                                                onError={(e) => { e.target.src = "/images/placeholder.png"; }}
+                                             />
                                           </div>
                                            <div className="flex flex-col gap-2">
                                               <div className="text-sm font-bold text-[#1A1A1A] line-clamp-1">{item.name}</div>

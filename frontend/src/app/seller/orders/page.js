@@ -5,6 +5,7 @@ import { Package, Clock, Eye, Search, Filter, X, MapPin, CreditCard, ShoppingBag
 import { motion, AnimatePresence } from "framer-motion";
 import { api } from "@/lib/api";
 import { useSocket } from "@/context/SocketContext";
+import { getProductImageSrc } from "@/lib/productImages";
 
 const STATUS_TABS = ["All", "Pending", "Processing", "Shipped", "Delivered", "Completed", "Cancelled"];
 
@@ -339,10 +340,10 @@ function OrderModal({ order, onClose, onUpdateStatus, isUpdating }) {
             <div>
               <div className="flex items-center gap-3 mb-2">
                 <div className="w-8 h-[2px] bg-[var(--rust)]" />
-                <span className="text-[10px] font-black text-[var(--rust)] tracking-[0.3em] uppercase">Commission Details</span>
+                <span className="text-[10px] font-black text-[var(--rust)] tracking-[0.3em] uppercase">Order Details</span>
               </div>
               <h2 className="font-serif text-4xl font-bold tracking-tighter">
-                Order <span className="font-serif italic font-normal text-[var(--rust)]">#LB-{order.id.toString().slice(-8).toUpperCase()}</span>
+                Order <span className="font-serif italic font-normal text-[var(--rust)]">#LB-OR-{order.id.toString().slice(-8).toUpperCase()}</span>
               </h2>
             </div>
             
@@ -418,7 +419,7 @@ function OrderModal({ order, onClose, onUpdateStatus, isUpdating }) {
             <section className="flex flex-col h-full">
               <div className="flex items-center gap-3 mb-4">
                   <div className="w-1.5 h-1.5 rounded-full bg-[var(--rust)]" />
-                  <span className="text-[10px] font-black text-[var(--rust)] tracking-widest uppercase">Commission Items</span>
+                  <span className="text-[10px] font-black text-[var(--rust)] tracking-widest uppercase">Order Items</span>
               </div>
               <div className="artisan-card flex-1 flex flex-col min-h-full">
                 <div className="flex-1 space-y-5 mb-8">
@@ -426,7 +427,7 @@ function OrderModal({ order, onClose, onUpdateStatus, isUpdating }) {
                     <div key={i} className="flex gap-5 p-4 hover:bg-[var(--cream)]/30 rounded-2xl transition-all border border-transparent hover:border-[var(--border)] group">
                       <div className="w-20 h-20 rounded-2xl overflow-hidden bg-white border border-[var(--border)] shadow-sm shrink-0">
                         <img
-                          src={item.product?.image?.[0]?.url || item.product?.image?.[0] || "/placeholder-barong.jpg"}
+                          src={getProductImageSrc(item.product?.image?.[0]?.url || item.product?.image?.[0] || item.product?.image)}
                           alt=""
                           className="w-full h-full object-cover transition-transform group-hover:scale-110"
                         />

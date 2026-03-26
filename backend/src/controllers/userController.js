@@ -195,3 +195,32 @@ exports.changePassword = async (req, res) => {
     }
 };
 
+exports.getSellerInfo = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const seller = await User.findByPk(id, {
+            attributes: ['id', 'name', 'createdAt', 'role']
+        });
+        
+        if (!seller || seller.role !== 'seller') {
+            return res.status(404).json({ message: 'Seller not found or user is not a seller' });
+        }
+
+        const monthsJoined = seller.createdAt 
+            ? Math.floor((new Date() - new Date(seller.createdAt)) / (1000 * 60 * 60 * 24 * 30)) 
+            : 12;
+
+        res.json({
+            id: seller.id,
+            shopName: seller.name || "Lumban Artisan",
+            location: "Lumban, Laguna",
+            rating: 4.9,
+            joined: (monthsJoined < 1 ? "Just Joined" : `${monthsJoined} Months Ago`),
+            responseRate: "98%",
+            description: "A legacy of fine hand-embroidery passed down through generations. Our workshop specializes in traditional Pina and Jusi Barongs with modern silhouettes."
+        });
+    } catch (err) {
+        console.error('getSellerInfo Error:', err);
+        res.status(500).json({ message: 'Error fetching seller info', error: err.message });
+    }
+};

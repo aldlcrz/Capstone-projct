@@ -144,7 +144,7 @@ export default function AboutPage() {
             <ValueCard
               icon={<Heart style={{ color: "var(--rust)" }} size={40} />}
               title="Empowering Artisans"
-              desc="We connect independent shops directly to the registry, ensuring every commission fairly values the artisan's time and heritage."
+              desc="We connect independent shops directly to the registry, ensuring every order fairly values the artisan's time and heritage."
             />
             <ValueCard
               icon={<Sparkles className="text-amber-400" size={40} fill="currentColor" />}
@@ -171,7 +171,7 @@ export default function AboutPage() {
               <span style={{ color: "var(--rust)" }}>Filipino Pride.</span>
             </h3>
             <p className="text-lg font-medium leading-relaxed italic mb-12" style={{ color: "var(--muted)" }}>
-              Today, LumBarong stands as more than a marketplace. It is a community of patrons and artisans bound by a shared respect for the threads that weave our history together. When you wear a LumBarong piece, you are not just wearing clothing; you are carrying a story of resilience, craftsmanship, and the eternal beauty of the Philippines.
+              Today, LumBarong stands as more than a marketplace. It is a community of customers and artisans bound by a shared respect for the threads that weave our history together. When you wear a LumBarong piece, you are not just wearing clothing; you are carrying a story of resilience, craftsmanship, and the eternal beauty of the Philippines.
             </p>
           </div>
 

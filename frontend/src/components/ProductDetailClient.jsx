@@ -37,9 +37,8 @@ export default function ProductDetailClient() {
     }
   }, []);
 
-  const isRestricted = userRole === "admin" || userRole === "seller";
-  const showActions = !isRestricted; 
-
+  const isRestricted = userRole === "admin";
+  const showActions = true; // Allow all users to initiate purchases
 
   const fetchProduct = useCallback(async () => {
     try {
@@ -56,7 +55,7 @@ export default function ProductDetailClient() {
         id: id,
         name: "Premium Barong Polo Shirt Men Filipino Traditional Printing Loose Casual T-Shirt Fashionable Short Sleeves Comfortable Breathable",
         price: 255,
-        description: "A signature hand-embroidered commission from the heart of Lumban. It features ultra-premium materials and traditional Filipiniana crafting perfectly suited for modern occasions.",
+        description: "A signature hand-embroidered order from the heart of Lumban. It features ultra-premium materials and traditional Filipiniana crafting perfectly suited for modern occasions.",
         sizes: ["S", "M", "L", "XL", "2XL"],
         category: "Formal",
         artisan: "Lumban Master Craft",
@@ -291,11 +290,7 @@ export default function ProductDetailClient() {
                     </button>
                   </div>
                 )}
-                {isRestricted && (
-                  <div className="mt-8 p-4 bg-gray-50 border border-gray-100 rounded-sm text-[13px] text-[var(--muted)] italic">
-                    Purchase actions are disabled for {userRole === 'admin' ? 'Administrators' : 'Sellers'}.
-                  </div>
-                )}
+
               </div>
             </div>
           </div>
@@ -306,16 +301,17 @@ export default function ProductDetailClient() {
              <div className="flex-1 flex flex-col justify-center border-r border-gray-200 pr-6 pl-2">
                 <div className="text-[15px] font-medium text-[#222] mb-1">{product.artisan || "Lumban Master Craft"}</div>
                 <div className="text-[#757575] text-[12px] mb-3">Active 5 minutes ago</div>
-                {showActions && (
                   <div className="flex gap-2">
-                    <Link href={`/messages?sellerId=${product.sellerId || 1}&sellerName=${product.artisan || "Lumban Master Craft"}`} className="lex items-center justify-center gap-1.5 px-3 py-1.5 border border-[#e8e8e8] text-[#555] bg-[#fff] hover:bg-[#f8f8f8] rounded-sm text-xs font-medium transition-colors min-w-[100px]">
+                    <Link 
+                      href={`/messages?sellerId=${product.sellerId || 1}&sellerName=${product.artisan || "Lumban Master Craft"}&productId=${product.id}&productName=${encodeURIComponent(product.name)}&productImage=${encodeURIComponent(galleryImages[0]?.url || galleryImages[0])}&productPrice=${product.price}`} 
+                      className="flex items-center justify-center gap-1.5 px-3 py-1.5 border border-[#e8e8e8] text-[#555] bg-[#fff] hover:bg-[#f8f8f8] rounded-sm text-xs font-medium transition-colors min-w-[100px]"
+                    >
                        <MessageCircle className="w-3.5 h-3.5 text-[#ee4d2d]" /> Chat Now
                     </Link>
                      <Link href={`/shop?id=${product.sellerId || 1}`} className="flex items-center justify-center gap-1.5 px-3 py-1.5 border border-[#e8e8e8] text-[#555] bg-[#fff] hover:bg-[#f8f8f8] rounded-sm text-xs font-medium transition-colors min-w-[100px]">
                        <ShoppingCart className="w-3.5 h-3.5 text-[#666]" /> View Shop
                     </Link>
                   </div>
-                )}
              </div>
              <div className="flex-1 pl-6 grid grid-cols-2 gap-y-3 gap-x-8 text-[13px]">
                 <div className="flex justify-between"><span className="text-[#757575]">Ratings</span> <span className="text-[var(--rust)]">523</span></div>

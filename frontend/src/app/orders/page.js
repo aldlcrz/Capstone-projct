@@ -21,6 +21,7 @@ import {
 import { motion, AnimatePresence } from "framer-motion";
 import { api } from "@/lib/api";
 import { useSocket } from "@/context/SocketContext";
+import { normalizeProductImages, getProductImageSrc } from "@/lib/productImages";
 
 export default function OrdersPage() {
   const [orders, setOrders] = useState([]);
@@ -124,11 +125,15 @@ export default function OrdersPage() {
   });
 
   const getSafeImage = (imgSrc) => {
-    if (!imgSrc) return null;
-    if (typeof imgSrc === 'string' && imgSrc.startsWith('[')) {
-      try { const parsed = JSON.parse(imgSrc); return parsed[0]; } catch (e) { return imgSrc; }
+    return getProductImageSrc(imgSrc);
+  };
+
+  const getParsedAddress = (address) => {
+    if (!address) return {};
+    if (typeof address === 'string') {
+      try { return JSON.parse(address); } catch (e) { return {}; }
     }
-    return Array.isArray(imgSrc) ? imgSrc[0] : imgSrc;
+    return address;
   };
 
   return (
@@ -234,7 +239,7 @@ export default function OrdersPage() {
                      <div className="px-5 sm:px-8 py-4 border-b border-[var(--border)] flex flex-wrap items-center justify-between gap-4">
                         <div className="flex flex-wrap items-center gap-4 sm:gap-6 text-xs font-bold uppercase tracking-wider text-[var(--muted)]">
                            <div className="flex items-center gap-1.5">
-                             ORDER ID <span className="text-[#2A2A2A] tracking-normal">LB-2024-{order.id.toString().padStart(4, '0')}</span>
+                             ORDER ID <span className="text-[#2A2A2A] tracking-normal">LB-OR-{order.id.toString().slice(-8).toUpperCase()}</span>
                              <button className="ml-1 hover:text-[var(--rust)] transition-colors"><Copy className="w-3.5 h-3.5 opacity-60" /></button>
                            </div>
                            <div className="w-px h-3 bg-[var(--border)] hidden sm:block" />
@@ -262,7 +267,7 @@ export default function OrdersPage() {
                                   {/* Thumbnail */}
                                   <div className="w-16 h-16 sm:w-20 sm:h-20 bg-white border border-[var(--border)] flex items-center justify-center rounded-xl shrink-0 p-1">
                                      {item.product?.image ? (
-                                        <img src={getSafeImage(item.product.image)} alt={item.product.name} className="w-full h-full object-cover rounded-md" />
+                                        <img src={getProductImageSrc(item.product.image)} alt={item.product.name} className="w-full h-full object-cover rounded-md" />
                                      ) : (
                                         <Package className="w-6 h-6 text-gray-300" />
                                      )}
@@ -393,7 +398,7 @@ export default function OrdersPage() {
                   <div>
                     <h2 className="font-serif text-2xl font-bold text-[#2A2A2A]">Order Details</h2>
                     <p className="text-[10px] font-bold text-[var(--muted)] uppercase tracking-widest mt-1">
-                      LB-2024-{selectedOrder.id.toString().padStart(4, '0')} • {new Date(selectedOrder.createdAt).toLocaleDateString()}
+                      LB-OR-{selectedOrder.id.toString().slice(-8).toUpperCase()} • {new Date(selectedOrder.createdAt).toLocaleDateString()}
                     </p>
                   </div>
                   <button 
@@ -414,27 +419,27 @@ export default function OrdersPage() {
                            <MapPin className="w-3 h-3" /> SHIPPING ADDRESS
                         </div>
                         <div className="bg-[#FDFBF9] p-4 rounded-2xl border border-[var(--cream)] shadow-sm">
-                           <div className="font-bold text-[#2A2A2A] text-sm mb-1">{selectedOrder.shippingAddress?.name || "Registry Name Missing"}</div>
-                           <div className="text-[10px] font-bold text-[var(--rust)] mb-2">{selectedOrder.shippingAddress?.phone || "Phone Missing"}</div>
+                           <div className="font-bold text-[#2A2A2A] text-sm mb-1">{getParsedAddress(selectedOrder.shippingAddress)?.name || "Registry Name Missing"}</div>
+                           <div className="text-[10px] font-bold text-[var(--rust)] mb-2">{getParsedAddress(selectedOrder.shippingAddress)?.phone || "Phone Missing"}</div>
                            <div className="text-xs text-[var(--muted)] leading-relaxed min-h-[3rem]">
-                              {!(selectedOrder.shippingAddress?.houseNo || selectedOrder.shippingAddress?.street || selectedOrder.shippingAddress?.barangay) ? (
+                              {!(getParsedAddress(selectedOrder.shippingAddress)?.houseNo || getParsedAddress(selectedOrder.shippingAddress)?.street || getParsedAddress(selectedOrder.shippingAddress)?.barangay) ? (
                                 <div className="italic opacity-40 py-2 uppercase text-[9px] font-bold tracking-widest text-[#2A2118]">Archived Registry Data Unavailable</div>
                               ) : (
                                 <>
-                                  {selectedOrder.shippingAddress?.houseNo && <span>{selectedOrder.shippingAddress.houseNo} </span>}
-                                  {selectedOrder.shippingAddress?.street && <span>{selectedOrder.shippingAddress.street}, </span>}
+                                  {getParsedAddress(selectedOrder.shippingAddress)?.houseNo && <span>{getParsedAddress(selectedOrder.shippingAddress).houseNo} </span>}
+                                  {getParsedAddress(selectedOrder.shippingAddress)?.street && <span>{getParsedAddress(selectedOrder.shippingAddress).street}, </span>}
                                   <br />
-                                  {selectedOrder.shippingAddress?.barangay && <span>Brgy. {selectedOrder.shippingAddress.barangay}, </span>}
-                                  {selectedOrder.shippingAddress?.city && <span>{selectedOrder.shippingAddress.city}, </span>}
+                                  {getParsedAddress(selectedOrder.shippingAddress)?.barangay && <span>Brgy. {getParsedAddress(selectedOrder.shippingAddress).barangay}, </span>}
+                                  {getParsedAddress(selectedOrder.shippingAddress)?.city && <span>{getParsedAddress(selectedOrder.shippingAddress).city}, </span>}
                                   <br />
-                                  {selectedOrder.shippingAddress?.province && <span>{selectedOrder.shippingAddress.province}, </span>}
-                                  {selectedOrder.shippingAddress?.postalCode && <span>{selectedOrder.shippingAddress.postalCode}</span>}
+                                  {getParsedAddress(selectedOrder.shippingAddress)?.province && <span>{getParsedAddress(selectedOrder.shippingAddress).province}, </span>}
+                                  {getParsedAddress(selectedOrder.shippingAddress)?.postalCode && <span>{getParsedAddress(selectedOrder.shippingAddress).postalCode}</span>}
                                 </>
                               )}
                            </div>
-                           {selectedOrder.shippingAddress?.latitude && (
+                           {getParsedAddress(selectedOrder.shippingAddress)?.latitude && (
                              <div className="mt-3 pt-3 border-t border-[var(--border)] flex items-center gap-2 text-[9px] font-bold text-[var(--rust)] uppercase tracking-widest">
-                                <MapPin className="w-3 h-3" /> Pinned: {selectedOrder.shippingAddress.latitude.toFixed(4)}, {selectedOrder.shippingAddress.longitude.toFixed(4)}
+                                <MapPin className="w-3 h-3" /> Pinned: {getParsedAddress(selectedOrder.shippingAddress).latitude.toFixed(4)}, {getParsedAddress(selectedOrder.shippingAddress).longitude.toFixed(4)}
                              </div>
                            )}
                         </div>

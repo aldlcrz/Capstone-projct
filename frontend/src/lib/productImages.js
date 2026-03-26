@@ -63,5 +63,6 @@ export function getProductImageSrc(image, fallback = FALLBACK_IMAGE) {
   const images = normalizeProductImages(image);
   if (images.length === 0) return fallback;
   const first = images[0];
-  return typeof first === 'object' ? first.url : first;
+  const src = typeof first === 'object' ? first.url : first;
+  return (src && typeof src === 'string' && src.trim() !== '') ? src : fallback;
 }
