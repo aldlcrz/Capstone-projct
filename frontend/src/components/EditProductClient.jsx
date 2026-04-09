@@ -19,7 +19,8 @@ export default function EditProductClient() {
     name: "",
     description: "",
     price: "",
-    category: "",
+    categories: [],
+    sizes: [],
     stock: "",
     shippingFee: "",
     shippingDays: "",
@@ -61,7 +62,8 @@ export default function EditProductClient() {
           name: p.name || "",
           description: p.description || "",
           price: p.price || "",
-          category: p.category || "",
+          categories: Array.isArray(p.categories) ? p.categories : [],
+          sizes: Array.isArray(p.sizes) ? p.sizes : [],
           stock: p.stock || "",
           shippingFee: p.shippingFee || "",
           shippingDays: p.shippingDays || "",
@@ -162,7 +164,8 @@ export default function EditProductClient() {
       form.append("name", formData.name);
       form.append("description", formData.description);
       form.append("price", formData.price);
-      form.append("category", formData.category);
+      form.append("categories", JSON.stringify(formData.categories));
+      form.append("sizes", JSON.stringify(formData.sizes));
       form.append("stock", formData.stock);
       form.append("shippingFee", formData.shippingFee || 0);
       form.append("shippingDays", formData.shippingDays || 3);
@@ -233,22 +236,69 @@ export default function EditProductClient() {
                     />
                 </div>
                 <div className="space-y-4">
-                  <label className="text-[10px] font-bold uppercase tracking-widest text-[var(--muted)] ml-2">Category Sector</label>
+                  <label className="text-[10px] font-bold uppercase tracking-widest text-[var(--muted)] ml-2">Categories</label>
+                  <div className="flex flex-wrap gap-2 mb-3">
+                    {formData.categories.map((cat, idx) => (
+                      <motion.div
+                        initial={{ scale: 0.8, opacity: 0 }}
+                        animate={{ scale: 1, opacity: 1 }}
+                        key={idx}
+                        className="flex items-center gap-2 px-4 py-2 bg-[var(--rust)] text-white rounded-full text-sm font-bold shadow-md shadow-red-900/10"
+                      >
+                        {cat}
+                        <button
+                          type="button"
+                          onClick={() => setFormData({ ...formData, categories: formData.categories.filter(c => c !== cat) })}
+                          className="hover:bg-white/20 rounded-full p-0.5 transition-colors"
+                        >
+                          <X className="w-3 h-3" />
+                        </button>
+                      </motion.div>
+                    ))}
+                  </div>
+
                   <div className="relative group">
-                    <select 
-                      value={formData.category}
-                      onChange={(e) => setFormData({...formData, category: e.target.value})}
+                    <select
                       className="w-full px-6 py-4 bg-white border-2 border-[var(--rust)]/60 rounded-2xl focus:outline-none focus:border-[var(--rust)] transition-all font-serif text-lg font-bold text-[var(--charcoal)] appearance-none cursor-pointer shadow-lg shadow-red-900/5 group-hover:border-[var(--rust)]"
-                      required
+                      onChange={(e) => {
+                        const val = e.target.value;
+                        if (val && !formData.categories.includes(val)) {
+                          setFormData({ ...formData, categories: [...formData.categories, val] });
+                        }
+                        e.target.value = ""; // Reset
+                      }}
                     >
-                      <option value="" disabled>Select Sector</option>
+                      <option value="">+ Select Category Sector </option>
                       {categoriesList.map((cat, idx) => (
-                        <option key={idx} value={cat.name}>{cat.name}</option>
+                        <option key={idx} value={cat.name} disabled={formData.categories.includes(cat.name)}>
+                          {cat.name}
+                        </option>
                       ))}
                     </select>
                     <div className="absolute right-6 top-1/2 -translate-y-1/2 pointer-events-none text-[var(--rust)]">
                       <Plus className="w-5 h-5 rotate-45" />
                     </div>
+                  </div>
+                </div>
+
+                <div className="space-y-3 col-span-2">
+                  <label className="text-[10px] font-bold uppercase tracking-widest text-[var(--muted)] ml-2">Heritage Sizing Available</label>
+                  <div className="flex flex-wrap gap-2">
+                    {["S", "M", "L", "XL", "XXL"].map(size => (
+                      <button
+                        key={size}
+                        type="button"
+                        onClick={() => {
+                          const newSizes = formData.sizes.includes(size)
+                            ? formData.sizes.filter(s => s !== size)
+                            : [...formData.sizes, size];
+                          setFormData({ ...formData, sizes: newSizes });
+                        }}
+                        className={`px-4 py-2 rounded-lg text-xs font-bold transition-all border-2 ${formData.sizes.includes(size) ? 'bg-[var(--rust)] text-white border-[var(--rust)] shadow-lg' : 'bg-[var(--input-bg)] text-[var(--muted)] border-[var(--border)] hover:border-[var(--rust)]'}`}
+                      >
+                        {size}
+                      </button>
+                    ))}
                   </div>
                 </div>
                 <div className="space-y-2">

@@ -1,9 +1,13 @@
 const { Category } = require('../models');
 
 const defaultCategories = [
-    { name: 'Barong Tagalog', description: 'Traditional Filipino formal wear for men.' },
-    { name: 'Filipiniana Dresses', description: 'Elegant traditional dresses for women.' },
-    { name: 'Accessories', description: 'Traditional Filipino jewelry, fans, and more.' },
+    { name: 'Formal Barong', description: 'Traditional Filipino formal wear for men (Piña, Jusi, Cocoon).' },
+    { name: 'Polo Barong', description: 'Semi-formal and everyday business attire.' },
+    { name: 'Modern Filipiniana', description: 'Contemporary takes on traditional women\'s dresses.' },
+    { name: 'Traditional Gowns', description: 'Heritage formal gowns like Traje de Mestiza.' },
+    { name: 'Heritage Accessories', description: 'Abaca bags, hand-painted fans, and native jewelry.' },
+    { name: 'Lumban Specials', description: 'Hand-embroidered specialties from the Embroidery Capital.' },
+    { name: 'Semi-Formal', description: 'Occasion-wear that balances heritage and modern comfort.' },
     { name: 'Others', description: 'Miscellaneous heritage crafts.' }
 ];
 

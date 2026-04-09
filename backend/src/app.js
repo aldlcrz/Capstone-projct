@@ -30,6 +30,8 @@ const allowedOrigins = [
   'http://127.0.0.1:3001',
   'http://localhost:5000',
   'http://127.0.0.1:5000',
+  'http://localhost',
+  'capacitor://localhost',
 ];
 
 app.use(cors({
@@ -47,6 +49,7 @@ app.use(cors({
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
+app.use('/uploads', express.static(path.join(__dirname, '../public/uploads')));
 
 // Socket.IO state inject
 const socketUtility = require('./utils/socketUtility');
@@ -68,9 +71,9 @@ const chatRoutes = require('./routes/chatRoutes');
 const adminRoutes = require('./routes/adminRoutes');
 const categoryRoutes = require('./routes/categoryRoutes');
 const addressRoutes = require('./routes/addressRoutes');
-const wishlistRoutes = require('./routes/wishlistRoutes');
 const returnRoutes = require('./routes/returnRoutes');
 const userRoutes = require('./routes/userRoutes');
+const uploadRoutes = require('./routes/uploadRoutes');
 
 app.use('/api/v1/auth', authRoutes);
 app.use('/api/v1/products', productRoutes);
@@ -80,9 +83,9 @@ app.use('/api/v1/chat', chatRoutes);
 app.use('/api/v1/admin', adminRoutes);
 app.use('/api/v1/categories', categoryRoutes);
 app.use('/api/v1/addresses', addressRoutes);
-app.use('/api/v1/wishlist', wishlistRoutes);
 app.use('/api/v1/returns', returnRoutes);
 app.use('/api/v1/users', userRoutes);
+app.use('/api/v1/upload', uploadRoutes);
 
 // Global Error Handler
 const errorHandler = require('./middleware/errorHandler');

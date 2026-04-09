@@ -1,7 +1,7 @@
 "use client";
 import React, { useState, useEffect } from "react";
 import AdminLayout from "@/components/AdminLayout";
-import { ShoppingBag, Search, Filter, TrendingUp, Store, Package, Trash2, Eye, LayoutGrid, List as ListIcon, CheckCircle2, XCircle } from "lucide-react";
+import { ShoppingBag, Search, Filter, TrendingUp, Store, Package, Trash2, Eye, LayoutGrid, List as ListIcon, CheckCircle2, XCircle, Edit2 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useRouter } from "next/navigation";
 import { api, BACKEND_URL } from "@/lib/api";
@@ -15,6 +15,7 @@ export default function AdminProducts() {
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState("products"); // "products" or "categories"
   const [newCategory, setNewCategory] = useState({ name: "", description: "" });
+  const [editingCategory, setEditingCategory] = useState(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(null);
@@ -71,15 +72,32 @@ export default function AdminProducts() {
     if (!newCategory.name) return;
     setError(null); setSuccess(null);
     try {
-      await api.post("/categories", newCategory);
+      if (editingCategory) {
+        await api.put(`/categories/${editingCategory.id}`, newCategory);
+        setSuccess("Category updated successfully.");
+      } else {
+        await api.post("/categories", newCategory);
+        setSuccess("Category added successfully.");
+      }
       setNewCategory({ name: "", description: "" });
-      setSuccess("Category added successfully.");
+      setEditingCategory(null);
       setTimeout(() => setSuccess(null), 3000);
       fetchCategories();
     } catch (err) {
-      setError(err.response?.data?.message || "Failed to add category.");
+      setError(err.response?.data?.message || `Failed to ${editingCategory ? 'update' : 'add'} category.`);
       setTimeout(() => setError(null), 3000);
     }
+  };
+
+  const handleEditClick = (cat) => {
+    setEditingCategory(cat);
+    setNewCategory({ name: cat.name, description: cat.description || "" });
+    // Scroll to form on mobile or small screens if needed, but here it's side-by-side
+  };
+
+  const cancelEdit = () => {
+    setEditingCategory(null);
+    setNewCategory({ name: "", description: "" });
   };
 
   const handleDeleteCategory = async (id) => {
@@ -223,7 +241,9 @@ export default function AdminProducts() {
             {/* Add Category Form */}
             <div className="lg:col-span-1">
               <div className="artisan-card p-8 bg-white shadow-xl space-y-6">
-                <h3 className="font-serif text-xl font-bold text-[var(--charcoal)] tracking-tight uppercase">Register <span className="text-[var(--rust)] italic lowercase">New Category</span></h3>
+                <h3 className="font-serif text-xl font-bold text-[var(--charcoal)] tracking-tight uppercase">
+                  {editingCategory ? 'Update' : 'Register'} <span className="text-[var(--rust)] italic lowercase">{editingCategory ? 'Category' : 'New Category'}</span>
+                </h3>
                 <form onSubmit={handleAddCategory} className="space-y-4">
                   <div className="space-y-2">
                     <label className="text-[10px] font-black uppercase tracking-widest text-[var(--muted)] ml-1">Category Name</label>
@@ -245,9 +265,20 @@ export default function AdminProducts() {
                       className="w-full px-5 py-3 bg-[var(--cream)]/30 border-2 border-transparent focus:border-[var(--rust)] rounded-xl outline-none text-xs font-bold transition-all shadow-inner resize-none"
                     />
                   </div>
-                  <button type="submit" className="w-full py-4 bg-[var(--rust)] text-white text-[10px] font-black uppercase tracking-[0.2em] rounded-xl hover:opacity-90 transition-all shadow-lg active:scale-[0.98]">
-                    Add to Registry
-                  </button>
+                  <div className="flex gap-3">
+                    {editingCategory && (
+                      <button 
+                        type="button" 
+                        onClick={cancelEdit}
+                        className="flex-1 py-4 bg-[var(--cream)] text-[var(--charcoal)] text-[10px] font-black uppercase tracking-[0.2em] rounded-xl hover:bg-[var(--border)] transition-all shadow-sm"
+                      >
+                        Cancel
+                      </button>
+                    )}
+                    <button type="submit" className={`flex-[2] py-4 bg-[var(--rust)] text-white text-[10px] font-black uppercase tracking-[0.2em] rounded-xl hover:opacity-90 transition-all shadow-lg active:scale-[0.98]`}>
+                      {editingCategory ? 'Save Changes' : 'Add to Registry'}
+                    </button>
+                  </div>
                 </form>
               </div>
             </div>
@@ -272,7 +303,22 @@ export default function AdminProducts() {
                           <td className="px-8 py-6 font-black text-[var(--charcoal)] uppercase tracking-tight text-xs group-hover:text-[var(--rust)]">{cat.name}</td>
                           <td className="px-8 py-6 text-[10px] font-bold text-[var(--muted)] line-clamp-1 italic">{cat.description || "No description provided."}</td>
                           <td className="px-8 py-6 text-right">
-                            <button onClick={() => handleDeleteCategory(cat.id)} className="p-2.5 text-red-500 hover:bg-red-50 rounded-lg transition-all border border-transparent hover:border-red-100"><Trash2 className="w-4 h-4" /></button>
+                            <div className="flex items-center justify-end gap-2">
+                              <button 
+                                onClick={() => handleEditClick(cat)} 
+                                className={`p-2.5 rounded-lg transition-all border ${editingCategory?.id === cat.id ? 'bg-red-50 text-[var(--rust)] border-red-100 shadow-sm' : 'text-[var(--muted)] hover:text-[var(--rust)] border-transparent hover:border-red-100 hover:bg-red-50'}`}
+                                title="Edit Category"
+                              >
+                                <Edit2 className="w-4 h-4" />
+                              </button>
+                              <button 
+                                onClick={() => handleDeleteCategory(cat.id)} 
+                                className="p-2.5 text-red-500 hover:bg-red-50 rounded-lg transition-all border border-transparent hover:border-red-100"
+                                title="Delete Category"
+                              >
+                                <Trash2 className="w-4 h-4" />
+                              </button>
+                            </div>
                           </td>
                         </tr>
                       ))

@@ -2,16 +2,16 @@
 import React, { useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { 
-  Home, 
-  ShoppingBag, 
-  MessageCircle, 
-  Bell, 
-  User, 
-  Search, 
-  ShoppingCart, 
-  LogOut, 
-  Menu, 
+import {
+  Home,
+  ShoppingBag,
+  MessageCircle,
+  Bell,
+  User,
+  Search,
+  ShoppingCart,
+  LogOut,
+  Menu,
   X,
   History,
   MapPin,
@@ -20,7 +20,7 @@ import {
   Loader2
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
-import { api } from "@/lib/api";
+import { api, clearSession } from "@/lib/api";
 import { useSocket } from "@/context/SocketContext";
 import {
   formatNotificationTime,
@@ -32,17 +32,23 @@ import {
 import MobileBottomNav from "./MobileBottomNav";
 
 const sidebarData = [
-  { group: "SHOPPING", items: [
-    { label: "Shop", icon: <Home className="w-5 h-5" />, path: "/home" },
-  ]},
-  { group: "ACCOUNT", items: [
-    { label: "My Orders", icon: <History className="w-5 h-5" />, path: "/orders" },
-    { label: "Messages", icon: <MessageCircle className="w-5 h-5" />, path: "/messages" },
-    { label: "My Addresses", icon: <MapPin className="w-5 h-5" />, path: "/addresses" },
-  ]},
-  { group: "SETTINGS", items: [
-    { label: "Profile", icon: <User className="w-5 h-5" />, path: "/profile" },
-  ]},
+  {
+    group: "SHOPPING", items: [
+      { label: "Shop", icon: <Home className="w-5 h-5" />, path: "/home" },
+    ]
+  },
+  {
+    group: "ACCOUNT", items: [
+      { label: "My Orders", icon: <History className="w-5 h-5" />, path: "/orders" },
+      { label: "Messages", icon: <MessageCircle className="w-5 h-5" />, path: "/messages" },
+      { label: "My Addresses", icon: <MapPin className="w-5 h-5" />, path: "/addresses" },
+    ]
+  },
+  {
+    group: "SETTINGS", items: [
+      { label: "Profile", icon: <User className="w-5 h-5" />, path: "/profile" },
+    ]
+  },
 ];
 
 const mobileNavItems = [
@@ -73,7 +79,9 @@ export default function CustomerLayout({ children }) {
     if (!silent) setNotificationsLoading(true);
     try {
       const res = await api.get("/notifications");
-      const nextNotifications = Array.isArray(res.data) ? res.data.map(normalizeNotification) : [];
+      let data = Array.isArray(res.data) ? res.data : [];
+      data = data.filter(n => !n.link || (!n.link.startsWith('/seller') && !n.link.startsWith('/admin')));
+      const nextNotifications = data.map(normalizeNotification);
       setNotifications(nextNotifications);
     } catch (error) {
       const msg = error.response?.data?.message || error.message || "Unknown error";
@@ -89,7 +97,7 @@ export default function CustomerLayout({ children }) {
     let storedUser = null;
     try {
       storedUser = JSON.parse(localStorage.getItem("user") || "null");
-    } catch (error) {}
+    } catch (error) { }
     setUser(storedUser);
 
     const updateCartCount = () => {
@@ -102,23 +110,32 @@ export default function CustomerLayout({ children }) {
 
     if (socket && storedUser?.id) {
       socket.on('new_notification', (incoming) => {
-        const nextNotification = normalizeNotification(incoming);
-        setNotifications((prev) => [nextNotification, ...prev.filter((item) => item.id !== nextNotification.id)]);
+        if (!incoming.link || (!incoming.link.startsWith('/seller') && !incoming.link.startsWith('/admin'))) {
+          const nextNotification = normalizeNotification(incoming);
+          setNotifications((prev) => [nextNotification, ...prev.filter((item) => item.id !== nextNotification.id)]);
+        }
       });
       socket.on('notification_count_update', () => {
         fetchNotifications({ silent: true });
       });
     }
 
+    const checkAuth = () => {
+      const storedUser = JSON.parse(localStorage.getItem("user") || "null");
+      setUser(storedUser);
+    };
+
     window.addEventListener('storage', updateCartCount);
+    window.addEventListener('storage', checkAuth);
     const interval = setInterval(updateCartCount, 1000); // Poll for changes
     return () => {
-        window.removeEventListener('storage', updateCartCount);
-        clearInterval(interval);
-        if (socket) {
-          socket.off('new_notification');
-          socket.off('notification_count_update');
-        }
+      window.removeEventListener('storage', updateCartCount);
+      window.removeEventListener('storage', checkAuth);
+      clearInterval(interval);
+      if (socket) {
+        socket.off('new_notification');
+        socket.off('notification_count_update');
+      }
     };
   }, [fetchNotifications, socket]);
 
@@ -140,7 +157,7 @@ export default function CustomerLayout({ children }) {
   }, [notificationsOpen]);
 
   const handleLogout = () => {
-    localStorage.clear();
+    clearSession();
     window.location.href = "/";
   };
 
@@ -209,9 +226,9 @@ export default function CustomerLayout({ children }) {
   };
 
   return (
-    <div className="flex h-screen bg-[#F7F3EE] overflow-hidden">
+    <div data-panel="customer" className="flex h-screen bg-[#F7F3EE] overflow-hidden">
       {/* Sidebar Desktop */}
-      <motion.aside 
+      <motion.aside
         initial={{ x: -280 }}
         animate={{ x: 0 }}
         className="hidden lg:flex flex-col w-[280px] h-full bg-white border-r border-[var(--border)] overflow-y-auto"
@@ -222,7 +239,7 @@ export default function CustomerLayout({ children }) {
               LUMBARONG
             </Link>
             <div className="flex items-center gap-1.5 mt-2 px-1 text-[var(--rust)] font-bold tracking-widest text-[10px]">
-              <ShoppingBag className="w-3 h-3" /> BUYER
+              <ShoppingBag className="w-3 h-3" />
             </div>
           </div>
 
@@ -236,9 +253,9 @@ export default function CustomerLayout({ children }) {
                   {group.items.map((item, i) => {
                     const active = pathname === item.path;
                     return (
-                      <Link 
-                        key={i} 
-                        href={item.path} 
+                      <Link
+                        key={i}
+                        href={item.path}
                         className={`flex items-center gap-3 px-4 py-3.5 rounded-xl transition-all duration-300 group tracking-wide text-sm font-medium ${active ? 'bg-[rgba(192,66,42,0.08)] text-[var(--rust)] border-l-4 border-[var(--rust)]' : 'text-[var(--charcoal)] hover:bg-[var(--cream)] hover:text-[var(--rust)]'}`}
                       >
                         <span className={`transition-colors ${active ? 'text-[var(--rust)]' : 'text-[var(--muted)] group-hover:text-[var(--rust)]'}`}>
@@ -254,8 +271,8 @@ export default function CustomerLayout({ children }) {
           </nav>
 
           <div className="mt-10 pt-8 border-t border-[var(--border)]">
-            <button 
-              onClick={() => { localStorage.clear(); window.location.href = "/"; }}
+            <button
+              onClick={handleLogout}
               className="flex items-center gap-3 w-full px-4 py-3.5 bg-red-50 text-red-600 rounded-xl hover:bg-red-100 transition-all font-bold text-xs tracking-widest uppercase"
             >
               <LogOut className="w-4 h-4" /> Sign Out
@@ -333,9 +350,8 @@ export default function CustomerLayout({ children }) {
                             <button
                               key={notification.id}
                               onClick={() => handleNotificationClick(notification)}
-                              className={`w-full px-6 py-4 text-left flex items-start gap-4 border-b border-[var(--border)] transition-colors hover:bg-[var(--cream)]/60 ${
-                                notification.read ? "bg-white" : "bg-[rgba(192,66,42,0.04)]"
-                              }`}
+                              className={`w-full px-6 py-4 text-left flex items-start gap-4 border-b border-[var(--border)] transition-colors hover:bg-[var(--cream)]/60 ${notification.read ? "bg-white" : "bg-[rgba(192,66,42,0.04)]"
+                                }`}
                             >
                               {renderNotificationIcon(notification)}
                               <div className="flex-1 min-w-0 space-y-1.5">
@@ -373,19 +389,31 @@ export default function CustomerLayout({ children }) {
               <Link href="/cart" className="relative w-10 h-10 flex items-center justify-center rounded-xl bg-[var(--cream)] text-[var(--charcoal)] hover:text-[var(--rust)]">
                 <ShoppingCart className="w-5 h-5" />
                 {cartCount > 0 && (
-                   <span className="absolute -top-1.5 -right-1.5 w-5 h-5 bg-[var(--rust)] text-white text-[10px] font-bold rounded-full flex items-center justify-center border-2 border-white shadow-sm">
-                     {cartCount}
-                   </span>
+                  <span className="absolute -top-1.5 -right-1.5 w-5 h-5 bg-[var(--rust)] text-white text-[10px] font-bold rounded-full flex items-center justify-center border-2 border-white shadow-sm">
+                    {cartCount}
+                  </span>
                 )}
               </Link>
               <div className="hidden lg:block w-[1px] h-8 bg-[var(--border)]" />
               <Link href="/profile" className="flex items-center gap-3 group">
                 <div className="hidden lg:block text-right">
                   <div className="text-sm font-bold text-[var(--charcoal)] group-hover:text-[var(--rust)] transition-colors">{user?.name || "User"}</div>
-                   <div className="text-[10px] text-[var(--muted)] font-bold uppercase tracking-widest">BUYER</div>
+                  <div className="text-[10px] text-[var(--muted)] font-bold uppercase tracking-widest"></div>
                 </div>
-                <div className="w-10 h-10 rounded-xl bg-[var(--sand)] border-2 border-white shadow-md flex items-center justify-center text-white font-serif text-lg font-bold uppercase transition-transform active:scale-95">
-                  {user?.name ? user.name[0] : "P"}
+                <div className="w-10 h-10 rounded-xl bg-[var(--sand)] border-2 border-white shadow-md flex items-center justify-center text-white font-serif text-lg font-bold uppercase overflow-hidden transition-transform active:scale-95">
+                  {user?.profilePhoto ? (
+                    <img 
+                      src={user.profilePhoto} 
+                      alt={user.name} 
+                      className="w-full h-full object-cover"
+                      onError={(e) => {
+                        e.target.onerror = null;
+                        e.target.src = `https://ui-avatars.com/api/?name=${user?.name || "User"}&background=EBE5DE&color=2A2A2A`;
+                      }}
+                    />
+                  ) : (
+                    user?.name ? user.name[0] : "P"
+                  )}
                 </div>
               </Link>
             </div>
@@ -400,7 +428,7 @@ export default function CustomerLayout({ children }) {
             {children}
           </div>
         </main>
-        
+
         <MobileBottomNav items={mobileNavItems} />
       </div>
 

@@ -45,9 +45,10 @@ const mobileNavItems = [
 ];
 
 import { useSocket } from "@/context/SocketContext";
-import { api } from "@/lib/api";
-import { normalizeNotification } from "@/lib/notifications";
+import { api, clearSession } from "@/lib/api";
+import { normalizeNotification, formatNotificationTime } from "@/lib/notifications";
 import MobileBottomNav from "./MobileBottomNav";
+import { ArrowRight, ShieldCheck } from "lucide-react";
 
 export default function SellerLayout({ children }) {
   const pathname = usePathname();
@@ -62,41 +63,50 @@ export default function SellerLayout({ children }) {
     if (!token || token === "null" || token === "undefined") return;
     try {
       const res = await api.get("/notifications");
-      const data = Array.isArray(res.data) ? res.data : [];
+      let data = Array.isArray(res.data) ? res.data : [];
+      data = data.filter(n => n.link && n.link.startsWith('/seller'));
       setNotifications(data);
       setUnreadCount(data.filter(n => !n.read).length);
     } catch (error) {
-      console.error("Failed to fetch seller notifications");
+      if (error?.response?.status !== 401) {
+        console.error("Failed to sync workshop alerts:", error?.response?.data || error.message);
+      }
     }
   }, []);
 
   React.useEffect(() => {
-    const storedUser = JSON.parse(localStorage.getItem("user") || "{}");
-    setUser(storedUser);
+    const checkAuth = () => {
+      const storedUser = JSON.parse(localStorage.getItem("user") || "null");
+      setUser(storedUser);
+      
+      // Safety redirect: If not seller or admin, bounce to home
+      if (storedUser && storedUser.role && storedUser.role !== 'seller' && storedUser.role !== 'admin') {
+        window.location.href = "/";
+      }
+    };
 
-    // Safety redirect: If not seller or admin, bounce to home
-    if (storedUser && storedUser.role && storedUser.role !== 'seller' && storedUser.role !== 'admin') {
-      window.location.href = "/";
-      return;
-    }
-
+    checkAuth();
     fetchNotifications();
 
-    if (socket && storedUser?.id) {
+    if (socket && user?.id) {
       socket.on('new_notification', (incoming) => {
-        setNotifications(prev => [incoming, ...prev]);
-        setUnreadCount(prev => prev + 1);
+        if (incoming.link && incoming.link.startsWith('/seller')) {
+          setNotifications(prev => [incoming, ...prev]);
+          setUnreadCount(prev => prev + 1);
+        }
       });
       socket.on('notification_count_update', fetchNotifications);
     }
 
+    window.addEventListener('storage', checkAuth);
     return () => {
+      window.removeEventListener('storage', checkAuth);
       if (socket) {
         socket.off('new_notification');
         socket.off('notification_count_update');
       }
     };
-  }, [socket, fetchNotifications]);
+  }, [socket, fetchNotifications, user?.id]);
 
   const markAsRead = async (id) => {
     try {
@@ -108,10 +118,15 @@ export default function SellerLayout({ children }) {
     }
   };
 
+  const handleLogout = () => {
+    clearSession();
+    window.location.href = "/";
+  };
+
   const isVerified = user?.isVerified;
 
   return (
-    <div className="flex h-screen bg-[#F4ECE3] overflow-hidden">
+    <div data-panel="seller" className="flex h-screen bg-[#F4ECE3] overflow-hidden">
       {/* Sidebar Desktop */}
       <motion.aside
         initial={{ x: -280 }}
@@ -158,7 +173,7 @@ export default function SellerLayout({ children }) {
 
           <div className="mt-10 pt-8 border-t border-[var(--border)]">
             <button
-              onClick={() => { localStorage.clear(); window.location.href = "/"; }}
+              onClick={handleLogout}
               className="flex items-center gap-3 w-full px-4 py-3.5 bg-red-50 text-red-600 rounded-xl hover:bg-red-100 transition-all font-bold text-xs tracking-widest uppercase"
             >
               <LogOut className="w-4 h-4" /> End Session
@@ -175,8 +190,6 @@ export default function SellerLayout({ children }) {
             <div className="flex items-center gap-4 lg:flex-1">
               {/* Search logic disabled based on UI polish request */}
             </div>
-
-
 
             <div className="flex items-center gap-2 md:gap-6">
               <div className="relative">
@@ -287,15 +300,25 @@ export default function SellerLayout({ children }) {
                     {isVerified ? "VERIFIED" : "PENDING VERIFICATION"}
                   </div>
                 </div>
-                <div className="w-10 h-10 rounded-xl bg-[var(--bark)] border-2 border-white shadow-md flex items-center justify-center text-white font-serif text-lg font-bold transition-transform active:scale-95">
-                  {user?.name ? user.name[0] : "A"}
+                <div className="w-10 h-10 rounded-xl bg-[var(--bark)] border-2 border-white shadow-md flex items-center justify-center text-white font-serif text-lg font-bold overflow-hidden transition-transform active:scale-95">
+                  {user?.profilePhoto ? (
+                    <img 
+                      src={user.profilePhoto} 
+                      alt={user.name} 
+                      className="w-full h-full object-cover"
+                      onError={(e) => {
+                        e.target.onerror = null;
+                        e.target.src = `https://ui-avatars.com/api/?name=${user?.name || "Seller"}&background=EBE5DE&color=2A2A2A`;
+                      }}
+                    />
+                  ) : (
+                    user?.name ? user.name[0] : "A"
+                  )}
                 </div>
               </Link>
             </div>
           </div>
         </header>
-
-
 
         {/* Scrollable Content */}
         <main className="flex-1 overflow-y-auto p-6 md:p-10 custom-scrollbar pb-[100px] lg:pb-10">
@@ -317,28 +340,6 @@ export default function SellerLayout({ children }) {
 
         <MobileBottomNav items={mobileNavItems} />
       </div>
-
-
     </div>
-  );
-}
-
-function ShieldCheck(props) {
-  return (
-    <svg
-      {...props}
-      xmlns="http://www.w3.org/2000/svg"
-      width="24"
-      height="24"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.5 3.8 17 5 19 5a1 1 0 0 1 1 1z" />
-      <path d="m9 12 2 2 4-4" />
-    </svg>
   );
 }

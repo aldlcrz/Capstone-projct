@@ -9,10 +9,12 @@ router.get('/customers', protect, authorize('admin'), adminController.getCustome
 router.delete('/customers/:id', protect, authorize('admin'), adminController.deleteCustomer);
 router.put('/customers/:id/toggle-status', protect, authorize('admin'), adminController.toggleCustomerStatus);
 router.put('/verify-seller/:id', protect, authorize('admin'), adminController.verifySeller);
+router.put('/reject-seller/:id', protect, authorize('admin'), adminController.rejectSeller);
 
 // System Settings
 router.get('/settings', protect, authorize('admin'), adminController.getSettings);
 router.put('/settings', protect, authorize('admin'), adminController.updateSettings);
 router.delete('/purge-cache', protect, authorize('admin'), adminController.purgeCache);
+router.post('/broadcast', protect, authorize('admin'), adminController.sendBroadcast);
 
 module.exports = router;

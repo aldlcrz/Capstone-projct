@@ -2,10 +2,16 @@
   "compilerOptions": {
     "baseUrl": ".",
     "paths": {
-      "@/*": ["./src/*"]
+      "@/*": [
+        "./src/*"
+      ]
     },
     "jsx": "preserve",
-    "lib": ["dom", "dom.iterable", "esnext"],
+    "lib": [
+      "dom",
+      "dom.iterable",
+      "esnext"
+    ],
     "module": "esnext",
     "moduleResolution": "node",
     "types": [],
@@ -19,6 +25,14 @@
   "typeAcquisition": {
     "enable": false
   },
-  "include": ["src", "next-env.d.ts", "**/*.js", "**/*.jsx"],
-  "exclude": ["node_modules", ".next"]
+  "include": [
+    "src",
+    "next-env.d.ts",
+    "**/*.js",
+    "**/*.jsx"
+  ],
+  "exclude": [
+    "node_modules",
+    ".next"
+  ]
 }

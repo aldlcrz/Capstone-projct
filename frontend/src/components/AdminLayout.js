@@ -17,7 +17,7 @@ import {
   X 
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
-import { api } from "@/lib/api";
+import { api, clearSession } from "@/lib/api";
 import { useSocket } from "@/context/SocketContext";
 import {
   formatNotificationTime,
@@ -56,21 +56,33 @@ import MobileBottomNav from "./MobileBottomNav";
 
 export default function AdminLayout({ children }) {
   const pathname = usePathname();
+  const [loading, setLoading] = useState(true);
   const [user, setUser] = useState(null);
 
   React.useEffect(() => {
-    const storedUser = JSON.parse(localStorage.getItem("user") || "{}");
-    const token = localStorage.getItem("token");
+    const checkAuth = () => {
+      const storedUser = JSON.parse(localStorage.getItem("user") || "null");
+      const token = localStorage.getItem("token");
 
-    // Strict Admin verification
-    if (!token || storedUser.role !== 'admin') {
-      console.warn("Unauthorized access attempt to Admin Panel. Redirecting...");
-      localStorage.clear();
-      window.location.href = "/login?error=admin_required";
-      return;
-    }
+      if (!token || !storedUser || storedUser.role !== 'admin') {
+        // If we are already on the login page or similar, don't redirect again
+        if (!window.location.pathname.includes("/login")) {
+          console.warn("Unauthorized or session expired. Redirecting...");
+          clearSession();
+          window.location.href = "/login?error=admin_required";
+        }
+        return;
+      }
 
-    setUser(storedUser);
+      setUser(storedUser);
+      setLoading(false);
+    };
+
+    checkAuth();
+
+    // Listen for storage changes (e.g. logout in another tab)
+    window.addEventListener('storage', checkAuth);
+    return () => window.removeEventListener('storage', checkAuth);
   }, []);
 
   const [notificationsOpen, setNotificationsOpen] = useState(false);
@@ -112,12 +124,12 @@ export default function AdminLayout({ children }) {
   };
 
   const handleLogout = () => {
-    localStorage.clear();
+    clearSession();
     window.location.href = "/";
   };
 
   return (
-    <div className="flex h-screen bg-[#F7F3EE] overflow-hidden">
+    <div data-panel="admin" className="flex h-screen bg-[#F7F3EE] overflow-hidden">
       {/* Sidebar Desktop */}
       <motion.aside 
         initial={{ x: -280 }}
@@ -163,8 +175,20 @@ export default function AdminLayout({ children }) {
 
           <div className="mt-10 pt-8 border-t border-[var(--border)]">
             <div className="flex items-center gap-3 px-2 mb-6">
-              <div className="w-10 h-10 rounded-xl bg-[var(--bark)] flex items-center justify-center text-white font-serif text-lg font-bold shadow-lg">
-                {user?.name ? user.name[0] : "A"}
+              <div className="w-10 h-10 rounded-xl bg-[var(--bark)] border-2 border-white shadow-md flex items-center justify-center text-white font-serif text-lg font-bold overflow-hidden transition-transform active:scale-95">
+                {user?.profilePhoto ? (
+                  <img 
+                    src={user.profilePhoto} 
+                    alt={user.name} 
+                    className="w-full h-full object-cover"
+                    onError={(e) => {
+                      e.target.onerror = null;
+                      e.target.src = `https://ui-avatars.com/api/?name=${user?.name || "Admin"}&background=EBE5DE&color=2A2A2A`;
+                    }}
+                  />
+                ) : (
+                  user?.name ? user.name[0] : "A"
+                )}
               </div>
               <div>
                 <div className="text-sm font-bold text-[var(--charcoal)]">{user?.name || "Administrator"}</div>
@@ -245,7 +269,13 @@ export default function AdminLayout({ children }) {
         {/* Scrollable Content */}
         <main className="flex-1 overflow-y-auto p-10 custom-scrollbar animate-fade-up">
           <div className="max-w-[1400px] mx-auto">
-            {children}
+            {loading ? (
+              <div className="flex items-center justify-center min-h-[400px]">
+                <Loader2 className="w-10 h-10 animate-spin text-[var(--rust)]" />
+              </div>
+            ) : (
+              children
+            )}
           </div>
         </main>
 

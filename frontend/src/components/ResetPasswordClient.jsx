@@ -84,20 +84,29 @@ export default function ResetPasswordClient() {
           boxShadow: "0 20px 60px rgba(60,40,20,0.08)",
         }}
       >
-        <div className="mb-10 text-center">
-          <Link href="/" className="inline-block mb-2">
-            <span
-              className="font-serif text-3xl font-black italic tracking-tight"
-              style={{ color: "var(--rust, #C0422A)" }}
-            >
-              LumbaRong
-            </span>
-          </Link>
-          <div
-            className="text-[9px] font-bold uppercase tracking-[0.3em]"
-            style={{ color: "var(--muted, #8C7B70)" }}
+        <div className="mb-10 text-center relative flex items-center justify-center">
+          <button
+            onClick={() => window.history.back()}
+            className="absolute left-0 p-2.5 bg-[#F9F6F2] hover:bg-[#EBDCCB] text-[var(--muted)] hover:text-[var(--rust)] rounded-xl transition-all border border-[#E5DDD5] shadow-sm transform hover:scale-105"
+            title="Go Back"
           >
-            New Password
+            <ArrowRight className="w-4 h-4 rotate-180" />
+          </button>
+          <div>
+            <Link href="/" className="inline-block mb-1">
+              <span
+                className="font-serif text-3xl font-black italic tracking-tight"
+                style={{ color: "var(--rust, #C0422A)" }}
+              >
+                LumbaRong
+              </span>
+            </Link>
+            <div
+              className="text-[9px] font-bold uppercase tracking-[0.3em]"
+              style={{ color: "var(--muted, #8C7B70)" }}
+            >
+              New Password
+            </div>
           </div>
         </div>
 

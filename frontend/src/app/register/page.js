@@ -145,13 +145,6 @@ export default function RegisterPage() {
       <div className="absolute bottom-0 left-0 w-[400px] h-[400px] rounded-full translate-y-1/2 -translate-x-1/3 blur-3xl pointer-events-none"
         style={{ background: "var(--sand, #D4B896)", opacity: 0.12 }} />
 
-      <button
-        onClick={() => router.back()}
-        className="absolute top-6 left-6 md:top-10 md:left-10 p-3 bg-white rounded-2xl shadow-[0_8px_30px_rgba(0,0,0,0.04)] text-[var(--muted)] hover:text-[var(--rust)] hover:scale-105 transition-all z-50 flex items-center justify-center border border-[var(--border)]"
-      >
-        <ArrowRight className="w-5 h-5 rotate-180" />
-      </button>
-
       <motion.div
         variants={cardVariants}
         initial="hidden"
@@ -159,20 +152,32 @@ export default function RegisterPage() {
         className="w-full max-w-xl relative z-10"
         style={{ background: "white", borderRadius: "2.5rem", border: "1px solid var(--border, #E5DDD5)", padding: "2.5rem", boxShadow: "0 20px 60px rgba(60,40,20,0.08)" }}
       >
+
         <motion.div variants={containerVariants} initial="hidden" animate="visible">
-          {/* Logo */}
-          <motion.div variants={itemVariants} className="mb-10 text-center">
-            <Link href="/" className="inline-block mb-2">
-              <span className="font-serif text-3xl font-black italic tracking-tight" style={{ color: "var(--rust, #C0422A)" }}>
-                LumbaRong
-              </span>
-            </Link>
-            <div className="text-[9px] font-bold uppercase tracking-[0.3em]" style={{ color: "var(--muted, #8C7B70)" }}>
-              LumbaRong Registration
+          {/* Logo & Header */}
+          <motion.div variants={itemVariants} className="mb-10 w-full relative">
+            <div className="flex items-center justify-center relative">
+              <button
+                onClick={() => router.back()}
+                className="absolute left-0 p-2.5 bg-[#F9F6F2] hover:bg-[#EBDCCB] text-[var(--muted)] hover:text-[var(--rust)] rounded-xl transition-all border border-[#E5DDD5] shadow-sm transform hover:scale-105"
+                title="Go Back"
+              >
+                <ArrowRight className="w-4 h-4 rotate-180" />
+              </button>
+              <div className="text-center">
+                <Link href="/" className="inline-block mb-1">
+                  <span className="font-serif text-3xl font-black italic tracking-tight" style={{ color: "var(--rust, #C0422A)" }}>
+                    LumbaRong
+                  </span>
+                </Link>
+                <div className="text-[9px] font-bold uppercase tracking-[0.3em]" style={{ color: "var(--muted, #8C7B70)" }}>
+                  LumbaRong Registration
+                </div>
+              </div>
             </div>
 
             {/* Progress Steps */}
-            <div className="flex items-center justify-center mt-8 gap-4 px-10">
+            <div className="flex items-center justify-center mt-8 gap-4 px-10 text-center mx-auto">
               {[1, 2].map((s) => (
                 <div key={s} className="flex-1 flex items-center gap-3">
                   <div className="w-8 h-8 rounded-full flex items-center justify-center text-[10px] font-bold transition-all duration-500"

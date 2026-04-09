@@ -56,9 +56,10 @@
       }
     },
     {
-      "name": "Launch Lumbarong Mobile (Native Android)",
+      "name": "Launch Lumbarong App",
       "type": "node",
       "request": "launch",
+      "preLaunchTask": "Launch System",
       "runtimeExecutable": "npx",
       "runtimeArgs": [
         "cap",
@@ -106,6 +107,22 @@
       "presentation": {
         "group": "lumbarong",
         "order": 8
+      }
+    },
+    {
+      "name": "Launch LumbaRong App (Windows Desktop)",
+      "type": "msedge",
+      "request": "launch",
+      "url": "http://localhost:3000",
+      "webRoot": "${workspaceFolder}/frontend",
+      "preLaunchTask": "Launch System",
+      "runtimeArgs": [
+        "--app=http://localhost:3000", 
+        "--window-size=1280,720"
+      ],
+      "presentation": {
+        "group": "lumbarong",
+        "order": 6
       }
     }
   ]

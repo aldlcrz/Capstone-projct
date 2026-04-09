@@ -47,26 +47,25 @@ export default function AdminActivity() {
 
   return (
     <AdminLayout>
-      <div className="max-w-5xl mx-auto space-y-12 mb-20">
+      <div className="max-w-6xl mx-auto space-y-10 mb-20">
         <div className="flex items-center justify-between">
-          <div>
-            <div className="eyebrow">Live System Log</div>
-            <h1 className="font-serif text-4xl font-bold tracking-tight text-[var(--charcoal)] uppercase">
-              System <span className="text-[var(--rust)] italic lowercase">Updates</span>
+          <div className="space-y-1">
+            <div className="eyebrow">Registry Log</div>
+            <h1 className="text-3xl font-bold tracking-tight text-[var(--charcoal)]">
+              System <span className="text-[var(--rust)] italic">Activity</span>
             </h1>
           </div>
-          <div className="hidden md:flex items-center gap-4 px-6 py-3 bg-white border border-[var(--border)] rounded-2xl shadow-sm text-xs font-bold uppercase tracking-widest text-[var(--muted)]">
-             <div className="w-2.5 h-2.5 bg-green-500 rounded-full animate-pulse ring-4 ring-green-100" /> SYSTEM ONLINE
+          <div className="hidden md:flex items-center gap-3 px-4 py-2 bg-white border border-[var(--border)] rounded-lg shadow-sm text-[10px] font-bold uppercase tracking-widest text-[var(--muted)]">
+             <div className="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse" /> SYSTEM STATUS: ONLINE
           </div>
         </div>
 
-        <div className="artisan-card p-0 overflow-hidden shadow-2xl relative">
-          <div className="absolute top-0 left-0 bottom-0 w-2 bg-[var(--rust)] opacity-10" />
-          <div className="p-8 border-b border-[var(--border)] flex items-center justify-between bg-gray-50/50">
-             <div className="flex items-center gap-3 font-bold text-sm text-[var(--charcoal)] tracking-tight">
-                <Activity className="w-5 h-5 text-[var(--rust)]" /> LATEST SYSTEM UPDATES
+        <div className="bg-white rounded-xl border border-[var(--border)] overflow-hidden shadow-sm">
+          <div className="px-6 py-4 border-b border-[var(--border)] flex items-center justify-between bg-[var(--warm-white)]">
+             <div className="flex items-center gap-2 font-bold text-xs text-[var(--charcoal)] tracking-widest uppercase">
+                <Activity className="w-4 h-4 text-[var(--rust)]" /> Latest Operations
              </div>
-             <button className="text-[10px] font-bold text-[var(--rust)] uppercase tracking-widest hover:underline decoration-2 underline-offset-4">Download CSV Report</button>
+             <button className="text-[10px] font-bold text-[var(--rust)] uppercase tracking-widest hover:text-[var(--rust-light)] transition-colors">Export Activity</button>
           </div>
 
           <div className="divide-y divide-[var(--border)]">
@@ -74,44 +73,37 @@ export default function AdminActivity() {
                 {activities.map((act) => (
                 <motion.div 
                   key={act.id}
-                  initial={{ opacity: 0, height: 0, x: -20 }}
-                  animate={{ opacity: 1, height: 'auto', x: 0 }}
-                  exit={{ opacity: 0, x: 20 }}
-                  className="p-8 hover:bg-white transition-all group flex items-start gap-8"
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0 }}
+                  className="px-6 py-5 hover:bg-[var(--warm-white)] transition-colors flex items-center gap-6"
                 >
-                  <div className={`w-12 h-12 rounded-2xl shadow-lg ring-4 ring-white flex items-center justify-center text-white shrink-0 scale-110 rotate-3 group-hover:rotate-0 transition-transform ${act.color}`}>
-                    {act.type === 'order' ? <ShoppingBag className="w-6 h-6" /> : act.type === 'seller' ? <Store className="w-6 h-6" /> : <UserCheck className="w-6 h-6" />}
+                  <div className={`w-10 h-10 rounded-lg flex items-center justify-center text-white shrink-0 ${act.color}`}>
+                    {act.type === 'order' ? <ShoppingBag className="w-5 h-5" /> : act.type === 'seller' ? <Store className="w-5 h-5" /> : <UserCheck className="w-5 h-5" />}
                   </div>
 
-                  <div className="flex-1 space-y-2">
-                    <div className="flex justify-between items-start">
-                      <div className="space-y-1">
-                        <div className="text-[10px] font-bold text-[var(--muted)] uppercase tracking-widest flex items-center gap-1.5 ring-1 ring-[var(--border)] px-2 py-0.5 rounded-full w-fit bg-white">
-                           {act.label}
-                        </div>
-                        <h3 className="font-serif text-xl font-bold text-[var(--charcoal)]">{act.user}</h3>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex justify-between items-center mb-0.5">
+                      <div className="flex items-center gap-3">
+                        <span className="text-[10px] font-bold text-[var(--rust)] uppercase tracking-wider">{act.label}</span>
+                        <span className="hidden md:inline w-1 h-1 bg-[var(--border)] rounded-full" />
+                        <h4 className="text-sm font-semibold text-[var(--charcoal)] truncate">{act.user}</h4>
                       </div>
-                      <div className="text-[10px] font-bold text-[var(--muted)] opacity-60 flex items-center gap-1.5 uppercase tracking-[0.1em]"><Clock className="w-3.5 h-3.5" /> {act.time}</div>
+                      <span className="text-[10px] font-medium text-[var(--muted)] flex items-center gap-1.5 tabular-nums">
+                        <Clock className="w-3 h-3" /> {act.time}
+                      </span>
                     </div>
-                    <div className="flex items-center gap-4 text-sm font-medium text-[var(--muted)] leading-relaxed italic border-l-4 border-[var(--border)] pl-4 py-1">
-                      {act.desc}
-                    </div>
-                    <div className="pt-3 flex gap-4">
-                        <button 
-                          onClick={() => alert(`Auditing entry #${act.id}: Logged transaction hash validated.`)}
-                          className="flex items-center gap-2 text-[10px] font-bold text-[var(--rust)] uppercase tracking-widest hover:translate-x-1 transition-transform"
-                        >
-                          Audit Record <ArrowRight className="w-3 h-3" />
-                        </button>
-                        {act.type === 'seller' && (
-                          <button 
-                            onClick={() => window.location.href = '/admin/sellers'}
-                            className="flex items-center gap-2 text-[10px] font-bold text-[var(--charcoal)] uppercase tracking-widest hover:text-[var(--rust)] transition-all"
-                          >
-                            Review Documents <ShieldCheck className="w-3 h-3" />
-                          </button>
-                        )}
-                    </div>
+                    <p className="text-xs text-[var(--muted)] truncate max-w-2xl">{act.desc}</p>
+                  </div>
+
+                  <div className="flex gap-3">
+                    <button 
+                      onClick={() => alert(`Reviewing action #${act.id}`)}
+                      className="p-2 text-[var(--muted)] hover:text-[var(--rust)] hover:bg-white rounded-md transition-all border border-transparent hover:border-[var(--border)]"
+                      title="View Details"
+                    >
+                      <ArrowRight className="w-4 h-4" />
+                    </button>
                   </div>
                 </motion.div>
               ))}
@@ -119,31 +111,48 @@ export default function AdminActivity() {
           </div>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-           <div className="artisan-card p-10 bg-[var(--bark)] text-white relative group overflow-hidden shadow-2xl">
-              <div className="absolute top-0 right-0 p-8 opacity-20 group-hover:scale-125 transition-transform"><MapPin className="w-20 h-20" /></div>
-              <div className="space-y-6 relative z-10">
-                 <h3 className="font-serif text-2xl font-bold italic tracking-tight">User Locations</h3>
-                 <div className="space-y-3">
-                    <GeoItem label="Lumban, Laguna" count="124 Customers" />
-                    <GeoItem label="Metro Manila" count="86 Customers" />
-                    <GeoItem label="Global Units" count="12 Orders" />
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+           {/* User Locations Card - Refined and Lightened */}
+           <div className="bg-white rounded-xl border border-[var(--border)] p-8 relative overflow-hidden group shadow-sm">
+              <div className="absolute top-[-20px] right-[-20px] p-8 opacity-[0.03] group-hover:opacity-[0.06] transition-opacity">
+                <MapPin className="w-32 h-32 text-[var(--charcoal)]" />
+              </div>
+              <div className="relative z-10 space-y-6">
+                 <h3 className="text-xl font-bold text-[var(--charcoal)]">Regional Distribution</h3>
+                 <div className="space-y-4">
+                    <GeoItem label="Lumban, Laguna" count="124 Artisans" />
+                    <GeoItem label="Metro Manila" count="86 Clients" />
+                    <GeoItem label="Global Exports" count="12 Ships" />
                  </div>
               </div>
            </div>
-           <div className="artisan-card p-10 bg-white/50 backdrop-blur-md shadow-2xl relative overflow-hidden group">
-              <div className="absolute bottom-0 right-0 p-8 opacity-10 group-hover:scale-125 transition-transform"><Mail className="w-20 h-20" /></div>
-              <div className="space-y-6 relative z-10">
-                 <h3 className="font-serif text-2xl font-bold text-[var(--charcoal)]">Send Global Message</h3>
-                 <p className="text-sm text-[var(--muted)] leading-relaxed">Send a notification to every user on the platform at once.</p>
+
+           {/* Global Message Card - Refined */}
+           <div className="bg-white rounded-xl border border-[var(--border)] p-8 relative overflow-hidden group shadow-sm">
+              <div className="absolute top-[-20px] right-[-20px] p-8 opacity-[0.03] group-hover:opacity-[0.06] transition-opacity">
+                <Mail className="w-32 h-32 text-[var(--charcoal)]" />
+              </div>
+              <div className="relative z-10 h-full flex flex-col justify-between">
+                 <div>
+                    <h3 className="text-xl font-bold text-[var(--charcoal)]">Broadcast System</h3>
+                    <p className="mt-2 text-xs text-[var(--muted)] leading-relaxed">Broadcast an urgent notification to all registered users in the network.</p>
+                 </div>
                   <button 
-                    onClick={() => {
-                        const msg = prompt("Enter the message for everyone:");
-                        if (msg) alert("Success: Message sent to all users.");
+                    onClick={async () => {
+                        const msg = prompt("Enter the broadcast message:");
+                        if (msg) {
+                          try {
+                            const { api } = await import('@/lib/api');
+                            await api.post('/admin/broadcast', { message: msg });
+                            alert("Broadcast transmitted successfully.");
+                          } catch (error) {
+                            alert("Failed to send broadcast.");
+                          }
+                        }
                     }}
-                    className="w-full py-4 bg-[var(--rust)] text-white rounded-xl text-xs font-bold font-sans uppercase tracking-[0.2em] shadow-xl hover:shadow-2xl transition-all"
+                    className="mt-6 w-full py-3.5 bg-[var(--charcoal)] text-white rounded-lg text-xs font-bold uppercase tracking-widest hover:bg-[var(--rust)] transition-all shadow-sm"
                   >
-                    Send Message to All
+                    Initiate Broadcast
                   </button>
               </div>
            </div>
@@ -155,9 +164,9 @@ export default function AdminActivity() {
 
 function GeoItem({ label, count }) {
   return (
-    <div className="flex items-center justify-between border-b border-white/10 pb-3 group/geo">
-       <span className="text-xs font-bold text-white/70 group-hover/geo:text-white transition-colors">{label}</span>
-       <span className="text-[10px] font-sans font-bold text-[var(--rust)] bg-white/10 px-2 py-0.5 rounded-full ring-1 ring-white/20">{count}</span>
+    <div className="flex items-center justify-between border-b border-[var(--border)] pb-3 group/geo">
+       <span className="text-xs font-bold text-[var(--charcoal)] group-hover/geo:text-[var(--rust)] transition-colors">{label}</span>
+       <span className="text-[10px] font-sans font-bold text-[var(--rust)] bg-[var(--warm-white)] px-2 py-0.5 rounded-full ring-1 ring-[var(--border)]">{count}</span>
     </div>
   );
 }

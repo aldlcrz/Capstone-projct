@@ -55,12 +55,28 @@ const User = sequelize.define('User', {
     type: DataTypes.STRING,
     allowNull: true,
   },
+  facebookLink: {
+    type: DataTypes.STRING,
+    allowNull: true,
+  },
+  instagramLink: {
+    type: DataTypes.STRING,
+    allowNull: true,
+  },
   isAdult: {
     type: DataTypes.BOOLEAN,
     defaultValue: false,
   },
   fcmToken: {
     type: DataTypes.STRING,
+    allowNull: true,
+  },
+  followers: {
+    type: DataTypes.JSON,
+    allowNull: true,
+  },
+  following: {
+    type: DataTypes.JSON,
     allowNull: true,
   },
   resetPasswordToken: {
@@ -74,6 +90,10 @@ const User = sequelize.define('User', {
   passwordChangedAt: {
     type: DataTypes.DATE,
     allowNull: true,
+  },
+  status: {
+    type: DataTypes.ENUM('active', 'frozen', 'blocked'),
+    defaultValue: 'active',
   },
 }, {
   timestamps: true,

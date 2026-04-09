@@ -27,6 +27,53 @@
   --safe-left: env(safe-area-inset-left, 0px);
 }
 
+/* ─────────────────────────────────────────────────────────────
+   FORMAL PANEL TYPOGRAPHY
+   Applies only inside admin / seller / customer layouts.
+   The landing page (/) has no [data-panel] wrapper — fully safe.
+───────────────────────────────────────────────────────────── */
+
+[data-panel] {
+  --formal-font: var(--font-playfair), "Playfair Display", Georgia, serif;
+}
+
+/* All headings inside panels use Playfair Display */
+[data-panel] h1,
+[data-panel] h2,
+[data-panel] h3,
+[data-panel] h4,
+[data-panel] h5,
+[data-panel] h6 {
+  font-family: var(--formal-font);
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+
+/* Sidebar brand name "LUMBARONG" (uses font-serif class) */
+[data-panel] .font-serif {
+  font-family: var(--formal-font);
+}
+
+/* Utility classes for explicit formal styling */
+.formal-text {
+  font-family: var(--formal-font);
+}
+
+/* Formal numbers — elegant Playfair Display serif style */
+.formal-num {
+  font-family: var(--formal-font);
+  font-variant-numeric: oldstyle-nums;
+  letter-spacing: 0.01em;
+}
+
+/* Recharts axis tick numbers — apply Playfair to all SVG text in charts */
+.recharts-cartesian-axis-tick text,
+.recharts-legend-item-text,
+.recharts-tooltip-label,
+.recharts-tooltip-item {
+  font-family: var(--font-playfair), "Playfair Display", Georgia, serif !important;
+}
+
 .pb-safe {
   padding-bottom: var(--safe-bottom);
 }

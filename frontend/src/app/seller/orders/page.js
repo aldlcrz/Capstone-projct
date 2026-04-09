@@ -303,12 +303,29 @@ function OrderRow({ order, index, onView, onUpdateStatus, isUpdating }) {
       </td>
 
       <td className="px-8 py-6 align-top text-right">
-        <button
-          onClick={onView}
-          className="p-2.5 bg-[var(--cream)] text-[var(--muted)] hover:text-white hover:bg-[var(--rust)] rounded-xl transition-all shadow-sm group/btn"
-        >
-          <Eye className="w-4 h-4 transition-transform group-hover/btn:scale-110" />
-        </button>
+        <div className="flex items-center justify-end gap-2">
+          {(currentStatus === 'Pending' || currentStatus === 'Processing') && (
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                if (window.confirm("Are you sure you want to cancel this order?")) {
+                  onUpdateStatus("Cancelled");
+                }
+              }}
+              disabled={isUpdating}
+              title="Cancel Order"
+              className="p-2.5 bg-red-50 text-red-400 hover:text-white hover:bg-red-500 rounded-xl transition-all shadow-sm group/btn disabled:opacity-50"
+            >
+              <X className="w-4 h-4 transition-transform group-hover/btn:scale-110" />
+            </button>
+          )}
+          <button
+            onClick={onView}
+            className="p-2.5 bg-[var(--cream)] text-[var(--muted)] hover:text-white hover:bg-[var(--rust)] rounded-xl transition-all shadow-sm group/btn"
+          >
+            <Eye className="w-4 h-4 transition-transform group-hover/btn:scale-110" />
+          </button>
+        </div>
       </td>
     </motion.tr>
   );
@@ -347,12 +364,27 @@ function OrderModal({ order, onClose, onUpdateStatus, isUpdating }) {
               </h2>
             </div>
             
-            <div className={`px-6 py-2 rounded-full border text-[10px] font-black tracking-[0.2em] shadow-sm ${
-                order.status === 'Cancelled' ? 'bg-red-50 border-red-200 text-red-600' :
-                order.status === 'Completed' || order.status === 'Delivered' ? 'bg-green-50 border-green-200 text-green-600' :
-                'bg-orange-50 border-orange-200 text-orange-600'
-            }`}>
-              {order.status?.toUpperCase()}
+            <div className="flex items-center gap-3">
+              <div className={`px-6 py-2 rounded-full border text-[10px] font-black tracking-[0.2em] shadow-sm ${
+                  order.status === 'Cancelled' ? 'bg-red-50 border-red-200 text-red-600' :
+                  order.status === 'Completed' || order.status === 'Delivered' ? 'bg-green-50 border-green-200 text-green-600' :
+                  'bg-orange-50 border-orange-200 text-orange-600'
+              }`}>
+                {order.status?.toUpperCase()}
+              </div>
+              {(order.status === 'Pending' || order.status === 'Processing') && (
+                <button 
+                  onClick={() => {
+                    if (window.confirm("Are you sure you want to cancel this order?")) {
+                      onUpdateStatus('Cancelled');
+                    }
+                  }}
+                  disabled={isUpdating}
+                  className="px-6 py-2 rounded-full border border-red-200 bg-white text-red-600 text-[10px] font-black tracking-[0.2em] hover:bg-red-50 transition-all shadow-sm disabled:opacity-50"
+                >
+                  {isUpdating ? 'CANCELLING...' : 'CANCEL'}
+                </button>
+              )}
             </div>
           </div>
           <button onClick={onClose} className="p-3 bg-white hover:bg-[var(--cream)] rounded-full transition-all border border-[var(--border)] group active:scale-90">

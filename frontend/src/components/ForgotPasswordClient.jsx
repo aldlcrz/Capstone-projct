@@ -61,13 +61,6 @@ export default function ForgotPasswordClient() {
         style={{ background: "var(--sand, #D4B896)", opacity: 0.12 }}
       />
 
-      <button
-        onClick={() => router.back()}
-        className="absolute top-6 left-6 md:top-10 md:left-10 p-3 bg-white rounded-2xl shadow-[0_8px_30px_rgba(0,0,0,0.04)] text-[var(--muted)] hover:text-[var(--rust)] hover:scale-105 transition-all z-50 flex items-center justify-center border border-[var(--border)]"
-      >
-        <ArrowRight className="w-5 h-5 rotate-180" />
-      </button>
-
       <motion.div
         variants={cardVariants}
         initial="hidden"
@@ -81,20 +74,29 @@ export default function ForgotPasswordClient() {
           boxShadow: "0 20px 60px rgba(60,40,20,0.08)",
         }}
       >
-        <div className="mb-10 text-center">
-          <Link href="/" className="inline-block mb-2">
-            <span
-              className="font-serif text-3xl font-black italic tracking-tight"
-              style={{ color: "var(--rust, #C0422A)" }}
-            >
-              LumbaRong
-            </span>
-          </Link>
-          <div
-            className="text-[9px] font-bold uppercase tracking-[0.3em]"
-            style={{ color: "var(--muted, #8C7B70)" }}
+        <div className="mb-10 text-center relative flex items-center justify-center">
+          <button
+            onClick={() => router.back()}
+            className="absolute left-0 p-2.5 bg-[#F9F6F2] hover:bg-[#EBDCCB] text-[var(--muted)] hover:text-[var(--rust)] rounded-xl transition-all border border-[#E5DDD5] shadow-sm transform hover:scale-105"
+            title="Go Back"
           >
-            Password Recovery
+            <ArrowRight className="w-4 h-4 rotate-180" />
+          </button>
+          <div>
+            <Link href="/" className="inline-block mb-1">
+              <span
+                className="font-serif text-3xl font-black italic tracking-tight"
+                style={{ color: "var(--rust, #C0422A)" }}
+              >
+                LumbaRong
+              </span>
+            </Link>
+            <div
+              className="text-[9px] font-bold uppercase tracking-[0.3em]"
+              style={{ color: "var(--muted, #8C7B70)" }}
+            >
+              Password Recovery
+            </div>
           </div>
         </div>
 

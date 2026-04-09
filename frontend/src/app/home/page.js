@@ -86,40 +86,11 @@ export default function ShopPage() {
 
 
   const addToCart = (product) => {
-    const cart = JSON.parse(localStorage.getItem("cart") || "[]");
-    const existing = cart.find(item => item.id === product.id && item.size === "M");
-    if (existing) {
-      existing.quantity += 1;
-    } else {
-      cart.push({
-        id: product.id,
-        name: product.name,
-        price: `₱${(product.price || 0).toLocaleString()}`,
-        category: product.category,
-        artisan: product.artisan,
-        image: normalizeProductImages(product.image),
-        size: "M",
-        quantity: 1
-      });
-    }
-    localStorage.setItem("cart", JSON.stringify(cart));
-    window.dispatchEvent(new Event('storage'));
+    router.push(`/products?id=${product.id}`);
   };
 
   const handleBuyNow = (product) => {
-    localStorage.setItem("checkout_mode", "buy_now");
-    localStorage.setItem("checkout_item", JSON.stringify({
-      id: product.id,
-      productId: product.id,
-      name: product.name,
-      price: `₱${(product.price || 0).toLocaleString()}`,
-      image: normalizeProductImages(product.image),
-      quantity: 1,
-      size: "M",
-      artisan: product.artisan,
-      category: product.category,
-    }));
-    router.push("/checkout?mode=buy_now");
+    router.push(`/products?id=${product.id}`);
   };
 
 

@@ -34,21 +34,21 @@ api.interceptors.request.use(
   (error) => Promise.reject(error)
 );
 
+export const clearSession = () => {
+    if (typeof window !== "undefined") {
+      localStorage.removeItem("token");
+      localStorage.removeItem("user");
+      // We don't use localStorage.clear() here to avoid wiping things like 
+      // the shopping cart or theme preferences unless absolutely necessary.
+    }
+};
+
 // Add response interceptor for debugging 401s
 api.interceptors.response.use(
   (response) => response,
   (error) => {
-    if (error.response?.status === 401) {
-      console.warn("Unauthorized API Call - Auto-logout triggered");
-      if (typeof window !== "undefined") {
-        localStorage.removeItem("token");
-        localStorage.removeItem("user");
-        // Only redirect if not already on login/register pages to avoid loops
-        if (!window.location.pathname.includes("/login") && !window.location.pathname.includes("/register")) {
-          window.location.href = "/login?expired=true";
-        }
-      }
-    }
+    // Disabled automatic 401 logouts based on user request.
+    // The user will only be logged out if they explicitly click the Log Out button.
     return Promise.reject(error);
   }
 );

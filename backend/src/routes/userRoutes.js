@@ -16,5 +16,6 @@ router.put('/change-password', protect, userController.changePassword);
 
 // Public route for shop details
 router.get('/seller/:id', userController.getSellerInfo);
+router.post('/seller/:id/follow', protect, userController.toggleFollow);
 
 module.exports = router;

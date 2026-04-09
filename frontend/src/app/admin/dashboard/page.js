@@ -168,13 +168,13 @@ export default function AdminDashboard() {
                     dataKey="name" 
                     axisLine={false} 
                     tickLine={false} 
-                    tick={{ fontSize: 10, fill: '#8C7B70', fontWeight: 'bold' }} 
+                    tick={{ fontSize: 11, fill: '#8C7B70', fontWeight: '600', fontFamily: '"Playfair Display", Georgia, serif' }} 
                     dy={12}
                   />
                   <YAxis 
                     axisLine={false} 
                     tickLine={false} 
-                    tick={{ fontSize: 10, fill: '#8C7B70', fontWeight: 'bold' }}
+                    tick={{ fontSize: 11, fill: '#8C7B70', fontWeight: '600', fontFamily: '"Playfair Display", Georgia, serif' }}
                     tickFormatter={(val) => `₱${val/1000}k`}
                   />
                   <Tooltip 

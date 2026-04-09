@@ -1,6 +1,6 @@
 const { User, Product, Order, SystemSetting } = require('../models');
 const { sendNotification } = require('../utils/notificationHelper');
-const { emitUserUpdated } = require('../utils/socketUtility');
+const { emitUserUpdated, emitDashboardUpdate, broadcast } = require('../utils/socketUtility');
 
 exports.getGlobalStats = async (req, res) => {
   try {
@@ -62,8 +62,10 @@ exports.toggleCustomerStatus = async (req, res) => {
     const user = await User.findByPk(id);
     if (!user) return res.status(404).json({ message: 'User not found' });
     
-    user.status = user.status === 'blocked' ? 'active' : 'blocked';
+    user.status = user.status === 'frozen' ? 'active' : 'frozen';
     await user.save();
+    
+    emitUserUpdated(user, { action: 'status_changed' });
     
     res.status(200).json({ message: `User ${user.status} successfully`, user });
   } catch (error) {
@@ -116,6 +118,21 @@ exports.verifySeller = async (req, res) => {
   }
 };
 
+exports.rejectSeller = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const user = await User.findByPk(id);
+    if (!user) return res.status(404).json({ message: 'Seller not found' });
+    
+    await user.destroy();
+    emitDashboardUpdate();
+    
+    res.status(200).json({ message: 'Seller application rejected' });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
 exports.getSettings = async (req, res) => {
   try {
     const settings = await SystemSetting.findAll();
@@ -152,6 +169,23 @@ exports.updateSettings = async (req, res) => {
       await SystemSetting.upsert({ key, value });
     }
     res.status(200).json({ message: 'Settings updated successfully' });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+exports.sendBroadcast = async (req, res) => {
+  try {
+    const { message, title } = req.body;
+
+    if (!message) {
+      return res.status(400).json({ message: 'Message is required for broadcast' });
+    }
+
+    // Emit the broadcast via socket
+    broadcast(message, title || 'System Announcement');
+
+    res.status(200).json({ message: 'Broadcast sent successfully' });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }

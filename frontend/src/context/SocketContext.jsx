@@ -3,8 +3,6 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { io } from 'socket.io-client';
 import { BACKEND_URL } from '@/lib/api';
-import { initializePushNotifications } from '@/lib/pushNotifications';
-
 const SocketContext = createContext(null);
 
 export const useSocket = () => {
@@ -18,15 +16,15 @@ export const useSocket = () => {
 export const SocketProvider = ({ children }) => {
   const [socket, setSocket] = useState(null);
   const [isConnected, setIsConnected] = useState(false);
+  const [currentBroadcast, setCurrentBroadcast] = useState(null);
+
+  const clearBroadcast = () => setCurrentBroadcast(null);
 
   useEffect(() => {
     const socketInstance = io(BACKEND_URL, {
       withCredentials: true,
       transports: ['websocket', 'polling'],
     });
-
-    // Initialize Push Notifications for Native Mobile
-    initializePushNotifications().catch(console.error);
 
     socketInstance.on('connect', () => {
       console.log('Socket connected:', socketInstance.id);
@@ -54,6 +52,17 @@ export const SocketProvider = ({ children }) => {
       setIsConnected(false);
     });
 
+    socketInstance.on('broadcast_message', (data) => {
+      // Global broadcast handler - replacing legacy alert with state management
+      setCurrentBroadcast({
+        id: Date.now(),
+        title: data.title || 'System Broadcast',
+        message: data.message,
+        timestamp: data.timestamp || new Date(),
+        type: data.type || 'system'
+      });
+    });
+
     setSocket(socketInstance);
 
     return () => {
@@ -61,7 +70,12 @@ export const SocketProvider = ({ children }) => {
     };
   }, []);
 
-  const value = React.useMemo(() => ({ socket, isConnected }), [socket, isConnected]);
+  const value = React.useMemo(() => ({ 
+    socket, 
+    isConnected, 
+    currentBroadcast, 
+    clearBroadcast 
+  }), [socket, isConnected, currentBroadcast]);
   
   return (
     <SocketContext.Provider value={value}>

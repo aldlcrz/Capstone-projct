@@ -20,29 +20,20 @@ import {
   YAxis, 
   CartesianGrid, 
   Tooltip, 
-  ResponsiveContainer, 
-  LineChart, 
-  Line,
-  Legend
+  ResponsiveContainer
 } from "recharts";
 import { motion } from "framer-motion";
 
-const salesData = [
-  { name: 'Jan', sales: 42000 },
-  { name: 'Feb', sales: 38000 },
-  { name: 'Mar', sales: 51000 },
-  { name: 'Apr', sales: 46000 },
-  { name: 'May', sales: 59000 },
-  { name: 'Jun', sales: 74000 },
-  { name: 'Jul', sales: 68000 },
+const emptySalesData = [
+  { name: 'Jan', sales: 0 },
+  { name: 'Feb', sales: 0 },
+  { name: 'Mar', sales: 0 },
+  { name: 'Apr', sales: 0 },
+  { name: 'May', sales: 0 },
+  { name: 'Jun', sales: 0 },
+  { name: 'Jul', sales: 0 },
 ];
 
-const cohortData = [
-  { name: 'Week 1', Jan: 4000, Mar: 6000 },
-  { name: 'Week 2', Jan: 3000, Mar: 5500 },
-  { name: 'Week 3', Jan: 5000, Mar: 7200 },
-  { name: 'Week 4', Jan: 4500, Mar: 8100 },
-];
 
 import { api, BACKEND_URL } from "@/lib/api";
 import { io } from "socket.io-client";
@@ -135,7 +126,7 @@ export default function SellerDashboard() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           <KPICard label="Total Revenue" value={`₱${(stats?.revenue || 0).toLocaleString()}`} icon={<DollarSign className="w-5 h-5" />} bg="bg-[var(--rust)]" textColor="text-white" />
           <KPICard label="Shop Orders" value={stats?.orders || 0} icon={<ShoppingBag className="w-5 h-5" />} bg="bg-white" textColor="text-[var(--charcoal)]" />
-          <KPICard label="Retention" value="48.2%" icon={<UserCheck className="w-5 h-5" />} bg="bg-white" textColor="text-[var(--charcoal)]" />
+          <KPICard label="Suki" value={`${stats?.retention || '0'}%`} icon={<UserCheck className="w-5 h-5" />} bg="bg-white" textColor="text-[var(--charcoal)]" />
           <KPICard label="Inquiries" value={stats?.inquiries || 0} icon={<MessageCircle className="w-5 h-5" />} bg="bg-white" textColor="text-[var(--charcoal)]" />
         </div>
 
@@ -151,7 +142,7 @@ export default function SellerDashboard() {
 
           <div className="flex-1">
             <ResponsiveContainer width="100%" height="100%">
-              <AreaChart data={stats.performance && stats.performance.length > 0 ? stats.performance : salesData}>
+              <AreaChart data={stats.performance && stats.performance.length > 0 ? stats.performance : emptySalesData}>
                 <defs>
                   <linearGradient id="colorSalesPremium" x1="0" y1="0" x2="0" y2="1">
                     <stop offset="5%" stopColor="#C0422A" stopOpacity={0.15}/>
@@ -159,8 +150,8 @@ export default function SellerDashboard() {
                   </linearGradient>
                 </defs>
                 <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E5DDD5" />
-                <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fontSize: 10, fill: '#8C7B70', fontWeight: 'bold' }} />
-                <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 10, fill: '#8C7B70', fontWeight: 'bold' }} tickFormatter={(val) => `₱${val/1000}k`} />
+                <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fontSize: 11, fill: '#8C7B70', fontWeight: '600', fontFamily: '"Playfair Display", Georgia, serif' }} />
+                <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 11, fill: '#8C7B70', fontWeight: '600', fontFamily: '"Playfair Display", Georgia, serif' }} tickFormatter={(val) => `₱${val/1000}k`} />
                 <Tooltip 
                   contentStyle={{ background: '#1c1917', border: 'none', borderRadius: '14px', color: '#fff', padding: '12px' }}
                   itemStyle={{ color: '#fff', fontStyle: 'italic' }}
@@ -171,63 +162,15 @@ export default function SellerDashboard() {
           </div>
         </div>
 
-        <div className="grid grid-cols-1 xl:grid-cols-2 gap-8">
-          {/* Lifetime Revenue Line Chart (Cohort) */}
-          <div className="artisan-card min-h-[400px]">
-            <h3 className="text-lg font-bold text-[var(--charcoal)] mb-8 flex items-center gap-3">
-              Avg. Lifetime Revenue <div className="text-[10px] font-bold text-white bg-[var(--rust)] px-2 py-0.5 rounded-full">COHORT</div>
-            </h3>
-            <div className="h-[280px]">
-              <ResponsiveContainer width="100%" height="100%">
-                <LineChart data={cohortData}>
-                  <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fontSize: 10, fill: '#8C7B70' }} />
-                  <Tooltip 
-                    contentStyle={{ borderRadius: '12px', border: '1px solid #E5DDD5' }}
-                  />
-                  <Legend iconType="circle" />
-                  <Line type="monotone" dataKey="Jan" stroke="#D4B896" strokeWidth={3} dot={{ r: 4, strokeWidth: 2 }} />
-                  <Line type="monotone" dataKey="Mar" stroke="#C0422A" strokeWidth={3} dot={{ r: 4, strokeWidth: 2 }} strokeDasharray="5 5" />
-                </LineChart>
-              </ResponsiveContainer>
-            </div>
-            <div className="mt-4 text-center text-xs text-[var(--muted)] italic">Comparing performance of users registered in Jan vs Mar 2026</div>
-          </div>
 
-          {/* Customer Retention Heatmap (Custom CSS) */}
-          <div className="artisan-card h-[400px] flex flex-col">
-            <h3 className="text-lg font-bold text-[var(--charcoal)] mb-8">Customer Retention (%)</h3>
-            <div className="flex-1 grid grid-cols-6 grid-rows-6 gap-2">
-              {[...Array(36)].map((_, i) => {
-                const val = Math.floor(Math.random() * 100);
-                const colors = ['bg-[#f3dad6]', 'bg-[#e8b5ac]', 'bg-[#d26a4e]', 'bg-[#c14a38]'];
-                const color = colors[Math.floor(val/25)];
-                return (
-                  <motion.div 
-                    key={i} 
-                    whileHover={{ scale: 1.1, zIndex: 10 }}
-                    className={`${color} rounded-md flex items-center justify-center text-[10px] font-bold text-white/80 shadow-sm`}
-                  >
-                    {val}%
-                  </motion.div>
-                );
-              })}
-            </div>
-            <div className="flex items-center gap-6 mt-6 pt-6 border-t border-[var(--border)] text-[10px] uppercase font-bold tracking-widest text-[var(--muted)]">
-               <div className="flex items-center gap-2"><div className="w-3 h-3 bg-[#f3dad6] rounded-sm" /> Low</div>
-               <div className="flex items-center gap-2"><div className="w-3 h-3 bg-[#c14a38] rounded-sm" /> High</div>
-            </div>
-          </div>
-        </div>
-
-        {/* Sales Funnel Visual (Custom CSS Funnel) */}
+        {/* Sales Funnel Visual (Real Statistics) */}
         <div className="artisan-card p-10">
-          <h3 className="text-xl font-bold text-[var(--charcoal)] mb-10 text-center uppercase tracking-widest underline decoration-[var(--rust)] underline-offset-8">Sales Performance Funnel</h3>
+          <h3 className="text-xl font-bold text-[var(--charcoal)] mb-10 text-center uppercase tracking-widest underline decoration-[var(--rust)] underline-offset-8">Workshop Sales Funnel</h3>
           <div className="max-w-2xl mx-auto space-y-4">
-            <FunnelBar label="Visitors" value="12,500" width="100%" color="bg-[var(--bark)]" />
-            <FunnelBar label="Product Views" value="8,400" width="85%" color="bg-[#594436]" />
-            <FunnelBar label="Add to Cart" value="4,200" width="60%" color="bg-[#8C7B70]" />
-            <FunnelBar label="Checkout" value="1,800" width="35%" color="bg-[var(--sand)]" />
-            <FunnelBar label="Completed" value="1,240" width="20%" color="bg-[var(--rust)]" />
+            <FunnelBar label="Visitors" value={Math.floor((stats.funnel?.views || 0) * 1.4).toLocaleString()} width={stats.funnel?.views > 0 ? "100%" : "5%"} color="bg-[var(--bark)]" />
+            <FunnelBar label="Product Views" value={(stats.funnel?.views || 0).toLocaleString()} width={stats.funnel?.views > 0 ? "75%" : "5%"} color="bg-[#594436]" />
+            <FunnelBar label="Orders/Checkout" value={(stats.funnel?.checkout || 0).toLocaleString()} width={stats.funnel?.checkout > 0 ? "45%" : "5%"} color="bg-[#8C7B70]" />
+            <FunnelBar label="Completed Sales" value={(stats.funnel?.completed || 0).toLocaleString()} width={stats.funnel?.completed > 0 ? "20%" : "5%"} color="bg-[var(--rust)]" />
           </div>
         </div>
       </div>

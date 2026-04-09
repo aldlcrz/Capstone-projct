@@ -11,15 +11,22 @@ const ensureDatabaseIntegrity = async () => {
   // 1. Check Users table
   const userTable = await queryInterface.describeTable(models.User.getTableName());
   const userColumns = {
+    profilePhoto: { type: DataTypes.STRING, allowNull: true },
+    indigencyCertificate: { type: DataTypes.STRING, allowNull: true },
     validId: { type: DataTypes.STRING, allowNull: true },
     mobileNumber: { type: DataTypes.STRING, allowNull: true },
     gcashNumber: { type: DataTypes.STRING, allowNull: true },
     gcashQrCode: { type: DataTypes.STRING, allowNull: true },
+    facebookLink: { type: DataTypes.STRING, allowNull: true },
+    instagramLink: { type: DataTypes.STRING, allowNull: true },
     isAdult: { type: DataTypes.BOOLEAN, defaultValue: false },
     fcmToken: { type: DataTypes.STRING, allowNull: true },
+    followers: { type: DataTypes.JSON, allowNull: true },
+    following: { type: DataTypes.JSON, allowNull: true },
     resetPasswordToken: { type: DataTypes.STRING, allowNull: true },
     resetPasswordExpires: { type: DataTypes.DATE, allowNull: true },
-    passwordChangedAt: { type: DataTypes.DATE, allowNull: true }
+    passwordChangedAt: { type: DataTypes.DATE, allowNull: true },
+    status: { type: DataTypes.ENUM('active', 'frozen', 'blocked'), defaultValue: 'active' }
   };
 
   for (const [columnName, definition] of Object.entries(userColumns)) {
@@ -55,6 +62,10 @@ const ensureDatabaseIntegrity = async () => {
   // 3. Check Products table for shipping fields
   const productTable = await queryInterface.describeTable(models.Product.getTableName());
   const productColumns = {
+    categories: { type: DataTypes.JSON, defaultValue: ["Formal"], allowNull: true },
+    sizes: { type: DataTypes.JSON, defaultValue: [], allowNull: true },
+    image: { type: DataTypes.JSON, defaultValue: [], allowNull: true },
+    views: { type: DataTypes.INTEGER, defaultValue: 0, allowNull: true },
     shippingFee: { type: DataTypes.DECIMAL(10, 2), defaultValue: 0, allowNull: true },
     shippingDays: { type: DataTypes.INTEGER, defaultValue: 3, allowNull: true }
   };

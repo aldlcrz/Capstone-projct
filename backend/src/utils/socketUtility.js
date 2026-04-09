@@ -114,6 +114,15 @@ const emitDashboardUpdate = () => {
   emit('dashboard_update', { timestamp: new Date() });
 };
 
+const broadcast = (message, title = 'System Broadcast') => {
+  emit('broadcast_message', { 
+    title, 
+    message, 
+    timestamp: new Date(),
+    type: 'system'
+  });
+};
+
 module.exports = {
   init,
   emit,
@@ -125,6 +134,7 @@ module.exports = {
   emitOrderUpdated,
   emitUserUpdated,
   emitDashboardUpdate,
+  broadcast,
   SOCKET_EVENTS,
   configureSocketServer
 };

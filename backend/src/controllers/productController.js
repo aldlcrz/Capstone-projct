@@ -55,8 +55,17 @@ const serializeProduct = (req, product) => {
   return {
     ...plainProduct,
     sizes: parseStoredList(plainProduct.sizes).filter(Boolean),
+    categories: parseStoredList(plainProduct.categories).filter(Boolean),
     image: images,
-    artisan: plainProduct.seller ? plainProduct.seller.name : undefined
+    artisan: plainProduct.seller ? plainProduct.seller.name : undefined,
+    seller: plainProduct.seller ? {
+      id: plainProduct.seller.id,
+      name: plainProduct.seller.name,
+      gcashNumber: plainProduct.seller.gcashNumber,
+      gcashQrCode: plainProduct.seller.gcashQrCode
+        ? toPublicImageUrl(req, plainProduct.seller.gcashQrCode)
+        : null
+    } : undefined
   };
 };
 
@@ -79,7 +88,7 @@ exports.getAllProducts = async (req, res) => {
     const where = {};
 
     if (category && category !== 'All') {
-      where.category = category;
+      where.categories = { [Op.like]: `%${category}%` };
     }
 
     if (search) {
@@ -92,7 +101,7 @@ exports.getAllProducts = async (req, res) => {
 
     const products = await Product.findAll({
       where,
-      include: [{ model: User, as: 'seller', attributes: ['id', 'name'] }],
+      include: [{ model: User, as: 'seller', attributes: ['id', 'name', 'gcashNumber', 'gcashQrCode'] }],
       order: [['createdAt', 'DESC']],
     });
 
@@ -118,12 +127,18 @@ exports.getSellerProducts = async (req, res) => {
 exports.getProductById = async (req, res) => {
   try {
     const product = await Product.findByPk(req.params.id, {
-      include: [{ model: User, as: 'seller', attributes: ['id', 'name'] }],
+      include: [{ model: User, as: 'seller', attributes: ['id', 'name', 'gcashNumber', 'gcashQrCode'] }],
     });
 
     if (!product) {
       return res.status(404).json({ message: 'Product not found' });
     }
+
+    try {
+      await product.increment('views');
+      const { emitInventoryUpdated, emit } = require('../utils/socketUtility');
+      emit('stats_update', { type: 'view', sellerId: product.sellerId });
+    } catch (e) {}
 
     res.status(200).json(serializeProduct(req, product));
   } catch (error) {
@@ -133,7 +148,7 @@ exports.getProductById = async (req, res) => {
 
 exports.createProduct = async (req, res) => {
   try {
-    const { name, description, price, sizes, category, stock, variationNames, shippingFee, shippingDays } = req.body;
+    const { name, description, price, sizes, categories, stock, variationNames, shippingFee, shippingDays } = req.body;
 
     if (!name || !price || stock === undefined) {
       return res.status(400).json({ message: 'Name, price, and stock are required' });
@@ -172,7 +187,7 @@ exports.createProduct = async (req, res) => {
       description,
       price,
       sizes: Array.isArray(sizes) ? sizes : JSON.parse(sizes || '[]'),
-      category,
+      categories: Array.isArray(categories) ? categories : JSON.parse(categories || '[]'),
       stock,
       shippingFee: shippingFee || 0,
       shippingDays: shippingDays || 3,
@@ -181,6 +196,29 @@ exports.createProduct = async (req, res) => {
     });
 
     emitInventoryUpdated(product, { action: 'created' });
+
+    try {
+      const seller = await User.findByPk(req.user.id);
+      if (seller && seller.followers) {
+        let followers = seller.followers;
+        if (typeof followers === 'string') followers = JSON.parse(followers);
+        if (Array.isArray(followers)) {
+          const { sendNotification } = require('../utils/notificationHelper');
+          for (const followerId of followers) {
+            await sendNotification(
+              followerId,
+              'New Product Alert!',
+              `${seller.name || "A shop you follow"} has just uploaded a new product: ${product.name}. Check it out!`,
+              'general',
+              `/products?id=${product.id}`
+            );
+          }
+        }
+      }
+    } catch (notifErr) {
+      console.error('Failed to notify followers:', notifErr);
+    }
+
     res.status(201).json(serializeProduct(req, product));
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -193,8 +231,7 @@ exports.updateProduct = async (req, res) => {
     if (!product) {
       return res.status(404).json({ message: 'Product not found or access denied' });
     }
-
-    const { name, description, price, sizes, category, stock, variationNames, existingImages, shippingFee, shippingDays } = req.body;
+    const { name, description, price, sizes, categories, stock, variationNames, existingImages, shippingFee, shippingDays } = req.body;
 
     if (price !== undefined && Number(price) <= 0) {
       return res.status(400).json({ message: 'Price must be a positive number' });
@@ -235,7 +272,7 @@ exports.updateProduct = async (req, res) => {
       description: description ?? product.description,
       price: price ?? product.price,
       sizes: sizes ? (Array.isArray(sizes) ? sizes : JSON.parse(sizes)) : product.sizes,
-      category: category ?? product.category,
+      categories: categories ? (Array.isArray(categories) ? categories : JSON.parse(categories)) : product.categories,
       stock: stock ?? product.stock,
       shippingFee: shippingFee ?? product.shippingFee,
       shippingDays: shippingDays ?? product.shippingDays,
@@ -275,28 +312,31 @@ exports.getSellerStats = async (req, res) => {
   try {
     const sellerId = req.user.id;
 
-    const [totalRevenue, totalOrders, totalInventory, lowStock, inquiries] = await Promise.all([
+    const [totalRevenue, totalOrders, totalInventory, lowStock, inquiries, totalViews, completedOrders] = await Promise.all([
       Order.sum('totalAmount', {
-        where: {
-          sellerId,
-          status: { [Op.ne]: 'Cancelled' },
-        },
+        where: { sellerId, status: { [Op.ne]: 'Cancelled' } },
       }),
       Order.count({ where: { sellerId } }),
       Product.count({ where: { sellerId } }),
       Product.count({
-        where: {
-          sellerId,
-          stock: { [Op.lt]: 5 },
-        },
+        where: { sellerId, stock: { [Op.lt]: 5 } },
       }),
       Message.count({
-        where: {
-          receiverId: sellerId,
-          read: false,
-        },
+        where: { receiverId: sellerId, read: false },
       }),
+      Product.sum('views', { where: { sellerId } }),
+      Order.count({ where: { sellerId, status: 'Delivered' } })
     ]);
+
+    // Calculate Retention (Percentage of customers with more than one order)
+    const customerOrderCounts = await Order.findAll({
+      attributes: ['customerId', [sequelize.fn('COUNT', sequelize.col('id')), 'count']],
+      where: { sellerId },
+      group: ['customerId']
+    });
+    const repeatCustomers = customerOrderCounts.filter(c => c.get('count') > 1).length;
+    const totalCustomers = customerOrderCounts.length;
+    const retentionRate = totalCustomers > 0 ? (repeatCustomers / totalCustomers) * 100 : 0;
 
     // Group orders by month for the last 6 months
     const sixMonthsAgo = new Date();
@@ -341,7 +381,13 @@ exports.getSellerStats = async (req, res) => {
       inquiries,
       products: totalInventory,
       lowStock,
-      performance: performanceData
+      performance: performanceData,
+      retention: retentionRate.toFixed(1),
+      funnel: {
+        views: totalViews || 0,
+        checkout: totalOrders || 0,
+        completed: completedOrders || 0
+      }
     });
   } catch (error) {
     res.status(500).json({ message: error.message });

@@ -1,7 +1,7 @@
 "use client";
 import React, { useState, useEffect } from "react";
 import AdminLayout from "@/components/AdminLayout";
-import { Users, Search, Mail, Phone, Calendar, ShieldCheck, MoreVertical, Ban } from "lucide-react";
+import { Users, Search, Mail, Phone, Calendar, ShieldCheck, Trash2, Snowflake } from "lucide-react";
 import { motion } from "framer-motion";
 import { api } from "@/lib/api";
 import { useSocket } from "@/context/SocketContext";
@@ -115,7 +115,7 @@ export default function AdminUsers() {
                       (user.mobile && user.mobile.includes(searchTerm))
                     )
                     .map((user, idx) => {
-                      const isBlocked = user.status === 'blocked';
+                      const isFrozen = user.status === 'frozen';
                       return (
                       <motion.tr 
                         key={user.id}
@@ -144,24 +144,25 @@ export default function AdminUsers() {
                           </div>
                         </td>
                         <td className="px-8 py-6">
-                          <div className={`inline-flex items-center gap-1.5 px-3 py-1 ${isBlocked ? 'bg-red-50 text-red-700 border-red-100' : 'bg-green-50 text-green-700 border-green-100'} text-[10px] font-bold uppercase tracking-widest rounded-full border italic shadow-sm`}>
-                            <ShieldCheck className="w-3 h-3" /> {isBlocked ? 'Blocked' : 'Active'}
+                          <div className={`inline-flex items-center gap-1.5 px-3 py-1 ${isFrozen ? 'bg-blue-50 text-blue-700 border-blue-100' : 'bg-green-50 text-green-700 border-green-100'} text-[10px] font-bold uppercase tracking-widest rounded-full border italic shadow-sm`}>
+                            {isFrozen ? <Snowflake className="w-3 h-3" /> : <ShieldCheck className="w-3 h-3" />} {isFrozen ? 'Frozen' : 'Active'}
                           </div>
                         </td>
                         <td className="px-8 py-6 text-right">
                           <div className="flex justify-end gap-2">
                             <button 
                               onClick={() => window.handleToggleStatus(user.id)}
-                              className={`p-2.5 ${isBlocked ? 'text-green-600 hover:bg-green-50' : 'text-red-500 hover:bg-red-50'} rounded-xl transition-all`} 
-                              title={isBlocked ? "Unblock User" : "Restrict Access"}
+                              className={`p-2.5 ${isFrozen ? 'text-green-600 hover:bg-green-50' : 'text-blue-500 hover:bg-blue-50'} rounded-xl transition-all`} 
+                              title={isFrozen ? "Unfreeze Account" : "Freeze Account"}
                             >
-                              <Ban className="w-4.5 h-4.5" />
+                              <Snowflake className="w-4.5 h-4.5" />
                             </button>
                             <button 
                               onClick={() => window.handleDeleteUser(user.id)}
-                              className="p-2.5 text-[var(--muted)] hover:text-red-600 hover:bg-red-50 rounded-xl transition-all"
+                              className="p-2.5 text-red-500 hover:bg-red-50 rounded-xl transition-all shadow-sm border border-transparent hover:border-red-100"
+                              title="Delete Record"
                             >
-                              <MoreVertical className="w-4.5 h-4.5" />
+                              <Trash2 className="w-4.5 h-4.5" />
                             </button>
                           </div>
                         </td>

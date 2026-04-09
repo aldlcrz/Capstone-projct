@@ -15,6 +15,7 @@ const nextConfig = {
   // Required for Capacitor static export
   output: 'export',
   distDir: 'out',
+  trailingSlash: true,
 
   // Allow images from any domain (useful for product images from backend)
   images: {

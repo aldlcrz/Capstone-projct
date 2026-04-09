@@ -63,6 +63,20 @@ export default function AdminSellersPage() {
     }
   };
 
+  const rejectSeller = async (id) => {
+    if(!confirm("Are you sure you want to reject this seller's application?")) return;
+    setError(null); setSuccess(null);
+    try {
+      await api.put(`/admin/reject-seller/${id}`);
+      setSuccess("Seller application rejected.");
+      fetchSellers();
+      setTimeout(() => setSuccess(null), 3000);
+    } catch (err) {
+      setError(err.response?.data?.message || "Rejection failed.");
+      setTimeout(() => setError(null), 3000);
+    }
+  };
+
   return (
     <AdminLayout>
       <div className="space-y-10">
@@ -131,15 +145,21 @@ export default function AdminSellersPage() {
                 <div className="flex items-center gap-3">
                   <button 
                     onClick={() => { setSelectedSeller(seller); setIsModalOpen(true); }}
-                    className="px-5 py-3 border border-[var(--border)] rounded-xl flex items-center gap-2 text-xs font-bold uppercase tracking-widest hover:border-[var(--rust)] hover:text-[var(--rust)] transition-all"
+                    className="px-4 py-2.5 border border-[var(--border)] rounded-xl flex items-center gap-2 text-[10px] font-bold uppercase tracking-widest hover:border-[var(--rust)] hover:text-[var(--rust)] transition-all"
                   >
                     <Eye className="w-4 h-4" /> View Documents
                   </button>
                   <button 
-                    onClick={() => verifySeller(seller.id)}
-                    className="px-5 py-3 bg-[var(--bark)] text-white rounded-xl flex items-center gap-2 text-xs font-bold uppercase tracking-widest hover:bg-green-600 transition-all shadow-md group"
+                    onClick={() => rejectSeller(seller.id)}
+                    className="px-4 py-2.5 border border-red-200 bg-red-50 text-red-600 rounded-xl flex items-center gap-2 text-[10px] font-bold uppercase tracking-widest hover:bg-red-100 transition-all font-bold"
                   >
-                    <ShieldCheck className="w-4 h-4 group-hover:rotate-12 transition-transform" /> Approve Seller
+                    <XCircle className="w-4 h-4" /> Reject
+                  </button>
+                  <button 
+                    onClick={() => verifySeller(seller.id)}
+                    className="px-4 py-2.5 bg-[var(--bark)] text-white rounded-xl flex items-center gap-2 text-[10px] font-bold uppercase tracking-widest hover:bg-green-600 transition-all shadow-md group"
+                  >
+                    <ShieldCheck className="w-4 h-4 group-hover:rotate-12 transition-transform" /> Approve
                   </button>
                 </div>
               </motion.div>
@@ -192,6 +212,15 @@ export default function AdminSellersPage() {
                 >
                   Back to Queue
                 </button>
+                  <button 
+                    onClick={() => {
+                      rejectSeller(selectedSeller.id);
+                      setIsModalOpen(false);
+                    }}
+                    className="px-8 py-3 bg-red-100 text-red-700 rounded-xl text-sm font-bold uppercase tracking-widest hover:bg-red-200 transition-all"
+                  >
+                    Reject Application
+                  </button>
                   <button 
                     onClick={() => {
                       verifySeller(selectedSeller.id);

@@ -17,6 +17,13 @@ export default function CustomerProfile() {
    const [isEditing, setIsEditing] = useState(false);
    const [editForm, setEditForm] = useState({ name: "", mobileNumber: "" });
    const [isSaving, setIsSaving] = useState(false);
+   const [isUploading, setIsUploading] = useState(false);
+   const fileInputRef = React.useRef(null);
+
+   // Change Password State
+   const [passwordForm, setPasswordForm] = useState({ currentPassword: "", newPassword: "", confirmPassword: "" });
+   const [isChangingPassword, setIsChangingPassword] = useState(false);
+   const [passwordMessage, setPasswordMessage] = useState(null); // { type: 'success' | 'error', text: '' }
 
    useEffect(() => {
       const fetchProfile = async () => {
@@ -64,6 +71,64 @@ export default function CustomerProfile() {
       }
    };
 
+   const handlePhotoChange = async (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+
+      try {
+         setIsUploading(true);
+         const formData = new FormData();
+         formData.append("image", file);
+
+         const uploadRes = await api.post("/upload", formData, {
+            headers: { "Content-Type": "multipart/form-data" }
+         });
+
+         const photoUrl = uploadRes.data.url;
+
+         // Update profile with new photo
+         const updateRes = await api.put("/users/profile", {
+            profilePhoto: photoUrl
+         });
+
+         setUser(updateRes.data.user);
+         localStorage.setItem("user", JSON.stringify(updateRes.data.user));
+      } catch (error) {
+         console.error("Failed to upload photo", error);
+         alert(error.response?.data?.message || "Failed to upload photo");
+      } finally {
+         setIsUploading(false);
+      }
+   };
+
+   const handleChangePassword = async () => {
+      const { currentPassword, newPassword, confirmPassword } = passwordForm;
+      if (!currentPassword || !newPassword || !confirmPassword) {
+         setPasswordMessage({ type: 'error', text: 'Please fill in all password fields.' });
+         return;
+      }
+      if (newPassword.length < 8) {
+         setPasswordMessage({ type: 'error', text: 'New password must be at least 8 characters.' });
+         return;
+      }
+      if (newPassword !== confirmPassword) {
+         setPasswordMessage({ type: 'error', text: 'New password and confirmation do not match.' });
+         return;
+      }
+      try {
+         setIsChangingPassword(true);
+         setPasswordMessage(null);
+         await api.put("/users/change-password", { currentPassword, newPassword });
+         setPasswordMessage({ type: 'success', text: 'Password updated successfully!' });
+         setPasswordForm({ currentPassword: "", newPassword: "", confirmPassword: "" });
+      } catch (error) {
+         setPasswordMessage({ type: 'error', text: error.response?.data?.message || 'Failed to update password.' });
+      } finally {
+         setIsChangingPassword(false);
+         setTimeout(() => setPasswordMessage(null), 5000);
+      }
+   };
+
    return (
       <CustomerLayout>
          <div className="max-w-6xl mx-auto mb-20">
@@ -79,18 +144,50 @@ export default function CustomerProfile() {
                      {/* Avatar Card */}
                      <div className="bg-white rounded-[2rem] p-10 flex flex-col items-center text-center shadow-sm border border-[var(--border)] relative overflow-hidden">
                         {/* Avatar Icon */}
-                        <div className="relative mb-4">
-                           <div className="w-24 h-24 bg-[#B94232] rounded-[1.5rem] flex items-center justify-center text-white font-serif text-5xl font-normal shadow-lg relative z-10">
-                              {user?.name?.[0] || 'J'}
-                           </div>
+                        <div 
+                           className="relative mb-4 cursor-pointer group" 
+                           onClick={() => fileInputRef.current?.click()}
+                        >
+                           {user?.profilePhoto ? (
+                              <img 
+                                 src={user.profilePhoto} 
+                                 alt={user.name} 
+                                 className="w-24 h-24 rounded-[1.5rem] object-cover shadow-lg relative z-10 border-2 border-white scale-100 group-hover:scale-105 transition-transform"
+                                 onError={(e) => {
+                                    e.target.onerror = null;
+                                    e.target.src = "https://ui-avatars.com/api/?name=" + (user?.name || "User") + "&background=B94232&color=fff";
+                                 }}
+                              />
+                           ) : (
+                              <div className="w-24 h-24 bg-[#B94232] rounded-[1.5rem] flex items-center justify-center text-white font-serif text-5xl font-normal shadow-lg relative z-10 scale-100 group-hover:scale-105 transition-transform">
+                                 {user?.name?.[0] || 'J'}
+                              </div>
+                           )}
                            {/* Green Check Badge */}
                            <div className="absolute -bottom-1 -right-1 z-20 bg-green-600 outline outline-4 outline-white w-6 h-6 rounded-full flex items-center justify-center">
                               <Check strokeWidth={4} className="w-3.5 h-3.5 text-white" />
                            </div>
+                           {isUploading && (
+                              <div className="absolute inset-0 z-30 bg-black/40 rounded-[1.5rem] flex items-center justify-center">
+                                 <Loader2 className="w-6 h-6 text-white animate-spin" />
+                              </div>
+                           )}
                         </div>
 
-                        <button className="text-[10px] font-medium text-[var(--muted)] opacity-80 mb-6 hover:text-[var(--rust)] transition-colors">
-                           Tap to change photo
+                        <input 
+                           type="file" 
+                           ref={fileInputRef} 
+                           onChange={handlePhotoChange} 
+                           className="hidden" 
+                           accept="image/*"
+                        />
+
+                        <button 
+                           onClick={() => fileInputRef.current?.click()}
+                           disabled={isUploading}
+                           className="text-[10px] font-medium text-[var(--muted)] opacity-80 mb-6 hover:text-[var(--rust)] transition-colors disabled:opacity-50"
+                        >
+                           {isUploading ? "Uploading..." : "Tap to change photo"}
                         </button>
 
                         <div className="space-y-1 w-full relative z-10">

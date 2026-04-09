@@ -16,7 +16,7 @@ exports.getProfile = async (req, res) => {
 
 exports.updateProfile = async (req, res) => {
     try {
-        const { name, mobileNumber, gcashNumber, profilePhoto } = req.body;
+        const { name, mobileNumber, gcashNumber, profilePhoto, facebookLink, instagramLink } = req.body;
         const user = await User.findByPk(req.user.id);
         if (!user) return res.status(404).json({ message: 'User not found' });
         
@@ -25,6 +25,8 @@ exports.updateProfile = async (req, res) => {
         if (mobileNumber !== undefined) updateData.mobileNumber = mobileNumber;
         if (gcashNumber !== undefined) updateData.gcashNumber = gcashNumber;
         if (profilePhoto !== undefined) updateData.profilePhoto = profilePhoto;
+        if (facebookLink !== undefined) updateData.facebookLink = facebookLink;
+        if (instagramLink !== undefined) updateData.instagramLink = instagramLink;
 
         await user.update(updateData);
 
@@ -199,7 +201,7 @@ exports.getSellerInfo = async (req, res) => {
     try {
         const { id } = req.params;
         const seller = await User.findByPk(id, {
-            attributes: ['id', 'name', 'createdAt', 'role']
+            attributes: ['id', 'name', 'createdAt', 'role', 'facebookLink', 'instagramLink']
         });
         
         if (!seller || seller.role !== 'seller') {
@@ -217,10 +219,54 @@ exports.getSellerInfo = async (req, res) => {
             rating: 4.9,
             joined: (monthsJoined < 1 ? "Just Joined" : `${monthsJoined} Months Ago`),
             responseRate: "98%",
-            description: "A legacy of fine hand-embroidery passed down through generations. Our workshop specializes in traditional Pina and Jusi Barongs with modern silhouettes."
+            description: "A legacy of fine hand-embroidery passed down through generations. Our workshop specializes in traditional Pina and Jusi Barongs with modern silhouettes.",
+            facebookLink: seller.facebookLink,
+            instagramLink: seller.instagramLink
         });
     } catch (err) {
         console.error('getSellerInfo Error:', err);
         res.status(500).json({ message: 'Error fetching seller info', error: err.message });
+    }
+};
+
+exports.toggleFollow = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const customerId = req.user.id;
+        
+        if (id === customerId) return res.status(400).json({ message: "You cannot follow yourself" });
+
+        const seller = await User.findByPk(id);
+        const customer = await User.findByPk(customerId);
+
+        if (!seller || seller.role !== 'seller') {
+            return res.status(404).json({ message: 'Seller not found' });
+        }
+
+        let sellerFollowers = seller.followers ? seller.followers : [];
+        if (typeof sellerFollowers === 'string') sellerFollowers = JSON.parse(sellerFollowers);
+        let customerFollowing = customer.following ? customer.following : [];
+        if (typeof customerFollowing === 'string') customerFollowing = JSON.parse(customerFollowing);
+
+        const isFollowing = sellerFollowers.includes(customerId);
+
+        if (isFollowing) {
+            sellerFollowers = sellerFollowers.filter(uid => uid !== customerId);
+            customerFollowing = customerFollowing.filter(uid => uid !== id);
+        } else {
+            sellerFollowers.push(customerId);
+            customerFollowing.push(id);
+        }
+
+        seller.followers = sellerFollowers;
+        customer.following = customerFollowing;
+
+        await seller.save();
+        await customer.save();
+
+        res.json({ isFollowing: !isFollowing });
+    } catch (err) {
+        console.error('toggleFollow Error:', err);
+        res.status(500).json({ message: 'Error toggling follow status', error: err.message });
     }
 };

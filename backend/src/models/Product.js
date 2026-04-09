@@ -23,9 +23,9 @@ const Product = sequelize.define('Product', {
     type: DataTypes.JSON, // Array of available sizes
     defaultValue: [],
   },
-  category: {
-    type: DataTypes.STRING,
-    allowNull: false,
+  categories: {
+    type: DataTypes.JSON, // Array of Heritage Sectors
+    defaultValue: ["Formal"],
   },
   image: {
     type: DataTypes.JSON, // Can store array of image URLs
@@ -50,6 +50,10 @@ const Product = sequelize.define('Product', {
       model: 'Users',
       key: 'id',
     },
+  },
+  views: {
+    type: DataTypes.INTEGER,
+    defaultValue: 0,
   },
 }, {
   timestamps: true,

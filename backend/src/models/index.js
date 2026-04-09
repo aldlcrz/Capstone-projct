@@ -7,7 +7,6 @@ const Message = require('./Message');
 const Notification = require('./Notification');
 const Address = require('./Address');
 const SystemSetting = require('./SystemSetting');
-const Wishlist = require('./Wishlist');
 const ReturnRequest = require('./ReturnRequest');
 
 // Associations
@@ -46,11 +45,6 @@ Message.belongsTo(User, { foreignKey: 'receiverId', as: 'receiver' });
 User.hasMany(Notification, { foreignKey: 'userId', as: 'notifications' });
 Notification.belongsTo(User, { foreignKey: 'userId' });
 
-// Wishlist Associations
-User.hasMany(Wishlist, { foreignKey: 'userId', as: 'wishlist' });
-Wishlist.belongsTo(User, { foreignKey: 'userId' });
-Product.hasMany(Wishlist, { foreignKey: 'productId' });
-Wishlist.belongsTo(Product, { foreignKey: 'productId', as: 'product' });
 
 // Order <-> ReturnRequest
 Order.hasMany(ReturnRequest, { foreignKey: 'orderId', as: 'returns' });
@@ -59,6 +53,8 @@ ReturnRequest.belongsTo(Order, { foreignKey: 'orderId' });
 // Category Hierarchical
 Category.hasMany(Category, { as: 'children', foreignKey: 'parentId' });
 Category.belongsTo(Category, { as: 'parent', foreignKey: 'parentId' });
+
+const sequelize = require('../config/db');
 
 module.exports = {
   User,
@@ -70,6 +66,6 @@ module.exports = {
   Notification,
   Address,
   SystemSetting,
-  Wishlist,
   ReturnRequest,
+  sequelize,
 };

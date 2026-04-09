@@ -1,6 +1,8 @@
 "use client";
 import React, { useState, useEffect, useRef } from "react";
 import CustomerLayout from "@/components/CustomerLayout";
+import AdminLayout from "@/components/AdminLayout";
+import SellerLayout from "@/components/SellerLayout";
 import { MessageCircle, Search, Store, Send, Loader2 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useSearchParams } from "next/navigation";
@@ -31,6 +33,16 @@ function MessagesThreadManager() {
   const [loading, setLoading] = useState(true);
   const [isSending, setIsSending] = useState(false);
   const [typingStatus, setTypingStatus] = useState({ isTyping: false, senderId: null });
+  const [userRole, setUserRole] = useState(null);
+
+  useEffect(() => {
+    try {
+      const stored = JSON.parse(localStorage.getItem("user") || "{}");
+      setUserRole(stored.role || "customer");
+    } catch (e) {
+      setUserRole("customer");
+    }
+  }, []);
 
   const { socket } = useSocket();
 
@@ -175,6 +187,7 @@ function MessagesThreadManager() {
       typingStatus={typingStatus}
       fetchMessages={fetchMessages}
       handleSendMessage={handleSendMessage}
+      userRole={userRole}
     />
   );
 }
@@ -190,17 +203,20 @@ function MessagesUI({
   isSending,
   typingStatus,
   fetchMessages,
-  handleSendMessage
+  handleSendMessage,
+  userRole
 }) {
   const { socket } = useSocket();
   const messagesEndRef = useRef(null);
+
+  const Layout = userRole === 'admin' ? AdminLayout : (userRole === 'seller' ? SellerLayout : CustomerLayout);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
   return (
-    <CustomerLayout>
+    <Layout>
       <div className="max-w-7xl mx-auto h-[calc(100vh-140px)] flex flex-col md:flex-row gap-8">
         {/* Thread List */}
         <div className="w-full md:w-96 flex flex-col gap-6">
@@ -395,6 +411,6 @@ function MessagesUI({
           )}
         </div>
       </div>
-    </CustomerLayout>
+    </Layout>
   );
 }

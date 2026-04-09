@@ -1,4 +1,4 @@
-import { Inter, Cormorant_Garamond } from "next/font/google";
+import { Inter, Cormorant_Garamond, Playfair_Display } from "next/font/google";
 import "./globals.css";
 
 const inter = Inter({
@@ -12,18 +12,26 @@ const cormorant = Cormorant_Garamond({
   weight: ["300", "400", "500", "600", "700"],
 });
 
+const playfair = Playfair_Display({
+  variable: "--font-playfair",
+  subsets: ["latin"],
+  weight: ["400", "500", "600", "700", "800"],
+});
+
 export const metadata = {
   title: "Lumbarong - Wear the Spirit of the Philippines",
   description: "A comprehensive e-commerce platform for Philippine heritage barong crafts.",
 };
 
 import { SocketProvider } from "@/context/SocketContext";
+import BroadcastNotification from "@/components/BroadcastNotification";
 
 export default function RootLayout({ children }) {
   return (
     <html lang="en">
-      <body className={`${inter.variable} ${cormorant.variable} antialiased`}>
+      <body className={`${inter.variable} ${cormorant.variable} ${playfair.variable} antialiased`}>
         <SocketProvider>
+          <BroadcastNotification />
           {children}
         </SocketProvider>
       </body>

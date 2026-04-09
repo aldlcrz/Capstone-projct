@@ -70,6 +70,16 @@ exports.createOrder = async (req, res) => {
   try {
     let { items, shippingAddress, addressId, paymentMethod, paymentReference, paymentProof } = req.body;
     const customerId = req.user.id;
+    const userRole = req.user.role;
+    const userStatus = req.user.status;
+
+    if (userStatus === 'blocked' || userStatus === 'frozen') {
+      throw createHttpError(403, `This account is ${userStatus} and cannot place new orders.`);
+    }
+
+    if (userRole === 'admin') {
+      throw createHttpError(403, 'Admins are not allowed to place orders');
+    }
 
     if (typeof items === 'string') items = JSON.parse(items);
     
@@ -199,6 +209,9 @@ exports.createOrder = async (req, res) => {
 
     const fullOrder = await fetchOrderWithRelations(order.id);
     emitOrderCreated(fullOrder);
+
+    // REAL-TIME: Notify Seller Dashboard to refresh stats
+    socketUtility.emit('stats_update', { type: 'order', sellerId: order.sellerId });
 
     const updatedProducts = new Map();
     preparedItems.forEach(({ product }) => {
@@ -381,6 +394,9 @@ exports.updateOrderStatus = async (req, res) => {
     restockedProducts.forEach((product) => {
       emitInventoryUpdated(product, { action: 'restocked' });
     });
+
+    // REAL-TIME: Notify Seller Dashboard to refresh stats
+    socketUtility.emit('stats_update', { type: 'order_status', sellerId: order.sellerId });
 
     const statusMessage = {
       Processing: 'Your order is now being prepared for shipment.',

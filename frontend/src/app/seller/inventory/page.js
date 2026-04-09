@@ -151,7 +151,7 @@ export default function InventoryPage() {
         ) : (
           <div className={`grid ${view === "list" ? "grid-cols-1" : "grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"} gap-6`}>
             {products
-              .filter(p => p.name.toLowerCase().includes(searchTerm.toLowerCase()) || p.category.toLowerCase().includes(searchTerm.toLowerCase()))
+              .filter(p => p.name.toLowerCase().includes(searchTerm.toLowerCase()) || (p.categories && p.categories.join(' ').toLowerCase().includes(searchTerm.toLowerCase())))
               .map((product, i) => {
               const status = product.stock > 5 ? 'Active' : product.stock > 0 ? 'Low Stock' : 'Out of Stock';
               return (
@@ -197,7 +197,7 @@ export default function InventoryPage() {
                    <div className="hidden md:flex flex-col gap-1">
                       <div className="text-[10px] uppercase font-bold tracking-widest text-[var(--muted)] opacity-60">Listing Category</div>
                       <div className="text-xs font-bold text-[var(--muted)]">
-                         {product.category}
+                         {product.categories?.join(', ') || "Uncategorized"}
                       </div>
                    </div>
 
