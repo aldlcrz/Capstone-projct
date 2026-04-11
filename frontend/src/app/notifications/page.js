@@ -22,8 +22,7 @@ export default function NotificationsPage() {
 
   const fetchNotifications = React.useCallback(async () => {
     try {
-      const token = localStorage.getItem("token");
-      const res = await api.get("/notifications");
+      const res = await api.get("/notifications?role=customer");
       setNotifications(Array.isArray(res.data) ? res.data.map(normalizeNotification) : []);
     } catch (error) {
       console.error("Failed to fetch notifications", error.response?.data || error.message);
@@ -52,21 +51,9 @@ export default function NotificationsPage() {
   }, [fetchNotifications, socket]);
 
   const markAllAsRead = async () => {
-    const unread = notifications.filter((notification) => !notification.read);
-    if (unread.length === 0) return;
-
-    const token = localStorage.getItem("token");
     setNotifications((prev) => prev.map((notification) => ({ ...notification, read: true })));
-
     try {
-      await Promise.all(
-        unread.map((notification) =>
-          api.put(
-            `/notifications/${notification.id}/read`,
-            {}
-          )
-        )
-      );
+      await api.put("/notifications/read-all?role=customer");
     } catch (error) {
       console.error("Failed to mark notifications as read", error.response?.data || error.message);
       fetchNotifications();
@@ -75,7 +62,7 @@ export default function NotificationsPage() {
 
   const handleNotificationClick = async (notification) => {
     const token = localStorage.getItem("token");
-    const href = getNotificationHref(notification);
+    const href = getNotificationHref(notification, 'customer');
 
     if (!notification.read) {
       setActiveNotificationId(notification.id);

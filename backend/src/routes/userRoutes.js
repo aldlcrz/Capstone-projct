@@ -10,9 +10,10 @@ router.get('/addresses', protect, userController.getAddresses);
 router.post('/addresses', protect, userController.createAddress);
 router.put('/addresses/:id', protect, userController.updateAddress);
 router.delete('/addresses/:id', protect, userController.deleteAddress);
-router.patch('/addresses/:id/default', protect, userController.setDefaultAddress);
+router.patch('/addresses/:id/set-default', protect, userController.setDefaultAddress);
 router.patch('/fcm-token', protect, userController.updateFcmToken);
 router.put('/change-password', protect, userController.changePassword);
+router.get('/stats', protect, userController.getCustomerStats);
 
 // Public route for shop details
 router.get('/seller/:id', userController.getSellerInfo);

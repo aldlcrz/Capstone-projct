@@ -59,7 +59,7 @@ export default function SellerLayout({ children }) {
   const { socket } = useSocket();
 
   const fetchNotifications = React.useCallback(async () => {
-    const token = localStorage.getItem("token");
+    const token = localStorage.getItem("seller_token") || localStorage.getItem("token");
     if (!token || token === "null" || token === "undefined") return;
     try {
       const res = await api.get("/notifications");
@@ -76,10 +76,20 @@ export default function SellerLayout({ children }) {
 
   React.useEffect(() => {
     const checkAuth = () => {
-      const storedUser = JSON.parse(localStorage.getItem("user") || "null");
+      // Use role-specific keys first to allow multi-tab sessions
+      let storedUser = JSON.parse(localStorage.getItem("seller_user") || "null");
+      let token = localStorage.getItem("seller_token");
+
+      // Fallback to generic keys
+      if (!token || !storedUser) {
+        storedUser = JSON.parse(localStorage.getItem("user") || "null");
+        token = localStorage.getItem("token");
+      }
+
       setUser(storedUser);
-      
+
       // Safety redirect: If not seller or admin, bounce to home
+      // Only do this if we are convinced no valid session exists
       if (storedUser && storedUser.role && storedUser.role !== 'seller' && storedUser.role !== 'admin') {
         window.location.href = "/";
       }
@@ -176,7 +186,7 @@ export default function SellerLayout({ children }) {
               onClick={handleLogout}
               className="flex items-center gap-3 w-full px-4 py-3.5 bg-red-50 text-red-600 rounded-xl hover:bg-red-100 transition-all font-bold text-xs tracking-widest uppercase"
             >
-              <LogOut className="w-4 h-4" /> End Session
+              <LogOut className="w-4 h-4" /> logout
             </button>
           </div>
         </div>
@@ -193,7 +203,7 @@ export default function SellerLayout({ children }) {
 
             <div className="flex items-center gap-2 md:gap-6">
               <div className="relative">
-                <button 
+                <button
                   onClick={() => setIsPopoutOpen(!isPopoutOpen)}
                   className={`relative w-10 h-10 flex items-center justify-center rounded-xl transition-all ${isPopoutOpen ? 'bg-[var(--rust)] text-white shadow-lg' : 'bg-[var(--cream)] text-[var(--charcoal)] hover:text-[var(--rust)]'}`}
                 >
@@ -209,9 +219,9 @@ export default function SellerLayout({ children }) {
                 <AnimatePresence>
                   {isPopoutOpen && (
                     <>
-                      <motion.div 
-                        initial={{ opacity: 0 }} 
-                        animate={{ opacity: 1 }} 
+                      <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
                         exit={{ opacity: 0 }}
                         onClick={() => setIsPopoutOpen(false)}
                         className="fixed inset-0 z-40 bg-black/5 backdrop-blur-[2px]"
@@ -237,8 +247,8 @@ export default function SellerLayout({ children }) {
                               {notifications.map((notif) => {
                                 const n = normalizeNotification(notif);
                                 return (
-                                  <div 
-                                    key={notif.id} 
+                                  <div
+                                    key={notif.id}
                                     className={`relative p-4 rounded-xl transition-all group ${!n.read ? 'bg-[var(--cream)]/40 hover:bg-[var(--cream)]/60' : 'hover:bg-stone-50'}`}
                                   >
                                     {!n.read && <div className="absolute left-2 top-1/2 -translate-y-1/2 w-1.5 h-1.5 bg-[var(--rust)] rounded-full" />}
@@ -250,11 +260,11 @@ export default function SellerLayout({ children }) {
                                         </div>
                                       </div>
                                       <p className="text-[11px] text-[var(--muted)] leading-relaxed line-clamp-2">{n.message}</p>
-                                      
+
                                       <div className="flex items-center gap-3 pt-2">
                                         {n.link && (
-                                          <Link 
-                                            href={n.link} 
+                                          <Link
+                                            href={n.link}
                                             onClick={() => setIsPopoutOpen(false)}
                                             className="text-[10px] font-bold text-[var(--rust)] hover:underline flex items-center gap-1"
                                           >
@@ -262,7 +272,7 @@ export default function SellerLayout({ children }) {
                                           </Link>
                                         )}
                                         {!n.read && (
-                                          <button 
+                                          <button
                                             onClick={() => markAsRead(notif.id)}
                                             className="text-[10px] font-bold text-[var(--muted)] hover:text-[var(--rust)] transition-colors ml-auto"
                                           >
@@ -279,12 +289,12 @@ export default function SellerLayout({ children }) {
                         </div>
                         {notifications.length > 0 && (
                           <div className="p-4 bg-stone-50 border-t border-[var(--border)] text-center">
-                             <button 
-                               onClick={() => setIsPopoutOpen(false)}
-                               className="text-[10px] font-bold uppercase tracking-widest text-[var(--muted)] hover:text-[var(--rust)] transition-colors"
-                             >
-                               Close Alerts
-                             </button>
+                            <button
+                              onClick={() => setIsPopoutOpen(false)}
+                              className="text-[10px] font-bold uppercase tracking-widest text-[var(--muted)] hover:text-[var(--rust)] transition-colors"
+                            >
+                              Close Alerts
+                            </button>
                           </div>
                         )}
                       </motion.div>
@@ -302,9 +312,9 @@ export default function SellerLayout({ children }) {
                 </div>
                 <div className="w-10 h-10 rounded-xl bg-[var(--bark)] border-2 border-white shadow-md flex items-center justify-center text-white font-serif text-lg font-bold overflow-hidden transition-transform active:scale-95">
                   {user?.profilePhoto ? (
-                    <img 
-                      src={user.profilePhoto} 
-                      alt={user.name} 
+                    <img
+                      src={user.profilePhoto}
+                      alt={user.name}
                       className="w-full h-full object-cover"
                       onError={(e) => {
                         e.target.onerror = null;

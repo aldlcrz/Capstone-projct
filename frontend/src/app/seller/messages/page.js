@@ -135,7 +135,10 @@ function SellerMessages() {
         setThreads(prev => [realThread, ...prev.filter(t => t.otherUser?.id !== activeThread.otherUser?.id)]);
       }
 
-      setMessages(prev => [...prev, res.data]);
+      setMessages(prev => {
+        if (prev.some(m => m.id === res.data.id)) return prev;
+        return [...prev, res.data];
+      });
       setNewMessage("");
       fetchThreads().then(allThreads => {
         setThreads(allThreads);

@@ -1,11 +1,25 @@
 "use client";
 import React, { useState, useEffect } from "react";
 import CustomerLayout from "@/components/CustomerLayout";
-import { User, Mail, Phone, MapPin, Package, Edit, Lock, Eye, EyeOff, Check, Loader2, X } from "lucide-react";
+import { User, Mail, Phone, MapPin, Package, Edit, Lock, Eye, EyeOff, Check, Loader2, X, TrendingUp, Calendar, DollarSign } from "lucide-react";
 import { motion } from "framer-motion";
+import { 
+  AreaChart, 
+  Area, 
+  XAxis, 
+  YAxis, 
+  CartesianGrid, 
+  Tooltip, 
+  ResponsiveContainer 
+} from "recharts";
 import { api } from "@/lib/api";
+import { useSocket } from "@/context/SocketContext";
+import { useCallback } from "react";
 
 export default function CustomerProfile() {
+   const [mounted, setMounted] = useState(false);
+   useEffect(() => setMounted(true), []);
+
    const [user, setUser] = useState(null);
    const [loading, setLoading] = useState(true);
    const [activeTab, setActiveTab] = useState("Account Info");
@@ -23,7 +37,24 @@ export default function CustomerProfile() {
    // Change Password State
    const [passwordForm, setPasswordForm] = useState({ currentPassword: "", newPassword: "", confirmPassword: "" });
    const [isChangingPassword, setIsChangingPassword] = useState(false);
-   const [passwordMessage, setPasswordMessage] = useState(null); // { type: 'success' | 'error', text: '' }
+   const [passwordMessage, setPasswordMessage] = useState(null); 
+
+   // Analytics State
+   const [stats, setStats] = useState({ activeOrders: 0 });
+   const [statsLoading, setStatsLoading] = useState(false);
+   const { socket } = useSocket();
+
+   const fetchStats = useCallback(async () => {
+      try {
+         setStatsLoading(true);
+         const res = await api.get("/users/stats");
+         setStats(res.data);
+      } catch (err) {
+         console.error("Failed to fetch customer stats", err);
+      } finally {
+         setStatsLoading(false);
+      }
+   }, []);
 
    useEffect(() => {
       const fetchProfile = async () => {
@@ -51,7 +82,27 @@ export default function CustomerProfile() {
          }
       };
       fetchProfile();
+      fetchStats();
    }, []);
+
+   useEffect(() => {
+      if (mounted) fetchStats();
+
+      if (socket) {
+         const handler = () => fetchStats();
+         socket.on('stats_update', handler);
+         socket.on('order_updated', handler);
+         socket.on('order_created', handler);
+
+         return () => {
+            socket.off('stats_update', handler);
+            socket.off('order_updated', handler);
+            socket.off('order_created', handler);
+         };
+      }
+   }, [mounted, socket, fetchStats]);
+
+
 
    const handleSaveProfile = async () => {
       try {
@@ -203,16 +254,16 @@ export default function CustomerProfile() {
                         </div>
                      </div>
 
-                     {/* Stats Row */}
-                     <div className="grid grid-cols-1 gap-6">
-                        <div className="bg-white rounded-[1.5rem] p-6 flex flex-col items-center justify-center text-center shadow-sm border border-[var(--border)]">
-                           <div className="w-10 h-10 rounded-xl border border-red-200 bg-red-50 flex items-center justify-center text-[var(--rust)] mb-3">
-                              <Package strokeWidth={1.5} className="w-5 h-5" />
-                           </div>
-                           <div className="text-xl font-serif font-bold text-[#2A2A2A]">{user?.activeOrders || "0"}</div>
-                           <div className="text-[8px] font-bold text-[var(--muted)] uppercase tracking-widest opacity-60 mt-1">ACTIVE ORDERS</div>
-                        </div>
-                     </div>
+                      {/* Stats Row */}
+                      <div className="grid grid-cols-1 gap-6">
+                         <div className="bg-white rounded-[1.5rem] p-6 flex flex-col items-center justify-center text-center shadow-sm border border-[var(--border)]">
+                            <div className="w-10 h-10 rounded-xl border border-red-200 bg-red-50 flex items-center justify-center text-[var(--rust)] mb-3">
+                               <Package strokeWidth={1.5} className="w-5 h-5" />
+                            </div>
+                            <div className="text-xl font-serif font-bold text-[#2A2A2A]">{stats?.activeOrders || "0"}</div>
+                            <div className="text-[8px] font-bold text-[var(--muted)] uppercase tracking-widest opacity-60 mt-1">ACTIVE ORDERS</div>
+                         </div>
+                      </div>
 
                   </div>
 
@@ -364,6 +415,8 @@ export default function CustomerProfile() {
                                           <Lock className="w-4 h-4 text-[var(--muted)] mr-3 shrink-0" />
                                           <input
                                              type={showCurrentPassword ? "text" : "password"}
+                                             value={passwordForm.currentPassword}
+                                             onChange={(e) => setPasswordForm({ ...passwordForm, currentPassword: e.target.value })}
                                              placeholder="Enter your current password"
                                              className="bg-transparent w-full text-sm outline-none text-[#2A2A2A]"
                                           />
@@ -383,6 +436,8 @@ export default function CustomerProfile() {
                                           <Lock className="w-4 h-4 text-[var(--muted)] mr-3 shrink-0" />
                                           <input
                                              type={showNewPassword ? "text" : "password"}
+                                             value={passwordForm.newPassword}
+                                             onChange={(e) => setPasswordForm({ ...passwordForm, newPassword: e.target.value })}
                                              placeholder="At least 8 characters"
                                              className="bg-transparent w-full text-sm outline-none text-[#2A2A2A]"
                                           />
@@ -402,6 +457,8 @@ export default function CustomerProfile() {
                                           <Lock className="w-4 h-4 text-[var(--muted)] mr-3 shrink-0" />
                                           <input
                                              type={showConfirmPassword ? "text" : "password"}
+                                             value={passwordForm.confirmPassword}
+                                             onChange={(e) => setPasswordForm({ ...passwordForm, confirmPassword: e.target.value })}
                                              placeholder="Re-enter new password"
                                              className="bg-transparent w-full text-sm outline-none text-[#2A2A2A]"
                                           />
@@ -415,9 +472,20 @@ export default function CustomerProfile() {
                                        </div>
                                     </div>
 
-                                    <button className="w-full bg-[#E3A8A0] text-white py-4 rounded-xl text-[10px] font-extrabold uppercase tracking-[0.15em] flex items-center justify-center gap-2 hover:bg-[#D99A93] transition-colors mt-2 shadow-sm">
-                                       <Check className="w-4 h-4" /> UPDATE PASSWORD
+                                    <button 
+                                       onClick={handleChangePassword}
+                                       disabled={isChangingPassword}
+                                       className="w-full bg-[#E3A8A0] text-white py-4 rounded-xl text-[10px] font-extrabold uppercase tracking-[0.15em] flex items-center justify-center gap-2 hover:bg-[#D99A93] transition-colors mt-2 shadow-sm disabled:opacity-50"
+                                    >
+                                       {isChangingPassword ? <Loader2 className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4" />}
+                                       UPDATE PASSWORD
                                     </button>
+
+                                    {passwordMessage && (
+                                       <div className={`mt-4 p-4 rounded-xl text-xs font-bold text-center ${passwordMessage.type === 'success' ? 'bg-green-50 text-green-700 border border-green-100' : 'bg-red-50 text-red-700 border border-red-100'}`}>
+                                          {passwordMessage.text}
+                                       </div>
+                                    )}
                                  </div>
                               </motion.div>
                            )}

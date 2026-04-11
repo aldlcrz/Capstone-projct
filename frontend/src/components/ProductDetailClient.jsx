@@ -37,6 +37,10 @@ export default function ProductDetailClient() {
   const [userRole, setUserRole] = useState(null);
   const [addedToCart, setAddedToCart] = useState(false);
   const [selectionError, setSelectionError] = useState(false);
+  const [newRating, setNewRating] = useState(5);
+  const [newComment, setNewComment] = useState("");
+  const [submittingReview, setSubmittingReview] = useState(false);
+  const [reviewError, setReviewError] = useState(null);
 
   useEffect(() => {
     try {
@@ -48,7 +52,7 @@ export default function ProductDetailClient() {
   }, []);
 
   const isRestricted = userRole === "admin";
-  const showActions = userRole !== "admin"; // Admins cannot initiate purchases as they are for management only
+  const showActions = userRole !== "admin"; 
 
   const fetchProduct = useCallback(async () => {
     try {
@@ -81,6 +85,28 @@ export default function ProductDetailClient() {
     }
   }, [id]);
 
+  const handleSubmitReview = async (e) => {
+    e.preventDefault();
+    if (!newComment.trim() || isRestricted) return;
+
+    setSubmittingReview(true);
+    setReviewError(null);
+    try {
+      await api.post(`/products/${id}/reviews`, {
+        rating: newRating,
+        comment: newComment
+      });
+      setNewComment("");
+      setNewRating(5);
+      // Refresh product to show new review
+      fetchProduct();
+    } catch (err) {
+      setReviewError(err.response?.data?.message || "Failed to submit review");
+    } finally {
+      setSubmittingReview(false);
+    }
+  };
+
   const { socket } = useSocket();
 
   useEffect(() => {
@@ -110,6 +136,7 @@ export default function ProductDetailClient() {
 
   const handleAddToCart = () => {
     if (!product || userRole === 'admin') return;
+    if ((product.stock || 0) <= 0) return; // Out of stock
     if (!selectedSize) {
       setSelectionError(true);
       return;
@@ -118,17 +145,20 @@ export default function ProductDetailClient() {
     const cart = JSON.parse(localStorage.getItem("cart") || "[]");
     const existing = cart.find(item => item.id === product.id && item.size === selectedSize && item.variation === currentVariation);
     if (existing) {
-      existing.quantity += quantity;
+      // Cap at available stock
+      const newQty = existing.quantity + quantity;
+      existing.quantity = Math.min(newQty, product.stock || 1);
     } else {
       cart.push({
         id: product.id,
         name: product.name,
         price: `₱${(product.price || 0).toLocaleString()}`,
         image: galleryImages[activeImage]?.url || galleryImages[0]?.url || galleryImages[0],
-        quantity,
+        quantity: Math.min(quantity, product.stock || 1),
         size: selectedSize,
         variation: currentVariation,
-        artisan: product.artisan
+        artisan: product.artisan,
+        stock: product.stock || 0,
       });
     }
     localStorage.setItem("cart", JSON.stringify(cart));
@@ -139,6 +169,7 @@ export default function ProductDetailClient() {
 
   const handleBuyNow = () => {
     if (!product || userRole === 'admin') return;
+    if ((product.stock || 0) <= 0) return; // Out of stock
     if (!selectedSize) {
       setSelectionError(true);
       return;
@@ -151,10 +182,11 @@ export default function ProductDetailClient() {
       name: product.name,
       price: `₱${(product.price || 0).toLocaleString()}`,
       image: galleryImages[activeImage]?.url || galleryImages[0]?.url || galleryImages[0],
-      quantity,
+      quantity: Math.min(quantity, product.stock || 1),
       size: selectedSize,
       variation: currentVariation,
-      artisan: product.artisan
+      artisan: product.artisan,
+      stock: product.stock || 0,
     }));
     router.push("/checkout?mode=buy_now");
   };
@@ -450,6 +482,29 @@ export default function ProductDetailClient() {
         .pd-spec-val { font-family: 'Playfair Display', serif; font-size: 13.5px; color: #1C1209; font-weight: 600; }
         .pd-desc { padding: 0 1.75rem 1.75rem; font-size: 14px; color: #3D2B1F; line-height: 1.78; white-space: pre-wrap; }
         .pd-divider { height: 1px; background: #F0EBE3; margin: 0 1.75rem; }
+
+        /* ── Reviews ── */
+        .pd-reviews { background: #fff; border-radius: 1.25rem; box-shadow: 0 4px 24px rgba(60,35,10,0.07); margin-top: 1.5rem; padding: 1.75rem; }
+        .pd-review-item { padding: 1.25rem 0; border-bottom: 1px solid #F7F3EE; }
+        .pd-review-item:last-child { border-bottom: none; }
+        .pd-review-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.5rem; }
+        .pd-reviewer { display: flex; align-items: center; gap: 0.75rem; }
+        .pd-rev-avatar { width: 32px; height: 32px; border-radius: 50%; background: #F7F3EE; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700; color: #9c6e30; overflow: hidden; }
+        .pd-rev-name { font-size: 13px; font-weight: 600; color: #1C1209; }
+        .pd-rev-date { font-size: 11px; color: #9c8876; }
+        .pd-rev-comment { font-size: 13.5px; color: #3D2B1F; line-height: 1.6; }
+
+        .pd-rev-form { background: #FDF5E8; border: 1px solid #EDD9A3; border-radius: 1rem; padding: 1.5rem; margin-bottom: 2rem; }
+        .pd-form-title { font-family: 'Playfair Display', serif; font-size: 16px; font-weight: 700; color: #7B3A10; margin-bottom: 1rem; }
+        .pd-star-picker { display: flex; gap: 0.4rem; margin-bottom: 1.25rem; }
+        .pd-star-btn { background: none; border: none; padding: 0; cursor: pointer; color: #E5DDD5; transition: color 0.2s; }
+        .pd-star-btn.active { color: #C0853A; }
+        .pd-textarea { width: 100%; min-height: 100px; padding: 1rem; border: 1px solid #E5DDD5; border-radius: 0.75rem; outline: none; transition: border 0.2s; font-size: 13.5px; resize: none; margin-bottom: 1rem; }
+        .pd-textarea:focus { border-color: #C0853A; }
+        .pd-submit-rev { background: #C0420A; color: #fff; padding: 0.75rem 1.5rem; border-radius: 0.75rem; border: none; font-size: 13px; font-weight: 700; cursor: pointer; transition: all 0.2s; }
+        .pd-submit-rev:hover:not(:disabled) { transform: translateY(-1px); box-shadow: 0 4px 12px rgba(192,66,10,0.25); }
+        .pd-submit-rev:disabled { opacity: 0.5; cursor: not-allowed; }
+
       `}</style>
 
       <div className="pd-page">
@@ -496,14 +551,23 @@ export default function ProductDetailClient() {
               {/* Rating row */}
               <div className="pd-rating-row">
                 <div className="pd-rating-seg">
-                  <span className="pd-score">{product.rating ? Number(product.rating).toFixed(1) : "5.0"}</span>
+                  <span className="pd-score">
+                    {product.reviews?.length > 0 
+                      ? (product.reviews.reduce((acc, r) => acc + r.rating, 0) / product.reviews.length).toFixed(1)
+                      : "5.0"}
+                  </span>
                   <div className="pd-stars">
-                    {[...Array(5)].map((_, i) => <Star key={i} className="w-3.5 h-3.5 fill-current" />)}
+                    {[...Array(5)].map((_, i) => (
+                      <Star 
+                        key={i} 
+                        className={`w-3.5 h-3.5 ${i < Math.round(product.reviews?.length > 0 ? (product.reviews.reduce((acc, r) => acc + r.rating, 0) / product.reviews.length) : 5) ? 'fill-current' : 'opacity-20'}`} 
+                      />
+                    ))}
                   </div>
                 </div>
                 <div className="pd-rating-sep" />
                 <div className="pd-rating-seg">
-                  <span className="pd-meta-val">4</span>
+                  <span className="pd-meta-val">{product.reviews?.length || 0}</span>
                   <span className="pd-meta-label">&nbsp;Ratings</span>
                 </div>
                 <div className="pd-rating-sep" />
@@ -594,11 +658,11 @@ export default function ProductDetailClient() {
                       <Minus size={13} />
                     </button>
                     <div className="pd-qty-val">{quantity}</div>
-                    <button className="pd-qty-btn" onClick={() => setQuantity(quantity + 1)}>
+                    <button className="pd-qty-btn" onClick={() => setQuantity(Math.min(product.stock || 1, quantity + 1))} disabled={quantity >= (product.stock || 1)}>
                       <Plus size={13} />
                     </button>
                   </div>
-                  <span className="pd-stock"><span className="pd-stock-val">{product.stock || 197}</span> pieces available</span>
+                  <span className="pd-stock"><span className="pd-stock-val" style={{ color: (product.stock || 0) === 0 ? '#C0422A' : '#C0853A' }}>{product.stock ?? 0}</span> {(product.stock || 0) === 0 ? <span style={{ color: '#C0422A', fontWeight: 700 }}>Out of Stock</span> : 'pieces available'}</span>
                 </div>
               </div>
 
@@ -613,13 +677,20 @@ export default function ProductDetailClient() {
                   <div className="pd-actions">
                     <button
                       onClick={handleAddToCart}
+                      disabled={(product.stock || 0) <= 0}
                       className={`pd-btn-cart ${addedToCart ? 'success' : ''}`}
+                      style={(product.stock || 0) <= 0 ? { opacity: 0.5, cursor: 'not-allowed' } : {}}
                     >
                       <ShoppingCart size={17} />
-                      {addedToCart ? "Added!" : "Add to Cart"}
+                      {addedToCart ? "Added!" : (product.stock || 0) <= 0 ? "Out of Stock" : "Add to Cart"}
                     </button>
-                    <button onClick={handleBuyNow} className="pd-btn-buy">
-                      Buy Now
+                    <button
+                      onClick={handleBuyNow}
+                      disabled={(product.stock || 0) <= 0}
+                      className="pd-btn-buy"
+                      style={(product.stock || 0) <= 0 ? { opacity: 0.5, cursor: 'not-allowed' } : {}}
+                    >
+                      {(product.stock || 0) <= 0 ? "Unavailable" : "Buy Now"}
                     </button>
                   </div>
                 </div>
@@ -700,6 +771,94 @@ export default function ProductDetailClient() {
             </div>
             <div className="pd-desc">{product.description || product.name}</div>
           </div>
+
+          {/* ───── Reviews Section ───── */}
+          <div className="pd-reviews">
+            <div className="flex items-center gap-3 mb-8">
+              <Star className="w-5 h-5 text-[var(--rust)] fill-current" />
+              <h2 className="font-serif text-xl font-bold text-[var(--charcoal)]">Customer Feedback</h2>
+            </div>
+
+            {/* Review Form (Only for customers) */}
+            {userRole === "customer" && (
+              <form onSubmit={handleSubmitReview} className="pd-rev-form">
+                <h3 className="pd-form-title">Write a Review</h3>
+                
+                <div className="pd-star-picker">
+                  {[1, 2, 3, 4, 5].map((s) => (
+                    <button
+                      key={s}
+                      type="button"
+                      onClick={() => setNewRating(s)}
+                      className={`pd-star-btn ${s <= newRating ? 'active' : ''}`}
+                    >
+                      <Star className="w-6 h-6 fill-current" />
+                    </button>
+                  ))}
+                </div>
+
+                <textarea
+                  className="pd-textarea"
+                  placeholder="Share your thoughts about this masterpiece..."
+                  value={newComment}
+                  onChange={(e) => setNewComment(e.target.value)}
+                  required
+                />
+
+                {reviewError && (
+                  <div className="text-red-600 text-[11px] font-bold mb-4 flex items-center gap-2">
+                    <ChevronRight size={10} className="rotate-90" /> {reviewError}
+                  </div>
+                )}
+
+                <button
+                  type="submit"
+                  disabled={submittingReview}
+                  className="pd-submit-rev"
+                >
+                  {submittingReview ? "Submitting..." : "Post Review"}
+                </button>
+              </form>
+            )}
+
+            {/* Review List */}
+            <div className="space-y-4">
+              {product.reviews?.length > 0 ? (
+                product.reviews.map((rev) => (
+                  <div key={rev.id} className="pd-review-item">
+                    <div className="pd-review-header">
+                      <div className="pd-reviewer">
+                        <div className="pd-rev-avatar">
+                          {rev.customer?.profilePhoto ? (
+                            <img src={rev.customer.profilePhoto} alt="" className="w-full h-full object-cover" />
+                          ) : (
+                            (rev.customer?.name || "C")[0].toUpperCase()
+                          )}
+                        </div>
+                        <div>
+                          <div className="pd-rev-name">{rev.customer?.name || "Anonymous"}</div>
+                          <div className="pd-stars" style={{ color: '#C0853A', marginTop: '2px' }}>
+                            {[...Array(5)].map((_, i) => (
+                              <Star key={i} className={`w-2.5 h-2.5 ${i < rev.rating ? 'fill-current' : 'opacity-20'}`} />
+                            ))}
+                          </div>
+                        </div>
+                      </div>
+                      <span className="pd-rev-date">
+                        {new Date(rev.createdAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}
+                      </span>
+                    </div>
+                    <p className="pd-rev-comment">{rev.comment}</p>
+                  </div>
+                ))
+              ) : (
+                <div className="py-12 text-center text-[var(--muted)] opacity-50 italic text-sm">
+                  No reviews yet. Be the first to share your experience!
+                </div>
+              )}
+            </div>
+          </div>
+
 
         </div>
       </div>

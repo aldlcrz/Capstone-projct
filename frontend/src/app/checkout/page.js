@@ -42,7 +42,7 @@ export default function CheckoutPage() {
 
   // Checkout State
   const [address, setAddress] = useState({
-    name: "",
+    recipientName: "",
     phone: "",
     houseNo: "",
     street: "",
@@ -112,7 +112,7 @@ export default function CheckoutPage() {
       const defaultAddr = data.find(a => a.isDefault) || data[0];
       if (defaultAddr) {
         setAddress({
-          name: defaultAddr.recipientName,
+          recipientName: defaultAddr.recipientName,
           phone: defaultAddr.phone,
           houseNo: defaultAddr.houseNo,
           street: defaultAddr.street,
@@ -174,7 +174,7 @@ export default function CheckoutPage() {
 
   const selectAddress = (addr) => {
     setAddress({
-      name: addr.recipientName,
+      recipientName: addr.recipientName,
       phone: addr.phone,
       houseNo: addr.houseNo,
       street: addr.street,
@@ -205,7 +205,7 @@ export default function CheckoutPage() {
 
   const handleNext = () => {
     if (currentStep === 1) {
-      const required = ["name", "phone", "houseNo", "street", "barangay", "city", "province", "postalCode"];
+      const required = ["recipientName", "phone", "houseNo", "street", "barangay", "city", "province", "postalCode"];
       const missing = required.filter(field => !address[field]);
       if (missing.length > 0) {
         setShowValidation(true);
@@ -263,7 +263,7 @@ export default function CheckoutPage() {
         if (!existing) {
           try {
             await api.post("/addresses", {
-              recipientName: address.name,
+              recipientName: address.recipientName,
               phone: address.phone,
               houseNo: address.houseNo,
               street: address.street,
@@ -404,7 +404,7 @@ export default function CheckoutPage() {
                         </div>
                       </div>
 
-                      {!isNewAddress && address.name ? (
+                      {!isNewAddress && address.recipientName ? (
                         <div className="bg-[var(--cream)]/30 border border-[var(--rust)]/10 rounded-3xl p-8 flex items-start gap-6 group transition-all hover:bg-white hover:shadow-lg">
                           <div className="w-14 h-14 bg-white rounded-2xl flex items-center justify-center shadow-sm shrink-0 border border-[var(--rust)]/5">
                             <MapPin className="w-6 h-6 text-[var(--rust)]" />
@@ -414,7 +414,7 @@ export default function CheckoutPage() {
                               <span className="text-[10px] font-bold text-[var(--rust)] uppercase tracking-[0.2em]">Fulfillment Node Active</span>
 
                             </div>
-                            <div className="text-xl font-serif font-bold text-[var(--charcoal)]">{address.name}</div>
+                            <div className="text-xl font-serif font-bold text-[var(--charcoal)]">{address.recipientName}</div>
                             <div className="text-xs font-bold text-[var(--muted)] tracking-widest mb-2 pd-meta-val">{address.phone}</div>
                             <p className="text-sm text-[var(--muted)] leading-relaxed italic">
                               {address.houseNo} {address.street}, {address.barangay},<br />
@@ -424,7 +424,7 @@ export default function CheckoutPage() {
                         </div>
                       ) : (
                         <div className={`grid grid-cols-1 md:grid-cols-2 ${isBuyNowMode ? 'gap-6 pt-2' : 'gap-8 pt-4'}`}>
-                          <InputGroup compact={isBuyNowMode} label="Full Name" placeholder="Enter recipient name" value={address.name} onChange={(e) => setAddress({ ...address, name: e.target.value.slice(0, 50) })} icon={<UserIcon className="w-4 h-4" />} />
+                          <InputGroup compact={isBuyNowMode} label="Full Name" placeholder="Enter recipient name" value={address.recipientName} onChange={(e) => setAddress({ ...address, recipientName: e.target.value.slice(0, 50) })} icon={<UserIcon className="w-4 h-4" />} />
                           <InputGroup compact={isBuyNowMode} label="Phone Number" placeholder="09XXXXXXXXX" value={address.phone} onChange={(e) => setAddress({ ...address, phone: e.target.value.replace(/\D/g, "").slice(0, 11) })} icon={<Phone className="w-4 h-4" />} />
 
                           <InputGroup compact={isBuyNowMode} label="House No. / Building" placeholder="Bldg/House Number" value={address.houseNo} onChange={(e) => setAddress({ ...address, houseNo: e.target.value.slice(0, 20) })} icon={<MapPin className="w-4 h-4" />} />
@@ -456,35 +456,28 @@ export default function CheckoutPage() {
                               )}
                             </button>
 
-                            <AnimatePresence>
-                              {showMap && (
-                                <motion.div
-                                  initial={{ opacity: 0, height: 0 }}
-                                  animate={{ opacity: 1, height: "auto" }}
-                                  exit={{ opacity: 0, height: 0 }}
-                                  transition={{ duration: 0.3 }}
-                                  className="overflow-hidden mt-4"
-                                >
-                                  <div className="text-[10px] font-bold uppercase tracking-widest text-[var(--muted)] mb-3 ml-1">Interactive Heritage Map</div>
-                                  <LocationPickerMap
-                                    initialLat={address.latitude || 14.2952}
-                                    initialLng={address.longitude || 121.4647}
-                                    onLocationFound={({ lat, lng, address: geo }) => {
-                                      setAddress(prev => ({
-                                        ...prev,
-                                        latitude: lat,
-                                        longitude: lng,
-                                        street: geo.street || prev.street,
-                                        barangay: geo.barangay || prev.barangay,
-                                        city: geo.city || prev.city,
-                                        province: geo.province || prev.province,
-                                        postalCode: geo.postalCode || prev.postalCode,
-                                      }));
-                                    }}
-                                  />
-                                </motion.div>
-                              )}
-                            </AnimatePresence>
+                            {showMap && (
+                              <div className="mt-4">
+                                <div className="text-[10px] font-bold uppercase tracking-widest text-[var(--muted)] mb-3 ml-1">Interactive Heritage Map</div>
+                                <LocationPickerMap
+                                  initialLat={address.latitude || 14.2952}
+                                  initialLng={address.longitude || 121.4647}
+                                  onLocationFound={({ lat, lng, address: geo }) => {
+                                    setAddress(prev => ({
+                                      ...prev,
+                                      latitude: lat,
+                                      longitude: lng,
+                                      street: geo.street || prev.street,
+                                      barangay: geo.barangay || prev.barangay,
+                                      city: geo.city || prev.city,
+                                      province: geo.province || prev.province,
+                                      postalCode: geo.postalCode || prev.postalCode,
+                                    }));
+                                  }}
+                                  onConfirm={() => setShowMap(false)}
+                                />
+                              </div>
+                            )}
                           </div>
                         </div>
                       )}
@@ -699,10 +692,10 @@ export default function CheckoutPage() {
 
               <div className={`flex flex-col sm:flex-row ${isBuyNowMode ? 'gap-4 pt-2' : 'gap-6 pt-6'}`}>
                 <Link href="/orders" className="btn-primary px-12 py-5 shadow-2xl flex items-center justify-center gap-3 group ring-8 ring-[var(--rust)]/10">
-                  Registry Track Order <History className="w-5 h-5 group-hover:rotate-12 transition-transform" />
+                  See My order <History className="w-5 h-5 group-hover:rotate-12 transition-transform" />
                 </Link>
                 <Link href="/home" className="px-12 py-5 font-bold uppercase text-[10px] tracking-widest bg-white border-2 border-[var(--border)] rounded-2xl hover:border-[var(--rust)] hover:text-[var(--rust)] transition-all flex items-center justify-center gap-3 shadow-lg">
-                  Explore More Archives <ShoppingCart className="w-5 h-5" />
+                  Back to Shop <ShoppingCart className="w-5 h-5" />
                 </Link>
               </div>
 
@@ -739,7 +732,7 @@ export default function CheckoutPage() {
                 <div className="space-y-3 bg-red-50/50 p-8 rounded-3xl text-left border border-red-100/50 inline-block w-full">
                   {currentStep === 1 ? (
                     <>
-                      {!address.name && <ValidationError label="Full Name" />}
+                      {!address.recipientName && <ValidationError label="Full Name" />}
                       {!address.phone && <ValidationError label="Phone Number" />}
                       {!address.houseNo && <ValidationError label="House No." />}
                       {!address.street && <ValidationError label="Street" />}
@@ -879,31 +872,28 @@ export default function CheckoutPage() {
                             </label>
                           </div>
 
-                          <AnimatePresence>
-                            {addrMapPicker && (
-                              <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }} className="overflow-hidden">
-                                <div className="pt-4 border-t border-[var(--border)]">
-                                  <label className="text-[10px] font-extrabold uppercase tracking-[0.2em] text-[var(--charcoal)] opacity-70 block mb-3">Interactive Heritage Map</label>
-                                  <LocationPickerMap
-                                    onLocationFound={({ lat, lng, address: geo }) => {
-                                      setAddrForm(prev => ({
-                                        ...prev,
-                                        latitude: lat,
-                                        longitude: lng,
-                                        street: geo.street || prev.street,
-                                        barangay: geo.barangay || prev.barangay,
-                                        city: geo.city || prev.city,
-                                        province: geo.province || prev.province,
-                                        postalCode: geo.postalCode || prev.postalCode,
-                                      }));
-                                    }}
-                                    initialLat={addrForm.latitude || 14.2952}
-                                    initialLng={addrForm.longitude || 121.4647}
-                                  />
-                                </div>
-                              </motion.div>
-                            )}
-                          </AnimatePresence>
+                          {addrMapPicker && (
+                            <div className="mt-4 pt-4 border-t border-[var(--border)]">
+                              <label className="text-[10px] font-extrabold uppercase tracking-[0.2em] text-[var(--charcoal)] opacity-70 block mb-3">Interactive Heritage Map</label>
+                              <LocationPickerMap
+                                onLocationFound={({ lat, lng, address: geo }) => {
+                                  setAddrForm(prev => ({
+                                    ...prev,
+                                    latitude: lat,
+                                    longitude: lng,
+                                    street: geo.street || prev.street,
+                                    barangay: geo.barangay || prev.barangay,
+                                    city: geo.city || prev.city,
+                                    province: geo.province || prev.province,
+                                    postalCode: geo.postalCode || prev.postalCode,
+                                  }));
+                                }}
+                                onConfirm={() => setAddrMapPicker(false)}
+                                initialLat={addrForm.latitude || 14.2952}
+                                initialLng={addrForm.longitude || 121.4647}
+                              />
+                            </div>
+                          )}
 
                           <button
                             type="submit"
@@ -937,7 +927,7 @@ function InputGroup({ label, placeholder, value, onChange, icon, disabled, compa
           disabled={disabled}
           className={`w-full bg-[var(--input-bg)] border-2 border-transparent outline-none focus:border-[var(--rust)] focus:bg-white transition-all font-bold shadow-inner ${compact ? 'pl-12 pr-4 py-4 rounded-xl text-sm' : 'pl-14 pr-6 py-5 rounded-2xl text-xs'} ${disabled ? 'opacity-40 cursor-not-allowed' : ''}`}
           placeholder={placeholder}
-          value={value}
+          value={value || ""}
           onChange={onChange}
         />
       </div>
@@ -966,7 +956,7 @@ function AbInputGroup({ label, value, onChange, icon, placeholder }) {
         <div className="absolute top-1/2 -translate-y-1/2 left-4 text-[var(--muted)] group-focus-within:text-[var(--rust)] transition-colors">{icon}</div>
         <input
           type="text"
-          value={value}
+          value={value || ""}
           onChange={e => onChange(e.target.value)}
           placeholder={placeholder}
           className="w-full bg-[var(--input-bg)] border-2 border-transparent outline-none focus:border-[var(--rust)] focus:bg-white transition-all font-bold shadow-inner pl-12 pr-4 py-4 rounded-xl text-sm"

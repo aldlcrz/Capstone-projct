@@ -1,6 +1,9 @@
 const User = require('../models/User');
 const Address = require('../models/Address');
+const Order = require('../models/Order');
 const socketUtility = require('../utils/socketUtility');
+const { getRangeBounds } = require('../utils/dateHelper');
+const { Op } = require('sequelize');
 
 exports.getProfile = async (req, res) => {
     try {
@@ -44,39 +47,40 @@ exports.updateProfile = async (req, res) => {
 exports.getAddresses = async (req, res) => {
     try {
         const addresses = await Address.findAll({
-            where: { UserId: req.user.id },
+            where: { userId: req.user.id },
             order: [['isDefault', 'DESC'], ['createdAt', 'DESC']]
         });
         res.json(addresses);
     } catch (err) {
-        console.error('getAddresses Error:', { userId: req.user?.id, error: err });
+        console.error('getAddresses Error:', err);
         res.status(500).json({ message: 'Error fetching addresses', error: err.message });
     }
 };
 
 exports.createAddress = async (req, res) => {
     try {
-        const { fullName, phoneNumber, street, barangay, city, province, postalCode, label, isDefault } = req.body;
+        const { recipientName, phone, houseNo, street, barangay, city, province, postalCode, latitude, longitude, isDefault } = req.body;
 
         if (isDefault) {
-            await Address.update({ isDefault: false }, { where: { UserId: req.user.id } });
+            await Address.update({ isDefault: false }, { where: { userId: req.user.id } });
         }
 
         const address = await Address.create({
-            UserId: req.user.id,
-            fullName,
-            phoneNumber,
+            userId: req.user.id,
+            recipientName,
+            phone,
+            houseNo,
             street,
             barangay,
             city,
             province,
             postalCode,
-            label,
+            latitude,
+            longitude,
             isDefault: isDefault || false
         });
 
         socketUtility.emitDashboardUpdate();
-
         res.json(address);
     } catch (err) {
         console.error('createAddress Error:', err);
@@ -87,29 +91,30 @@ exports.createAddress = async (req, res) => {
 exports.updateAddress = async (req, res) => {
     try {
         const { id } = req.params;
-        const { fullName, phoneNumber, street, barangay, city, province, postalCode, label, isDefault } = req.body;
+        const { recipientName, phone, houseNo, street, barangay, city, province, postalCode, latitude, longitude, isDefault } = req.body;
 
-        const address = await Address.findOne({ where: { id, UserId: req.user.id } });
+        const address = await Address.findOne({ where: { id, userId: req.user.id } });
         if (!address) return res.status(404).json({ message: 'Address not found' });
 
         if (isDefault) {
-            await Address.update({ isDefault: false }, { where: { UserId: req.user.id } });
+            await Address.update({ isDefault: false }, { where: { userId: req.user.id } });
         }
 
         await address.update({
-            fullName,
-            phoneNumber,
+            recipientName,
+            phone,
+            houseNo,
             street,
             barangay,
             city,
             province,
             postalCode,
-            label,
+            latitude,
+            longitude,
             isDefault
         });
 
         socketUtility.emitDashboardUpdate();
-
         res.json(address);
     } catch (err) {
         console.error('updateAddress Error:', err);
@@ -120,8 +125,8 @@ exports.updateAddress = async (req, res) => {
 exports.setDefaultAddress = async (req, res) => {
     try {
         const { id } = req.params;
-        await Address.update({ isDefault: false }, { where: { UserId: req.user.id } });
-        const address = await Address.findOne({ where: { id, UserId: req.user.id } });
+        await Address.update({ isDefault: false }, { where: { userId: req.user.id } });
+        const address = await Address.findOne({ where: { id, userId: req.user.id } });
         if (!address) return res.status(404).json({ message: 'Address not found' });
 
         await address.update({ isDefault: true });
@@ -160,34 +165,46 @@ exports.updateFcmToken = async (req, res) => {
     }
 };
 
+
+exports.getCustomerStats = async (req, res) => {
+    try {
+        const customerId = req.user.id;
+        // Only return count of active (non-cancelled, non-delivered) orders for the profile card
+        const activeOrders = await Order.count({
+            where: { 
+                customerId, 
+                status: { [Op.notIn]: ['Cancelled', 'Completed', 'Delivered'] } 
+            }
+        });
+
+        res.status(200).json({ activeOrders });
+    } catch (error) {
+        console.error('getCustomerStats Error:', error.message);
+        res.status(500).json({ message: error.message });
+    }
+};
+
 const bcrypt = require('bcryptjs');
 
 exports.changePassword = async (req, res) => {
     try {
-        const { oldPassword, newPassword } = req.body;
+        const { currentPassword, newPassword } = req.body;
 
-        if (!oldPassword || !newPassword) {
-            return res.status(400).json({ message: 'Old password and new password are required' });
+        if (!currentPassword || !newPassword) {
+            return res.status(400).json({ message: 'Current password and new password are required' });
         }
 
-        if (newPassword.length < 6 || newPassword.length > 32) {
-            return res.status(400).json({ message: 'New password must be between 6 and 32 characters long' });
+        if (newPassword.length < 8) {
+            return res.status(400).json({ message: 'New password must be at least 8 characters long' });
         }
 
         const user = await User.findByPk(req.user.id);
-        if (!user) {
-            return res.status(404).json({ message: 'User not found' });
-        }
+        if (!user) return res.status(404).json({ message: 'User not found' });
 
-        // Verify old password
-        const isMatch = await bcrypt.compare(oldPassword, user.password);
-        if (!isMatch) {
-            return res.status(400).json({ message: 'Incorrect old password' });
-        }
+        const isMatch = await bcrypt.compare(currentPassword, user.password);
+        if (!isMatch) return res.status(400).json({ message: 'Incorrect current password' });
 
-        // Hash new password
         user.password = await bcrypt.hash(newPassword, 10);
-        user.passwordChangedAt = new Date();
         await user.save();
 
         res.json({ message: 'Password changed successfully' });

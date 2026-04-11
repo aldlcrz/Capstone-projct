@@ -4,7 +4,7 @@ import Link from "next/link";
 import { Mail, Lock, ArrowRight, Loader2, Eye, EyeOff, ShieldCheck } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useRouter } from "next/navigation";
-import { api, getApiErrorMessage } from "@/lib/api";
+import { api, getApiErrorMessage, clearSession } from "@/lib/api";
 
 const containerVariants = {
   hidden: {},
@@ -57,19 +57,30 @@ export default function LoginPage() {
     try {
       const response = await api.post("/auth/login", { email, password, });
       const { token, user } = response.data;
+      
+      // Clear previous residual sessions securely to prevent role overlap
+      clearSession();
+
+      // Store generic keys for backward compatibility
       localStorage.setItem("token", token);
       localStorage.setItem("user", JSON.stringify(user));
+
+      // Store role-specific keys to prevent tab session collision
+      if (user.role) {
+        localStorage.setItem(`${user.role}_token`, token);
+        localStorage.setItem(`${user.role}_user`, JSON.stringify(user));
+      }
 
       const returnUrl = localStorage.getItem("returnUrl");
       if (returnUrl) {
         localStorage.removeItem("returnUrl");
-        window.location.href = returnUrl;
+        window.location.replace(returnUrl);
         return;
       }
 
-      if (user.role === "admin") window.location.href = "/admin/dashboard";
-      else if (user.role === "seller") window.location.href = "/seller/dashboard";
-      else window.location.href = "/home";
+      if (user.role === "admin") window.location.replace("/admin/dashboard");
+      else if (user.role === "seller") window.location.replace("/seller/dashboard");
+      else window.location.replace("/home");
     } catch (error) {
       setError(getApiErrorMessage(error, "Authentication failed. Check your credentials."));
     } finally {

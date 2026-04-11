@@ -32,6 +32,68 @@ export default function OrdersPage() {
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(null);
 
+  const [ratingModalOpen, setRatingModalOpen] = useState(false);
+  const [ratingData, setRatingData] = useState({ rating: 5, comment: '', orderId: null, productId: null });
+  const [returnModalOpen, setReturnModalOpen] = useState(false);
+  const [returnData, setReturnData] = useState({ orderId: null, reason: '' });
+  const [actionLoading, setActionLoading] = useState(false);
+
+  const handleCopy = (id) => {
+    navigator.clipboard.writeText(`LB-OR-${id.toString().slice(-8).toUpperCase()}`);
+    setSuccess("Order ID copied to clipboard.");
+    setTimeout(() => setSuccess(null), 3000);
+  };
+
+  const openRatingModal = (order) => {
+    setRatingData({ rating: 5, comment: '', orderId: order.id, productId: order.items?.[0]?.product?.id });
+    setRatingModalOpen(true);
+  };
+
+  const submitRating = async () => {
+    if (!ratingData.productId) {
+       setError("No product found to rate.");
+       setTimeout(() => setError(null), 3000);
+       return;
+    }
+    try {
+      setActionLoading(true);
+      await api.post(`/products/${ratingData.productId}/reviews`, { rating: ratingData.rating, comment: ratingData.comment });
+      setSuccess("Thank you for your rating!");
+      setRatingModalOpen(false);
+      setTimeout(() => setSuccess(null), 3000);
+    } catch (err) {
+      setError(err.response?.data?.message || err.message || "Failed to submit rating.");
+      setTimeout(() => setError(null), 3000);
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  const openReturnModal = (order) => {
+    setReturnData({ orderId: order.id, reason: '' });
+    setReturnModalOpen(true);
+  };
+
+  const submitReturn = async () => {
+    if (!returnData.reason.trim()) {
+       setError("Please enter a reason.");
+       setTimeout(() => setError(null), 3000);
+       return;
+    }
+    try {
+      setActionLoading(true);
+      await api.post("/returns", { orderId: returnData.orderId, reason: returnData.reason });
+      setSuccess("Return request submitted.");
+      setReturnModalOpen(false);
+      setTimeout(() => setSuccess(null), 3000);
+    } catch (err) {
+      setError("Failed to submit return: " + (err.response?.data?.message || err.message));
+      setTimeout(() => setError(null), 4000);
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
   const tabs = ["ALL", "PENDING", "TO SHIP", "TO RECEIVE", "COMPLETED", "CANCELLED"];
 
   // Helper mappings
@@ -240,7 +302,7 @@ export default function OrdersPage() {
                         <div className="flex flex-wrap items-center gap-4 sm:gap-6 text-xs font-bold uppercase tracking-wider text-[var(--muted)]">
                            <div className="flex items-center gap-1.5">
                              ORDER ID <span className="text-[#2A2A2A] tracking-normal">LB-OR-{order.id.toString().slice(-8).toUpperCase()}</span>
-                             <button className="ml-1 hover:text-[var(--rust)] transition-colors"><Copy className="w-3.5 h-3.5 opacity-60" /></button>
+                             <button onClick={(e) => { e.stopPropagation(); handleCopy(order.id); }} className="ml-1 hover:text-[var(--rust)] transition-colors"><Copy className="w-3.5 h-3.5 opacity-60" /></button>
                            </div>
                            <div className="w-px h-3 bg-[var(--border)] hidden sm:block" />
                            <div className="flex items-center gap-1.5 opacity-80">
@@ -313,28 +375,17 @@ export default function OrdersPage() {
 
                               {/* Secondary Action: Rate if completed */}
                               {displayStatus === "COMPLETED" && (
-                                 <button className="w-full py-3.5 bg-[#F6F4F0] hover:bg-[#EAE5DF] text-[#2A2A2A]/70 border border-[var(--border)] rounded-xl text-[10px] font-extrabold uppercase tracking-[0.15em] transition-colors flex items-center justify-center gap-2 group shadow-sm">
+                                 <button 
+                                   onClick={(e) => { e.stopPropagation(); openRatingModal(order); }}
+                                   className="w-full py-3.5 bg-[#F6F4F0] hover:bg-[#EAE5DF] text-[#2A2A2A]/70 border border-[var(--border)] rounded-xl text-[10px] font-extrabold uppercase tracking-[0.15em] transition-colors flex items-center justify-center gap-2 group shadow-sm"
+                                 >
                                     <Star className="w-3.5 h-3.5" /> Rate Products
                                  </button>
                                )}
 
                                {displayStatus === "DELIVERED" && (
                                  <button 
-                                   onClick={() => {
-                                      const reason = prompt("Enter reason for return:");
-                                      if (reason) {
-                                         setError(null); setSuccess(null);
-                                         api.post("/returns", { orderId: order.id, reason })
-                                           .then(() => {
-                                              setSuccess("Return request submitted.");
-                                              setTimeout(() => setSuccess(null), 3000);
-                                           })
-                                           .catch(err => {
-                                              setError("Failed to submit return: " + (err.response?.data?.message || err.message));
-                                              setTimeout(() => setError(null), 4000);
-                                           });
-                                      }
-                                   }}
+                                   onClick={(e) => { e.stopPropagation(); openReturnModal(order); }}
                                    className="w-full py-3.5 bg-white hover:bg-red-50 text-red-600 border border-red-100 rounded-xl text-[10px] font-extrabold uppercase tracking-[0.15em] transition-colors flex items-center justify-center gap-2 group shadow-sm"
                                  >
                                     <RefreshCw className="w-3.5 h-3.5" /> Request Return
@@ -501,6 +552,62 @@ export default function OrdersPage() {
           </div>
         )}
       </AnimatePresence>
+      {/* Return Modal */}
+      <AnimatePresence>
+        {returnModalOpen && (
+          <div className="fixed inset-0 z-[110] flex items-center justify-center p-4">
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={() => setReturnModalOpen(false)} />
+            <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }} className="bg-white p-6 rounded-2xl shadow-xl w-full max-w-md relative z-10 space-y-4 border border-[var(--border)]">
+               <h3 className="font-serif text-2xl font-bold text-[#2A2A2A]">Request Return</h3>
+               <p className="text-sm text-[var(--muted)]">Please explain why you need to return this order.</p>
+               <textarea 
+                 value={returnData.reason}
+                 onChange={e => setReturnData({...returnData, reason: e.target.value})}
+                 placeholder="Reason for return..."
+                 className="w-full p-3 border border-[var(--border)] rounded-xl text-sm min-h-[100px] outline-none focus:border-[var(--rust)] transition-colors"
+               />
+               <div className="flex justify-end gap-3 pt-2">
+                 <button onClick={() => setReturnModalOpen(false)} className="px-4 py-2 rounded-lg text-sm font-bold text-[var(--muted)] hover:bg-gray-100 transition-colors">Cancel</button>
+                 <button onClick={submitReturn} disabled={actionLoading} className="px-4 py-2 bg-[var(--rust)] text-white rounded-lg text-sm font-bold shadow-md disabled:opacity-50 flex items-center justify-center min-w-[100px]">
+                   {actionLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : "Submit Request"}
+                 </button>
+               </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* Rating Modal */}
+      <AnimatePresence>
+        {ratingModalOpen && (
+          <div className="fixed inset-0 z-[110] flex items-center justify-center p-4">
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={() => setRatingModalOpen(false)} />
+            <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }} className="bg-white p-6 rounded-2xl shadow-xl w-full max-w-md relative z-10 space-y-4 border border-[var(--border)]">
+               <h3 className="font-serif text-2xl font-bold text-[#2A2A2A]">Rate Product</h3>
+               <div className="flex gap-2 justify-center py-4">
+                 {[1, 2, 3, 4, 5].map((star) => (
+                   <button key={star} onClick={() => setRatingData({...ratingData, rating: star})}>
+                     <Star className={`w-8 h-8 ${star <= ratingData.rating ? "fill-amber-400 text-amber-400" : "text-gray-300"}`} />
+                   </button>
+                 ))}
+               </div>
+               <textarea 
+                 value={ratingData.comment}
+                 onChange={e => setRatingData({...ratingData, comment: e.target.value})}
+                 placeholder="What did you think of this masterpiece? (Optional)"
+                 className="w-full p-3 border border-[var(--border)] rounded-xl text-sm min-h-[100px] outline-none focus:border-[var(--rust)] transition-colors"
+               />
+               <div className="flex justify-end gap-3 pt-2">
+                 <button onClick={() => setRatingModalOpen(false)} className="px-4 py-2 rounded-lg text-sm font-bold text-[var(--muted)] hover:bg-gray-100 transition-colors">Cancel</button>
+                 <button onClick={submitRating} disabled={actionLoading} className="px-4 py-2 bg-[var(--rust)] text-white rounded-lg text-sm font-bold shadow-md disabled:opacity-50 flex items-center justify-center min-w-[100px]">
+                   {actionLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : "Submit Rating"}
+                 </button>
+               </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
     </CustomerLayout>
   );
 }

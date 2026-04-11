@@ -99,12 +99,20 @@ export default function AddProductPage() {
       alert("Please upload at least one product variation image.");
       return;
     }
-    if (Number(formData.price) <= 0) {
-      alert("Price must be a positive number.");
+    if (Number(formData.price) <= 0 || Number(formData.price) > 10000) {
+      alert("Price must be between 1 and 10,000 PHP.");
       return;
     }
-    if (Number(formData.stock) < 0) {
-      alert("Stock cannot be negative.");
+    if (Number(formData.stock) < 0 || Number(formData.stock) > 500) {
+      alert("Stock quantity must be between 0 and 500 units.");
+      return;
+    }
+    if (formData.shippingFee && (Number(formData.shippingFee) < 0 || Number(formData.shippingFee) > 500)) {
+      alert("Shipping fee cannot exceed 500 PHP.");
+      return;
+    }
+    if (formData.shippingDays && (Number(formData.shippingDays) < 1 || Number(formData.shippingDays) > 30)) {
+      alert("Shipping days must be between 1 and 30 days.");
       return;
     }
     setLoading(true);
@@ -188,9 +196,10 @@ export default function AddProductPage() {
                     type="number"
                     required
                     min="1"
+                    max="10000"
                     step="0.01"
                     className="w-full px-4 py-3 bg-[var(--input-bg)] border border-[var(--border)] rounded-xl focus:outline-none focus:border-[var(--rust)] transition-all"
-                    placeholder="2500"
+                    placeholder="Max ₱10,000"
                     value={formData.price}
                     onChange={(e) => setFormData({ ...formData, price: e.target.value })}
                   />
@@ -201,9 +210,10 @@ export default function AddProductPage() {
                     type="number"
                     required
                     min="0"
+                    max="500"
                     step="1"
                     className="w-full px-4 py-3 bg-[var(--input-bg)] border border-[var(--border)] rounded-xl focus:outline-none focus:border-[var(--rust)] transition-all"
-                    placeholder="10"
+                    placeholder="Max 500"
                     value={formData.stock}
                     onChange={(e) => setFormData({ ...formData, stock: e.target.value })}
                   />
@@ -213,9 +223,10 @@ export default function AddProductPage() {
                   <input
                     type="number"
                     min="0"
+                    max="500"
                     step="0.01"
                     className="w-full px-4 py-3 bg-[var(--input-bg)] border border-[var(--border)] rounded-xl focus:outline-none focus:border-[var(--rust)] transition-all"
-                    placeholder="0"
+                    placeholder="Max ₱500"
                     value={formData.shippingFee}
                     onChange={(e) => setFormData({ ...formData, shippingFee: e.target.value })}
                   />
@@ -225,9 +236,10 @@ export default function AddProductPage() {
                   <input
                     type="number"
                     min="1"
+                    max="30"
                     step="1"
                     className="w-full px-4 py-3 bg-[var(--input-bg)] border border-[var(--border)] rounded-xl focus:outline-none focus:border-[var(--rust)] transition-all"
-                    placeholder="3–7 days"
+                    placeholder="Max 30 days"
                     value={formData.shippingDays}
                     onChange={(e) => setFormData({ ...formData, shippingDays: e.target.value })}
                   />

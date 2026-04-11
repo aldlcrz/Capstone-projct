@@ -158,6 +158,27 @@ export default function EditProductClient() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (Number(formData.price) <= 0 || Number(formData.price) > 10000) {
+      alert("Price must be between 1 and 10,000 PHP.");
+      setSaving(false);
+      return;
+    }
+    if (Number(formData.stock) < 0 || Number(formData.stock) > 500) {
+      alert("Stock quantity must be between 0 and 500 units.");
+      setSaving(false);
+      return;
+    }
+    if (formData.shippingFee && (Number(formData.shippingFee) < 0 || Number(formData.shippingFee) > 500)) {
+      alert("Shipping fee cannot exceed 500 PHP.");
+      setSaving(false);
+      return;
+    }
+    if (formData.shippingDays && (Number(formData.shippingDays) < 1 || Number(formData.shippingDays) > 30)) {
+      alert("Shipping days must be between 1 and 30 days.");
+      setSaving(false);
+      return;
+    }
+
     setSaving(true);
     try {
       const form = new FormData();
@@ -227,11 +248,12 @@ export default function EditProductClient() {
                     <input 
                       type="number" 
                       min="0.01"
+                      max="10000"
                       step="0.01"
                       value={formData.price}
                       onChange={(e) => setFormData({...formData, price: e.target.value})}
                       className="w-full bg-[var(--input-bg)] border-none rounded-2xl p-5 text-sm font-medium focus:ring-2 focus:ring-[var(--rust)]/20 transition-all placeholder:opacity-30"
-                      placeholder="0.00"
+                      placeholder="Max ₱10,000"
                       required
                     />
                 </div>
@@ -306,11 +328,12 @@ export default function EditProductClient() {
                     <input 
                       type="number" 
                       min="0"
+                      max="500"
                       step="1"
                       value={formData.stock}
                       onChange={(e) => setFormData({...formData, stock: e.target.value})}
                       className="w-full bg-[var(--input-bg)] border-none rounded-2xl p-5 text-sm font-medium focus:ring-2 focus:ring-[var(--rust)]/20 transition-all placeholder:opacity-30"
-                      placeholder="Quantity in stock"
+                      placeholder="Max 500"
                     />
                 </div>
                 <div className="space-y-2">
@@ -318,11 +341,12 @@ export default function EditProductClient() {
                     <input 
                       type="number" 
                       min="0"
+                      max="500"
                       step="0.01"
                       value={formData.shippingFee}
                       onChange={(e) => setFormData({...formData, shippingFee: e.target.value})}
                       className="w-full bg-[var(--input-bg)] border-none rounded-2xl p-5 text-sm font-medium focus:ring-2 focus:ring-[var(--rust)]/20 transition-all placeholder:opacity-30"
-                      placeholder="0.00"
+                      placeholder="Max ₱500"
                     />
                 </div>
                 <div className="space-y-2">
@@ -330,11 +354,12 @@ export default function EditProductClient() {
                     <input 
                       type="number" 
                       min="1"
+                      max="30"
                       step="1"
                       value={formData.shippingDays}
                       onChange={(e) => setFormData({...formData, shippingDays: e.target.value})}
                       className="w-full bg-[var(--input-bg)] border-none rounded-2xl p-5 text-sm font-medium focus:ring-2 focus:ring-[var(--rust)]/20 transition-all placeholder:opacity-30"
-                      placeholder="Estimated delivery days"
+                      placeholder="Max 30 days"
                     />
                 </div>
               </div>

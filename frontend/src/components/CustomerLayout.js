@@ -275,7 +275,7 @@ export default function CustomerLayout({ children }) {
               onClick={handleLogout}
               className="flex items-center gap-3 w-full px-4 py-3.5 bg-red-50 text-red-600 rounded-xl hover:bg-red-100 transition-all font-bold text-xs tracking-widest uppercase"
             >
-              <LogOut className="w-4 h-4" /> Sign Out
+              <LogOut className="w-4 h-4" /> Log Out
             </button>
           </div>
         </div>
@@ -402,9 +402,9 @@ export default function CustomerLayout({ children }) {
                 </div>
                 <div className="w-10 h-10 rounded-xl bg-[var(--sand)] border-2 border-white shadow-md flex items-center justify-center text-white font-serif text-lg font-bold uppercase overflow-hidden transition-transform active:scale-95">
                   {user?.profilePhoto ? (
-                    <img 
-                      src={user.profilePhoto} 
-                      alt={user.name} 
+                    <img
+                      src={user.profilePhoto}
+                      alt={user.name}
                       className="w-full h-full object-cover"
                       onError={(e) => {
                         e.target.onerror = null;

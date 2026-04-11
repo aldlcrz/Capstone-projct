@@ -3,7 +3,7 @@ const User = require('../models/User');
 const socketUtility = require('./socketUtility');
 const pushHelper = require('./pushHelper');
 
-const sendNotification = async (userId, title, message, type = 'system', link = null) => {
+const sendNotification = async (userId, title, message, type = 'system', link = null, targetRole = 'customer') => {
     try {
         const resolvedTitle = title || 'Notification';
         const resolvedMessage = message || title || '';
@@ -14,6 +14,7 @@ const sendNotification = async (userId, title, message, type = 'system', link = 
             type,
             link,
             read: false,
+            targetRole,
         });
 
         // Real-time emission using centralized utility

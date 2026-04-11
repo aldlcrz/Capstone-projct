@@ -5,11 +5,38 @@ const { emitNotificationCountUpdated } = require('../utils/socketUtility');
 exports.getMyNotifications = async (req, res) => {
   try {
     const userId = req.user.id;
+    const { role } = req.query; // Filter by 'customer' or 'seller'
+    const where = { userId };
+    if (role) {
+      where.targetRole = role;
+    }
     const notifications = await Notification.findAll({
-      where: { userId },
+      where,
       order: [['createdAt', 'DESC']],
     });
     res.status(200).json(notifications);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+exports.markAllRead = async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const { role } = req.query;
+    const where = { userId, read: false };
+    if (role) {
+      where.targetRole = role;
+    }
+    
+    await Notification.update({ read: true }, { where });
+    
+    const unreadCount = await Notification.count({
+      where: { userId, read: false },
+    });
+    emitNotificationCountUpdated(userId, unreadCount);
+
+    res.status(200).json({ message: 'All notifications marked as read' });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
@@ -38,9 +65,9 @@ exports.markAsRead = async (req, res) => {
   }
 };
 
-exports.createPushNotification = async (userId, title, message, type = 'general', link = null) => {
+exports.createPushNotification = async (userId, title, message, type = 'general', link = null, targetRole = 'customer') => {
   try {
-    return await sendNotification(userId, title, message, type, link);
+    return await sendNotification(userId, title, message, type, link, targetRole);
   } catch (error) {
     console.error('Failed to create notification:', error);
     return null;

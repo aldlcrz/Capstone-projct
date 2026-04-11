@@ -45,18 +45,20 @@ export function getNotificationTypeLabel(notification = {}) {
   }
 }
 
-export function getNotificationHref(notification = {}) {
+export function getNotificationHref(notification = {}, role = 'customer') {
   const link = String(notification.link || "").trim();
   if (link.startsWith("/")) return link;
   if (/^https?:\/\//i.test(link)) return link;
 
+  const isSeller = role === 'seller';
+
   switch (getNotificationTypeKey(notification)) {
     case "message":
-      return "/messages";
+      return isSeller ? "/seller/messages" : "/messages";
     case "order":
-      return "/orders";
+      return isSeller ? "/seller/orders" : "/orders";
     case "account":
-      return "/profile";
+      return isSeller ? "/seller/profile" : "/profile";
     default:
       return NOTIFICATION_ROUTE;
   }

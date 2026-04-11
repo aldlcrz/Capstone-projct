@@ -1,4 +1,4 @@
-const { Product, User, Order, Message, sequelize } = require('../models');
+const { Product, User, Order, OrderItem, Message, ProductView, Review, sequelize } = require('../models');
 const { Op } = require('sequelize');
 const { emitInventoryUpdated } = require('../utils/socketUtility');
 
@@ -127,7 +127,15 @@ exports.getSellerProducts = async (req, res) => {
 exports.getProductById = async (req, res) => {
   try {
     const product = await Product.findByPk(req.params.id, {
-      include: [{ model: User, as: 'seller', attributes: ['id', 'name', 'gcashNumber', 'gcashQrCode'] }],
+      include: [
+        { model: User, as: 'seller', attributes: ['id', 'name', 'gcashNumber', 'gcashQrCode'] },
+        {
+          model: Review,
+          as: 'reviews',
+          include: [{ model: User, as: 'customer', attributes: ['id', 'name', 'profilePhoto'] }]
+        }
+      ],
+      order: [[{ model: Review, as: 'reviews' }, 'createdAt', 'DESC']]
     });
 
     if (!product) {
@@ -136,9 +144,20 @@ exports.getProductById = async (req, res) => {
 
     try {
       await product.increment('views');
-      const { emitInventoryUpdated, emit } = require('../utils/socketUtility');
-      emit('stats_update', { type: 'view', sellerId: product.sellerId });
-    } catch (e) {}
+      
+      // Log timestamped view for the analytics funnel
+      await ProductView.create({
+        productId: product.id,
+        sellerId: product.sellerId,
+        customerId: req.user?.id || null,
+        ipAddress: req.ip || req.connection.remoteAddress
+      });
+
+      const { emitStatsUpdate } = require('../utils/socketUtility');
+      emitStatsUpdate({ type: 'view', sellerId: product.sellerId });
+    } catch (e) {
+      console.error('View tracking error:', e.message);
+    }
 
     res.status(200).json(serializeProduct(req, product));
   } catch (error) {
@@ -154,20 +173,20 @@ exports.createProduct = async (req, res) => {
       return res.status(400).json({ message: 'Name, price, and stock are required' });
     }
 
-    if (Number(price) <= 0) {
-      return res.status(400).json({ message: 'Price must be a positive number' });
+    if (Number(price) <= 0 || Number(price) > 10000) {
+      return res.status(400).json({ message: 'Price must be between 1 and 10,000 PHP' });
     }
-
-    if (!Number.isInteger(Number(stock)) || Number(stock) < 0) {
-      return res.status(400).json({ message: 'Stock must be a non-negative integer' });
+    
+    if (!Number.isInteger(Number(stock)) || Number(stock) < 0 || Number(stock) > 500) {
+      return res.status(400).json({ message: 'Stock must be between 0 and 500 units' });
     }
-
-    if (shippingFee !== undefined && (isNaN(Number(shippingFee)) || Number(shippingFee) < 0)) {
-      return res.status(400).json({ message: 'Shipping fee cannot be negative' });
+    
+    if (shippingFee !== undefined && (isNaN(Number(shippingFee)) || Number(shippingFee) < 0 || Number(shippingFee) > 500)) {
+      return res.status(400).json({ message: 'Shipping fee cannot exceed 500 PHP' });
     }
-
-    if (shippingDays !== undefined && (!Number.isInteger(Number(shippingDays)) || Number(shippingDays) < 1)) {
-      return res.status(400).json({ message: 'Shipping days must be at least 1 day' });
+    
+    if (shippingDays !== undefined && (!Number.isInteger(Number(shippingDays)) || Number(shippingDays) < 1 || Number(shippingDays) > 30)) {
+      return res.status(400).json({ message: 'Shipping days must be between 1 and 30 days' });
     }
     
     let images = [];
@@ -210,7 +229,8 @@ exports.createProduct = async (req, res) => {
               'New Product Alert!',
               `${seller.name || "A shop you follow"} has just uploaded a new product: ${product.name}. Check it out!`,
               'general',
-              `/products?id=${product.id}`
+              `/products?id=${product.id}`,
+              'customer'
             );
           }
         }
@@ -233,20 +253,20 @@ exports.updateProduct = async (req, res) => {
     }
     const { name, description, price, sizes, categories, stock, variationNames, existingImages, shippingFee, shippingDays } = req.body;
 
-    if (price !== undefined && Number(price) <= 0) {
-      return res.status(400).json({ message: 'Price must be a positive number' });
+    if (price !== undefined && (Number(price) <= 0 || Number(price) > 10000)) {
+      return res.status(400).json({ message: 'Price must be between 1 and 10,000 PHP' });
     }
-
-    if (stock !== undefined && (!Number.isInteger(Number(stock)) || Number(stock) < 0)) {
-      return res.status(400).json({ message: 'Stock must be a non-negative integer' });
+    
+    if (stock !== undefined && (!Number.isInteger(Number(stock)) || Number(stock) < 0 || Number(stock) > 500)) {
+      return res.status(400).json({ message: 'Stock must be between 0 and 500 units' });
     }
-
-    if (shippingFee !== undefined && (isNaN(Number(shippingFee)) || Number(shippingFee) < 0)) {
-      return res.status(400).json({ message: 'Shipping fee cannot be negative' });
+    
+    if (shippingFee !== undefined && (isNaN(Number(shippingFee)) || Number(shippingFee) < 0 || Number(shippingFee) > 500)) {
+      return res.status(400).json({ message: 'Shipping fee cannot exceed 500 PHP' });
     }
-
-    if (shippingDays !== undefined && (!Number.isInteger(Number(shippingDays)) || Number(shippingDays) < 1)) {
-      return res.status(400).json({ message: 'Shipping days must be at least 1 day' });
+    
+    if (shippingDays !== undefined && (!Number.isInteger(Number(shippingDays)) || Number(shippingDays) < 1 || Number(shippingDays) > 30)) {
+      return res.status(400).json({ message: 'Shipping days must be between 1 and 30 days' });
     }
 
     let images = parseStoredList(product.image);
@@ -308,87 +328,227 @@ exports.deleteProduct = async (req, res) => {
   }
 };
 
+const { getRangeBounds } = require('../utils/dateHelper');
+
 exports.getSellerStats = async (req, res) => {
   try {
-    const sellerId = req.user.id;
+    const sellerId = req.user.id || req.user.userId;
+    if (!sellerId) {
+      return res.status(401).json({ message: 'Seller ID missing from token' });
+    }
 
-    const [totalRevenue, totalOrders, totalInventory, lowStock, inquiries, totalViews, completedOrders] = await Promise.all([
+    const { range = 'month' } = req.query;
+    const now = new Date();
+    const start = getRangeBounds(range);
+
+    // ── 1. KPI Counts within Range ──────────────────────────────────
+    const rangeWhere = { 
+      sellerId, 
+      createdAt: { [Op.gte]: start } 
+    };
+
+    const [totalRevenue, totalOrders, inquiries, completedOrders] = await Promise.all([
       Order.sum('totalAmount', {
-        where: { sellerId, status: { [Op.ne]: 'Cancelled' } },
-      }),
-      Order.count({ where: { sellerId } }),
-      Product.count({ where: { sellerId } }),
-      Product.count({
-        where: { sellerId, stock: { [Op.lt]: 5 } },
-      }),
-      Message.count({
-        where: { receiverId: sellerId, read: false },
-      }),
-      Product.sum('views', { where: { sellerId } }),
-      Order.count({ where: { sellerId, status: 'Delivered' } })
+        where: { ...rangeWhere, status: { [Op.notIn]: ['Cancelled'] } },
+      }).catch(() => 0),
+      Order.count({ where: rangeWhere }).catch(() => 0),
+      Message.count({ where: { receiverId: sellerId, read: false, createdAt: { [Op.gte]: start } } }).catch(() => 0),
+      Order.count({ where: { ...rangeWhere, status: { [Op.in]: ['Delivered', 'Completed'] } } }).catch(() => 0),
     ]);
 
-    // Calculate Retention (Percentage of customers with more than one order)
-    const customerOrderCounts = await Order.findAll({
-      attributes: ['customerId', [sequelize.fn('COUNT', sequelize.col('id')), 'count']],
-      where: { sellerId },
-      group: ['customerId']
-    });
-    const repeatCustomers = customerOrderCounts.filter(c => c.get('count') > 1).length;
-    const totalCustomers = customerOrderCounts.length;
-    const retentionRate = totalCustomers > 0 ? (repeatCustomers / totalCustomers) * 100 : 0;
+    // Global counts (not range-bound)
+    const [totalInventory, lowStock, totalViews] = await Promise.all([
+      Product.count({ where: { sellerId } }).catch(() => 0),
+      Product.count({ where: { sellerId, stock: { [Op.lt]: 5 } } }).catch(() => 0),
+      ProductView.count({ where: { sellerId } }).catch(() => 0),
+    ]);
 
-    // Group orders by month for the last 6 months
-    const sixMonthsAgo = new Date();
-    sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 5); // Start of the 6-month window
-    sixMonthsAgo.setDate(1);
-    sixMonthsAgo.setHours(0, 0, 0, 0);
+    // Range-bound Metrics for funnel
+    const rangeViews = await ProductView.count({ 
+      where: rangeWhere 
+    }).catch(() => 0);
+    
+    // Unique Visitors = Distinct Customer IDs + Distinct Guest IP Addresses
+    const [uniqueCustomers, uniqueGuests] = await Promise.all([
+      ProductView.count({ 
+        where: { ...rangeWhere, customerId: { [Op.ne]: null } },
+        distinct: true,
+        col: 'customerId'
+      }),
+      ProductView.count({ 
+        where: { ...rangeWhere, customerId: null },
+        distinct: true,
+        col: 'ipAddress'
+      })
+    ]).catch(() => [0, 0]);
 
+    const rangeVisitors = Number(uniqueCustomers || 0) + Number(uniqueGuests || 0);
+
+    const rangeInquiries = await Message.count({ 
+        where: { 
+          receiverId: sellerId, 
+          createdAt: { [Op.gte]: start } 
+        } 
+    }).catch(() => 0);
+
+    // ── 2. Performance Series (Adapts to range) ──────────────────────
     const ordersTrend = await Order.findAll({
       attributes: ['totalAmount', 'createdAt'],
       where: {
         sellerId,
-        status: { [Op.ne]: 'Cancelled' },
-        createdAt: { [Op.gte]: sixMonthsAgo }
+        status: { [Op.notIn]: ['Cancelled'] },
+        createdAt: { [Op.gte]: start },
       },
-      order: [['createdAt', 'ASC']]
+      order: [['createdAt', 'ASC']],
     });
 
-    const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
-    const performanceMap = {};
-    
-    // Initialize last 6 months with 0
-    for (let i = 0; i < 6; i++) {
-      const d = new Date();
-      d.setMonth(d.getMonth() - i);
-      performanceMap[monthNames[d.getMonth()]] = 0;
+    let performance = [];
+    if (range === 'today') {
+      const bins = Array.from({ length: 24 }, (_, i) => ({ name: `${i}:00`, sales: 0 }));
+      ordersTrend.forEach(o => {
+        const hour = new Date(o.createdAt).getHours();
+        bins[hour].sales += Number(o.totalAmount || 0);
+      });
+      performance = bins;
+    } else if (range === 'week') {
+      const DAY_NAMES = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+      const WEEK_ORDER = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+      const weeklyMap = Object.fromEntries(WEEK_ORDER.map(d => [d, 0]));
+      ordersTrend.forEach(o => {
+        const name = DAY_NAMES[new Date(o.createdAt).getDay()];
+        weeklyMap[name] = (weeklyMap[name] || 0) + Number(o.totalAmount || 0);
+      });
+      performance = WEEK_ORDER.map(name => ({ name, sales: weeklyMap[name] }));
+    } else if (range === 'month') {
+      const daysInMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
+      const bins = Array.from({ length: daysInMonth }, (_, i) => ({ name: `${i+1}`, sales: 0 }));
+      ordersTrend.forEach(o => {
+        const day = new Date(o.createdAt).getDate();
+        bins[day-1].sales += Number(o.totalAmount || 0);
+      });
+      performance = bins;
+    } else if (range === 'year') {
+      const MONTH_NAMES = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+      const bins = MONTH_NAMES.map(name => ({ name, sales: 0 }));
+      ordersTrend.forEach(o => {
+        const month = new Date(o.createdAt).getMonth();
+        bins[month].sales += Number(o.totalAmount || 0);
+      });
+      performance = bins;
     }
 
-    ordersTrend.forEach(o => {
-      const m = monthNames[new Date(o.createdAt).getMonth()];
-      if (performanceMap[m] !== undefined) {
-        performanceMap[m] += Number(o.totalAmount || 0);
-      }
-    });
+    // ── 3. Top Sold Products ──────────────────────────────────────────
+    let topProducts = [];
+    try {
+      const topProductsData = await OrderItem.findAll({
+        attributes: [
+          'productId',
+          [sequelize.fn('SUM', sequelize.col('OrderItem.quantity')), 'totalSold']
+        ],
+        include: [{
+          model: Order,
+          attributes: [],
+          where: {
+            sellerId,
+            status: { [Op.notIn]: ['Cancelled'] },
+            createdAt: { [Op.gte]: start }
+          }
+        }, {
+          model: Product,
+          as: 'product',
+          attributes: ['name']
+        }],
+        group: ['OrderItem.productId', 'product.id'],
+        order: [[sequelize.fn('SUM', sequelize.col('OrderItem.quantity')), 'DESC']],
+        limit: 5,
+        raw: true,
+        nest: true
+      });
 
-    const performanceData = Object.keys(performanceMap)
-      .map(name => ({ name, sales: performanceMap[name] }))
-      .reverse(); // Standard chronological order
+      topProducts = topProductsData.map(d => ({
+        name: d.product?.name || 'Unknown Product',
+        sales: Number(d.totalSold || 0)
+      }));
+    } catch (err) {
+      console.warn('Failed to fetch top products:', err.message);
+    }
+
+    // ── 4. Suki (Retention Rate) — Seller-Scoped ─────────────────────
+    let retentionRate = 0;
+    try {
+      const customerOrderCounts = await Order.findAll({
+        attributes: [
+          'customerId',
+          [sequelize.fn('COUNT', sequelize.col('Order.id')), 'orderCount']
+        ],
+        where: { 
+          sellerId, 
+          status: { [Op.notIn]: ['Cancelled'] },
+          createdAt: { [Op.gte]: start }
+        },
+        group: ['Order.customerId'],
+        raw: true,
+      });
+      const totalCustomers = customerOrderCounts.length;
+      const repeatCustomers = customerOrderCounts.filter(
+        c => parseInt(c.orderCount || 0, 10) > 1
+      ).length;
+      retentionRate = totalCustomers > 0 ? (repeatCustomers / totalCustomers) * 100 : 0;
+    } catch (retentionErr) {
+      console.warn('Suki (retention) calc skipped:', retentionErr.message);
+    }
 
     res.status(200).json({
       revenue: Number(totalRevenue || 0),
-      orders: totalOrders,
-      inquiries,
-      products: totalInventory,
-      lowStock,
-      performance: performanceData,
-      retention: retentionRate.toFixed(1),
+      orders: totalOrders || 0,
+      inquiries: rangeInquiries || 0,
+      products: totalInventory || 0,
+      lowStock: lowStock || 0,
+      performance,
+      topProducts,
+      retention: Number(retentionRate).toFixed(1),
       funnel: {
-        views: totalViews || 0,
+        visitors: rangeVisitors || 0,
+        views: rangeViews || 0,
         checkout: totalOrders || 0,
-        completed: completedOrders || 0
+        completed: completedOrders || 0,
+      },
+      global: {
+        views: totalViews || 0
       }
     });
+  } catch (error) {
+    console.error('getSellerStats Error:', error.message);
+    res.status(500).json({ message: error.message });
+  }
+};
+
+exports.addReview = async (req, res) => {
+  try {
+    const { id: productId } = req.params;
+    const { rating, comment } = req.body;
+    const customerId = req.user.id;
+
+    if (!rating || rating < 1 || rating > 5) {
+      return res.status(400).json({ message: 'Rating must be between 1 and 5' });
+    }
+
+    const product = await Product.findByPk(productId);
+    if (!product) {
+       return res.status(404).json({ message: 'Product not found' });
+    }
+
+    const review = await Review.create({
+      productId,
+      customerId,
+      rating: parseInt(rating, 10),
+      comment
+    });
+
+    const { emitStatsUpdate } = require('../utils/socketUtility');
+    emitStatsUpdate({ type: 'review', productId, sellerId: product.sellerId });
+
+    res.status(201).json(review);
   } catch (error) {
     res.status(500).json({ message: error.message });
   }

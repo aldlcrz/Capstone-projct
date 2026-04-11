@@ -227,14 +227,16 @@ exports.createOrder = async (req, res) => {
         'Order placed',
         'Your order has been placed successfully and is awaiting confirmation.',
         'order',
-        '/orders'
+        '/orders',
+        'customer'
       ),
       sendNotification(
         sellerId,
         'New order received',
         'A customer has placed a new order in your shop.',
         'order',
-        '/seller/orders'
+        '/seller/orders',
+        'seller'
       ),
     ]);
 
@@ -294,14 +296,16 @@ exports.cancelOrder = async (req, res) => {
         'Order cancelled',
         'Your order has been cancelled successfully.',
         'order',
-        '/orders'
+        '/orders',
+        'customer'
       ),
       sendNotification(
         order.sellerId,
         'Order cancelled by customer',
         'A customer cancelled an order before shipment.',
         'order',
-        '/seller/orders'
+        '/seller/orders',
+        'seller'
       ),
     ]);
 
@@ -410,7 +414,8 @@ exports.updateOrderStatus = async (req, res) => {
       `Order ${status}`,
       statusMessage,
       'order',
-      '/orders'
+      '/orders',
+      'customer'
     );
 
     res.status(200).json(fullOrder);

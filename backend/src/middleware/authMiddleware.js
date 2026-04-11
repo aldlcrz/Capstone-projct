@@ -33,6 +33,10 @@ const authMiddleware = (roles = []) => {
             }
             next();
         } catch (error) {
+            console.error('Auth Middleware Error:', error.name, ' - ', error.message);
+            if (error.name === 'TokenExpiredError') {
+                return res.status(401).json({ message: 'Session expired. Please log in again.' });
+            }
             res.status(401).json({ message: 'Token is not valid' });
         }
     };
@@ -59,6 +63,10 @@ authMiddleware.protect = async (req, res, next) => {
         req.user = user;
         next();
     } catch (error) {
+        console.error('Protect Middleware Error:', error.name, ' - ', error.message);
+        if (error.name === 'TokenExpiredError') {
+            return res.status(401).json({ message: 'Session expired. Please log in again.' });
+        }
         res.status(401).json({ message: 'Token is not valid' });
     }
 };
@@ -71,6 +79,28 @@ authMiddleware.authorize = (...roles) => {
         }
         next();
     };
+};
+
+// 4. Optional authentication (populates req.user if token exists, but doesn't block guests)
+authMiddleware.maybeProtect = async (req, res, next) => {
+    try {
+        let token = req.header('x-auth-token');
+        if (!token) {
+            const authHeader = req.header('Authorization');
+            if (authHeader && authHeader.startsWith('Bearer ')) token = authHeader.slice(7);
+        }
+        
+        if (token) {
+            const decoded = jwt.verify(token, process.env.JWT_SECRET || 'lumbarong_secret_key_2026');
+            const user = await User.findByPk(decoded.id || decoded.userId);
+            if (user && !isTokenStale(decoded, user)) {
+                req.user = user;
+            }
+        }
+    } catch (error) {
+        // Silently fail and proceed as guest
+    }
+    next();
 };
 
 module.exports = authMiddleware;

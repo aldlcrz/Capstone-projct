@@ -1,63 +1,56 @@
 "use client";
-import React, { useState } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import AdminLayout from "@/components/AdminLayout";
-import { Settings, TrendingUp, Target, DollarSign, Users, Store, ShieldCheck, Mail, Save, Clock, Trash2, ArrowRight } from "lucide-react";
-import { motion } from "framer-motion";
-
+import {
+  ShieldCheck, Save,
+  Loader2, AlertCircle, CheckCircle
+} from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
 import { api, getApiErrorMessage } from "@/lib/api";
-import { Loader2, AlertCircle } from "lucide-react";
 
 export default function AdminSettings() {
-  const [revenueTarget, setRevenueTarget] = useState(500000);
-  const [commissionRate, setCommissionRate] = useState(10);
   const [verificationRequired, setVerificationRequired] = useState(true);
-  const [automatedSupport, setAutomatedSupport] = useState(false);
-  const [publicLedger, setPublicLedger] = useState(true);
-  const [isSaving, setIsSaving] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const [automatedSupport, setAutomatedSupport]     = useState(false);
+  const [publicLedger, setPublicLedger]             = useState(true);
 
-  React.useEffect(() => {
-    const fetchSettings = async () => {
-      try {
-        setError(null);
-        const res = await api.get("/admin/settings");
-        const s = res.data;
-        if (s.revenueTarget) setRevenueTarget(s.revenueTarget);
-        if (s.commissionRate) setCommissionRate(s.commissionRate);
-        if (s.verificationRequired !== undefined) setVerificationRequired(s.verificationRequired);
-        if (s.automatedSupport !== undefined) setAutomatedSupport(s.automatedSupport);
-        if (s.publicLedger !== undefined) setPublicLedger(s.publicLedger);
-      } catch (err) {
-        console.error("Failed to fetch settings", err);
-        setError(getApiErrorMessage(err, "Failed to load platform parameters."));
-      } finally {
-        setIsLoading(false);
-      }
-    };
-    fetchSettings();
+  const [isSaving, setIsSaving]   = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError]         = useState(null);
+  const [success, setSuccess]     = useState(null);
+
+  const showSuccess = (msg) => {
+    setSuccess(msg);
+    setTimeout(() => setSuccess(null), 3000);
+  };
+
+  const fetchSettings = useCallback(async () => {
+    try {
+      setError(null);
+      const res = await api.get("/admin/settings");
+      const s = res.data;
+      if (s.verificationRequired !== undefined) setVerificationRequired(s.verificationRequired === true || s.verificationRequired === "true");
+      if (s.automatedSupport !== undefined)    setAutomatedSupport(s.automatedSupport === true || s.automatedSupport === "true");
+      if (s.publicLedger !== undefined)        setPublicLedger(s.publicLedger === true || s.publicLedger === "true");
+    } catch (err) {
+      console.error("Failed to fetch settings", err);
+      setError(getApiErrorMessage(err, "Failed to load platform parameters."));
+    } finally {
+      setIsLoading(false);
+    }
   }, []);
 
+  useEffect(() => { fetchSettings(); }, [fetchSettings]);
+
   const handleSaveSettings = async () => {
+    setError(null);
     try {
       setIsSaving(true);
-      setError(null);
-      // Frontend Guardian
-      if (commissionRate < 0 || commissionRate > 100) {
-        throw new Error("Order rate must be between 0 and 100%");
-      }
-      if (revenueTarget < 0) {
-        throw new Error("Growth target cannot be negative");
-      }
-
       await api.put("/admin/settings", {
-        revenueTarget,
-        commissionRate,
         verificationRequired,
         automatedSupport,
-        publicLedger
+        publicLedger,
       });
-      alert("Platform parameters synchronized successfully!");
+      showSuccess("Platform parameters synchronized successfully!");
     } catch (err) {
       setError(getApiErrorMessage(err, "Failed to sync governance."));
     } finally {
@@ -65,19 +58,13 @@ export default function AdminSettings() {
     }
   };
 
-  const handlePurgeCache = async () => {
-    if (!window.confirm("Are you sure you want to wipe platform temporary caches? This action will reset live session counters.")) return;
-    try {
-      await api.delete("/admin/purge-cache");
-      alert("Platform caches purged successfully!");
-    } catch (err) {
-      alert("Failed to purge platform caches.");
-    }
-  };
+
+
 
   return (
     <AdminLayout>
-      <div className="max-w-6xl mx-auto space-y-12 mb-20 animate-fade-in">
+      <div className="max-w-2xl mx-auto space-y-10 mb-20 animate-fade-in">
+        {/* Header */}
         <div>
           <div className="eyebrow">Main App Settings</div>
           <h1 className="font-serif text-4xl font-bold tracking-tight text-[var(--charcoal)] uppercase">
@@ -85,110 +72,64 @@ export default function AdminSettings() {
           </h1>
         </div>
 
-        <div className="grid grid-cols-1 xl:grid-cols-3 gap-10 items-start">
-          {/* Main Controls */}
-          <div className="xl:col-span-2 space-y-10">
-            {/* Revenue Targets Section */}
-            <div className="artisan-card p-12 space-y-10 shadow-2xl relative overflow-hidden bg-white">
-               <div className="absolute top-0 right-0 p-10 opacity-5 group-hover:scale-110 transition-transform"><Target className="w-24 h-24" /></div>
-               <div>
-                  <h3 className="text-xl font-bold text-[var(--charcoal)] mb-2 flex items-center gap-3"><TrendingUp className="w-6 h-6 text-[var(--rust)]" /> Sales Goals</h3>
-                  <p className="text-xs text-[var(--muted)] tracking-wider uppercase font-bold opacity-60">Set the target amount of money we want to make this month.</p>
-               </div>
+        {/* Global Toasts */}
+        <AnimatePresence>
+          {success && (
+            <motion.div
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0 }}
+              className="p-4 bg-green-50 border border-green-200 rounded-xl flex items-center gap-3 text-green-700 text-sm font-bold"
+            >
+              <CheckCircle className="w-4 h-4 shrink-0" /> {success}
+            </motion.div>
+          )}
+          {error && (
+            <motion.div
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0 }}
+              className="p-4 bg-red-50 border border-red-100 rounded-xl flex items-center gap-3 text-red-600 text-sm font-bold"
+            >
+              <AlertCircle className="w-4 h-4 shrink-0" /> {error}
+            </motion.div>
+          )}
+        </AnimatePresence>
 
-               <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
-                  <div className="space-y-4">
-                     <label className="text-[10px] font-bold text-[var(--muted)] uppercase tracking-[0.2em] flex items-center gap-2"><DollarSign className="w-3.5 h-3.5" /> Growth Target (PHP)</label>
-                     <div className="relative group">
-                        <input 
-                           type="number" 
-                           value={revenueTarget}
-                           onChange={(e) => setRevenueTarget(e.target.value)}
-                           className="w-full pl-10 pr-4 py-4 bg-[var(--input-bg)] border-2 border-transparent focus:border-[var(--rust)] focus:bg-white rounded-2xl outline-none font-bold text-lg transition-all"
-                        />
-                        <div className="absolute left-4 top-1/2 -translate-y-1/2 text-[var(--muted)] group-focus-within:text-[var(--rust)] font-serif font-bold transition-all">₱</div>
-                     </div>
-                  </div>
-                  <div className="space-y-4">
-                     <label className="text-[10px] font-bold text-[var(--muted)] uppercase tracking-[0.2em] flex items-center gap-2">Seller Fee Rate (%)</label>
-                     <div className="relative group">
-                        <input 
-                           type="number" 
-                           value={commissionRate}
-                           onChange={(e) => setCommissionRate(e.target.value)}
-                           className="w-full pl-6 pr-10 py-4 bg-[var(--input-bg)] border-2 border-transparent focus:border-[var(--rust)] focus:bg-white rounded-2xl outline-none font-bold text-lg transition-all"
-                        />
-                        <div className="absolute right-4 top-1/2 -translate-y-1/2 text-[var(--muted)] group-focus-within:text-[var(--rust)] font-serif font-bold transition-all">%</div>
-                     </div>
-                  </div>
-               </div>
-                <div className="pt-8 border-t border-[var(--border)] flex flex-col md:flex-row gap-4 items-center justify-between">
-                   <div className="text-xs text-[var(--muted)] italic">Settings will propagate across all artisan workshops in real-time.</div>
-                   <button 
-                     onClick={handleSaveSettings}
-                     disabled={isSaving}
-                     className="btn-primary px-10 py-4 shadow-xl flex items-center gap-2"
-                   >
-                      {isSaving ? <Loader2 className="w-4.5 h-4.5 animate-spin" /> : <Save className="w-4.5 h-4.5" />}
-                      {isSaving ? "Saving..." : "Save All Settings"}
-                   </button>
-                </div>
-
-                {error && (
-                   <div className="p-4 bg-red-50 border border-red-100 rounded-xl flex items-center gap-3 text-red-600 text-xs font-bold animate-shake">
-                      <AlertCircle className="w-4 h-4" />
-                      {error}
-                   </div>
-                )}
-            </div>
-
-            {/* Platform Policy Sliders */}
-            <div className="artisan-card p-10 space-y-8 bg-white/50 backdrop-blur-md shadow-2xl">
-               <h3 className="text-xl font-bold flex items-center gap-3"><ShieldCheck className="w-6 h-6 text-[var(--rust)]" /> App Rules</h3>
-               
-               <div className="divide-y divide-[var(--border)]">
-                  <PolicySwitch 
-                    label="Check Seller ID" 
-                    desc="Ask for IDs when a new seller signs up."
-                    active={verificationRequired}
-                    toggle={() => setVerificationRequired(!verificationRequired)}
-                  />
-                   <PolicySwitch 
-                     label="Auto Help" 
-                     desc="Use AI to answer common questions for customers."
-                     active={automatedSupport}
-                     toggle={() => setAutomatedSupport(!automatedSupport)}
-                   />
-                   <PolicySwitch 
-                     label="Show Stats on Start Page" 
-                     desc="Show total sales amount on the public landing page."
-                     active={publicLedger}
-                     toggle={() => setPublicLedger(!publicLedger)}
-                   />
-               </div>
-            </div>
+        {/* App Rules */}
+        <div className="artisan-card p-10 space-y-8 bg-white/50 backdrop-blur-md shadow-2xl">
+          <h3 className="text-xl font-bold flex items-center gap-3">
+            <ShieldCheck className="w-6 h-6 text-[var(--rust)]" /> App Rules
+          </h3>
+          <div className="divide-y divide-[var(--border)]">
+            <PolicySwitch
+              label="Check Seller ID"
+              desc="Require identity documents when a new seller signs up."
+              active={verificationRequired}
+              toggle={() => setVerificationRequired(v => !v)}
+            />
+            <PolicySwitch
+              label="Auto Help"
+              desc="Use AI to answer common customer questions automatically."
+              active={automatedSupport}
+              toggle={() => setAutomatedSupport(v => !v)}
+            />
+            <PolicySwitch
+              label="Show Stats on Start Page"
+              desc="Display total sales figure on the public landing page."
+              active={publicLedger}
+              toggle={() => setPublicLedger(v => !v)}
+            />
           </div>
-
-          {/* Right: Side Actions */}
-          <div className="space-y-8">
-             <div className="artisan-card p-8 bg-[var(--bark)] text-white shadow-2xl relative overflow-hidden group">
-                <div className="absolute top-0 right-0 p-8 opacity-10 group-hover:rotate-12 transition-transform"><Clock className="w-20 h-20" /></div>
-                <div className="space-y-6 relative z-10">
-                   <h3 className="font-serif text-xl font-bold italic tracking-tight underline decoration-[var(--rust)] underline-offset-8">Recent Changes</h3>
-                   <div className="space-y-4">
-                      <AuditItem user="Root Admin" action="Updated verification flag" time="2h ago" />
-                      <AuditItem user="System" action="Monthly stats broadcast" time="5h ago" />
-                      <AuditItem user="Moderator" action="Revoked artisan access #88" time="1d ago" />
-                   </div>
-                   <button className="w-full mt-4 flex items-center justify-center gap-2 text-[10px] font-bold uppercase tracking-widest text-white/60 hover:text-white transition-all underline decoration-1">View Enterprise Compliance Feed <ArrowRight className="w-3.5 h-3.5" /></button>
-                </div>
-             </div>
-
-             <div className="artisan-card p-8 border-2 border-red-100 bg-red-50/50 space-y-6 shadow-sm">
-                <div className="text-xs font-bold text-red-600 uppercase tracking-widest flex items-center gap-2 border-b border-red-100 pb-2"><Trash2 className="w-4 h-4" /> Danger Zone</div>
-                <p className="text-[10px] text-red-700/60 leading-relaxed font-bold">This section is for clearing data. Please be very careful here.</p>
-                <button onClick={handlePurgeCache} className="w-full py-3 bg-red-600 text-white rounded-xl text-[10px] font-bold uppercase tracking-widest shadow-xl hover:bg-red-700 transition-all">Clear App Cache</button>
-             </div>
+          <div className="pt-4">
+            <button
+              onClick={handleSaveSettings}
+              disabled={isSaving || isLoading}
+              className="btn-primary px-8 py-3 flex items-center gap-2 text-sm disabled:opacity-60"
+            >
+              {isSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
+              {isSaving ? "Saving…" : "Save Rules"}
+            </button>
           </div>
         </div>
       </div>
@@ -199,30 +140,16 @@ export default function AdminSettings() {
 function PolicySwitch({ label, desc, active, toggle }) {
   return (
     <div className="py-6 flex items-center justify-between group">
-       <div className="space-y-1">
-          <div className="text-sm font-bold text-[var(--charcoal)] group-hover:text-[var(--rust)] transition-colors">{label}</div>
-          <div className="text-[10px] text-[var(--muted)] font-bold tracking-tight max-w-[280px]">{desc}</div>
-       </div>
-       <button 
-          onClick={toggle}
-          className={`w-14 h-8 rounded-full relative transition-all duration-500 shadow-inner ${active ? 'bg-[var(--rust)] ring-4 ring-red-50' : 'bg-[var(--border)]'}`}
-        >
-          <motion.div 
-             animate={{ x: active ? 28 : 4 }}
-             className="absolute top-1 w-6 h-6 bg-white rounded-full shadow-lg border-2 border-transparent" 
-          />
-       </button>
-    </div>
-  );
-}
-
-function AuditItem({ user, action, time }) {
-  return (
-    <div className="flex items-center gap-4 text-xs font-medium border-l-2 border-white/10 pl-4 py-1">
-       <div className="flex-1">
-          <span className="text-white font-bold">{user}</span> <span className="text-white/40 italic">{action}</span>
-       </div>
-       <div className="text-[9px] font-bold text-white/30 uppercase tracking-tighter shrink-0">{time}</div>
+      <div className="space-y-1">
+        <div className="text-sm font-bold text-[var(--charcoal)] group-hover:text-[var(--rust)] transition-colors">{label}</div>
+        <div className="text-[10px] text-[var(--muted)] font-bold tracking-tight max-w-[280px]">{desc}</div>
+      </div>
+      <button
+        onClick={toggle}
+        className={`w-14 h-8 rounded-full relative transition-all duration-500 shadow-inner ${active ? "bg-[var(--rust)] ring-4 ring-red-50" : "bg-[var(--border)]"}`}
+      >
+        <motion.div animate={{ x: active ? 28 : 4 }} className="absolute top-1 w-6 h-6 bg-white rounded-full shadow-lg" />
+      </button>
     </div>
   );
 }

@@ -40,7 +40,7 @@ export default function CartPage() {
   }, []);
 
   const toggleItemSelection = (id, size, variation = "") => {
-    const key = `${id}-${size}-${variation}`;
+    const key = `${id}-${size}-${variation || ""}`;
     setSelectedItems(prev => 
       prev.includes(key) ? prev.filter(k => k !== key) : [...prev, key]
     );
@@ -57,7 +57,9 @@ export default function CartPage() {
   const updateQuantity = (id, size, variation, delta) => {
     const updated = cartItems.map(item => {
       if (item.id === id && item.size === size && (item.variation || "") === (variation || "")) {
-        return { ...item, quantity: Math.max(1, item.quantity + delta) };
+        const maxQty = item.stock > 0 ? item.stock : Infinity;
+        const newQty = Math.max(1, Math.min(maxQty, item.quantity + delta));
+        return { ...item, quantity: newQty };
       }
       return item;
     });
@@ -180,7 +182,7 @@ export default function CartPage() {
                            {/* Product Rows */}
                            <div className="divide-y divide-[var(--border)] bg-white">
                               {groupedItems[artisan].map((item, idx) => {
-                                 const itemKey = `${item.id}-${item.size}`;
+                                 const itemKey = `${item.id}-${item.size}-${item.variation || ""}`;
                                  const isSelected = selectedItems.includes(itemKey);
                                  const priceVal = getPriceNumber(item.price);
                                  const itemTotal = priceVal * item.quantity;
@@ -192,7 +194,7 @@ export default function CartPage() {
                                           <input 
                                              type="checkbox" 
                                              checked={isSelected}
-                                             onChange={() => toggleItemSelection(item.id, item.size)}
+                                             onChange={() => toggleItemSelection(item.id, item.size, item.variation)}
                                              className="w-4 h-4 rounded border-[#D1D1D1] text-[var(--rust)] focus:ring-[var(--rust)] cursor-pointer shrink-0" 
                                           />
                                           <div className="w-16 h-16 sm:w-20 sm:h-20 bg-[#FDFBF9] border border-[var(--border)] rounded-xl overflow-hidden shrink-0 flex items-center justify-center p-1">
@@ -267,9 +269,10 @@ export default function CartPage() {
                            <span className="font-serif text-[24px] font-bold text-[var(--rust)] italic">₱{total.toLocaleString()}</span>
                         </div>
                         <button 
+                           type="button"
                            onClick={handleCheckout}
                            disabled={selectedItems.length === 0}
-                           className="flex-1 md:px-10 py-3.5 bg-[#D4AFA7] text-white rounded-xl text-[10px] font-extrabold uppercase tracking-[0.2em] shadow-lg shadow-pink-900/5 hover:bg-[var(--rust)] transition-all disabled:opacity-50 disabled:grayscale transition-all active:scale-95"
+                           className="flex-1 md:px-10 py-3.5 bg-[var(--rust)] text-white rounded-xl text-[10px] font-extrabold uppercase tracking-[0.2em] shadow-lg shadow-pink-900/5 hover:bg-[#A33420] transition-all disabled:bg-[#E5DDD5] disabled:text-[var(--muted)] disabled:opacity-50 disabled:grayscale transition-all active:scale-95"
                         >
                            CHECK OUT ({selectedItems.length})
                         </button>
@@ -301,9 +304,10 @@ export default function CartPage() {
 
                   <div className="space-y-6 pt-4">
                      <button 
+                       type="button"
                        onClick={handleCheckout}
                        disabled={selectedItems.length === 0}
-                       className="w-full py-5 bg-[#D4AFA7] text-white rounded-[1.2rem] text-[11px] font-extrabold uppercase tracking-[0.2em] shadow-lg shadow-pink-900/10 hover:bg-[var(--rust)] transition-all flex items-center justify-center gap-2 group/btn disabled:opacity-50 active:scale-[0.98]"
+                       className="w-full py-5 bg-[var(--rust)] text-white rounded-[1.2rem] text-[11px] font-extrabold uppercase tracking-[0.2em] shadow-lg shadow-pink-900/10 hover:bg-[#A33420] transition-all flex items-center justify-center gap-2 group/btn disabled:bg-[#E5DDD5] disabled:text-[var(--muted)] disabled:opacity-50 active:scale-[0.98]"
                      >
                         CHECK OUT ({selectedItems.length})
                      </button>

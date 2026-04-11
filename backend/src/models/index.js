@@ -8,6 +8,8 @@ const Notification = require('./Notification');
 const Address = require('./Address');
 const SystemSetting = require('./SystemSetting');
 const ReturnRequest = require('./ReturnRequest');
+const ProductView = require('./ProductView');
+const Review = require('./Review');
 
 // Associations
 
@@ -54,6 +56,22 @@ ReturnRequest.belongsTo(Order, { foreignKey: 'orderId' });
 Category.hasMany(Category, { as: 'children', foreignKey: 'parentId' });
 Category.belongsTo(Category, { as: 'parent', foreignKey: 'parentId' });
 
+// Product <-> ProductView
+Product.hasMany(ProductView, { foreignKey: 'productId', as: 'productViews' });
+ProductView.belongsTo(Product, { foreignKey: 'productId' });
+
+// User <-> ProductView (as Seller)
+User.hasMany(ProductView, { foreignKey: 'sellerId', as: 'sellerViews' });
+ProductView.belongsTo(User, { foreignKey: 'sellerId', as: 'seller' });
+
+// Product <-> Review
+Product.hasMany(Review, { foreignKey: 'productId', as: 'reviews' });
+Review.belongsTo(Product, { foreignKey: 'productId' });
+
+// User <-> Review (Customer)
+User.hasMany(Review, { foreignKey: 'customerId', as: 'givenReviews' });
+Review.belongsTo(User, { foreignKey: 'customerId', as: 'customer' });
+
 const sequelize = require('../config/db');
 
 module.exports = {
@@ -67,5 +85,7 @@ module.exports = {
   Address,
   SystemSetting,
   ReturnRequest,
+  ProductView,
+  Review,
   sequelize,
 };

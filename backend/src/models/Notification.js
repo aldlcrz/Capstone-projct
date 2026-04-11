@@ -35,6 +35,10 @@ const Notification = sequelize.define('Notification', {
     type: DataTypes.BOOLEAN,
     defaultValue: false,
   },
+  targetRole: {
+    type: DataTypes.STRING, // 'customer' or 'seller'
+    defaultValue: 'customer',
+  },
 }, {
   timestamps: true,
 });

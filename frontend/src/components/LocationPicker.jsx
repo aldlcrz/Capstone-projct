@@ -45,6 +45,7 @@ function MapEvents({ onLocationSelect, markerPosition, setMarkerPosition }) {
 
 export default function LocationPicker({ 
   onLocationFound, 
+  onConfirm,
   initialLat = 14.2952, // Default to Lumban, Laguna approx
   initialLng = 121.4647,
   autoLocate = true
@@ -100,6 +101,10 @@ export default function LocationPicker({
       }
       
       await performReverseGeocoding(lat, lon);
+      
+      if (onConfirm) {
+        setTimeout(() => onConfirm(), 500); // Auto-confirm after locating
+      }
     } catch (error) {
       console.error("Geolocation failed:", error);
       alert("Could not determine your current location. Please check your permissions.");
@@ -143,10 +148,17 @@ export default function LocationPicker({
     }
   };
 
-  const handleSearchClick = (e) => {
+  const handleSearchClick = async (e) => {
     e.preventDefault();
     if (searchQuery.trim()) {
-      handleSearch();
+      await handleSearch();
+      if (onConfirm) {
+          // Tiny buffer to let Leaflet animations or address states settle before unmounting map
+          setTimeout(() => onConfirm(), 200);
+      }
+    } else {
+      // If no search text, use current location and pin
+      await handleCurrentLocation();
     }
   };
 
@@ -218,20 +230,11 @@ export default function LocationPicker({
         </div>
         <button 
           type="button" 
-          onClick={handleCurrentLocation}
-          disabled={searching}
-          className="bg-white border-2 border-[var(--border)] text-[var(--muted)] hover:text-[var(--rust)] hover:border-[var(--rust)] w-12 rounded-xl flex items-center justify-center transition-all"
-          title="Use My Location"
-        >
-          <Navigation className="w-4 h-4" />
-        </button>
-        <button 
-          type="button" 
           onClick={handleSearchClick}
           disabled={searching}
-          className="bg-[var(--rust)] text-white px-5 rounded-xl text-xs font-bold hover:bg-[#b03b25] transition-all flex items-center justify-center min-w-[100px]"
+          className="bg-[var(--rust)] text-white px-5 rounded-xl text-[11px] uppercase tracking-widest font-bold hover:bg-[#b03b25] transition-all flex items-center justify-center min-w-[140px] gap-2 shrink-0 shadow-sm"
         >
-          {searching ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Pin Address'}
+          {searching ? <Loader2 className="w-4 h-4 animate-spin" /> : <><Navigation className="w-3.5 h-3.5" /> Pin Address</>}
         </button>
       </div>
 

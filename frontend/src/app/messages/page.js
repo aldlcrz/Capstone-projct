@@ -165,7 +165,10 @@ function MessagesThreadManager() {
         setActiveThread(realThread);
       }
 
-      setMessages(prev => [...prev, res.data]);
+      setMessages(prev => {
+        if (prev.some(m => m.id === res.data.id)) return prev;
+        return [...prev, res.data];
+      });
       setNewMessage("");
     } catch (err) {
       console.error("Failed to send message");
