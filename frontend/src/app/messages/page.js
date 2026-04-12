@@ -345,7 +345,11 @@ function MessagesUI({
                 </div>
 
                 {messages.map((msg, i) => {
-                  const storedUser = JSON.parse(localStorage.getItem("user") || "{}");
+                  let storedUser = {};
+                  try {
+                    storedUser = JSON.parse(localStorage.getItem("customer_user") || localStorage.getItem("user") || "{}");
+                  } catch(e) {}
+                  
                   const msgSenderId = msg.senderId || msg.sender?.id;
                   const isMe = String(msgSenderId) === String(storedUser.id);
                   const senderName = msg.sender?.name || activeThread.otherUser?.name || 'User';

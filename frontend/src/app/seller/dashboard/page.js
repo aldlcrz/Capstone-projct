@@ -33,6 +33,7 @@ const EMPTY_TOP = [{ name: "No data yet", sales: 0 }];
 
 export default function SellerDashboard() {
   const [mounted, setMounted] = useState(false);
+  const [showRevenueTrend, setShowRevenueTrend] = useState(false);
   const [dateFilter, setDateFilter] = useState("month");
   const [stats, setStats] = useState({ 
     revenue: 0, 
@@ -184,113 +185,194 @@ export default function SellerDashboard() {
           <KPICard label="Inquiries"     value={loading ? "—" : (stats?.inquiries || 0)}                       icon={<MessageCircle className="w-5 h-5" />} bg="bg-white" textColor="text-[var(--charcoal)]" />
         </div>
 
-        {/* Revenue Trend Chart */}
-        <div className="artisan-card min-h-[400px] flex flex-col">
-          <div className="flex items-center justify-between mb-8">
-            <div>
-              <h3 className="text-xl font-bold text-[var(--charcoal)] mb-1">Revenue Trend</h3>
-              <div className="text-xs text-[var(--muted)] tracking-wider">
-                Financial performance · {FILTER_LABELS[dateFilter]}
-                {loading && <RefreshCw className="inline-block w-3 h-3 ml-2 animate-spin opacity-60" />}
-              </div>
-            </div>
-            <TrendingUp className="w-6 h-6 text-[var(--rust)]" />
-          </div>
 
-          <div className="flex-1 w-full h-[300px] min-h-[300px] relative">
-            {loading ? (
-              <div className="absolute inset-0 flex items-center justify-center">
-                <RefreshCw className="w-8 h-8 text-[var(--muted)] animate-spin opacity-30" />
-              </div>
-            ) : (
-              <div className="absolute inset-0">
-                <ResponsiveContainer key={`trend-${filterKey}`} width="100%" height="100%">
-                  <AreaChart data={stats.performance || []} margin={{ top: 10, right: 20, left: 0, bottom: 20 }}>
-                    <defs>
-                      <linearGradient id="colorRevenue" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="5%" stopColor="#C0422A" stopOpacity={0.3}/>
-                        <stop offset="95%" stopColor="#C0422A" stopOpacity={0}/>
-                      </linearGradient>
-                    </defs>
-                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E5DDD5" />
-                    <XAxis 
-                      dataKey="name" 
-                      axisLine={false} 
-                      tickLine={false} 
-                      tick={{ fontSize: 11, fill: "#8C7B70", fontWeight: "600", fontFamily: '"Playfair Display", Georgia, serif' }} 
-                      dy={8}
-                    />
-                    <YAxis 
-                      axisLine={false} 
-                      tickLine={false} 
-                      tick={{ fontSize: 11, fill: "#8C7B70", fontWeight: "600", fontFamily: '"Playfair Display", Georgia, serif' }}
-                      tickFormatter={(v) => v === 0 ? "" : `₱${v.toLocaleString()}`}
-                    />
-                    <Tooltip 
-                      contentStyle={{ background: "#1c1917", border: "none", borderRadius: "14px", color: "#fff", padding: "12px 16px" }}
-                      itemStyle={{ color: "#fff", fontStyle: "italic", fontWeight: "bold" }}
-                      labelStyle={{ fontWeight: "bold", fontSize: "12px", marginBottom: "4px", color: "#a8a29e" }}
-                      formatter={(val) => [`₱${val.toLocaleString()}`, "Revenue"]}
-                    />
-                    <Area type="monotone" dataKey="sales" stroke="#C0422A" strokeWidth={3} fillOpacity={1} fill="url(#colorRevenue)" animationDuration={1000} />
-                  </AreaChart>
-                </ResponsiveContainer>
-              </div>
-            )}
-          </div>
-        </div>
 
-        {/* Top Products Bar Chart — re-mounts on each data refresh */}
-        <div className="artisan-card min-h-[450px] flex flex-col">
-          <div className="flex items-center justify-between mb-8">
+        {/* Revenue Trend Chart (Toggleable) */}
+        <AnimatePresence>
+          {showRevenueTrend && (
+            <motion.div 
+              initial={{ opacity: 0, height: 0, marginBottom: 0 }} 
+              animate={{ opacity: 1, height: 'auto', marginBottom: 32 }} 
+              exit={{ opacity: 0, height: 0, marginBottom: 0, overflow: 'hidden' }}
+              className="bg-white rounded-[24px] border border-[var(--border)] p-6 md:p-8 shadow-sm"
+            >
+              <div className="flex items-start justify-between mb-6">
+                <div>
+                  <h3 className="text-xl font-bold text-[var(--charcoal)] mb-1">Revenue trend</h3>
+                  <div className="text-xs text-[var(--muted)] font-medium">
+                    Financial performance · {FILTER_LABELS[dateFilter]}
+                    {loading && <RefreshCw className="inline-block w-3 h-3 ml-2 animate-spin opacity-60" />}
+                  </div>
+                </div>
+                <button 
+                  onClick={() => setShowRevenueTrend(false)}
+                  className="p-2.5 rounded-xl transition-all shadow-sm border bg-[var(--rust)] border-[var(--rust)] text-white hover:bg-[#a33520] hover:border-[#a33520]"
+                  title="Hide Revenue Trend"
+                >
+                  <TrendingUp className="w-5 h-5 pointer-events-none" />
+                </button>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+                <div className="bg-[#f7f6f2] rounded-2xl p-5">
+                  <div className="text-xs font-semibold text-[var(--charcoal)] opacity-80 mb-2">Total revenue</div>
+                  <div className="text-2xl font-semibold text-[var(--charcoal)] flex items-baseline gap-2">
+                    ₱{(stats?.revenue || 0).toLocaleString()} <span className="text-xs font-medium text-[var(--muted)]">this period</span>
+                  </div>
+                </div>
+                <div className="bg-[#f7f6f2] rounded-2xl p-5">
+                  <div className="text-xs font-semibold text-[var(--charcoal)] opacity-80 mb-2">Units sold</div>
+                  <div className="text-2xl font-semibold text-[var(--charcoal)] flex items-baseline gap-2">
+                    {stats?.topProducts?.reduce((sum, p) => sum + p.sales, 0) || 0} <span className="text-xs font-medium text-[var(--muted)]">items (top 5)</span>
+                  </div>
+                </div>
+                <div className="bg-[#f7f6f2] rounded-2xl p-5">
+                  <div className="text-xs font-semibold text-[var(--charcoal)] opacity-80 mb-2">Avg. order</div>
+                  <div className="text-2xl font-semibold text-[var(--charcoal)] flex items-baseline gap-2">
+                    ₱{stats?.orders ? (stats.revenue / stats.orders).toFixed(1) : 0} <span className="text-xs font-medium text-[var(--muted)]">/ order</span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="w-full h-[250px] relative">
+                {loading ? (
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <RefreshCw className="w-8 h-8 text-[var(--muted)] animate-spin opacity-30" />
+                  </div>
+                ) : (
+                  <ResponsiveContainer key={`trend-${filterKey}`} width="100%" height="100%">
+                    <AreaChart data={stats.performance || []} margin={{ top: 10, right: 0, left: -20, bottom: 0 }}>
+                      <defs>
+                        <linearGradient id="colorRevenue" x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="5%" stopColor="#C0422A" stopOpacity={0.15}/>
+                          <stop offset="95%" stopColor="#C0422A" stopOpacity={0}/>
+                        </linearGradient>
+                      </defs>
+                      <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E5DDD5" />
+                      <XAxis 
+                        dataKey="name" 
+                        axisLine={false} 
+                        tickLine={false} 
+                        tick={{ fontSize: 10, fill: "#8C7B70", fontWeight: "600" }} 
+                        dy={10}
+                      />
+                      <YAxis 
+                        axisLine={false} 
+                        tickLine={false} 
+                        tick={{ fontSize: 10, fill: "#8C7B70", fontWeight: "600" }}
+                        tickFormatter={(v) => v === 0 ? "" : `₱${(v/1000).toFixed(0)}k`}
+                      />
+                      <Tooltip 
+                        contentStyle={{ background: "#fff", border: "1px solid #E5DDD5", borderRadius: "12px", color: "#1c1917", padding: "10px 14px", boxShadow: "0 10px 25px -5px rgba(0, 0, 0, 0.1)" }}
+                        itemStyle={{ color: "#C0422A", fontWeight: "bold" }}
+                        labelStyle={{ fontWeight: "bold", fontSize: "11px", marginBottom: "4px", color: "#8c7b70" }}
+                        formatter={(val) => [`₱${val.toLocaleString()}`, "Revenue"]}
+                      />
+                      <Area type="monotone" dataKey="sales" stroke="#C0422A" strokeWidth={2.5} fillOpacity={1} fill="url(#colorRevenue)" animationDuration={1000} />
+                    </AreaChart>
+                  </ResponsiveContainer>
+                )}
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {/* Top Products (New Layout) */}
+        <div className="bg-white rounded-[24px] border border-[var(--border)] p-6 md:p-8 shadow-sm">
+          <div className="flex items-start justify-between mb-8">
             <div>
-              <h3 className="text-xl font-bold text-[var(--charcoal)] mb-1">Top Products</h3>
-              <div className="text-xs text-[var(--muted)] tracking-wider">
+              <h3 className="text-xl font-bold text-[var(--charcoal)] mb-1">Top products</h3>
+              <div className="text-xs text-[var(--muted)] font-medium">
                 Most sold products · {FILTER_LABELS[dateFilter]}
-                {loading && <RefreshCw className="inline-block w-3 h-3 ml-2 animate-spin opacity-60" />}
               </div>
             </div>
-            <BarChart3 className="w-6 h-6 text-[var(--rust)]" />
+            <button 
+              onClick={() => setShowRevenueTrend(!showRevenueTrend)} 
+              className={`p-2.5 rounded-xl transition-all shadow-sm border ${showRevenueTrend ? 'bg-[var(--rust)] border-[var(--rust)] text-white' : 'bg-white border-[var(--border)] text-[var(--rust)] hover:bg-[#FAF9F7]'}`}
+              title={showRevenueTrend ? "Hide Revenue Trend" : "Show Revenue Trend"}
+            >
+              <BarChart3 className="w-5 h-5 pointer-events-none" />
+            </button>
           </div>
+          <div className="space-y-4">
+            <div className="grid grid-cols-12 gap-4 px-4 pb-2 text-[11px] font-semibold text-[var(--muted)] border-b border-[var(--border)]">
+              <div className="col-span-3 flex items-end gap-1">
+                <span>Product</span>
+                <span className="text-[var(--charcoal)]">name</span>
+              </div>
+              <div className="col-span-2 flex items-end">category</div>
+              <div className="col-span-3 flex items-end">Sales volume</div>
+              <div className="col-span-2 flex items-end">Rating</div>
+              <div className="col-span-2 flex items-end">Status</div>
+            </div>
 
-          <div className="flex-1 w-full min-h-[350px]">
             {loading ? (
-              <div className="h-full flex items-center justify-center">
-                <RefreshCw className="w-8 h-8 text-[var(--muted)] animate-spin opacity-30" />
+              <div className="py-12 flex items-center justify-center">
+                <RefreshCw className="w-6 h-6 text-[var(--muted)] animate-spin opacity-30" />
+              </div>
+            ) : (!stats.topProducts || stats.topProducts.length === 0) ? (
+              <div className="py-12 text-center text-sm font-medium text-[var(--muted)]">
+                No product sales yet in this period.
               </div>
             ) : (
-              <ResponsiveContainer key={`top-${filterKey}`} width="100%" height="100%">
-                <BarChart data={topProducts} margin={{ top: 10, right: 20, left: 0, bottom: 20 }}>
-                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E5DDD5" />
-                  <XAxis
-                    dataKey="name"
-                    axisLine={false}
-                    tickLine={false}
-                    tick={{ fontSize: 11, fill: "#8C7B70", fontWeight: "600", fontFamily: '"Playfair Display", Georgia, serif' }}
-                    tickFormatter={(val) => val.length > 16 ? val.substring(0, 16) + "…" : val}
-                    dy={8}
-                  />
-                  <YAxis
-                    axisLine={false}
-                    tickLine={false}
-                    allowDecimals={false}
-                    tick={{ fontSize: 11, fill: "#8C7B70", fontWeight: "600", fontFamily: '"Playfair Display", Georgia, serif' }}
-                    tickFormatter={(v) => v === 0 ? "" : v}
-                  />
-                  <Tooltip
-                    cursor={{ fill: "rgba(192,66,42,0.04)" }}
-                    contentStyle={{ background: "#1c1917", border: "none", borderRadius: "14px", color: "#fff", padding: "12px 16px" }}
-                    itemStyle={{ color: "#fff", fontStyle: "italic" }}
-                    labelStyle={{ fontWeight: "bold", fontSize: "12px", marginBottom: "4px" }}
-                    formatter={(val) => [val, "Units Sold"]}
-                  />
-                  <Bar dataKey="sales" radius={[6, 6, 0, 0]} animationDuration={1000} animationBegin={0}>
-                    {topProducts.map((_, i) => (
-                      <Cell key={i} fill={i === 0 ? "#C0422A" : `rgba(192,66,42,${Math.max(0.3, 1 - i * 0.15)})`} />
-                    ))}
-                  </Bar>
-                </BarChart>
-              </ResponsiveContainer>
+              stats.topProducts.map((prod, i) => {
+                const max = prod.maxSalesRef || 1;
+                const pct = Math.max((prod.sales / max) * 100, 2);
+                
+                let statusColor = "bg-[#fcedeb] text-[#c95a46]";
+                if (prod.status === "Top seller") statusColor = "bg-[#eaf5eb] text-[#3b8c4c]";
+                else if (prod.status === "Trending") statusColor = "bg-[#fcf5e3] text-[#b88c35]";
+
+                return (
+                  <motion.div 
+                    key={prod.id || i}
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: i * 0.05 }}
+                    className="grid grid-cols-12 gap-4 items-center bg-[#f7f6f2] rounded-xl p-4 transition-all hover:bg-[#f1efe9]"
+                  >
+                    <div className="col-span-3 pr-4 flex flex-col justify-center">
+                      <div className="text-[13px] font-bold text-[var(--charcoal)] leading-tight truncate">{prod.name}</div>
+                    </div>
+
+                    <div className="col-span-2 flex items-center pr-4">
+                      <div className="text-[12px] font-semibold text-[var(--charcoal)] lowercase truncate">{prod.category || "formal"}</div>
+                    </div>
+
+                    <div className="col-span-3 pr-4">
+                      <div className="flex items-center gap-2 mb-1.5 h-1.5 w-full bg-[#e3dfd7] rounded-full overflow-hidden">
+                        <motion.div 
+                          initial={{ width: 0 }} animate={{ width: `${pct}%` }} transition={{ duration: 1, delay: 0.2 + (i * 0.1) }}
+                          className="h-full bg-[var(--rust)] rounded-full"
+                        />
+                      </div>
+                      <div className="text-[11px] font-medium text-[var(--charcoal)]">
+                        {prod.sales} sold <span className="opacity-40">·</span> ₱{prod.revenue?.toLocaleString() || 0}
+                      </div>
+                    </div>
+
+                    <div className="col-span-2 flex flex-col justify-center">
+                      <div className="flex items-center gap-1 mb-1">
+                        <div className="flex">
+                          {[1,2,3,4,5].map(star => (
+                            <svg key={star} className={`w-3 h-3 ${star <= Math.round(prod.rating) ? 'text-[#e56d4b] fill-current' : 'text-[#e3dfd7] fill-current'}`} viewBox="0 0 20 20">
+                              <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                            </svg>
+                          ))}
+                        </div>
+                        <span className="text-[12px] font-bold text-[var(--charcoal)] ml-1">{prod.rating?.toFixed(1) || "4.5"}</span>
+                      </div>
+                      <div className="text-[10px] text-[var(--muted)]">{prod.reviewsCount || 0} reviews</div>
+                    </div>
+
+                    <div className="col-span-2">
+                      <span className={`px-2.5 py-1 rounded-full text-[10px] font-bold ${statusColor} whitespace-nowrap`}>
+                        {prod.status || "Trending"}
+                      </span>
+                    </div>
+                  </motion.div>
+                );
+              })
             )}
           </div>
         </div>

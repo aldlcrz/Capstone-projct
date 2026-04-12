@@ -13,7 +13,8 @@ import {
   LogOut,
   Menu,
   PlusCircle,
-  X
+  X,
+  CheckCheck
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
@@ -57,9 +58,10 @@ export default function SellerLayout({ children }) {
   const [unreadCount, setUnreadCount] = useState(0);
   const [isPopoutOpen, setIsPopoutOpen] = useState(false);
   const { socket } = useSocket();
+  const router = useRouter();
 
   const fetchNotifications = React.useCallback(async () => {
-    const token = localStorage.getItem("seller_token") || localStorage.getItem("token");
+    const token = localStorage.getItem("seller_token");
     if (!token || token === "null" || token === "undefined") return;
     try {
       const res = await api.get("/notifications");
@@ -76,22 +78,17 @@ export default function SellerLayout({ children }) {
 
   React.useEffect(() => {
     const checkAuth = () => {
-      // Use role-specific keys first to allow multi-tab sessions
-      let storedUser = JSON.parse(localStorage.getItem("seller_user") || "null");
-      let token = localStorage.getItem("seller_token");
-
-      // Fallback to generic keys
-      if (!token || !storedUser) {
-        storedUser = JSON.parse(localStorage.getItem("user") || "null");
-        token = localStorage.getItem("token");
-      }
+      // Only use role-specific keys — no generic fallback to prevent cross-tab contamination
+      const storedUser = JSON.parse(localStorage.getItem("seller_user") || "null");
+      const token = localStorage.getItem("seller_token");
 
       setUser(storedUser);
 
-      // Safety redirect: If not seller or admin, bounce to home
-      // Only do this if we are convinced no valid session exists
-      if (storedUser && storedUser.role && storedUser.role !== 'seller' && storedUser.role !== 'admin') {
-        window.location.href = "/";
+      // If no valid seller session, redirect to login
+      if (!token || !storedUser || (storedUser.role !== 'seller' && storedUser.role !== 'admin')) {
+        if (!window.location.pathname.includes("/login")) {
+          window.location.href = "/login";
+        }
       }
     };
 
@@ -128,8 +125,18 @@ export default function SellerLayout({ children }) {
     }
   };
 
+  const markAllAsRead = async () => {
+    try {
+      await api.put(`/notifications/read-all`);
+      setNotifications(prev => prev.map(n => ({ ...n, read: true })));
+      setUnreadCount(0);
+    } catch (error) {
+      console.error("Failed to mark all notifications as read");
+    }
+  };
+
   const handleLogout = () => {
-    clearSession();
+    clearSession('seller');
     window.location.href = "/";
   };
 
@@ -232,9 +239,19 @@ export default function SellerLayout({ children }) {
                         exit={{ opacity: 0, y: 10, scale: 0.95 }}
                         className="absolute right-0 mt-3 w-80 md:w-96 max-h-[500px] bg-white rounded-2xl shadow-2xl border border-[var(--border)] overflow-hidden z-50 flex flex-col"
                       >
-                        <div className="p-5 border-b border-[var(--border)] flex items-center justify-between bg-stone-50/50">
-                          <h3 className="font-serif font-bold text-[var(--charcoal)]">Artisan Alerts</h3>
-                          <span className="text-[10px] font-black tracking-widest text-[var(--muted)] opacity-50 uppercase">{unreadCount} New</span>
+                        <div className="p-3 lg:p-5 border-b border-[var(--border)] flex items-center justify-between bg-stone-50/50">
+                          <div>
+                            <h3 className="font-serif font-bold text-[var(--charcoal)] leading-tight">Artisan Alerts</h3>
+                            {unreadCount > 0 && <span className="text-[10px] font-black tracking-widest text-[var(--muted)] opacity-50 uppercase">{unreadCount} New</span>}
+                          </div>
+                          {unreadCount > 0 && (
+                            <button
+                              onClick={markAllAsRead}
+                              className="text-[10px] bg-[var(--cream)] border border-[var(--border)] hover:bg-[var(--rust)] hover:text-white transition-all rounded-md px-2 py-1 font-bold text-[var(--charcoal)] tracking-wider flex items-center gap-1"
+                            >
+                              <CheckCheck className="w-3 h-3" /> Mark All Read
+                            </button>
+                          )}
                         </div>
                         <div className="flex-1 overflow-y-auto custom-scrollbar p-2">
                           {notifications.length === 0 ? (
@@ -249,7 +266,14 @@ export default function SellerLayout({ children }) {
                                 return (
                                   <div
                                     key={notif.id}
-                                    className={`relative p-4 rounded-xl transition-all group ${!n.read ? 'bg-[var(--cream)]/40 hover:bg-[var(--cream)]/60' : 'hover:bg-stone-50'}`}
+                                    onClick={() => {
+                                      if (n.link) {
+                                        if (!n.read) markAsRead(notif.id);
+                                        router.push(n.link);
+                                        setIsPopoutOpen(false);
+                                      }
+                                    }}
+                                    className={`relative p-4 rounded-xl transition-all group ${n.link ? 'cursor-pointer' : ''} ${!n.read ? 'bg-[var(--cream)]/40 hover:bg-[var(--cream)]/60' : 'hover:bg-stone-50'}`}
                                   >
                                     {!n.read && <div className="absolute left-2 top-1/2 -translate-y-1/2 w-1.5 h-1.5 bg-[var(--rust)] rounded-full" />}
                                     <div className="pl-3 space-y-1">
@@ -263,17 +287,16 @@ export default function SellerLayout({ children }) {
 
                                       <div className="flex items-center gap-3 pt-2">
                                         {n.link && (
-                                          <Link
-                                            href={n.link}
-                                            onClick={() => setIsPopoutOpen(false)}
-                                            className="text-[10px] font-bold text-[var(--rust)] hover:underline flex items-center gap-1"
-                                          >
+                                          <span className="text-[10px] font-bold text-[var(--rust)] group-hover:underline flex items-center gap-1">
                                             View Details <ArrowRight className="w-3 h-3" />
-                                          </Link>
+                                          </span>
                                         )}
                                         {!n.read && (
                                           <button
-                                            onClick={() => markAsRead(notif.id)}
+                                            onClick={(e) => {
+                                              e.stopPropagation();
+                                              markAsRead(notif.id);
+                                            }}
                                             className="text-[10px] font-bold text-[var(--muted)] hover:text-[var(--rust)] transition-colors ml-auto"
                                           >
                                             Mark as read

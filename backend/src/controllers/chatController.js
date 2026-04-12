@@ -166,3 +166,49 @@ exports.getConversations = async (req, res) => {
         res.status(500).json({ message: 'Error fetching conversations', error: error.message });
     }
 };
+
+// Manually mark conversation as read
+exports.markAsRead = async (req, res) => {
+    try {
+        const userId = req.user.id || req.user.userId;
+        const { otherUserId } = req.params;
+
+        await Message.update(
+            { read: true },
+            {
+                where: {
+                    senderId: otherUserId,
+                    receiverId: userId,
+                    read: false
+                }
+            }
+        );
+
+        res.json({ message: 'Marked as read' });
+    } catch (error) {
+        console.error('Mark Read Error:', error);
+        res.status(500).json({ message: 'Error marking messages as read' });
+    }
+};
+
+// Delete an entire conversation with a user
+exports.deleteConversation = async (req, res) => {
+    try {
+        const userId = req.user.id || req.user.userId;
+        const { otherUserId } = req.params;
+
+        await Message.destroy({
+            where: {
+                [Op.or]: [
+                    { senderId: userId, receiverId: otherUserId },
+                    { senderId: otherUserId, receiverId: userId }
+                ]
+            }
+        });
+
+        res.json({ message: 'Conversation deleted successfully' });
+    } catch (error) {
+        console.error('Delete Conversation Error:', error);
+        res.status(500).json({ message: 'Error deleting conversation' });
+    }
+};

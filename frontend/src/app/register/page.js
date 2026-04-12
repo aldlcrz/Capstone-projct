@@ -177,19 +177,19 @@ export default function RegisterPage() {
             </div>
 
             {/* Progress Steps */}
-            <div className="flex items-center justify-center mt-8 gap-4 px-10 text-center mx-auto">
-              {[1, 2].map((s) => (
-                <div key={s} className="flex-1 flex items-center gap-3">
-                  <div className="w-8 h-8 rounded-full flex items-center justify-center text-[10px] font-bold transition-all duration-500"
-                    style={{ background: step >= s ? "var(--rust, #C0422A)" : "var(--input-bg, #F9F6F2)", color: step >= s ? "white" : "var(--muted)", boxShadow: step >= s ? "0 4px 12px rgba(192,66,42,0.25)" : "none" }}>
-                    {s}
-                  </div>
-                  {s === 1 && (
-                    <div className="flex-1 h-px transition-all duration-700"
-                      style={{ background: step > 1 ? "var(--rust, #C0422A)" : "var(--border, #E5DDD5)" }} />
-                  )}
+            <div className="flex items-center justify-center mt-8 mb-6 max-w-[280px] mx-auto px-4">
+              <div className="flex items-center w-full">
+                <div className="w-8 h-8 rounded-full flex items-center justify-center text-[10px] font-bold transition-all duration-500 shrink-0"
+                  style={{ background: step >= 1 ? "var(--rust, #C0422A)" : "var(--input-bg, #F9F6F2)", color: step >= 1 ? "white" : "var(--muted)", boxShadow: step >= 1 ? "0 4px 12px rgba(192,66,42,0.25)" : "none" }}>
+                  1
                 </div>
-              ))}
+                <div className="flex-1 h-px transition-all duration-700 mx-4"
+                  style={{ background: step > 1 ? "var(--rust, #C0422A)" : "var(--border, #E5DDD5)" }} />
+                <div className="w-8 h-8 rounded-full flex items-center justify-center text-[10px] font-bold transition-all duration-500 shrink-0"
+                  style={{ background: step >= 2 ? "var(--rust, #C0422A)" : "var(--input-bg, #F9F6F2)", color: step >= 2 ? "white" : "var(--muted)", boxShadow: step >= 2 ? "0 4px 12px rgba(192,66,42,0.25)" : "none" }}>
+                  2
+                </div>
+              </div>
             </div>
           </motion.div>
 

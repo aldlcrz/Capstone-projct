@@ -4,7 +4,7 @@ import SellerLayout from "@/components/SellerLayout";
 import { Users, Mail, Phone, Calendar, Search, MapPin, MoreHorizontal, MessageCircle, X, ShoppingBag, Clock, ChevronRight, Package, MoreVertical, Grid3x3, List } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { api } from "@/lib/api";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 
 function formatAddress(address) {
   if (!address) return "Locality Unknown";
@@ -217,6 +217,8 @@ export default function SellerCustomers() {
   const [filter, setFilter] = useState("Active");
   const [viewType, setViewType] = useState("grid");
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const targetId = searchParams.get("id");
 
   useEffect(() => {
     const fetchCustomers = async () => {
@@ -251,6 +253,16 @@ export default function SellerCustomers() {
     };
     fetchCustomers();
   }, []);
+
+  // Auto-open portfolio if ?id= is present in the URL
+  useEffect(() => {
+    if (!loading && customers.length > 0 && targetId) {
+      const match = customers.find(c => String(c.id) === String(targetId));
+      if (match && !selectedPortfolio) {
+        setSelectedPortfolio(match);
+      }
+    }
+  }, [loading, customers, targetId]);
 
   const filtered = customers.filter(c =>
     !searchTerm ||

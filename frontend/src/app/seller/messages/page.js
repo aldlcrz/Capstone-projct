@@ -27,6 +27,8 @@ function SellerMessages() {
   const [newMessage, setNewMessage] = useState("");
   const [loading, setLoading] = useState(true);
   const [isSending, setIsSending] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
+  const menuRef = useRef(null);
   const { socket } = useSocket();
   const scrollRef = useRef(null);
 
@@ -151,8 +153,46 @@ function SellerMessages() {
   };
 
   const myId = typeof window !== "undefined"
-    ? JSON.parse(localStorage.getItem("user") || "{}").id
+    ? JSON.parse(localStorage.getItem("seller_user") || localStorage.getItem("user") || "{}").id
     : null;
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (menuRef.current && !menuRef.current.contains(e.target)) {
+        setMenuOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  const handleMarkAllRead = async () => {
+    if (!activeThread) return;
+    setMenuOpen(false);
+    try {
+      await api.put(`/chat/read/${activeThread.otherUser.id}`);
+      setThreads(prev => prev.map(t =>
+        t.otherUser?.id === activeThread.otherUser.id ? { ...t, unreadCount: 0 } : t
+      ));
+    } catch (err) {
+      console.warn("Mark read failed", err?.response?.data || err.message);
+    }
+  };
+
+  const handleDeleteConversation = async () => {
+    if (!activeThread) return;
+    if (!confirm(`Delete all messages with ${activeThread.otherUser.name}? This cannot be undone.`)) return;
+    setMenuOpen(false);
+    try {
+      await api.delete(`/chat/conversation/${activeThread.otherUser.id}`);
+      setMessages([]);
+      setThreads(prev => prev.filter(t => t.otherUser?.id !== activeThread.otherUser.id));
+      setActiveThread(null);
+    } catch (err) {
+      console.warn("Delete conversation failed", err?.response?.data || err.message);
+    }
+  };
 
   return (
     <SellerLayout>
@@ -252,9 +292,49 @@ function SellerMessages() {
                     </div>
                   </div>
                 </div>
-                <button className="p-3 hover:bg-[var(--cream)] rounded-xl transition-all text-[var(--muted)] hover:text-[var(--rust)]">
-                  <MoreVertical className="w-5 h-5" />
-                </button>
+                {/* 3-dot Menu */}
+                <div className="relative" ref={menuRef}>
+                  <button
+                    onClick={() => setMenuOpen(prev => !prev)}
+                    className={`p-3 rounded-xl transition-all ${menuOpen ? 'bg-[var(--rust)] text-white' : 'hover:bg-[var(--cream)] text-[var(--muted)] hover:text-[var(--rust)]'}`}
+                  >
+                    <MoreVertical className="w-5 h-5" />
+                  </button>
+
+                  {menuOpen && (
+                    <div className="absolute right-0 top-[calc(100%+8px)] z-50 w-56 bg-white rounded-2xl shadow-2xl border border-[var(--border)] overflow-hidden animate-fade-up">
+                      {/* View Profile */}
+                      <a
+                        href={`/seller/customer?id=${activeThread.otherUser.id}`}
+                        onClick={() => setMenuOpen(false)}
+                        className="flex items-center gap-3 px-5 py-4 text-sm font-semibold text-[var(--charcoal)] hover:bg-[var(--cream)] transition-colors"
+                      >
+                        <span className="w-7 h-7 rounded-lg bg-[var(--cream)] flex items-center justify-center text-[var(--rust)]">👤</span>
+                        View Customer Profile
+                      </a>
+
+                      {/* Mark All Read */}
+                      <button
+                        onClick={handleMarkAllRead}
+                        className="w-full flex items-center gap-3 px-5 py-4 text-sm font-semibold text-[var(--charcoal)] hover:bg-[var(--cream)] transition-colors text-left"
+                      >
+                        <span className="w-7 h-7 rounded-lg bg-[var(--cream)] flex items-center justify-center text-[var(--rust)]">✓</span>
+                        Mark All as Read
+                      </button>
+
+                      <div className="h-px bg-[var(--border)] mx-4" />
+
+                      {/* Delete Conversation */}
+                      <button
+                        onClick={handleDeleteConversation}
+                        className="w-full flex items-center gap-3 px-5 py-4 text-sm font-semibold text-red-500 hover:bg-red-50 transition-colors text-left"
+                      >
+                        <span className="w-7 h-7 rounded-lg bg-red-50 flex items-center justify-center">🗑</span>
+                        Delete Conversation
+                      </button>
+                    </div>
+                  )}
+                </div>
               </div>
 
               <div className="flex-1 overflow-y-auto p-10 space-y-6 bg-[var(--cream)]/20 custom-scrollbar">

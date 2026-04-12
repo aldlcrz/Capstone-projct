@@ -58,18 +58,11 @@ export default function LoginPage() {
       const response = await api.post("/auth/login", { email, password, });
       const { token, user } = response.data;
       
-      // Clear previous residual sessions securely to prevent role overlap
-      clearSession();
-
-      // Store generic keys for backward compatibility
-      localStorage.setItem("token", token);
-      localStorage.setItem("user", JSON.stringify(user));
-
-      // Store role-specific keys to prevent tab session collision
-      if (user.role) {
-        localStorage.setItem(`${user.role}_token`, token);
-        localStorage.setItem(`${user.role}_user`, JSON.stringify(user));
-      }
+      // Store ONLY role-specific keys — never overwrite the generic 'token'/'user'
+      // to prevent cross-tab session collision (other tabs would see the wrong user).
+      const roleKey = user.role || "customer";
+      localStorage.setItem(`${roleKey}_token`, token);
+      localStorage.setItem(`${roleKey}_user`, JSON.stringify(user));
 
       const returnUrl = localStorage.getItem("returnUrl");
       if (returnUrl) {

@@ -70,7 +70,7 @@ export default function CustomerLayout({ children }) {
   const notificationPanelRef = React.useRef(null);
 
   const fetchNotifications = React.useCallback(async ({ silent = false } = {}) => {
-    const token = localStorage.getItem("token");
+    const token = localStorage.getItem("customer_token");
     if (!token || token === "null" || token === "undefined") {
       setNotifications([]);
       return;
@@ -96,13 +96,23 @@ export default function CustomerLayout({ children }) {
   React.useEffect(() => {
     let storedUser = null;
     try {
-      storedUser = JSON.parse(localStorage.getItem("user") || "null");
+      // Only use customer-specific keys — no generic fallback to prevent cross-tab contamination
+      storedUser = JSON.parse(localStorage.getItem("customer_user") || "null");
     } catch (error) { }
     setUser(storedUser);
 
     const updateCartCount = () => {
-      const cart = JSON.parse(localStorage.getItem("cart") || "[]");
-      setCartCount(cart.reduce((sum, item) => sum + item.quantity, 0));
+      try {
+        const cartStr = localStorage.getItem("cart");
+        const cart = cartStr ? JSON.parse(cartStr) : [];
+        if (Array.isArray(cart)) {
+          setCartCount(cart.reduce((sum, item) => sum + (item.quantity || 1), 0));
+        } else {
+          setCartCount(0);
+        }
+      } catch (e) {
+        setCartCount(0);
+      }
     };
 
     updateCartCount();
@@ -157,7 +167,7 @@ export default function CustomerLayout({ children }) {
   }, [notificationsOpen]);
 
   const handleLogout = () => {
-    clearSession();
+    clearSession('customer');
     window.location.href = "/";
   };
 
@@ -239,7 +249,7 @@ export default function CustomerLayout({ children }) {
               LUMBARONG
             </Link>
             <div className="flex items-center gap-1.5 mt-2 px-1 text-[var(--rust)] font-bold tracking-widest text-[10px]">
-              <ShoppingBag className="w-3 h-3" />
+              <ShoppingBag className="w-3 h-3" /> Customer Side
             </div>
           </div>
 

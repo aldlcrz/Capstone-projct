@@ -489,10 +489,24 @@ export default function ProductDetailClient() {
         .pd-review-item:last-child { border-bottom: none; }
         .pd-review-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.5rem; }
         .pd-reviewer { display: flex; align-items: center; gap: 0.75rem; }
-        .pd-rev-avatar { width: 32px; height: 32px; border-radius: 50%; background: #F7F3EE; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700; color: #9c6e30; overflow: hidden; }
+        .pd-rev-avatar { width: 36px; height: 36px; border-radius: 50%; background: #F7F3EE; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700; color: #9c6e30; overflow: hidden; flex-shrink: 0; }
         .pd-rev-name { font-size: 13px; font-weight: 600; color: #1C1209; }
         .pd-rev-date { font-size: 11px; color: #9c8876; }
-        .pd-rev-comment { font-size: 13.5px; color: #3D2B1F; line-height: 1.6; }
+        .pd-rev-comment { font-size: 13.5px; color: #3D2B1F; line-height: 1.6; margin-top: 0.5rem; }
+        .pd-verified-badge { display: inline-flex; align-items: center; gap: 0.25rem; font-size: 9.5px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: #2E7D53; background: #F0FFF5; border: 1px solid #A7D5BB; border-radius: 999px; padding: 0.15rem 0.55rem; margin-top: 0.3rem; }
+
+        /* ── Rating Distribution ── */
+        .pd-dist-wrap { background: #FDF5E8; border: 1px solid #EDD9A3; border-radius: 1rem; padding: 1.25rem 1.5rem; margin-bottom: 1.75rem; display: flex; gap: 2rem; align-items: center; }
+        .pd-dist-score { display: flex; flex-direction: column; align-items: center; gap: 0.25rem; flex-shrink: 0; }
+        .pd-dist-big { font-family: 'Playfair Display', serif; font-size: 3rem; font-weight: 700; color: #7B3A10; line-height: 1; }
+        .pd-dist-stars { display: flex; gap: 2px; color: #C0853A; }
+        .pd-dist-count { font-size: 11px; color: #9c8876; }
+        .pd-dist-bars { flex: 1; display: flex; flex-direction: column; gap: 0.4rem; }
+        .pd-dist-row { display: flex; align-items: center; gap: 0.6rem; }
+        .pd-dist-label { font-size: 11px; color: #9c8876; width: 32px; text-align: right; flex-shrink: 0; }
+        .pd-dist-track { flex: 1; height: 6px; background: #F0EBE3; border-radius: 999px; overflow: hidden; }
+        .pd-dist-fill { height: 100%; border-radius: 999px; background: #C0853A; transition: width 0.6s ease; }
+        .pd-dist-pct { font-size: 10px; color: #9c8876; width: 28px; flex-shrink: 0; }
 
         .pd-rev-form { background: #FDF5E8; border: 1px solid #EDD9A3; border-radius: 1rem; padding: 1.5rem; margin-bottom: 2rem; }
         .pd-form-title { font-family: 'Playfair Display', serif; font-size: 16px; font-weight: 700; color: #7B3A10; margin-bottom: 1rem; }
@@ -504,6 +518,9 @@ export default function ProductDetailClient() {
         .pd-submit-rev { background: #C0420A; color: #fff; padding: 0.75rem 1.5rem; border-radius: 0.75rem; border: none; font-size: 13px; font-weight: 700; cursor: pointer; transition: all 0.2s; }
         .pd-submit-rev:hover:not(:disabled) { transform: translateY(-1px); box-shadow: 0 4px 12px rgba(192,66,10,0.25); }
         .pd-submit-rev:disabled { opacity: 0.5; cursor: not-allowed; }
+        .pd-no-purchase-note { background: #FFF8EC; border: 1px solid #EDD9A3; border-radius: 0.85rem; padding: 1rem 1.25rem; display: flex; align-items: flex-start; gap: 0.75rem; margin-bottom: 1.5rem; }
+        .pd-no-purchase-note-icon { font-size: 1.1rem; flex-shrink: 0; margin-top: 1px; }
+        .pd-no-purchase-note-text { font-size: 12px; color: #7B5A30; line-height: 1.5; }
 
       `}</style>
 
@@ -774,52 +791,53 @@ export default function ProductDetailClient() {
 
           {/* ───── Reviews Section ───── */}
           <div className="pd-reviews">
-            <div className="flex items-center gap-3 mb-8">
+            <div className="flex items-center gap-3 mb-6">
               <Star className="w-5 h-5 text-[var(--rust)] fill-current" />
               <h2 className="font-serif text-xl font-bold text-[var(--charcoal)]">Customer Feedback</h2>
+              <span className="ml-auto text-[11px] font-bold uppercase tracking-widest" style={{ color: '#9c8876' }}>
+                {product.reviews?.length || 0} Reviews
+              </span>
             </div>
 
-            {/* Review Form (Only for customers) */}
-            {userRole === "customer" && (
-              <form onSubmit={handleSubmitReview} className="pd-rev-form">
-                <h3 className="pd-form-title">Write a Review</h3>
-                
-                <div className="pd-star-picker">
-                  {[1, 2, 3, 4, 5].map((s) => (
-                    <button
-                      key={s}
-                      type="button"
-                      onClick={() => setNewRating(s)}
-                      className={`pd-star-btn ${s <= newRating ? 'active' : ''}`}
-                    >
-                      <Star className="w-6 h-6 fill-current" />
-                    </button>
-                  ))}
-                </div>
-
-                <textarea
-                  className="pd-textarea"
-                  placeholder="Share your thoughts about this masterpiece..."
-                  value={newComment}
-                  onChange={(e) => setNewComment(e.target.value)}
-                  required
-                />
-
-                {reviewError && (
-                  <div className="text-red-600 text-[11px] font-bold mb-4 flex items-center gap-2">
-                    <ChevronRight size={10} className="rotate-90" /> {reviewError}
+            {/* ── Star Distribution Summary ── */}
+            {product.reviews?.length > 0 && (() => {
+              const reviews = product.reviews;
+              const total = reviews.length;
+              const avg = (reviews.reduce((a, r) => a + r.rating, 0) / total);
+              const dist = [5, 4, 3, 2, 1].map(star => ({
+                star,
+                count: reviews.filter(r => r.rating === star).length,
+                pct: Math.round((reviews.filter(r => r.rating === star).length / total) * 100)
+              }));
+              return (
+                <div className="pd-dist-wrap">
+                  <div className="pd-dist-score">
+                    <span className="pd-dist-big">{avg.toFixed(1)}</span>
+                    <div className="pd-dist-stars">
+                      {[...Array(5)].map((_, i) => (
+                        <Star key={i} className={`w-3.5 h-3.5 ${i < Math.round(avg) ? 'fill-current' : 'opacity-20'}`} />
+                      ))}
+                    </div>
+                    <span className="pd-dist-count">{total} ratings</span>
                   </div>
-                )}
+                  <div className="pd-dist-bars">
+                    {dist.map(({ star, count, pct }) => (
+                      <div key={star} className="pd-dist-row">
+                        <span className="pd-dist-label">{star} ★</span>
+                        <div className="pd-dist-track">
+                          <div className="pd-dist-fill" style={{ width: `${pct}%` }} />
+                        </div>
+                        <span className="pd-dist-pct">{pct}%</span>
+                        <span style={{ fontSize: '10px', color: '#9c8876', width: '24px' }}>({count})</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              );
+            })()}
 
-                <button
-                  type="submit"
-                  disabled={submittingReview}
-                  className="pd-submit-rev"
-                >
-                  {submittingReview ? "Submitting..." : "Post Review"}
-                </button>
-              </form>
-            )}
+
+
 
             {/* Review List */}
             <div className="space-y-4">
@@ -842,6 +860,11 @@ export default function ProductDetailClient() {
                               <Star key={i} className={`w-2.5 h-2.5 ${i < rev.rating ? 'fill-current' : 'opacity-20'}`} />
                             ))}
                           </div>
+                          {rev.orderId && (
+                            <span className="pd-verified-badge">
+                              <ShieldCheck size={9} /> Verified Purchase
+                            </span>
+                          )}
                         </div>
                       </div>
                       <span className="pd-rev-date">

@@ -29,8 +29,8 @@ api.interceptors.request.use(
         } else if (path.startsWith("/seller")) {
           token = localStorage.getItem("seller_token");
         } else {
-          // Fallback to generic token for other routes (customer/home/profile)
-          token = localStorage.getItem("token");
+          // Customer routes — use customer-specific token, fall back to generic only for compatibility
+          token = localStorage.getItem("customer_token") || localStorage.getItem("token");
         }
 
         // Ensure we don't send "null" or "undefined" as string tokens
@@ -46,15 +46,32 @@ api.interceptors.request.use(
   (error) => Promise.reject(error)
 );
 
-export const clearSession = () => {
-  if (typeof window !== "undefined") {
-    const keysToRemove = [
-      "token", "user", 
-      "admin_token", "admin_user", 
-      "seller_token", "seller_user",
-      "customer_token", "customer_user"
-    ];
-    keysToRemove.forEach(key => localStorage.removeItem(key));
+export const clearSession = (role) => {
+  if (typeof window === "undefined") return;
+
+  // If role is explicitly provided use it, otherwise infer from the current URL
+  const resolvedRole = role || (() => {
+    const path = window.location.pathname;
+    if (path.startsWith("/admin")) return "admin";
+    if (path.startsWith("/seller")) return "seller";
+    return "customer";
+  })();
+
+  // Only remove keys that belong to this role
+  localStorage.removeItem(`${resolvedRole}_token`);
+  localStorage.removeItem(`${resolvedRole}_user`);
+
+  // Only remove the generic keys if they belong to this role
+  // (i.e. the last login was for this role)
+  try {
+    const genericUser = JSON.parse(localStorage.getItem("user") || "null");
+    if (!genericUser || genericUser.role === resolvedRole) {
+      localStorage.removeItem("token");
+      localStorage.removeItem("user");
+    }
+  } catch (e) {
+    localStorage.removeItem("token");
+    localStorage.removeItem("user");
   }
 };
 

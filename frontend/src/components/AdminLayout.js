@@ -58,22 +58,12 @@ export default function AdminLayout({ children }) {
 
   React.useEffect(() => {
     const checkAuth = () => {
-      // Use role-specific keys first to allow multi-tab sessions
-      let storedUser = JSON.parse(localStorage.getItem("admin_user") || "null");
-      let token = localStorage.getItem("admin_token");
-
-      // Fallback to generic keys
-      if (!token || !storedUser) {
-        storedUser = JSON.parse(localStorage.getItem("user") || "null");
-        token = localStorage.getItem("token");
-      }
+      // Only use role-specific keys — no generic fallback to prevent cross-tab contamination
+      const storedUser = JSON.parse(localStorage.getItem("admin_user") || "null");
+      const token = localStorage.getItem("admin_token");
 
       if (!token || !storedUser || storedUser.role !== 'admin') {
-        // If we are already on the login page or similar, don't redirect again
         if (!window.location.pathname.includes("/login")) {
-          console.warn("Unauthorized or session expired. Redirecting...");
-          // We don't call clearSession() here because it would wipe 
-          // a valid seller session in another tab.
           window.location.href = "/login?error=admin_required";
         }
         return;
@@ -129,7 +119,7 @@ export default function AdminLayout({ children }) {
   };
 
   const handleLogout = () => {
-    clearSession();
+    clearSession('admin');
     window.location.href = "/";
   };
 
@@ -220,13 +210,7 @@ export default function AdminLayout({ children }) {
             </div>
 
             <div className="flex items-center gap-4">
-              <div className="hidden md:flex flex-col text-right">
-                <div className="text-[10px] font-bold text-[var(--muted)] uppercase tracking-wider">Server Status</div>
-                <div className="text-xs font-bold text-green-600 flex items-center gap-1.5 justify-end">
-                  <span className="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse" /> ONLINE
-                </div>
-              </div>
-              <div className="w-[1px] h-8 bg-[var(--border)] hidden md:block mx-2" />
+
               <div className="relative">
                 <button 
                   onClick={() => { setNotificationsOpen(!notificationsOpen); if(!notificationsOpen) fetchNotifications(); }}

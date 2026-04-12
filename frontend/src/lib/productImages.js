@@ -62,7 +62,10 @@ export function normalizeProductSizes(sizes) {
 export function getProductImageSrc(image, fallback = FALLBACK_IMAGE) {
   const images = normalizeProductImages(image);
   if (images.length === 0) return fallback;
-  const first = images[0];
-  const src = typeof first === 'object' ? first.url : first;
-  return (src && typeof src === 'string' && src.trim() !== '') ? src : fallback;
+  let first = images[0];
+  // Unwrap object wrappers until we get a plain string URL
+  while (first && typeof first === 'object' && first.url) {
+    first = first.url;
+  }
+  return (first && typeof first === 'string' && first.trim() !== '') ? first : fallback;
 }

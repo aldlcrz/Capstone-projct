@@ -33,80 +33,79 @@ exports.getAdminAnalytics = async (req, res) => {
   try {
     const { range = 'week' } = req.query;
     const now = new Date();
-    const start = getRangeBounds(range);
-
-    // ── 1. Revenue Series (Adapts to range) ──────────────────────────
-    const orders = await Order.findAll({
-      where: {
-        createdAt: { [Op.gte]: start },
-        status: { [Op.notIn]: ['Cancelled'] },
-      },
-      attributes: ['createdAt', 'totalAmount'],
-    });
+    const start = getRangeBounds(range);    // ── 1. Unified Time Series (Revenue & Signups) ───────────────────
+    const [orders, newUsers] = await Promise.all([
+      Order.findAll({
+        where: {
+          createdAt: { [Op.gte]: start },
+          status: { [Op.notIn]: ['Cancelled'] },
+        },
+        attributes: ['id', 'createdAt', 'totalAmount'],
+      }),
+      User.findAll({
+        where: { createdAt: { [Op.gte]: start } },
+        attributes: ['createdAt'],
+      })
+    ]);
 
     let revenueSeries = [];
+    let signupSeries = [];
+
     if (range === 'today') {
-      // Hourly bins for today
-      const bins = Array.from({ length: 24 }, (_, i) => ({ name: `${i}:00`, revenue: 0 }));
+      const bins = Array.from({ length: 24 }, (_, i) => ({ name: `${i}:00`, revenue: 0, hits: 0 }));
       orders.forEach(o => {
         const hour = new Date(o.createdAt).getHours();
         bins[hour].revenue += Number(o.totalAmount || 0);
       });
+      newUsers.forEach(u => {
+        const hour = new Date(u.createdAt).getHours();
+        bins[hour].hits++;
+      });
       revenueSeries = bins;
+      signupSeries = bins;
     } else if (range === 'week') {
       const DAY_NAMES = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
       const WEEK_ORDER = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
-      const weeklyMap = Object.fromEntries(WEEK_ORDER.map(d => [d, 0]));
+      const map = Object.fromEntries(WEEK_ORDER.map(d => [d, { revenue: 0, hits: 0 }]));
       orders.forEach(o => {
         const name = DAY_NAMES[new Date(o.createdAt).getDay()];
-        weeklyMap[name] = (weeklyMap[name] || 0) + Number(o.totalAmount || 0);
+        map[name].revenue += Number(o.totalAmount || 0);
       });
-      revenueSeries = WEEK_ORDER.map(name => ({ name, revenue: weeklyMap[name] }));
+      newUsers.forEach(u => {
+        const name = DAY_NAMES[new Date(u.createdAt).getDay()];
+        if (map[name]) map[name].hits++;
+      });
+      revenueSeries = WEEK_ORDER.map(name => ({ name, revenue: map[name].revenue }));
+      signupSeries = WEEK_ORDER.map(name => ({ name, hits: map[name].hits }));
     } else if (range === 'month') {
-      // Daily bins for current month
       const daysInMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
-      const bins = Array.from({ length: daysInMonth }, (_, i) => ({ name: `${i+1}`, revenue: 0 }));
+      const bins = Array.from({ length: daysInMonth }, (_, i) => ({ name: `${i + 1}`, revenue: 0, hits: 0 }));
       orders.forEach(o => {
         const day = new Date(o.createdAt).getDate();
-        bins[day-1].revenue += Number(o.totalAmount || 0);
+        if (bins[day - 1]) bins[day - 1].revenue += Number(o.totalAmount || 0);
+      });
+      newUsers.forEach(u => {
+        const day = new Date(u.createdAt).getDate();
+        if (bins[day - 1]) bins[day - 1].hits++;
       });
       revenueSeries = bins;
+      signupSeries = bins;
     } else if (range === 'year') {
-      // Monthly bins for current year
-      const MONTH_NAMES = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-      const bins = MONTH_NAMES.map(name => ({ name, revenue: 0 }));
+      const MONTH_NAMES = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+      const bins = MONTH_NAMES.map(name => ({ name, revenue: 0, hits: 0 }));
       orders.forEach(o => {
         const month = new Date(o.createdAt).getMonth();
         bins[month].revenue += Number(o.totalAmount || 0);
       });
+      newUsers.forEach(u => {
+        const month = new Date(u.createdAt).getMonth();
+        bins[month].hits++;
+      });
       revenueSeries = bins;
+      signupSeries = bins;
     }
 
-    // ── 2. Monthly User Signups (last 6 months) ──────────────────────
-    const sixMonthsAgo = new Date();
-    sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 5);
-    sixMonthsAgo.setDate(1);
-    sixMonthsAgo.setHours(0, 0, 0, 0);
-
-    const newUsers = await User.findAll({
-      where: { createdAt: { [Op.gte]: sixMonthsAgo } },
-      attributes: ['createdAt'],
-    });
-
-    const MONTH_NAMES = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-    const monthlyMap = {};
-    for (let i = 5; i >= 0; i--) {
-      const d = new Date();
-      d.setMonth(d.getMonth() - i);
-      monthlyMap[MONTH_NAMES[d.getMonth()]] = 0;
-    }
-    newUsers.forEach(u => {
-      const key = MONTH_NAMES[new Date(u.createdAt).getMonth()];
-      if (monthlyMap[key] !== undefined) monthlyMap[key]++;
-    });
-    const monthlySignups = Object.entries(monthlyMap).map(([name, hits]) => ({ name, hits }));
-
-
+    const monthlySignups = signupSeries;
 
     // ── 4. Recent Activity (last 6 orders) ───────────────────────────
     const recentOrders = await Order.findAll({
@@ -125,9 +124,9 @@ exports.getAdminAnalytics = async (req, res) => {
     }));
 
     // ── 5. Top Customer Locations (from shipping addresses) ───────────
-    const ordersWithAddr = await Order.findAll({ 
+    const ordersWithAddr = await Order.findAll({
       where: { createdAt: { [Op.gte]: start } },
-      attributes: ['shippingAddress'] 
+      attributes: ['shippingAddress']
     });
     const locationCount = {};
     ordersWithAddr.forEach(o => {
@@ -136,7 +135,7 @@ exports.getAdminAnalytics = async (req, res) => {
           ? JSON.parse(o.shippingAddress) : o.shippingAddress;
         const city = addr?.city || addr?.province || null;
         if (city) locationCount[city] = (locationCount[city] || 0) + 1;
-      } catch (_) {}
+      } catch (_) { }
     });
     const topLocations = Object.entries(locationCount)
       .sort((a, b) => b[1] - a[1])
@@ -152,12 +151,117 @@ exports.getAdminAnalytics = async (req, res) => {
       Order.count({ where: { status: 'Cancelled', createdAt: { [Op.gte]: start } } }),
     ]);
 
+    // ── 7. Top Selling Products & Categories ───────────────────────────
+    const orderIds = orders.map(o => o.id);
+    let topProducts = [];
+    let topCategories = [];
+
+    if (orderIds.length > 0) {
+      // Aggregate Top Products
+      const topProductsData = await OrderItem.findAll({
+        attributes: [
+          'productId',
+          [sequelize.fn('SUM', sequelize.col('OrderItem.quantity')), 'totalSold'],
+          [sequelize.fn('SUM', sequelize.literal('`OrderItem`.`quantity` * `OrderItem`.`price`')), 'totalRevenue']
+        ],
+        where: { orderId: { [Op.in]: orderIds } },
+        include: [{
+          model: Product,
+          as: 'product',
+          attributes: ['id', 'name', 'categories'],
+          required: true
+        }],
+        group: ['OrderItem.productId', 'product.id', 'product.name', 'product.categories'],
+        order: [[sequelize.fn('SUM', sequelize.col('OrderItem.quantity')), 'DESC']],
+        limit: 10,
+        subQuery: false,
+        raw: true,
+        nest: true
+      });
+
+      topProducts = topProductsData.map(d => {
+        let cat = d.product?.categories;
+        let categoryName = "Other";
+        if (typeof cat === 'string') {
+          try { cat = JSON.parse(cat); } catch (e) { }
+        }
+        if (Array.isArray(cat) && cat.length > 0) categoryName = cat[0];
+
+        return {
+          id: d.product?.id,
+          name: d.product?.name || 'Unknown',
+          category: categoryName,
+          sales: Number(d.totalSold || 0),
+          revenue: Number(d.totalRevenue || 0)
+        };
+      });
+
+      // Aggregate Top Categories
+      const categoriesMap = {};
+      topProductsData.forEach(d => {
+        let cat = d.product?.categories;
+        if (typeof cat === 'string') {
+          try { cat = JSON.parse(cat); } catch (e) { }
+        }
+        // Count each order item's sales volume towards all of its categories
+        const sold = Number(d.totalSold || 0);
+        if (Array.isArray(cat) && cat.length > 0) {
+          cat.forEach(c => {
+            categoriesMap[c] = (categoriesMap[c] || 0) + sold;
+          });
+        } else {
+          categoriesMap["Other"] = (categoriesMap["Other"] || 0) + sold;
+        }
+      });
+
+      // Instead of relying purely on top 10 products for category accuracy, fetch all OrderItems if needed
+      // But for quick analytics, fetching base categories using all order items is better.
+      const allItemsData = await OrderItem.findAll({
+        attributes: [
+          [sequelize.fn('SUM', sequelize.col('OrderItem.quantity')), 'totalSold']
+        ],
+        where: { orderId: { [Op.in]: orderIds } },
+        include: [{
+          model: Product,
+          as: 'product',
+          attributes: ['categories'],
+          required: true
+        }],
+        group: ['product.id', 'product.categories'],
+        raw: true,
+        nest: true
+      });
+
+      const fullCategoriesMap = {};
+      allItemsData.forEach(d => {
+        let cat = d.product?.categories;
+        if (typeof cat === 'string') {
+          try { cat = JSON.parse(cat); } catch (e) { }
+        }
+        const sold = Number(d.totalSold || 0);
+        if (Array.isArray(cat) && cat.length > 0) {
+          cat.forEach(c => {
+            fullCategoriesMap[c] = (fullCategoriesMap[c] || 0) + sold;
+          });
+        } else {
+          fullCategoriesMap["Other"] = (fullCategoriesMap["Other"] || 0) + sold;
+        }
+      });
+
+      topCategories = Object.entries(fullCategoriesMap)
+        .map(([name, value]) => ({ name, value }))
+        .sort((a, b) => b.value - a.value)
+        .slice(0, 5); // top 5
+    }
+
     res.status(200).json({
       revenueSeries,
       monthlySignups,
       recentActivity,
       topLocations,
       orderStatusBreakdown: { pending, processing, shipped, completed, cancelled },
+      topProducts,
+      topCategories
     });
   } catch (error) {
     console.error('Admin Analytics Error:', error);
@@ -234,7 +338,7 @@ exports.deleteCustomer = async (req, res) => {
     const { id } = req.params;
     const user = await User.findByPk(id);
     if (!user) return res.status(404).json({ message: 'User not found' });
-    
+
     await user.destroy();
     res.status(200).json({ message: 'User deleted successfully' });
   } catch (error) {
@@ -247,12 +351,12 @@ exports.toggleCustomerStatus = async (req, res) => {
     const { id } = req.params;
     const user = await User.findByPk(id);
     if (!user) return res.status(404).json({ message: 'User not found' });
-    
+
     user.status = user.status === 'frozen' ? 'active' : 'frozen';
     await user.save();
-    
+
     emitUserUpdated(user, { action: 'status_changed' });
-    
+
     res.status(200).json({ message: `User ${user.status} successfully`, user });
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -274,7 +378,7 @@ exports.verifySeller = async (req, res) => {
     const { id } = req.params;
     const user = await User.findByPk(id);
     if (!user) return res.status(404).json({ message: 'Seller not found' });
-    
+
     user.isVerified = true;
     await user.save();
 
@@ -289,7 +393,7 @@ exports.verifySeller = async (req, res) => {
 
     emitUserUpdated(publicUser, { action: 'verified' });
     emitDashboardUpdate();
-    
+
     await sendNotification(
       user.id,
       'Seller verification approved',
@@ -309,10 +413,10 @@ exports.rejectSeller = async (req, res) => {
     const { id } = req.params;
     const user = await User.findByPk(id);
     if (!user) return res.status(404).json({ message: 'Seller not found' });
-    
+
     await user.destroy();
     emitDashboardUpdate();
-    
+
     res.status(200).json({ message: 'Seller application rejected' });
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -334,7 +438,7 @@ exports.getSettings = async (req, res) => {
 
 exports.updateSettings = async (req, res) => {
   try {
-    const updates = req.body; 
+    const updates = req.body;
 
     // Integrity Validation
     if (updates.commissionRate !== undefined) {

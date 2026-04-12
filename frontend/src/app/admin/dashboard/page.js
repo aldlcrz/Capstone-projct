@@ -14,6 +14,7 @@ import {
   Clock,
   Truck,
   XCircle,
+  TrendingUp,
 } from "lucide-react";
 import {
   BarChart,
@@ -25,8 +26,11 @@ import {
   ResponsiveContainer,
   AreaChart,
   Area,
+  PieChart,
+  Pie,
+  Cell,
 } from "recharts";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { api } from "@/lib/api";
 import { useSocket } from "@/context/SocketContext";
 
@@ -44,8 +48,13 @@ const STATUS_META = {
   Cancelled:  { color: "bg-red-100 text-red-700",      icon: <XCircle className="w-4 h-4 text-red-500" /> },
 };
 
+const PIE_COLORS = ["#C0422A", "#E56D4B", "#8C7B70", "#B3A499", "#E5DDD5"];
+
 export default function AdminDashboard() {
   const [mounted, setMounted] = useState(false);
+  const [showUserGrowth, setShowUserGrowth] = useState(false);
+  const [showRevenueTrend, setShowRevenueTrend] = useState(false);
+
   const [refreshing, setRefreshing] = useState(false);
   const [dateFilter, setDateFilter] = useState("week");
 
@@ -62,6 +71,8 @@ export default function AdminDashboard() {
     recentActivity: [],
     topLocations: [],
     orderStatusBreakdown: { pending: 0, processing: 0, shipped: 0, completed: 0, cancelled: 0 },
+    topProducts: [],
+    topCategories: [],
   });
 
   const { socket } = useSocket();
@@ -85,6 +96,8 @@ export default function AdminDashboard() {
         recentActivity: d.recentActivity || [],
         topLocations: d.topLocations || [],
         orderStatusBreakdown: d.orderStatusBreakdown || { pending: 0, processing: 0, shipped: 0, completed: 0, cancelled: 0 },
+        topProducts: d.topProducts || [],
+        topCategories: d.topCategories || [],
       });
     } catch (err) {
       console.warn("Analytics fetch failed", err.message);
@@ -192,74 +205,119 @@ export default function AdminDashboard() {
           <StatCard label="Live Products"     value={stats.liveProducts}     icon={<Package className="w-5 h-5" />}   color="amber" loading={refreshing} />
         </div>
 
-        {/* Chart Row */}
-        <div className="artisan-card min-h-[450px] flex flex-col">
-          <div className="flex items-center justify-between mb-8">
-            <div>
-              <h3 className="text-lg font-bold text-[var(--charcoal)] mb-1">Earning Statistics</h3>
-              <div className="text-xs text-[var(--muted)] tracking-wider flex items-center gap-2">
-                Revenue for this {dateFilter}
-                <span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse inline-block" />
-                <span className="text-green-600 font-bold">Live</span>
+        {/* Primary Functional Graphs */}
+        <div className="space-y-6">
+          {/* Revenue Trend - RESTORED & TOGGLEABLE */}
+          <div className="artisan-card flex flex-col justify-start">
+            <div className="flex items-center justify-between mb-2 pb-2">
+              <div>
+                <h3 className="text-lg font-bold text-[var(--charcoal)] mb-1">Revenue Trend</h3>
+                <div className="text-xs text-[var(--muted)] tracking-wider capitalize">Total earnings • {dateFilter} view</div>
               </div>
+              <button 
+                onClick={() => setShowRevenueTrend(!showRevenueTrend)}
+                className={`p-2.5 rounded-xl transition-all shadow-sm border ${showRevenueTrend ? 'bg-[var(--rust)] border-[var(--rust)] text-white' : 'bg-white border-[var(--border)] text-[var(--rust)] hover:bg-[#FAF9F7]'}`}
+                title={showRevenueTrend ? "Hide Revenue Trend" : "Show Revenue Trend"}
+              >
+                <TrendingUp className="w-5 h-5 pointer-events-none" />
+              </button>
             </div>
-            <Activity className="w-5 h-5 text-[var(--muted)]" />
-          </div>
-          <div className="flex-1 w-full relative">
-            {refreshing && (
-              <div className="absolute inset-0 z-10 bg-white/50 backdrop-blur-[2px] flex items-center justify-center rounded-xl">
-                <RefreshCw className="w-8 h-8 text-[var(--rust)] animate-spin" />
-              </div>
-            )}
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={analytics.revenueSeries} margin={{ top: 20, right: 30, left: 10, bottom: 0 }}>
-                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E5DDD5" />
-                <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fontSize: 11, fill: "#8C7B70", fontWeight: "600", fontFamily: '"Playfair Display", Georgia, serif' }} dy={12} />
-                <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 11, fill: "#8C7B70", fontWeight: "600", fontFamily: '"Playfair Display", Georgia, serif' }} tickFormatter={v => v >= 1000 ? `₱${(v/1000).toFixed(0)}k` : `₱${v}`} />
-                <Tooltip
-                  cursor={{ fill: "rgba(192,66,42,0.04)" }}
-                  content={({ active, payload }) => {
-                    if (active && payload?.length) return (
-                      <div className="bg-[#1C1917] text-white p-3 rounded-xl shadow-2xl border border-white/10">
-                        <div className="text-[10px] font-bold text-white/50 uppercase tracking-widest mb-1">{payload[0].payload.name}</div>
-                        <div className="text-lg font-serif font-bold">₱{payload[0].value.toLocaleString()}</div>
-                      </div>
-                    );
-                    return null;
-                  }}
-                />
-                <Bar dataKey="revenue" fill="#C0422A" radius={[10, 10, 4, 4]} barSize={dateFilter === 'today' ? 15 : dateFilter === 'month' ? 12 : 45} animationDuration={1200} />
-              </BarChart>
-            </ResponsiveContainer>
+            
+            <AnimatePresence>
+              {showRevenueTrend && (
+                <motion.div 
+                  initial={{ opacity: 0, height: 0, marginTop: 0 }}
+                  animate={{ opacity: 1, height: 'auto', marginTop: 24 }}
+                  exit={{ opacity: 0, height: 0, marginTop: 0, overflow: 'hidden' }}
+                >
+                  <div className="h-[300px]">
+                    <ResponsiveContainer width="100%" height="100%" key={`revenue-${dateFilter}`}>
+                      <AreaChart data={analytics.revenueSeries}>
+                        <defs>
+                          <linearGradient id="colorRevenue" x1="0" y1="0" x2="0" y2="1">
+                            <stop offset="5%"  stopColor="#C0422A" stopOpacity={0.1} />
+                            <stop offset="95%" stopColor="#C0422A" stopOpacity={0} />
+                          </linearGradient>
+                        </defs>
+                        <XAxis 
+                          dataKey="name" 
+                          axisLine={false} 
+                          tickLine={false} 
+                          tick={{ fontSize: 10, fill: "#8C7B70", fontWeight: "600" }} 
+                          dy={10}
+                        />
+                        <YAxis 
+                          axisLine={false} 
+                          tickLine={false} 
+                          tick={{ fontSize: 10, fill: "#8C7B70" }}
+                          tickFormatter={(val) => `₱${val.toLocaleString()}`}
+                        />
+                        <Tooltip 
+                          contentStyle={{ background: "#fff", borderRadius: "14px", border: "1px solid #E5DDD5", fontSize: "12px", boxShadow: "0 10px 15px -3px rgb(0 0 0 / 0.1)" }} 
+                          labelStyle={{ fontWeight: "bold", color: "#2A2A2A" }} 
+                          formatter={(val) => [`₱${val.toLocaleString()}`, "Revenue"]}
+                        />
+                        <Area 
+                          type="monotone" 
+                          dataKey="revenue" 
+                          stroke="#C0422A" 
+                          strokeWidth={4} 
+                          fillOpacity={1} 
+                          fill="url(#colorRevenue)" 
+                          animationDuration={1500} 
+                        />
+                      </AreaChart>
+                    </ResponsiveContainer>
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
           </div>
         </div>
 
         {/* Bottom Charts Row */}
         <div className="grid grid-cols-1 xl:grid-cols-2 gap-8">
           {/* User Signups Area Chart */}
-          <div className="artisan-card min-h-[400px]">
-            <div className="flex items-center justify-between mb-8">
+          <div className="artisan-card flex flex-col justify-start">
+            <div className="flex items-center justify-between mb-2 pb-2">
               <div>
                 <h3 className="text-lg font-bold text-[var(--charcoal)] mb-1">User Growth</h3>
-                <div className="text-xs text-[var(--muted)] tracking-wider">New registrations per month</div>
+                <div className="text-xs text-[var(--muted)] tracking-wider capitalize">New registrations • {dateFilter} view</div>
               </div>
-              <CloudRain className="w-5 h-5 text-[var(--rust)]" />
+              <button 
+                onClick={() => setShowUserGrowth(!showUserGrowth)}
+                className={`p-2.5 rounded-xl transition-all shadow-sm border ${showUserGrowth ? 'bg-[var(--rust)] border-[var(--rust)] text-white' : 'bg-white border-[var(--border)] text-[var(--rust)] hover:bg-[#FAF9F7]'}`}
+                title={showUserGrowth ? "Hide User Growth" : "Show User Growth"}
+              >
+                <CloudRain className="w-5 h-5 pointer-events-none" />
+              </button>
             </div>
-            <div className="h-[280px]">
-              <ResponsiveContainer width="100%" height="100%">
-                <AreaChart data={analytics.monthlySignups}>
-                  <defs>
-                    <linearGradient id="colorHits" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%"  stopColor="#C0422A" stopOpacity={0.2} />
-                      <stop offset="95%" stopColor="#C0422A" stopOpacity={0} />
-                    </linearGradient>
-                  </defs>
-                  <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fontSize: 11, fill: "#8C7B70", fontWeight: "600" }} />
-                  <Tooltip contentStyle={{ background: "#fff", borderRadius: "14px", border: "1px solid #E5DDD5", fontSize: "12px" }} labelStyle={{ fontWeight: "bold" }} />
-                  <Area type="monotone" dataKey="hits" stroke="#C0422A" strokeWidth={3} fillOpacity={1} fill="url(#colorHits)" animationDuration={1200} />
-                </AreaChart>
-              </ResponsiveContainer>
-            </div>
+            
+            <AnimatePresence>
+              {showUserGrowth && (
+                <motion.div 
+                  initial={{ opacity: 0, height: 0, marginTop: 0 }}
+                  animate={{ opacity: 1, height: 'auto', marginTop: 24 }}
+                  exit={{ opacity: 0, height: 0, marginTop: 0, overflow: 'hidden' }}
+                >
+                  <div className="h-[280px]">
+                    <ResponsiveContainer width="100%" height="100%" key={`growth-${dateFilter}`}>
+                      <AreaChart data={analytics.monthlySignups}>
+                        <defs>
+                          <linearGradient id="colorHits" x1="0" y1="0" x2="0" y2="1">
+                            <stop offset="5%"  stopColor="#C0422A" stopOpacity={0.2} />
+                            <stop offset="95%" stopColor="#C0422A" stopOpacity={0} />
+                          </linearGradient>
+                        </defs>
+                        <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fontSize: 11, fill: "#8C7B70", fontWeight: "600" }} />
+                        <Tooltip contentStyle={{ background: "#fff", borderRadius: "14px", border: "1px solid #E5DDD5", fontSize: "12px" }} labelStyle={{ fontWeight: "bold" }} />
+                        <Area type="monotone" dataKey="hits" stroke="#C0422A" strokeWidth={3} fillOpacity={1} fill="url(#colorHits)" animationDuration={1200} />
+                      </AreaChart>
+                    </ResponsiveContainer>
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
           </div>
 
           {/* Top Locations */}
@@ -314,6 +372,112 @@ export default function AdminDashboard() {
           })}
         </div>
 
+        {/* Global Network Tops */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 my-8">
+          
+          {/* Best Selling Products */}
+          <div className="artisan-card flex flex-col min-h-[400px]">
+            <h3 className="text-lg font-bold text-[var(--charcoal)] mb-6 underline decoration-[var(--border)] decoration-4 underline-offset-8">
+              Top Selling Products
+            </h3>
+            {!analytics.topProducts || analytics.topProducts.length === 0 ? (
+              <div className="flex-1 flex items-center justify-center text-[var(--muted)] text-sm italic opacity-50">
+                No product sales in this period
+              </div>
+            ) : (
+              <div className="flex-1 flex flex-col space-y-4">
+                <div className="grid grid-cols-12 gap-2 px-2 pb-2 text-[10px] uppercase font-bold tracking-widest text-[var(--muted)] border-b border-[var(--border)]">
+                  <div className="col-span-6">Product</div>
+                  <div className="col-span-3 text-right">Sales</div>
+                  <div className="col-span-3 text-right">Revenue</div>
+                </div>
+                {analytics.topProducts.slice(0, 5).map((prod, i) => {
+                  const maxSales = Math.max(...analytics.topProducts.map(p => p.sales), 1);
+                  const pct = Math.max((prod.sales / maxSales) * 100, 2);
+                  return (
+                    <motion.div 
+                      key={prod.id || i}
+                      initial={{ opacity: 0, y: 5 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: i * 0.05 }}
+                      className="grid grid-cols-12 gap-2 items-center bg-[#f7f6f2] rounded-xl p-3 hover:bg-[#FAF9F7] transition-all"
+                    >
+                      <div className="col-span-6 overflow-hidden">
+                        <div className="text-[12px] font-bold text-[var(--charcoal)] truncate pr-2">{prod.name}</div>
+                        <div className="text-[10px] text-[var(--muted)] lowercase">{prod.category}</div>
+                      </div>
+                      <div className="col-span-3 pr-2">
+                        <div className="flex items-center gap-2 mb-1.5 h-1.5 w-full bg-[#e3dfd7] rounded-full overflow-hidden">
+                          <motion.div 
+                            initial={{ width: 0 }} animate={{ width: `${pct}%` }} transition={{ duration: 1, delay: 0.1 + (i * 0.1) }}
+                            className="h-full bg-[var(--rust)] rounded-full"
+                          />
+                        </div>
+                        <div className="text-[10px] font-bold text-right w-full text-[var(--charcoal)]">{prod.sales} sold</div>
+                      </div>
+                      <div className="col-span-3 text-right text-[11px] font-bold text-[var(--rust)]">
+                        ₱{prod.revenue?.toLocaleString() || 0}
+                      </div>
+                    </motion.div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+
+          {/* Top Categories Donut */}
+          <div className="artisan-card flex flex-col min-h-[400px]">
+            <h3 className="text-lg font-bold text-[var(--charcoal)] mb-6 underline decoration-[var(--border)] decoration-4 underline-offset-8">
+              Top Categories
+            </h3>
+            {!analytics.topCategories || analytics.topCategories.length === 0 ? (
+              <div className="flex-1 flex items-center justify-center text-[var(--muted)] text-sm italic opacity-50">
+                No category data yet
+              </div>
+            ) : (
+              <div className="flex-1 flex flex-col items-center justify-center">
+                <div className="w-full h-[220px]">
+                  <ResponsiveContainer width="100%" height="100%" key={`categories-${dateFilter}`}>
+                    <PieChart>
+                      <Pie
+                        data={analytics.topCategories}
+                        cx="50%"
+                        cy="50%"
+                        innerRadius={60}
+                        outerRadius={90}
+                        paddingAngle={5}
+                        dataKey="value"
+                        animationDuration={1500}
+                        stroke="none"
+                      >
+                        {analytics.topCategories.map((entry, index) => (
+                          <Cell key={`cell-${index}`} fill={PIE_COLORS[index % PIE_COLORS.length]} />
+                        ))}
+                      </Pie>
+                      <Tooltip 
+                        contentStyle={{ background: "#fff", border: "1px solid #E5DDD5", borderRadius: "12px", fontSize: "12px" }}
+                        itemStyle={{ fontWeight: "bold" }}
+                        formatter={(val) => [`${val} items`, "Sales"]}
+                      />
+                    </PieChart>
+                  </ResponsiveContainer>
+                </div>
+                
+                {/* Custom Legend */}
+                <div className="w-full mt-4 flex flex-wrap items-center justify-center gap-4 px-4">
+                  {analytics.topCategories.map((entry, index) => (
+                    <div key={index} className="flex items-center gap-2">
+                       <span className="w-3 h-3 rounded-full" style={{ backgroundColor: PIE_COLORS[index % PIE_COLORS.length] }}></span>
+                       <span className="text-[11px] font-bold text-[var(--charcoal)] uppercase tracking-wider">{entry.name}</span>
+                       <span className="text-[11px] text-[var(--muted)]">({entry.value})</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+
+        </div>
 
       </div>
     </AdminLayout>
