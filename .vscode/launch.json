@@ -1,0 +1,61 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Backend Server (Express)",
+      "type": "node",
+      "request": "launch",
+      "cwd": "${workspaceFolder}/backend",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": [
+        "run",
+        "dev"
+      ],
+      "console": "integratedTerminal",
+      "presentation": {
+        "group": "lumbarong",
+        "order": 1
+      }
+    },
+    {
+      "name": "Frontend Server (Next.js)",
+      "type": "node",
+      "request": "launch",
+      "cwd": "${workspaceFolder}/frontend",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": [
+        "run",
+        "dev"
+      ],
+      "console": "integratedTerminal",
+      "presentation": {
+        "group": "lumbarong",
+        "order": 2
+      }
+    },
+    {
+      "name": "Launch Lumbarong",
+      "type": "msedge",
+      "request": "launch",
+      "url": "http://localhost:3000",
+      "webRoot": "${workspaceFolder}/frontend",
+      "preLaunchTask": "Launch System",
+      "presentation": {
+        "group": "lumbarong",
+        "order": 3
+      }
+    },
+    {
+      "name": "Flutter App",
+      "type": "dart",
+      "request": "launch",
+      "cwd": "${workspaceFolder}/flutter_app",
+      "program": "${workspaceFolder}/flutter_app/lib/main.dart",
+      "flutterMode": "debug",
+      "presentation": {
+        "group": "lumbarong",
+        "order": 5
+      }
+    }
+  ]
+}
