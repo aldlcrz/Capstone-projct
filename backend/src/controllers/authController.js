@@ -6,7 +6,7 @@ const { OAuth2Client } = require('google-auth-library');
 const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 const { User } = require('../models');
 const socketUtility = require('../utils/socketUtility');
-const { sendPasswordResetEmail } = require('../utils/emailService');
+const { sendPasswordResetEmail, sendPasswordResetCodeEmail } = require('../utils/emailService');
 const {
   LIMITS,
   normalizeWhitespace,
@@ -188,47 +188,81 @@ exports.forgotPassword = async (req, res) => {
     user = await User.findOne({ where: { email: cleanedEmail } });
 
     if (!user) {
-      return res.status(200).json({ message: GENERIC_PASSWORD_RESET_MESSAGE });
+      // Even if user not found, we return 200 for security, but without sending email
+      return res.status(200).json({ message: 'If an account with that email exists, a verification code has been sent.' });
     }
 
-    const resetToken = crypto.randomBytes(32).toString('hex');
-    const resetUrl = buildResetUrl(resetToken);
-    user.resetPasswordToken = hashResetToken(resetToken);
+    // Generate 6-digit code
+    const resetCode = Math.floor(100000 + Math.random() * 900000).toString();
+    
+    user.resetPasswordCode = resetCode;
     user.resetPasswordExpires = new Date(Date.now() + RESET_PASSWORD_WINDOW_MINUTES * 60 * 1000);
     await user.save();
 
-    const delivery = await sendPasswordResetEmail({
+    const delivery = await sendPasswordResetCodeEmail({
       email: user.email,
       name: user.name,
-      resetUrl,
+      code: resetCode,
       expiresInMinutes: RESET_PASSWORD_WINDOW_MINUTES,
     });
 
-    const response = { message: GENERIC_PASSWORD_RESET_MESSAGE };
+    const response = { message: 'Verification code sent to your email.' };
     if (process.env.NODE_ENV !== 'production' && delivery?.provider === 'console') {
-      response.devResetUrl = resetUrl;
+      response.devResetCode = resetCode;
       response.delivery = 'console';
     }
 
     return res.status(200).json(response);
   } catch (error) {
+    console.error('ForgotPassword Error:', error);
     if (user) {
-      user.resetPasswordToken = null;
+      user.resetPasswordCode = null;
       user.resetPasswordExpires = null;
       await user.save();
     }
 
-    return res.status(500).json({ message: 'Unable to send a password reset link right now' });
+    return res.status(500).json({ message: 'Unable to send verification code right now' });
+  }
+};
+
+exports.verifyResetCode = async (req, res) => {
+  try {
+    const email = String(req.body?.email || '').trim().toLowerCase();
+    const code = String(req.body?.code || '').trim();
+
+    if (!email || !code) {
+      return res.status(400).json({ message: 'Email and verification code are required' });
+    }
+
+    const user = await User.findOne({
+      where: {
+        email,
+        resetPasswordCode: code,
+        resetPasswordExpires: {
+          [Op.gt]: new Date(),
+        },
+      },
+    });
+
+    if (!user) {
+      return res.status(400).json({ message: 'Invalid or expired verification code' });
+    }
+
+    return res.status(200).json({ message: 'Code verified successfully', email, code });
+  } catch (error) {
+    console.error('VerifyResetCode Error:', error);
+    return res.status(500).json({ message: 'Verification failed' });
   }
 };
 
 exports.resetPassword = async (req, res) => {
   try {
-    const token = String(req.body?.token || '').trim();
+    const email = String(req.body?.email || '').trim().toLowerCase();
+    const code = String(req.body?.code || '').trim();
     const password = String(req.body?.password || '');
 
-    if (!token || !password) {
-      return res.status(400).json({ message: 'Reset token and new password are required' });
+    if (!email || !code || !password) {
+      return res.status(400).json({ message: 'All fields are required' });
     }
 
     if (password.length < 6 || password.length > 32) {
@@ -237,7 +271,8 @@ exports.resetPassword = async (req, res) => {
 
     const user = await User.findOne({
       where: {
-        resetPasswordToken: hashResetToken(token),
+        email,
+        resetPasswordCode: code,
         resetPasswordExpires: {
           [Op.gt]: new Date(),
         },
@@ -245,11 +280,11 @@ exports.resetPassword = async (req, res) => {
     });
 
     if (!user) {
-      return res.status(400).json({ message: 'Reset link is invalid or has expired' });
+      return res.status(400).json({ message: 'Invalid or expired session. Please start over.' });
     }
 
     user.password = await bcrypt.hash(password, 10);
-    user.resetPasswordToken = null;
+    user.resetPasswordCode = null;
     user.resetPasswordExpires = null;
     user.passwordChangedAt = new Date();
     await user.save();
@@ -258,6 +293,7 @@ exports.resetPassword = async (req, res) => {
 
     return res.status(200).json({ message: 'Password reset successful' });
   } catch (error) {
+    console.error('ResetPassword Error:', error);
     return res.status(500).json({ message: 'Unable to reset password right now' });
   }
 };
