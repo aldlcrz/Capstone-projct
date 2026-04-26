@@ -97,6 +97,7 @@ export default function ProductDetailClient() {
   const [expandedReviewId, setExpandedReviewId] = useState(null);
   const [expandedImageIndex, setExpandedImageIndex] = useState(0);
   const [isReportModalOpen, setIsReportModalOpen] = useState(false);
+  const [maintenanceMode, setMaintenanceMode] = useState(false);
   const isManualChange = useRef(false);
 
   const handleExpandReviewImage = useCallback((reviewId, index) => {
@@ -155,6 +156,10 @@ export default function ProductDetailClient() {
 
   const fetchProduct = useCallback(async () => {
     try {
+      const publicSettings = await api.get("/admin/public-settings");
+      if (publicSettings.data.maintenanceMode !== undefined) {
+        setMaintenanceMode(publicSettings.data.maintenanceMode === true || publicSettings.data.maintenanceMode === "true");
+      }
       const res = await api.get(`/products/${id}`);
       const normalizedSizes = normalizeProductSizes(res.data.sizes);
       setProduct({
@@ -382,7 +387,7 @@ export default function ProductDetailClient() {
     : (product?.category || "Uncategorized");
 
   const handleAddToCart = () => {
-    if (!product || userRole === 'admin') return;
+    if (!product || userRole === 'admin' || maintenanceMode) return;
     const selectedSizeInfo = typeof availableSizes[0] === 'object' 
       ? availableSizes.find(s => (s.size || s.name) === selectedSize)
       : null;
@@ -440,7 +445,7 @@ export default function ProductDetailClient() {
   };
 
   const handleBuyNow = () => {
-    if (!product || userRole === 'admin') return;
+    if (!product || userRole === 'admin' || maintenanceMode) return;
     const selectedSizeInfo = typeof availableSizes[0] === 'object' 
       ? availableSizes.find(s => (s.size || s.name) === selectedSize)
       : null;
@@ -1156,8 +1161,16 @@ export default function ProductDetailClient() {
               </div>
 
               <div className="pd-actions">
-                    <button onClick={handleAddToCart} className="pd-btn-cart"><ShoppingCart size={17} /> {addedToCart ? "Added!" : "Add to Cart"}</button>
-                    <button onClick={handleBuyNow} className="pd-btn-buy">Buy Now</button>
+                    {maintenanceMode ? (
+                      <div className="w-full p-4 bg-amber-50 border border-amber-200 rounded-xl flex items-center justify-center gap-3 text-amber-700 text-[10px] font-black uppercase tracking-widest animate-pulse shadow-sm">
+                        <ShieldAlert className="w-4 h-4" /> Orders are temporarily paused
+                      </div>
+                    ) : (
+                      <>
+                        <button onClick={handleAddToCart} className="pd-btn-cart"><ShoppingCart size={17} /> {addedToCart ? "Added!" : "Add to Cart"}</button>
+                        <button onClick={handleBuyNow} className="pd-btn-buy">Buy Now</button>
+                      </>
+                    )}
                   </div>
                 </>
               )}

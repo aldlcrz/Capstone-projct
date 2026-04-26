@@ -24,6 +24,7 @@ export default function CartPage() {
   const [cartItems, setCartItems] = useState([]);
   const [selectedItems, setSelectedItems] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [maintenanceMode, setMaintenanceMode] = useState(false);
 
   useEffect(() => {
     const loadCart = () => {
@@ -38,6 +39,14 @@ export default function CartPage() {
     
     window.addEventListener('storage', loadCart);
     window.addEventListener(CUSTOMER_STORAGE_SYNC_EVENT, loadCart);
+
+    const fetchPublicSettings = async () => {
+      try {
+        const res = await api.get("/admin/public-settings");
+        setMaintenanceMode(res.data.maintenanceMode === true || res.data.maintenanceMode === "true");
+      } catch (e) { console.error("Failed to fetch public settings"); }
+    };
+    fetchPublicSettings();
 
     return () => {
       window.removeEventListener('storage', loadCart);
@@ -99,6 +108,10 @@ export default function CartPage() {
 
   const router = useRouter();
   const handleCheckout = () => {
+    if (maintenanceMode) {
+      alert("Orders are temporarily paused for maintenance. Please try again later.");
+      return;
+    }
     if (selectedCartItems.length === 0) {
       alert("Please select at least one heritage piece to proceed.");
       return;
@@ -291,10 +304,10 @@ export default function CartPage() {
                         <button 
                            type="button"
                            onClick={handleCheckout}
-                           disabled={selectedItems.length === 0}
+                           disabled={selectedItems.length === 0 || maintenanceMode}
                            className="flex-1 md:px-10 py-3.5 bg-[var(--rust)] text-white rounded-xl text-[10px] font-extrabold uppercase tracking-[0.2em] shadow-lg shadow-pink-900/5 hover:bg-[#A33420] transition-all disabled:bg-[#E5DDD5] disabled:text-[var(--muted)] disabled:opacity-50 disabled:grayscale transition-all active:scale-95"
                         >
-                           CHECK OUT ({selectedItems.length})
+                           {maintenanceMode ? "ORDERS PAUSED" : `CHECK OUT (${selectedItems.length})`}
                         </button>
                      </div>
                   </div>
@@ -326,10 +339,10 @@ export default function CartPage() {
                      <button 
                        type="button"
                        onClick={handleCheckout}
-                       disabled={selectedItems.length === 0}
+                       disabled={selectedItems.length === 0 || maintenanceMode}
                        className="w-full py-5 bg-[var(--rust)] text-white rounded-[1.2rem] text-[11px] font-extrabold uppercase tracking-[0.2em] shadow-lg shadow-pink-900/10 hover:bg-[#A33420] transition-all flex items-center justify-center gap-2 group/btn disabled:bg-[#E5DDD5] disabled:text-[var(--muted)] disabled:opacity-50 active:scale-[0.98]"
                      >
-                        CHECK OUT ({selectedItems.length})
+                        {maintenanceMode ? "ORDERS TEMPORARILY PAUSED" : `CHECK OUT (${selectedItems.length})`}
                      </button>
                      <div className="flex items-center justify-center gap-2.5 text-[10px] font-bold text-[#A3A3A3] uppercase tracking-widest">
                         <ShieldCheck className="w-4 h-4 text-[#22C55E]" />
