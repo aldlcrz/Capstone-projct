@@ -89,6 +89,20 @@ const restockOrderItems = async (orderId, transaction) => {
 };
 
 exports.createOrder = async (req, res) => {
+  const userRole = req.user.role;
+  const userStatus = req.user.status;
+
+  // Global Maintenance Mode Guard
+  const maintenanceSetting = await SystemSetting.findOne({ where: { key: 'maintenanceMode' } });
+  const isMaintenance = maintenanceSetting && (maintenanceSetting.value === true || maintenanceSetting.value === "true");
+  
+  if (isMaintenance && userRole !== 'admin') {
+    return res.status(403).json({ 
+      message: "Transactions are temporarily paused for maintenance. Please try again later.",
+      maintenanceMode: true 
+    });
+  }
+
   let transaction;
   let committed = false;
 
@@ -96,8 +110,6 @@ exports.createOrder = async (req, res) => {
     transaction = await sequelize.transaction();
     let { items, shippingAddress, addressId, paymentMethod, paymentReference, paymentProof } = req.body;
     const customerId = req.user.id;
-    const userRole = req.user.role;
-    const userStatus = req.user.status;
 
     console.log(`[CreateOrder] Initializing for customer ${customerId} (${userRole})`);
 

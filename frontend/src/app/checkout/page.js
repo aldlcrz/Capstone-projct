@@ -28,6 +28,7 @@ import {
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { api, getApiErrorMessage, getTokenForRole } from "@/lib/api";
+import { useSocket } from "@/context/SocketContext";
 import { getProductImageSrc, resolveBackendImageUrl } from "@/lib/productImages";
 import { validateImageFile } from "@/lib/imageUploadValidation";
 import dynamic from "next/dynamic";
@@ -76,6 +77,7 @@ export default function CheckoutPage() {
   const [selectedAddressId, setSelectedAddressId] = useState(null);
   const [addressLoaded, setAddressLoaded] = useState(false);
   const [maintenanceMode, setMaintenanceMode] = useState(false);
+  const { socket } = useSocket();
 
 
 
@@ -167,9 +169,25 @@ export default function CheckoutPage() {
     };
     fetchPublicSettings();
 
+    // Socket listener for real-time updates
+    const handleSettingsUpdated = (data) => {
+      if (data.maintenanceMode !== undefined) {
+        setMaintenanceMode(data.maintenanceMode === true || data.maintenanceMode === "true");
+      }
+    };
+
+    if (socket) {
+      socket.on('settings_updated', handleSettingsUpdated);
+    }
+
     fetchSavedAddresses();
 
-  }, [currentStep]);
+    return () => {
+      if (socket) {
+        socket.off('settings_updated', handleSettingsUpdated);
+      }
+    };
+  }, [currentStep, socket]);
 
   // Adjust payment method based on product settings when items are loaded
   useEffect(() => {

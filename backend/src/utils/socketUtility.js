@@ -9,7 +9,8 @@ const SOCKET_EVENTS = {
   REVIEW_UPDATED: 'review_updated',
   STATS_UPDATE: 'stats_update',
   NOTIFICATION_COUNT_UPDATE: 'notification_count_update',
-  NEW_NOTIFICATION: 'new_notification'
+  NEW_NOTIFICATION: 'new_notification',
+  SETTINGS_UPDATED: 'settings_updated'
 };
 
 const init = (ioInstance) => {
@@ -160,6 +161,7 @@ module.exports = {
   emitUserUpdated,
   emitDashboardUpdate,
   emitStatsUpdate,
+  emitSettingsUpdated,
   broadcast,
   SOCKET_EVENTS,
   configureSocketServer

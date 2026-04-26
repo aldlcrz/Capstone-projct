@@ -14,6 +14,8 @@ import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { getProductImageSrc } from "@/lib/productImages";
+import { api } from "@/lib/api";
+import { useSocket } from "@/context/SocketContext";
 import {
   CUSTOMER_STORAGE_SYNC_EVENT,
   getCustomerScopedJson,
@@ -25,6 +27,7 @@ export default function CartPage() {
   const [selectedItems, setSelectedItems] = useState([]);
   const [loading, setLoading] = useState(true);
   const [maintenanceMode, setMaintenanceMode] = useState(false);
+  const { socket } = useSocket();
 
   useEffect(() => {
     const loadCart = () => {
@@ -48,11 +51,25 @@ export default function CartPage() {
     };
     fetchPublicSettings();
 
+    // Socket listener for real-time updates
+    const handleSettingsUpdated = (data) => {
+      if (data.maintenanceMode !== undefined) {
+        setMaintenanceMode(data.maintenanceMode === true || data.maintenanceMode === "true");
+      }
+    };
+
+    if (socket) {
+      socket.on('settings_updated', handleSettingsUpdated);
+    }
+    
     return () => {
       window.removeEventListener('storage', loadCart);
       window.removeEventListener(CUSTOMER_STORAGE_SYNC_EVENT, loadCart);
+      if (socket) {
+        socket.off('settings_updated', handleSettingsUpdated);
+      }
     };
-  }, []);
+  }, [socket]);
 
   const toggleItemSelection = (id, size, variation = "") => {
     const key = `${id}-${size}-${variation || ""}`;

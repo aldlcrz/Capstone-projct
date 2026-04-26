@@ -269,12 +269,20 @@ export default function ProductDetailClient() {
         ));
       };
 
+      const handleSettingsUpdated = (data) => {
+        if (data.maintenanceMode !== undefined) {
+          setMaintenanceMode(data.maintenanceMode === true || data.maintenanceMode === "true");
+        }
+      };
+
       socket.on('inventory_updated', handleInventoryUpdated);
       socket.on('review_updated', handleReviewUpdated);
+      socket.on('settings_updated', handleSettingsUpdated);
 
       return () => {
         socket.off('inventory_updated', handleInventoryUpdated);
         socket.off('review_updated', handleReviewUpdated);
+        socket.off('settings_updated', handleSettingsUpdated);
       };
     }
 

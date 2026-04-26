@@ -1,7 +1,7 @@
 const { User, Product, Order, OrderItem, SystemSetting, sequelize } = require('../models');
 const { Op } = require('sequelize');
 const { sendNotification } = require('../utils/notificationHelper');
-const { emitUserUpdated, emitDashboardUpdate, broadcast } = require('../utils/socketUtility');
+const { emitUserUpdated, emitDashboardUpdate, broadcast, emitSettingsUpdated } = require('../utils/socketUtility');
 const { getRangeBounds } = require('../utils/dateHelper');
 const { resetLoginRateLimit } = require('../routes/authRoutes');
 
@@ -568,9 +568,16 @@ exports.updateSettings = async (req, res) => {
 
 
     for (const [key, value] of Object.entries(updates)) {
-      // Ensure we don't save already encoded strings if they came from a corrupted state
       await SystemSetting.upsert({ key, value: cleanSettingValue(value) });
     }
+
+    const updatedSettings = await SystemSetting.findAll();
+    const settingsMap = updatedSettings.reduce((acc, s) => {
+      acc[s.key] = cleanSettingValue(s.value);
+      return acc;
+    }, {});
+    emitSettingsUpdated(settingsMap);
+
     res.status(200).json({ message: 'Settings updated successfully' });
   } catch (error) {
     res.status(500).json({ message: error.message });
