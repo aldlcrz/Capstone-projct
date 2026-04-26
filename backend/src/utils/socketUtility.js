@@ -149,6 +149,10 @@ const broadcast = (message, title = 'System Broadcast') => {
   });
 };
 
+const emitSettingsUpdated = (settings) => {
+  emit(SOCKET_EVENTS.SETTINGS_UPDATED, settings);
+};
+
 module.exports = {
   init,
   emit,
