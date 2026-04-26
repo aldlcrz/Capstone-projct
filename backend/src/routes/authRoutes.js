@@ -2,7 +2,7 @@ const express = require('express');
 const rateLimit = require('express-rate-limit');
 const { ipKeyGenerator } = require('express-rate-limit');
 const authMiddleware = require('../middleware/authMiddleware');
-const { register, login, forgotPassword, resetPassword, getProfile, googleLogin, setPassword } = require('../controllers/authController');
+const { register, login, forgotPassword, verifyOtp, resetPassword, getProfile, googleLogin, setPassword } = require('../controllers/authController');
 const { imageUpload } = require('../middleware/uploadMiddleware');
 const { validateStoredImageUpload } = require('../utils/imageUploadSecurity');
 const fs = require('fs');
@@ -56,7 +56,16 @@ const passwordResetLimiter = rateLimit({
   max: 5,
   standardHeaders: true,
   legacyHeaders: false,
-  message: { error: 'Too many password reset requests, please try again after an hour' }
+  keyGenerator: (req) => {
+    return (req.body?.email || '').toLowerCase().trim() || ipKeyGenerator(req);
+  },
+  handler: (req, res) => {
+    const resetTime = req.rateLimit.resetTime;
+    res.status(429).json({
+      message: 'Too many password reset requests',
+      retryAfter: resetTime,
+    });
+  }
 });
 
 const validateRegistrationImages = async (req, res, next) => {
@@ -89,6 +98,7 @@ router.post(
 );
 router.post('/login', loginLimiter, login);
 router.post('/forgot-password', passwordResetLimiter, forgotPassword);
+router.post('/verify-otp', passwordResetLimiter, verifyOtp);
 router.post('/reset-password', passwordResetLimiter, resetPassword);
 router.post('/google', googleLogin);
 router.post('/set-password', authMiddleware.protect, setPassword);

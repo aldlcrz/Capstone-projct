@@ -39,13 +39,80 @@ export default function ForgotPasswordClient() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [submitted, setSubmitted] = useState(false);
-  const [submittedEmail, setSubmittedEmail] = useState("");
-  const [devResetUrl, setDevResetUrl] = useState("");
-  const devResetHref = normalizeResetLink(devResetUrl);
+  const [otp, setOtp] = useState("");
+  const [verifying, setVerifying] = useState(false);
+  const [devOtp, setDevOtp] = useState("");
+  const [retryAfter, setRetryAfter] = useState(null);
+  const [timeLeft, setTimeLeft] = useState("");
+
+  // Update countdown display when email changes or timer ticks
+  React.useEffect(() => {
+    if (typeof window === 'undefined') return;
+    
+    const checkLimit = () => {
+      const savedRetries = JSON.parse(localStorage.getItem("password_reset_retries") || "{}");
+      const normalizedEmail = email.trim().toLowerCase();
+      
+      if (normalizedEmail && savedRetries[normalizedEmail]) {
+        const resetTime = new Date(savedRetries[normalizedEmail]).getTime();
+        if (resetTime > Date.now()) {
+          setRetryAfter(resetTime);
+        } else {
+          const newRetries = { ...savedRetries };
+          delete newRetries[normalizedEmail];
+          localStorage.setItem("password_reset_retries", JSON.stringify(newRetries));
+          setRetryAfter(null);
+        }
+      } else {
+        setRetryAfter(null);
+      }
+    };
+
+    checkLimit();
+  }, [email]);
+
+  // Timer tick logic
+  React.useEffect(() => {
+    if (!retryAfter) {
+      setTimeLeft("");
+      return () => {};
+    }
+
+    const timer = setInterval(() => {
+      const now = Date.now();
+      const distance = retryAfter - now;
+
+      if (distance <= 0) {
+        setRetryAfter(null);
+        setTimeLeft("");
+        setError("");
+        
+        const savedRetries = JSON.parse(localStorage.getItem("password_reset_retries") || "{}");
+        const normalizedEmail = email.trim().toLowerCase();
+        if (normalizedEmail) {
+          delete savedRetries[normalizedEmail];
+          localStorage.setItem("password_reset_retries", JSON.stringify(savedRetries));
+        }
+        
+        clearInterval(timer);
+      } else {
+        const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+        const seconds = Math.floor((distance % (1000 * 60)) / 1000);
+        setTimeLeft(`${minutes}:${seconds < 10 ? "0" : ""}${seconds}`);
+      }
+    }, 1000);
+
+    return () => clearInterval(timer);
+  }, [retryAfter, email]);
 
   const handleSubmit = async (event) => {
     event.preventDefault();
     setError("");
+
+    if (retryAfter) {
+      setError(`Too many requests for this email. Try again in ${timeLeft}`);
+      return;
+    }
 
     const normalizedEmail = email.trim().toLowerCase();
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -58,13 +125,48 @@ export default function ForgotPasswordClient() {
     setLoading(true);
     try {
       const response = await api.post("/auth/forgot-password", { email: normalizedEmail });
-      setSubmittedEmail(normalizedEmail);
-      setDevResetUrl(response.data?.devResetUrl || "");
+      setDevOtp(response.data?.devOtp || "");
       setSubmitted(true);
     } catch (requestError) {
-      setError(getApiErrorMessage(requestError, "Unable to start password reset right now."));
+      if (requestError.response?.status === 429) {
+        const resetTime = new Date(requestError.response.data.retryAfter).getTime();
+        setRetryAfter(resetTime);
+        
+        // Save specifically for this email
+        const savedRetries = JSON.parse(localStorage.getItem("password_reset_retries") || "{}");
+        savedRetries[normalizedEmail] = requestError.response.data.retryAfter;
+        localStorage.setItem("password_reset_retries", JSON.stringify(savedRetries));
+        
+        setError(`Too many requests for this email. Try again in calculating...`);
+      } else {
+        setError(getApiErrorMessage(requestError, "Unable to start password reset right now."));
+      }
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleVerifyOtp = async (event) => {
+    event.preventDefault();
+    setError("");
+
+    if (otp.length !== 6) {
+      setError("Please enter the 6-digit code.");
+      return;
+    }
+
+    setVerifying(true);
+    try {
+      const response = await api.post("/auth/verify-otp", { 
+        email: email.trim().toLowerCase(), 
+        otp 
+      });
+      // Redirect to reset password page with the verified token
+      router.push(`/reset-password?token=${response.data.resetToken}`);
+    } catch (requestError) {
+      setError(getApiErrorMessage(requestError, "Invalid or expired OTP. Please try again."));
+    } finally {
+      setVerifying(false);
     }
   };
 
@@ -97,7 +199,14 @@ export default function ForgotPasswordClient() {
       >
         <div className="mb-10 text-center relative flex items-center justify-center">
           <button
-            onClick={() => router.back()}
+            onClick={() => {
+              if (submitted) {
+                setSubmitted(false);
+                setOtp("");
+              } else {
+                router.back();
+              }
+            }}
             className="absolute left-0 p-2.5 bg-[#F9F6F2] hover:bg-[#EBDCCB] text-[var(--muted)] hover:text-[var(--rust)] rounded-xl transition-all border border-[#E5DDD5] shadow-sm transform hover:scale-105"
             title="Go Back"
           >
@@ -122,7 +231,7 @@ export default function ForgotPasswordClient() {
         </div>
 
         <AnimatePresence>
-          {error && (
+          {(error || retryAfter) && (
             <motion.div
               initial={{ opacity: 0, y: -10, scale: 0.97 }}
               animate={{ opacity: 1, y: 0, scale: 1 }}
@@ -131,78 +240,106 @@ export default function ForgotPasswordClient() {
               className="mb-8 p-4 rounded-2xl text-[10px] font-bold text-center flex items-center justify-center gap-2 uppercase tracking-wider"
               style={{ background: "#FEF0EE", border: "1px solid #F9D0C8", color: "var(--rust)" }}
             >
-              <ShieldCheck className="w-4 h-4 shrink-0" /> {error}
+              <ShieldCheck className="w-4 h-4 shrink-0" /> 
+              {retryAfter ? `Too many requests. Try again in ${timeLeft}` : error}
             </motion.div>
           )}
         </AnimatePresence>
 
         {submitted ? (
-          <div className="space-y-6 text-center">
-            <div className="w-16 h-16 rounded-full bg-[#eef8f2] text-[#1c7c54] flex items-center justify-center mx-auto">
-              <CheckCircle2 className="w-8 h-8" />
-            </div>
-            <div className="space-y-3">
-              <h1 className="font-serif text-xl font-bold text-[var(--charcoal)]">Check your email</h1>
+          <form onSubmit={handleVerifyOtp} className="space-y-6" autoComplete="off">
+            <div className="space-y-3 text-center">
+              <h1 className="font-serif text-xl font-bold text-[var(--charcoal)]">Enter Verification Code</h1>
               <p className="text-sm leading-6 text-[var(--muted)]">
-                If an account exists for <span className="font-semibold text-[var(--charcoal)]">{submittedEmail}</span>, a reset link has been sent.
+                We've sent a 6-digit code to <span className="font-semibold text-[var(--charcoal)]">{email}</span>.
               </p>
-              {devResetUrl ? (
-                <p className="text-xs leading-5 text-[var(--muted)]">
-                  Email delivery is not configured in local development, so you can continue directly with the reset link below.
-                </p>
-              ) : (
-                <p className="text-xs leading-5 text-[var(--muted)]">
-                  If email delivery is configured, the reset link will arrive in the inbox for that account.
-                </p>
-              )}
             </div>
-            <div className="space-y-3">
-              {devResetUrl ? (
-                <Link
-                  href={devResetHref}
-                  className="w-full inline-flex items-center justify-center gap-3 text-white text-[10px] font-bold uppercase tracking-[0.2em]"
-                  style={{
-                    padding: "0.875rem",
-                    borderRadius: "9999px",
-                    background: "var(--rust, #C0422A)",
-                    boxShadow: "0 6px 20px rgba(192,66,42,0.18)",
+
+            <div className="space-y-2">
+              <label
+                className="text-[10px] font-bold uppercase tracking-widest ml-5 block"
+                style={{ color: "var(--muted, #8C7B70)" }}
+              >
+                6-Digit OTP
+              </label>
+              <div className="relative group">
+                <ShieldCheck
+                  className="absolute left-6 top-1/2 -translate-y-1/2 w-4 h-4 transition-colors duration-300 group-focus-within:text-[color:var(--rust)]"
+                  style={{ color: "var(--border, #E5DDD5)" }}
+                />
+                <input
+                  type="text"
+                  maxLength={6}
+                  placeholder="Enter 6-digit code"
+                  className="w-full text-center text-lg font-bold tracking-[0.5em] outline-none transition-all duration-300 placeholder:text-gray-300 placeholder:tracking-normal"
+                  required
+                  value={otp}
+                  onChange={(event) => {
+                    const val = event.target.value.replace(/\D/g, "");
+                    if (val.length <= 6) setOtp(val);
                   }}
-                >
-                  Open Reset Link <ArrowRight className="w-4 h-4" />
-                </Link>
-              ) : null}
-              <Link
-                href="/login"
-                className="w-full inline-flex items-center justify-center gap-3 text-white text-[10px] font-bold uppercase tracking-[0.2em]"
-                style={{
-                  padding: "0.875rem",
-                  borderRadius: "9999px",
-                  background: "var(--bark, #3D2B1F)",
-                  boxShadow: "0 6px 20px rgba(60,43,31,0.18)",
-                }}
-              >
-                Back To Login <ArrowRight className="w-4 h-4" />
-              </Link>
-              <button
-                type="button"
-                onClick={() => {
-                  setSubmitted(false);
-                  setEmail("");
-                  setSubmittedEmail("");
-                  setDevResetUrl("");
-                }}
-                className="text-[10px] font-bold uppercase tracking-[0.2em] text-[var(--rust)] hover:opacity-70 transition-opacity"
-              >
-                Try Another Email
-              </button>
+                  style={{
+                    paddingLeft: "3rem",
+                    paddingRight: "1.25rem",
+                    paddingTop: "0.875rem",
+                    paddingBottom: "0.875rem",
+                    background: "var(--input-bg, #F9F6F2)",
+                    borderRadius: "9999px",
+                    border: "1.5px solid transparent",
+                    color: "var(--charcoal, #1C1917)",
+                  }}
+                  onFocus={(event) => {
+                    event.target.style.borderColor = "var(--rust)";
+                    event.target.style.background = "white";
+                  }}
+                  onBlur={(event) => {
+                    event.target.style.borderColor = "transparent";
+                    event.target.style.background = "var(--input-bg, #F9F6F2)";
+                  }}
+                />
+              </div>
             </div>
-          </div>
+
+            <motion.button
+              type="submit"
+              disabled={verifying}
+              whileHover={{ scale: verifying ? 1 : 1.02 }}
+              whileTap={{ scale: verifying ? 1 : 0.97 }}
+              transition={{ type: "spring", stiffness: 400, damping: 20 }}
+              className="w-full text-white text-[10px] font-bold uppercase tracking-[0.2em] flex items-center justify-center gap-3 mt-4 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
+              style={{
+                padding: "0.875rem",
+                borderRadius: "9999px",
+                background: "var(--bark, #3D2B1F)",
+                boxShadow: "0 6px 20px rgba(60,43,31,0.18)",
+              }}
+            >
+              {verifying ? <Loader2 className="w-5 h-5 animate-spin" /> : <>Verify Code <ArrowRight className="w-4 h-4" /></>}
+            </motion.button>
+
+            {devOtp && (
+              <p className="text-[10px] text-center text-[var(--muted)] italic">
+                Local Dev Code: <span className="font-bold text-[var(--rust)]">{devOtp}</span>
+              </p>
+            )}
+
+            <button
+              type="button"
+              onClick={() => {
+                setSubmitted(false);
+                setOtp("");
+              }}
+              className="w-full text-[10px] font-bold uppercase tracking-[0.18em] text-[var(--muted)] hover:text-[var(--rust)] transition-colors"
+            >
+              Didn't receive a code? <span className="text-[var(--rust)]">Try again</span>
+            </button>
+          </form>
         ) : (
           <form onSubmit={handleSubmit} className="space-y-6" autoComplete="off">
             <div className="space-y-3 text-center">
               <h1 className="font-serif text-xl font-bold text-[var(--charcoal)]">Forgot your password?</h1>
               <p className="text-sm leading-6 text-[var(--muted)]">
-                Enter your account email and we will send you a reset link.
+                Enter your account email and we will send you a verification code.
               </p>
             </div>
 
@@ -263,7 +400,7 @@ export default function ForgotPasswordClient() {
                 boxShadow: "0 6px 20px rgba(60,43,31,0.18)",
               }}
             >
-              {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : <>Send Reset Link <ArrowRight className="w-4 h-4" /></>}
+              {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : <>Send Verification Code <ArrowRight className="w-4 h-4" /></>}
             </motion.button>
 
             <div className="text-center text-[10px] font-bold uppercase tracking-[0.18em] text-[var(--muted)]">

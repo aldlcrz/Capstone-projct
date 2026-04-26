@@ -25,6 +25,10 @@ const buildResetUrl = (token) => {
   return `${frontendUrl}/reset-password/?token=${encodeURIComponent(token)}`;
 };
 
+const generateOTP = () => {
+  return Math.floor(100000 + Math.random() * 900000).toString();
+};
+
 exports.register = async (req, res) => {
   try {
     const { name, email, password, role, mobileNumber, gcashNumber, isAdult } = req.body;
@@ -191,22 +195,21 @@ exports.forgotPassword = async (req, res) => {
       return res.status(200).json({ message: GENERIC_PASSWORD_RESET_MESSAGE });
     }
 
-    const resetToken = crypto.randomBytes(32).toString('hex');
-    const resetUrl = buildResetUrl(resetToken);
-    user.resetPasswordToken = hashResetToken(resetToken);
+    const otp = generateOTP();
+    user.resetPasswordToken = hashResetToken(otp);
     user.resetPasswordExpires = new Date(Date.now() + RESET_PASSWORD_WINDOW_MINUTES * 60 * 1000);
     await user.save();
 
     const delivery = await sendPasswordResetEmail({
       email: user.email,
       name: user.name,
-      resetUrl,
+      otp, // Sending OTP instead of URL
       expiresInMinutes: RESET_PASSWORD_WINDOW_MINUTES,
     });
 
-    const response = { message: GENERIC_PASSWORD_RESET_MESSAGE };
+    const response = { message: 'A 6-digit code has been sent to your email.' };
     if (process.env.NODE_ENV !== 'production' && delivery?.provider === 'console') {
-      response.devResetUrl = resetUrl;
+      response.devOtp = otp;
       response.delivery = 'console';
     }
 
@@ -219,6 +222,39 @@ exports.forgotPassword = async (req, res) => {
     }
 
     return res.status(500).json({ message: 'Unable to send a password reset link right now' });
+  }
+};
+
+exports.verifyOtp = async (req, res) => {
+  try {
+    const { email, otp } = req.body;
+
+    if (!email || !otp) {
+      return res.status(400).json({ message: 'Email and OTP are required' });
+    }
+
+    const user = await User.findOne({
+      where: {
+        email: email.toLowerCase(),
+        resetPasswordToken: hashResetToken(otp),
+        resetPasswordExpires: {
+          [Op.gt]: new Date(),
+        },
+      },
+    });
+
+    if (!user) {
+      return res.status(400).json({ message: 'Invalid or expired OTP' });
+    }
+
+    // Return a temporary "reset token" so the next step is secure
+    // We can just use the same OTP as the token for the reset-password call
+    return res.status(200).json({ 
+      message: 'OTP verified successfully',
+      resetToken: otp 
+    });
+  } catch (error) {
+    return res.status(500).json({ message: 'Unable to verify OTP right now' });
   }
 };
 

@@ -52,21 +52,21 @@ const sendWithGmail = async ({ email, subject, html, text }) => {
   }
 };
 
-exports.sendPasswordResetEmail = async ({ email, name, resetUrl, expiresInMinutes }) => {
+exports.sendPasswordResetEmail = async ({ email, name, otp, expiresInMinutes }) => {
   const safeName = name || 'there';
-  const subject = 'Reset your LumbaRong password';
-  const text = `Hello ${safeName}, use this link to reset your LumbaRong password: ${resetUrl}. This link expires in ${expiresInMinutes} minutes.`;
+  const subject = 'Your LumbaRong Password Recovery Code';
+  const text = `Hello ${safeName}, your 6-digit password recovery code is: ${otp}. This code expires in ${expiresInMinutes} minutes.`;
   const html = `
-    <div style="font-family: Arial, sans-serif; line-height: 1.6; color: #1f2937;">
-      <h2 style="margin-bottom: 8px;">Reset your LumbaRong password</h2>
-      <p>Hello ${safeName},</p>
-      <p>Click the button below to set a new password. This link expires in ${expiresInMinutes} minutes.</p>
-      <p style="margin: 24px 0;">
-        <a href="${resetUrl}" style="display: inline-block; padding: 12px 18px; background: #c0422a; color: #ffffff; text-decoration: none; border-radius: 999px;">Reset Password</a>
-      </p>
-      <p>If the button does not work, copy and paste this link into your browser:</p>
-      <p><a href="${resetUrl}">${resetUrl}</a></p>
-      <p>If you did not request this reset, you can ignore this email.</p>
+    <div style="font-family: Arial, sans-serif; line-height: 1.6; color: #1f2937; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e5e7eb; border-radius: 12px;">
+      <h2 style="color: #c0422a; margin-bottom: 16px;">Password Recovery</h2>
+      <p>Hello <strong>${safeName}</strong>,</p>
+      <p>You requested to reset your LumbaRong password. Use the code below to continue:</p>
+      <div style="margin: 32px 0; padding: 24px; background: #f9fafb; border-radius: 12px; text-align: center;">
+        <span style="font-family: monospace; font-size: 32px; font-weight: bold; letter-spacing: 8px; color: #1c1917;">${otp}</span>
+      </div>
+      <p style="font-size: 14px; color: #6b7280;">This code will expire in <strong>${expiresInMinutes} minutes</strong>. If you did not request this, please ignore this email.</p>
+      <hr style="margin: 32px 0; border: 0; border-top: 1px solid #e5e7eb;" />
+      <p style="font-size: 12px; color: #9ca3af; text-align: center;">LumbaRong &copy; 2026 | Artisan Registry of Lumban</p>
     </div>
   `;
 
@@ -84,6 +84,6 @@ exports.sendPasswordResetEmail = async ({ email, name, resetUrl, expiresInMinute
     throw new Error('No email provider is configured or all providers failed');
   }
 
-  console.warn(`[password-reset] Email provider not configured. Reset link for ${email}: ${resetUrl}`);
+  console.warn(`[password-reset] Email provider not configured. OTP for ${email}: ${otp}`);
   return { provider: 'console' };
 };
