@@ -2,7 +2,7 @@ const express = require('express');
 const rateLimit = require('express-rate-limit');
 const { ipKeyGenerator } = require('express-rate-limit');
 const authMiddleware = require('../middleware/authMiddleware');
-const { register, login, forgotPassword, verifyResetCode, resetPassword, getProfile, googleLogin, setPassword } = require('../controllers/authController');
+const { register, login, forgotPassword, resetPassword, getProfile, googleLogin, setPassword } = require('../controllers/authController');
 const { imageUpload } = require('../middleware/uploadMiddleware');
 const { validateStoredImageUpload } = require('../utils/imageUploadSecurity');
 const fs = require('fs');
@@ -89,7 +89,6 @@ router.post(
 );
 router.post('/login', loginLimiter, login);
 router.post('/forgot-password', passwordResetLimiter, forgotPassword);
-router.post('/verify-reset-code', passwordResetLimiter, verifyResetCode);
 router.post('/reset-password', passwordResetLimiter, resetPassword);
 router.post('/google', googleLogin);
 router.post('/set-password', authMiddleware.protect, setPassword);
