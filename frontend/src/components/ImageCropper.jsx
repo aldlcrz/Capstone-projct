@@ -9,6 +9,7 @@ import React, {
   forwardRef,
 } from "react";
 import { ImagePlus, Loader2 } from "lucide-react";
+import { validateImageFile } from "@/lib/imageUploadValidation";
 
 const ImageCropper = forwardRef(({ initialImage = "", onSave }, ref) => {
   const [image, setImage] = useState(initialImage);
@@ -17,6 +18,7 @@ const ImageCropper = forwardRef(({ initialImage = "", onSave }, ref) => {
   const [offset, setOffset] = useState({ x: 0, y: 0 });
   const [interaction, setInteraction] = useState(null);
   const [isSaving, setIsSaving] = useState(false);
+  const [validationError, setValidationError] = useState("");
 
   const containerRef = useRef(null);
   const fileInputRef = useRef(null);
@@ -37,9 +39,18 @@ const ImageCropper = forwardRef(({ initialImage = "", onSave }, ref) => {
     if (initialImage) setImage(initialImage);
   }, [initialImage]);
 
-  const handleFileChange = (e) => {
+  const handleFileChange = async (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
+
+    const error = await validateImageFile(file, "Image");
+    if (error) {
+      setValidationError(error);
+      e.target.value = "";
+      return;
+    }
+
+    setValidationError("");
 
     const reader = new FileReader();
     reader.onload = (event) => {
@@ -302,6 +313,9 @@ const ImageCropper = forwardRef(({ initialImage = "", onSave }, ref) => {
           </div>
         )}
       </div>
+      {validationError && (
+        <p className="text-xs font-bold text-red-600">{validationError}</p>
+      )}
     </div>
   );
 });

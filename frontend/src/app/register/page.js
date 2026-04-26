@@ -5,6 +5,7 @@ import { User, Mail, Lock, Upload, ArrowRight, Loader2, CheckCircle2, ShieldChec
 import { motion, AnimatePresence } from "framer-motion";
 import { usePathname, useRouter } from "next/navigation";
 import { api, getApiErrorMessage } from "@/lib/api";
+import { validateImageFile } from "@/lib/imageUploadValidation";
 import {
   INPUT_LIMITS,
   sanitizePersonNameInput,
@@ -14,8 +15,6 @@ import {
 } from "@/lib/inputValidation";
 import { GoogleLogin } from "@react-oauth/google";
 import { isGoogleAuthEnabled } from "@/lib/googleAuth";
-
-const isImageFile = (file) => Boolean(file?.type && file.type.startsWith("image/"));
 
 const cardVariants = {
   hidden: { opacity: 0, y: 32, scale: 0.97 },
@@ -100,8 +99,15 @@ export default function RegisterPage() {
         return;
       }
 
-      if (![certificate, validId, gcashQrCode].every(isImageFile)) {
-        setError("Seller verification uploads must be image files only.");
+      const uploadChecks = await Promise.all([
+        validateImageFile(certificate, "Indigency certificate"),
+        validateImageFile(validId, "Valid ID"),
+        validateImageFile(gcashQrCode, "GCash QR image"),
+      ]);
+
+      const firstUploadError = uploadChecks.find(Boolean);
+      if (firstUploadError) {
+        setError(firstUploadError);
         setLoading(false);
         return;
       }
@@ -411,14 +417,18 @@ export default function RegisterPage() {
                           <input
                             id={`${item.id}-upload`}
                             type="file"
-                            accept="image/*"
+                            accept="image/jpeg,image/png"
                             className="hidden"
-                            onChange={(e) => {
+                            onChange={async (e) => {
                               const file = e.target.files[0];
-                              if (file && !isImageFile(file)) {
-                                setError(`${item.label} must be an image file.`);
-                                e.target.value = "";
-                                return;
+                              if (file) {
+                                const validationError = await validateImageFile(file, item.label);
+                                if (validationError) {
+                                  setError(validationError);
+                                  e.target.value = "";
+                                  item.set(null);
+                                  return;
+                                }
                               }
                               setError("");
                               item.set(file || null);

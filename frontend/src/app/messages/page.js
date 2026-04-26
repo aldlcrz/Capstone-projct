@@ -3,7 +3,8 @@ import React, { useState, useEffect, useRef } from "react";
 import CustomerLayout from "@/components/CustomerLayout";
 import AdminLayout from "@/components/AdminLayout";
 import SellerLayout from "@/components/SellerLayout";
-import { MessageCircle, Store, Send, Loader2, MoreVertical, ChevronLeft } from "lucide-react";
+import { MessageCircle, Store, Send, Loader2, MoreVertical, ChevronLeft, ShieldAlert } from "lucide-react";
+import ReportModal from "@/components/ReportModal";
 import { motion, AnimatePresence } from "framer-motion";
 import Image from "next/image";
 import { useSearchParams } from "next/navigation";
@@ -244,6 +245,7 @@ function MessagesUI({
   const messagesEndRef = useRef(null);
   const [threadSearch, setThreadSearch] = useState("");
   const [menuOpen, setMenuOpen] = useState(false);
+  const [isReportModalOpen, setIsReportModalOpen] = useState(false);
   const menuRef = useRef(null);
 
   const Layout = userRole === 'admin' ? AdminLayout : (userRole === 'seller' ? SellerLayout : CustomerLayout);
@@ -470,6 +472,19 @@ function MessagesUI({
                       <div className="h-px bg-(--border) mx-4" />
 
                       <button
+                        onClick={() => {
+                          setMenuOpen(false);
+                          setIsReportModalOpen(true);
+                        }}
+                        className="w-full flex items-center gap-3 px-5 py-4 text-sm font-semibold text-red-500 hover:bg-red-50 transition-colors text-left"
+                      >
+                        <span className="w-7 h-7 rounded-lg bg-red-50 flex items-center justify-center"><ShieldAlert className="w-4 h-4" /></span>
+                        Report User
+                      </button>
+
+                      <div className="h-px bg-(--border) mx-4" />
+
+                      <button
                         onClick={handleDeleteConversation}
                         className="w-full flex items-center gap-3 px-5 py-4 text-sm font-semibold text-red-500 hover:bg-red-50 transition-colors text-left"
                       >
@@ -574,6 +589,16 @@ function MessagesUI({
           )}
         </section>
       </div>
+
+      {activeThread && (
+        <ReportModal
+          isOpen={isReportModalOpen}
+          onClose={() => setIsReportModalOpen(false)}
+          reportedId={activeThread.otherUser.id}
+          type={userRole === "seller" ? "SellerReportingCustomer" : "CustomerReportingSeller"}
+          reportedName={activeThread.otherUser.name}
+        />
+      )}
     </Layout>
   );
 }

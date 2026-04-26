@@ -157,6 +157,7 @@ const refundRoutes = require('./routes/refundRoutes');
 const userRoutes = require('./routes/userRoutes');
 const uploadRoutes = require('./routes/uploadRoutes');
 const reviewRoutes = require('./routes/reviewRoutes');
+const reportRoutes = require('./routes/reportRoutes');
 
 app.use('/api/v1/auth', authRoutes);
 app.use('/api/v1/products', productRoutes);
@@ -170,6 +171,7 @@ app.use('/api/v1/refunds', refundRoutes);
 app.use('/api/v1/users', userRoutes);
 app.use('/api/v1/upload', uploadRoutes);
 app.use('/api/v1/reviews', reviewRoutes);
+app.use('/api/v1/reports', reportRoutes);
 
 // Global Error Handler
 const errorHandler = require('./middleware/errorHandler');

@@ -336,7 +336,7 @@ export default function AdminProducts() {
                     </thead>
                     <tbody className="divide-y divide-[var(--border)]">
                       {filteredCategories.length === 0 ? (
-                        <tr><td colSpan="3" className="px-4 sm:px-6 lg:px-8 py-8 sm:py-10 text-center text-xs font-bold text-[var(--muted)] italic uppercase tracking-widest opacity-60">No categories matching "{searchQuery}"</td></tr>
+                        <tr><td colSpan="3" className="px-4 sm:px-6 lg:px-8 py-8 sm:py-10 text-center text-xs font-bold text-[var(--muted)] italic uppercase tracking-widest opacity-60">No categories matching &quot;{searchQuery}&quot;</td></tr>
                       ) : (
                         filteredCategories.map(cat => (
                           <tr key={cat.id} className="group hover:bg-[var(--cream)]/10 transition-all">

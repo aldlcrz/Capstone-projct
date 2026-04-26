@@ -1,7 +1,8 @@
 "use client";
 import React, { Suspense, useEffect, useRef, useState } from "react";
 import SellerLayout from "@/components/SellerLayout";
-import { Users, Mail, Phone, Calendar, Search, MapPin, MoreHorizontal, MessageCircle, X, ShoppingBag, Clock, ChevronRight, Package, MoreVertical, Grid3x3, List } from "lucide-react";
+import { Users, Mail, Phone, Calendar, Search, MapPin, MoreHorizontal, MessageCircle, X, ShoppingBag, Clock, ChevronRight, Package, MoreVertical, Grid3x3, List, ShieldAlert } from "lucide-react";
+import ReportModal from "@/components/ReportModal";
 import { motion, AnimatePresence } from "framer-motion";
 import { api } from "@/lib/api";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -162,7 +163,7 @@ function PortfolioModal({ customer, onClose }) {
   );
 }
 
-function MoreMenu({ customer, onMessage, onViewPortfolio }) {
+function MoreMenu({ customer, onMessage, onViewPortfolio, onReport }) {
   const [open, setOpen] = useState(false);
   const ref = useRef(null);
 
@@ -202,6 +203,12 @@ function MoreMenu({ customer, onMessage, onViewPortfolio }) {
             >
               <ChevronRight className="w-4 h-4" /> View Portfolio
             </button>
+            <button
+              onClick={() => { onReport(); setOpen(false); }}
+              className="w-full flex items-center gap-3 px-5 py-4 text-[10px] font-black uppercase tracking-widest text-red-500 hover:bg-red-50 transition-all border-t border-[var(--border)] text-left"
+            >
+              <ShieldAlert className="w-4 h-4" /> Report User
+            </button>
           </motion.div>
         )}
       </AnimatePresence>
@@ -214,6 +221,8 @@ function SellerCustomersContent() {
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedPortfolio, setSelectedPortfolio] = useState(null);
+  const [selectedForReport, setSelectedForReport] = useState(null);
+  const [isReportModalOpen, setIsReportModalOpen] = useState(false);
   const [statusFilter, setStatusFilter] = useState("All Customers");
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -413,6 +422,10 @@ function SellerCustomersContent() {
                       customer={customer}
                       onMessage={() => router.push(`/seller/messages?userId=${customer.id}`)}
                       onViewPortfolio={() => setSelectedPortfolio(customer)}
+                      onReport={() => {
+                        setSelectedForReport(customer);
+                        setIsReportModalOpen(true);
+                      }}
                     />
                     <button
                       onClick={() => setSelectedPortfolio(customer)}
@@ -436,6 +449,19 @@ function SellerCustomersContent() {
           />
         )}
       </AnimatePresence>
+
+      {selectedForReport && (
+        <ReportModal
+          isOpen={isReportModalOpen}
+          onClose={() => {
+            setIsReportModalOpen(false);
+            setSelectedForReport(null);
+          }}
+          reportedId={selectedForReport.id}
+          type="SellerReportingCustomer"
+          reportedName={selectedForReport.name}
+        />
+      )}
     </SellerLayout>
   );
 }

@@ -4,10 +4,11 @@ import SellerLayout from "@/components/SellerLayout";
 import { User, Mail, Phone, Calendar, ShieldCheck, MapPin, Building, Trash2, Facebook, Instagram, Youtube, Music, Link as LinkIcon, Plus, X, Edit2, Home } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import axios from "axios";
-import { api, setStoredUserForRole } from "@/lib/api";
+import { api, getApiErrorMessage, setStoredUserForRole } from "@/lib/api";
 import { resolveBackendImageUrl } from "@/lib/productImages";
 import dynamic from 'next/dynamic';
 import { INPUT_LIMITS, sanitizePersonNameInput, sanitizePhoneInput, validatePhilippineMobileNumber } from "@/lib/inputValidation";
+import { validateImageFile } from "@/lib/imageUploadValidation";
 import { CheckCircle, XCircle } from "lucide-react";
 
 const LocationPicker = dynamic(
@@ -72,9 +73,15 @@ export default function SellerProfile() {
     fetchProfile();
   }, []);
 
-  const handleProfileChange = (e) => {
+  const handleProfileChange = async (e) => {
     const file = e.target.files[0];
     if (file) {
+      const validationError = await validateImageFile(file, "Profile photo");
+      if (validationError) {
+        showToast("error", validationError);
+        e.target.value = "";
+        return;
+      }
       setProfileFile(file);
       setProfilePreview(URL.createObjectURL(file));
     }
@@ -92,6 +99,18 @@ export default function SellerProfile() {
       validatePhilippineMobileNumber(formData.mobileNumber, "Contact number", { required: true });
       if (formData.gcashNumber) validatePhilippineMobileNumber(formData.gcashNumber, "GCash number");
       if (formData.mayaNumber) validatePhilippineMobileNumber(formData.mayaNumber, "Maya number");
+      if (profileFile) {
+        const validationError = await validateImageFile(profileFile, "Profile photo");
+        if (validationError) throw new Error(validationError);
+      }
+      if (qrFile) {
+        const validationError = await validateImageFile(qrFile, "GCash QR image");
+        if (validationError) throw new Error(validationError);
+      }
+      if (mayaQrFile) {
+        const validationError = await validateImageFile(mayaQrFile, "Maya QR image");
+        if (validationError) throw new Error(validationError);
+      }
     } catch (err) {
       showToast("error", err.message);
       setIsSubmitting(false);
@@ -142,7 +161,7 @@ export default function SellerProfile() {
       showToast("success", "Profile updated successfully!");
     } catch (err) {
       console.error("Failed to update profile", err);
-      showToast("error", "Error updating profile. Please ensure image size is optimized.");
+      showToast("error", getApiErrorMessage(err, "Error updating profile."));
     } finally {
       setIsSubmitting(false);
     }
@@ -432,7 +451,7 @@ export default function SellerProfile() {
                       <Plus className="w-6 h-6 text-white" />
                     </div>
                   </div>
-                  <input id="profileUpload" type="file" accept="image/*" className="hidden" onChange={handleProfileChange} />
+                  <input id="profileUpload" type="file" accept="image/jpeg,image/png" className="hidden" onChange={handleProfileChange} />
                 </div>
                 <div className="text-center">
                   <h4 className="text-[10px] font-black uppercase tracking-widest text-[var(--charcoal)]">Shop Profile Photo</h4>
@@ -539,7 +558,21 @@ export default function SellerProfile() {
                 </div>
                 <div className="space-y-2">
                   <label className="text-[10px] font-bold text-[var(--muted)] uppercase tracking-widest">GCash QR Code</label>
-                  <input type="file" accept="image/*" onChange={e => setQrFile(e.target.files[0])} className="w-full p-4 border border-[var(--border)] rounded-xl bg-[var(--input-bg)] text-sm flex items-center focus:outline-none" />
+                  <input type="file" accept="image/jpeg,image/png" onChange={async (e) => {
+                    const file = e.target.files[0];
+                    if (!file) {
+                      setQrFile(null);
+                      return;
+                    }
+                    const validationError = await validateImageFile(file, "GCash QR image");
+                    if (validationError) {
+                      showToast("error", validationError);
+                      e.target.value = "";
+                      setQrFile(null);
+                      return;
+                    }
+                    setQrFile(file);
+                  }} className="w-full p-4 border border-[var(--border)] rounded-xl bg-[var(--input-bg)] text-sm flex items-center focus:outline-none" />
                 </div>
                 <div className="space-y-2">
                   <label className="text-[10px] font-bold text-[var(--muted)] uppercase tracking-widest">Maya Number</label>
@@ -551,7 +584,21 @@ export default function SellerProfile() {
                 </div>
                 <div className="space-y-2">
                   <label className="text-[10px] font-bold text-[var(--muted)] uppercase tracking-widest">Maya QR Code</label>
-                  <input type="file" accept="image/*" onChange={e => setMayaQrFile(e.target.files[0])} className="w-full p-4 border border-[var(--border)] rounded-xl bg-[var(--input-bg)] text-sm flex items-center focus:outline-none" />
+                  <input type="file" accept="image/jpeg,image/png" onChange={async (e) => {
+                    const file = e.target.files[0];
+                    if (!file) {
+                      setMayaQrFile(null);
+                      return;
+                    }
+                    const validationError = await validateImageFile(file, "Maya QR image");
+                    if (validationError) {
+                      showToast("error", validationError);
+                      e.target.value = "";
+                      setMayaQrFile(null);
+                      return;
+                    }
+                    setMayaQrFile(file);
+                  }} className="w-full p-4 border border-[var(--border)] rounded-xl bg-[var(--input-bg)] text-sm flex items-center focus:outline-none" />
                 </div>
               </div>
               <div className="pt-4 mt-8 border-t border-[var(--border)]">

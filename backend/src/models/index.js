@@ -11,6 +11,7 @@ const RefundRequest = require('./RefundRequest');
 const ProductView = require('./ProductView');
 const Review = require('./Review');
 const SellerFunnelEvent = require('./SellerFunnelEvent');
+const Report = require('./Report');
 
 // Associations
 
@@ -101,6 +102,14 @@ Review.belongsTo(User, { foreignKey: 'customerId', as: 'customer' });
 Order.hasMany(Review, { foreignKey: 'orderId', as: 'reviews' });
 Review.belongsTo(Order, { foreignKey: 'orderId', as: 'order' });
 
+// User <-> Report (Reporter)
+User.hasMany(Report, { foreignKey: 'reporterId', as: 'filedReports' });
+Report.belongsTo(User, { foreignKey: 'reporterId', as: 'reporter' });
+
+// User <-> Report (Reported)
+User.hasMany(Report, { foreignKey: 'reportedId', as: 'receivedReports' });
+Report.belongsTo(User, { foreignKey: 'reportedId', as: 'reportedUser' });
+
 const sequelize = require('../config/db');
 
 module.exports = {
@@ -117,5 +126,6 @@ module.exports = {
   ProductView,
   Review,
   SellerFunnelEvent,
+  Report,
   sequelize,
 };

@@ -4,6 +4,8 @@ const { ipKeyGenerator } = require('express-rate-limit');
 const authMiddleware = require('../middleware/authMiddleware');
 const { register, login, forgotPassword, resetPassword, getProfile, googleLogin, setPassword } = require('../controllers/authController');
 const { imageUpload } = require('../middleware/uploadMiddleware');
+const { validateStoredImageUpload } = require('../utils/imageUploadSecurity');
+const fs = require('fs');
 const router = express.Router();
 
 // Email-keyed limiter for login — each account gets its own independent bucket.
@@ -57,6 +59,23 @@ const passwordResetLimiter = rateLimit({
   message: { error: 'Too many password reset requests, please try again after an hour' }
 });
 
+const validateRegistrationImages = async (req, res, next) => {
+  const fileGroups = req.files ? Object.values(req.files).flat() : [];
+
+  try {
+    for (let index = 0; index < fileGroups.length; index += 1) {
+      await validateStoredImageUpload(fileGroups[index], `Registration image ${index + 1}`);
+    }
+
+    return next();
+  } catch (error) {
+    await Promise.all(
+      fileGroups.map((file) => fs.promises.unlink(file.path).catch(() => {}))
+    );
+    return next(error);
+  }
+};
+
 router.post(
   '/register',
   authLimiter,
@@ -65,6 +84,7 @@ router.post(
     { name: 'validId', maxCount: 1 },
     { name: 'gcashQrCode', maxCount: 1 },
   ]),
+  validateRegistrationImages,
   register
 );
 router.post('/login', loginLimiter, login);

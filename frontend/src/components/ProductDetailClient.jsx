@@ -24,8 +24,10 @@ import {
   Plus,
   Store,
   Ruler,
-  X as CloseIcon
+  X as CloseIcon,
+  ShieldAlert
 } from "lucide-react";
+import ReportModal from "./ReportModal";
 import { api, getStoredUserForRole } from "@/lib/api";
 import { useSocket } from "@/context/SocketContext";
 import { normalizeProductImages, normalizeProductSizes, resolveBackendImageUrl } from "@/lib/productImages";
@@ -94,6 +96,7 @@ export default function ProductDetailClient() {
   const [activeReviewFilter, setActiveReviewFilter] = useState("all");
   const [expandedReviewId, setExpandedReviewId] = useState(null);
   const [expandedImageIndex, setExpandedImageIndex] = useState(0);
+  const [isReportModalOpen, setIsReportModalOpen] = useState(false);
   const isManualChange = useRef(false);
 
   const handleExpandReviewImage = useCallback((reviewId, index) => {
@@ -898,12 +901,19 @@ export default function ProductDetailClient() {
 
           {/* Customer Back Button */}
           {userRole !== 'admin' && userRole !== 'seller-preview' && (
-            <div className="mb-4 pt-4 sm:pt-6">
+            <div className="mb-4 pt-4 sm:pt-6 flex justify-between items-center">
               <button 
                 onClick={() => router.back()} 
                 className="flex items-center gap-1.5 text-xs font-bold text-stone-500 hover:text-[var(--rust)] transition-colors"
               >
                 <ChevronLeft className="h-4 w-4" /> Back to previous
+              </button>
+
+              <button 
+                onClick={() => setIsReportModalOpen(true)}
+                className="flex items-center gap-1.5 text-[10px] font-black uppercase tracking-widest text-red-500 hover:text-red-700 transition-colors bg-white px-3 py-1.5 rounded-full border border-red-100 shadow-sm"
+              >
+                <ShieldAlert className="w-3.5 h-3.5" /> Report Product
               </button>
             </div>
           )}
@@ -1401,6 +1411,16 @@ export default function ProductDetailClient() {
           </div>
         )}
       </AnimatePresence>
+      {product && (
+        <ReportModal
+          isOpen={isReportModalOpen}
+          onClose={() => setIsReportModalOpen(false)}
+          reportedId={product.sellerId}
+          type="CustomerReportingSeller"
+          referenceId={product.id}
+          reportedName={product.name}
+        />
+      )}
     </Layout>
   );
 }

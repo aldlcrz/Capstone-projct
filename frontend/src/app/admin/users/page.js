@@ -399,7 +399,7 @@ export default function AdminUsers() {
                       <h3 className="font-serif text-xl font-bold text-[var(--charcoal)] tracking-tighter uppercase">
                         Freeze <span className="text-blue-600 italic lowercase">Account</span>
                       </h3>
-                      <p className="text-[9px] font-black text-[var(--muted)] opacity-50 uppercase tracking-widest italic mt-1">Suspending {freezeTarget.name}'s access.</p>
+                      <p className="text-[9px] font-black text-[var(--muted)] opacity-50 uppercase tracking-widest italic mt-1">Suspending {freezeTarget.name}&apos;s access.</p>
                     </div>
                     <button onClick={() => setShowFreezeModal(false)} className="p-2 hover:bg-[var(--cream)] rounded-xl transition-all">
                       <XCircle className="w-5 h-5 text-[var(--muted)]" />

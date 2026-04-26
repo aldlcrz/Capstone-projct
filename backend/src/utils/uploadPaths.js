@@ -5,6 +5,7 @@ const uploadsRoot = path.join(__dirname, '../../uploads');
 const productsUploadDir = path.join(uploadsRoot, 'products');
 const paymentsUploadDir = path.join(uploadsRoot, 'payments');
 const miscUploadDir = path.join(uploadsRoot, 'misc');
+const reportsUploadDir = path.join(uploadsRoot, 'reports');
 
 function ensureDir(dirPath) {
   if (!fs.existsSync(dirPath)) {
@@ -17,6 +18,7 @@ function ensureUploadDirs() {
   ensureDir(productsUploadDir);
   ensureDir(paymentsUploadDir);
   ensureDir(miscUploadDir);
+  ensureDir(reportsUploadDir);
 }
 
 module.exports = {
@@ -24,5 +26,6 @@ module.exports = {
   productsUploadDir,
   paymentsUploadDir,
   miscUploadDir,
+  reportsUploadDir,
   ensureUploadDirs,
 };

@@ -1,12 +1,13 @@
 "use client";
 import React, { useState, useEffect, useMemo, useCallback } from "react";
 import SellerLayout from "@/components/SellerLayout";
-import { Package, Clock, Eye, Search, Filter, X, MapPin, CreditCard, ShoppingBag, Video, Check } from "lucide-react";
+import { Package, Clock, Eye, Search, Filter, X, MapPin, CreditCard, ShoppingBag, Video, Check, ShieldAlert } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { api } from "@/lib/api";
 import { useSocket } from "@/context/SocketContext";
 import { getProductImageSrc } from "@/lib/productImages";
 import ConfirmationModal from "@/components/ConfirmationModal";
+import ReportModal from "@/components/ReportModal";
 
 const STATUS_TABS = ["All", "Pending", "To Ship", "To Receive", "Completed", "Cancelled", "Refunds"];
 
@@ -59,6 +60,7 @@ export default function SellerOrders() {
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
   const [showCancelConfirm, setShowCancelConfirm] = useState(false);
   const [cancelTargetId, setCancelTargetId] = useState(null);
+  const [isReportModalOpen, setIsReportModalOpen] = useState(false);
   const { socket } = useSocket();
 
   const fetchOrders = useCallback(async () => {
@@ -346,6 +348,7 @@ export default function SellerOrders() {
                 setCancelTargetId(id);
                 setShowCancelConfirm(true);
               }}
+              onReportClick={() => setIsReportModalOpen(true)}
             />
           )}
         </AnimatePresence>
@@ -366,6 +369,17 @@ export default function SellerOrders() {
           cancelText="No, Keep it"
           type="danger"
         />
+
+        {selectedOrder && (
+          <ReportModal
+            isOpen={isReportModalOpen}
+            onClose={() => setIsReportModalOpen(false)}
+            reportedId={selectedOrder.customerId}
+            type="SellerReportingCustomer"
+            referenceId={selectedOrder.id}
+            reportedName={selectedOrder.shippingAddress?.customerName || selectedOrder.customer?.name}
+          />
+        )}
       </div>
     </SellerLayout>
   );
@@ -508,7 +522,7 @@ function OrderRow({ order, index, onView, onUpdateStatus, isUpdating }) {
   );
 }
 
-function OrderModal({ order, onClose, onUpdateStatus, onCancelClick, isUpdating }) {
+function OrderModal({ order, onClose, onUpdateStatus, onCancelClick, onReportClick, isUpdating }) {
   const steps = ["Pending", "Processing", "Shipped", "Delivered", "Completed"];
   const currentStep = steps.findIndex(s => s.toLowerCase() === order.status?.toLowerCase());
 
@@ -557,6 +571,12 @@ function OrderModal({ order, onClose, onUpdateStatus, onCancelClick, isUpdating 
                   {isUpdating ? 'CANCELLING...' : 'CANCEL'}
                 </button>
               )}
+              <button
+                onClick={onReportClick}
+                className="px-3 sm:px-4 py-1 sm:py-1.5 rounded-full border border-red-200 bg-white text-red-600 text-[8px] sm:text-[9px] font-black tracking-[0.2em] hover:bg-red-50 transition-all shadow-sm flex items-center gap-1.5"
+              >
+                <ShieldAlert className="w-3 h-3" /> REPORT BUYER
+              </button>
             </div>
           </div>
           <button onClick={onClose} className="absolute top-3 right-3 sm:top-5 sm:right-5 p-2 sm:p-2.5 bg-white hover:bg-[var(--cream)] rounded-full transition-all border border-[var(--border)] group active:scale-90 z-20">
@@ -622,7 +642,7 @@ function OrderModal({ order, onClose, onUpdateStatus, onCancelClick, isUpdating 
                       <Clock className="w-3 h-3" /> Cancellation Request
                     </div>
                     <p className="text-[11px] sm:text-xs text-orange-800 italic leading-relaxed">
-                      "{order.cancellationReason}"
+                      &quot;{order.cancellationReason}&quot;
                     </p>
                     <div className="flex gap-2 mt-4">
                       <button
@@ -838,7 +858,7 @@ function RefundRow({ refund, index, onUpdate }) {
           </div>
         </div>
         <div className="inline-block px-2 py-0.5 bg-red-50 text-red-600 rounded text-[9px] font-black uppercase tracking-widest border border-red-100">{refund.reason}</div>
-        {refund.message && <div className="mt-2 text-[11px] text-[var(--charcoal)] leading-relaxed italic bg-stone-50 p-2 rounded-lg border border-stone-100">"{refund.message}"</div>}
+        {refund.message && <div className="mt-2 text-[11px] text-[var(--charcoal)] leading-relaxed italic bg-stone-50 p-2 rounded-lg border border-stone-100">&quot;{refund.message}&quot;</div>}
       </td>
       <td className="px-8 py-6 align-top text-center">
         <a 
@@ -924,7 +944,7 @@ function MobileRefundCard({ refund, index, onUpdate }) {
 
       {refund.message && (
         <div className="text-[11px] text-[var(--muted)] italic bg-stone-50 p-3 rounded-xl border border-stone-100">
-          "{refund.message}"
+          &quot;{refund.message}&quot;
         </div>
       )}
 

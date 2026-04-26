@@ -29,7 +29,8 @@ import { getProductImageSrc, resolveBackendImageUrl } from "@/lib/productImages"
 
 import dynamic from "next/dynamic";
 const ShopMap = dynamic(() => import("./ShopMap"), { ssr: false });
-import { X, Navigation } from "lucide-react";
+import { X, Navigation, ShieldAlert } from "lucide-react";
+import ReportModal from "./ReportModal";
 
 export default function ShopClient() {
   const searchParams = useSearchParams();
@@ -43,6 +44,7 @@ export default function ShopClient() {
   const [activeTab, setActiveTab] = useState("all");
   const [searchQuery, setSearchQuery] = useState("");
   const [isMapOpen, setIsMapOpen] = useState(false);
+  const [isReportModalOpen, setIsReportModalOpen] = useState(false);
   const { socket } = useSocket();
 
   useEffect(() => {
@@ -254,13 +256,22 @@ export default function ShopClient() {
     <Layout>
       <div className="min-h-screen bg-stone-50 pb-24 font-sans sm:pb-28 lg:pb-20">
         {/* Back Button */}
-        <div className="mx-auto max-w-5xl px-4 sm:px-6 lg:px-8 pt-6 pb-2">
+        <div className="mx-auto max-w-5xl px-4 sm:px-6 lg:px-8 pt-6 pb-2 flex justify-between items-center">
            <button 
              onClick={() => router.back()} 
              className="flex items-center gap-1.5 text-xs font-bold text-stone-500 hover:text-[var(--rust)] transition-colors"
            >
              <ChevronLeft className="h-4 w-4" /> Back to previous
            </button>
+
+           {userRole !== "admin" && (
+             <button 
+               onClick={() => setIsReportModalOpen(true)}
+               className="flex items-center gap-1.5 text-[10px] font-black uppercase tracking-widest text-red-500 hover:text-red-700 transition-colors bg-white px-3 py-1.5 rounded-full border border-red-100 shadow-sm"
+             >
+               <ShieldAlert className="w-3.5 h-3.5" /> Report Store
+             </button>
+           )}
         </div>
 
         {/* Profile Info - Shopee Style Layout */}
@@ -447,6 +458,16 @@ export default function ShopClient() {
         <ShopMap 
           seller={seller} 
           onClose={() => setIsMapOpen(false)} 
+        />
+      )}
+
+      {seller && (
+        <ReportModal
+          isOpen={isReportModalOpen}
+          onClose={() => setIsReportModalOpen(false)}
+          reportedId={seller.id}
+          type="CustomerReportingSeller"
+          reportedName={seller.shopName}
         />
       )}
     </Layout>

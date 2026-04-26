@@ -12,6 +12,7 @@ import {
   ArrowRight,
   CheckCircle2,
   AlertCircle,
+  ShieldAlert,
   Upload,
   Phone,
   Scan,

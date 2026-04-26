@@ -40,6 +40,9 @@ const sidebarData = [
     { label: "Users", icon: <Users className="w-5 h-5" />, path: "/admin/users" },
     { label: "Shop Requests", icon: <Store className="w-5 h-5" />, path: "/admin/sellers" },
   ]},
+  { group: "SYSTEM GOVERNANCE", items: [
+    { label: "Reports", icon: <ShieldAlert className="w-5 h-5" />, path: "/admin/reports" },
+  ]},
   { group: "PRODUCT CONTROL", items: [
     { label: "All Products", icon: <ShoppingBag className="w-5 h-5" />, path: "/admin/products" },
   ]},
