@@ -24,7 +24,8 @@ export default function ReportModal({ isOpen, onClose, reportedId, type, referen
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!reason) return alert("Please select a reason.");
-    if (description.length < 10) return alert("Please provide a more detailed description (min 10 characters).");
+    if (description.length < 50) return alert("Please provide a more detailed description (min 50 characters).");
+
 
     try {
       setIsSubmitting(true);
@@ -148,15 +149,23 @@ export default function ReportModal({ isOpen, onClose, reportedId, type, referen
                   </div>
 
                   <div className="space-y-2">
-                    <label className="text-[9px] font-black uppercase tracking-widest text-[var(--muted)] ml-1">Detailed Description</label>
+                    <div className="flex items-center justify-between ml-1">
+                      <label className="text-[9px] font-black uppercase tracking-widest text-[var(--muted)]">Detailed Description</label>
+                      <span className={`text-[9px] font-bold tabular-nums ${description.length >= 50 ? 'text-green-600' : 'text-[var(--muted)]'}`}>
+                        {description.length}<span className="opacity-50">/50 min</span>
+                      </span>
+                    </div>
                     <textarea
-                      placeholder="Please explain the situation in detail..."
+                      placeholder="Please explain the situation in detail (minimum 50 characters)..."
                       value={description}
                       onChange={(e) => setDescription(e.target.value)}
                       required
                       rows="4"
-                      className="w-full px-5 py-4 bg-[var(--cream)]/30 border border-[var(--border)] focus:border-[var(--rust)] rounded-2xl outline-none text-[11px] font-bold transition-all shadow-sm resize-none"
+                      className={`w-full px-5 py-4 bg-[var(--cream)]/30 border focus:border-[var(--rust)] rounded-2xl outline-none text-[11px] font-bold transition-all shadow-sm resize-none ${description.length > 0 && description.length < 50 ? 'border-amber-400' : 'border-[var(--border)]'}`}
                     />
+                    {description.length > 0 && description.length < 50 && (
+                      <p className="text-[9px] text-amber-600 font-bold ml-1">{50 - description.length} more characters needed</p>
+                    )}
                   </div>
 
                   <div className="space-y-2">

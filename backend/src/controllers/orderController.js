@@ -1,7 +1,8 @@
 const sequelize = require('../config/db');
 const { Order, OrderItem, Product, User, Address, Review, SystemSetting } = require('../models');
 
-const { sendNotification } = require('../utils/notificationHelper');
+const { sendNotification, notifyAdmins } = require('../utils/notificationHelper');
+
 const socketUtility = require('../utils/socketUtility');
 const { jsonToCsv } = require('../utils/csvHelper');
 const {
@@ -327,6 +328,31 @@ exports.createOrder = async (req, res) => {
       ),
     ]);
 
+    // Low stock / out-of-stock notifications for the seller
+    for (const { product } of preparedItems) {
+      const freshProduct = await Product.findByPk(product.id);
+      if (!freshProduct) continue;
+      if (freshProduct.stock <= 0) {
+        await sendNotification(
+          freshProduct.sellerId,
+          '⚠️ Out of Stock',
+          `"${freshProduct.name}" is now out of stock. Restock to keep selling.`,
+          'system',
+          '/seller/products',
+          'seller'
+        );
+      } else if (freshProduct.stock <= 5) {
+        await sendNotification(
+          freshProduct.sellerId,
+          '🔔 Low Stock Alert',
+          `"${freshProduct.name}" has only ${freshProduct.stock} item(s) left. Consider restocking soon.`,
+          'system',
+          '/seller/products',
+          'seller'
+        );
+      }
+    }
+
     res.status(201).json(fullOrder);
   } catch (error) {
     if (!committed && transaction) {
@@ -499,46 +525,86 @@ exports.exportSellerReport = async (req, res) => {
             Order.findAll({
                 where: { sellerId },
                 include: [
-                    { model: User, as: 'customer', attributes: ['name', 'email'] },
-                    { model: Address, attributes: ['city', 'province'] }
-                ]
+                    { model: User, as: 'customer', attributes: ['name', 'email', 'mobileNumber'] },
+                    { model: OrderItem, as: 'items', include: [{ model: Product, as: 'product', attributes: ['name'] }] }
+                ],
+                order: [['createdAt', 'DESC']]
             }),
             Product.findAll({
                 where: { sellerId },
-                attributes: ['id', 'name', 'price', 'stock', 'category', 'status']
+                attributes: ['id', 'name', 'price', 'stock', 'categories', 'status'],
+                order: [['name', 'ASC']]
             })
         ]);
 
-        const orderData = orders.map(o => ({
-            Type: 'ORDER',
-            ID: o.id,
-            Customer: o.customer?.name || 'N/A',
-            Total: o.totalAmount,
-            Status: o.status,
-            Date: o.createdAt.toISOString().split('T')[0],
-            Location: o.Address ? `${o.Address.city}, ${o.Address.province}` : 'N/A'
-        }));
+        const reportRows = [];
 
-        const productData = products.map(p => ({
-            Type: 'PRODUCT',
-            ID: p.id,
-            Name: p.name,
-            Price: p.price,
-            Stock: p.stock,
-            Category: p.category,
-            Status: p.status,
-            Date: '' // Not applicable for products list in this simplified report
-        }));
+        // 1. Orders Section
+        reportRows.push({ Type: '--- ORDERS ---', ID: '', Title: '', Details: '', Amount: '', Status: '', Date: '' });
+        
+        orders.forEach(o => {
+            const dateStr = new Date(o.createdAt).toLocaleString();
+            const customerName = o.customer?.name || 'Unknown';
+            const customerContact = o.customer?.mobileNumber || o.customer?.email || 'N/A';
+            const address = o.shippingAddress ? 
+                (typeof o.shippingAddress === 'string' ? JSON.parse(o.shippingAddress) : o.shippingAddress) : null;
+            const location = address ? `${address.city || ''}, ${address.province || ''}` : 'N/A';
 
-        const combined = [...orderData, ...productData];
-        const csv = jsonToCsv(combined);
+            // Main Order Row
+            reportRows.push({
+                Type: 'ORDER',
+                ID: o.id,
+                Title: `Order from ${customerName}`,
+                Details: `Contact: ${customerContact} | Location: ${location} | Pay: ${o.paymentMethod}`,
+                Amount: Number(o.totalAmount).toFixed(2),
+                Status: o.status,
+                Date: dateStr
+            });
+
+            // Item Breakdown
+            if (o.items && o.items.length > 0) {
+                o.items.forEach(item => {
+                    reportRows.push({
+                        Type: 'ITEM',
+                        ID: '',
+                        Title: `  > ${item.product?.name || 'Deleted Product'}`,
+                        Details: `Qty: ${item.quantity} @ ₱${Number(item.price).toFixed(2)}`,
+                        Amount: (item.quantity * item.price).toFixed(2),
+                        Status: '',
+                        Date: ''
+                    });
+                });
+            }
+            // Spacer row
+            reportRows.push({ Type: '', ID: '', Title: '', Details: '', Amount: '', Status: '', Date: '' });
+        });
+
+        // 2. Inventory Section
+        reportRows.push({ Type: '--- INVENTORY ---', ID: '', Title: '', Details: '', Amount: '', Status: '', Date: '' });
+        products.forEach(p => {
+            reportRows.push({
+                Type: 'PRODUCT',
+                ID: p.id,
+                Title: p.name,
+                Details: `Category: ${Array.isArray(p.categories) ? p.categories.join(', ') : (p.categories || 'Uncategorized')} | Stock: ${p.stock}`,
+                Amount: Number(p.price).toFixed(2),
+                Status: p.status,
+                Date: '-'
+            });
+        });
+
+        if (reportRows.length === 2) { // Only headers
+            reportRows.push({ Type: 'INFO', ID: '-', Title: 'No business activity found for this period', Details: '', Amount: '0.00', Status: '-', Date: '-' });
+        }
+        
+        const csv = jsonToCsv(reportRows, ['Type', 'ID', 'Title', 'Details', 'Amount', 'Status', 'Date']);
 
         res.setHeader('Content-Type', 'text/csv');
         res.setHeader('Content-Disposition', `attachment; filename=seller_report_${new Date().getTime()}.csv`);
         res.status(200).send(csv);
     } catch (err) {
         console.error('Export Error:', err);
-        res.status(500).json({ message: 'Error generating report', error: err.message });
+        res.status(500).json({ message: 'Error generating report', error: err.message, stack: process.env.NODE_ENV === 'development' ? err.stack : undefined });
     }
 };
 

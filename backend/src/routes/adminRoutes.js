@@ -23,6 +23,7 @@ router.get('/settings', protect, authorize('admin'), adminController.getSettings
 router.put('/settings', protect, authorize('admin'), adminController.updateSettings);
 router.post('/purge-cache', protect, authorize('admin'), adminController.purgeCache);
 router.post('/broadcast', protect, authorize('admin'), adminController.sendBroadcast);
+router.get('/export-global-report', protect, authorize('admin'), adminController.exportGlobalReport);
 
 // Public Settings
 router.get('/public-settings', adminController.getPublicSettings);

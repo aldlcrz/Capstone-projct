@@ -44,8 +44,41 @@ export default function LoginPage() {
   const [redirectUrl, setRedirectUrl] = useState("");
   const [showSetPassword, setShowSetPassword] = useState(false);
   const [tempAuthData, setTempAuthData] = useState(null);
+  const [lockoutSeconds, setLockoutSeconds] = useState(0);
+  const [forcedRestriction, setForcedRestriction] = useState(null);
   const router = useRouter();
   const searchParams = useSearchParams();
+
+  // Read force-logout restriction stored by the API interceptor
+  useEffect(() => {
+    try {
+      const raw = sessionStorage.getItem("lumbarong_account_restriction");
+      if (raw) {
+        const data = JSON.parse(raw);
+        setForcedRestriction(data);
+        sessionStorage.removeItem("lumbarong_account_restriction");
+      }
+    } catch (_) {}
+  }, []);
+
+
+  // Countdown timer for lockout
+  useEffect(() => {
+    if (lockoutSeconds <= 0) return;
+    const timer = setInterval(() => {
+      setLockoutSeconds((prev) => {
+        if (prev <= 1) {
+          clearInterval(timer);
+          setError("");
+          setAccountStatus("");
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+    return () => clearInterval(timer);
+  }, [lockoutSeconds]);
+
 
   useEffect(() => {
     const queryRedirect = searchParams.get("redirect");
@@ -74,9 +107,7 @@ export default function LoginPage() {
     try {
       const response = await api.post("/auth/login", { email, password, });
       const { token, user } = response.data;
-      
-      // Store ONLY role-specific keys — never overwrite the generic 'token'/'user'
-      // to prevent cross-tab session collision (other tabs would see the wrong user).
+
       const roleKey = user.role || "customer";
       setSessionForRole(roleKey, { token, user });
 
@@ -91,9 +122,19 @@ export default function LoginPage() {
       else if (user.role === "seller") window.location.replace("/seller/dashboard");
       else window.location.replace("/home");
     } catch (err) {
-      setError(getApiErrorMessage(err, "Authentication failed. Check your credentials."));
       const data = err.response?.data;
-      if (data?.status === "frozen" || data?.status === "rejected" || data?.status === "blocked") {
+      setError(getApiErrorMessage(err, "Authentication failed. Check your credentials."));
+
+      if (data?.status === "locked") {
+        setAccountStatus("locked");
+        if (data?.lockedUntil) {
+          const secondsLeft = Math.max(0, Math.ceil((new Date(data.lockedUntil) - Date.now()) / 1000));
+          setLockoutSeconds(secondsLeft);
+        }
+      } else if (data?.status === "pending") {
+        setAccountStatus("pending");
+        setReason(data.reason || "");
+      } else if (data?.status === "frozen" || data?.status === "rejected" || data?.status === "blocked") {
         setAccountStatus(data.status);
         setReason(data.reason || "");
       } else {
@@ -111,9 +152,9 @@ export default function LoginPage() {
     try {
       const res = await api.post("/auth/google", { credential: response.credential });
       const { token, user } = res.data;
-      
+
       const roleKey = user.role || "customer";
-      
+
       // If user hasn't set a password, show modal
       if (!user.hasPasswordSet) {
         setTempAuthData({ token, user, roleKey });
@@ -144,7 +185,7 @@ export default function LoginPage() {
   const handleSetPasswordSuccess = () => {
     if (!tempAuthData) return;
     const { token, user, roleKey } = tempAuthData;
-    
+
     // Update local user object
     const updatedUser = { ...user, hasPasswordSet: true };
     setSessionForRole(roleKey, { token, user: updatedUser });
@@ -164,7 +205,7 @@ export default function LoginPage() {
   const handleSkipSetPassword = () => {
     if (!tempAuthData) return;
     const { token, user, roleKey } = tempAuthData;
-    
+
     setSessionForRole(roleKey, { token, user });
 
     const returnUrl = redirectUrl || localStorage.getItem("returnUrl");
@@ -207,7 +248,7 @@ export default function LoginPage() {
         <motion.div variants={containerVariants} initial="hidden" animate="visible">
           {/* Logo Container */}
           <motion.div variants={itemVariants} className="mb-10 text-center relative flex items-center justify-center">
-            <button 
+            <button
               onClick={() => router.push('/')}
               className="absolute left-0 p-2.5 bg-[#F9F6F2] hover:bg-[#EBDCCB] text-[var(--muted)] hover:text-[var(--rust)] rounded-xl transition-all border border-[#E5DDD5] shadow-sm transform hover:scale-105"
               title="Go Back"
@@ -228,7 +269,39 @@ export default function LoginPage() {
             </div>
           </motion.div>
 
-          {/* Error */}
+          {/* Force-logout Restriction Banner */}
+          {forcedRestriction && (
+            <motion.div
+              initial={{ opacity: 0, y: -10, scale: 0.97 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              className="mb-8 p-5 rounded-2xl text-left space-y-2"
+              style={{
+                background: forcedRestriction.status === "blocked" ? "#FEF0EE" : "#EFF6FF",
+                border: `1px solid ${forcedRestriction.status === "blocked" ? "#F9D0C8" : "#BFDBFE"}`,
+              }}
+            >
+              <div className="flex items-center gap-2">
+                <ShieldCheck className="w-4 h-4 shrink-0" style={{ color: forcedRestriction.status === "blocked" ? "var(--rust)" : "#3B82F6" }} />
+                <span className="text-[10px] font-black uppercase tracking-wider" style={{ color: forcedRestriction.status === "blocked" ? "var(--rust)" : "#1D4ED8" }}>
+                  {forcedRestriction.status === "blocked" ? "Account Terminated" : "Account Frozen"}
+                </span>
+              </div>
+              <p className="text-xs font-bold text-gray-600 leading-relaxed">
+                You have been logged out because your account has been {forcedRestriction.status === "blocked" ? "terminated" : "frozen"} by an administrator.
+              </p>
+              {forcedRestriction.reason && (
+                <p className="text-[10px] font-bold italic text-gray-500 border-t border-gray-200 pt-2">
+                  Reason: {forcedRestriction.reason}
+                </p>
+              )}
+              {forcedRestriction.status === "frozen" && (
+                <p className="text-[10px] text-blue-600 font-bold">
+                  Contact support or wait for an admin to lift the restriction to regain access.
+                </p>
+              )}
+            </motion.div>
+          )}
+
           <AnimatePresence>
             {error && (
               <motion.div
@@ -243,6 +316,19 @@ export default function LoginPage() {
                   <div className="flex items-center gap-2">
                     <ShieldCheck className="w-4 h-4 shrink-0" /> {error}
                   </div>
+                  {accountStatus === "locked" && lockoutSeconds > 0 && (
+                    <div className="mt-1 text-[11px] font-bold text-red-600 normal-case">
+                      ⏱ Try again in{" "}
+                      <span className="tabular-nums">
+                        {Math.floor(lockoutSeconds / 60)}:{String(lockoutSeconds % 60).padStart(2, "0")}
+                      </span>
+                    </div>
+                  )}
+                  {accountStatus === "pending" && (
+                    <div className="mt-1 normal-case font-bold text-amber-600 italic opacity-90 border-t border-[var(--rust)]/10 pt-1">
+                      {reason || "Awaiting admin approval."}
+                    </div>
+                  )}
                   {(accountStatus === "frozen" || accountStatus === "rejected" || accountStatus === "blocked") && reason && (
                     <div className="mt-1 normal-case font-bold text-gray-500 italic opacity-80 border-t border-[var(--rust)]/10 pt-1">
                       {accountStatus === "rejected" ? "Feedback" : "Violation"}: {reason}
@@ -351,9 +437,9 @@ export default function LoginPage() {
             <motion.div variants={itemVariants}>
               <motion.button
                 type="submit"
-                disabled={loading}
-                whileHover={{ scale: loading ? 1 : 1.02 }}
-                whileTap={{ scale: loading ? 1 : 0.97 }}
+                disabled={loading || lockoutSeconds > 0}
+                whileHover={{ scale: (loading || lockoutSeconds > 0) ? 1 : 1.02 }}
+                whileTap={{ scale: (loading || lockoutSeconds > 0) ? 1 : 0.97 }}
                 transition={{ type: "spring", stiffness: 400, damping: 20 }}
                 className="w-full text-white text-[10px] font-bold uppercase tracking-[0.2em] flex items-center justify-center gap-3 mt-4 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
                 style={{
@@ -385,7 +471,7 @@ export default function LoginPage() {
                 <span className="text-[9px] font-bold text-[#8C7B70] uppercase tracking-widest">social gateway</span>
                 <div className="h-px flex-1 bg-[#E5DDD5]" />
               </div>
-              
+
               {isGoogleAuthEnabled ? (
                 <div className="flex justify-center">
                   <GoogleLogin

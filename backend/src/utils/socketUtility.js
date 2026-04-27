@@ -3,14 +3,15 @@ let io = null;
 const SOCKET_EVENTS = {
   USER_UPDATED: 'user_updated',
   ORDER_CREATED: 'order_created',
-  ORDER_UPDATED: 'order_updated', // Standardized
+  ORDER_UPDATED: 'order_updated',
   DASHBOARD_UPDATE: 'dashboard_update',
   INVENTORY_UPDATED: 'inventory_updated',
   REVIEW_UPDATED: 'review_updated',
   STATS_UPDATE: 'stats_update',
   NOTIFICATION_COUNT_UPDATE: 'notification_count_update',
   NEW_NOTIFICATION: 'new_notification',
-  SETTINGS_UPDATED: 'settings_updated'
+  SETTINGS_UPDATED: 'settings_updated',
+  FORCE_LOGOUT: 'force_logout'
 };
 
 const init = (ioInstance) => {
@@ -153,6 +154,19 @@ const emitSettingsUpdated = (settings) => {
   emit(SOCKET_EVENTS.SETTINGS_UPDATED, settings);
 };
 
+/**
+ * Push a force_logout event directly to a user's private socket room.
+ * The frontend SocketContext listens for this and immediately clears
+ * the session + redirects to /login without waiting for the next API call.
+ */
+const emitForceLogout = (userId, status, reason) => {
+  emitToUser(userId, SOCKET_EVENTS.FORCE_LOGOUT, {
+    status,
+    reason: reason || null,
+    message: status === 'blocked' ? 'Account Terminated' : 'Account Frozen',
+  });
+};
+
 module.exports = {
   init,
   emit,
@@ -166,6 +180,7 @@ module.exports = {
   emitDashboardUpdate,
   emitStatsUpdate,
   emitSettingsUpdated,
+  emitForceLogout,
   broadcast,
   SOCKET_EVENTS,
   configureSocketServer

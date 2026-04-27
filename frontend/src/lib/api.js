@@ -136,7 +136,7 @@ export const setSessionForRole = (role, { token, user }) => {
   emitSessionSync(role);
 };
 
-const removeSessionKeys = (role) => {
+export const removeSessionKeys = (role) => {
   const keys = ROLE_STORAGE_KEYS[role];
   if (!keys) return;
 
@@ -208,30 +208,51 @@ export const clearSession = (role) => {
 api.interceptors.response.use(
   (response) => response,
   (error) => {
-    // Automatically clear expired tokens to prevent infinite error loops in the UI
     if (error?.response?.status === 401) {
       const role = typeof window !== "undefined"
         ? resolveRoleFromPath(window.location.pathname)
         : "customer";
       const status = error?.response?.data?.status;
       const reason = error?.response?.data?.reason;
+      const message = error?.response?.data?.message;
 
-      if (status === "frozen" || status === "blocked" || status === "rejected") {
+      // Force-logout frozen or terminated accounts immediately
+      if (status === "frozen" || status === "blocked") {
+        if (typeof window !== "undefined") {
+          // Store the reason so the login page can display it
+          try {
+            sessionStorage.setItem(
+              "lumbarong_account_restriction",
+              JSON.stringify({ status, reason, message })
+            );
+          } catch (_) {}
+
+          // Clear the active session
+          removeSessionKeys(role);
+
+          // Redirect to login — use replace so they can't go back
+          const currentPath = window.location.pathname;
+          if (!currentPath.startsWith("/login")) {
+            window.location.replace("/login");
+          }
+        }
+        return Promise.reject(error);
+      }
+
+      if (status === "rejected") {
         emitAccountStatus({
           role,
           status,
           reason,
-          message: error?.response?.data?.message || "Account access restricted.",
+          message: message || "Account access restricted.",
         });
         return Promise.reject(error);
       }
 
+      // Generic 401 — clear session quietly
       console.warn("Unauthorized request detected. Clearing local session keys...");
       if (typeof window !== "undefined") {
         removeSessionKeys(role);
-        
-        // Note: Automatic redirect is disabled per user request in conversation 734621da.
-        // The app will naturally prompt for login when the user tries to navigate or the next guard check runs.
       }
     }
     return Promise.reject(error);

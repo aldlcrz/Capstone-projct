@@ -93,7 +93,7 @@ export default function RegisterPage() {
     data.append("password", formData.password);
     data.append("role", formData.role);
     if (formData.role === "seller") {
-      if (!certificate || !validId || !gcashQrCode || !sellerData.mobileNumber || !sellerData.gcashNumber || !sellerData.isAdult) {
+      if (!certificate || !validId || !gcashQrCode || !sellerData.mobileNumber || !sellerData.gcashNumber) {
         setError("All seller verification fields are required.");
         setLoading(false);
         return;
@@ -438,7 +438,6 @@ export default function RegisterPage() {
                       ))}
                     </div>
                   </div>
-
 
                 </div>
 

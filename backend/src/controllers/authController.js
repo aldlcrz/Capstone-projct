@@ -127,6 +127,16 @@ exports.login = async (req, res) => {
       return res.status(404).json({ message: 'User not found' });
     }
 
+    // Check lockout FIRST (before status checks so brute-force doesn't reveal status)
+    if (user.loginLockedUntil && new Date(user.loginLockedUntil) > new Date()) {
+      return res.status(429).json({
+        message: 'Too many failed login attempts. Account temporarily locked.',
+        lockedUntil: user.loginLockedUntil,
+        status: 'locked'
+      });
+    }
+
+    // Account status checks
     if (user.status === 'blocked') {
       return res.status(403).json({
         message: 'Account Terminated',
@@ -136,25 +146,55 @@ exports.login = async (req, res) => {
     }
 
     if (user.status === 'frozen') {
-      return res.status(403).json({ 
-        message: 'Violation Detected', 
+      return res.status(403).json({
+        message: 'Account Frozen',
         reason: user.violationReason || 'Account suspended for policy violations.',
         status: 'frozen'
       });
     }
 
     if (user.status === 'rejected') {
-      return res.status(403).json({ 
-        message: 'Registration Rejected', 
+      return res.status(403).json({
+        message: 'Registration Rejected',
         reason: user.rejectionReason || 'Application does not meet community standards.',
         status: 'rejected'
       });
     }
 
+    // Seller pending approval gate
+    if (user.role === 'seller' && !user.isVerified) {
+      return res.status(403).json({
+        message: 'Account Pending Approval',
+        reason: 'Your seller account is awaiting admin approval. You will be notified once approved.',
+        status: 'pending'
+      });
+    }
+
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) {
-      return res.status(400).json({ message: 'Invalid credentials' });
+      // Increment failed attempts
+      user.loginAttempts = (user.loginAttempts || 0) + 1;
+      if (user.loginAttempts >= 5) {
+        user.loginLockedUntil = new Date(Date.now() + 10 * 60 * 1000); // 10-minute lockout
+        user.loginAttempts = 0; // reset counter after lockout is set
+        await user.save();
+        return res.status(429).json({
+          message: 'Too many failed login attempts. Account temporarily locked.',
+          lockedUntil: user.loginLockedUntil,
+          status: 'locked'
+        });
+      }
+      await user.save();
+      const attemptsLeft = 5 - user.loginAttempts;
+      return res.status(400).json({
+        message: `Invalid credentials. ${attemptsLeft} attempt${attemptsLeft !== 1 ? 's' : ''} remaining before lockout.`
+      });
     }
+
+    // Reset failed attempts on successful login
+    user.loginAttempts = 0;
+    user.loginLockedUntil = null;
+    await user.save();
 
     const token = jwt.sign(
       { id: user.id, role: user.role },
@@ -249,9 +289,9 @@ exports.verifyOtp = async (req, res) => {
 
     // Return a temporary "reset token" so the next step is secure
     // We can just use the same OTP as the token for the reset-password call
-    return res.status(200).json({ 
+    return res.status(200).json({
       message: 'OTP verified successfully',
-      resetToken: otp 
+      resetToken: otp
     });
   } catch (error) {
     return res.status(500).json({ message: 'Unable to verify OTP right now' });
@@ -305,7 +345,7 @@ exports.getProfile = async (req, res) => {
     });
     res.status(200).json(user);
   } catch (error) {
-    res.status(500).json(user);
+    res.status(500).json({ message: 'Error fetching profile' });
   }
 };
 
@@ -329,13 +369,13 @@ exports.googleLogin = async (req, res) => {
     }
 
     // Check for existing user by googleId or email
-    let user = await User.findOne({ 
-      where: { 
+    let user = await User.findOne({
+      where: {
         [Op.or]: [
           { googleId },
           { email: email.toLowerCase() }
         ]
-      } 
+      }
     });
 
     let isNewUser = false;

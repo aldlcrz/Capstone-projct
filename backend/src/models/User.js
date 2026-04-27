@@ -172,6 +172,14 @@ const User = sequelize.define('User', {
     type: DataTypes.BOOLEAN,
     defaultValue: true,
   },
+  loginAttempts: {
+    type: DataTypes.INTEGER,
+    defaultValue: 0,
+  },
+  loginLockedUntil: {
+    type: DataTypes.DATE,
+    allowNull: true,
+  },
 }, {
   timestamps: true,
   indexes: [

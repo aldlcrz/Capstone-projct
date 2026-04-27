@@ -3,7 +3,7 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { io } from 'socket.io-client';
 import { usePathname } from 'next/navigation';
-import { api, BACKEND_URL, resolveRoleFromPath, getStoredUserForRole, getTokenForRole } from '@/lib/api';
+import { api, BACKEND_URL, resolveRoleFromPath, getStoredUserForRole, getTokenForRole, removeSessionKeys } from '@/lib/api';
 const SocketContext = createContext(null);
 
 export const useSocket = () => {
@@ -129,6 +129,27 @@ export const SocketProvider = ({ children }) => {
         timestamp: data.timestamp || new Date(),
         type: data.type || 'system'
       });
+    });
+
+    socketInstance.on('force_logout', (data) => {
+      console.warn('FORCE LOGOUT RECEIVED:', data);
+      if (typeof window !== "undefined") {
+        try {
+          sessionStorage.setItem(
+            "lumbarong_account_restriction",
+            JSON.stringify({
+              status: data.status,
+              reason: data.reason,
+              message: data.message
+            })
+          );
+        } catch (_) {}
+
+        // Clear active session and redirect
+        const role = resolveRoleFromPath(window.location.pathname);
+        removeSessionKeys(role);
+        window.location.replace("/login");
+      }
     });
 
     queueMicrotask(() => {

@@ -1,7 +1,7 @@
 const { User, Product, Order, OrderItem, SystemSetting, sequelize } = require('../models');
 const { Op } = require('sequelize');
 const { sendNotification } = require('../utils/notificationHelper');
-const { emitUserUpdated, emitDashboardUpdate, broadcast, emitSettingsUpdated } = require('../utils/socketUtility');
+const { emitUserUpdated, emitDashboardUpdate, broadcast, emitSettingsUpdated, emitForceLogout } = require('../utils/socketUtility');
 const { getRangeBounds } = require('../utils/dateHelper');
 const { resetLoginRateLimit } = require('../routes/authRoutes');
 
@@ -392,6 +392,8 @@ exports.deleteCustomer = async (req, res) => {
     await user.save();
 
     emitUserUpdated(user, { action: 'terminated' });
+    emitForceLogout(user.id, 'blocked', user.violationReason);
+
     res.status(200).json({ message: 'Account blocked successfully' });
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -407,6 +409,8 @@ exports.toggleCustomerStatus = async (req, res) => {
     // If it was frozen, we are now unfreezing it
     user.status = 'active';
     user.violationReason = null;
+    user.loginAttempts = 0;
+    user.loginLockedUntil = null;
     await user.save();
 
     // Clear any stale rate-limit window so the user can log in immediately
@@ -438,6 +442,8 @@ exports.freezeUser = async (req, res) => {
     await user.save();
 
     emitUserUpdated(user, { action: 'frozen' });
+    emitForceLogout(user.id, 'frozen', user.violationReason);
+
 
     res.status(200).json({ message: 'Account frozen successfully', user });
   } catch (error) {
@@ -598,5 +604,89 @@ exports.sendBroadcast = async (req, res) => {
     res.status(200).json({ message: 'Broadcast sent successfully' });
   } catch (error) {
     res.status(500).json({ message: error.message });
+  }
+};
+
+exports.exportGlobalReport = async (req, res) => {
+  try {
+    const { jsonToCsv } = require('../utils/csvHelper');
+    const [orders, products, stats] = await Promise.all([
+      Order.findAll({
+        include: [
+          { model: User, as: 'customer', attributes: ['name', 'email', 'mobileNumber'] },
+          { model: User, as: 'seller', attributes: ['name', 'email'] },
+          { model: OrderItem, as: 'items', include: [{ model: Product, as: 'product', attributes: ['name'] }] }
+        ],
+        order: [['createdAt', 'DESC']]
+      }),
+      Product.findAll({
+        include: [{ model: User, as: 'seller', attributes: ['name'] }],
+        order: [['name', 'ASC']]
+      }),
+      Promise.all([
+        Order.sum('totalAmount', { where: { status: { [Op.notIn]: ['Cancelled'] } } }),
+        Order.count(),
+        User.count({ where: { role: 'customer' } }),
+        Product.count()
+      ])
+    ]);
+
+    const [totalRevenue, totalOrders, totalCustomers, totalProducts] = stats;
+    const reportRows = [];
+
+    // 1. Executive Summary
+    reportRows.push({ Type: '--- SYSTEM OVERVIEW ---', ID: '', Title: '', Details: '', Amount: '', Status: '', Date: '' });
+    reportRows.push({ Type: 'METRIC', ID: '-', Title: 'Total Platform Revenue', Details: 'Aggregated sales (excluding cancellations)', Amount: Number(totalRevenue || 0).toFixed(2), Status: 'Live', Date: new Date().toLocaleDateString() });
+    reportRows.push({ Type: 'METRIC', ID: '-', Title: 'Total Order Volume', Details: 'Historical orders processed', Amount: totalOrders.toString(), Status: 'Live', Date: '-' });
+    reportRows.push({ Type: 'METRIC', ID: '-', Title: 'Registered Customers', Details: 'Active consumer base', Amount: totalCustomers.toString(), Status: 'Live', Date: '-' });
+    reportRows.push({ Type: 'METRIC', ID: '-', Title: 'Live Marketplace Items', Details: 'Total products listed', Amount: totalProducts.toString(), Status: 'Live', Date: '-' });
+    reportRows.push({ Type: '', ID: '', Title: '', Details: '', Amount: '', Status: '', Date: '' });
+
+    // 2. All Orders Section
+    reportRows.push({ Type: '--- TRANSACTION LOG ---', ID: '', Title: '', Details: '', Amount: '', Status: '', Date: '' });
+    orders.forEach(o => {
+      const dateStr = new Date(o.createdAt).toLocaleString();
+      const customerName = o.customer?.name || 'Unknown';
+      const sellerName = o.seller?.name || 'Unknown';
+      const address = o.shippingAddress ? (typeof o.shippingAddress === 'string' ? JSON.parse(o.shippingAddress) : o.shippingAddress) : null;
+      const location = address ? `${address.city || ''}, ${address.province || ''}` : 'N/A';
+
+      reportRows.push({
+        Type: 'ORDER',
+        ID: o.id,
+        Title: `${customerName} bought from ${sellerName}`,
+        Details: `Seller Contact: ${o.seller?.email || 'N/A'} | Location: ${location}`,
+        Amount: Number(o.totalAmount).toFixed(2),
+        Status: o.status,
+        Date: dateStr
+      });
+    });
+    reportRows.push({ Type: '', ID: '', Title: '', Details: '', Amount: '', Status: '', Date: '' });
+
+    // 3. Global Catalog Section
+    reportRows.push({ Type: '--- GLOBAL CATALOG ---', ID: '', Title: '', Details: '', Amount: '', Status: '', Date: '' });
+    products.forEach(p => {
+      reportRows.push({
+        Type: 'PRODUCT',
+        ID: p.id,
+        Title: p.name,
+        Details: `Seller: ${p.seller?.name || 'Unknown'} | Category: ${Array.isArray(p.categories) ? p.categories.join(', ') : (p.categories || 'N/A')} | Stock: ${p.stock}`,
+        Amount: Number(p.price).toFixed(2),
+        Status: p.status,
+        Date: '-'
+      });
+    });
+
+    if (reportRows.length === 5) { // Only header sections + empty rows
+      reportRows.push({ Type: 'INFO', ID: '-', Title: 'No platform activity detected', Details: '', Amount: '0.00', Status: '-', Date: '-' });
+    }
+
+    const csv = jsonToCsv(reportRows, ['Type', 'ID', 'Title', 'Details', 'Amount', 'Status', 'Date']);
+    res.setHeader('Content-Type', 'text/csv');
+    res.setHeader('Content-Disposition', `attachment; filename=admin_system_report_${new Date().getTime()}.csv`);
+    res.status(200).send(csv);
+  } catch (err) {
+    console.error('Admin Global Export Error:', err);
+    res.status(500).json({ message: 'Error generating global system report', error: err.message, stack: process.env.NODE_ENV === 'development' ? err.stack : undefined });
   }
 };

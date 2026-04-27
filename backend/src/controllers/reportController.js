@@ -1,7 +1,12 @@
 const { Report, User } = require('../models');
 const { createSafeImageFilename } = require('../utils/imageUploadSecurity');
 const { ensureUploadDirs, reportsUploadDir } = require('../utils/uploadPaths');
+const { notifyAdmins } = require('../utils/notificationHelper');
+const { emitStatsUpdate } = require('../utils/socketUtility');
 const fs = require('fs');
+const path = require('path');
+
+
 
 exports.createReport = async (req, res) => {
   try {
@@ -36,10 +41,26 @@ exports.createReport = async (req, res) => {
       status: 'Pending'
     });
 
+    // Notify all admins about the new report
+    const reportedUser = await User.findByPk(reportedId, { attributes: ['name'] });
+    const reporterUser = await User.findByPk(reporterId, { attributes: ['name'] });
+    const typeLabel = type === 'CustomerReportingSeller' ? 'Customer reported a Seller' : 'Seller reported a Customer';
+    await notifyAdmins(
+      `🚨 New Report: ${typeLabel}`,
+      `${reporterUser?.name || 'A user'} filed a report against ${reportedUser?.name || 'a user'}. Reason: ${reason}`,
+      'system',
+      '/admin/reports'
+    );
+    
+    emitStatsUpdate({ type: 'report' });
+
     res.status(201).json({ message: 'Report submitted successfully.', data: report });
   } catch (error) {
-    console.error('Create Report Error:', error);
-    res.status(500).json({ message: 'Internal server error while creating report.' });
+    console.error('Create Report Error Stack:', error.stack);
+    res.status(500).json({ 
+      message: 'Internal server error while creating report.',
+      error: process.env.NODE_ENV === 'development' ? error.message : undefined 
+    });
   }
 };
 

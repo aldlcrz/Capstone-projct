@@ -1,10 +1,16 @@
 "use client";
 import React, { useState, useEffect, useCallback } from "react";
 import AdminLayout from "@/components/AdminLayout";
-import { Store, CheckCircle, XCircle, Eye, ShieldCheck, Search, X, Star } from "lucide-react";
+import { CheckCircle, XCircle, Eye, ShieldCheck, X, Star, ZoomIn } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
-import { api } from "@/lib/api";
+import { api, BACKEND_URL } from "@/lib/api";
 import { useSocket } from "@/context/SocketContext";
+
+const resolveImageUrl = (src) => {
+  if (!src) return null;
+  if (src.startsWith("http")) return src;
+  return `${BACKEND_URL}/${src.replace(/^\//, "")}`;
+};
 
 export default function AdminSellersPage() {
 
@@ -17,6 +23,15 @@ export default function AdminSellersPage() {
   const [isReviewsOpen, setIsReviewsOpen] = useState(false);
   const [sellerReviews, setSellerReviews] = useState([]);
   const [reviewsLoading, setReviewsLoading] = useState(false);
+
+  // Rejection reason modal state
+  const [showRejectModal, setShowRejectModal] = useState(false);
+  const [rejectTarget, setRejectTarget] = useState(null);
+  const [rejectReason, setRejectReason] = useState("");
+  const [isRejecting, setIsRejecting] = useState(false);
+
+  // QR code / document zoom modal
+  const [qrZoomSrc, setQrZoomSrc] = useState(null);
 
   const { socket } = useSocket();
 
@@ -31,8 +46,6 @@ export default function AdminSellersPage() {
       setLoading(false);
     }
   }, []);
-
-
 
   const fetchSellerReviews = async (sellerId) => {
     try {
@@ -52,24 +65,20 @@ export default function AdminSellersPage() {
     fetchSellers();
 
     if (socket) {
-      const handler = () => {
-        fetchSellers();
-      };
-      
-      socket.on('stats_update', handler);
-      socket.on('user_updated', handler);
-      socket.on('dashboard_update', handler);
-
+      const handler = () => { fetchSellers(); };
+      socket.on("stats_update", handler);
+      socket.on("user_updated", handler);
+      socket.on("dashboard_update", handler);
       return () => {
-        socket.off('stats_update', handler);
-        socket.off('user_updated', handler);
-        socket.off('dashboard_update', handler);
+        socket.off("stats_update", handler);
+        socket.off("user_updated", handler);
+        socket.off("dashboard_update", handler);
       };
     }
   }, [socket, fetchSellers]);
 
   const verifySeller = async (id) => {
-    if(!confirm("Verify this seller for the Lumban community?")) return;
+    if (!confirm("Verify this seller for the Lumban community?")) return;
     setError(null); setSuccess(null);
     try {
       await api.put(`/admin/verify-seller/${id}`);
@@ -82,17 +91,30 @@ export default function AdminSellersPage() {
     }
   };
 
-  const rejectSeller = async (id) => {
-    if(!confirm("Are you sure you want to reject this seller's application?")) return;
+  const openRejectModal = (seller) => {
+    setRejectTarget(seller);
+    setRejectReason("");
+    setShowRejectModal(true);
+    setIsModalOpen(false);
+  };
+
+  const confirmReject = async () => {
+    if (!rejectReason.trim()) return;
+    setIsRejecting(true);
     setError(null); setSuccess(null);
     try {
-      await api.put(`/admin/reject-seller/${id}`);
-      setSuccess("Seller application removed.");
+      await api.put(`/admin/reject-seller/${rejectTarget.id}`, { reason: rejectReason });
+      setSuccess("Seller application rejected with reason.");
+      setShowRejectModal(false);
+      setRejectReason("");
+      setRejectTarget(null);
       fetchSellers();
       setTimeout(() => setSuccess(null), 3000);
     } catch (err) {
       setError(err.response?.data?.message || "Operation failed.");
       setTimeout(() => setError(null), 3000);
+    } finally {
+      setIsRejecting(false);
     }
   };
 
@@ -106,13 +128,12 @@ export default function AdminSellersPage() {
               Artisan <span className="text-[var(--rust)] italic lowercase">Shops</span>
             </h1>
           </div>
-          
           <div className="flex items-center gap-3">
-             <div className="flex items-center gap-1 p-1 bg-white border border-[var(--border)] rounded-xl shadow-sm">
-                <div className="px-4 py-1.5 rounded-lg text-[10px] font-bold uppercase tracking-widest bg-[var(--rust)] text-white shadow">
-                  Requests ({sellers.length})
-                </div>
-             </div>
+            <div className="flex items-center gap-1 p-1 bg-white border border-[var(--border)] rounded-xl shadow-sm">
+              <div className="px-4 py-1.5 rounded-lg text-[10px] font-bold uppercase tracking-widest bg-[var(--rust)] text-white shadow">
+                Requests ({sellers.length})
+              </div>
+            </div>
           </div>
         </div>
 
@@ -141,7 +162,7 @@ export default function AdminSellersPage() {
         ) : (
           <div className="grid grid-cols-1 gap-6">
             {sellers.map((seller, idx) => (
-              <motion.div 
+              <motion.div
                 key={seller.id}
                 initial={{ opacity: 0, x: -10 }}
                 animate={{ opacity: 1, x: 0 }}
@@ -158,32 +179,32 @@ export default function AdminSellersPage() {
                     <div className="flex flex-wrap items-center gap-2 sm:gap-3">
                       <span className="text-[9px] sm:text-[10px] bg-amber-100 text-amber-700 px-3 py-1 rounded-full font-bold tracking-widest uppercase whitespace-nowrap">PENDING APPROVAL</span>
                       <span className="text-[9px] sm:text-[10px] text-[var(--muted)] flex items-center gap-1 whitespace-nowrap">
-                        <Clock className="w-3 h-3 shrink-0" /> 
-                        Applied {new Date(seller.createdAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
+                        <Clock className="w-3 h-3 shrink-0" />
+                        Applied {new Date(seller.createdAt).toLocaleDateString(undefined, { month: "short", day: "numeric" })}
                       </span>
                     </div>
                   </div>
                 </div>
 
                 <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-3 w-full md:w-auto">
-                  <button 
+                  <button
                     onClick={() => { setSelectedSeller(seller); setIsModalOpen(true); }}
                     className="flex-1 justify-center px-4 py-2.5 border border-[var(--border)] rounded-xl flex items-center gap-2 text-[10px] font-bold uppercase tracking-widest hover:border-[var(--rust)] hover:text-[var(--rust)] transition-all"
                   >
                     <Eye className="w-4 h-4" /> View Docs
                   </button>
                   <div className="flex items-center gap-2 sm:gap-3 flex-1">
-                    <button 
-                      onClick={() => rejectSeller(seller.id)}
+                    <button
+                      onClick={() => openRejectModal(seller)}
                       className="flex-1 justify-center px-4 py-2.5 border border-red-200 bg-red-50 text-red-600 rounded-xl flex items-center gap-2 text-[10px] font-bold uppercase tracking-widest hover:bg-red-100 transition-all"
                     >
                       <XCircle className="w-4 h-4" /> Reject
                     </button>
-                    <button 
+                    <button
                       onClick={() => verifySeller(seller.id)}
-                      className="flex-1 justify-center px-4 py-2.5 bg-[var(--bark)] text-white rounded-xl flex items-center gap-2 text-[10px] font-bold uppercase tracking-widest hover:bg-green-600 transition-all shadow-md group"
+                      className="flex-1 justify-center px-4 py-2.5 bg-[var(--bark)] text-white rounded-xl flex items-center gap-2 text-[10px] font-bold uppercase tracking-widest hover:bg-green-600 transition-all shadow-md"
                     >
-                      <ShieldCheck className="w-4 h-4 group-hover:rotate-12 transition-transform" /> Approve
+                      <ShieldCheck className="w-4 h-4" /> Approve
                     </button>
                   </div>
                 </div>
@@ -194,155 +215,128 @@ export default function AdminSellersPage() {
       </div>
 
       <AnimatePresence>
+        {/* Documents Modal */}
         {isModalOpen && selectedSeller && (
           <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
-            <motion.div 
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              onClick={() => setIsModalOpen(false)}
-              className="absolute inset-0 bg-[var(--charcoal)]/40 backdrop-blur-md"
-            />
-            <motion.div 
-              initial={{ opacity: 0, scale: 0.95, y: 20 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.95, y: 20 }}
-              className="relative w-full max-w-4xl bg-white rounded-3xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]"
-            >
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setIsModalOpen(false)} className="absolute inset-0 bg-[var(--charcoal)]/40 backdrop-blur-md" />
+            <motion.div initial={{ opacity: 0, scale: 0.95, y: 20 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.95, y: 20 }} className="relative w-full max-w-4xl bg-white rounded-3xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
               <div className="p-6 border-b border-[var(--border)] flex items-center justify-between bg-[var(--stone)]/30">
                 <div>
                   <h2 className="text-2xl font-serif font-bold text-[var(--charcoal)]">Verification Documents</h2>
                   <p className="text-sm text-[var(--muted)]">Reviewing credentials for <span className="font-bold text-[var(--rust)]">{selectedSeller.name}</span></p>
                 </div>
-                <button 
-                  onClick={() => setIsModalOpen(false)}
-                  className="p-2 hover:bg-white rounded-full transition-colors text-[var(--muted)] hover:text-[var(--rust)]"
-                >
+                <button onClick={() => setIsModalOpen(false)} className="p-2 hover:bg-white rounded-full transition-colors text-[var(--muted)] hover:text-[var(--rust)]">
                   <X className="w-6 h-6" />
                 </button>
               </div>
-
               <div className="p-8 overflow-y-auto custom-scrollbar">
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                  <DocumentCard title="Indigency Certificate" src={selectedSeller.indigencyCertificate} />
-                  <DocumentCard title="Valid ID" src={selectedSeller.validId} />
-                  <DocumentCard title="GCash QR Code" src={selectedSeller.gcashQrCode} />
+                  <DocumentCard title="Indigency Certificate" src={resolveImageUrl(selectedSeller.indigencyCertificate)} onZoom={setQrZoomSrc} />
+                  <DocumentCard title="Valid ID" src={resolveImageUrl(selectedSeller.validId)} onZoom={setQrZoomSrc} />
+                  <DocumentCard title="GCash QR Code" src={resolveImageUrl(selectedSeller.gcashQrCode)} onZoom={setQrZoomSrc} isQr />
                 </div>
               </div>
-
               <div className="p-6 border-t border-[var(--border)] bg-[var(--stone)]/30 flex justify-end gap-4">
-                 <button 
-                  onClick={() => setIsModalOpen(false)}
-                  className="px-6 py-3 text-sm font-bold uppercase tracking-widest text-[var(--muted)] hover:text-[var(--charcoal)]"
-                >
-                  Back to Queue
-                </button>
-                  <button 
-                    onClick={() => {
-                      rejectSeller(selectedSeller.id);
-                      setIsModalOpen(false);
-                    }}
-                    className="px-8 py-3 bg-red-100 text-red-700 rounded-xl text-sm font-bold uppercase tracking-widest hover:bg-red-200 transition-all"
-                  >
-                    Reject Application
-                  </button>
-                  <button 
-                    onClick={() => {
-                      verifySeller(selectedSeller.id);
-                      setIsModalOpen(false);
-                    }}
-                    className="px-8 py-3 bg-[var(--bark)] text-white rounded-xl text-sm font-bold uppercase tracking-widest hover:bg-green-600 transition-all shadow-lg"
-                  >
-                    Approve Seller
-                  </button>
+                <button onClick={() => setIsModalOpen(false)} className="px-6 py-3 text-sm font-bold uppercase tracking-widest text-[var(--muted)] hover:text-[var(--charcoal)]">Back to Queue</button>
+                <button onClick={() => openRejectModal(selectedSeller)} className="px-8 py-3 bg-red-100 text-red-700 rounded-xl text-sm font-bold uppercase tracking-widest hover:bg-red-200 transition-all">Reject Application</button>
+                <button onClick={() => { verifySeller(selectedSeller.id); setIsModalOpen(false); }} className="px-8 py-3 bg-[var(--bark)] text-white rounded-xl text-sm font-bold uppercase tracking-widest hover:bg-green-600 transition-all shadow-lg">Approve Seller</button>
               </div>
             </motion.div>
           </div>
         )}
 
-        {isReviewsOpen && selectedSeller && (
-          <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
-            <motion.div 
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              onClick={() => setIsReviewsOpen(false)}
-              className="absolute inset-0 bg-[var(--charcoal)]/40 backdrop-blur-md"
-            />
-            <motion.div 
-              initial={{ opacity: 0, scale: 0.95, y: 20 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.95, y: 20 }}
-              className="relative w-full max-w-xl bg-white rounded-3xl shadow-2xl overflow-hidden flex flex-col max-h-[85vh]"
-            >
-              <div className="p-6 border-b border-[var(--border)] flex items-center justify-between bg-[var(--stone)]/30">
-                <div className="flex items-center gap-4">
-                   <div className="w-12 h-12 bg-[var(--rust)] rounded-xl flex items-center justify-center text-white">
-                      <Star className="w-6 h-6 fill-current" />
-                   </div>
-                   <div>
-                      <h2 className="text-xl font-serif font-bold text-[var(--charcoal)]">Artisan Feedback</h2>
-                      <p className="text-xs text-[var(--muted)]">Monitoring customer satisfaction for <span className="font-bold text-[var(--rust)]">{selectedSeller.name}</span></p>
-                   </div>
+        {/* Rejection Reason Modal */}
+        {showRejectModal && rejectTarget && (
+          <div className="fixed inset-0 z-[110] flex items-center justify-center p-4">
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => { setShowRejectModal(false); setRejectReason(""); }} className="absolute inset-0 bg-[var(--charcoal)]/50 backdrop-blur-md" />
+            <motion.div initial={{ opacity: 0, scale: 0.95, y: 20 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.95, y: 20 }} className="relative w-full max-w-md bg-white rounded-3xl shadow-2xl p-8 space-y-6">
+              <div className="flex items-start justify-between">
+                <div>
+                  <h3 className="font-serif text-xl font-bold text-[var(--charcoal)]">Reject Application</h3>
+                  <p className="text-xs text-[var(--muted)] mt-1">Provide a reason for <span className="font-bold text-[var(--rust)]">{rejectTarget.name}</span></p>
                 </div>
-                <button 
-                  onClick={() => setIsReviewsOpen(false)}
-                  className="p-2 hover:bg-white rounded-full transition-colors text-[var(--muted)]"
-                >
-                  <X className="w-6 h-6" />
+                <button onClick={() => { setShowRejectModal(false); setRejectReason(""); }} className="p-2 hover:bg-[var(--cream)] rounded-xl transition-all">
+                  <X className="w-5 h-5 text-[var(--muted)]" />
                 </button>
               </div>
-
-              <div className="p-8 overflow-y-auto artisan-scrollbar bg-[#FAFAFA]">
-                {reviewsLoading ? (
-                  <div className="py-12 text-center text-[var(--muted)] italic animate-pulse">Syncing feedback registry...</div>
-                ) : sellerReviews.length === 0 ? (
-                  <div className="py-12 px-6 text-center text-[var(--muted)] italic border-2 border-dashed border-[var(--border)] rounded-2xl mx-10">
-                    No customer feedback has been recorded for this workshop yet.
-                  </div>
-                ) : (
-                  <div className="space-y-6">
-                    {sellerReviews.map((review) => (
-                      <div key={review.id} className="bg-white p-5 rounded-2xl border border-[var(--border)] shadow-sm">
-                        <div className="flex justify-between items-start mb-3">
-                          <div className="flex items-center gap-3">
-                             <div className="w-8 h-8 rounded-full bg-[var(--stone)] flex items-center justify-center text-[var(--rust)] font-bold text-xs overflow-hidden">
-                                {review.customer?.profilePhoto ? (
-                                  <img src={review.customer.profilePhoto} alt="" className="w-full h-full object-cover" />
-                                ) : (
-                                  review.customer?.name?.[0] || 'C'
-                                )}
-                             </div>
-                             <div>
-                                <div className="text-xs font-bold text-[var(--charcoal)]">{review.customer?.name}</div>
-                                <div className="flex text-amber-400">
-                                   {[...Array(5)].map((_, i) => (
-                                     <Star key={i} className={`w-2.5 h-2.5 ${i < review.rating ? 'fill-current' : 'opacity-20'}`} />
-                                   ))}
-                                </div>
-                             </div>
-                          </div>
-                          <div className="text-[10px] text-[var(--muted)] font-bold bg-[var(--stone)]/30 px-2 py-1 rounded">
-                             {new Date(review.createdAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}
-                          </div>
-                        </div>
-                        <div className="text-[11px] font-bold text-[var(--rust)] bg-[var(--rust)]/5 px-2 py-1 rounded w-fit mb-2">
-                           Product: {review.product?.name}
-                        </div>
-                        <p className="text-xs text-[var(--charcoal)]/80 leading-relaxed italic">&ldquo;{review.comment}&rdquo;</p>
-                      </div>
-                    ))}
-                  </div>
-                )}
+              <div className="space-y-2">
+                <label className="text-[9px] font-black uppercase tracking-widest text-[var(--muted)]">Reason for Rejection <span className="text-red-500">*</span></label>
+                <textarea
+                  autoFocus
+                  value={rejectReason}
+                  onChange={(e) => setRejectReason(e.target.value)}
+                  placeholder="e.g. Documents unclear, Invalid credentials, Does not meet requirements..."
+                  rows={4}
+                  className="w-full px-4 py-3 bg-red-50/30 border border-red-100 focus:border-red-400 rounded-xl outline-none text-xs font-medium transition-all resize-none"
+                />
+                <p className="text-[8px] text-red-500 font-bold uppercase tracking-wider italic">This reason will be shown to the applicant.</p>
               </div>
+              <div className="flex gap-3">
+                <button onClick={() => { setShowRejectModal(false); setRejectReason(""); }} className="flex-1 py-3 bg-[var(--cream)] text-[var(--charcoal)] text-[10px] font-black uppercase tracking-widest rounded-xl hover:bg-[var(--border)] transition-all">Cancel</button>
+                <button onClick={confirmReject} disabled={!rejectReason.trim() || isRejecting} className="flex-[2] py-3 bg-red-600 text-white text-[10px] font-black uppercase tracking-widest rounded-xl hover:bg-red-700 transition-all disabled:opacity-40 disabled:cursor-not-allowed">
+                  {isRejecting ? "Rejecting..." : "Confirm Rejection"}
+                </button>
+              </div>
+            </motion.div>
+          </div>
+        )}
 
+        {/* Document / QR Zoom Modal */}
+        {qrZoomSrc && (
+          <div className="fixed inset-0 z-[120] flex items-center justify-center p-4">
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setQrZoomSrc(null)} className="absolute inset-0 bg-black/70 backdrop-blur-sm" />
+            <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.9 }} className="relative max-w-sm w-full bg-white rounded-3xl shadow-2xl overflow-hidden">
+              <div className="flex items-center justify-between p-4 border-b border-[var(--border)]">
+                <span className="text-xs font-bold uppercase tracking-widest text-[var(--charcoal)]">Document View</span>
+                <button onClick={() => setQrZoomSrc(null)} className="p-2 hover:bg-[var(--cream)] rounded-xl transition-all"><X className="w-5 h-5 text-[var(--muted)]" /></button>
+              </div>
+              <div className="p-6 flex items-center justify-center">
+                <img src={qrZoomSrc} alt="Document" className="max-w-full max-h-[70vh] object-contain rounded-xl" />
+              </div>
+            </motion.div>
+          </div>
+        )}
+
+        {/* Reviews Modal */}
+        {isReviewsOpen && selectedSeller && (
+          <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setIsReviewsOpen(false)} className="absolute inset-0 bg-[var(--charcoal)]/40 backdrop-blur-md" />
+            <motion.div initial={{ opacity: 0, scale: 0.95, y: 20 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.95, y: 20 }} className="relative w-full max-w-xl bg-white rounded-3xl shadow-2xl overflow-hidden flex flex-col max-h-[85vh]">
+              <div className="p-6 border-b border-[var(--border)] flex items-center justify-between bg-[var(--stone)]/30">
+                <div className="flex items-center gap-4">
+                  <div className="w-12 h-12 bg-[var(--rust)] rounded-xl flex items-center justify-center text-white"><Star className="w-6 h-6 fill-current" /></div>
+                  <div>
+                    <h2 className="text-xl font-serif font-bold text-[var(--charcoal)]">Artisan Feedback</h2>
+                    <p className="text-xs text-[var(--muted)]">Monitoring for <span className="font-bold text-[var(--rust)]">{selectedSeller.name}</span></p>
+                  </div>
+                </div>
+                <button onClick={() => setIsReviewsOpen(false)} className="p-2 hover:bg-white rounded-full transition-colors text-[var(--muted)]"><X className="w-6 h-6" /></button>
+              </div>
+              <div className="p-8 overflow-y-auto artisan-scrollbar bg-[#FAFAFA]">
+                {reviewsLoading ? <div className="py-12 text-center text-[var(--muted)] italic animate-pulse">Syncing feedback...</div>
+                  : sellerReviews.length === 0 ? <div className="py-12 text-center text-[var(--muted)] italic border-2 border-dashed border-[var(--border)] rounded-2xl">No feedback recorded yet.</div>
+                  : <div className="space-y-6">{sellerReviews.map((review) => (
+                    <div key={review.id} className="bg-white p-5 rounded-2xl border border-[var(--border)] shadow-sm">
+                      <div className="flex justify-between items-start mb-3">
+                        <div className="flex items-center gap-3">
+                          <div className="w-8 h-8 rounded-full bg-[var(--stone)] flex items-center justify-center text-[var(--rust)] font-bold text-xs overflow-hidden">
+                            {review.customer?.profilePhoto ? <img src={review.customer.profilePhoto} alt="" className="w-full h-full object-cover" /> : review.customer?.name?.[0] || "C"}
+                          </div>
+                          <div>
+                            <div className="text-xs font-bold text-[var(--charcoal)]">{review.customer?.name}</div>
+                            <div className="flex text-amber-400">{[...Array(5)].map((_, i) => <Star key={i} className={`w-2.5 h-2.5 ${i < review.rating ? "fill-current" : "opacity-20"}`} />)}</div>
+                          </div>
+                        </div>
+                        <div className="text-[10px] text-[var(--muted)] font-bold">{new Date(review.createdAt).toLocaleDateString()}</div>
+                      </div>
+                      <div className="text-[11px] font-bold text-[var(--rust)] mb-2">Product: {review.product?.name}</div>
+                      <p className="text-xs text-[var(--charcoal)]/80 italic">&ldquo;{review.comment}&rdquo;</p>
+                    </div>
+                  ))}</div>
+                }
+              </div>
               <div className="p-6 border-t border-[var(--border)] bg-[var(--stone)]/30 flex justify-end">
-                  <button 
-                    onClick={() => setIsReviewsOpen(false)}
-                    className="px-8 py-3 bg-[var(--charcoal)] text-white rounded-xl text-[10px] font-bold uppercase tracking-widest hover:bg-[var(--rust)] transition-all"
-                  >
-                    Close Review Panel
-                  </button>
+                <button onClick={() => setIsReviewsOpen(false)} className="px-8 py-3 bg-[var(--charcoal)] text-white rounded-xl text-[10px] font-bold uppercase tracking-widest hover:bg-[var(--rust)] transition-all">Close</button>
               </div>
             </motion.div>
           </div>
@@ -352,7 +346,7 @@ export default function AdminSellersPage() {
   );
 }
 
-function DocumentCard({ title, src }) {
+function DocumentCard({ title, src, onZoom, isQr = false }) {
   return (
     <div className="space-y-3">
       <h4 className="text-xs font-bold uppercase tracking-widest text-[var(--muted)] px-1">{title}</h4>
@@ -360,10 +354,13 @@ function DocumentCard({ title, src }) {
         {src ? (
           <>
             <img src={src} alt={title} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" />
-            <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors flex items-center justify-center opacity-0 group-hover:opacity-100">
-               <a href={src} target="_blank" rel="noopener noreferrer" className="px-4 py-2 bg-white/90 backdrop-blur rounded-lg text-xs font-bold uppercase tracking-wider shadow-xl transform translate-y-4 group-hover:translate-y-0 transition-transform">
-                 Open Full Size
-               </a>
+            <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors flex items-center justify-center opacity-0 group-hover:opacity-100 gap-2">
+              <button
+                onClick={() => onZoom(src)}
+                className="px-4 py-2 bg-white/90 backdrop-blur rounded-lg text-xs font-bold uppercase tracking-wider shadow-xl transform translate-y-4 group-hover:translate-y-0 transition-transform flex items-center gap-1.5"
+              >
+                <ZoomIn className="w-3.5 h-3.5" /> {isQr ? "View QR" : "View Full"}
+              </button>
             </div>
           </>
         ) : (
@@ -379,6 +376,6 @@ function DocumentCard({ title, src }) {
 
 function Clock(props) {
   return (
-    <svg {...props} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+    <svg {...props} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10" /><polyline points="12 6 12 12 16 14" /></svg>
   );
 }

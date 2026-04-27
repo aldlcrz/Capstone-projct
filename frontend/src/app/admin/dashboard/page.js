@@ -10,6 +10,7 @@ import {
   CloudRain,
   RefreshCw,
   Download,
+  FileDown,
   CheckCircle,
   Clock,
   Truck,
@@ -141,22 +142,22 @@ export default function AdminDashboard() {
     };
   }, [socket, refresh]);
 
-  const handleDownloadReport = () => {
-    const rows = [
-      ["Metric", "Value"],
-      ["Total Sales", stats.totalSales],
-      ["Total Orders", stats.totalOrders],
-      ["Active Customers", stats.activeCustomers],
-      ["Live Products", stats.liveProducts],
-    ];
-    const csv = rows.map(r => r.join(",")).join("\n");
-    const blob = new Blob([csv], { type: "text/csv" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `lumbarong_report_${new Date().toLocaleDateString("en-CA")}.csv`;
-    a.click();
-    URL.revokeObjectURL(url);
+  const handleDownloadReport = async () => {
+    try {
+      setRefreshing(true);
+      const res = await api.get('/admin/export-global-report', { responseType: 'blob' });
+      const url = window.URL.createObjectURL(new Blob([res.data]));
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `lumbarong_admin_report_${new Date().toLocaleDateString("en-CA")}.csv`;
+      a.click();
+      window.URL.revokeObjectURL(url);
+    } catch (err) {
+      console.error("Export failed", err);
+      alert("Failed to generate global report.");
+    } finally {
+      setRefreshing(false);
+    }
   };
 
 
@@ -200,9 +201,9 @@ export default function AdminDashboard() {
                 onClick={handleDownloadReport}
                 className="flex items-center gap-2 px-3 sm:px-5 py-2.5 bg-[var(--bark)] text-white rounded-xl text-[9px] sm:text-xs font-bold uppercase tracking-widest hover:bg-[var(--rust)] transition-all whitespace-nowrap"
               >
-                <Download className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-                <span className="hidden sm:inline">Download Report</span>
-                <span className="sm:hidden">Report</span>
+                <FileDown className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                <span className="hidden sm:inline">Export (.csv)</span>
+                <span className="sm:hidden">Export</span>
               </button>
             </div>
           </div>
