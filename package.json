@@ -6,6 +6,7 @@
         "postinstall": "npm install --legacy-peer-deps --prefix backend && npm install --legacy-peer-deps --prefix frontend",
         "start": "powershell -NoProfile -ExecutionPolicy Bypass -File ./start.ps1",
         "dev": "npm start",
+        "build": "npm run build --prefix frontend",
         "expo": "npx expo start --lan --prefix expo_app",
         "start:expo": "npx expo start --lan --prefix expo_app"
     }
