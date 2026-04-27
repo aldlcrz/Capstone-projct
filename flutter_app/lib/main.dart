@@ -8,6 +8,7 @@ import 'providers/cart_provider.dart';
 import 'providers/notification_provider.dart';
 
 // Screens (To be implemented)
+// Screens (To be implemented)
 import 'screens/auth/landing_screen.dart';
 import 'screens/auth/login_screen.dart';
 import 'screens/auth/register_screen.dart';
@@ -88,18 +89,28 @@ class _LumBarongRouterState extends State<LumBarongRouter> {
         GoRoute(path: '/home', builder: (c, s) => const HomeScreen()),
         GoRoute(
           path: '/products/:id',
-          builder: (c, s) => ProductDetailScreen(productId: s.pathParameters['id']!),
+          builder: (c, s) =>
+              ProductDetailScreen(productId: s.pathParameters['id']!),
         ),
         GoRoute(path: '/cart', builder: (c, s) => const CartScreen()),
         GoRoute(path: '/checkout', builder: (c, s) => const CheckoutScreen()),
         GoRoute(path: '/orders', builder: (c, s) => const OrdersScreen()),
-        
+
         // Seller Routes
-        GoRoute(path: '/seller/dashboard', builder: (c, s) => const SellerDashboardScreen()),
-        GoRoute(path: '/seller/orders', builder: (c, s) => const SellerOrdersScreen()),
-        
-        GoRoute(path: '/notifications', builder: (c, s) => const NotificationsScreen()),
-        
+        GoRoute(
+          path: '/seller/dashboard',
+          builder: (c, s) => const SellerDashboardScreen(),
+        ),
+        GoRoute(
+          path: '/seller/orders',
+          builder: (c, s) => const SellerOrdersScreen(),
+        ),
+
+        GoRoute(
+          path: '/notifications',
+          builder: (c, s) => const NotificationsScreen(),
+        ),
+
         // Add more routes as we build screens
       ],
     );
