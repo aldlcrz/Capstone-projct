@@ -1,0 +1,81 @@
+{
+  "expo": {
+    "name": "LumBarong",
+    "slug": "lumbarong",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/images/icon.png",
+    "scheme": "lumbarong",
+    "userInterfaceStyle": "dark",
+    "newArchEnabled": true,
+    "ios": {
+      "supportsTablet": false,
+      "bundleIdentifier": "com.lumbarong.app",
+      "infoPlist": {
+        "NSCameraUsageDescription": "Used for uploading product and profile photos.",
+        "NSPhotoLibraryUsageDescription": "Used to select product images, payment proofs, and profile photos.",
+        "NSLocationWhenInUseUsageDescription": "Used to help locate your delivery address."
+      }
+    },
+    "android": {
+      "package": "com.lumbarong.app",
+      "versionCode": 1,
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/images/adaptive-icon.png",
+        "backgroundColor": "#1A1410"
+      },
+      "permissions": [
+        "READ_EXTERNAL_STORAGE",
+        "WRITE_EXTERNAL_STORAGE",
+        "CAMERA",
+        "ACCESS_FINE_LOCATION",
+        "ACCESS_COARSE_LOCATION",
+        "RECEIVE_BOOT_COMPLETED",
+        "VIBRATE"
+      ],
+      "edgeToEdgeEnabled": true,
+      "predictiveBackGestureEnabled": false
+    },
+    "web": {
+      "output": "static",
+      "favicon": "./assets/images/favicon.png"
+    },
+    "plugins": [
+      "expo-router",
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "Allow LumBarong to access your photos for product and profile uploads.",
+          "cameraPermission": "Allow LumBarong to use your camera for photos."
+        }
+      ],
+      [
+        "expo-location",
+        {
+          "locationAlwaysAndWhenInUsePermission": "Allow LumBarong to access your location for delivery address."
+        }
+      ],
+      [
+        "expo-splash-screen",
+        {
+          "image": "./assets/images/splash-icon.png",
+          "imageWidth": 200,
+          "resizeMode": "contain",
+          "backgroundColor": "#1A1410",
+          "dark": {
+            "backgroundColor": "#1A1410"
+          }
+        }
+      ]
+    ],
+    "experiments": {
+      "typedRoutes": true
+    },
+    "extra": {
+      "eas": {
+        "projectId": "your-eas-project-id-here"
+      }
+    }
+  }
+}
+
