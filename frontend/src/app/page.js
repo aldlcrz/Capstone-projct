@@ -19,8 +19,9 @@ import { api, getStoredUserForRole } from "@/lib/api";
 import { useSocket } from "@/context/SocketContext";
 import { normalizeProductImages, getProductImageSrc } from "@/lib/productImages";
 import { fetchCategories, normalizeCategories } from "@/lib/categories";
+import { Suspense } from "react";
 
-export default function ShopPage() {
+function ShopContent() {
   const router = useRouter();
   const [activeCategory, setActiveCategory] = useState("ALL");
   const [products, setProducts] = useState([]);
@@ -352,5 +353,17 @@ export default function ShopPage() {
 
       </div>
     </CustomerLayout>
+  );
+}
+
+export default function ShopPage() {
+  return (
+    <Suspense fallback={
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="w-12 h-12 border-4 border-stone-200 border-t-[#C0420A] rounded-full animate-spin" />
+      </div>
+    }>
+      <ShopContent />
+    </Suspense>
   );
 }
