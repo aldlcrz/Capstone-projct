@@ -185,6 +185,9 @@ export default function SellerLayout({ children }) {
   };
 
 
+  const isUnverified = user && !user.isVerified && user.role === 'seller';
+  const isRejected = user && user.status === 'rejected' && user.role === 'seller';
+
   return (
     <div data-panel="seller" className="flex h-screen bg-[var(--cream)] overflow-hidden">
 
@@ -213,11 +216,15 @@ export default function SellerLayout({ children }) {
                 <div className="space-y-1.5">
                   {group.items.map((item, i) => {
                     const active = pathname === item.path || (item.path !== '/seller/dashboard' && pathname.startsWith(item.path));
+                    // Disable navigation if unverified, except Profile
+                    const isDisabled = (isUnverified || isRejected) && item.path !== '/seller/profile';
+                    
                     return (
                       <Link
                         key={i}
-                        href={item.path}
-                        className={`flex items-center gap-3 px-4 py-3.5 rounded-xl transition-all duration-300 group tracking-wide text-sm font-medium ${active ? 'bg-[rgba(192,66,42,0.08)] text-[var(--rust)] border-l-4 border-[var(--rust)]' : 'text-[var(--charcoal)] hover:bg-[var(--cream)] hover:text-[var(--rust)]'}`}
+                        href={isDisabled ? "#" : item.path}
+                        onClick={(e) => { if(isDisabled) { e.preventDefault(); } }}
+                        className={`flex items-center gap-3 px-4 py-3.5 rounded-xl transition-all duration-300 group tracking-wide text-sm font-medium ${isDisabled ? 'opacity-40 cursor-not-allowed' : active ? 'bg-[rgba(192,66,42,0.08)] text-[var(--rust)] border-l-4 border-[var(--rust)]' : 'text-[var(--charcoal)] hover:bg-[var(--cream)] hover:text-[var(--rust)]'}`}
                       >
                         <span className={`transition-colors ${active ? 'text-[var(--rust)]' : 'text-[var(--muted)] group-hover:text-[var(--rust)]'}`}>
                           {item.icon}
@@ -387,7 +394,7 @@ export default function SellerLayout({ children }) {
                     {user?.name || "Artisan Shop"}
                   </div>
                   <div className="text-[10px] font-bold uppercase tracking-widest text-[var(--muted)]">
-                    VERIFIED SELLER
+                    {user?.isVerified ? "VERIFIED SELLER" : "PENDING VERIFICATION"}
                   </div>
                 </div>
                 <div className="w-10 h-10 rounded-xl bg-[var(--bark)] border-2 border-white shadow-md flex items-center justify-center text-white font-serif text-lg font-bold overflow-hidden transition-transform active:scale-95">
@@ -421,10 +428,36 @@ export default function SellerLayout({ children }) {
         </header>
 
         {/* Page Content */}
-        <main className="flex-1 overflow-y-auto fluid-container !pt-10 pb-[135px] lg:pb-10">
+        <main className="flex-1 overflow-y-auto fluid-container !pt-10 pb-[135px] lg:pb-10 relative">
           <div className="max-w-[1200px] mx-auto">
             {children}
           </div>
+
+          {/* Waiting for Approval Overlay */}
+          {(isUnverified || isRejected) && pathname !== '/seller/profile' && (
+            <div className="absolute inset-0 z-[100] bg-white/60 backdrop-blur-md flex flex-col items-center justify-center p-8 text-center animate-in fade-in duration-500">
+              <div className="max-w-md w-full artisan-card p-10 space-y-6 shadow-2xl">
+                <div className="w-20 h-20 bg-[var(--cream)] rounded-full flex items-center justify-center mx-auto text-[var(--rust)]">
+                   {isUnverified ? <RefreshCw className="w-10 h-10 animate-spin" /> : <XCircle className="w-10 h-10 text-red-500" />}
+                </div>
+                <div className="space-y-2">
+                  <h2 className="font-serif text-2xl font-bold text-[var(--charcoal)] uppercase tracking-tight">
+                    {isUnverified ? "Waiting for Approval" : "Application Rejected"}
+                  </h2>
+                  <p className="text-sm text-[var(--muted)] font-medium leading-relaxed">
+                    {isUnverified 
+                      ? "Our curators are currently reviewing your artisan credentials. You'll be notified once your workshop is live."
+                      : `Your application was not approved. Reason: ${user?.rejectionReason || "No details provided."}`
+                    }
+                  </p>
+                </div>
+                <div className="pt-4 flex flex-col gap-3">
+                  <button onClick={() => router.push('/seller/profile')} className="btn-primary w-full py-4 text-[10px] tracking-widest uppercase font-black">Update Documents</button>
+                  <button onClick={handleLogout} className="text-[10px] font-black uppercase tracking-widest text-[var(--muted)] hover:text-red-500 transition-colors">Logout</button>
+                </div>
+              </div>
+            </div>
+          )}
         </main>
 
         {/* Mobile Bottom Nav */}

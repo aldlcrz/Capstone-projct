@@ -1,235 +1,356 @@
 "use client";
-import React, { useState } from "react";
-
+import React, { useState, useEffect, useCallback } from "react";
+import CustomerLayout from "@/components/CustomerLayout";
+import Image from "next/image";
 import Link from "next/link";
-import { Star, ArrowRight, Menu, X } from "lucide-react";
+import { useRouter, useSearchParams } from "next/navigation";
+import {
+  Search,
+  ChevronRight,
+  SlidersHorizontal,
+  Star,
+  RefreshCw,
+  ShoppingCart,
+  ArrowRight,
+  X
+} from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
-import { api } from "@/lib/api";
+import { api, getStoredUserForRole } from "@/lib/api";
+import { useSocket } from "@/context/SocketContext";
+import { normalizeProductImages, getProductImageSrc } from "@/lib/productImages";
+import { fetchCategories, normalizeCategories } from "@/lib/categories";
 
-const containerVariants = {
-  hidden: {},
-  visible: { transition: { staggerChildren: 0.12, delayChildren: 0.3 } },
-};
+export default function ShopPage() {
+  const router = useRouter();
+  const [activeCategory, setActiveCategory] = useState("ALL");
+  const [products, setProducts] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [userRole, setUserRole] = useState(null);
+  const [categories, setCategories] = useState([]);
+  const [showCategoryModal, setShowCategoryModal] = useState(false);
+  const searchParams = useSearchParams();
 
-const itemVariants = {
-  hidden: { opacity: 0, y: 22 },
-  visible: {
-    opacity: 1,
-    y: 0,
-    transition: { duration: 0.7, ease: [0.22, 1, 0.36, 1] },
-  },
-};
+  useEffect(() => {
+    const category = searchParams.get("category");
+    const search = searchParams.get("search");
+    const filter = searchParams.get("filter");
+    
+    if (category) setActiveCategory(category);
+    if (search) setSearchQuery(search);
+    
+    // If filter is new_arrivals, we might want to reset category or keep it
+    if (filter === 'new_arrivals') {
+      setActiveCategory('New Arrivals');
+    }
+  }, [searchParams]);
 
-export default function LandingPage() {
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const [backgroundUrl, setBackgroundUrl] = useState(null);
-  const [backgroundPosition, setBackgroundPosition] = useState("center");
-
-  React.useEffect(() => {
-    const fetchSettings = async () => {
-      try {
-        const res = await api.get("/admin/public-settings");
-        if (res.data?.landingPageBackground) {
-          setBackgroundUrl(res.data.landingPageBackground);
-        } else {
-          setBackgroundUrl("/images/barong-bg.jpg");
-        }
-        if (res.data?.landingPageBackgroundPosition) {
-          setBackgroundPosition(res.data.landingPageBackgroundPosition);
-        }
-      } catch (err) {
-        console.error("Failed to load public settings", err);
-        setBackgroundUrl("/images/barong-bg.jpg");
-      }
-    };
-    fetchSettings();
+  useEffect(() => {
+    try {
+      const stored = getStoredUserForRole("customer") || {};
+      setUserRole(stored.role || "customer");
+    } catch (e) {
+      setUserRole("customer");
+    }
   }, []);
 
+  const showActions = true; // Enable quick purchase actions for all roles toggle for testing/UX versatility
+
+
+  const { socket } = useSocket();
+
+  const fetchProducts = useCallback(async () => {
+    try {
+      setLoading(true);
+      const response = await api.get("/products");
+      setProducts(response.data);
+    } catch (error) {
+      console.error("Failed to fetch products from backend.");
+      setProducts([]);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchProducts();
+  }, [fetchProducts]);
+
+  useEffect(() => {
+    const loadCategories = async () => {
+      try {
+        const data = await fetchCategories();
+        setCategories(normalizeCategories(data));
+      } catch (err) {
+        console.error("Failed to fetch categories from backend.");
+        setCategories([]);
+      }
+    };
+
+    loadCategories();
+  }, []);
+
+  useEffect(() => {
+    if (!socket) return;
+
+    const handleInventoryUpdated = (data) => {
+      setProducts(prev => prev.map(p =>
+        p.id === data.product.id ? { ...p, ...data.product } : p
+      ));
+    };
+
+    const handleReviewUpdated = (data) => {
+      setProducts((prev) => prev.map((product) =>
+        String(product.id) === String(data.productId)
+          ? {
+            ...product,
+            rating: Number(data.productRating || 0).toFixed(1),
+            reviewCount: Number(data.productReviewCount || 0),
+          }
+          : product
+      ));
+    };
+
+    const handleStatsUpdate = () => fetchProducts();
+    const handleOrderCreated = () => fetchProducts();
+
+    socket.on("inventory_updated", handleInventoryUpdated);
+    socket.on("review_updated", handleReviewUpdated);
+    socket.on("stats_update", handleStatsUpdate);
+    socket.on("order_created", handleOrderCreated);
+
+    return () => {
+      socket.off("inventory_updated", handleInventoryUpdated);
+      socket.off("review_updated", handleReviewUpdated);
+      socket.off("stats_update", handleStatsUpdate);
+      socket.off("order_created", handleOrderCreated);
+    };
+  }, [socket, fetchProducts]);
+
+  // Replaced with library functions
+
+
+  const addToCart = (product) => {
+    router.push(`/products?id=${product.id}`);
+  };
+
+  const handleBuyNow = (product) => {
+    router.push(`/products?id=${product.id}`);
+  };
+
+  const normalizeCategoryValue = (value) =>
+    (value || "").toString().trim().toLowerCase();
+
+  const getProductCategories = (product) => {
+    if (Array.isArray(product?.categories)) {
+      return product.categories
+        .map((c) => (c || "").toString().trim())
+        .filter(Boolean);
+    }
+
+    if (typeof product?.categories === "string" && product.categories.trim()) {
+      try {
+        const parsed = JSON.parse(product.categories);
+        if (Array.isArray(parsed)) {
+          return parsed.map((c) => (c || "").toString().trim()).filter(Boolean);
+        }
+      } catch {
+        return product.categories
+          .split(",")
+          .map((c) => c.trim())
+          .filter(Boolean);
+      }
+    }
+
+    if (product?.category) {
+      return [product.category.toString().trim()].filter(Boolean);
+    }
+
+    return [];
+  };
+
+  const categoryProductCounts = products.reduce((acc, product) => {
+    const unique = Array.from(new Set(getProductCategories(product).map(normalizeCategoryValue)));
+    unique.forEach((cat) => {
+      acc[cat] = (acc[cat] || 0) + 1;
+    });
+    return acc;
+  }, {});
+
+  const filteredProducts = products.filter((product) => {
+    const productCategories = getProductCategories(product);
+    
+    const matchesCategory =
+      activeCategory === "ALL" ||
+      activeCategory === "New Arrivals" ||
+      productCategories.some(
+        (category) => normalizeCategoryValue(category) === normalizeCategoryValue(activeCategory),
+      );
+
+    const s = searchQuery.toLowerCase();
+    const matchesSearch =
+      !searchQuery ||
+      (product.name?.toLowerCase().includes(s)) ||
+      (product.artisan?.toLowerCase().includes(s)) ||
+      (product.description?.toLowerCase().includes(s)) ||
+      (product.fabric_type?.toLowerCase().includes(s)) ||
+      (product.artisan_region?.toLowerCase().includes(s)) ||
+      (product.sku?.toLowerCase().includes(s));
+
+    return matchesCategory && matchesSearch;
+  });
+
+  // Apply sorting for New Arrivals
+  const displayProducts = activeCategory === 'New Arrivals' 
+    ? [...filteredProducts].sort((a, b) => b.id - a.id) 
+    : filteredProducts;
+
+  const selectedCategoryLabel =
+    activeCategory === "ALL"
+      ? "All Categories"
+      : activeCategory;
+
+
   return (
-    <div className="relative min-h-screen overflow-hidden flex flex-col selection:bg-red-200">
-      {/* Full-bleed background image */}
-      <div className="absolute inset-0 z-0 bg-[#1C1917]">
-        {/* Native img gives the browser full control over high-quality rendering */}
-        {backgroundUrl && (
-          <motion.img
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 0.8 }}
-            src={backgroundUrl}
-            alt="Authentic Barong Tagalog"
-            style={{
-              position: "absolute",
-              inset: 0,
-              width: "100%",
-              height: "100%",
-              objectFit: "cover",
-              objectPosition: backgroundPosition,
-              imageRendering: "auto",
-            }}
-          />
-        )}
-        {/* Dark warm overlay for readability */}
-        <div className="absolute inset-0 bg-gradient-to-r from-[#1C1917]/90 via-[#1C1917]/65 to-[#1C1917]/20" />
-        <div className="absolute inset-0 bg-gradient-to-t from-[#1C1917]/70 via-transparent to-transparent" />
-      </div>
+    <CustomerLayout>
+      <div className="space-y-4 mb-20">
 
-      {/* Header */}
-      <header className="relative z-50 w-full px-6 md:px-8 lg:px-14 py-6 md:py-8 flex items-center justify-between">
-        <Link href="/" className="relative z-[60]">
-          <span className="font-serif text-lg font-black italic tracking-tight text-[#D4B896]">
-            LumbaRong
-          </span>
-        </Link>
 
-        {/* Desktop Navigation */}
-        <nav className="hidden lg:flex items-center gap-10">
-          {[
-            { href: "/heritage-guide", label: "GUIDE" },
-            { href: "/about", label: "ABOUT US" },
-            { href: "/privacy-policy", label: "PRIVACY POLICY" },
-            { href: "/terms", label: "TERMS OF USE" },
-          ].map((item) => (
-            <Link
-              key={item.href}
-              href={item.href}
-              className="text-[10px] font-bold tracking-[0.2em] text-[#D4B896]/80 hover:text-[#D4B896] transition-colors duration-300"
-            >
-              {item.label}
-            </Link>
-          ))}
-        </nav>
-
-        {/* Desktop Auth */}
-        <div className="hidden lg:flex items-center gap-8">
-          <Link
-            href="/login"
-            className="text-[11px] font-bold tracking-[0.12em] text-[#D4B896]/80 hover:text-[#D4B896] transition-colors duration-300"
-          >
-            SIGN IN
-          </Link>
-          <Link
-            href="/register"
-            className="bg-[#C0422A] text-white px-7 py-3 rounded-full text-[10px] font-bold tracking-[0.15em] hover:bg-[#E8604A] hover:scale-105 transition-all duration-300 shadow-lg shadow-[#C0422A]/30"
-          >
-            CREATE ACCOUNT
-          </Link>
-        </div>
-
-        {/* Mobile Menu Toggle */}
-        <button
-          className="lg:hidden text-[#D4B896] hover:text-white transition-colors z-[60] relative"
-          onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-        >
-          {isMobileMenuOpen ? <X size={28} /> : <Menu size={28} />}
-        </button>
-      </header>
-
-      {/* Mobile Menu Overlay */}
-      <AnimatePresence>
-        {isMobileMenuOpen && (
-          <motion.div
-            initial={{ opacity: 0, y: -20 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -20 }}
-            className="fixed inset-0 z-[100] bg-[#1C1917]/95 backdrop-blur-md flex flex-col items-center justify-center gap-8 lg:hidden"
-          >
-            {/* Close Button Inside Overlay */}
-            <button
-              className="absolute top-8 right-8 text-[#D4B896] hover:text-white transition-colors"
-              onClick={() => setIsMobileMenuOpen(false)}
-            >
-              <X size={32} />
-            </button>
-
-            {[
-              { href: "/heritage-guide", label: "GUIDE" },
-              { href: "/about", label: "ABOUT US" },
-              { href: "/privacy-policy", label: "PRIVACY POLICY" },
-              { href: "/terms", label: "TERMS OF USE" },
-            ].map((item) => (
+        {/* Product Grid - Denser Minimalist Layout */}
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 sm:gap-4 lg:gap-5">
+          <AnimatePresence>
+            {loading ? (
+              <div className="col-span-full py-32 text-center text-gray-500 opacity-50 italic animate-pulse">Loading items...</div>
+            ) : displayProducts.map((product, i) => (
               <motion.div
-                key={item.href}
-                initial={{ opacity: 0, scale: 0.9 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{ duration: 0.2 }}
+                key={product.id}
+                initial={{ opacity: 0, y: 15 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.95 }}
+                transition={{ delay: i * 0.05 }}
+                className="group relative flex flex-col bg-white rounded-sm shadow-sm hover:-translate-y-1 hover:shadow-lg border border-transparent hover:border-black transition-all duration-300"
               >
-                <Link
-                  href={item.href}
-                  onClick={() => setIsMobileMenuOpen(false)}
-                  className="text-lg font-bold tracking-[0.2em] text-[#D4B896] hover:text-white transition-colors duration-300"
-                >
-                  {item.label}
-                </Link>
+                {/* Image Area - Tall Portrait for Full Apparel */}
+                <div className="relative w-full aspect-2/3 bg-[#F7F3EE] overflow-hidden rounded-t-sm group/img pointer-events-auto">
+                  <Link href={`/products?id=${product.id}`} className="absolute inset-0 block z-0" aria-label={`View ${product.name} details`}>
+                    <Image
+                      src={getProductImageSrc(product.image)}
+                      alt={product.name}
+                      fill
+                      unoptimized
+                      priority={i < 2}
+                      sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                      className="object-cover object-top group-hover/img:scale-105 transition-transform duration-700 mix-blend-multiply opacity-90 group-hover/img:opacity-100"
+                    />
+                  </Link>
+
+                </div>
+
+                {/* Details Area */}
+                <div className="px-2 pb-3 pt-2 space-y-1 flex-1 flex flex-col justify-between">
+                  <Link href={`/products?id=${product.id}`} className="block flex-1">
+                    <h3 className="text-[13px] leading-tight font-medium text-[#222] group-hover:text-black transition-colors line-clamp-2 min-h-[36px]">{product.name}</h3>
+                  </Link>
+
+                  <div className="flex flex-col mt-1 space-y-1">
+                    <span className="text-[16px] font-medium text-black">₱{(product.price || 0).toLocaleString()}</span>
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-1">
+                        <Star className="w-2.5 h-2.5 fill-yellow-400 text-yellow-400" />
+                        <span className="text-[10px] text-[#757575]">{Number(product.rating || 0).toFixed(1)}</span>
+                      </div>
+                      <span className="text-[10px] text-[#757575] line-clamp-1">{product.artisan || "Trusted Seller"}</span>
+                    </div>
+                  </div>
+                </div>
               </motion.div>
             ))}
-            <div className="w-16 h-px bg-[#D4B896]/30 my-2" />
-            <Link
-              href="/login"
-              onClick={() => setIsMobileMenuOpen(false)}
-              className="text-lg font-bold tracking-[0.12em] text-[#D4B896] hover:text-white transition-colors duration-300"
-            >
-              SIGN IN
-            </Link>
-            <Link
-              href="/register"
-              onClick={() => setIsMobileMenuOpen(false)}
-              className="bg-[#C0422A] text-white px-8 py-4 rounded-full text-xs font-bold tracking-[0.15em] hover:bg-[#E8604A] transition-all duration-300 shadow-lg shadow-[#C0422A]/30 mt-2"
-            >
-              CREATE ACCOUNT
-            </Link>
-          </motion.div>
-        )}
-      </AnimatePresence>
+          </AnimatePresence>
+        </div>
 
-      {/* Hero Content */}
-      <main className="relative z-20 flex-1 flex flex-col items-center justify-center px-6 md:px-8 lg:px-16 max-w-[1400px] mx-auto w-full mt-10 md:mt-0 pb-16 md:pb-0">
-        <motion.div
-          className="max-w-[620px] md:mt-[-4vh] text-center"
-          variants={containerVariants}
-          initial="hidden"
-          animate="visible"
-        >
+        {/* Minimalist Category Selection Modal */}
+        <AnimatePresence>
+          {showCategoryModal && (
+            <div className="fixed inset-0 z-110 flex items-center justify-center p-4">
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                onClick={() => setShowCategoryModal(false)}
+                className="absolute inset-0 bg-[#2A1E14]/30 backdrop-blur-md"
+              />
+              <motion.div
+                initial={{ opacity: 0, scale: 0.98, y: 10 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.98, y: 10 }}
+                className="bg-white w-full max-w-lg sm:max-w-xl rounded-[2.5rem] shadow-[0_32px_64px_-16px_rgba(0,0,0,0.15)] relative z-10 overflow-hidden flex flex-col border border-stone-200/50"
+              >
+                {/* Header Section */}
+                <div className="px-8 sm:px-12 pt-10 sm:pt-12 pb-6 sm:pb-8">
+                  <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-black opacity-60">Catalogue</span>
+                  <h2 className="font-serif text-lg sm:text-xl font-bold text-[#2A2A2A] mt-1">Browse Categories</h2>
+                </div>
 
-          {/* Headline */}
-          <motion.h1
-            variants={itemVariants}
-            className="text-[1.5rem] sm:text-[2rem] md:text-[3rem] lg:text-[3.75rem] leading-[1.1] md:leading-[0.95] font-serif font-black text-[#F7F3EE] tracking-tight mb-4"
-          >
-            Wear the <br className="hidden sm:block" />
-            <span className="text-[#C0422A] italic font-serif">Spirit</span> of the{" "}
-            <br className="hidden sm:block" />
-            Philippines.
-          </motion.h1>
+                <div className="flex-1 overflow-y-auto max-h-[50vh] sm:max-h-[60vh] px-6 sm:px-10 pb-10 no-scrollbar">
+                  <div className="grid grid-cols-1 gap-1">
+                    {["ALL", ...categories].map((cat) => {
+                      const isSelected = activeCategory === cat;
+                      const count =
+                        cat === "ALL"
+                          ? products.length
+                          : (categoryProductCounts[normalizeCategoryValue(cat)] || 0);
+                      const displayName = cat === "ALL"
+                        ? "All Collections"
+                        : cat.split(" ").map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()).join(" ");
 
-          {/* Subheadline */}
-          <motion.p
-            variants={itemVariants}
-            className="text-[#D4B896]/80 text-xs md:text-sm leading-relaxed mb-8 font-medium max-w-[380px] italic mx-auto"
-          >
-            Buy directly from the makers of Barong. High quality, handmade clothes sent to your home.
-          </motion.p>
+                      return (
+                        <button
+                          key={cat}
+                          onClick={() => {
+                            setActiveCategory(cat);
+                            setShowCategoryModal(false);
+                          }}
+                          className={`w-full text-left px-6 py-4 rounded-2xl transition-all duration-300 flex items-center justify-between group ${isSelected
+                              ? "bg-stone-50 text-black"
+                              : "text-[#2A2A2A]/70 hover:bg-stone-50/50 hover:text-black"
+                            }`}
+                        >
+                          <div className="flex items-center gap-3">
+                            <span className={`text-base sm:text-lg font-serif ${isSelected ? "font-bold" : "font-medium"}`}>
+                              {displayName}
+                            </span>
+                            <span className="text-[10px] px-2 py-0.5 rounded-full bg-stone-100 text-stone-500 font-bold">
+                              {count}
+                            </span>
+                          </div>
+                          {isSelected && (
+                            <motion.div layoutId="active-dot" className="w-1.5 h-1.5 rounded-full bg-black" />
+                          )}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
 
-          {/* CTA */}
-          <motion.div variants={itemVariants}>
-            <Link
-              href="/login"
-              className="inline-flex items-center justify-center w-full sm:w-auto gap-3 bg-[#C0422A] text-white px-8 py-4 rounded-full text-[10px] font-bold tracking-[0.2em] uppercase hover:bg-[#E8604A] hover:scale-105 transition-all duration-300 shadow-xl shadow-[#C0422A]/40 mb-16"
-            >
-              Start Shopping <ArrowRight className="w-4 h-4" />
-            </Link>
-          </motion.div>
+                <div className="p-8 sm:p-10 border-t border-stone-100 bg-stone-50/30">
+                  <button
+                    onClick={() => setShowCategoryModal(false)}
+                    className="w-full py-4 bg-white border border-stone-200 rounded-2xl flex items-center justify-between px-8 sm:px-10 hover:border-black transition-all group"
+                  >
+                    <span className="font-serif text-base sm:text-lg font-bold text-[#2A2A2A]">
+                      Select Category
+                    </span>
+                    <div className="w-8 h-8 rounded-full bg-stone-100 flex items-center justify-center group-hover:bg-red-50 transition-colors">
+                      <X className="w-4 h-4 text-[#2A2A2A] group-hover:text-black transition-colors" />
+                    </div>
+                  </button>
+                </div>
+              </motion.div>
+            </div>
+          )}
+        </AnimatePresence>
 
-          {/* Stats */}
-
-        </motion.div>
-      </main>
-
-      {/* Footer */}
-      <footer className="relative z-20 w-full px-8 py-6 flex items-center justify-center">
-        <span className="text-[9px] font-bold tracking-[0.2em] text-[#D4B896]/40">
-          © 2026 LUMBARONG PHILIPPINES
-        </span>
-      </footer>
-    </div>
+      </div>
+    </CustomerLayout>
   );
 }

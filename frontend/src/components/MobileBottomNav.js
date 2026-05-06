@@ -10,7 +10,7 @@ export default function MobileBottomNav({ items = [] }) {
   return (
     <nav className="lg:hidden fixed bottom-0 left-0 right-0 z-[100] flex items-center justify-around gap-1 border-t border-[var(--border)] bg-white/90 px-2 py-2 shadow-[0_-8px_30px_rgba(0,0,0,0.04)] backdrop-blur-xl h-[calc(110px+var(--safe-bottom,0px))] pb-[calc(2.5rem+var(--safe-bottom,0px))] sm:px-4">
       {items.map((item, idx) => {
-        const active = pathname === item.path || (item.path !== '/' && item.path !== '/home' && item.path !== '/seller/dashboard' && item.path !== '/admin/dashboard' && pathname.startsWith(item.path));
+        const active = pathname === item.path || (item.path !== '/' && item.path !== '/seller/dashboard' && item.path !== '/admin/dashboard' && pathname.startsWith(item.path));
         return (
           <Link
             key={idx}

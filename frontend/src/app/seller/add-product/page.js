@@ -1,8 +1,11 @@
 "use client";
 import React, { useState } from "react";
 import SellerLayout from "@/components/SellerLayout";
-import { Upload, Plus, X, Loader2, ArrowRight, ArrowLeft, Camera, Image as ImageIcon } from "lucide-react";
-import { motion } from "framer-motion";
+import { 
+  Upload, Plus, X, Loader2, ArrowRight, ArrowLeft, Camera, 
+  Image as ImageIcon, CreditCard, CheckCircle, XCircle 
+} from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
 import { api } from "@/lib/api";
 import { Camera as CapCamera, CameraResultType } from "@capacitor/camera";
 import { Capacitor } from "@capacitor/core";
@@ -13,8 +16,7 @@ import {
   sanitizePhoneInput,
   validatePhilippineMobileNumber,
 } from "@/lib/inputValidation";
-import { CheckCircle, XCircle } from "lucide-react";
-import { AnimatePresence } from "framer-motion";
+import Link from "next/link";
 
 export default function AddProductPage() {
   const [loading, setLoading] = useState(false);
@@ -89,6 +91,26 @@ export default function AddProductPage() {
       }
     };
     loadCategories();
+    
+    // Pre-fill payment info from seller profile
+    const loadProfile = async () => {
+      try {
+        const { data } = await api.get('/users/profile');
+        const user = data.user;
+        if (user) {
+          setFormData(prev => ({
+            ...prev,
+            gcashNumber: user.gcashNumber || prev.gcashNumber,
+            gcashName: user.gcashName || user.name || prev.gcashName,
+            mayaNumber: user.mayaNumber || prev.mayaNumber,
+            mayaName: user.mayaName || user.name || prev.mayaName,
+          }));
+        }
+      } catch (err) {
+        console.error("Failed to fetch seller profile for pre-fill");
+      }
+    };
+    loadProfile();
   }, []);
 
   const handleImageChange = async (e) => {
@@ -187,85 +209,15 @@ export default function AddProductPage() {
       showToast("error", "Price must be between 1 and 10,000 PHP.");
       return;
     }
-    if (!formData.stock || Number(formData.stock) < 0 || Number(formData.stock) > 500) {
+    if (formData.stock === undefined || Number(formData.stock) < 0 || Number(formData.stock) > 500) {
       showToast("error", "Stock quantity must be between 0 and 500 units.");
       return;
     }
-    if (formData.shippingFee && (Number(formData.shippingFee) < 0 || Number(formData.shippingFee) > 500)) {
-      showToast("error", "Shipping fee cannot exceed 500 PHP.");
-      return;
-    }
-    if (formData.shippingDays && (Number(formData.shippingDays) < 1 || Number(formData.shippingDays) > 30)) {
-      showToast("error", "Shipping days must be between 1 and 30 days.");
-      return;
-    }
-    if (!formData.allowGcash && !formData.allowMaya) {
-      showToast("error", "Please enable at least one payment method (GCash or Maya).");
-      return;
-    }
-
-    if (formData.allowGcash) {
-      if (!formData.gcashNumber) {
-        showToast("error", "GCash number is required when GCash is enabled.");
-        return;
-      }
-      if (!gcashQrFile) {
-        showToast("error", "GCash QR Code is required when GCash is enabled.");
-        return;
-      }
-    }
-    if (formData.allowMaya) {
-      if (!formData.mayaNumber) {
-        showToast("error", "Maya number is required when Maya is enabled.");
-        return;
-      }
-      if (!mayaQrFile) {
-        showToast("error", "Maya QR Code is required when Maya is enabled.");
-        return;
-      }
-    }
-
-    let normalizedGcashNumber = "";
-    let normalizedMayaNumber = "";
-    try {
-      normalizedGcashNumber = validatePhilippineMobileNumber(formData.gcashNumber, "GCash number", { required: !!formData.allowGcash });
-      normalizedMayaNumber = validatePhilippineMobileNumber(formData.mayaNumber, "Maya number", { required: !!formData.allowMaya });
-    } catch (error) {
-      showToast("error", error.message || "Please review the payment numbers.");
-      return;
-    }
+    
     setLoading(true);
     setUploadProgress(0);
 
     try {
-      let gcashQrUrl = "";
-      let mayaQrUrl = "";
-
-      if (gcashQrFile) {
-        const gFormData = new FormData();
-        gFormData.append('image', gcashQrFile);
-        const gRes = await api.post('/upload', gFormData, {
-          headers: { 'Content-Type': 'multipart/form-data' },
-          onUploadProgress: (event) => {
-            if (!event.total) return;
-            setUploadProgress(Math.round((event.loaded / event.total) * 50));
-          }
-        });
-        gcashQrUrl = gRes.data.url;
-      }
-      if (mayaQrFile) {
-        const mFormData = new FormData();
-        mFormData.append('image', mayaQrFile);
-        const mRes = await api.post('/upload', mFormData, {
-          headers: { 'Content-Type': 'multipart/form-data' },
-          onUploadProgress: (event) => {
-            if (!event.total) return;
-            setUploadProgress(Math.max(50, Math.round(50 + (event.loaded / event.total) * 20)));
-          }
-        });
-        mayaQrUrl = mRes.data.url;
-      }
-
       const data = new FormData();
       data.append('name', formData.name);
       data.append('description', formData.description);
@@ -275,14 +227,11 @@ export default function AddProductPage() {
       data.append('sizes', JSON.stringify(formData.sizes));
       data.append('shippingFee', formData.shippingFee || 0);
       data.append('shippingDays', formData.shippingDays || 3);
-      data.append('gcashNumber', normalizedGcashNumber);
-      data.append('gcashName', formData.gcashName);
-      data.append('gcashQrCode', gcashQrUrl || "");
-      data.append('mayaNumber', normalizedMayaNumber);
-      data.append('mayaName', formData.mayaName);
-      data.append('mayaQrCode', mayaQrUrl || "");
-      data.append('allowGcash', formData.allowGcash);
-      data.append('allowMaya', formData.allowMaya);
+      
+      // We don't send payment info here anymore as it uses profile
+      // But we send defaults to satisfy backend if needed (though backend now handles it)
+      data.append('allowGcash', true);
+      data.append('allowMaya', true);
 
       variations.forEach((v) => {
         data.append('images', v.file);
@@ -296,7 +245,7 @@ export default function AddProductPage() {
         },
         onUploadProgress: (event) => {
           if (!event.total) return;
-          setUploadProgress(Math.max(20, Math.round((event.loaded / event.total) * 100)));
+          setUploadProgress(Math.round((event.loaded / event.total) * 100));
         },
       });
       showToast("success", "Product listed successfully!");
@@ -309,6 +258,7 @@ export default function AddProductPage() {
       setUploadProgress(0);
     }
   };
+
   return (
     <SellerLayout>
       <div className="max-w-[1400px] mx-auto space-y-10 relative">
@@ -533,7 +483,7 @@ export default function AddProductPage() {
             <div className="artisan-card space-y-6">
               <h3 className="text-lg font-bold">Base Information</h3>
               <div className="space-y-2">
-                <label className="text-[10px] font-bold uppercase tracking-widest text-[var(--muted)]">Product Name</label>
+                <label className="text-[10px] font-bold uppercase tracking-widest text-[var(--muted)]">Product Name *</label>
                 <input
                   type="text"
                   required
@@ -545,7 +495,7 @@ export default function AddProductPage() {
                 />
               </div>
               <div className="space-y-2">
-                <label className="text-[10px] font-bold uppercase tracking-widest text-[var(--muted)]">Description</label>
+                <label className="text-[10px] font-bold uppercase tracking-widest text-[var(--muted)]">Description *</label>
                 <textarea
                   required
                   maxLength={2000}
@@ -562,7 +512,7 @@ export default function AddProductPage() {
               <h3 className="text-lg font-bold">Pricing & Stock</h3>
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <label className="text-[10px] font-bold uppercase tracking-widest text-[var(--muted)]">Price (₱)</label>
+                  <label className="text-[10px] font-bold uppercase tracking-widest text-[var(--muted)]">Price (₱) *</label>
                   <input
                     type="number"
                     required
@@ -631,155 +581,43 @@ export default function AddProductPage() {
             </div>
           </div>
 
-          {/* Column 3: Payment */}
+          {/* Column 3: Payment Methods Reference */}
           <div className="space-y-8 md:col-span-2 lg:col-span-1">
             <div className="artisan-card space-y-6">
-              <h3 className="text-lg font-bold">Payment</h3>
-              <p className="text-[10px] text-[var(--muted)] -mt-4 uppercase tracking-widest leading-relaxed">Optional: Leave blank to use your Seller Profile&apos;s global payment details.</p>
-              <div className="grid grid-cols-1 gap-6">
-                {/* GCash */}
-                <div className="space-y-4 p-4 border border-[var(--border)] rounded-2xl bg-[var(--input-bg)]/30">
-                  <div className="flex items-center justify-between gap-2 text-[10px] font-bold uppercase tracking-widest text-[#2D5CC5]">
-                    <div className="flex items-center gap-2">
-                      <div className="w-2 h-2 rounded-full bg-[#2D5CC5]" /> GCash Method
-                    </div>
-                    <label className="flex items-center gap-2 cursor-pointer group">
-                      <span className="text-[9px] font-bold text-[var(--muted)] group-hover:text-[#2D5CC5] transition-colors">{formData.allowGcash ? 'AVAILABLE' : 'DISABLED'}</span>
-                      <input
-                        type="checkbox"
-                        className="w-4 h-4 accent-[#2D5CC5] rounded cursor-pointer"
-                        checked={formData.allowGcash}
-                        onChange={(e) => setFormData({ ...formData, allowGcash: e.target.checked })}
-                      />
-                    </label>
-                  </div>
-                  <div className="space-y-2">
-                    <label className="text-[9px] font-black uppercase tracking-widest text-[var(--muted)]">GCash Number</label>
-                    <input
-                      type="text"
-                      className="w-full px-4 py-3 bg-white border border-[var(--border)] rounded-xl focus:outline-none focus:border-[#2D5CC5] transition-all text-sm"
-                      placeholder="e.g. 0917 123 4567"
-                      value={formData.gcashNumber}
-                      inputMode="numeric"
-                      maxLength={INPUT_LIMITS.mobileNumber}
-                      onChange={(e) => setFormData({ ...formData, gcashNumber: sanitizePhoneInput(e.target.value) })}
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <label className="text-[9px] font-black uppercase tracking-widest text-[var(--muted)]">GCash Account Name</label>
-                    <input
-                      type="text"
-                      className="w-full px-4 py-3 bg-white border border-[var(--border)] rounded-xl focus:outline-none focus:border-[#2D5CC5] transition-all text-sm"
-                      placeholder="Account Holder Name"
-                      value={formData.gcashName}
-                      onChange={(e) => setFormData({ ...formData, gcashName: e.target.value })}
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <label className="text-[9px] font-black uppercase tracking-widest text-[var(--muted)]">GCash QR Code</label>
-                    <div className="flex gap-4">
-                      <div
-                        className="flex-1 py-4 border-2 border-dashed border-[var(--border)] rounded-xl flex flex-col items-center justify-center bg-white hover:bg-blue-50 transition-all cursor-pointer group"
-                        onClick={() => document.getElementById('gcash-qr').click()}
-                      >
-                        <Upload className="w-4 h-4 text-[var(--muted)] mb-1 group-hover:text-[#2D5CC5]" />
-                        <span className="text-[9px] font-bold uppercase tracking-widest">Upload QR</span>
-                        <input id="gcash-qr" type="file" accept="image/jpeg,image/png" className="hidden" onChange={async (e) => {
-                          const file = e.target.files[0];
-                          if (!file) return;
-                          const error = await validateImageFile(file, "GCash QR image");
-                          if (error) {
-                            showToast("error", error);
-                            e.target.value = "";
-                            return;
-                          }
-                          setGcashQrFile(file);
-                          setGcashQrPreview(URL.createObjectURL(file));
-                        }} />
-                      </div>
-                      {gcashQrPreview && (
-                        <div className="w-16 h-16 rounded-xl overflow-hidden border border-[var(--border)] shadow-sm relative group">
-                          <img src={gcashQrPreview} alt="GCash QR" className="w-full h-full object-cover" />
-                          <button onClick={() => { setGcashQrFile(null); setGcashQrPreview(null); }} className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                            <X className="w-4 h-4 text-white" />
-                          </button>
-                        </div>
-                      )}
+              <div className="flex items-center justify-between">
+                <h3 className="text-lg font-bold">Payment Methods</h3>
+                <Link href="/seller/profile" className="text-[10px] font-bold text-[var(--rust)] uppercase tracking-widest hover:underline">Update in Profile</Link>
+              </div>
+              <p className="text-[10px] text-[var(--muted)] -mt-4 uppercase tracking-widest leading-relaxed">We use your workshop&apos;s global payment details from your profile for all transactions.</p>
+              
+              <div className="space-y-4">
+                <div className="p-4 rounded-2xl bg-blue-50/50 border border-blue-100 flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center text-white"><CreditCard size={16} /></div>
+                    <div>
+                      <div className="text-[10px] font-black text-blue-600 uppercase tracking-widest">GCash Available</div>
+                      <div className="text-[9px] text-[var(--muted)] font-bold">Standard Registry Payment</div>
                     </div>
                   </div>
+                  <CheckCircle className="text-blue-600 w-5 h-5" />
                 </div>
 
-                {/* Maya */}
-                <div className="space-y-4 p-4 border border-[var(--border)] rounded-2xl bg-[var(--input-bg)]/30">
-                  <div className="flex items-center justify-between gap-2 text-[10px] font-bold uppercase tracking-widest text-[#00E06D]">
-                    <div className="flex items-center gap-2">
-                      <div className="w-2 h-2 rounded-full bg-[#00E06D]" /> Maya Method
-                    </div>
-                    <label className="flex items-center gap-2 cursor-pointer group">
-                      <span className="text-[9px] font-bold text-[var(--muted)] group-hover:text-[#00E06D] transition-colors">{formData.allowMaya ? 'AVAILABLE' : 'DISABLED'}</span>
-                      <input
-                        type="checkbox"
-                        className="w-4 h-4 accent-[#00E06D] rounded cursor-pointer"
-                        checked={formData.allowMaya}
-                        onChange={(e) => setFormData({ ...formData, allowMaya: e.target.checked })}
-                      />
-                    </label>
-                  </div>
-                  <div className="space-y-2">
-                    <label className="text-[9px] font-black uppercase tracking-widest text-[var(--muted)]">Maya Number</label>
-                    <input
-                      type="text"
-                      className="w-full px-4 py-3 bg-white border border-[var(--border)] rounded-xl focus:outline-none focus:border-[#00E06D] transition-all text-sm"
-                      placeholder="e.g. 0917 123 4567"
-                      value={formData.mayaNumber}
-                      inputMode="numeric"
-                      maxLength={INPUT_LIMITS.mobileNumber}
-                      onChange={(e) => setFormData({ ...formData, mayaNumber: sanitizePhoneInput(e.target.value) })}
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <label className="text-[9px] font-black uppercase tracking-widest text-[var(--muted)]">Maya Account Name</label>
-                    <input
-                      type="text"
-                      className="w-full px-4 py-3 bg-white border border-[var(--border)] rounded-xl focus:outline-none focus:border-[#00E06D] transition-all text-sm"
-                      placeholder="Account Holder Name"
-                      value={formData.mayaName}
-                      onChange={(e) => setFormData({ ...formData, mayaName: e.target.value })}
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <label className="text-[9px] font-black uppercase tracking-widest text-[var(--muted)]">Maya QR Code</label>
-                    <div className="flex gap-4">
-                      <div
-                        className="flex-1 py-4 border-2 border-dashed border-[var(--border)] rounded-xl flex flex-col items-center justify-center bg-white hover:bg-green-50 transition-all cursor-pointer group"
-                        onClick={() => document.getElementById('maya-qr').click()}
-                      >
-                        <Upload className="w-4 h-4 text-[var(--muted)] mb-1 group-hover:text-[#00E06D]" />
-                        <span className="text-[9px] font-bold uppercase tracking-widest">Upload QR</span>
-                        <input id="maya-qr" type="file" accept="image/jpeg,image/png" className="hidden" onChange={async (e) => {
-                          const file = e.target.files[0];
-                          if (!file) return;
-                          const error = await validateImageFile(file, "Maya QR image");
-                          if (error) {
-                            showToast("error", error);
-                            e.target.value = "";
-                            return;
-                          }
-                          setMayaQrFile(file);
-                          setMayaQrPreview(URL.createObjectURL(file));
-                        }} />
-                      </div>
-                      {mayaQrPreview && (
-                        <div className="w-16 h-16 rounded-xl overflow-hidden border border-[var(--border)] shadow-sm relative group">
-                          <img src={mayaQrPreview} alt="Maya QR" className="w-full h-full object-cover" />
-                          <button onClick={() => { setMayaQrFile(null); setMayaQrPreview(null); }} className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                            <X className="w-4 h-4 text-white" />
-                          </button>
-                        </div>
-                      )}
+                <div className="p-4 rounded-2xl bg-teal-50/50 border border-teal-100 flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="w-8 h-8 rounded-full bg-teal-600 flex items-center justify-center text-white"><CreditCard size={16} /></div>
+                    <div>
+                      <div className="text-[10px] font-black text-teal-600 uppercase tracking-widest">Maya Available</div>
+                      <div className="text-[9px] text-[var(--muted)] font-bold">Digital Wallet Transfer</div>
                     </div>
                   </div>
+                  <CheckCircle className="text-teal-600 w-5 h-5" />
                 </div>
+              </div>
+
+              <div className="p-4 rounded-2xl bg-amber-50 border border-amber-100">
+                <p className="text-[10px] font-bold text-amber-800 leading-relaxed italic">
+                  Ensure your GCash/Maya QR codes are up-to-date in your profile to avoid fulfillment delays.
+                </p>
               </div>
             </div>
 

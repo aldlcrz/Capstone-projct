@@ -24,14 +24,14 @@ const Notification = sequelize.define('Notification', {
     allowNull: false,
   },
   type: {
-    type: DataTypes.STRING, // e.g., 'OrderUpdate', 'NewMessage', 'System'
-    defaultValue: 'System',
+    type: DataTypes.ENUM('product_approved', 'product_rejected', 'order_update', 'account_verified', 'new_message', 'system'),
+    defaultValue: 'system',
   },
   link: {
     type: DataTypes.STRING,
     allowNull: true,
   },
-  read: {
+  isRead: {
     type: DataTypes.BOOLEAN,
     defaultValue: false,
   },
@@ -46,13 +46,13 @@ const Notification = sequelize.define('Notification', {
       fields: ['userId', 'createdAt'],
     },
     {
-      fields: ['userId', 'read'],
+      fields: ['userId', 'isRead'],
     },
     {
       fields: ['userId', 'targetRole', 'createdAt'],
     },
     {
-      fields: ['userId', 'targetRole', 'read'],
+      fields: ['userId', 'targetRole', 'isRead'],
     },
   ],
 });

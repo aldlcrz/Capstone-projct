@@ -1,3 +1,4 @@
+/* eslint-disable @next/next/no-img-element */
 "use client";
 import React, { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
@@ -14,6 +15,7 @@ import {
   Loader2,
   ChevronRight,
   ChevronLeft,
+  ChevronDown,
   ShieldCheck,
   MessageCircle,
   MapPin,
@@ -25,13 +27,41 @@ import {
   Store,
   Ruler,
   X as CloseIcon,
-  ShieldAlert
+  ShieldAlert,
+  CheckCircle2,
+  Info,
+  BookOpen,
+  Heart
 } from "lucide-react";
 import ReportModal from "./ReportModal";
+import AuthGateModal from "./AuthGateModal";
 import { api, getStoredUserForRole } from "@/lib/api";
 import { useSocket } from "@/context/SocketContext";
 import { normalizeProductImages, normalizeProductSizes, resolveBackendImageUrl } from "@/lib/productImages";
 import { setCustomerScopedJson, getCustomerScopedJson } from "@/lib/customerStorage";
+
+const fabricGuide = {
+  "Piña": {
+    description: "The 'Queen of Philippine Fabrics'. Hand-loomed from pineapple leaf fibers. It is translucent, delicate, and has a natural shimmer.",
+    origin: "Aklan / Lumban",
+    care: "Hand wash with mild detergent. Do not wring. Iron while damp."
+  },
+  "Jusilyn": {
+    description: "A popular choice for modern Barongs. Made from mechanically woven silk and polyester. It's more durable than Piña but maintains a similar look.",
+    origin: "Laguna",
+    care: "Dry clean or hand wash. Iron on low to medium heat."
+  },
+  "Organza": {
+    description: "A thin, plain weave, sheer fabric traditionally made from silk. Modern versions often use synthetic fibers like polyester.",
+    origin: "Various",
+    care: "Steam or iron on very low heat."
+  },
+  "Cocoon": {
+    description: "A premium fabric that mimics the texture of Piña but with more body. Known for its distinct slubs and natural texture.",
+    origin: "Lumban",
+    care: "Dry clean recommended."
+  }
+};
 
 const parseStoredList = (value) => {
   if (Array.isArray(value)) return value;
@@ -97,7 +127,12 @@ export default function ProductDetailClient() {
   const [expandedReviewId, setExpandedReviewId] = useState(null);
   const [expandedImageIndex, setExpandedImageIndex] = useState(0);
   const [isReportModalOpen, setIsReportModalOpen] = useState(false);
+  const [showFabricGuide, setShowFabricGuide] = useState(false);
+  const [activeFabric, setActiveFabric] = useState(null);
   const [maintenanceMode, setMaintenanceMode] = useState(false);
+  const [isZoomOpen, setIsZoomOpen] = useState(false);
+  const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
+  const [authModalConfig, setAuthModalConfig] = useState({ message: "", redirectPath: "" });
   const isManualChange = useRef(false);
 
   const handleExpandReviewImage = useCallback((reviewId, index) => {
@@ -125,8 +160,6 @@ export default function ProductDetailClient() {
 
   useEffect(() => {
     try {
-      // Use URL path to determine context — /products is always customer-facing
-      // Only use seller layout when explicitly on a /seller/* path OR in ?preview=1 mode
       const isSellerRoute = pathname?.startsWith('/seller');
       const isAdminRoute = pathname?.startsWith('/admin');
 
@@ -139,18 +172,15 @@ export default function ProductDetailClient() {
       } else if (isSellerRoute && sellerData?.role === 'seller') {
         setUserRole("seller");
       } else if (previewMode && sellerData?.role === 'seller') {
-        // Seller previewing their own product via ?preview=1 — read-only mode
         setUserRole("seller-preview");
       } else {
-        // On /products or any other path, always use customer layout
-        setUserRole(customerData?.role || "customer");
+        setUserRole(customerData?.role || "guest");
       }
     } catch (e) {
-      setUserRole("customer");
+      setUserRole("guest");
     }
   }, [pathname, previewMode]);
 
-  // seller-preview = can VIEW but cannot take any customer actions
   const isRestricted = userRole === "admin" || userRole === "seller-preview";
   const showActions = !isRestricted;
 
@@ -168,6 +198,10 @@ export default function ProductDetailClient() {
         reviews: Array.isArray(res.data.reviews)
           ? res.data.reviews.map((review) => normalizeReview(review)).filter(Boolean)
           : [],
+        sku: res.data.sku,
+        fabric_type: res.data.fabric_type,
+        collar_type: res.data.collar_type,
+        artisan_region: res.data.artisan_region,
       });
 
       fetchSeller(res.data.sellerId);
@@ -196,6 +230,14 @@ export default function ProductDetailClient() {
 
   const handleSubmitReview = async (e) => {
     e.preventDefault();
+    if (userRole === "guest") {
+      setAuthModalConfig({
+        message: "You need to log in to share your thoughts on this masterpiece.",
+        redirectPath: window.location.href
+      });
+      setIsAuthModalOpen(true);
+      return;
+    }
     if (!newComment.trim() || isRestricted) return;
 
     setSubmittingReview(true);
@@ -310,18 +352,6 @@ export default function ProductDetailClient() {
     [reviewList]
   );
 
-  const ratingBreakdown = useMemo(
-    () => [5, 4, 3, 2, 1].map((stars) => {
-      const count = reviewList.filter((review) => Number(review.rating) === stars).length;
-      return {
-        stars,
-        count,
-        percentage: productReviewCount > 0 ? (count / productReviewCount) * 100 : 0,
-      };
-    }),
-    [reviewList, productReviewCount]
-  );
-
   const reviewFilters = useMemo(() => {
     const countByStars = (stars) => reviewList.filter((review) => Number(review.rating) === stars).length;
 
@@ -354,12 +384,8 @@ export default function ProductDetailClient() {
     }
   }, [reviewList, activeReviewFilter]);
 
-  const activeReviewImage = null; // Replaced by inline expansion
-
-  // Synchronization logic for variation persistence
   useEffect(() => {
     if (vParam && galleryImages.length > 0) {
-      // Avoid fighting with manual user clicks
       if (isManualChange.current) return;
 
       const index = galleryImages.findIndex(img =>
@@ -379,12 +405,10 @@ export default function ProductDetailClient() {
     const variation = galleryImages[index]?.variation || "Original";
     setActiveImage(index);
 
-    // Update URL parameter (Permanent link)
     const params = new URLSearchParams(window.location.search);
     params.set("v", variation);
     router.replace(`${window.location.pathname}?${params.toString()}`, { scroll: false });
 
-    // Release lock after a short delay to allow URL catch-up
     setTimeout(() => {
       isManualChange.current = false;
     }, 500);
@@ -395,8 +419,16 @@ export default function ProductDetailClient() {
     : (product?.category || "Uncategorized");
 
   const handleAddToCart = () => {
+    if (userRole === "guest") {
+      setAuthModalConfig({
+        message: "Sign in to start building your personal heritage collection.",
+        redirectPath: window.location.href
+      });
+      setIsAuthModalOpen(true);
+      return;
+    }
     if (!product || userRole === 'admin' || maintenanceMode) return;
-    const selectedSizeInfo = typeof availableSizes[0] === 'object' 
+    const selectedSizeInfo = typeof availableSizes[0] === 'object'
       ? availableSizes.find(s => (s.size || s.name) === selectedSize)
       : null;
     const maxStock = selectedSizeInfo ? (selectedSizeInfo.stock || 0) : (product.stock || 0);
@@ -453,8 +485,15 @@ export default function ProductDetailClient() {
   };
 
   const handleBuyNow = () => {
-    if (!product || userRole === 'admin' || maintenanceMode) return;
-    const selectedSizeInfo = typeof availableSizes[0] === 'object' 
+    if (userRole === "guest") {
+      setAuthModalConfig({
+        message: "Log in to proceed directly to secure checkout for this piece.",
+        redirectPath: window.location.href
+      });
+      setIsAuthModalOpen(true);
+      return;
+    }
+    const selectedSizeInfo = typeof availableSizes[0] === 'object'
       ? availableSizes.find(s => (s.size || s.name) === selectedSize)
       : null;
     const maxStock = selectedSizeInfo ? (selectedSizeInfo.stock || 0) : (product.stock || 0);
@@ -498,14 +537,14 @@ export default function ProductDetailClient() {
   if (loading) return (
     <Layout>
       <div className="h-[70vh] flex flex-col items-center justify-center space-y-6">
-        <Loader2 className="w-10 h-10 animate-spin text-[var(--rust)] opacity-50" />
+        <Loader2 className="w-10 h-10 animate-spin text-black opacity-50" />
       </div>
     </Layout>
   );
 
   if (!id) return (
     <Layout>
-      <div className="h-[70vh] flex items-center justify-center px-4 text-center text-[var(--muted)]">
+      <div className="h-[70vh] flex items-center justify-center px-4 text-center text-gray-500">
         Select a product first to view its details.
       </div>
     </Layout>
@@ -515,572 +554,128 @@ export default function ProductDetailClient() {
   const availableSizes = sizeOptions.length > 0 ? sizeOptions : ["S", "M", "L", "XL", "2XL"];
   const effectiveSize = selectedSize;
 
+  const breadcrumbs = userRole !== 'admin' && userRole !== 'seller-preview' ? (
+    <nav className="flex items-center gap-3 text-sm text-gray-400 font-medium">
+      <Link href="/" className="hover:text-black transition-colors">Home</Link>
+      <ChevronRight className="w-4 h-4 text-gray-300" />
+      <Link href={`/?category=${encodeURIComponent(productCategory)}`} className="hover:text-black transition-colors">{productCategory}</Link>
+      {product?.artisan_region && (
+        <>
+          <ChevronRight className="w-4 h-4 text-gray-300" />
+          <Link href={`/?search=${encodeURIComponent(product.artisan_region)}`} className="hover:text-black transition-colors">{product.artisan_region}</Link>
+        </>
+      )}
+      <ChevronRight className="w-4 h-4 text-gray-300" />
+      <span className="text-black line-clamp-1 max-w-[200px]">{product.name}</span>
+    </nav>
+  ) : null;
+
   return (
-    <Layout>
-      <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700&family=Inter:wght@300;400;500;600&display=swap');
+    <Layout breadcrumbs={breadcrumbs}>
+      <div className="min-h-screen bg-[#FAFAFA] pb-24 font-sans text-black">
+        <div className="max-w-[1440px] mx-auto px-4 lg:px-12 pt-8">
 
-        .pd-page { background: #F0EBE3; min-height: 100vh; padding: 2rem 0 120px; }
-        .pd-wrap { max-width: 1100px; margin: 0 auto; padding: 0 1.25rem; }
 
-        .pd-hero {
-          display: grid;
-          grid-template-columns: 1fr 1fr;
-          gap: 0;
-          background: #fff;
-          border-radius: 1.25rem;
-          overflow: hidden;
-          box-shadow: 0 8px 48px rgba(60,35,10,0.10);
-          margin-bottom: 1.5rem;
-        }
-        @media(max-width: 768px){
-          .pd-hero { grid-template-columns: 1fr; }
-        }
-
-        .pd-gallery {
-          background: #000;
-          position: relative;
-          overflow: hidden;
-          min-height: 650px;
-        }
-        .pd-gallery-badge {
-          position: absolute;
-          top: 1.5rem; left: 1.5rem;
-          display: flex; align-items: center; gap: 0.4rem;
-          background: rgba(26,18,8,0.7);
-          backdrop-filter: blur(12px);
-          border: 1px solid rgba(255,255,255,0.15);
-          border-radius: 8px;
-          padding: 0.4rem 0.8rem;
-          font-size: 11px; font-weight: 700;
-          color: #e8d5b0; letter-spacing: 0.1em; text-transform: uppercase;
-          z-index: 10;
-        }
-        .pd-main-img {
-          position: absolute;
-          inset: 0;
-          width: 100%;
-          height: 100%;
-          overflow: hidden;
-          z-index: 1;
-        }
-        .pd-thumbs {
-          position: absolute;
-          bottom: 1.5rem;
-          left: 0; right: 0;
-          display: flex; gap: 0.75rem;
-          justify-content: center;
-          z-index: 10;
-          padding: 0 1rem;
-        }
-        .pd-thumb {
-          position: relative; width: 54px; height: 54px;
-          border-radius: 0.65rem; overflow: hidden; cursor: pointer;
-          border: 2.5px solid rgba(255,255,255,0.2);
-          transition: all 0.25s;
-          background: rgba(0,0,0,0.5);
-        }
-        .pd-thumb.active { border-color: #D4A96A; transform: translateY(-3px); }
-
-        .pd-info {
-          padding: 2.5rem 2rem 2rem;
-          display: flex; flex-direction: column;
-          background: #fff;
-        }
-        .pd-eyebrow {
-          font-family: 'Inter', sans-serif;
-          font-size: 10.5px; font-weight: 700;
-          letter-spacing: 0.14em; text-transform: uppercase;
-          color: #9c6e30;
-          display: flex; align-items: center; gap: 0.5rem;
-          margin-bottom: 0.7rem;
-        }
-        .pd-eyebrow::before {
-          content: ''; display: inline-block;
-          width: 1.4rem; height: 1.5px; background: #C0853A;
-        }
-        .pd-title {
-          font-family: 'Playfair Display', serif;
-          font-size: 1.55rem; font-weight: 600; line-height: 1.3;
-          color: #1C1209;
-          margin-bottom: 1rem;
-        }
-
-        .pd-rating-row {
-          display: flex; align-items: center; padding: 0.65rem 0; border-top: 1px solid #F0EBE3; border-bottom: 1px solid #F0EBE3; margin-bottom: 1.2rem;
-        }
-        .pd-rating-seg { display: flex; align-items: center; gap: 0.4rem; padding: 0 1rem; }
-        .pd-rating-seg:first-child { padding-left: 0; }
-        .pd-rating-sep { width: 1px; height: 18px; background: #E5DDD5; }
-        .pd-score { font-family: 'Inter', sans-serif; font-size: 15px; font-weight: 700; color: #C0853A; }
-
-        .pd-price-block {
-          background: linear-gradient(135deg, #FDF5E8 0%, #FEF9F0 100%);
-          border: 1px solid #EDD9A3;
-          border-radius: 0.75rem;
-          padding: 0.9rem 1.1rem;
-          margin-bottom: 1.4rem;
-          display: flex; align-items: baseline; gap: 0.5rem;
-        }
-        .pd-price { font-family: 'Inter', sans-serif; font-size: 1.75rem; color: #7B3A10; font-weight: 700; line-height:1; }
-
-        .pd-row { display: flex; align-items: flex-start; gap: 0; margin-bottom: 1rem; }
-        .pd-row-label { width: 6.5rem; flex-shrink: 0; font-size: 12.5px; color: #9c8876; padding-top: 2px; font-weight: 500; }
-        
-        .pd-chip-wrap { display: flex; flex-wrap: wrap; gap: 0.45rem; }
-        .pd-chip {
-          display: flex; align-items: center; gap: 0.4rem;
-          padding: 0.35rem 0.65rem;
-          border: 1.5px solid #E5DDD5;
-          border-radius: 6px;
-          cursor: pointer; transition: all 0.18s;
-          font-size: 12.5px; color: #3D2B1F; background: #fff;
-        }
-        .pd-chip.active { border-color: #9c6e30; background: #FDF5E8; color: #7B3A10; }
-        .pd-chip-img { position: relative; width: 28px; height: 28px; border-radius: 4px; overflow: hidden; }
-
-        .pd-size-chip {
-          padding: 0.35rem 0.9rem;
-          border: 1.5px solid #E5DDD5;
-          border-radius: 6px;
-          cursor: pointer; transition: all 0.18s;
-          font-size: 13px; color: #3D2B1F; background: #fff;
-          font-weight: 500;
-        }
-        .pd-size-chip.active { border-color: #9c6e30; background: #FDF5E8; color: #7B3A10; }
-
-        .pd-size-guide-btn {
-          display: flex;
-          align-items: center;
-          gap: 0.4rem;
-          font-size: 11px;
-          font-weight: 700;
-          color: #9c6e30;
-          text-transform: uppercase;
-          letter-spacing: 0.05em;
-          background: none;
-          border: none;
-          cursor: pointer;
-          padding: 0;
-          margin-left: auto;
-          transition: opacity 0.2s;
-        }
-        .pd-size-guide-btn:hover { opacity: 0.7; }
-
-        .pd-modal-overlay {
-          position: fixed;
-          inset: 0;
-          background: rgba(26,18,8,0.6);
-          backdrop-filter: blur(8px);
-          z-index: 999;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          padding: 1.5rem;
-        }
-        .pd-modal-content {
-          background: #fff;
-          width: 100%;
-          max-width: 800px;
-          border-radius: 1.5rem;
-          overflow: hidden;
-          position: relative;
-          box-shadow: 0 24px 64px rgba(0,0,0,0.2);
-          display: flex;
-          flex-direction: column;
-        }
-        .pd-modal-header {
-          padding: 1.25rem 1.75rem;
-          border-bottom: 1px solid #F0EBE3;
-          display: flex;
-          align-items: center;
-          justify-content: space-between;
-          background: #FDFBF9;
-        }
-        .pd-modal-title {
-          font-family: 'Playfair Display', serif;
-          font-size: 1.25rem;
-          font-weight: 700;
-          color: #1C1209;
-        }
-        .pd-modal-close {
-          width: 32px;
-          height: 32px;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          border-radius: 50%;
-          background: #F7F3EE;
-          border: none;
-          cursor: pointer;
-          color: #3D2B1F;
-          transition: all 0.2s;
-        }
-        .pd-modal-close:hover { background: #E5DDD5; transform: rotate(90deg); }
-        .pd-modal-tabs {
-          display: flex;
-          border-bottom: 1px solid #F0EBE3;
-          background: #FDFBF9;
-        }
-        .pd-modal-tab {
-          flex: 1;
-          padding: 0.7rem 1rem;
-          font-size: 12px;
-          font-weight: 700;
-          text-transform: uppercase;
-          letter-spacing: 0.08em;
-          color: #9c8876;
-          background: none;
-          border: none;
-          border-bottom: 2.5px solid transparent;
-          cursor: pointer;
-          transition: all 0.18s;
-        }
-        .pd-modal-tab.active {
-          color: #7B3A10;
-          border-bottom-color: #C0853A;
-          background: #fff;
-        }
-        .pd-modal-tab:hover:not(.active) { background: #F7F3EE; }
-        .pd-modal-body {
-          padding: 1.5rem;
-          overflow-y: auto;
-          max-height: 75vh;
-          display: flex;
-          justify-content: center;
-          background: #fff;
-        }
-        .pd-guide-img {
-          max-width: 100%;
-          height: auto;
-          border-radius: 0.75rem;
-        }
-
-        .pd-qty { display: flex; align-items: center; border: 1.5px solid #E5DDD5; border-radius: 8px; overflow: hidden; }
-        .pd-qty-btn { width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; background: #F7F3EE; border: none; cursor: pointer; }
-        .pd-qty-val { 
-          width: 52px; height: 36px; text-align: center;
-          font-family: 'Inter', sans-serif; font-size: 16px; font-weight: 700; 
-          background: #fff; border-left: 1.5px solid #E5DDD5; border-right: 1.5px solid #E5DDD5;
-          outline: none; -moz-appearance: textfield;
-        }
-        .pd-qty-val::-webkit-outer-spin-button, .pd-qty-val::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
-
-        .pd-actions { display: flex; gap: 0.75rem; margin-top: 1.5rem; }
-        .pd-btn-cart { flex: 1; display: flex; align-items: center; justify-content: center; gap: 0.5rem; padding: 0.85rem; border: 2px solid #C0420A; border-radius: 10px; font-size: 14px; font-weight: 600; color: #C0420A; background: #fff; cursor: pointer; }
-        .pd-btn-buy { flex: 1; display: flex; align-items: center; justify-content: center; padding: 0.85rem; border-radius: 10px; font-size: 14px; font-weight: 600; color: #fff; background: #C0420A; cursor: pointer; border: none; }
-
-        .pd-artisan {
-          background: #fff;
-          border-radius: 1.25rem;
-          box-shadow: 0 4px 24px rgba(60,35,10,0.07);
-          padding: 1.25rem 1.5rem;
-          margin-bottom: 1.5rem;
-          border: 1px solid #F0EBE3;
-        }
-        .pd-artisan-top {
-          display: flex;
-          align-items: center;
-          gap: 1rem;
-          margin-bottom: 1rem;
-        }
-        .pd-artisan-avatar {
-          width: 52px;
-          height: 52px;
-          min-width: 52px;
-          border-radius: 50%;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          font-size: 1.35rem;
-          font-weight: 700;
-          background: linear-gradient(135deg, #3D2B1F, #7B3A10);
-          color: #E8C98C;
-          flex-shrink: 0;
-        }
-        .pd-artisan-info { flex: 1; min-width: 0; }
-        .pd-artisan-name {
-          font-family: 'Playfair Display', serif;
-          font-size: 1rem;
-          font-weight: 700;
-          color: #1C1209;
-          white-space: nowrap;
-          overflow: hidden;
-          text-overflow: ellipsis;
-        }
-        .pd-artisan-online {
-          display: inline-flex;
-          align-items: center;
-          gap: 0.35rem;
-          font-size: 11px;
-          font-weight: 600;
-          color: #16a34a;
-          margin-top: 2px;
-        }
-        .pd-artisan-online::before {
-          content: '';
-          display: inline-block;
-          width: 7px;
-          height: 7px;
-          border-radius: 50%;
-          background: #16a34a;
-          animation: pulse-green 2s infinite;
-        }
-        @keyframes pulse-green {
-          0%, 100% { opacity: 1; }
-          50% { opacity: 0.4; }
-        }
-        .pd-artisan-stats {
-          display: flex;
-          gap: 0;
-          border-top: 1px solid #F0EBE3;
-          border-bottom: 1px solid #F0EBE3;
-          margin-bottom: 1rem;
-          padding: 0.75rem 0;
-        }
-        .pd-artisan-stat {
-          flex: 1;
-          display: flex;
-          flex-direction: column;
-          align-items: center;
-          gap: 2px;
-          border-right: 1px solid #F0EBE3;
-        }
-        .pd-artisan-stat:last-child { border-right: none; }
-        .pd-artisan-stat-label {
-          font-size: 10px;
-          font-weight: 700;
-          color: #9c8876;
-          text-transform: uppercase;
-          letter-spacing: 0.06em;
-        }
-        .pd-artisan-stat-value {
-          font-family: 'Inter', sans-serif;
-          font-size: 1rem;
-          font-weight: 700;
-          color: #1C1209;
-          white-space: nowrap;
-        }
-        .pd-artisan-actions { display: flex; gap: 0.5rem; }
-        .pd-artisan-btn-chat {
-          flex: 1;
-          display: flex; align-items: center; justify-content: center; gap: 0.4rem;
-          padding: 0.55rem 1rem;
-          font-size: 12px; font-weight: 700;
-          border: 1.5px solid #C0420A;
-          border-radius: 8px;
-          color: #C0420A;
-          background: #fff;
-          cursor: pointer;
-          transition: all 0.18s;
-          text-decoration: none;
-        }
-        .pd-artisan-btn-chat:hover { background: #FFF5F3; }
-        .pd-artisan-btn-shop {
-          flex: 1;
-          display: flex; align-items: center; justify-content: center; gap: 0.4rem;
-          padding: 0.55rem 1rem;
-          font-size: 12px; font-weight: 700;
-          border: none;
-          border-radius: 8px;
-          color: #fff;
-          background: #3D2B1F;
-          cursor: pointer;
-          transition: all 0.18s;
-          text-decoration: none;
-        }
-        .pd-artisan-btn-shop:hover { background: #C0420A; }
-
-        .pd-details-card { background: #fff; border-radius: 1.25rem; box-shadow: 0 4px 24px rgba(60,35,10,0.07); overflow: hidden; }
-        .pd-section-head { 
-          display: flex; align-items: center; gap: 0.6rem; padding: 1.1rem 1.75rem; 
-          background: #FDFBF9; color: #7B3A10; border-bottom: 1px solid #F7F3EE;
-          font-size: 14px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em;
-        }
-        .pd-specs { padding: 1.25rem 1.75rem; }
-        .pd-spec-row { display: flex; align-items: center; padding: 0.65rem 0; border-bottom: 1px solid #F7F3EE; }
-        .pd-desc { padding: 0 1.75rem 1.75rem; font-size: 14px; color: #3D2B1F; line-height: 1.78; white-space: pre-wrap; }
-
-        .pd-reviews { background: #fff; border-radius: 1.25rem; box-shadow: 0 4px 24px rgba(60,35,10,0.07); margin-top: 1.5rem; padding: 1.75rem; }
-        .pd-dist-wrap { background: #FDF5E8; border: 1px solid #EDD9A3; border-radius: 1rem; padding: 1.25rem 1.5rem; margin-bottom: 1.75rem; display: flex; gap: 2rem; align-items: center; }
-        .pd-dist-big { font-size: 3rem; font-weight: 700; color: #7B3A10; }
-        .pd-dist-bars { flex: 1; display: flex; flex-direction: column; gap: 0.4rem; }
-        .pd-dist-track { flex: 1; height: 6px; background: #F0EBE3; border-radius: 999px; overflow: hidden; }
-        .pd-dist-fill { height: 100%; background: #C0853A; }
-      `}</style>
-
-      <div className="pd-page">
-        <div className="pd-wrap">
-
-          {/* Customer Back Button */}
-          {userRole !== 'admin' && userRole !== 'seller-preview' && (
-            <div className="mb-4 pt-4 sm:pt-6 flex justify-between items-center">
-              <button 
-                onClick={() => router.back()} 
-                className="flex items-center gap-1.5 text-xs font-bold text-stone-500 hover:text-[var(--rust)] transition-colors"
-              >
-                <ChevronLeft className="h-4 w-4" /> Back to previous
-              </button>
-
-              <button 
-                onClick={() => setIsReportModalOpen(true)}
-                className="flex items-center gap-1.5 text-[10px] font-black uppercase tracking-widest text-red-500 hover:text-red-700 transition-colors bg-white px-3 py-1.5 rounded-full border border-red-100 shadow-sm"
-              >
-                <ShieldAlert className="w-3.5 h-3.5" /> Report Product
-              </button>
-            </div>
-          )}
-
-          {/* Admin Back Button Banner */}
           {userRole === 'admin' && (
-            <div className="flex items-center justify-between gap-4 p-4 mb-5 bg-white border border-[var(--border)] rounded-2xl shadow-sm">
+            <div className="flex items-center justify-between gap-4 p-4 mb-8 bg-white border border-gray-200 rounded-2xl shadow-sm">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-[var(--bark)] flex items-center justify-center text-white">
+                <div className="w-10 h-10 rounded-xl bg-black flex items-center justify-center text-white">
                   <ShieldCheck className="w-5 h-5" />
                 </div>
                 <div>
-                  <div className="text-[10px] font-bold text-[var(--muted)] uppercase tracking-widest leading-none mb-1">System Administration</div>
-                  <div className="text-sm font-bold text-[var(--charcoal)]">Product Management View</div>
+                  <div className="text-[10px] font-bold text-gray-500 uppercase tracking-widest leading-none mb-1">System Administration</div>
+                  <div className="text-sm font-bold text-black">Product Management View</div>
                 </div>
               </div>
               <button
                 onClick={() => router.push('/admin/products')}
-                className="flex items-center gap-2 px-5 py-2.5 bg-[var(--cream)] border border-[var(--border)] rounded-xl text-[11px] font-bold text-[var(--charcoal)] uppercase tracking-widest hover:bg-[var(--rust)] hover:text-white hover:border-[var(--rust)] transition-all shadow-sm"
+                className="flex items-center gap-2 px-5 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-[11px] font-bold text-black uppercase tracking-widest hover:bg-black hover:text-white transition-colors"
               >
                 ← Back to Products
               </button>
             </div>
           )}
 
-          {/* Seller Preview Banner */}
           {userRole === 'seller-preview' && (
-            <div style={{
-              background: 'linear-gradient(135deg, #1C1209, #3D2B1F)',
-              borderRadius: '0.85rem',
-              padding: '0.9rem 1.25rem',
-              marginBottom: '1.25rem',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'space-between',
-              gap: '1rem',
-              boxShadow: '0 4px 20px rgba(0,0,0,0.15)',
-            }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-                <div style={{ width: 8, height: 8, borderRadius: '50%', background: '#E8C98C', animation: 'pulse 2s infinite' }} />
-                <span style={{ fontSize: 11, fontWeight: 800, letterSpacing: '0.18em', textTransform: 'uppercase', color: '#E8C98C' }}>
+            <div className="flex items-center justify-between gap-4 p-4 mb-8 bg-black border border-gray-800 rounded-2xl shadow-xl">
+              <div className="flex items-center gap-3">
+                <div className="w-2 h-2 rounded-full bg-amber-400 animate-pulse" />
+                <span className="text-[11px] font-bold tracking-widest uppercase text-amber-400">
                   Seller Preview Mode
                 </span>
-                <span style={{ fontSize: 11, color: 'rgba(232,201,140,0.6)', fontStyle: 'italic' }}>
-                  — Customer interactions are disabled
+                <span className="text-[11px] text-gray-400 italic">
+                  — Customer interactions disabled
                 </span>
               </div>
               <button
                 onClick={() => router.push('/seller/inventory')}
-                style={{
-                  display: 'flex', alignItems: 'center', gap: '0.4rem',
-                  padding: '0.4rem 0.9rem', borderRadius: '6px',
-                  background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.2)',
-                  color: '#E8C98C', fontSize: 11, fontWeight: 700,
-                  letterSpacing: '0.1em', textTransform: 'uppercase', cursor: 'pointer',
-                  transition: 'all 0.2s',
-                }}
+                className="flex items-center gap-2 px-4 py-2 border border-gray-700 bg-white/5 rounded-lg text-[11px] font-bold text-amber-400 uppercase tracking-widest hover:bg-white/10 transition-colors"
               >
                 ← Back to Inventory
               </button>
             </div>
           )}
 
-          {/* Hero Card */}
-          <div className="pd-hero">
-            <div className="pd-gallery">
-              <div className="pd-gallery-badge"><Award size={12} /> Lumban Artisan Craft</div>
-              <div className="pd-main-img">
-                <img
+          {/* Main Product Layout */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-20 mb-20">
+            
+            {/* Left: Image Gallery */}
+            <div className="flex flex-col gap-6">
+              <div 
+                className="relative aspect-4/5 bg-gray-50 rounded-4xl overflow-hidden cursor-zoom-in border border-gray-100" 
+                onClick={() => setIsZoomOpen(true)}
+              >
+                <Image
                   key={activeImage}
                   src={galleryImages[activeImage]?.url || galleryImages[activeImage]}
                   alt={product.name}
-                  className="w-full h-full object-cover object-top"
+                  fill
+                  className="object-cover hover:scale-[1.02] transition-transform duration-500"
+                  unoptimized
                 />
               </div>
-              <div className="pd-thumbs">
+              
+              <div className="flex gap-4 overflow-x-auto pb-2 scrollbar-hide snap-x">
                 {galleryImages.map((img, i) => (
-                  <div
+                  <button
                     key={i}
                     onClick={() => handleVariationSelect(i)}
-                    className={`pd-thumb ${activeImage === i ? 'active' : ''}`}
+                    className={`relative w-24 h-28 rounded-2xl overflow-hidden shrink-0 transition-all snap-start bg-gray-50 border-2 ${
+                      activeImage === i 
+                        ? 'border-black opacity-100 shadow-md scale-100' 
+                        : 'border-transparent opacity-60 hover:opacity-100 scale-95 hover:scale-100'
+                    }`}
                   >
                     <Image src={img.url || img} alt="thumb" fill className="object-cover" unoptimized />
-                  </div>
+                  </button>
                 ))}
               </div>
             </div>
 
-            <div className="pd-info">
-              <div className="pd-eyebrow"><span>{productCategory}</span></div>
-              <h1 className="pd-title">{product.name}</h1>
+            {/* Right: Product Details */}
+            <div className="flex flex-col pt-2 md:pt-6">
+              <span className="text-sm font-semibold text-gray-500 mb-3 uppercase tracking-wider">{productCategory}</span>
+              <h1 className="text-3xl md:text-5xl font-extrabold text-black mb-6 leading-[1.1] tracking-tight">{product.name}</h1>
 
-              <div className="pd-rating-row">
-                <div className="pd-rating-seg">
-                  <span className="pd-score">{productRating.toFixed(1)}</span>
-                  <div className="flex text-[#C0853A]">
-                    {[...Array(5)].map((_, i) => (
-                      <Star
-                        key={i}
-                        className={`w-3.5 h-3.5 ${i < Math.floor(productRating) ? "fill-current" : "opacity-30"}`}
-                      />
-                    ))}
-                  </div>
-                </div>
-                <div className="pd-rating-sep" />
-                <div className="pd-rating-seg"><span className="font-bold">{productReviewCount}</span> ratings</div>
-                <div className="pd-rating-sep" />
-                <div className="pd-rating-seg"><span className="font-bold">{product.soldCount || 0}</span> sold</div>
+              <div className="flex items-end gap-6 mb-8">
+                <span className="text-3xl font-extrabold text-black">₱{(product.price || 0).toLocaleString()}</span>
               </div>
 
-              <div className="pd-price-block">
-                <span className="text-xl font-bold text-[#9c6e30] mr-1">₱</span>
-                <span className="pd-price">{(product.price || 0).toLocaleString()}</span>
-              </div>
 
-              <div className="pd-row">
-                <span className="pd-row-label">Shipping</span>
-                <div className="text-sm">Est. arrival in 5 days</div>
-              </div>
 
-              <div className="pd-row">
-                <span className="pd-row-label">Variation</span>
-                <div className="pd-chip-wrap">
-                  {galleryImages.map((img, i) => (
-                    <button
-                      key={i}
-                      onClick={() => handleVariationSelect(i)}
-                      className={`pd-chip ${activeImage === i ? 'active' : ''}`}
-                    >
-                      <div className="pd-chip-img">
-                        <Image src={img.url || img} alt="variant" fill className="object-cover" unoptimized />
-                      </div>
-                      <span>{img.variation || `Variant ${i + 1}`}</span>
+              {/* Size Selector */}
+              <div className="mb-10">
+                <div className="flex items-center justify-between mb-5">
+                  <span className="text-base font-bold text-black uppercase tracking-wider">Select Size</span>
+                  {!isRestricted && (
+                    <button onClick={() => setShowSizeGuide(true)} className="text-sm font-bold text-gray-400 hover:text-black transition-colors underline underline-offset-4">
+                      Size Guide
                     </button>
-                  ))}
+                  )}
                 </div>
-              </div>
-
-              <div style={{ marginBottom: '1rem' }}>
-                {!isRestricted && (
-                  <button
-                    onClick={() => setShowSizeGuide(true)}
-                    className="pd-size-guide-btn"
-                    style={{ marginLeft: 0, marginBottom: '0.6rem', display: 'flex' }}
-                  >
-                    <Ruler size={12} />
-                    Size Guide
-                  </button>
-                )}
-                <div style={{ display: 'flex', alignItems: 'center', marginBottom: '0.5rem' }}>
-                  <span className="pd-row-label" style={{ paddingTop: 0 }}>Size</span>
-                </div>
+                
                 {!isRestricted ? (
-                  <div className="pd-chip-wrap">
+                  <div className="flex flex-wrap gap-4">
                     {availableSizes.map((s) => {
                       const isObj = typeof s === 'object';
                       const sName = isObj ? (s.size || s.name) : s;
@@ -1092,13 +687,19 @@ export default function ProductDetailClient() {
                         <button
                           key={sName}
                           onClick={() => !isOutOfStock && setSelectedSize(sName)}
-                          className={`pd-size-chip ${isActive ? 'active' : ''} ${isOutOfStock ? 'opacity-40 cursor-not-allowed grayscale relative' : ''}`}
+                          className={`relative w-16 h-16 rounded-full flex items-center justify-center text-sm font-bold transition-all ${
+                            isActive 
+                              ? 'bg-black text-white shadow-lg shadow-black/20 scale-105' 
+                              : isOutOfStock 
+                                ? 'bg-gray-50 text-gray-300 cursor-not-allowed border border-gray-100' 
+                                : 'bg-white text-gray-600 border border-gray-200 hover:border-black hover:text-black'
+                          }`}
                           disabled={isOutOfStock}
                         >
                           {sName}
                           {isOutOfStock && (
-                            <span className="absolute -top-2 -right-1 bg-red-500 text-white text-[7px] px-1 rounded-full font-black uppercase tracking-tighter shadow-sm">
-                              Sold Out
+                            <span className="absolute -top-1 -right-2 bg-red-500 text-white text-[8px] px-1.5 py-0.5 rounded-full font-black uppercase tracking-widest shadow-sm">
+                              Out
                             </span>
                           )}
                         </button>
@@ -1106,254 +707,312 @@ export default function ProductDetailClient() {
                     })}
                   </div>
                 ) : (
-                  <div className="text-xs font-bold text-[var(--muted)] opacity-50 italic">Size selection restricted in preview</div>
+                  <div className="text-sm text-gray-400 italic">Size selection restricted in preview mode</div>
                 )}
               </div>
 
+              {/* Quantity */}
               {!isRestricted && (
                 <>
-                  <div className="pd-row">
-                    <span className="pd-row-label">Quantity</span>
-                    <div className="flex items-center gap-3">
-                      <div className="pd-qty">
-                        <button className="pd-qty-btn" onClick={() => setQuantity(Math.max(1, quantity - 1))}><Minus size={13} /></button>
-                        <input
-                          type="number"
-                          value={quantity}
-                          onChange={(e) => {
-                            const val = parseInt(e.target.value);
-                            const selectedSizeInfo = typeof availableSizes[0] === 'object' 
-                              ? availableSizes.find(s => (s.size || s.name) === selectedSize)
-                              : null;
-                            const maxStock = selectedSizeInfo ? (selectedSizeInfo.stock || 0) : (product.stock || 999);
-                            
-                            if (!isNaN(val)) {
-                              setQuantity(Math.min(Math.max(1, val), maxStock));
-                            } else {
-                              setQuantity("");
-                            }
-                          }}
-                          onBlur={() => {
-                            if (quantity === "" || quantity < 1) setQuantity(1);
-                          }}
-                          className="pd-qty-val"
-                        />
-                        <button className="pd-qty-btn" onClick={() => {
-                          const selectedSizeInfo = typeof availableSizes[0] === 'object' 
-                            ? availableSizes.find(s => (s.size || s.name) === selectedSize)
-                            : null;
-                          const maxStock = selectedSizeInfo ? (selectedSizeInfo.stock || 0) : (product.stock || 999);
-                          setQuantity(Math.min(quantity + 1, maxStock));
-                        }}><Plus size={13} /></button>
-                      </div>
-                      <span className="text-xs text-gray-500">
-                        {(() => {
-                          const selectedSizeInfo = typeof availableSizes[0] === 'object' 
-                            ? availableSizes.find(s => (s.size || s.name) === selectedSize)
-                            : null;
-                          return selectedSizeInfo ? `${selectedSizeInfo.stock} units available` : `${product.stock || 0} units available`;
-                        })()}
-                      </span>
-                    </div>
+                  <div className="flex items-center gap-6 mb-10">
+                  <div className="flex items-center border-2 border-gray-100 rounded-full bg-white h-[60px] w-40 overflow-hidden">
+                    <button 
+                      className="w-12 h-full flex items-center justify-center text-gray-400 hover:text-black hover:bg-gray-50 transition-colors"
+                      onClick={() => setQuantity(Math.max(1, quantity - 1))}
+                    >
+                      <Minus size={18} />
+                    </button>
+                    <input
+                      type="number"
+                      value={quantity}
+                      onChange={(e) => {
+                        const val = parseInt(e.target.value);
+                        const selectedSizeInfo = typeof availableSizes[0] === 'object'
+                          ? availableSizes.find(s => (s.size || s.name) === selectedSize)
+                          : null;
+                        const maxStock = selectedSizeInfo ? (selectedSizeInfo.stock || 0) : (product.stock || 999);
+                        if (!isNaN(val)) setQuantity(Math.min(Math.max(1, val), maxStock));
+                        else setQuantity("");
+                      }}
+                      onBlur={() => { if (quantity === "" || quantity < 1) setQuantity(1); }}
+                      className="flex-1 text-center font-bold text-lg text-black bg-transparent outline-none h-full w-full"
+                      style={{ MozAppearance: 'textfield' }}
+                    />
+                    <button 
+                      className="w-12 h-full flex items-center justify-center text-gray-400 hover:text-black hover:bg-gray-50 transition-colors"
+                      onClick={() => {
+                        const selectedSizeInfo = typeof availableSizes[0] === 'object'
+                          ? availableSizes.find(s => (s.size || s.name) === selectedSize)
+                          : null;
+                        const maxStock = selectedSizeInfo ? (selectedSizeInfo.stock || 0) : (product.stock || 999);
+                        setQuantity(Math.min(quantity + 1, maxStock));
+                      }}
+                    >
+                      <Plus size={18} />
+                    </button>
                   </div>
-
-                  {/* Refund Reminder */}
-              <div className="mt-6 p-4 bg-amber-50 border border-amber-200 rounded-xl flex items-start gap-3">
-                <Camera className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
-                <div>
-                  <p className="text-[11px] font-bold text-amber-800 uppercase tracking-wider mb-1">Refund Policy Reminder</p>
-                  <p className="text-xs text-amber-700 leading-relaxed font-medium">
-                    Please record a video while opening the package. This serves as essential proof for refund requests.
+                  <span className="text-sm font-medium text-gray-400">
+                    {(() => {
+                      const selectedSizeInfo = typeof availableSizes[0] === 'object'
+                        ? availableSizes.find(s => (s.size || s.name) === selectedSize)
+                        : null;
+                      return selectedSizeInfo ? `${selectedSizeInfo.stock} items left` : `${product.stock || 0} items left`;
+                    })()}
+                  </span>
+                </div>
+                
+                {/* Shipping Info - Quick View */}
+                <div className="flex items-center gap-3 mb-10 px-2">
+                  <div className="w-8 h-8 rounded-full bg-gray-50 flex items-center justify-center border border-gray-100">
+                    <Truck className="w-4 h-4 text-gray-500" />
+                  </div>
+                  <p className="text-sm text-gray-500">
+                    Estimated delivery: <span className="font-bold text-black">{product?.shippingDays || 5} business days</span>
                   </p>
                 </div>
+              </>
+            )}
+
+              {/* Actions */}
+              {!isRestricted && (
+                <div className="flex flex-col gap-3 mb-12">
+                  <button 
+                    onClick={handleAddToCart} 
+                    className="w-full h-[64px] bg-white border-2 border-black text-black rounded-2xl font-bold text-sm uppercase tracking-widest hover:bg-gray-50 transition-colors flex items-center justify-center gap-3 active:scale-[0.98]"
+                  >
+                    <ShoppingCart size={18} /> 
+                    {addedToCart ? "Added!" : "Add to Cart"}
+                  </button>
+                  
+                  <button 
+                    onClick={handleBuyNow} 
+                    className="w-full h-[64px] bg-black text-white rounded-2xl font-bold text-sm uppercase tracking-widest hover:bg-gray-900 transition-all shadow-xl shadow-black/10 flex items-center justify-center gap-3 active:scale-[0.98] border-2 border-black"
+                  >
+                    Buy It Now
+                  </button>
+                </div>
+              )}
+
+              {/* Accordions */}
+              <div className="border-t border-gray-200 divide-y divide-gray-200 mt-auto">
+                <details className="group py-6" open>
+                  <summary className="flex items-center justify-between font-bold text-black cursor-pointer list-none outline-none">
+                    <span className="text-base uppercase tracking-wider">Description & Fit</span>
+                    <span className="transition-transform duration-300 group-open:rotate-180 text-gray-400 group-hover:text-black">
+                      <ChevronDown size={20} />
+                    </span>
+                  </summary>
+                  <div className="text-sm text-gray-600 mt-6 leading-loose whitespace-pre-wrap">
+                    {product.description || product.name}
+                    
+                    <div className="mt-6 flex flex-col gap-3">
+                      {product.fabric_type && (
+                         <div className="flex items-center gap-2">
+                            <span className="font-bold text-black w-24">Material:</span> 
+                            <span>{product.fabric_type}</span>
+                         </div>
+                      )}
+                      {product.collar_type && (
+                         <div className="flex items-center gap-2">
+                            <span className="font-bold text-black w-24">Collar:</span> 
+                            <span>{product.collar_type}</span>
+                         </div>
+                      )}
+                      {product.sku && (
+                         <div className="flex items-center gap-2">
+                            <span className="font-bold text-black w-24">SKU:</span> 
+                            <span className="font-mono text-xs bg-gray-100 px-2 py-1 rounded">{product.sku}</span>
+                         </div>
+                      )}
+                    </div>
+                  </div>
+                </details>
+                
+
+                
+
               </div>
 
-              <div className="pd-actions">
-                    {maintenanceMode ? (
-                      <div className="w-full p-4 bg-amber-50 border border-amber-200 rounded-xl flex items-center justify-center gap-3 text-amber-700 text-[10px] font-black uppercase tracking-widest animate-pulse shadow-sm">
-                        <ShieldAlert className="w-4 h-4" /> Orders are temporarily paused
-                      </div>
-                    ) : (
-                      <>
-                        <button onClick={handleAddToCart} className="pd-btn-cart"><ShoppingCart size={17} /> {addedToCart ? "Added!" : "Add to Cart"}</button>
-                        <button onClick={handleBuyNow} className="pd-btn-buy">Buy Now</button>
-                      </>
-                    )}
-                  </div>
-                </>
-              )}
             </div>
           </div>
 
-          {/* Shop Profile Card */}
-          <div className="pd-artisan">
-            <div className="pd-artisan-top">
-              <div className="pd-artisan-avatar">
-                {(product.artisan || "L")[0].toUpperCase()}
-              </div>
-              <div className="pd-artisan-info">
-                <div className="pd-artisan-name">{product.artisan || "Lumban Master Craft"}</div>
-                <div className="pd-artisan-online">Online Now</div>
-              </div>
-            </div>
-            <div className="pd-artisan-stats">
-              <div className="pd-artisan-stat">
-                <span className="pd-artisan-stat-label">Ratings</span>
-                <span className="pd-artisan-stat-value">{seller?.reviewCount || 0}</span>
-              </div>
-              <div className="pd-artisan-stat">
-                <span className="pd-artisan-stat-label">Products</span>
-                <span className="pd-artisan-stat-value">{seller?.productCount || 0}</span>
-              </div>
-              <div className="pd-artisan-stat">
-                <span className="pd-artisan-stat-label">Joined</span>
-                <span className="pd-artisan-stat-value" style={{ fontSize: '0.82rem' }}>
-                  {seller?.establishedOn || seller?.joined || "New"}
-                </span>
-              </div>
-            </div>
-            {!isRestricted && (
-              <div className="pd-artisan-actions">
-                <Link href={`/messages?sellerId=${product.sellerId || 1}`} className="pd-artisan-btn-chat">
-                  <MessageCircle size={13} /> Chat
+          {/* Optional: Minimal Artisan Section directly below */}
+          <div className="border-t border-gray-200 pt-16 pb-12 flex flex-col md:flex-row items-center justify-between gap-8">
+             <div className="flex items-center gap-6">
+                <div className="w-20 h-20 rounded-full overflow-hidden bg-gray-100 shrink-0">
+                  {product.seller?.profilePhoto ? (
+                    <img src={product.seller.profilePhoto} alt="Artisan" className="w-full h-full object-cover" />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center bg-black text-white text-3xl font-bold">
+                      {(product.artisan || "L")[0].toUpperCase()}
+                    </div>
+                  )}
+                </div>
+                <div>
+                  <div className="text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-1">Authentic Maker</div>
+                  <div className="flex items-center gap-2 mb-2">
+                    <h3 className="font-extrabold text-black text-2xl">{product.artisan || "Master Craft"}</h3>
+                    {product.seller?.isVerified && <CheckCircle2 className="w-5 h-5 text-blue-500" />}
+                  </div>
+                  <div className="text-sm font-medium text-gray-500 flex items-center gap-4">
+                    <span>{seller?.productCount || 0} Products</span>
+                    <span className="w-1 h-1 rounded-full bg-gray-300" />
+                    <span>{seller?.reviewCount || 0} Reviews</span>
+                  </div>
+                </div>
+             </div>
+
+             {!isRestricted && (
+              <div className="flex gap-4 w-full md:w-auto">
+                <Link href={`/messages?sellerId=${product.sellerId || 1}`} className="flex-1 md:flex-none flex items-center justify-center gap-2 px-8 py-4 border-2 border-gray-200 rounded-full text-black font-bold hover:border-black hover:bg-gray-50 transition-colors">
+                  <MessageCircle size={18} /> Message
                 </Link>
-                <Link href={`/shop?id=${product.sellerId || 1}`} className="pd-artisan-btn-shop">
-                  <Store size={13} /> View Shop
+                <Link href={`/shop?id=${product.sellerId || 1}`} className="flex-1 md:flex-none flex items-center justify-center gap-2 px-8 py-4 bg-black text-white rounded-full font-bold hover:bg-gray-800 transition-colors shadow-lg shadow-black/10">
+                  <Store size={18} /> Visit Shop
                 </Link>
               </div>
             )}
           </div>
 
-          {/* Specs & Description */}
-          <div className="pd-details-card">
-            <div className="pd-section-head"><Package size={14} /> Product Specifications</div>
-            <div className="pd-specs">
-              <div className="pd-spec-row">
-                <span className="w-32 text-gray-400 text-sm">Category</span>
-                <span className="font-bold text-sm">{productCategory}</span>
-              </div>
-            </div>
-            <div className="pd-section-head"><Award size={14} /> Product Description</div>
-            <div className="pd-desc">{product.description || product.name}</div>
-          </div>
-
-          {/* Reviews Section */}
-          <div className="pd-reviews" id="reviews">
-            <h2 className="font-serif text-lg font-bold text-[#1C1209] mb-6">Customer Feedback</h2>
+          <div className="mt-16 bg-white rounded-4xl p-8 lg:p-12 shadow-sm border border-gray-100" id="reviews">
+            <h2 className="text-3xl font-extrabold text-black mb-10">Customer Reviews</h2>
 
             {reviewList.length > 0 ? (
-              <div className="space-y-6">
-                {/* Rating Header */}
-                <div className="flex flex-col sm:flex-row gap-3 p-3 rounded-lg bg-[#FDFBF9] border border-[#E5DDD5] items-center">
-                  <div className="flex flex-col items-center justify-center min-w-[70px]">
-                    <div className="flex items-baseline gap-0.5">
-                      <span className="text-lg font-bold text-[#C0420A]">{productRating.toFixed(1)}</span>
-                      <span className="text-[9px] font-medium text-[#9c8876]">out of 5</span>
+              <div className="space-y-12">
+                <div className="flex flex-col md:flex-row gap-10 p-8 rounded-3xl bg-gray-50 items-center border border-gray-100">
+                  <div className="flex flex-col items-center justify-center md:w-1/3">
+                    <div className="flex items-baseline gap-2 mb-2">
+                      <span className="text-6xl font-black text-black">{productRating.toFixed(1)}</span>
+                      <span className="text-2xl font-bold text-gray-400">/ 5</span>
                     </div>
-                    <div className="flex text-[#C0420A] mt-0.5">
+                    <div className="flex text-black mb-3">
                       {[...Array(5)].map((_, index) => (
-                        <Star key={index} className={`w-3 h-3 ${index < Math.floor(productRating) ? "fill-current" : "opacity-20"}`} />
+                        <Star key={index} className={`w-6 h-6 ${index < Math.floor(productRating) ? "fill-black" : "opacity-20"}`} />
                       ))}
                     </div>
+                    <span className="text-sm font-bold text-gray-500 uppercase tracking-widest">{productReviewCount} Ratings</span>
                   </div>
 
-                  <div className="w-px h-10 bg-[#E5DDD5] hidden sm:block" />
+                  <div className="w-full h-px md:w-px md:h-32 bg-gray-200" />
 
-                  <div className="flex flex-wrap gap-1.5 items-center justify-center sm:justify-start">
-                    {reviewFilters.map((filter) => (
-                      <button
-                        key={filter.key}
-                        onClick={() => setActiveReviewFilter(filter.key)}
-                        className={`px-2 py-1 text-[9px] font-bold uppercase tracking-wider rounded border transition-all ${activeReviewFilter === filter.key
-                          ? "border-[#C0420A] bg-[#FFF5F3] text-[#C0420A]"
-                          : "border-[#E5DDD5] bg-white text-[#3D2B1F] hover:border-[#C0853A]"
-                          }`}
-                      >
-                        {filter.label} <span className="opacity-60 ml-0.5">({filter.count})</span>
-                      </button>
+                  <div className="flex-1 w-full flex flex-col justify-center gap-4 px-4">
+                    {[5, 4, 3, 2, 1].map(star => (
+                      <div key={star} className="flex items-center gap-4">
+                        <div className="flex items-center gap-2 w-12 text-sm font-bold text-black">
+                          {star} <Star className="w-4 h-4 fill-black" />
+                        </div>
+                        <div className="flex-1 h-2.5 bg-gray-200 rounded-full overflow-hidden">
+                          <div 
+                            className="h-full bg-black rounded-full" 
+                            style={{ width: star === 5 ? '75%' : star === 4 ? '15%' : star === 3 ? '5%' : star === 2 ? '3%' : '2%' }}
+                          />
+                        </div>
+                      </div>
                     ))}
                   </div>
                 </div>
 
-                {/* Reviews List */}
-                <div className="space-y-6">
+                <div className="flex flex-wrap gap-3 border-b border-gray-200 pb-8">
+                  {reviewFilters.map((filter) => (
+                    <button
+                      key={filter.key}
+                      onClick={() => setActiveReviewFilter(filter.key)}
+                      className={`px-5 py-2.5 text-xs font-bold uppercase tracking-widest rounded-full transition-all ${activeReviewFilter === filter.key
+                        ? "bg-black text-white shadow-md shadow-black/10 scale-105"
+                        : "bg-white text-gray-600 border border-gray-200 hover:border-black hover:text-black"
+                        }`}
+                    >
+                      {filter.label} <span className="opacity-70 ml-1">({filter.count})</span>
+                    </button>
+                  ))}
+                </div>
+
+                <div className="space-y-10">
                   {filteredReviews.length === 0 ? (
-                    <div className="text-center py-10 text-sm font-medium text-[#9c8876] italic">No reviews found for this filter.</div>
+                    <div className="text-center py-16 text-sm font-medium text-gray-400 italic">No reviews found for this filter.</div>
                   ) : (
                     filteredReviews.map((review) => (
-                      <div key={review.id} className="pt-6 border-t border-[#F0EBE3] first:border-0 first:pt-0">
-                        <div className="flex gap-4">
-                          <div className="w-10 h-10 rounded-full bg-[#E5DDD5] overflow-hidden flex items-center justify-center shrink-0">
+                      <div key={review.id} className="pb-10 border-b border-gray-100 last:border-0 last:pb-0">
+                        <div className="flex gap-6">
+                          <div className="w-14 h-14 rounded-full bg-gray-100 border border-gray-200 overflow-hidden flex items-center justify-center shrink-0 shadow-sm">
                             {review.customer?.profilePhoto ? (
                               <img src={resolveBackendImageUrl(review.customer.profilePhoto)} alt="User" className="w-full h-full object-cover" />
                             ) : (
-                              <span className="font-serif font-bold text-[#7B3A10]">{review.customer?.name?.[0] || "A"}</span>
+                              <span className="font-extrabold text-gray-500 text-xl">{review.customer?.name?.[0] || "A"}</span>
                             )}
                           </div>
 
                           <div className="flex-1 min-w-0">
-                            <div className="font-bold text-[13px] text-[#1C1209]">
-                              {review.customer?.name || "Verified Customer"}
+                            <div className="flex items-center justify-between mb-2">
+                              <div className="font-bold text-base text-black">
+                                {review.customer?.name || "Verified Customer"}
+                              </div>
+                              <div className="text-xs font-bold text-gray-400 uppercase tracking-widest">
+                                {new Date(review.createdAt).toLocaleDateString(undefined, {
+                                  year: "numeric", month: "short", day: "numeric"
+                                })}
+                              </div>
                             </div>
-                            <div className="flex text-[#C0420A] mt-1 mb-1">
+                            
+                            <div className="flex text-black mb-4">
                               {[...Array(5)].map((_, index) => (
-                                <Star key={index} className={`w-3 h-3 ${index < Number(review.rating || 0) ? "fill-current" : "opacity-20"}`} />
+                                <Star key={index} className={`w-4 h-4 ${index < Number(review.rating || 0) ? "fill-black" : "opacity-20"}`} />
                               ))}
                             </div>
-                            <div className="text-[11px] font-medium text-[#9c8876] mb-3">
-                              {new Date(review.createdAt).toLocaleDateString(undefined, {
-                                year: "numeric", month: "short", day: "numeric", hour: "2-digit", minute: "2-digit"
-                              })}
-                              {review.variation && <span className="ml-2 pl-2 border-l border-[#E5DDD5]">Variation: {review.variation}</span>}
-                            </div>
+                            
+                            {review.variation && (
+                              <div className="text-xs font-bold text-gray-500 mb-4 bg-gray-50 inline-block px-3 py-1.5 rounded-lg border border-gray-100">
+                                Variation: <span className="text-black">{review.variation}</span>
+                              </div>
+                            )}
 
                             {review.comment && (
-                              <p className="text-[13px] leading-relaxed text-[#3D2B1F] whitespace-pre-wrap mb-4">
+                              <p className="text-sm leading-loose text-gray-700 whitespace-pre-wrap mb-6">
                                 {review.comment}
                               </p>
                             )}
 
                             {Array.isArray(review.images) && review.images.length > 0 && (
-                              <div className="mt-3">
-                                <div className="flex flex-wrap gap-2">
+                              <div className="mt-4">
+                                <div className="flex flex-wrap gap-4">
                                   {review.images.map((img, i) => {
                                     const isExpanded = expandedReviewId === review.id && expandedImageIndex === i;
                                     return (
                                       <button
                                         key={i}
                                         onClick={() => handleExpandReviewImage(review.id, i)}
-                                        className={`relative w-[72px] h-[72px] rounded-md overflow-hidden border-2 transition-colors ${isExpanded ? "border-[#C0420A]" : "border-transparent hover:border-[#C0853A]"
+                                        className={`relative w-24 h-24 rounded-2xl overflow-hidden border-2 transition-all ${isExpanded ? "border-black scale-105 shadow-md" : "border-transparent hover:scale-105"
                                           }`}
                                       >
-                                        <img src={img} alt="Review Media" className="w-full h-full object-cover bg-[#F7F3EE]" />
+                                        <img src={img} alt="Review Media" className="w-full h-full object-cover bg-gray-50" />
                                       </button>
                                     );
                                   })}
                                 </div>
 
                                 {expandedReviewId === review.id && (
-                                  <div className="mt-4 relative max-w-[400px] bg-black rounded-lg overflow-hidden group">
+                                  <div className="mt-8 relative max-w-xl bg-black rounded-3xl overflow-hidden group shadow-2xl">
                                     <button
                                       onClick={(e) => { e.stopPropagation(); setExpandedReviewId(null); }}
-                                      className="absolute top-2 right-2 w-8 h-8 flex items-center justify-center bg-black/50 hover:bg-black/80 rounded-full text-white shadow-md transition-colors z-10"
+                                      className="absolute top-4 right-4 w-10 h-10 flex items-center justify-center bg-black/60 hover:bg-black rounded-full text-white shadow-xl transition-colors z-10"
                                       title="Close image"
                                     >
-                                      <CloseIcon size={16} />
+                                      <CloseIcon size={20} />
                                     </button>
-                                    <img src={review.images[expandedImageIndex]} alt="Expanded Media" className="w-full h-auto object-contain max-h-[500px]" />
+                                    <img src={review.images[expandedImageIndex]} alt="Expanded Media" className="w-full h-auto object-contain max-h-[600px]" />
                                     {review.images.length > 1 && (
                                       <>
                                         <button
                                           onClick={(e) => { e.stopPropagation(); setExpandedImageIndex((prev) => (prev - 1 + review.images.length) % review.images.length); }}
-                                          className="absolute left-2 top-1/2 -translate-y-1/2 w-8 h-8 flex items-center justify-center bg-white/80 hover:bg-white rounded-full text-black shadow-md opacity-0 group-hover:opacity-100 transition-opacity"
+                                          className="absolute left-4 top-1/2 -translate-y-1/2 w-12 h-12 flex items-center justify-center bg-white/90 hover:bg-white rounded-full text-black shadow-xl opacity-0 group-hover:opacity-100 transition-all scale-95 hover:scale-100"
                                         >
-                                          <ChevronLeft size={16} />
+                                          <ChevronLeft size={24} />
                                         </button>
                                         <button
                                           onClick={(e) => { e.stopPropagation(); setExpandedImageIndex((prev) => (prev + 1) % review.images.length); }}
-                                          className="absolute right-2 top-1/2 -translate-y-1/2 w-8 h-8 flex items-center justify-center bg-white/80 hover:bg-white rounded-full text-black shadow-md opacity-0 group-hover:opacity-100 transition-opacity"
+                                          className="absolute right-4 top-1/2 -translate-y-1/2 w-12 h-12 flex items-center justify-center bg-white/90 hover:bg-white rounded-full text-black shadow-xl opacity-0 group-hover:opacity-100 transition-all scale-95 hover:scale-100"
                                         >
-                                          <ChevronRight size={16} />
+                                          <ChevronRight size={24} />
                                         </button>
                                       </>
                                     )}
@@ -1369,76 +1028,213 @@ export default function ProductDetailClient() {
                 </div>
               </div>
             ) : (
-              <div className="text-center py-16 px-4 bg-[#FDFBF9] rounded-[1.5rem] border border-[#F0EBE3]">
-                <MessageCircle className="w-10 h-10 text-[#E5DDD5] mx-auto mb-3" />
-                <h3 className="font-serif text-lg font-bold text-[#1C1209] mb-1">No reviews yet</h3>
-                <p className="text-sm font-medium text-[#9c8876]">Be the first to share your thoughts on this masterpiece.</p>
+              <div className="text-center py-24 px-4 bg-gray-50 rounded-3xl border border-dashed border-gray-300">
+                <MessageCircle className="w-16 h-16 text-gray-300 mx-auto mb-6" />
+                <h3 className="text-xl font-extrabold text-black mb-2">No reviews yet</h3>
+                <p className="text-sm font-medium text-gray-500">Be the first to share your thoughts on this product.</p>
               </div>
             )}
           </div>
-
         </div>
+
+        {/* Recommendations Section */}
+        <div className="mt-32">
+          <div className="flex items-center justify-between mb-10">
+            <h2 className="text-3xl font-extrabold text-black tracking-tight">You Might Also Like</h2>
+            <Link href="/" className="text-sm font-bold text-gray-500 uppercase tracking-widest hover:text-black transition-colors flex items-center gap-1">
+              View All <ChevronRight className="w-4 h-4" />
+            </Link>
+          </div>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+            {/* Mock Recommendation Items */}
+            {[1, 2, 3, 4].map((item) => (
+              <div key={item} className="group cursor-pointer">
+                <div className="relative aspect-3/4 rounded-3xl overflow-hidden bg-gray-50 border border-gray-100 mb-4">
+                  <img src={`/images/placeholder.png`} alt="Recommendation" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                  <div className="absolute top-4 left-4 bg-white px-3 py-1.5 rounded-full text-[10px] font-bold uppercase tracking-widest text-black shadow-sm">
+                    Trending
+                  </div>
+                </div>
+                <div className="space-y-1.5 px-2">
+                  <div className="text-xs font-bold text-gray-400 uppercase tracking-widest">Heritage</div>
+                  <h3 className="font-bold text-black text-base line-clamp-1 group-hover:text-gray-600 transition-colors">Classic Embroidered Piece</h3>
+                  <div className="font-extrabold text-black text-lg">₱4,500</div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
       </div>
 
-      {/* Size Guide Modal */}
       <AnimatePresence>
         {showSizeGuide && (
-          <div className="pd-modal-overlay" onClick={() => setShowSizeGuide(false)}>
+          <div className="fixed inset-0 z-100 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm" onClick={() => setShowSizeGuide(false)}>
             <motion.div
-              initial={{ opacity: 0, scale: 0.9, y: 20 }}
+              initial={{ opacity: 0, scale: 0.95, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.9, y: 20 }}
-              className="pd-modal-content"
+              exit={{ opacity: 0, scale: 0.95, y: 20 }}
+              className="bg-white rounded-3xl w-full max-w-lg overflow-hidden shadow-2xl"
               onClick={(e) => e.stopPropagation()}
             >
-              <div className="pd-modal-header">
-                <h2 className="pd-modal-title">Official Size Guide</h2>
-                <button className="pd-modal-close" onClick={() => setShowSizeGuide(false)}>
-                  <CloseIcon size={18} />
+              <div className="flex items-center justify-between p-6 border-b border-gray-100">
+                <h2 className="text-xl font-extrabold text-black uppercase tracking-wider">Official Size Guide</h2>
+                <button className="p-2 text-gray-400 hover:text-black hover:bg-gray-100 rounded-full transition-colors" onClick={() => setShowSizeGuide(false)}>
+                  <CloseIcon size={20} />
                 </button>
               </div>
-              <div className="pd-modal-tabs">
+              <div className="flex bg-gray-50 p-2 gap-2 border-b border-gray-100">
                 <button
-                  className={`pd-modal-tab ${sizeGuideTab === 'men' ? 'active' : ''}`}
+                  className={`flex-1 py-2.5 px-4 rounded-xl text-xs uppercase tracking-widest font-bold transition-all ${sizeGuideTab === 'men' ? 'bg-white shadow-sm text-black border border-gray-200' : 'text-gray-500 hover:bg-gray-200 border border-transparent'}`}
                   onClick={() => setSizeGuideTab('men')}
                 >
-                  👔 Men
+                  Men
                 </button>
                 <button
-                  className={`pd-modal-tab ${sizeGuideTab === 'women' ? 'active' : ''}`}
+                  className={`flex-1 py-2.5 px-4 rounded-xl text-xs uppercase tracking-widest font-bold transition-all ${sizeGuideTab === 'women' ? 'bg-white shadow-sm text-black border border-gray-200' : 'text-gray-500 hover:bg-gray-200 border border-transparent'}`}
                   onClick={() => setSizeGuideTab('women')}
                 >
-                  👗 Women
+                  Women
                 </button>
                 <button
-                  className={`pd-modal-tab ${sizeGuideTab === 'kids' ? 'active' : ''}`}
+                  className={`flex-1 py-2.5 px-4 rounded-xl text-xs uppercase tracking-widest font-bold transition-all ${sizeGuideTab === 'kids' ? 'bg-white shadow-sm text-black border border-gray-200' : 'text-gray-500 hover:bg-gray-200 border border-transparent'}`}
                   onClick={() => setSizeGuideTab('kids')}
                 >
-                  🧒 Kids
+                  Kids
                 </button>
               </div>
-              <div className="pd-modal-body">
+              <div className="p-6 max-h-[60vh] overflow-y-auto">
                 {sizeGuideTab === 'men' && (
-                  <img src="/images/size-guide.png" alt="Men's Size Guide" className="pd-guide-img" />
+                  <img src="/images/size-guide.png" alt="Men's Size Guide" className="w-full h-auto rounded-xl shadow-sm border border-gray-100" />
                 )}
                 {sizeGuideTab === 'women' && (
-                  <img src="/images/size-guide-women.png" alt="Women's Size Guide" className="pd-guide-img" />
+                  <img src="/images/size-guide-women.png" alt="Women's Size Guide" className="w-full h-auto rounded-xl shadow-sm border border-gray-100" />
                 )}
                 {sizeGuideTab === 'kids' && (
-                  <img src="/images/size-guide-kids.png" alt="Kids' Size Guide" className="pd-guide-img" />
+                  <img src="/images/size-guide-kids.png" alt="Kids' Size Guide" className="w-full h-auto rounded-xl shadow-sm border border-gray-100" />
                 )}
               </div>
             </motion.div>
           </div>
         )}
       </AnimatePresence>
-      {product && (
+
+      <AnimatePresence>
+        {showFabricGuide && (
+          <div className="fixed inset-0 z-100 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm">
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setShowFabricGuide(false)}
+              className="absolute inset-0"
+            />
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 20 }}
+              className="relative w-full max-w-md bg-white rounded-3xl shadow-2xl overflow-hidden z-10"
+            >
+              <div className="p-8">
+                <div className="flex items-center gap-4 mb-8">
+                  <div className="w-12 h-12 rounded-2xl bg-black flex items-center justify-center text-white shrink-0 shadow-lg shadow-black/20">
+                    <BookOpen className="w-6 h-6" />
+                  </div>
+                  <div>
+                    <h3 className="text-xl font-extrabold text-black uppercase tracking-wider">Fabric Guide</h3>
+                    <p className="text-[10px] font-bold uppercase tracking-widest text-gray-400">Material Education</p>
+                  </div>
+                </div>
+
+                <div className="space-y-6">
+                  <div>
+                    <div className="text-[10px] font-black uppercase tracking-[0.2em] text-black mb-3">{activeFabric}</div>
+                    <p className="text-sm text-gray-600 leading-loose">
+                      {fabricGuide[activeFabric]?.description}
+                    </p>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-6 pt-6 border-t border-gray-100">
+                    <div>
+                      <h4 className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Common Origin</h4>
+                      <p className="text-xs font-bold text-black">{fabricGuide[activeFabric]?.origin}</p>
+                    </div>
+                    <div>
+                      <h4 className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Care Level</h4>
+                      <p className="text-xs font-bold text-black">{fabricGuide[activeFabric]?.care}</p>
+                    </div>
+                  </div>
+                </div>
+
+                <button
+                  onClick={() => setShowFabricGuide(false)}
+                  className="w-full mt-10 py-4 bg-black text-white text-[11px] font-bold uppercase tracking-[0.2em] rounded-2xl hover:bg-gray-900 transition-colors shadow-lg shadow-black/10 active:scale-[0.98]"
+                >
+                  Got it
+                </button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {isAuthModalOpen && (
+        <AuthGateModal
+          isOpen={isAuthModalOpen}
+          onClose={() => setIsAuthModalOpen(false)}
+          message={authModalConfig.message}
+          redirectPath={authModalConfig.redirectPath}
+        />
+      )}
+
+      {isZoomOpen && (
+        <div className="fixed inset-0 z-2000 bg-black/95 flex flex-col backdrop-blur-md">
+          {/* Close button */}
+          <div className="absolute top-6 right-6 z-2001">
+            <button
+              onClick={() => setIsZoomOpen(false)}
+              className="w-12 h-12 rounded-full bg-white/10 border border-white/20 text-white flex items-center justify-center hover:bg-white/20 transition-all hover:scale-105 active:scale-95"
+            >
+              <CloseIcon size={24} />
+            </button>
+          </div>
+
+          {/* Scrollable image container */}
+          <div className="flex-1 overflow-auto flex items-start justify-start cursor-zoom-out" onClick={() => setIsZoomOpen(false)}>
+            <img
+              src={galleryImages[activeImage]?.url || galleryImages[activeImage]}
+              alt={product.name}
+              className="block w-[150%] md:w-full h-auto object-contain mx-auto my-auto min-h-screen p-4"
+              draggable={false}
+              onClick={(e) => e.stopPropagation()}
+            />
+          </div>
+
+          {/* Thumbnail strip at bottom */}
+          {galleryImages.length > 1 && (
+            <div className="flex justify-center gap-3 p-4 bg-black/60 backdrop-blur-lg border-t border-white/10">
+              {galleryImages.map((img, i) => (
+                <button
+                  key={i}
+                  onClick={() => setActiveImage(i)}
+                  className={`w-14 h-16 md:w-16 md:h-20 rounded-xl overflow-hidden border-2 transition-all shrink-0 ${
+                    activeImage === i ? 'border-white opacity-100 scale-105' : 'border-transparent opacity-50 hover:opacity-100'
+                  }`}
+                >
+                  <img src={img.url || img} alt="" className="w-full h-full object-cover bg-gray-900" />
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+
+      {isReportModalOpen && (
         <ReportModal
           isOpen={isReportModalOpen}
           onClose={() => setIsReportModalOpen(false)}
-          reportedId={product.sellerId}
-          type="CustomerReportingSeller"
-          referenceId={product.id}
+          reportedId={product.id}
+          type="CustomerReportingProduct"
           reportedName={product.name}
         />
       )}

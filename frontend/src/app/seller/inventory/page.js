@@ -17,7 +17,8 @@ import {
   List as ListIcon,
   CheckCircle,
   AlertTriangle,
-  XCircle
+  XCircle,
+  Clock
 } from "lucide-react";
 import { usePathname, useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
@@ -226,9 +227,24 @@ export default function InventoryPage() {
                       </div>
 
                       <div className="flex items-center justify-between md:justify-end gap-3 pt-4 md:pt-0 border-t md:border-none border-[var(--border)]">
-                        <div className={`px-2 py-1 rounded-md text-[9px] font-bold tracking-widest uppercase flex items-center gap-1.5 border ${status === 'Active' ? 'bg-green-50 text-green-700 border-green-200' : status === 'Low Stock' ? 'bg-amber-50 text-amber-700 border-amber-200' : 'bg-red-50 text-red-700 border-red-200'}`}>
-                          {status === 'Active' ? <CheckCircle className="w-3 h-3" /> : <AlertTriangle className="w-3 h-3" />} {status}
+                        <div className={`px-2 py-1 rounded-md text-[9px] font-bold tracking-widest uppercase flex items-center gap-1.5 border ${
+                          product.status === 'approved' 
+                            ? 'bg-green-50 text-green-700 border-green-200' 
+                            : product.status === 'pending'
+                            ? 'bg-amber-50 text-amber-700 border-amber-200'
+                            : 'bg-red-50 text-red-700 border-red-200'
+                        }`}>
+                          {product.status === 'approved' ? <CheckCircle className="w-3 h-3" /> : product.status === 'pending' ? <Clock className="w-3 h-3" /> : <AlertTriangle className="w-3 h-3" />} 
+                          {product.status?.toUpperCase() || 'UNKNOWN'}
                         </div>
+                        {product.status === 'rejected' && (
+                          <div className="group/reason relative">
+                            <AlertTriangle className="w-4 h-4 text-red-500 cursor-help" />
+                            <div className="absolute bottom-full right-0 mb-2 w-48 p-2 bg-white border border-red-100 rounded-lg shadow-xl text-[9px] font-bold text-red-700 opacity-0 group-hover/reason:opacity-100 transition-opacity z-10 pointer-events-none">
+                              REASON: {product.rejectionReason || "No reason provided."}
+                            </div>
+                          </div>
+                        )}
                         <div className="flex gap-1.5">
                           <button
                             onClick={() => router.push(`/seller/inventory/edit?id=${product.id}`)}

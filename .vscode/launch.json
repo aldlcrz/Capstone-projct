@@ -44,18 +44,4 @@
         "group": "lumbarong",
         "order": 3
       }
-    },
-    {
-      "name": "Flutter App",
-      "type": "dart",
-      "request": "launch",
-      "cwd": "${workspaceFolder}/flutter_app",
-      "program": "${workspaceFolder}/flutter_app/lib/main.dart",
-      "flutterMode": "debug",
-      "presentation": {
-        "group": "lumbarong",
-        "order": 5
-      }
     }
-  ]
-}

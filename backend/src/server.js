@@ -7,16 +7,20 @@ const PORT = process.env.PORT || 5000;
 
 const startServer = async () => {
   try {
-    // Create database if it doesn't exist
-    const mysql = require('mysql2/promise');
-    const connection = await mysql.createConnection({
-      host: process.env.DB_HOST || '127.0.0.1',
-      user: process.env.DB_USER || 'root',
-      password: process.env.DB_PASS || '',
-    });
-    await connection.query(`CREATE DATABASE IF NOT EXISTS \`${process.env.DB_NAME || 'lumbarong'}\`;`);
-    await connection.end();
-    console.log('✅ Database checking/creation complete');
+    // Create database if it doesn't exist (optional, might fail on shared hosting)
+    try {
+      const mysql = require('mysql2/promise');
+      const connection = await mysql.createConnection({
+        host: process.env.DB_HOST || '127.0.0.1',
+        user: process.env.DB_USER || 'root',
+        password: process.env.DB_PASS || '',
+      });
+      await connection.query(`CREATE DATABASE IF NOT EXISTS \`${process.env.DB_NAME || 'lumbarong'}\`;`);
+      await connection.end();
+      console.log('✅ Database checking/creation complete');
+    } catch (dbError) {
+      console.log('⚠️ Database creation skipped or failed (common on production hosting):', dbError.message);
+    }
 
     // Authenticate and sync the models
     await sequelize.authenticate();

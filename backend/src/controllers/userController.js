@@ -47,7 +47,12 @@ exports.getProfile = async (req, res) => {
 
 exports.updateProfile = async (req, res) => {
     try {
-        const { name, mobileNumber, gcashNumber, gcashQrCode, mayaNumber, mayaQrCode, profilePhoto, facebookLink, instagramLink, tiktokLink, youtubeLink, socialLinks, shopHouseNo, shopStreet, shopAddress, shopBarangay, shopCity, shopProvince, shopPostalCode, shopLatitude, shopLongitude } = req.body;
+        const { 
+            name, mobileNumber, gcashNumber, gcashQrCode, mayaNumber, mayaQrCode, profilePhoto, 
+            facebookLink, instagramLink, tiktokLink, youtubeLink, socialLinks, 
+            shopHouseNo, shopStreet, shopAddress, shopBarangay, shopCity, shopProvince, shopPostalCode, shopLatitude, shopLongitude,
+            username, gender, birthday
+        } = req.body;
         const user = await User.findByPk(req.user.id);
         if (!user) return res.status(404).json({ message: 'User not found' });
         
@@ -79,6 +84,9 @@ exports.updateProfile = async (req, res) => {
         if (shopPostalCode !== undefined) updateData.shopPostalCode = validatePostalCode(shopPostalCode, { required: false });
         if (shopLatitude !== undefined) updateData.shopLatitude = shopLatitude;
         if (shopLongitude !== undefined) updateData.shopLongitude = shopLongitude;
+        if (username !== undefined) updateData.username = username;
+        if (gender !== undefined) updateData.gender = gender;
+        if (birthday !== undefined) updateData.birthday = birthday;
 
         await user.update(updateData);
 

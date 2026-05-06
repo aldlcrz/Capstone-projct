@@ -18,6 +18,11 @@ router.put('/verify-seller/:id', protect, authorize('admin'), adminController.ve
 router.put('/reject-seller/:id', protect, authorize('admin'), adminController.rejectSeller);
 router.get('/seller-performance', protect, authorize('admin'), adminController.getSellerPerformance);
 
+// Product Approvals
+router.get('/pending-products', protect, authorize('admin'), adminController.getPendingProducts);
+router.put('/approve-product/:id', protect, authorize('admin'), adminController.approveProduct);
+router.put('/reject-product/:id', protect, authorize('admin'), adminController.rejectProduct);
+
 // System Settings
 router.get('/settings', protect, authorize('admin'), adminController.getSettings);
 router.put('/settings', protect, authorize('admin'), adminController.updateSettings);

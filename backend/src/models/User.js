@@ -11,6 +11,11 @@ const User = sequelize.define('User', {
     type: DataTypes.STRING,
     allowNull: false,
   },
+  username: {
+    type: DataTypes.STRING,
+    allowNull: true,
+    unique: true,
+  },
   email: {
     type: DataTypes.STRING,
     allowNull: false,
@@ -33,6 +38,10 @@ const User = sequelize.define('User', {
   },
   profilePhoto: {
     type: DataTypes.STRING,
+    allowNull: true,
+  },
+  bio: {
+    type: DataTypes.TEXT,
     allowNull: true,
   },
   indigencyCertificate: {
@@ -122,6 +131,14 @@ const User = sequelize.define('User', {
   isAdult: {
     type: DataTypes.BOOLEAN,
     defaultValue: false,
+  },
+  gender: {
+    type: DataTypes.ENUM('male', 'female', 'other'),
+    allowNull: true,
+  },
+  birthday: {
+    type: DataTypes.DATEONLY,
+    allowNull: true,
   },
   fcmToken: {
     type: DataTypes.STRING,

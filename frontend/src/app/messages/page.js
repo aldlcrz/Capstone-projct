@@ -41,28 +41,11 @@ function MessagesThreadManager() {
 
   useEffect(() => {
     try {
-      // Strictly use customer_user for storefront messages to prevent admin/seller session hijacking
       const customerData = getStoredUserForRole("customer");
       setUserRole(customerData?.role || "customer");
     } catch (e) {
       setUserRole("customer");
     }
-
-    // Solve double scrollbar issue by locking the outer body and layout main container
-    document.body.style.overflow = 'hidden';
-    const mainEl = document.querySelector('main');
-    if (mainEl) {
-      mainEl.style.overflow = 'hidden';
-      mainEl.style.height = '100dvh'; // Lock height to prevent bounce
-    }
-
-    return () => {
-      document.body.style.overflow = 'auto';
-      if (mainEl) {
-        mainEl.style.overflow = 'auto';
-        mainEl.style.height = 'auto';
-      }
-    };
   }, []);
 
   const { socket } = useSocket();
@@ -307,7 +290,7 @@ function MessagesUI({
 
   if (isUnauthorized) {
     return (
-      <Layout>
+      <Layout contentPadding="p-0">
         <div className="max-w-7xl mx-auto h-[calc(100vh-140px)] flex flex-col items-center justify-center text-center px-4">
           <div className="artisan-card max-w-md p-10 flex flex-col items-center space-y-8 animate-fade-up">
             <div className="w-20 h-20 bg-(--cream) rounded-full flex items-center justify-center">
@@ -339,10 +322,10 @@ function MessagesUI({
   }
 
   return (
-    <Layout>
+    <Layout contentPadding="p-0">
       {/* Messaging Wrapper */}
-      <div className="lg:max-w-7xl lg:mx-auto lg:h-[calc(100vh-140px)] lg:rounded-3xl lg:overflow-hidden lg:shadow-2xl lg:border lg:border-(--border)
-                      max-lg:fixed max-lg:top-[72px] max-lg:bottom-[calc(80px+var(--safe-bottom,0px))] max-lg:left-0 max-lg:right-0 
+      <div className="lg:max-w-full lg:mx-0 lg:h-[calc(100vh-180px)] lg:border-0 lg:shadow-none
+                      max-lg:fixed max-lg:top-[120px] max-lg:bottom-[calc(80px+var(--safe-bottom,0px))] max-lg:left-0 max-lg:right-0 
                       flex flex-col lg:grid lg:grid-cols-[384px_minmax(0,1fr)] bg-white min-h-0 z-10">
         {/* Thread List */}
         <aside className={`w-full lg:w-auto border-r border-(--border) flex flex-col bg-white min-h-0 ${activeThread ? 'hidden lg:flex' : 'flex'}`}>
@@ -424,7 +407,7 @@ function MessagesUI({
                     <ChevronLeft className="w-6 h-6" />
                   </button>
  
-                  <div className="w-9 h-9 rounded-full flex items-center justify-center text-white text-sm font-bold shadow-md bg-[#FAD4C0] !text-[#7A2A10]">
+                  <div className="w-9 h-9 rounded-full flex items-center justify-center text-sm font-bold shadow-md bg-[#FAD4C0] text-[#7A2A10]!">
                     {activeThread.otherUser?.name?.[0] || "?"}
                   </div>
                   <div>

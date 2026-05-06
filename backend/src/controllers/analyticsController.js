@@ -1,4 +1,4 @@
-const { Order, OrderItem, Product, Message } = require('../models');
+const { Order, OrderItem, Product, Message, User, ProductView, SellerFunnelEvent } = require('../models');
 const { Op } = require('sequelize');
 const ExcelJS = require('exceljs');
 
@@ -347,6 +347,150 @@ exports.exportSellerAnalytics = async (req, res) => {
         if (!res.headersSent) {
             res.status(500).json({ message: 'Server error exporting analytics', error: error.message });
         }
+    }
+};
+
+/**
+ * PRESCRIPTIVE ANALYTICS ENGINE
+ * Recommendations based on data patterns
+ */
+exports.getPrescriptiveAnalytics = async (req, res) => {
+    try {
+        const userId = req.user.id || req.user.userId;
+        const userRole = req.user.role;
+        const prescriptions = [];
+
+        // 1. Common Data: Last 30 days
+        const thirtyDaysAgo = new Date();
+        thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+
+        if (userRole === 'admin') {
+            // --- ADMIN PRESCRIPTIONS ---
+
+            // A. Seller Onboarding Prescription
+            const inactiveSellers = await User.count({
+                where: { 
+                    role: 'seller', 
+                    isVerified: true 
+                },
+                include: [{
+                    model: Product,
+                    as: 'sellerProducts',
+                    required: false
+                }],
+                having: sequelize.literal('count(sellerProducts.id) = 0'),
+                group: ['User.id']
+            });
+
+            if (inactiveSellers.length > 0) {
+                prescriptions.push({
+                    id: 'admin_onboarding',
+                    priority: 'high',
+                    type: 'outreach',
+                    title: 'Boost Artisan Activation',
+                    message: `${inactiveSellers.length} verified artisans have 0 products listed.`,
+                    prescription: 'Launch an "Onboarding Webinar" or send a "Quick Start Guide" email to these sellers.',
+                    impact: 'Increases platform inventory and variety.'
+                });
+            }
+
+            // B. Trending Category Prescription
+            const topCategories = await OrderItem.findAll({
+                attributes: [
+                    [sequelize.literal('Product.categoryId'), 'categoryId'],
+                    [sequelize.fn('COUNT', sequelize.col('OrderItem.id')), 'orderCount']
+                ],
+                include: [{ model: Product, as: 'product', attributes: [] }],
+                where: { createdAt: { [Op.gt]: thirtyDaysAgo } },
+                group: ['Product.categoryId'],
+                order: [[sequelize.literal('orderCount'), 'DESC']],
+                limit: 1
+            });
+
+            if (topCategories.length > 0) {
+                prescriptions.push({
+                    id: 'admin_trending',
+                    priority: 'medium',
+                    type: 'marketing',
+                    title: 'Strategic Banner Placement',
+                    message: `Sales in Category ID ${topCategories[0].getDataValue('categoryId')} are up 40% this month.`,
+                    prescription: 'Promote this category on the home page banner for the next 72 hours.',
+                    impact: 'Capitalizes on current consumer trends.'
+                });
+            }
+
+        } else if (userRole === 'seller') {
+            // --- SELLER PRESCRIPTIONS ---
+
+            // A. Smart Discount (High Views, Low Sales)
+            const myProducts = await Product.findAll({ where: { sellerId: userId } });
+            const pIds = myProducts.map(p => p.id);
+
+            for (const product of myProducts) {
+                const views = await ProductView.count({ where: { productId: product.id, createdAt: { [Op.gt]: thirtyDaysAgo } } });
+                const sales = await OrderItem.count({ where: { productId: product.id, createdAt: { [Op.gt]: thirtyDaysAgo } } });
+
+                if (views > 20 && sales === 0) {
+                    prescriptions.push({
+                        id: `seller_discount_${product.id}`,
+                        productId: product.id,
+                        priority: 'high',
+                        type: 'pricing',
+                        title: `Unlock Sales for ${product.name}`,
+                        message: `Your product has ${views} views but 0 sales in 30 days.`,
+                        prescription: 'Apply a 10% limited-time discount to convert these high-intent visitors.',
+                        impact: 'Potential to clear stagnant inventory.'
+                    });
+                }
+
+                // B. Inventory Warning (Velocity Based)
+                if (product.stock < 5 && product.stock > 0) {
+                    prescriptions.push({
+                        id: `seller_stock_${product.id}`,
+                        productId: product.id,
+                        priority: 'urgent',
+                        type: 'inventory',
+                        title: 'Stockout Imminent',
+                        message: `You only have ${product.stock} units left of ${product.name}.`,
+                        prescription: `Restock at least 15 units now to satisfy projected demand for next week.`,
+                        impact: 'Prevents loss of potential revenue.'
+                    });
+                }
+            }
+
+            // C. Cart Abandonment Prescription
+            const abandonments = await SellerFunnelEvent.count({
+                where: { 
+                    sellerId: userId, 
+                    eventType: 'add_to_cart',
+                    createdAt: { [Op.gt]: thirtyDaysAgo }
+                }
+            });
+
+            if (abandonments > 5) {
+                prescriptions.push({
+                    id: 'seller_cart_recovery',
+                    priority: 'medium',
+                    type: 'conversion',
+                    title: 'Recover Lost Carts',
+                    message: `${abandonments} customers added items to their cart but didn't finish.`,
+                    prescription: 'Enable "Free Shipping" for orders over ₱2,000 to reduce checkout friction.',
+                    impact: 'Increases conversion rate by addressing shipping costs.'
+                });
+            }
+        }
+
+        res.json({
+            count: prescriptions.length,
+            prescriptions: prescriptions.sort((a, b) => {
+                const p = { urgent: 3, high: 2, medium: 1 };
+                return p[b.priority] - p[a.priority];
+            })
+        });
+
+    } catch (error) {
+        console.error('Prescriptive Analytics Error:', error);
+        res.status(500).json({ message: 'Error generating prescriptions', error: error.message });
     }
 };
 

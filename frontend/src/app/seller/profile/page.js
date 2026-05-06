@@ -28,10 +28,9 @@ export default function SellerProfile() {
     tiktokLink: '',
     youtubeLink: '',
     socialLinks: [],
-    gcashNumber: '',
-    gcashName: '',
     mayaNumber: '',
-    mayaName: ''
+    mayaName: '',
+    bio: ''
   });
   const [qrFile, setQrFile] = useState(null);
   const [mayaQrFile, setMayaQrFile] = useState(null);
@@ -396,7 +395,8 @@ export default function SellerProfile() {
                           gcashNumber: user.gcashNumber || '',
                           gcashName: user.gcashName || '',
                           mayaNumber: user.mayaNumber || '',
-                          mayaName: user.mayaName || ''
+                          mayaName: user.mayaName || '',
+                          bio: user.bio || ''
                         });
                         setQrFile(null);
                         setMayaQrFile(null);
@@ -467,6 +467,16 @@ export default function SellerProfile() {
                 <div className="space-y-2">
                   <label className="text-[10px] font-bold text-[var(--muted)] uppercase tracking-widest">Mobile Number</label>
                   <input type="text" value={formData.mobileNumber} inputMode="numeric" maxLength={INPUT_LIMITS.mobileNumber} onChange={e => setFormData({ ...formData, mobileNumber: sanitizePhoneInput(e.target.value) })} className="w-full p-4 border border-[var(--border)] rounded-xl bg-[var(--input-bg)] text-sm text-[var(--charcoal)] focus:outline-none focus:border-[var(--rust)] focus:ring-1 focus:ring-[var(--rust)]" />
+                </div>
+                <div className="col-span-full space-y-2">
+                  <label className="text-[10px] font-bold text-[var(--muted)] uppercase tracking-widest">Artisan Bio / Story</label>
+                  <textarea 
+                    value={formData.bio} 
+                    onChange={e => setFormData({ ...formData, bio: e.target.value })} 
+                    placeholder="Tell your story as an artisan... e.g. 'Third generation hand-embroiderer from Lumban, specializing in Piña Calado...'"
+                    className="w-full p-4 border border-[var(--border)] rounded-xl bg-[var(--input-bg)] text-sm text-[var(--charcoal)] focus:outline-none focus:border-[var(--rust)] focus:ring-1 focus:ring-[var(--rust)] h-32 resize-none"
+                  />
+                  <p className="text-[9px] text-[var(--muted)] italic">This story will be featured on your product pages to build trust with customers.</p>
                 </div>
                 <div className="col-span-full pt-6 border-t border-[var(--border)]">
                   <div className="flex items-center justify-between mb-6">

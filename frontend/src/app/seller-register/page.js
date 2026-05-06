@@ -34,18 +34,21 @@ const itemVariants = {
 export default function RegisterPage() {
   const [step, setStep] = useState(1);
   const [loading, setLoading] = useState(false);
-  const [formData, setFormData] = useState({ name: "", email: "", password: "", confirmPassword: "", role: "customer" });
+  const [formData, setFormData] = useState({ name: "", email: "", password: "", confirmPassword: "", role: "seller" });
+  const [certificate, setCertificate] = useState(null);
+  const [validId, setValidId] = useState(null);
+  const [gcashQrCode, setGcashQrCode] = useState(null);
   const [sellerData, setSellerData] = useState({ mobileNumber: "", gcashNumber: "", isAdult: false });
   const [error, setError] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const router = useRouter();
 
-  const handleNext = async (e) => {
+  const handleNext = (e) => {
     e.preventDefault();
     setError("");
 
     try {
-      validatePersonName(formData.name, "Username");
+      validatePersonName(formData.name, "Registry name");
     } catch (err) {
       setError(err.message);
       return;
@@ -77,16 +80,59 @@ export default function RegisterPage() {
       return;
     }
 
+    if (step === 1) setStep(2);
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
     setLoading(true);
+    setError("");
     const data = new FormData();
     data.append("name", formData.name);
     data.append("email", formData.email);
     data.append("password", formData.password);
-    data.append("role", "customer");
+    data.append("role", formData.role);
+    if (formData.role === "seller") {
+      if (!certificate || !validId || !gcashQrCode || !sellerData.mobileNumber || !sellerData.gcashNumber) {
+        setError("All seller verification fields are required.");
+        setLoading(false);
+        return;
+      }
 
+      const uploadChecks = await Promise.all([
+        validateImageFile(certificate, "Indigency certificate"),
+        validateImageFile(validId, "Valid ID"),
+        validateImageFile(gcashQrCode, "GCash QR image"),
+      ]);
+
+      const firstUploadError = uploadChecks.find(Boolean);
+      if (firstUploadError) {
+        setError(firstUploadError);
+        setLoading(false);
+        return;
+      }
+
+      let cleanMobile = "";
+      let cleanGcash = "";
+      try {
+        cleanMobile = validatePhilippineMobileNumber(sellerData.mobileNumber, "Mobile number");
+        cleanGcash = validatePhilippineMobileNumber(sellerData.gcashNumber, "GCash number");
+      } catch (err) {
+        setError(err.message);
+        setLoading(false);
+        return;
+      }
+
+      data.append("indigencyCertificate", certificate);
+      data.append("validId", validId);
+      data.append("gcashQrCode", gcashQrCode);
+      data.append("mobileNumber", cleanMobile);
+      data.append("gcashNumber", cleanGcash);
+      data.append("isAdult", sellerData.isAdult);
+    }
     try {
       await api.post("/auth/register", data, { headers: { "Content-Type": "multipart/form-data" } });
-      setStep(2); // Go to success step (which will be index 2 now)
+      setStep(3);
     } catch (error) {
       setError(getApiErrorMessage(error, "Registration failed. Please audit your information."));
     } finally {
@@ -172,12 +218,26 @@ export default function RegisterPage() {
                   </span>
                 </Link>
                 <div className="text-[9px] font-bold uppercase tracking-[0.3em]" style={{ color: "var(--muted, #8C7B70)" }}>
-                  Customer Registration
+                  Seller Registration
                 </div>
               </div>
             </div>
 
-            {/* Progress Steps removed for single step */}
+            {/* Progress Steps */}
+            <div className="flex items-center justify-center mt-8 mb-6 max-w-[280px] mx-auto px-4">
+              <div className="flex items-center w-full">
+                <div className="w-8 h-8 rounded-full flex items-center justify-center text-[10px] font-bold transition-all duration-500 shrink-0"
+                  style={{ background: step >= 1 ? "var(--rust, #C0422A)" : "var(--input-bg, #F9F6F2)", color: step >= 1 ? "white" : "var(--muted)", boxShadow: step >= 1 ? "0 4px 12px rgba(192,66,42,0.25)" : "none" }}>
+                  1
+                </div>
+                <div className="flex-1 h-px transition-all duration-700 mx-4"
+                  style={{ background: step > 1 ? "var(--rust, #C0422A)" : "var(--border, #E5DDD5)" }} />
+                <div className="w-8 h-8 rounded-full flex items-center justify-center text-[10px] font-bold transition-all duration-500 shrink-0"
+                  style={{ background: step >= 2 ? "var(--rust, #C0422A)" : "var(--input-bg, #F9F6F2)", color: step >= 2 ? "white" : "var(--muted)", boxShadow: step >= 2 ? "0 4px 12px rgba(192,66,42,0.25)" : "none" }}>
+                  2
+                </div>
+              </div>
+            </div>
           </motion.div>
 
           {/* Error */}
@@ -199,7 +259,7 @@ export default function RegisterPage() {
             {step === 1 && (
               <motion.form key="step1" initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 20 }} transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }} onSubmit={handleNext} className="space-y-6" autoComplete="off">
                 <motion.div variants={itemVariants} className="space-y-2">
-                  <label style={labelStyle}>Username</label>
+                  <label style={labelStyle}>Registry Name</label>
                   <div className="relative">
                     <User className="absolute left-6 top-1/2 -translate-y-1/2 w-4 h-4" style={{ color: "var(--border)" }} />
                     <input type="text" style={inputStyle} placeholder="" required value={formData.name} name="register_name" autoComplete="off"
@@ -289,16 +349,107 @@ export default function RegisterPage() {
               </motion.form>
             )}
 
-            {/* Step 2 Success */}
+            {/* Step 2 */}
             {step === 2 && (
-              <motion.div key="step2" initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }} className="text-center py-8">
+              <motion.form key="step2" initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 20 }} transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }} onSubmit={handleSubmit} className="space-y-8" autoComplete="off">
+                <div className="space-y-2">
+                  <label style={labelStyle}>Seller Verification</label>
+                  <p className="text-[10px] text-gray-500 italic ml-5 mb-4">Please provide your details for account verification.</p>
+                </div>
+
+                {/* Seller fields */}
+                <div className={`space-y-6 transition-all duration-500`}>
+                  <div className="grid grid-cols-2 gap-4">
+                    {[
+                      { label: "Mobile", placeholder: "09xx-xxx-xxxx", key: "mobileNumber" },
+                      { label: "GCash", placeholder: "09xx-xxx-xxxx", key: "gcashNumber" },
+                    ].map((field) => (
+                      <div key={field.key} className="space-y-2">
+                        <label style={labelStyle}>{field.label}</label>
+                        <input type="text"
+                          style={{ ...inputStyle, paddingLeft: "1.5rem" }}
+                          placeholder={field.placeholder}
+                          value={sellerData[field.key]}
+                          autoComplete="off"
+                          maxLength={INPUT_LIMITS.mobileNumber}
+                          onChange={(e) => setSellerData({ ...sellerData, [field.key]: sanitizePhoneInput(e.target.value) })}
+                          onFocus={handleFocus} onBlur={handleBlur} />
+                      </div>
+                    ))}
+                  </div>
+
+                  <div className="space-y-3">
+                    <label style={labelStyle}>Requirements</label>
+                    <div className="grid grid-cols-3 gap-3">
+                      {[
+                        { id: "cert", label: "Indigency", file: certificate, set: setCertificate },
+                        { id: "id", label: "Valid ID", file: validId, set: setValidId },
+                        { id: "qr", label: "GCash QR", file: gcashQrCode, set: setGcashQrCode },
+                      ].map((item) => (
+                        <div key={item.id}
+                          className="rounded-2xl p-4 text-center cursor-pointer flex flex-col items-center justify-center min-h-[90px] transition-all duration-300"
+                          style={{ border: `1.5px dashed ${item.file ? "var(--rust)" : "var(--border)"}`, background: item.file ? "#FEF0EE" : "var(--input-bg)" }}
+                          onClick={() => document.getElementById(`${item.id}-upload`).click()}>
+                          <Upload className="w-4 h-4 mb-2" style={{ color: item.file ? "var(--rust)" : "var(--muted)" }} />
+                          <div className="text-[7px] font-bold uppercase leading-tight line-clamp-2" style={{ color: "var(--muted)" }}>
+                            {item.file ? item.file.name : item.label}
+                          </div>
+                          <input
+                            id={`${item.id}-upload`}
+                            type="file"
+                            accept="image/jpeg,image/png"
+                            className="hidden"
+                            onChange={async (e) => {
+                              const file = e.target.files[0];
+                              if (file) {
+                                const validationError = await validateImageFile(file, item.label);
+                                if (validationError) {
+                                  setError(validationError);
+                                  e.target.value = "";
+                                  item.set(null);
+                                  return;
+                                }
+                              }
+                              setError("");
+                              item.set(file || null);
+                            }}
+                          />
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                </div>
+
+                <div className="flex gap-4">
+                  <button type="button" onClick={() => setStep(1)}
+                    className="flex-1 font-bold uppercase text-[9px] tracking-widest transition-all"
+                    style={{ padding: "0.875rem", borderRadius: "9999px", border: "1.5px solid var(--border)", color: "var(--muted)", background: "transparent" }}
+                    onMouseEnter={(e) => { e.currentTarget.style.background = "var(--input-bg)"; }}
+                    onMouseLeave={(e) => { e.currentTarget.style.background = "transparent"; }}>
+                    Back
+                  </button>
+                  <motion.button type="submit" disabled={loading} whileHover={{ scale: loading ? 1 : 1.02 }} whileTap={{ scale: loading ? 1 : 0.97 }} transition={{ type: "spring", stiffness: 400, damping: 20 }}
+                    className="flex-2 text-white text-[10px] font-bold uppercase tracking-[0.2em] flex items-center justify-center gap-2 disabled:opacity-50"
+                    style={{ padding: "0.875rem", borderRadius: "9999px", background: "var(--rust, #C0422A)", boxShadow: "0 6px 20px rgba(192,66,42,0.2)", transition: "background 0.3s" }}
+                    onMouseEnter={(e) => { e.currentTarget.style.background = "var(--rust-light, #E8604A)"; }}
+                    onMouseLeave={(e) => { e.currentTarget.style.background = "var(--rust, #C0422A)"; }}>
+                    {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : "Sign Up"}
+                  </motion.button>
+                </div>
+              </motion.form>
+            )}
+
+            {/* Step 3 — Success */}
+            {step === 3 && (
+              <motion.div key="step3" initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }} className="text-center py-8">
                 <div className="w-20 h-20 rounded-3xl flex items-center justify-center mx-auto mb-8 shadow-xl"
                   style={{ background: "var(--input-bg)", color: "var(--sage, #8FA882)", transform: "rotate(6deg)" }}>
                   <CheckCircle2 className="w-10 h-10" />
                 </div>
-                <h2 className="font-serif text-2xl font-black mb-4" style={{ color: "var(--charcoal)" }}>Welcome!</h2>
+                <h2 className="font-serif text-2xl font-black mb-4" style={{ color: "var(--charcoal)" }}>Application Received!</h2>
                 <p className="max-w-xs mx-auto mb-10 text-[11px] font-medium leading-relaxed italic" style={{ color: "var(--muted)" }}>
-                  Your account has been created successfully. You may now explore our curated collection.
+                  Your heritage seller application has been logged. Our curators will review your credentials within 24 hours.
                 </p>
                 <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.97 }} transition={{ type: "spring", stiffness: 400, damping: 20 }}>
                   <Link href="/"
@@ -306,16 +457,15 @@ export default function RegisterPage() {
                     style={{ padding: "1rem 2.5rem", borderRadius: "9999px", background: "var(--bark, #3D2B1F)" }}
                     onMouseEnter={(e) => { e.currentTarget.style.background = "var(--rust, #C0422A)"; }}
                     onMouseLeave={(e) => { e.currentTarget.style.background = "var(--bark, #3D2B1F)"; }}>
-                    Start Shopping <ArrowRight className="w-4 h-4" />
+                    Begin Journey <ArrowRight className="w-4 h-4" />
                   </Link>
                 </motion.div>
               </motion.div>
             )}
-
           </AnimatePresence>
 
           {/* Footer */}
-          {step < 2 && (
+          {step < 3 && (
             <motion.div variants={itemVariants} className="mt-10 text-center">
               <p className="text-[10px] font-bold uppercase tracking-widest" style={{ color: "var(--muted, #8C7B70)" }}>
                 Already Registered?{" "}

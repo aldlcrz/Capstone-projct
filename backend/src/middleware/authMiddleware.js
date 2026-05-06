@@ -150,4 +150,21 @@ authMiddleware.maybeProtect = async (req, res, next) => {
     next();
 };
 
+// 5. Convenience role wrappers
+authMiddleware.isAdmin = [authMiddleware.protect, authMiddleware.authorize('admin')];
+authMiddleware.isSeller = [
+    authMiddleware.protect, 
+    authMiddleware.authorize('seller'),
+    (req, res, next) => {
+        if (!req.user.isVerified) {
+            return res.status(403).json({ 
+                message: 'Account pending approval', 
+                status: 'pending_verification' 
+            });
+        }
+        next();
+    }
+];
+authMiddleware.isCustomer = [authMiddleware.protect, authMiddleware.authorize('customer')];
+
 module.exports = authMiddleware;

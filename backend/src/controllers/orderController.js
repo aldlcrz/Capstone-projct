@@ -33,7 +33,7 @@ const parsePrice = (value) => {
 
 const orderIncludes = [
   { model: User, as: 'customer', attributes: ['id', 'name', 'email'] },
-  { model: User, as: 'seller', attributes: ['id', 'name', 'email', 'isVerified'] },
+  { model: User, as: 'seller', attributes: ['id', 'name', 'email', 'isVerified', 'gcashNumber', 'gcashQrCode', 'mayaNumber', 'mayaQrCode'] },
   {
     model: OrderItem,
     as: 'items',

@@ -14,7 +14,8 @@ export default function AdminProducts() {
   const [products, setProducts] = useState([]);
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState("products"); // "products" or "categories"
+  const [activeTab, setActiveTab] = useState("products"); // "products", "categories", or "pending"
+  const [pendingProducts, setPendingProducts] = useState([]);
   const [newCategory, setNewCategory] = useState({ name: "", description: "" });
   const [editingCategory, setEditingCategory] = useState(null);
   const [searchQuery, setSearchQuery] = useState("");
@@ -26,13 +27,30 @@ export default function AdminProducts() {
   const [deleteReason, setDeleteReason] = useState("");
   const [isDeleting, setIsDeleting] = useState(false);
 
+  // Approval state
+  const [showApproveModal, setShowApproveModal] = useState(false);
+  const [showRejectModal, setShowRejectModal] = useState(false);
+  const [approvalTarget, setApprovalTarget] = useState(null);
+  const [rejectionReason, setRejectionReason] = useState("");
+  const [isProcessingApproval, setIsProcessingApproval] = useState(false);
+
   const fetchProducts = useCallback(async () => {
     try {
       const res = await api.get("/products");
       setProducts(res.data);
     } catch (err) {
       console.warn("Failed to fetch products", err.message || "Backend offline");
-      setProducts([]); // Fallback to empty array
+      setProducts([]); 
+    }
+  }, []);
+
+  const fetchPendingProducts = useCallback(async () => {
+    try {
+      const res = await api.get("/admin/pending-products");
+      setPendingProducts(res.data);
+    } catch (err) {
+      console.warn("Failed to fetch pending products", err.message);
+      setPendingProducts([]);
     }
   }, []);
 
@@ -42,18 +60,18 @@ export default function AdminProducts() {
       setCategories(res.data);
     } catch (err) {
       console.warn("Failed to fetch categories", err.message || "Backend offline");
-      setCategories([]); // Fallback to empty array
+      setCategories([]); 
     }
   }, []);
 
   const fetchData = useCallback(async () => {
     setLoading(true);
     try {
-      await Promise.all([fetchProducts(), fetchCategories()]);
+      await Promise.all([fetchProducts(), fetchCategories(), fetchPendingProducts()]);
     } finally {
       setLoading(false);
     }
-  }, [fetchProducts, fetchCategories]);
+  }, [fetchProducts, fetchCategories, fetchPendingProducts]);
 
   const { socket } = useSocket();
 
@@ -72,6 +90,36 @@ export default function AdminProducts() {
       socket.off("dashboard_update", handleStatsUpdate);
     };
   }, [socket, fetchData]);
+
+  const handleApprove = async (id) => {
+    setIsProcessingApproval(true);
+    try {
+      await api.put(`/admin/approve-product/${id}`);
+      setSuccess("Product approved and is now live!");
+      fetchData();
+    } catch (err) {
+      setError(err.response?.data?.message || "Failed to approve product");
+    } finally {
+      setIsProcessingApproval(false);
+      setShowApproveModal(false);
+    }
+  };
+
+  const handleReject = async (id) => {
+    if (!rejectionReason.trim()) return;
+    setIsProcessingApproval(true);
+    try {
+      await api.put(`/admin/reject-product/${id}`, { reason: rejectionReason });
+      setSuccess("Product rejected.");
+      fetchData();
+    } catch (err) {
+      setError(err.response?.data?.message || "Failed to reject product");
+    } finally {
+      setIsProcessingApproval(false);
+      setShowRejectModal(false);
+      setRejectionReason("");
+    }
+  };
 
   const handleDeleteClick = (product) => {
     setDeleteTarget(product);
@@ -163,6 +211,11 @@ export default function AdminProducts() {
     c.description?.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
+  const filteredPending = pendingProducts.filter(p =>
+    p.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    p.seller?.name?.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
   return (
     <AdminLayout>
       <div className="space-y-6 mb-16 sm:mb-20">
@@ -176,12 +229,18 @@ export default function AdminProducts() {
               Overseeing all heritage collections and segments.
             </p>
           </div>
-          <div className="flex items-center p-1 sm:p-1.5 bg-white rounded-2xl border border-[var(--border)] shadow-sm w-fit mx-auto lg:mx-0">
+          <div className="flex items-center p-1 sm:p-1.5 bg-white rounded-2xl border border-[var(--border)] shadow-sm w-fit mx-auto lg:mx-0 overflow-x-auto no-scrollbar">
             <button
               onClick={() => setActiveTab("products")}
               className={`flex items-center gap-1.5 sm:gap-2 px-3 sm:px-6 py-2 sm:py-2.5 rounded-xl text-[9px] sm:text-[10px] font-black uppercase tracking-widest transition-all whitespace-nowrap ${activeTab === "products" ? 'bg-red-50 text-[var(--rust)] shadow-sm ring-1 ring-red-100' : 'text-[var(--muted)] hover:bg-[var(--cream)]'}`}
             >
               <Package className="w-3 sm:w-3.5 h-3 sm:h-3.5" /> Products
+            </button>
+            <button
+              onClick={() => setActiveTab("pending")}
+              className={`flex items-center gap-1.5 sm:gap-2 px-3 sm:px-6 py-2 sm:py-2.5 rounded-xl text-[9px] sm:text-[10px] font-black uppercase tracking-widest transition-all whitespace-nowrap ${activeTab === "pending" ? 'bg-red-50 text-[var(--rust)] shadow-sm ring-1 ring-red-100' : 'text-[var(--muted)] hover:bg-[var(--cream)]'}`}
+            >
+              <CheckCircle2 className="w-3 sm:w-3.5 h-3 sm:h-3.5" /> Pending ({pendingProducts.length})
             </button>
             <button
               onClick={() => setActiveTab("categories")}
@@ -271,14 +330,97 @@ export default function AdminProducts() {
                             </div>
                           </td>
                           <td className="px-5 py-3 sm:py-4 whitespace-nowrap">
-                            <div className="inline-flex items-center gap-1 sm:gap-1.5 px-2 sm:px-3 py-1 bg-green-50 text-green-700 text-[8px] sm:text-[9px] font-black uppercase tracking-widest rounded-lg border border-green-100 italic shadow-sm">
-                              <CheckCircle2 className="w-2.5 sm:w-3 h-2.5 sm:h-3 shrink-0" /> <span className="hidden sm:inline">Approved</span><span className="sm:hidden">OK</span>
+                            <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-green-50 text-green-700 text-[9px] font-black uppercase tracking-widest rounded-lg border border-green-100 italic shadow-sm">
+                              <CheckCircle2 className="w-3 h-3 shrink-0" /> Approved
                             </div>
                           </td>
                           <td className="px-5 py-3 sm:py-4 whitespace-nowrap">
                             <div className="flex items-center justify-end gap-1.5 sm:gap-2">
                               <button onClick={() => router.push(`/admin/products/view?id=${product.id}`)} className="p-2 sm:p-2.5 bg-white text-[var(--muted)] hover:text-[var(--rust)] rounded-lg transition-all border border-[var(--border)] shadow-sm hover:border-[var(--rust)]" title="View Listing"><Eye className="w-3.5 sm:w-4 h-3.5 sm:h-4" /></button>
                               <button onClick={() => handleDeleteClick(product)} className="p-2 sm:p-2.5 bg-red-50 text-red-600 hover:bg-red-100 rounded-lg transition-all border border-red-100 shadow-sm" title="Revoke Listing"><Trash2 className="w-3.5 sm:w-4 h-3.5 sm:h-4" /></button>
+                            </div>
+                          </td>
+                        </tr>
+                      ))
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </>
+        ) : activeTab === "pending" ? (
+          <>
+            {/* Search Bar */}
+            <div className="flex items-center bg-white w-full rounded-2xl px-3 sm:px-5 py-2.5 sm:py-3.5 border border-[var(--border)] focus-within:border-[var(--rust)] shadow-sm transition-all group">
+              <Search className="w-4 sm:w-4.5 h-4 sm:h-4.5 text-[var(--muted)] mr-2 sm:mr-4 group-focus-within:text-[var(--rust)] transition-colors shrink-0" />
+              <input
+                type="text"
+                placeholder="Filter pending items..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="bg-transparent w-full text-xs sm:text-xs outline-none font-bold placeholder:opacity-50 truncate"
+              />
+            </div>
+
+            <div className="artisan-card p-0 overflow-hidden border-none shadow-xl bg-white/80 backdrop-blur-xl">
+              <div className="overflow-x-auto">
+                <table className="w-full text-left min-w-max border-collapse">
+                  <thead className="bg-[var(--cream)]/40 border-b border-[var(--border)] sticky top-0 backdrop-blur-md">
+                    <tr>
+                      <th className="px-4 sm:px-5 py-4 text-[9px] sm:text-[10px] font-black uppercase tracking-widest text-[var(--muted)]">Product</th>
+                      <th className="px-5 py-4 text-[9px] sm:text-[10px] font-black uppercase tracking-widest text-[var(--muted)]">Seller</th>
+                      <th className="px-5 py-4 text-[9px] sm:text-[10px] font-black uppercase tracking-widest text-[var(--muted)]">Price</th>
+                      <th className="px-5 py-4 text-[9px] sm:text-[10px] font-black uppercase tracking-widest text-[var(--muted)] text-right">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-[var(--border)]">
+                    {loading ? (
+                      <tr><td colSpan="4" className="px-8 py-12 text-center text-xs font-bold text-[var(--muted)] animate-pulse uppercase tracking-widest italic">Scanning Pending Submissions...</td></tr>
+                    ) : filteredPending.length === 0 ? (
+                      <tr><td colSpan="4" className="px-8 py-12 text-center text-xs font-bold text-[var(--muted)] uppercase tracking-widest italic">No Items Awaiting Approval</td></tr>
+                    ) : (
+                      filteredPending.map((product) => (
+                        <tr key={product.id} className="group hover:bg-[var(--cream)]/10 transition-colors">
+                          <td className="px-4 sm:px-5 py-3 sm:py-4">
+                            <div className="flex items-center gap-3 sm:gap-4">
+                              <div className="w-10 sm:w-12 h-10 sm:h-12 rounded-lg sm:rounded-xl overflow-hidden bg-[var(--cream)] border border-[var(--border)] shrink-0">
+                                <img
+                                  src={getProductImageSrc(product.image)}
+                                  className="w-full h-full object-cover"
+                                  alt={product.name}
+                                  onError={(e) => { e.target.src = "/images/placeholder.png"; }}
+                                />
+                              </div>
+                              <div className="min-w-0">
+                                <div className="font-black text-[var(--charcoal)] uppercase tracking-tight text-xs sm:text-sm truncate">{product.name}</div>
+                                <div className="text-[8px] sm:text-[10px] font-bold text-[var(--muted)] mt-0.5 italic lowercase truncate">Submission ID: {product.id}</div>
+                              </div>
+                            </div>
+                          </td>
+                          <td className="px-5 py-3 sm:py-4 whitespace-nowrap">
+                            <div className="text-[9px] sm:text-xs font-bold text-[var(--charcoal)] flex items-center gap-2 italic">
+                              <Store className="w-3.5 h-3.5 text-[var(--rust)] shrink-0" /> {product.seller?.name || "Artisan"}
+                            </div>
+                          </td>
+                          <td className="px-5 py-3 sm:py-4 whitespace-nowrap">
+                            <div className="text-[9px] sm:text-xs font-bold text-[var(--rust)]">₱{product.price?.toLocaleString()}</div>
+                          </td>
+                          <td className="px-5 py-3 sm:py-4 whitespace-nowrap text-right">
+                            <div className="flex items-center justify-end gap-2">
+                              <button 
+                                onClick={() => { setApprovalTarget(product); setShowRejectModal(true); }}
+                                className="p-2 sm:p-2.5 bg-red-50 text-red-600 hover:bg-red-100 rounded-lg transition-all border border-red-100 shadow-sm"
+                                title="Reject Submission"
+                              >
+                                <XCircle className="w-3.5 sm:w-4 h-3.5 sm:h-4" />
+                              </button>
+                              <button 
+                                onClick={() => { setApprovalTarget(product); setShowApproveModal(true); }}
+                                className="p-2 sm:p-2.5 bg-green-50 text-green-600 hover:bg-green-100 rounded-lg transition-all border border-green-100 shadow-sm"
+                                title="Approve Listing"
+                              >
+                                <CheckCircle2 className="w-3.5 sm:w-4 h-3.5 sm:h-4" />
+                              </button>
                             </div>
                           </td>
                         </tr>
@@ -497,6 +639,37 @@ export default function AdminProducts() {
               onChange={(e) => setDeleteReason(e.target.value)}
               placeholder="e.g. Inappropriate content, Policy violation, Prohibited item..."
               className="w-full mt-2 p-4 bg-[var(--cream)]/30 border border-[var(--border)] rounded-2xl text-xs font-medium outline-none focus:border-red-500 transition-all min-h-[100px] resize-none"
+            />
+          </div>
+        </ConfirmationModal>
+
+        {/* Approve Modal */}
+        <ConfirmationModal
+          isOpen={showApproveModal}
+          onClose={() => setShowApproveModal(false)}
+          onConfirm={() => handleApprove(approvalTarget?.id)}
+          title="Approve Listing?"
+          message={`Confirm that "${approvalTarget?.name}" meets all community standards and is ready for the marketplace.`}
+          confirmText={isProcessingApproval ? "Approving..." : "Confirm Approval"}
+          type="success"
+        />
+
+        {/* Reject Modal */}
+        <ConfirmationModal
+          isOpen={showRejectModal}
+          onClose={() => setShowRejectModal(false)}
+          onConfirm={() => handleReject(approvalTarget?.id)}
+          title="Reject Submission?"
+          message={`Please specify why "${approvalTarget?.name}" is being rejected. This feedback will be sent to the artisan.`}
+          confirmText={isProcessingApproval ? "Rejecting..." : "Send Rejection"}
+          type="danger"
+        >
+          <div className="mt-4">
+            <textarea
+              value={rejectionReason}
+              onChange={(e) => setRejectionReason(e.target.value)}
+              placeholder="e.g. Photo quality too low, Incomplete description, Pricing error..."
+              className="w-full p-4 bg-[var(--cream)]/30 border border-[var(--border)] rounded-2xl text-xs font-medium outline-none focus:border-red-500 transition-all min-h-[100px] resize-none"
             />
           </div>
         </ConfirmationModal>

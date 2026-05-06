@@ -103,10 +103,6 @@ const serializeProduct = (req, product) => {
     categories: parseStoredList(plainProduct.categories).filter(Boolean),
     image: images,
     artisan: plainProduct.seller ? plainProduct.seller.name : undefined,
-    gcashNumber: plainProduct.gcashNumber,
-    gcashQrCode: plainProduct.gcashQrCode ? toPublicImageUrl(req, plainProduct.gcashQrCode) : null,
-    mayaNumber: plainProduct.mayaNumber,
-    mayaQrCode: plainProduct.mayaQrCode ? toPublicImageUrl(req, plainProduct.mayaQrCode) : null,
     seller: plainProduct.seller ? {
       id: plainProduct.seller.id,
       name: plainProduct.seller.name,
@@ -117,7 +113,10 @@ const serializeProduct = (req, product) => {
       mayaNumber: plainProduct.seller.mayaNumber,
       mayaQrCode: plainProduct.seller.mayaQrCode
         ? toPublicImageUrl(req, plainProduct.seller.mayaQrCode)
-        : null
+        : null,
+      isVerified: plainProduct.seller.isVerified,
+      bio: plainProduct.seller.bio,
+      profilePhoto: toPublicImageUrl(req, plainProduct.seller.profilePhoto)
     } : undefined,
     reviews: Array.isArray(plainProduct.reviews)
       ? plainProduct.reviews.map((review) => serializeReview(req, review)).filter(Boolean)
@@ -143,15 +142,25 @@ const getProductLookup = (req, id) => {
 
 exports.getAllProducts = async (req, res) => {
   try {
-    const { category, search, seller } = req.query;
-    const where = {};
+    const { category, search, seller, style } = req.query;
+    const where = { status: 'approved' };
 
     if (category && category !== 'All') {
       where.categories = { [Op.like]: `%${category}%` };
     }
 
+    if (style) {
+      where.description = { [Op.like]: `%${style}%` }; // Or another field if 'style' is separate
+    }
+
     if (search) {
-      where.name = { [Op.like]: `%${search}%` };
+      where[Op.or] = [
+        { name: { [Op.like]: `%${search}%` } },
+        { description: { [Op.like]: `%${search}%` } },
+        { sku: { [Op.like]: `%${search}%` } },
+        { fabric_type: { [Op.like]: `%${search}%` } },
+        { artisan_region: { [Op.like]: `%${search}%` } }
+      ];
     }
 
     if (seller) {
@@ -189,7 +198,7 @@ exports.getAllProducts = async (req, res) => {
           ]
         ]
       },
-      include: [{ model: User, as: 'seller', attributes: ['id', 'name', 'gcashNumber', 'gcashQrCode', 'mayaNumber', 'mayaQrCode'] }],
+      include: [{ model: User, as: 'seller', attributes: ['id', 'name', 'gcashNumber', 'gcashQrCode', 'mayaNumber', 'mayaQrCode', 'isVerified', 'bio', 'profilePhoto'] }],
       order: [['createdAt', 'DESC']],
     });
 
@@ -245,7 +254,7 @@ exports.getProductById = async (req, res) => {
         ]
       },
       include: [
-        { model: User, as: 'seller', attributes: ['id', 'name', 'gcashNumber', 'gcashQrCode', 'mayaNumber', 'mayaQrCode', 'createdAt'] },
+        { model: User, as: 'seller', attributes: ['id', 'name', 'gcashNumber', 'gcashQrCode', 'mayaNumber', 'mayaQrCode', 'createdAt', 'isVerified', 'bio', 'profilePhoto'] },
         {
           model: Review,
           as: 'reviews',
@@ -257,6 +266,11 @@ exports.getProductById = async (req, res) => {
 
     if (!product) {
       return res.status(404).json({ message: 'Product not found' });
+    }
+
+    // Restriction: Only owner or admin can see unapproved products
+    if (product.status !== 'approved' && req.user?.role !== 'admin' && req.user?.id !== product.sellerId) {
+      return res.status(403).json({ message: 'This product is currently under review or has been rejected.' });
     }
 
     if (shouldTrackCustomerAnalytics(req.user)) {
@@ -287,16 +301,13 @@ exports.getProductById = async (req, res) => {
 exports.createProduct = async (req, res) => {
   try {
     const { 
-      name, description, price, sizes, categories, stock, variationNames, 
-      shippingFee, shippingDays,
-      gcashNumber, gcashQrCode, mayaNumber, mayaQrCode,
-      allowGcash, allowMaya
+      name, description, price, costPerPiece, sizes, categories, stock, variationNames, 
+      shippingFee, shippingDays, gcashNumber, gcashName, gcashQrCode, mayaNumber, mayaName, mayaQrCode, allowGcash, allowMaya,
+      sku, fabric_type, collar_type, artisan_region
     } = req.body;
 
     const normalizedName = normalizeWhitespace(name);
     const normalizedDescription = normalizeWhitespace(description);
-    const normalizedGcashNumber = validatePhilippineMobileNumber(gcashNumber, 'GCash number', { required: false });
-    const normalizedMayaNumber = validatePhilippineMobileNumber(mayaNumber, 'Maya number', { required: false });
 
     if (!normalizedName || !price || stock === undefined) {
       return res.status(400).json({ message: 'Name, price, and stock are required' });
@@ -342,19 +353,27 @@ exports.createProduct = async (req, res) => {
       name: normalizedName,
       description: normalizedDescription || null,
       price,
+      costPerPiece: costPerPiece || 0,
       sizes: Array.isArray(sizes) ? sizes : JSON.parse(sizes || '[]'),
       categories: Array.isArray(categories) ? categories : JSON.parse(categories || '[]'),
       stock,
       shippingFee: shippingFee || 0,
       shippingDays: shippingDays || 3,
-      gcashNumber: normalizedGcashNumber,
-      gcashQrCode,
-      mayaNumber: normalizedMayaNumber,
-      mayaQrCode,
-      allowGcash: allowGcash === undefined ? true : (allowGcash === 'true' || allowGcash === true),
-      allowMaya: allowMaya === undefined ? true : (allowMaya === 'true' || allowMaya === true),
       sellerId: req.user.id,
       image: images,
+      status: 'pending', // Explicitly set to pending
+      gcashNumber: gcashNumber || undefined,
+      gcashName: gcashName || undefined,
+      gcashQrCode: gcashQrCode || undefined,
+      mayaNumber: mayaNumber || undefined,
+      mayaName: mayaName || undefined,
+      mayaQrCode: mayaQrCode || undefined,
+      allowGcash: allowGcash !== undefined ? allowGcash : true,
+      allowMaya: allowMaya !== undefined ? allowMaya : true,
+      sku: sku || null,
+      fabric_type: fabric_type || null,
+      collar_type: collar_type || null,
+      artisan_region: artisan_region || null
     });
 
     emitInventoryUpdated(product, { action: 'created' });
@@ -407,20 +426,13 @@ exports.updateProduct = async (req, res) => {
       return res.status(404).json({ message: 'Product not found or access denied' });
     }
     const { 
-      name, description, price, sizes, categories, stock, variationNames, 
+      name, description, price, costPerPiece, sizes, categories, stock, variationNames, 
       existingImages, shippingFee, shippingDays,
-      gcashNumber, gcashQrCode, mayaNumber, mayaQrCode,
-      allowGcash, allowMaya
+      sku, fabric_type, collar_type, artisan_region
     } = req.body;
 
     const normalizedName = name === undefined ? undefined : normalizeWhitespace(name);
     const normalizedDescription = description === undefined ? undefined : normalizeWhitespace(description);
-    const normalizedGcashNumber = gcashNumber === undefined
-      ? undefined
-      : validatePhilippineMobileNumber(gcashNumber, 'GCash number', { required: false });
-    const normalizedMayaNumber = mayaNumber === undefined
-      ? undefined
-      : validatePhilippineMobileNumber(mayaNumber, 'Maya number', { required: false });
 
     if (normalizedName !== undefined) {
       if (!normalizedName) {
@@ -473,18 +485,17 @@ exports.updateProduct = async (req, res) => {
       name: normalizedName ?? product.name,
       description: normalizedDescription ?? product.description,
       price: price ?? product.price,
+      costPerPiece: costPerPiece ?? product.costPerPiece,
       sizes: sizes ? (Array.isArray(sizes) ? sizes : JSON.parse(sizes)) : product.sizes,
       categories: categories ? (Array.isArray(categories) ? categories : JSON.parse(categories)) : product.categories,
       stock: stock ?? product.stock,
       shippingFee: shippingFee ?? product.shippingFee,
       shippingDays: shippingDays ?? product.shippingDays,
-      gcashNumber: normalizedGcashNumber ?? product.gcashNumber,
-      gcashQrCode: (gcashQrCode === 'null' || gcashQrCode === '') ? null : (gcashQrCode ?? product.gcashQrCode),
-      mayaNumber: normalizedMayaNumber ?? product.mayaNumber,
-      mayaQrCode: (mayaQrCode === 'null' || mayaQrCode === '') ? null : (mayaQrCode ?? product.mayaQrCode),
-      allowGcash: allowGcash !== undefined ? (allowGcash === 'true' || allowGcash === true) : product.allowGcash,
-      allowMaya: allowMaya !== undefined ? (allowMaya === 'true' || allowMaya === true) : product.allowMaya,
       image: images,
+      sku: sku !== undefined ? sku : product.sku,
+      fabric_type: fabric_type !== undefined ? fabric_type : product.fabric_type,
+      collar_type: collar_type !== undefined ? collar_type : product.collar_type,
+      artisan_region: artisan_region !== undefined ? artisan_region : product.artisan_region,
     });
 
     emitInventoryUpdated(product, { action: 'updated' });

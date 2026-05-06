@@ -1,6 +1,6 @@
 "use client";
 import React, { useState, useEffect } from "react";
-import { Upload, Plus, X, Loader2, ArrowLeft, Save, Camera, Image as ImageIcon, CheckCircle, XCircle } from "lucide-react";
+import { Upload, Plus, X, Loader2, ArrowLeft, Save, Camera, Image as ImageIcon, CheckCircle, XCircle, CreditCard } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { api } from "@/lib/api";
 import { fetchCategories, normalizeCategories } from "@/lib/categories";
@@ -28,21 +28,13 @@ export default function EditProductClient({ id: propId }) {
     description: "",
     price: "",
     categories: [],
-    sizes: ["S", "M", "L", "XL"],
+    sizes: [],
     stock: "",
     shippingFee: "",
-    shippingDays: "3",
-    gcashNumber: "",
-    mayaNumber: "",
-    allowGcash: true,
-    allowMaya: true
+    shippingDays: "3"
   });
 
   const [variations, setVariations] = useState([]); // Matches AddProductPage logic
-  const [gcashQrFile, setGcashQrFile] = useState(null);
-  const [mayaQrFile, setMayaQrFile] = useState(null);
-  const [gcashQrPreview, setGcashQrPreview] = useState(null);
-  const [mayaQrPreview, setMayaQrPreview] = useState(null);
   const [uploadProgress, setUploadProgress] = useState(0);
 
   const showToast = (type, msg) => {
@@ -60,7 +52,7 @@ export default function EditProductClient({ id: propId }) {
         ]);
         
         const prod = prodRes.data;
-        let sizes = prod.sizes || ["S", "M", "L", "XL"];
+        let sizes = prod.sizes || [];
         if (typeof sizes === 'string') {
           try { sizes = JSON.parse(sizes); } catch (e) { sizes = []; }
         }
@@ -75,27 +67,18 @@ export default function EditProductClient({ id: propId }) {
           sizes: sizes,
           stock: prod.stock,
           shippingFee: prod.shippingFee || 0,
-          shippingDays: prod.shippingDays || 3,
-          gcashNumber: prod.gcashNumber || "",
-          mayaNumber: prod.mayaNumber || "",
-          allowGcash: prod.allowGcash ?? true,
-          allowMaya: prod.allowMaya ?? true
+          shippingDays: prod.shippingDays || 3
         });
         
-        // Map existing images to the local variations state
-        // Backend returns images as prod.image (array of URLs or objects)
         const rawImages = Array.isArray(prod.image) ? prod.image : [];
         const existingVars = rawImages.map((img, idx) => ({
           file: null,
-          label: img?.name || img?.label || `Variation ${idx + 1}`,
+          label: img?.name || img?.label || img?.variation || `Variation ${idx + 1}`,
           preview: img?.url || (typeof img === 'string' ? img : null),
           isExisting: true
         })).filter(v => v.preview);
         setVariations(existingVars);
 
-
-        if (prod.gcashQrCode) setGcashQrPreview(prod.gcashQrCode);
-        if (prod.mayaQrCode) setMayaQrPreview(prod.mayaQrCode);
         setCategoriesList(normalizeCategories(catsData));
       } catch (err) {
         console.error(err);
@@ -211,34 +194,6 @@ export default function EditProductClient({ id: propId }) {
     setLoading(true);
     setUploadProgress(0);
     try {
-      let gcashQrUrl = gcashQrPreview;
-      let mayaQrUrl = mayaQrPreview;
-
-      if (gcashQrFile) {
-        const gFormData = new FormData();
-        gFormData.append('image', gcashQrFile);
-        const gRes = await api.post('/upload', gFormData, {
-          headers: { 'Content-Type': 'multipart/form-data' },
-          onUploadProgress: (event) => {
-            if (!event.total) return;
-            setUploadProgress(Math.round((event.loaded / event.total) * 50));
-          }
-        });
-        gcashQrUrl = gRes.data.url;
-      }
-      if (mayaQrFile) {
-        const mFormData = new FormData();
-        mFormData.append('image', mayaQrFile);
-        const mRes = await api.post('/upload', mFormData, {
-          headers: { 'Content-Type': 'multipart/form-data' },
-          onUploadProgress: (event) => {
-            if (!event.total) return;
-            setUploadProgress(Math.max(50, Math.round(50 + (event.loaded / event.total) * 20)));
-          }
-        });
-        mayaQrUrl = mRes.data.url;
-      }
-
       const data = new FormData();
       data.append('name', formData.name);
       data.append('description', formData.description);
@@ -248,12 +203,6 @@ export default function EditProductClient({ id: propId }) {
       data.append('sizes', JSON.stringify(formData.sizes));
       data.append('shippingFee', formData.shippingFee || 0);
       data.append('shippingDays', formData.shippingDays || 3);
-      data.append('gcashNumber', formData.gcashNumber);
-      data.append('gcashQrCode', gcashQrUrl || "");
-      data.append('mayaNumber', formData.mayaNumber);
-      data.append('mayaQrCode', mayaQrUrl || "");
-      data.append('allowGcash', formData.allowGcash);
-      data.append('allowMaya', formData.allowMaya);
 
       // Separate existing and new variations for backend logic
       const existingVars = variations.filter(v => v.isExisting).map(v => ({
@@ -273,7 +222,7 @@ export default function EditProductClient({ id: propId }) {
         },
         onUploadProgress: (event) => {
           if (!event.total) return;
-          setUploadProgress(Math.max(20, Math.round((event.loaded / event.total) * 100)));
+          setUploadProgress(Math.round((event.loaded / event.total) * 100));
         },
       });
       showToast("success", "Product updated successfully!");
@@ -514,7 +463,7 @@ export default function EditProductClient({ id: propId }) {
           <div className="artisan-card space-y-6">
             <h3 className="text-lg font-bold">Base Information</h3>
             <div className="space-y-2">
-              <label className="text-[10px] font-bold uppercase tracking-widest text-[var(--muted)]">Product Name</label>
+              <label className="text-[10px] font-bold uppercase tracking-widest text-[var(--muted)]">Product Name *</label>
               <input
                 type="text"
                 required
@@ -526,7 +475,7 @@ export default function EditProductClient({ id: propId }) {
               />
             </div>
             <div className="space-y-2">
-              <label className="text-[10px] font-bold uppercase tracking-widest text-[var(--muted)]">Description</label>
+              <label className="text-[10px] font-bold uppercase tracking-widest text-[var(--muted)]">Description *</label>
               <textarea
                 required
                 maxLength={2000}
@@ -543,7 +492,7 @@ export default function EditProductClient({ id: propId }) {
             <h3 className="text-lg font-bold">Pricing & Stock</h3>
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <label className="text-[10px] font-bold uppercase tracking-widest text-[var(--muted)]">Price (₱)</label>
+                <label className="text-[10px] font-bold uppercase tracking-widest text-[var(--muted)]">Price (₱) *</label>
                 <input
                   type="number"
                   required
@@ -612,135 +561,43 @@ export default function EditProductClient({ id: propId }) {
           </div>
         </div>
 
-        {/* Column 3: Payment */}
+        {/* Column 3: Payment Methods Reference */}
         <div className="space-y-8 md:col-span-2 lg:col-span-1">
           <div className="artisan-card space-y-6">
-            <h3 className="text-lg font-bold">Payment</h3>
-            <p className="text-[10px] text-[var(--muted)] -mt-4 uppercase tracking-widest leading-relaxed">Optional: Leave blank to use your Seller Profile&apos;s global payment details.</p>
-            <div className="grid grid-cols-1 gap-6">
-              {/* GCash */}
-              <div className="space-y-4 p-4 border border-[var(--border)] rounded-2xl bg-[var(--input-bg)]/30">
-                <div className="flex items-center justify-between gap-2 text-[10px] font-bold uppercase tracking-widest text-[#2D5CC5]">
-                  <div className="flex items-center gap-2">
-                    <div className="w-2 h-2 rounded-full bg-[#2D5CC5]" /> GCash Method
-                  </div>
-                  <label className="flex items-center gap-2 cursor-pointer group">
-                    <span className="text-[9px] font-bold text-[var(--muted)] group-hover:text-[#2D5CC5] transition-colors">{formData.allowGcash ? 'AVAILABLE' : 'DISABLED'}</span>
-                    <input
-                      type="checkbox"
-                      className="w-4 h-4 accent-[#2D5CC5] rounded cursor-pointer"
-                      checked={formData.allowGcash}
-                      onChange={(e) => setFormData({ ...formData, allowGcash: e.target.checked })}
-                    />
-                  </label>
-                </div>
-                <div className="space-y-2">
-                  <label className="text-[9px] font-black uppercase tracking-widest text-[var(--muted)]">GCash Number</label>
-                  <input
-                    type="text"
-                    className="w-full px-4 py-3 bg-white border border-[var(--border)] rounded-xl focus:outline-none focus:border-[#2D5CC5] transition-all text-sm"
-                    placeholder="e.g. 0917 123 4567"
-                    value={formData.gcashNumber}
-                    inputMode="numeric"
-                    maxLength={INPUT_LIMITS.mobileNumber}
-                    onChange={(e) => setFormData({ ...formData, gcashNumber: sanitizePhoneInput(e.target.value) })}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <label className="text-[9px] font-black uppercase tracking-widest text-[var(--muted)]">GCash QR Code</label>
-                  <div className="flex gap-4">
-                    <div
-                      className="flex-1 py-4 border-2 border-dashed border-[var(--border)] rounded-xl flex flex-col items-center justify-center bg-white hover:bg-blue-50 transition-all cursor-pointer group"
-                      onClick={() => document.getElementById('gcash-qr').click()}
-                    >
-                      <Upload className="w-4 h-4 text-[var(--muted)] mb-1 group-hover:text-[#2D5CC5]" />
-                      <span className="text-[9px] font-bold uppercase tracking-widest">Upload QR</span>
-                      <input id="gcash-qr" type="file" accept="image/jpeg,image/png" className="hidden" onChange={async (e) => {
-                        const file = e.target.files[0];
-                        if (!file) return;
-                        const error = await validateImageFile(file, "GCash QR image");
-                        if (error) {
-                          showToast("error", error);
-                          e.target.value = "";
-                          return;
-                        }
-                        setGcashQrFile(file);
-                        setGcashQrPreview(URL.createObjectURL(file));
-                      }} />
-                    </div>
-                    {gcashQrPreview && (
-                      <div className="w-16 h-16 rounded-xl overflow-hidden border border-[var(--border)] shadow-sm relative group">
-                        <img src={gcashQrPreview} alt="GCash QR" className="w-full h-full object-cover" />
-                        <button type="button" onClick={() => { setGcashQrFile(null); setGcashQrPreview(null); }} className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                          <X className="w-4 h-4 text-white" />
-                        </button>
-                      </div>
-                    )}
+            <div className="flex items-center justify-between">
+              <h3 className="text-lg font-bold">Payment Methods</h3>
+              <Link href="/seller/profile" className="text-[10px] font-bold text-[var(--rust)] uppercase tracking-widest hover:underline">Update in Profile</Link>
+            </div>
+            <p className="text-[10px] text-[var(--muted)] -mt-4 uppercase tracking-widest leading-relaxed">We use your workshop&apos;s global payment details from your profile for all transactions.</p>
+            
+            <div className="space-y-4">
+              <div className="p-4 rounded-2xl bg-blue-50/50 border border-blue-100 flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center text-white"><CreditCard size={16} /></div>
+                  <div>
+                    <div className="text-[10px] font-black text-blue-600 uppercase tracking-widest">GCash Available</div>
+                    <div className="text-[9px] text-[var(--muted)] font-bold">Standard Registry Payment</div>
                   </div>
                 </div>
+                <CheckCircle className="text-blue-600 w-5 h-5" />
               </div>
 
-              {/* Maya */}
-              <div className="space-y-4 p-4 border border-[var(--border)] rounded-2xl bg-[var(--input-bg)]/30">
-                <div className="flex items-center justify-between gap-2 text-[10px] font-bold uppercase tracking-widest text-[#00E06D]">
-                  <div className="flex items-center gap-2">
-                    <div className="w-2 h-2 rounded-full bg-[#00E06D]" /> Maya Method
-                  </div>
-                  <label className="flex items-center gap-2 cursor-pointer group">
-                    <span className="text-[9px] font-bold text-[var(--muted)] group-hover:text-[#00E06D] transition-colors">{formData.allowMaya ? 'AVAILABLE' : 'DISABLED'}</span>
-                    <input
-                      type="checkbox"
-                      className="w-4 h-4 accent-[#00E06D] rounded cursor-pointer"
-                      checked={formData.allowMaya}
-                      onChange={(e) => setFormData({ ...formData, allowMaya: e.target.checked })}
-                    />
-                  </label>
-                </div>
-                <div className="space-y-2">
-                  <label className="text-[9px] font-black uppercase tracking-widest text-[var(--muted)]">Maya Number</label>
-                  <input
-                    type="text"
-                    className="w-full px-4 py-3 bg-white border border-[var(--border)] rounded-xl focus:outline-none focus:border-[#00E06D] transition-all text-sm"
-                    placeholder="e.g. 0917 123 4567"
-                    value={formData.mayaNumber}
-                    inputMode="numeric"
-                    maxLength={INPUT_LIMITS.mobileNumber}
-                    onChange={(e) => setFormData({ ...formData, mayaNumber: sanitizePhoneInput(e.target.value) })}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <label className="text-[9px] font-black uppercase tracking-widest text-[var(--muted)]">Maya QR Code</label>
-                  <div className="flex gap-4">
-                    <div
-                      className="flex-1 py-4 border-2 border-dashed border-[var(--border)] rounded-xl flex flex-col items-center justify-center bg-white hover:bg-green-50 transition-all cursor-pointer group"
-                      onClick={() => document.getElementById('maya-qr').click()}
-                    >
-                      <Upload className="w-4 h-4 text-[var(--muted)] mb-1 group-hover:text-[#00E06D]" />
-                      <span className="text-[9px] font-bold uppercase tracking-widest">Upload QR</span>
-                      <input id="maya-qr" type="file" accept="image/jpeg,image/png" className="hidden" onChange={async (e) => {
-                        const file = e.target.files[0];
-                        if (!file) return;
-                        const error = await validateImageFile(file, "Maya QR image");
-                        if (error) {
-                          showToast("error", error);
-                          e.target.value = "";
-                          return;
-                        }
-                        setMayaQrFile(file);
-                        setMayaQrPreview(URL.createObjectURL(file));
-                      }} />
-                    </div>
-                    {mayaQrPreview && (
-                      <div className="w-16 h-16 rounded-xl overflow-hidden border border-[var(--border)] shadow-sm relative group">
-                        <img src={mayaQrPreview} alt="Maya QR" className="w-full h-full object-cover" />
-                        <button type="button" onClick={() => { setMayaQrFile(null); setMayaQrPreview(null); }} className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                          <X className="w-4 h-4 text-white" />
-                        </button>
-                      </div>
-                    )}
+              <div className="p-4 rounded-2xl bg-teal-50/50 border border-teal-100 flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="w-8 h-8 rounded-full bg-teal-600 flex items-center justify-center text-white"><CreditCard size={16} /></div>
+                  <div>
+                    <div className="text-[10px] font-black text-teal-600 uppercase tracking-widest">Maya Available</div>
+                    <div className="text-[9px] text-[var(--muted)] font-bold">Digital Wallet Transfer</div>
                   </div>
                 </div>
+                <CheckCircle className="text-teal-600 w-5 h-5" />
               </div>
+            </div>
+
+            <div className="p-4 rounded-2xl bg-amber-50 border border-amber-100">
+              <p className="text-[10px] font-bold text-amber-800 leading-relaxed italic">
+                Ensure your GCash/Maya QR codes are up-to-date in your profile to avoid fulfillment delays.
+              </p>
             </div>
           </div>
 
@@ -749,7 +606,7 @@ export default function EditProductClient({ id: propId }) {
             disabled={loading}
             className="btn-primary w-full py-5 text-base shadow-xl"
           >
-            {loading ? <Loader2 className="w-5 h-5 animate-spin mx-auto" /> : <>Save <Plus className="w-5 h-5 ml-1" /></>}
+            {loading ? <Loader2 className="w-5 h-5 animate-spin mx-auto" /> : <>Save Changes <Save className="w-5 h-5 ml-1" /></>}
           </button>
           {loading && uploadProgress > 0 && (
             <div className="space-y-2">

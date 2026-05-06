@@ -343,21 +343,11 @@ export default function AdminDashboard() {
           </div>
         </div>
 
-        {/* Order Status Breakdown */}
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3 sm:gap-4">
-          {Object.entries(analytics.orderStatusBreakdown).map(([status, count]) => {
-            const label = status.charAt(0).toUpperCase() + status.slice(1);
-            const meta = STATUS_META[label] || STATUS_META.Pending;
-            return (
-              <div key={status} className="artisan-card p-3 sm:p-5 flex flex-col items-center gap-2 text-center">
-                <div className={`w-8 h-8 rounded-xl flex items-center justify-center ${meta.color}`}>
-                  {meta.icon}
-                </div>
-                <div className="text-xl font-serif font-bold text-[var(--charcoal)]">{count}</div>
-                <div className="text-[9px] font-bold text-[var(--muted)] uppercase tracking-widest">{label}</div>
-              </div>
-            );
-          })}
+        {/* Financial Metrics Breakdown */}
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 lg:gap-6 mb-6">
+          <StatCard label="Total Capital (Cost)" value={stats.totalCapital || "—"} icon={<Activity className="w-4 h-4" />} color="blue" loading={refreshing} />
+          <StatCard label="Gross Revenue" value={stats.totalRevenue || "—"} icon={<TrendingUp className="w-4 h-4" />} color="amber" loading={refreshing} />
+          <StatCard label="Net Profit" value={stats.totalProfit || "—"} icon={<DollarSign className="w-4 h-4" />} color="green" loading={refreshing} />
         </div>
 
         {/* Global Network Tops */}

@@ -1,6 +1,8 @@
 "use client";
 import React, { useState, useEffect, useCallback } from "react";
+import { useRouter } from "next/navigation";
 import Link from "next/link";
+import Image from "next/image";
 import CustomerLayout from "@/components/CustomerLayout";
 import {
   Copy,
@@ -24,7 +26,7 @@ import {
   Video
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
-import { api, getApiErrorMessage, getStoredUserForRole } from "@/lib/api";
+import { api, getApiErrorMessage, getStoredUserForRole, getTokenForRole } from "@/lib/api";
 import { useSocket } from "@/context/SocketContext";
 import { normalizeProductImages, getProductImageSrc } from "@/lib/productImages";
 import ConfirmationModal from "@/components/ConfirmationModal";
@@ -289,6 +291,9 @@ export default function OrdersPage() {
   const [refunds, setRefunds] = useState([]);
 
   const fetchRefunds = useCallback(async () => {
+    const token = getTokenForRole("customer");
+    if (!token || token === "null") return;
+
     try {
       const response = await api.get("/refunds/customer");
       setRefunds(response.data);
@@ -298,6 +303,9 @@ export default function OrdersPage() {
   }, []);
 
   const fetchOrders = useCallback(async () => {
+    const token = getTokenForRole("customer");
+    if (!token || token === "null") return;
+
     try {
       setLoading(true);
       const response = await api.get("/orders/my-orders");
@@ -370,6 +378,14 @@ export default function OrdersPage() {
 
   useEffect(() => {
     if (typeof window === "undefined") return;
+
+    // Guest protection
+    const token = getTokenForRole("customer");
+    if (!token || token === "null") {
+       localStorage.setItem("returnUrl", "/orders");
+       window.location.replace("/login");
+       return;
+    }
 
     try {
       const storedCustomer = getStoredUserForRole("customer");
@@ -457,26 +473,26 @@ export default function OrdersPage() {
         <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-4 sm:gap-6 pb-4 sm:pb-6">
           <div className="space-y-2 sm:space-y-4">
             <div className="flex items-center gap-3">
-              <span className="w-4 sm:w-6 h-[2.5px] bg-[var(--rust)]"></span>
-              <span className="text-[9px] sm:text-[10px] font-bold uppercase tracking-[0.2em] text-[var(--rust)]">MY ACCOUNT</span>
+              <span className="w-4 sm:w-6 h-[2.5px] bg-(--rust)"></span>
+              <span className="text-[9px] sm:text-[10px] font-bold uppercase tracking-[0.2em] text-(--rust)">MY ACCOUNT</span>
             </div>
             <h1 className="font-serif text-lg sm:text-xl font-bold tracking-tight text-[#2A2A2A]">
-              My <span className="text-[var(--rust)] italic font-medium">Orders</span>
+              My <span className="text-(--rust) italic font-medium">Orders</span>
             </h1>
           </div>
           <div className="flex items-center gap-2 sm:gap-3 shrink-0">
             <div className="relative group flex-1 sm:w-80">
-              <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-[var(--muted)]" />
+              <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-(--muted)" />
               <input
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="Search orders..."
-                className="w-full pl-10 pr-4 py-2.5 sm:py-3 bg-white border border-[var(--border)] rounded-xl text-[11px] sm:text-xs font-medium text-[#2A2A2A] placeholder:text-[var(--muted)] outline-none focus:border-[var(--rust)] focus:ring-1 focus:ring-[var(--rust)] transition-all shadow-sm"
+                className="w-full pl-10 pr-4 py-2.5 sm:py-3 bg-white border border-(--border) rounded-xl text-[11px] sm:text-xs font-medium text-[#2A2A2A] placeholder:text-(--muted) outline-none focus:border-(--rust) focus:ring-1 focus:ring-(--rust) transition-all shadow-sm"
               />
             </div>
-            <button onClick={fetchOrders} className="p-2.5 sm:p-3 bg-white border border-[var(--border)] rounded-xl hover:text-[var(--rust)] hover:bg-[#FDFCFB] transition-colors shadow-sm active:scale-95">
-              <RefreshCw className="w-4 h-4 sm:w-5 sm:h-5 text-[var(--muted)] hover:text-[var(--rust)] transition-all" />
+            <button onClick={fetchOrders} className="p-2.5 sm:p-3 bg-white border border-(--border) rounded-xl hover:text-(--rust) hover:bg-[#FDFCFB] transition-colors shadow-sm active:scale-95">
+              <RefreshCw className="w-4 h-4 sm:w-5 sm:h-5 text-(--muted) hover:text-(--rust) transition-all" />
             </button>
           </div>
         </div>
@@ -484,19 +500,19 @@ export default function OrdersPage() {
         {/* Alerts */}
         <AnimatePresence>
           {error && (
-            <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} className="p-4 bg-red-50 border border-red-200 text-red-700 rounded-[1rem] text-sm font-bold flex items-center gap-2 mb-6">
+            <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} className="p-4 bg-red-50 border border-red-200 text-red-700 rounded-2xl text-sm font-bold flex items-center gap-2 mb-6">
               <XCircle className="w-5 h-5 text-red-500" /> {error}
             </motion.div>
           )}
           {success && (
-            <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} className="p-4 bg-green-50 border border-green-200 text-green-700 rounded-[1rem] text-sm font-bold flex items-center gap-2 mb-6">
+            <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} className="p-4 bg-green-50 border border-green-200 text-green-700 rounded-2xl text-sm font-bold flex items-center gap-2 mb-6">
               <CheckCircle className="w-5 h-5 text-green-500" /> {success}
             </motion.div>
           )}
         </AnimatePresence>
 
         {/* Tabs - Grid on mobile, row on desktop */}
-        <div className="border-b border-[var(--border)]">
+        <div className="border-b border-(--border)">
           {/* Mobile: 3-column grid with full labels, smaller text */}
           <div className="grid grid-cols-3 sm:hidden">
             {tabs.map(({ key, label }) => (
@@ -504,7 +520,7 @@ export default function OrdersPage() {
                 key={key}
                 onClick={() => setActiveTab(key)}
                 className={`py-2.5 px-1 text-[8px] font-bold uppercase tracking-[0.04em] transition-all border-b-2 outline-none focus:outline-none text-center leading-tight ${activeTab === key
-                    ? "border-[var(--rust)] text-[var(--rust)] bg-[var(--rust)]/5"
+                    ? "border-(--rust) text-(--rust) bg-(--rust)/5"
                     : "border-transparent text-[#2A2A2A]/40"
                   }`}
               >
@@ -518,8 +534,8 @@ export default function OrdersPage() {
               <button
                 key={key}
                 onClick={() => setActiveTab(key)}
-                className={`px-6 py-4 text-xs font-bold uppercase tracking-[0.1em] transition-all whitespace-nowrap border-b-2 outline-none focus:outline-none ${activeTab === key
-                    ? "border-[var(--rust)] text-[var(--rust)]"
+                className={`px-6 py-4 text-xs font-bold uppercase tracking-widest transition-all whitespace-nowrap border-b-2 outline-none focus:outline-none ${activeTab === key
+                    ? "border-(--rust) text-(--rust)"
                     : "border-transparent text-[#2A2A2A]/40 hover:text-[#2A2A2A]"
                   }`}
               >
@@ -535,14 +551,14 @@ export default function OrdersPage() {
         <div className="space-y-6">
           {loading ? (
             <div className="py-24 text-center">
-              <Loader2 className="w-10 h-10 animate-spin mx-auto text-[var(--muted)] opacity-50 mb-4" />
-              <p className="text-sm font-bold uppercase tracking-widest text-[var(--muted)]">Loading Orders...</p>
+              <Loader2 className="w-10 h-10 animate-spin mx-auto text-(--muted) opacity-50 mb-4" />
+              <p className="text-sm font-bold uppercase tracking-widest text-(--muted)">Loading Orders...</p>
             </div>
           ) : filteredOrders.length === 0 ? (
-            <div className="py-16 sm:py-24 text-center bg-white rounded-[1.5rem] border border-[var(--border)] shadow-sm px-6">
-              <ShoppingBag className="w-12 h-12 sm:w-16 sm:h-16 mx-auto text-[var(--muted)] opacity-20 mb-4 sm:mb-6" />
+            <div className="py-16 sm:py-24 text-center bg-white rounded-3xl border border-(--border) shadow-sm px-6">
+              <ShoppingBag className="w-12 h-12 sm:w-16 sm:h-16 mx-auto text-(--muted) opacity-20 mb-4 sm:mb-6" />
               <h3 className="text-lg sm:text-xl font-serif font-bold text-[#2A2A2A] mb-2">No Records Found</h3>
-              <p className="text-[10px] sm:text-xs text-[var(--muted)] italic">No orders found matching your current filter.</p>
+              <p className="text-[10px] sm:text-xs text-(--muted) italic">No orders found matching your current filter.</p>
             </div>
           ) : (
             <AnimatePresence>
@@ -558,7 +574,7 @@ export default function OrdersPage() {
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, scale: 0.98 }}
                     transition={{ delay: idx * 0.05 }}
-                    className={`bg-[#FDFBF9] rounded-[1rem] border border-[#E5DDD5] shadow-[0_2px_10px_rgba(0,0,0,0.02)] overflow-hidden ${newlyCompletedOrderId === order.id ? "ring-2 ring-amber-400" : ""}`}
+                    className={`bg-[#FDFBF9] rounded-2xl border border-[#E5DDD5] shadow-[0_2px_10px_rgba(0,0,0,0.02)] overflow-hidden ${newlyCompletedOrderId === order.id ? "ring-2 ring-amber-400" : ""}`}
                   >
                     {/* Card Header */}
                     <div className="px-5 sm:px-6 py-3.5 border-b border-[#E5DDD5] flex flex-wrap items-center justify-between gap-4 bg-white">
@@ -598,9 +614,15 @@ export default function OrdersPage() {
                           return (
                             <div key={i} className="flex flex-row items-center gap-4 sm:gap-5 pb-4 border-b border-[#EAE5DF] last:border-b-0 last:pb-0">
                               {/* Thumbnail */}
-                              <Link href={`/products?id=${productId}`} className="w-14 h-14 bg-white border border-[#E5DDD5] flex items-center justify-center rounded-lg shrink-0 overflow-hidden shadow-sm hover:border-[var(--rust)] hover:opacity-90 transition-all cursor-pointer">
+                              <Link href={`/products?id=${productId}`} className="w-14 h-14 bg-white border border-[#E5DDD5] flex items-center justify-center rounded-lg shrink-0 overflow-hidden shadow-sm hover:border-(--rust) hover:opacity-90 transition-all cursor-pointer">
                                 {item.product?.image ? (
-                                  <img src={getProductImageSrc(item.product.image)} alt={item.product.name} className="w-full h-full object-cover" />
+                                  <Image 
+                                    src={getProductImageSrc(item.product.image)} 
+                                    alt={item.product.name} 
+                                    width={56} 
+                                    height={56} 
+                                    className="w-full h-full object-cover" 
+                                  />
                                 ) : (
                                   <Package className="w-5 h-5 text-gray-300" />
                                 )}
@@ -609,7 +631,7 @@ export default function OrdersPage() {
                               {/* Details + Rate button */}
                               <div className="flex-1 flex flex-row items-center justify-between w-full">
                                 <div className="space-y-1">
-                                  <Link href={`/products?id=${productId}`} className="text-[13px] font-bold text-[#2A2A2A] hover:text-[var(--rust)] transition-colors block cursor-pointer">{item.product?.name || "Lumbarong Product"}</Link>
+                                  <Link href={`/products?id=${productId}`} className="text-[13px] font-bold text-[#2A2A2A] hover:text-(--rust) transition-colors block cursor-pointer">{item.product?.name || "Lumbarong Product"}</Link>
                                   <div className="flex items-center gap-2">
                                     <span className="bg-[#FAF7F2] border border-[#E5DDD5] text-[#9c8876] px-2 py-0.5 rounded text-[9px] font-bold uppercase tracking-widest">Qty: {item.quantity}</span>
                                     <span className="bg-[#FAF7F2] border border-[#E5DDD5] text-[#9c8876] px-2 py-0.5 rounded text-[9px] font-bold uppercase tracking-widest">Size: {item.size || "M"}</span>
@@ -628,7 +650,7 @@ export default function OrdersPage() {
                                         </div>
                                         <button 
                                           onClick={() => openRatingModal(order.id, item, itemReview)}
-                                          className="text-[10px] text-[var(--rust)] font-bold hover:underline"
+                                          className="text-[10px] text-(--rust) font-bold hover:underline"
                                         >
                                           Edit Review
                                         </button>
@@ -691,7 +713,7 @@ export default function OrdersPage() {
                               <button onClick={(e) => { e.stopPropagation(); handleConfirmReceipt(order.id); }} className="w-full py-2.5 bg-green-600 hover:bg-green-700 text-white rounded-lg text-[9px] font-extrabold uppercase tracking-[0.15em] transition-colors shadow flex items-center justify-center gap-2">
                                 <Check className="w-3.5 h-3.5" /> Mark as Completed
                               </button>
-                              <div className="text-[8px] text-[var(--muted)] text-center italic mt-1">If there are issues with specific items, use Request Refund below.</div>
+                              <div className="text-[8px] text-(--muted) text-center italic mt-1">If there are issues with specific items, use Request Refund below.</div>
                             </>
                           )}
 
@@ -747,28 +769,28 @@ export default function OrdersPage() {
       {/* Order Details Modal */}
       <AnimatePresence>
         {selectedOrder && (
-          <div className="fixed inset-0 z-[150] flex items-center justify-center p-4 sm:p-6 overflow-hidden">
+          <div className="fixed inset-0 z-150 flex items-center justify-center p-4 sm:p-6 overflow-hidden">
             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setSelectedOrder(null)} className="absolute inset-0 bg-[#2A1E14]/60 backdrop-blur-sm" />
-            <motion.div initial={{ opacity: 0, scale: 0.95, y: 20 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.95, y: 20 }} className="bg-white w-full max-w-2xl max-h-[88vh] rounded-[2rem] shadow-2xl relative z-10 overflow-hidden flex flex-col border border-white/20">
-              <div className="px-6 sm:px-8 py-6 border-b border-[var(--border)] flex items-center justify-between bg-[#FDFCFB]">
+            <motion.div initial={{ opacity: 0, scale: 0.95, y: 20 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.95, y: 20 }} className="bg-white w-full max-w-2xl max-h-[88vh] rounded-4xl shadow-2xl relative z-10 overflow-hidden flex flex-col border border-white/20">
+              <div className="px-6 sm:px-8 py-6 border-b border-(--border) flex items-center justify-between bg-[#FDFCFB]">
                 <div>
                   <h2 className="font-serif text-xl sm:text-2xl font-bold text-[#2A2A2A]">Order Details</h2>
-                  <p className="text-[10px] font-bold text-[var(--muted)] uppercase tracking-widest mt-1">
+                  <p className="text-[10px] font-bold text-(--muted) uppercase tracking-widest mt-1">
                     LB-OR-{selectedOrder.id.toString().slice(-8).toUpperCase()} • {new Date(selectedOrder.createdAt).toLocaleDateString()}
                   </p>
                 </div>
-                <button onClick={() => setSelectedOrder(null)} className="p-2.5 bg-white border border-[var(--border)] rounded-xl hover:text-[var(--rust)] transition-all active:scale-90 shadow-sm">
+                <button onClick={() => setSelectedOrder(null)} className="p-2.5 bg-white border border-(--border) rounded-xl hover:text-(--rust) transition-all active:scale-90 shadow-sm">
                   <X className="w-5 h-5" />
                 </button>
               </div>
               <div className="flex-1 overflow-y-auto p-5 sm:p-8 pb-12 space-y-7 sm:space-y-8 artisan-scrollbar">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div className="space-y-3">
-                    <div className="flex items-center gap-2 text-[10px] font-extrabold text-[var(--rust)] uppercase tracking-widest opacity-80"><MapPin className="w-3 h-3" /> SHIPPING ADDRESS</div>
-                    <div className="bg-[#FDFBF9] p-4 rounded-2xl border border-[var(--cream)] shadow-sm">
+                    <div className="flex items-center gap-2 text-[10px] font-extrabold text-(--rust) uppercase tracking-widest opacity-80"><MapPin className="w-3 h-3" /> SHIPPING ADDRESS</div>
+                    <div className="bg-[#FDFBF9] p-4 rounded-2xl border border-(--cream) shadow-sm">
                       <div className="font-bold text-[#2A2A2A] text-sm mb-1">{getParsedAddress(selectedOrder.shippingAddress)?.name || "Registry Name Missing"}</div>
-                      <div className="text-[10px] font-bold text-[var(--rust)] mb-2">{getParsedAddress(selectedOrder.shippingAddress)?.phone || "Phone Missing"}</div>
-                      <div className="text-xs text-[var(--muted)] leading-relaxed min-h-[3rem]">
+                      <div className="text-[10px] font-bold text-(--rust) mb-2">{getParsedAddress(selectedOrder.shippingAddress)?.phone || "Phone Missing"}</div>
+                      <div className="text-xs text-(--muted) leading-relaxed min-h-12">
                         {!(getParsedAddress(selectedOrder.shippingAddress)?.houseNo || getParsedAddress(selectedOrder.shippingAddress)?.street || getParsedAddress(selectedOrder.shippingAddress)?.barangay) ? (
                           <div className="italic opacity-40 py-2 uppercase text-[9px] font-bold tracking-widest text-[#2A2118]">Archived Registry Data Unavailable</div>
                         ) : (
@@ -787,36 +809,36 @@ export default function OrdersPage() {
                     </div>
                   </div>
                   <div className="space-y-3">
-                    <div className="flex items-center gap-2 text-[10px] font-extrabold text-[var(--rust)] uppercase tracking-widest opacity-80"><CreditCard className="w-3 h-3" /> PAYMENT METHOD</div>
-                    <div className="bg-[#FDFBF9] p-4 rounded-2xl border border-[var(--cream)] shadow-sm">
+                    <div className="flex items-center gap-2 text-[10px] font-extrabold text-(--rust) uppercase tracking-widest opacity-80"><CreditCard className="w-3 h-3" /> PAYMENT METHOD</div>
+                    <div className="bg-[#FDFBF9] p-4 rounded-2xl border border-(--cream) shadow-sm">
                       <div className="font-bold text-[#2A2A2A] text-sm mb-1">{selectedOrder.paymentMethod || "GCash"}</div>
-                      <div className="text-xs text-[var(--muted)]">Reference: <span className="font-mono text-[var(--rust)]">{selectedOrder.paymentReference || "N/A"}</span></div>
+                      <div className="text-xs text-(--muted)">Reference: <span className="font-mono text-(--rust)">{selectedOrder.paymentReference || "N/A"}</span></div>
                     </div>
                   </div>
                 </div>
                 <div className="space-y-4">
-                  <div className="flex items-center gap-2 text-[10px] font-extrabold text-[var(--rust)] uppercase tracking-widest opacity-80"><Clock className="w-3 h-3" /> ORDER STATUS</div>
+                  <div className="flex items-center gap-2 text-[10px] font-extrabold text-(--rust) uppercase tracking-widest opacity-80"><Clock className="w-3 h-3" /> ORDER STATUS</div>
                   <div className={`inline-flex items-center gap-2 px-4 py-2 rounded-full border text-[10px] font-bold uppercase tracking-widest ${getStatusStyle(selectedOrder.status).border} ${getStatusStyle(selectedOrder.status).text}`}>
                     <div className={`w-1.5 h-1.5 rounded-full ${getStatusStyle(selectedOrder.status).dot}`} />
                     {selectedOrder.status}
                   </div>
                 </div>
                 <div className="space-y-4">
-                  <div className="flex items-center gap-2 text-[10px] font-extrabold text-[var(--rust)] uppercase tracking-widest opacity-80"><ShoppingBag className="w-3 h-3" /> PURCHASED ITEMS</div>
+                  <div className="flex items-center gap-2 text-[10px] font-extrabold text-(--rust) uppercase tracking-widest opacity-80"><ShoppingBag className="w-3 h-3" /> PURCHASED ITEMS</div>
                   <div className="space-y-3">
                     {selectedOrder.items?.map((item, i) => {
                       const existingRefund = refunds.find(r => String(r.orderItemId) === String(item.id));
                       return (
-                      <div key={i} className="flex gap-4 p-4 bg-white border border-[var(--border)] rounded-2xl shadow-sm">
-                        <Link href={`/products?id=${item.product?.id}`} className="w-14 h-14 bg-[#FDFBF9] rounded-xl border border-[var(--border)] flex items-center justify-center p-1 shrink-0 overflow-hidden hover:border-[var(--rust)] hover:opacity-90 transition-all cursor-pointer">
-                          <img src={getSafeImage(item.product?.image)} alt="" className="w-full h-full object-cover rounded-lg" />
+                      <div key={i} className="flex gap-4 p-4 bg-white border border-(--border) rounded-2xl shadow-sm">
+                        <Link href={`/products?id=${item.product?.id}`} className="w-14 h-14 bg-[#FDFBF9] rounded-xl border border-(--border) flex items-center justify-center p-1 shrink-0 overflow-hidden hover:border-(--rust) hover:opacity-90 transition-all cursor-pointer">
+                          <Image src={getSafeImage(item.product?.image)} alt="" width={56} height={56} className="w-full h-full object-cover rounded-lg" />
                         </Link>
                         <div className="flex-1 min-w-0">
-                          <Link href={`/products?id=${item.product?.id}`} className="font-bold text-[#2A2A2A] text-sm truncate hover:text-[var(--rust)] transition-colors block cursor-pointer">{item.product?.name}</Link>
-                          <div className="text-[10px] text-[var(--muted)] mt-0.5">Qty: {item.quantity} • Size: {item.size}</div>
+                          <Link href={`/products?id=${item.product?.id}`} className="font-bold text-[#2A2A2A] text-sm truncate hover:text-(--rust) transition-colors block cursor-pointer">{item.product?.name}</Link>
+                          <div className="text-[10px] text-(--muted) mt-0.5">Qty: {item.quantity} • Size: {item.size}</div>
                         </div>
                         <div className="text-right flex flex-col items-end justify-between">
-                          <div className="text-sm font-bold text-[var(--rust)]">₱{Number(item.price || 0).toLocaleString()}</div>
+                          <div className="text-sm font-bold text-(--rust)">₱{Number(item.price || 0).toLocaleString()}</div>
                           {existingRefund ? (
                             <div className={`px-2 py-1 rounded text-[9px] font-extrabold uppercase tracking-widest mt-2 border ${
                               existingRefund.status === 'Approved' ? 'bg-green-50 text-green-700 border-green-200' :
@@ -839,9 +861,9 @@ export default function OrdersPage() {
                   </div>
                 </div>
               </div>
-              <div className="px-6 sm:px-8 py-6 bg-[#FDFCFB] border-t border-[var(--border)] flex items-center justify-between">
-                <span className="text-[10px] font-bold text-[var(--muted)] uppercase tracking-widest">SUBTOTAL AMOUNT</span>
-                <div className="text-lg sm:text-xl font-bold text-[var(--rust)]">₱{Number(selectedOrder.totalAmount || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</div>
+              <div className="px-6 sm:px-8 py-6 bg-[#FDFCFB] border-t border-(--border) flex items-center justify-between">
+                <span className="text-[10px] font-bold text-(--muted) uppercase tracking-widest">SUBTOTAL AMOUNT</span>
+                <div className="text-lg sm:text-xl font-bold text-(--rust)">₱{Number(selectedOrder.totalAmount || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</div>
               </div>
             </motion.div>
           </div>
@@ -851,34 +873,34 @@ export default function OrdersPage() {
       {/* Refund Modal */}
       <AnimatePresence>
         {refundModalOpen && (
-          <div className="fixed inset-0 z-[110] flex items-center justify-center p-4">
+          <div className="fixed inset-0 z-110 flex items-center justify-center p-4">
             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={() => setRefundModalOpen(false)} />
-            <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }} className="bg-white p-6 rounded-2xl shadow-xl w-full max-w-md relative z-10 space-y-5 border border-[var(--border)] overflow-hidden">
+            <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }} className="bg-white p-6 rounded-2xl shadow-xl w-full max-w-md relative z-10 space-y-5 border border-(--border) overflow-hidden">
               <div className="flex items-center justify-between">
                 <h3 className="font-serif text-2xl font-bold text-[#2A2A2A]">Request Refund</h3>
                 <button onClick={() => setRefundModalOpen(false)} className="p-2 hover:bg-gray-100 rounded-lg transition-colors">
-                  <X className="w-5 h-5 text-[var(--muted)]" />
+                  <X className="w-5 h-5 text-(--muted)" />
                 </button>
               </div>
 
               {/* Item Info Summary */}
               <div className="flex items-center gap-4 p-3 bg-stone-50 rounded-xl border border-stone-100">
                 <div className="w-12 h-12 rounded-lg border border-stone-200 overflow-hidden bg-white shrink-0">
-                  <img src={getSafeImage(refundData.item?.product?.image)} alt="" className="w-full h-full object-cover" />
+                  <Image src={getSafeImage(refundData.item?.product?.image)} alt="" width={48} height={48} className="w-full h-full object-cover" />
                 </div>
                 <div className="min-w-0">
                   <div className="font-bold text-xs text-[#2A2A2A] truncate">{refundData.item?.product?.name}</div>
-                  <div className="text-[10px] text-[var(--muted)]">Qty: {refundData.item?.quantity} • Size: {refundData.item?.size}</div>
+                  <div className="text-[10px] text-(--muted)">Qty: {refundData.item?.quantity} • Size: {refundData.item?.size}</div>
                 </div>
               </div>
 
               <div className="space-y-4">
                 <div>
-                  <label className="text-[10px] font-bold text-[var(--muted)] uppercase tracking-widest mb-1.5 block">Select Reason</label>
+                  <label className="text-[10px] font-bold text-(--muted) uppercase tracking-widest mb-1.5 block">Select Reason</label>
                   <select 
                     value={refundData.reason}
                     onChange={(e) => setRefundData({ ...refundData, reason: e.target.value })}
-                    className="w-full p-3 bg-white border border-[var(--border)] rounded-xl text-sm outline-none focus:border-[var(--rust)] transition-all font-medium"
+                    className="w-full p-3 bg-white border border-(--border) rounded-xl text-sm outline-none focus:border-(--rust) transition-all font-medium"
                   >
                     <option value="Damaged Item">Damaged Item</option>
                     <option value="Wrong Size">Wrong Size</option>
@@ -888,18 +910,18 @@ export default function OrdersPage() {
 
                 {refundData.reason === "Other" && (
                   <div>
-                    <label className="text-[10px] font-bold text-[var(--muted)] uppercase tracking-widest mb-1.5 block">Please specify the issue</label>
+                    <label className="text-[10px] font-bold text-(--muted) uppercase tracking-widest mb-1.5 block">Please specify the issue</label>
                     <textarea
                       value={refundData.message}
                       onChange={(e) => setRefundData({ ...refundData, message: e.target.value })}
                       placeholder="Tell us more about the encounter..."
-                      className="w-full p-3 border border-[var(--border)] rounded-xl text-sm min-h-[100px] outline-none focus:border-[var(--rust)] transition-all"
+                      className="w-full p-3 border border-(--border) rounded-xl text-sm min-h-[100px] outline-none focus:border-(--rust) transition-all"
                     />
                   </div>
                 )}
 
                 <div>
-                  <label className="text-[10px] font-bold text-[var(--muted)] uppercase tracking-widest mb-1.5 block">Video Evidence (Required)</label>
+                  <label className="text-[10px] font-bold text-(--muted) uppercase tracking-widest mb-1.5 block">Video Evidence (Required)</label>
                   <div className="relative">
                     <input 
                       type="file" 
@@ -910,7 +932,7 @@ export default function OrdersPage() {
                     />
                     <label 
                       htmlFor="refund-video-upload"
-                      className={`flex flex-col items-center justify-center p-6 border-2 border-dashed rounded-xl cursor-pointer transition-all ${refundData.video ? 'border-green-300 bg-green-50' : 'border-[var(--border)] hover:border-[var(--rust)] hover:bg-[var(--rust)]/5'}`}
+                      className={`flex flex-col items-center justify-center p-6 border-2 border-dashed rounded-xl cursor-pointer transition-all ${refundData.video ? 'border-green-300 bg-green-50' : 'border-(--border) hover:border-(--rust) hover:bg-(--rust)/5'}`}
                     >
                       {refundData.video ? (
                         <>
@@ -920,9 +942,9 @@ export default function OrdersPage() {
                         </>
                       ) : (
                         <>
-                          <Video className="w-8 h-8 text-[var(--muted)] mb-2" />
-                          <span className="text-xs font-bold text-[var(--muted)]">Upload Opening Video</span>
-                          <span className="text-[9px] text-[var(--muted)]/60 mt-1 uppercase tracking-tighter">MP4, MOV, or AVI up to 50MB</span>
+                          <Video className="w-8 h-8 text-(--muted) mb-2" />
+                          <span className="text-xs font-bold text-(--muted)">Upload Opening Video</span>
+                          <span className="text-[9px] text-(--muted)/60 mt-1 uppercase tracking-tighter">MP4, MOV, or AVI up to 50MB</span>
                         </>
                       )}
                     </label>
@@ -938,7 +960,7 @@ export default function OrdersPage() {
                 >
                   {actionLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : "Submit Refund Request"}
                 </button>
-                <div className="text-[9px] text-[var(--muted)] text-center mt-3 leading-relaxed">
+                <div className="text-[9px] text-(--muted) text-center mt-3 leading-relaxed">
                   By submitting, you agree to our <span className="underline cursor-pointer">Refund Policy</span>. <br/>Proof will be reviewed by the artisan.
                 </div>
               </div>
@@ -950,37 +972,37 @@ export default function OrdersPage() {
       {/* Shopee-style Rating Modal */}
       <AnimatePresence>
         {ratingModal && (
-          <div className="fixed inset-0 z-[110] flex items-center justify-center p-4">
+          <div className="fixed inset-0 z-110 flex items-center justify-center p-4">
             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={() => setRatingModal(null)} />
             <motion.div
               initial={{ opacity: 0, scale: 0.95, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 20 }}
-              className="bg-white rounded-2xl shadow-2xl w-full max-w-md relative z-10 border border-[var(--border)] overflow-hidden"
+              className="bg-white rounded-2xl shadow-2xl w-full max-w-md relative z-10 border border-(--border) overflow-hidden"
             >
               {/* Modal Header */}
-              <div className="flex items-center justify-between px-6 py-5 border-b border-[var(--border)] bg-[#FDFCFB]">
+              <div className="flex items-center justify-between px-6 py-5 border-b border-(--border) bg-[#FDFCFB]">
                 <h3 className="font-serif text-xl font-bold text-[#2A2A2A]">
                   {ratingModal.isEditing ? "Edit Your Review" : "Rate Product"}
                 </h3>
                 <button onClick={() => setRatingModal(null)} className="p-2 rounded-xl hover:bg-gray-100 transition-colors">
-                  <X className="w-4 h-4 text-[var(--muted)]" />
+                  <X className="w-4 h-4 text-(--muted)" />
                 </button>
               </div>
 
               <div className="p-6 space-y-6">
                 {/* Product info strip */}
-                <div className="flex items-center gap-4 p-4 bg-[#FDFBF9] rounded-2xl border border-[var(--cream)]">
-                  <div className="w-14 h-14 rounded-xl border border-[var(--border)] bg-white overflow-hidden shrink-0">
+                <div className="flex items-center gap-4 p-4 bg-[#FDFBF9] rounded-2xl border border-(--cream)">
+                  <div className="w-14 h-14 rounded-xl border border-(--border) bg-white overflow-hidden shrink-0">
                     {ratingModal.item.product?.image ? (
-                      <img src={getProductImageSrc(ratingModal.item.product.image)} alt="" className="w-full h-full object-cover" />
+                      <Image src={getProductImageSrc(ratingModal.item.product.image)} alt="" width={56} height={56} className="w-full h-full object-cover" />
                     ) : (
                       <Package className="w-6 h-6 text-gray-300 m-4" />
                     )}
                   </div>
                   <div className="min-w-0">
                     <div className="font-bold text-[#2A2A2A] text-sm truncate">{ratingModal.item.product?.name || "Product"}</div>
-                    <div className="text-[10px] text-[var(--muted)] mt-0.5 uppercase tracking-wider">
+                    <div className="text-[10px] text-(--muted) mt-0.5 uppercase tracking-wider">
                       Qty: {ratingModal.item.quantity} · Size: {ratingModal.item.size}
                     </div>
                   </div>
@@ -988,7 +1010,7 @@ export default function OrdersPage() {
 
                 {/* Star picker with Shopee-style labels */}
                 <div className="text-center space-y-3">
-                  <p className="text-[11px] font-bold uppercase tracking-widest text-[var(--muted)]">Product Quality</p>
+                  <p className="text-[11px] font-bold uppercase tracking-widest text-(--muted)">Product Quality</p>
                   <div className="flex gap-2 justify-center">
                     {[1, 2, 3, 4, 5].map((star) => (
                       <button
@@ -1014,25 +1036,25 @@ export default function OrdersPage() {
 
                 {/* Comment */}
                 <div>
-                  <p className="text-[11px] font-bold uppercase tracking-widest text-[var(--muted)] mb-2">Your Comments (Optional)</p>
+                  <p className="text-[11px] font-bold uppercase tracking-widest text-(--muted) mb-2">Your Comments (Optional)</p>
                   <textarea
                     value={ratingData.comment}
                     onChange={(e) => setRatingData((prev) => ({ ...prev, comment: e.target.value }))}
                     placeholder="Share your experience with this masterpiece..."
-                    className="w-full p-3 border border-[var(--border)] rounded-xl text-sm min-h-[90px] outline-none focus:border-amber-400 transition-colors resize-none mb-4"
+                    className="w-full p-3 border border-(--border) rounded-xl text-sm min-h-[90px] outline-none focus:border-amber-400 transition-colors resize-none mb-4"
                   />
                 </div>
 
                 {/* Image Upload */}
                 <div>
                   <div className="flex items-center justify-between mb-2">
-                    <p className="text-[11px] font-bold uppercase tracking-widest text-[var(--muted)]">Add Photos <span className="normal-case font-normal text-xs">({ratingData.images?.length || 0}/3)</span></p>
+                    <p className="text-[11px] font-bold uppercase tracking-widest text-(--muted)">Add Photos <span className="normal-case font-normal text-xs">({ratingData.images?.length || 0}/3)</span></p>
                   </div>
                   
                   <div className="flex flex-wrap gap-3">
                     {ratingData.images?.map((img, idx) => (
-                      <div key={idx} className="relative w-16 h-16 rounded-xl border border-[var(--border)] overflow-hidden group">
-                        <img src={img} alt="Review upload" className="w-full h-full object-cover" />
+                      <div key={idx} className="relative w-16 h-16 rounded-xl border border-(--border) overflow-hidden group">
+                        <Image src={img} alt="Review upload" width={64} height={64} className="w-full h-full object-cover" />
                         <button
                           onClick={() => removeImage(idx)}
                           className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
@@ -1043,7 +1065,7 @@ export default function OrdersPage() {
                     ))}
                     
                     {(ratingData.images?.length || 0) < 3 && (
-                      <label className={`w-16 h-16 rounded-xl border-2 border-dashed border-[var(--border)] flex flex-col items-center justify-center cursor-pointer hover:border-amber-400 hover:bg-amber-50/50 transition-colors ${uploadingImages ? 'opacity-50 pointer-events-none' : ''}`}>
+                      <label className={`w-16 h-16 rounded-xl border-2 border-dashed border-(--border) flex flex-col items-center justify-center cursor-pointer hover:border-amber-400 hover:bg-amber-50/50 transition-colors ${uploadingImages ? 'opacity-50 pointer-events-none' : ''}`}>
                         <input 
                           type="file" 
                           accept="image/jpeg,image/png" 
@@ -1056,8 +1078,8 @@ export default function OrdersPage() {
                           <Loader2 className="w-5 h-5 text-amber-500 animate-spin" />
                         ) : (
                           <>
-                            <Camera className="w-5 h-5 text-[var(--muted)] mb-1" />
-                            <span className="text-[8px] font-bold uppercase tracking-widest text-[var(--muted)]">Add</span>
+                            <Camera className="w-5 h-5 text-(--muted) mb-1" />
+                            <span className="text-[8px] font-bold uppercase tracking-widest text-(--muted)">Add</span>
                           </>
                         )}
                       </label>
@@ -1067,13 +1089,13 @@ export default function OrdersPage() {
 
                 {/* Action buttons */}
                 <div className="flex gap-3">
-                  <button onClick={() => setRatingModal(null)} className="flex-1 py-3 rounded-xl text-sm font-bold text-[var(--muted)] border border-[var(--border)] hover:bg-gray-50 transition-colors">
+                  <button onClick={() => setRatingModal(null)} className="flex-1 py-3 rounded-xl text-sm font-bold text-(--muted) border border-(--border) hover:bg-gray-50 transition-colors">
                     Cancel
                   </button>
                   <button
                     onClick={submitRating}
                     disabled={actionLoading}
-                    className="flex-[2] py-3 bg-amber-400 hover:bg-amber-500 text-white rounded-xl text-sm font-extrabold uppercase tracking-wider shadow-md disabled:opacity-50 flex items-center justify-center transition-all active:scale-95"
+                    className="flex-2 py-3 bg-amber-400 hover:bg-amber-500 text-white rounded-xl text-sm font-extrabold uppercase tracking-wider shadow-md disabled:opacity-50 flex items-center justify-center transition-all active:scale-95"
                   >
                     {actionLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : (ratingModal.isEditing ? "Update Review" : "Submit Review")}
                   </button>
@@ -1087,9 +1109,9 @@ export default function OrdersPage() {
       {/* Cancellation Request Modal */}
       <AnimatePresence>
         {cancellationModal.isOpen && (
-          <div className="fixed inset-0 z-[200] flex items-center justify-center p-4">
+          <div className="fixed inset-0 z-200 flex items-center justify-center p-4">
             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setCancellationModal({ ...cancellationModal, isOpen: false })} className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
-            <motion.div initial={{ opacity: 0, scale: 0.95, y: 20 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.95, y: 20 }} className="bg-white w-full max-w-md rounded-[2rem] shadow-2xl relative z-10 overflow-hidden border border-[var(--border)]">
+            <motion.div initial={{ opacity: 0, scale: 0.95, y: 20 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.95, y: 20 }} className="bg-white w-full max-w-md rounded-4xl shadow-2xl relative z-10 overflow-hidden border border-(--border)">
               <div className="p-8">
                 <div className="flex items-center justify-between mb-6">
                   <h3 className="font-serif text-xl font-bold text-[#2A2A2A]">Cancel Order</h3>
@@ -1098,18 +1120,18 @@ export default function OrdersPage() {
                   </button>
                 </div>
                 
-                <p className="text-xs text-[var(--muted)] mb-6 leading-relaxed">
+                <p className="text-xs text-(--muted) mb-6 leading-relaxed">
                   Please provide a reason for cancelling this order. This request will be reviewed by the artisan for approval.
                 </p>
 
                 <div className="space-y-4">
                   <div>
-                    <label className="text-[10px] font-bold uppercase tracking-widest text-[var(--rust)] mb-2 block">Reason for Cancellation</label>
+                    <label className="text-[10px] font-bold uppercase tracking-widest text-(--rust) mb-2 block">Reason for Cancellation</label>
                     <textarea
                       value={cancellationModal.reason}
                       onChange={(e) => setCancellationModal({ ...cancellationModal, reason: e.target.value })}
                       placeholder="E.g., Changed my mind, Duplicate order, etc."
-                      className="w-full h-32 p-4 bg-[#FDFBF9] border border-[var(--border)] rounded-2xl text-sm outline-none focus:border-[var(--rust)] transition-all resize-none artisan-scrollbar"
+                      className="w-full h-32 p-4 bg-[#FDFBF9] border border-(--border) rounded-2xl text-sm outline-none focus:border-(--rust) transition-all resize-none artisan-scrollbar"
                     />
                   </div>
                 </div>
@@ -1117,14 +1139,14 @@ export default function OrdersPage() {
                 <div className="flex gap-3 mt-8">
                   <button
                     onClick={() => setCancellationModal({ ...cancellationModal, isOpen: false })}
-                    className="flex-1 py-3.5 border border-[var(--border)] rounded-xl text-[10px] font-bold uppercase tracking-widest text-[var(--muted)] hover:bg-gray-50 transition-all"
+                    className="flex-1 py-3.5 border border-(--border) rounded-xl text-[10px] font-bold uppercase tracking-widest text-(--muted) hover:bg-gray-50 transition-all"
                   >
                     Keep Order
                   </button>
                   <button
                     onClick={handleCancelOrder}
                     disabled={actionLoading || !cancellationModal.reason.trim()}
-                    className="flex-[2] py-3.5 bg-[var(--bark)] text-white rounded-xl text-[10px] font-bold uppercase tracking-widest hover:bg-[var(--rust)] transition-all disabled:opacity-50 flex items-center justify-center gap-2 shadow-lg"
+                    className="flex-2 py-3.5 bg-(--bark) text-white rounded-xl text-[10px] font-bold uppercase tracking-widest hover:bg-(--rust) transition-all disabled:opacity-50 flex items-center justify-center gap-2 shadow-lg"
                   >
                     {actionLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <X className="w-4 h-4" />}
                     Submit Request

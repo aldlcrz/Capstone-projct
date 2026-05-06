@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { 
   Plus, 
   MapPin, 
@@ -10,10 +10,16 @@ import {
   X,
   Phone,
   User,
-  Check
+  Check,
+  ChevronRight,
+  Search,
+  Pencil,
+  ChevronDown,
+  Map as MapIcon,
+  Briefcase
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
-import { api } from "@/lib/api";
+import { api, getTokenForRole } from "@/lib/api";
 import dynamic from 'next/dynamic';
 import {
   INPUT_LIMITS,
@@ -24,33 +30,28 @@ import {
   sanitizePlaceNameInput,
   sanitizePostalCodeInput,
 } from "@/lib/inputValidation";
+import PsgcSelector from "@/components/PsgcSelector";
 
-const LocationPicker = dynamic(
-  () => import('@/components/LocationPicker'),
-  { ssr: false, loading: () => <div className="h-64 w-full bg-slate-100 animate-pulse rounded-xl border border-[var(--border)] flex items-center justify-center text-[var(--muted)] text-xs font-bold uppercase tracking-widest leading-relaxed text-center">Initializing <br /> Satellite Imagery...</div> }
-);
+const LocationPickerMap = dynamic(() => import('@/components/LocationPicker'), { ssr: false });
 
 export default function AddressManager({ onUpdate }) {
   const [addresses, setAddresses] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [showModal, setShowModal] = useState(false);
+  const [view, setView] = useState("list"); // "list" or "form"
   const [editingAddress, setEditingAddress] = useState(null);
-  const [formData, setFormData] = useState({
-    recipientName: "",
-    phone: "",
-    houseNo: "",
-    street: "",
-    barangay: "",
-    city: "",
-    province: "",
-    postalCode: "",
-    isDefault: false,
-    latitude: null,
-    longitude: null
-  });
+  const [searchQuery, setSearchQuery] = useState("");
+  const [showPsgcSelector, setShowPsgcSelector] = useState(false);
+  const [psgcTab, setPsgcTab] = useState("region");
+  const [showMapModal, setShowMapModal] = useState(false);
 
   const fetchAddresses = async () => {
+    const token = getTokenForRole("customer");
+    if (!token) {
+      setLoading(false);
+      return;
+    }
     try {
+      setLoading(true);
       const response = await api.get("/addresses");
       setAddresses(response.data);
     } catch (error) {
@@ -64,50 +65,82 @@ export default function AddressManager({ onUpdate }) {
     fetchAddresses();
   }, []);
 
-  const handleOpenModal = (address = null) => {
-    if (address) {
-      setEditingAddress(address);
-      setFormData(address);
-    } else {
-      setEditingAddress(null);
-      setFormData({
-        recipientName: "",
-        phone: "",
-        houseNo: "",
-        street: "",
-        barangay: "",
-        city: "",
-        province: "",
-        postalCode: "",
-        isDefault: false,
-        latitude: null,
-        longitude: null
-      });
-    }
-    setShowModal(true);
+  const filteredAddresses = useMemo(() => {
+    return addresses.filter(addr => {
+      const s = searchQuery.toLowerCase();
+      return (
+        addr.recipientName?.toLowerCase().includes(s) ||
+        addr.houseNo?.toLowerCase().includes(s) ||
+        addr.street?.toLowerCase().includes(s) ||
+        addr.barangay?.toLowerCase().includes(s) ||
+        addr.city?.toLowerCase().includes(s)
+      );
+    });
+  }, [addresses, searchQuery]);
+
+  const handleEdit = (addr) => {
+    const names = (addr.recipientName || "").split(" ");
+    setEditingAddress({
+      ...addr,
+      firstName: names[0] || "",
+      lastName: names.slice(1).join(" ") || "",
+      label: addr.label || (addr.isDefault ? "Home" : "Work")
+    });
+    setView("form");
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
+  const handleAddNew = () => {
+    setEditingAddress({
+      recipientName: "",
+      firstName: "",
+      lastName: "",
+      phone: "",
+      houseNo: "",
+      street: "",
+      barangay: "",
+      city: "",
+      province: "",
+      postalCode: "",
+      label: "Home",
+      isDefault: false,
+      latitude: null,
+      longitude: null
+    });
+    setView("form");
+  };
+
+  const handleSave = async () => {
+    if (!editingAddress.firstName && !editingAddress.recipientName) {
+      alert("Please enter a name.");
+      return;
+    }
+    if (!editingAddress.phone) {
+      alert("Please enter a phone number.");
+      return;
+    }
+
     setLoading(true);
     try {
-      const normalizedAddress = {
-        ...normalizeAddressPayload(formData),
-        latitude: formData.latitude ?? null,
-        longitude: formData.longitude ?? null,
-        isDefault: Boolean(formData.isDefault),
+      const combinedName = editingAddress.recipientName || `${editingAddress.firstName} ${editingAddress.lastName}`.trim();
+      const payload = {
+        ...normalizeAddressPayload({ ...editingAddress, recipientName: combinedName }),
+        latitude: editingAddress.latitude,
+        longitude: editingAddress.longitude,
+        isDefault: editingAddress.isDefault,
+        label: editingAddress.label
       };
-      setFormData(normalizedAddress);
-      if (editingAddress) {
-        await api.put(`/addresses/${editingAddress.id}`, normalizedAddress);
+
+      if (editingAddress.id) {
+        await api.put(`/addresses/${editingAddress.id}`, payload);
       } else {
-        await api.post("/addresses", normalizedAddress);
+        await api.post("/addresses", payload);
       }
-      setShowModal(false);
-      fetchAddresses();
+      
+      await fetchAddresses();
       if (onUpdate) onUpdate();
-    } catch (error) {
-      alert(error.response?.data?.message || error.message || "Failed to save address.");
+      setView("list");
+    } catch (err) {
+      alert(err.response?.data?.message || "Failed to save address.");
     } finally {
       setLoading(false);
     }
@@ -124,274 +157,299 @@ export default function AddressManager({ onUpdate }) {
     }
   };
 
-  const handleSetDefault = async (id) => {
-    try {
-      await api.patch(`/addresses/${id}/set-default`, {});
-      fetchAddresses();
-      if (onUpdate) onUpdate();
-    } catch (error) {
-      alert("Failed to update default address.");
-    }
-  };
+  if (view === "form") {
+    return (
+      <div className="space-y-6">
+        <div className="flex items-center justify-between border-b border-stone-100 pb-5">
+          <div className="flex items-center gap-4">
+            <button onClick={() => setView("list")} className="p-2 hover:bg-stone-50 rounded-full transition-colors">
+              <ChevronRight className="w-5 h-5 rotate-180" />
+            </button>
+            <h2 className="text-xl font-medium text-stone-800">{editingAddress?.id ? "Edit Address" : "New Address"}</h2>
+          </div>
+        </div>
 
-  const handlePinLocationInCard = async (id) => {
-    if ("geolocation" in navigator) {
-      navigator.geolocation.getCurrentPosition(async (position) => {
-        try {
-          await api.put(`/addresses/${id}`, {
-            latitude: position.coords.latitude,
-            longitude: position.coords.longitude
-          });
-          alert("📍 Location pinned successfully!");
-          fetchAddresses();
-        } catch (e) {
-          alert("Failed to update coordinates.");
-        }
-      }, () => {
-        alert("Unable to get location.");
-      });
-    }
-  };
+        <div className="max-w-2xl space-y-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="relative">
+              <label className="text-[10px] font-bold text-stone-400 uppercase tracking-widest mb-1 block">Full Name</label>
+              <input 
+                type="text" 
+                placeholder="Full Name" 
+                value={editingAddress.recipientName || (editingAddress.firstName + " " + editingAddress.lastName).trim()} 
+                onChange={(e) => {
+                  const val = e.target.value;
+                  const parts = val.split(" ");
+                  setEditingAddress({
+                    ...editingAddress, 
+                    recipientName: val,
+                    firstName: parts[0] || "",
+                    lastName: parts.slice(1).join(" ") || ""
+                  });
+                }} 
+                className="w-full px-4 py-3 border border-stone-200 rounded-sm focus:border-(--rust) outline-none text-sm placeholder-stone-300" 
+              />
+            </div>
+            <div className="relative">
+              <label className="text-[10px] font-bold text-stone-400 uppercase tracking-widest mb-1 block">Phone Number</label>
+              <input 
+                type="text" 
+                placeholder="Phone Number" 
+                value={editingAddress.phone} 
+                onChange={(e) => setEditingAddress({...editingAddress, phone: sanitizePhoneInput(e.target.value)})} 
+                className="w-full px-4 py-3 border border-stone-200 rounded-sm focus:border-(--rust) outline-none text-sm placeholder-stone-300" 
+              />
+            </div>
+          </div>
 
-  const handleLocationFound = ({ lat, lng, address }) => {
-    setFormData(prev => ({
-      ...prev,
-      latitude: lat,
-      longitude: lng,
-      // Aggressive fallback for street and house number
-      houseNo: address.houseNumber ? sanitizeAddressLineInput(address.houseNumber, INPUT_LIMITS.houseNo) : prev.houseNo,
-      street: address.street ? sanitizeAddressLineInput(address.street, INPUT_LIMITS.street) : prev.street,
-      barangay: address.barangay ? sanitizeAddressLineInput(address.barangay, INPUT_LIMITS.barangay) : prev.barangay,
-      city: address.city ? sanitizePlaceNameInput(address.city, INPUT_LIMITS.city) : prev.city,
-      province: address.province ? sanitizePlaceNameInput(address.province, INPUT_LIMITS.province) : prev.province,
-      postalCode: address.postalCode ? sanitizePostalCodeInput(address.postalCode) : prev.postalCode,
-    }));
-  };
+          <div className="relative">
+            <label className="text-[10px] font-bold text-stone-400 uppercase tracking-widest mb-1 block">Region, Province, City, Barangay</label>
+            <PsgcSelector 
+              value={editingAddress} 
+              onChange={(newVal) => setEditingAddress(newVal)} 
+            />
+          </div>
 
-  const [showMapPicker, setShowMapPicker] = useState(false);
+          <div className="relative">
+            <label className="text-[10px] font-bold text-stone-400 uppercase tracking-widest mb-1 block">Postal Code</label>
+            <input 
+              type="text" 
+              placeholder="Postal Code" 
+              value={editingAddress.postalCode} 
+              onChange={(e) => setEditingAddress({...editingAddress, postalCode: sanitizePostalCodeInput(e.target.value)})} 
+              className="w-full px-4 py-3 border border-stone-200 rounded-sm focus:border-(--rust) outline-none text-sm placeholder-stone-300" 
+            />
+          </div>
+
+          <div className="relative">
+            <label className="text-[10px] font-bold text-stone-400 uppercase tracking-widest mb-1 block">Street Name, Building, House No.</label>
+            <textarea 
+              placeholder="Street Name, Building, House No." 
+              value={editingAddress.houseNo} 
+              onChange={(e) => setEditingAddress({...editingAddress, houseNo: e.target.value})} 
+              className="w-full px-4 py-3 border border-stone-200 rounded-sm focus:border-(--rust) outline-none text-sm placeholder-stone-300 min-h-[100px] resize-none" 
+            />
+          </div>
+
+          {/* REALTIME MAP SECTION */}
+          <div className="relative border border-stone-100 rounded-sm overflow-hidden bg-stone-50 group">
+            {(!editingAddress.latitude || !editingAddress.longitude) ? (
+              <button 
+                onClick={() => setShowMapModal(true)} 
+                className="w-full h-40 flex flex-col items-center justify-center gap-2 hover:bg-stone-100 transition-colors"
+              >
+                <div className="w-10 h-10 rounded-full border border-stone-300 flex items-center justify-center text-stone-300 group-hover:border-(--rust) group-hover:text-(--rust) transition-all">
+                  <Plus className="w-6 h-6" />
+                </div>
+                <span className="text-sm font-medium text-stone-400 group-hover:text-(--rust)">Add Geolocation Pin</span>
+              </button>
+            ) : (
+              <div className="h-48 relative">
+                <LocationPickerMap 
+                  initialLat={editingAddress.latitude} 
+                  initialLng={editingAddress.longitude}
+                  readOnly={true}
+                />
+                <div className="absolute inset-0 bg-black/5 pointer-events-none" />
+                <button 
+                  onClick={() => setShowMapModal(true)} 
+                  className="absolute top-4 right-4 z-20 bg-white/90 backdrop-blur-sm px-4 py-2 rounded-full shadow-lg border border-stone-100 text-(--rust) hover:bg-white text-xs font-bold flex items-center gap-2"
+                >
+                  <MapIcon className="w-3.5 h-3.5" /> Change pin point
+                </button>
+              </div>
+            )}
+          </div>
+
+          <div className="space-y-4">
+            <label className="text-[10px] font-bold text-stone-400 uppercase tracking-widest block">Label As:</label>
+            <div className="flex gap-4">
+              {[
+                { id: "Home", icon: <Home className="w-4 h-4" /> },
+                { id: "Work", icon: <Briefcase className="w-4 h-4" /> }
+              ].map(l => (
+                <button 
+                  key={l.id} 
+                  type="button"
+                  onClick={() => setEditingAddress({...editingAddress, label: l.id})} 
+                  className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-sm border transition-all text-sm font-medium ${editingAddress.label === l.id ? 'border-(--rust) text-(--rust) bg-(--rust)/5 shadow-sm' : 'border-stone-100 text-stone-400 hover:border-stone-200'}`}
+                >
+                  {l.icon} {l.id}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div className="flex items-center gap-3 py-2">
+            <label className="flex items-center gap-3 cursor-pointer group">
+              <div 
+                onClick={() => setEditingAddress({...editingAddress, isDefault: !editingAddress.isDefault})}
+                className={`w-5 h-5 rounded-sm border flex items-center justify-center transition-all ${editingAddress.isDefault ? 'bg-(--rust) border-(--rust)' : 'border-stone-200 group-hover:border-stone-400'}`}
+              >
+                {editingAddress.isDefault && <Check className="w-3.5 h-3.5 text-white" />}
+              </div>
+              <span className="text-sm text-stone-500 select-none">Set as Default Address</span>
+            </label>
+          </div>
+
+          <div className="pt-8 flex items-center justify-end gap-8">
+            <button onClick={() => setView("list")} className="text-sm font-medium text-stone-400 hover:text-stone-800 transition-colors">Cancel</button>
+            <button 
+              onClick={handleSave} 
+              disabled={loading} 
+              className="px-16 py-3.5 bg-(--rust) text-white rounded-sm text-sm font-bold uppercase tracking-widest hover:opacity-95 transition-all shadow-md shadow-(--rust)/10 disabled:opacity-50 flex items-center gap-3"
+            >
+              {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : "Submit"}
+            </button>
+          </div>
+        </div>
+
+        {/* Realtime Map Picker Overlay */}
+        <AnimatePresence>
+          {showMapModal && (
+            <div className="fixed inset-0 z-300 flex items-center justify-center p-4">
+              <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setShowMapModal(false)} className="absolute inset-0 bg-stone-900/60 backdrop-blur-sm" />
+              <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.9, opacity: 0 }} className="relative w-full max-w-4xl bg-white rounded-sm overflow-hidden shadow-2xl h-[85vh] flex flex-col">
+                 <div className="p-6 border-b border-stone-100 flex justify-between items-center bg-stone-50">
+                    <h3 className="text-lg font-medium text-stone-800">Pin Your Exact Location</h3>
+                    <button onClick={() => setShowMapModal(false)} className="w-10 h-10 rounded-full bg-white flex items-center justify-center border border-stone-100 hover:bg-stone-50 transition-colors shadow-sm"><X className="w-5 h-5" /></button>
+                 </div>
+                 <div className="flex-1 relative">
+                    <LocationPickerMap 
+                      onLocationSelect={(lat, lng, addrObj) => {
+                        setEditingAddress(prev => ({ 
+                          ...prev, 
+                          latitude: lat, 
+                          longitude: lng,
+                          houseNo: addrObj.houseNumber || prev.houseNo,
+                          street: addrObj.street || prev.street,
+                          barangay: addrObj.barangay || prev.barangay,
+                          city: addrObj.city || prev.city,
+                          province: addrObj.province || prev.province,
+                          postalCode: addrObj.postalCode || prev.postalCode
+                        }));
+                        setShowMapModal(false);
+                      }}
+                    />
+                 </div>
+                 <div className="p-4 bg-stone-800 text-center">
+                    <p className="text-[11px] text-stone-400 font-medium uppercase tracking-widest">Move the pin to match your doorstep for precise delivery</p>
+                 </div>
+              </motion.div>
+            </div>
+          )}
+        </AnimatePresence>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-8">
-      <div className="flex justify-between items-center">
-        <div>
-          <h2 className="text-lg font-serif font-bold text-[var(--charcoal)] uppercase tracking-tight">
-            Delivery <span className="text-[var(--rust)] italic lowercase font-normal">Registry</span>
-          </h2>
-          <p className="text-[var(--muted)] text-[10px] uppercase font-bold tracking-widest mt-1 opacity-60">Manage your shipping destinations</p>
+      <div className="flex flex-col sm:flex-row gap-4 items-center justify-between">
+        <div className="relative w-full sm:w-80 group">
+          <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-stone-300 group-focus-within:text-(--rust) transition-colors" />
+          <input 
+            type="text" 
+            placeholder="Search address..." 
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="w-full pl-11 pr-4 py-3 bg-stone-50 border border-stone-100 rounded-sm text-sm focus:bg-white focus:border-stone-300 outline-none transition-all placeholder-stone-300 font-medium" 
+          />
         </div>
-        
         <button 
-          onClick={() => handleOpenModal()}
-          className="flex items-center gap-2 bg-[var(--rust)] text-white px-6 py-3 rounded-xl font-bold uppercase text-[9px] tracking-widest shadow-lg hover:scale-105 active:scale-95 transition-all"
+          onClick={handleAddNew}
+          className="w-full sm:w-auto flex items-center justify-center gap-2 bg-(--rust) text-white px-8 py-3 rounded-sm text-xs font-bold uppercase tracking-widest shadow-lg hover:shadow-(--rust)/20 transition-all active:scale-[0.98]"
         >
-          <Plus className="w-3.5 h-3.5" /> New Address
+          <Plus className="w-4 h-4" /> Add New Address
         </button>
       </div>
 
-      {loading && addresses.length === 0 ? (
-        <div className="flex flex-col items-center justify-center py-20 gap-3 border-2 border-dashed border-[var(--border)] rounded-[2rem]">
-          <Loader2 className="w-8 h-8 animate-spin text-[var(--rust)]" />
-          <p className="font-serif italic text-sm text-[var(--muted)]">Consulting the archives...</p>
-        </div>
-      ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <AnimatePresence>
-            {addresses.map((addr) => (
-              <motion.div 
-                key={addr.id}
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, scale: 0.95 }}
-                className={`relative group bg-[#FDFBF9] border-2 rounded-3xl p-6 transition-all shadow-sm hover:shadow-xl ${addr.isDefault ? 'border-[var(--rust)] ring-2 ring-[var(--rust)]/5' : 'border-[var(--border)] hover:border-[var(--rust)]/30'}`}
-              >
-                <div className="flex justify-between items-start mb-4">
-                  {addr.isDefault ? (
-                    <div className="bg-[var(--rust)] text-white px-2 py-0.5 rounded-md text-[7px] font-extrabold uppercase tracking-widest">Default</div>
-                  ) : (
-                    <button 
-                      onClick={() => handleSetDefault(addr.id)}
-                      className="text-[7px] font-extrabold uppercase tracking-widest text-[var(--muted)] hover:text-[var(--rust)]"
-                    >
-                      Set Default
-                    </button>
-                  )}
-                  
-                  <div className="flex items-center gap-3">
-                    <button 
-                      onClick={() => handlePinLocationInCard(addr.id)}
-                      className="p-1.5 bg-[var(--rust)]/5 rounded-lg text-[var(--rust)] hover:bg-[var(--rust)] hover:text-white transition-all"
-                    >
-                       <MapPin className="w-3.5 h-3.5" />
-                    </button>
-                    <button 
-                      onClick={() => handleOpenModal(addr)}
-                      className="text-[9px] font-bold uppercase tracking-widest text-[var(--rust)] hover:underline"
-                    >
-                       Edit
-                    </button>
-                    <button 
-                       onClick={() => handleDelete(addr.id)}
-                       className="text-[var(--muted)] hover:text-red-500 transition-colors"
-                    >
-                       <Trash2 className="w-3.5 h-3.5" />
-                    </button>
+      <div className="grid grid-cols-1 gap-4">
+        {loading && addresses.length === 0 ? (
+          <div className="py-20 text-center space-y-4">
+            <Loader2 className="w-10 h-10 animate-spin text-stone-200 mx-auto" />
+            <p className="text-sm text-stone-400 font-serif italic tracking-wide">Loading your address book...</p>
+          </div>
+        ) : filteredAddresses.length > 0 ? (
+          filteredAddresses.map(addr => (
+            <motion.div 
+              key={addr.id}
+              initial={{ opacity: 0, y: 5 }}
+              animate={{ opacity: 1, y: 0 }}
+              className={`group relative bg-white border rounded-sm p-6 transition-all hover:border-stone-300 ${addr.isDefault ? 'border-(--rust) shadow-sm' : 'border-stone-100'}`}
+            >
+              <div className="flex flex-col md:flex-row justify-between gap-6">
+                <div className="flex gap-6">
+                  {/* Map Preview Icon */}
+                  <div className="hidden sm:flex w-24 h-24 bg-stone-50 rounded-sm items-center justify-center shrink-0 border border-stone-100 relative overflow-hidden group-hover:bg-stone-100 transition-colors">
+                    {addr.latitude ? (
+                      <div className="w-full h-full opacity-40 grayscale group-hover:grayscale-0 transition-all duration-700">
+                        <LocationPickerMap 
+                          initialLat={addr.latitude} 
+                          initialLng={addr.longitude}
+                          readOnly={true}
+                        />
+                      </div>
+                    ) : (
+                      <MapPin className="w-8 h-8 text-stone-200 group-hover:text-stone-300 transition-colors" />
+                    )}
+                    <div className="absolute inset-0 border border-black/5" />
+                  </div>
+
+                  <div className="space-y-2">
+                    <div className="flex items-center gap-3">
+                      <span className="text-sm font-bold text-stone-800">{addr.recipientName}</span>
+                      <div className="h-4 w-px bg-stone-200" />
+                      <span className="text-sm text-stone-500">{addr.phone}</span>
+                    </div>
+                    <p className="text-sm text-stone-500 leading-relaxed max-w-xl">
+                      {addr.houseNo} {addr.street}, {addr.barangay}, {addr.city}, {addr.province}, {addr.region} {addr.postalCode}
+                    </p>
+                    <div className="flex items-center gap-2 pt-1">
+                      {addr.isDefault && (
+                        <span className="px-2 py-0.5 border border-(--rust) text-[10px] font-bold text-(--rust) uppercase tracking-widest rounded-sm">Default</span>
+                      )}
+                      {addr.label && (
+                        <span className="px-2 py-0.5 border border-stone-200 text-[10px] font-bold text-stone-400 uppercase tracking-widest rounded-sm">{addr.label}</span>
+                      )}
+                    </div>
                   </div>
                 </div>
 
-                <div className="space-y-2">
-                  <h3 className="font-serif text-lg font-bold text-[var(--charcoal)] leading-none">{addr.recipientName}</h3>
-                  <p className="text-[10px] font-bold text-[var(--muted)]">{addr.phone}</p>
-                  <p className="text-xs text-[var(--charcoal)]/80 leading-relaxed font-medium">
-                    {addr.houseNo} {addr.street}, Brgy. {addr.barangay}, {addr.city}, {addr.province} {addr.postalCode}
-                  </p>
-                  {addr.latitude && (
-                    <div className="flex items-center gap-1.5 text-[8px] font-bold text-[var(--rust)] uppercase tracking-widest bg-[var(--rust)]/5 py-1.5 px-2 rounded-md w-fit mt-2">
-                      <MapPin className="w-2.5 h-2.5" /> Pinned
-                    </div>
-                  )}
-                </div>
-              </motion.div>
-            ))}
-          </AnimatePresence>
-
-          {addresses.length === 0 && !loading && (
-            <div className="col-span-full py-20 text-center bg-white rounded-3xl border-2 border-dashed border-[var(--border)]">
-               <MapPin className="w-10 h-10 text-[var(--muted)]/20 mx-auto mb-4" />
-               <h3 className="font-serif text-xl font-bold text-[var(--charcoal)]">No Destinations</h3>
-               <p className="text-[var(--muted)] text-xs mt-1">Add your first shipping address above.</p>
-            </div>
-          )}
-        </div>
-      )}
-
-      {/* Add/Edit Modal */}
-      <AnimatePresence>
-        {showModal && (
-          <div className="fixed inset-0 z-[200] flex items-center justify-center p-4">
-             <motion.div 
-               initial={{ opacity: 0 }} 
-               animate={{ opacity: 1 }} 
-               exit={{ opacity: 0 }} 
-               onClick={() => setShowModal(false)}
-               className="absolute inset-0 bg-[var(--charcoal)]/40 backdrop-blur-sm"
-             />
-             <motion.div 
-               initial={{ scale: 0.95, opacity: 0 }}
-               animate={{ scale: 1, opacity: 1 }}
-               exit={{ scale: 0.95, opacity: 0 }}
-               className="relative bg-white w-full max-w-2xl rounded-[2.5rem] shadow-2xl overflow-hidden flex flex-col max-h-[90vh]"
-             >
-                <div className="p-8 pb-32 overflow-y-auto artisan-scrollbar">
-                  <div className="flex justify-between items-start mb-8">
-                    <div>
-                      <h2 className="font-serif text-2xl font-bold text-[var(--charcoal)] uppercase tracking-tighter">
-                        {editingAddress ? 'Update' : 'Establish'} <span className="text-[var(--rust)] italic lowercase">Address</span>
-                      </h2>
-                      <p className="text-[var(--muted)] text-[10px] font-bold uppercase tracking-widest mt-1">Registry node metadata</p>
-                    </div>
-                    <button onClick={() => setShowModal(false)} className="p-2 bg-[var(--input-bg)] rounded-xl text-[var(--muted)] hover:text-red-500">
-                      <X className="w-6 h-6" />
+                <div className="flex md:flex-col items-center md:items-end justify-between md:justify-start gap-4 shrink-0">
+                  <div className="flex gap-4">
+                    <button onClick={() => handleEdit(addr)} className="text-sm font-medium text-stone-800 hover:text-(--rust) transition-colors flex items-center gap-1">
+                      <Pencil className="w-3.5 h-3.5" /> Edit
+                    </button>
+                    <button onClick={() => handleDelete(addr.id)} className="text-sm font-medium text-stone-400 hover:text-red-500 transition-colors flex items-center gap-1">
+                      <Trash2 className="w-3.5 h-3.5" /> Delete
                     </button>
                   </div>
-
-                  <form onSubmit={handleSubmit} className="space-y-6">
-                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <InputGroup label="Recipient" value={formData.recipientName} onChange={(val) => setFormData({ ...formData, recipientName: sanitizePersonNameInput(val) })} icon={<User className="w-4 h-4" />} placeholder="Full Name" maxLength={INPUT_LIMITS.personName} autoComplete="name" />
-                        <InputGroup label="Phone" value={formData.phone} onChange={(val) => setFormData({ ...formData, phone: sanitizePhoneInput(val) })} icon={<Phone className="w-4 h-4" />} placeholder="Mobile Number" inputMode="numeric" maxLength={INPUT_LIMITS.mobileNumber} autoComplete="tel" />
-                        <InputGroup label="House no, or landmark" value={formData.houseNo} onChange={(val) => setFormData({ ...formData, houseNo: sanitizeAddressLineInput(val, INPUT_LIMITS.houseNo) })} icon={<Home className="w-4 h-4" />} placeholder="Building/No." maxLength={INPUT_LIMITS.houseNo} autoComplete="address-line1" />
-                        <InputGroup label="Street" value={formData.street} onChange={(val) => setFormData({ ...formData, street: sanitizeAddressLineInput(val, INPUT_LIMITS.street) })} icon={<MapPin className="w-4 h-4" />} placeholder="Road Name" maxLength={INPUT_LIMITS.street} autoComplete="address-line2" />
-                        <InputGroup label="Barangay" value={formData.barangay} onChange={(val) => setFormData({ ...formData, barangay: sanitizeAddressLineInput(val, INPUT_LIMITS.barangay) })} icon={<Navigation className="w-4 h-4" />} placeholder="Lumban" maxLength={INPUT_LIMITS.barangay} />
-                        <InputGroup label="City" value={formData.city} onChange={(val) => setFormData({ ...formData, city: sanitizePlaceNameInput(val, INPUT_LIMITS.city) })} icon={<Navigation className="w-4 h-4" />} placeholder="City" maxLength={INPUT_LIMITS.city} autoComplete="address-level2" />
-                        <InputGroup label="Province" value={formData.province} onChange={(val) => setFormData({ ...formData, province: sanitizePlaceNameInput(val, INPUT_LIMITS.province) })} icon={<Navigation className="w-4 h-4" />} placeholder="Province" maxLength={INPUT_LIMITS.province} autoComplete="address-level1" />
-                        <InputGroup label="Postal" value={formData.postalCode} onChange={(val) => setFormData({ ...formData, postalCode: sanitizePostalCodeInput(val) })} icon={<Navigation className="w-4 h-4" />} placeholder="XXXX" inputMode="numeric" maxLength={INPUT_LIMITS.postalCode} autoComplete="postal-code" />
-                     </div>
-
-                     <div className="flex flex-col sm:flex-row gap-4 items-center justify-between border-t border-[var(--border)] pt-8 mt-4">
-                        <button
-                          type="button"
-                          onClick={() => setShowMapPicker(!showMapPicker)}
-                          className={`w-full sm:w-auto flex items-center justify-center gap-3 px-6 py-4 rounded-xl text-[10px] font-bold uppercase tracking-widest transition-all ${formData.latitude ? 'bg-green-50 text-green-700 border-2 border-green-200 shadow-sm' : (showMapPicker ? 'bg-[var(--rust)] text-white' : 'bg-[var(--input-bg)] text-[var(--muted)]')}`}
-                        >
-                          <MapPin className="w-4 h-4" /> {formData.latitude ? `Location Pinned (${formData.latitude.toFixed(4)})` : (showMapPicker ? 'Hide Heritage Map' : 'Precision Pin')}
-                        </button>
-
-                        <label className="flex items-center gap-3 cursor-pointer group py-2">
-                           <div 
-                             onClick={() => setFormData({ ...formData, isDefault: !formData.isDefault })}
-                             className={`w-5 h-5 rounded-full border-2 flex items-center justify-center transition-all ${formData.isDefault ? 'bg-green-600 border-green-600 shadow-md' : 'border-[var(--border)]'}`}
-                           >
-                              {formData.isDefault && <Check className="w-3 h-3 text-white" />}
-                           </div>
-                           <span className="text-[10px] font-bold uppercase tracking-widest text-[var(--charcoal)] opacity-80">Default Destination</span>
-                        </label>
-                     </div>
-
-                     <AnimatePresence>
-                        {showMapPicker && (
-                          <motion.div
-                            initial={{ opacity: 0, height: 0 }}
-                            animate={{ opacity: 1, height: 'auto' }}
-                            exit={{ opacity: 0, height: 0 }}
-                            className="overflow-hidden"
-                          >
-                            <div className="pt-6 border-t border-[var(--border)] mt-4">
-                              <LocationPicker 
-                                onLocationFound={handleLocationFound}
-                                initialLat={formData.latitude || 14.2952}
-                                initialLng={formData.longitude || 121.4647}
-                                onConfirm={() => setShowMapPicker(false)}
-                              />
-                            </div>
-                          </motion.div>
-                        )}
-                     </AnimatePresence>
-
-                     <button
-                        type="submit"
-                        disabled={loading}
-                        className="w-full bg-[var(--rust)] text-white py-5 rounded-2xl font-bold uppercase text-xs tracking-[0.3em] shadow-xl hover:scale-[1.01] active:scale-[0.98] transition-all flex items-center justify-center gap-3 mt-10 active:shadow-inner"
-                     >
-                       {loading ? <Loader2 className="w-6 h-6 animate-spin" /> : (editingAddress ? 'Revise Destination' : 'Confirm Registry')}
-                     </button>
-                  </form>
+                  {!addr.isDefault && (
+                    <button 
+                      onClick={async () => {
+                        try {
+                          await api.patch(`/addresses/${addr.id}/set-default`);
+                          fetchAddresses();
+                          if (onUpdate) onUpdate();
+                        } catch (e) { alert("Failed to set default."); }
+                      }}
+                      className="text-xs font-bold text-stone-400 hover:text-stone-800 border-b border-stone-200 hover:border-stone-800 transition-all pb-0.5"
+                    >
+                      Set as default
+                    </button>
+                  )}
                 </div>
-             </motion.div>
+              </div>
+            </motion.div>
+          ))
+        ) : (
+          <div className="py-20 text-center border-2 border-dashed border-stone-100 rounded-sm">
+            <MapPin className="w-12 h-12 text-stone-100 mx-auto mb-4" />
+            <h3 className="text-stone-800 font-medium">No addresses found</h3>
+            <p className="text-sm text-stone-400 mt-1">Start by adding a new delivery registry node.</p>
           </div>
         )}
-      </AnimatePresence>
-    </div>
-  );
-}
-
-function InputGroup({
-  label,
-  value,
-  onChange,
-  icon,
-  placeholder,
-  type = "text",
-  inputMode,
-  maxLength,
-  autoComplete = "off",
-}) {
-  return (
-    <div className="space-y-2">
-      <label className="text-[9px] font-extrabold uppercase tracking-[0.2em] text-[var(--charcoal)] ml-1 opacity-70">{label}</label>
-      <div className="relative group">
-        <div className="absolute top-1/2 -translate-y-1/2 left-4 text-[var(--muted)] group-focus-within:text-[var(--rust)] transition-colors">
-          {icon}
-        </div>
-        <input 
-          type={type} 
-          required
-          inputMode={inputMode}
-          maxLength={maxLength}
-          autoComplete={autoComplete}
-          value={value}
-          onChange={(e) => onChange(e.target.value)}
-          placeholder={placeholder}
-          className="w-full bg-[var(--input-bg)] text-[var(--charcoal)] placeholder:text-[var(--muted)]/50 border-2 border-transparent outline-none focus:border-[var(--rust)] focus:bg-white transition-all pl-12 pr-4 py-4 rounded-xl text-xs font-bold shadow-inner"
-        />
       </div>
     </div>
   );

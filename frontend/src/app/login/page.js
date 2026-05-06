@@ -8,6 +8,7 @@ import { api, getApiErrorMessage, setSessionForRole } from "@/lib/api";
 import { GoogleLogin } from "@react-oauth/google";
 import { isGoogleAuthEnabled } from "@/lib/googleAuth";
 import SetPasswordModal from "@/components/SetPasswordModal";
+import { syncGuestDataToCustomer } from "@/lib/customerStorage";
 
 const containerVariants = {
   hidden: {},
@@ -111,6 +112,10 @@ export default function LoginPage() {
       const roleKey = user.role || "customer";
       setSessionForRole(roleKey, { token, user });
 
+      if (roleKey === "customer") {
+        syncGuestDataToCustomer();
+      }
+
       const returnUrl = redirectUrl || localStorage.getItem("returnUrl");
       if (returnUrl) {
         localStorage.removeItem("returnUrl");
@@ -120,7 +125,7 @@ export default function LoginPage() {
 
       if (user.role === "admin") window.location.replace("/admin/dashboard");
       else if (user.role === "seller") window.location.replace("/seller/dashboard");
-      else window.location.replace("/home");
+      else window.location.replace("/");
     } catch (err) {
       const data = err.response?.data;
       setError(getApiErrorMessage(err, "Authentication failed. Check your credentials."));
@@ -165,6 +170,10 @@ export default function LoginPage() {
 
       setSessionForRole(roleKey, { token, user });
 
+      if (roleKey === "customer") {
+        syncGuestDataToCustomer();
+      }
+
       const returnUrl = redirectUrl || localStorage.getItem("returnUrl");
       if (returnUrl) {
         localStorage.removeItem("returnUrl");
@@ -174,7 +183,7 @@ export default function LoginPage() {
 
       if (user.role === "admin") window.location.replace("/admin/dashboard");
       else if (user.role === "seller") window.location.replace("/seller/dashboard");
-      else window.location.replace("/home");
+      else window.location.replace("/");
     } catch (err) {
       setError(getApiErrorMessage(err, "Google authentication failed."));
     } finally {
@@ -199,7 +208,7 @@ export default function LoginPage() {
 
     if (user.role === "admin") window.location.replace("/admin/dashboard");
     else if (user.role === "seller") window.location.replace("/seller/dashboard");
-    else window.location.replace("/home");
+    else window.location.replace("/");
   };
 
   const handleSkipSetPassword = () => {
@@ -217,7 +226,7 @@ export default function LoginPage() {
 
     if (user.role === "admin") window.location.replace("/admin/dashboard");
     else if (user.role === "seller") window.location.replace("/seller/dashboard");
-    else window.location.replace("/home");
+    else window.location.replace("/");
   };
 
   return (
@@ -479,7 +488,6 @@ export default function LoginPage() {
                     onError={() => setError("Google Sign-in failed. Please try again.")}
                     theme="outline"
                     shape="pill"
-                    width="100%"
                     text="signin_with"
                     ux_mode="popup"
                   />

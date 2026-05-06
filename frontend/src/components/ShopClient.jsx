@@ -27,10 +27,10 @@ import { getProductImageSrc, resolveBackendImageUrl } from "@/lib/productImages"
 
 // Removed MetricCard and SocialCard for the new premium layout inline implementation
 
-import dynamic from "next/dynamic";
-const ShopMap = dynamic(() => import("./ShopMap"), { ssr: false });
+
 import { X, Navigation, ShieldAlert } from "lucide-react";
 import ReportModal from "./ReportModal";
+import AuthGateModal from "./AuthGateModal";
 
 export default function ShopClient() {
   const searchParams = useSearchParams();
@@ -43,16 +43,17 @@ export default function ShopClient() {
   const [userRole, setUserRole] = useState(null);
   const [activeTab, setActiveTab] = useState("all");
   const [searchQuery, setSearchQuery] = useState("");
-  const [isMapOpen, setIsMapOpen] = useState(false);
+
   const [isReportModalOpen, setIsReportModalOpen] = useState(false);
+  const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const { socket } = useSocket();
 
   useEffect(() => {
     try {
       const customerUser = getStoredUserForRole("customer");
-      setUserRole(customerUser?.role || "customer");
+      setUserRole(customerUser?.role || "guest");
     } catch {
-      setUserRole("customer");
+      setUserRole("guest");
     }
   }, []);
 
@@ -137,7 +138,7 @@ export default function ShopClient() {
         }
 
         return {
-          icon: <LinkIcon className="h-4 w-4 text-[var(--rust)]" />,
+          icon: <LinkIcon className="h-4 w-4 text-(--rust)" />,
           label: link.label || "Link",
           href,
           linkLabel: "Open Link",
@@ -235,8 +236,8 @@ export default function ShopClient() {
     return (
       <Layout>
         <div className="flex h-[70vh] flex-col items-center justify-center space-y-6">
-          <Loader2 className="h-10 w-10 animate-spin text-[var(--rust)] opacity-30" />
-          <p className="font-serif italic text-[var(--muted)]">Opening artisan workshop...</p>
+          <Loader2 className="h-10 w-10 animate-spin text-(--rust) opacity-30" />
+          <p className="font-serif italic text-(--muted)">Opening artisan workshop...</p>
         </div>
       </Layout>
     );
@@ -245,7 +246,7 @@ export default function ShopClient() {
   if (!id) {
     return (
       <Layout>
-        <div className="flex h-[70vh] items-center justify-center px-4 text-center text-[var(--muted)]">
+        <div className="flex h-[70vh] items-center justify-center px-4 text-center text-(--muted)">
           Select a shop first to open its collection.
         </div>
       </Layout>
@@ -259,7 +260,7 @@ export default function ShopClient() {
         <div className="mx-auto max-w-5xl px-4 sm:px-6 lg:px-8 pt-6 pb-2 flex justify-between items-center">
            <button 
              onClick={() => router.back()} 
-             className="flex items-center gap-1.5 text-xs font-bold text-stone-500 hover:text-[var(--rust)] transition-colors"
+             className="flex items-center gap-1.5 text-xs font-bold text-stone-500 hover:text-(--rust) transition-colors"
            >
              <ChevronLeft className="h-4 w-4" /> Back to previous
            </button>
@@ -284,9 +285,11 @@ export default function ShopClient() {
               <div className="relative z-10 flex gap-4 items-center">
                 <div className="w-[72px] h-[72px] rounded-full border border-white/20 bg-stone-100 overflow-hidden shrink-0 flex items-center justify-center font-serif text-3xl text-stone-400">
                   {seller?.profilePhoto ? (
-                    <img
+                    <Image
                       src={resolveBackendImageUrl(seller.profilePhoto, "/images/placeholder.png")}
                       alt={seller.shopName}
+                      width={72}
+                      height={72}
                       className="w-full h-full object-cover"
                     />
                   ) : (
@@ -305,18 +308,20 @@ export default function ShopClient() {
               </div>
               <div className="relative z-10 flex gap-2.5 mt-5 w-full">
                 {userRole !== "admin" && (
-                  <Link
-                    href={`/messages?sellerId=${id}&sellerName=${seller?.shopName}`}
+                  <button
+                    onClick={() => {
+                      if (userRole === "guest") {
+                        setIsAuthModalOpen(true);
+                      } else {
+                        router.push(`/messages?sellerId=${id}&sellerName=${seller?.shopName}`);
+                      }
+                    }}
                     className="flex-1 flex items-center justify-center gap-1.5 border border-white/30 px-3 py-1.5 text-[10px] font-bold uppercase tracking-widest text-white transition-all hover:bg-white/10 rounded-sm"
                   >
                     <MessageCircle className="h-3 w-3" /> Message
-                  </Link>
+                  </button>
                 )}
-                {seller?.shopLatitude && seller?.shopLongitude && (
-                   <button onClick={() => setIsMapOpen(true)} className="flex-1 flex items-center justify-center gap-1.5 border border-white/30 px-3 py-1.5 text-[10px] font-bold uppercase tracking-widest text-white transition-all hover:bg-white/10 rounded-sm">
-                      <MapPin className="h-3 w-3" /> View Map
-                   </button>
-                )}
+
               </div>
             </div>
 
@@ -326,22 +331,22 @@ export default function ShopClient() {
                   <div className="flex items-center gap-3 text-sm">
                      <Package className="w-4 h-4 text-stone-400" />
                      <span className="text-stone-500 font-medium">Masterpieces:</span>
-                     <span className="text-[var(--rust)] font-bold">{seller?.productCount ?? products.length}</span>
+                     <span className="text-(--rust) font-bold">{seller?.productCount ?? products.length}</span>
                   </div>
                   <div className="flex items-center gap-3 text-sm">
                      <Star className="w-4 h-4 text-stone-400" />
                      <span className="text-stone-500 font-medium">Rating:</span>
-                     <span className="text-[var(--rust)] font-bold">{Number(seller?.rating || 0.0).toFixed(1)}</span>
+                     <span className="text-(--rust) font-bold">{Number(seller?.rating || 0.0).toFixed(1)}</span>
                   </div>
                   <div className="flex items-center gap-3 text-sm">
                      <MessageCircle className="w-4 h-4 text-stone-400" />
                      <span className="text-stone-500 font-medium">Response:</span>
-                     <span className="text-[var(--rust)] font-bold">{seller?.responseRate || "100%"}</span>
+                     <span className="text-(--rust) font-bold">{seller?.responseRate || "100%"}</span>
                   </div>
                   <div className="flex items-center gap-3 text-sm">
                      <Clock className="w-4 h-4 text-stone-400" />
                      <span className="text-stone-500 font-medium">Established:</span>
-                     <span className="text-[var(--rust)] font-bold">{seller?.establishedOn || seller?.joined || "April 2026"}</span>
+                     <span className="text-(--rust) font-bold">{seller?.establishedOn || seller?.joined || "April 2026"}</span>
                   </div>
                </div>
             </div>
@@ -351,8 +356,8 @@ export default function ShopClient() {
 
         <div className="mx-auto max-w-5xl px-4 py-8 sm:px-6 lg:px-8">
           <div className="mb-6 flex flex-col items-center text-center">
-            <h3 className="font-serif text-xl sm:text-2xl font-bold tracking-tight text-[var(--charcoal)] mb-4">
-              The <span className="text-[var(--rust)] italic">Collection</span>
+            <h3 className="font-serif text-xl sm:text-2xl font-bold tracking-tight text-(--charcoal) mb-4">
+              The <span className="text-(--rust) italic">Collection</span>
             </h3>
 
             <div className="w-full max-w-md relative mb-6">
@@ -361,7 +366,7 @@ export default function ShopClient() {
                 placeholder="Search in this shop..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full bg-white border border-stone-200 rounded-full py-2.5 pl-11 pr-4 text-sm font-medium text-stone-700 outline-none focus:border-[var(--rust)] transition-colors shadow-sm"
+                className="w-full bg-white border border-stone-200 rounded-full py-2.5 pl-11 pr-4 text-sm font-medium text-stone-700 outline-none focus:border-(--rust) transition-colors shadow-sm"
               />
               <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-stone-400" />
             </div>
@@ -371,8 +376,8 @@ export default function ShopClient() {
                 onClick={() => setActiveTab("all")}
                 className={`shrink-0 rounded-full px-6 py-2.5 transition-colors ${
                   activeTab === "all"
-                    ? "bg-[var(--rust)] text-white shadow-md shadow-[var(--rust)]/20"
-                    : "bg-white text-stone-500 hover:text-[var(--rust)] hover:bg-stone-100"
+                    ? "bg-(--rust) text-white shadow-md shadow-(--rust)/20"
+                    : "bg-white text-stone-500 hover:text-(--rust) hover:bg-stone-100"
                 }`}
               >
                 All Pieces
@@ -381,8 +386,8 @@ export default function ShopClient() {
                 onClick={() => setActiveTab("sale")}
                 className={`shrink-0 rounded-full px-6 py-2.5 transition-colors ${
                   activeTab === "sale"
-                    ? "bg-[var(--rust)] text-white shadow-md shadow-[var(--rust)]/20"
-                    : "bg-white text-stone-500 hover:text-[var(--rust)] hover:bg-stone-100"
+                    ? "bg-(--rust) text-white shadow-md shadow-(--rust)/20"
+                    : "bg-white text-stone-500 hover:text-(--rust) hover:bg-stone-100"
                 }`}
               >
                 On Sale
@@ -391,8 +396,8 @@ export default function ShopClient() {
                 onClick={() => setActiveTab("rated")}
                 className={`shrink-0 rounded-full px-6 py-2.5 transition-colors ${
                   activeTab === "rated"
-                    ? "bg-[var(--rust)] text-white shadow-md shadow-[var(--rust)]/20"
-                    : "bg-white text-stone-500 hover:text-[var(--rust)] hover:bg-stone-100"
+                    ? "bg-(--rust) text-white shadow-md shadow-(--rust)/20"
+                    : "bg-white text-stone-500 hover:text-(--rust) hover:bg-stone-100"
                 }`}
               >
                 Highest Rated
@@ -405,16 +410,18 @@ export default function ShopClient() {
               <Link
                 key={product.id}
                 href={`/products?id=${product.id}`}
-                className="group relative flex flex-col bg-white rounded-sm shadow-sm hover:-translate-y-1 hover:shadow-lg border border-transparent hover:border-[var(--rust)] transition-all duration-300"
+                className="group relative flex flex-col bg-white rounded-sm shadow-sm hover:-translate-y-1 hover:shadow-lg border border-transparent hover:border-(--rust) transition-all duration-300"
               >
                 <div className="relative aspect-square overflow-hidden bg-[#F7F3EE] rounded-t-sm">
-                  <img
+                  <Image
                     src={getProductImageSrc(product.image)}
                     alt={product.name}
+                    width={300}
+                    height={300}
                     className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105 mix-blend-multiply opacity-90 group-hover:opacity-100"
                   />
                   {product.stock <= 5 && (
-                    <div className="absolute bottom-2 left-2 rounded-sm bg-[var(--rust)] px-2 py-1 text-[9px] font-bold uppercase tracking-widest text-white">
+                    <div className="absolute bottom-2 left-2 rounded-sm bg-(--rust) px-2 py-1 text-[9px] font-bold uppercase tracking-widest text-white">
                       Limited
                     </div>
                   )}
@@ -422,7 +429,7 @@ export default function ShopClient() {
 
                 <div className="flex flex-1 flex-col justify-between p-3 sm:p-4">
                   <div>
-                    <h4 className="mb-1.5 line-clamp-2 text-[13px] font-medium leading-tight text-[#222] transition-colors group-hover:text-[var(--rust)]">
+                    <h4 className="mb-1.5 line-clamp-2 text-[13px] font-medium leading-tight text-[#222] transition-colors group-hover:text-(--rust)">
                       {product.name}
                     </h4>
                     <div className="flex items-center gap-1.5 mb-2">
@@ -432,7 +439,7 @@ export default function ShopClient() {
                   </div>
 
                   <div className="flex items-end justify-between gap-3 mt-1">
-                    <div className="text-sm font-bold text-[var(--rust)]">
+                    <div className="text-sm font-bold text-(--rust)">
                       {"\u20B1"}{(product.price || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                     </div>
                     <div className="text-[10px] text-stone-400 uppercase tracking-wider font-bold">
@@ -454,12 +461,7 @@ export default function ShopClient() {
         </div>
       </div>
       
-      {isMapOpen && (
-        <ShopMap 
-          seller={seller} 
-          onClose={() => setIsMapOpen(false)} 
-        />
-      )}
+
 
       {seller && (
         <ReportModal
@@ -470,6 +472,13 @@ export default function ShopClient() {
           reportedName={seller.shopName}
         />
       )}
+
+      <AuthGateModal
+        isOpen={isAuthModalOpen}
+        onClose={() => setIsAuthModalOpen(false)}
+        message="Sign in to message this artisan and discuss custom heritage pieces."
+        redirectPath={typeof window !== "undefined" ? window.location.href : ""}
+      />
     </Layout>
   );
 }

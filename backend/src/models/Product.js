@@ -15,9 +15,30 @@ const Product = sequelize.define('Product', {
     type: DataTypes.TEXT,
     allowNull: true,
   },
+  sku: {
+    type: DataTypes.STRING,
+    allowNull: true,
+  },
+  fabric_type: {
+    type: DataTypes.STRING,
+    allowNull: true,
+  },
+  collar_type: {
+    type: DataTypes.STRING,
+    allowNull: true,
+  },
+  artisan_region: {
+    type: DataTypes.STRING,
+    allowNull: true,
+  },
   price: {
     type: DataTypes.DECIMAL(10, 2),
     allowNull: false,
+  },
+  costPerPiece: {
+    type: DataTypes.DECIMAL(10, 2),
+    allowNull: true,
+    defaultValue: 0,
   },
   sizes: {
     type: DataTypes.JSON, // Array of available sizes
@@ -51,29 +72,13 @@ const Product = sequelize.define('Product', {
       key: 'id',
     },
   },
-  gcashNumber: {
-    type: DataTypes.STRING,
+  status: {
+    type: DataTypes.ENUM('pending', 'approved', 'rejected'),
+    defaultValue: 'pending',
+  },
+  rejectionReason: {
+    type: DataTypes.TEXT,
     allowNull: true,
-  },
-  gcashQrCode: {
-    type: DataTypes.STRING,
-    allowNull: true,
-  },
-  mayaNumber: {
-    type: DataTypes.STRING,
-    allowNull: true,
-  },
-  mayaQrCode: {
-    type: DataTypes.STRING,
-    allowNull: true,
-  },
-  allowGcash: {
-    type: DataTypes.BOOLEAN,
-    defaultValue: true,
-  },
-  allowMaya: {
-    type: DataTypes.BOOLEAN,
-    defaultValue: true,
   },
   views: {
     type: DataTypes.INTEGER,

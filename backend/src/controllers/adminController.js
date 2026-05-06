@@ -26,8 +26,35 @@ exports.getGlobalStats = async (req, res) => {
     });
     const totalProductsCount = await Product.count(); // Products count is usually global
 
+    // Calculate capital based on order items
+    const orderItems = await OrderItem.findAll({
+      include: [
+        {
+          model: Order,
+          as: 'order',
+          where: { ...where, status: { [Op.notIn]: ['Cancelled'] } },
+          attributes: []
+        },
+        {
+          model: Product,
+          as: 'product',
+          attributes: ['costPerPiece']
+        }
+      ]
+    });
+
+    let totalCapital = 0;
+    orderItems.forEach(item => {
+      totalCapital += (item.quantity || 0) * Number(item.product?.costPerPiece || 0);
+    });
+
+    const totalProfit = totalSalesValue - totalCapital;
+
     res.status(200).json({
       totalSales: `₱${totalSalesValue.toLocaleString()}`,
+      totalCapital: `₱${totalCapital.toLocaleString()}`,
+      totalRevenue: `₱${totalSalesValue.toLocaleString()}`,
+      totalProfit: `₱${totalProfit.toLocaleString()}`,
       totalOrders: totalOrdersCount.toLocaleString(),
       activeCustomers: totalCustomersCount.toLocaleString(),
       liveProducts: totalProductsCount.toLocaleString()
@@ -511,6 +538,15 @@ exports.rejectSeller = async (req, res) => {
     user.rejectionReason = normalizedReason;
     user.isVerified = false;
     await user.save();
+    
+    await sendNotification(
+      user.id,
+      'Seller Application Rejected',
+      `Your artisan application was not approved. Reason: ${normalizedReason}`,
+      'system',
+      '/seller/profile',
+      'seller'
+    );
 
     emitDashboardUpdate();
 
@@ -688,5 +724,75 @@ exports.exportGlobalReport = async (req, res) => {
   } catch (err) {
     console.error('Admin Global Export Error:', err);
     res.status(500).json({ message: 'Error generating global system report', error: err.message, stack: process.env.NODE_ENV === 'development' ? err.stack : undefined });
+  }
+};
+
+exports.getPendingProducts = async (req, res) => {
+  try {
+    const products = await Product.findAll({
+      where: { status: 'pending' },
+      include: [{ model: User, as: 'seller', attributes: ['id', 'name', 'email'] }],
+      order: [['createdAt', 'ASC']]
+    });
+    res.status(200).json(products);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+exports.approveProduct = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const product = await Product.findByPk(id);
+    if (!product) return res.status(404).json({ message: 'Product not found' });
+
+    product.status = 'approved';
+    product.rejectionReason = null;
+    await product.save();
+
+    await sendNotification(
+      product.sellerId,
+      'Product Approved',
+      `Your product "${product.name}" has been approved and is now live!`,
+      'product_approved',
+      `/seller/products/${product.id}`,
+      'seller'
+    );
+
+    emitDashboardUpdate();
+
+    res.status(200).json({ message: 'Product approved successfully', product });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+exports.rejectProduct = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { reason } = req.body;
+    if (!reason) return res.status(400).json({ message: 'Rejection reason is required' });
+
+    const product = await Product.findByPk(id);
+    if (!product) return res.status(404).json({ message: 'Product not found' });
+
+    product.status = 'rejected';
+    product.rejectionReason = reason;
+    await product.save();
+
+    await sendNotification(
+      product.sellerId,
+      'Product Rejected',
+      `Your product "${product.name}" was rejected. Reason: ${reason}`,
+      'product_rejected',
+      `/seller/products/${product.id}`,
+      'seller'
+    );
+
+    emitDashboardUpdate();
+
+    res.status(200).json({ message: 'Product rejected successfully', product });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
   }
 };

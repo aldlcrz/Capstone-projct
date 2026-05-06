@@ -73,7 +73,7 @@ app.use(express.urlencoded({ extended: true }));
 const rateLimit = require('express-rate-limit');
 const globalLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, 
-  max: 500, 
+  max: 2000, 
   standardHeaders: true, 
   legacyHeaders: false, 
   message: { error: 'Too many requests from this IP, please try again after 15 minutes' }
@@ -158,6 +158,7 @@ const userRoutes = require('./routes/userRoutes');
 const uploadRoutes = require('./routes/uploadRoutes');
 const reviewRoutes = require('./routes/reviewRoutes');
 const reportRoutes = require('./routes/reportRoutes');
+const analyticsRoutes = require('./routes/analyticsRoutes');
 
 app.use('/api/v1/auth', authRoutes);
 app.use('/api/v1/products', productRoutes);
@@ -172,6 +173,7 @@ app.use('/api/v1/users', userRoutes);
 app.use('/api/v1/upload', uploadRoutes);
 app.use('/api/v1/reviews', reviewRoutes);
 app.use('/api/v1/reports', reportRoutes);
+app.use('/api/v1/analytics', analyticsRoutes);
 
 // Global Error Handler
 const errorHandler = require('./middleware/errorHandler');

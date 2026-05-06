@@ -28,8 +28,8 @@ const Order = sequelize.define('Order', {
     allowNull: false,
   },
   status: {
-    type: DataTypes.ENUM('Pending', 'Processing', 'Shipped', 'Delivered', 'Received by Buyer', 'Completed', 'Cancelled', 'Cancellation Pending'),
-    defaultValue: 'Pending',
+    type: DataTypes.ENUM('pending', 'confirmed', 'packed', 'shipped', 'out_for_delivery', 'delivered', 'cancelled'),
+    defaultValue: 'pending',
   },
   paymentMethod: {
     type: DataTypes.STRING,
@@ -42,6 +42,10 @@ const Order = sequelize.define('Order', {
   paymentProof: {
     type: DataTypes.STRING,
     allowNull: true, // URL to screenshot proof
+  },
+  paymentStatus: {
+    type: DataTypes.ENUM('pending', 'paid', 'failed'),
+    defaultValue: 'pending',
   },
   shippingAddress: {
     type: DataTypes.JSON, // {name, street, city, postalCode}

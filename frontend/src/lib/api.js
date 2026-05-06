@@ -94,6 +94,12 @@ const emitAccountStatus = (detail) => {
 export const resolveRoleFromPath = (path) => {
   if (path.startsWith("/admin")) return "admin";
   if (path.startsWith("/seller")) return "seller";
+  
+  // Check for seller preview mode on public paths
+  if (typeof window !== "undefined" && window.location.search.includes("preview=1")) {
+    return "seller";
+  }
+  
   return "customer";
 };
 
@@ -145,9 +151,14 @@ export const removeSessionKeys = (role) => {
   emitSessionSync(role);
 };
 
-// Mobile Emulators use 10.0.2.2 to reach the host machine's localhost
+/**
+ * BRIDGE CONFIGURATION:
+ * Use your computer\u0027s local IP so your phone can reach the backend.
+ * Local IP: 192.168.100.5
+ */
+const COMPUTER_IP = "192.168.100.5";
 const isNative = typeof window !== "undefined" && Capacitor.isNativePlatform();
-const DEFAULT_URL = isNative ? "http://10.0.2.2:5000" : "http://localhost:5000";
+const DEFAULT_URL = isNative ? `http://${COMPUTER_IP}:5000` : `http://localhost:5000`;
 
 export const BACKEND_URL = trimTrailingSlash(
   process.env.NEXT_PUBLIC_BACKEND_URL || DEFAULT_URL
@@ -165,15 +176,8 @@ api.interceptors.request.use(
         const path = window.location.pathname;
         let token = null;
 
-        // Strictly role-specific token retrieval — NO generic 'token' fallback
-        if (path.startsWith("/admin")) {
-          token = getTokenForRole("admin");
-        } else if (path.startsWith("/seller")) {
-          token = getTokenForRole("seller");
-        } else {
-          // All other paths (including storefront /home, etc) use customer_token
-          token = getTokenForRole("customer");
-        }
+        const role = resolveRoleFromPath(path);
+        token = getTokenForRole(role);
 
         // Only add header if valid token exists
         if (token && token !== "null" && token !== "undefined") {
@@ -204,11 +208,28 @@ export const clearSession = (role) => {
   removeSessionKeys(resolvedRole);
 };
 
-// Add response interceptor for debugging 401s
+// Global throttle for 429 errors
+const throttledEndpoints = new Set();
 api.interceptors.response.use(
   (response) => response,
   (error) => {
+    if (error?.response?.status === 429) {
+      const url = error?.config?.url || '';
+      if (!throttledEndpoints.has(url)) {
+        throttledEndpoints.add(url);
+        console.warn(`Endpoint ${url} is being throttled due to 429.`);
+        setTimeout(() => throttledEndpoints.delete(url), 5000); // 5s backoff
+      }
+      return Promise.reject(error);
+    }
+
     if (error?.response?.status === 401) {
+      // Never interfere with auth-related API calls (login, register, password reset)
+      const requestUrl = error?.config?.url || '';
+      if (requestUrl.includes('/auth/')) {
+        return Promise.reject(error);
+      }
+
       const role = typeof window !== "undefined"
         ? resolveRoleFromPath(window.location.pathname)
         : "customer";
@@ -230,7 +251,7 @@ api.interceptors.response.use(
           // Clear the active session
           removeSessionKeys(role);
 
-          // Redirect to login — use replace so they can't go back
+          // Redirect to login \u2014 use replace so they can't go back
           const currentPath = window.location.pathname;
           if (!currentPath.startsWith("/login")) {
             window.location.replace("/login");
@@ -249,10 +270,16 @@ api.interceptors.response.use(
         return Promise.reject(error);
       }
 
-      // Generic 401 — clear session quietly
-      console.warn("Unauthorized request detected. Clearing local session keys...");
+      // Generic 401 — clear session and redirect
+      console.warn("Unauthorized request detected. Clearing local session keys and redirecting...");
       if (typeof window !== "undefined") {
-        removeSessionKeys(role);
+        const currentPath = window.location.pathname;
+        // Don't clear session or redirect if already on login/register
+        if (!currentPath.startsWith("/login") && !currentPath.startsWith("/register")) {
+          removeSessionKeys(role);
+          localStorage.setItem("returnUrl", currentPath);
+          window.location.replace("/login");
+        }
       }
     }
     return Promise.reject(error);

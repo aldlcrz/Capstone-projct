@@ -20,6 +20,7 @@ export const SocketProvider = ({ children }) => {
   const [currentBroadcast, setCurrentBroadcast] = useState(null);
   const [unreadCount, setUnreadCount] = useState(0);
   const [processedEventIds] = useState(() => new Set());
+  const [publicSettings, setPublicSettings] = useState({ maintenanceMode: false });
 
   const clearBroadcast = React.useCallback(() => setCurrentBroadcast(null), []);
 
@@ -58,6 +59,17 @@ export const SocketProvider = ({ children }) => {
       console.warn("Unable to refresh unread notification count", error?.response?.data || error?.message || error);
     }
   }, [activeRole]);
+
+  const fetchPublicSettings = React.useCallback(async () => {
+    try {
+      const res = await api.get("/admin/public-settings");
+      setPublicSettings({
+        maintenanceMode: res.data.maintenanceMode === true || res.data.maintenanceMode === "true"
+      });
+    } catch (e) {
+      console.error("Failed to fetch public settings");
+    }
+  }, []);
 
   useEffect(() => {
     const { defineCustomElements } = require('@ionic/pwa-elements/loader');
@@ -152,6 +164,15 @@ export const SocketProvider = ({ children }) => {
       }
     });
 
+    socketInstance.on('settings_updated', (data) => {
+      if (data.maintenanceMode !== undefined) {
+        setPublicSettings(prev => ({
+          ...prev,
+          maintenanceMode: data.maintenanceMode === true || data.maintenanceMode === "true"
+        }));
+      }
+    });
+
     queueMicrotask(() => {
       setSocket(socketInstance);
     });
@@ -161,6 +182,13 @@ export const SocketProvider = ({ children }) => {
     };
   }, [activeRole, refreshUnreadCount]);
 
+  useEffect(() => {
+    // Use queueMicrotask to defer the fetch and avoid cascading render warnings
+    queueMicrotask(() => {
+      fetchPublicSettings();
+    });
+  }, [fetchPublicSettings]);
+
   const value = React.useMemo(() => ({ 
     socket, 
     isConnected, 
@@ -169,8 +197,10 @@ export const SocketProvider = ({ children }) => {
     setUnreadCount,
     refreshUnreadCount,
     clearBroadcast,
-    isDuplicateEvent
-  }), [socket, isConnected, currentBroadcast, unreadCount, refreshUnreadCount, clearBroadcast, isDuplicateEvent]);
+    isDuplicateEvent,
+    publicSettings,
+    fetchPublicSettings
+  }), [socket, isConnected, currentBroadcast, unreadCount, refreshUnreadCount, clearBroadcast, isDuplicateEvent, publicSettings, fetchPublicSettings]);
   
   return (
     <SocketContext.Provider value={value}>
