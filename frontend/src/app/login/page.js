@@ -34,7 +34,9 @@ const cardVariants = {
   },
 };
 
-export default function LoginPage() {
+import { Suspense } from "react";
+
+function LoginContent() {
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [email, setEmail] = useState("");
@@ -259,7 +261,7 @@ export default function LoginPage() {
           <motion.div variants={itemVariants} className="mb-10 text-center relative flex items-center justify-center">
             <button
               onClick={() => router.push('/')}
-              className="absolute left-0 p-2.5 bg-[#F9F6F2] hover:bg-[#EBDCCB] text-[var(--muted)] hover:text-[var(--rust)] rounded-xl transition-all border border-[#E5DDD5] shadow-sm transform hover:scale-105"
+              className="absolute left-0 p-2.5 bg-[#F9F6F2] hover:bg-[#EBDCCB] text-(--muted) hover:text-(--rust) rounded-xl transition-all border border-[#E5DDD5] shadow-sm transform hover:scale-105"
               title="Go Back"
             >
               <ArrowRight className="w-4 h-4 rotate-180" />
@@ -271,8 +273,7 @@ export default function LoginPage() {
                   LumbaRong
                 </span>
               </Link>
-              <div className="text-[11px] font-bold uppercase tracking-[0.3em]"
-                style={{ color: "var(--muted, #8C7B70)" }}>
+              <div className="text-[11px] font-bold uppercase tracking-[0.3em] text-(--muted)">
                 Authentication Portal
               </div>
             </div>
@@ -334,12 +335,12 @@ export default function LoginPage() {
                     </div>
                   )}
                   {accountStatus === "pending" && (
-                    <div className="mt-1 normal-case font-bold text-amber-600 italic opacity-90 border-t border-[var(--rust)]/10 pt-1">
+                    <div className="mt-1 normal-case font-bold text-amber-600 italic opacity-90 border-t border-(--rust)/10 pt-1">
                       {reason || "Awaiting admin approval."}
                     </div>
                   )}
                   {(accountStatus === "frozen" || accountStatus === "rejected" || accountStatus === "blocked") && reason && (
-                    <div className="mt-1 normal-case font-bold text-gray-500 italic opacity-80 border-t border-[var(--rust)]/10 pt-1">
+                    <div className="mt-1 normal-case font-bold text-gray-500 italic opacity-80 border-t border-(--rust)/10 pt-1">
                       {accountStatus === "rejected" ? "Feedback" : "Violation"}: {reason}
                     </div>
                   )}
@@ -356,7 +357,7 @@ export default function LoginPage() {
                 Email Address
               </label>
               <div className="relative group">
-                <Mail className="absolute left-6 top-1/2 -translate-y-1/2 w-4 h-4 transition-colors duration-300 group-focus-within:text-[color:var(--rust)]"
+                <Mail className="absolute left-6 top-1/2 -translate-y-1/2 w-4 h-4 transition-colors duration-300 group-focus-within:text-(--rust)"
                   style={{ color: "var(--border, #E5DDD5)" }} />
                 <input
                   type="email"
@@ -528,5 +529,17 @@ export default function LoginPage() {
         )}
       </AnimatePresence>
     </div>
+  );
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen flex items-center justify-center bg-[#F7F3EE]">
+        <Loader2 className="w-10 h-10 animate-spin text-[#C0422A]" />
+      </div>
+    }>
+      <LoginContent />
+    </Suspense>
   );
 }

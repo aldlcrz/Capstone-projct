@@ -7,6 +7,7 @@ import {
   Navigation, CreditCard, Bell, Ticket, Coins, Shield, Settings, History, Camera
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import Image from "next/image";
 import { api, getStoredUserForRole, setStoredUserForRole, getTokenForRole } from "@/lib/api";
 import { useSocket } from "@/context/SocketContext";
 import { useSearchParams, useRouter } from "next/navigation";
@@ -16,7 +17,9 @@ import { INPUT_LIMITS, sanitizePersonNameInput, sanitizePhoneInput } from "@/lib
 import { validateImageFile } from "@/lib/imageUploadValidation";
 import { resolveBackendImageUrl } from "@/lib/productImages";
 
-export default function CustomerProfile() {
+import { Suspense } from "react";
+
+function ProfileContent() {
   const [mounted, setMounted] = useState(false);
   const router = useRouter();
   useEffect(() => setMounted(true), []);
@@ -157,8 +160,8 @@ export default function CustomerProfile() {
         {/* Sidebar */}
         <aside className="w-full md:w-64 space-y-8">
           <div className="flex items-center gap-3 px-2">
-            <div className="w-12 h-12 rounded-full overflow-hidden border border-stone-200">
-              <img src={resolveBackendImageUrl(user?.profilePhoto, "https://ui-avatars.com/api/?name=" + (user?.name || "U"))} className="w-full h-full object-cover" />
+            <div className="w-12 h-12 rounded-full overflow-hidden border border-stone-200 relative">
+              <Image src={resolveBackendImageUrl(user?.profilePhoto, "https://ui-avatars.com/api/?name=" + (user?.name || "U"))} alt="Profile" fill className="object-cover" unoptimized />
             </div>
             <div>
               <div className="text-sm font-bold text-stone-800 truncate max-w-[120px]">{user?.username || user?.name}</div>
@@ -182,7 +185,7 @@ export default function CustomerProfile() {
                         <button
                           key={j}
                           onClick={() => setActiveTab(item.key)}
-                          className={`block text-[13px] transition-colors ${activeTab === item.key ? 'text-[var(--rust)] font-bold' : 'text-stone-500 hover:text-[var(--rust)]'}`}
+                          className={`block text-[13px] transition-colors ${activeTab === item.key ? 'text-(--rust) font-bold' : 'text-stone-500 hover:text-(--rust)'}`}
                         >
                           {item.label}
                         </button>
@@ -195,7 +198,7 @@ export default function CustomerProfile() {
                     className="flex items-center gap-3 px-3 py-2 w-full hover:bg-stone-50 rounded-lg transition-colors group"
                   >
                     {group.icon}
-                    <span className={`text-sm font-bold transition-colors ${activeTab === group.key ? 'text-[var(--rust)]' : 'text-stone-700 group-hover:text-[var(--rust)]'}`}>
+                    <span className={`text-sm font-bold transition-colors ${activeTab === group.key ? 'text-(--rust)' : 'text-stone-700 group-hover:text-(--rust)'}`}>
                       {group.label}
                     </span>
                   </button>
@@ -268,7 +271,7 @@ export default function CustomerProfile() {
                     <button 
                       onClick={handleSaveProfile}
                       disabled={isSaving}
-                      className="px-8 py-2.5 bg-[var(--rust)] text-white text-sm font-medium rounded-sm shadow-sm hover:opacity-90 transition-opacity disabled:opacity-50"
+                      className="px-8 py-2.5 bg-(--rust) text-white text-sm font-medium rounded-sm shadow-sm hover:opacity-90 transition-opacity disabled:opacity-50"
                     >
                       {isSaving ? "Saving..." : "Save"}
                     </button>
@@ -277,8 +280,8 @@ export default function CustomerProfile() {
 
                 {/* Avatar Side */}
                 <div className="w-full lg:w-72 lg:border-l border-stone-100 flex flex-col items-center gap-6 lg:pl-12">
-                  <div className="w-24 h-24 rounded-full overflow-hidden border border-stone-100 shadow-inner">
-                    <img src={profilePreview || resolveBackendImageUrl(user?.profilePhoto, "https://ui-avatars.com/api/?name=" + (user?.name || "U"))} className="w-full h-full object-cover" />
+                  <div className="w-24 h-24 rounded-full overflow-hidden border border-stone-100 shadow-inner relative">
+                    <Image src={profilePreview || resolveBackendImageUrl(user?.profilePhoto, "https://ui-avatars.com/api/?name=" + (user?.name || "U"))} alt="Avatar Preview" fill className="object-cover" unoptimized />
                   </div>
                   <div className="space-y-4 w-full flex flex-col items-center">
                     <button 
@@ -319,7 +322,7 @@ export default function CustomerProfile() {
             <div className="p-8 max-w-lg">
                <div className="border-b border-stone-100 pb-5 mb-8">
                 <h1 className="text-lg font-medium text-stone-800">Change Password</h1>
-                <p className="text-sm text-stone-500 mt-1">For your account's security, do not share your password with others</p>
+                <p className="text-sm text-stone-500 mt-1">For your account&apos;s security, do not share your password with others</p>
               </div>
               {/* Reuse password logic from previous implementation if needed */}
               <div className="space-y-6">
@@ -341,5 +344,13 @@ export default function CustomerProfile() {
         </main>
       </div>
     </CustomerLayout>
+  );
+}
+
+export default function CustomerProfile() {
+  return (
+    <Suspense fallback={<CustomerLayout><div className="p-20 text-center animate-pulse">Loading heritage profile...</div></CustomerLayout>}>
+      <ProfileContent />
+    </Suspense>
   );
 }
