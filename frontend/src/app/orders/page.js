@@ -44,13 +44,8 @@ export default function OrdersPage() {
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(null);
-  const STAR_LABELS = {
-    1: "Terrible",
-    2: "Poor",
-    3: "Fair",
-    4: "Good",
-    5: "Excellent"
-  };
+  const [actionLoading, setActionLoading] = useState(false);
+  const [currentCustomerId, setCurrentCustomerId] = useState(null);
 
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
 
@@ -60,8 +55,6 @@ export default function OrdersPage() {
   const [uploadingImages, setUploadingImages] = useState(false);
   // Track which productIds have been rated this session
   const [ratedProducts, setRatedProducts] = useState({});
-  const [actionLoading, setActionLoading] = useState(false);
-  const [currentCustomerId, setCurrentCustomerId] = useState(null);
 
   const [refundModalOpen, setRefundModalOpen] = useState(false);
   const [refundData, setRefundData] = useState({ orderId: null, orderItemId: null, reason: "Damaged Item", message: "", video: null, item: null });
