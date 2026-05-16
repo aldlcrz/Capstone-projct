@@ -1,9 +1,10 @@
 {
   "recommendations": [
-    "dbaeumer.vscode-eslint",
-    "esbenp.prettier-vscode",
-    "dsznajder.es7-react-js-snippets",
+    "bmewburn.vscode-intelephense-client",
+    "onecentlin.laravel-blade",
+    "amiralizadeh9480.laravel-extra-intellisense",
     "bradlc.vscode-tailwindcss",
+    "alpinejs.alpine-intellisense",
     "christian-kohler.path-intellisense"
   ]
 }
