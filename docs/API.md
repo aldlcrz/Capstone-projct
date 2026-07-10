@@ -3,10 +3,10 @@
 This directory contains documentation for the LumBarong API and system architecture.
 
 ## API Overview
-LumBarong uses a RESTful API built with Express.js and Node.js.
+LumBarong uses a RESTful API built with Laravel (PHP).
 
 ### Base URL
-- Local: `http://localhost:5000/api/v1`
+- Local: `http://localhost:8000/api/v1`
 - Production: (Configure via environment variables)
 
 ### Core Modules
@@ -16,4 +16,4 @@ LumBarong uses a RESTful API built with Express.js and Node.js.
 - **Messaging**: Real-time artisan-to-customer chat.
 
 ---
-*For detailed endpoint documentation, refer to the [server.js](file:///c:/xampp/htdocs/lumbarong-main/backend/server.js) and the `backend/src/routes` directory.*
+*For detailed endpoint documentation, refer to the [api.php](file:///c:/xampp/htdocs/LumbarongProject-main/backend_laravel/routes/api.php) and the `backend_laravel/app/Http/Controllers` directory.*

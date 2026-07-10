@@ -8,7 +8,8 @@
 
 | Language | Purpose |
 |---|---|
-| **JavaScript** | Backend (Node.js) and Frontend (Next.js/React) — the primary language of the system |
+| **PHP** | Backend API logic and database migrations (Laravel framework) |
+| **JavaScript** | Frontend web UI (Next.js/React framework) |
 | **Dart** | Flutter mobile companion app |
 | **SQL** | MySQL relational database queries and schema |
 | **TypeScript** | Config-only ([capacitor.config.ts](file:///c:/xampp/htdocs/lumbarong-main/frontend/capacitor.config.ts)) |
@@ -20,28 +21,24 @@
 ### 🔵 Backend
 | Tool | Role |
 |---|---|
-| **Node.js** | Server runtime |
-| **Express.js v5** | REST API framework |
-| **Sequelize v6** | ORM for database models |
+| **PHP v8.2+** | Server runtime |
+| **Laravel v11** | PHP MVC web/API framework |
+| **Eloquent ORM** | Active record implementation for database interactions |
 | **MySQL** | Relational database |
-| **Socket.IO v4** | Real-time messaging and live dashboard updates |
-| **JWT + bcryptjs** | Authentication and password hashing |
-| **Multer + Cloudinary** | File/image uploads stored in the cloud |
-| **Helmet + express-rate-limit** | Security hardening |
-| **ExcelJS** | Analytics data export to `.xlsx` |
-| **Nodemon + Jest + Supertest** | Dev tooling and testing |
+| **Reverb / Pusher** | WebSockets for real-time dashboard events and notifications |
+| **JWT** | Authentication protocol |
+| **Base64 Storage** | Product and QR code images converted and saved directly to MySQL as `LONGTEXT` |
 
 ### 🖥️ Frontend
 | Tool | Role |
 |---|---|
-| **Next.js v15** | React framework with Pages Router |
+| **Next.js v15** | React framework with App Router |
 | **React v19** | UI component library |
 | **Tailwind CSS v4** | Utility-first styling |
 | **Framer Motion** | Page and component animations |
 | **Lucide React** | Icon library |
 | **Axios** | HTTP client for API calls |
 | **Recharts** | Charts and data visualizations |
-| **Socket.IO Client** | Real-time updates on the frontend |
 | **Capacitor v8** | Wraps the web app into Android/iOS apps |
 
 ### 📱 Flutter Mobile App
@@ -58,13 +55,12 @@
 ### ☁️ Infrastructure
 | Tool | Role |
 |---|---|
-| **Cloudinary** | Cloud storage for product/upload images |
 | **MySQL / XAMPP** | Local relational database |
-| **Docker** | Backend containerization |
 | **Vercel** | Frontend deployment |
 | **PowerShell scripts** | [start.ps1](file:///c:/xampp/htdocs/lumbarong-main/start.ps1) to run servers, [fix_db.ps1](file:///c:/xampp/htdocs/lumbarong-main/fix_db.ps1) for DB fixes |
 
 ---
+
 
 ## 3. Design System, Layout Themes & Backgrounds
 
@@ -207,12 +203,12 @@ The platform relies heavily on **Recharts** for data visualization across the Se
 │        Frontend (Next.js / React)       │
 │   Web app — Customer, Seller, Admin     │
 └──────────────┬──────────────────────────┘
-               │  REST API + WebSocket (Socket.IO)
+               │  REST API + WebSockets
 ┌──────────────▼──────────────────────────┐
-│      Backend (Node.js / Express)        │
+│          Backend (Laravel PHP)          │
 │   Auth · Products · Orders · Chat       │
 └──────────────┬──────────────────────────┘
-               │  Sequelize ORM
+               │  Eloquent ORM
 ┌──────────────▼──────────────────────────┐
 │           MySQL Database                │
 │  Users · Products · Orders · Messages   │
@@ -224,7 +220,7 @@ The platform relies heavily on **Recharts** for data visualization across the Se
 └─────────────────────────────────────────┘
 ```
 
-The backend exposes a versioned REST API (`/api/v1/...`) consumed by both the Next.js web frontend and the Flutter mobile app. Socket.IO enables real-time features like chat messaging and live dashboard refreshes.
+The backend exposes a versioned REST API (`/api/v1/...`) consumed by both the Next.js web frontend and the Flutter mobile app. Reverb/Pusher handles WebSockets for real-time events.
 
 ---
 
@@ -233,32 +229,31 @@ The backend exposes a versioned REST API (`/api/v1/...`) consumed by both the Ne
 | Model | Description |
 |---|---|
 | `User` | Stores customers, sellers, and admins with role flags |
-| `Product` | Product listings with images, price, sizes, category |
+| `Product` | Product listings with base64 images, price, sizes, category, and tags |
 | `Order` | Orders linking customers to products with status tracking |
 | `Category` | Product category taxonomy |
 | `Message` | Real-time chat messages between buyers and sellers |
-| [Notification](file:///c:/xampp/htdocs/lumbarong-main/frontend/src/components/AdminLayout.js#81-90) | System and order notifications per user |
+| [Notification](file:///c:/xampp/htdocs/LumbarongProject-main/frontend/src/components/AdminLayout.js#81-90) | System and order notifications per user |
 | `Address` | Customer shipping addresses |
 | `Wishlist` | Saved/favorited products per customer |
 | `SystemSetting` | Admin-controlled platform settings (e.g., sales targets) |
 
 ---
 
-## 7. Backend API Routes
+## 7. Backend API Controllers
 
-| Route Group | Endpoints |
+| Controller | Purpose |
 |---|---|
-| `authRoutes` | Register, Login, Logout, Profile, Stats |
-| `productRoutes` | CRUD products, search, filter by category |
-| `orderRoutes` | Create order, list orders, update status |
-| `categoryRoutes` | List and manage categories |
-| `chatRoutes` | Fetch message threads, send messages |
-| `notificationRoutes` | Get and mark notifications |
-| `wishlistRoutes` | Add/remove/list wishlist items |
-| `userRoutes` | Update profile, change password, manage addresses |
-| `adminRoutes` | Dashboard stats, seller verification |
-| `analyticsRoutes` | Seller analytics (revenue, trends, cohort, export) |
-| `uploadRoutes` | Cloudinary image upload endpoints |
+| `AuthController` | Handles login, registration, password resets, and user authentication |
+| `ProductController` | Handles CRUD of product listings, sizes, categories, and tags |
+| `CategoryController` | Manages formal category taxomony |
+| `OrderController` | Manages checkout, order creations, and payment validation |
+| `NotificationController` | Fetches system and order notifications |
+| `ChatController` | Real-time message exchange |
+| `WishlistController` | Wishlist updates |
+| `AddressController` | Customer delivery addresses |
+| `UploadController` | Converts and responds with base64 data URIs for direct DB storage |
+
 
 ---
 

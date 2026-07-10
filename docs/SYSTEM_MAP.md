@@ -8,12 +8,12 @@ This document explains how the **Lumbarong** system works using simple analogies
 Think of the system like a **Fine Dining Restaurant**.
 
 ### 1. 🍳 The Kitchen (Backend)
-- **Location**: `/backend`
+- **Location**: `/backend_laravel`
 - **What it does**: This is where all the "cooking" happens. It handles calculations, checks security, manages orders, and speaks to the database.
 - **Key Concepts**:
-  - `controllers/`: The **Chefs** who decide how to prepare each request.
-  - `routes/`: The **Waiters** who take orders from the storefront and bring them to the kitchen.
-  - `models/`: The **Recipes** that define what a "Product" or an "Order" looks like.
+  - `app/Http/Controllers/`: The **Chefs** who decide how to prepare each request.
+  - `routes/api.php`: The **Waiters** who take orders from the storefront and bring them to the kitchen.
+  - `app/Models/`: The **Recipes** that define what a "Product" or an "Order" looks like.
 
 ### 2. 🏪 The Storefront (Frontend & Mobile)
 - **Location**: `/frontend` and `/flutter_app`
@@ -34,8 +34,8 @@ Think of the system like a **Fine Dining Restaurant**.
 | :--- | :--- |
 | `backups/` | Safety copies of your data (SQL files). |
 | `docs/` | Instruction manuals and walkthroughs for the system. |
-| `uploads/` | Photos of products and payment receipts. |
-| `backend/logs/` | Note-books where the system writes down errors or activity for debugging. |
+| `backend_laravel/public/uploads/` | Cache photos of products and payment receipts. Note: New product uploads are converted and stored directly in the database as base64. |
+| `backend_laravel/storage/logs/` | Note-books where the system writes down errors or activity for debugging. |
 
 ---
 
@@ -45,3 +45,4 @@ Think of the system like a **Fine Dining Restaurant**.
 3. **Check**: The **Chefs** (Controllers) check the **Pantry** (Database) to see if there is enough stock.
 4. **Action**: If everything is okay, the Chef writes down the new Order in the Pantry and notifies the Seller.
 5. **Confirmation**: You see the "New Order" alert on your screen!
+
