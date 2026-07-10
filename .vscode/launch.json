@@ -2,26 +2,25 @@
   "version": "0.2.0",
   "configurations": [
     {
-      "name": "Laravel Artisan Serve",
-      "type": "node",
+      "name": "Backend Server (Laravel)",
+      "type": "php",
       "request": "launch",
-      "cwd": "${workspaceFolder}/backend-laravel",
+      "cwd": "${workspaceFolder}/backend_laravel",
+      "program": "${workspaceFolder}/backend_laravel/artisan",
       "runtimeExecutable": "C:\\xampp\\php\\php.exe",
       "runtimeArgs": [
-        "artisan",
         "serve"
       ],
-      "console": "integratedTerminal",
       "presentation": {
         "group": "lumbarong",
         "order": 1
       }
     },
     {
-      "name": "Vite Assets (CSS/JS)",
+      "name": "Frontend Server (Next.js)",
       "type": "node",
       "request": "launch",
-      "cwd": "${workspaceFolder}/backend-laravel",
+      "cwd": "${workspaceFolder}/frontend",
       "runtimeExecutable": "npm",
       "runtimeArgs": [
         "run",
@@ -34,12 +33,12 @@
       }
     },
     {
-      "name": "Launch Browser",
+      "name": "Launch Lumbarong",
       "type": "msedge",
       "request": "launch",
-      "url": "http://localhost:8000",
-      "webRoot": "${workspaceFolder}/backend-laravel/public",
-      "preLaunchTask": "Launch LumBarong",
+      "url": "http://localhost:3000",
+      "webRoot": "${workspaceFolder}/frontend",
+      "preLaunchTask": "Launch System",
       "presentation": {
         "group": "lumbarong",
         "order": 3

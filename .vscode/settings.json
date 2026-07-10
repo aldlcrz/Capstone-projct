@@ -1,7 +1,7 @@
 {
   "css.lint.unknownAtRules": "ignore",
-  "builder.serverUrl": "http://localhost:8000/",
-  "builder.command": "C:\\xampp\\php\\php.exe artisan serve",
+  "builder.serverUrl": "http://localhost:3000/",
+  "builder.command": "npm run dev",
   "builder.runDevServer": false,
   "builder.autoDetectDevServer": true,
   "builder.launchType": "editor"

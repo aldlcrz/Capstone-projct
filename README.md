@@ -1,74 +1,42 @@
 # LumBarong - Authentic Filipino E-Commerce
 
-LumBarong is a premium e-commerce platform dedicated to Filipino artisans, specializing in Barong Tagalog, Filipiniana dresses, and local heritage crafts.
+LumBarong is a full-stack, cross-platform Progressive Web App (PWA) designed for Filipino artisans to sell authentic Barong Tagalog, Filipiniana dresses, and local accessories.
 
-## 🚀 System Overview
-This project has been migrated to a modern **Laravel** architecture, providing a robust backend, secure authentication, and a dynamic frontend using Blade and Alpine.js.
+## Tech Stack
+- **Frontend**: Next.js, Tailwind CSS (v4), Axios, Lucide Icons, Framer Motion.
+- **Backend**: Node.js, Express, MySQL, Sequelize, Cloudinary.
+- **Authentication**: JWT (JSON Web Tokens).
+- **Styling**: Filipino-inspired premium design system.
 
-### Tech Stack
-- **Backend**: Laravel 11 (PHP)
-- **Frontend**: Blade Templates, Alpine.js, Tailwind CSS
-- **Database**: MySQL (XAMPP)
-- **Asset Bundling**: Vite
+## Getting Started
 
----
+### Prerequisites
+- Node.js (v20+)
+- MySQL
 
-## 🛠️ Installation & Setup
-
-### 1. Prerequisites
-- **PHP 8.2+**
-- **Composer**
-- **Node.js & NPM**
-- **XAMPP** (for Apache and MySQL)
-
-### 2. Project Setup
-1. **Move to the application directory**:
+### Setup
+1. **Root Directory**: `cd lumbarong`
+2. **Backend**:
    ```bash
-   cd backend-laravel
-   ```
-2. **Install Dependencies**:
-   ```bash
-   composer install
+   cd backend
    npm install
+   # Configure .env file
+   npm run dev
    ```
-3. **Environment Configuration**:
-   The system includes a pre-configured `.env` file for development. Ensure your local database settings in `.env` match your XAMPP configuration.
-4. **Generate App Key**:
+3. **Frontend**:
    ```bash
-   php artisan key:generate
-   ```
-5. **Database Import**:
-   - Open **phpMyAdmin**.
-   - Create a database named `lumbarong`.
-   - Import the `database.sql` file located in the project root.
-
----
-
-## 💻 Running the Application
-
-### Option A: Using XAMPP (Recommended for Windows)
-1. Point your XAMPP Apache virtual host to the `backend-laravel/public` directory.
-2. Start Apache and MySQL in the XAMPP Control Panel.
-3. Access the site via your configured local URL (e.g., `http://localhost/Capstone-projct-main/backend-laravel/public`).
-
-### Option B: Using Artisan Serve
-1. In the `backend-laravel` directory, run:
-   ```bash
-   php artisan serve
-   ```
-2. In a separate terminal, run Vite for frontend assets:
-   ```bash
+   cd frontend
+   npm install
    npm run dev
    ```
 
----
+## Features
+- **PWA Ready**: Offline support and home screen installation.
+- **Multi-role**: Admin, Seller, and Customer dashboards.
+- **Responsive**: Mobile-first design inspired by Lazada/Shopee.
+- **Artisan Focus**: Specialized categories for traditional Filipino wear.
 
-## 📂 Directory Structure
-- `backend-laravel/`: The core Laravel application (Models, Views, Controllers).
-- `docs/`: System documentation and walkthroughs.
-- `database.sql`: The latest database schema and seed data.
-
----
-
-## 🛡️ Security Note
-The `.env` file containing sensitive credentials has been included in this repository for development/handoff purposes. **For production deployment, ensure these secrets are rotated and kept secure.**
+## Directory Structure
+- `backend/`: Express API with MVC architecture.
+- `frontend/`: Next.js application with Pages router.
+- `docs/`: API documentation and schemas.

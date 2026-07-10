@@ -2,11 +2,11 @@
   "version": "2.0.0",
   "tasks": [
     {
-      "label": "Start Laravel Server",
+      "label": "Start Backend",
       "type": "shell",
       "command": "C:\\xampp\\php\\php.exe artisan serve",
       "options": {
-        "cwd": "${workspaceFolder}/backend-laravel"
+        "cwd": "${workspaceFolder}/backend_laravel"
       },
       "isBackground": true,
       "problemMatcher": {
@@ -15,7 +15,7 @@
         "background": {
           "activeOnStart": true,
           "beginsPattern": "^.*$",
-          "endsPattern": "Server running on|Development server"
+          "endsPattern": "Server running on"
         }
       },
       "presentation": {
@@ -27,11 +27,11 @@
       }
     },
     {
-      "label": "Start Vite (Frontend)",
+      "label": "Start Frontend",
       "type": "shell",
       "command": "npm run dev",
       "options": {
-        "cwd": "${workspaceFolder}/backend-laravel"
+        "cwd": "${workspaceFolder}/frontend"
       },
       "isBackground": true,
       "problemMatcher": {
@@ -40,7 +40,7 @@
         "background": {
           "activeOnStart": true,
           "beginsPattern": "^.*$",
-          "endsPattern": "VITE v.*|ready in"
+          "endsPattern": "Ready in|ready in"
         }
       },
       "presentation": {
@@ -52,10 +52,10 @@
       }
     },
     {
-      "label": "Launch LumBarong",
+      "label": "Launch System",
       "dependsOn": [
-        "Start Laravel Server",
-        "Start Vite (Frontend)"
+        "Start Backend",
+        "Start Frontend"
       ],
       "dependsOrder": "parallel",
       "group": {
