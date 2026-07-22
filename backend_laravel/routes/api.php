@@ -15,6 +15,7 @@ use App\Http\Controllers\UploadController;
 use App\Http\Controllers\ReviewController;
 use App\Http\Controllers\ReportController;
 use App\Http\Controllers\AnalyticsController;
+use App\Http\Controllers\SuperAdminController;
 
 Route::prefix('v1')->group(function () {
     
@@ -110,6 +111,13 @@ Route::prefix('v1')->group(function () {
     // 6.5. Super Admin routes
     Route::prefix('super-admin')->middleware('jwt.auth:super_admin')->group(function () {
         Route::get('/seller-performance', [AdminController::class, 'getSellerPerformance']);
+        Route::get('/commissions', [SuperAdminController::class, 'getCommissionRules']);
+        Route::put('/commissions', [SuperAdminController::class, 'updateCommissionRules']);
+        Route::get('/badges', [SuperAdminController::class, 'getBadges']);
+        Route::post('/badges/toggle', [SuperAdminController::class, 'toggleArtisanBadge']);
+        Route::get('/audit-logs', [SuperAdminController::class, 'getAuditLogs']);
+        Route::get('/system-health', [SuperAdminController::class, 'getSystemHealth']);
+        Route::get('/backup-db', [SuperAdminController::class, 'downloadDatabaseBackup']);
     });
 
     // Public Settings (Under admin in Node routes but public)
@@ -185,5 +193,16 @@ Route::prefix('v1')->group(function () {
         // Shop Details & Follow
         Route::get('/seller/{id}', [UserController::class, 'getSellerInfo'])->withoutMiddleware('jwt.auth');
         Route::post('/seller/{id}/follow', [UserController::class, 'toggleFollow']);
+    });
+
+    // 15. Super Admin routes
+    Route::prefix('super-admin')->middleware('jwt.auth:super_admin')->group(function () {
+        Route::get('/commissions', [SuperAdminController::class, 'getCommissionRules']);
+        Route::put('/commissions', [SuperAdminController::class, 'updateCommissionRules']);
+        Route::get('/badges', [SuperAdminController::class, 'getBadges']);
+        Route::post('/badges/toggle', [SuperAdminController::class, 'toggleArtisanBadge']);
+        Route::get('/audit-logs', [SuperAdminController::class, 'getAuditLogs']);
+        Route::get('/system-health', [SuperAdminController::class, 'getSystemHealth']);
+        Route::get('/backup-db', [SuperAdminController::class, 'downloadDatabaseBackup']);
     });
 });

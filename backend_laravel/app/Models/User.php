@@ -107,4 +107,9 @@ class User extends Authenticatable implements JWTSubject
     {
         return $this->hasMany(Report::class, 'reportedId');
     }
+
+    public function artisanBadges()
+    {
+        return $this->hasMany(ArtisanBadge::class, 'seller_id');
+    }
 }

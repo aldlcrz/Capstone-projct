@@ -19,7 +19,8 @@ import {
   Link as LinkIcon,
   Facebook,
   ChevronLeft,
-  Search
+  Search,
+  Award
 } from "lucide-react";
 import { api, getStoredUserForRole } from "@/lib/api";
 import { useSocket } from "@/context/SocketContext";
@@ -280,10 +281,10 @@ export default function ShopClient() {
           <div className="bg-white rounded-md shadow-sm border border-stone-200 flex flex-col md:flex-row overflow-hidden">
             
             {/* Left Side: Dark Banner */}
-            <div className="bg-[#1A1A1A] w-full md:w-[380px] p-5 flex flex-col justify-between shrink-0 relative overflow-hidden">
+            <div className="bg-[#1A1A1A] w-full md:w-95 p-5 flex flex-col justify-between shrink-0 relative overflow-hidden">
               <div className="absolute inset-0 opacity-[0.03] bg-white mix-blend-overlay" />
               <div className="relative z-10 flex gap-4 items-center">
-                <div className="w-[72px] h-[72px] rounded-full border border-white/20 bg-stone-100 overflow-hidden shrink-0 flex items-center justify-center font-serif text-3xl text-stone-400">
+                <div className="w-18 h-18 rounded-full border border-white/20 bg-stone-100 overflow-hidden shrink-0 flex items-center justify-center font-serif text-3xl text-stone-400">
                   {seller?.profilePhoto ? (
                     <Image
                       src={resolveBackendImageUrl(seller.profilePhoto, "/images/placeholder.png")}
@@ -304,6 +305,20 @@ export default function ShopClient() {
                   <div className="text-white/60 text-[11px] mt-1.5 flex items-center gap-1 font-medium tracking-wide">
                     <MapPin className="w-3 h-3 opacity-80" /> {seller?.location || "Lumban, Laguna"}
                   </div>
+                  {seller?.artisanBadges?.length > 0 && (
+                    <div className="flex flex-wrap gap-1 mt-2">
+                      {seller.artisanBadges.map((badge, i) => (
+                        <span
+                          key={i}
+                          title={`Badge awarded: ${badge.issued_at ? new Date(badge.issued_at).toLocaleDateString() : ''}`}
+                          className="inline-flex items-center gap-1 bg-amber-500/20 border border-amber-400/30 text-amber-300 text-[9px] font-bold uppercase tracking-widest px-2 py-0.5 rounded-full"
+                        >
+                          <Award className="w-2.5 h-2.5" />
+                          {badge.badge_type?.replace(/_/g, ' ')}
+                        </span>
+                      ))}
+                    </div>
+                  )}
                 </div>
               </div>
               <div className="relative z-10 flex gap-2.5 mt-5 w-full">

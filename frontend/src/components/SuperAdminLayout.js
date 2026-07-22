@@ -11,6 +11,10 @@ import {
   Menu,
   X,
   TrendingUp,
+  Percent,
+  Award,
+  FileText,
+  Activity,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { clearSession, getStoredUserForRole, getTokenForRole, SESSION_SYNC_EVENT } from "@/lib/api";
@@ -28,6 +32,15 @@ const sidebarData = [
     group: "FINANCIAL MONITORING",
     items: [
       { label: "Shop Performance", icon: <TrendingUp className="w-5 h-5" />, path: "/super-admin/performance" },
+      { label: "Commission Rules", icon: <Percent className="w-5 h-5" />, path: "/super-admin/commissions" },
+    ],
+  },
+  {
+    group: "HERITAGE & SECURITY",
+    items: [
+      { label: "Artisan Badges", icon: <Award className="w-5 h-5" />, path: "/super-admin/badges" },
+      { label: "Audit Logs", icon: <FileText className="w-5 h-5" />, path: "/super-admin/audit-logs" },
+      { label: "System Health", icon: <Activity className="w-5 h-5" />, path: "/super-admin/system-health" },
     ],
   },
 ];
@@ -35,6 +48,9 @@ const sidebarData = [
 const mobileNavItems = [
   { label: "Dashboard", icon: <BarChart3 />, path: "/super-admin/dashboard" },
   { label: "Performance", icon: <TrendingUp />, path: "/super-admin/performance" },
+  { label: "Badges", icon: <Award />, path: "/super-admin/badges" },
+  { label: "Audit", icon: <FileText />, path: "/super-admin/audit-logs" },
+  { label: "Health", icon: <Activity />, path: "/super-admin/system-health" },
 ];
 
 function MobileBottomNav({ items }) {
@@ -102,7 +118,7 @@ export default function SuperAdminLayout({ children }) {
       <motion.aside
         initial={{ x: -280 }}
         animate={{ x: 0 }}
-        className="hidden lg:flex flex-col w-[280px] h-full border-r border-[#2d2d5e] overflow-y-auto"
+        className="hidden lg:flex flex-col w-70 h-full border-r border-[#2d2d5e] overflow-y-auto"
         style={{ background: "rgba(15, 15, 30, 0.95)", backdropFilter: "blur(20px)" }}
       >
         <div className="p-10 flex flex-col h-full">
@@ -178,7 +194,7 @@ export default function SuperAdminLayout({ children }) {
       {/* Main Content */}
       <div className="flex-1 flex flex-col h-full relative overflow-hidden">
         {/* Top Header */}
-        <header className="sticky top-0 z-40 h-[72px] flex items-center shrink-0 border-b border-[#2d2d5e]" style={{ background: "rgba(15, 15, 30, 0.8)", backdropFilter: "blur(20px)" }}>
+        <header className="sticky top-0 z-40 h-18 flex items-center shrink-0 border-b border-[#2d2d5e]" style={{ background: "rgba(15, 15, 30, 0.8)", backdropFilter: "blur(20px)" }}>
           <div className="container mx-auto px-5 lg:px-10 flex items-center justify-between">
             <div className="flex items-center lg:hidden">
               <Link href="/super-admin/dashboard" className="font-serif text-sm font-bold tracking-tighter text-white">
@@ -209,10 +225,10 @@ export default function SuperAdminLayout({ children }) {
         </header>
 
         {/* Scrollable Content */}
-        <main className="flex-1 overflow-y-auto p-5 lg:p-10 pb-[135px] lg:pb-10 custom-scrollbar animate-fade-up">
-          <div className="max-w-[1200px] mx-auto">
+        <main className="flex-1 overflow-y-auto p-5 lg:p-10 pb-33.75 lg:pb-10 custom-scrollbar animate-fade-up">
+          <div className="max-w-300 mx-auto">
             {loading ? (
-              <div className="flex items-center justify-center min-h-[400px]">
+              <div className="flex items-center justify-center min-h-100">
                 <Loader2 className="w-10 h-10 animate-spin" style={{ color: "#818cf8" }} />
               </div>
             ) : (

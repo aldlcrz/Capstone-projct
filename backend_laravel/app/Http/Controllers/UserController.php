@@ -7,6 +7,7 @@ use App\Models\Address;
 use App\Models\Order;
 use App\Models\Product;
 use App\Models\Review;
+use App\Models\ArtisanBadge;
 use App\Utils\SocketUtility;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
@@ -298,6 +299,13 @@ class UserController extends Controller
                 ? $seller->createdAt->format('F Y')
                 : "March 2026";
 
+            $badges = ArtisanBadge::where('seller_id', $id)->get()->map(function($b) {
+                return [
+                    'badge_type' => $b->badge_type,
+                    'issued_at'  => $b->issued_at,
+                ];
+            });
+
             return response()->json([
                 'id' => $seller->id,
                 'shopName' => $seller->name ?: "Lumban Artisan",
@@ -317,7 +325,8 @@ class UserController extends Controller
                 'youtubeLink' => $seller->youtubeLink,
                 'socialLinks' => $seller->socialLinks ?: [],
                 'shopLatitude' => $seller->shopLatitude,
-                'shopLongitude' => $seller->shopLongitude
+                'shopLongitude' => $seller->shopLongitude,
+                'artisanBadges' => $badges,
             ]);
         } catch (\Exception $err) {
             return response()->json(['message' => 'Error fetching seller info', 'error' => $err->getMessage()], 500);

@@ -349,7 +349,7 @@ export default function EditProductClient({ id: propId }) {
   );
 
   return (
-    <div className="max-w-[1400px] mx-auto space-y-10 relative px-4">
+    <div className="max-w-350 mx-auto space-y-10 relative px-4">
       <AnimatePresence>
         {toast && (
           <motion.div

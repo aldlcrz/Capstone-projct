@@ -8,9 +8,11 @@ use App\Models\Order;
 use App\Models\OrderItem;
 use App\Models\SystemSetting;
 use App\Models\Notification;
+use App\Models\SystemAuditLog;
 use App\Utils\SocketUtility;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Auth;
 
 class AdminController extends Controller
 {
@@ -452,6 +454,14 @@ class AdminController extends Controller
             SocketUtility::emitUserUpdated($user, ['action' => 'terminated']);
             SocketUtility::emitForceLogout($user->id, 'blocked', $user->violationReason);
 
+            SystemAuditLog::create([
+                'user_id' => Auth::id(),
+                'action' => 'BLOCK_USER',
+                'entity_type' => 'User',
+                'entity_id' => $user->id,
+                'details' => ['user_name' => $user->name, 'reason' => $user->violationReason],
+            ]);
+
             return response()->json(['message' => 'Account blocked successfully']);
         } catch (\Exception $e) {
             return response()->json(['message' => $e->getMessage()], 500);
@@ -474,6 +484,14 @@ class AdminController extends Controller
             ]);
 
             SocketUtility::emitUserUpdated($user, ['action' => 'status_changed']);
+
+            SystemAuditLog::create([
+                'user_id' => Auth::id(),
+                'action' => 'UNFREEZE_USER',
+                'entity_type' => 'User',
+                'entity_id' => $user->id,
+                'details' => ['user_name' => $user->name],
+            ]);
 
             return response()->json(['message' => 'User unfrozen successfully', 'user' => $user]);
         } catch (\Exception $e) {
@@ -501,6 +519,14 @@ class AdminController extends Controller
 
             SocketUtility::emitUserUpdated($user, ['action' => 'frozen']);
             SocketUtility::emitForceLogout($user->id, 'frozen', $user->violationReason);
+
+            SystemAuditLog::create([
+                'user_id' => Auth::id(),
+                'action' => 'FREEZE_USER',
+                'entity_type' => 'User',
+                'entity_id' => $user->id,
+                'details' => ['user_name' => $user->name, 'reason' => $reason],
+            ]);
 
             return response()->json(['message' => 'Account frozen successfully', 'user' => $user]);
         } catch (\Exception $e) {
@@ -548,6 +574,14 @@ class AdminController extends Controller
                 'message' => 'Your artisan workshop is now verified and can access seller tools.'
             ]);
 
+            SystemAuditLog::create([
+                'user_id' => Auth::id(),
+                'action' => 'VERIFY_SELLER',
+                'entity_type' => 'User',
+                'entity_id' => $user->id,
+                'details' => ['seller_email' => $user->email],
+            ]);
+
             return response()->json(['message' => 'Seller verified successfully', 'user' => $publicUser]);
         } catch (\Exception $e) {
             return response()->json(['message' => $e->getMessage()], 500);
@@ -587,6 +621,14 @@ class AdminController extends Controller
             ]);
 
             SocketUtility::emitDashboardUpdate();
+
+            SystemAuditLog::create([
+                'user_id' => Auth::id(),
+                'action' => 'REJECT_SELLER',
+                'entity_type' => 'User',
+                'entity_id' => $user->id,
+                'details' => ['reason' => $reason],
+            ]);
 
             return response()->json(['message' => 'Seller application rejected with reason']);
         } catch (\Exception $e) {
@@ -755,6 +797,14 @@ class AdminController extends Controller
 
             SocketUtility::emitDashboardUpdate();
 
+            SystemAuditLog::create([
+                'user_id' => Auth::id(),
+                'action' => 'APPROVE_PRODUCT',
+                'entity_type' => 'Product',
+                'entity_id' => $product->id,
+                'details' => ['product_name' => $product->name],
+            ]);
+
             return response()->json(['message' => 'Product approved successfully', 'product' => $product]);
         } catch (\Exception $e) {
             return response()->json(['message' => $e->getMessage()], 500);
@@ -790,6 +840,14 @@ class AdminController extends Controller
             ]);
 
             SocketUtility::emitDashboardUpdate();
+
+            SystemAuditLog::create([
+                'user_id' => Auth::id(),
+                'action' => 'REJECT_PRODUCT',
+                'entity_type' => 'Product',
+                'entity_id' => $product->id,
+                'details' => ['product_name' => $product->name, 'reason' => $reason],
+            ]);
 
             return response()->json(['message' => 'Product rejected successfully', 'product' => $product]);
         } catch (\Exception $e) {

@@ -355,7 +355,7 @@ export default function AddProductPage() {
 
   return (
     <SellerLayout>
-      <div className="max-w-[1400px] mx-auto space-y-10 relative">
+      <div className="max-w-350 mx-auto space-y-10 relative">
         {/* Toast Notification */}
         <AnimatePresence>
           {toast && (

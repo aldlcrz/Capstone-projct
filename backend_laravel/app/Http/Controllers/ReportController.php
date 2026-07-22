@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Report;
 use App\Models\User;
 use App\Models\Notification;
+use App\Models\SystemAuditLog;
 use App\Utils\SocketUtility;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
@@ -139,6 +140,14 @@ class ReportController extends Controller
                     $report->reportedUser->update(['status' => 'blocked']);
                 }
             }
+
+            SystemAuditLog::create([
+                'user_id' => Auth::id(),
+                'action' => 'RESOLVE_REPORT',
+                'entity_type' => 'Report',
+                'entity_id' => $report->id,
+                'details' => ['status' => $status, 'action_taken' => $actionTaken],
+            ]);
 
             return response()->json([
                 'message' => 'Report resolved successfully.',

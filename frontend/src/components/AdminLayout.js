@@ -202,7 +202,7 @@ export default function AdminLayout({ children }) {
       <motion.aside 
         initial={{ x: -280 }}
         animate={{ x: 0 }}
-        className="hidden lg:flex flex-col w-[280px] h-full bg-white border-r border-(--border) overflow-y-auto"
+        className="hidden lg:flex flex-col w-70 h-full bg-white border-r border-(--border) overflow-y-auto"
       >
         <div className="p-10 flex flex-col h-full">
           <div className="mb-12">
@@ -278,7 +278,7 @@ export default function AdminLayout({ children }) {
       {/* Main Content Area */}
       <div className="flex-1 flex flex-col h-full relative overflow-hidden">
         {/* Top Sticky Header */}
-        <header className="sticky top-0 z-40 bg-white/80 backdrop-blur-md border-b border-(--border) h-[72px] flex items-center shrink-0">
+        <header className="sticky top-0 z-40 bg-white/80 backdrop-blur-md border-b border-(--border) h-18 flex items-center shrink-0">
           <div className="container mx-auto px-5 lg:px-10 flex items-center justify-between">
             {/* Mobile Header: Logo (Left) */}
             <div className="flex items-center lg:hidden">
@@ -378,10 +378,10 @@ export default function AdminLayout({ children }) {
         </header>
 
         {/* Scrollable Content */}
-        <main className="flex-1 overflow-y-auto p-5 lg:p-10 pb-[135px] lg:pb-10 custom-scrollbar animate-fade-up">
-          <div className="max-w-[1200px] mx-auto">
+        <main className="flex-1 overflow-y-auto p-5 lg:p-10 pb-33.75 lg:pb-10 custom-scrollbar animate-fade-up">
+          <div className="max-w-300 mx-auto">
             {loading ? (
-              <div className="flex items-center justify-center min-h-[400px]">
+              <div className="flex items-center justify-center min-h-100">
                 <Loader2 className="w-10 h-10 animate-spin text-(--rust)" />
               </div>
             ) : (
