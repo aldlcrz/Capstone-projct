@@ -1,7 +1,7 @@
 @extends('layouts.seller')
 
 @section('content')
-<div class="max-w-[1400px] mx-auto" x-data="{ deleteModal: false, deleteProductId: null, deleteProductName: '' }">
+<div class="max-w-350 mx-auto" x-data="{ deleteModal: false, deleteProductId: null, deleteProductName: '' }">
     <div class="mb-10">
         <a href="{{ route('seller.products.index') }}" class="inline-flex items-center gap-2 text-[10px] font-bold text-gray-400 uppercase tracking-widest hover:text-[#C0420A] transition-colors mb-4">
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
@@ -165,7 +165,7 @@
                                 <input type="checkbox" id="discountToggle" class="sr-only peer"
                                     {{ $product->is_on_sale ? 'checked' : '' }}
                                     onchange="toggleDiscount(this)">
-                                <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#C0420A]"></div>
+                                <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-0.5 after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#C0420A]"></div>
                                 <span class="ml-2 text-[10px] font-bold text-gray-500 uppercase tracking-widest peer-checked:text-[#C0420A]">On Sale</span>
                             </label>
                         </div>
@@ -260,7 +260,7 @@
                 {{-- Drop Zone --}}
                 <label for="imageUploadInput"
                     id="dropZone"
-                    class="flex flex-col items-center justify-center gap-3 w-full min-h-[160px] rounded-2xl border-2 border-dashed border-gray-200 bg-gray-50 hover:bg-white hover:border-[#C0420A] transition-all cursor-pointer group px-6 py-8 text-center">
+                    class="flex flex-col items-center justify-center gap-3 w-full min-h-40 rounded-2xl border-2 border-dashed border-gray-200 bg-gray-50 hover:bg-white hover:border-[#C0420A] transition-all cursor-pointer group px-6 py-8 text-center">
                     <div class="w-12 h-12 rounded-2xl bg-gray-100 group-hover:bg-[#C0420A]/10 flex items-center justify-center transition-colors">
                         <svg class="w-6 h-6 text-gray-300 group-hover:text-[#C0420A] transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/>
@@ -281,12 +281,18 @@
 
             {{-- Payment Method Configuration --}}
             <div class="bg-white p-8 rounded-3xl border border-gray-100 shadow-sm space-y-6">
-                <div>
-                    <h3 class="text-sm font-bold text-black uppercase tracking-widest flex items-center gap-2">
-                        <svg class="w-4 h-4 text-[#C0420A]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"></path></svg>
-                        Payment Methods
-                    </h3>
-                    <p class="text-[10px] text-gray-400 mt-1">Select payment methods accepted for this product. Numbers and QR codes are managed in your profile.</p>
+                <div class="flex items-center justify-between">
+                    <div>
+                        <h3 class="text-sm font-bold text-black uppercase tracking-widest flex items-center gap-2">
+                            <svg class="w-4 h-4 text-[#C0420A]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"></path></svg>
+                            Payment Methods
+                        </h3>
+                        <p class="text-[10px] text-gray-400 mt-1">Select accepted payment methods for this product and upload your QR codes.</p>
+                    </div>
+                    <a href="{{ route('seller.profile') }}" target="_blank" class="text-[10px] font-bold text-[#C0420A] hover:underline flex items-center gap-1 shrink-0">
+                        Profile Payment Settings
+                        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path></svg>
+                    </a>
                 </div>
 
                 {{-- GCash --}}
@@ -299,26 +305,43 @@
                         <label class="relative inline-flex items-center cursor-pointer">
                             <input type="checkbox" name="product_is_gcash_available" value="1" class="sr-only peer"
                                 {{ old('product_is_gcash_available', $product->is_gcash_available) ? 'checked' : '' }}>
-                            <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                            <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-0.5 after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
                             <span class="ml-2 text-[10px] font-bold text-gray-500 uppercase tracking-widest peer-checked:text-blue-600">Available</span>
                         </label>
                     </div>
 
                     <div class="space-y-2">
                         <label class="text-[9px] font-black uppercase tracking-widest text-gray-400">GCash Number</label>
-                        <div class="px-4 py-3 bg-gray-100 border border-gray-200 rounded-xl text-xs font-bold text-gray-500">
-                            {{ auth()->user()->gcashNumber ?? 'Not set in profile' }}
-                        </div>
+                        <input type="text" name="gcashNumber" value="{{ old('gcashNumber', $product->gcash_number ?? auth()->user()->gcashNumber) }}" placeholder="e.g. 0917 123 4567" class="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl text-xs font-bold text-gray-800 outline-none focus:border-blue-500 transition-all">
                     </div>
 
                     <div class="space-y-2">
                         <label class="text-[9px] font-black uppercase tracking-widest text-gray-400">GCash QR Code</label>
-                        <div class="border-2 border-dashed border-gray-200 bg-gray-100 rounded-2xl p-4 flex flex-col items-center justify-center text-center min-h-[100px]">
-                            @if(auth()->user()->gcashQrCode)
-                                <img src="{{ asset('storage/' . auth()->user()->gcashQrCode) }}" class="w-20 h-20 object-contain rounded-lg">
-                            @else
-                                <span class="text-[10px] font-bold text-gray-400 uppercase tracking-widest block">No QR Uploaded in Profile</span>
-                            @endif
+                        <div class="relative group" x-data="{ qrPreview: '{{ $product->gcash_qr_code ? asset('storage/' . $product->gcash_qr_code) : (auth()->user()->gcashQrCode ? asset('storage/' . auth()->user()->gcashQrCode) : '') }}' }">
+                            <input type="file" name="gcashQrCode" accept="image/*" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10" @change="
+                                const file = $event.target.files[0];
+                                if (file) {
+                                    const reader = new FileReader();
+                                    reader.onload = (e) => { qrPreview = e.target.result; };
+                                    reader.readAsDataURL(file);
+                                }
+                            ">
+                            <div class="border-2 border-dashed border-gray-200 bg-white rounded-2xl p-4 flex flex-col items-center justify-center text-center hover:border-blue-500 hover:bg-blue-50/10 transition-all min-h-25">
+                                <template x-if="qrPreview">
+                                    <div class="relative w-24 h-24">
+                                        <img :src="qrPreview" class="w-full h-full object-contain rounded-lg">
+                                        <div class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center rounded-lg transition-opacity">
+                                            <span class="text-[8px] text-white font-bold uppercase tracking-widest">Change QR</span>
+                                        </div>
+                                    </div>
+                                </template>
+                                <template x-if="!qrPreview">
+                                    <div class="space-y-1">
+                                        <svg class="w-6 h-6 text-gray-300 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path></svg>
+                                        <span class="text-[10px] font-bold text-gray-400 uppercase tracking-widest block">Upload GCash QR Code</span>
+                                    </div>
+                                </template>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -333,26 +356,43 @@
                         <label class="relative inline-flex items-center cursor-pointer">
                             <input type="checkbox" name="product_is_maya_available" value="1" class="sr-only peer"
                                 {{ old('product_is_maya_available', $product->is_maya_available) ? 'checked' : '' }}>
-                            <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-green-600"></div>
+                            <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-0.5 after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-green-600"></div>
                             <span class="ml-2 text-[10px] font-bold text-gray-500 uppercase tracking-widest peer-checked:text-green-600">Available</span>
                         </label>
                     </div>
 
                     <div class="space-y-2">
                         <label class="text-[9px] font-black uppercase tracking-widest text-gray-400">Maya Number</label>
-                        <div class="px-4 py-3 bg-gray-100 border border-gray-200 rounded-xl text-xs font-bold text-gray-500">
-                            {{ auth()->user()->mayaNumber ?? 'Not set in profile' }}
-                        </div>
+                        <input type="text" name="mayaNumber" value="{{ old('mayaNumber', $product->maya_number ?? auth()->user()->mayaNumber) }}" placeholder="e.g. 0917 123 4567" class="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl text-xs font-bold text-gray-800 outline-none focus:border-green-500 transition-all">
                     </div>
 
                     <div class="space-y-2">
                         <label class="text-[9px] font-black uppercase tracking-widest text-gray-400">Maya QR Code</label>
-                        <div class="border-2 border-dashed border-gray-200 bg-gray-100 rounded-2xl p-4 flex flex-col items-center justify-center text-center min-h-[100px]">
-                            @if(auth()->user()->mayaQrCode)
-                                <img src="{{ asset('storage/' . auth()->user()->mayaQrCode) }}" class="w-20 h-20 object-contain rounded-lg">
-                            @else
-                                <span class="text-[10px] font-bold text-gray-400 uppercase tracking-widest block">No QR Uploaded in Profile</span>
-                            @endif
+                        <div class="relative group" x-data="{ qrPreview: '{{ $product->maya_qr_code ? asset('storage/' . $product->maya_qr_code) : (auth()->user()->mayaQrCode ? asset('storage/' . auth()->user()->mayaQrCode) : '') }}' }">
+                            <input type="file" name="mayaQrCode" accept="image/*" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10" @change="
+                                const file = $event.target.files[0];
+                                if (file) {
+                                    const reader = new FileReader();
+                                    reader.onload = (e) => { qrPreview = e.target.result; };
+                                    reader.readAsDataURL(file);
+                                }
+                            ">
+                            <div class="border-2 border-dashed border-gray-200 bg-white rounded-2xl p-4 flex flex-col items-center justify-center text-center hover:border-green-500 hover:bg-green-50/10 transition-all min-h-25">
+                                <template x-if="qrPreview">
+                                    <div class="relative w-24 h-24">
+                                        <img :src="qrPreview" class="w-full h-full object-contain rounded-lg">
+                                        <div class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center rounded-lg transition-opacity">
+                                            <span class="text-[8px] text-white font-bold uppercase tracking-widest">Change QR</span>
+                                        </div>
+                                    </div>
+                                </template>
+                                <template x-if="!qrPreview">
+                                    <div class="space-y-1">
+                                        <svg class="w-6 h-6 text-gray-300 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path></svg>
+                                        <span class="text-[10px] font-bold text-gray-400 uppercase tracking-widest block">Upload Maya QR Code</span>
+                                    </div>
+                                </template>
+                            </div>
                         </div>
                     </div>
                 </div>

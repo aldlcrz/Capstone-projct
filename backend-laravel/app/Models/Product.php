@@ -139,22 +139,48 @@ class Product extends Model
      */
     public function getImageUrl($image = null)
     {
-        $img = $image ?? ($this->image[0] ?? null);
+        $img = $image;
+
         if (!$img) {
+            $raw = $this->image;
+            if (is_array($raw)) {
+                $img = $raw[0] ?? null;
+            } elseif (is_string($raw)) {
+                $decoded = json_decode($raw, true);
+                if (is_array($decoded) && !empty($decoded)) {
+                    $img = $decoded[0];
+                } elseif ($raw !== 'Array' && $raw !== '[]') {
+                    $img = $raw;
+                }
+            }
+        }
+
+        if (!$img || $img === 'Array' || $img === '[]' || $img === '[') {
             return asset('uploads/products/default.jpg');
         }
+
         if (str_starts_with($img, 'http://') || str_starts_with($img, 'https://')) {
             return $img;
         }
+
+        $img = ltrim($img, '/');
+
+        if (str_starts_with($img, 'storage/')) {
+            return asset($img);
+        }
+
         if (str_starts_with($img, 'products/')) {
             return asset('storage/' . $img);
         }
+
+        if (str_starts_with($img, 'qrcodes/')) {
+            return asset('storage/' . $img);
+        }
+
         if (str_starts_with($img, 'uploads/')) {
             return asset($img);
         }
-        if (str_starts_with($img, '/uploads/')) {
-            return asset($img);
-        }
-        return asset('uploads/products/' . $img);
+
+        return asset('storage/products/' . $img);
     }
 }

@@ -17,6 +17,7 @@ class ProductManagementController extends Controller
 
     public function create()
     {
+        /** @var \App\Models\User $user */
         $user = Auth::user();
         if (!$user->isPremiumActive()) {
             $productCount = Product::where('sellerId', $user->id)->count();
@@ -30,6 +31,7 @@ class ProductManagementController extends Controller
 
     public function store(Request $request)
     {
+        /** @var \App\Models\User $user */
         $user = Auth::user();
         if (!$user->isPremiumActive()) {
             $productCount = Product::where('sellerId', $user->id)->count();
@@ -76,13 +78,26 @@ class ProductManagementController extends Controller
                 $product->stock = $request->stock ?? 0;
             }
 
-            // Per-product payment availability flags
+            // Ensure storage directories exist on Hostinger / server
+            \Illuminate\Support\Facades\Storage::disk('public')->makeDirectory('qrcodes');
+            \Illuminate\Support\Facades\Storage::disk('public')->makeDirectory('products');
+
+            // Per-product payment availability and overrides
             $product->is_gcash_available = $request->has('product_is_gcash_available');
-            $product->gcash_number       = null;
-            $product->gcash_qr_code      = null;
+            $product->gcash_number       = $request->filled('gcashNumber') ? $request->gcashNumber : null;
+            if ($request->hasFile('gcashQrCode')) {
+                $product->gcash_qr_code = $request->file('gcashQrCode')->store('qrcodes', 'public');
+            } else {
+                $product->gcash_qr_code = null;
+            }
+
             $product->is_maya_available  = $request->has('product_is_maya_available');
-            $product->maya_number        = null;
-            $product->maya_qr_code       = null;
+            $product->maya_number        = $request->filled('mayaNumber') ? $request->mayaNumber : null;
+            if ($request->hasFile('mayaQrCode')) {
+                $product->maya_qr_code = $request->file('mayaQrCode')->store('qrcodes', 'public');
+            } else {
+                $product->maya_qr_code = null;
+            }
 
             // Lumban Special discount
             $product->is_on_sale          = $request->boolean('is_on_sale');
@@ -115,14 +130,14 @@ class ProductManagementController extends Controller
         }
     }
 
-    public function edit($id)
+    public function edit(string $id)
     {
         $product = Product::where('id', $id)->where('sellerId', Auth::id())->firstOrFail();
         $categories = \App\Models\Category::orderBy('name', 'asc')->get();
         return view('seller.products.edit', compact('product', 'categories'));
     }
 
-    public function update(Request $request, $id)
+    public function update(Request $request, string $id)
     {
         $product = Product::where('id', $id)->where('sellerId', Auth::id())->firstOrFail();
 
@@ -159,20 +174,30 @@ class ProductManagementController extends Controller
             $product->stock = $request->stock;
         }
 
-        // Per-product payment availability flags
+        // Per-product payment availability and overrides
         $product->is_gcash_available = $request->has('product_is_gcash_available');
-        if ($product->gcash_qr_code) {
-            \Illuminate\Support\Facades\Storage::disk('public')->delete($product->gcash_qr_code);
+        if ($request->filled('gcashNumber')) {
+            $product->gcash_number = $request->gcashNumber;
         }
-        $product->gcash_number       = null;
-        $product->gcash_qr_code      = null;
 
-        $product->is_maya_available  = $request->has('product_is_maya_available');
-        if ($product->maya_qr_code) {
-            \Illuminate\Support\Facades\Storage::disk('public')->delete($product->maya_qr_code);
+        if ($request->hasFile('gcashQrCode')) {
+            if ($product->gcash_qr_code && !str_starts_with($product->gcash_qr_code, 'http')) {
+                \Illuminate\Support\Facades\Storage::disk('public')->delete($product->gcash_qr_code);
+            }
+            $product->gcash_qr_code = $request->file('gcashQrCode')->store('qrcodes', 'public');
         }
-        $product->maya_number        = null;
-        $product->maya_qr_code       = null;
+
+        $product->is_maya_available = $request->has('product_is_maya_available');
+        if ($request->filled('mayaNumber')) {
+            $product->maya_number = $request->mayaNumber;
+        }
+
+        if ($request->hasFile('mayaQrCode')) {
+            if ($product->maya_qr_code && !str_starts_with($product->maya_qr_code, 'http')) {
+                \Illuminate\Support\Facades\Storage::disk('public')->delete($product->maya_qr_code);
+            }
+            $product->maya_qr_code = $request->file('mayaQrCode')->store('qrcodes', 'public');
+        }
 
         // Lumban Special discount
         $product->is_on_sale          = $request->boolean('is_on_sale');
@@ -218,7 +243,7 @@ class ProductManagementController extends Controller
         return redirect()->route('seller.products.index')->with('success', 'Product updated and pending review.');
     }
 
-    public function destroy($id)
+    public function destroy(string $id)
     {
         $product = Product::where('id', $id)->where('sellerId', Auth::id())->firstOrFail();
 

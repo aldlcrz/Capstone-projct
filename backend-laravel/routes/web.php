@@ -190,3 +190,14 @@ Route::middleware(['auth', 'superadmin'])->prefix('superadmin')->group(function 
     Route::patch('/shops/{id}/unfreeze', [\App\Http\Controllers\SuperAdminController::class, 'unfreezeShop'])->name('superadmin.shops.unfreeze');
 });
 
+// ─── Storage Fallback Route ───────────────────────────────────────────────
+// Serves uploaded files directly if storage symlink is missing on Hostinger / shared hosts
+Route::get('/storage/{path}', function ($path) {
+    $filePath = storage_path('app/public/' . $path);
+    if (file_exists($filePath)) {
+        return response()->file($filePath);
+    }
+    abort(404);
+})->where('path', '.*');
+
+

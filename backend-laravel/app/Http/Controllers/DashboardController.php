@@ -16,13 +16,13 @@ class DashboardController extends Controller
 {
     public function sellerDashboard(Request $request)
     {
-        return view('seller.dashboard', $this->buildSellerDashboardData($request->user()->id));
+        return view('seller.dashboard', $this->buildSellerDashboardData($request->user()->id, $request));
     }
 
     public function getSellerDashboardSummary(Request $request)
     {
         try {
-            return response()->json($this->buildSellerDashboardData($request->user()->id));
+            return response()->json($this->buildSellerDashboardData($request->user()->id, $request));
         } catch (\Exception $e) {
             return response()->json(['message' => 'Error aggregating dashboard data', 'error' => $e->getMessage()], 500);
         }
@@ -30,11 +30,22 @@ class DashboardController extends Controller
 
     public function exportSellerReport(Request $request): StreamedResponse
     {
-        $sellerId = $request->user()->id;
-        $orders = Order::where('sellerId', $sellerId)
-            ->with(['customer:id,name,email', 'items.product:id,name'])
-            ->orderBy('createdAt', 'desc')
-            ->get();
+        $sellerId   = $request->user()->id;
+        $dateFilter = $this->resolveDateRange($request);
+        $from       = $dateFilter['from'];
+        $to         = $dateFilter['to'];
+
+        $ordersQuery = Order::where('sellerId', $sellerId)
+            ->with(['customer:id,name,email', 'items.product:id,name']);
+
+        if ($from) {
+            $ordersQuery->where('createdAt', '>=', $from);
+        }
+        if ($to) {
+            $ordersQuery->where('createdAt', '<=', $to);
+        }
+
+        $orders = $ordersQuery->orderBy('createdAt', 'desc')->get();
 
         $filename = 'lumbarong-orders-' . now()->format('Y-m-d') . '.csv';
 
@@ -65,11 +76,96 @@ class DashboardController extends Controller
         }, $filename, ['Content-Type' => 'text/csv']);
     }
 
-    private function buildSellerDashboardData(string $sellerId): array
+    private function resolveDateRange(Request $request): array
     {
-        $orders = Order::where('sellerId', $sellerId)
-            ->orderBy('createdAt', 'desc')
-            ->get();
+        $preset    = $request->input('date_preset');
+        $startDate = $request->input('start_date');
+        $endDate   = $request->input('end_date');
+
+        $from = null;
+        $to   = null;
+        $label = 'All Time';
+
+        if ($startDate || $endDate) {
+            $preset = 'custom';
+            if ($startDate) {
+                $from = Carbon::parse($startDate)->startOfDay();
+            }
+            if ($endDate) {
+                $to = Carbon::parse($endDate)->endOfDay();
+            }
+            if ($from && $to) {
+                $label = $from->format('M d, Y') . ' - ' . $to->format('M d, Y');
+            } elseif ($from) {
+                $label = 'From ' . $from->format('M d, Y');
+            } elseif ($to) {
+                $label = 'Until ' . $to->format('M d, Y');
+            }
+        } elseif ($preset) {
+            switch ($preset) {
+                case 'today':
+                    $from  = Carbon::now()->startOfDay();
+                    $to    = Carbon::now()->endOfDay();
+                    $label = 'Today (' . $from->format('M d, Y') . ')';
+                    break;
+                case 'yesterday':
+                    $from  = Carbon::yesterday()->startOfDay();
+                    $to    = Carbon::yesterday()->endOfDay();
+                    $label = 'Yesterday (' . $from->format('M d, Y') . ')';
+                    break;
+                case 'last_7_days':
+                    $from  = Carbon::now()->subDays(6)->startOfDay();
+                    $to    = Carbon::now()->endOfDay();
+                    $label = 'Last 7 Days';
+                    break;
+                case 'last_30_days':
+                    $from  = Carbon::now()->subDays(29)->startOfDay();
+                    $to    = Carbon::now()->endOfDay();
+                    $label = 'Last 30 Days';
+                    break;
+                case 'this_month':
+                    $from  = Carbon::now()->startOfMonth();
+                    $to    = Carbon::now()->endOfMonth();
+                    $label = 'This Month (' . Carbon::now()->format('M Y') . ')';
+                    break;
+                case 'last_month':
+                    $from  = Carbon::now()->subMonth()->startOfMonth();
+                    $to    = Carbon::now()->subMonth()->endOfMonth();
+                    $label = 'Last Month (' . Carbon::now()->subMonth()->format('M Y') . ')';
+                    break;
+                case 'all_time':
+                default:
+                    $preset = 'all_time';
+                    $label  = 'All Time';
+                    break;
+            }
+        }
+
+        return [
+            'preset'     => $preset ?? 'all_time',
+            'start_date' => $startDate ?? ($from ? $from->format('Y-m-d') : ''),
+            'end_date'   => $endDate ?? ($to ? $to->format('Y-m-d') : ''),
+            'from'       => $from,
+            'to'         => $to,
+            'label'      => $label,
+        ];
+    }
+
+    private function buildSellerDashboardData(string $sellerId, ?Request $request = null): array
+    {
+        $request    = $request ?? request();
+        $dateFilter = $this->resolveDateRange($request);
+        $from       = $dateFilter['from'];
+        $to         = $dateFilter['to'];
+
+        $ordersQuery = Order::where('sellerId', $sellerId);
+        if ($from) {
+            $ordersQuery->where('createdAt', '>=', $from);
+        }
+        if ($to) {
+            $ordersQuery->where('createdAt', '<=', $to);
+        }
+        $orders = $ordersQuery->orderBy('createdAt', 'desc')->get();
 
         $activeOrders = $orders->reject(fn ($order) => $this->isCancelledOrder($order->status));
 
@@ -147,37 +243,71 @@ class DashboardController extends Controller
             ? number_format(($orderCount / $shopViews) * 100, 1)
             : '0.0';
 
-        $topProducts = DB::table('order_items')
+        $topProductsQuery = DB::table('order_items')
             ->join('orders', 'order_items.orderId', '=', 'orders.id')
             ->join('products', 'order_items.productId', '=', 'products.id')
             ->where('orders.sellerId', $sellerId)
-            ->whereRaw('LOWER(orders.status) NOT IN (?, ?, ?)', ['cancelled', 'cancellation pending', 'cancellation requested'])
-            ->select(
-                'products.id',
-                'products.name',
-                DB::raw('SUM(order_items.quantity) as units_sold'),
-                DB::raw('SUM(order_items.quantity * order_items.price) as revenue')
-            )
-            ->groupBy('products.id', 'products.name')
-            ->orderByDesc('units_sold')
-            ->limit(5)
-            ->get();
+            ->whereRaw('LOWER(orders.status) NOT IN (?, ?, ?)', ['cancelled', 'cancellation pending', 'cancellation requested']);
+
+        if ($from) {
+            $topProductsQuery->where('orders.createdAt', '>=', $from);
+        }
+        if ($to) {
+            $topProductsQuery->where('orders.createdAt', '<=', $to);
+        }
+
+        $topProducts = $topProductsQuery->select(
+            'products.id',
+            'products.name',
+            DB::raw('SUM(order_items.quantity) as units_sold'),
+            DB::raw('SUM(order_items.quantity * order_items.price) as revenue')
+        )
+        ->groupBy('products.id', 'products.name')
+        ->orderByDesc('units_sold')
+        ->limit(5)
+        ->get();
 
         $revenueChart = [];
-        for ($i = 6; $i >= 0; $i--) {
-            $day = Carbon::now()->subDays($i);
-            $dayRevenue = (float) $activeOrders
-                ->filter(fn ($order) => Carbon::parse($order->createdAt)->between(
-                    $day->copy()->startOfDay(),
-                    $day->copy()->endOfDay()
-                ))
-                ->sum('totalAmount');
+        if ($from && $to) {
+            $diffDays = max(1, (int) $from->diffInDays($to));
+            $stepDays = max(1, (int) ceil($diffDays / 6));
+            for ($i = 6; $i >= 0; $i--) {
+                $day = $to->copy()->subDays($i * $stepDays);
+                $periodStart = $day->copy()->startOfDay();
+                $periodEnd   = ($stepDays > 1) ? $day->copy()->addDays($stepDays - 1)->endOfDay() : $day->copy()->endOfDay();
 
-            $revenueChart[] = [
-                'label' => $day->format('D'),
-                'date' => $day->format('M d'),
-                'revenue' => $dayRevenue,
-            ];
+                $dayRevenue = (float) $activeOrders
+                    ->filter(fn ($order) => Carbon::parse($order->createdAt)->between($periodStart, $periodEnd))
+                    ->sum('totalAmount');
+
+                $revenueChart[] = [
+                    'label' => $diffDays <= 7 ? $periodStart->format('D') : $periodStart->format('M d'),
+                    'date' => $periodStart->format('M d'),
+                    'revenue' => $dayRevenue,
+                ];
+            }
+        } else {
+            // All Time mode: Anchor on latest active order date if recent 7 days have no orders
+            $recentCount = $activeOrders->filter(fn ($order) => Carbon::parse($order->createdAt)->gte(Carbon::now()->subDays(6)->startOfDay()))->count();
+            $anchorEnd = ($recentCount === 0 && $activeOrders->isNotEmpty())
+                ? Carbon::parse($activeOrders->first()->createdAt ?? Carbon::now())
+                : Carbon::now();
+
+            for ($i = 6; $i >= 0; $i--) {
+                $day = $anchorEnd->copy()->subDays($i);
+                $dayRevenue = (float) $activeOrders
+                    ->filter(fn ($order) => Carbon::parse($order->createdAt)->between(
+                        $day->copy()->startOfDay(),
+                        $day->copy()->endOfDay()
+                    ))
+                    ->sum('totalAmount');
+
+                $revenueChart[] = [
+                    'label' => $day->format('D'),
+                    'date' => $day->format('M d'),
+                    'revenue' => $dayRevenue,
+                ];
+            }
         }
 
         $maxChartRevenue = max(array_column($revenueChart, 'revenue')) ?: 1;
@@ -195,6 +325,7 @@ class DashboardController extends Controller
         );
 
         return [
+            'filters' => $dateFilter,
             'summary' => [
                 'revenue' => $totalRevenue,
                 'orders' => $orderCount,
@@ -263,8 +394,8 @@ class DashboardController extends Controller
     private function buildSellerPrescriptions(
         int $pendingOrders,
         array $inventoryHealth,
-        $lowStockProducts,
-        $outOfStockProducts,
+        mixed $lowStockProducts,
+        mixed $outOfStockProducts,
         int $pendingApprovalProducts,
         int $totalProducts,
         float $conversionRate,
@@ -425,13 +556,13 @@ class DashboardController extends Controller
 
     public function notifications()
     {
-        $notifications = \App\Models\Notification::where('userId', auth()->id())
+        $notifications = \App\Models\Notification::where('userId', \Illuminate\Support\Facades\Auth::id())
             ->where('targetRole', 'seller')
             ->orderBy('createdAt', 'desc')
             ->paginate(15);
 
         // Mark all as read when visiting
-        \App\Models\Notification::where('userId', auth()->id())
+        \App\Models\Notification::where('userId', \Illuminate\Support\Facades\Auth::id())
             ->where('targetRole', 'seller')
             ->where('isRead', false)
             ->update(['isRead' => true]);
@@ -441,7 +572,7 @@ class DashboardController extends Controller
 
     public function readAllNotifications()
     {
-        \App\Models\Notification::where('userId', auth()->id())
+        \App\Models\Notification::where('userId', \Illuminate\Support\Facades\Auth::id())
             ->where('targetRole', 'seller')
             ->where('isRead', false)
             ->update(['isRead' => true]);

@@ -84,11 +84,11 @@ class CheckoutController extends Controller
                     // Build a resolved payment object that merges product overrides onto seller defaults
                     $resolvedPayment = (object) [
                         'isGcashAvailable' => $cartProduct->is_gcash_available ?? ($seller->isGcashAvailable ?? true),
-                        'gcashNumber'      => $seller->gcashNumber ?? null,
-                        'gcashQrCode'      => $seller->gcashQrCode ?? null,
+                        'gcashNumber'      => $cartProduct->gcash_number ?: ($seller->gcashNumber ?? null),
+                        'gcashQrCode'      => $cartProduct->gcash_qr_code ?: ($seller->gcashQrCode ?? null),
                         'isMayaAvailable'  => $cartProduct->is_maya_available  ?? ($seller->isMayaAvailable ?? false),
-                        'mayaNumber'       => $seller->mayaNumber ?? null,
-                        'mayaQrCode'       => $seller->mayaQrCode ?? null,
+                        'mayaNumber'       => $cartProduct->maya_number ?: ($seller->mayaNumber ?? null),
+                        'mayaQrCode'       => $cartProduct->maya_qr_code ?: ($seller->mayaQrCode ?? null),
                         'shopName'         => $seller->shopName ?? ($seller->name ?? 'Artisan'),
                     ];
                 }
