@@ -193,10 +193,20 @@ Route::middleware(['auth', 'superadmin'])->prefix('superadmin')->group(function 
 // ─── Storage Fallback Route ───────────────────────────────────────────────
 // Serves uploaded files directly if storage symlink is missing on Hostinger / shared hosts
 Route::get('/storage/{path}', function ($path) {
-    $filePath = storage_path('app/public/' . $path);
-    if (file_exists($filePath)) {
-        return response()->file($filePath);
+    $cleanPath = str_replace('\\', '/', $path);
+
+    $candidates = [
+        storage_path('app/public/' . $cleanPath),
+        public_path('storage/' . $cleanPath),
+        public_path('uploads/' . $cleanPath),
+    ];
+
+    foreach ($candidates as $filePath) {
+        if (file_exists($filePath) && is_file($filePath)) {
+            return response()->file($filePath);
+        }
     }
+
     abort(404);
 })->where('path', '.*');
 

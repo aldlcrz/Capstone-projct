@@ -156,31 +156,28 @@ class Product extends Model
         }
 
         if (!$img || $img === 'Array' || $img === '[]' || $img === '[') {
-            return asset('uploads/products/default.jpg');
+            return url('uploads/products/default.jpg');
         }
+
+        $img = str_replace('\\', '/', $img);
+        $img = ltrim($img, '/');
 
         if (str_starts_with($img, 'http://') || str_starts_with($img, 'https://')) {
             return $img;
         }
 
-        $img = ltrim($img, '/');
-
         if (str_starts_with($img, 'storage/')) {
-            return asset($img);
+            return url($img);
         }
 
-        if (str_starts_with($img, 'products/')) {
-            return asset('storage/' . $img);
-        }
-
-        if (str_starts_with($img, 'qrcodes/')) {
-            return asset('storage/' . $img);
+        if (str_starts_with($img, 'products/') || str_starts_with($img, 'qrcodes/') || str_starts_with($img, 'categories/')) {
+            return url('storage/' . $img);
         }
 
         if (str_starts_with($img, 'uploads/')) {
-            return asset($img);
+            return url($img);
         }
 
-        return asset('storage/products/' . $img);
+        return url('storage/products/' . $img);
     }
 }
