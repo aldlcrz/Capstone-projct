@@ -1,0 +1,1283 @@
+-- MariaDB dump 10.19  Distrib 10.4.32-MariaDB, for Win64 (AMD64)
+--
+-- Host: 127.0.0.1    Database: lumbarong
+-- ------------------------------------------------------
+-- Server version	10.4.32-MariaDB
+
+/*!40101 SET @OLD_CHARACTER_SET_CLIENT=@@CHARACTER_SET_CLIENT */;
+/*!40101 SET @OLD_CHARACTER_SET_RESULTS=@@CHARACTER_SET_RESULTS */;
+/*!40101 SET @OLD_COLLATION_CONNECTION=@@COLLATION_CONNECTION */;
+/*!40101 SET NAMES utf8mb4 */;
+/*!40103 SET @OLD_TIME_ZONE=@@TIME_ZONE */;
+/*!40103 SET TIME_ZONE='+00:00' */;
+/*!40014 SET @OLD_UNIQUE_CHECKS=@@UNIQUE_CHECKS, UNIQUE_CHECKS=0 */;
+/*!40014 SET @OLD_FOREIGN_KEY_CHECKS=@@FOREIGN_KEY_CHECKS, FOREIGN_KEY_CHECKS=0 */;
+/*!40101 SET @OLD_SQL_MODE=@@SQL_MODE, SQL_MODE='NO_AUTO_VALUE_ON_ZERO' */;
+/*!40111 SET @OLD_SQL_NOTES=@@SQL_NOTES, SQL_NOTES=0 */;
+
+--
+-- Table structure for table `addresses`
+--
+
+DROP TABLE IF EXISTS `addresses`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `addresses` (
+  `id` char(36) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL,
+  `userId` char(36) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL,
+  `recipientName` varchar(255) NOT NULL,
+  `phone` varchar(255) NOT NULL,
+  `houseNo` varchar(255) NOT NULL,
+  `street` varchar(255) NOT NULL,
+  `barangay` varchar(255) NOT NULL,
+  `city` varchar(255) NOT NULL,
+  `province` varchar(255) NOT NULL,
+  `postalCode` varchar(255) NOT NULL,
+  `latitude` float DEFAULT NULL,
+  `longitude` float DEFAULT NULL,
+  `isDefault` tinyint(1) DEFAULT 0,
+  `createdAt` datetime NOT NULL,
+  `updatedAt` datetime NOT NULL,
+  `region` varchar(255) DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  KEY `userId` (`userId`),
+  CONSTRAINT `addresses_ibfk_1` FOREIGN KEY (`userId`) REFERENCES `users` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `addresses_ibfk_10` FOREIGN KEY (`userId`) REFERENCES `users` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `addresses_ibfk_11` FOREIGN KEY (`userId`) REFERENCES `users` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `addresses_ibfk_12` FOREIGN KEY (`userId`) REFERENCES `users` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `addresses_ibfk_13` FOREIGN KEY (`userId`) REFERENCES `users` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `addresses_ibfk_14` FOREIGN KEY (`userId`) REFERENCES `users` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `addresses_ibfk_15` FOREIGN KEY (`userId`) REFERENCES `users` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `addresses_ibfk_16` FOREIGN KEY (`userId`) REFERENCES `users` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `addresses_ibfk_17` FOREIGN KEY (`userId`) REFERENCES `users` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `addresses_ibfk_2` FOREIGN KEY (`userId`) REFERENCES `users` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `addresses_ibfk_3` FOREIGN KEY (`userId`) REFERENCES `users` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `addresses_ibfk_4` FOREIGN KEY (`userId`) REFERENCES `users` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `addresses_ibfk_5` FOREIGN KEY (`userId`) REFERENCES `users` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `addresses_ibfk_6` FOREIGN KEY (`userId`) REFERENCES `users` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `addresses_ibfk_7` FOREIGN KEY (`userId`) REFERENCES `users` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `addresses_ibfk_8` FOREIGN KEY (`userId`) REFERENCES `users` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `addresses_ibfk_9` FOREIGN KEY (`userId`) REFERENCES `users` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `addresses`
+--
+
+LOCK TABLES `addresses` WRITE;
+/*!40000 ALTER TABLE `addresses` DISABLE KEYS */;
+INSERT INTO `addresses` VALUES ('1e8c4515-751f-4a05-a06b-5dc95f336a98','4213bfe2-e963-4f01-8436-7f5e935c527d','Ramil Bonifacio','09948774899','Block 1 Lot 2','107 Sitio Dao','Santisima Cruz','Santa Cruz','Laguna','4009',NULL,NULL,1,'2026-06-05 12:38:22','2026-06-05 12:38:22','CALABARZON'),('d5dc183f-68fe-4cb9-9112-c49c9c537898','3a522612-4462-477f-a690-a530e1559b9b','John Doe','09123456789','Block 1 Lot 2','Mango St.','Bucandala III','City of Imus','Cavite','4103',NULL,NULL,0,'2026-06-05 10:17:46','2026-06-05 10:17:46','CALABARZON');
+/*!40000 ALTER TABLE `addresses` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `banners`
+--
+
+DROP TABLE IF EXISTS `banners`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `banners` (
+  `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+  `userId` char(36) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL,
+  `image_path` varchar(255) NOT NULL,
+  `title` varchar(255) DEFAULT NULL,
+  `subtitle` text DEFAULT NULL,
+  `button_text_1` varchar(255) DEFAULT NULL,
+  `button_url_1` varchar(255) DEFAULT NULL,
+  `button_text_2` varchar(255) DEFAULT NULL,
+  `button_url_2` varchar(255) DEFAULT NULL,
+  `order_index` int(11) NOT NULL DEFAULT 0,
+  `is_active` tinyint(1) NOT NULL DEFAULT 1,
+  `status` varchar(255) NOT NULL DEFAULT 'approved',
+  `rejection_reason` text DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT NULL,
+  `updated_at` timestamp NULL DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  KEY `banners_userid_foreign` (`userId`),
+  CONSTRAINT `banners_userid_foreign` FOREIGN KEY (`userId`) REFERENCES `users` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB AUTO_INCREMENT=6 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `banners`
+--
+
+LOCK TABLES `banners` WRITE;
+/*!40000 ALTER TABLE `banners` DISABLE KEYS */;
+INSERT INTO `banners` VALUES (3,NULL,'uploads/banners/1781345299_6a2d2c1337a0f.JPEG','Jerry Smiling','if you\'re looking for jerry smiling','Men','https://www.facebook.com/','Women','https://www.facebook.com/',1897,1,'approved',NULL,'2026-06-13 02:08:19','2026-06-13 02:08:19'),(4,NULL,'uploads/banners/1781345953_6a2d2ea19e5a5.gif','Sunflower-Land','if you\'re looking for','Men','https://www.facebook.com/','Women','https://www.facebook.com/',2988,1,'approved',NULL,'2026-06-13 02:19:13','2026-06-13 02:19:13'),(5,'e12a0e73-8572-431b-838d-71c9ace5a2c4','uploads/banners/1781346071_6a2d2f1749f5a.jpg','Anime Talking','100% gay','Shop Now','https://www.facebook.com/','Visit Shop','https://www.facebook.com/',99,1,'approved',NULL,'2026-06-13 02:21:11','2026-06-13 02:21:31');
+/*!40000 ALTER TABLE `banners` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `categories`
+--
+
+DROP TABLE IF EXISTS `categories`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `categories` (
+  `id` char(36) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL,
+  `name` varchar(255) NOT NULL,
+  `description` text DEFAULT NULL,
+  `target_group` varchar(255) DEFAULT NULL,
+  `parentId` char(36) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `name` (`name`),
+  UNIQUE KEY `name_2` (`name`),
+  UNIQUE KEY `name_3` (`name`),
+  UNIQUE KEY `name_4` (`name`),
+  UNIQUE KEY `name_5` (`name`),
+  UNIQUE KEY `name_6` (`name`),
+  UNIQUE KEY `name_7` (`name`),
+  UNIQUE KEY `name_8` (`name`),
+  UNIQUE KEY `name_9` (`name`),
+  UNIQUE KEY `name_10` (`name`),
+  UNIQUE KEY `name_11` (`name`),
+  UNIQUE KEY `name_12` (`name`),
+  UNIQUE KEY `name_13` (`name`),
+  UNIQUE KEY `name_14` (`name`),
+  UNIQUE KEY `name_15` (`name`),
+  UNIQUE KEY `name_16` (`name`),
+  UNIQUE KEY `name_17` (`name`),
+  KEY `parentId` (`parentId`),
+  CONSTRAINT `categories_ibfk_1` FOREIGN KEY (`parentId`) REFERENCES `categories` (`id`) ON DELETE SET NULL ON UPDATE CASCADE,
+  CONSTRAINT `categories_ibfk_10` FOREIGN KEY (`parentId`) REFERENCES `categories` (`id`) ON DELETE SET NULL ON UPDATE CASCADE,
+  CONSTRAINT `categories_ibfk_11` FOREIGN KEY (`parentId`) REFERENCES `categories` (`id`) ON DELETE SET NULL ON UPDATE CASCADE,
+  CONSTRAINT `categories_ibfk_12` FOREIGN KEY (`parentId`) REFERENCES `categories` (`id`) ON DELETE SET NULL ON UPDATE CASCADE,
+  CONSTRAINT `categories_ibfk_13` FOREIGN KEY (`parentId`) REFERENCES `categories` (`id`) ON DELETE SET NULL ON UPDATE CASCADE,
+  CONSTRAINT `categories_ibfk_14` FOREIGN KEY (`parentId`) REFERENCES `categories` (`id`) ON DELETE SET NULL ON UPDATE CASCADE,
+  CONSTRAINT `categories_ibfk_15` FOREIGN KEY (`parentId`) REFERENCES `categories` (`id`) ON DELETE SET NULL ON UPDATE CASCADE,
+  CONSTRAINT `categories_ibfk_16` FOREIGN KEY (`parentId`) REFERENCES `categories` (`id`) ON DELETE SET NULL ON UPDATE CASCADE,
+  CONSTRAINT `categories_ibfk_17` FOREIGN KEY (`parentId`) REFERENCES `categories` (`id`) ON DELETE SET NULL ON UPDATE CASCADE,
+  CONSTRAINT `categories_ibfk_2` FOREIGN KEY (`parentId`) REFERENCES `categories` (`id`) ON DELETE SET NULL ON UPDATE CASCADE,
+  CONSTRAINT `categories_ibfk_3` FOREIGN KEY (`parentId`) REFERENCES `categories` (`id`) ON DELETE SET NULL ON UPDATE CASCADE,
+  CONSTRAINT `categories_ibfk_4` FOREIGN KEY (`parentId`) REFERENCES `categories` (`id`) ON DELETE SET NULL ON UPDATE CASCADE,
+  CONSTRAINT `categories_ibfk_5` FOREIGN KEY (`parentId`) REFERENCES `categories` (`id`) ON DELETE SET NULL ON UPDATE CASCADE,
+  CONSTRAINT `categories_ibfk_6` FOREIGN KEY (`parentId`) REFERENCES `categories` (`id`) ON DELETE SET NULL ON UPDATE CASCADE,
+  CONSTRAINT `categories_ibfk_7` FOREIGN KEY (`parentId`) REFERENCES `categories` (`id`) ON DELETE SET NULL ON UPDATE CASCADE,
+  CONSTRAINT `categories_ibfk_8` FOREIGN KEY (`parentId`) REFERENCES `categories` (`id`) ON DELETE SET NULL ON UPDATE CASCADE,
+  CONSTRAINT `categories_ibfk_9` FOREIGN KEY (`parentId`) REFERENCES `categories` (`id`) ON DELETE SET NULL ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `categories`
+--
+
+LOCK TABLES `categories` WRITE;
+/*!40000 ALTER TABLE `categories` DISABLE KEYS */;
+INSERT INTO `categories` VALUES ('2838535a-4775-4ff8-9193-b9e46f50052a','Formal Barong','Traditional Filipino formal wear for men (Piña, Jusi, Cocoon).','[\"Men\"]',NULL),('68411b03-d8f3-436e-8563-b4860a56b268','Semi-Formal','Occasion-wear that balances heritage and modern comfort.',NULL,NULL),('72c0273e-8a87-4040-a439-6d8ca2a2e635','Lumban Specials','Hand-embroidered specialties from the Embroidery Capital.','[\"Men\",\"Women\"]',NULL),('8c097ea2-5f44-481e-beb0-eb28f435d1e6','Traditional Gowns','Heritage formal gowns like Traje de Mestiza.',NULL,NULL),('c8bd0190-aeea-4cfc-9d81-e386c20ecf56','Modern Filipiniana','Contemporary takes on traditional women\'s dresses.','[\"Women\"]',NULL),('d8922eb8-1b81-48ef-946d-3fb509f5d8df','Polo Barong','Semi-formal and everyday business attire.',NULL,NULL),('e1a96f69-fe8a-48a2-bcc1-7cf22de10074','Heritage Accessories','Abaca bags, hand-painted fans, and native jewelry.','[\"Men\",\"Women\",\"Kids\"]',NULL);
+/*!40000 ALTER TABLE `categories` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `messages`
+--
+
+DROP TABLE IF EXISTS `messages`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `messages` (
+  `id` char(36) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL,
+  `senderId` char(36) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL,
+  `receiverId` char(36) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL,
+  `content` text NOT NULL,
+  `read` tinyint(1) DEFAULT 0,
+  `createdAt` datetime NOT NULL,
+  `updatedAt` datetime NOT NULL,
+  PRIMARY KEY (`id`),
+  KEY `senderId` (`senderId`),
+  KEY `receiverId` (`receiverId`),
+  CONSTRAINT `messages_ibfk_1` FOREIGN KEY (`senderId`) REFERENCES `users` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `messages_ibfk_10` FOREIGN KEY (`receiverId`) REFERENCES `users` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `messages_ibfk_11` FOREIGN KEY (`senderId`) REFERENCES `users` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `messages_ibfk_12` FOREIGN KEY (`receiverId`) REFERENCES `users` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `messages_ibfk_13` FOREIGN KEY (`senderId`) REFERENCES `users` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `messages_ibfk_14` FOREIGN KEY (`receiverId`) REFERENCES `users` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `messages_ibfk_15` FOREIGN KEY (`senderId`) REFERENCES `users` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `messages_ibfk_16` FOREIGN KEY (`receiverId`) REFERENCES `users` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `messages_ibfk_17` FOREIGN KEY (`senderId`) REFERENCES `users` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `messages_ibfk_18` FOREIGN KEY (`receiverId`) REFERENCES `users` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `messages_ibfk_19` FOREIGN KEY (`senderId`) REFERENCES `users` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `messages_ibfk_2` FOREIGN KEY (`receiverId`) REFERENCES `users` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `messages_ibfk_20` FOREIGN KEY (`receiverId`) REFERENCES `users` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `messages_ibfk_21` FOREIGN KEY (`senderId`) REFERENCES `users` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `messages_ibfk_22` FOREIGN KEY (`receiverId`) REFERENCES `users` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `messages_ibfk_23` FOREIGN KEY (`senderId`) REFERENCES `users` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `messages_ibfk_24` FOREIGN KEY (`receiverId`) REFERENCES `users` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `messages_ibfk_25` FOREIGN KEY (`senderId`) REFERENCES `users` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `messages_ibfk_26` FOREIGN KEY (`receiverId`) REFERENCES `users` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `messages_ibfk_27` FOREIGN KEY (`senderId`) REFERENCES `users` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `messages_ibfk_28` FOREIGN KEY (`receiverId`) REFERENCES `users` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `messages_ibfk_29` FOREIGN KEY (`senderId`) REFERENCES `users` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `messages_ibfk_3` FOREIGN KEY (`senderId`) REFERENCES `users` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `messages_ibfk_30` FOREIGN KEY (`receiverId`) REFERENCES `users` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `messages_ibfk_31` FOREIGN KEY (`senderId`) REFERENCES `users` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `messages_ibfk_32` FOREIGN KEY (`receiverId`) REFERENCES `users` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `messages_ibfk_33` FOREIGN KEY (`senderId`) REFERENCES `users` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `messages_ibfk_34` FOREIGN KEY (`receiverId`) REFERENCES `users` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `messages_ibfk_4` FOREIGN KEY (`receiverId`) REFERENCES `users` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `messages_ibfk_5` FOREIGN KEY (`senderId`) REFERENCES `users` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `messages_ibfk_6` FOREIGN KEY (`receiverId`) REFERENCES `users` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `messages_ibfk_7` FOREIGN KEY (`senderId`) REFERENCES `users` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `messages_ibfk_8` FOREIGN KEY (`receiverId`) REFERENCES `users` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `messages_ibfk_9` FOREIGN KEY (`senderId`) REFERENCES `users` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `messages`
+--
+
+LOCK TABLES `messages` WRITE;
+/*!40000 ALTER TABLE `messages` DISABLE KEYS */;
+INSERT INTO `messages` VALUES ('8945b6b1-7331-4daf-a269-2173b1fa5b98','e12a0e73-8572-431b-838d-71c9ace5a2c4','4213bfe2-e963-4f01-8436-7f5e935c527d','Hiii',1,'2026-06-05 15:29:57','2026-06-08 12:00:59'),('c0610ee9-c67e-4d93-b5c5-295d6a97a172','4213bfe2-e963-4f01-8436-7f5e935c527d','e12a0e73-8572-431b-838d-71c9ace5a2c4','Helloooo',1,'2026-06-05 09:31:10','2026-06-05 10:03:40'),('d4435156-3f4e-4cd7-b1c3-462659832077','4213bfe2-e963-4f01-8436-7f5e935c527d','e12a0e73-8572-431b-838d-71c9ace5a2c4','imong lubot',1,'2026-06-08 12:01:12','2026-06-08 13:27:07');
+/*!40000 ALTER TABLE `messages` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `migrations`
+--
+
+DROP TABLE IF EXISTS `migrations`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `migrations` (
+  `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
+  `migration` varchar(255) NOT NULL,
+  `batch` int(11) NOT NULL,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=36 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `migrations`
+--
+
+LOCK TABLES `migrations` WRITE;
+/*!40000 ALTER TABLE `migrations` DISABLE KEYS */;
+INSERT INTO `migrations` VALUES (1,'0001_01_01_000000_create_users_table',1),(2,'0001_01_01_000001_create_cache_table',1),(3,'0001_01_01_000002_create_jobs_table',1),(4,'2026_05_08_150000_create_categories_table',1),(5,'2026_05_08_150001_create_products_table',1),(6,'2026_05_08_150002_create_addresses_table',1),(7,'2026_05_08_150003_create_orders_table',1),(8,'2026_05_08_155802_create_system_settings_table',1),(9,'2026_05_08_155803_create_product_views_table',1),(10,'2026_05_08_155804_create_seller_funnel_events_table',1),(11,'2026_05_08_155805_create_refund_requests_table',1),(12,'2026_05_08_155805_create_reports_table',1),(13,'2026_05_08_155811_create_reviews_table',1),(14,'2026_05_08_155812_create_messages_table',1),(15,'2026_05_08_155813_create_notifications_table',1),(17,'2026_05_09_123437_add_seller_fields_to_users_table',1),(18,'2026_05_15_063016_add_target_group_to_categories_table',1),(19,'2026_06_04_000001_add_category_id_to_products_table',2),(20,'2026_06_04_000002_add_target_group_to_categories_table',3),(21,'2026_06_04_000003_add_seller_fields_to_users_table',4),(22,'2026_06_05_085404_rename_indigency_and_gcash_qr_in_users',5),(23,'2026_06_05_085936_migrate_valid_id_to_business_permit',6),(25,'2026_06_05_000001_add_target_group_to_products_table',7),(26,'2026_06_05_190000_add_maya_availability_and_size_stocks',8),(27,'2026_06_05_192100_add_payment_fields_to_products_table',9),(28,'2026_06_05_113923_add_gcash_qr_code_to_users_table',10),(29,'2026_06_05_201300_add_discount_fields_to_products_table',11),(30,'2026_06_05_142730_add_variation_to_order_items_table',12),(31,'2026_06_05_144723_add_cart_to_users_table',13),(32,'2026_06_12_160800_create_banners_table',14),(33,'2026_06_12_173000_create_seller_subscriptions_table',15),(34,'2026_06_12_173100_add_is_premium_to_users_table',15),(35,'2026_06_13_175000_add_user_id_and_status_to_banners_table',16);
+/*!40000 ALTER TABLE `migrations` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `notifications`
+--
+
+DROP TABLE IF EXISTS `notifications`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `notifications` (
+  `id` char(36) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL,
+  `userId` char(36) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL,
+  `title` varchar(255) NOT NULL,
+  `message` text NOT NULL,
+  `type` varchar(255) DEFAULT 'System',
+  `link` varchar(255) DEFAULT NULL,
+  `isRead` tinyint(1) DEFAULT 0,
+  `targetRole` varchar(255) DEFAULT 'customer',
+  `createdAt` datetime NOT NULL,
+  `updatedAt` datetime NOT NULL,
+  PRIMARY KEY (`id`),
+  KEY `userId` (`userId`),
+  KEY `notifications_user_id_created_at` (`userId`,`createdAt`),
+  KEY `notifications_user_id_read` (`userId`,`isRead`),
+  KEY `notifications_user_id_target_role_created_at` (`userId`,`targetRole`,`createdAt`),
+  KEY `notifications_user_id_target_role_read` (`userId`,`targetRole`,`isRead`),
+  KEY `notifications_user_id_is_read` (`userId`,`isRead`),
+  KEY `notifications_user_id_target_role_is_read` (`userId`,`targetRole`,`isRead`),
+  CONSTRAINT `notifications_ibfk_1` FOREIGN KEY (`userId`) REFERENCES `users` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `notifications_ibfk_10` FOREIGN KEY (`userId`) REFERENCES `users` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `notifications_ibfk_11` FOREIGN KEY (`userId`) REFERENCES `users` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `notifications_ibfk_12` FOREIGN KEY (`userId`) REFERENCES `users` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `notifications_ibfk_13` FOREIGN KEY (`userId`) REFERENCES `users` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `notifications_ibfk_14` FOREIGN KEY (`userId`) REFERENCES `users` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `notifications_ibfk_15` FOREIGN KEY (`userId`) REFERENCES `users` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `notifications_ibfk_16` FOREIGN KEY (`userId`) REFERENCES `users` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `notifications_ibfk_17` FOREIGN KEY (`userId`) REFERENCES `users` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `notifications_ibfk_2` FOREIGN KEY (`userId`) REFERENCES `users` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `notifications_ibfk_3` FOREIGN KEY (`userId`) REFERENCES `users` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `notifications_ibfk_4` FOREIGN KEY (`userId`) REFERENCES `users` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `notifications_ibfk_5` FOREIGN KEY (`userId`) REFERENCES `users` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `notifications_ibfk_6` FOREIGN KEY (`userId`) REFERENCES `users` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `notifications_ibfk_7` FOREIGN KEY (`userId`) REFERENCES `users` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `notifications_ibfk_8` FOREIGN KEY (`userId`) REFERENCES `users` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `notifications_ibfk_9` FOREIGN KEY (`userId`) REFERENCES `users` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `notifications`
+--
+
+LOCK TABLES `notifications` WRITE;
+/*!40000 ALTER TABLE `notifications` DISABLE KEYS */;
+INSERT INTO `notifications` VALUES ('063bf2d1-aea1-47ea-8df8-79215ce03308','e12a0e73-8572-431b-838d-71c9ace5a2c4','New order received','A customer has placed a new order in your shop.','order','/seller/orders',1,'seller','2026-06-05 15:19:03','2026-06-08 11:52:00'),('09c8cd0f-bf83-426c-8764-9fe94a0ff310','4213bfe2-e963-4f01-8436-7f5e935c527d','Order Placed','Your order has been placed successfully and is awaiting confirmation.','order','/orders/48cf51fd-dfe4-4869-86fe-10dd5d144547',1,'customer','2026-06-08 14:14:47','2026-06-12 08:26:10'),('0dee1eca-c750-41c5-afad-19eeae9a98aa','d8c82309-a05c-4ba4-a4f4-b780ada43286','New Premium Subscription Request','Seller Dan Karindirya has submitted a premium subscription payment for review.','System',NULL,1,'admin','2026-06-12 09:38:28','2026-06-13 12:13:33'),('1c25de97-f9e4-438d-a6d7-a28f530748d8','4213bfe2-e963-4f01-8436-7f5e935c527d','Order Placed','Your order has been placed successfully and is awaiting confirmation.','order','/orders/8ababe80-2281-49f5-9f27-2a6fd9cde1fe',1,'customer','2026-06-08 14:27:55','2026-06-12 08:26:10'),('1f8e9e12-4acb-4d3b-a9af-70c4975f5359','4213bfe2-e963-4f01-8436-7f5e935c527d','Order Shipped','Your order has been shipped and is on the way.','order','/orders',1,'customer','2026-06-05 15:46:28','2026-06-08 11:24:36'),('22bbf0a0-ca68-40be-a72a-06e6f764f202','e12a0e73-8572-431b-838d-71c9ace5a2c4','Premium Subscription Approved','Congratulations! Your Premium subscription has been approved. Enjoy premium perks until July 12, 2026.','System',NULL,0,'seller','2026-06-12 09:41:58','2026-06-12 09:41:58'),('367a4f4c-5f5d-4f88-8b6a-a0f622989962','d8c82309-a05c-4ba4-a4f4-b780ada43286','New Product Listed','Artisan Maganos Embroidery has listed a new product: \"Jusi Barong\" for review.','system','/admin/products',1,'admin','2026-06-13 10:15:45','2026-06-13 12:13:33'),('3c06166c-0bee-4603-8441-b374b89c29a4','e12a0e73-8572-431b-838d-71c9ace5a2c4','Order Completed','A customer has confirmed receipt of their order.','order','/seller/orders',0,'seller','2026-06-08 11:57:51','2026-06-08 11:57:51'),('426ecf2b-efa4-4f5f-b16f-c8211d9a1443','d8c82309-a05c-4ba4-a4f4-b780ada43286','New Product Listed','Artisan Maganos Embroidery has listed a new product: \"Piña Barong\" for review.','system','/admin/products',1,'admin','2026-06-13 10:14:30','2026-06-13 12:13:33'),('4b17a432-4f33-4fd3-aa3c-ec011108c082','e12a0e73-8572-431b-838d-71c9ace5a2c4','New order received','A customer has placed a new order in your shop.','order','/seller/orders',0,'seller','2026-06-08 14:25:12','2026-06-08 14:25:12'),('50170737-c26c-4949-9f0f-dc48d3cb445a','e12a0e73-8572-431b-838d-71c9ace5a2c4','Product Approved','Your product \"Organza Barong\" is now live!','product_approved','/seller/products',1,'seller','2026-06-05 13:30:50','2026-06-08 11:52:00'),('51112974-5bbe-4b02-8a40-c9b7892be715','4213bfe2-e963-4f01-8436-7f5e935c527d','Order Shipped','Your order has been shipped and is on the way.','order','/orders',1,'customer','2026-06-05 15:46:32','2026-06-08 11:24:36'),('5a362055-e4c8-4966-ad02-4cd3d24b7bdb','e12a0e73-8572-431b-838d-71c9ace5a2c4','Hero Banner Approved','Your requested hero banner \"Anime Talking\" has been approved and is now live on the homepage!','System','/seller/banners',0,'seller','2026-06-13 10:21:31','2026-06-13 10:21:31'),('5edfc28d-a3b0-42ac-97a7-dd078ed29c38','4213bfe2-e963-4f01-8436-7f5e935c527d','Order Shipped','Your order has been shipped and is on the way.','order','/orders',1,'customer','2026-06-05 15:46:19','2026-06-08 11:24:36'),('61c839e7-4c4a-4813-bc33-8c924a565d24','4213bfe2-e963-4f01-8436-7f5e935c527d','Order Placed','Your order has been placed successfully and is awaiting confirmation.','order','/orders/a11c0196-de70-4725-9880-2bda4160b585',0,'customer','2026-06-13 12:20:38','2026-06-13 12:20:38'),('64bc829a-5bf3-4f8a-b958-0f55f70270a4','e12a0e73-8572-431b-838d-71c9ace5a2c4','New order received','A customer has placed a new order in your shop.','order','/seller/orders',0,'seller','2026-06-08 14:14:47','2026-06-08 14:14:47'),('653c230a-6289-493c-9699-edc836875263','e12a0e73-8572-431b-838d-71c9ace5a2c4','Product Approved','Your product \"Piña Barong\" is now live!','product_approved','/seller/products',1,'seller','2026-06-05 14:16:28','2026-06-08 11:52:00'),('6718cb63-6f70-49ae-99c5-4448e2ef8207','e12a0e73-8572-431b-838d-71c9ace5a2c4','Product Approved','Your product \"Special Barong\" is now live!','product_approved','/seller/products',1,'seller','2026-06-05 12:20:06','2026-06-08 11:52:00'),('6b825bec-db4b-41f7-bf82-6768f50b434f','4213bfe2-e963-4f01-8436-7f5e935c527d','Order Placed','Your order has been placed successfully and is awaiting confirmation.','order','/orders/f513890d-a861-4c14-b5fa-dc84e32e7aa4',1,'customer','2026-06-05 15:28:15','2026-06-08 11:24:36'),('6bef59e6-e2b0-476d-b5d5-0b6fa2a26bb0','e12a0e73-8572-431b-838d-71c9ace5a2c4','Product Approved','Your product \"Piña Barong\" is now live!','product_approved','/seller/products',1,'seller','2026-06-05 14:19:09','2026-06-08 11:52:00'),('71158a63-4f7e-4336-b56e-d089ce5096e8','4213bfe2-e963-4f01-8436-7f5e935c527d','Order Shipped','Your order has been shipped and is on the way.','order','/orders',1,'customer','2026-06-05 15:46:19','2026-06-08 11:24:36'),('7a56def5-91cd-4c41-b887-fd803dc49022','e12a0e73-8572-431b-838d-71c9ace5a2c4','Product Removed','Your product \"Barong\" has been removed by an administrator. Reason: i just want to remove this one sorry.','system','/seller/inventory',1,'seller','2026-06-03 12:03:08','2026-06-04 05:54:26'),('7d7ac614-693a-41d9-95c0-dc56be089de3','e12a0e73-8572-431b-838d-71c9ace5a2c4','Product Approved','Your product \"Piña Barong\" is now live!','product_approved','/seller/products',1,'seller','2026-06-05 09:52:58','2026-06-08 11:52:00'),('7e657ba8-06aa-483b-9dc8-bdc5776f9334','e12a0e73-8572-431b-838d-71c9ace5a2c4','New order received','A customer has placed a new order in your shop.','order','/seller/orders',1,'seller','2026-06-05 15:28:15','2026-06-08 11:52:00'),('828246a6-5c44-4064-a51e-8c3d8ab2ca2b','e12a0e73-8572-431b-838d-71c9ace5a2c4','Order Cancelled by Customer','A customer has cancelled their order. Reason: im sorry just misclick','order','/seller/orders',0,'seller','2026-06-08 14:09:54','2026-06-08 14:09:54'),('891c5410-9071-42d9-be38-607556422ea6','e12a0e73-8572-431b-838d-71c9ace5a2c4','Product Approved','Your product \"Jusi Barong\" is now live!','product_approved','/seller/products',1,'seller','2026-06-05 14:19:06','2026-06-08 11:52:00'),('8e35766f-2a53-4256-a132-a0cb4d172f31','e12a0e73-8572-431b-838d-71c9ace5a2c4','Product Approved','Your product \"Piña Barong\" is now live!','product_approved','/seller/products',1,'seller','2026-06-04 06:13:39','2026-06-08 11:52:00'),('8f35d4d3-c158-47a0-a8f7-d5b6c0c4a544','e12a0e73-8572-431b-838d-71c9ace5a2c4','New order received','A customer has placed a new order in your shop.','order','/seller/orders',0,'seller','2026-06-08 14:09:31','2026-06-08 14:09:31'),('917013e2-ed66-4a35-b00c-5f63572fc9f9','d8c82309-a05c-4ba4-a4f4-b780ada43286','New Seller Registration','A new seller named Maganos Embroidery has registered and is waiting for review.','system','/admin/users',1,'admin','2026-06-03 11:27:30','2026-06-05 12:19:23'),('91a02853-de3f-464b-a7eb-c313d71199ad','4213bfe2-e963-4f01-8436-7f5e935c527d','Order Placed','Your order has been placed successfully and is awaiting confirmation.','order','/orders/f503876b-fc93-4541-ba59-706f78e26895',1,'customer','2026-06-08 14:09:31','2026-06-08 14:12:09'),('964e0e18-c86b-40b3-b3ad-882fe985bbc5','e12a0e73-8572-431b-838d-71c9ace5a2c4','Product Approved','Your product \"Jusi Barong\" is now live!','product_approved','/seller/products',1,'seller','2026-06-05 14:16:24','2026-06-08 11:52:00'),('9b4308ac-2a95-43a8-987b-758b75829644','e12a0e73-8572-431b-838d-71c9ace5a2c4','Order Completed','A customer has confirmed receipt of their order.','order','/seller/orders',1,'seller','2026-06-08 11:35:33','2026-06-08 11:52:00'),('9dfd9d25-dac4-4e10-8645-e31f3e7b14c0','e12a0e73-8572-431b-838d-71c9ace5a2c4','Product Approved','Your product \"Jusi Barong\" is now live!','product_approved','/seller/products',1,'seller','2026-06-05 09:37:35','2026-06-08 11:52:00'),('a70830fe-0f4f-4cdc-b2b7-fb41ef3797c6','7b52819f-8981-4570-bb27-21ea3621a8a2','Product Approved','Your product \"Jusi Barong\" is now live!','product_approved','/seller/products',0,'seller','2026-06-13 10:16:56','2026-06-13 10:16:56'),('a73432da-6d07-4317-a7b4-e08102cfe6b6','e12a0e73-8572-431b-838d-71c9ace5a2c4','Product Approved','Your product \"Jusi Barong\" is now live!','product_approved','/seller/products',1,'seller','2026-06-05 09:52:54','2026-06-08 11:52:00'),('a8b35e34-bd9c-4815-a7ba-edd427d2f69c','e12a0e73-8572-431b-838d-71c9ace5a2c4','Product Approved','Your product \"Barong\" has been approved and is now live!','product_approved','/seller/products/8ae0a42b-86f6-4fef-8142-1c6b8779e3fc',1,'seller','2026-05-31 12:06:06','2026-06-04 05:54:26'),('b5028a70-997e-4a11-8099-da04b1ff45e3','e12a0e73-8572-431b-838d-71c9ace5a2c4','New order received','A customer has placed a new order in your shop.','order','/seller/orders',0,'seller','2026-06-13 12:20:38','2026-06-13 12:20:38'),('ba574259-57ad-4146-8daa-e58aa59beaff','4213bfe2-e963-4f01-8436-7f5e935c527d','Order Processing','Your order is now being prepared for shipment.','order','/orders',1,'customer','2026-06-05 15:36:13','2026-06-08 11:24:36'),('bbed14f2-597c-46ee-bede-8fcc6175871d','e12a0e73-8572-431b-838d-71c9ace5a2c4','Product Approved','Your product \"Piña Barong\" is now live!','product_approved','/seller/products',1,'seller','2026-06-04 06:13:53','2026-06-08 11:52:00'),('c1c28203-e93b-4c86-950d-763d7b4cf3c1','7b52819f-8981-4570-bb27-21ea3621a8a2','Seller verification approved','Your artisan workshop is now verified and can access seller tools.','system','/seller/dashboard',0,'seller','2026-06-03 12:02:28','2026-06-03 12:02:28'),('c441e336-8326-4c75-b8e6-10636e724dd0','4213bfe2-e963-4f01-8436-7f5e935c527d','Order Placed','Your order has been placed successfully and is awaiting confirmation.','order','/orders/371f55a1-0664-4db6-8be0-e56697041ca7',1,'customer','2026-06-05 15:19:03','2026-06-05 15:21:01'),('d766ba74-5f1f-4ac8-8c3f-031851d110d3','4213bfe2-e963-4f01-8436-7f5e935c527d','Order Placed','Your order has been placed successfully and is awaiting confirmation.','order','/orders/c343ac76-3301-49fb-94c8-ea7f279d2813',1,'customer','2026-06-08 14:25:12','2026-06-12 08:26:10'),('dde8b4c4-3fbd-43d9-a08d-fd752d01ce5b','4213bfe2-e963-4f01-8436-7f5e935c527d','Order Delivered','Your order has been marked as delivered.','order','/orders',1,'customer','2026-06-08 11:54:08','2026-06-08 12:52:15'),('e46c3538-edee-4f79-a81f-68a82e8ce31c','d8c82309-a05c-4ba4-a4f4-b780ada43286','New Product Posted','Seller Heritage Workshop posted a new product: Barong','system','/admin/products?search=Barong',1,'admin','2026-04-25 21:57:12','2026-06-05 12:19:23'),('e65040b3-0a7a-4f30-b4b4-130b82eb3322','e12a0e73-8572-431b-838d-71c9ace5a2c4','Product Approved','Your product \"Special Barong\" is now live!','product_approved','/seller/products',1,'seller','2026-06-05 14:21:05','2026-06-08 11:52:00'),('e83983f1-7536-4ff8-b761-908ebcd1e8d3','d8c82309-a05c-4ba4-a4f4-b780ada43286','New Hero Banner Request','Seller Dan Karindirya has submitted a hero banner request for review.','System','/admin/banners',1,'admin','2026-06-13 10:21:11','2026-06-13 12:13:33'),('ea0c0114-da18-4344-8a49-5d08d2b3174a','4213bfe2-e963-4f01-8436-7f5e935c527d','Order Processing','Your order is now being prepared for shipment.','order','/orders',1,'customer','2026-06-05 15:46:24','2026-06-08 11:24:36'),('f1275778-dd29-443a-8a2d-10ae10e7e3d9','7b52819f-8981-4570-bb27-21ea3621a8a2','Product Approved','Your product \"Piña Barong\" is now live!','product_approved','/seller/products',0,'seller','2026-06-13 10:16:53','2026-06-13 10:16:53'),('fc309ae9-771a-4496-8101-9637def84c0d','e12a0e73-8572-431b-838d-71c9ace5a2c4','New order received','A customer has placed a new order in your shop.','order','/seller/orders',0,'seller','2026-06-08 14:27:55','2026-06-08 14:27:55');
+/*!40000 ALTER TABLE `notifications` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `order_items`
+--
+
+DROP TABLE IF EXISTS `order_items`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `order_items` (
+  `id` char(36) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL,
+  `quantity` int(10) unsigned NOT NULL DEFAULT 1,
+  `price` decimal(10,2) NOT NULL,
+  `size` varchar(255) DEFAULT NULL,
+  `variation` varchar(255) DEFAULT NULL,
+  `createdAt` datetime NOT NULL,
+  `updatedAt` datetime NOT NULL,
+  `orderId` char(36) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL,
+  `productId` char(36) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  KEY `orderId` (`orderId`),
+  KEY `productId` (`productId`),
+  CONSTRAINT `order_items_ibfk_11` FOREIGN KEY (`orderId`) REFERENCES `orders` (`id`) ON DELETE SET NULL ON UPDATE CASCADE,
+  CONSTRAINT `order_items_ibfk_12` FOREIGN KEY (`productId`) REFERENCES `products` (`id`) ON DELETE SET NULL ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `order_items`
+--
+
+LOCK TABLES `order_items` WRITE;
+/*!40000 ALTER TABLE `order_items` DISABLE KEYS */;
+INSERT INTO `order_items` VALUES ('1c16707a-4e0c-4b3b-8f2f-d50566a44a42',1,4799.20,'L','Original','2026-06-08 14:27:55','2026-06-08 14:27:55','8ababe80-2281-49f5-9f27-2a6fd9cde1fe','135193e4-2b29-4608-92b7-9cbc3c00d46d'),('31b6bc57-b85e-4f60-b589-6789379dfefc',1,5399.10,'S',NULL,'2026-06-05 14:30:08','2026-06-05 14:30:08','c7ba4a8b-e7bc-46ff-9ced-f33df3389c5f','791b885c-b07f-46f9-ad77-901f69dcbcca'),('3f04b315-d055-4317-b57b-4c84903ec0af',1,4799.20,'M','Original','2026-06-08 14:25:12','2026-06-08 14:25:12','c343ac76-3301-49fb-94c8-ea7f279d2813','135193e4-2b29-4608-92b7-9cbc3c00d46d'),('5528100c-79de-464e-9547-aaa2114a2321',2,4799.20,'XL',NULL,'2026-06-05 15:28:15','2026-06-05 15:28:15','f513890d-a861-4c14-b5fa-dc84e32e7aa4','135193e4-2b29-4608-92b7-9cbc3c00d46d'),('6734fa0c-c27b-4bad-9e3b-c0c7b00196f5',2,4799.20,'M','products/iRDIOukyHfu4wQ4CiwO4GYc51koD4LQNA28uJLci.jpg','2026-06-08 14:09:31','2026-06-08 14:09:31','f503876b-fc93-4541-ba59-706f78e26895','135193e4-2b29-4608-92b7-9cbc3c00d46d'),('859e91ec-2b00-4f40-b101-74551d8312be',2,4799.20,'S','products/iRDIOukyHfu4wQ4CiwO4GYc51koD4LQNA28uJLci.jpg','2026-06-08 14:14:47','2026-06-08 14:14:47','48cf51fd-dfe4-4869-86fe-10dd5d144547','135193e4-2b29-4608-92b7-9cbc3c00d46d'),('b40c07b0-b565-4dfd-8d18-1cd8169e1af2',2,5399.10,'M',NULL,'2026-06-05 15:19:03','2026-06-05 15:19:03','371f55a1-0664-4db6-8be0-e56697041ca7','791b885c-b07f-46f9-ad77-901f69dcbcca'),('cf71841f-04de-4b8f-a49d-c0f95a8902fc',1,5399.10,'M','Original','2026-06-13 12:20:38','2026-06-13 12:20:38','a11c0196-de70-4725-9880-2bda4160b585','791b885c-b07f-46f9-ad77-901f69dcbcca'),('d76a04ca-5e43-4f03-bbd5-4b754fc31630',2,4999.00,'S',NULL,'2026-06-05 15:28:15','2026-06-05 15:28:15','f513890d-a861-4c14-b5fa-dc84e32e7aa4','72b7002b-cb89-412b-8db5-28dc0e10d194');
+/*!40000 ALTER TABLE `order_items` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `orderitems`
+--
+
+DROP TABLE IF EXISTS `orderitems`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `orderitems` (
+  `id` char(36) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL,
+  `orderId` char(36) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL,
+  `productId` char(36) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL,
+  `quantity` int(11) DEFAULT 1,
+  `price` decimal(10,2) NOT NULL,
+  `size` varchar(255) DEFAULT NULL,
+  `variation` varchar(255) DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  KEY `orderId` (`orderId`),
+  KEY `productId` (`productId`),
+  CONSTRAINT `orderitems_ibfk_1` FOREIGN KEY (`orderId`) REFERENCES `orders` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `orderitems_ibfk_10` FOREIGN KEY (`productId`) REFERENCES `products` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `orderitems_ibfk_11` FOREIGN KEY (`orderId`) REFERENCES `orders` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `orderitems_ibfk_12` FOREIGN KEY (`productId`) REFERENCES `products` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `orderitems_ibfk_13` FOREIGN KEY (`orderId`) REFERENCES `orders` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `orderitems_ibfk_14` FOREIGN KEY (`productId`) REFERENCES `products` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `orderitems_ibfk_15` FOREIGN KEY (`orderId`) REFERENCES `orders` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `orderitems_ibfk_16` FOREIGN KEY (`productId`) REFERENCES `products` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `orderitems_ibfk_17` FOREIGN KEY (`orderId`) REFERENCES `orders` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `orderitems_ibfk_18` FOREIGN KEY (`productId`) REFERENCES `products` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `orderitems_ibfk_19` FOREIGN KEY (`orderId`) REFERENCES `orders` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `orderitems_ibfk_2` FOREIGN KEY (`productId`) REFERENCES `products` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `orderitems_ibfk_20` FOREIGN KEY (`productId`) REFERENCES `products` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `orderitems_ibfk_21` FOREIGN KEY (`orderId`) REFERENCES `orders` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `orderitems_ibfk_22` FOREIGN KEY (`productId`) REFERENCES `products` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `orderitems_ibfk_23` FOREIGN KEY (`orderId`) REFERENCES `orders` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `orderitems_ibfk_24` FOREIGN KEY (`productId`) REFERENCES `products` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `orderitems_ibfk_25` FOREIGN KEY (`orderId`) REFERENCES `orders` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `orderitems_ibfk_26` FOREIGN KEY (`productId`) REFERENCES `products` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `orderitems_ibfk_27` FOREIGN KEY (`orderId`) REFERENCES `orders` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `orderitems_ibfk_28` FOREIGN KEY (`productId`) REFERENCES `products` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `orderitems_ibfk_29` FOREIGN KEY (`orderId`) REFERENCES `orders` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `orderitems_ibfk_3` FOREIGN KEY (`orderId`) REFERENCES `orders` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `orderitems_ibfk_30` FOREIGN KEY (`productId`) REFERENCES `products` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `orderitems_ibfk_31` FOREIGN KEY (`orderId`) REFERENCES `orders` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `orderitems_ibfk_32` FOREIGN KEY (`productId`) REFERENCES `products` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `orderitems_ibfk_33` FOREIGN KEY (`orderId`) REFERENCES `orders` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `orderitems_ibfk_34` FOREIGN KEY (`productId`) REFERENCES `products` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `orderitems_ibfk_4` FOREIGN KEY (`productId`) REFERENCES `products` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `orderitems_ibfk_5` FOREIGN KEY (`orderId`) REFERENCES `orders` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `orderitems_ibfk_6` FOREIGN KEY (`productId`) REFERENCES `products` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `orderitems_ibfk_7` FOREIGN KEY (`orderId`) REFERENCES `orders` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `orderitems_ibfk_8` FOREIGN KEY (`productId`) REFERENCES `products` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `orderitems_ibfk_9` FOREIGN KEY (`orderId`) REFERENCES `orders` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `orderitems`
+--
+
+LOCK TABLES `orderitems` WRITE;
+/*!40000 ALTER TABLE `orderitems` DISABLE KEYS */;
+/*!40000 ALTER TABLE `orderitems` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `orders`
+--
+
+DROP TABLE IF EXISTS `orders`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `orders` (
+  `id` char(36) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL,
+  `customerId` char(36) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL,
+  `sellerId` char(36) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL,
+  `totalAmount` decimal(10,2) NOT NULL,
+  `status` enum('Pending','Processing','Shipped','Delivered','Completed','Cancelled') DEFAULT 'Pending',
+  `paymentMethod` varchar(255) DEFAULT 'GCash',
+  `paymentReference` varchar(255) DEFAULT NULL,
+  `paymentProof` varchar(255) DEFAULT NULL,
+  `shippingAddress` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL CHECK (json_valid(`shippingAddress`)),
+  `createdAt` datetime NOT NULL,
+  `updatedAt` datetime NOT NULL,
+  `paymentStatus` enum('pending','paid','failed') DEFAULT 'pending',
+  `cancellationReason` text DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  KEY `orders_customer_id` (`customerId`),
+  KEY `orders_seller_id` (`sellerId`),
+  CONSTRAINT `orders_ibfk_1` FOREIGN KEY (`customerId`) REFERENCES `users` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `orders_ibfk_10` FOREIGN KEY (`sellerId`) REFERENCES `users` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `orders_ibfk_11` FOREIGN KEY (`customerId`) REFERENCES `users` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `orders_ibfk_12` FOREIGN KEY (`sellerId`) REFERENCES `users` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `orders_ibfk_13` FOREIGN KEY (`customerId`) REFERENCES `users` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `orders_ibfk_14` FOREIGN KEY (`sellerId`) REFERENCES `users` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `orders_ibfk_15` FOREIGN KEY (`customerId`) REFERENCES `users` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `orders_ibfk_16` FOREIGN KEY (`sellerId`) REFERENCES `users` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `orders_ibfk_17` FOREIGN KEY (`customerId`) REFERENCES `users` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `orders_ibfk_18` FOREIGN KEY (`sellerId`) REFERENCES `users` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `orders_ibfk_19` FOREIGN KEY (`customerId`) REFERENCES `users` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `orders_ibfk_2` FOREIGN KEY (`sellerId`) REFERENCES `users` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `orders_ibfk_20` FOREIGN KEY (`sellerId`) REFERENCES `users` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `orders_ibfk_21` FOREIGN KEY (`customerId`) REFERENCES `users` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `orders_ibfk_22` FOREIGN KEY (`sellerId`) REFERENCES `users` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `orders_ibfk_23` FOREIGN KEY (`customerId`) REFERENCES `users` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `orders_ibfk_24` FOREIGN KEY (`sellerId`) REFERENCES `users` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `orders_ibfk_25` FOREIGN KEY (`customerId`) REFERENCES `users` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `orders_ibfk_26` FOREIGN KEY (`sellerId`) REFERENCES `users` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `orders_ibfk_27` FOREIGN KEY (`customerId`) REFERENCES `users` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `orders_ibfk_28` FOREIGN KEY (`sellerId`) REFERENCES `users` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `orders_ibfk_29` FOREIGN KEY (`customerId`) REFERENCES `users` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `orders_ibfk_3` FOREIGN KEY (`customerId`) REFERENCES `users` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `orders_ibfk_30` FOREIGN KEY (`sellerId`) REFERENCES `users` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `orders_ibfk_31` FOREIGN KEY (`customerId`) REFERENCES `users` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `orders_ibfk_32` FOREIGN KEY (`sellerId`) REFERENCES `users` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `orders_ibfk_33` FOREIGN KEY (`customerId`) REFERENCES `users` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `orders_ibfk_34` FOREIGN KEY (`sellerId`) REFERENCES `users` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `orders_ibfk_4` FOREIGN KEY (`sellerId`) REFERENCES `users` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `orders_ibfk_5` FOREIGN KEY (`customerId`) REFERENCES `users` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `orders_ibfk_6` FOREIGN KEY (`sellerId`) REFERENCES `users` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `orders_ibfk_7` FOREIGN KEY (`customerId`) REFERENCES `users` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `orders_ibfk_8` FOREIGN KEY (`sellerId`) REFERENCES `users` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `orders_ibfk_9` FOREIGN KEY (`customerId`) REFERENCES `users` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `orders`
+--
+
+LOCK TABLES `orders` WRITE;
+/*!40000 ALTER TABLE `orders` DISABLE KEYS */;
+INSERT INTO `orders` VALUES ('371f55a1-0664-4db6-8be0-e56697041ca7','4213bfe2-e963-4f01-8436-7f5e935c527d','e12a0e73-8572-431b-838d-71c9ace5a2c4',10828.20,'Completed','Maya','12345678','payments/jMjzF59CMsAw1miGQvdnkJRs6lDWSrLgisH0LABE.jpg','\"{\\\"id\\\":\\\"1e8c4515-751f-4a05-a06b-5dc95f336a98\\\",\\\"userId\\\":\\\"4213bfe2-e963-4f01-8436-7f5e935c527d\\\",\\\"recipientName\\\":\\\"Ramil Bonifacio\\\",\\\"phone\\\":\\\"09948774899\\\",\\\"houseNo\\\":\\\"Block 1 Lot 2\\\",\\\"street\\\":\\\"107 Sitio Dao\\\",\\\"barangay\\\":\\\"Santisima Cruz\\\",\\\"city\\\":\\\"Santa Cruz\\\",\\\"province\\\":\\\"Laguna\\\",\\\"postalCode\\\":\\\"4009\\\",\\\"latitude\\\":null,\\\"longitude\\\":null,\\\"isDefault\\\":true,\\\"createdAt\\\":\\\"2026-06-05T12:38:22.000000Z\\\",\\\"updatedAt\\\":\\\"2026-06-05T12:38:22.000000Z\\\",\\\"region\\\":\\\"CALABARZON\\\"}\"','2026-06-05 15:19:03','2026-06-08 11:35:33','pending',NULL),('48cf51fd-dfe4-4869-86fe-10dd5d144547','4213bfe2-e963-4f01-8436-7f5e935c527d','e12a0e73-8572-431b-838d-71c9ace5a2c4',9628.40,'Pending','GCash','12345678','payments/D3aFmlf9BSoOozvBSG00Z3vqdy9P1xbZ2R3tXLXI.jpg','{\"id\":\"1e8c4515-751f-4a05-a06b-5dc95f336a98\",\"userId\":\"4213bfe2-e963-4f01-8436-7f5e935c527d\",\"recipientName\":\"Ramil Bonifacio\",\"phone\":\"09948774899\",\"houseNo\":\"Block 1 Lot 2\",\"street\":\"107 Sitio Dao\",\"barangay\":\"Santisima Cruz\",\"city\":\"Santa Cruz\",\"province\":\"Laguna\",\"postalCode\":\"4009\",\"latitude\":null,\"longitude\":null,\"isDefault\":true,\"createdAt\":\"2026-06-05T12:38:22.000000Z\",\"updatedAt\":\"2026-06-05T12:38:22.000000Z\",\"region\":\"CALABARZON\"}','2026-06-08 14:14:47','2026-06-08 14:14:47','paid',NULL),('8ababe80-2281-49f5-9f27-2a6fd9cde1fe','4213bfe2-e963-4f01-8436-7f5e935c527d','e12a0e73-8572-431b-838d-71c9ace5a2c4',4829.20,'Pending','GCash','12345678','payments/fj8WEKHxmhFDiC0xlpOLzYqnL6JQRWOkoLtH2Z7Q.jpg','{\"id\":\"1e8c4515-751f-4a05-a06b-5dc95f336a98\",\"userId\":\"4213bfe2-e963-4f01-8436-7f5e935c527d\",\"recipientName\":\"Ramil Bonifacio\",\"phone\":\"09948774899\",\"houseNo\":\"Block 1 Lot 2\",\"street\":\"107 Sitio Dao\",\"barangay\":\"Santisima Cruz\",\"city\":\"Santa Cruz\",\"province\":\"Laguna\",\"postalCode\":\"4009\",\"latitude\":null,\"longitude\":null,\"isDefault\":true,\"createdAt\":\"2026-06-05T12:38:22.000000Z\",\"updatedAt\":\"2026-06-05T12:38:22.000000Z\",\"region\":\"CALABARZON\"}','2026-06-08 14:27:55','2026-06-08 14:27:55','paid',NULL),('a11c0196-de70-4725-9880-2bda4160b585','4213bfe2-e963-4f01-8436-7f5e935c527d','e12a0e73-8572-431b-838d-71c9ace5a2c4',5429.10,'Pending','GCash','12345678','payments/w1XIKxaPeFsLCIGc7C2UOupCfpOgxAdTTHkV8kIP.jpg','{\"id\":\"1e8c4515-751f-4a05-a06b-5dc95f336a98\",\"userId\":\"4213bfe2-e963-4f01-8436-7f5e935c527d\",\"recipientName\":\"Ramil Bonifacio\",\"phone\":\"09948774899\",\"houseNo\":\"Block 1 Lot 2\",\"street\":\"107 Sitio Dao\",\"barangay\":\"Santisima Cruz\",\"city\":\"Santa Cruz\",\"province\":\"Laguna\",\"postalCode\":\"4009\",\"latitude\":null,\"longitude\":null,\"isDefault\":true,\"createdAt\":\"2026-06-05T12:38:22.000000Z\",\"updatedAt\":\"2026-06-05T12:38:22.000000Z\",\"region\":\"CALABARZON\"}','2026-06-13 12:20:38','2026-06-13 12:20:38','paid',NULL),('c343ac76-3301-49fb-94c8-ea7f279d2813','4213bfe2-e963-4f01-8436-7f5e935c527d','e12a0e73-8572-431b-838d-71c9ace5a2c4',4829.20,'Pending','GCash','12345678','payments/JcNI5Zf0ndlRxuCoDtcZZgH6rzVPtq1lYnNw28PA.jpg','{\"id\":\"1e8c4515-751f-4a05-a06b-5dc95f336a98\",\"userId\":\"4213bfe2-e963-4f01-8436-7f5e935c527d\",\"recipientName\":\"Ramil Bonifacio\",\"phone\":\"09948774899\",\"houseNo\":\"Block 1 Lot 2\",\"street\":\"107 Sitio Dao\",\"barangay\":\"Santisima Cruz\",\"city\":\"Santa Cruz\",\"province\":\"Laguna\",\"postalCode\":\"4009\",\"latitude\":null,\"longitude\":null,\"isDefault\":true,\"createdAt\":\"2026-06-05T12:38:22.000000Z\",\"updatedAt\":\"2026-06-05T12:38:22.000000Z\",\"region\":\"CALABARZON\"}','2026-06-08 14:25:12','2026-06-08 14:25:12','paid',NULL),('c7ba4a8b-e7bc-46ff-9ced-f33df3389c5f','4213bfe2-e963-4f01-8436-7f5e935c527d','e12a0e73-8572-431b-838d-71c9ace5a2c4',5429.10,'Completed','Maya','12345678','payments/3xcuft0R6jCktsciVd2juwKF3fOSCPliL9uyPS7o.jpg','\"{\\\"id\\\":\\\"1e8c4515-751f-4a05-a06b-5dc95f336a98\\\",\\\"userId\\\":\\\"4213bfe2-e963-4f01-8436-7f5e935c527d\\\",\\\"recipientName\\\":\\\"Ramil Bonifacio\\\",\\\"phone\\\":\\\"09948774899\\\",\\\"houseNo\\\":\\\"Block 1 Lot 2\\\",\\\"street\\\":\\\"107 Sitio Dao\\\",\\\"barangay\\\":\\\"Santisima Cruz\\\",\\\"city\\\":\\\"Santa Cruz\\\",\\\"province\\\":\\\"Laguna\\\",\\\"postalCode\\\":\\\"4009\\\",\\\"latitude\\\":null,\\\"longitude\\\":null,\\\"isDefault\\\":true,\\\"createdAt\\\":\\\"2026-06-05T12:38:22.000000Z\\\",\\\"updatedAt\\\":\\\"2026-06-05T12:38:22.000000Z\\\",\\\"region\\\":\\\"CALABARZON\\\"}\"','2026-06-05 14:30:08','2026-06-08 11:57:51','pending',NULL),('f503876b-fc93-4541-ba59-706f78e26895','4213bfe2-e963-4f01-8436-7f5e935c527d','e12a0e73-8572-431b-838d-71c9ace5a2c4',9628.40,'Cancelled','GCash','12345678','payments/7vBvw0Gmu7uC9aE3dNBT29cWN5GEzDIFnrVDqmZn.jpg','{\"id\":\"1e8c4515-751f-4a05-a06b-5dc95f336a98\",\"userId\":\"4213bfe2-e963-4f01-8436-7f5e935c527d\",\"recipientName\":\"Ramil Bonifacio\",\"phone\":\"09948774899\",\"houseNo\":\"Block 1 Lot 2\",\"street\":\"107 Sitio Dao\",\"barangay\":\"Santisima Cruz\",\"city\":\"Santa Cruz\",\"province\":\"Laguna\",\"postalCode\":\"4009\",\"latitude\":null,\"longitude\":null,\"isDefault\":true,\"createdAt\":\"2026-06-05T12:38:22.000000Z\",\"updatedAt\":\"2026-06-05T12:38:22.000000Z\",\"region\":\"CALABARZON\"}','2026-06-08 14:09:30','2026-06-08 14:09:54','paid','im sorry just misclick'),('f513890d-a861-4c14-b5fa-dc84e32e7aa4','4213bfe2-e963-4f01-8436-7f5e935c527d','e12a0e73-8572-431b-838d-71c9ace5a2c4',19626.40,'Delivered','GCash','12345678','payments/7gQTYylKRumJXoWagTu76zfRAmcuwfIOabiyBeHC.jpg','\"{\\\"id\\\":\\\"1e8c4515-751f-4a05-a06b-5dc95f336a98\\\",\\\"userId\\\":\\\"4213bfe2-e963-4f01-8436-7f5e935c527d\\\",\\\"recipientName\\\":\\\"Ramil Bonifacio\\\",\\\"phone\\\":\\\"09948774899\\\",\\\"houseNo\\\":\\\"Block 1 Lot 2\\\",\\\"street\\\":\\\"107 Sitio Dao\\\",\\\"barangay\\\":\\\"Santisima Cruz\\\",\\\"city\\\":\\\"Santa Cruz\\\",\\\"province\\\":\\\"Laguna\\\",\\\"postalCode\\\":\\\"4009\\\",\\\"latitude\\\":null,\\\"longitude\\\":null,\\\"isDefault\\\":true,\\\"createdAt\\\":\\\"2026-06-05T12:38:22.000000Z\\\",\\\"updatedAt\\\":\\\"2026-06-05T12:38:22.000000Z\\\",\\\"region\\\":\\\"CALABARZON\\\"}\"','2026-06-05 15:28:15','2026-06-08 11:54:08','pending',NULL);
+/*!40000 ALTER TABLE `orders` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `productcolors`
+--
+
+DROP TABLE IF EXISTS `productcolors`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `productcolors` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `color` varchar(255) NOT NULL,
+  `ProductId` char(36) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL,
+  `createdAt` datetime NOT NULL,
+  `updatedAt` datetime NOT NULL,
+  PRIMARY KEY (`id`),
+  KEY `ProductId` (`ProductId`),
+  CONSTRAINT `productcolors_ProductId_fk` FOREIGN KEY (`ProductId`) REFERENCES `products` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `productcolors`
+--
+
+LOCK TABLES `productcolors` WRITE;
+/*!40000 ALTER TABLE `productcolors` DISABLE KEYS */;
+/*!40000 ALTER TABLE `productcolors` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `productimages`
+--
+
+DROP TABLE IF EXISTS `productimages`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `productimages` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `url` varchar(255) NOT NULL,
+  `ProductId` char(36) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL,
+  `createdAt` datetime NOT NULL,
+  `updatedAt` datetime NOT NULL,
+  `designName` varchar(255) DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  KEY `ProductId` (`ProductId`),
+  CONSTRAINT `productimages_ProductId_fk` FOREIGN KEY (`ProductId`) REFERENCES `products` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
+) ENGINE=InnoDB AUTO_INCREMENT=55 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `productimages`
+--
+
+LOCK TABLES `productimages` WRITE;
+/*!40000 ALTER TABLE `productimages` DISABLE KEYS */;
+/*!40000 ALTER TABLE `productimages` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `productratings`
+--
+
+DROP TABLE IF EXISTS `productratings`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `productratings` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `rating` int(11) NOT NULL,
+  `review` text DEFAULT NULL,
+  `userId` char(36) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL,
+  `ProductId` char(36) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL,
+  `createdAt` datetime NOT NULL,
+  `updatedAt` datetime NOT NULL,
+  `images` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL CHECK (json_valid(`images`)),
+  `helpfulCount` int(11) DEFAULT 0,
+  `orderId` char(36) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  KEY `product_ratings__product_id` (`ProductId`),
+  KEY `product_ratings_user_id` (`userId`),
+  KEY `orderId` (`orderId`),
+  CONSTRAINT `ProductRatings_orderId_foreign_idx` FOREIGN KEY (`orderId`) REFERENCES `orders` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `productratings_ProductId_fk` FOREIGN KEY (`ProductId`) REFERENCES `products` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `productratings_orderId_fk` FOREIGN KEY (`orderId`) REFERENCES `orders` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `productratings_userId_fk` FOREIGN KEY (`userId`) REFERENCES `users` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
+) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `productratings`
+--
+
+LOCK TABLES `productratings` WRITE;
+/*!40000 ALTER TABLE `productratings` DISABLE KEYS */;
+/*!40000 ALTER TABLE `productratings` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `products`
+--
+
+DROP TABLE IF EXISTS `products`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `products` (
+  `id` char(36) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL,
+  `name` varchar(255) NOT NULL,
+  `description` text DEFAULT NULL,
+  `price` decimal(10,2) NOT NULL,
+  `sizes` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL CHECK (json_valid(`sizes`)),
+  `categories` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL CHECK (json_valid(`categories`)),
+  `image` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL CHECK (json_valid(`image`)),
+  `stock` int(11) DEFAULT 0,
+  `shippingFee` decimal(10,2) DEFAULT 0.00,
+  `shippingDays` int(11) DEFAULT 3,
+  `sellerId` char(36) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL,
+  `CategoryId` char(36) DEFAULT NULL,
+  `is_on_sale` tinyint(1) NOT NULL DEFAULT 0,
+  `discount_percentage` decimal(5,2) DEFAULT NULL,
+  `target_group` varchar(255) DEFAULT NULL,
+  `gcashNumber` varchar(255) DEFAULT NULL,
+  `gcashQrCode` varchar(255) DEFAULT NULL,
+  `mayaNumber` varchar(255) DEFAULT NULL,
+  `mayaQrCode` varchar(255) DEFAULT NULL,
+  `allowGcash` tinyint(1) DEFAULT 1,
+  `allowMaya` tinyint(1) DEFAULT 1,
+  `views` int(11) DEFAULT 0,
+  `createdAt` datetime NOT NULL,
+  `updatedAt` datetime NOT NULL,
+  `sku` varchar(255) DEFAULT NULL,
+  `fabric_type` varchar(255) DEFAULT NULL,
+  `collar_type` varchar(255) DEFAULT NULL,
+  `artisan_region` varchar(255) DEFAULT NULL,
+  `costPerPiece` decimal(10,2) DEFAULT 0.00,
+  `rejectionReason` text DEFAULT NULL,
+  `status` enum('pending','approved','rejected') DEFAULT 'pending',
+  `size_stocks` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL CHECK (json_valid(`size_stocks`)),
+  `is_gcash_available` tinyint(1) DEFAULT NULL,
+  `gcash_number` varchar(255) DEFAULT NULL,
+  `gcash_qr_code` varchar(255) DEFAULT NULL,
+  `is_maya_available` tinyint(1) DEFAULT NULL,
+  `maya_number` varchar(255) DEFAULT NULL,
+  `maya_qr_code` varchar(255) DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  KEY `sellerId` (`sellerId`),
+  CONSTRAINT `products_ibfk_1` FOREIGN KEY (`sellerId`) REFERENCES `users` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `products_ibfk_10` FOREIGN KEY (`sellerId`) REFERENCES `users` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `products_ibfk_11` FOREIGN KEY (`sellerId`) REFERENCES `users` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `products_ibfk_12` FOREIGN KEY (`sellerId`) REFERENCES `users` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `products_ibfk_13` FOREIGN KEY (`sellerId`) REFERENCES `users` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `products_ibfk_14` FOREIGN KEY (`sellerId`) REFERENCES `users` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `products_ibfk_15` FOREIGN KEY (`sellerId`) REFERENCES `users` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `products_ibfk_16` FOREIGN KEY (`sellerId`) REFERENCES `users` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `products_ibfk_17` FOREIGN KEY (`sellerId`) REFERENCES `users` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `products_ibfk_2` FOREIGN KEY (`sellerId`) REFERENCES `users` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `products_ibfk_3` FOREIGN KEY (`sellerId`) REFERENCES `users` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `products_ibfk_4` FOREIGN KEY (`sellerId`) REFERENCES `users` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `products_ibfk_5` FOREIGN KEY (`sellerId`) REFERENCES `users` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `products_ibfk_6` FOREIGN KEY (`sellerId`) REFERENCES `users` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `products_ibfk_7` FOREIGN KEY (`sellerId`) REFERENCES `users` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `products_ibfk_8` FOREIGN KEY (`sellerId`) REFERENCES `users` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `products_ibfk_9` FOREIGN KEY (`sellerId`) REFERENCES `users` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `products`
+--
+
+LOCK TABLES `products` WRITE;
+/*!40000 ALTER TABLE `products` DISABLE KEYS */;
+INSERT INTO `products` VALUES ('135193e4-2b29-4608-92b7-9cbc3c00d46d','Special Barong','Special pa sa special',5999.00,'[\"S\",\"M\",\"L\",\"XL\",\"XXL\"]',NULL,'[\"products\\/iRDIOukyHfu4wQ4CiwO4GYc51koD4LQNA28uJLci.jpg\"]',19,30.00,3,'e12a0e73-8572-431b-838d-71c9ace5a2c4','72c0273e-8a87-4040-a439-6d8ca2a2e635',1,20.00,'Men',NULL,NULL,NULL,NULL,1,1,0,'2026-06-05 12:18:44','2026-06-08 14:27:55',NULL,NULL,NULL,NULL,0.00,NULL,'approved','{\"S\":3,\"M\":2,\"L\":4,\"XL\":3,\"XXL\":\"5\"}',1,NULL,NULL,0,NULL,NULL),('71d97858-2831-4aad-86c6-0f74fe9dd9a7','Piña Barong','Made from pineapple fiber (piña), very lightweight, sheer, and luxurious with intricate embroidery. Considered the most prestigious type.',3999.00,'[\"S\",\"M\",\"L\",\"XL\",\"XXL\"]',NULL,'[\"products\\/jyphvoLVvXMWvBYZLN6C8Znkfqm9xRuzFLXdUXGM.jpg\"]',25,30.00,3,'e12a0e73-8572-431b-838d-71c9ace5a2c4','2838535a-4775-4ff8-9193-b9e46f50052a',0,NULL,'Men',NULL,NULL,NULL,NULL,1,1,0,'2026-06-04 06:02:57','2026-06-05 14:19:09',NULL,NULL,NULL,NULL,0.00,NULL,'approved','{\"S\":\"5\",\"M\":\"5\",\"L\":\"5\",\"XL\":\"5\",\"XXL\":\"5\"}',1,NULL,NULL,1,NULL,NULL),('72b7002b-cb89-412b-8db5-28dc0e10d194','Jusi Barong','Made from silk or silk blends. Less expensive than piña but still elegant and semi-sheer.',4999.00,'[\"S\",\"M\",\"L\",\"XL\",\"XXL\"]',NULL,'[\"products\\/yYeKIRKCvrak9qfTTo4lEr4iSkGDrEahPYK0SiRJ.jpg\"]',23,30.00,3,'e12a0e73-8572-431b-838d-71c9ace5a2c4','68411b03-d8f3-436e-8563-b4860a56b268',0,NULL,'Men',NULL,NULL,NULL,NULL,1,1,0,'2026-06-05 09:36:59','2026-06-05 15:28:15',NULL,NULL,NULL,NULL,0.00,NULL,'approved','{\"S\":3,\"M\":\"5\",\"L\":\"5\",\"XL\":\"5\",\"XXL\":\"5\"}',1,NULL,NULL,1,NULL,NULL),('791b885c-b07f-46f9-ad77-901f69dcbcca','Organza Barong','Transparent and lightweight, often used for modern designs due to affordability.',5999.00,'[\"S\",\"M\",\"L\",\"XL\",\"XXL\"]',NULL,'[\"products\\/4HapTcxJpyeATpZlvzs9s849qNZB6e0tUSNMGIM4.jpg\"]',21,30.00,3,'e12a0e73-8572-431b-838d-71c9ace5a2c4','68411b03-d8f3-436e-8563-b4860a56b268',1,10.00,'Men',NULL,NULL,NULL,NULL,1,1,0,'2026-06-05 13:29:53','2026-06-13 12:20:38',NULL,NULL,NULL,NULL,0.00,NULL,'approved','{\"S\":4,\"M\":2,\"L\":\"5\",\"XL\":\"5\",\"XXL\":\"5\"}',1,NULL,NULL,1,NULL,NULL),('be7a55ae-4357-4fdf-8c62-1a93d7eb2868','Piña Barong','Made from pineapple fiber (piña), very lightweight, sheer, and luxurious with intricate embroidery. Considered the most prestigious type.',3899.00,'[\"S\",\"M\",\"L\",\"XL\",\"XXL\",\"Custom\"]',NULL,'[\"products\\/4F1oaUIGFtzjni9Hyvzy9hZcB8MeSkHSW0T3Qryl.jpg\"]',30,30.00,3,'7b52819f-8981-4570-bb27-21ea3621a8a2','2838535a-4775-4ff8-9193-b9e46f50052a',1,5.00,'Men',NULL,NULL,NULL,NULL,1,1,0,'2026-06-13 10:14:30','2026-06-13 10:16:53',NULL,NULL,NULL,NULL,0.00,NULL,'approved','{\"S\":\"5\",\"M\":\"5\",\"L\":\"5\",\"XL\":\"5\",\"XXL\":\"5\",\"Custom\":\"5\"}',1,NULL,NULL,0,NULL,NULL),('c7d6ba4e-9684-4520-aa61-e8640eafd49c','Jusi Barong','Made from silk or silk blends. Less expensive than piña but still elegant and semi-sheer.',3499.00,'[\"S\",\"M\",\"L\",\"XL\",\"XXL\",\"Custom\"]',NULL,'[\"products\\/X1kI5aWZWmqlSOpQTzPpGuSplyMgY1Fvg5YVPgA7.jpg\"]',30,30.00,3,'7b52819f-8981-4570-bb27-21ea3621a8a2','2838535a-4775-4ff8-9193-b9e46f50052a',0,NULL,'Men',NULL,NULL,NULL,NULL,1,1,0,'2026-06-13 10:15:44','2026-06-13 10:16:55',NULL,NULL,NULL,NULL,0.00,NULL,'approved','{\"S\":\"5\",\"M\":\"5\",\"L\":\"5\",\"XL\":\"5\",\"XXL\":\"5\",\"Custom\":\"5\"}',1,NULL,NULL,1,NULL,NULL);
+/*!40000 ALTER TABLE `products` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `productsizes`
+--
+
+DROP TABLE IF EXISTS `productsizes`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `productsizes` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `size` varchar(255) NOT NULL,
+  `ProductId` char(36) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL,
+  `createdAt` datetime NOT NULL,
+  `updatedAt` datetime NOT NULL,
+  PRIMARY KEY (`id`),
+  KEY `ProductId` (`ProductId`),
+  CONSTRAINT `productsizes_ProductId_fk` FOREIGN KEY (`ProductId`) REFERENCES `products` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
+) ENGINE=InnoDB AUTO_INCREMENT=16 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `productsizes`
+--
+
+LOCK TABLES `productsizes` WRITE;
+/*!40000 ALTER TABLE `productsizes` DISABLE KEYS */;
+/*!40000 ALTER TABLE `productsizes` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `productviews`
+--
+
+DROP TABLE IF EXISTS `productviews`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `productviews` (
+  `id` char(36) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL,
+  `productId` char(36) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL,
+  `sellerId` char(36) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL,
+  `customerId` char(36) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL,
+  `visitorSessionId` varchar(255) DEFAULT NULL,
+  `ipAddress` varchar(255) DEFAULT NULL,
+  `createdAt` datetime NOT NULL,
+  PRIMARY KEY (`id`),
+  KEY `product_views_product_id` (`productId`),
+  KEY `product_views_seller_id` (`sellerId`),
+  KEY `product_views_customer_id` (`customerId`),
+  KEY `product_views_visitor_session_id` (`visitorSessionId`),
+  KEY `product_views_ip_address` (`ipAddress`),
+  KEY `product_views_created_at` (`createdAt`),
+  CONSTRAINT `productviews_ibfk_1` FOREIGN KEY (`productId`) REFERENCES `products` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `productviews_ibfk_10` FOREIGN KEY (`productId`) REFERENCES `products` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `productviews_ibfk_11` FOREIGN KEY (`sellerId`) REFERENCES `users` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `productviews_ibfk_12` FOREIGN KEY (`customerId`) REFERENCES `users` (`id`),
+  CONSTRAINT `productviews_ibfk_13` FOREIGN KEY (`productId`) REFERENCES `products` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `productviews_ibfk_14` FOREIGN KEY (`sellerId`) REFERENCES `users` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `productviews_ibfk_15` FOREIGN KEY (`customerId`) REFERENCES `users` (`id`),
+  CONSTRAINT `productviews_ibfk_16` FOREIGN KEY (`productId`) REFERENCES `products` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `productviews_ibfk_17` FOREIGN KEY (`sellerId`) REFERENCES `users` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `productviews_ibfk_18` FOREIGN KEY (`customerId`) REFERENCES `users` (`id`),
+  CONSTRAINT `productviews_ibfk_19` FOREIGN KEY (`productId`) REFERENCES `products` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `productviews_ibfk_2` FOREIGN KEY (`sellerId`) REFERENCES `users` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `productviews_ibfk_20` FOREIGN KEY (`sellerId`) REFERENCES `users` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `productviews_ibfk_21` FOREIGN KEY (`customerId`) REFERENCES `users` (`id`),
+  CONSTRAINT `productviews_ibfk_22` FOREIGN KEY (`productId`) REFERENCES `products` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `productviews_ibfk_23` FOREIGN KEY (`sellerId`) REFERENCES `users` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `productviews_ibfk_24` FOREIGN KEY (`customerId`) REFERENCES `users` (`id`),
+  CONSTRAINT `productviews_ibfk_25` FOREIGN KEY (`productId`) REFERENCES `products` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `productviews_ibfk_26` FOREIGN KEY (`sellerId`) REFERENCES `users` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `productviews_ibfk_27` FOREIGN KEY (`customerId`) REFERENCES `users` (`id`),
+  CONSTRAINT `productviews_ibfk_28` FOREIGN KEY (`productId`) REFERENCES `products` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `productviews_ibfk_29` FOREIGN KEY (`sellerId`) REFERENCES `users` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `productviews_ibfk_3` FOREIGN KEY (`customerId`) REFERENCES `users` (`id`),
+  CONSTRAINT `productviews_ibfk_30` FOREIGN KEY (`customerId`) REFERENCES `users` (`id`),
+  CONSTRAINT `productviews_ibfk_31` FOREIGN KEY (`productId`) REFERENCES `products` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `productviews_ibfk_32` FOREIGN KEY (`sellerId`) REFERENCES `users` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `productviews_ibfk_33` FOREIGN KEY (`customerId`) REFERENCES `users` (`id`),
+  CONSTRAINT `productviews_ibfk_34` FOREIGN KEY (`productId`) REFERENCES `products` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `productviews_ibfk_35` FOREIGN KEY (`sellerId`) REFERENCES `users` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `productviews_ibfk_36` FOREIGN KEY (`customerId`) REFERENCES `users` (`id`),
+  CONSTRAINT `productviews_ibfk_37` FOREIGN KEY (`productId`) REFERENCES `products` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `productviews_ibfk_38` FOREIGN KEY (`sellerId`) REFERENCES `users` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `productviews_ibfk_39` FOREIGN KEY (`customerId`) REFERENCES `users` (`id`),
+  CONSTRAINT `productviews_ibfk_4` FOREIGN KEY (`productId`) REFERENCES `products` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `productviews_ibfk_40` FOREIGN KEY (`productId`) REFERENCES `products` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `productviews_ibfk_41` FOREIGN KEY (`sellerId`) REFERENCES `users` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `productviews_ibfk_42` FOREIGN KEY (`customerId`) REFERENCES `users` (`id`),
+  CONSTRAINT `productviews_ibfk_43` FOREIGN KEY (`productId`) REFERENCES `products` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `productviews_ibfk_44` FOREIGN KEY (`sellerId`) REFERENCES `users` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `productviews_ibfk_45` FOREIGN KEY (`customerId`) REFERENCES `users` (`id`),
+  CONSTRAINT `productviews_ibfk_46` FOREIGN KEY (`productId`) REFERENCES `products` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `productviews_ibfk_47` FOREIGN KEY (`sellerId`) REFERENCES `users` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `productviews_ibfk_48` FOREIGN KEY (`customerId`) REFERENCES `users` (`id`),
+  CONSTRAINT `productviews_ibfk_49` FOREIGN KEY (`productId`) REFERENCES `products` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `productviews_ibfk_5` FOREIGN KEY (`sellerId`) REFERENCES `users` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `productviews_ibfk_50` FOREIGN KEY (`sellerId`) REFERENCES `users` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `productviews_ibfk_51` FOREIGN KEY (`customerId`) REFERENCES `users` (`id`),
+  CONSTRAINT `productviews_ibfk_6` FOREIGN KEY (`customerId`) REFERENCES `users` (`id`),
+  CONSTRAINT `productviews_ibfk_7` FOREIGN KEY (`productId`) REFERENCES `products` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `productviews_ibfk_8` FOREIGN KEY (`sellerId`) REFERENCES `users` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `productviews_ibfk_9` FOREIGN KEY (`customerId`) REFERENCES `users` (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `productviews`
+--
+
+LOCK TABLES `productviews` WRITE;
+/*!40000 ALTER TABLE `productviews` DISABLE KEYS */;
+/*!40000 ALTER TABLE `productviews` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `refundrequests`
+--
+
+DROP TABLE IF EXISTS `refundrequests`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `refundrequests` (
+  `id` char(36) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL,
+  `orderId` char(36) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL,
+  `orderItemId` char(36) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL,
+  `customerId` char(36) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL,
+  `sellerId` char(36) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL,
+  `reason` enum('Damaged Item','Wrong Size','Other') NOT NULL,
+  `message` text DEFAULT NULL,
+  `videoProof` varchar(255) NOT NULL,
+  `status` enum('Pending','Approved','Rejected','Resolved') DEFAULT 'Pending',
+  `sellerComment` text DEFAULT NULL,
+  `createdAt` datetime NOT NULL,
+  `updatedAt` datetime NOT NULL,
+  PRIMARY KEY (`id`),
+  KEY `orderId` (`orderId`),
+  KEY `orderItemId` (`orderItemId`),
+  KEY `customerId` (`customerId`),
+  KEY `sellerId` (`sellerId`),
+  CONSTRAINT `refundrequests_ibfk_1` FOREIGN KEY (`orderId`) REFERENCES `orders` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `refundrequests_ibfk_2` FOREIGN KEY (`orderItemId`) REFERENCES `orderitems` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `refundrequests_ibfk_3` FOREIGN KEY (`customerId`) REFERENCES `users` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `refundrequests_ibfk_4` FOREIGN KEY (`sellerId`) REFERENCES `users` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `refundrequests`
+--
+
+LOCK TABLES `refundrequests` WRITE;
+/*!40000 ALTER TABLE `refundrequests` DISABLE KEYS */;
+/*!40000 ALTER TABLE `refundrequests` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `reports`
+--
+
+DROP TABLE IF EXISTS `reports`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `reports` (
+  `id` char(36) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL,
+  `reporterId` char(36) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL,
+  `reportedId` char(36) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL,
+  `type` enum('CustomerReportingSeller','SellerReportingCustomer') NOT NULL,
+  `referenceId` char(36) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL,
+  `reason` varchar(255) NOT NULL,
+  `description` text NOT NULL,
+  `evidence` text DEFAULT NULL,
+  `status` enum('Pending','In Review','Resolved','Dismissed') DEFAULT 'Pending',
+  `adminNotes` text DEFAULT NULL,
+  `actionTaken` enum('None','Warning','Restricted','Suspended') DEFAULT NULL,
+  `createdAt` datetime NOT NULL,
+  `updatedAt` datetime NOT NULL,
+  PRIMARY KEY (`id`),
+  KEY `reporterId` (`reporterId`),
+  KEY `reportedId` (`reportedId`),
+  CONSTRAINT `reports_ibfk_1` FOREIGN KEY (`reporterId`) REFERENCES `users` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `reports_ibfk_2` FOREIGN KEY (`reportedId`) REFERENCES `users` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `reports`
+--
+
+LOCK TABLES `reports` WRITE;
+/*!40000 ALTER TABLE `reports` DISABLE KEYS */;
+/*!40000 ALTER TABLE `reports` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `returnrequests`
+--
+
+DROP TABLE IF EXISTS `returnrequests`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `returnrequests` (
+  `id` char(36) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL,
+  `orderId` char(36) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL,
+  `reason` text NOT NULL,
+  `proofImages` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL CHECK (json_valid(`proofImages`)),
+  `status` enum('Pending','Approved','Rejected','Completed') DEFAULT 'Pending',
+  `adminComment` text DEFAULT NULL,
+  `createdAt` datetime NOT NULL,
+  `updatedAt` datetime NOT NULL,
+  PRIMARY KEY (`id`),
+  KEY `orderId` (`orderId`),
+  CONSTRAINT `returnrequests_ibfk_1` FOREIGN KEY (`orderId`) REFERENCES `orders` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `returnrequests_ibfk_10` FOREIGN KEY (`orderId`) REFERENCES `orders` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `returnrequests_ibfk_11` FOREIGN KEY (`orderId`) REFERENCES `orders` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `returnrequests_ibfk_12` FOREIGN KEY (`orderId`) REFERENCES `orders` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `returnrequests_ibfk_13` FOREIGN KEY (`orderId`) REFERENCES `orders` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `returnrequests_ibfk_14` FOREIGN KEY (`orderId`) REFERENCES `orders` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `returnrequests_ibfk_15` FOREIGN KEY (`orderId`) REFERENCES `orders` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `returnrequests_ibfk_16` FOREIGN KEY (`orderId`) REFERENCES `orders` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `returnrequests_ibfk_17` FOREIGN KEY (`orderId`) REFERENCES `orders` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `returnrequests_ibfk_2` FOREIGN KEY (`orderId`) REFERENCES `orders` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `returnrequests_ibfk_3` FOREIGN KEY (`orderId`) REFERENCES `orders` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `returnrequests_ibfk_4` FOREIGN KEY (`orderId`) REFERENCES `orders` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `returnrequests_ibfk_5` FOREIGN KEY (`orderId`) REFERENCES `orders` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `returnrequests_ibfk_6` FOREIGN KEY (`orderId`) REFERENCES `orders` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `returnrequests_ibfk_7` FOREIGN KEY (`orderId`) REFERENCES `orders` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `returnrequests_ibfk_8` FOREIGN KEY (`orderId`) REFERENCES `orders` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `returnrequests_ibfk_9` FOREIGN KEY (`orderId`) REFERENCES `orders` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `returnrequests`
+--
+
+LOCK TABLES `returnrequests` WRITE;
+/*!40000 ALTER TABLE `returnrequests` DISABLE KEYS */;
+/*!40000 ALTER TABLE `returnrequests` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `reviews`
+--
+
+DROP TABLE IF EXISTS `reviews`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `reviews` (
+  `id` char(36) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL,
+  `productId` char(36) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL,
+  `customerId` char(36) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL,
+  `orderId` char(36) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL,
+  `rating` int(11) NOT NULL,
+  `comment` text DEFAULT NULL,
+  `images` text DEFAULT NULL,
+  `createdAt` datetime NOT NULL,
+  `updatedAt` datetime NOT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `unique_order_product_review` (`productId`,`customerId`,`orderId`),
+  KEY `customerId` (`customerId`),
+  KEY `orderId` (`orderId`),
+  CONSTRAINT `reviews_ibfk_1` FOREIGN KEY (`productId`) REFERENCES `products` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `reviews_ibfk_10` FOREIGN KEY (`productId`) REFERENCES `products` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `reviews_ibfk_11` FOREIGN KEY (`customerId`) REFERENCES `users` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `reviews_ibfk_12` FOREIGN KEY (`orderId`) REFERENCES `orders` (`id`) ON DELETE SET NULL ON UPDATE CASCADE,
+  CONSTRAINT `reviews_ibfk_13` FOREIGN KEY (`productId`) REFERENCES `products` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `reviews_ibfk_14` FOREIGN KEY (`customerId`) REFERENCES `users` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `reviews_ibfk_15` FOREIGN KEY (`orderId`) REFERENCES `orders` (`id`) ON DELETE SET NULL ON UPDATE CASCADE,
+  CONSTRAINT `reviews_ibfk_16` FOREIGN KEY (`productId`) REFERENCES `products` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `reviews_ibfk_17` FOREIGN KEY (`customerId`) REFERENCES `users` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `reviews_ibfk_18` FOREIGN KEY (`orderId`) REFERENCES `orders` (`id`) ON DELETE SET NULL ON UPDATE CASCADE,
+  CONSTRAINT `reviews_ibfk_19` FOREIGN KEY (`productId`) REFERENCES `products` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `reviews_ibfk_2` FOREIGN KEY (`customerId`) REFERENCES `users` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `reviews_ibfk_20` FOREIGN KEY (`customerId`) REFERENCES `users` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `reviews_ibfk_21` FOREIGN KEY (`orderId`) REFERENCES `orders` (`id`) ON DELETE SET NULL ON UPDATE CASCADE,
+  CONSTRAINT `reviews_ibfk_22` FOREIGN KEY (`productId`) REFERENCES `products` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `reviews_ibfk_23` FOREIGN KEY (`customerId`) REFERENCES `users` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `reviews_ibfk_24` FOREIGN KEY (`orderId`) REFERENCES `orders` (`id`) ON DELETE SET NULL ON UPDATE CASCADE,
+  CONSTRAINT `reviews_ibfk_25` FOREIGN KEY (`productId`) REFERENCES `products` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `reviews_ibfk_26` FOREIGN KEY (`customerId`) REFERENCES `users` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `reviews_ibfk_27` FOREIGN KEY (`orderId`) REFERENCES `orders` (`id`) ON DELETE SET NULL ON UPDATE CASCADE,
+  CONSTRAINT `reviews_ibfk_28` FOREIGN KEY (`productId`) REFERENCES `products` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `reviews_ibfk_29` FOREIGN KEY (`customerId`) REFERENCES `users` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `reviews_ibfk_3` FOREIGN KEY (`orderId`) REFERENCES `orders` (`id`) ON DELETE SET NULL ON UPDATE CASCADE,
+  CONSTRAINT `reviews_ibfk_30` FOREIGN KEY (`orderId`) REFERENCES `orders` (`id`) ON DELETE SET NULL ON UPDATE CASCADE,
+  CONSTRAINT `reviews_ibfk_31` FOREIGN KEY (`productId`) REFERENCES `products` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `reviews_ibfk_32` FOREIGN KEY (`customerId`) REFERENCES `users` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `reviews_ibfk_33` FOREIGN KEY (`orderId`) REFERENCES `orders` (`id`) ON DELETE SET NULL ON UPDATE CASCADE,
+  CONSTRAINT `reviews_ibfk_34` FOREIGN KEY (`productId`) REFERENCES `products` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `reviews_ibfk_35` FOREIGN KEY (`customerId`) REFERENCES `users` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `reviews_ibfk_36` FOREIGN KEY (`orderId`) REFERENCES `orders` (`id`) ON DELETE SET NULL ON UPDATE CASCADE,
+  CONSTRAINT `reviews_ibfk_37` FOREIGN KEY (`productId`) REFERENCES `products` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `reviews_ibfk_38` FOREIGN KEY (`customerId`) REFERENCES `users` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `reviews_ibfk_39` FOREIGN KEY (`orderId`) REFERENCES `orders` (`id`) ON DELETE SET NULL ON UPDATE CASCADE,
+  CONSTRAINT `reviews_ibfk_4` FOREIGN KEY (`productId`) REFERENCES `products` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `reviews_ibfk_40` FOREIGN KEY (`productId`) REFERENCES `products` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `reviews_ibfk_41` FOREIGN KEY (`customerId`) REFERENCES `users` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `reviews_ibfk_42` FOREIGN KEY (`orderId`) REFERENCES `orders` (`id`) ON DELETE SET NULL ON UPDATE CASCADE,
+  CONSTRAINT `reviews_ibfk_43` FOREIGN KEY (`productId`) REFERENCES `products` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `reviews_ibfk_44` FOREIGN KEY (`customerId`) REFERENCES `users` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `reviews_ibfk_45` FOREIGN KEY (`orderId`) REFERENCES `orders` (`id`) ON DELETE SET NULL ON UPDATE CASCADE,
+  CONSTRAINT `reviews_ibfk_46` FOREIGN KEY (`productId`) REFERENCES `products` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `reviews_ibfk_47` FOREIGN KEY (`productId`) REFERENCES `products` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `reviews_ibfk_48` FOREIGN KEY (`customerId`) REFERENCES `users` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `reviews_ibfk_49` FOREIGN KEY (`orderId`) REFERENCES `orders` (`id`) ON DELETE SET NULL ON UPDATE CASCADE,
+  CONSTRAINT `reviews_ibfk_5` FOREIGN KEY (`customerId`) REFERENCES `users` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `reviews_ibfk_6` FOREIGN KEY (`orderId`) REFERENCES `orders` (`id`) ON DELETE SET NULL ON UPDATE CASCADE,
+  CONSTRAINT `reviews_ibfk_7` FOREIGN KEY (`productId`) REFERENCES `products` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `reviews_ibfk_8` FOREIGN KEY (`customerId`) REFERENCES `users` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `reviews_ibfk_9` FOREIGN KEY (`orderId`) REFERENCES `orders` (`id`) ON DELETE SET NULL ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `reviews`
+--
+
+LOCK TABLES `reviews` WRITE;
+/*!40000 ALTER TABLE `reviews` DISABLE KEYS */;
+INSERT INTO `reviews` VALUES ('7babe1bc-aa93-492e-95e2-916dcccbd750','791b885c-b07f-46f9-ad77-901f69dcbcca','4213bfe2-e963-4f01-8436-7f5e935c527d','371f55a1-0664-4db6-8be0-e56697041ca7',1,'Hindi maganda ang pangit ng quality',NULL,'2026-06-08 11:35:57','2026-06-08 11:35:57');
+/*!40000 ALTER TABLE `reviews` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `seller_subscriptions`
+--
+
+DROP TABLE IF EXISTS `seller_subscriptions`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `seller_subscriptions` (
+  `id` char(36) NOT NULL,
+  `userId` char(36) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL,
+  `status` varchar(255) NOT NULL DEFAULT 'pending',
+  `planName` varchar(255) NOT NULL,
+  `amount` decimal(10,2) NOT NULL,
+  `paymentMethod` varchar(255) NOT NULL,
+  `paymentReference` varchar(255) NOT NULL,
+  `paymentProof` varchar(255) DEFAULT NULL,
+  `rejectionReason` text DEFAULT NULL,
+  `startsAt` timestamp NULL DEFAULT NULL,
+  `endsAt` timestamp NULL DEFAULT NULL,
+  `createdAt` timestamp NOT NULL DEFAULT current_timestamp(),
+  `updatedAt` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
+  PRIMARY KEY (`id`),
+  KEY `seller_subscriptions_userid_foreign` (`userId`),
+  CONSTRAINT `seller_subscriptions_userid_foreign` FOREIGN KEY (`userId`) REFERENCES `users` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `seller_subscriptions`
+--
+
+LOCK TABLES `seller_subscriptions` WRITE;
+/*!40000 ALTER TABLE `seller_subscriptions` DISABLE KEYS */;
+INSERT INTO `seller_subscriptions` VALUES ('09885290-d228-4a4f-afdd-a4caacba2356','e12a0e73-8572-431b-838d-71c9ace5a2c4','active','Premium Tier',299.00,'GCash','12345678','proofs/MLP2kwXHnffyiqxmUH24v8pMd1vYE1mU704wSd7V.jpg',NULL,'2026-06-12 01:41:58','2026-07-12 01:41:58','2026-06-12 01:38:28','2026-06-12 01:41:58');
+/*!40000 ALTER TABLE `seller_subscriptions` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `sellerfunnelevents`
+--
+
+DROP TABLE IF EXISTS `sellerfunnelevents`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `sellerfunnelevents` (
+  `id` char(36) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL,
+  `sellerId` char(36) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL,
+  `productId` char(36) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL,
+  `customerId` char(36) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL,
+  `visitorSessionId` varchar(255) DEFAULT NULL,
+  `ipAddress` varchar(255) DEFAULT NULL,
+  `eventType` enum('add_to_cart') NOT NULL,
+  `createdAt` datetime NOT NULL,
+  PRIMARY KEY (`id`),
+  KEY `seller_funnel_events_seller_id` (`sellerId`),
+  KEY `seller_funnel_events_product_id` (`productId`),
+  KEY `seller_funnel_events_customer_id` (`customerId`),
+  KEY `seller_funnel_events_visitor_session_id` (`visitorSessionId`),
+  KEY `seller_funnel_events_event_type` (`eventType`),
+  KEY `seller_funnel_events_created_at` (`createdAt`),
+  CONSTRAINT `sellerfunnelevents_ibfk_1` FOREIGN KEY (`sellerId`) REFERENCES `users` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `sellerfunnelevents_ibfk_10` FOREIGN KEY (`sellerId`) REFERENCES `users` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `sellerfunnelevents_ibfk_11` FOREIGN KEY (`productId`) REFERENCES `products` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `sellerfunnelevents_ibfk_12` FOREIGN KEY (`customerId`) REFERENCES `users` (`id`) ON DELETE SET NULL ON UPDATE CASCADE,
+  CONSTRAINT `sellerfunnelevents_ibfk_13` FOREIGN KEY (`sellerId`) REFERENCES `users` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `sellerfunnelevents_ibfk_14` FOREIGN KEY (`productId`) REFERENCES `products` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `sellerfunnelevents_ibfk_15` FOREIGN KEY (`customerId`) REFERENCES `users` (`id`) ON DELETE SET NULL ON UPDATE CASCADE,
+  CONSTRAINT `sellerfunnelevents_ibfk_16` FOREIGN KEY (`sellerId`) REFERENCES `users` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `sellerfunnelevents_ibfk_17` FOREIGN KEY (`productId`) REFERENCES `products` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `sellerfunnelevents_ibfk_18` FOREIGN KEY (`customerId`) REFERENCES `users` (`id`) ON DELETE SET NULL ON UPDATE CASCADE,
+  CONSTRAINT `sellerfunnelevents_ibfk_19` FOREIGN KEY (`sellerId`) REFERENCES `users` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `sellerfunnelevents_ibfk_2` FOREIGN KEY (`productId`) REFERENCES `products` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `sellerfunnelevents_ibfk_20` FOREIGN KEY (`productId`) REFERENCES `products` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `sellerfunnelevents_ibfk_21` FOREIGN KEY (`customerId`) REFERENCES `users` (`id`) ON DELETE SET NULL ON UPDATE CASCADE,
+  CONSTRAINT `sellerfunnelevents_ibfk_22` FOREIGN KEY (`sellerId`) REFERENCES `users` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `sellerfunnelevents_ibfk_23` FOREIGN KEY (`productId`) REFERENCES `products` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `sellerfunnelevents_ibfk_24` FOREIGN KEY (`customerId`) REFERENCES `users` (`id`) ON DELETE SET NULL ON UPDATE CASCADE,
+  CONSTRAINT `sellerfunnelevents_ibfk_25` FOREIGN KEY (`sellerId`) REFERENCES `users` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `sellerfunnelevents_ibfk_26` FOREIGN KEY (`productId`) REFERENCES `products` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `sellerfunnelevents_ibfk_27` FOREIGN KEY (`customerId`) REFERENCES `users` (`id`) ON DELETE SET NULL ON UPDATE CASCADE,
+  CONSTRAINT `sellerfunnelevents_ibfk_28` FOREIGN KEY (`sellerId`) REFERENCES `users` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `sellerfunnelevents_ibfk_29` FOREIGN KEY (`productId`) REFERENCES `products` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `sellerfunnelevents_ibfk_3` FOREIGN KEY (`customerId`) REFERENCES `users` (`id`) ON DELETE SET NULL ON UPDATE CASCADE,
+  CONSTRAINT `sellerfunnelevents_ibfk_30` FOREIGN KEY (`customerId`) REFERENCES `users` (`id`) ON DELETE SET NULL ON UPDATE CASCADE,
+  CONSTRAINT `sellerfunnelevents_ibfk_31` FOREIGN KEY (`sellerId`) REFERENCES `users` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `sellerfunnelevents_ibfk_32` FOREIGN KEY (`productId`) REFERENCES `products` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `sellerfunnelevents_ibfk_33` FOREIGN KEY (`customerId`) REFERENCES `users` (`id`) ON DELETE SET NULL ON UPDATE CASCADE,
+  CONSTRAINT `sellerfunnelevents_ibfk_34` FOREIGN KEY (`sellerId`) REFERENCES `users` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `sellerfunnelevents_ibfk_35` FOREIGN KEY (`productId`) REFERENCES `products` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `sellerfunnelevents_ibfk_36` FOREIGN KEY (`customerId`) REFERENCES `users` (`id`) ON DELETE SET NULL ON UPDATE CASCADE,
+  CONSTRAINT `sellerfunnelevents_ibfk_37` FOREIGN KEY (`sellerId`) REFERENCES `users` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `sellerfunnelevents_ibfk_38` FOREIGN KEY (`productId`) REFERENCES `products` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `sellerfunnelevents_ibfk_39` FOREIGN KEY (`customerId`) REFERENCES `users` (`id`) ON DELETE SET NULL ON UPDATE CASCADE,
+  CONSTRAINT `sellerfunnelevents_ibfk_4` FOREIGN KEY (`sellerId`) REFERENCES `users` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `sellerfunnelevents_ibfk_40` FOREIGN KEY (`sellerId`) REFERENCES `users` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `sellerfunnelevents_ibfk_41` FOREIGN KEY (`productId`) REFERENCES `products` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `sellerfunnelevents_ibfk_42` FOREIGN KEY (`customerId`) REFERENCES `users` (`id`) ON DELETE SET NULL ON UPDATE CASCADE,
+  CONSTRAINT `sellerfunnelevents_ibfk_43` FOREIGN KEY (`sellerId`) REFERENCES `users` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `sellerfunnelevents_ibfk_44` FOREIGN KEY (`productId`) REFERENCES `products` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `sellerfunnelevents_ibfk_45` FOREIGN KEY (`customerId`) REFERENCES `users` (`id`) ON DELETE SET NULL ON UPDATE CASCADE,
+  CONSTRAINT `sellerfunnelevents_ibfk_46` FOREIGN KEY (`sellerId`) REFERENCES `users` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `sellerfunnelevents_ibfk_47` FOREIGN KEY (`productId`) REFERENCES `products` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `sellerfunnelevents_ibfk_48` FOREIGN KEY (`customerId`) REFERENCES `users` (`id`) ON DELETE SET NULL ON UPDATE CASCADE,
+  CONSTRAINT `sellerfunnelevents_ibfk_5` FOREIGN KEY (`productId`) REFERENCES `products` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `sellerfunnelevents_ibfk_6` FOREIGN KEY (`customerId`) REFERENCES `users` (`id`) ON DELETE SET NULL ON UPDATE CASCADE,
+  CONSTRAINT `sellerfunnelevents_ibfk_7` FOREIGN KEY (`sellerId`) REFERENCES `users` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `sellerfunnelevents_ibfk_8` FOREIGN KEY (`productId`) REFERENCES `products` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `sellerfunnelevents_ibfk_9` FOREIGN KEY (`customerId`) REFERENCES `users` (`id`) ON DELETE SET NULL ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `sellerfunnelevents`
+--
+
+LOCK TABLES `sellerfunnelevents` WRITE;
+/*!40000 ALTER TABLE `sellerfunnelevents` DISABLE KEYS */;
+/*!40000 ALTER TABLE `sellerfunnelevents` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `system_settings`
+--
+
+DROP TABLE IF EXISTS `system_settings`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `system_settings` (
+  `key` varchar(255) NOT NULL,
+  `value` varchar(255) NOT NULL,
+  `description` text DEFAULT NULL,
+  `createdAt` datetime NOT NULL,
+  `updatedAt` datetime NOT NULL,
+  PRIMARY KEY (`key`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `system_settings`
+--
+
+LOCK TABLES `system_settings` WRITE;
+/*!40000 ALTER TABLE `system_settings` DISABLE KEYS */;
+/*!40000 ALTER TABLE `system_settings` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `systemsettings`
+--
+
+DROP TABLE IF EXISTS `systemsettings`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `systemsettings` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `key` varchar(255) NOT NULL,
+  `value` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL CHECK (json_valid(`value`)),
+  `createdAt` datetime NOT NULL,
+  `updatedAt` datetime NOT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `key` (`key`),
+  UNIQUE KEY `key_2` (`key`),
+  UNIQUE KEY `key_3` (`key`),
+  UNIQUE KEY `key_4` (`key`),
+  UNIQUE KEY `key_5` (`key`),
+  UNIQUE KEY `key_6` (`key`),
+  UNIQUE KEY `key_7` (`key`),
+  UNIQUE KEY `key_8` (`key`),
+  UNIQUE KEY `key_9` (`key`),
+  UNIQUE KEY `key_10` (`key`),
+  UNIQUE KEY `key_11` (`key`),
+  UNIQUE KEY `key_12` (`key`),
+  UNIQUE KEY `key_13` (`key`),
+  UNIQUE KEY `key_14` (`key`),
+  UNIQUE KEY `key_15` (`key`),
+  UNIQUE KEY `key_16` (`key`),
+  UNIQUE KEY `key_17` (`key`)
+) ENGINE=InnoDB AUTO_INCREMENT=8 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `systemsettings`
+--
+
+LOCK TABLES `systemsettings` WRITE;
+/*!40000 ALTER TABLE `systemsettings` DISABLE KEYS */;
+INSERT INTO `systemsettings` VALUES (1,'verificationRequired','true','2026-04-25 21:22:31','2026-04-25 21:22:31'),(2,'publicLedger','true','2026-04-25 21:22:31','2026-04-25 21:22:31'),(3,'maintenanceMode','false','2026-04-25 21:22:31','2026-04-25 21:22:31'),(4,'landingPageBackground','\"http://127.0.0.1:5000/uploads/1777152151756-landing-bg.jpg\"','2026-04-25 21:22:31','2026-04-25 21:22:31'),(5,'landingPageBackgroundPosition','\"center\"','2026-04-25 21:22:31','2026-04-25 21:22:31'),(6,'maintenance_message','\"We are currently performing scheduled maintenance. We\'ll be back shortly.\"','2026-06-13 12:17:25','2026-06-13 12:17:25'),(7,'maintenance_mode','\"0\"','2026-06-13 12:20:00','2026-06-13 12:31:55');
+/*!40000 ALTER TABLE `systemsettings` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `users`
+--
+
+DROP TABLE IF EXISTS `users`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `users` (
+  `id` char(36) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL,
+  `name` varchar(255) NOT NULL,
+  `shopName` varchar(255) DEFAULT NULL,
+  `shopDescription` text DEFAULT NULL,
+  `email` varchar(255) NOT NULL,
+  `password` varchar(255) NOT NULL,
+  `role` enum('customer','seller','admin') DEFAULT 'customer',
+  `isPremium` tinyint(1) NOT NULL DEFAULT 0,
+  `premiumEndsAt` timestamp NULL DEFAULT NULL,
+  `isVerified` tinyint(1) DEFAULT 0,
+  `profilePhoto` varchar(255) DEFAULT NULL,
+  `businessPermit` varchar(255) DEFAULT NULL,
+  `cart` longtext DEFAULT NULL,
+  `mobileNumber` varchar(255) DEFAULT NULL,
+  `gcashNumber` varchar(255) DEFAULT NULL,
+  `gcashQrCode` varchar(255) DEFAULT NULL,
+  `mayaNumber` varchar(255) DEFAULT NULL,
+  `mayaQrCode` varchar(255) DEFAULT NULL,
+  `facebookLink` varchar(255) DEFAULT NULL,
+  `instagramLink` varchar(255) DEFAULT NULL,
+  `tiktokLink` varchar(255) DEFAULT NULL,
+  `youtubeLink` varchar(255) DEFAULT NULL,
+  `socialLinks` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL CHECK (json_valid(`socialLinks`)),
+  `shopHouseNo` varchar(255) DEFAULT NULL,
+  `shopStreet` varchar(255) DEFAULT NULL,
+  `shopAddress` varchar(255) DEFAULT NULL,
+  `shopBarangay` varchar(255) DEFAULT NULL,
+  `shopCity` varchar(255) DEFAULT NULL,
+  `shopProvince` varchar(255) DEFAULT NULL,
+  `shopPostalCode` varchar(255) DEFAULT NULL,
+  `shopLatitude` float DEFAULT NULL,
+  `shopLongitude` float DEFAULT NULL,
+  `isAdult` tinyint(1) DEFAULT 0,
+  `fcmToken` varchar(255) DEFAULT NULL,
+  `followers` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL CHECK (json_valid(`followers`)),
+  `following` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL CHECK (json_valid(`following`)),
+  `resetPasswordToken` varchar(255) DEFAULT NULL,
+  `resetPasswordExpires` datetime DEFAULT NULL,
+  `passwordChangedAt` datetime DEFAULT NULL,
+  `status` enum('active','frozen','blocked','rejected') DEFAULT 'active',
+  `violationReason` text DEFAULT NULL,
+  `rejectionReason` text DEFAULT NULL,
+  `sessionVersion` int(11) DEFAULT 0,
+  `googleId` varchar(255) DEFAULT NULL,
+  `createdAt` datetime NOT NULL,
+  `updatedAt` datetime NOT NULL,
+  `bio` text DEFAULT NULL,
+  `username` varchar(255) DEFAULT NULL,
+  `loginAttempts` int(11) DEFAULT 0,
+  `loginLockedUntil` datetime DEFAULT NULL,
+  `birthday` date DEFAULT NULL,
+  `gender` enum('male','female','other') DEFAULT NULL,
+  `hasPasswordSet` tinyint(1) DEFAULT 1,
+  `residencyCertificate` varchar(255) DEFAULT NULL,
+  `birDocument` varchar(255) DEFAULT NULL,
+  `isMayaAvailable` tinyint(1) NOT NULL DEFAULT 0,
+  `isGcashAvailable` tinyint(1) NOT NULL DEFAULT 1,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `email` (`email`),
+  UNIQUE KEY `users_email` (`email`),
+  UNIQUE KEY `email_2` (`email`),
+  UNIQUE KEY `email_3` (`email`),
+  UNIQUE KEY `email_4` (`email`),
+  UNIQUE KEY `email_5` (`email`),
+  UNIQUE KEY `email_6` (`email`),
+  UNIQUE KEY `email_7` (`email`),
+  UNIQUE KEY `email_8` (`email`),
+  UNIQUE KEY `email_9` (`email`),
+  UNIQUE KEY `email_10` (`email`),
+  UNIQUE KEY `email_11` (`email`),
+  UNIQUE KEY `email_12` (`email`),
+  UNIQUE KEY `email_13` (`email`),
+  UNIQUE KEY `email_14` (`email`),
+  UNIQUE KEY `email_15` (`email`),
+  UNIQUE KEY `email_16` (`email`),
+  UNIQUE KEY `email_17` (`email`),
+  UNIQUE KEY `username` (`username`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `users`
+--
+
+LOCK TABLES `users` WRITE;
+/*!40000 ALTER TABLE `users` DISABLE KEYS */;
+INSERT INTO `users` VALUES ('3a522612-4462-477f-a690-a530e1559b9b','customer',NULL,NULL,'customer@lumbarong.com','$2y$12$xYLzIs4FNsCVmMoMtZXcW.DR.AyZsEjwzApQZXwLp2fwdjAuLpKmS','customer',0,NULL,1,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,0,NULL,NULL,NULL,NULL,NULL,NULL,'active',NULL,NULL,0,NULL,'2026-06-05 10:15:57','2026-06-13 15:28:50',NULL,'customer',0,NULL,NULL,NULL,1,NULL,NULL,0,1),('4213bfe2-e963-4f01-8436-7f5e935c527d','Juan Dela Cruz',NULL,NULL,'customer@gmail.com','$2y$12$Z5cS1AWOmOupwOaBuBagp./QczovjLNjQezWx2zHYifpuxKGFt3bO','customer',0,NULL,0,NULL,NULL,'[]','0994874899',NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,'[]',NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,0,NULL,NULL,NULL,NULL,NULL,NULL,'active',NULL,NULL,0,NULL,'2026-04-25 21:19:03','2026-06-13 15:28:50',NULL,NULL,0,NULL,'2001-10-05',NULL,1,NULL,NULL,0,1),('5bb6120f-3edf-4d91-9664-0c26c1103bca','Ramil Bonifacio',NULL,NULL,'customer1@gmail.com','$2y$12$YQ1jVCZnp4cZ9CFXevmufuha8aLmRjBQtO/nY1LSJYlmRr0zR8inK','customer',0,NULL,1,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,0,NULL,NULL,NULL,NULL,NULL,NULL,'active',NULL,NULL,0,NULL,'2026-06-13 15:32:14','2026-06-13 15:32:14',NULL,'Ramil Bonifacio',0,NULL,NULL,NULL,1,NULL,NULL,0,1),('5ed7ac82-0725-469c-9f98-346f1e4a291d','ailo',NULL,NULL,'ailo@gmail.com','$2y$12$lZfzZhC/4eMX2A3P9ReYR.GFQ/BBX7V/lM8ceHLFEpPKxxxr/MOem','customer',0,NULL,0,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,'[]',NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,0,NULL,NULL,NULL,NULL,NULL,NULL,'active',NULL,NULL,0,NULL,'2026-04-25 22:29:28','2026-06-13 15:28:51',NULL,NULL,0,NULL,NULL,NULL,1,NULL,NULL,0,1),('654b10d0-f50b-435b-90aa-5ab65744fd83','testuser2',NULL,NULL,'testuser2@example.com','$2y$12$2Tamm0Zx2Dkp3yR.s92wjuVsperf2u0NcrsVGxMu0wLwCZOC0p/Vu','customer',0,NULL,1,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,0,NULL,NULL,NULL,NULL,NULL,NULL,'active',NULL,NULL,0,NULL,'2026-06-12 08:35:08','2026-06-13 15:28:51',NULL,'testuser2',0,NULL,NULL,NULL,1,NULL,NULL,0,1),('7b52819f-8981-4570-bb27-21ea3621a8a2','Maganos Embroidery','Maganos Embroidery',NULL,'maganos@gmail.com','$2y$12$b4I5fiE8PBCv5e/o8lHwk.7ZU.Ew6FIIUn3ya2fV6ZYDFgQoBcMcG','seller',0,NULL,1,NULL,'validId-9fa8fa66-1c3f-4b8a-b43d-78cad5a95dda.jpg','[]','09948774899','09948774899','qrcodes/dxcVvP5H1KiVrTcKZLfXIzddIGXE5gvZG8M20RIt.jpg','0994874899','qrcodes/BzFgVJviQutknKUUUYlZVqoiijkKr7JisEqxPBtA.jpg',NULL,NULL,NULL,NULL,'[]',NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,0,NULL,NULL,NULL,NULL,NULL,NULL,'active',NULL,NULL,0,NULL,'2026-06-03 11:27:30','2026-06-13 15:28:51',NULL,NULL,0,NULL,NULL,NULL,1,'residencyCertificate-eb5c05b7-a566-4f66-89b6-93618dbfff78.png','birCertificate-183cd505-74dd-43ea-a6ac-09ce5275443c.jpg',0,0),('9382810d-dbe8-471e-854d-7362feb4c8b7','testuser',NULL,NULL,'testuser123@example.com','$2y$12$125m1tP2NXwidoldGVlUqucTEr.9XkOVSAvUKgXD4YJvf0UIfgedC','customer',0,NULL,1,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,0,NULL,NULL,NULL,NULL,NULL,NULL,'active',NULL,NULL,0,NULL,'2026-06-05 11:43:42','2026-06-13 15:28:51',NULL,'testuser',0,NULL,NULL,NULL,1,NULL,NULL,0,1),('d8c82309-a05c-4ba4-a4f4-b780ada43286','Super Admin',NULL,NULL,'admin@gmail.com','$2y$12$EIJifwZ8UiMxtTdhBjvyaOraaU0gYBr7HSlocRyrBHUk5r2DFQrli','admin',0,NULL,1,NULL,NULL,'[]',NULL,'09123456789','qrcodes/XoFzudJPm8mRybpxf5pHHiK1VYOfKX9d4GZ5OCuY.jpg','0994874899','qrcodes/GBBruTc1QFHMDA4X5gEfuifIyTw5mUE82KvaQKLH.jpg',NULL,NULL,NULL,NULL,'[]',NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,0,NULL,NULL,NULL,NULL,NULL,NULL,'active',NULL,NULL,0,NULL,'2026-04-25 21:19:03','2026-06-13 15:28:52',NULL,NULL,0,NULL,NULL,NULL,1,NULL,NULL,1,1),('e12a0e73-8572-431b-838d-71c9ace5a2c4','Dan Karindirya','Dan Karindirya','magaganda gawa namin bili na kayo','seller@gmail.com','$2y$12$tQ0/xL1/2p6pOBqWNIOi7u2A7ob7AZhe66lgBl5KUC1w8Dvm6xuxi','seller',1,'2026-07-12 01:41:58',1,'profiles/1pnzuSGGyq5XLohojqLcWOlyvaAMSuNyUJ2PqTl8.gif',NULL,'[]','09123456789','09123456789','qrcodes/Wi3V8wBiZSjDpyzzvE7bfXBIPJhG1wQeP8NYQ1LS.jpg','0994874899','qrcodes/NAz0beAXcfpc1DxyNgqkKAXF9h5GrHTWwQTjus6t.jpg',NULL,NULL,NULL,NULL,'[]',NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,1,NULL,NULL,NULL,NULL,NULL,NULL,'active',NULL,NULL,0,NULL,'2026-04-25 21:19:03','2026-06-13 15:28:52',NULL,NULL,0,NULL,NULL,NULL,1,NULL,NULL,0,0);
+/*!40000 ALTER TABLE `users` ENABLE KEYS */;
+UNLOCK TABLES;
+/*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
+
+/*!40101 SET SQL_MODE=@OLD_SQL_MODE */;
+/*!40014 SET FOREIGN_KEY_CHECKS=@OLD_FOREIGN_KEY_CHECKS */;
+/*!40014 SET UNIQUE_CHECKS=@OLD_UNIQUE_CHECKS */;
+/*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
+/*!40101 SET CHARACTER_SET_RESULTS=@OLD_CHARACTER_SET_RESULTS */;
+/*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
+/*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
+
+-- Dump completed on 2026-06-13 23:46:49
