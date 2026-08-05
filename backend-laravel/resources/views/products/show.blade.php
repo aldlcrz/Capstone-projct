@@ -280,7 +280,6 @@
                                 </div>
                             </div>
                         </div>
-                        </div>
 
                         <!-- Row 4: Quantity -->
                         <div class="flex items-center gap-4">
@@ -317,7 +316,6 @@
                         </div>
 
                     </div>
-                </div>
 
                 <!-- Bottom Stacked Action Buttons -->
                 <div class="flex flex-col gap-3 mt-8">
