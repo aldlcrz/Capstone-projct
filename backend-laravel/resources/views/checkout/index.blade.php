@@ -336,7 +336,7 @@
                         </div>
                     </div>
                 </template>
-                <a href="/profile#addresses" class="flex items-center justify-center gap-2 p-4 border-2 border-dashed border-gray-200 rounded-2xl text-sm font-bold text-gray-400 hover:text-black hover:border-black transition-all">
+                <a href="{{ route('profile.addresses') }}" class="flex items-center justify-center gap-2 p-4 border-2 border-dashed border-gray-200 rounded-2xl text-sm font-bold text-gray-400 hover:text-black hover:border-black transition-all">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
                     Manage Addresses
                 </a>
