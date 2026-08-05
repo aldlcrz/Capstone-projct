@@ -14,6 +14,11 @@ Route::get('/', [WebController::class, 'index'])->name('home');
 Route::get('/products/{id}', [WebController::class, 'productDetails'])->name('products.show');
 Route::get('/shops/{id}', [WebController::class, 'sellerShop'])->name('shops.show');
 
+// Public Pages
+Route::get('/about', function() { return view('pages.about'); })->name('about');
+Route::get('/privacy', function() { return view('pages.privacy'); })->name('privacy');
+Route::get('/terms', function() { return view('pages.terms'); })->name('terms');
+
 // Auth Routes
 Route::middleware('guest')->group(function () {
     Route::get('/login', [WebAuthController::class, 'showLogin'])->name('login');
