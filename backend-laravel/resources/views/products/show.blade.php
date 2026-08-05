@@ -40,23 +40,33 @@
             <div class="lg:col-span-5 flex flex-col space-y-6">
                 <!-- Main Image Box with Tag -->
                 <div 
-                    class="relative aspect-4/5 bg-gray-50 rounded-2xl overflow-hidden border border-gray-100 shadow-sm group cursor-zoom-in"
+                    class="relative aspect-4/5 bg-gray-50 rounded-2xl overflow-hidden border border-gray-100 shadow-sm group select-none"
+                    :class="isZoomed ? 'cursor-zoom-out' : 'cursor-zoom-in'"
                     x-data="{
                         isZoomed: false,
                         originX: 50,
                         originY: 50,
-                        handleMouseMove(e) {
+                        toggleZoom(e) {
                             const rect = e.currentTarget.getBoundingClientRect();
                             const x = ((e.clientX - rect.left) / rect.width) * 100;
                             const y = ((e.clientY - rect.top) / rect.height) * 100;
                             this.originX = x.toFixed(2);
                             this.originY = y.toFixed(2);
-                            this.isZoomed = true;
+                            this.isZoomed = !this.isZoomed;
+                        },
+                        handleMouseMove(e) {
+                            if (!this.isZoomed) return;
+                            const rect = e.currentTarget.getBoundingClientRect();
+                            const x = ((e.clientX - rect.left) / rect.width) * 100;
+                            const y = ((e.clientY - rect.top) / rect.height) * 100;
+                            this.originX = x.toFixed(2);
+                            this.originY = y.toFixed(2);
                         },
                         handleMouseLeave() {
                             this.isZoomed = false;
                         }
                     }"
+                    @click="toggleZoom($event)"
                     @mousemove="handleMouseMove($event)"
                     @mouseleave="handleMouseLeave()"
                 >
