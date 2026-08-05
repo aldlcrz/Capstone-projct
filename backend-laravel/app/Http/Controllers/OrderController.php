@@ -177,6 +177,20 @@ class OrderController extends Controller
                 $this->sendNotification($customerId, 'Order placed', 'Your order has been placed successfully and is awaiting confirmation.', 'order', '/orders', 'customer');
                 $this->sendNotification($sellerId, 'New order received', 'A customer has placed a new order in your shop.', 'order', '/seller/orders', 'seller');
 
+                // Gmail Notifications
+                $customerUser = User::find($customerId);
+                $sellerUser   = User::find($sellerId);
+
+                if ($customerUser && $customerUser->email) {
+                    $cMail = new \App\Mail\OrderStatusUpdatedMail($customerUser->name, $order->id, 'Order Confirmed', 'Your order has been placed successfully.');
+                    \App\Services\EmailNotificationService::sendNotification($customerUser->email, $cMail, 'order_status_updated', $customerUser->id, 'Order', $order->id);
+                }
+
+                if ($sellerUser && $sellerUser->email) {
+                    $sMail = new \App\Mail\NewOrderSellerMail($sellerUser->name, $order->id, (float) $calculatedTotal);
+                    \App\Services\EmailNotificationService::sendNotification($sellerUser->email, $sMail, 'new_order', $sellerUser->id, 'Order', $order->id);
+                }
+
                 return response()->json($order->load(['seller', 'items.product']), 201);
             });
         } catch (\Exception $e) {
@@ -218,6 +232,13 @@ class OrderController extends Controller
         ][$request->status] ?? "Your order status is now {$request->status}.";
 
         $this->sendNotification($order->customerId, "Order {$request->status}", $statusMsg, 'order', '/orders', 'customer');
+
+        // Gmail Notification to Customer
+        $customerUser = User::find($order->customerId);
+        if ($customerUser && $customerUser->email) {
+            $mailable = new \App\Mail\OrderStatusUpdatedMail($customerUser->name, $order->id, $request->status, $statusMsg);
+            \App\Services\EmailNotificationService::sendNotification($customerUser->email, $mailable, 'order_status_updated', $customerUser->id, 'Order', $order->id);
+        }
 
         return response()->json($order->load(['customer', 'seller', 'items.product']));
     }

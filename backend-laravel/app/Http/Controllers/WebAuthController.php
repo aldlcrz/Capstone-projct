@@ -48,6 +48,14 @@ class WebAuthController extends Controller
                 ])->onlyInput('email');
             }
 
+            if (!$user->isVerified) {
+                Auth::logout();
+                session(['verify_email' => $user->email]);
+                return redirect()->route('verify.email')->withErrors([
+                    'code' => 'Please verify your Gmail address to activate your account.',
+                ]);
+            }
+
             $request->session()->regenerate();
 
             // Restore cart: merge saved DB cart with any current guest session cart
@@ -93,28 +101,38 @@ class WebAuthController extends Controller
     public function register(Request $request)
     {
         $validator = Validator::make($request->all(), [
-            'username' => 'required|string|max:255|unique:users',
-            'email'    => 'required|string|email|max:255|unique:users',
+            'username' => 'required|string|max:255|unique:users,username',
+            'email'    => 'required|string|email|max:255|unique:users,email',
             'password' => 'required|string|min:6|confirmed',
+        ], [
+            'email.unique' => 'This Gmail address is already registered. Please log in or use a different address.',
+            'username.unique' => 'This username is already taken.',
         ]);
 
         if ($validator->fails()) {
             return back()->withErrors($validator)->withInput();
         }
 
+        $email = strtolower(trim($request->email));
+
         $user = User::create([
-            'name' => $request->username, // Default name to username
-            'username' => $request->username,
-            'email' => strtolower($request->email),
-            'password' => Hash::make($request->password),
-            'role' => 'customer',
-            'status' => 'active',
-            'isVerified' => true,
+            'name'       => $request->username,
+            'username'   => $request->username,
+            'email'      => $email,
+            'password'   => Hash::make($request->password),
+            'role'       => 'customer',
+            'status'     => 'active',
+            'isVerified' => false, // Requires Gmail verification
         ]);
 
-        Auth::login($user);
+        // Generate verification code and send email
+        $verification = \App\Services\EmailNotificationService::createVerificationCode($email, 'registration');
+        $mailable = new \App\Mail\VerificationCodeMail($user->name, $verification->code);
+        \App\Services\EmailNotificationService::sendNotification($email, $mailable, 'email_verification', $user->id, 'User', $user->id);
 
-        return redirect('/');
+        session(['verify_email' => $email]);
+
+        return redirect()->route('verify.email')->with('success', 'Account created! Please enter the 6-digit verification code sent to your Gmail.');
     }
 
     public function showSellerRegister()
@@ -125,36 +143,39 @@ class WebAuthController extends Controller
     public function sellerRegister(Request $request)
     {
         $validator = Validator::make($request->all(), [
-            'name' => 'required|string|max:255',
-            'email' => 'required|string|email|max:255|unique:users',
-            'password' => 'required|string|min:6|confirmed',
-            'mobileNumber' => 'required|string|max:20',
-            'gcashNumber' => 'nullable|string|max:20',
+            'name'                 => 'required|string|max:255',
+            'email'                => 'required|string|email|max:255|unique:users,email',
+            'password'             => 'required|string|min:6|confirmed',
+            'mobileNumber'         => 'required|string|max:20',
+            'gcashNumber'          => 'nullable|string|max:20',
             'residencyCertificate' => 'required|file|mimes:jpg,jpeg,png,pdf|max:5120',
-            'birDocument' => 'required|file|mimes:jpg,jpeg,png,pdf|max:5120',
-            'shopName' => 'nullable|string|max:255',
-            'shopAddress' => 'nullable|string|max:1000',
-            'businessPermit' => 'required|file|mimes:jpg,jpeg,png,pdf|max:5120',
+            'birDocument'           => 'required|file|mimes:jpg,jpeg,png,pdf|max:5120',
+            'shopName'             => 'nullable|string|max:255',
+            'shopAddress'          => 'nullable|string|max:1000',
+            'businessPermit'       => 'required|file|mimes:jpg,jpeg,png,pdf|max:5120',
+        ], [
+            'email.unique' => 'This Gmail address is already registered. Please log in or use a different address.',
         ]);
 
         if ($validator->fails()) {
             return back()->withErrors($validator)->withInput();
         }
 
+        $email = strtolower(trim($request->email));
+
         $data = [
-            'name' => $request->name,
-            'email' => strtolower($request->email),
-            'password' => Hash::make($request->password),
+            'name'         => $request->name,
+            'email'        => $email,
+            'password'     => Hash::make($request->password),
             'mobileNumber' => $request->mobileNumber,
-            'gcashNumber' => $request->gcashNumber,
-            'shopName' => $request->shopName ?? $request->name . "'s Workshop",
-            'shopAddress' => $request->shopAddress ?? 'Not Provided',
-            'role' => 'seller',
-            'status' => 'active',
-            'isVerified' => false, // Needs admin approval
+            'gcashNumber'  => $request->gcashNumber,
+            'shopName'     => $request->shopName ?? $request->name . "'s Workshop",
+            'shopAddress'  => $request->shopAddress ?? 'Not Provided',
+            'role'         => 'seller',
+            'status'       => 'active',
+            'isVerified'   => false, // Requires Gmail verification & admin approval
         ];
 
-        // Handle file uploads
         if ($request->hasFile('residencyCertificate')) {
             $path = $request->file('residencyCertificate')->move(public_path('uploads/requirements'), time().'_residency.'.$request->file('residencyCertificate')->getClientOriginalExtension());
             $data['residencyCertificate'] = '/uploads/requirements/'.basename($path);
@@ -172,7 +193,11 @@ class WebAuthController extends Controller
 
         $user = User::create($data);
 
-        // Notify admins about the new seller registration
+        // Generate verification code and send email
+        $verification = \App\Services\EmailNotificationService::createVerificationCode($email, 'registration');
+        $mailable = new \App\Mail\VerificationCodeMail($user->name, $verification->code);
+        \App\Services\EmailNotificationService::sendNotification($email, $mailable, 'email_verification', $user->id, 'User', $user->id);
+
         \App\Models\Notification::sendToAdmins(
             'New Seller Application',
             "Artisan {$user->name} has submitted a verification application for shop '{$user->shopName}'.",
@@ -180,7 +205,65 @@ class WebAuthController extends Controller
             '/admin/sellers'
         );
 
-        return redirect()->route('login')->with('success', 'Your artisan application has been submitted and is awaiting approval.');
+        session(['verify_email' => $email]);
+
+        return redirect()->route('verify.email')->with('success', 'Application submitted! Please verify your Gmail address to proceed.');
+    }
+
+    public function showVerifyEmail()
+    {
+        return view('auth.verify-email');
+    }
+
+    public function verifyEmail(Request $request)
+    {
+        $request->validate([
+            'email' => 'required|email',
+            'code'  => 'required|string|size:6',
+        ]);
+
+        $email = strtolower(trim($request->email));
+        $isValid = \App\Services\EmailNotificationService::verifyCode($email, $request->code, 'registration');
+
+        if (!$isValid) {
+            return back()->withErrors(['code' => 'Invalid or expired verification code. Please request a new code if expired.']);
+        }
+
+        $user = User::where('email', $email)->first();
+        if ($user) {
+            $user->isVerified = true;
+            $user->save();
+            \App\Services\EmailNotificationService::consumeCode($email, 'registration');
+            Auth::login($user);
+            return redirect('/')->with('success', 'Your Gmail address has been verified successfully!');
+        }
+
+        return redirect()->route('login')->with('error', 'User account not found.');
+    }
+
+    public function resendVerificationCode(Request $request)
+    {
+        $request->validate(['email' => 'required|email']);
+        $email = strtolower(trim($request->email));
+        $user = User::where('email', $email)->first();
+
+        if (!$user) {
+            return back()->withErrors(['email' => 'No account found with this Gmail address.']);
+        }
+
+        $existing = \App\Models\EmailVerification::where('email', $email)->where('type', 'registration')->first();
+        if ($existing && $existing->last_sent_at && $existing->last_sent_at->diffInSeconds(now()) < 60) {
+            $secondsLeft = 60 - $existing->last_sent_at->diffInSeconds(now());
+            return back()->withErrors(['code' => "Please wait {$secondsLeft} seconds before requesting a new code."]);
+        }
+
+        $verification = \App\Services\EmailNotificationService::createVerificationCode($email, 'registration');
+        $mailable = new \App\Mail\VerificationCodeMail($user->name, $verification->code);
+        \App\Services\EmailNotificationService::sendNotification($email, $mailable, 'email_verification', $user->id, 'User', $user->id);
+
+        session(['verify_email' => $email]);
+
+        return back()->with('success', 'A new 6-digit verification code has been sent to your Gmail address.');
     }
 
     public function logout(Request $request)
@@ -267,10 +350,83 @@ class WebAuthController extends Controller
     public function forgotPassword(Request $request)
     {
         $request->validate(['email' => 'required|email']);
-        $user = User::where('email', strtolower($request->email))->first();
-        // Use Laravel's built-in password reset
-        \Illuminate\Support\Facades\Password::sendResetLink($request->only('email'));
-        return back()->with('status', 'If that email exists, a password reset link has been sent.');
+        $email = strtolower(trim($request->email));
+        $user = User::where('email', $email)->first();
+
+        if (!$user) {
+            return back()->withErrors(['email' => 'No registered account found with that Gmail address.']);
+        }
+
+        // Throttle resend if a code was recently sent within 60 seconds
+        $existing = \App\Models\EmailVerification::where('email', $email)->where('type', 'password_reset')->first();
+        if ($existing && $existing->last_sent_at && $existing->last_sent_at->diffInSeconds(now()) < 60) {
+            $secondsLeft = 60 - $existing->last_sent_at->diffInSeconds(now());
+            session(['reset_email' => $email]);
+            return redirect()->route('password.verify.code')->withErrors(['code' => "A code was recently sent. Please wait {$secondsLeft} seconds before requesting another code."]);
+        }
+
+        $verification = \App\Services\EmailNotificationService::createVerificationCode($email, 'password_reset');
+        $mailable = new \App\Mail\PasswordResetCodeMail($user->name, $verification->code);
+        \App\Services\EmailNotificationService::sendNotification($email, $mailable, 'forgot_password', $user->id, 'User', $user->id);
+
+        session(['reset_email' => $email]);
+
+        return redirect()->route('password.verify.code')->with('success', 'A 6-digit password reset code has been sent to your Gmail address.');
+    }
+
+    public function showVerifyResetCode()
+    {
+        return view('auth.verify-reset-code');
+    }
+
+    public function verifyResetCode(Request $request)
+    {
+        $request->validate([
+            'email' => 'required|email',
+            'code'  => 'required|string|size:6',
+        ]);
+
+        $email = strtolower(trim($request->email));
+        $isValid = \App\Services\EmailNotificationService::verifyCode($email, $request->code, 'password_reset');
+
+        if (!$isValid) {
+            return back()->withErrors(['code' => 'Invalid or expired password reset code. Please request a new code.']);
+        }
+
+        session(['validated_reset_email' => $email]);
+
+        return redirect()->route('password.reset.new')->with('success', 'Code verified! Please set your new password.');
+    }
+
+    public function showResetPassword()
+    {
+        if (!session('validated_reset_email')) {
+            return redirect()->route('password.request')->with('error', 'Session expired. Please request a password reset code again.');
+        }
+        return view('auth.reset-password');
+    }
+
+    public function resetPassword(Request $request)
+    {
+        $request->validate([
+            'email'    => 'required|email',
+            'password' => 'required|string|min:8|confirmed',
+        ]);
+
+        $email = strtolower(trim($request->email));
+
+        $user = User::where('email', $email)->first();
+        if (!$user) {
+            return redirect()->route('password.request')->with('error', 'User account not found.');
+        }
+
+        $user->password = Hash::make($request->password);
+        $user->save();
+
+        \App\Services\EmailNotificationService::consumeCode($email, 'password_reset');
+        session()->forget(['reset_email', 'validated_reset_email']);
+
+        return redirect()->route('login')->with('success', 'Password updated successfully! Please log in with your new password.');
     }
 
     public function updateProfile(Request $request)

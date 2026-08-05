@@ -25,8 +25,20 @@ Route::middleware('guest')->group(function () {
     Route::get('/register', [WebAuthController::class, 'showRegister'])->name('register');
     Route::get('/seller/register', [WebAuthController::class, 'showSellerRegister'])->name('seller.register');
     Route::post('/seller/register', [WebAuthController::class, 'sellerRegister'])->name('seller.register.submit');
+
+    // Email Verification Routes
+    Route::get('/verify-email', [WebAuthController::class, 'showVerifyEmail'])->name('verify.email');
+    Route::post('/verify-email', [WebAuthController::class, 'verifyEmail'])->name('verify.email.submit');
+    Route::post('/resend-verification', [WebAuthController::class, 'resendVerificationCode'])->name('verify.email.resend');
+
+    // 6-Digit Code Password Reset Routes
     Route::get('/forgot-password', function() { return view('auth.forgot-password'); })->name('password.request');
     Route::post('/forgot-password', [WebAuthController::class, 'forgotPassword'])->name('password.email');
+    Route::get('/forgot-password/verify', [WebAuthController::class, 'showVerifyResetCode'])->name('password.verify.code');
+    Route::post('/forgot-password/verify', [WebAuthController::class, 'verifyResetCode'])->name('password.verify.code.submit');
+    Route::get('/reset-password', [WebAuthController::class, 'showResetPassword'])->name('password.reset.new');
+    Route::post('/reset-password', [WebAuthController::class, 'resetPassword'])->name('password.update.submit');
+
     Route::post('/login', [WebAuthController::class, 'login']);
     Route::post('/register', [WebAuthController::class, 'register']);
     Route::post('/auth/google', [WebAuthController::class, 'handleGoogleLogin'])->name('auth.google');
@@ -146,6 +158,7 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->group(function () {
     Route::get('/maintenance', [\App\Http\Controllers\AdminSettingsController::class, 'maintenance'])->name('admin.maintenance');
     Route::post('/maintenance/toggle', [\App\Http\Controllers\AdminSettingsController::class, 'toggleMaintenance'])->name('admin.maintenance.toggle');
     Route::get('/audit-logs',  [\App\Http\Controllers\AdminSettingsController::class, 'auditLogs'])->name('admin.audit-logs');
+    Route::get('/email-logs',  [\App\Http\Controllers\AdminController::class, 'emailLogs'])->name('admin.email-logs');
     Route::get('/platform',    [\App\Http\Controllers\AdminSettingsController::class, 'platform'])->name('admin.platform');
 });
 

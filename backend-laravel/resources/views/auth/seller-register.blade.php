@@ -61,8 +61,8 @@
 </head>
 <body class="min-h-screen flex items-center justify-center p-6 relative overflow-hidden">
     <!-- Background Decor -->
-    <div class="absolute top-0 right-0 w-[560px] h-[560px] rounded-full -translate-y-1/2 translate-x-1/3 blur-3xl opacity-[0.04] pointer-events-none bg-[#C0422A]"></div>
-    <div class="absolute bottom-0 left-0 w-[380px] h-[380px] rounded-full translate-y-1/2 -translate-x-1/3 blur-3xl opacity-[0.12] pointer-events-none bg-[#D4B896]"></div>
+    <div class="absolute top-0 right-0 w-140 h-140 rounded-full -translate-y-1/2 translate-x-1/3 blur-3xl opacity-[0.04] pointer-events-none bg-[#C0422A]"></div>
+    <div class="absolute bottom-0 left-0 w-95 h-95 rounded-full translate-y-1/2 -translate-x-1/3 blur-3xl opacity-[0.12] pointer-events-none bg-[#D4B896]"></div>
 
     <div class="w-full max-w-xl bg-white rounded-[3rem] border border-[#E5DDD5] p-8 md:p-12 shadow-[0_20px_60px_rgba(60,40,20,0.08)] relative z-10 max-h-[95vh] overflow-y-auto no-scrollbar" 
          x-data="{ step: 1 }" x-cloak>
@@ -160,11 +160,15 @@
 
                 <div class="space-y-1">
                     <label class="text-[10px] font-bold uppercase tracking-widest px-5 block text-gray-400">Confirm Password</label>
-                    <div class="relative">
+                    <div class="relative" x-data="{ show: false }">
                         <span class="absolute left-8 top-1/2 -translate-y-1/2 opacity-20">
                             <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" /></svg>
                         </span>
-                        <input type="password" name="password_confirmation" required class="premium-input pl-16" placeholder="••••••••••••">
+                        <input :type="show ? 'text' : 'password'" name="password_confirmation" required class="premium-input pl-16 pr-16" placeholder="••••••••••••">
+                        <button type="button" @click="show = !show" class="absolute right-8 top-1/2 -translate-y-1/2 opacity-40 hover:opacity-100">
+                            <svg x-show="!show" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" /></svg>
+                            <svg x-show="show" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" x-cloak><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.878 9.878L5.136 5.136m13.727 13.727L13.875 18.825M21 12a10.025 10.025 0 01-1.12 4.5m-5.878-9.375l2.122-2.122m-8.484 8.484L5.136 5.136m13.727 13.727L21 12" /></svg>
+                        </button>
                     </div>
                 </div>
 

@@ -59,6 +59,12 @@ class RefundController extends Controller
             'targetRole' => 'seller',
         ]);
 
+        $sellerUser = \App\Models\User::find($order->sellerId);
+        if ($sellerUser && $sellerUser->email) {
+            $mailable = new \App\Mail\ReturnRefundRequestMail($sellerUser->name, $order->id, $request->reason, 'Refund');
+            \App\Services\EmailNotificationService::sendNotification($sellerUser->email, $mailable, 'return_refund_request', $sellerUser->id, 'Order', $order->id);
+        }
+
         return response()->json([
             'message' => 'Refund request submitted successfully.',
             'refundRequest' => $refundRequest,
@@ -113,6 +119,12 @@ class RefundController extends Controller
             'message' => "Your refund request has been {$request->status}.",
             'targetRole' => 'customer',
         ]);
+
+        $customerUser = \App\Models\User::find($refundRequest->customerId);
+        if ($customerUser && $customerUser->email) {
+            $mailable = new \App\Mail\ReturnRefundStatusMail($customerUser->name, $refundRequest->orderId, $request->status, $request->sellerComment, 'Refund');
+            \App\Services\EmailNotificationService::sendNotification($customerUser->email, $mailable, 'return_refund_update', $customerUser->id, 'Order', $refundRequest->orderId);
+        }
 
         return response()->json([
             'message' => 'Refund request updated successfully.',

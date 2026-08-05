@@ -684,22 +684,72 @@ class AdminController extends Controller
 
     public function approveProductWeb(string $id)
     {
-        $product = Product::findOrFail($id);
+        $product = Product::with('seller')->findOrFail($id);
         $product->status          = 'approved';
         $product->rejectionReason = null;
         $product->save();
+
         $this->sendNotification($product->sellerId, 'Product Approved', "Your product \"{$product->name}\" is now live!", 'product_approved', '/seller/products', 'seller');
-        return redirect()->back()->with('success', 'Product approved.');
+
+        // Email Seller
+        if ($product->seller && $product->seller->email) {
+            $mailable = new \App\Mail\ProductApprovedMail($product->seller->name, $product->name, $product->id);
+            \App\Services\EmailNotificationService::sendNotification($product->seller->email, $mailable, 'product_approved', $product->sellerId, 'Product', $product->id);
+        }
+
+        // Email Active Customers about New Available Product or Discounted Product
+        $activeCustomers = User::where('role', 'customer')->where('status', 'active')->get();
+        $shopName = $product->seller->shopName ?? $product->seller->name ?? 'Artisan';
+
+        foreach ($activeCustomers as $customer) {
+            if ($customer->email) {
+                if ($product->is_on_sale && $product->discount_percentage > 0) {
+                    $salePrice = round((float) $product->price * (1 - ($product->discount_percentage / 100)), 2);
+                    $dMail = new \App\Mail\ProductDiscountMail(
+                        $customer->name,
+                        $product->name,
+                        $shopName,
+                        (float) $product->price,
+                        $salePrice,
+                        (float) $product->discount_percentage,
+                        $product->id
+                    );
+                    \App\Services\EmailNotificationService::sendNotification($customer->email, $dMail, 'product_discount_alert', $customer->id, 'Product', $product->id);
+                } else {
+                    $cMail = new \App\Mail\NewProductAvailableMail($customer->name, $product->name, $shopName, (float) $product->price, $product->id);
+                    \App\Services\EmailNotificationService::sendNotification($customer->email, $cMail, 'new_product_alert', $customer->id, 'Product', $product->id);
+                }
+            }
+        }
+
+        return redirect()->back()->with('success', 'Product approved and notifications sent.');
     }
 
     public function rejectProductWeb(Request $request, string $id)
     {
-        $product = Product::findOrFail($id);
+        $product = Product::with('seller')->findOrFail($id);
         $product->status          = 'rejected';
         $product->rejectionReason = $request->reason ?? 'Rejected by admin.';
         $product->save();
+
         $this->sendNotification($product->sellerId, 'Product Rejected', "Your product \"{$product->name}\" was rejected. Reason: {$product->rejectionReason}", 'product_rejected', '/seller/products', 'seller');
+
+        // Email Seller with Specific Rejection Reason
+        if ($product->seller && $product->seller->email) {
+            $mailable = new \App\Mail\ProductRejectedMail($product->seller->name, $product->name, $product->id, $product->rejectionReason);
+            \App\Services\EmailNotificationService::sendNotification($product->seller->email, $mailable, 'product_rejected', $product->sellerId, 'Product', $product->id);
+        }
+
         return redirect()->back()->with('success', 'Product rejected.');
+    }
+
+    public function emailLogs()
+    {
+        $logs = \App\Models\EmailLog::with('user')
+            ->orderByDesc('created_at')
+            ->paginate(20);
+
+        return view('admin.email-logs', compact('logs'));
     }
 
     public function reports(Request $request)

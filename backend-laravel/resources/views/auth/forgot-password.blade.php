@@ -14,7 +14,7 @@
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
 </head>
 <body class="min-h-screen flex items-center justify-center p-6 relative overflow-hidden">
-    <div class="absolute top-0 right-0 w-[560px] h-[560px] rounded-full -translate-y-1/2 translate-x-1/3 blur-3xl opacity-[0.04] pointer-events-none bg-[#C0422A]"></div>
+    <div class="absolute top-0 right-0 w-140 h-140 rounded-full -translate-y-1/2 translate-x-1/3 blur-3xl opacity-[0.04] pointer-events-none bg-[#C0422A]"></div>
     
     <div class="w-full max-w-md bg-white rounded-[2.5rem] border border-[#E5DDD5] p-8 shadow-[0_20px_60px_rgba(60,40,20,0.08)] relative z-10">
         <div class="relative mb-10 text-center">
@@ -54,20 +54,27 @@
         </div>
         @endif
 
+        @if($errors->any())
+            <div class="bg-rose-50 border border-rose-200 text-rose-700 px-4 py-3 rounded-2xl text-xs font-bold mb-4">
+                {{ $errors->first() }}
+            </div>
+        @endif
+
         <form action="/forgot-password" method="POST" class="space-y-6">
             @csrf
             <div class="space-y-2">
-                <label class="text-[10px] font-bold uppercase tracking-widest px-5 block text-gray-500">Email Address</label>
+                <label class="text-[10px] font-bold uppercase tracking-widest px-5 block text-gray-500">Registered Gmail Address</label>
                 <input 
                     type="email" 
                     name="email" 
                     required 
+                    placeholder="example@gmail.com"
                     class="w-full h-14 bg-[#F9F6F2] rounded-full px-8 text-sm font-medium border-2 border-transparent focus:border-[#C0422A] focus:bg-white outline-none transition-all"
                 >
             </div>
 
             <button type="submit" class="w-full h-14 bg-[#3D2B1F] text-white rounded-full font-bold uppercase tracking-[0.2em] text-[10px] shadow-xl shadow-black/10 hover:bg-[#C0422A] transition-all">
-                Send Reset Link
+                Send 6-Digit Reset Code
             </button>
         </form>
 

@@ -247,6 +247,18 @@ class CheckoutController extends Controller
                 // Send notifications for order placement
                 \App\Models\Notification::send(Auth::id(), 'Order Placed', 'Your order has been placed successfully and is awaiting confirmation.', 'order', '/orders/' . $orderId, 'customer');
                 \App\Models\Notification::send($sellerId, 'New order received', 'A customer has placed a new order in your shop.', 'order', '/seller/orders', 'seller');
+
+                // Gmail Notifications
+                $customerUser = Auth::user();
+                if ($customerUser && $customerUser->email) {
+                    $cMail = new \App\Mail\OrderStatusUpdatedMail($customerUser->name, $orderId, 'Order Confirmed', 'Your order has been placed successfully and confirmed.');
+                    \App\Services\EmailNotificationService::sendNotification($customerUser->email, $cMail, 'order_status_updated', $customerUser->id, 'Order', $orderId);
+                }
+
+                if ($sellerUser && $sellerUser->email) {
+                    $sMail = new \App\Mail\NewOrderSellerMail($sellerUser->name, $orderId, (float) $totalAmount);
+                    \App\Services\EmailNotificationService::sendNotification($sellerUser->email, $sMail, 'new_order', $sellerUser->id, 'Order', $orderId);
+                }
                 
                 $orders[] = $order;
             }
