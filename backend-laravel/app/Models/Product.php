@@ -92,6 +92,14 @@ class Product extends Model
     }
 
     /**
+     * Get the clean product name handling special characters like ñ.
+     */
+    public function getNameAttribute($value): string
+    {
+        return str_replace(['Pi??a', 'Pi?a'], 'Piña', $value ?? '');
+    }
+
+    /**
      * Get the final sale price after discount.
      */
     public function getSalePriceAttribute(): float

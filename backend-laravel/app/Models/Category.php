@@ -78,6 +78,14 @@ class Category extends Model
     }
 
     /**
+     * Get the clean category name handling special characters like ñ.
+     */
+    public function getNameAttribute($value): string
+    {
+        return str_replace(['Pi??a', 'Pi?a'], 'Piña', $value ?? '');
+    }
+
+    /**
      * Get the products for the category.
      */
     public function products()
