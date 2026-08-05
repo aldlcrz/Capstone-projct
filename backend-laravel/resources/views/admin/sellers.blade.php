@@ -1,7 +1,18 @@
 @extends('layouts.admin')
 
 @section('content')
-<div class="space-y-8">
+<div class="space-y-8" x-data="{
+    suspendModal: false,
+    suspendSellerId: null,
+    suspendSellerName: '',
+    suspendReason: '',
+    openSuspend(seller) {
+        this.suspendSellerId = seller.id;
+        this.suspendSellerName = seller.name;
+        this.suspendReason = '';
+        this.suspendModal = true;
+    }
+}">
     <div>
         <div class="text-[10px] font-bold text-[#C0422A] uppercase tracking-[0.2em] mb-1">Artisan Registry</div>
         <h1 class="font-serif text-3xl font-bold text-black">Seller <span class="text-gray-300 font-light italic">Management</span></h1>
@@ -47,11 +58,7 @@
                         @csrf @method('PATCH')
                         <button type="submit" class="px-5 py-2 bg-green-600 text-white rounded-xl text-[9px] font-black uppercase tracking-widest hover:bg-green-700 transition-all">Verify</button>
                     </form>
-                    <form action="/admin/sellers/{{ $seller->id }}/suspend" method="POST">
-                        @csrf @method('PATCH')
-                        <input type="hidden" name="reason" value="Application rejected by admin.">
-                        <button type="submit" class="px-5 py-2 bg-red-50 text-red-600 rounded-xl text-[9px] font-black uppercase tracking-widest hover:bg-red-500 hover:text-white transition-all">Reject</button>
-                    </form>
+                    <button type="button" @click="openSuspend({{ json_encode($seller) }})" class="px-5 py-2 bg-red-50 text-red-600 rounded-xl text-[9px] font-black uppercase tracking-widest hover:bg-red-500 hover:text-white transition-all">Reject / Suspend</button>
                 </div>
             </div>
             @endforeach
@@ -104,11 +111,9 @@
                     <td class="px-6 py-4">
                         <div class="flex items-center justify-end gap-2">
                             @if($seller->status === 'active')
-                                <form action="/admin/sellers/{{ $seller->id }}/suspend" method="POST" onsubmit="return confirm('Suspend this seller?')">
-                                    @csrf @method('PATCH')
-                                    <input type="hidden" name="reason" value="Suspended by admin.">
-                                    <button type="submit" class="px-4 py-2 bg-red-50 text-red-600 rounded-lg text-[9px] font-black uppercase tracking-widest hover:bg-red-500 hover:text-white transition-all">Suspend</button>
-                                </form>
+                                <button type="button" @click="openSuspend({{ json_encode($seller) }})" class="px-4 py-2 bg-red-50 text-red-600 rounded-lg text-[9px] font-black uppercase tracking-widest hover:bg-red-500 hover:text-white transition-all">
+                                    Suspend
+                                </button>
                             @else
                                 <form action="/admin/sellers/{{ $seller->id }}/verify" method="POST">
                                     @csrf @method('PATCH')
@@ -119,11 +124,37 @@
                     </td>
                 </tr>
                 @empty
-                <tr><td colspan="5" class="py-16 text-center text-sm text-gray-300 italic">No sellers yet.</td></tr>
+                <tr>
+                    <td colspan="5" class="py-16 text-center text-sm text-gray-300 italic">No seller accounts found.</td>
+                </tr>
                 @endforelse
             </tbody>
         </table>
-        <div class="px-6 py-4 border-t border-gray-50">{{ $sellers->links() }}</div>
+        <div class="px-6 py-4 border-t border-gray-50">
+            {{ $sellers->links() }}
+        </div>
+    </div>
+
+    {{-- Suspend Confirmation Modal --}}
+    <div x-show="suspendModal" class="fixed inset-0 z-50 flex items-center justify-center p-4" x-cloak>
+        <div class="absolute inset-0 bg-black/40 backdrop-blur-sm" @click="suspendModal = false"></div>
+        <div class="relative bg-white rounded-2xl shadow-2xl w-full max-w-md p-6 space-y-4">
+            <h3 class="text-lg font-bold text-gray-900">Suspend Seller Account</h3>
+            <p class="text-xs text-gray-500 leading-relaxed">
+                Are you sure you want to suspend seller <strong x-text="suspendSellerName" class="text-black"></strong>? Please enter an explanation or reason for suspending this seller.
+            </p>
+            <form :action="'/admin/sellers/' + suspendSellerId + '/suspend'" method="POST" class="space-y-4">
+                @csrf @method('PATCH')
+                <div>
+                    <label class="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-1 block">Explanation / Reason *</label>
+                    <textarea name="reason" x-model="suspendReason" required rows="3" placeholder="Provide the reason for account suspension..." class="w-full p-3 bg-gray-50 border border-gray-200 rounded-xl text-xs outline-none focus:border-red-500"></textarea>
+                </div>
+                <div class="flex gap-3 pt-2">
+                    <button type="button" @click="suspendModal = false" class="flex-1 py-2.5 border border-gray-200 text-xs font-semibold text-gray-500 rounded-xl hover:bg-gray-50">Cancel</button>
+                    <button type="submit" class="flex-1 py-2.5 bg-red-600 text-white text-xs font-bold uppercase tracking-wider rounded-xl hover:bg-red-700">Confirm Suspension</button>
+                </div>
+            </form>
+        </div>
     </div>
 </div>
 @endsection

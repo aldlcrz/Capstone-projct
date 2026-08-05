@@ -278,12 +278,27 @@ class WebAuthController extends Controller
         /** @var User $user */
         $user = Auth::user();
         $request->validate([
-            'name'     => 'required|string|max:255',
-            'username' => 'required|string|max:255|unique:users,username,' . $user->id,
+            'name'         => 'required|string|max:255',
+            'username'     => 'required|string|max:255|unique:users,username,' . $user->id,
+            'avatar'       => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:5120',
+            'profilePhoto' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:5120',
         ]);
 
         $user->name     = $request->name;
         $user->username = $request->username;
+
+        if ($request->hasFile('avatar')) {
+            $file = $request->file('avatar');
+            $filename = time() . '_' . \Illuminate\Support\Str::random(8) . '.' . $file->getClientOriginalExtension();
+            $file->move(public_path('uploads/avatars'), $filename);
+            $user->profilePhoto = '/uploads/avatars/' . $filename;
+        } elseif ($request->hasFile('profilePhoto')) {
+            $file = $request->file('profilePhoto');
+            $filename = time() . '_' . \Illuminate\Support\Str::random(8) . '.' . $file->getClientOriginalExtension();
+            $file->move(public_path('uploads/avatars'), $filename);
+            $user->profilePhoto = '/uploads/avatars/' . $filename;
+        }
+
         $user->save();
 
         return redirect()->route('profile')->with('success', 'Profile updated successfully!');

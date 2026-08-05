@@ -129,11 +129,11 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->group(function () {
     Route::get('/notifications', [\App\Http\Controllers\AdminController::class, 'notifications'])->name('admin.notifications.index');
     Route::post('/notifications/read-all', [\App\Http\Controllers\AdminController::class, 'readAllNotifications'])->name('admin.notifications.read-all');
 
-    // Subscription Management
-    Route::get('/subscriptions', [\App\Http\Controllers\AdminSubscriptionController::class, 'index'])->name('admin.subscriptions.index');
-    Route::patch('/subscriptions/{id}/approve', [\App\Http\Controllers\AdminSubscriptionController::class, 'approve'])->name('admin.subscriptions.approve');
-    Route::patch('/subscriptions/{id}/reject', [\App\Http\Controllers\AdminSubscriptionController::class, 'reject'])->name('admin.subscriptions.reject');
-    Route::post('/subscriptions/settings', [\App\Http\Controllers\AdminSubscriptionController::class, 'updateSettings'])->name('admin.subscriptions.settings.update');
+    // Subscription Management (Feature Removed)
+    // Route::get('/subscriptions', [\App\Http\Controllers\AdminSubscriptionController::class, 'index'])->name('admin.subscriptions.index');
+    // Route::patch('/subscriptions/{id}/approve', [\App\Http\Controllers\AdminSubscriptionController::class, 'approve'])->name('admin.subscriptions.approve');
+    // Route::patch('/subscriptions/{id}/reject', [\App\Http\Controllers\AdminSubscriptionController::class, 'reject'])->name('admin.subscriptions.reject');
+    // Route::post('/subscriptions/settings', [\App\Http\Controllers\AdminSubscriptionController::class, 'updateSettings'])->name('admin.subscriptions.settings.update');
 
     // Settings Pages
     Route::get('/settings',    [\App\Http\Controllers\AdminSettingsController::class, 'index'])->name('admin.settings');
@@ -151,6 +151,8 @@ Route::middleware(['auth', 'seller'])->prefix('seller')->group(function () {
     Route::get('/profile', [\App\Http\Controllers\DashboardController::class, 'sellerProfile'])->name('seller.profile');
     Route::put('/profile', [\App\Http\Controllers\DashboardController::class, 'updateSellerProfile'])->name('seller.profile.update');
     Route::get('/orders', [\App\Http\Controllers\DashboardController::class, 'sellerOrders'])->name('seller.orders');
+    Route::get('/commission', [\App\Http\Controllers\DashboardController::class, 'sellerCommission'])->name('seller.commission');
+    Route::post('/commission', [\App\Http\Controllers\DashboardController::class, 'submitCommissionPayment'])->name('seller.commission.submit');
     Route::patch('/api/orders/{id}/status', [\App\Http\Controllers\OrderController::class, 'updateOrderStatus']);
     Route::get('/messages', [\App\Http\Controllers\ChatController::class, 'sellerChatView'])->name('seller.messages');
     Route::get('/products', [\App\Http\Controllers\ProductManagementController::class, 'index'])->name('seller.products.index');

@@ -81,6 +81,8 @@ class Order extends Model
         return [
             'totalAmount' => 'decimal:2',
             'shippingAddress' => 'array',
+            'createdAt' => 'datetime',
+            'updatedAt' => 'datetime',
         ];
     }
 

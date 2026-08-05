@@ -41,7 +41,7 @@
     </div>
     @endif
 
-    <form action="{{ route('seller.products.update', $product->id) }}" method="POST" enctype="multipart/form-data" class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+    <form action="{{ route('seller.products.update', $product->id) }}" method="POST" enctype="multipart/form-data" onsubmit="return validateProductForm(event, true)" class="grid grid-cols-1 lg:grid-cols-3 gap-8">
         @csrf
         @method('PUT')
 
@@ -65,8 +65,9 @@
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
                     <div class="space-y-4">
                         <label class="text-[10px] font-bold uppercase tracking-widest text-gray-400">Price (₱)</label>
-                        <input type="number" name="price" required min="1" step="0.01"
+                        <input type="number" name="price" required min="1" max="10000" step="0.01"
                             value="{{ old('price', $product->price) }}"
+                            oninput="if(parseFloat(this.value) > 10000) this.value = 10000; updateDiscountPreview();"
                             class="w-full px-6 py-4 bg-gray-50/50 border border-gray-100 rounded-2xl outline-none focus:border-[#C0420A] transition-all font-bold text-xl">
                     </div>
                     <div class="space-y-4">
@@ -82,20 +83,22 @@
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
                     <div class="space-y-4">
                         <label class="text-[10px] font-bold uppercase tracking-widest text-gray-400">Shipping Fee (₱)</label>
-                        <input type="number" name="shippingFee" min="0" step="0.01" placeholder="0.00"
+                        <input type="number" name="shippingFee" min="0" max="500" step="0.01" placeholder="0.00"
                             value="{{ old('shippingFee', $product->shippingFee ?? 0) }}"
+                            oninput="if(parseFloat(this.value) > 500) this.value = 500;"
                             class="w-full px-6 py-4 bg-gray-50/50 border border-gray-100 rounded-2xl outline-none focus:border-[#C0420A] transition-all font-bold text-xl">
                         <p class="text-[9px] text-gray-400 italic -mt-2">Enter 0 for free shipping.</p>
                     </div>
                     <div class="space-y-4">
                         <label class="text-[10px] font-bold uppercase tracking-widest text-gray-400">Est. Shipping Days</label>
-                        <input type="number" name="shippingDays" min="1" step="1" placeholder="e.g. 5"
+                        <input type="number" name="shippingDays" min="1" max="30" step="1" placeholder="e.g. 5"
                             value="{{ old('shippingDays', $product->shippingDays ?? 5) }}"
+                            oninput="if(parseInt(this.value) > 30) this.value = 30;"
                             class="w-full px-6 py-4 bg-gray-50/50 border border-gray-100 rounded-2xl outline-none focus:border-[#C0420A] transition-all font-bold text-xl">
                     </div>
                 </div>
 
-                <div class="space-y-6 pt-6 border-t border-gray-100">
+                <div id="sizing-section" class="space-y-6 pt-6 border-t border-gray-100 rounded-2xl p-4 transition-all">
                     <h3 class="text-sm font-bold text-black uppercase tracking-widest">Heritage Sizing & Stock</h3>
                     <p class="text-[10px] text-gray-400">Select sizes and assign stock for each size. The overall stock will update automatically.</p>
                     @php
@@ -117,10 +120,10 @@
                                     <span>Size {{ $size }}</span>
                                 </label>
                                 <input type="number" name="size_stocks[{{ $size }}]" id="stock_{{ $size }}" 
-                                    value="{{ old('size_stocks.'.$size, $sizeStock) }}" min="0" 
+                                    value="{{ old('size_stocks.'.$size, $sizeStock) }}" min="0" max="10000"
                                     {{ $hasSize ? '' : 'disabled' }}
-                                    oninput="calculateTotalStock()"
-                                    class="w-full px-4 py-2.5 bg-white border border-gray-100 rounded-xl outline-none text-xs font-bold text-center size-stock-input">
+                                    oninput="if(parseInt(this.value) > 10000) this.value = 10000; calculateTotalStock();"
+                                    class="w-full px-4 py-2.5 bg-[#fff] border border-gray-100 rounded-xl outline-none text-xs font-bold text-center size-stock-input">
                             </div>
                         @endforeach
                     </div>
@@ -140,6 +143,10 @@
                 </div>
 
                 {{-- Lumban Special Discount Panel (always visible, independent of category) --}}
+                @php
+                    $isOnSale = old('is_on_sale', $product->is_on_sale ?? false);
+                    $discountPct = old('discount_percentage', $product->discount_percentage ?? '');
+                @endphp
                 <div class="space-y-5 pt-6 border-t border-[#C0420A]/15">
                     <div class="flex items-center gap-3">
                         <div class="w-8 h-8 bg-[#C0420A] rounded-xl flex items-center justify-center shrink-0">
@@ -154,7 +161,7 @@
                     </div>
 
                     <div class="rounded-2xl p-5 border border-[#C0420A]/15 space-y-4" style="background: linear-gradient(to bottom right, #FFF5F0, #fff);">
-                        <input type="hidden" name="is_on_sale" id="isOnSaleInput" value="{{ $product->is_on_sale ? '1' : '0' }}">
+                        <input type="hidden" name="is_on_sale" id="isOnSaleInput" value="{{ $isOnSale ? '1' : '0' }}">
 
                         <div class="flex items-center justify-between p-4 bg-white rounded-xl border border-[#C0420A]/20">
                             <div>
@@ -163,22 +170,22 @@
                             </div>
                             <label class="relative inline-flex items-center cursor-pointer">
                                 <input type="checkbox" id="discountToggle" class="sr-only peer"
-                                    {{ $product->is_on_sale ? 'checked' : '' }}
+                                    {{ $isOnSale ? 'checked' : '' }}
                                     onchange="toggleDiscount(this)">
                                 <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-0.5 after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#C0420A]"></div>
                                 <span class="ml-2 text-[10px] font-bold text-gray-500 uppercase tracking-widest peer-checked:text-[#C0420A]">On Sale</span>
                             </label>
                         </div>
 
-                        <div id="discountFields" class="{{ $product->is_on_sale ? '' : 'hidden' }} space-y-4">
+                        <div id="discountFields" class="{{ $isOnSale ? '' : 'hidden' }} space-y-4">
                             <div class="space-y-2">
                                 <label class="text-[10px] font-black uppercase tracking-widest text-gray-400">Discount Percentage (%)</label>
                                 <div class="relative">
                                     <input type="number" name="discount_percentage" id="discountPercentage"
                                         min="1" max="99" step="1" placeholder="e.g. 20"
-                                        value="{{ $product->discount_percentage ? (int)$product->discount_percentage : '' }}"
+                                        value="{{ $discountPct }}"
                                         class="w-full px-6 py-4 bg-white border border-[#C0420A]/30 rounded-2xl outline-none focus:border-[#C0420A] transition-all font-black text-xl text-[#C0420A]"
-                                        oninput="updateDiscountPreview()">
+                                        oninput="if(parseInt(this.value) > 99) this.value = 99; updateDiscountPreview();">
                                     <span class="absolute right-5 top-1/2 -translate-y-1/2 text-lg font-black text-[#C0420A]">%</span>
                                 </div>
                             </div>
@@ -584,6 +591,146 @@ function updateDiscountPreview() {
     } else {
         preview.classList.add('hidden');
     }
+}
+
+function validateProductForm(e, isEdit = true) {
+    const errors = [];
+    
+    // Clear previous error styles
+    document.querySelectorAll('.border-red-500').forEach(el => el.classList.remove('border-red-500'));
+    const oldJsBanner = document.getElementById('js-error-banner');
+    if (oldJsBanner) oldJsBanner.remove();
+
+    // 1. Name & Description
+    const nameInput = document.querySelector('input[name="name"]');
+    if (!nameInput || !nameInput.value.trim()) {
+        errors.push('Product Name is required.');
+        if (nameInput) nameInput.classList.add('border-red-500');
+    }
+
+    const descInput = document.querySelector('textarea[name="description"]');
+    if (!descInput || !descInput.value.trim()) {
+        errors.push('Artisan Description is required.');
+        if (descInput) descInput.classList.add('border-red-500');
+    }
+
+    // 2. Price
+    const priceInput = document.querySelector('input[name="price"]');
+    const priceVal = parseFloat(priceInput ? priceInput.value : 0);
+    if (!priceInput || isNaN(priceVal) || priceVal < 1) {
+        errors.push('Price must be at least ₱1.00.');
+        if (priceInput) priceInput.classList.add('border-red-500');
+    } else if (priceVal > 10000) {
+        errors.push('Price cannot exceed ₱10,000.00.');
+        if (priceInput) priceInput.classList.add('border-red-500');
+    }
+
+    // Shipping Fee
+    const shipFeeInput = document.querySelector('input[name="shippingFee"]');
+    if (shipFeeInput) {
+        const shipFeeVal = parseFloat(shipFeeInput.value) || 0;
+        if (shipFeeVal < 0 || shipFeeVal > 500) {
+            errors.push('Shipping Fee must be between ₱0.00 and ₱500.00.');
+            shipFeeInput.classList.add('border-red-500');
+        }
+    }
+
+    // Shipping Days
+    const shipDaysInput = document.querySelector('input[name="shippingDays"]');
+    if (shipDaysInput) {
+        const shipDaysVal = parseInt(shipDaysInput.value) || 0;
+        if (shipDaysVal < 1 || shipDaysVal > 30) {
+            errors.push('Estimated Shipping Days must be between 1 and 30 days.');
+            shipDaysInput.classList.add('border-red-500');
+        }
+    }
+
+    // 3. Heritage Sizing & Stock
+    const checkedSizes = document.querySelectorAll('.size-checkbox:checked');
+    const sizingSection = document.getElementById('sizing-section');
+    
+    if (checkedSizes.length === 0) {
+        errors.push('Please select at least one Heritage Size (e.g. S, M, L, XL, XXL, Custom).');
+        if (sizingSection) sizingSection.classList.add('border-red-500');
+    } else {
+        let invalidStockCount = 0;
+        checkedSizes.forEach(cb => {
+            const sizeVal = cb.value;
+            const stockInput = document.getElementById('stock_' + sizeVal);
+            const qty = parseInt(stockInput ? stockInput.value : 0) || 0;
+            if (qty <= 0) {
+                invalidStockCount++;
+                if (stockInput) stockInput.classList.add('border-red-500');
+            } else if (qty > 10000) {
+                invalidStockCount++;
+                errors.push(`Stock for Size ${sizeVal} cannot exceed 10,000 units.`);
+                if (stockInput) stockInput.classList.add('border-red-500');
+            }
+        });
+        if (invalidStockCount > 0 && !errors.some(e => e.includes('10,000'))) {
+            errors.push('Each checked Heritage size must have a stock quantity greater than 0.');
+            if (sizingSection) sizingSection.classList.add('border-red-500');
+        }
+    }
+
+    const totalStock = parseInt(document.getElementById('total_stock')?.value || 0);
+    if (totalStock <= 0) {
+        errors.push('Total product stock must be greater than 0.');
+    }
+
+    // 4. Product Category
+    const categorySelect = document.getElementById('categorySelect');
+    if (!categorySelect || !categorySelect.value) {
+        errors.push('Please select a Product Category.');
+        if (categorySelect) categorySelect.classList.add('border-red-500');
+    }
+
+    // 5. Lumban Special Discount
+    const isOnSale = document.getElementById('discountToggle')?.checked;
+    if (isOnSale) {
+        const pctInput = document.getElementById('discountPercentage');
+        const pctVal = parseFloat(pctInput ? pctInput.value : 0);
+        if (isNaN(pctVal) || pctVal < 1 || pctVal > 99) {
+            errors.push('Discount percentage must be between 1% and 99%.');
+            if (pctInput) pctInput.classList.add('border-red-500');
+        }
+    }
+
+    if (errors.length > 0) {
+        e.preventDefault();
+
+        // Create floating error banner
+        const banner = document.createElement('div');
+        banner.id = 'js-error-banner';
+        banner.className = 'fixed top-6 right-6 z-50 w-full max-w-md bg-white rounded-2xl shadow-2xl border border-red-200 p-4 flex items-start gap-3.5';
+        banner.innerHTML = `
+            <div class="w-8 h-8 rounded-full bg-red-50 flex items-center justify-center text-red-600 shrink-0 border border-red-100 font-bold">✕</div>
+            <div class="grow pt-0.5">
+                <h4 class="text-xs font-black text-black uppercase tracking-wider">Please fix the following form errors</h4>
+                <ul class="text-xs text-red-600 font-semibold mt-1 leading-relaxed space-y-1 list-disc list-inside">
+                    ${errors.map(err => `<li>${err}</li>`).join('')}
+                </ul>
+            </div>
+            <button onclick="this.parentElement.remove()" class="text-gray-300 hover:text-gray-500 shrink-0 font-bold">✕</button>
+        `;
+        document.body.appendChild(banner);
+
+        // Auto remove banner after 8 seconds
+        setTimeout(() => {
+            const b = document.getElementById('js-error-banner');
+            if (b) b.remove();
+        }, 8000);
+
+        // Smooth scroll to first invalid field
+        const firstError = document.querySelector('.border-red-500');
+        if (firstError) {
+            firstError.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+
+        return false;
+    }
+
+    return true;
 }
 
 // Update preview on page load and register event listeners

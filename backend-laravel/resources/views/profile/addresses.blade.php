@@ -426,6 +426,9 @@ function addressManager() {
             this.form.barangay = '';
             this.locationSearch = '';
 
+            // Auto-populate Postal Code based on selected city/province
+            this.form.postalCode = this.autoPostalCode(city.name, this.form.province);
+
             this.activeTab = 'barangay';
             await this.loadBarangays(city.code);
         },
@@ -448,6 +451,100 @@ function addressManager() {
             this.form.barangay = barangay.name;
             this.locationDropdownOpen = false;
             this.locationSearch = '';
+
+            if (!this.form.postalCode) {
+                this.form.postalCode = this.autoPostalCode(this.form.city, this.form.province);
+            }
+        },
+
+        autoPostalCode(cityName, provinceName) {
+            if (!cityName) return '';
+            const c = cityName.toLowerCase().trim();
+            const p = (provinceName || '').toLowerCase().trim();
+
+            const postalMap = {
+                'lumban': '4014',
+                'santa cruz': p.includes('laguna') ? '4009' : '1003',
+                'calamba': '4027',
+                'los baños': '4030',
+                'los banos': '4030',
+                'biñan': '4024',
+                'binan': '4024',
+                'san pedro': '4023',
+                'santa rosa': '4026',
+                'san pablo': '4000',
+                'pagsanjan': '4008',
+                'cavinti': '4013',
+                'kalayaan': '4015',
+                'paete': '4016',
+                'pakil': '4017',
+                'pangil': '4018',
+                'siniloan': '4019',
+                'famy': '4020',
+                'mabitac': '4021',
+                'santa maria': '4022',
+                'cabuyao': '4025',
+                'bay': '4033',
+                'alaminos': '4001',
+                'victoria': '4011',
+                'pila': '4010',
+                'magdalena': '4007',
+                'majayjay': '4005',
+                'liliw': '4004',
+                'nagcarlan': '4002',
+                'rizal': '4003',
+                'luisiana': '4032',
+                
+                // Metro Manila & Key Cities
+                'city of manila': '1000',
+                'manila': '1000',
+                'quezon city': '1100',
+                'makati': '1200',
+                'pasig': '1600',
+                'taguig': '1630',
+                'mandaluyong': '1550',
+                'san juan': '1500',
+                'pasay': '1300',
+                'parañaque': '1700',
+                'paranaque': '1700',
+                'las piñas': '1740',
+                'las pinas': '1740',
+                'muntinlupa': '1770',
+                'marikina': '1800',
+                'valenzuela': '1440',
+                'malabon': '1470',
+                'navotas': '1485',
+                'caloocan': '1400',
+                'cebu city': '6000',
+                'davao city': '8000',
+                'baguio': '2600',
+                'iloilo city': '5000',
+                'bacolod': '6100',
+                'cagayan de oro': '9000',
+                'zamboanga city': '7000',
+                'general santos': '9500',
+                'angeles': '2009',
+                'subic': '2209',
+                'batangas city': '4200',
+                'lipa': '4217',
+                'lucena': '4301',
+                'naga': '4400',
+                'legazpi': '4500',
+                'tacloban': '6500',
+                'puerto princesa': '5300',
+                'tagbilaran': '6300',
+                'dumaguete': '6200',
+                'butuan': '8500',
+                'cotabato city': '9400',
+                'koronadal': '9506'
+            };
+
+            for (const key in postalMap) {
+                if (c.includes(key)) {
+                    return postalMap[key];
+                }
+            }
+            return '4000'; // Default Laguna/PH region postal code
         },
 
         filteredGeoList(list) {

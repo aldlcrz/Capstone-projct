@@ -86,22 +86,7 @@ class DashboardController extends Controller
         $to   = null;
         $label = 'All Time';
 
-        if ($startDate || $endDate) {
-            $preset = 'custom';
-            if ($startDate) {
-                $from = Carbon::parse($startDate)->startOfDay();
-            }
-            if ($endDate) {
-                $to = Carbon::parse($endDate)->endOfDay();
-            }
-            if ($from && $to) {
-                $label = $from->format('M d, Y') . ' - ' . $to->format('M d, Y');
-            } elseif ($from) {
-                $label = 'From ' . $from->format('M d, Y');
-            } elseif ($to) {
-                $label = 'Until ' . $to->format('M d, Y');
-            }
-        } elseif ($preset) {
+        if ($preset && $preset !== 'custom') {
             switch ($preset) {
                 case 'today':
                     $from  = Carbon::now()->startOfDay();
@@ -139,6 +124,26 @@ class DashboardController extends Controller
                     $label  = 'All Time';
                     break;
             }
+            $startDate = '';
+            $endDate   = '';
+        } elseif ($startDate || $endDate || $preset === 'custom') {
+            $preset = 'custom';
+            if ($startDate) {
+                $from = Carbon::parse($startDate)->startOfDay();
+            }
+            if ($endDate) {
+                $to = Carbon::parse($endDate)->endOfDay();
+            }
+            if ($from && $to) {
+                $label = $from->format('M d, Y') . ' - ' . $to->format('M d, Y');
+            } elseif ($from) {
+                $label = 'From ' . $from->format('M d, Y');
+            } elseif ($to) {
+                $label = 'Until ' . $to->format('M d, Y');
+            }
+        } else {
+            $preset = 'all_time';
+            $label  = 'All Time';
         }
 
         return [
@@ -490,11 +495,62 @@ class DashboardController extends Controller
 
     public function sellerOrders(Request $request)
     {
-        $orders = Order::where('sellerId', $request->user()->id)
-            ->with(['customer:id,name,email,mobileNumber', 'items.product'])
-            ->orderBy('createdAt', 'desc')
-            ->get();
-        return view('seller.orders.index', compact('orders'));
+        $sellerId = $request->user()->id;
+        $query = Order::where('sellerId', $sellerId)
+            ->with(['customer:id,name,email,mobileNumber', 'items.product']);
+
+        $status = strtolower($request->input('status', 'all'));
+        if ($status && $status !== 'all') {
+            if ($status === 'processing') {
+                $query->whereIn(DB::raw('LOWER(status)'), ['processing', 'to ship', 'confirmed', 'packed']);
+            } elseif ($status === 'shipped') {
+                $query->whereIn(DB::raw('LOWER(status)'), ['shipped', 'to receive']);
+            } elseif ($status === 'delivered') {
+                $query->whereIn(DB::raw('LOWER(status)'), ['delivered']);
+            } elseif ($status === 'completed') {
+                $query->whereIn(DB::raw('LOWER(status)'), ['completed']);
+            } elseif ($status === 'cancelled') {
+                $query->whereIn(DB::raw('LOWER(status)'), ['cancelled', 'cancellation pending', 'cancellation requested']);
+            } elseif ($status === 'pending') {
+                $query->whereIn(DB::raw('LOWER(status)'), ['pending']);
+            } else {
+                $query->where(DB::raw('LOWER(status)'), $status);
+            }
+        }
+
+        if ($request->filled('search')) {
+            $s = strtolower($request->search);
+            $query->where(function($q) use ($s) {
+                $q->where(DB::raw('LOWER(id)'), 'like', "%{$s}%")
+                  ->orWhereHas('customer', function($cq) use ($s) {
+                      $cq->where(DB::raw('LOWER(name)'), 'like', "%{$s}%")
+                         ->orWhere(DB::raw('LOWER(email)'), 'like', "%{$s}%");
+                  });
+            });
+        }
+
+        if ($request->filled('start_date')) {
+            $query->where('createdAt', '>=', Carbon::parse($request->start_date)->startOfDay());
+        }
+
+        if ($request->filled('end_date')) {
+            $query->where('createdAt', '<=', Carbon::parse($request->end_date)->endOfDay());
+        }
+
+        $orders = $query->orderBy('createdAt', 'desc')->get();
+
+        $allOrders = Order::where('sellerId', $sellerId)->get();
+        $counts = [
+            'all'        => $allOrders->count(),
+            'pending'    => $allOrders->filter(fn($o) => strtolower($o->status) === 'pending')->count(),
+            'processing' => $allOrders->filter(fn($o) => in_array(strtolower($o->status), ['processing', 'to ship', 'confirmed', 'packed']))->count(),
+            'shipped'    => $allOrders->filter(fn($o) => in_array(strtolower($o->status), ['shipped', 'to receive']))->count(),
+            'delivered'  => $allOrders->filter(fn($o) => strtolower($o->status) === 'delivered')->count(),
+            'completed'  => $allOrders->filter(fn($o) => strtolower($o->status) === 'completed')->count(),
+            'cancelled'  => $allOrders->filter(fn($o) => in_array(strtolower($o->status), ['cancelled', 'cancellation pending', 'cancellation requested']))->count(),
+        ];
+
+        return view('seller.orders.index', compact('orders', 'counts', 'status'));
     }
 
     public function sellerProfile(Request $request)
@@ -527,27 +583,24 @@ class DashboardController extends Controller
         $user->isMayaAvailable  = $request->has('isMayaAvailable');
 
         if ($request->hasFile('profilePhoto')) {
-            $path = $request->file('profilePhoto')->store('profiles', 'public');
-            if ($user->profilePhoto && !str_starts_with($user->profilePhoto, 'http') && !str_starts_with($user->profilePhoto, '/')) {
-                \Illuminate\Support\Facades\Storage::disk('public')->delete($user->profilePhoto);
-            }
-            $user->profilePhoto = $path;
+            $file = $request->file('profilePhoto');
+            $filename = time() . '_seller_' . \Illuminate\Support\Str::random(8) . '.' . $file->getClientOriginalExtension();
+            $file->move(public_path('uploads/avatars'), $filename);
+            $user->profilePhoto = '/uploads/avatars/' . $filename;
         }
 
         if ($request->hasFile('gcashQrCode')) {
-            $path = $request->file('gcashQrCode')->store('qrcodes', 'public');
-            if ($user->gcashQrCode && !str_starts_with($user->gcashQrCode, 'http')) {
-                \Illuminate\Support\Facades\Storage::disk('public')->delete($user->gcashQrCode);
-            }
-            $user->gcashQrCode = $path;
+            $file = $request->file('gcashQrCode');
+            $filename = time() . '_gcash_' . \Illuminate\Support\Str::random(8) . '.' . $file->getClientOriginalExtension();
+            $file->move(public_path('uploads/qrcodes'), $filename);
+            $user->gcashQrCode = '/uploads/qrcodes/' . $filename;
         }
 
         if ($request->hasFile('mayaQrCode')) {
-            $path = $request->file('mayaQrCode')->store('qrcodes', 'public');
-            if ($user->mayaQrCode && !str_starts_with($user->mayaQrCode, 'http')) {
-                \Illuminate\Support\Facades\Storage::disk('public')->delete($user->mayaQrCode);
-            }
-            $user->mayaQrCode = $path;
+            $file = $request->file('mayaQrCode');
+            $filename = time() . '_maya_' . \Illuminate\Support\Str::random(8) . '.' . $file->getClientOriginalExtension();
+            $file->move(public_path('uploads/qrcodes'), $filename);
+            $user->mayaQrCode = '/uploads/qrcodes/' . $filename;
         }
 
         $user->save();
@@ -578,5 +631,86 @@ class DashboardController extends Controller
             ->update(['isRead' => true]);
 
         return redirect()->back()->with('success', 'All seller notifications marked as read.');
+    }
+
+    public function sellerCommission(Request $request)
+    {
+        $seller = $request->user();
+        $rate = (float) (\App\Models\SystemSetting::where('key', 'commission_rate')->value('value') ?? 5);
+        $period = Carbon::now()->format('Y-m');
+        [$year, $month] = explode('-', $period);
+
+        $totalSales = (float) Order::whereNotIn('status', ['Cancelled', 'cancellation pending', 'cancellation requested'])
+            ->where('sellerId', $seller->id)
+            ->whereYear('createdAt', $year)
+            ->whereMonth('createdAt', $month)
+            ->sum('totalAmount');
+
+        $commissionDue = round($totalSales * ($rate / 100), 2);
+
+        $paymentSettings = [
+            'gcash_number' => \App\Models\SystemSetting::where('key', 'superadmin_gcash_number')->value('value') ?? '',
+            'gcash_qr'     => \App\Models\SystemSetting::where('key', 'superadmin_gcash_qr')->value('value') ?? '',
+            'maya_number'  => \App\Models\SystemSetting::where('key', 'superadmin_maya_number')->value('value') ?? '',
+            'maya_qr'      => \App\Models\SystemSetting::where('key', 'superadmin_maya_qr')->value('value') ?? '',
+        ];
+
+        $pastRecords = \App\Models\CommissionRecord::where('sellerId', $seller->id)
+            ->orderByDesc('created_at')
+            ->get();
+
+        $currentRecord = $pastRecords->firstWhere('period', $period);
+
+        return view('seller.commission.index', compact(
+            'seller', 'rate', 'period', 'totalSales', 'commissionDue',
+            'paymentSettings', 'pastRecords', 'currentRecord'
+        ));
+    }
+
+    public function submitCommissionPayment(Request $request)
+    {
+        $request->validate([
+            'period'           => 'required|string',
+            'paymentMethod'    => 'required|string|in:GCash,Maya,Bank Transfer',
+            'referenceNumber'  => 'required|string|max:100',
+            'paymentProof'     => 'required|image|max:3072',
+            'notes'            => 'nullable|string|max:500',
+        ]);
+
+        $seller = $request->user();
+        $rate = (float) (\App\Models\SystemSetting::where('key', 'commission_rate')->value('value') ?? 5);
+        [$year, $month] = explode('-', $request->period);
+
+        $totalSales = (float) Order::whereNotIn('status', ['Cancelled', 'cancellation pending', 'cancellation requested'])
+            ->where('sellerId', $seller->id)
+            ->whereYear('createdAt', $year)
+            ->whereMonth('createdAt', $month)
+            ->sum('totalAmount');
+
+        $commissionAmount = round($totalSales * ($rate / 100), 2);
+
+        $proofPath = '';
+        if ($request->hasFile('paymentProof')) {
+            $file = $request->file('paymentProof');
+            $filename = time() . '_commission_' . \Illuminate\Support\Str::random(8) . '.' . $file->getClientOriginalExtension();
+            $file->move(public_path('uploads/payments'), $filename);
+            $proofPath = '/uploads/payments/' . $filename;
+        }
+
+        \App\Models\CommissionRecord::updateOrCreate(
+            ['sellerId' => $seller->id, 'period' => $request->period],
+            [
+                'totalSales'       => $totalSales,
+                'commissionRate'   => $rate,
+                'commissionAmount' => $commissionAmount,
+                'status'           => 'verification_pending',
+                'paymentMethod'    => $request->paymentMethod,
+                'referenceNumber'  => $request->referenceNumber,
+                'paymentProof'     => $proofPath,
+                'notes'            => $request->notes,
+            ]
+        );
+
+        return redirect()->back()->with('success', 'Commission payment proof submitted! Awaiting Super Admin verification.');
     }
 }

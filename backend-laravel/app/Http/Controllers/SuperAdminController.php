@@ -198,8 +198,10 @@ class SuperAdminController extends Controller
         }
 
         if ($request->hasFile('gcash_qr')) {
-            $path = $request->file('gcash_qr')->store('qr_codes', 'public');
-            SystemSetting::updateOrCreate(['key' => 'superadmin_gcash_qr'], ['value' => $path]);
+            $file = $request->file('gcash_qr');
+            $filename = time() . '_superadmin_gcash_' . \Illuminate\Support\Str::random(8) . '.' . $file->getClientOriginalExtension();
+            $file->move(public_path('uploads/qrcodes'), $filename);
+            SystemSetting::updateOrCreate(['key' => 'superadmin_gcash_qr'], ['value' => '/uploads/qrcodes/' . $filename]);
         }
 
         if ($request->has('maya_number')) {
@@ -207,8 +209,10 @@ class SuperAdminController extends Controller
         }
 
         if ($request->hasFile('maya_qr')) {
-            $path = $request->file('maya_qr')->store('qr_codes', 'public');
-            SystemSetting::updateOrCreate(['key' => 'superadmin_maya_qr'], ['value' => $path]);
+            $file = $request->file('maya_qr');
+            $filename = time() . '_superadmin_maya_' . \Illuminate\Support\Str::random(8) . '.' . $file->getClientOriginalExtension();
+            $file->move(public_path('uploads/qrcodes'), $filename);
+            SystemSetting::updateOrCreate(['key' => 'superadmin_maya_qr'], ['value' => '/uploads/qrcodes/' . $filename]);
         }
 
         return redirect()->route('superadmin.payment-settings')->with('success', 'Payment details and QR codes updated successfully.');

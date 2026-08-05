@@ -93,7 +93,7 @@
                     <div class="flex flex-col items-center gap-4 lg:w-48 lg:border-l lg:border-gray-100 lg:pl-10">
                         <div class="w-24 h-24 rounded-full bg-gray-100 border border-gray-200 flex items-center justify-center overflow-hidden">
                             @if($user->profilePhoto)
-                                <img src="{{ $user->profilePhoto }}" class="w-full h-full object-cover">
+                                <img src="{{ str_starts_with($user->profilePhoto, 'http') || str_starts_with($user->profilePhoto, '/') ? $user->profilePhoto : asset('storage/' . $user->profilePhoto) }}" class="w-full h-full object-cover">
                             @else
                                 <span class="text-3xl font-bold text-gray-400">{{ strtoupper(substr($user->name, 0, 1)) }}</span>
                             @endif

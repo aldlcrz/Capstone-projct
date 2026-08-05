@@ -41,13 +41,42 @@ class ProductManagementController extends Controller
         }
 
         $request->validate([
-            'name' => 'required|max:100',
-            'description' => 'required',
-            'price' => 'required|numeric|min:1|max:10000',
-            'CategoryId' => 'required|exists:categories,id',
-            'images' => 'required|array',
-            'images.*' => 'image',
+            'name'                => 'required|string|max:100',
+            'description'         => 'required|string',
+            'price'               => 'required|numeric|min:1|max:10000',
+            'CategoryId'          => 'required|exists:categories,id',
+            'images'              => 'required|array|min:1',
+            'images.*'            => 'image|mimes:jpeg,png,jpg,webp|max:5120',
+            'sizes'               => 'required|array|min:1',
+            'sizes.*'             => 'string',
+            'size_stocks.*'       => 'nullable|integer|min:0|max:10000',
+            'shippingFee'         => 'nullable|numeric|min:0|max:500',
+            'shippingDays'        => 'nullable|integer|min:1|max:30',
+            'discount_percentage' => 'nullable|numeric|min:1|max:99',
+        ], [
+            'name.required'        => 'Product Name is required.',
+            'description.required' => 'Artisan Description is required.',
+            'price.required'       => 'Product Price is required.',
+            'price.min'            => 'Product Price must be at least ₱1.00.',
+            'price.max'            => 'Product Price cannot exceed ₱10,000.00.',
+            'shippingFee.max'      => 'Shipping Fee cannot exceed ₱500.00.',
+            'shippingDays.max'     => 'Estimated Shipping Days cannot exceed 30 days.',
+            'size_stocks.*.max'    => 'Size stock quantity cannot exceed 10,000 units.',
+            'CategoryId.required'  => 'Please select a Product Category.',
+            'images.required'      => 'Please upload at least one product image.',
+            'sizes.required'       => 'Please select at least one Heritage Size (e.g. S, M, L, XL, XXL, Custom).',
+            'sizes.min'            => 'Please select at least one Heritage Size (e.g. S, M, L, XL, XXL, Custom).',
         ]);
+
+        $selectedSizes = $request->sizes ?? [];
+        $sizeStocks = is_array($request->size_stocks) ? array_filter($request->size_stocks, function($key) use ($selectedSizes) {
+            return in_array($key, $selectedSizes);
+        }, ARRAY_FILTER_USE_KEY) : [];
+
+        $totalStock = array_sum(array_map('intval', $sizeStocks));
+        if ($totalStock <= 0) {
+            return redirect()->back()->withInput()->with('error', 'Please assign a stock quantity greater than 0 for at least one selected size.');
+        }
 
         try {
             $product = new Product();
@@ -60,23 +89,9 @@ class ProductManagementController extends Controller
             $product->shippingDays = $request->shippingDays ?? 5;
             $product->CategoryId = $request->CategoryId;
             $product->target_group = $request->target_group ?? null;
-            $product->sizes = $request->sizes ?? [];
-            
-            if ($request->has('size_stocks') && is_array($request->size_stocks)) {
-                $selectedSizes = $request->sizes ?? [];
-                $sizeStocks = array_filter($request->size_stocks, function($key) use ($selectedSizes) {
-                    return in_array($key, $selectedSizes);
-                }, ARRAY_FILTER_USE_KEY);
-                $product->size_stocks = $sizeStocks;
-                if (!empty($sizeStocks)) {
-                    $product->stock = array_sum(array_map('intval', $sizeStocks));
-                } else {
-                    $product->stock = $request->stock ?? 0;
-                }
-            } else {
-                $product->size_stocks = [];
-                $product->stock = $request->stock ?? 0;
-            }
+            $product->sizes = $selectedSizes;
+            $product->size_stocks = $sizeStocks;
+            $product->stock = $totalStock;
 
             // Ensure storage directories exist on Hostinger / server
             \Illuminate\Support\Facades\Storage::disk('public')->makeDirectory('qrcodes');
@@ -142,12 +157,40 @@ class ProductManagementController extends Controller
         $product = Product::where('id', $id)->where('sellerId', Auth::id())->firstOrFail();
 
         $request->validate([
-            'name'        => 'required|max:100',
-            'description' => 'required',
-            'price'       => 'required|numeric|min:1|max:10000',
-            'CategoryId'  => 'required|exists:categories,id',
-            'images.*'    => 'nullable|image',
+            'name'                => 'required|string|max:100',
+            'description'         => 'required|string',
+            'price'               => 'required|numeric|min:1|max:10000',
+            'CategoryId'          => 'required|exists:categories,id',
+            'images.*'            => 'nullable|image|mimes:jpeg,png,jpg,webp|max:5120',
+            'sizes'               => 'required|array|min:1',
+            'sizes.*'             => 'string',
+            'size_stocks.*'       => 'nullable|integer|min:0|max:10000',
+            'shippingFee'         => 'nullable|numeric|min:0|max:500',
+            'shippingDays'        => 'nullable|integer|min:1|max:30',
+            'discount_percentage' => 'nullable|numeric|min:1|max:99',
+        ], [
+            'name.required'        => 'Product Name is required.',
+            'description.required' => 'Artisan Description is required.',
+            'price.required'       => 'Product Price is required.',
+            'price.min'            => 'Product Price must be at least ₱1.00.',
+            'price.max'            => 'Product Price cannot exceed ₱10,000.00.',
+            'shippingFee.max'      => 'Shipping Fee cannot exceed ₱500.00.',
+            'shippingDays.max'     => 'Estimated Shipping Days cannot exceed 30 days.',
+            'size_stocks.*.max'    => 'Size stock quantity cannot exceed 10,000 units.',
+            'CategoryId.required'  => 'Please select a Product Category.',
+            'sizes.required'       => 'Please select at least one Heritage Size (e.g. S, M, L, XL, XXL, Custom).',
+            'sizes.min'            => 'Please select at least one Heritage Size (e.g. S, M, L, XL, XXL, Custom).',
         ]);
+
+        $selectedSizes = $request->sizes ?? [];
+        $sizeStocks = is_array($request->size_stocks) ? array_filter($request->size_stocks, function($key) use ($selectedSizes) {
+            return in_array($key, $selectedSizes);
+        }, ARRAY_FILTER_USE_KEY) : [];
+
+        $totalStock = array_sum(array_map('intval', $sizeStocks));
+        if ($totalStock <= 0) {
+            return redirect()->back()->withInput()->with('error', 'Please assign a stock quantity greater than 0 for at least one selected size.');
+        }
 
         $product->name         = $request->name;
         $product->description  = $request->description;
@@ -156,23 +199,9 @@ class ProductManagementController extends Controller
         $product->shippingDays = $request->shippingDays ?? 5;
         $product->CategoryId   = $request->CategoryId;
         $product->target_group = $request->target_group ?? null;
-        $product->sizes        = $request->sizes ?? [];
-        
-        if ($request->has('size_stocks') && is_array($request->size_stocks)) {
-            $selectedSizes = $request->sizes ?? [];
-            $sizeStocks = array_filter($request->size_stocks, function($key) use ($selectedSizes) {
-                return in_array($key, $selectedSizes);
-            }, ARRAY_FILTER_USE_KEY);
-            $product->size_stocks = $sizeStocks;
-            if (!empty($sizeStocks)) {
-                $product->stock = array_sum(array_map('intval', $sizeStocks));
-            } else {
-                $product->stock = $request->stock;
-            }
-        } else {
-            $product->size_stocks = [];
-            $product->stock = $request->stock;
-        }
+        $product->sizes        = $selectedSizes;
+        $product->size_stocks  = $sizeStocks;
+        $product->stock        = $totalStock;
 
         // Per-product payment availability and overrides
         $product->is_gcash_available = $request->has('product_is_gcash_available');

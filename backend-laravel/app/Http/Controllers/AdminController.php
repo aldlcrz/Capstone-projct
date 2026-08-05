@@ -106,7 +106,6 @@ class AdminController extends Controller
         return [
             'products'      => Product::where('status', 'pending')->count(),
             'sellers'       => User::where('role', 'seller')->where('isVerified', false)->where('status', 'active')->count(),
-            'subscriptions' => \App\Models\SellerSubscription::where('status', 'pending')->count(),
             'banners'       => \App\Models\Banner::whereNotNull('userId')->where('status', 'pending')->count(),
             'reports'       => \App\Models\Report::where('status', 'Pending')->count(),
         ];
@@ -574,31 +573,44 @@ class AdminController extends Controller
 
     public function users(Request $request)
     {
-        $query = User::query();
+        // User Management is strictly for Customer accounts (Sellers are managed under Seller Management)
+        $query = User::where('role', 'customer');
+
         if ($request->search) {
             $query->where(function($q) use ($request) {
                 $q->where('name', 'like', '%'.$request->search.'%')
-                  ->orWhere('email', 'like', '%'.$request->search.'%');
+                  ->orWhere('email', 'like', '%'.$request->search.'%')
+                  ->orWhere('username', 'like', '%'.$request->search.'%');
             });
         }
-        
-        // Default to customer role if no role is specified and not searching all
-        $role = $request->input('role', 'customer');
-        if ($role && $role !== 'all') {
-            $query->where('role', $role);
+
+        if ($request->status) {
+            $query->where('status', $request->status);
         }
-        
-        if ($request->status) $query->where('status', $request->status);
+
         $users = $query->orderBy('createdAt', 'desc')->paginate(20);
         return view('admin.users', compact('users'));
     }
 
-    public function banUser(string $id)
+    public function banUser(Request $request, string $id)
     {
         $user = User::findOrFail($id);
+        $reason = $request->input('reason', 'Violation of community guidelines');
+
         $user->status = 'blocked';
+        $user->violationReason = $reason;
         $user->save();
-        return redirect()->back()->with('success', 'User banned.');
+
+        $this->sendNotification(
+            $user->id,
+            'Account Suspended',
+            "Your account has been suspended by an administrator. Reason: {$reason}",
+            'system',
+            null,
+            'customer'
+        );
+
+        return redirect()->back()->with('success', 'User account banned successfully.');
     }
 
     public function unbanUser(string $id)

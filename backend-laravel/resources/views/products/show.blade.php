@@ -221,6 +221,10 @@
                                         if (empty($sizes)) {
                                             $sizes = ['S', 'M', 'L', 'XL'];
                                         }
+                                        $sizeNames = array_map(fn($s) => is_array($s) ? ($s['size'] ?? $s['name'] ?? 'N/A') : $s, $sizes);
+                                        if (!in_array('Custom', $sizeNames)) {
+                                            $sizes[] = 'Custom';
+                                        }
                                     @endphp
                                     @foreach($sizes as $size)
                                         @php 
@@ -233,7 +237,7 @@
                                         <button 
                                             @click="updateStock('{{ $sizeName }}')"
                                             type="button"
-                                            class="relative w-12 h-12 rounded-xl flex items-center justify-center text-xs font-bold border transition-all shadow-sm"
+                                            class="relative min-w-12 h-12 px-3 rounded-xl flex items-center justify-center text-xs font-bold border transition-all shadow-sm"
                                             :class="selectedSize === '{{ $sizeName }}' ? 'border-black bg-black text-white' : 'border-gray-200 text-gray-700 bg-white hover:border-black'"
                                         >
                                             <span class="{{ !$hasSizeStock ? 'text-gray-300 line-through font-normal' : '' }}">{{ $sizeName }}</span>
@@ -244,6 +248,37 @@
                                     @endforeach
                                 </div>
                             </div>
+
+                            <!-- Custom Measurements Input Box -->
+                            <div x-show="selectedSize === 'Custom'" x-transition class="ml-28 p-4 bg-[#FAF7F2] border border-[#EBE3D7] rounded-2xl space-y-3 mt-2" x-cloak>
+                                <div class="text-xs font-bold text-[#C0420A] uppercase tracking-wider flex items-center gap-1.5">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"/></svg>
+                                    Specify Custom Measurements
+                                </div>
+                                <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                                    <div>
+                                        <label class="text-[10px] font-bold text-gray-500 uppercase tracking-widest block mb-1">Chest (in)</label>
+                                        <input type="text" x-model="customMeasurements.chest" placeholder="e.g. 40&quot;" class="w-full h-9 px-3 bg-white border border-gray-200 rounded-lg text-xs font-semibold outline-none focus:border-[#C0420A]">
+                                    </div>
+                                    <div>
+                                        <label class="text-[10px] font-bold text-gray-500 uppercase tracking-widest block mb-1">Shoulder (in)</label>
+                                        <input type="text" x-model="customMeasurements.shoulder" placeholder="e.g. 18&quot;" class="w-full h-9 px-3 bg-white border border-gray-200 rounded-lg text-xs font-semibold outline-none focus:border-[#C0420A]">
+                                    </div>
+                                    <div>
+                                        <label class="text-[10px] font-bold text-gray-500 uppercase tracking-widest block mb-1">Length (in)</label>
+                                        <input type="text" x-model="customMeasurements.length" placeholder="e.g. 30&quot;" class="w-full h-9 px-3 bg-white border border-gray-200 rounded-lg text-xs font-semibold outline-none focus:border-[#C0420A]">
+                                    </div>
+                                    <div>
+                                        <label class="text-[10px] font-bold text-gray-500 uppercase tracking-widest block mb-1">Sleeve (in)</label>
+                                        <input type="text" x-model="customMeasurements.sleeve" placeholder="e.g. 24&quot;" class="w-full h-9 px-3 bg-white border border-gray-200 rounded-lg text-xs font-semibold outline-none focus:border-[#C0420A]">
+                                    </div>
+                                </div>
+                                <div>
+                                    <label class="text-[10px] font-bold text-gray-500 uppercase tracking-widest block mb-1">Special Sizing / Tailoring Notes</label>
+                                    <input type="text" x-model="customMeasurements.notes" placeholder="e.g. Preferred fit, collar style, etc." class="w-full h-9 px-3 bg-white border border-gray-200 rounded-lg text-xs font-semibold outline-none focus:border-[#C0420A]">
+                                </div>
+                            </div>
+                        </div>
                         </div>
 
                         <!-- Row 4: Quantity -->
@@ -289,7 +324,7 @@
                     <form action="/cart/add" method="POST" @submit.prevent="submitAddToCart($event)">
                         @csrf
                         <input type="hidden" name="productId" value="{{ $product->id }}">
-                        <input type="hidden" name="size" :value="selectedSize">
+                        <input type="hidden" name="size" :value="effectiveSize()">
                         <input type="hidden" name="quantity" :value="quantity">
                         <input type="hidden" name="variation" :value="selectedVariationLabel()">
                         <button 
@@ -307,7 +342,7 @@
                     <!-- Form 2: Buy Now -->
                     <form action="/checkout" method="GET">
                         <input type="hidden" name="productId" value="{{ $product->id }}">
-                        <input type="hidden" name="size" :value="selectedSize">
+                        <input type="hidden" name="size" :value="effectiveSize()">
                         <input type="hidden" name="quantity" :value="quantity">
                         <input type="hidden" name="variation" :value="selectedVariationLabel()">
                         <input type="hidden" name="direct" value="1">
@@ -635,6 +670,26 @@
             variations: variations,
             selectedVariation: 0,
             showSizeGuide: false,
+            customMeasurements: {
+                chest: '',
+                shoulder: '',
+                length: '',
+                sleeve: '',
+                notes: ''
+            },
+            effectiveSize() {
+                if (!this.selectedSize) return '';
+                if (this.selectedSize === 'Custom' || this.selectedSize.toLowerCase().includes('custom')) {
+                    const parts = [];
+                    if (this.customMeasurements.chest) parts.push('Chest: ' + this.customMeasurements.chest);
+                    if (this.customMeasurements.shoulder) parts.push('Shoulder: ' + this.customMeasurements.shoulder);
+                    if (this.customMeasurements.length) parts.push('Length: ' + this.customMeasurements.length);
+                    if (this.customMeasurements.sleeve) parts.push('Sleeve: ' + this.customMeasurements.sleeve);
+                    if (this.customMeasurements.notes) parts.push('Notes: ' + this.customMeasurements.notes);
+                    return 'Custom (' + (parts.length > 0 ? parts.join(', ') : 'Tailored Sizing') + ')';
+                }
+                return this.selectedSize;
+            },
             imageUrl(url) {
                 if (!url) return '/uploads/products/default.jpg';
                 if (url.startsWith('http')) return url;
