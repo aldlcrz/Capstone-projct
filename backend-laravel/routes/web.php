@@ -192,15 +192,38 @@ Route::middleware(['auth', 'superadmin'])->prefix('superadmin')->group(function 
     Route::patch('/shops/{id}/unfreeze', [\App\Http\Controllers\SuperAdminController::class, 'unfreezeShop'])->name('superadmin.shops.unfreeze');
 });
 
-// ─── Storage Fallback Route ───────────────────────────────────────────────
-// Serves uploaded files directly if storage symlink is missing on Hostinger / shared hosts
+// ─── Storage & Upload Fallback Routes ──────────────────────────────────────────
+// Serves uploaded files directly if storage symlink is missing or broken on Hostinger
 Route::get('/storage/{path}', function ($path) {
-    $cleanPath = str_replace('\\', '/', $path);
+    $cleanPath = ltrim(str_replace('\\', '/', $path), '/');
 
     $candidates = [
         storage_path('app/public/' . $cleanPath),
+        storage_path('app/public/products/' . $cleanPath),
         public_path('storage/' . $cleanPath),
         public_path('uploads/' . $cleanPath),
+        public_path('uploads/products/' . $cleanPath),
+        base_path('uploads/' . $cleanPath),
+    ];
+
+    foreach ($candidates as $filePath) {
+        if (file_exists($filePath) && is_file($filePath)) {
+            return response()->file($filePath);
+        }
+    }
+
+    abort(404);
+})->where('path', '.*');
+
+Route::get('/uploads/{path}', function ($path) {
+    $cleanPath = ltrim(str_replace('\\', '/', $path), '/');
+
+    $candidates = [
+        public_path('uploads/' . $cleanPath),
+        storage_path('app/public/' . $cleanPath),
+        storage_path('app/public/uploads/' . $cleanPath),
+        public_path('storage/' . $cleanPath),
+        base_path('uploads/' . $cleanPath),
     ];
 
     foreach ($candidates as $filePath) {

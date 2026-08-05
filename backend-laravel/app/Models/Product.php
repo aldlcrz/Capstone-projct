@@ -156,7 +156,7 @@ class Product extends Model
         }
 
         if (!$img || $img === 'Array' || $img === '[]' || $img === '[') {
-            return url('uploads/products/default.jpg');
+            return '/uploads/products/default.jpg';
         }
 
         $img = str_replace('\\', '/', $img);
@@ -167,17 +167,17 @@ class Product extends Model
         }
 
         if (str_starts_with($img, 'storage/')) {
-            return url($img);
+            return '/' . $img;
         }
 
         if (str_starts_with($img, 'products/') || str_starts_with($img, 'qrcodes/') || str_starts_with($img, 'categories/')) {
-            return url('storage/' . $img);
+            return '/storage/' . $img;
         }
 
         if (str_starts_with($img, 'uploads/')) {
-            return url($img);
+            return '/' . $img;
         }
 
-        return url('storage/products/' . $img);
+        return '/storage/products/' . $img;
     }
 }
