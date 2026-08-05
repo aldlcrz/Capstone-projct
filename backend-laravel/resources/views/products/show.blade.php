@@ -354,9 +354,9 @@
                         </button>
                     </form>
                 </div>
-
             </div>
         </div>
+    </div>
 
         <!-- Lower Section: Description & Info -->
         <div class="mt-16 pt-10 border-t border-gray-100 grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-16">
