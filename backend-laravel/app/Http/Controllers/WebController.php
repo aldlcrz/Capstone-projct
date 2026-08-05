@@ -24,6 +24,9 @@ class WebController extends Controller
             if (Auth::user()->role === 'admin') {
                 return redirect()->route('admin.dashboard');
             }
+            if (Auth::user()->role === 'seller' && !$request->has('browse')) {
+                return redirect()->route('seller.dashboard');
+            }
         }
 
         $query = Product::where('status', 'approved')

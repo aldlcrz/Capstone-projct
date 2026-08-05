@@ -223,9 +223,14 @@
                                     <a href="/superadmin/dashboard" class="flex items-center gap-3 px-4 py-3 text-[11px] font-bold text-amber-600 hover:bg-amber-50 transition-all">👑 Super Admin Governance</a>
                                 @elseif(Auth::user()->role === 'admin')
                                     <a href="/admin/dashboard" class="flex items-center gap-3 px-4 py-3 text-[11px] font-bold text-gray-800 hover:bg-gray-50 transition-all">Admin Panel</a>
+                                @elseif(Auth::user()->role === 'seller')
+                                    <a href="/seller/dashboard" class="flex items-center gap-3 px-4 py-3 text-[11px] font-bold text-[#C0422A] hover:bg-[#C0422A]/10 transition-all">🏪 Seller Dashboard</a>
+                                    <a href="/seller/orders" class="flex items-center gap-3 px-4 py-3 text-[11px] font-bold text-gray-700 hover:bg-gray-50 transition-all">📦 My Sales Orders</a>
                                 @endif
                                 <a href="/profile" class="flex items-center gap-3 px-4 py-3 text-[11px] font-bold text-gray-600 hover:bg-gray-50 hover:text-black transition-all">My Account</a>
-                                <a href="/orders/my-orders" class="flex items-center gap-3 px-4 py-3 text-[11px] font-bold text-gray-600 hover:bg-gray-50 hover:text-black transition-all">My Purchase</a>
+                                @if(Auth::user()->role !== 'seller')
+                                    <a href="/orders/my-orders" class="flex items-center gap-3 px-4 py-3 text-[11px] font-bold text-gray-600 hover:bg-gray-50 hover:text-black transition-all">My Purchase</a>
+                                @endif
                                 <form action="{{ route('logout') }}" method="POST" onsubmit="return confirm('Are you sure you want to logout?')" class="border-t border-gray-50 mt-1">
                                     @csrf
                                     <button type="submit" class="w-full text-left px-4 py-3 text-[11px] font-bold text-red-500 hover:bg-red-50 transition-all">Logout</button>
