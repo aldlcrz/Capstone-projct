@@ -232,10 +232,6 @@
                                         if (empty($sizes)) {
                                             $sizes = ['S', 'M', 'L', 'XL'];
                                         }
-                                        $sizeNames = array_map(fn($s) => is_array($s) ? ($s['size'] ?? $s['name'] ?? 'N/A') : $s, $sizes);
-                                        if (!in_array('Custom', $sizeNames)) {
-                                            $sizes[] = 'Custom';
-                                        }
                                     @endphp
                                     @foreach($sizes as $size)
                                         @php 
