@@ -101,7 +101,10 @@ class ProductManagementController extends Controller
             $product->is_gcash_available = $request->has('product_is_gcash_available');
             $product->gcash_number       = $request->filled('gcashNumber') ? $request->gcashNumber : null;
             if ($request->hasFile('gcashQrCode')) {
-                $product->gcash_qr_code = $request->file('gcashQrCode')->store('qrcodes', 'public');
+                $file = $request->file('gcashQrCode');
+                $filename = time() . '_gcash_' . Str::random(6) . '.' . $file->getClientOriginalExtension();
+                $file->move(public_path('uploads/qrcodes'), $filename);
+                $product->gcash_qr_code = 'uploads/qrcodes/' . $filename;
             } else {
                 $product->gcash_qr_code = null;
             }
@@ -109,7 +112,10 @@ class ProductManagementController extends Controller
             $product->is_maya_available  = $request->has('product_is_maya_available');
             $product->maya_number        = $request->filled('mayaNumber') ? $request->mayaNumber : null;
             if ($request->hasFile('mayaQrCode')) {
-                $product->maya_qr_code = $request->file('mayaQrCode')->store('qrcodes', 'public');
+                $file = $request->file('mayaQrCode');
+                $filename = time() . '_maya_' . Str::random(6) . '.' . $file->getClientOriginalExtension();
+                $file->move(public_path('uploads/qrcodes'), $filename);
+                $product->maya_qr_code = 'uploads/qrcodes/' . $filename;
             } else {
                 $product->maya_qr_code = null;
             }
@@ -123,8 +129,9 @@ class ProductManagementController extends Controller
             $images = [];
             if ($request->hasFile('images')) {
                 foreach ($request->file('images') as $image) {
-                    $path = $image->store('products', 'public');
-                    $images[] = $path;
+                    $filename = time() . '_' . Str::random(8) . '.' . $image->getClientOriginalExtension();
+                    $image->move(public_path('uploads/products'), $filename);
+                    $images[] = 'uploads/products/' . $filename;
                 }
             }
             $product->image = $images;
@@ -210,10 +217,10 @@ class ProductManagementController extends Controller
         }
 
         if ($request->hasFile('gcashQrCode')) {
-            if ($product->gcash_qr_code && !str_starts_with($product->gcash_qr_code, 'http')) {
-                \Illuminate\Support\Facades\Storage::disk('public')->delete($product->gcash_qr_code);
-            }
-            $product->gcash_qr_code = $request->file('gcashQrCode')->store('qrcodes', 'public');
+            $file = $request->file('gcashQrCode');
+            $filename = time() . '_gcash_' . Str::random(6) . '.' . $file->getClientOriginalExtension();
+            $file->move(public_path('uploads/qrcodes'), $filename);
+            $product->gcash_qr_code = 'uploads/qrcodes/' . $filename;
         }
 
         $product->is_maya_available = $request->has('product_is_maya_available');
@@ -222,10 +229,10 @@ class ProductManagementController extends Controller
         }
 
         if ($request->hasFile('mayaQrCode')) {
-            if ($product->maya_qr_code && !str_starts_with($product->maya_qr_code, 'http')) {
-                \Illuminate\Support\Facades\Storage::disk('public')->delete($product->maya_qr_code);
-            }
-            $product->maya_qr_code = $request->file('mayaQrCode')->store('qrcodes', 'public');
+            $file = $request->file('mayaQrCode');
+            $filename = time() . '_maya_' . Str::random(6) . '.' . $file->getClientOriginalExtension();
+            $file->move(public_path('uploads/qrcodes'), $filename);
+            $product->maya_qr_code = 'uploads/qrcodes/' . $filename;
         }
 
         // Lumban Special discount
@@ -245,17 +252,27 @@ class ProductManagementController extends Controller
             // Delete physical files for local storage paths
             foreach ($toRemove as $img) {
                 if (!str_starts_with($img, 'http')) {
-                    \Illuminate\Support\Facades\Storage::disk('public')->delete($img);
+                    $cleanImg = preg_replace('/^(storage|uploads)\//', '', $img);
+                    $cleanImg = ltrim(str_replace('\\', '/', $cleanImg), '/');
+                    if (file_exists(public_path('uploads/' . $cleanImg))) {
+                        @unlink(public_path('uploads/' . $cleanImg));
+                    }
+                    if (file_exists(public_path('uploads/products/' . $cleanImg))) {
+                        @unlink(public_path('uploads/products/' . $cleanImg));
+                    }
                 }
             }
         }
 
-        // Handle new image uploads
+        // Handle new image uploads (prepend new images so the newest photo becomes primary thumbnail)
         if ($request->hasFile('images')) {
+            $newImages = [];
             foreach ($request->file('images') as $image) {
-                $path = $image->store('products', 'public');
-                $currentImages[] = $path;
+                $filename = time() . '_' . Str::random(8) . '.' . $image->getClientOriginalExtension();
+                $image->move(public_path('uploads/products'), $filename);
+                $newImages[] = 'uploads/products/' . $filename;
             }
+            $currentImages = array_merge($newImages, array_values($currentImages));
         }
 
         $product->image = array_values($currentImages);
