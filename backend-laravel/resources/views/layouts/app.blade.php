@@ -386,7 +386,7 @@
                     </div>
                 </div>
                 <div class="pt-10 border-t border-gray-100 flex flex-col md:flex-row items-center justify-between gap-6">
-                    <div class="text-[11px] font-medium text-gray-400 tracking-widest">LumBarong © 2024. All Rights Reserved</div>
+                    <div class="text-[11px] font-medium text-gray-400 tracking-widest">LumBarong © {{ date('Y') }}. All Rights Reserved</div>
                 </div>
             </div>
         </footer>
