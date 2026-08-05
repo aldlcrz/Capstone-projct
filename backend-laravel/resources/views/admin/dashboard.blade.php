@@ -144,7 +144,7 @@
                 <div class="flex items-center gap-3">
                     <div class="w-6 h-6 rounded-full bg-gray-100 flex items-center justify-center text-[9px] font-black text-gray-500 shrink-0">{{ $i+1 }}</div>
                     <div class="flex-1 min-w-0">
-                        <div class="text-xs font-bold text-black truncate">{{ $row->seller?->shopName ?: $row->seller?->name ?: 'Unknown' }}</div>
+                        <div class="text-xs font-bold text-black truncate">{{ $row->shopName ?? $row->name ?? $row->seller?->shopName ?? $row->seller?->name ?? 'Unknown' }}</div>
                         <div class="text-[9px] text-gray-400">{{ $row->orders }} orders</div>
                     </div>
                     <div class="text-xs font-black text-[#C0422A] shrink-0">₱{{ number_format($row->revenue) }}</div>
@@ -172,7 +172,7 @@
                 <div class="flex items-center gap-3">
                     <div class="w-6 h-6 rounded-full bg-gray-100 flex items-center justify-center text-[9px] font-black text-gray-500 shrink-0">{{ $i+1 }}</div>
                     <div class="flex-1 min-w-0">
-                        <div class="text-xs font-bold text-black truncate">{{ $row->product?->name ?: 'Unknown Product' }}</div>
+                        <div class="text-xs font-bold text-black truncate">{{ $row->name ?? $row->product?->name ?? 'Unknown Product' }}</div>
                         <div class="text-[9px] text-gray-400">₱{{ number_format($row->revenue) }} revenue</div>
                     </div>
                     <div class="text-xs font-black text-blue-600 shrink-0">{{ $row->units }} units</div>
@@ -231,11 +231,10 @@
                 <div class="text-[9px] font-black uppercase tracking-widest text-gray-400 mb-3">Quick Links</div>
                 <div class="space-y-1.5">
                     @foreach([
-                        ['label'=>'Pending Products', 'href'=>'/admin/products?status=pending', 'count'=>$pendingActions['products']],
-                        ['label'=>'Pending Sellers',  'href'=>'/admin/sellers',                  'count'=>$pendingActions['sellers']],
-                        ['label'=>'Subscriptions',    'href'=>'/admin/subscriptions',            'count'=>$pendingActions['subscriptions']],
-                        ['label'=>'Banner Requests',  'href'=>'/admin/banners',                  'count'=>$pendingActions['banners']],
-                        ['label'=>'Open Reports',     'href'=>'/admin/reports',                  'count'=>$pendingActions['reports']],
+                        ['label'=>'Pending Products', 'href'=>'/admin/products?status=pending', 'count'=>$pendingActions['products'] ?? 0],
+                        ['label'=>'Pending Sellers',  'href'=>'/admin/sellers',                  'count'=>$pendingActions['sellers'] ?? 0],
+                        ['label'=>'Banner Requests',  'href'=>'/admin/banners',                  'count'=>$pendingActions['banners'] ?? 0],
+                        ['label'=>'Open Reports',     'href'=>'/admin/reports',                  'count'=>$pendingActions['reports'] ?? 0],
                     ] as $link)
                     <a href="{{ $link['href'] }}" class="flex items-center justify-between px-3 py-2 rounded-xl hover:bg-gray-50 transition-all group">
                         <span class="text-[10px] font-bold text-gray-700 group-hover:text-[#C0422A] transition-colors">{{ $link['label'] }}</span>

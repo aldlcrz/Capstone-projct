@@ -68,35 +68,40 @@ class AdminController extends Controller
     }
 
     /** Top 5 sellers ranked by gross revenue. */
-    private function getTopSellers(): \Illuminate\Database\Eloquent\Collection
+    private function getTopSellers()
     {
-        return Order::select(
-                'sellerId',
-                DB::raw('SUM(totalAmount) as revenue'),
-                DB::raw('COUNT(*) as orders')
+        return DB::table('orders')
+            ->join('users', 'orders.sellerId', '=', 'users.id')
+            ->select(
+                'users.id as sellerId',
+                'users.name',
+                'users.shopName',
+                DB::raw('SUM(orders.totalAmount) as revenue'),
+                DB::raw('COUNT(orders.id) as orders')
             )
-            ->whereNotIn('status', ['Cancelled'])
-            ->groupBy('sellerId')
+            ->whereNotIn('orders.status', ['Cancelled'])
+            ->groupBy('users.id', 'users.name', 'users.shopName')
             ->orderByDesc('revenue')
             ->limit(5)
-            ->with('seller:id,name,shopName')
             ->get();
     }
 
     /** Top 5 products ranked by units sold. */
-    private function getTopProducts(): \Illuminate\Database\Eloquent\Collection
+    private function getTopProducts()
     {
-        return OrderItem::select(
-                'productId',
-                DB::raw('SUM(quantity) as units'),
-                DB::raw('SUM(price * quantity) as revenue')
-            )
+        return DB::table('order_items')
             ->join('orders', 'order_items.orderId', '=', 'orders.id')
+            ->join('products', 'order_items.productId', '=', 'products.id')
+            ->select(
+                'products.id as productId',
+                'products.name',
+                DB::raw('SUM(order_items.quantity) as units'),
+                DB::raw('SUM(order_items.price * order_items.quantity) as revenue')
+            )
             ->whereNotIn('orders.status', ['Cancelled'])
-            ->groupBy('productId')
+            ->groupBy('products.id', 'products.name')
             ->orderByDesc('units')
             ->limit(5)
-            ->with('product:id,name')
             ->get();
     }
 
