@@ -174,18 +174,28 @@ class Product extends Model
             return $img;
         }
 
-        if (str_starts_with($img, 'storage/')) {
-            return '/' . $img;
+        $cleanPath = preg_replace('/^(storage|uploads)\//', '', $img);
+        $cleanPath = ltrim(str_replace('\\', '/', $cleanPath), '/');
+
+        $candidates = [
+            public_path('uploads/' . $cleanPath),
+            public_path('uploads/products/' . $cleanPath),
+            storage_path('app/public/' . $cleanPath),
+            storage_path('app/public/products/' . $cleanPath),
+            public_path('storage/' . $cleanPath),
+            public_path($img),
+        ];
+
+        foreach ($candidates as $filePath) {
+            if (file_exists($filePath) && is_file($filePath)) {
+                if (str_contains($filePath, 'public/uploads') || str_contains($filePath, 'public\uploads')) {
+                    return str_starts_with($cleanPath, 'products/') ? '/uploads/' . $cleanPath : '/uploads/products/' . $cleanPath;
+                }
+                return str_starts_with($cleanPath, 'products/') ? '/storage/' . $cleanPath : '/storage/products/' . $cleanPath;
+            }
         }
 
-        if (str_starts_with($img, 'products/') || str_starts_with($img, 'qrcodes/') || str_starts_with($img, 'categories/')) {
-            return '/storage/' . $img;
-        }
-
-        if (str_starts_with($img, 'uploads/')) {
-            return '/' . $img;
-        }
-
-        return '/storage/products/' . $img;
+        // File does not exist physically on disk — return default product placeholder directly
+        return '/uploads/products/default.jpg';
     }
 }
