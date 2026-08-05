@@ -35,7 +35,7 @@
                     <div class="group bg-white rounded-3xl border border-gray-100 shadow-sm hover:shadow-xl transition-all duration-500 overflow-hidden flex flex-col">
                         <!-- Image Section -->
                         <div class="relative aspect-3/4 overflow-hidden bg-gray-50">
-                            <img src="{{ $product->getImageUrl() }}" class="w-full h-full object-cover object-top group-hover:scale-110 transition-transform duration-700">
+                            <img src="{{ $product->getImageUrl() }}" onerror="this.src='/uploads/products/default.jpg'" class="w-full h-full object-cover object-top group-hover:scale-110 transition-transform duration-700">
                             
                             <div class="absolute top-4 left-4">
                                 <span class="px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest {{ $product->status === 'approved' ? 'bg-green-100 text-green-600' : 'bg-amber-100 text-amber-600' }}">
@@ -101,7 +101,7 @@
                 <div class="group bg-white rounded-3xl border border-gray-100 shadow-sm hover:shadow-xl transition-all duration-500 overflow-hidden flex flex-col">
                     <!-- Image Section -->
                     <div class="relative aspect-3/4 overflow-hidden bg-gray-50">
-                        <img src="{{ $product->getImageUrl() }}" class="w-full h-full object-cover object-top group-hover:scale-110 transition-transform duration-700">
+                        <img src="{{ $product->getImageUrl() }}" onerror="this.src='/uploads/products/default.jpg'" class="w-full h-full object-cover object-top group-hover:scale-110 transition-transform duration-700">
                         
                         <div class="absolute top-4 left-4">
                             <span class="px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest {{ $product->status === 'approved' ? 'bg-green-100 text-green-600' : 'bg-amber-100 text-amber-600' }}">

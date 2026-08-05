@@ -251,6 +251,7 @@
                      onclick="if(!event.target.closest('button') && !event.target.closest('form') && !event.target.closest('a')) window.location.href='/products/{{ $product->id }}'">
                     <div class="aspect-4/5 bg-gray-100 rounded-2xl overflow-hidden mb-3 relative shadow-sm">
                         <img src="{{ $product->getImageUrl() }}"
+                             onerror="this.src='/uploads/products/default.jpg'"
                              alt="{{ $product->name }}"
                              class="w-full h-full object-cover object-top group-hover:scale-105 transition-transform duration-500 ease-out">
 
@@ -335,6 +336,7 @@
                  onclick="if(!event.target.closest('button') && !event.target.closest('form') && !event.target.closest('a')) window.location.href='/products/{{ $product->id }}'">
                 <div class="aspect-4/5 bg-gray-100 rounded-2xl overflow-hidden mb-3 relative shadow-sm">
                     <img src="{{ $product->getImageUrl() }}"
+                         onerror="this.src='/uploads/products/default.jpg'"
                          alt="{{ $product->name }}"
                          class="w-full h-full object-cover object-top group-hover:scale-105 transition-transform duration-500 ease-out">
 

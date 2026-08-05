@@ -92,6 +92,7 @@
                         <img 
                             x-show="activeImage === index"
                             :src="imageUrl(variation.url)"
+                            onerror="this.src='/uploads/products/default.jpg'"
                             class="w-full h-full object-cover object-top"
                             :class="isZoomed ? 'scale-[2.2] transition-transform duration-100 ease-out' : 'scale-100 transition-transform duration-300 ease-out'"
                             :style="isZoomed ? { transformOrigin: `${originX}% ${originY}%` } : {}"
@@ -108,7 +109,7 @@
                             class="relative w-20 h-24 rounded-xl overflow-hidden shrink-0 border-2 transition-all shadow-sm"
                             :class="activeImage === index ? 'border-black opacity-100 scale-[0.98]' : 'border-transparent opacity-60 hover:opacity-100'"
                         >
-                            <img :src="imageUrl(variation.url)" class="w-full h-full object-cover">
+                            <img :src="imageUrl(variation.url)" onerror="this.src='/uploads/products/default.jpg'" class="w-full h-full object-cover">
                         </button>
                     </template>
                 </div>
