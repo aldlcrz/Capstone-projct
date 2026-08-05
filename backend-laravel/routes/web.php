@@ -212,6 +212,11 @@ Route::get('/storage/{path}', function ($path) {
         }
     }
 
+    $defaultImg = public_path('uploads/products/default.jpg');
+    if (file_exists($defaultImg)) {
+        return response()->file($defaultImg);
+    }
+
     abort(404);
 })->where('path', '.*');
 
@@ -230,6 +235,11 @@ Route::get('/uploads/{path}', function ($path) {
         if (file_exists($filePath) && is_file($filePath)) {
             return response()->file($filePath);
         }
+    }
+
+    $defaultImg = public_path('uploads/products/default.jpg');
+    if (file_exists($defaultImg)) {
+        return response()->file($defaultImg);
     }
 
     abort(404);
