@@ -171,19 +171,20 @@
     @endif
 
     {{-- ====== Filters & Search ====== --}}
+    <div id="catalogue-section" class="space-y-12 transition-opacity duration-300">
     <div class="space-y-3">
         <!-- Demographics & Search Bar -->
         <div class="flex flex-wrap items-center gap-3">
             <div class="flex items-center gap-2 overflow-x-auto no-scrollbar py-1">
-                <a href="/" class="px-5 py-2.5 rounded-full border text-sm font-bold transition-all {{ !request('category') ? 'bg-black text-white border-black' : 'bg-white text-gray-600 border-gray-200 hover:border-black hover:text-black' }}">All</a>
-                <a href="/?category=Men" class="px-5 py-2.5 rounded-full border text-sm font-bold transition-all {{ in_array(request('category'), ['Male', 'Men']) ? 'bg-black text-white border-black' : 'bg-white text-gray-600 border-gray-200 hover:border-black hover:text-black' }}">Men</a>
-                <a href="/?category=Women" class="px-5 py-2.5 rounded-full border text-sm font-bold transition-all {{ in_array(request('category'), ['Female', 'Women']) ? 'bg-black text-white border-black' : 'bg-white text-gray-600 border-gray-200 hover:border-black hover:text-black' }}">Women</a>
-                <a href="/?category=Kids" class="px-5 py-2.5 rounded-full border text-sm font-bold transition-all {{ request('category') == 'Kids' ? 'bg-black text-white border-black' : 'bg-white text-gray-600 border-gray-200 hover:border-black hover:text-black' }}">Kids</a>
+                <a href="/" class="ajax-filter-link px-5 py-2.5 rounded-full border text-sm font-bold transition-all {{ !request('category') ? 'bg-black text-white border-black' : 'bg-white text-gray-600 border-gray-200 hover:border-black hover:text-black' }}">All</a>
+                <a href="/?category=Men" class="ajax-filter-link px-5 py-2.5 rounded-full border text-sm font-bold transition-all {{ in_array(request('category'), ['Male', 'Men']) ? 'bg-black text-white border-black' : 'bg-white text-gray-600 border-gray-200 hover:border-black hover:text-black' }}">Men</a>
+                <a href="/?category=Women" class="ajax-filter-link px-5 py-2.5 rounded-full border text-sm font-bold transition-all {{ in_array(request('category'), ['Female', 'Women']) ? 'bg-black text-white border-black' : 'bg-white text-gray-600 border-gray-200 hover:border-black hover:text-black' }}">Women</a>
+                <a href="/?category=Kids" class="ajax-filter-link px-5 py-2.5 rounded-full border text-sm font-bold transition-all {{ request('category') == 'Kids' ? 'bg-black text-white border-black' : 'bg-white text-gray-600 border-gray-200 hover:border-black hover:text-black' }}">Kids</a>
             </div>
 
             <div class="h-8 w-px bg-gray-200 mx-1 hidden md:block"></div>
 
-            <form action="/" method="GET" class="flex-1 min-w-[240px] relative">
+            <form action="/" method="GET" class="ajax-search-form flex-1 min-w-[240px] relative">
                 @if(request('category'))
                     <input type="hidden" name="category" value="{{ request('category') }}">
                 @endif
@@ -196,7 +197,7 @@
             @if(request('search'))
                 <div class="text-xs text-gray-400 font-medium">
                     Results for <span class="font-bold text-black">"{{ request('search') }}"</span>
-                    <a href="{{ request('category') ? '/?category='.request('category') : '/' }}" class="ml-2 text-[#C0422A] hover:underline">Clear</a>
+                    <a href="{{ request('category') ? '/?category='.request('category') : '/' }}" class="ajax-filter-link ml-2 text-[#C0422A] hover:underline">Clear</a>
                 </div>
             @endif
         </div>
@@ -210,7 +211,7 @@
                         $isActiveCategory = request('category') == $cat->id || strtolower(request('category')) == strtolower($cat->name);
                     @endphp
                     <a href="/?category={{ urlencode($cat->id) }}"
-                       class="px-4 py-1.5 rounded-full border text-xs font-semibold transition-all shrink-0 {{ $isActiveCategory ? 'bg-[#C0422A] text-white border-[#C0422A] shadow-sm font-bold' : 'bg-white text-gray-700 border-gray-200 hover:border-[#C0422A] hover:text-[#C0422A]' }}">
+                       class="ajax-filter-link px-4 py-1.5 rounded-full border text-xs font-semibold transition-all shrink-0 {{ $isActiveCategory ? 'bg-[#C0422A] text-white border-[#C0422A] shadow-sm font-bold' : 'bg-white text-gray-700 border-gray-200 hover:border-[#C0422A] hover:text-[#C0422A]' }}">
                         {{ $cat->name }}
                     </a>
                 @endforeach
@@ -401,6 +402,7 @@
     <div class="mt-4">
         {{ $products->links() }}
     </div>
+    </div>{{-- End #catalogue-section --}}
 
     {{-- ====== Quick Add to Cart Modal ====== --}}
     <div 
@@ -619,6 +621,62 @@
                 }
             }
         }));
+    });
+
+    // Instant AJAX filtering for categories, demographics, and search without full page refresh
+    document.addEventListener('DOMContentLoaded', function() {
+        function loadCatalogue(url, push = true) {
+            const section = document.getElementById('catalogue-section');
+            if (!section) {
+                window.location.href = url;
+                return;
+            }
+
+            section.style.opacity = '0.4';
+            section.style.pointerEvents = 'none';
+
+            fetch(url, { headers: { 'X-Requested-With': 'XMLHttpRequest' } })
+                .then(res => res.text())
+                .then(html => {
+                    const parser = new DOMParser();
+                    const doc = parser.parseFromString(html, 'text/html');
+                    const newSection = doc.getElementById('catalogue-section');
+                    if (newSection && section) {
+                        section.innerHTML = newSection.innerHTML;
+                        if (push) history.pushState(null, '', url);
+                    }
+                })
+                .catch(() => {
+                    window.location.href = url;
+                })
+                .finally(() => {
+                    section.style.opacity = '1';
+                    section.style.pointerEvents = 'auto';
+                });
+        }
+
+        document.addEventListener('click', function(e) {
+            const link = e.target.closest('.ajax-filter-link, .pagination a');
+            if (link && link.href) {
+                e.preventDefault();
+                loadCatalogue(link.href);
+            }
+        });
+
+        document.addEventListener('submit', function(e) {
+            const form = e.target.closest('.ajax-search-form');
+            if (form) {
+                e.preventDefault();
+                const formData = new FormData(form);
+                const params = new URLSearchParams(formData).toString();
+                const url = form.action + (params ? '?' + params : '');
+                loadCatalogue(url);
+            }
+        });
+
+        window.addEventListener('popstate', function() {
+            loadCatalogue(window.location.href, false);
+        });
     });
 </script>
 @endpush
