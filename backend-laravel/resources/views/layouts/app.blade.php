@@ -329,7 +329,7 @@
         @endif
 
         <!-- Page Content -->
-        <main class="flex-1 w-full max-w-360 mx-auto px-4 py-8 lg:px-12 pb-28 lg:pb-8">
+        <main class="flex-1 w-full max-w-360 mx-auto px-4 pt-2 sm:pt-4 lg:pt-6 lg:px-12 pb-28 lg:pb-8">
             @yield('content')
         </main>
 
