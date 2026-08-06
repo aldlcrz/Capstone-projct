@@ -322,42 +322,6 @@
                         {{ count($cart) }} item(s) selected
                     </p>
 
-                    <div class="space-y-4 mb-6 flex-1 min-h-0 overflow-y-auto pr-2 custom-scrollbar">
-                        @foreach($cart as $item)
-                            @php
-                                $img = $item['image'] ?? '';
-                                $imgSrc = (str_starts_with($img, 'http') || str_starts_with($img, '/')) ? $img : (str_starts_with($img, 'products/') ? asset('storage/' . $img) : asset('uploads/products/' . $img));
-                            @endphp
-                            <div class="bg-white rounded-2xl p-4 flex gap-4 border border-gray-50 shadow-xs">
-                                <div class="w-16 h-16 bg-gray-50 rounded-xl overflow-hidden shrink-0">
-                                    <img src="{{ $imgSrc }}" onerror="this.src='/uploads/products/default.jpg'" class="w-full h-full object-cover">
-                                </div>
-                                <div class="flex-1 min-w-0">
-                                    <div class="flex items-center justify-between">
-                                        <h3 class="text-xs lg:text-sm font-bold text-black line-clamp-1">{{ $item['name'] }}</h3>
-                                        @if(!empty($item['category_name']))
-                                            <span class="text-[8px] lg:text-[9px] font-bold text-gray-400 uppercase tracking-wider bg-gray-100 px-1.5 py-0.5 rounded ml-2 shrink-0">{{ $item['category_name'] }}</span>
-                                        @endif
-                                    </div>
-                                    <div class="text-[10px] lg:text-xs text-gray-400 font-bold uppercase mt-1">
-                                        @if(!empty($item['size']))Size: {{ $item['size'] }}@else Size: Standard @endif
-                                    </div>
-                                    <div class="flex justify-between items-center mt-2">
-                                        <span class="text-xs font-bold text-gray-500">{{ $item['quantity'] }}x</span>
-                                        <div class="flex items-center gap-1.5">
-                                            @if(!empty($item['is_on_sale']) && ($item['discount_percentage'] ?? 0) > 0)
-                                                <span class="text-xs lg:text-sm font-bold text-[#C0422A]">₱{{ number_format($item['price'] * $item['quantity']) }}</span>
-                                                <span class="text-[9px] lg:text-[10px] text-gray-400 line-through">₱{{ number_format(($item['original_price'] ?? $item['price']) * $item['quantity']) }}</span>
-                                            @else
-                                                <span class="text-xs lg:text-sm font-bold text-black">₱{{ number_format($item['price'] * $item['quantity']) }}</span>
-                                            @endif
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        @endforeach
-                    </div>
-
                     <div class="space-y-3 border-t border-gray-100 pt-6 mt-auto">
                         <div class="flex justify-between items-center">
                             <span class="text-sm lg:text-base text-gray-500 font-medium">Subtotal</span>
