@@ -326,10 +326,8 @@
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
             </button>
         </div>
-        @endif
-
-        <!-- Page Content -->
-        <main class="flex-1 w-full max-w-360 mx-auto px-4 pt-2 sm:pt-4 lg:pt-6 lg:px-12 pb-28 lg:pb-8">
+          <!-- Page Content -->
+        <main class="flex-1 w-full max-w-360 mx-auto px-4 pt-2 sm:pt-4 lg:pt-6 lg:px-12 {{ request()->is('checkout*') ? 'pb-0 lg:pb-6' : 'pb-28 lg:pb-8' }}">
             @yield('content')
         </main>
 
@@ -352,7 +350,7 @@
 
             @auth
             <a href="/orders/my-orders" class="flex flex-col items-center gap-1 flex-1 {{ request()->is('orders*') ? 'text-black' : 'text-gray-400' }}">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path></svg>
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 022 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path></svg>
                 <span class="text-[9px] font-bold uppercase tracking-widest">Orders</span>
             </a>
             <a href="/profile" class="flex flex-col items-center gap-1 flex-1 {{ request()->is('profile') ? 'text-black' : 'text-gray-400' }}">
@@ -369,7 +367,7 @@
         @endif
 
         <!-- Footer -->
-        <footer class="bg-white pt-16 pb-10 border-t border-gray-100 mt-8 sm:mt-12">
+        <footer class="hidden lg:block bg-white pt-16 pb-10 border-t border-gray-100 mt-8 sm:mt-12">
             <div class="max-w-360 mx-auto px-4 lg:px-12">
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-12 mb-20">
                     <div class="space-y-6">
