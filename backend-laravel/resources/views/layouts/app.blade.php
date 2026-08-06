@@ -144,13 +144,12 @@
                     <div x-data="{ 
                         open: false, 
                         cartCount: {{ auth()->check() ? count(session('cart', [])) : 0 }},
-                        cartItems: [],
+                        cartItems: {{ json_encode(array_values(session('cart', [])), JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP) }},
                         init() {
                             window.addEventListener('cart-updated', (e) => {
                                 this.cartCount = e.detail.cartCount;
                                 this.cartItems = Object.values(e.detail.cart || {});
                             });
-                            this.cartItems = @json(array_values(session('cart', [])));
                         }
                     }" class="relative" @mouseenter="open = true" @mouseleave="open = false">
                         <a href="/cart" class="relative w-11 h-11 flex items-center justify-center rounded-full border border-gray-100 text-gray-800 hover:border-gray-400 bg-white transition-all shadow-sm">
