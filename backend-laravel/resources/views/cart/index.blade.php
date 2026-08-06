@@ -228,123 +228,123 @@
                     <a href="/" class="px-8 py-3 bg-black text-white text-xs font-bold uppercase tracking-widest rounded-full hover:bg-gray-800 transition-all">Explore Collection</a>
                 </div>
             @endforelse
+        </div>
 
-            {{-- ===== Right: Dynamic Order Summary (Desktop Sidebar) ===== --}}
-            @if(!empty($cart))
-            <div class="lg:w-96 hidden lg:block">
-                <div class="bg-white p-8 rounded-3xl border border-gray-100 shadow-sm sticky top-8">
-                    <h2 class="text-xl font-bold text-black mb-1">Order Summary</h2>
-                    <p class="text-[10px] text-gray-400 uppercase tracking-widest font-bold mb-6">
-                        <span x-text="selected.length"></span> of {{ count($cart) }} item(s) selected
-                    </p>
+        {{-- ===== Right: Dynamic Order Summary (Desktop Sidebar) ===== --}}
+        @if(!empty($cart))
+        <div class="lg:w-96 w-full hidden lg:block shrink-0">
+            <div class="bg-white p-8 rounded-3xl border border-gray-100 shadow-sm sticky top-8">
+                <h2 class="text-xl font-bold text-black mb-1">Order Summary</h2>
+                <p class="text-[10px] text-gray-400 uppercase tracking-widest font-bold mb-6">
+                    <span x-text="selected.length"></span> of {{ count($cart) }} item(s) selected
+                </p>
 
-                    {{-- Empty selection notice --}}
-                    <div x-show="selected.length === 0"
-                         class="py-6 text-center bg-gray-50 rounded-2xl border border-dashed border-gray-200 mb-6">
-                        <svg class="w-8 h-8 text-gray-200 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
-                        </svg>
-                        <p class="text-xs text-gray-400 font-bold">Select items to checkout</p>
-                    </div>
-
-                    <div x-show="selected.length > 0" class="space-y-4">
-                        <div class="flex justify-between text-gray-500">
-                            <span class="text-sm">Subtotal (<span x-text="selected.length"></span> item<span x-show="selected.length !== 1">s</span>)</span>
-                            <span class="font-bold text-black">₱<span x-text="subtotal.toLocaleString('en-PH', {minimumFractionDigits:0,maximumFractionDigits:0})"></span></span>
-                        </div>
-                        <div class="flex justify-between text-gray-500">
-                            <span class="text-sm">Shipping</span>
-                            <span x-show="shipping > 0" class="text-gray-900 font-bold text-sm">₱<span x-text="shipping.toLocaleString('en-PH', {minimumFractionDigits:2,maximumFractionDigits:2})"></span></span>
-                            <span x-show="shipping === 0" class="text-green-600 font-bold text-sm">Free</span>
-                        </div>
-                        <div class="pt-4 border-t border-gray-100 flex justify-between items-center">
-                            <span class="text-lg font-bold text-black">Total</span>
-                            <span class="text-2xl font-black text-[#C0422A]">₱<span x-text="(subtotal + shipping).toLocaleString('en-PH', {minimumFractionDigits:0,maximumFractionDigits:0})"></span></span>
-                        </div>
-                    </div>
-
-                    {{-- Checkout form - posts selected keys --}}
-                    <form action="/checkout/selected" method="POST" class="mt-8" x-ref="checkoutForm">
-                        @csrf
-                        <template x-for="key in selected" :key="key">
-                            <input type="hidden" name="selected_keys[]" :value="key">
-                        </template>
-                        <button type="submit"
-                                :disabled="selected.length === 0"
-                                :class="selected.length === 0
-                                    ? 'opacity-40 cursor-not-allowed bg-gray-400'
-                                    : 'bg-black hover:bg-[#C0422A] shadow-xl cursor-pointer'"
-                                class="block w-full text-white text-center py-4 rounded-xl text-xs font-bold uppercase tracking-widest transition-all">
-                            Checkout Now
-                            <span x-show="selected.length > 0"
-                                  class="ml-1 opacity-70"
-                                  x-text="'(' + selected.length + ' item' + (selected.length !== 1 ? 's' : '') + ')'">
-                            </span>
-                        </button>
-                    </form>
-
-                    <a href="/" class="block w-full text-center py-3 text-xs font-bold text-gray-400 uppercase tracking-widest hover:text-black transition-colors mt-2">
-                        Continue Shopping
-                    </a>
+                {{-- Empty selection notice --}}
+                <div x-show="selected.length === 0"
+                     class="py-6 text-center bg-gray-50 rounded-2xl border border-dashed border-gray-200 mb-6">
+                    <svg class="w-8 h-8 text-gray-200 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
+                    </svg>
+                    <p class="text-xs text-gray-400 font-bold">Select items to checkout</p>
                 </div>
-            </div>
 
-            {{-- ===== Mobile Sticky Pricing & Checkout Bar ===== --}}
-            <div x-show="items.length > 0"
-                 x-cloak
-                 class="lg:hidden fixed bottom-16 left-0 right-0 z-40 bg-white/95 backdrop-blur-md border-t border-gray-200 shadow-[0_-6px_24px_rgba(0,0,0,0.12)] px-4 py-3"
-                 x-data="{ showMobileBreakdown: false }">
-
-                {{-- Expandable Price Breakdown on Mobile --}}
-                <div x-show="showMobileBreakdown" 
-                     x-cloak
-                     x-transition:enter="transition ease-out duration-200"
-                     x-transition:enter-start="opacity-0 translate-y-2 scale-95"
-                     x-transition:enter-end="opacity-100 translate-y-0 scale-100"
-                     x-transition:leave="transition ease-in duration-150"
-                     x-transition:leave-start="opacity-100 translate-y-0 scale-100"
-                     x-transition:leave-end="opacity-0 translate-y-2 scale-95"
-                     class="mb-3 p-4 bg-gray-50 rounded-2xl border border-gray-100 text-xs space-y-2 shadow-inner">
-                    <div class="flex justify-between items-center text-gray-500">
-                        <span>Subtotal (<span x-text="selected.length"></span> item<span x-show="selected.length !== 1">s</span>)</span>
+                <div x-show="selected.length > 0" class="space-y-4">
+                    <div class="flex justify-between text-gray-500">
+                        <span class="text-sm">Subtotal (<span x-text="selected.length"></span> item<span x-show="selected.length !== 1">s</span>)</span>
                         <span class="font-bold text-black">₱<span x-text="subtotal.toLocaleString('en-PH', {minimumFractionDigits:0,maximumFractionDigits:0})"></span></span>
                     </div>
-                    <div class="flex justify-between items-center text-gray-500">
-                        <span>Estimated Shipping</span>
-                        <span x-show="shipping > 0" class="text-gray-900 font-bold">₱<span x-text="shipping.toLocaleString('en-PH', {minimumFractionDigits:2,maximumFractionDigits:2})"></span></span>
-                        <span x-show="shipping === 0" class="text-green-600 font-bold">Free</span>
+                    <div class="flex justify-between text-gray-500">
+                        <span class="text-sm">Shipping</span>
+                        <span x-show="shipping > 0" class="text-gray-900 font-bold text-sm">₱<span x-text="shipping.toLocaleString('en-PH', {minimumFractionDigits:2,maximumFractionDigits:2})"></span></span>
+                        <span x-show="shipping === 0" class="text-green-600 font-bold text-sm">Free</span>
+                    </div>
+                    <div class="pt-4 border-t border-gray-100 flex justify-between items-center">
+                        <span class="text-lg font-bold text-black">Total</span>
+                        <span class="text-2xl font-black text-[#C0422A]">₱<span x-text="(subtotal + shipping).toLocaleString('en-PH', {minimumFractionDigits:0,maximumFractionDigits:0})"></span></span>
                     </div>
                 </div>
 
-                {{-- Main Bottom Action Bar --}}
-                <div class="flex items-center justify-between gap-3">
-                    {{-- Price & Breakdown Toggle --}}
-                    <div class="flex-1 min-w-0">
-                        <button type="button" @click="showMobileBreakdown = !showMobileBreakdown" class="inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-widest text-gray-400 hover:text-black transition-colors">
-                            <span>Total Amount</span>
-                            <svg class="w-3.5 h-3.5 transition-transform duration-200" :class="showMobileBreakdown ? 'rotate-180 text-black' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7"/>
-                            </svg>
-                        </button>
-                        <div class="text-xl font-black text-[#C0422A] leading-tight truncate">
-                            ₱<span x-text="(subtotal + shipping).toLocaleString('en-PH', {minimumFractionDigits:0,maximumFractionDigits:0})"></span>
-                        </div>
-                    </div>
-
-                    {{-- Mobile Checkout Button --}}
-                    <button type="button"
-                            @click="$refs.checkoutForm.submit()"
+                {{-- Checkout form - posts selected keys --}}
+                <form action="/checkout/selected" method="POST" class="mt-8" x-ref="checkoutForm">
+                    @csrf
+                    <template x-for="key in selected" :key="key">
+                        <input type="hidden" name="selected_keys[]" :value="key">
+                    </template>
+                    <button type="submit"
                             :disabled="selected.length === 0"
                             :class="selected.length === 0
                                 ? 'opacity-40 cursor-not-allowed bg-gray-400'
-                                : 'bg-[#C0422A] hover:bg-black shadow-lg shadow-[#C0422A]/20 active:scale-95 cursor-pointer'"
-                            class="px-6 py-3.5 text-white text-xs font-bold uppercase tracking-widest rounded-xl transition-all shrink-0">
-                        Checkout Now <span x-show="selected.length > 0" x-text="'(' + selected.length + ')'"></span>
+                                : 'bg-black hover:bg-[#C0422A] shadow-xl cursor-pointer'"
+                            class="block w-full text-white text-center py-4 rounded-xl text-xs font-bold uppercase tracking-widest transition-all">
+                        Checkout Now
+                        <span x-show="selected.length > 0"
+                              class="ml-1 opacity-70"
+                              x-text="'(' + selected.length + ' item' + (selected.length !== 1 ? 's' : '') + ')'">
+                        </span>
                     </button>
+                </form>
+
+                <a href="/" class="block w-full text-center py-3 text-xs font-bold text-gray-400 uppercase tracking-widest hover:text-black transition-colors mt-2">
+                    Continue Shopping
+                </a>
+            </div>
+        </div>
+
+        {{-- ===== Mobile Sticky Pricing & Checkout Bar ===== --}}
+        <div x-show="items.length > 0"
+             x-cloak
+             class="lg:hidden fixed bottom-16 left-0 right-0 z-40 bg-white/95 backdrop-blur-md border-t border-gray-200 shadow-[0_-6px_24px_rgba(0,0,0,0.12)] px-4 py-3"
+             x-data="{ showMobileBreakdown: false }">
+
+            {{-- Expandable Price Breakdown on Mobile --}}
+            <div x-show="showMobileBreakdown" 
+                 x-cloak
+                 x-transition:enter="transition ease-out duration-200"
+                 x-transition:enter-start="opacity-0 translate-y-2 scale-95"
+                 x-transition:enter-end="opacity-100 translate-y-0 scale-100"
+                 x-transition:leave="transition ease-in duration-150"
+                 x-transition:leave-start="opacity-100 translate-y-0 scale-100"
+                 x-transition:leave-end="opacity-0 translate-y-2 scale-95"
+                 class="mb-3 p-4 bg-gray-50 rounded-2xl border border-gray-100 text-xs space-y-2 shadow-inner">
+                <div class="flex justify-between items-center text-gray-500">
+                    <span>Subtotal (<span x-text="selected.length"></span> item<span x-show="selected.length !== 1">s</span>)</span>
+                    <span class="font-bold text-black">₱<span x-text="subtotal.toLocaleString('en-PH', {minimumFractionDigits:0,maximumFractionDigits:0})"></span></span>
+                </div>
+                <div class="flex justify-between items-center text-gray-500">
+                    <span>Estimated Shipping</span>
+                    <span x-show="shipping > 0" class="text-gray-900 font-bold">₱<span x-text="shipping.toLocaleString('en-PH', {minimumFractionDigits:2,maximumFractionDigits:2})"></span></span>
+                    <span x-show="shipping === 0" class="text-green-600 font-bold">Free</span>
                 </div>
             </div>
-            @endif
+
+            {{-- Main Bottom Action Bar --}}
+            <div class="flex items-center justify-between gap-3">
+                {{-- Price & Breakdown Toggle --}}
+                <div class="flex-1 min-w-0">
+                    <button type="button" @click="showMobileBreakdown = !showMobileBreakdown" class="inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-widest text-gray-400 hover:text-black transition-colors">
+                        <span>Total Amount</span>
+                        <svg class="w-3.5 h-3.5 transition-transform duration-200" :class="showMobileBreakdown ? 'rotate-180 text-black' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7"/>
+                        </svg>
+                    </button>
+                    <div class="text-xl font-black text-[#C0422A] leading-tight truncate">
+                        ₱<span x-text="(subtotal + shipping).toLocaleString('en-PH', {minimumFractionDigits:0,maximumFractionDigits:0})"></span>
+                    </div>
+                </div>
+
+                {{-- Mobile Checkout Button --}}
+                <button type="button"
+                        @click="$refs.checkoutForm.submit()"
+                        :disabled="selected.length === 0"
+                        :class="selected.length === 0
+                            ? 'opacity-40 cursor-not-allowed bg-gray-400'
+                            : 'bg-[#C0422A] hover:bg-black shadow-lg shadow-[#C0422A]/20 active:scale-95 cursor-pointer'"
+                        class="px-6 py-3.5 text-white text-xs font-bold uppercase tracking-widest rounded-xl transition-all shrink-0">
+                    Checkout Now <span x-show="selected.length > 0" x-text="'(' + selected.length + ')'"></span>
+                </button>
+            </div>
         </div>
+        @endif
     </div>
 
     {{-- Client-side Empty Cart view --}}
