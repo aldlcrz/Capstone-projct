@@ -83,7 +83,7 @@
     <div x-data="{ isMobileMenuOpen: false }" class="flex h-screen overflow-hidden">
         
         <!-- Desktop Sidebar -->
-        <aside class="hidden lg:flex flex-col w-70 h-full bg-white border-r border-(--border) overflow-hidden">
+        <aside class="hidden lg:flex flex-col w-[280px] h-full bg-white border-r border-(--border) overflow-hidden">
             <div class="p-10 flex flex-col h-full">
                 <div class="mb-12 shrink-0">
                     <a href="/admin/dashboard" class="font-serif text-lg font-bold text-(--charcoal) tracking-tighter">
@@ -206,7 +206,7 @@
         <!-- Main Content Area -->
         <div class="flex-1 flex flex-col h-full relative overflow-hidden">
             <!-- Header -->
-            <header class="sticky top-0 z-40 bg-white border-b border-(--border) h-18 flex items-center shrink-0 px-4 lg:px-10 justify-between">
+            <header class="sticky top-0 z-40 bg-white border-b border-(--border) h-[72px] flex items-center shrink-0 px-4 lg:px-10 justify-between">
                 <div class="lg:hidden font-serif font-bold text-(--charcoal) tracking-tighter">LUMBARONG ADMIN</div>
                 <div class="hidden lg:block"></div>
                 <div class="flex items-center gap-4">
@@ -228,7 +228,7 @@
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"></path>
                             </svg>
                             @if($unreadCount > 0)
-                                <span class="absolute -top-1 -right-1 min-w-4.5 h-4.5 px-1 bg-red-500 text-white text-[9px] font-bold rounded-full flex items-center justify-center border-2 border-white">{{ $unreadCount }}</span>
+                                <span class="absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 bg-red-500 text-white text-[9px] font-bold rounded-full flex items-center justify-center border-2 border-white">{{ $unreadCount }}</span>
                             @endif
                         </button>
 
@@ -279,7 +279,7 @@
 
             <!-- Page Content -->
             <main class="flex-1 overflow-y-auto p-4 lg:p-10 pb-24">
-                <div class="max-w-300 mx-auto">
+                <div class="max-w-[1200px] mx-auto">
                     {{-- Flash Messages (Floating Toasts) --}}
                     @if(session('success') || session('error'))
                     <div 
