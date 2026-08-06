@@ -326,7 +326,9 @@
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
             </button>
         </div>
-          <!-- Page Content -->
+        @endif
+
+        <!-- Page Content -->
         <main class="flex-1 w-full max-w-360 mx-auto px-4 pt-2 sm:pt-4 lg:pt-6 lg:px-12 {{ request()->is('checkout*') ? 'pb-0 lg:pb-6' : 'pb-28 lg:pb-8' }}">
             @yield('content')
         </main>
