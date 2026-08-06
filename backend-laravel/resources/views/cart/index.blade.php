@@ -23,7 +23,7 @@
 
 <div id="cart-root"
      data-cart-items="{{ json_encode($cartItemsForJs) }}"
-     class="max-w-[1200px] mx-auto px-4 py-12 min-h-screen"
+     class="max-w-300 mx-auto px-4 py-12 min-h-screen"
      x-data="cartApp()"
      x-init="init()">
 

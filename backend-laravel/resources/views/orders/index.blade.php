@@ -1,11 +1,11 @@
 @extends('layouts.app')
 
 @section('content')
-<div class="max-w-[1000px] mx-auto py-8">
+<div class="max-w-250 mx-auto py-8">
     <div class="flex flex-col md:flex-row items-center justify-between gap-6 mb-12">
         <div>
             <div class="flex items-center gap-2 mb-2">
-                <div class="w-6 h-[2px] bg-[#C0422A]"></div>
+                <div class="w-6 h-0.5 bg-[#C0422A]"></div>
                 <span class="text-[10px] font-bold uppercase tracking-widest text-[#C0422A]">Account</span>
             </div>
             <h1 class="font-serif text-3xl font-bold text-black">My <span class="text-[#C0422A] italic">Orders</span></h1>

@@ -1,7 +1,7 @@
 @extends('layouts.app')
 
 @section('content')
-<div class="max-w-[1200px] mx-auto px-4 py-12 min-h-screen bg-white" x-data="{
+<div class="max-w-300 mx-auto px-4 py-12 min-h-screen bg-white" x-data="{
     step: 1,
     paymentMethod: '{{ ($paymentSource && !($paymentSource->isGcashAvailable ?? true) && ($paymentSource->isMayaAvailable ?? false)) ? 'Maya' : 'GCash' }}',
     address: @js($addresses->first() ?? [
@@ -189,7 +189,7 @@
             <div class="lg:col-span-5">
                 <div class="bg-[#F9FAFB] rounded-[40px] p-8 border border-gray-100 sticky top-10">
                     <h2 class="text-xl font-bold mb-6">Order Summary</h2>
-                    <div class="space-y-4 mb-8 max-h-[300px] overflow-y-auto pr-2 custom-scrollbar">
+                    <div class="space-y-4 mb-8 max-h-75 overflow-y-auto pr-2 custom-scrollbar">
                         @foreach($cart as $item)
                             @php
                                 $img = $item['image'] ?? '';
@@ -312,7 +312,7 @@
     </div>
 
     <!-- Address Book Modal -->
-    <div x-show="showAddressModal" class="fixed inset-0 z-[9999] flex items-center justify-center p-4" x-cloak>
+    <div x-show="showAddressModal" class="fixed inset-0 z-9999 flex items-center justify-center p-4" x-cloak>
         <div class="absolute inset-0 bg-black/60 backdrop-blur-sm" @click="showAddressModal = false"></div>
         <div class="relative bg-white w-full max-w-lg rounded-[40px] shadow-2xl overflow-hidden" x-transition>
             <div class="p-8 border-b border-gray-50 flex justify-between items-center">
@@ -347,7 +347,7 @@
     <!-- QR Code Zoom Modal -->
     <template x-if="showZoomModal">
         <div 
-            class="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm"
+            class="fixed inset-0 z-9999 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm"
             @click="showZoomModal = false"
             x-transition:enter="transition ease-out duration-200"
             x-transition:enter-start="opacity-0"
@@ -358,7 +358,7 @@
         >
             <div 
                 @click.stop
-                class="bg-white rounded-[32px] border border-gray-100 shadow-2xl p-6 relative overflow-hidden max-w-sm w-full flex flex-col items-center justify-center"
+                class="bg-white rounded-4xl border border-gray-100 shadow-2xl p-6 relative overflow-hidden max-w-sm w-full flex flex-col items-center justify-center"
                 x-transition:enter="transition ease-out duration-300 transform"
                 x-transition:enter-start="opacity-0 scale-95 translate-y-4"
                 x-transition:enter-end="opacity-100 scale-100 translate-y-0"

@@ -1,7 +1,7 @@
 @extends('layouts.app')
 
 @section('content')
-<div class="max-w-[900px] mx-auto py-8" x-data="{ confirmModal: false, reviewModal: false, reviewProductId: null, reviewProductName: '' }">
+<div class="max-w-225 mx-auto py-8" x-data="{ confirmModal: false, reviewModal: false, reviewProductId: null, reviewProductName: '' }">
 
     {{-- Back --}}
     <a href="/orders/my-orders" class="inline-flex items-center gap-2 text-[10px] font-bold text-gray-400 uppercase tracking-widest hover:text-[#C0422A] transition-colors mb-8">
@@ -15,7 +15,7 @@
     <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
         <div>
             <div class="flex items-center gap-2 mb-1">
-                <div class="w-6 h-[2px] bg-[#C0422A]"></div>
+                <div class="w-6 h-0.5 bg-[#C0422A]"></div>
                 <span class="text-[10px] font-bold uppercase tracking-widest text-[#C0422A]">Order Details</span>
             </div>
             <h1 class="font-serif text-2xl font-bold text-black">
@@ -68,8 +68,8 @@
     @if(!$isCancelled)
     <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 mb-6">
         <div class="flex items-center justify-between relative">
-            <div class="absolute left-0 right-0 top-4 h-[2px] bg-gray-100 z-0"></div>
-            <div class="absolute left-0 top-4 h-[2px] bg-[#C0422A] z-0 transition-all duration-700"
+            <div class="absolute left-0 right-0 top-4 h-0.5 bg-gray-100 z-0"></div>
+            <div class="absolute left-0 top-4 h-0.5 bg-[#C0422A] z-0 transition-all duration-700"
                  style="width: {{ $currentStep >= 3 ? '100%' : round($currentStep * 33.33, 2) . '%' }};"></div>
             @foreach($steps as $i => $step)
                 <div class="flex flex-col items-center gap-2 z-10 flex-1">

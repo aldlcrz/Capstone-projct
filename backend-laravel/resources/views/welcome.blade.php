@@ -45,10 +45,10 @@
                 x-init="initAutoplay()"
                 @mouseenter="stopAutoplay()"
                 @mouseleave="initAutoplay()"
-                class="relative rounded-3xl overflow-hidden min-h-[260px] lg:min-h-[340px] flex items-center bg-gray-950 shadow-md group"
+                class="relative rounded-3xl overflow-hidden min-h-65 lg:min-h-85 flex items-center bg-gray-950 shadow-md group"
             >
                 <!-- Slides container -->
-                <div class="relative w-full h-full min-h-[260px] lg:min-h-[340px]">
+                <div class="relative w-full h-full min-h-65 lg:min-h-85">
                     @foreach($banners as $index => $banner)
                         <div 
                             x-show="activeSlide === {{ $index }}"
@@ -58,7 +58,7 @@
                             x-transition:leave="transition ease-in duration-1000 transform absolute inset-0"
                             x-transition:leave-start="opacity-100 translate-x-0"
                             x-transition:leave-end="opacity-0 -translate-x-4"
-                            class="w-full h-full min-h-[260px] lg:min-h-[340px] flex items-center"
+                            class="w-full h-full min-h-65 lg:min-h-85 flex items-center"
                             :class="{ 'hidden': activeSlide !== {{ $index }} }"
                         >
                             <!-- Slide Background Image with dark overlay -->
@@ -127,7 +127,7 @@
             </div>
         @else
             <!-- Default Static Hero Banner Fallback -->
-            <div class="relative bg-[#2A2A28] rounded-3xl overflow-hidden min-h-[260px] lg:min-h-[320px] flex items-center">
+            <div class="relative bg-[#2A2A28] rounded-3xl overflow-hidden min-h-65 lg:min-h-80 flex items-center">
                 {{-- Decorative pattern --}}
                 <div class="absolute inset-0 opacity-[0.04]" style="background-image: url('data:image/svg+xml,%3Csvg width=\'60\' height=\'60\' viewBox=\'0 0 60 60\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cg fill=\'none\' fill-rule=\'evenodd\'%3E%3Cg fill=\'%23ffffff\' fill-opacity=\'1\'%3E%3Cpath d=\'M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z\'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E');"></div>
 
@@ -184,7 +184,7 @@
 
             <div class="h-8 w-px bg-gray-200 mx-1 hidden md:block"></div>
 
-            <form action="/" method="GET" class="ajax-search-form flex-1 min-w-[240px] relative">
+            <form action="/" method="GET" class="ajax-search-form flex-1 min-w-60 relative">
                 @if(request('category'))
                     <input type="hidden" name="category" value="{{ request('category') }}">
                 @endif
@@ -416,7 +416,7 @@
         <template x-if="open">
             {{-- Backdrop --}}
             <div 
-                class="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm"
+                class="fixed inset-0 z-9999 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm"
                 @click="open = false"
                 x-transition:enter="transition ease-out duration-200"
                 x-transition:enter-start="opacity-0"

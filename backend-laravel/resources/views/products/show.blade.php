@@ -39,7 +39,7 @@
     </div>
 
     <!-- Product Detail Container Card -->
-    <div class="bg-white rounded-[32px] border border-gray-100 shadow-sm overflow-hidden p-6 lg:p-12">
+    <div class="bg-white rounded-4xl border border-gray-100 shadow-sm overflow-hidden p-6 lg:p-12">
         <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-16">
             
             <!-- Left Side: Product Images Gallery -->
