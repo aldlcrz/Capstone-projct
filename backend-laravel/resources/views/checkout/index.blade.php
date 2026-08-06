@@ -19,12 +19,37 @@
     addresses: @js($addresses),
     zoomImage: '',
     showZoomModal: false,
+    paymentRef: '',
+    refError: '',
 
     selectAddress(addr) {
         this.address = addr;
         this.showAddressModal = false;
     },
+    validateRef() {
+        if (this.step < 2) return true;
+        const val = (this.paymentRef || '').trim();
+        const digits = val.replace(/\D/g, '');
+        if (!val) {
+            this.refError = 'Payment reference number is required.';
+            return false;
+        }
+        if (/[a-zA-Z]/.test(val)) {
+            this.refError = 'Reference number must contain numbers only (no letters allowed).';
+            return false;
+        }
+        if (digits.length < 10 || digits.length > 16) {
+            this.refError = 'Invalid length. Reference number must be 10 to 16 digits (e.g. 13-digit GCash or 12-digit Maya ref #).';
+            return false;
+        }
+        this.refError = '';
+        return true;
+    },
     requestPlaceOrder() {
+        if (!this.validateRef()) {
+            document.getElementById('paymentReferenceInput')?.focus();
+            return;
+        }
         const form = document.getElementById('checkout-form');
         if (!form || !form.reportValidity()) return;
         this.showConfirmModal = true;
@@ -272,8 +297,31 @@
                     <div class="bg-gray-50 border border-gray-100 rounded-2xl p-5 mt-6 space-y-4">
                         <div class="text-xs font-bold text-gray-700 uppercase tracking-wider mb-2">Upload Proof of Payment</div>
                         <div class="space-y-3">
-                            <input type="text" name="paymentReference" required placeholder="Payment Reference Number" class="w-full px-4 py-3 bg-white border-gray-200 border rounded-xl text-sm font-bold outline-none focus:border-black">
-                            <input type="file" name="paymentScreenshot" required class="w-full text-xs text-gray-400 file:bg-black file:text-white file:rounded-lg file:border-0 file:px-4 file:py-2 file:mr-4 file:font-black">
+                            <div class="space-y-1">
+                                <label class="text-[9px] font-bold text-gray-400 uppercase tracking-widest block mb-0.5">Payment Reference Number</label>
+                                <input type="text"
+                                       id="paymentReferenceInput"
+                                       name="paymentReference"
+                                       x-model="paymentRef"
+                                       @input="paymentRef = paymentRef.replace(/[^0-9\s\-]/g, ''); validateRef()"
+                                       @blur="validateRef()"
+                                       inputmode="numeric"
+                                       pattern="[\d\s\-]{10,20}"
+                                       maxlength="20"
+                                       required
+                                       placeholder="e.g. 1002345678901 (10-16 digits)"
+                                       :class="refError ? 'border-red-500 focus:border-red-500 bg-red-50/20' : 'border-gray-200 focus:border-black bg-white'"
+                                       class="w-full px-4 py-3 border rounded-xl text-sm font-bold outline-none transition-all">
+                                <div x-show="refError" x-cloak x-text="refError" class="text-xs font-bold text-red-500 px-1 mt-1"></div>
+                                <div x-show="!refError && paymentRef.length > 0" x-cloak class="text-[10px] text-green-600 font-bold px-1 mt-0.5 flex items-center gap-1">
+                                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
+                                    Valid Reference Format (<span x-text="paymentRef.replace(/\D/g, '').length"></span> digits)
+                                </div>
+                            </div>
+                            <div>
+                                <label class="text-[9px] font-bold text-gray-400 uppercase tracking-widest block mb-1">Proof Screenshot</label>
+                                <input type="file" name="paymentScreenshot" required class="w-full text-xs text-gray-400 file:bg-black file:text-white file:rounded-lg file:border-0 file:px-4 file:py-2 file:mr-4 file:font-black cursor-pointer">
+                            </div>
                         </div>
                     </div>
                 </div>

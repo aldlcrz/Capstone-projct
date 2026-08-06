@@ -131,9 +131,22 @@ class CheckoutController extends Controller
     {
         $request->validate([
             'paymentMethod' => 'required',
-            'paymentReference' => 'required',
+            'paymentReference' => [
+                'required',
+                'string',
+                'regex:/^[\d\s\-]{10,20}$/',
+                function ($attribute, $value, $fail) {
+                    $digits = preg_replace('/\D/', '', (string)$value);
+                    if (strlen($digits) < 10 || strlen($digits) > 16) {
+                        $fail('The payment reference number must contain between 10 and 16 digits (e.g., 13-digit GCash or 12-digit Maya reference number).');
+                    }
+                },
+            ],
             'paymentScreenshot' => 'required|image',
             'shippingAddress' => 'required',
+        ], [
+            'paymentReference.required' => 'Please provide your payment reference number.',
+            'paymentReference.regex' => 'Payment reference number must consist of digits only (e.g., 1002345678901). Letters and special characters are not allowed.',
         ]);
 
         try {
