@@ -159,7 +159,7 @@
     @if(session('payment_submitted'))
     <!-- Payment Submitted Success Modal -->
     <div x-data="{ show: true }" x-show="show"
-         class="fixed inset-0 z-[99999] flex items-center justify-center p-4 bg-black/60 backdrop-blur-md"
+         class="fixed inset-0 z-99999 flex items-center justify-center p-4 bg-black/60 backdrop-blur-md"
          style="display: none;" x-cloak>
         <div @click.away="show = false" class="w-full max-w-md bg-white rounded-4xl p-6 lg:p-8 shadow-2xl border border-gray-100 text-center space-y-4">
             <div class="w-14 h-14 rounded-2xl bg-green-50 text-green-600 border border-green-200 flex items-center justify-center mx-auto shadow-sm">
@@ -184,7 +184,7 @@
         x-transition:leave="transition ease-in duration-200"
         x-transition:leave-start="opacity-100 scale-100"
         x-transition:leave-end="opacity-0 scale-95"
-        class="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/60 backdrop-blur-md overflow-y-auto"
+        class="fixed inset-0 z-9999 flex items-center justify-center p-4 bg-black/60 backdrop-blur-md overflow-y-auto"
         style="display: none;"
         x-cloak
         @keydown.escape.window="show = false"
