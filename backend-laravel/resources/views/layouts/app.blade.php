@@ -369,7 +369,7 @@
         @endif
 
         <!-- Footer -->
-        <footer class="bg-white pt-20 pb-10 border-t border-gray-100 mt-20">
+        <footer class="bg-white pt-16 pb-10 border-t border-gray-100 mt-8 sm:mt-12">
             <div class="max-w-360 mx-auto px-4 lg:px-12">
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-12 mb-20">
                     <div class="space-y-6">

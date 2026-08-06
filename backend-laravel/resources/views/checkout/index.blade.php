@@ -1,7 +1,7 @@
 @extends('layouts.app')
 
 @section('content')
-<div class="max-w-300 mx-auto px-4 py-12 min-h-screen bg-white" x-data="{
+<div class="max-w-300 mx-auto px-4 py-4 sm:py-6 lg:py-8 bg-white" x-data="{
     step: 1,
     paymentMethod: '{{ ($paymentSource && !($paymentSource->isGcashAvailable ?? true) && ($paymentSource->isMayaAvailable ?? false)) ? 'Maya' : 'GCash' }}',
     address: @js($addresses->first() ?? [
@@ -104,41 +104,41 @@
                 <div x-show="step === 1" x-transition>
                     
                     {{-- Lazada-Style Address Card --}}
-                    <div class="bg-white rounded-2xl border border-gray-100 p-5 shadow-xs mb-6 relative overflow-hidden">
+                    <div class="bg-white rounded-2xl border border-gray-100 p-5 lg:p-6 shadow-xs mb-6 relative overflow-hidden">
                         <div class="flex items-start justify-between gap-3">
-                            <div class="flex items-start gap-3 flex-1">
-                                <div class="w-9 h-9 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center shrink-0 mt-0.5">
-                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <div class="flex items-start gap-3.5 flex-1">
+                                <div class="w-9 h-9 lg:w-10 lg:h-10 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center shrink-0 mt-0.5">
+                                    <svg class="w-5 h-5 lg:w-6 lg:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
                                     </svg>
                                 </div>
                                 <div class="space-y-1">
                                     <div class="flex items-center gap-2 flex-wrap">
-                                        <span class="font-bold text-black text-sm" x-text="address.recipientName || 'Add Recipient Name'"></span>
-                                        <span class="text-xs text-gray-500 font-medium" x-text="address.phone"></span>
+                                        <span class="font-bold text-black text-sm lg:text-base" x-text="address.recipientName || 'Add Recipient Name'"></span>
+                                        <span class="text-xs lg:text-sm text-gray-500 font-semibold" x-text="address.phone"></span>
                                     </div>
                                     <div class="flex items-center gap-2">
-                                        <span class="bg-blue-100 text-blue-700 text-[9px] font-black uppercase px-1.5 py-0.5 rounded tracking-wider">HOME</span>
-                                        <p class="text-xs text-gray-600 font-medium leading-snug" x-text="address.houseNo ? address.houseNo + ' ' + address.street + ', ' + address.barangay + ', ' + address.city : 'Please select your delivery address'"></p>
+                                        <span class="bg-blue-100 text-blue-700 text-[9px] lg:text-[10px] font-black uppercase px-2 py-0.5 rounded tracking-wider">HOME</span>
+                                        <p class="text-xs lg:text-sm text-gray-700 font-medium leading-snug" x-text="address.houseNo ? address.houseNo + ' ' + address.street + ', ' + address.barangay + ', ' + address.city : 'Please select your delivery address'"></p>
                                     </div>
                                 </div>
                             </div>
-                            <button type="button" @click="showAddressModal = true" class="text-xs font-bold text-blue-600 hover:text-blue-800 shrink-0">
+                            <button type="button" @click="showAddressModal = true" class="text-xs lg:text-sm font-bold text-blue-600 hover:text-blue-800 shrink-0">
                                 Edit
                             </button>
                         </div>
                     </div>
 
                     {{-- Lazada-Style Store Items Preview --}}
-                    <div class="bg-white rounded-2xl border border-gray-100 p-5 shadow-xs mb-6 space-y-4">
+                    <div class="bg-white rounded-2xl border border-gray-100 p-5 lg:p-6 shadow-xs mb-6 space-y-4">
                         <div class="flex items-center justify-between pb-3 border-b border-gray-100">
                             <div class="flex items-center gap-2">
-                                <span class="bg-[#C0422A] text-white text-[9px] font-black uppercase px-2 py-0.5 rounded tracking-wider">LumBarong Store</span>
-                                <span class="text-xs font-bold text-black">Official Store</span>
+                                <span class="bg-[#C0422A] text-white text-[9px] lg:text-[10px] font-black uppercase px-2 py-0.5 rounded tracking-wider">LumBarong Store</span>
+                                <span class="text-xs lg:text-sm font-bold text-black">Official Store</span>
                             </div>
-                            <span class="text-[10px] font-bold text-green-600 uppercase tracking-wider flex items-center gap-1">
-                                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
+                            <span class="text-[10px] lg:text-xs font-bold text-green-600 uppercase tracking-wider flex items-center gap-1">
+                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
                                 100% Authentic
                             </span>
                         </div>
@@ -149,25 +149,25 @@
                                     $img = $item['image'] ?? '';
                                     $imgSrc = (str_starts_with($img, 'http') || str_starts_with($img, '/')) ? $img : (str_starts_with($img, 'products/') ? asset('storage/' . $img) : asset('uploads/products/' . $img));
                                 @endphp
-                                <div class="flex gap-3 items-start">
-                                    <img src="{{ $imgSrc }}" onerror="this.src='/uploads/products/default.jpg'" class="w-20 h-20 object-cover rounded-xl bg-gray-50 border border-gray-100 shrink-0">
+                                <div class="flex gap-3.5 items-start">
+                                    <img src="{{ $imgSrc }}" onerror="this.src='/uploads/products/default.jpg'" class="w-20 h-20 lg:w-24 lg:h-24 object-cover rounded-xl bg-gray-50 border border-gray-100 shrink-0">
                                     <div class="flex-1 min-w-0">
-                                        <h4 class="text-xs font-bold text-gray-900 line-clamp-2 leading-snug">{{ $item['name'] }}</h4>
-                                        <div class="text-[10px] text-gray-400 font-medium mt-1">
+                                        <h4 class="text-xs sm:text-sm lg:text-base font-bold text-gray-900 line-clamp-2 leading-snug">{{ $item['name'] }}</h4>
+                                        <div class="text-[10px] sm:text-xs lg:text-sm text-gray-500 font-medium mt-1">
                                             @if(!empty($item['size'])) Size: {{ $item['size'] }} @endif
                                             @if(!empty($item['variation'])) | {{ $item['variation'] }} @endif
                                         </div>
-                                        <div class="inline-block mt-1 bg-blue-50 text-blue-600 text-[9px] font-bold px-1.5 py-0.5 rounded">
+                                        <div class="inline-block mt-1 bg-blue-50 text-blue-600 text-[9px] lg:text-[10px] font-bold px-2 py-0.5 rounded">
                                             30 Days Free Returns
                                         </div>
                                         <div class="flex items-center justify-between mt-2">
                                             <div class="flex items-center gap-1.5">
-                                                <span class="text-xs font-black text-[#C0422A]">₱{{ number_format($item['price']) }}</span>
+                                                <span class="text-xs sm:text-sm lg:text-base font-black text-[#C0422A]">₱{{ number_format($item['price']) }}</span>
                                                 @if(!empty($item['is_on_sale']) && ($item['discount_percentage'] ?? 0) > 0)
-                                                    <span class="text-[10px] text-gray-400 line-through">₱{{ number_format($item['original_price'] ?? $item['price']) }}</span>
+                                                    <span class="text-[10px] lg:text-xs text-gray-400 line-through">₱{{ number_format($item['original_price'] ?? $item['price']) }}</span>
                                                 @endif
                                             </div>
-                                            <span class="text-xs font-bold text-gray-500">Qty: {{ $item['quantity'] }}</span>
+                                            <span class="text-xs lg:text-sm font-bold text-gray-500">Qty: {{ $item['quantity'] }}</span>
                                         </div>
                                     </div>
                                 </div>
@@ -185,14 +185,14 @@
                             }
                         }
                     @endphp
-                    <div class="bg-white rounded-2xl border border-gray-100 p-5 shadow-xs space-y-1">
+                    <div class="bg-white rounded-2xl border border-gray-100 p-5 lg:p-6 shadow-xs space-y-1">
                         <div class="flex justify-between items-center">
-                            <span class="text-xs font-bold text-gray-800">Guaranteed Delivery (3-5 Days)</span>
-                            <span class="text-xs font-black text-black">
+                            <span class="text-xs sm:text-sm lg:text-base font-bold text-gray-800">Guaranteed Delivery (3-5 Days)</span>
+                            <span class="text-xs sm:text-sm lg:text-base font-black text-black">
                                 @if($shippingFee > 0) ₱{{ number_format($shippingFee, 2) }} @else Free @endif
                             </span>
                         </div>
-                        <p class="text-[10px] text-gray-400 font-medium">Eligible for LumBarong delivery guarantee and buyer protection.</p>
+                        <p class="text-[10px] lg:text-xs text-gray-500 font-medium">Eligible for LumBarong delivery guarantee and buyer protection.</p>
                     </div>
 
                 </div>
@@ -200,8 +200,8 @@
                 <!-- STEP 2: PAYMENT (Lazada Style) -->
                 <div x-show="step === 2" x-transition>
                     <div class="mb-6">
-                        <h2 class="text-xl font-bold text-black mb-1">Select Payment Method</h2>
-                        <p class="text-xs text-gray-400 font-medium">Choose your preferred payment channel.</p>
+                        <h2 class="text-xl lg:text-2xl font-bold text-black mb-1">Select Payment Method</h2>
+                        <p class="text-xs lg:text-sm text-gray-500 font-medium">Choose your preferred payment channel.</p>
                     </div>
 
                     <div class="space-y-4">
@@ -211,8 +211,8 @@
                                 <div class="flex items-center gap-3">
                                     <div class="w-8 h-8 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center text-xs font-black">GC</div>
                                     <div>
-                                        <div class="font-bold text-gray-900 text-sm">GCash e-Wallet</div>
-                                        <div class="text-[10px] text-gray-400">Direct QR or Mobile Transfer</div>
+                                        <div class="font-bold text-gray-900 text-sm lg:text-base">GCash e-Wallet</div>
+                                        <div class="text-[10px] lg:text-xs text-gray-400">Direct QR or Mobile Transfer</div>
                                     </div>
                                 </div>
                                 <input type="radio" name="paymentMethod" value="GCash" x-model="paymentMethod" class="w-5 h-5 accent-[#C0422A]">
@@ -222,19 +222,19 @@
                                 <div class="w-1/3 bg-gray-50 rounded-2xl p-3 flex flex-col items-center justify-center @if($paymentSource && $paymentSource->gcashQrCode) cursor-zoom-in hover:bg-gray-100 transition-colors group/qr @endif"
                                      @if($paymentSource && $paymentSource->gcashQrCode) @click="zoomImage = '{{ asset('storage/' . $paymentSource->gcashQrCode) }}'; showZoomModal = true" @endif>
                                     @if($paymentSource && $paymentSource->gcashQrCode)
-                                        <img src="{{ asset('storage/' . $paymentSource->gcashQrCode) }}" class="w-20 h-20 object-contain rounded-xl bg-white border border-gray-100 shadow-xs">
+                                        <img src="{{ asset('storage/' . $paymentSource->gcashQrCode) }}" class="w-20 h-20 lg:w-24 lg:h-24 object-contain rounded-xl bg-white border border-gray-100 shadow-xs">
                                     @else
-                                        <div class="w-20 h-20 bg-white rounded-xl mb-1 flex items-center justify-center text-gray-200">
-                                            <svg class="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z"></path></svg>
+                                        <div class="w-20 h-20 lg:w-24 lg:h-24 bg-white rounded-xl mb-1 flex items-center justify-center text-gray-200">
+                                            <svg class="w-10 h-10 lg:w-12 lg:h-12" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z"></path></svg>
                                         </div>
                                     @endif
-                                    <span class="text-[8px] font-black uppercase text-gray-400">Tap to Zoom QR</span>
+                                    <span class="text-[8px] lg:text-[9px] font-black uppercase text-gray-400">Tap to Zoom QR</span>
                                 </div>
                                 <div class="flex-1">
                                     <div class="bg-blue-50/50 p-3.5 rounded-xl border border-blue-100">
-                                        <div class="text-[9px] font-black text-blue-500 uppercase tracking-widest mb-0.5">Send Payment To</div>
-                                        <div class="text-lg font-black text-black">{{ $paymentSource->gcashNumber ?? '0912 345 6789' }}</div>
-                                        <div class="text-[10px] font-bold text-gray-500 mt-0.5">Name: {{ $paymentSource->shopName ?? ($seller->name ?? 'LumBarong Store') }}</div>
+                                        <div class="text-[9px] lg:text-[10px] font-black text-blue-500 uppercase tracking-widest mb-0.5">Send Payment To</div>
+                                        <div class="text-lg lg:text-xl font-black text-black">{{ $paymentSource->gcashNumber ?? '0912 345 6789' }}</div>
+                                        <div class="text-[10px] lg:text-xs font-bold text-gray-500 mt-0.5">Name: {{ $paymentSource->shopName ?? ($seller->name ?? 'LumBarong Store') }}</div>
                                     </div>
                                 </div>
                             </div>
@@ -248,8 +248,8 @@
                                 <div class="flex items-center gap-3">
                                     <div class="w-8 h-8 rounded-xl bg-green-50 text-green-600 flex items-center justify-center text-xs font-black">MY</div>
                                     <div>
-                                        <div class="font-bold text-gray-900 text-sm">Maya e-Wallet</div>
-                                        <div class="text-[10px] text-gray-400">Pay via Maya app or QR</div>
+                                        <div class="font-bold text-gray-900 text-sm lg:text-base">Maya e-Wallet</div>
+                                        <div class="text-[10px] lg:text-xs text-gray-400">Pay via Maya app or QR</div>
                                     </div>
                                 </div>
                                 <input type="radio" name="paymentMethod" value="Maya" x-model="paymentMethod" class="w-5 h-5 accent-[#C0422A]">
@@ -259,19 +259,19 @@
                                 <div class="w-1/3 bg-gray-50 rounded-2xl p-3 flex flex-col items-center justify-center @if($paymentSource && $paymentSource->mayaQrCode) cursor-zoom-in hover:bg-gray-100 transition-colors group/qr @endif"
                                      @if($paymentSource && $paymentSource->mayaQrCode) @click="zoomImage = '{{ asset('storage/' . $paymentSource->mayaQrCode) }}'; showZoomModal = true" @endif>
                                     @if($paymentSource && $paymentSource->mayaQrCode)
-                                        <img src="{{ asset('storage/' . $paymentSource->mayaQrCode) }}" class="w-20 h-20 object-contain rounded-xl bg-white border border-gray-100 shadow-xs">
+                                        <img src="{{ asset('storage/' . $paymentSource->mayaQrCode) }}" class="w-20 h-20 lg:w-24 lg:h-24 object-contain rounded-xl bg-white border border-gray-100 shadow-xs">
                                     @else
-                                        <div class="w-20 h-20 bg-white rounded-xl mb-1 flex items-center justify-center text-gray-200">
-                                            <svg class="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z"></path></svg>
+                                        <div class="w-20 h-20 lg:w-24 lg:h-24 bg-white rounded-xl mb-1 flex items-center justify-center text-gray-200">
+                                            <svg class="w-10 h-10 lg:w-12 lg:h-12" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z"></path></svg>
                                         </div>
                                     @endif
-                                    <span class="text-[8px] font-black uppercase text-gray-400">Tap to Zoom QR</span>
+                                    <span class="text-[8px] lg:text-[9px] font-black uppercase text-gray-400">Tap to Zoom QR</span>
                                 </div>
                                 <div class="flex-1">
                                     <div class="bg-green-50/50 p-3.5 rounded-xl border border-green-100">
-                                        <div class="text-[9px] font-black text-green-500 uppercase tracking-widest mb-0.5">Send Payment To</div>
-                                        <div class="text-lg font-black text-black">{{ $paymentSource->mayaNumber ?? '0912 345 6789' }}</div>
-                                        <div class="text-[10px] font-bold text-gray-500 mt-0.5">Name: {{ $paymentSource->shopName ?? ($seller->name ?? 'LumBarong Store') }}</div>
+                                        <div class="text-[9px] lg:text-[10px] font-black text-green-500 uppercase tracking-widest mb-0.5">Send Payment To</div>
+                                        <div class="text-lg lg:text-xl font-black text-black">{{ $paymentSource->mayaNumber ?? '0912 345 6789' }}</div>
+                                        <div class="text-[10px] lg:text-xs font-bold text-gray-500 mt-0.5">Name: {{ $paymentSource->shopName ?? ($seller->name ?? 'LumBarong Store') }}</div>
                                     </div>
                                 </div>
                             </div>
@@ -280,11 +280,11 @@
                     </div>
 
                     <!-- Payment Proof Upload Inputs -->
-                    <div class="bg-gray-50 border border-gray-100 rounded-2xl p-5 mt-6 space-y-4">
-                        <div class="text-xs font-bold text-gray-700 uppercase tracking-wider mb-2">Upload Proof of Payment</div>
+                    <div class="bg-gray-50 border border-gray-100 rounded-2xl p-5 lg:p-6 mt-6 space-y-4">
+                        <div class="text-xs lg:text-sm font-bold text-gray-700 uppercase tracking-wider mb-2">Upload Proof of Payment</div>
                         <div class="space-y-3">
                             <div class="space-y-1">
-                                <label class="text-[9px] font-bold text-gray-400 uppercase tracking-widest block mb-0.5">Payment Reference Number</label>
+                                <label class="text-[9px] lg:text-[10px] font-bold text-gray-400 uppercase tracking-widest block mb-0.5">Payment Reference Number</label>
                                 <input type="text"
                                        id="paymentReferenceInput"
                                        name="paymentReference"
@@ -297,16 +297,16 @@
                                        required
                                        placeholder="e.g. 1002345678901 (10-16 digits)"
                                        :class="refError ? 'border-red-500 focus:border-red-500 bg-red-50/20' : 'border-gray-200 focus:border-black bg-white'"
-                                       class="w-full px-4 py-3 border rounded-xl text-sm font-bold outline-none transition-all">
+                                       class="w-full px-4 py-3 border rounded-xl text-sm lg:text-base font-bold outline-none transition-all">
                                 <div x-show="refError" x-cloak x-text="refError" class="text-xs font-bold text-red-500 px-1 mt-1"></div>
-                                <div x-show="!refError && paymentRef.length > 0" x-cloak class="text-[10px] text-green-600 font-bold px-1 mt-0.5 flex items-center gap-1">
+                                <div x-show="!refError && paymentRef.length > 0" x-cloak class="text-[10px] lg:text-xs text-green-600 font-bold px-1 mt-0.5 flex items-center gap-1">
                                     <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
                                     Valid Reference Format (<span x-text="paymentRef.replace(/\D/g, '').length"></span> digits)
                                 </div>
                             </div>
                             <div>
-                                <label class="text-[9px] font-bold text-gray-400 uppercase tracking-widest block mb-1">Proof Screenshot</label>
-                                <input type="file" name="paymentScreenshot" required class="w-full text-xs text-gray-400 file:bg-black file:text-white file:rounded-lg file:border-0 file:px-4 file:py-2 file:mr-4 file:font-black cursor-pointer">
+                                <label class="text-[9px] lg:text-[10px] font-bold text-gray-400 uppercase tracking-widest block mb-1">Proof Screenshot</label>
+                                <input type="file" name="paymentScreenshot" required class="w-full text-xs lg:text-sm text-gray-500 file:bg-black file:text-white file:rounded-lg file:border-0 file:px-4 file:py-2 file:mr-4 file:font-black cursor-pointer">
                             </div>
                         </div>
                     </div>
@@ -317,8 +317,8 @@
             <!-- Desktop Sidebar -->
             <div class="hidden lg:block lg:col-span-5">
                 <div class="bg-[#F9FAFB] rounded-[40px] p-8 border border-gray-100 sticky top-10 flex flex-col max-h-[calc(100vh-80px)] shadow-sm">
-                    <h2 class="text-xl font-bold mb-1">Order Summary</h2>
-                    <p class="text-[10px] text-gray-400 uppercase tracking-widest font-bold mb-6">
+                    <h2 class="text-xl lg:text-2xl font-bold mb-1">Order Summary</h2>
+                    <p class="text-xs lg:text-sm text-gray-400 uppercase tracking-widest font-bold mb-6">
                         {{ count($cart) }} item(s) selected
                     </p>
 
@@ -334,22 +334,22 @@
                                 </div>
                                 <div class="flex-1 min-w-0">
                                     <div class="flex items-center justify-between">
-                                        <h3 class="text-xs font-bold text-black line-clamp-1">{{ $item['name'] }}</h3>
+                                        <h3 class="text-xs lg:text-sm font-bold text-black line-clamp-1">{{ $item['name'] }}</h3>
                                         @if(!empty($item['category_name']))
-                                            <span class="text-[8px] font-bold text-gray-400 uppercase tracking-wider bg-gray-100 px-1.5 py-0.5 rounded ml-2 shrink-0">{{ $item['category_name'] }}</span>
+                                            <span class="text-[8px] lg:text-[9px] font-bold text-gray-400 uppercase tracking-wider bg-gray-100 px-1.5 py-0.5 rounded ml-2 shrink-0">{{ $item['category_name'] }}</span>
                                         @endif
                                     </div>
-                                    <div class="text-[9px] text-gray-400 font-bold uppercase mt-1">
+                                    <div class="text-[10px] lg:text-xs text-gray-400 font-bold uppercase mt-1">
                                         @if(!empty($item['size']))Size: {{ $item['size'] }}@else Size: Standard @endif
                                     </div>
                                     <div class="flex justify-between items-center mt-2">
-                                        <span class="text-[10px] text-gray-400 font-bold">{{ $item['quantity'] }}x</span>
+                                        <span class="text-xs font-bold text-gray-500">{{ $item['quantity'] }}x</span>
                                         <div class="flex items-center gap-1.5">
                                             @if(!empty($item['is_on_sale']) && ($item['discount_percentage'] ?? 0) > 0)
-                                                <span class="text-xs font-bold text-[#C0422A]">₱{{ number_format($item['price'] * $item['quantity']) }}</span>
-                                                <span class="text-[9px] text-gray-400 line-through">₱{{ number_format(($item['original_price'] ?? $item['price']) * $item['quantity']) }}</span>
+                                                <span class="text-xs lg:text-sm font-bold text-[#C0422A]">₱{{ number_format($item['price'] * $item['quantity']) }}</span>
+                                                <span class="text-[9px] lg:text-[10px] text-gray-400 line-through">₱{{ number_format(($item['original_price'] ?? $item['price']) * $item['quantity']) }}</span>
                                             @else
-                                                <span class="text-xs font-bold text-black">₱{{ number_format($item['price'] * $item['quantity']) }}</span>
+                                                <span class="text-xs lg:text-sm font-bold text-black">₱{{ number_format($item['price'] * $item['quantity']) }}</span>
                                             @endif
                                         </div>
                                     </div>
@@ -360,12 +360,12 @@
 
                     <div class="space-y-3 border-t border-gray-100 pt-6 mt-auto">
                         <div class="flex justify-between items-center">
-                            <span class="text-sm text-gray-400 font-medium">Subtotal</span>
-                            <span class="text-sm font-bold text-black">₱{{ number_format($subtotal) }}</span>
+                            <span class="text-sm lg:text-base text-gray-500 font-medium">Subtotal</span>
+                            <span class="text-sm lg:text-base font-bold text-black">₱{{ number_format($subtotal) }}</span>
                         </div>
                         <div class="flex justify-between items-center">
-                            <span class="text-sm text-gray-400 font-medium">Delivery</span>
-                            <span class="text-sm font-bold text-black">
+                            <span class="text-sm lg:text-base text-gray-500 font-medium">Delivery</span>
+                            <span class="text-sm lg:text-base font-bold text-black">
                                 @if($shippingFee > 0)
                                     ₱{{ number_format($shippingFee, 2) }}
                                 @else
@@ -374,22 +374,22 @@
                             </span>
                         </div>
                         <div class="flex justify-between items-center pt-3 border-t border-dashed border-gray-200">
-                            <span class="text-lg font-bold text-black">Total</span>
-                            <span class="text-2xl font-black text-[#C0422A]">₱{{ number_format($subtotal + $shippingFee) }}</span>
+                            <span class="text-lg lg:text-xl font-bold text-black">Total</span>
+                            <span class="text-2xl lg:text-3xl font-black text-[#C0422A]">₱{{ number_format($subtotal + $shippingFee) }}</span>
                         </div>
                     </div>
 
                     <template x-if="step === 1">
-                        <button type="button" @click="step = 2" class="w-full bg-black text-white py-5 rounded-2xl text-sm font-bold shadow-xl shadow-black/10 hover:bg-[#C0422A] transition-all mt-6">
+                        <button type="button" @click="step = 2" class="w-full bg-black text-white py-4 lg:py-5 rounded-2xl text-sm lg:text-base font-bold shadow-xl shadow-black/10 hover:bg-[#C0422A] transition-all mt-6">
                             Proceed to Payment
                         </button>
                     </template>
                     <template x-if="step === 2">
                         <div class="flex gap-4 mt-6">
-                            <button type="button" @click="step = 1" class="w-1/4 border-2 border-gray-100 py-5 rounded-2xl flex items-center justify-center text-gray-400 hover:text-black">
+                            <button type="button" @click="step = 1" class="w-1/4 border-2 border-gray-100 py-4 lg:py-5 rounded-2xl flex items-center justify-center text-gray-400 hover:text-black">
                                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path></svg>
                             </button>
-                            <button type="button" @click="requestPlaceOrder()" class="flex-1 bg-[#C0422A] text-white py-5 rounded-2xl text-sm font-bold shadow-xl shadow-[#C0422A]/10 hover:bg-[#A33622] transition-all">
+                            <button type="button" @click="requestPlaceOrder()" class="flex-1 bg-[#C0422A] text-white py-4 lg:py-5 rounded-2xl text-sm lg:text-base font-bold shadow-xl shadow-[#C0422A]/10 hover:bg-[#A33622] transition-all">
                                 Place Order
                             </button>
                         </div>
