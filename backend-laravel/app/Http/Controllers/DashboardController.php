@@ -156,6 +156,13 @@ class DashboardController extends Controller
         ];
     }
 
+    /**
+     * Build seller dashboard dataset.
+     *
+     * @param string $sellerId
+     * @param Request|null $request
+     * @return array<string, mixed>
+     */
     private function buildSellerDashboardData(string $sellerId, ?Request $request = null): array
     {
         $request    = $request ?? request();
