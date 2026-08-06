@@ -23,7 +23,7 @@
 
 <div id="cart-root"
      data-cart-items="{{ json_encode($cartItemsForJs) }}"
-     class="max-w-300 mx-auto px-4 pt-0 pb-12 min-h-screen"
+     class="max-w-300 mx-auto px-4 pt-0 pb-6 sm:pb-8"
      x-data="cartApp()"
      x-init="init()">
 
@@ -243,7 +243,7 @@
                 <div x-show="selected.length === 0"
                      class="py-6 text-center bg-gray-50 rounded-2xl border border-dashed border-gray-200 mb-6">
                     <svg class="w-8 h-8 text-gray-200 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 012-2h2a2 2 0 012-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
                     </svg>
                     <p class="text-xs text-gray-400 font-bold">Select items to checkout</p>
                 </div>
