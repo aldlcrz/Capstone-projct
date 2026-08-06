@@ -70,7 +70,7 @@
         <div class="flex items-center justify-between relative">
             <div class="absolute left-0 right-0 top-4 h-[2px] bg-gray-100 z-0"></div>
             <div class="absolute left-0 top-4 h-[2px] bg-[#C0422A] z-0 transition-all duration-700"
-                 style="width: {{ $currentStep >= 3 ? '100' : ($currentStep * 33.33) }}%"></div>
+                 style="width: {{ $currentStep >= 3 ? '100%' : round($currentStep * 33.33, 2) . '%' }};"></div>
             @foreach($steps as $i => $step)
                 <div class="flex flex-col items-center gap-2 z-10 flex-1">
                     <div class="w-8 h-8 rounded-full border-2 flex items-center justify-center text-[10px] font-black transition-all
@@ -116,22 +116,11 @@
                 <div class="divide-y divide-gray-50">
                     @foreach($order->items as $item)
                         @php
-                            $rawImg = is_array($item->product->image) ? ($item->product->image[0] ?? '') : $item->product->image;
-                            if (!$rawImg) {
-                                $imgSrc = asset('uploads/products/default.jpg');
-                            } elseif (str_starts_with($rawImg, 'http')) {
-                                $imgSrc = $rawImg;
-                            } elseif (str_starts_with($rawImg, 'products/')) {
-                                $imgSrc = asset('storage/' . $rawImg);
-                            } elseif (str_starts_with($rawImg, 'uploads/')) {
-                                $imgSrc = asset($rawImg);
-                            } else {
-                                $imgSrc = asset('uploads/products/' . $rawImg);
-                            }
+                            $imgSrc = $item->product ? $item->product->getImageUrl() : asset('uploads/products/default.jpg');
                         @endphp
                         <div class="p-6 flex items-center gap-4">
                             <div class="w-16 h-20 bg-gray-50 rounded-xl overflow-hidden border border-gray-100 shrink-0">
-                                <img src="{{ $imgSrc }}" class="w-full h-full object-cover" onerror="this.src='{{ asset('uploads/products/default.jpg') }}'" alt="{{ $item->product->name }}">
+                                <img src="{{ $imgSrc }}" class="w-full h-full object-cover" onerror="this.src='/uploads/products/default.jpg'" alt="{{ $item->product->name ?? 'Product' }}">
                             </div>
                             <div class="flex-1 min-w-0">
                                 <h4 class="text-sm font-bold text-black truncate mb-1">{{ $item->product->name }}</h4>

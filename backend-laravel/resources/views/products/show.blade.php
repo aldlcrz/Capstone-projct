@@ -5,9 +5,15 @@
     use App\Support\VariationFormatter;
     $productVariations = VariationFormatter::buildVariations($product->image);
 @endphp
+<div id="product-page-data"
+    data-logged-in="{{ auth()->check() ? 'true' : 'false' }}"
+    data-login-url="{{ route('login') }}"
+    style="display:none;" aria-hidden="true">
+</div>
 <script>
-    window.isLoggedIn = {{ auth()->check() ? 'true' : 'false' }};
-    window.loginUrl   = '{{ route("login") }}';
+    var _pd = document.getElementById('product-page-data').dataset;
+    window.isLoggedIn = _pd.loggedIn === 'true';
+    window.loginUrl   = _pd.loginUrl;
 
     document.addEventListener('DOMContentLoaded', function () {
         // Intercept cart/checkout form submissions for guests
@@ -700,7 +706,7 @@
                 if (url.startsWith('http')) return url;
                 if (url.startsWith('products/')) return '/storage/' + url;
                 if (url.startsWith('uploads/')) return '/' + url;
-                if (url.startsWith('/uploads/')) return url;
+                if (url.startsWith('/uploads/') || url.startsWith('/storage/')) return url;
                 return '/uploads/products/' + url;
             },
             selectedVariationLabel() {

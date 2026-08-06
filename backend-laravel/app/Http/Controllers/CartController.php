@@ -46,6 +46,8 @@ class CartController extends Controller
             }
 
             // Dynamic detail injection for UI rendering
+            $item['name'] = $product->name;
+            $item['image'] = $product->getImageUrl();
             $item['original_price'] = $product->price;
             $item['discount_percentage'] = $product->discount_percentage;
             $item['is_on_sale'] = $product->is_on_sale && ($product->discount_percentage > 0);
@@ -114,14 +116,18 @@ class CartController extends Controller
         $key = $productId . '_' . ($size ?? '') . '_' . ($variation ?? '');
 
         // Safe image resolution
-        $images = is_array($product->image) ? $product->image : [];
-        $image = (count($images) > 0) ? $images[0] : null;
+        $image = $product->getImageUrl();
 
         if (isset($cart[$key])) {
             $newQuantity = $cart[$key]['quantity'] + $quantity;
-            $cart[$key]['quantity'] = min($newQuantity, $availableStock);
+            $updatedItem = $cart[$key];
+            $updatedItem['quantity'] = min($newQuantity, $availableStock);
+            $updatedItem['image'] = $image;
+            $updatedItem['name'] = $product->name;
+            unset($cart[$key]);
+            $cart = [$key => $updatedItem] + $cart;
         } else {
-            $cart[$key] = [
+            $newItem = [
                 'id' => $product->id,
                 'name' => $product->name,
                 'price' => $product->sale_price,
@@ -136,6 +142,7 @@ class CartController extends Controller
                 'is_on_sale' => $product->is_on_sale && ($product->discount_percentage > 0),
                 'category_name' => $product->category->name ?? 'Traditional',
             ];
+            $cart = [$key => $newItem] + $cart;
         }
 
         session()->put('cart', $cart);
@@ -221,5 +228,54 @@ class CartController extends Controller
         }
 
         return redirect()->back()->with('success', 'Item removed from cart.');
+    }
+
+    public function removeSelected(Request $request)
+    {
+        $keys = $request->input('keys', []);
+        $cart = session()->get('cart', []);
+
+        if (is_array($keys)) {
+            foreach ($keys as $key) {
+                unset($cart[$key]);
+            }
+        }
+
+        session()->put('cart', $cart);
+        $user = Auth::user();
+        if ($user instanceof User) {
+            $user->update(['cart' => json_encode($cart)]);
+        }
+
+        if ($request->wantsJson() || $request->ajax()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Selected items removed from cart.',
+                'cart_count' => count($cart),
+                'cart' => $cart
+            ]);
+        }
+
+        return redirect()->back()->with('success', 'Selected items removed from cart.');
+    }
+
+    public function clear(Request $request)
+    {
+        session()->put('cart', []);
+        $user = Auth::user();
+        if ($user instanceof User) {
+            $user->update(['cart' => json_encode([])]);
+        }
+
+        if ($request->wantsJson() || $request->ajax()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Cart cleared successfully.',
+                'cart_count' => 0,
+                'cart' => []
+            ]);
+        }
+
+        return redirect()->back()->with('success', 'Cart cleared successfully.');
     }
 }

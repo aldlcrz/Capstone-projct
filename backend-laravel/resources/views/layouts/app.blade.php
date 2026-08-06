@@ -150,7 +150,7 @@
                                 this.cartCount = e.detail.cartCount;
                                 this.cartItems = Object.values(e.detail.cart || {});
                             });
-                            this.cartItems = @json(array_values(array_reverse(session('cart', []), true)));
+                            this.cartItems = @json(array_values(session('cart', [])));
                         }
                     }" class="relative" @mouseenter="open = true" @mouseleave="open = false">
                         <a href="/cart" class="relative w-11 h-11 flex items-center justify-center rounded-full border border-gray-100 text-gray-800 hover:border-gray-400 bg-white transition-all shadow-sm">
@@ -179,7 +179,7 @@
                                 <template x-for="item in cartItems.slice(0, 5)" :key="item.id + '_' + (item.size || '') + '_' + (item.variation || '')">
                                     <div class="flex items-center gap-4 p-4 border-b border-gray-50 last:border-0 hover:bg-gray-50 transition-all">
                                         <div class="w-12 h-12 rounded-lg bg-gray-100 overflow-hidden shrink-0 border border-gray-200">
-                                            <img :src="item.image ? (item.image.startsWith('http') ? item.image : (item.image.startsWith('products/') ? '/storage/' + item.image : '/uploads/products/' + item.image)) : '/uploads/products/default.jpg'" class="w-full h-full object-cover">
+                                            <img :src="item.image ? (item.image.startsWith('http') || item.image.startsWith('/') ? item.image : (item.image.startsWith('products/') ? '/storage/' + item.image : '/uploads/products/' + item.image)) : '/uploads/products/default.jpg'" class="w-full h-full object-cover">
                                         </div>
                                         <div class="flex-1 min-w-0">
                                             <div class="text-[11px] font-bold text-black truncate" x-text="item.name"></div>

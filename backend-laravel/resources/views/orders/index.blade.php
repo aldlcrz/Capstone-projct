@@ -62,20 +62,9 @@
                         <div class="flex items-center gap-4">
                             <div class="w-16 h-20 bg-gray-50 rounded-lg overflow-hidden border border-gray-100 shrink-0">
                                 @php
-                                    $rawImg = is_array($item->product->image) ? ($item->product->image[0] ?? '') : $item->product->image;
-                                    if (!$rawImg) {
-                                        $imgSrc = asset('uploads/products/default.jpg');
-                                    } elseif (str_starts_with($rawImg, 'http')) {
-                                        $imgSrc = $rawImg;
-                                    } elseif (str_starts_with($rawImg, 'products/')) {
-                                        $imgSrc = asset('storage/' . $rawImg);
-                                    } elseif (str_starts_with($rawImg, 'uploads/')) {
-                                        $imgSrc = asset($rawImg);
-                                    } else {
-                                        $imgSrc = asset('uploads/products/' . $rawImg);
-                                    }
+                                    $imgSrc = $item->product ? $item->product->getImageUrl() : asset('uploads/products/default.jpg');
                                 @endphp
-                                <img src="{{ $imgSrc }}" class="w-full h-full object-cover" onerror="this.src='{{ asset('uploads/products/default.jpg') }}'" alt="{{ $item->product->name }}">
+                                <img src="{{ $imgSrc }}" class="w-full h-full object-cover" onerror="this.src='/uploads/products/default.jpg'" alt="{{ $item->product->name ?? 'Product' }}">
                             </div>
                             <div class="flex-1">
                                 <h4 class="text-sm font-bold text-black mb-1">{{ $item->product->name }}</h4>

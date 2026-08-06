@@ -94,7 +94,7 @@ class Product extends Model
     /**
      * Get the clean product name handling special characters like ñ.
      */
-    public function getNameAttribute($value): string
+    public function getNameAttribute(?string $value): string
     {
         return str_replace(['Pi??a', 'Pi?a'], 'Piña', $value ?? '');
     }
@@ -147,19 +147,14 @@ class Product extends Model
      */
     public function getImageUrl($image = null)
     {
-        $img = $image;
+        $img = $image ?? $this->image;
 
-        if (!$img) {
-            $raw = $this->image;
-            if (is_array($raw)) {
-                $img = $raw[0] ?? null;
-            } elseif (is_string($raw)) {
-                $decoded = json_decode($raw, true);
-                if (is_array($decoded) && !empty($decoded)) {
-                    $img = $decoded[0];
-                } elseif ($raw !== 'Array' && $raw !== '[]') {
-                    $img = $raw;
-                }
+        if (is_array($img)) {
+            $img = $img[0] ?? null;
+        } elseif (is_string($img)) {
+            $decoded = json_decode($img, true);
+            if (is_array($decoded) && !empty($decoded)) {
+                $img = $decoded[0];
             }
         }
 

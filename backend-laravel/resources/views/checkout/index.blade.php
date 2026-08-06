@@ -193,11 +193,11 @@
                         @foreach($cart as $item)
                             @php
                                 $img = $item['image'] ?? '';
-                                $imgSrc = str_starts_with($img, 'http') ? $img : (str_starts_with($img, 'products/') ? asset('storage/' . $img) : asset('uploads/products/' . $img));
+                                $imgSrc = (str_starts_with($img, 'http') || str_starts_with($img, '/')) ? $img : (str_starts_with($img, 'products/') ? asset('storage/' . $img) : asset('uploads/products/' . $img));
                             @endphp
                             <div class="bg-white rounded-2xl p-4 flex gap-4 border border-gray-50 shadow-sm">
                                 <div class="w-16 h-16 bg-gray-50 rounded-xl overflow-hidden shrink-0">
-                                    <img src="{{ $imgSrc }}" class="w-full h-full object-cover">
+                                    <img src="{{ $imgSrc }}" onerror="this.src='/uploads/products/default.jpg'" class="w-full h-full object-cover">
                                 </div>
                                 <div class="flex-1 min-w-0">
                                     <div class="flex items-center justify-between">

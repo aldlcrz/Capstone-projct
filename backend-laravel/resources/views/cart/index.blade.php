@@ -21,12 +21,9 @@
     })->values();
 @endphp
 
-{{-- Build JS-safe items array --}}
-<script>
-    window.__cartItems = @json($cartItemsForJs);
-</script>
-
-<div class="max-w-[1200px] mx-auto px-4 py-12 min-h-screen"
+<div id="cart-root"
+     data-cart-items="{{ json_encode($cartItemsForJs) }}"
+     class="max-w-[1200px] mx-auto px-4 py-12 min-h-screen"
      x-data="cartApp()"
      x-init="init()">
 
@@ -54,26 +51,39 @@
                 </div>
 
                 @if(!empty($cart))
-                <label class="flex items-center gap-2.5 cursor-pointer group select-none">
-                    <div class="relative w-5 h-5">
-                        <input type="checkbox"
-                               id="select-all"
-                               x-model="allSelected"
-                               @change="toggleAll()"
-                               class="sr-only peer">
-                        <div class="w-5 h-5 rounded-md border-2 border-gray-300 peer-checked:bg-[#C0422A] peer-checked:border-[#C0422A] transition-all flex items-center justify-center">
-                            <svg x-show="allSelected" class="w-3 h-3 text-white fill-current" viewBox="0 0 20 20">
-                                <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
-                            </svg>
-                            <svg x-show="!allSelected && selected.length > 0" class="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M20 12H4"/>
-                            </svg>
+                <div class="flex items-center gap-4 flex-wrap">
+                    <label class="flex items-center gap-2.5 cursor-pointer group select-none">
+                        <div class="relative w-5 h-5">
+                            <input type="checkbox"
+                                   id="select-all"
+                                   x-model="allSelected"
+                                   @change="toggleAll()"
+                                   class="sr-only peer">
+                            <div class="w-5 h-5 rounded-md border-2 border-gray-300 peer-checked:bg-[#C0422A] peer-checked:border-[#C0422A] transition-all flex items-center justify-center">
+                                <svg x-show="allSelected" class="w-3 h-3 text-white fill-current" viewBox="0 0 20 20">
+                                    <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
+                                </svg>
+                                <svg x-show="!allSelected && selected.length > 0" class="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M20 12H4"/>
+                                </svg>
+                            </div>
                         </div>
-                    </div>
-                    <span class="text-xs font-bold text-gray-600 group-hover:text-black transition-colors uppercase tracking-widest">
-                        Select All (<span x-text="selected.length"></span>/<span>{{ count($cart) }}</span>)
-                    </span>
-                </label>
+                        <span class="text-xs font-bold text-gray-600 group-hover:text-black transition-colors uppercase tracking-widest">
+                            Select All (<span x-text="selected.length"></span>/<span>{{ count($cart) }}</span>)
+                        </span>
+                    </label>
+
+                    {{-- Delete Selected / Delete All Button --}}
+                    <button type="button"
+                            x-show="selected.length > 0"
+                            @click="removeSelectedItems()"
+                            class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-red-200 bg-red-50 text-red-600 hover:bg-red-600 hover:text-white transition-all text-xs font-bold uppercase tracking-wider cursor-pointer shadow-sm">
+                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                        </svg>
+                        <span x-text="selected.length === items.length ? 'Delete All' : 'Delete Selected (' + selected.length + ')'"></span>
+                    </button>
+                </div>
                 @endif
             </div>
 
@@ -81,7 +91,7 @@
             @forelse($cart as $key => $item)
                 @php
                     $img    = $item['image'] ?? '';
-                    $imgSrc = str_starts_with($img, 'http') ? $img
+                    $imgSrc = (str_starts_with($img, 'http') || str_starts_with($img, '/')) ? $img
                             : (str_starts_with($img, 'products/') ? asset('storage/'.$img) : asset('uploads/products/'.$img));
                 @endphp
                 <div class="flex gap-4 bg-white p-5 rounded-2xl shadow-sm border transition-all duration-200 items-start"
@@ -272,7 +282,7 @@
 <script>
 function cartApp() {
     return {
-        items: window.__cartItems || [],
+        items: JSON.parse(document.getElementById('cart-root')?.dataset?.cartItems || '[]'),
         selected: [],
         allSelected: false,
 
@@ -356,6 +366,37 @@ function cartApp() {
                     if (data.success) {
                         this.items = this.items.filter(i => i.key !== key);
                         this.selected = this.selected.filter(k => k !== key);
+                        this.syncSelectAll();
+                        window.dispatchEvent(new CustomEvent('cart-updated', { detail: data }));
+                    }
+                }
+            } catch(e) {}
+        },
+
+        async removeSelectedItems() {
+            if (this.selected.length === 0) return;
+            const message = this.selected.length === this.items.length 
+                ? 'Are you sure you want to delete all items from your cart?' 
+                : 'Are you sure you want to delete the selected (' + this.selected.length + ') item(s) from your cart?';
+            
+            if (!confirm(message)) return;
+
+            try {
+                const response = await fetch('/cart/remove-selected', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                    },
+                    body: JSON.stringify({ keys: this.selected })
+                });
+                if (response.ok) {
+                    const data = await response.json();
+                    if (data.success) {
+                        const removedKeys = [...this.selected];
+                        this.items = this.items.filter(i => !removedKeys.includes(i.key));
+                        this.selected = [];
                         this.syncSelectAll();
                         window.dispatchEvent(new CustomEvent('cart-updated', { detail: data }));
                     }

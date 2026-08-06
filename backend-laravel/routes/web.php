@@ -59,6 +59,8 @@ Route::middleware('auth')->group(function () {
     Route::get('/cart', [\App\Http\Controllers\CartController::class, 'index'])->name('cart.index');
     Route::post('/cart/add', [\App\Http\Controllers\CartController::class, 'add'])->name('cart.add');
     Route::post('/cart/update', [\App\Http\Controllers\CartController::class, 'update'])->name('cart.update');
+    Route::post('/cart/remove-selected', [\App\Http\Controllers\CartController::class, 'removeSelected'])->name('cart.remove-selected');
+    Route::post('/cart/clear', [\App\Http\Controllers\CartController::class, 'clear'])->name('cart.clear');
     Route::post('/cart/remove/{key}', [\App\Http\Controllers\CartController::class, 'remove'])->name('cart.remove')->where('key', '.*');
 
     // Checkout
