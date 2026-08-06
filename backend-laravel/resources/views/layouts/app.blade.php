@@ -46,7 +46,7 @@
         <header class="sticky top-0 z-40 bg-white border-b border-gray-100 w-full shadow-sm">
             <div class="flex items-center justify-between px-4 lg:px-12 py-4 w-full max-w-360 mx-auto">
                 <!-- Left: Info -->
-                <div class="flex items-center gap-4 flex-1 md:flex-none">
+                <div class="hidden md:flex items-center gap-4 flex-1 md:flex-none">
                     @guest
                         <a href="{{ route('seller.register') }}" class="text-[10px] font-bold uppercase tracking-[0.2em] text-gray-500 hover:text-black transition-all">START YOUR SHOP NOW</a>
                     @else
@@ -397,7 +397,7 @@
     <x-chat-widget />
     <x-report-modal />
 
-    <div x-data="{}" class="fixed bottom-6 right-6 z-50">
+    <div x-data="{}" class="fixed bottom-20 lg:bottom-6 right-4 lg:right-6 z-50">
         <button 
             @click="window.dispatchEvent(new CustomEvent({{ auth()->check() ? "'toggle-chat'" : "'open-auth-gate'" }}, {{ auth()->check() ? '{}' : "{ detail: { message: 'Please log in to chat with artisans.' } }" }}))"
             class="w-12 h-12 bg-black text-white rounded-full flex items-center justify-center shadow-lg hover:bg-gray-800 transition-all"

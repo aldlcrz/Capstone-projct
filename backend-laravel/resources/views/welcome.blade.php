@@ -205,7 +205,7 @@
         <!-- Product Categories Row -->
         @if(isset($categories) && $categories->isNotEmpty())
             <div class="flex items-center gap-2 overflow-x-auto no-scrollbar pb-2 pt-1 border-t border-gray-100">
-                <span class="text-[10px] font-black uppercase tracking-widest text-gray-400 shrink-0 mr-1">Categories:</span>
+                <span class="text-[10px] font-black uppercase tracking-widest text-gray-400 shrink-0 mr-1 hidden sm:inline-block">Categories:</span>
                 @foreach($categories as $cat)
                     @php
                         $isActiveCategory = request('category') == $cat->id || strtolower(request('category')) == strtolower($cat->name);
