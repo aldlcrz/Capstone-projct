@@ -7,6 +7,7 @@ use App\Models\Product;
 use App\Models\ProductView;
 use App\Models\SellerFunnelEvent;
 use Illuminate\Http\Request;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 use Carbon\Carbon;
