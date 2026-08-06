@@ -282,15 +282,19 @@
 
             <!-- Desktop Sidebar -->
             <div class="hidden lg:block lg:col-span-5">
-                <div class="bg-[#F9FAFB] rounded-[40px] p-8 border border-gray-100 sticky top-10">
-                    <h2 class="text-xl font-bold mb-6">Order Summary</h2>
-                    <div class="space-y-4 mb-8 max-h-75 overflow-y-auto pr-2 custom-scrollbar">
+                <div class="bg-[#F9FAFB] rounded-[40px] p-8 border border-gray-100 sticky top-10 flex flex-col max-h-[calc(100vh-80px)] shadow-sm">
+                    <h2 class="text-xl font-bold mb-1">Order Summary</h2>
+                    <p class="text-[10px] text-gray-400 uppercase tracking-widest font-bold mb-6">
+                        {{ count($cart) }} item(s) selected
+                    </p>
+
+                    <div class="space-y-4 mb-6 flex-1 min-h-0 overflow-y-auto pr-2 custom-scrollbar">
                         @foreach($cart as $item)
                             @php
                                 $img = $item['image'] ?? '';
                                 $imgSrc = (str_starts_with($img, 'http') || str_starts_with($img, '/')) ? $img : (str_starts_with($img, 'products/') ? asset('storage/' . $img) : asset('uploads/products/' . $img));
                             @endphp
-                            <div class="bg-white rounded-2xl p-4 flex gap-4 border border-gray-50 shadow-sm">
+                            <div class="bg-white rounded-2xl p-4 flex gap-4 border border-gray-50 shadow-xs">
                                 <div class="w-16 h-16 bg-gray-50 rounded-xl overflow-hidden shrink-0">
                                     <img src="{{ $imgSrc }}" onerror="this.src='/uploads/products/default.jpg'" class="w-full h-full object-cover">
                                 </div>
@@ -320,7 +324,7 @@
                         @endforeach
                     </div>
 
-                    <div class="space-y-3 border-t border-gray-100 pt-6 mb-8">
+                    <div class="space-y-3 border-t border-gray-100 pt-6 mt-auto">
                         <div class="flex justify-between items-center">
                             <span class="text-sm text-gray-400 font-medium">Subtotal</span>
                             <span class="text-sm font-bold text-black">₱{{ number_format($subtotal) }}</span>
@@ -342,12 +346,12 @@
                     </div>
 
                     <template x-if="step === 1">
-                        <button type="button" @click="step = 2" class="w-full bg-black text-white py-5 rounded-2xl text-sm font-bold shadow-xl shadow-black/10 hover:bg-[#C0422A] transition-all">
+                        <button type="button" @click="step = 2" class="w-full bg-black text-white py-5 rounded-2xl text-sm font-bold shadow-xl shadow-black/10 hover:bg-[#C0422A] transition-all mt-6">
                             Proceed to Payment
                         </button>
                     </template>
                     <template x-if="step === 2">
-                        <div class="flex gap-4">
+                        <div class="flex gap-4 mt-6">
                             <button type="button" @click="step = 1" class="w-1/4 border-2 border-gray-100 py-5 rounded-2xl flex items-center justify-center text-gray-400 hover:text-black">
                                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path></svg>
                             </button>
