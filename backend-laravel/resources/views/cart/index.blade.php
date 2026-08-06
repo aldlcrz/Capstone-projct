@@ -23,12 +23,12 @@
 
 <div id="cart-root"
      data-cart-items="{{ json_encode($cartItemsForJs) }}"
-     class="max-w-300 mx-auto px-4 py-12 min-h-screen"
+     class="max-w-300 mx-auto px-4 pt-1 pb-12 lg:pt-4 min-h-screen"
      x-data="cartApp()"
      x-init="init()">
 
     {{-- Back --}}
-    <a href="/" class="inline-flex items-center gap-2 text-[10px] font-bold text-gray-400 uppercase tracking-widest hover:text-black transition-colors mb-6">
+    <a href="/" class="inline-flex items-center gap-2 text-[10px] font-bold text-gray-400 uppercase tracking-widest hover:text-black transition-colors mb-4">
         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
         </svg>
