@@ -232,7 +232,7 @@
 
         {{-- ===== Right: Dynamic Order Summary (Desktop Sidebar) ===== --}}
         @if(!empty($cart))
-        <div class="lg:w-96 w-full hidden lg:block shrink-0">
+        <div class="lg:w-96 w-full hidden lg:block shrink-0 self-stretch">
             <div class="bg-white p-8 rounded-3xl border border-gray-100 shadow-sm sticky top-24">
                 <h2 class="text-xl font-bold text-black mb-1">Order Summary</h2>
                 <p class="text-[10px] text-gray-400 uppercase tracking-widest font-bold mb-6">
