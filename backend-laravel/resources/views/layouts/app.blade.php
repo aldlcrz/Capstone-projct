@@ -370,10 +370,10 @@
 
         <!-- Footer -->
         @if(!request()->is('cart*') && !request()->is('checkout*'))
-        <footer class="hidden lg:block bg-white pt-16 pb-10 border-t border-gray-100 mt-8 sm:mt-12">
+        <footer class="hidden lg:block bg-white pt-12 pb-8 border-t border-gray-100 mt-8 sm:mt-12">
             <div class="max-w-360 mx-auto px-4 lg:px-12">
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-12 mb-20">
-                    <div class="space-y-6">
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-12 mb-8">
+                    <div class="space-y-4">
                         <div class="flex items-center gap-2">
                             <div class="w-8 h-8 bg-black rounded-full text-white flex items-center justify-center font-bold text-lg shadow-md">L</div>
                             <span class="text-xl font-bold tracking-tight text-black">LumBarong</span>
@@ -383,22 +383,22 @@
                         </p>
                     </div>
                     <div>
-                        <h4 class="text-[10px] font-bold uppercase tracking-[0.2em] text-black mb-8">Shop</h4>
-                        <ul class="space-y-4">
+                        <h4 class="text-[10px] font-bold uppercase tracking-[0.2em] text-black mb-6">Shop</h4>
+                        <ul class="space-y-3">
                             <li><a href="/" class="text-sm text-gray-500 hover:text-black transition-colors">All Products</a></li>
                             <li><a href="/" class="text-sm text-gray-500 hover:text-black transition-colors">New Arrivals</a></li>
                         </ul>
                     </div>
                     <div>
-                        <h4 class="text-[10px] font-bold uppercase tracking-[0.2em] text-black mb-8">Support</h4>
-                        <ul class="space-y-4">
+                        <h4 class="text-[10px] font-bold uppercase tracking-[0.2em] text-black mb-6">Support</h4>
+                        <ul class="space-y-3">
                             <li><a href="/about" class="text-sm text-gray-500 hover:text-black transition-colors">About LumBarong</a></li>
                             <li><a href="/privacy" class="text-sm text-gray-500 hover:text-black transition-colors">Privacy Policy</a></li>
                             <li><a href="/terms" class="text-sm text-gray-500 hover:text-black transition-colors">Terms & Conditions</a></li>
                         </ul>
                     </div>
                 </div>
-                <div class="pt-10 border-t border-gray-100 flex flex-col md:flex-row items-center justify-between gap-6">
+                <div class="pt-6 border-t border-gray-100 flex flex-col md:flex-row items-center justify-between gap-4">
                     <div class="text-[11px] font-medium text-gray-400 tracking-widest">LumBarong © {{ date('Y') }}. All Rights Reserved</div>
                 </div>
             </div>
