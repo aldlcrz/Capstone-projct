@@ -39,6 +39,16 @@
         /* Prevent Alpine.js x-cloak elements from flashing before initialization */
         [x-cloak] { display: none !important; }
     </style>
+    @auth
+    <script>
+        (function() {
+            window.history.pushState(null, "", window.location.href);
+            window.onpopstate = function() {
+                window.history.pushState(null, "", window.location.href);
+            };
+        })();
+    </script>
+    @endauth
 </head>
 <body class="antialiased text-gray-900">
     <div class="min-h-screen flex flex-col">
