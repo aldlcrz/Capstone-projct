@@ -184,9 +184,17 @@
                             <div class="text-[10px] text-(--muted) font-bold uppercase tracking-widest leading-none">Administrator</div>
                         </div>
                     </div>
-                    <form action="{{ route('logout') }}" method="POST" onsubmit="return confirm('Are you sure you want to logout?')">
+                    <form x-ref="logoutForm" action="{{ route('logout') }}" method="POST">
                         @csrf
-                        <button type="submit" class="flex items-center gap-3 w-full px-4 py-3.5 bg-red-50 text-red-600 rounded-xl hover:bg-red-100 transition-all font-bold text-xs tracking-widest uppercase">
+                        <button type="button" 
+                                @click="$dispatch('open-confirmation', { 
+                                    title: 'Logout', 
+                                    message: 'Are you sure you want to logout?', 
+                                    confirmText: 'Logout', 
+                                    type: 'danger', 
+                                    onConfirm: () => $refs.logoutForm.submit() 
+                                })" 
+                                class="flex items-center gap-3 w-full px-4 py-3.5 bg-red-50 text-red-600 rounded-xl hover:bg-red-100 transition-all font-bold text-xs tracking-widest uppercase">
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path></svg>
                             Logout
                         </button>

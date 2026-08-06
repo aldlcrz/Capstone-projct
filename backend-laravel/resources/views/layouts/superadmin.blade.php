@@ -81,9 +81,17 @@
                         </div>
                     </div>
 
-                    <form action="{{ route('superadmin.logout') }}" method="POST">
+                    <form x-ref="logoutForm" action="{{ route('superadmin.logout') }}" method="POST">
                         @csrf
-                        <button type="submit" class="w-full py-3 bg-[#3D2B1F] text-white hover:bg-[#C0422A] rounded-xl text-xs font-bold uppercase tracking-widest transition-all">
+                        <button type="button" 
+                                @click="$dispatch('open-confirmation', { 
+                                    title: 'Logout', 
+                                    message: 'Are you sure you want to logout?', 
+                                    confirmText: 'Logout', 
+                                    type: 'danger', 
+                                    onConfirm: () => $refs.logoutForm.submit() 
+                                })" 
+                                class="w-full py-3 bg-[#3D2B1F] text-white hover:bg-[#C0422A] rounded-xl text-xs font-bold uppercase tracking-widest transition-all">
                             Sign Out
                         </button>
                     </form>
@@ -123,6 +131,7 @@
             </main>
         </div>
     </div>
+    <x-confirmation-modal />
     @stack('scripts')
 </body>
 </html>

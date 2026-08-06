@@ -17,6 +17,7 @@
         onConfirm = $event.detail.onConfirm;
     "
     x-show="isOpen" 
+    x-cloak
     class="fixed inset-0 z-[999] flex items-center justify-center p-4" 
     style="display: none;"
     x-transition:enter="transition ease-out duration-300"

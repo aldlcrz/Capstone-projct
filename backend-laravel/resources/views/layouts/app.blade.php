@@ -231,9 +231,20 @@
                                 @if(Auth::user()->role !== 'seller')
                                     <a href="/orders/my-orders" class="flex items-center gap-3 px-4 py-3 text-[11px] font-bold text-gray-600 hover:bg-gray-50 hover:text-black transition-all">My Purchase</a>
                                 @endif
-                                <form action="{{ route('logout') }}" method="POST" onsubmit="return confirm('Are you sure you want to logout?')" class="border-t border-gray-50 mt-1">
+                                <form x-ref="logoutForm" action="{{ route('logout') }}" method="POST" class="border-t border-gray-50 mt-1">
                                     @csrf
-                                    <button type="submit" class="w-full text-left px-4 py-3 text-[11px] font-bold text-red-500 hover:bg-red-50 transition-all">Logout</button>
+                                    <button type="button" 
+                                            @click="$dispatch('open-confirmation', { 
+                                                title: 'Logout', 
+                                                message: 'Are you sure you want to logout?', 
+                                                confirmText: 'Logout', 
+                                                type: 'danger', 
+                                                onConfirm: () => $refs.logoutForm.submit() 
+                                            })" 
+                                            class="w-full text-left px-4 py-3 text-[11px] font-bold text-red-500 hover:bg-red-50 transition-all flex items-center gap-2">
+                                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path></svg>
+                                        Logout
+                                    </button>
                                 </form>
                             </div>
                         @else
