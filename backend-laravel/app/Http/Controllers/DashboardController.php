@@ -255,72 +255,8 @@ class DashboardController extends Controller
             ? number_format(($orderCount / $shopViews) * 100, 1)
             : '0.0';
 
-        $topProductsQuery = DB::table('order_items')
-            ->join('orders', 'order_items.orderId', '=', 'orders.id')
-            ->join('products', 'order_items.productId', '=', 'products.id')
-            ->where('orders.sellerId', $sellerId)
-            ->whereRaw('LOWER(orders.status) NOT IN (?, ?, ?)', ['cancelled', 'cancellation pending', 'cancellation requested']);
-
-        if ($from) {
-            $topProductsQuery->where('orders.createdAt', '>=', $from);
-        }
-        if ($to) {
-            $topProductsQuery->where('orders.createdAt', '<=', $to);
-        }
-
-        $topProducts = $topProductsQuery->select(
-            'products.id',
-            'products.name',
-            DB::raw('SUM(order_items.quantity) as units_sold'),
-            DB::raw('SUM(order_items.quantity * order_items.price) as revenue')
-        )
-        ->groupBy('products.id', 'products.name')
-        ->orderByDesc('units_sold')
-        ->limit(5)
-        ->get();
-
-        $revenueChart = [];
-        if ($from && $to) {
-            $diffDays = max(1, (int) $from->diffInDays($to));
-            $stepDays = max(1, (int) ceil($diffDays / 6));
-            for ($i = 6; $i >= 0; $i--) {
-                $day = $to->copy()->subDays($i * $stepDays);
-                $periodStart = $day->copy()->startOfDay();
-                $periodEnd   = ($stepDays > 1) ? $day->copy()->addDays($stepDays - 1)->endOfDay() : $day->copy()->endOfDay();
-
-                $dayRevenue = (float) $activeOrders
-                    ->filter(fn ($order) => Carbon::parse($order->createdAt)->between($periodStart, $periodEnd))
-                    ->sum('totalAmount');
-
-                $revenueChart[] = [
-                    'label' => $diffDays <= 7 ? $periodStart->format('D') : $periodStart->format('M d'),
-                    'date' => $periodStart->format('M d'),
-                    'revenue' => $dayRevenue,
-                ];
-            }
-        } else {
-            // All Time mode: Anchor on latest active order date if recent 7 days have no orders
-            $recentCount = $activeOrders->filter(fn ($order) => Carbon::parse($order->createdAt)->gte(Carbon::now()->subDays(6)->startOfDay()))->count();
-            $anchorEnd = ($recentCount === 0 && $activeOrders->isNotEmpty())
-                ? Carbon::parse($activeOrders->first()->createdAt ?? Carbon::now())
-                : Carbon::now();
-
-            for ($i = 6; $i >= 0; $i--) {
-                $day = $anchorEnd->copy()->subDays($i);
-                $dayRevenue = (float) $activeOrders
-                    ->filter(fn ($order) => Carbon::parse($order->createdAt)->between(
-                        $day->copy()->startOfDay(),
-                        $day->copy()->endOfDay()
-                    ))
-                    ->sum('totalAmount');
-
-                $revenueChart[] = [
-                    'label' => $day->format('D'),
-                    'date' => $day->format('M d'),
-                    'revenue' => $dayRevenue,
-                ];
-            }
-        }
+        $topProducts = $this->fetchSellerTopProducts($sellerId, $from, $to);
+        $revenueChart = $this->buildSellerRevenueChart($activeOrders, $from, $to);
 
         $maxChartRevenue = max(array_column($revenueChart, 'revenue')) ?: 1;
 
@@ -369,6 +305,96 @@ class DashboardController extends Controller
             'revenueChart' => $revenueChart,
             'maxChartRevenue' => $maxChartRevenue,
         ];
+    }
+
+    /**
+     * Fetch top products for seller dashboard.
+     *
+     * @param string $sellerId
+     * @param Carbon|null $from
+     * @param Carbon|null $to
+     * @return \Illuminate\Support\Collection
+     */
+    private function fetchSellerTopProducts(string $sellerId, ?Carbon $from, ?Carbon $to): \Illuminate\Support\Collection
+    {
+        $topProductsQuery = DB::table('order_items')
+            ->join('orders', 'order_items.orderId', '=', 'orders.id')
+            ->join('products', 'order_items.productId', '=', 'products.id')
+            ->where('orders.sellerId', $sellerId)
+            ->whereRaw('LOWER(orders.status) NOT IN (?, ?, ?)', ['cancelled', 'cancellation pending', 'cancellation requested']);
+
+        if ($from) {
+            $topProductsQuery->where('orders.createdAt', '>=', $from);
+        }
+        if ($to) {
+            $topProductsQuery->where('orders.createdAt', '<=', $to);
+        }
+
+        return $topProductsQuery->select(
+            'products.id',
+            'products.name',
+            DB::raw('SUM(order_items.quantity) as units_sold'),
+            DB::raw('SUM(order_items.quantity * order_items.price) as revenue')
+        )
+        ->groupBy('products.id', 'products.name')
+        ->orderByDesc('units_sold')
+        ->limit(5)
+        ->get();
+    }
+
+    /**
+     * Build revenue chart dataset for seller dashboard.
+     *
+     * @param Collection $activeOrders
+     * @param Carbon|null $from
+     * @param Carbon|null $to
+     * @return array<int, array<string, mixed>>
+     */
+    private function buildSellerRevenueChart(Collection $activeOrders, ?Carbon $from, ?Carbon $to): array
+    {
+        $revenueChart = [];
+        if ($from && $to) {
+            $diffDays = max(1, (int) $from->diffInDays($to));
+            $stepDays = max(1, (int) ceil($diffDays / 6));
+            for ($i = 6; $i >= 0; $i--) {
+                $day = $to->copy()->subDays($i * $stepDays);
+                $periodStart = $day->copy()->startOfDay();
+                $periodEnd   = ($stepDays > 1) ? $day->copy()->addDays($stepDays - 1)->endOfDay() : $day->copy()->endOfDay();
+
+                $dayRevenue = (float) $activeOrders
+                    ->filter(fn ($order) => Carbon::parse($order->createdAt)->between($periodStart, $periodEnd))
+                    ->sum('totalAmount');
+
+                $revenueChart[] = [
+                    'label' => $diffDays <= 7 ? $periodStart->format('D') : $periodStart->format('M d'),
+                    'date' => $periodStart->format('M d'),
+                    'revenue' => $dayRevenue,
+                ];
+            }
+        } else {
+            $recentCount = $activeOrders->filter(fn ($order) => Carbon::parse($order->createdAt)->gte(Carbon::now()->subDays(6)->startOfDay()))->count();
+            $anchorEnd = ($recentCount === 0 && $activeOrders->isNotEmpty())
+                ? Carbon::parse($activeOrders->first()->createdAt ?? Carbon::now())
+                : Carbon::now();
+
+            for ($i = 6; $i >= 0; $i--) {
+                $day = $anchorEnd->copy()->subDays($i);
+                $dayRevenue = (float) $activeOrders
+                    ->filter(fn ($order) => Carbon::parse($order->createdAt)->between(
+                        $day->copy()->startOfDay(),
+                        $day->copy()->endOfDay()
+                    ))
+                    ->sum('totalAmount');
+
+                $revenueChart[] = [
+                    'label' => $day->format('D'),
+                    'date' => $day->format('M d'),
+                    'revenue' => $dayRevenue,
+                ];
+            }
+        }
+
+        return $revenueChart;
     }
 
     private function isCancelledOrder(string $status): bool
