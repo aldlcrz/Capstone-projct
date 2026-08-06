@@ -130,20 +130,6 @@
                         </div>
                     </div>
 
-                    {{-- Form Fields for Contact/Address Name --}}
-                    <div class="space-y-4 bg-gray-50/50 p-5 rounded-2xl border border-gray-100 mb-6">
-                        <div class="text-xs font-bold text-gray-700 uppercase tracking-wider mb-2">Recipient Details</div>
-                        <div class="relative border rounded-xl p-3 bg-white border-gray-200 focus-within:border-black">
-                            <label class="text-[9px] font-bold text-gray-400 uppercase tracking-widest block mb-0.5">Full Name</label>
-                            <input type="text" x-model="address.recipientName" class="w-full font-bold text-black text-sm outline-none bg-transparent" placeholder="Recipient Name">
-                        </div>
-
-                        <div class="relative border rounded-xl p-3 bg-white border-gray-200 focus-within:border-black">
-                            <label class="text-[9px] font-bold text-gray-400 uppercase tracking-widest block mb-0.5">Mobile Phone Number</label>
-                            <input type="text" x-model="address.phone" class="w-full font-bold text-black text-sm outline-none bg-transparent" placeholder="Mobile Phone Number">
-                        </div>
-                    </div>
-
                     {{-- Lazada-Style Store Items Preview --}}
                     <div class="bg-white rounded-2xl border border-gray-100 p-5 shadow-xs mb-6 space-y-4">
                         <div class="flex items-center justify-between pb-3 border-b border-gray-100">
