@@ -24,6 +24,7 @@ return Application::configure(basePath: dirname(__DIR__))
 
         $middleware->appendToGroup('web', \App\Http\Middleware\CheckMaintenance::class);
         $middleware->appendToGroup('web', \App\Http\Middleware\PreventBackHistory::class);
+        $middleware->appendToGroup('web', \App\Http\Middleware\SyncUserCart::class);
         $middleware->appendToGroup('api', \App\Http\Middleware\CheckMaintenance::class);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
