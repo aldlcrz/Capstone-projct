@@ -316,7 +316,7 @@
 
             <!-- Desktop Sidebar -->
             <div class="hidden lg:block lg:col-span-5">
-                <div class="bg-[#F9FAFB] rounded-[40px] p-8 border border-gray-100 sticky top-10 flex flex-col max-h-[calc(100vh-80px)] shadow-sm">
+                <div class="bg-[#F9FAFB] rounded-[40px] p-8 border border-gray-100 sticky top-24 flex flex-col max-h-[calc(100vh-120px)] shadow-sm">
                     <h2 class="text-xl lg:text-2xl font-bold mb-1">Order Summary</h2>
                     <p class="text-xs lg:text-sm text-gray-400 uppercase tracking-widest font-bold mb-6">
                         {{ count($cart) }} item(s) selected

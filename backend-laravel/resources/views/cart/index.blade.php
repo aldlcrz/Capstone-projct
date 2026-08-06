@@ -35,10 +35,10 @@
         Back to catalogue
     </a>
 
-    <div class="flex flex-col lg:flex-row gap-8" x-show="items.length > 0">
+    <div class="flex flex-col lg:flex-row gap-8 items-start" x-show="items.length > 0">
 
         {{-- ===== Left: Cart Items ===== --}}
-        <div class="flex-1 space-y-4">
+        <div class="flex-1 space-y-4 min-w-0 w-full">
 
             {{-- Header + Select All --}}
             <div class="flex items-center justify-between mb-6 flex-wrap gap-3">
@@ -233,7 +233,7 @@
         {{-- ===== Right: Dynamic Order Summary (Desktop Sidebar) ===== --}}
         @if(!empty($cart))
         <div class="lg:w-96 w-full hidden lg:block shrink-0">
-            <div class="bg-white p-8 rounded-3xl border border-gray-100 shadow-sm sticky top-8">
+            <div class="bg-white p-8 rounded-3xl border border-gray-100 shadow-sm sticky top-24">
                 <h2 class="text-xl font-bold text-black mb-1">Order Summary</h2>
                 <p class="text-[10px] text-gray-400 uppercase tracking-widest font-bold mb-6">
                     <span x-text="selected.length"></span> of {{ count($cart) }} item(s) selected
