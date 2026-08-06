@@ -47,51 +47,14 @@
             </div>
             @endif
 
-            <form action="{{ route('profile.update') }}" method="POST" enctype="multipart/form-data" class="px-8 py-8">
+            <form action="{{ route('profile.update') }}" method="POST" enctype="multipart/form-data" class="px-4 sm:px-8 py-6 sm:py-8">
                 @csrf
                 @method('PUT')
 
-                <div class="flex flex-col lg:flex-row gap-10">
-                    {{-- Fields --}}
-                    <div class="flex-1 space-y-5">
-
-                        {{-- Username (editable) --}}
-                        <div class="grid grid-cols-[160px_1fr] items-center gap-4">
-                            <label class="text-sm text-gray-500 text-right" for="username">Username</label>
-                            <input id="username" type="text" name="username" value="{{ old('username', $user->username ?? $user->name) }}"
-                                class="h-10 px-4 bg-white border border-gray-200 rounded-lg text-sm outline-none focus:border-[#C0420A] transition-colors w-full">
-                        </div>
-
-                        {{-- Name --}}
-                        <div class="grid grid-cols-[160px_1fr] items-center gap-4">
-                            <label class="text-sm text-gray-500 text-right" for="name">Name</label>
-                            <input id="name" type="text" name="name" value="{{ old('name', $user->name) }}"
-                                class="h-10 px-4 bg-white border border-gray-200 rounded-lg text-sm outline-none focus:border-[#C0420A] transition-colors w-full">
-                        </div>
-
-                        {{-- Email (read-only) --}}
-                        <div class="grid grid-cols-[160px_1fr] items-center gap-4">
-                            <label class="text-sm text-gray-500 text-right">Email</label>
-                            <div class="flex items-center gap-3">
-                                <span class="text-sm text-gray-800">{{ $user->email }}</span>
-                            </div>
-                        </div>
-
-
-
-                        {{-- Submit --}}
-                        <div class="grid grid-cols-[160px_1fr] items-center gap-4 pt-2">
-                            <div></div>
-                            <button type="submit"
-                                class="w-32 py-2.5 bg-[#C0420A] text-white text-sm font-semibold rounded-lg hover:bg-[#a83808] transition-colors shadow-sm">
-                                Save
-                            </button>
-                        </div>
-                    </div>
-
-                    {{-- Avatar --}}
-                    <div class="flex flex-col items-center gap-4 lg:w-48 lg:border-l lg:border-gray-100 lg:pl-10">
-                        <div class="w-24 h-24 rounded-full bg-gray-100 border border-gray-200 flex items-center justify-center overflow-hidden">
+                <div class="flex flex-col lg:flex-row gap-8 lg:gap-10">
+                    {{-- Avatar (Top on mobile, Right sidebar on desktop) --}}
+                    <div class="order-first lg:order-last flex flex-col items-center gap-3 lg:w-48 lg:border-l lg:border-gray-100 lg:pl-10 pb-6 lg:pb-0 border-b border-gray-100 lg:border-b-0">
+                        <div class="w-24 h-24 rounded-full bg-gray-100 border border-gray-200 flex items-center justify-center overflow-hidden shadow-xs">
                             @if($user->profilePhoto)
                                 <img src="{{ str_starts_with($user->profilePhoto, 'http') || str_starts_with($user->profilePhoto, '/') ? $user->profilePhoto : asset('storage/' . $user->profilePhoto) }}" class="w-full h-full object-cover">
                             @else
@@ -100,13 +63,48 @@
                         </div>
                         <label class="cursor-pointer">
                             <input type="file" name="avatar" accept="image/jpeg,image/png" class="hidden" onchange="previewAvatar(this)">
-                            <div class="px-4 py-2 border border-gray-300 rounded-lg text-sm text-gray-600 hover:border-gray-400 transition-colors">
+                            <div class="px-4 py-2 border border-gray-300 rounded-lg text-xs sm:text-sm font-semibold text-gray-700 hover:border-gray-400 bg-white transition-colors shadow-2xs">
                                 Select Image
                             </div>
                         </label>
-                        <div class="text-center text-[11px] text-gray-400 leading-relaxed">
+                        <div class="text-center text-[10px] sm:text-[11px] text-gray-400 leading-relaxed">
                             File size: maximum 1 MB<br>
                             File extension: JPEG, PNG
+                        </div>
+                    </div>
+
+                    {{-- Form Fields --}}
+                    <div class="flex-1 space-y-4 sm:space-y-5">
+
+                        {{-- Username (editable) --}}
+                        <div class="flex flex-col sm:grid sm:grid-cols-[140px_1fr] md:grid-cols-[160px_1fr] items-start sm:items-center gap-1.5 sm:gap-4">
+                            <label class="text-xs sm:text-sm font-medium sm:font-normal text-gray-500 text-left sm:text-right" for="username">Username</label>
+                            <input id="username" type="text" name="username" value="{{ old('username', $user->username ?? $user->name) }}"
+                                class="h-10 px-4 bg-white border border-gray-200 rounded-lg text-sm outline-none focus:border-[#C0420A] transition-colors w-full">
+                        </div>
+
+                        {{-- Name --}}
+                        <div class="flex flex-col sm:grid sm:grid-cols-[140px_1fr] md:grid-cols-[160px_1fr] items-start sm:items-center gap-1.5 sm:gap-4">
+                            <label class="text-xs sm:text-sm font-medium sm:font-normal text-gray-500 text-left sm:text-right" for="name">Name</label>
+                            <input id="name" type="text" name="name" value="{{ old('name', $user->name) }}"
+                                class="h-10 px-4 bg-white border border-gray-200 rounded-lg text-sm outline-none focus:border-[#C0420A] transition-colors w-full">
+                        </div>
+
+                        {{-- Email (read-only) --}}
+                        <div class="flex flex-col sm:grid sm:grid-cols-[140px_1fr] md:grid-cols-[160px_1fr] items-start sm:items-center gap-1.5 sm:gap-4">
+                            <label class="text-xs sm:text-sm font-medium sm:font-normal text-gray-500 text-left sm:text-right">Email</label>
+                            <div class="flex items-center gap-3 w-full overflow-hidden">
+                                <span class="text-xs sm:text-sm text-gray-800 truncate font-semibold sm:font-normal">{{ $user->email }}</span>
+                            </div>
+                        </div>
+
+                        {{-- Submit --}}
+                        <div class="flex flex-col sm:grid sm:grid-cols-[140px_1fr] md:grid-cols-[160px_1fr] items-start sm:items-center gap-1.5 sm:gap-4 pt-3">
+                            <div class="hidden sm:block"></div>
+                            <button type="submit"
+                                class="w-full sm:w-32 py-2.5 bg-[#C0420A] text-white text-sm font-semibold rounded-lg hover:bg-[#a83808] transition-colors shadow-sm">
+                                Save
+                            </button>
                         </div>
                     </div>
                 </div>

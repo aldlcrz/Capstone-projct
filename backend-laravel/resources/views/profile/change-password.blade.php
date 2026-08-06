@@ -49,13 +49,13 @@
             @endif
 
             {{-- Form --}}
-            <form action="{{ route('profile.change-password.submit') }}" method="POST" class="px-8 py-8 max-w-lg" x-data="{ showCurrent: false, showNew: false, showConfirm: false }">
+            <form action="{{ route('profile.change-password.submit') }}" method="POST" class="px-4 sm:px-8 py-6 sm:py-8 max-w-lg" x-data="{ showCurrent: false, showNew: false, showConfirm: false }">
                 @csrf
 
                 {{-- Current Password --}}
-                <div class="grid grid-cols-[180px_1fr] items-start gap-4 mb-5">
-                    <label class="text-sm text-gray-500 text-right pt-2.5">Current Password</label>
-                    <div class="space-y-1">
+                <div class="flex flex-col sm:grid sm:grid-cols-[160px_1fr] md:grid-cols-[180px_1fr] items-start sm:items-center gap-1.5 sm:gap-4 mb-5">
+                    <label class="text-xs sm:text-sm font-medium sm:font-normal text-gray-500 text-left sm:text-right pt-0 sm:pt-2.5">Current Password</label>
+                    <div class="space-y-1 w-full">
                         <div class="relative">
                             <input :type="showCurrent ? 'text' : 'password'" name="current_password"
                                 class="w-full h-10 px-4 pr-10 border {{ $errors->has('current_password') ? 'border-red-400 bg-red-50' : 'border-gray-200 bg-white' }} rounded-lg text-sm outline-none focus:border-[#C0420A] transition-colors"
@@ -73,9 +73,9 @@
                 </div>
 
                 {{-- New Password --}}
-                <div class="grid grid-cols-[180px_1fr] items-start gap-4 mb-5">
-                    <label class="text-sm text-gray-500 text-right pt-2.5">New Password</label>
-                    <div class="space-y-1">
+                <div class="flex flex-col sm:grid sm:grid-cols-[160px_1fr] md:grid-cols-[180px_1fr] items-start sm:items-center gap-1.5 sm:gap-4 mb-5">
+                    <label class="text-xs sm:text-sm font-medium sm:font-normal text-gray-500 text-left sm:text-right pt-0 sm:pt-2.5">New Password</label>
+                    <div class="space-y-1 w-full">
                         <div class="relative">
                             <input :type="showNew ? 'text' : 'password'" name="password" id="password"
                                 class="w-full h-10 px-4 pr-10 border {{ $errors->has('password') ? 'border-red-400 bg-red-50' : 'border-gray-200 bg-white' }} rounded-lg text-sm outline-none focus:border-[#C0420A] transition-colors"
@@ -104,9 +104,9 @@
                 </div>
 
                 {{-- Confirm Password --}}
-                <div class="grid grid-cols-[180px_1fr] items-start gap-4 mb-8">
-                    <label class="text-sm text-gray-500 text-right pt-2.5">Confirm Password</label>
-                    <div class="relative">
+                <div class="flex flex-col sm:grid sm:grid-cols-[160px_1fr] md:grid-cols-[180px_1fr] items-start sm:items-center gap-1.5 sm:gap-4 mb-8">
+                    <label class="text-xs sm:text-sm font-medium sm:font-normal text-gray-500 text-left sm:text-right pt-0 sm:pt-2.5">Confirm Password</label>
+                    <div class="relative w-full">
                         <input :type="showConfirm ? 'text' : 'password'" name="password_confirmation"
                             class="w-full h-10 px-4 pr-10 border border-gray-200 bg-white rounded-lg text-sm outline-none focus:border-[#C0420A] transition-colors"
                             placeholder="Re-enter new password">
@@ -119,10 +119,10 @@
                 </div>
 
                 {{-- Submit --}}
-                <div class="grid grid-cols-[180px_1fr] items-center gap-4">
-                    <div></div>
+                <div class="flex flex-col sm:grid sm:grid-cols-[160px_1fr] md:grid-cols-[180px_1fr] items-start sm:items-center gap-1.5 sm:gap-4">
+                    <div class="hidden sm:block"></div>
                     <button type="submit"
-                        class="w-36 py-2.5 bg-[#C0420A] text-white text-sm font-semibold rounded-lg hover:bg-[#a83808] transition-colors shadow-sm">
+                        class="w-full sm:w-36 py-2.5 bg-[#C0420A] text-white text-sm font-semibold rounded-lg hover:bg-[#a83808] transition-colors shadow-sm">
                         Confirm
                     </button>
                 </div>
