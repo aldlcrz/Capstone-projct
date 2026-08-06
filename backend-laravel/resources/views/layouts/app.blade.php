@@ -370,9 +370,9 @@
 
         <!-- Footer -->
         @if(!request()->is('cart*') && !request()->is('checkout*'))
-        <footer class="hidden lg:block bg-white pt-12 pb-8 border-t border-gray-100 mt-8 sm:mt-12">
+        <footer class="hidden lg:block bg-white pt-12 pb-12 border-t border-gray-100 mt-8 sm:mt-12">
             <div class="max-w-360 mx-auto px-4 lg:px-12">
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-12 mb-8">
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-12">
                     <div class="space-y-4">
                         <div class="flex items-center gap-2">
                             <div class="w-8 h-8 bg-black rounded-full text-white flex items-center justify-center font-bold text-lg shadow-md">L</div>
@@ -381,6 +381,9 @@
                         <p class="text-sm text-gray-500 leading-relaxed max-w-sm">
                             We have clothes that suits your style and which you're proud to wear. From women to men.
                         </p>
+                        <div class="text-[11px] font-medium text-gray-400 tracking-widest pt-2">
+                            LumBarong © {{ date('Y') }}. All Rights Reserved
+                        </div>
                     </div>
                     <div>
                         <h4 class="text-[10px] font-bold uppercase tracking-[0.2em] text-black mb-6">Shop</h4>
@@ -397,9 +400,6 @@
                             <li><a href="/terms" class="text-sm text-gray-500 hover:text-black transition-colors">Terms & Conditions</a></li>
                         </ul>
                     </div>
-                </div>
-                <div class="pt-6 border-t border-gray-100 flex flex-col md:flex-row items-center justify-between gap-4">
-                    <div class="text-[11px] font-medium text-gray-400 tracking-widest">LumBarong © {{ date('Y') }}. All Rights Reserved</div>
                 </div>
             </div>
         </footer>
