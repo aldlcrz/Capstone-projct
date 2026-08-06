@@ -51,9 +51,9 @@
                 @csrf
                 @method('PUT')
 
-                <div class="flex flex-col lg:flex-row gap-8 lg:gap-10">
-                    {{-- Avatar (Top on mobile, Right sidebar on desktop) --}}
-                    <div class="order-first lg:order-last flex flex-col items-center gap-3 lg:w-48 lg:border-l lg:border-gray-100 lg:pl-10 pb-6 lg:pb-0 border-b border-gray-100 lg:border-b-0">
+                <div class="flex flex-col lg:flex-row gap-8 lg:gap-10 lg:items-center">
+                    {{-- Avatar (Top on mobile, Vertically Centered Right Sidebar on desktop) --}}
+                    <div class="order-first lg:order-last flex flex-col items-center justify-center gap-3 lg:w-56 lg:border-l lg:border-gray-100 lg:pl-10 pb-6 lg:pb-0 border-b border-gray-100 lg:border-b-0 lg:py-4">
                         <div class="w-24 h-24 rounded-full bg-gray-100 border border-gray-200 flex items-center justify-center overflow-hidden shadow-xs">
                             @if($user->profilePhoto)
                                 <img src="{{ str_starts_with($user->profilePhoto, 'http') || str_starts_with($user->profilePhoto, '/') ? $user->profilePhoto : asset('storage/' . $user->profilePhoto) }}" class="w-full h-full object-cover">
