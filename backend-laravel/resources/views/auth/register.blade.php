@@ -11,20 +11,6 @@
         .font-serif { font-family: 'Playfair Display', serif; }
         [x-cloak] { display: none !important; }
     </style>
-    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
-    <script>
-        (function() {
-            window.history.pushState(null, "", window.location.href);
-            window.onpopstate = function() {
-                window.history.pushState(null, "", window.location.href);
-            };
-            window.addEventListener('pageshow', function(e) {
-                if (e.persisted || (performance && performance.getEntriesByType("navigation")[0]?.type === "back_forward")) {
-                    window.location.reload();
-                }
-            });
-        })();
-    </script>
 </head>
 <body class="min-h-screen flex items-center justify-center p-6 relative overflow-hidden">
     <!-- Subtle warm blobs -->
