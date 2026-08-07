@@ -201,7 +201,7 @@
          x-cloak
          class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs"
          x-transition
-         @keydown.escape.window="if (!showDeleteConfirmModal && !addEditModalOpen) showAddressModal = false">
+         @click.self="if (!showDeleteConfirmModal && !addEditModalOpen) showAddressModal = false">
 
         <div class="relative w-full max-w-lg bg-white rounded-3xl p-6 shadow-2xl border border-gray-100 max-h-[85vh] flex flex-col space-y-4">
 
@@ -372,7 +372,7 @@
          x-cloak
          class="fixed inset-0 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs"
          style="z-index: 9999;"
-         @keydown.escape.window="showDeleteConfirmModal = false">
+         @click.self="showDeleteConfirmModal = false">
 
         <div class="relative w-full max-w-xs bg-white rounded-3xl p-6 shadow-2xl border border-gray-100 text-center space-y-4">
 
@@ -439,6 +439,20 @@ function profileApp() {
 
         async init() {
             await this.fetchAddresses();
+            // Centralised ESC handler — respects modal priority
+            window.addEventListener('keydown', (e) => {
+                if (e.key !== 'Escape') return;
+                e.preventDefault();
+                if (this.showDeleteConfirmModal) {
+                    this.showDeleteConfirmModal = false;
+                } else if (this.addEditModalOpen) {
+                    this.addEditModalOpen = false;
+                } else if (this.showAddressModal) {
+                    this.showAddressModal = false;
+                } else if (this.showEditModal) {
+                    this.showEditModal = false;
+                }
+            });
         },
 
         async fetchAddresses() {
