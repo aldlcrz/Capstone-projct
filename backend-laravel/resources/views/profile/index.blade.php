@@ -201,10 +201,10 @@
          x-cloak
          class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs"
          x-transition
-         @keydown.escape.window="showAddressModal = false">
+         @keydown.escape.window="if (!showDeleteConfirmModal && !addEditModalOpen) showAddressModal = false">
 
         <div class="relative w-full max-w-lg bg-white rounded-3xl p-6 shadow-2xl border border-gray-100 max-h-[85vh] flex flex-col space-y-4"
-             @click.away="showAddressModal = false">
+             @click.away="if (!showDeleteConfirmModal && !addEditModalOpen) showAddressModal = false">
 
             <div class="flex items-center justify-between pb-3 border-b border-gray-100 shrink-0">
                 <div>
