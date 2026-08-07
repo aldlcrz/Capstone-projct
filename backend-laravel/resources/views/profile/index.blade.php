@@ -5,14 +5,8 @@
     <div class="max-w-md mx-auto space-y-6">
 
         {{-- Top Header --}}
-        <div class="flex items-center justify-between pt-2">
-            <a href="/" class="w-10 h-10 bg-white rounded-2xl flex items-center justify-center text-gray-700 shadow-xs border border-gray-100 hover:bg-gray-50 transition-colors">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
-                </svg>
-            </a>
+        <div class="text-center pt-2">
             <h1 class="text-lg font-extrabold text-gray-900 tracking-tight">Profile</h1>
-            <div class="w-10"></div>
         </div>
 
         {{-- Profile Avatar & User Card --}}
