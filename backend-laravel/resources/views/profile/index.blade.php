@@ -268,7 +268,7 @@
             </div>
 
             {{-- Inner Add / Edit Form Modal Popup --}}
-            <div x-show="addEditModalOpen" class="fixed inset-0 z-60 flex items-center justify-center p-4 bg-black/50" x-cloak>
+            <div x-show="addEditModalOpen" class="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/50" style="z-index: 60;" x-cloak>
                 <div class="relative bg-white rounded-3xl shadow-2xl w-full max-w-md p-6 space-y-4 max-h-[85vh] overflow-y-auto" @click.away="addEditModalOpen = false">
                     <h4 class="text-sm font-extrabold text-gray-900" x-text="editAddressId ? 'Edit Address' : 'Add New Address'"></h4>
 
@@ -371,7 +371,8 @@
     {{-- Custom Delete Address Confirmation Modal --}}
     <div x-show="showDeleteConfirmModal"
          x-cloak
-         class="fixed inset-0 z-70 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs"
+         class="fixed inset-0 z-[70] flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs"
+         style="z-index: 70;"
          x-transition:enter="transition ease-out duration-200"
          x-transition:enter-start="opacity-0 scale-95"
          x-transition:enter-end="opacity-100 scale-100"
