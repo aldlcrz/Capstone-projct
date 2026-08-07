@@ -5,7 +5,7 @@
     $cart = session('cart', []);
     $cartItemsForJs = collect($cart)->map(function ($item, $key) {
         return [
-            'key'                 => $key,
+            'key'                 => (string) $key,
             'id'                  => $item['id'] ?? '',
             'name'                => $item['name'] ?? '',
             'price'               => (float) ($item['price'] ?? 0),
@@ -22,9 +22,11 @@
         ];
     })->values();
 
-    $groupedCart = collect($cart)->groupBy(function ($item) {
-        return $item['shop_name'] ?? 'Lumban Heritage Shop';
-    });
+    $groupedCart = [];
+    foreach ($cart as $cartKey => $item) {
+        $shop = $item['shop_name'] ?? 'Lumban Heritage Shop';
+        $groupedCart[$shop][$cartKey] = $item;
+    }
 @endphp
 
 <div id="cart-root"
@@ -97,20 +99,19 @@
             <div class="space-y-4 max-h-[calc(100vh-200px)] lg:max-h-[calc(100vh-220px)] overflow-y-auto pr-1 sm:pr-2 custom-scrollbar">
                 @forelse($groupedCart as $shopName => $shopItems)
                     @php
-                        $firstItem = $shopItems->first();
+                        $firstItem = reset($shopItems);
                         $sellerId = $firstItem['sellerId'] ?? null;
                     @endphp
                     <div class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden mb-4 transition-all"
-                         x-data="{ currentShop: '{{ addslashes($shopName) }}' }"
-                         x-show="items.some(i => (i.shop_name || 'Lumban Heritage Shop') === currentShop)">
+                         x-show="items.some(i => (i.shop_name || 'Lumban Heritage Shop') === '{{ addslashes($shopName) }}')">
 
                         {{-- Shop Header Bar --}}
                         <div class="bg-gray-50/80 px-3 sm:px-4 py-2.5 border-b border-gray-100 flex items-center justify-between gap-3">
                             <div class="flex items-center gap-2 sm:gap-2.5 min-w-0">
                                 <label class="relative w-4.5 h-4.5 sm:w-5 sm:h-5 block cursor-pointer shrink-0">
                                     <input type="checkbox"
-                                           @change="toggleShop(currentShop, $event.target.checked)"
-                                           :checked="isShopSelected(currentShop)"
+                                           @change="toggleShop('{{ addslashes($shopName) }}', $event.target.checked)"
+                                           :checked="isShopSelected('{{ addslashes($shopName) }}')"
                                            class="sr-only peer">
                                     <div class="w-4.5 h-4.5 sm:w-5 sm:h-5 rounded-md border-2 border-gray-300 peer-checked:bg-[#C0422A] peer-checked:border-[#C0422A] transition-all flex items-center justify-center">
                                         <svg class="w-3 h-3 text-white fill-current hidden peer-checked:block" viewBox="0 0 20 20">
@@ -142,9 +143,9 @@
 
                         {{-- Shop Product Items --}}
                         <div class="divide-y divide-gray-100 p-2 sm:p-4 space-y-2">
-                            @foreach($shopItems as $loopKey => $item)
+                            @foreach($shopItems as $cartKey => $item)
                                 @php
-                                    $itemKey = (string) ($item['key'] ?? $loopKey);
+                                    $itemKey = (string) $cartKey;
                                     $img = $item['image'] ?? '';
                                     $imgSrc = asset('uploads/products/default.jpg');
                                     if ($img) {
@@ -161,9 +162,9 @@
                                     }
                                 @endphp
                                 <div class="p-2 sm:p-4 rounded-xl border transition-all duration-200"
-                                     x-show="items.some(i => String(i.key) === '{{ $itemKey }}')"
+                                     x-show="items.some(i => String(i.key) === '{{ addslashes($itemKey) }}')"
                                      x-transition
-                                     :class="isSelected('{{ $itemKey }}')
+                                     :class="isSelected('{{ addslashes($itemKey) }}')
                                          ? 'border-[#C0422A]/40 shadow-[#C0422A]/5 shadow-sm bg-[#FDF9F4]'
                                          : 'border-gray-100'">
 
@@ -244,19 +245,19 @@
                                         <div class="hidden sm:flex flex-col items-end gap-3 shrink-0 ml-2">
                                             {{-- Quantity Stepper --}}
                                             <div class="flex items-center border border-gray-200 rounded-xl overflow-hidden h-10 bg-white">
-                                                <button type="button" @click="updateQty('{{ $itemKey }}', (items.find(i => String(i.key) === '{{ $itemKey }}')?.quantity || {{ $item['quantity'] }}) - 1)" class="w-10 h-10 flex items-center justify-center text-gray-400 hover:text-black hover:bg-gray-50 font-bold text-lg transition-colors">−</button>
-                                                <span class="w-10 text-center text-sm font-bold text-gray-900 border-x border-gray-200" x-text="items.find(i => String(i.key) === '{{ $itemKey }}')?.quantity || {{ $item['quantity'] }}"></span>
-                                                <button type="button" @click="updateQty('{{ $itemKey }}', (items.find(i => String(i.key) === '{{ $itemKey }}')?.quantity || {{ $item['quantity'] }}) + 1)" class="w-10 h-10 flex items-center justify-center text-gray-400 hover:text-black hover:bg-gray-50 font-bold text-lg transition-colors">+</button>
+                                                <button type="button" @click="updateQty('{{ addslashes($itemKey) }}', (items.find(i => String(i.key) === '{{ addslashes($itemKey) }}')?.quantity || {{ $item['quantity'] }}) - 1)" class="w-10 h-10 flex items-center justify-center text-gray-400 hover:text-black hover:bg-gray-50 font-bold text-lg transition-colors">−</button>
+                                                <span class="w-10 text-center text-sm font-bold text-gray-900 border-x border-gray-200" x-text="items.find(i => String(i.key) === '{{ addslashes($itemKey) }}')?.quantity || {{ $item['quantity'] }}"></span>
+                                                <button type="button" @click="updateQty('{{ addslashes($itemKey) }}', (items.find(i => String(i.key) === '{{ addslashes($itemKey) }}')?.quantity || {{ $item['quantity'] }}) + 1)" class="w-10 h-10 flex items-center justify-center text-gray-400 hover:text-black hover:bg-gray-50 font-bold text-lg transition-colors">+</button>
                                             </div>
 
                                             {{-- Subtotal --}}
                                             <div class="text-right">
-                                                <div class="text-sm font-black text-black" x-text="'₱' + Number((items.find(i => String(i.key) === '{{ $itemKey }}')?.price || 0) * (items.find(i => String(i.key) === '{{ $itemKey }}')?.quantity || 0)).toLocaleString()"></div>
+                                                <div class="text-sm font-black text-black" x-text="'₱' + Number((items.find(i => String(i.key) === '{{ addslashes($itemKey) }}')?.price || 0) * (items.find(i => String(i.key) === '{{ addslashes($itemKey) }}')?.quantity || 0)).toLocaleString()"></div>
                                                 <div class="text-[9px] text-gray-400 uppercase tracking-widest">subtotal</div>
                                             </div>
 
                                             {{-- Remove --}}
-                                            <button type="button" @click="removeItem('{{ $itemKey }}')" class="w-9 h-9 rounded-full border border-gray-100 flex items-center justify-center text-gray-300 hover:text-red-500 hover:border-red-200 transition-all cursor-pointer">
+                                            <button type="button" @click="removeItem('{{ addslashes($itemKey) }}')" class="w-9 h-9 rounded-full border border-gray-100 flex items-center justify-center text-gray-300 hover:text-red-500 hover:border-red-200 transition-all cursor-pointer">
                                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
                                             </button>
                                         </div>
@@ -266,19 +267,19 @@
                                     <div class="mt-2 pt-2 border-t border-gray-100 flex items-center justify-between gap-2 sm:hidden">
                                         {{-- Quantity Stepper --}}
                                         <div class="flex items-center border border-gray-200 rounded-lg overflow-hidden h-7.5 bg-white shadow-xs">
-                                            <button type="button" @click="updateQty('{{ $itemKey }}', (items.find(i => String(i.key) === '{{ $itemKey }}')?.quantity || {{ $item['quantity'] }}) - 1)" class="w-7 h-7.5 flex items-center justify-center text-gray-400 hover:text-black hover:bg-gray-50 font-bold text-sm transition-colors">−</button>
-                                            <span class="w-7 text-center text-xs font-bold text-gray-900 border-x border-gray-200" x-text="items.find(i => String(i.key) === '{{ $itemKey }}')?.quantity || {{ $item['quantity'] }}"></span>
-                                            <button type="button" @click="updateQty('{{ $itemKey }}', (items.find(i => String(i.key) === '{{ $itemKey }}')?.quantity || {{ $item['quantity'] }}) + 1)" class="w-7 h-7.5 flex items-center justify-center text-gray-400 hover:text-black hover:bg-gray-50 font-bold text-sm transition-colors">+</button>
+                                            <button type="button" @click="updateQty('{{ addslashes($itemKey) }}', (items.find(i => String(i.key) === '{{ addslashes($itemKey) }}')?.quantity || {{ $item['quantity'] }}) - 1)" class="w-7 h-7.5 flex items-center justify-center text-gray-400 hover:text-black hover:bg-gray-50 font-bold text-sm transition-colors">−</button>
+                                            <span class="w-7 text-center text-xs font-bold text-gray-900 border-x border-gray-200" x-text="items.find(i => String(i.key) === '{{ addslashes($itemKey) }}')?.quantity || {{ $item['quantity'] }}"></span>
+                                            <button type="button" @click="updateQty('{{ addslashes($itemKey) }}', (items.find(i => String(i.key) === '{{ addslashes($itemKey) }}')?.quantity || {{ $item['quantity'] }}) + 1)" class="w-7 h-7.5 flex items-center justify-center text-gray-400 hover:text-black hover:bg-gray-50 font-bold text-sm transition-colors">+</button>
                                         </div>
 
                                         {{-- Subtotal --}}
                                         <div class="text-right flex-1">
                                             <div class="text-[8px] text-gray-400 uppercase tracking-widest font-bold">Subtotal</div>
-                                            <div class="text-xs font-black text-black" x-text="'₱' + Number((items.find(i => String(i.key) === '{{ $itemKey }}')?.price || 0) * (items.find(i => String(i.key) === '{{ $itemKey }}')?.quantity || 0)).toLocaleString()"></div>
+                                            <div class="text-xs font-black text-black" x-text="'₱' + Number((items.find(i => String(i.key) === '{{ addslashes($itemKey) }}')?.price || 0) * (items.find(i => String(i.key) === '{{ addslashes($itemKey) }}')?.quantity || 0)).toLocaleString()"></div>
                                         </div>
 
                                         {{-- Remove Button --}}
-                                        <button type="button" @click="removeItem('{{ $itemKey }}')" class="w-7 h-7 rounded-full border border-red-100 bg-red-50 text-red-500 flex items-center justify-center transition-all cursor-pointer shrink-0">
+                                        <button type="button" @click="removeItem('{{ addslashes($itemKey) }}')" class="w-7 h-7 rounded-full border border-red-100 bg-red-50 text-red-500 flex items-center justify-center transition-all cursor-pointer shrink-0">
                                             <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
                                         </button>
                                     </div>
