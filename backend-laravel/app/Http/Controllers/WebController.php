@@ -94,6 +94,18 @@ class WebController extends Controller
             ->orderBy('created_at', 'desc')
             ->get();
 
+        if ($banners->isEmpty()) {
+            $defaultBanner = new Banner([
+                'title' => 'Elegant. Timeless. Filipino.',
+                'subtitle' => 'NEW COLLECTION',
+                'button_text_1' => 'Shop Now',
+                'button_url_1' => '/?sort=newest#catalogue-section',
+                'image_path' => '/uploads/categories/featured_best_sellers.png',
+                'is_active' => true,
+            ]);
+            $banners = collect([$defaultBanner]);
+        }
+
         // Fetch Top Rated Artisan Shops with ratings, sales, and product counts (safe try-catch for production DBs)
         $topShops = collect();
         $customerStats = [

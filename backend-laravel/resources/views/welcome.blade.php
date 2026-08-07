@@ -48,8 +48,8 @@
             x-transition:leave-end="opacity-0"
             class="absolute inset-0 w-full h-full"
         >
-            {{-- Background image (object-contain so full image is visible) --}}
-            <img src="{{ $banner->getImageUrl() }}" alt="{{ $banner->title }}" class="absolute inset-0 w-full h-full object-contain">
+            {{-- Background image --}}
+            <img src="{{ $banner->getImageUrl() }}" alt="{{ $banner->title }}" class="absolute inset-0 w-full h-full object-cover object-center">
             {{-- Dark gradient overlay on left --}}
             <div class="absolute inset-0 bg-gradient-to-r from-black/75 via-black/40 to-transparent"></div>
             {{-- Content --}}
@@ -101,9 +101,8 @@
 
         {{-- ====== Shop by Category ====== --}}
         <div>
-            <div class="flex items-center justify-between mb-4">
+            <div class="flex items-center gap-3 mb-4">
                 <h3 class="text-base sm:text-lg font-extrabold text-gray-900">Shop by Category</h3>
-                {{-- View all: text link on all screen sizes --}}
                 <button type="button" @click="categoriesModalOpen = true" class="text-xs font-semibold text-amber-700 hover:text-amber-900 hover:underline cursor-pointer">
                     View all
                 </button>

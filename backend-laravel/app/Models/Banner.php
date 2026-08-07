@@ -47,10 +47,10 @@ class Banner extends Model
         if (str_starts_with($this->image_path, 'http://') || str_starts_with($this->image_path, 'https://')) {
             return $this->image_path;
         }
-        if (str_starts_with($this->image_path, 'uploads/')) {
-            return asset($this->image_path);
+        if (str_starts_with($this->image_path, '/')) {
+            return asset(ltrim($this->image_path, '/'));
         }
-        if (str_starts_with($this->image_path, '/uploads/')) {
+        if (str_starts_with($this->image_path, 'uploads/')) {
             return asset($this->image_path);
         }
         return asset('uploads/banners/' . $this->image_path);
