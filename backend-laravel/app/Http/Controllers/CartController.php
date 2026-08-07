@@ -16,7 +16,7 @@ class CartController extends Controller
         $updated = false;
 
         foreach ($cart as $key => &$item) {
-            $product = Product::find($item['id']);
+            $product = Product::with('seller')->find($item['id']);
             if (!$product) {
                 unset($cart[$key]);
                 $updated = true;
@@ -46,12 +46,15 @@ class CartController extends Controller
             }
 
             // Dynamic detail injection for UI rendering
+            $seller = $product->seller;
             $item['name'] = $product->name;
             $item['image'] = $product->getImageUrl();
             $item['original_price'] = $product->price;
             $item['discount_percentage'] = $product->discount_percentage;
             $item['is_on_sale'] = $product->is_on_sale && ($product->discount_percentage > 0);
             $item['category_name'] = $product->category->name ?? 'Traditional';
+            $item['sellerId'] = $product->sellerId ?? ($seller->id ?? 'unknown');
+            $item['shop_name'] = $seller ? ($seller->shopName ?: $seller->name ?: 'Lumban Heritage Shop') : 'Lumban Heritage Shop';
         }
 
         if ($updated) {
@@ -141,6 +144,7 @@ class CartController extends Controller
                 'discount_percentage' => $product->discount_percentage,
                 'is_on_sale' => $product->is_on_sale && ($product->discount_percentage > 0),
                 'category_name' => $product->category->name ?? 'Traditional',
+                'shop_name' => $product->seller ? ($product->seller->shopName ?: $product->seller->name ?: 'Lumban Heritage Shop') : 'Lumban Heritage Shop',
             ];
             $cart = [$key => $newItem] + $cart;
         }

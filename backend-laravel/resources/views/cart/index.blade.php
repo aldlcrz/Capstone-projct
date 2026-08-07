@@ -17,8 +17,14 @@
             'size'                => $item['size'] ?? '',
             'category_name'       => $item['category_name'] ?? '',
             'variation'           => $item['variation'] ?? '',
+            'sellerId'            => $item['sellerId'] ?? '',
+            'shop_name'           => $item['shop_name'] ?? 'Lumban Heritage Shop',
         ];
     })->values();
+
+    $groupedCart = collect($cart)->groupBy(function ($item) {
+        return $item['shop_name'] ?? 'Lumban Heritage Shop';
+    });
 @endphp
 
 <div id="cart-root"
@@ -41,25 +47,25 @@
         <div class="flex-1 space-y-4 min-w-0 w-full">
 
             {{-- Header + Select All --}}
-            <div class="flex items-center justify-between mb-6 flex-wrap gap-3">
+            <div class="flex items-center justify-between mb-4 sm:mb-6 flex-wrap gap-3">
                 <div>
                     <div class="flex items-center gap-2 mb-0.5">
                         <div class="w-5 h-[1.5px] bg-[#C0422A]"></div>
                         <span class="text-[10px] font-bold uppercase tracking-widest text-[#C0422A]">Shopping</span>
                     </div>
-                    <h1 class="font-serif text-3xl font-bold text-black">Your Cart</h1>
+                    <h1 class="font-serif text-2xl sm:text-3xl font-bold text-black">Your Cart</h1>
                 </div>
 
                 @if(!empty($cart))
                 <div class="flex items-center gap-4 flex-wrap">
                     <label class="flex items-center gap-2.5 cursor-pointer group select-none">
-                        <div class="relative w-5 h-5">
+                        <div class="relative w-4.5 h-4.5 sm:w-5 sm:h-5">
                             <input type="checkbox"
                                    id="select-all"
                                    x-model="allSelected"
                                    @change="toggleAll()"
                                    class="sr-only peer">
-                            <div class="w-5 h-5 rounded-md border-2 border-gray-300 peer-checked:bg-[#C0422A] peer-checked:border-[#C0422A] transition-all flex items-center justify-center">
+                            <div class="w-4.5 h-4.5 sm:w-5 sm:h-5 rounded-md border-2 border-gray-300 peer-checked:bg-[#C0422A] peer-checked:border-[#C0422A] transition-all flex items-center justify-center">
                                 <svg x-show="allSelected" class="w-3 h-3 text-white fill-current" viewBox="0 0 20 20">
                                     <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
                                 </svg>
@@ -87,149 +93,198 @@
                 @endif
             </div>
 
-            {{-- Cart Items List (Independently Scrollable Container) --}}
+            {{-- Cart Items Grouped by Shop --}}
             <div class="space-y-4 max-h-[calc(100vh-200px)] lg:max-h-[calc(100vh-220px)] overflow-y-auto pr-1 sm:pr-2 custom-scrollbar">
-                @forelse($cart as $key => $item)
+                @forelse($groupedCart as $shopName => $shopItems)
                     @php
-                        $img = $item['image'] ?? '';
-                        $imgSrc = asset('uploads/products/default.jpg');
-                        if ($img) {
-                            $cleanImg = ltrim($img, '/');
-                            if (str_starts_with($img, 'http') || str_starts_with($img, '/')) {
-                                $imgSrc = $img;
-                            } elseif (file_exists(storage_path('app/public/' . $cleanImg))) {
-                                $imgSrc = asset('storage/' . $cleanImg);
-                            } elseif (file_exists(public_path('uploads/' . $cleanImg))) {
-                                $imgSrc = asset('uploads/' . $cleanImg);
-                            } elseif (file_exists(public_path('uploads/products/' . $cleanImg))) {
-                                $imgSrc = asset('uploads/products/' . $cleanImg);
-                            }
-                        }
+                        $firstItem = $shopItems->first();
+                        $sellerId = $firstItem['sellerId'] ?? null;
                     @endphp
-                    <div class="bg-white p-4 sm:p-5 rounded-2xl shadow-sm border transition-all duration-200"
-                         x-show="items.some(i => i.key === '{{ $key }}')"
-                         x-transition
-                         :class="isSelected('{{ $key }}')
-                             ? 'border-[#C0422A]/40 shadow-[#C0422A]/5 shadow-md bg-[#FDF9F4]'
-                             : 'border-gray-100'">
+                    <div class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden mb-4 transition-all"
+                         x-data="{ currentShop: '{{ addslashes($shopName) }}' }"
+                         x-show="items.some(i => (i.shop_name || 'Lumban Heritage Shop') === currentShop)">
 
-                        {{-- Main Info Row: Checkbox + Image + Details --}}
-                        <div class="flex gap-3 sm:gap-4 items-start">
-                            {{-- Checkbox --}}
-                            <div class="pt-1 shrink-0">
-                                <label class="relative w-5 h-5 block cursor-pointer">
+                        {{-- Shop Header Bar --}}
+                        <div class="bg-gray-50/80 px-3 sm:px-4 py-2.5 border-b border-gray-100 flex items-center justify-between gap-3">
+                            <div class="flex items-center gap-2 sm:gap-2.5 min-w-0">
+                                <label class="relative w-4.5 h-4.5 sm:w-5 sm:h-5 block cursor-pointer shrink-0">
                                     <input type="checkbox"
-                                           value="{{ $key }}"
-                                           x-model="selected"
-                                           @change="syncSelectAll()"
+                                           @change="toggleShop(currentShop, $event.target.checked)"
+                                           :checked="isShopSelected(currentShop)"
                                            class="sr-only peer">
-                                    <div class="w-5 h-5 rounded-md border-2 border-gray-300 peer-checked:bg-[#C0422A] peer-checked:border-[#C0422A] transition-all flex items-center justify-center">
+                                    <div class="w-4.5 h-4.5 sm:w-5 sm:h-5 rounded-md border-2 border-gray-300 peer-checked:bg-[#C0422A] peer-checked:border-[#C0422A] transition-all flex items-center justify-center">
                                         <svg class="w-3 h-3 text-white fill-current hidden peer-checked:block" viewBox="0 0 20 20">
                                             <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
                                         </svg>
                                     </div>
                                 </label>
+
+                                <div class="flex items-center gap-1.5 min-w-0">
+                                    <svg class="w-4 h-4 text-[#C0422A] shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5m0 0h5m-5 0v-4m0 4h5m-5 0v-4m5 4v-4m-5-4h5"/>
+                                    </svg>
+                                    @if($sellerId)
+                                        <a href="/shops/{{ $sellerId }}" class="font-extrabold text-xs sm:text-sm text-gray-900 hover:text-[#C0422A] transition-colors truncate">
+                                            {{ $shopName }}
+                                        </a>
+                                    @else
+                                        <span class="font-extrabold text-xs sm:text-sm text-gray-900 truncate">{{ $shopName }}</span>
+                                    @endif
+                                </div>
                             </div>
 
-                            {{-- Product Image --}}
-                            <a href="/products/{{ $item['id'] ?? '#' }}" class="shrink-0">
-                                <img src="{{ $imgSrc }}" class="w-20 h-24 sm:w-24 sm:h-28 object-cover rounded-xl bg-gray-50 border border-gray-100">
+                            @if($sellerId)
+                            <a href="/shops/{{ $sellerId }}" class="text-[9px] sm:text-[10px] font-bold text-gray-400 hover:text-black uppercase tracking-wider shrink-0 transition-colors">
+                                Visit Shop &rarr;
                             </a>
-
-                            {{-- Product Info --}}
-                            <div class="flex-1 min-w-0">
-                                <div class="flex flex-wrap items-center gap-1.5 mb-1">
-                                    @if(!empty($item['category_name']))
-                                        <span class="inline-block text-[9px] font-black text-[#C0422A] uppercase tracking-wider bg-[#C0422A]/5 px-2 py-0.5 rounded">{{ $item['category_name'] }}</span>
-                                    @endif
-                                    @if(!empty($item['is_on_sale']))
-                                        <span class="inline-flex items-center gap-1 text-[9px] font-black text-white bg-[#C0422A] uppercase tracking-wider px-2 py-0.5 rounded shadow-sm">
-                                            <svg class="w-2.5 h-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-5 5a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 10V5a2 2 0 012-2z"/>
-                                            </svg>
-                                            Lumban Special
-                                        </span>
-                                    @endif
-                                </div>
-
-                                <a href="/products/{{ $item['id'] ?? '#' }}"
-                                   class="font-bold text-gray-900 hover:text-[#C0422A] transition-colors block text-sm sm:text-base leading-snug line-clamp-2">
-                                    {{ $item['name'] }}
-                                </a>
-
-                                <div class="flex flex-wrap items-center gap-2 mt-1.5 text-[10px] font-bold text-gray-400 uppercase tracking-widest">
-                                    @if(!empty($item['size']))
-                                        <span class="bg-gray-100 text-gray-700 px-2 py-0.5 rounded">Size: <span class="text-black font-black">{{ $item['size'] }}</span></span>
-                                    @else
-                                        <span class="bg-gray-50 text-gray-400 px-2 py-0.5 rounded">Size: Standard</span>
-                                    @endif
-                                    @if(!empty($item['variation']))
-                                        @php
-                                            $variationLabel = \App\Support\VariationFormatter::label(
-                                                $item['variation'],
-                                                \App\Models\Product::find($item['id'] ?? null)?->image
-                                            ) ?? $item['variation'];
-                                        @endphp
-                                        <span class="bg-gray-100 text-gray-700 px-2 py-0.5 rounded">Variation: <span class="text-black font-black">{{ $variationLabel }}</span></span>
-                                    @endif
-                                </div>
-
-                                {{-- Price --}}
-                                <div class="flex items-center gap-2 mt-2">
-                                    @if(!empty($item['is_on_sale']) && ($item['discount_percentage'] ?? 0) > 0)
-                                        <span class="text-[#C0422A] font-black text-sm sm:text-base">₱{{ number_format($item['price']) }}</span>
-                                        <span class="text-xs text-gray-400 line-through">₱{{ number_format($item['original_price'] ?? $item['price']) }}</span>
-                                        <span class="text-[8px] font-black bg-[#C0422A] text-white px-1.5 py-0.5 rounded-md uppercase tracking-wider">-{{ number_format($item['discount_percentage'], 0) }}%</span>
-                                    @else
-                                        <span class="text-gray-900 font-black text-sm sm:text-base">₱{{ number_format($item['price']) }}</span>
-                                    @endif
-                                </div>
-                            </div>
-
-                            {{-- Desktop Right side (qty + subtotal + remove) --}}
-                            <div class="hidden sm:flex flex-col items-end gap-3 shrink-0 ml-2">
-                                {{-- Quantity Stepper --}}
-                                <div class="flex items-center border border-gray-200 rounded-xl overflow-hidden h-10 bg-white">
-                                    <button type="button" @click="updateQty('{{ $key }}', (items.find(i => i.key === '{{ $key }}')?.quantity || {{ $item['quantity'] }}) - 1)" class="w-10 h-10 flex items-center justify-center text-gray-400 hover:text-black hover:bg-gray-50 font-bold text-lg transition-colors">−</button>
-                                    <span class="w-10 text-center text-sm font-bold text-gray-900 border-x border-gray-200" x-text="items.find(i => i.key === '{{ $key }}')?.quantity || {{ $item['quantity'] }}"></span>
-                                    <button type="button" @click="updateQty('{{ $key }}', (items.find(i => i.key === '{{ $key }}')?.quantity || {{ $item['quantity'] }}) + 1)" class="w-10 h-10 flex items-center justify-center text-gray-400 hover:text-black hover:bg-gray-50 font-bold text-lg transition-colors">+</button>
-                                </div>
-
-                                {{-- Subtotal --}}
-                                <div class="text-right">
-                                    <div class="text-sm font-black text-black" x-text="'₱' + Number((items.find(i => i.key === '{{ $key }}')?.price || 0) * (items.find(i => i.key === '{{ $key }}')?.quantity || 0)).toLocaleString()"></div>
-                                    <div class="text-[9px] text-gray-400 uppercase tracking-widest">subtotal</div>
-                                </div>
-
-                                {{-- Remove --}}
-                                <button type="button" @click="removeItem('{{ $key }}')" class="w-9 h-9 rounded-full border border-gray-100 flex items-center justify-center text-gray-300 hover:text-red-500 hover:border-red-200 transition-all cursor-pointer">
-                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
-                                </button>
-                            </div>
+                            @endif
                         </div>
 
-                        {{-- Mobile Controls Bar (visible only on mobile) --}}
-                        <div class="mt-3 pt-3 border-t border-gray-100 flex items-center justify-between gap-3 sm:hidden">
-                            {{-- Quantity Stepper --}}
-                            <div class="flex items-center border border-gray-200 rounded-xl overflow-hidden h-9 bg-white shadow-xs">
-                                <button type="button" @click="updateQty('{{ $key }}', (items.find(i => i.key === '{{ $key }}')?.quantity || {{ $item['quantity'] }}) - 1)" class="w-8 h-9 flex items-center justify-center text-gray-400 hover:text-black hover:bg-gray-50 font-bold text-base transition-colors">−</button>
-                                <span class="w-8 text-center text-xs font-bold text-gray-900 border-x border-gray-200" x-text="items.find(i => i.key === '{{ $key }}')?.quantity || {{ $item['quantity'] }}"></span>
-                                <button type="button" @click="updateQty('{{ $key }}', (items.find(i => i.key === '{{ $key }}')?.quantity || {{ $item['quantity'] }}) + 1)" class="w-8 h-9 flex items-center justify-center text-gray-400 hover:text-black hover:bg-gray-50 font-bold text-base transition-colors">+</button>
-                            </div>
+                        {{-- Shop Product Items --}}
+                        <div class="divide-y divide-gray-100 p-2 sm:p-4 space-y-2">
+                            @foreach($shopItems as $key => $item)
+                                @php
+                                    $img = $item['image'] ?? '';
+                                    $imgSrc = asset('uploads/products/default.jpg');
+                                    if ($img) {
+                                        $cleanImg = ltrim($img, '/');
+                                        if (str_starts_with($img, 'http') || str_starts_with($img, '/')) {
+                                            $imgSrc = $img;
+                                        } elseif (file_exists(storage_path('app/public/' . $cleanImg))) {
+                                            $imgSrc = asset('storage/' . $cleanImg);
+                                        } elseif (file_exists(public_path('uploads/' . $cleanImg))) {
+                                            $imgSrc = asset('uploads/' . $cleanImg);
+                                        } elseif (file_exists(public_path('uploads/products/' . $cleanImg))) {
+                                            $imgSrc = asset('uploads/products/' . $cleanImg);
+                                        }
+                                    }
+                                @endphp
+                                <div class="p-2 sm:p-4 rounded-xl border transition-all duration-200"
+                                     x-show="items.some(i => i.key === '{{ $key }}')"
+                                     x-transition
+                                     :class="isSelected('{{ $key }}')
+                                         ? 'border-[#C0422A]/40 shadow-[#C0422A]/5 shadow-sm bg-[#FDF9F4]'
+                                         : 'border-gray-100'">
 
-                            {{-- Subtotal --}}
-                            <div class="text-right flex-1">
-                                <div class="text-[9px] text-gray-400 uppercase tracking-widest font-bold">Subtotal</div>
-                                <div class="text-xs font-black text-black" x-text="'₱' + Number((items.find(i => i.key === '{{ $key }}')?.price || 0) * (items.find(i => i.key === '{{ $key }}')?.quantity || 0)).toLocaleString()"></div>
-                            </div>
+                                    {{-- Main Info Row: Checkbox + Image + Details --}}
+                                    <div class="flex gap-2.5 sm:gap-4 items-start">
+                                        {{-- Checkbox --}}
+                                        <div class="pt-1 shrink-0">
+                                            <label class="relative w-4.5 h-4.5 sm:w-5 sm:h-5 block cursor-pointer">
+                                                <input type="checkbox"
+                                                       value="{{ $key }}"
+                                                       x-model="selected"
+                                                       @change="syncSelectAll()"
+                                                       class="sr-only peer">
+                                                <div class="w-4.5 h-4.5 sm:w-5 sm:h-5 rounded-md border-2 border-gray-300 peer-checked:bg-[#C0422A] peer-checked:border-[#C0422A] transition-all flex items-center justify-center">
+                                                    <svg class="w-2.5 h-2.5 sm:w-3 sm:h-3 text-white fill-current hidden peer-checked:block" viewBox="0 0 20 20">
+                                                        <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
+                                                    </svg>
+                                                </div>
+                                            </label>
+                                        </div>
 
-                            {{-- Remove Button --}}
-                            <button type="button" @click="removeItem('{{ $key }}')" class="w-8 h-8 rounded-full border border-red-100 bg-red-50 text-red-500 flex items-center justify-center transition-all cursor-pointer shrink-0">
-                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
-                            </button>
+                                        {{-- Product Image (Compact on Mobile: w-16 h-18) --}}
+                                        <a href="/products/{{ $item['id'] ?? '#' }}" class="shrink-0">
+                                            <img src="{{ $imgSrc }}" class="w-16 h-18 sm:w-24 sm:h-28 object-cover rounded-lg sm:rounded-xl bg-gray-50 border border-gray-100">
+                                        </a>
+
+                                        {{-- Product Info --}}
+                                        <div class="flex-1 min-w-0">
+                                            <div class="flex flex-wrap items-center gap-1 mb-0.5 sm:mb-1">
+                                                @if(!empty($item['category_name']))
+                                                    <span class="inline-block text-[8px] sm:text-[9px] font-black text-[#C0422A] uppercase tracking-wider bg-[#C0422A]/5 px-1.5 py-0.5 rounded">{{ $item['category_name'] }}</span>
+                                                @endif
+                                                @if(!empty($item['is_on_sale']))
+                                                    <span class="inline-flex items-center gap-0.5 text-[8px] sm:text-[9px] font-black text-white bg-[#C0422A] uppercase tracking-wider px-1.5 py-0.5 rounded shadow-xs">
+                                                        <svg class="w-2 h-2 sm:w-2.5 sm:h-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-5 5a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 10V5a2 2 0 012-2z"/>
+                                                        </svg>
+                                                        Lumban Special
+                                                    </span>
+                                                @endif
+                                            </div>
+
+                                            <a href="/products/{{ $item['id'] ?? '#' }}"
+                                               class="font-bold text-gray-900 hover:text-[#C0422A] transition-colors block text-xs sm:text-base leading-snug line-clamp-2">
+                                                {{ $item['name'] }}
+                                            </a>
+
+                                            <div class="flex flex-wrap items-center gap-1.5 mt-1 text-[9px] sm:text-[10px] font-bold text-gray-400 uppercase tracking-widest">
+                                                @if(!empty($item['size']))
+                                                    <span class="bg-gray-100 text-gray-700 px-1.5 py-0.5 rounded">Size: <span class="text-black font-black">{{ $item['size'] }}</span></span>
+                                                @else
+                                                    <span class="bg-gray-50 text-gray-400 px-1.5 py-0.5 rounded">Size: Standard</span>
+                                                @endif
+                                                @if(!empty($item['variation']))
+                                                    @php
+                                                        $variationLabel = \App\Support\VariationFormatter::label(
+                                                            $item['variation'],
+                                                            \App\Models\Product::find($item['id'] ?? null)?->image
+                                                        ) ?? $item['variation'];
+                                                    @endphp
+                                                    <span class="bg-gray-100 text-gray-700 px-1.5 py-0.5 rounded">Var: <span class="text-black font-black">{{ $variationLabel }}</span></span>
+                                                @endif
+                                            </div>
+
+                                            {{-- Price --}}
+                                            <div class="flex items-center gap-1.5 mt-1.5">
+                                                @if(!empty($item['is_on_sale']) && ($item['discount_percentage'] ?? 0) > 0)
+                                                    <span class="text-[#C0422A] font-black text-xs sm:text-base">₱{{ number_format($item['price']) }}</span>
+                                                    <span class="text-[10px] sm:text-xs text-gray-400 line-through">₱{{ number_format($item['original_price'] ?? $item['price']) }}</span>
+                                                    <span class="text-[8px] font-black bg-[#C0422A] text-white px-1 py-0.5 rounded-md uppercase tracking-wider">-{{ number_format($item['discount_percentage'], 0) }}%</span>
+                                                @else
+                                                    <span class="text-gray-900 font-black text-xs sm:text-base">₱{{ number_format($item['price']) }}</span>
+                                                @endif
+                                            </div>
+                                        </div>
+
+                                        {{-- Desktop Right side (qty + subtotal + remove) --}}
+                                        <div class="hidden sm:flex flex-col items-end gap-3 shrink-0 ml-2">
+                                            {{-- Quantity Stepper --}}
+                                            <div class="flex items-center border border-gray-200 rounded-xl overflow-hidden h-10 bg-white">
+                                                <button type="button" @click="updateQty('{{ $key }}', (items.find(i => i.key === '{{ $key }}')?.quantity || {{ $item['quantity'] }}) - 1)" class="w-10 h-10 flex items-center justify-center text-gray-400 hover:text-black hover:bg-gray-50 font-bold text-lg transition-colors">−</button>
+                                                <span class="w-10 text-center text-sm font-bold text-gray-900 border-x border-gray-200" x-text="items.find(i => i.key === '{{ $key }}')?.quantity || {{ $item['quantity'] }}"></span>
+                                                <button type="button" @click="updateQty('{{ $key }}', (items.find(i => i.key === '{{ $key }}')?.quantity || {{ $item['quantity'] }}) + 1)" class="w-10 h-10 flex items-center justify-center text-gray-400 hover:text-black hover:bg-gray-50 font-bold text-lg transition-colors">+</button>
+                                            </div>
+
+                                            {{-- Subtotal --}}
+                                            <div class="text-right">
+                                                <div class="text-sm font-black text-black" x-text="'₱' + Number((items.find(i => i.key === '{{ $key }}')?.price || 0) * (items.find(i => i.key === '{{ $key }}')?.quantity || 0)).toLocaleString()"></div>
+                                                <div class="text-[9px] text-gray-400 uppercase tracking-widest">subtotal</div>
+                                            </div>
+
+                                            {{-- Remove --}}
+                                            <button type="button" @click="removeItem('{{ $key }}')" class="w-9 h-9 rounded-full border border-gray-100 flex items-center justify-center text-gray-300 hover:text-red-500 hover:border-red-200 transition-all cursor-pointer">
+                                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+                                            </button>
+                                        </div>
+                                    </div>
+
+                                    {{-- Mobile Controls Bar (compact design for mobile screen) --}}
+                                    <div class="mt-2 pt-2 border-t border-gray-100 flex items-center justify-between gap-2 sm:hidden">
+                                        {{-- Quantity Stepper --}}
+                                        <div class="flex items-center border border-gray-200 rounded-lg overflow-hidden h-7.5 bg-white shadow-xs">
+                                            <button type="button" @click="updateQty('{{ $key }}', (items.find(i => i.key === '{{ $key }}')?.quantity || {{ $item['quantity'] }}) - 1)" class="w-7 h-7.5 flex items-center justify-center text-gray-400 hover:text-black hover:bg-gray-50 font-bold text-sm transition-colors">−</button>
+                                            <span class="w-7 text-center text-xs font-bold text-gray-900 border-x border-gray-200" x-text="items.find(i => i.key === '{{ $key }}')?.quantity || {{ $item['quantity'] }}"></span>
+                                            <button type="button" @click="updateQty('{{ $key }}', (items.find(i => i.key === '{{ $key }}')?.quantity || {{ $item['quantity'] }}) + 1)" class="w-7 h-7.5 flex items-center justify-center text-gray-400 hover:text-black hover:bg-gray-50 font-bold text-sm transition-colors">+</button>
+                                        </div>
+
+                                        {{-- Subtotal --}}
+                                        <div class="text-right flex-1">
+                                            <div class="text-[8px] text-gray-400 uppercase tracking-widest font-bold">Subtotal</div>
+                                            <div class="text-xs font-black text-black" x-text="'₱' + Number((items.find(i => i.key === '{{ $key }}')?.price || 0) * (items.find(i => i.key === '{{ $key }}')?.quantity || 0)).toLocaleString()"></div>
+                                        </div>
+
+                                        {{-- Remove Button --}}
+                                        <button type="button" @click="removeItem('{{ $key }}')" class="w-7 h-7 rounded-full border border-red-100 bg-red-50 text-red-500 flex items-center justify-center transition-all cursor-pointer shrink-0">
+                                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+                                        </button>
+                                    </div>
+                                </div>
+                            @endforeach
                         </div>
                     </div>
-
                 @empty
                     <div class="text-center py-24 bg-white rounded-3xl border border-dashed border-gray-200">
                         <div class="w-16 h-16 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-4 border border-gray-100">
@@ -386,6 +441,24 @@ function cartApp() {
 
         isSelected(key) {
             return this.selected.includes(key);
+        },
+
+        isShopSelected(shopName) {
+            const shopItems = this.items.filter(i => (i.shop_name || 'Lumban Heritage Shop') === shopName);
+            return shopItems.length > 0 && shopItems.every(i => this.selected.includes(i.key));
+        },
+
+        toggleShop(shopName, isChecked) {
+            const shopKeys = this.items
+                .filter(i => (i.shop_name || 'Lumban Heritage Shop') === shopName)
+                .map(i => i.key);
+
+            if (isChecked) {
+                this.selected = Array.from(new Set([...this.selected, ...shopKeys]));
+            } else {
+                this.selected = this.selected.filter(k => !shopKeys.includes(k));
+            }
+            this.syncSelectAll();
         },
 
         toggleAll() {
