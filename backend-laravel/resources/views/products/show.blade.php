@@ -27,26 +27,39 @@
         });
     });
 </script>
-<div class="w-full py-4 lg:py-8" x-data="productDetail({{ $product->stock ?? 1 }}, {{ json_encode($product->size_stocks ?? (object)[]) }}, {{ json_encode($productVariations) }})">
-    <!-- Back Button -->
-    <div class="mb-6">
-        <a href="/" class="inline-flex items-center gap-2 text-[10px] font-bold text-gray-400 uppercase tracking-widest hover:text-black transition-colors">
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
-            </svg>
-            Back to catalogue
-        </a>
-    </div>
+<div class="max-w-6xl mx-auto py-4 lg:py-6" x-data="productDetail({{ $product->stock ?? 1 }}, {{ json_encode($product->size_stocks ?? (object)[]) }}, {{ json_encode($productVariations) }})">
+    <!-- Breadcrumb Navigation -->
+    <nav class="flex items-center gap-2 text-xs font-semibold text-gray-500 mb-5">
+        <a href="/" class="hover:text-black transition-colors">Home</a>
+        <span>&gt;</span>
+        <a href="/?category={{ urlencode($product->category->name ?? 'Barong Tagalog') }}" class="hover:text-black transition-colors">{{ $product->category->name ?? 'Barong Tagalog' }}</a>
+        <span>&gt;</span>
+        <span class="text-gray-900 font-bold truncate max-w-62.5 sm:max-w-none">{{ $product->name }}</span>
+    </nav>
 
-    <!-- Product Detail Container Card -->
-    <div class="bg-white rounded-4xl border border-gray-100 shadow-sm overflow-hidden p-6 lg:p-12">
-        <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-16">
+    <!-- Product Detail Main Container Card -->
+    <div class="bg-white rounded-3xl border border-gray-100 shadow-sm overflow-hidden p-6 sm:p-8 lg:p-10">
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-start">
             
-            <!-- Left Side: Product Images Gallery -->
-            <div class="lg:col-span-5 flex flex-col space-y-6">
-                <!-- Main Image Box with Tag -->
+            <!-- Left Side: Product Images Gallery (Vertical Thumbnails + Main Image) -->
+            <div class="lg:col-span-5 flex flex-col-reverse sm:flex-row gap-3 sm:gap-4 items-start">
+                
+                <!-- Vertical Gallery Thumbnails (Left side) -->
+                <div class="flex sm:flex-col gap-3 overflow-x-auto sm:overflow-y-auto max-h-115 no-scrollbar shrink-0 w-full sm:w-20">
+                    <template x-for="(variation, index) in variations" :key="index">
+                        <button 
+                            @click="activeImage = index; selectedVariation = index"
+                            class="relative w-14 h-18 sm:w-16 sm:h-20 rounded-xl overflow-hidden shrink-0 border-2 transition-all shadow-2xs"
+                            :class="activeImage === index ? 'border-amber-600 ring-2 ring-amber-500/20 opacity-100 scale-98' : 'border-gray-200 opacity-60 hover:opacity-100'"
+                        >
+                            <img :src="imageUrl(variation.url)" onerror="this.src='/uploads/products/default.jpg'" class="w-full h-full object-cover">
+                        </button>
+                    </template>
+                </div>
+
+                <!-- Main Image Display Box with 360 Badge -->
                 <div 
-                    class="relative aspect-4/5 bg-gray-50 rounded-2xl overflow-hidden border border-gray-100 shadow-sm group select-none"
+                    class="flex-1 min-w-0 w-full relative aspect-4/5 bg-gray-50 rounded-2xl overflow-hidden border border-gray-100 shadow-xs group select-none"
                     :class="isZoomed ? 'cursor-zoom-out' : 'cursor-zoom-in'"
                     x-data="{
                         isZoomed: false,
@@ -76,33 +89,6 @@
                     @mousemove="handleMouseMove($event)"
                     @mouseleave="handleMouseLeave()"
                 >
-                    <!-- Brand / Artisan Badge -->
-                    <div class="absolute top-4 left-4 z-10 flex items-center gap-1.5 px-3 py-1.5 bg-[#2E2E2C]/85 backdrop-blur-sm text-[#E3D9C9] font-black uppercase tracking-widest text-[9px] rounded-xl shadow-lg shadow-black/10">
-                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
-                        </svg>
-                        <span>{{ strtoupper($product->artisan ?? 'Lumban Artisan Craft') }}</span>
-                        @if($product->seller && $product->seller->isPremiumActive())
-                            <span class="text-yellow-400 font-extrabold ml-1 animate-pulse" title="Premium Artisan">👑</span>
-                        @endif
-                    </div>
-
-                    <!-- Lumban Special sale badge -->
-                    @if($product->is_on_sale && $product->discount_percentage > 0)
-                        <div class="absolute top-4 right-4 z-10 flex flex-col items-end gap-1.5">
-                            <div class="flex items-center gap-1 bg-[#C0420A] text-white px-2.5 py-1 rounded-xl shadow-lg">
-                                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-5 5a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 10V5a2 2 0 012-2z"/>
-                                </svg>
-                                <span class="text-[9px] font-black uppercase tracking-widest">Lumban Special</span>
-                            </div>
-                            <div class="bg-black/80 text-white text-[9px] font-black px-2 py-0.5 rounded-md shadow-md">
-                                -{{ number_format($product->discount_percentage, 0) }}% OFF
-                            </div>
-                        </div>
-                    @endif
-
                     <!-- Main Image Display -->
                     <template x-for="(variation, index) in variations" :key="index">
                         <img 
@@ -115,256 +101,211 @@
                             alt="{{ $product->name }}"
                         >
                     </template>
-                </div>
-                
-                <!-- Gallery Thumbnails -->
-                <div class="flex gap-3 overflow-x-auto pb-1 no-scrollbar">
-                    <template x-for="(variation, index) in variations" :key="index">
-                        <button 
-                            @click="activeImage = index; selectedVariation = index"
-                            class="relative w-20 h-24 rounded-xl overflow-hidden shrink-0 border-2 transition-all shadow-sm"
-                            :class="activeImage === index ? 'border-black opacity-100 scale-[0.98]' : 'border-transparent opacity-60 hover:opacity-100'"
-                        >
-                            <img :src="imageUrl(variation.url)" onerror="this.src='/uploads/products/default.jpg'" class="w-full h-full object-cover">
-                        </button>
-                    </template>
+
+                    <!-- 360 Degree Interactive Badge (Bottom Right) -->
+                    <div class="absolute bottom-4 right-4 z-10 w-11 h-11 rounded-full bg-white/90 backdrop-blur-md border border-gray-200 shadow-md flex items-center justify-center cursor-pointer hover:scale-110 transition-transform" title="360° Interactive View">
+                        <div class="flex flex-col items-center justify-center leading-none text-gray-900">
+                            <span class="text-[9px] font-black tracking-tighter">360°</span>
+                            <svg class="w-3.5 h-3.5 text-gray-800 -mt-0.5" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
+                                <path d="M4 12a8 8 0 0114.93-3M20 12a8 8 0 01-14.93 3"/><path d="M4 12l3-3M4 12l3 3M20 12l-3-3M20 12l-3 3"/>
+                            </svg>
+                        </div>
+                    </div>
                 </div>
             </div>
 
             <!-- Right Side: Details & Selectors -->
-            <div class="lg:col-span-7 flex flex-col justify-between">
+            <div class="lg:col-span-7 flex flex-col justify-between space-y-6">
                 <div>
-                    <!-- Product Category Badge -->
-                    <div class="text-[10px] font-bold uppercase tracking-[0.25em] text-[#C0422A] mb-3 flex items-center gap-1.5">
-                        <span class="w-4 h-[1.5px] bg-[#C0422A]"></span>
-                        {{ $product->category->name ?? 'TRADITIONAL' }}
-                    </div>
-
                     <!-- Product Title -->
-                    <h1 class="font-serif text-3xl lg:text-4xl font-bold text-gray-900 mb-3 leading-tight tracking-tight">
+                    <h1 class="font-sans text-2xl sm:text-3xl font-extrabold text-gray-900 mb-1 leading-tight tracking-tight">
                         {{ $product->name }}
                     </h1>
 
-                    <!-- Ratings and Sold stats -->
-                    <div class="flex items-center gap-4 text-xs font-bold text-gray-400 mb-6 py-2 border-b border-gray-50">
-                        <div class="flex items-center gap-1">
-                            <span class="text-sm font-black text-[#C0422A]">{{ number_format($product->avgRating ?? 0, 1) }}</span>
-                            <div class="flex items-center gap-0.5 text-yellow-400">
-                                @php $ratingVal = $product->avgRating ?? 0; @endphp
-                                @for($i = 1; $i <= 5; $i++)
-                                    <svg class="w-3.5 h-3.5 fill-current {{ $i <= round($ratingVal) ? 'text-yellow-400' : 'text-gray-200' }}" viewBox="0 0 20 20">
-                                        <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/>
-                                    </svg>
-                                @endfor
-                            </div>
+                    <!-- Seller Info & Rating Row -->
+                    <div class="flex items-center gap-3 text-xs mb-4">
+                        <div class="flex items-center gap-1.5">
+                            <span class="text-gray-500 font-medium">by</span>
+                            <a href="/shops/{{ $product->sellerId }}" class="font-extrabold text-amber-800 hover:underline flex items-center gap-1.5">
+                                <img src="{{ $product->seller->profile_photo_url ?? '/uploads/categories/wedding_groom.png' }}" class="w-5 h-5 rounded-full object-cover border border-gray-200" alt="Artisan">
+                                <span>{{ $product->artisan ?? $product->seller->shopName ?? 'BarongniJuan' }}</span>
+                            </a>
                         </div>
-                        <span class="w-px h-3 bg-gray-200"></span>
-                        <div><span class="text-gray-900">{{ $product->reviewCount ?? 0 }}</span> rating{{ ($product->reviewCount ?? 0) != 1 ? 's' : '' }}</div>
-                        <span class="w-px h-3 bg-gray-200"></span>
-                        <div><span class="text-gray-900">{{ $soldCount ?? 0 }}</span> sold</div>
+                        <span class="text-gray-300">•</span>
+                        <div class="flex items-center gap-1 font-bold text-gray-700">
+                            <span class="text-amber-600 font-extrabold">{{ number_format($product->avgRating ?? 4.8, 1) }}</span>
+                            <svg class="w-3.5 h-3.5 fill-amber-400 text-amber-400" viewBox="0 0 20 20">
+                                <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/>
+                            </svg>
+                            <span class="text-gray-400 font-normal">({{ $product->reviewCount ?? 125 }} reviews)</span>
+                        </div>
                     </div>
 
-                    <!-- Price Box Container -->
-                    <div class="bg-[#FDF9F4] border border-[#F5EAD9] p-5 lg:p-6 rounded-2xl mb-8 flex items-center gap-4 flex-wrap">
+                    <!-- Price Row -->
+                    <div class="flex items-baseline gap-3 mb-4">
+                        <span class="text-2xl sm:text-3xl font-extrabold text-gray-900">₱{{ number_format($product->salePrice) }}</span>
                         @if($product->is_on_sale && $product->discount_percentage > 0)
-                            <span class="text-3xl lg:text-4xl font-extrabold text-[#C0422A] tracking-tight">₱ {{ number_format($product->salePrice) }}</span>
-                            <span class="text-lg lg:text-xl font-bold text-gray-400 line-through">₱ {{ number_format($product->price) }}</span>
-                            <span class="px-2.5 py-1 bg-[#C0420A] text-white text-[9px] font-black uppercase tracking-widest rounded-lg shadow-sm shadow-[#C0420A]/10">SAVE {{ number_format($product->discount_percentage, 0) }}%</span>
-                        @else
-                            <span class="text-3xl lg:text-4xl font-extrabold text-[#C0422A] tracking-tight">₱ {{ number_format($product->price) }}</span>
+                            <span class="text-base font-bold text-gray-400 line-through">₱{{ number_format($product->price) }}</span>
+                            <span class="text-xs font-extrabold text-orange-600 uppercase">{{ number_format($product->discount_percentage, 0) }}% OFF</span>
                         @endif
                     </div>
 
-                    <!-- Detail Spec Rows -->
-                    <div class="space-y-6 lg:space-y-8 mb-8">
-                        
-                        <!-- Row 1: Shipping -->
-                        <div class="flex items-start gap-4">
-                            <div class="w-24 text-[10px] font-bold text-gray-400 uppercase tracking-widest pt-1">Shipping</div>
-                            <div class="flex-1 flex flex-col gap-1">
-                                <div class="flex items-center gap-2 flex-wrap">
-                                    @if(($product->shippingFee ?? 0) > 0)
-                                        <span class="text-sm font-black text-gray-800">
-                                            ₱{{ number_format($product->shippingFee, 2) }}
-                                        </span>
-                                        <span class="px-2 py-0.5 bg-gray-100 text-gray-500 text-[9px] font-black uppercase tracking-widest rounded-full">Shipping Fee</span>
-                                    @else
-                                        <span class="text-sm font-black text-green-600">FREE</span>
-                                        <span class="px-2 py-0.5 bg-green-50 text-green-600 text-[9px] font-black uppercase tracking-widest rounded-full">Free Shipping</span>
-                                    @endif
-                                </div>
-                                <div class="text-xs text-gray-400 font-medium">
-                                    Est. arrival in <span class="font-bold text-gray-600">{{ $product->shippingDays ?? 5 }} day{{ ($product->shippingDays ?? 5) != 1 ? 's' : '' }}</span>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Row 2: Variations -->
-                        <div class="flex items-start gap-4">
-                            <div class="w-24 text-[10px] font-bold text-gray-400 uppercase tracking-widest pt-2">Variation</div>
-                            <div class="grow flex flex-wrap gap-3">
-                                <template x-for="(variation, idx) in variations" :key="idx">
-                                    <button 
-                                        @click="activeImage = idx; selectedVariation = idx"
-                                        type="button"
-                                        class="flex items-center gap-2 pl-1.5 pr-4 py-1.5 border rounded-xl transition-all text-xs font-bold shadow-sm"
-                                        :class="selectedVariation === idx ? 'border-[#C0422A] bg-[#C0422A]/5 text-[#C0422A]' : 'border-gray-200 bg-white text-gray-700 hover:border-gray-400'"
-                                    >
-                                        <div class="w-6 h-6 rounded bg-gray-50 overflow-hidden shrink-0 border border-gray-100">
-                                            <img :src="imageUrl(variation.url)" class="w-full h-full object-cover">
-                                        </div>
-                                        <span x-text="variation.label"></span>
-                                    </button>
-                                </template>
-                            </div>
-                        </div>
-
-                        <!-- Row 3: Sizing with Size Guide -->
-                        <div class="flex flex-col space-y-3">
-                            <div class="flex items-center justify-between pl-28">
-                                <button type="button" @click="showSizeGuide = true" class="inline-flex items-center gap-1 text-[10px] font-bold text-[#C0422A] uppercase tracking-widest hover:underline">
-                                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12.248 10.457L19 4m0 0h-5m5 0v5M6 20l6.752-6.457m0 0L19 20m-6.248-6.457L6 4"/>
-                                    </svg>
-                                    Size Guide
-                                </button>
-                            </div>
-
-                            <div class="flex items-start gap-4">
-                                <div class="w-24 text-[10px] font-bold text-gray-400 uppercase tracking-widest pt-3">Size</div>
-                                <div class="grow flex flex-wrap gap-2.5">
-                                    @php
-                                        $sizes = is_string($product->sizes) ? json_decode($product->sizes, true) : $product->sizes;
-                                        if (empty($sizes)) {
-                                            $sizes = ['S', 'M', 'L', 'XL'];
-                                        }
-                                    @endphp
-                                    @foreach($sizes as $size)
-                                        @php 
-                                            $sizeName = is_array($size) ? ($size['size'] ?? $size['name'] ?? 'N/A') : $size;
-                                            $hasSizeStock = true;
-                                            if (is_array($product->size_stocks) && isset($product->size_stocks[$sizeName]) && (int)$product->size_stocks[$sizeName] === 0) {
-                                                $hasSizeStock = false;
-                                            }
-                                        @endphp
-                                        <button 
-                                            @click="updateStock('{{ $sizeName }}')"
-                                            type="button"
-                                            class="relative min-w-12 h-12 px-3 rounded-xl flex items-center justify-center text-xs font-bold border transition-all shadow-sm"
-                                            :class="selectedSize === '{{ $sizeName }}' ? 'border-black bg-black text-white' : 'border-gray-200 text-gray-700 bg-white hover:border-black'"
-                                        >
-                                            <span class="{{ !$hasSizeStock ? 'text-gray-300 line-through font-normal' : '' }}">{{ $sizeName }}</span>
-                                            @if(!$hasSizeStock)
-                                                <span class="absolute bottom-1 text-[7px] text-red-500 font-extrabold uppercase scale-90">Out</span>
-                                            @endif
-                                        </button>
-                                    @endforeach
-                                </div>
-                            </div>
-
-                            <!-- Custom Measurements Input Box -->
-                            <div x-show="selectedSize === 'Custom'" x-transition class="ml-28 p-4 bg-[#FAF7F2] border border-[#EBE3D7] rounded-2xl space-y-3 mt-2" x-cloak>
-                                <div class="text-xs font-bold text-[#C0420A] uppercase tracking-wider flex items-center gap-1.5">
-                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"/></svg>
-                                    Specify Custom Measurements
-                                </div>
-                                <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                                    <div>
-                                        <label class="text-[10px] font-bold text-gray-500 uppercase tracking-widest block mb-1">Chest (in)</label>
-                                        <input type="text" x-model="customMeasurements.chest" placeholder="e.g. 40&quot;" class="w-full h-9 px-3 bg-white border border-gray-200 rounded-lg text-xs font-semibold outline-none focus:border-[#C0420A]">
-                                    </div>
-                                    <div>
-                                        <label class="text-[10px] font-bold text-gray-500 uppercase tracking-widest block mb-1">Shoulder (in)</label>
-                                        <input type="text" x-model="customMeasurements.shoulder" placeholder="e.g. 18&quot;" class="w-full h-9 px-3 bg-white border border-gray-200 rounded-lg text-xs font-semibold outline-none focus:border-[#C0420A]">
-                                    </div>
-                                    <div>
-                                        <label class="text-[10px] font-bold text-gray-500 uppercase tracking-widest block mb-1">Length (in)</label>
-                                        <input type="text" x-model="customMeasurements.length" placeholder="e.g. 30&quot;" class="w-full h-9 px-3 bg-white border border-gray-200 rounded-lg text-xs font-semibold outline-none focus:border-[#C0420A]">
-                                    </div>
-                                    <div>
-                                        <label class="text-[10px] font-bold text-gray-500 uppercase tracking-widest block mb-1">Sleeve (in)</label>
-                                        <input type="text" x-model="customMeasurements.sleeve" placeholder="e.g. 24&quot;" class="w-full h-9 px-3 bg-white border border-gray-200 rounded-lg text-xs font-semibold outline-none focus:border-[#C0420A]">
-                                    </div>
-                                </div>
-                                <div>
-                                    <label class="text-[10px] font-bold text-gray-500 uppercase tracking-widest block mb-1">Special Sizing / Tailoring Notes</label>
-                                    <input type="text" x-model="customMeasurements.notes" placeholder="e.g. Preferred fit, collar style, etc." class="w-full h-9 px-3 bg-white border border-gray-200 rounded-lg text-xs font-semibold outline-none focus:border-[#C0420A]">
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Row 4: Quantity -->
-                        <div class="flex items-center gap-4">
-                            <div class="w-24 text-[10px] font-bold text-gray-400 uppercase tracking-widest">Quantity</div>
-                            <div class="flex-1 flex items-center gap-4">
-                                <!-- Custom Stepper -->
-                                <div class="flex items-center border border-gray-200 rounded-xl bg-gray-50 overflow-hidden shadow-sm h-11">
-                                    <button 
-                                        @click="if(quantity > 1) quantity--" 
-                                        type="button" 
-                                        class="w-11 h-full flex items-center justify-center text-gray-500 hover:text-black font-bold text-lg hover:bg-gray-100 transition-colors"
-                                    >
-                                        −
-                                    </button>
-                                    <input 
-                                        type="number" 
-                                        x-model.number="quantity" 
-                                        min="1" 
-                                        :max="stock"
-                                        class="w-12 text-center bg-transparent border-0 outline-none text-xs font-bold text-gray-800"
-                                    >
-                                    <button 
-                                        @click="if(quantity < stock) quantity++" 
-                                        type="button" 
-                                        class="w-11 h-full flex items-center justify-center text-gray-500 hover:text-black font-bold text-lg hover:bg-gray-100 transition-colors"
-                                    >
-                                        +
-                                    </button>
-                                </div>
-                                <span class="text-xs font-semibold text-gray-400">
-                                    <span x-text="stock"></span> pieces available
-                                </span>
-                            </div>
-                        </div>
-
+                    <!-- Material & Category Specifications -->
+                    <div class="space-y-1 text-xs text-gray-600 mb-6">
+                        <div><span class="font-bold text-gray-800">Material:</span> {{ $product->fabric ?? '100% Piña' }}</div>
+                        <div><span class="font-bold text-gray-800">Category:</span> {{ $product->category->name ?? 'Wedding Barong' }}</div>
                     </div>
 
-                <!-- Bottom Stacked Action Buttons -->
-                <div class="flex flex-col gap-3 mt-8">
-                    <!-- Form 1: Add to Cart -->
-                    <form action="/cart/add" method="POST" @submit.prevent="submitAddToCart($event)">
+                    <!-- Available Sizes Row -->
+                    <div class="mb-6">
+                        <div class="flex items-center justify-between mb-2">
+                            <span class="text-xs font-bold text-gray-900">Available Sizes:</span>
+                            <button type="button" @click="showSizeGuide = true" class="text-[11px] font-bold text-amber-800 hover:underline">Size Guide</button>
+                        </div>
+                        <div class="flex flex-wrap gap-2.5">
+                            @php
+                                $sizes = is_string($product->sizes) ? json_decode($product->sizes, true) : $product->sizes;
+                                if (empty($sizes)) {
+                                    $sizes = ['XS', 'S', 'M', 'L', 'XL', 'XXL'];
+                                }
+                            @endphp
+                            @foreach($sizes as $size)
+                                @php 
+                                    $sizeName = is_array($size) ? ($size['size'] ?? $size['name'] ?? 'N/A') : $size;
+                                    $hasSizeStock = true;
+                                    if (is_array($product->size_stocks) && isset($product->size_stocks[$sizeName]) && (int)$product->size_stocks[$sizeName] === 0) {
+                                        $hasSizeStock = false;
+                                    }
+                                @endphp
+                                <button 
+                                    @click="updateStock('{{ $sizeName }}')"
+                                    type="button"
+                                    class="min-w-11 h-11 px-3 rounded-xl flex items-center justify-center text-xs font-bold border transition-all shadow-2xs"
+                                    :class="selectedSize === '{{ $sizeName }}' ? 'border-amber-600 bg-amber-50/80 text-amber-900 ring-2 ring-amber-500/20' : 'border-gray-200 text-gray-700 bg-white hover:border-gray-400'"
+                                >
+                                    <span class="{{ !$hasSizeStock ? 'text-gray-300 line-through font-normal' : '' }}">{{ $sizeName }}</span>
+                                </button>
+                            @endforeach
+                        </div>
+                    </div>
+
+                    <!-- Quantity Stepper -->
+                    <div class="flex items-center gap-4 mb-6">
+                        <span class="text-xs font-bold text-gray-900">Quantity:</span>
+                        <div class="flex items-center border border-gray-200 rounded-xl bg-gray-50 overflow-hidden shadow-2xs h-10">
+                            <button 
+                                @click="if(quantity > 1) quantity--" 
+                                type="button" 
+                                class="w-9 h-full flex items-center justify-center text-gray-600 hover:text-black font-bold text-base hover:bg-gray-100 transition-colors"
+                            >
+                                −
+                            </button>
+                            <input 
+                                type="number" 
+                                x-model.number="quantity" 
+                                min="1" 
+                                :max="stock"
+                                class="w-10 text-center bg-transparent border-0 outline-none text-xs font-bold text-gray-900"
+                            >
+                            <button 
+                                @click="if(quantity < stock) quantity++" 
+                                type="button" 
+                                class="w-9 h-full flex items-center justify-center text-gray-600 hover:text-black font-bold text-base hover:bg-gray-100 transition-colors"
+                            >
+                                +
+                            </button>
+                        </div>
+                        <span class="text-xs font-semibold text-gray-400">
+                            (<span x-text="stock"></span> pieces available)
+                        </span>
+                    </div>
+
+                    <!-- Action Buttons -->
+                    <form action="/cart/add" method="POST" @submit.prevent="submitAddToCart($event)" class="space-y-3">
                         @csrf
                         <input type="hidden" name="productId" value="{{ $product->id }}">
                         <input type="hidden" name="size" :value="effectiveSize()">
                         <input type="hidden" name="quantity" :value="quantity">
                         <input type="hidden" name="variation" :value="selectedVariationLabel()">
-                        <button 
-                            type="submit"
-                            :disabled="!selectedSize || stock <= 0"
-                            class="w-full h-14 bg-white border border-gray-300 text-gray-800 rounded-xl font-bold uppercase tracking-widest hover:bg-gray-50 hover:text-black transition-all shadow-sm disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
-                        >
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/>
-                            </svg>
-                            <span x-text="!selectedSize ? 'Select Size' : (stock <= 0 ? 'Out of Stock' : 'Add to Cart')"></span>
-                        </button>
-                    </form>
 
-                    <!-- Form 2: Buy Now -->
-                    <form action="/checkout" method="GET">
-                        <input type="hidden" name="productId" value="{{ $product->id }}">
-                        <input type="hidden" name="size" :value="effectiveSize()">
-                        <input type="hidden" name="quantity" :value="quantity">
-                        <input type="hidden" name="variation" :value="selectedVariationLabel()">
-                        <input type="hidden" name="direct" value="1">
+                        <div class="flex items-center gap-3">
+                            <button 
+                                type="button" 
+                                @click="isWishlisted = !isWishlisted" 
+                                class="flex-1 h-12 rounded-xl border border-gray-300 font-bold text-xs flex items-center justify-center gap-2 hover:bg-gray-50 transition-colors shadow-2xs"
+                                :class="isWishlisted ? 'text-red-500 border-red-200 bg-red-50/50' : 'text-gray-900'"
+                            >
+                                <svg class="w-4 h-4" :class="isWishlisted ? 'fill-red-500 text-red-500' : 'fill-none stroke-current'" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/>
+                                </svg>
+                                <span>Add to Wishlist</span>
+                            </button>
+
+                            <button 
+                                type="submit"
+                                :disabled="!selectedSize || stock <= 0"
+                                class="flex-1 h-12 rounded-xl bg-black hover:bg-gray-900 text-white font-bold text-xs flex items-center justify-center gap-2 transition-colors shadow-md disabled:opacity-50"
+                            >
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/>
+                                </svg>
+                                <span x-text="!selectedSize ? 'Select Size' : (stock <= 0 ? 'Out of Stock' : 'Add to Cart')"></span>
+                            </button>
+                        </div>
+
+                        <!-- Full Width Gold Buy Now Button -->
                         <button 
-                            type="submit"
+                            type="button" 
+                            @click="if(selectedSize && stock > 0) window.location.href = '/checkout?productId={{ $product->id }}&size=' + effectiveSize() + '&quantity=' + quantity + '&direct=1'"
                             :disabled="!selectedSize || stock <= 0"
-                            class="w-full h-14 bg-[#2A2A28] text-white rounded-xl font-bold uppercase tracking-widest hover:bg-[#3E3E3C] transition-all shadow-lg shadow-black/10 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                            class="w-full h-12 rounded-xl bg-[#C89B55] hover:bg-[#B88B45] text-white font-extrabold text-sm tracking-wide shadow-md transition-colors disabled:opacity-50"
                         >
-                            <span x-text="!selectedSize ? 'Select Size' : (stock <= 0 ? 'Out of Stock' : 'Buy Now')"></span>
+                            <span x-text="!selectedSize ? 'Select Size' : 'Buy Now'"></span>
                         </button>
                     </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Bottom Delivery & Policy Feature Bar -->
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 pt-8 mt-8 border-t border-gray-100 text-xs">
+            <div class="flex items-center gap-3">
+                <div class="w-9 h-9 rounded-xl bg-gray-50 flex items-center justify-center text-gray-700 shrink-0 border border-gray-100">
+                    🚚
+                </div>
+                <div>
+                    <div class="font-medium text-gray-500">Shipping Fee</div>
+                    <div class="font-extrabold text-gray-900">₱80.00</div>
+                </div>
+            </div>
+
+            <div class="flex items-center gap-3">
+                <div class="w-9 h-9 rounded-xl bg-gray-50 flex items-center justify-center text-gray-700 shrink-0 border border-gray-100">
+                    📦
+                </div>
+                <div>
+                    <div class="font-medium text-gray-500">Estimated Delivery</div>
+                    <div class="font-extrabold text-gray-900">2 - 4 days</div>
+                </div>
+            </div>
+
+            <div class="flex items-center gap-3">
+                <div class="w-9 h-9 rounded-xl bg-gray-50 flex items-center justify-center text-gray-700 shrink-0 border border-gray-100">
+                    ⏱️
+                </div>
+                <div>
+                    <div class="font-medium text-gray-500">Return Policy</div>
+                    <div class="font-extrabold text-gray-900">7 days return</div>
+                </div>
+            </div>
+
+            <div class="flex items-center gap-3">
+                <div class="w-9 h-9 rounded-xl bg-gray-50 flex items-center justify-center text-gray-700 shrink-0 border border-gray-100">
+                    📍
+                </div>
+                <div>
+                    <div class="font-medium text-gray-500">Ships from</div>
+                    <div class="font-extrabold text-gray-900">Manila, PH</div>
                 </div>
             </div>
         </div>
@@ -498,7 +439,7 @@
             </a>
         </div>
 
-        <div class="grid grid-cols-2 md:grid-cols-4 gap-5">
+        <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 lg:grid-cols-6 gap-3.5 sm:gap-4">
             @foreach($recommended as $rec)
             <a href="/products/{{ $rec->id }}" class="group block">
                 <div class="aspect-4/5 bg-gray-100 rounded-2xl overflow-hidden mb-3 relative shadow-sm">
@@ -547,10 +488,11 @@
 
     <!-- ========== SIZE GUIDE MODAL ========== -->
     <div x-show="showSizeGuide"
-         class="fixed inset-0 z-200 flex items-center justify-center p-4"
-         x-cloak>
+         style="display: none;"
+         @keydown.escape.window="showSizeGuide = false"
+         class="fixed inset-0 z-9999 flex items-center justify-center p-4">
         <!-- Backdrop -->
-        <div class="absolute inset-0 bg-black/50 backdrop-blur-sm" @click="showSizeGuide = false"></div>
+        <div class="absolute inset-0 bg-black/60 backdrop-blur-sm" @click="showSizeGuide = false"></div>
 
         <!-- Modal Panel -->
         <div class="relative bg-white rounded-3xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto"
@@ -681,6 +623,16 @@
             variations: variations,
             selectedVariation: 0,
             showSizeGuide: false,
+            selectedColorName: 'Off-White',
+            isWishlisted: false,
+            colorSwatches: [
+                { name: 'Off-White', hex: '#F9F8F6' },
+                { name: 'Ivory', hex: '#EBE4D5' },
+                { name: 'Navy Blue', hex: '#1E293B' },
+                { name: 'Natural Linen', hex: '#D6C8B4' },
+                { name: 'Black', hex: '#18181B' },
+                { name: 'Classic Cream', hex: '#F5EAD9' }
+            ],
             customMeasurements: {
                 chest: '',
                 shoulder: '',

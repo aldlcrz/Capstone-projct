@@ -1,10 +1,8 @@
 @extends('layouts.app')
 
 @section('content')
-<div class="max-w-300 mx-auto px-4 py-4 sm:py-6 lg:py-8 bg-white" x-data="{
-    step: 1,
-    paymentMethod: '{{ ($paymentSource && !($paymentSource->isGcashAvailable ?? true) && ($paymentSource->isMayaAvailable ?? false)) ? 'Maya' : 'GCash' }}',
-    address: @js($addresses->first() ?? [
+<div class="max-w-300 mx-auto px-4 py-4 sm:py-6 lg:py-8" x-data="checkoutApp(
+    @js($addresses->first() ?? [
         'recipientName' => '',
         'phone' => '',
         'houseNo' => '',
@@ -14,80 +12,60 @@
         'province' => '',
         'postalCode' => ''
     ]),
-    showAddressModal: false,
-    showConfirmModal: false,
-    addresses: @js($addresses),
-    zoomImage: '',
-    showZoomModal: false,
-    paymentRef: '',
-    refError: '',
+    @js($addresses),
+    '{{ ($paymentSource && !($paymentSource->isGcashAvailable ?? true) && ($paymentSource->isMayaAvailable ?? false)) ? 'Maya' : 'GCash' }}'
+)">
 
-    selectAddress(addr) {
-        this.address = addr;
-        this.showAddressModal = false;
-    },
-    validateRef() {
-        if (this.step < 2) return true;
-        const val = (this.paymentRef || '').trim();
-        const digits = val.replace(/\D/g, '');
-        if (!val) {
-            this.refError = 'Payment reference number is required.';
-            return false;
-        }
-        if (/[a-zA-Z]/.test(val)) {
-            this.refError = 'Reference number must contain numbers only (no letters allowed).';
-            return false;
-        }
-        if (digits.length < 10 || digits.length > 16) {
-            this.refError = 'Invalid length. Reference number must be 10 to 16 digits (e.g. 13-digit GCash or 12-digit Maya ref #).';
-            return false;
-        }
-        this.refError = '';
-        return true;
-    },
-    requestPlaceOrder() {
-        if (!this.validateRef()) {
-            document.getElementById('paymentReferenceInput')?.focus();
-            return;
-        }
-        const form = document.getElementById('checkout-form');
-        if (!form || !form.reportValidity()) return;
-        this.showConfirmModal = true;
-    },
-    confirmPlaceOrder() {
-        this.showConfirmModal = false;
-        document.getElementById('checkout-form')?.submit();
-    }
-}">
-    <!-- Mobile Header -->
-    <div class="lg:hidden flex items-center justify-between mb-6 pb-3 border-b border-gray-100">
-        <a href="/cart" class="flex items-center gap-2 text-gray-700 font-bold text-base hover:text-black">
-            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
+    {{-- Back Link & Page Title Header --}}
+    <div class="mb-6 lg:mb-8">
+        <a href="/cart" class="inline-flex items-center gap-2 text-[10px] font-bold text-gray-400 uppercase tracking-widest hover:text-[#C0422A] transition-colors mb-3">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
             </svg>
-            Checkout
+            Back to Cart
         </a>
-        <div class="text-xs text-gray-400 font-bold uppercase tracking-widest" x-text="step === 1 ? 'Step 1 of 2' : 'Step 2 of 2'"></div>
+        <div class="flex items-center justify-between flex-wrap gap-4">
+            <div>
+                <div class="flex items-center gap-2 mb-1">
+                    <div class="w-5 h-[1.5px] bg-[#C0422A]"></div>
+                    <span class="text-[10px] font-bold uppercase tracking-widest text-[#C0422A]">Secure Checkout</span>
+                </div>
+                <h1 class="font-serif text-2xl sm:text-3xl font-bold text-black">Order Checkout</h1>
+            </div>
+            
+            <div class="text-xs text-gray-400 font-bold uppercase tracking-widest lg:hidden" x-text="step === 1 ? 'Step 1 of 2: Shipping' : 'Step 2 of 2: Payment'"></div>
+        </div>
     </div>
 
-    <!-- Stepper (Desktop) -->
-    <div class="hidden lg:flex items-center gap-12 mb-12 border-b border-gray-100 pb-2 overflow-x-auto no-scrollbar">
-        <div class="flex items-center gap-3 border-b-2 pb-2 transition-colors" :class="step >= 1 ? 'border-black' : 'border-transparent text-gray-300'">
-            <div class="w-6 h-6 rounded-full flex items-center justify-center" :class="step > 1 ? 'bg-gray-400' : 'bg-black'">
+    <!-- Stepper Header (Desktop) -->
+    <div class="hidden lg:flex items-center gap-8 mb-8 bg-white rounded-2xl border border-gray-100 p-4 shadow-xs">
+        <div class="flex items-center gap-3 flex-1 pb-1 border-b-2 transition-all duration-300" :class="step >= 1 ? 'border-[#C0422A]' : 'border-transparent text-gray-300'">
+            <div class="w-8 h-8 rounded-full flex items-center justify-center font-bold text-xs transition-colors" :class="step > 1 ? 'bg-[#C0422A] text-white' : (step === 1 ? 'bg-[#C0422A] text-white shadow-md shadow-[#C0422A]/20' : 'bg-gray-100 text-gray-400')">
                 <template x-if="step > 1">
-                    <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"></path></svg>
                 </template>
                 <template x-if="step === 1">
-                    <span class="text-[11px] font-bold text-white">1</span>
+                    <span>1</span>
                 </template>
             </div>
-            <span class="text-sm font-bold whitespace-nowrap" :class="step >= 1 ? 'text-black' : 'text-gray-300'">Shipping Information</span>
-        </div>
-        <div class="flex items-center gap-3 border-b-2 pb-2 transition-colors" :class="step >= 2 ? 'border-black' : 'border-transparent text-gray-300'">
-            <div class="w-6 h-6 rounded-full flex items-center justify-center" :class="step >= 2 ? 'bg-black' : 'border border-gray-300'">
-                <span class="text-[11px] font-bold" :class="step >= 2 ? 'text-white' : 'text-gray-300'">2</span>
+            <div>
+                <div class="text-xs font-bold uppercase tracking-wider" :class="step >= 1 ? 'text-[#C0422A]' : 'text-gray-400'">Step 1</div>
+                <div class="text-sm font-bold whitespace-nowrap" :class="step >= 1 ? 'text-gray-900' : 'text-gray-400'">Shipping Information</div>
             </div>
-            <span class="text-sm font-bold whitespace-nowrap" :class="step >= 2 ? 'text-black' : 'text-gray-300'">Payment Details</span>
+        </div>
+
+        <div class="flex items-center text-gray-300">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+        </div>
+
+        <div class="flex items-center gap-3 flex-1 pb-1 border-b-2 transition-all duration-300" :class="step >= 2 ? 'border-[#C0422A]' : 'border-transparent text-gray-300'">
+            <div class="w-8 h-8 rounded-full flex items-center justify-center font-bold text-xs transition-colors" :class="step >= 2 ? 'bg-[#C0422A] text-white shadow-md shadow-[#C0422A]/20' : 'bg-gray-100 text-gray-400'">
+                <span>2</span>
+            </div>
+            <div>
+                <div class="text-xs font-bold uppercase tracking-wider" :class="step >= 2 ? 'text-[#C0422A]' : 'text-gray-400'">Step 2</div>
+                <div class="text-sm font-bold whitespace-nowrap" :class="step >= 2 ? 'text-gray-900' : 'text-gray-400'">Payment Details</div>
+            </div>
         </div>
     </div>
 
@@ -96,78 +74,96 @@
         <input type="hidden" name="mode" value="{{ $mode }}">
         <input type="hidden" name="shippingAddress" :value="JSON.stringify(address)">
 
-        <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-start pb-24 lg:pb-0">
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start pb-32 lg:pb-0">
             <!-- Main Content Area -->
-            <div class="lg:col-span-7 space-y-8 lg:space-y-12">
+            <div class="lg:col-span-7 space-y-6">
                 
-                <!-- STEP 1: SHIPPING (Lazada Style) -->
+                <!-- STEP 1: SHIPPING INFORMATION -->
                 <div x-show="step === 1" x-transition>
                     
-                    {{-- Lazada-Style Address Card --}}
-                    <div class="bg-white rounded-2xl border border-gray-100 p-5 lg:p-6 shadow-xs mb-6 relative overflow-hidden">
-                        <div class="flex items-start justify-between gap-3">
-                            <div class="flex items-start gap-3.5 flex-1">
-                                <div class="w-9 h-9 lg:w-10 lg:h-10 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center shrink-0 mt-0.5">
-                                    <svg class="w-5 h-5 lg:w-6 lg:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    {{-- Delivery Address Card --}}
+                    <div class="bg-white rounded-2xl border border-gray-100 p-4 sm:p-6 shadow-sm mb-6 relative overflow-hidden">
+                        <div class="flex flex-col sm:flex-row sm:items-start justify-between gap-3.5">
+                            <div class="flex items-start gap-3 sm:gap-4 flex-1 min-w-0">
+                                <div class="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-[#FDF9F4] border border-[#C0422A]/20 text-[#C0422A] flex items-center justify-center shrink-0 mt-0.5">
+                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
                                     </svg>
                                 </div>
-                                <div class="space-y-1">
+                                <div class="space-y-1.5 min-w-0 flex-1">
                                     <div class="flex items-center gap-2 flex-wrap">
-                                        <span class="font-bold text-black text-sm lg:text-base" x-text="address.recipientName || 'Add Recipient Name'"></span>
-                                        <span class="text-xs lg:text-sm text-gray-500 font-semibold" x-text="address.phone"></span>
+                                        <span class="font-bold text-gray-900 text-sm lg:text-base" x-text="address.recipientName || 'Add Recipient Name'"></span>
+                                        <span class="text-xs lg:text-sm text-gray-500 font-medium" x-text="address.phone"></span>
                                     </div>
-                                    <div class="flex items-center gap-2">
-                                        <span class="bg-blue-100 text-blue-700 text-[9px] lg:text-[10px] font-black uppercase px-2 py-0.5 rounded tracking-wider">HOME</span>
-                                        <p class="text-xs lg:text-sm text-gray-700 font-medium leading-snug" x-text="address.houseNo ? address.houseNo + ' ' + address.street + ', ' + address.barangay + ', ' + address.city : 'Please select your delivery address'"></p>
+                                    <div class="flex items-start gap-2 flex-wrap">
+                                        <span class="bg-[#C0422A]/10 text-[#C0422A] text-[9px] font-black uppercase px-2 py-0.5 rounded-md tracking-wider border border-[#C0422A]/20 shrink-0 mt-0.5">HOME</span>
+                                        <p class="text-xs lg:text-sm text-gray-700 font-medium leading-relaxed flex-1 min-w-0 wrap-break-word" x-text="address.houseNo ? address.houseNo + ' ' + (address.street ? address.street + ', ' : '') + (address.barangay ? address.barangay + ', ' : '') + address.city : 'Please select your delivery address'"></p>
                                     </div>
                                 </div>
                             </div>
-                            <button type="button" @click="showAddressModal = true" class="text-xs lg:text-sm font-bold text-blue-600 hover:text-blue-800 shrink-0">
-                                Edit
-                            </button>
+                            <div class="flex items-center gap-2 shrink-0 pt-2 sm:pt-0 border-t sm:border-t-0 border-gray-100 justify-end">
+                                <button type="button" @click="openEditAddress()" class="inline-flex items-center gap-1 text-xs font-bold text-gray-700 hover:text-black px-2.5 py-1 bg-gray-50 rounded-lg border border-gray-200 transition-colors">
+                                    <svg class="w-3.5 h-3.5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/></svg>
+                                    Edit
+                                </button>
+                                <button type="button" @click="showAddressModal = true" class="inline-flex items-center text-xs font-bold text-[#C0422A] hover:text-[#A33622] px-2.5 py-1 bg-[#FDF9F4] rounded-lg border border-[#C0422A]/20 transition-colors whitespace-nowrap">
+                                    Change Address
+                                </button>
+                            </div>
                         </div>
                     </div>
 
-                    {{-- Lazada-Style Store Items Preview --}}
-                    <div class="bg-white rounded-2xl border border-gray-100 p-5 lg:p-6 shadow-xs mb-6 space-y-4">
-                        <div class="flex items-center justify-between pb-3 border-b border-gray-100">
-                            <div class="flex items-center gap-2">
-                                <span class="bg-[#C0422A] text-white text-[9px] lg:text-[10px] font-black uppercase px-2 py-0.5 rounded tracking-wider">LumBarong Store</span>
-                                <span class="text-xs lg:text-sm font-bold text-black">Official Store</span>
+                    {{-- Store Items Preview Card --}}
+                    <div class="bg-white rounded-2xl border border-gray-100 p-4 sm:p-6 shadow-sm mb-6 space-y-4">
+                        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-3 border-b border-gray-100">
+                            <div class="flex items-center gap-2 flex-wrap">
+                                <span class="bg-[#C0422A] text-white text-[9px] lg:text-[10px] font-black uppercase px-2.5 py-0.5 rounded-md tracking-wider whitespace-nowrap">LumBarong Store</span>
+                                <span class="text-xs sm:text-sm font-bold text-gray-900">Official Heritage Store</span>
                             </div>
-                            <span class="text-[10px] lg:text-xs font-bold text-green-600 uppercase tracking-wider flex items-center gap-1">
-                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
-                                100% Authentic
+                            <span class="text-[10px] lg:text-xs font-bold text-amber-800 uppercase tracking-wider flex items-center gap-1 bg-amber-50 px-2.5 py-1 rounded-md border border-amber-200/60 w-fit">
+                                <svg class="w-3.5 h-3.5 text-amber-600 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
+                                100% Authentic Handcrafted
                             </span>
                         </div>
 
-                        <div class="space-y-4">
+                        <div class="divide-y divide-gray-100">
                             @foreach($cart as $item)
                                 @php
                                     $img = $item['image'] ?? '';
-                                    $imgSrc = (str_starts_with($img, 'http') || str_starts_with($img, '/')) ? $img : (str_starts_with($img, 'products/') ? asset('storage/' . $img) : asset('uploads/products/' . $img));
+                                    $imgSrc = asset('uploads/products/default.jpg');
+                                    if ($img) {
+                                        $cleanImg = ltrim($img, '/');
+                                        if (str_starts_with($img, 'http') || str_starts_with($img, '/')) {
+                                            $imgSrc = $img;
+                                        } elseif (file_exists(storage_path('app/public/' . $cleanImg))) {
+                                            $imgSrc = asset('storage/' . $cleanImg);
+                                        } elseif (file_exists(public_path('uploads/' . $cleanImg))) {
+                                            $imgSrc = asset('uploads/' . $cleanImg);
+                                        } elseif (file_exists(public_path('uploads/products/' . $cleanImg))) {
+                                            $imgSrc = asset('uploads/products/' . $cleanImg);
+                                        }
+                                    }
                                 @endphp
-                                <div class="flex gap-3.5 items-start">
-                                    <img src="{{ $imgSrc }}" onerror="this.src='/uploads/products/default.jpg'" class="w-20 h-20 lg:w-24 lg:h-24 object-cover rounded-xl bg-gray-50 border border-gray-100 shrink-0">
+                                <div class="flex gap-3.5 sm:gap-4 py-3.5 first:pt-0 last:pb-0 items-start">
+                                    <img src="{{ $imgSrc }}" onerror="this.src='/uploads/products/default.jpg'" class="w-16 h-16 sm:w-20 sm:h-20 lg:w-24 lg:h-24 object-cover rounded-xl bg-gray-50 border border-gray-100 shrink-0">
                                     <div class="flex-1 min-w-0">
                                         <h4 class="text-xs sm:text-sm lg:text-base font-bold text-gray-900 line-clamp-2 leading-snug">{{ $item['name'] }}</h4>
-                                        <div class="text-[10px] sm:text-xs lg:text-sm text-gray-500 font-medium mt-1">
-                                            @if(!empty($item['size'])) Size: {{ $item['size'] }} @endif
-                                            @if(!empty($item['variation'])) | {{ $item['variation'] }} @endif
+                                        <div class="text-[10px] sm:text-xs text-gray-500 font-medium mt-1 flex items-center gap-2 flex-wrap">
+                                            @if(!empty($item['size'])) <span>Size: <strong class="text-gray-700">{{ $item['size'] }}</strong></span> @endif
+                                            @if(!empty($item['variation'])) <span>| <strong class="text-gray-700">{{ $item['variation'] }}</strong></span> @endif
                                         </div>
-                                        <div class="inline-block mt-1 bg-blue-50 text-blue-600 text-[9px] lg:text-[10px] font-bold px-2 py-0.5 rounded">
-                                            30 Days Free Returns
+                                        <div class="inline-flex items-center gap-1 mt-1.5 bg-amber-50 text-amber-900 text-[9px] lg:text-[10px] font-bold px-2 py-0.5 rounded border border-amber-200/50 max-w-full">
+                                            <span class="shrink-0">🛡️</span> <span class="truncate">30 Days Heritage Return Guarantee</span>
                                         </div>
-                                        <div class="flex items-center justify-between mt-2">
-                                            <div class="flex items-center gap-1.5">
-                                                <span class="text-xs sm:text-sm lg:text-base font-black text-[#C0422A]">₱{{ number_format($item['price']) }}</span>
+                                        <div class="flex items-center justify-between mt-2.5 flex-wrap gap-1">
+                                            <div class="flex items-center gap-2">
+                                                <span class="text-sm lg:text-base font-black text-[#C0422A]">₱{{ number_format($item['price']) }}</span>
                                                 @if(!empty($item['is_on_sale']) && ($item['discount_percentage'] ?? 0) > 0)
                                                     <span class="text-[10px] lg:text-xs text-gray-400 line-through">₱{{ number_format($item['original_price'] ?? $item['price']) }}</span>
                                                 @endif
                                             </div>
-                                            <span class="text-xs lg:text-sm font-bold text-gray-500">Qty: {{ $item['quantity'] }}</span>
+                                            <span class="text-xs lg:text-sm font-bold text-gray-600 bg-gray-100 px-2.5 py-0.5 rounded-md">Qty: {{ $item['quantity'] }}</span>
                                         </div>
                                     </div>
                                 </div>
@@ -175,7 +171,7 @@
                         </div>
                     </div>
 
-                    {{-- Lazada-Style Delivery Guarantee Card --}}
+                    {{-- Delivery Guarantee Card --}}
                     @php
                         $shippingFee = 0;
                         foreach ($cart as $item) {
@@ -185,56 +181,61 @@
                             }
                         }
                     @endphp
-                    <div class="bg-white rounded-2xl border border-gray-100 p-5 lg:p-6 shadow-xs space-y-1">
-                        <div class="flex justify-between items-center">
-                            <span class="text-xs sm:text-sm lg:text-base font-bold text-gray-800">Guaranteed Delivery (3-5 Days)</span>
-                            <span class="text-xs sm:text-sm lg:text-base font-black text-black">
-                                @if($shippingFee > 0) ₱{{ number_format($shippingFee, 2) }} @else Free @endif
+                    <div class="bg-[#FDF9F4] rounded-2xl border border-[#C0422A]/20 p-4 sm:p-5 lg:p-6 shadow-xs space-y-1">
+                        <div class="flex justify-between items-center gap-2">
+                            <div class="flex items-center gap-2">
+                                <svg class="w-5 h-5 text-[#C0422A] shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                </svg>
+                                <span class="text-xs sm:text-sm lg:text-base font-bold text-gray-900">Standard Delivery (3-5 Days)</span>
+                            </div>
+                            <span class="text-xs sm:text-sm lg:text-base font-black text-black shrink-0">
+                                @if($shippingFee > 0) ₱{{ number_format($shippingFee, 2) }} @else <span class="text-emerald-600 uppercase text-xs">FREE</span> @endif
                             </span>
                         </div>
-                        <p class="text-[10px] lg:text-xs text-gray-500 font-medium">Eligible for LumBarong delivery guarantee and buyer protection.</p>
+                        <p class="text-[10px] lg:text-xs text-gray-500 font-medium pl-7">Protected by LumBarong nationwide delivery guarantee & secure packaging.</p>
                     </div>
 
                 </div>
 
-                <!-- STEP 2: PAYMENT (Lazada Style) -->
+                <!-- STEP 2: PAYMENT METHOD & PROOF UPLOAD -->
                 <div x-show="step === 2" x-transition>
                     <div class="mb-6">
-                        <h2 class="text-xl lg:text-2xl font-bold text-black mb-1">Select Payment Method</h2>
-                        <p class="text-xs lg:text-sm text-gray-500 font-medium">Choose your preferred payment channel.</p>
+                        <h2 class="font-serif text-xl lg:text-2xl font-bold text-black mb-1">Select Payment Channel</h2>
+                        <p class="text-xs lg:text-sm text-gray-500 font-medium">Choose your e-wallet payment option below and submit your reference receipt.</p>
                     </div>
 
                     <div class="space-y-4">
                         @if(!$paymentSource || ($paymentSource->isGcashAvailable ?? true))
-                        <div class="rounded-2xl border-2 p-5 transition-all" :class="paymentMethod === 'GCash' ? 'border-[#C0422A] bg-white shadow-sm' : 'border-gray-100'">
+                        <div class="rounded-2xl border-2 p-4 sm:p-5 transition-all duration-200" :class="paymentMethod === 'GCash' ? 'border-[#C0422A] bg-[#FDF9F4]/40 shadow-sm' : 'border-gray-100 bg-white hover:border-gray-200'">
                             <label class="flex items-center justify-between cursor-pointer">
-                                <div class="flex items-center gap-3">
-                                    <div class="w-8 h-8 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center text-xs font-black">GC</div>
+                                <div class="flex items-center gap-3.5">
+                                    <div class="w-10 h-10 rounded-xl bg-blue-600 text-white flex items-center justify-center text-xs font-black shadow-sm shrink-0">GC</div>
                                     <div>
                                         <div class="font-bold text-gray-900 text-sm lg:text-base">GCash e-Wallet</div>
-                                        <div class="text-[10px] lg:text-xs text-gray-400">Direct QR or Mobile Transfer</div>
+                                        <div class="text-[10px] lg:text-xs text-gray-500">Scan QR or Transfer to Mobile Number</div>
                                     </div>
                                 </div>
-                                <input type="radio" name="paymentMethod" value="GCash" x-model="paymentMethod" class="w-5 h-5 accent-[#C0422A]">
+                                <input type="radio" name="paymentMethod" value="GCash" x-model="paymentMethod" class="w-5 h-5 accent-[#C0422A] cursor-pointer">
                             </label>
                             
-                            <div x-show="paymentMethod === 'GCash'" class="mt-4 pt-4 border-t border-gray-100 flex gap-4 items-center">
-                                <div class="w-1/3 bg-gray-50 rounded-2xl p-3 flex flex-col items-center justify-center @if($paymentSource && $paymentSource->gcashQrCode) cursor-zoom-in hover:bg-gray-100 transition-colors group/qr @endif"
+                            <div x-show="paymentMethod === 'GCash'" class="mt-4 pt-4 border-t border-gray-100 flex flex-col sm:flex-row gap-3 sm:gap-4 items-center" x-transition>
+                                <div class="w-full sm:w-1/3 bg-white border border-gray-100 rounded-2xl p-3 flex flex-col items-center justify-center shadow-xs @if($paymentSource && $paymentSource->gcashQrCode) cursor-zoom-in hover:border-[#C0422A]/40 transition-all group/qr @endif"
                                      @if($paymentSource && $paymentSource->gcashQrCode) @click="zoomImage = '{{ asset('storage/' . $paymentSource->gcashQrCode) }}'; showZoomModal = true" @endif>
                                     @if($paymentSource && $paymentSource->gcashQrCode)
-                                        <img src="{{ asset('storage/' . $paymentSource->gcashQrCode) }}" class="w-20 h-20 lg:w-24 lg:h-24 object-contain rounded-xl bg-white border border-gray-100 shadow-xs">
+                                        <img src="{{ asset('storage/' . $paymentSource->gcashQrCode) }}" class="w-24 h-24 sm:w-20 sm:h-20 lg:w-24 lg:h-24 object-contain rounded-xl bg-white border border-gray-100 shadow-xs">
                                     @else
-                                        <div class="w-20 h-20 lg:w-24 lg:h-24 bg-white rounded-xl mb-1 flex items-center justify-center text-gray-200">
-                                            <svg class="w-10 h-10 lg:w-12 lg:h-12" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z"></path></svg>
+                                        <div class="w-20 h-20 lg:w-24 lg:h-24 bg-gray-50 rounded-xl mb-1 flex items-center justify-center text-gray-300 border border-dashed border-gray-200">
+                                            <svg class="w-8 h-8 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z"></path></svg>
                                         </div>
                                     @endif
-                                    <span class="text-[8px] lg:text-[9px] font-black uppercase text-gray-400">Tap to Zoom QR</span>
+                                    <span class="text-[8px] lg:text-[9px] font-black uppercase text-[#C0422A] tracking-wider mt-1">Tap to Zoom QR</span>
                                 </div>
-                                <div class="flex-1">
-                                    <div class="bg-blue-50/50 p-3.5 rounded-xl border border-blue-100">
-                                        <div class="text-[9px] lg:text-[10px] font-black text-blue-500 uppercase tracking-widest mb-0.5">Send Payment To</div>
-                                        <div class="text-lg lg:text-xl font-black text-black">{{ $paymentSource->gcashNumber ?? '0912 345 6789' }}</div>
-                                        <div class="text-[10px] lg:text-xs font-bold text-gray-500 mt-0.5">Name: {{ $paymentSource->shopName ?? ($seller->name ?? 'LumBarong Store') }}</div>
+                                <div class="w-full sm:flex-1">
+                                    <div class="bg-[#FDF9F4] p-3.5 sm:p-4 rounded-xl border border-[#C0422A]/20">
+                                        <div class="text-[9px] lg:text-[10px] font-black text-[#C0422A] uppercase tracking-widest mb-0.5">Send GCash Payment To</div>
+                                        <div class="text-base sm:text-lg lg:text-xl font-black text-black tracking-wide">{{ $paymentSource->gcashNumber ?? '0912 345 6789' }}</div>
+                                        <div class="text-[10px] lg:text-xs font-bold text-gray-600 mt-1">Account: <span class="text-gray-900">{{ $paymentSource->shopName ?? ($seller->name ?? 'LumBarong Official') }}</span></div>
                                     </div>
                                 </div>
                             </div>
@@ -243,35 +244,35 @@
 
                         @if(!$paymentSource || ($paymentSource->isMayaAvailable ?? false))
                         <!-- Maya Option -->
-                        <div class="rounded-2xl border-2 p-5 transition-all" :class="paymentMethod === 'Maya' ? 'border-[#C0422A] bg-white shadow-sm' : 'border-gray-100'">
+                        <div class="rounded-2xl border-2 p-4 sm:p-5 transition-all duration-200" :class="paymentMethod === 'Maya' ? 'border-[#C0422A] bg-[#FDF9F4]/40 shadow-sm' : 'border-gray-100 bg-white hover:border-gray-200'">
                             <label class="flex items-center justify-between cursor-pointer">
-                                <div class="flex items-center gap-3">
-                                    <div class="w-8 h-8 rounded-xl bg-green-50 text-green-600 flex items-center justify-center text-xs font-black">MY</div>
+                                <div class="flex items-center gap-3.5">
+                                    <div class="w-10 h-10 rounded-xl bg-emerald-600 text-white flex items-center justify-center text-xs font-black shadow-sm shrink-0">MY</div>
                                     <div>
                                         <div class="font-bold text-gray-900 text-sm lg:text-base">Maya e-Wallet</div>
-                                        <div class="text-[10px] lg:text-xs text-gray-400">Pay via Maya app or QR</div>
+                                        <div class="text-[10px] lg:text-xs text-gray-500">Pay via Maya App or Scan QR</div>
                                     </div>
                                 </div>
-                                <input type="radio" name="paymentMethod" value="Maya" x-model="paymentMethod" class="w-5 h-5 accent-[#C0422A]">
+                                <input type="radio" name="paymentMethod" value="Maya" x-model="paymentMethod" class="w-5 h-5 accent-[#C0422A] cursor-pointer">
                             </label>
 
-                            <div x-show="paymentMethod === 'Maya'" class="mt-4 pt-4 border-t border-gray-100 flex gap-4 items-center">
-                                <div class="w-1/3 bg-gray-50 rounded-2xl p-3 flex flex-col items-center justify-center @if($paymentSource && $paymentSource->mayaQrCode) cursor-zoom-in hover:bg-gray-100 transition-colors group/qr @endif"
+                            <div x-show="paymentMethod === 'Maya'" class="mt-4 pt-4 border-t border-gray-100 flex flex-col sm:flex-row gap-3 sm:gap-4 items-center" x-transition>
+                                <div class="w-full sm:w-1/3 bg-white border border-gray-100 rounded-2xl p-3 flex flex-col items-center justify-center shadow-xs @if($paymentSource && $paymentSource->mayaQrCode) cursor-zoom-in hover:border-[#C0422A]/40 transition-all group/qr @endif"
                                      @if($paymentSource && $paymentSource->mayaQrCode) @click="zoomImage = '{{ asset('storage/' . $paymentSource->mayaQrCode) }}'; showZoomModal = true" @endif>
                                     @if($paymentSource && $paymentSource->mayaQrCode)
-                                        <img src="{{ asset('storage/' . $paymentSource->mayaQrCode) }}" class="w-20 h-20 lg:w-24 lg:h-24 object-contain rounded-xl bg-white border border-gray-100 shadow-xs">
+                                        <img src="{{ asset('storage/' . $paymentSource->mayaQrCode) }}" class="w-24 h-24 sm:w-20 sm:h-20 lg:w-24 lg:h-24 object-contain rounded-xl bg-white border border-gray-100 shadow-xs">
                                     @else
-                                        <div class="w-20 h-20 lg:w-24 lg:h-24 bg-white rounded-xl mb-1 flex items-center justify-center text-gray-200">
-                                            <svg class="w-10 h-10 lg:w-12 lg:h-12" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z"></path></svg>
+                                        <div class="w-20 h-20 lg:w-24 lg:h-24 bg-gray-50 rounded-xl mb-1 flex items-center justify-center text-gray-300 border border-dashed border-gray-200">
+                                            <svg class="w-8 h-8 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z"></path></svg>
                                         </div>
                                     @endif
-                                    <span class="text-[8px] lg:text-[9px] font-black uppercase text-gray-400">Tap to Zoom QR</span>
+                                    <span class="text-[8px] lg:text-[9px] font-black uppercase text-[#C0422A] tracking-wider mt-1">Tap to Zoom QR</span>
                                 </div>
-                                <div class="flex-1">
-                                    <div class="bg-green-50/50 p-3.5 rounded-xl border border-green-100">
-                                        <div class="text-[9px] lg:text-[10px] font-black text-green-500 uppercase tracking-widest mb-0.5">Send Payment To</div>
-                                        <div class="text-lg lg:text-xl font-black text-black">{{ $paymentSource->mayaNumber ?? '0912 345 6789' }}</div>
-                                        <div class="text-[10px] lg:text-xs font-bold text-gray-500 mt-0.5">Name: {{ $paymentSource->shopName ?? ($seller->name ?? 'LumBarong Store') }}</div>
+                                <div class="w-full sm:flex-1">
+                                    <div class="bg-[#FDF9F4] p-3.5 sm:p-4 rounded-xl border border-[#C0422A]/20">
+                                        <div class="text-[9px] lg:text-[10px] font-black text-[#C0422A] uppercase tracking-widest mb-0.5">Send Maya Payment To</div>
+                                        <div class="text-base sm:text-lg lg:text-xl font-black text-black tracking-wide">{{ $paymentSource->mayaNumber ?? '0912 345 6789' }}</div>
+                                        <div class="text-[10px] lg:text-xs font-bold text-gray-600 mt-1">Account: <span class="text-gray-900">{{ $paymentSource->shopName ?? ($seller->name ?? 'LumBarong Official') }}</span></div>
                                     </div>
                                 </div>
                             </div>
@@ -280,11 +281,15 @@
                     </div>
 
                     <!-- Payment Proof Upload Inputs -->
-                    <div class="bg-gray-50 border border-gray-100 rounded-2xl p-5 lg:p-6 mt-6 space-y-4">
-                        <div class="text-xs lg:text-sm font-bold text-gray-700 uppercase tracking-wider mb-2">Upload Proof of Payment</div>
-                        <div class="space-y-3">
-                            <div class="space-y-1">
-                                <label class="text-[9px] lg:text-[10px] font-bold text-gray-400 uppercase tracking-widest block mb-0.5">Payment Reference Number</label>
+                    <div class="bg-white border border-gray-100 rounded-2xl p-5 lg:p-6 mt-6 shadow-sm space-y-4">
+                        <div class="flex items-center gap-2 border-b border-gray-100 pb-3">
+                            <div class="w-2 h-2 rounded-full bg-[#C0422A]"></div>
+                            <h3 class="text-xs lg:text-sm font-bold text-gray-900 uppercase tracking-wider">Upload Proof of Payment</h3>
+                        </div>
+                        
+                        <div class="space-y-4">
+                            <div class="space-y-1.5">
+                                <label class="text-[9px] lg:text-[10px] font-bold text-gray-500 uppercase tracking-widest block">Payment Reference Number <span class="text-[#C0422A]">*</span></label>
                                 <input type="text"
                                        id="paymentReferenceInput"
                                        name="paymentReference"
@@ -295,18 +300,68 @@
                                        pattern="[\d\s\-]{10,20}"
                                        maxlength="20"
                                        required
-                                       placeholder="e.g. 1002345678901 (10-16 digits)"
-                                       :class="refError ? 'border-red-500 focus:border-red-500 bg-red-50/20' : 'border-gray-200 focus:border-black bg-white'"
-                                       class="w-full px-4 py-3 border rounded-xl text-sm lg:text-base font-bold outline-none transition-all">
+                                       placeholder="e.g. 1002345678901 (10 to 16 numeric digits)"
+                                       :class="refError ? 'border-red-500 focus:ring-red-200 bg-red-50/20' : 'border-gray-200 focus:border-[#C0422A] focus:ring-[#C0422A]/10 bg-gray-50/50'"
+                                       class="w-full px-4 py-3 border rounded-xl text-sm lg:text-base font-bold outline-none focus:ring-4 transition-all">
                                 <div x-show="refError" x-cloak x-text="refError" class="text-xs font-bold text-red-500 px-1 mt-1"></div>
-                                <div x-show="!refError && paymentRef.length > 0" x-cloak class="text-[10px] lg:text-xs text-green-600 font-bold px-1 mt-0.5 flex items-center gap-1">
+                                <div x-show="!refError && paymentRef.length > 0" x-cloak class="text-[10px] lg:text-xs text-emerald-600 font-bold px-1 mt-0.5 flex items-center gap-1">
                                     <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
                                     Valid Reference Format (<span x-text="paymentRef.replace(/\D/g, '').length"></span> digits)
                                 </div>
                             </div>
-                            <div>
-                                <label class="text-[9px] lg:text-[10px] font-bold text-gray-400 uppercase tracking-widest block mb-1">Proof Screenshot</label>
-                                <input type="file" name="paymentScreenshot" required class="w-full text-xs lg:text-sm text-gray-500 file:bg-black file:text-white file:rounded-lg file:border-0 file:px-4 file:py-2 file:mr-4 file:font-black cursor-pointer">
+
+                            <div class="space-y-1.5">
+                                <label class="text-[9px] lg:text-[10px] font-bold text-gray-500 uppercase tracking-widest block">Payment Receipt Screenshot <span class="text-[#C0422A]">*</span></label>
+                                
+                                <input type="file" 
+                                       id="paymentScreenshotInput" 
+                                       name="paymentScreenshot" 
+                                       accept="image/*" 
+                                       required 
+                                       @change="handleFileChange($event)" 
+                                       class="sr-only">
+
+                                <!-- Upload Card Dropzone -->
+                                <div x-show="!fileName" 
+                                     @click="document.getElementById('paymentScreenshotInput').click()" 
+                                     class="cursor-pointer py-6 px-4 bg-gray-50/70 border-2 border-dashed border-gray-200 rounded-2xl text-center hover:border-[#C0422A] hover:bg-[#FDF9F4]/40 transition-all flex flex-col items-center justify-center gap-2 group">
+                                    <div class="w-12 h-12 rounded-2xl bg-white border border-gray-200 text-gray-400 group-hover:text-[#C0422A] group-hover:border-[#C0422A]/30 flex items-center justify-center shadow-xs transition-all">
+                                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                                    </div>
+                                    <div>
+                                        <div class="inline-flex items-center gap-1.5 text-xs sm:text-sm font-bold text-gray-800 group-hover:text-[#C0422A]">
+                                            <span class="px-3 py-1.5 bg-[#C0422A] text-white rounded-xl text-[10px] font-black uppercase tracking-wider shadow-xs">Attach Screenshot</span>
+                                            <span class="hidden sm:inline text-gray-500">or tap to select</span>
+                                        </div>
+                                        <p class="text-[10px] text-gray-400 mt-2">PNG, JPG, or JPEG (Clear receipt showing ref # & amount)</p>
+                                    </div>
+                                </div>
+
+                                <!-- Active Attached File Display -->
+                                <div x-show="fileName" x-cloak class="p-3.5 bg-[#FDF9F4] border-2 border-[#C0422A]/30 rounded-2xl flex items-center justify-between gap-3 shadow-xs">
+                                    <div class="flex items-center gap-3 min-w-0">
+                                        <template x-if="filePreview">
+                                            <img :src="filePreview" class="w-12 h-12 object-cover rounded-xl border border-gray-200 shrink-0 bg-white">
+                                        </template>
+                                        <template x-if="!filePreview">
+                                            <div class="w-10 h-10 rounded-xl bg-emerald-100 text-emerald-700 flex items-center justify-center shrink-0">
+                                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
+                                            </div>
+                                        </template>
+                                        <div class="min-w-0">
+                                            <div class="flex items-center gap-1.5">
+                                                <span class="text-xs font-bold text-gray-900 truncate" x-text="fileName"></span>
+                                                <span class="text-[9px] font-black uppercase text-emerald-600 bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-200 shrink-0">Attached</span>
+                                            </div>
+                                            <p class="text-[10px] text-gray-500 font-medium">Receipt image ready for verification</p>
+                                        </div>
+                                    </div>
+                                    <button type="button" @click="removeFile()" class="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-xl transition-colors shrink-0" title="Remove photo">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                                    </button>
+                                </div>
+
+                                <div x-show="screenshotError" x-cloak x-text="screenshotError" class="text-xs font-bold text-red-500 px-1 mt-1"></div>
                             </div>
                         </div>
                     </div>
@@ -314,56 +369,72 @@
 
             </div>
 
-            <!-- Desktop Sidebar -->
+            <!-- Sidebar: Order Summary -->
             <div class="hidden lg:block lg:col-span-5 self-stretch">
-                <div class="bg-[#F9FAFB] rounded-[40px] p-8 border border-gray-100 sticky top-24 flex flex-col max-h-[calc(100vh-120px)] shadow-sm">
-                    <h2 class="text-xl lg:text-2xl font-bold mb-1">Order Summary</h2>
-                    <p class="text-xs lg:text-sm text-gray-400 uppercase tracking-widest font-bold mb-6">
-                        {{ count($cart) }} item(s) selected
-                    </p>
+                <div class="bg-white rounded-3xl p-6 lg:p-8 border border-gray-100 sticky top-24 flex flex-col max-h-[calc(100vh-120px)] shadow-sm space-y-6">
+                    <div>
+                        <div class="flex items-center gap-2 mb-1">
+                            <div class="w-4 h-[1.5px] bg-[#C0422A]"></div>
+                            <span class="text-[9px] font-bold uppercase tracking-widest text-[#C0422A]">Order Overview</span>
+                        </div>
+                        <h2 class="font-serif text-2xl font-bold text-gray-900">Order Summary</h2>
+                        <p class="text-xs text-gray-400 font-bold uppercase tracking-wider mt-1">
+                            {{ count($cart) }} item(s) selected
+                        </p>
+                    </div>
 
-                    <div class="space-y-3 border-t border-gray-100 pt-6 mt-auto">
+                    <div class="space-y-3.5 border-t border-gray-100 pt-6">
                         <div class="flex justify-between items-center">
-                            <span class="text-sm lg:text-base text-gray-500 font-medium">Subtotal</span>
-                            <span class="text-sm lg:text-base font-bold text-black">₱{{ number_format($subtotal) }}</span>
+                            <span class="text-sm text-gray-600 font-medium">Subtotal</span>
+                            <span class="text-sm font-bold text-gray-900">₱{{ number_format($subtotal) }}</span>
                         </div>
                         <div class="flex justify-between items-center">
-                            <span class="text-sm lg:text-base text-gray-500 font-medium">Delivery</span>
-                            <span class="text-sm lg:text-base font-bold text-black">
+                            <span class="text-sm text-gray-600 font-medium">Estimated Delivery</span>
+                            <span class="text-sm font-bold text-gray-900">
                                 @if($shippingFee > 0)
                                     ₱{{ number_format($shippingFee, 2) }}
                                 @else
-                                    Free
+                                    <span class="text-emerald-600 uppercase text-xs">Free</span>
                                 @endif
                             </span>
                         </div>
-                        <div class="flex justify-between items-center pt-3 border-t border-dashed border-gray-200">
-                            <span class="text-lg lg:text-xl font-bold text-black">Total</span>
+                        <div class="flex justify-between items-center pt-4 border-t border-dashed border-gray-200">
+                            <span class="text-base font-bold text-gray-900">Total Payment</span>
                             <span class="text-2xl lg:text-3xl font-black text-[#C0422A]">₱{{ number_format($subtotal + $shippingFee) }}</span>
                         </div>
                     </div>
 
                     <template x-if="step === 1">
-                        <button type="button" @click="step = 2" class="w-full bg-black text-white py-4 lg:py-5 rounded-2xl text-sm lg:text-base font-bold shadow-xl shadow-black/10 hover:bg-[#C0422A] transition-all mt-6">
-                            Proceed to Payment
+                        <button type="button" @click="step = 2" class="w-full bg-[#C0422A] text-white py-4 rounded-xl text-sm font-bold shadow-lg shadow-[#C0422A]/20 hover:bg-[#A33622] transition-all transform active:scale-[0.99] flex items-center justify-center gap-2">
+                            <span>Proceed to Payment</span>
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
                         </button>
                     </template>
                     <template x-if="step === 2">
-                        <div class="flex gap-4 mt-6">
-                            <button type="button" @click="step = 1" class="w-1/4 border-2 border-gray-100 py-4 lg:py-5 rounded-2xl flex items-center justify-center text-gray-400 hover:text-black">
+                        <div class="flex gap-3">
+                            <button type="button" @click="step = 1" class="px-4 py-4 border border-gray-200 rounded-xl flex items-center justify-center text-gray-500 hover:text-black hover:border-black transition-colors">
                                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path></svg>
                             </button>
-                            <button type="button" @click="requestPlaceOrder()" class="flex-1 bg-[#C0422A] text-white py-4 lg:py-5 rounded-2xl text-sm lg:text-base font-bold shadow-xl shadow-[#C0422A]/10 hover:bg-[#A33622] transition-all">
-                                Place Order
+                            <button type="button" @click="requestPlaceOrder()" class="flex-1 bg-[#C0422A] text-white py-4 rounded-xl text-sm font-bold shadow-lg shadow-[#C0422A]/20 hover:bg-[#A33622] transition-all transform active:scale-[0.99] flex items-center justify-center gap-2">
+                                <span>Place Order</span>
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
                             </button>
                         </div>
                     </template>
+
+                    <div class="bg-gray-50/80 rounded-2xl p-4 border border-gray-100/80 text-[11px] text-gray-500 leading-relaxed space-y-1">
+                        <div class="font-bold text-gray-700 flex items-center gap-1.5">
+                            <svg class="w-3.5 h-3.5 text-[#C0422A]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
+                            LumBarong Buyer Protection
+                        </div>
+                        <p class="text-[10px]">Your order payment is securely processed and verified directly by the seller before fulfillment.</p>
+                    </div>
                 </div>
             </div>
         </div>
     </form>
 
-    <!-- ===== Mobile Sticky Place Order Bar (Lazada Style) ===== -->
+    <!-- Mobile Sticky Place Order Bar -->
     <div class="lg:hidden fixed bottom-0 left-0 right-0 z-50 bg-white border-t border-gray-200 shadow-[0_-6px_24px_rgba(0,0,0,0.12)] p-3"
          x-data="{ showCheckoutBreakdown: false }">
 
@@ -379,7 +450,7 @@
             <div class="flex justify-between items-center text-gray-500">
                 <span>Estimated Shipping</span>
                 <span class="font-bold text-black">
-                    @if($shippingFee > 0) ₱{{ number_format($shippingFee, 2) }} @else Free @endif
+                    @if($shippingFee > 0) ₱{{ number_format($shippingFee, 2) }} @else <span class="text-emerald-600">Free</span> @endif
                 </span>
             </div>
         </div>
@@ -400,18 +471,18 @@
 
             {{-- Step 1 Button on Mobile --}}
             <template x-if="step === 1">
-                <button type="button" @click="step = 2" class="px-6 py-3.5 bg-black text-white text-xs font-bold uppercase tracking-widest rounded-xl shadow-lg hover:bg-[#C0422A] transition-all">
+                <button type="button" @click="step = 2" class="px-6 py-3 bg-[#C0422A] text-white text-xs font-bold uppercase tracking-widest rounded-xl shadow-lg hover:bg-[#A33622] transition-all">
                     Proceed to Payment
                 </button>
             </template>
 
-            {{-- Step 2 Dual Button on Mobile (Lazada Style Place Order) --}}
+            {{-- Step 2 Dual Button on Mobile --}}
             <template x-if="step === 2">
                 <div class="flex items-center gap-2">
                     <button type="button" @click="step = 1" class="w-10 h-11 border border-gray-200 rounded-xl flex items-center justify-center text-gray-500 hover:bg-gray-50">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
                     </button>
-                    <button type="button" @click="requestPlaceOrder()" class="px-6 py-3.5 bg-[#C0422A] text-white text-xs font-bold uppercase tracking-widest rounded-xl shadow-lg hover:bg-[#A33622] transition-all">
+                    <button type="button" @click="requestPlaceOrder()" class="px-6 py-3 bg-[#C0422A] text-white text-xs font-bold uppercase tracking-widest rounded-xl shadow-lg hover:bg-[#A33622] transition-all">
                         Place Order
                     </button>
                 </div>
@@ -424,30 +495,30 @@
         <div class="absolute inset-0 bg-black/60 backdrop-blur-sm" @click="showConfirmModal = false"></div>
         <div @click.away="showConfirmModal = false" class="relative bg-white w-full max-w-md rounded-3xl shadow-2xl p-8 space-y-6" x-transition>
             <div class="text-center">
-                <div class="w-16 h-16 rounded-full bg-amber-50 flex items-center justify-center mx-auto mb-4">
-                    <svg class="w-8 h-8 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <div class="w-16 h-16 rounded-full bg-amber-50 flex items-center justify-center mx-auto mb-4 border border-amber-200/50">
+                    <svg class="w-8 h-8 text-[#C0422A]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
                     </svg>
                 </div>
-                <h3 class="font-serif text-xl font-bold text-black mb-2">Confirm Your Purchase?</h3>
+                <h3 class="font-serif text-xl font-bold text-black mb-2">Confirm Your Purchase</h3>
                 <p class="text-xs text-gray-500 leading-relaxed">
-                    Please make sure your shipping details and payment proof are correct before placing this order.
+                    Please make sure your delivery address and payment reference receipt are accurate before placing this order.
                 </p>
             </div>
-            <div class="bg-red-50 border border-red-100 rounded-2xl p-4">
-                <p class="text-[11px] font-bold text-red-700 uppercase tracking-widest mb-1">No refund policy</p>
-                <p class="text-xs text-red-600 leading-relaxed">
+            <div class="bg-amber-50/70 border border-amber-200/70 rounded-2xl p-4">
+                <p class="text-[11px] font-bold text-[#C0422A] uppercase tracking-widest mb-1">No refund policy</p>
+                <p class="text-xs text-amber-900 leading-relaxed">
                     All purchases on LumBarong are final sale. Once payment is confirmed, this order
-                    <span class="font-bold">strictly cannot be cancelled or refunded</span>.
+                    <span class="font-bold text-[#C0422A]">strictly cannot be cancelled or refunded</span>.
                 </p>
             </div>
             <div class="flex gap-3">
                 <button type="button" @click="showConfirmModal = false"
-                    class="flex-1 py-3 rounded-xl border border-gray-200 text-[10px] font-bold uppercase tracking-widest text-gray-500 hover:bg-gray-50 transition-all">
+                    class="flex-1 py-3 rounded-xl border border-gray-200 text-[10px] font-bold uppercase tracking-widest text-gray-600 hover:bg-gray-50 transition-all">
                     Go Back
                 </button>
                 <button type="button" @click="confirmPlaceOrder()"
-                    class="flex-1 py-3 rounded-xl bg-[#C0422A] text-white text-[10px] font-bold uppercase tracking-widest hover:bg-[#A33622] transition-all">
+                    class="flex-1 py-3 rounded-xl bg-[#C0422A] text-white text-[10px] font-bold uppercase tracking-widest hover:bg-[#A33622] transition-all shadow-md shadow-[#C0422A]/20">
                     Yes, Place Order
                 </button>
             </div>
@@ -457,32 +528,114 @@
     <!-- Address Book Modal -->
     <div x-show="showAddressModal" class="fixed inset-0 z-9999 flex items-center justify-center p-4" x-cloak>
         <div class="absolute inset-0 bg-black/60 backdrop-blur-sm" @click="showAddressModal = false"></div>
-        <div class="relative bg-white w-full max-w-lg rounded-[40px] shadow-2xl overflow-hidden" x-transition>
-            <div class="p-8 border-b border-gray-50 flex justify-between items-center">
-                <h3 class="text-xl font-bold">Select Address</h3>
+        <div class="relative bg-white w-full max-w-lg rounded-3xl shadow-2xl overflow-hidden" x-transition>
+            <div class="p-6 border-b border-gray-100 flex justify-between items-center">
+                <div class="flex items-center gap-2">
+                    <div class="w-4 h-[1.5px] bg-[#C0422A]"></div>
+                    <h3 class="font-serif text-xl font-bold text-gray-900">Select Delivery Address</h3>
+                </div>
                 <button @click="showAddressModal = false" class="text-gray-400 hover:text-black">
                     <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
                 </button>
             </div>
-            <div class="p-8 space-y-4 max-h-[60vh] overflow-y-auto custom-scrollbar">
+            <div class="p-6 space-y-3.5 max-h-[60vh] overflow-y-auto custom-scrollbar">
                 <template x-for="addr in addresses" :key="addr.id">
-                    <div class="border-2 rounded-2xl p-4 cursor-pointer transition-all hover:border-black" :class="address.id === addr.id ? 'border-black bg-gray-50' : 'border-gray-50'" @click="selectAddress(addr)">
-                        <div class="flex gap-4">
-                            <div class="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center text-gray-400 shrink-0">
-                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+                    <div class="border-2 rounded-2xl p-4 cursor-pointer transition-all hover:border-[#C0422A] relative group" :class="address.id === addr.id ? 'border-[#C0422A] bg-[#FDF9F4]/50 shadow-xs' : 'border-gray-100'" @click="selectAddress(addr)">
+                        <div class="flex items-start justify-between gap-3">
+                            <div class="flex gap-3.5 flex-1">
+                                <div class="w-9 h-9 rounded-xl bg-[#FDF9F4] text-[#C0422A] border border-[#C0422A]/20 flex items-center justify-center shrink-0 mt-0.5">
+                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+                                </div>
+                                <div>
+                                    <div class="text-sm font-bold text-black" x-text="addr.recipientName"></div>
+                                    <div class="text-[10px] text-gray-500 font-bold mt-0.5" x-text="addr.phone"></div>
+                                    <p class="text-xs text-gray-600 mt-1.5 leading-relaxed" x-text="addr.houseNo + ' ' + (addr.street ? addr.street + ', ' : '') + (addr.barangay ? addr.barangay + ', ' : '') + addr.city"></p>
+                                </div>
                             </div>
-                            <div>
-                                <div class="text-sm font-bold text-black" x-text="addr.recipientName"></div>
-                                <div class="text-[10px] text-gray-400 font-bold mt-1" x-text="addr.phone"></div>
-                                <p class="text-xs text-gray-500 mt-2" x-text="addr.houseNo + ' ' + addr.street + ', ' + addr.barangay + ', ' + addr.city"></p>
-                            </div>
+                            <button type="button" @click.stop="openEditAddress(addr)" class="text-xs font-bold text-[#C0422A] hover:underline px-2 py-1 rounded hover:bg-[#C0422A]/10 transition-colors">
+                                Edit
+                            </button>
                         </div>
                     </div>
                 </template>
-                <a href="{{ route('profile.addresses') }}" class="flex items-center justify-center gap-2 p-4 border-2 border-dashed border-gray-200 rounded-2xl text-sm font-bold text-gray-400 hover:text-black hover:border-black transition-all">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
-                    Manage Addresses
-                </a>
+                <div class="flex flex-col sm:flex-row gap-3 pt-2">
+                    <button type="button" @click="openEditAddress(null)" class="flex-1 flex items-center justify-center gap-2 p-3.5 border-2 border-dashed border-[#C0422A]/40 rounded-2xl text-xs font-bold uppercase tracking-wider text-[#C0422A] hover:bg-[#FDF9F4] transition-all">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
+                        Add New Address
+                    </button>
+                    <a href="{{ route('profile.addresses') }}" class="flex-1 flex items-center justify-center gap-2 p-3.5 border border-gray-200 rounded-2xl text-xs font-bold uppercase tracking-wider text-gray-500 hover:text-black hover:border-black transition-all text-center">
+                        Manage Saved Addresses
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Edit / Add Address Modal -->
+    <div x-show="showEditAddressModal" class="fixed inset-0 z-10000 flex items-center justify-center p-4" x-cloak>
+        <div class="absolute inset-0 bg-black/60 backdrop-blur-sm" @click="showEditAddressModal = false"></div>
+        <div class="relative bg-white w-full max-w-lg rounded-3xl shadow-2xl overflow-hidden p-6 sm:p-8 space-y-5 max-h-[90vh] overflow-y-auto" x-transition>
+            <div class="flex items-center justify-between border-b border-gray-100 pb-4">
+                <div class="flex items-center gap-2">
+                    <div class="w-4 h-[1.5px] bg-[#C0422A]"></div>
+                    <h3 class="font-serif text-xl font-bold text-gray-900" x-text="editForm.id ? 'Edit Delivery Address' : 'Add New Address'"></h3>
+                </div>
+                <button type="button" @click="showEditAddressModal = false" class="text-gray-400 hover:text-black">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                </button>
+            </div>
+
+            <div x-show="addressError" x-cloak x-text="addressError" class="p-3 bg-red-50 border border-red-200 text-red-600 rounded-xl text-xs font-bold"></div>
+
+            <div class="grid grid-cols-2 gap-4">
+                <div class="col-span-2 space-y-1">
+                    <label class="text-[10px] font-bold text-gray-500 uppercase tracking-wider block">Recipient Full Name <span class="text-[#C0422A]">*</span></label>
+                    <input type="text" x-model="editForm.recipientName" @input="editForm.recipientName = editForm.recipientName.replace(/[^a-zA-Z\s\.\,\'\-]/g, '')" placeholder="e.g. John Doe (letters only)" class="w-full px-4 py-2.5 bg-gray-50/50 border border-gray-200 rounded-xl text-sm font-semibold outline-none focus:border-[#C0422A] focus:bg-white transition-all">
+                </div>
+
+                <div class="col-span-2 space-y-1">
+                    <label class="text-[10px] font-bold text-gray-500 uppercase tracking-wider block">Phone Number <span class="text-[#C0422A]">*</span></label>
+                    <input type="text" x-model="editForm.phone" @input="editForm.phone = editForm.phone.replace(/[^0-9]/g, '').slice(0, 11)" placeholder="e.g. 09123456789 (11 digits)" inputmode="numeric" maxlength="11" class="w-full px-4 py-2.5 bg-gray-50/50 border border-gray-200 rounded-xl text-sm font-semibold outline-none focus:border-[#C0422A] focus:bg-white transition-all">
+                </div>
+
+                <div class="col-span-2 space-y-1">
+                    <label class="text-[10px] font-bold text-gray-500 uppercase tracking-wider block">House / Building / Unit No. <span class="text-[#C0422A]">*</span></label>
+                    <input type="text" x-model="editForm.houseNo" placeholder="e.g. Block 1 Lot 2 Mango St." class="w-full px-4 py-2.5 bg-gray-50/50 border border-gray-200 rounded-xl text-sm font-semibold outline-none focus:border-[#C0422A] focus:bg-white transition-all">
+                </div>
+
+                <div class="space-y-1">
+                    <label class="text-[10px] font-bold text-gray-500 uppercase tracking-wider block">Street</label>
+                    <input type="text" x-model="editForm.street" placeholder="e.g. Mango St." class="w-full px-4 py-2.5 bg-gray-50/50 border border-gray-200 rounded-xl text-sm font-semibold outline-none focus:border-[#C0422A] focus:bg-white transition-all">
+                </div>
+
+                <div class="space-y-1">
+                    <label class="text-[10px] font-bold text-gray-500 uppercase tracking-wider block">Barangay</label>
+                    <input type="text" x-model="editForm.barangay" placeholder="e.g. Bucandala III" class="w-full px-4 py-2.5 bg-gray-50/50 border border-gray-200 rounded-xl text-sm font-semibold outline-none focus:border-[#C0422A] focus:bg-white transition-all">
+                </div>
+
+                <div class="space-y-1">
+                    <label class="text-[10px] font-bold text-gray-500 uppercase tracking-wider block">City / Municipality <span class="text-[#C0422A]">*</span></label>
+                    <input type="text" x-model="editForm.city" placeholder="e.g. City of Imus" class="w-full px-4 py-2.5 bg-gray-50/50 border border-gray-200 rounded-xl text-sm font-semibold outline-none focus:border-[#C0422A] focus:bg-white transition-all">
+                </div>
+
+                <div class="space-y-1">
+                    <label class="text-[10px] font-bold text-gray-500 uppercase tracking-wider block">Province <span class="text-[#C0422A]">*</span></label>
+                    <input type="text" x-model="editForm.province" placeholder="e.g. Cavite" class="w-full px-4 py-2.5 bg-gray-50/50 border border-gray-200 rounded-xl text-sm font-semibold outline-none focus:border-[#C0422A] focus:bg-white transition-all">
+                </div>
+
+                <div class="col-span-2 space-y-1">
+                    <label class="text-[10px] font-bold text-gray-500 uppercase tracking-wider block">Postal Code</label>
+                    <input type="text" x-model="editForm.postalCode" @input="editForm.postalCode = editForm.postalCode.replace(/[^0-9]/g, '').slice(0, 4)" placeholder="e.g. 4103 (4 digits)" inputmode="numeric" maxlength="4" class="w-full px-4 py-2.5 bg-gray-50/50 border border-gray-200 rounded-xl text-sm font-semibold outline-none focus:border-[#C0422A] focus:bg-white transition-all">
+                </div>
+            </div>
+
+            <div class="flex gap-3 pt-4 border-t border-gray-100">
+                <button type="button" @click="showEditAddressModal = false" class="flex-1 py-3 border border-gray-200 text-xs font-bold uppercase tracking-wider text-gray-500 rounded-xl hover:bg-gray-50 transition-colors">
+                    Cancel
+                </button>
+                <button type="button" @click="saveEditAddress()" :disabled="savingAddress" class="flex-1 py-3 bg-[#C0422A] text-white text-xs font-bold uppercase tracking-wider rounded-xl hover:bg-[#A33622] transition-colors shadow-md shadow-[#C0422A]/20 disabled:opacity-50">
+                    <span x-text="savingAddress ? 'Saving Address...' : 'Save Address'"></span>
+                </button>
             </div>
         </div>
     </div>
@@ -501,7 +654,7 @@
         >
             <div 
                 @click.stop
-                class="bg-white rounded-4xl border border-gray-100 shadow-2xl p-6 relative overflow-hidden max-w-sm w-full flex flex-col items-center justify-center"
+                class="bg-white rounded-3xl border border-gray-100 shadow-2xl p-6 relative overflow-hidden max-w-sm w-full flex flex-col items-center justify-center"
                 x-transition:enter="transition ease-out duration-300 transform"
                 x-transition:enter-start="opacity-0 scale-95 translate-y-4"
                 x-transition:enter-end="opacity-100 scale-100 translate-y-0"
@@ -520,16 +673,225 @@
                 </button>
 
                 <!-- Modal Content -->
-                <div class="text-[9px] font-bold uppercase tracking-[0.2em] text-[#C0422A] mb-2 mt-2">Scan QR Code</div>
-                <h3 class="font-serif text-base font-bold text-gray-900 leading-tight mb-4" x-text="paymentMethod === 'GCash' ? 'GCash Payment QR' : 'Maya Payment QR'"></h3>
+                <div class="text-[9px] font-bold uppercase tracking-[0.2em] text-[#C0422A] mb-1.5 mt-1">Scan QR Code</div>
+                <h3 class="font-serif text-lg font-bold text-gray-900 leading-tight mb-4" x-text="paymentMethod === 'GCash' ? 'GCash Payment QR' : 'Maya Payment QR'"></h3>
                 
-                <div class="w-64 h-64 bg-gray-50 rounded-2xl overflow-hidden border border-gray-100 shadow-sm flex items-center justify-center p-4">
-                    <img :src="zoomImage" class="max-w-full max-h-full object-contain" alt="QR Code">
+                <div class="w-64 h-64 bg-gray-50 rounded-2xl overflow-hidden border border-gray-100 shadow-xs flex items-center justify-center p-4">
+                    <img :src="zoomImage" class="max-w-full max-h-full object-contain rounded-lg" alt="QR Code">
                 </div>
 
-                <p class="text-[10px] text-gray-400 font-medium text-center mt-4">Click anywhere outside or close to return.</p>
+                <p class="text-[10px] text-gray-400 font-medium text-center mt-4">Tap outside or press close to return.</p>
             </div>
         </div>
     </template>
 </div>
+
+<script>
+function checkoutApp(initialAddress, initialAddresses, defaultPaymentMethod) {
+    return {
+        step: 1,
+        paymentMethod: defaultPaymentMethod || 'GCash',
+        address: initialAddress || {},
+        addresses: initialAddresses || [],
+        showAddressModal: false,
+        showConfirmModal: false,
+        showEditAddressModal: false,
+        savingAddress: false,
+        addressError: '',
+        editForm: {
+            id: null,
+            recipientName: '',
+            phone: '',
+            houseNo: '',
+            street: '',
+            barangay: '',
+            city: '',
+            province: '',
+            postalCode: ''
+        },
+        fileName: '',
+        filePreview: '',
+        screenshotError: '',
+        zoomImage: '',
+        showZoomModal: false,
+        paymentRef: '',
+        refError: '',
+
+        handleFileChange(e) {
+            const file = e.target.files && e.target.files[0];
+            if (file) {
+                if (file.size > 10 * 1024 * 1024) {
+                    this.screenshotError = 'File size exceeds 10MB limit.';
+                    e.target.value = '';
+                    this.fileName = '';
+                    this.filePreview = '';
+                    return;
+                }
+                this.screenshotError = '';
+                this.fileName = file.name;
+                if (file.type.startsWith('image/')) {
+                    this.filePreview = URL.createObjectURL(file);
+                } else {
+                    this.filePreview = '';
+                }
+            }
+        },
+        removeFile() {
+            const input = document.getElementById('paymentScreenshotInput');
+            if (input) input.value = '';
+            this.fileName = '';
+            this.filePreview = '';
+            this.screenshotError = '';
+        },
+
+        selectAddress(addr) {
+            this.address = addr;
+            this.showAddressModal = false;
+        },
+        openEditAddress(addr) {
+            const target = addr || this.address || {};
+            this.editForm = {
+                id: target.id || null,
+                recipientName: target.recipientName || '',
+                phone: target.phone || '',
+                houseNo: target.houseNo || '',
+                street: target.street || '',
+                barangay: target.barangay || '',
+                city: target.city || '',
+                province: target.province || '',
+                postalCode: target.postalCode || ''
+            };
+            this.addressError = '';
+            this.showEditAddressModal = true;
+        },
+        async saveEditAddress() {
+            this.addressError = '';
+
+            const name = (this.editForm.recipientName || '').trim();
+            const phone = (this.editForm.phone || '').trim();
+            const houseNo = (this.editForm.houseNo || '').trim();
+            const city = (this.editForm.city || '').trim();
+            const province = (this.editForm.province || '').trim();
+            const postalCode = (this.editForm.postalCode || '').trim();
+
+            if (!name || !phone || !houseNo || !city || !province) {
+                this.addressError = 'Please fill in all required fields (*).';
+                return;
+            }
+
+            if (/[0-9]/.test(name)) {
+                this.addressError = 'Recipient full name cannot contain numbers.';
+                return;
+            }
+
+            if (!/^[a-zA-Z\s\.\,\'\-]+$/.test(name)) {
+                this.addressError = 'Recipient full name can only contain letters, spaces, hyphens, and periods.';
+                return;
+            }
+
+            if (!/^(09|\+639)\d{9}$/.test(phone)) {
+                this.addressError = 'Phone number must be a valid 11-digit mobile number starting with 09 (e.g. 09123456789).';
+                return;
+            }
+
+            if (postalCode && !/^\d{4}$/.test(postalCode)) {
+                this.addressError = 'Postal code must contain exactly 4 numeric digits (e.g. 4103).';
+                return;
+            }
+
+            this.savingAddress = true;
+            try {
+                const isUpdate = !!this.editForm.id;
+                const url = isUpdate ? `/api/addresses/${this.editForm.id}` : '/api/addresses';
+                const method = isUpdate ? 'PUT' : 'POST';
+                
+                const res = await fetch(url, {
+                    method: method,
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content || ''
+                    },
+                    body: JSON.stringify({
+                        ...this.editForm,
+                        recipientName: name,
+                        phone: phone,
+                        houseNo: houseNo,
+                        city: city,
+                        province: province,
+                        postalCode: postalCode
+                    })
+                });
+
+                if (!res.ok) {
+                    const errData = await res.json().catch(() => ({}));
+                    let msg = errData.message || 'Failed to save address.';
+                    if (errData.errors) {
+                        msg = Object.values(errData.errors).flat().join(' ');
+                    }
+                    throw new Error(msg);
+                }
+
+                const saved = await res.json();
+                this.address = saved;
+                if (isUpdate) {
+                    const idx = this.addresses.findIndex(a => a.id === saved.id);
+                    if (idx !== -1) {
+                        this.addresses[idx] = saved;
+                    } else {
+                        this.addresses.unshift(saved);
+                    }
+                } else {
+                    this.addresses.unshift(saved);
+                }
+                this.showEditAddressModal = false;
+            } catch (e) {
+                this.addressError = e.message || 'An error occurred while saving address.';
+            } finally {
+                this.savingAddress = false;
+            }
+        },
+        validateRef() {
+            if (this.step < 2) return true;
+            const val = (this.paymentRef || '').trim();
+            const digits = val.replace(/\D/g, '');
+            if (!val) {
+                this.refError = 'Payment reference number is required.';
+                return false;
+            }
+            if (/[a-zA-Z]/.test(val)) {
+                this.refError = 'Reference number must contain numbers only (no letters allowed).';
+                return false;
+            }
+            if (digits.length < 10 || digits.length > 16) {
+                this.refError = 'Invalid length. Reference number must be 10 to 16 digits (e.g. 13-digit GCash or 12-digit Maya ref #).';
+                return false;
+            }
+            this.refError = '';
+            return true;
+        },
+        requestPlaceOrder() {
+            if (!this.validateRef()) {
+                document.getElementById('paymentReferenceInput')?.focus();
+                return;
+            }
+            const screenshotInput = document.getElementById('paymentScreenshotInput');
+            if (!screenshotInput || !screenshotInput.files || screenshotInput.files.length === 0) {
+                this.screenshotError = 'Payment receipt screenshot is required.';
+                document.getElementById('paymentScreenshotInput')?.focus();
+                return;
+            }
+            this.screenshotError = '';
+            const form = document.getElementById('checkout-form');
+            if (!form || !form.reportValidity()) return;
+            this.showConfirmModal = true;
+        },
+        confirmPlaceOrder() {
+            this.showConfirmModal = false;
+            document.getElementById('checkout-form')?.submit();
+        }
+    };
+}
+</script>
 @endsection
+

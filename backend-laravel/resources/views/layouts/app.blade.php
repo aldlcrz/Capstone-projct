@@ -13,23 +13,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 
     <!-- Styles / Scripts -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    aspectRatio: {
-                        '4/5': '4 / 5',
-                        '3/4': '3 / 4',
-                        '2/1': '2 / 1',
-                    },
-                    zIndex: {
-                        '9999': '9999',
-                    }
-                }
-            }
-        }
-    </script>
+    @vite(['resources/css/app.css', 'resources/js/app.js'])
     <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
 
     <style>
@@ -43,49 +27,61 @@
 <body class="antialiased text-gray-900">
     <div class="min-h-screen flex flex-col">
         <!-- Navigation Header -->
-        <header class="sticky top-0 z-40 bg-white border-b border-gray-100 w-full shadow-sm">
-            <div class="flex items-center justify-between px-4 lg:px-12 py-4 w-full max-w-360 mx-auto">
-                <!-- Left: Info -->
-                <div class="hidden md:flex items-center gap-4 flex-1 md:flex-none">
-                    @guest
-                        <a href="{{ route('seller.register') }}" class="text-[10px] font-bold uppercase tracking-[0.2em] text-gray-500 hover:text-black transition-all">START YOUR SHOP NOW</a>
-                    @else
+        <header class="sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-gray-100 w-full shadow-xs">
+            <div class="flex items-center justify-between px-4 lg:px-12 py-3.5 w-full max-w-7xl mx-auto gap-4">
+                <!-- Left: Logo & Seller Hub -->
+                <div class="flex items-center gap-6 shrink-0">
+                    <a href="/" class="flex items-center gap-2.5">
+                        <div class="w-9 h-9 bg-black rounded-full text-white flex items-center justify-center font-extrabold text-lg shadow-sm">L</div>
+                        <span class="text-xl font-extrabold tracking-tight text-gray-900 hidden sm:inline-block">LumBarong</span>
+                    </a>
+
+                    @auth
                         @if(Auth::user()->role === 'superadmin')
-                            <a href="/superadmin/dashboard" class="text-[10px] font-bold uppercase tracking-[0.2em] text-amber-600 hover:text-amber-800 transition-all flex items-center gap-2">
-                                👑 SUPER ADMIN GOVERNANCE
-                            </a>
+                            <a href="/superadmin/dashboard" class="hidden md:flex text-[10px] font-extrabold uppercase tracking-widest text-amber-600 hover:text-amber-800 transition-colors">👑 Governance</a>
                         @elseif(Auth::user()->role === 'admin')
-                            <a href="/admin/dashboard" class="text-[10px] font-bold uppercase tracking-[0.2em] text-black hover:text-gray-600 transition-all flex items-center gap-2">
-                                ADMIN PANEL
-                            </a>
+                            <a href="/admin/dashboard" class="hidden md:flex text-[10px] font-extrabold uppercase tracking-widest text-gray-700 hover:text-black transition-colors">Admin Panel</a>
                         @elseif(Auth::user()->role === 'seller')
-                            <a href="/seller/dashboard" class="text-[10px] font-bold uppercase tracking-[0.2em] text-black hover:text-gray-600 transition-all flex items-center gap-2">
+                            <a href="/seller/dashboard" class="hidden md:flex items-center gap-1.5 text-[10px] font-extrabold uppercase tracking-widest text-[#C0422A] hover:underline">
                                 <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"></path></svg>
-                                SELLER HUB
+                                Seller Hub
                             </a>
                         @endif
-                    @endguest
+                    @else
+                        <a href="{{ route('seller.register') }}" class="hidden md:flex text-[10px] font-extrabold uppercase tracking-widest text-gray-400 hover:text-black transition-colors">Sell on LumBarong</a>
+                    @endauth
                 </div>
                 
-                <!-- Center: Logo -->
-                <div class="flex items-center md:absolute md:left-1/2 md:-translate-x-1/2">
-                    <a href="/" class="flex items-center gap-2">
-                        <div class="w-8 h-8 bg-black rounded-full text-white flex items-center justify-center font-bold text-lg shadow-md">L</div>
-                        <span class="text-xl font-bold tracking-tight text-black">LumBarong</span>
-                    </a>
+                <!-- Center: Pill Search Bar (Matching UI design) -->
+                <div class="flex-1 max-w-lg mx-auto">
+                    <form action="/" method="GET" class="relative">
+                        <input type="text" name="search" value="{{ request('search') }}"
+                               placeholder="Search for barongs, fabric, color, or seller..."
+                               class="w-full bg-gray-50/80 border border-gray-200/80 hover:border-gray-300 focus:bg-white rounded-full py-2.5 pl-5 pr-11 text-xs sm:text-sm text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-black/5 transition-all shadow-xs">
+                        <button type="submit" class="absolute right-3.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-black transition-colors">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+                        </button>
+                    </form>
                 </div>
 
-                <!-- Right: Actions -->
-                <div class="flex items-center gap-3 md:gap-5 flex-1 md:flex-none justify-end">
+                <!-- Right: Quick Action Icons (Bookmark, Bell, Cart, Avatar) -->
+                <div class="flex items-center gap-2.5 sm:gap-3.5 shrink-0">
+
+                    <!-- Wishlist / Saved Items -->
+                    <a href="/cart" class="w-10 h-10 flex items-center justify-center rounded-full text-gray-600 hover:bg-gray-100 hover:text-black transition-all" title="Saved & Cart">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z"/>
+                        </svg>
+                    </a>
 
                     <!-- Notifications -->
                     <div x-data="{ open: false }" class="relative" @mouseenter="open = true" @mouseleave="open = false">
-                        <a href="/notifications" class="relative w-11 h-11 flex items-center justify-center rounded-full border border-gray-100 text-gray-800 hover:border-gray-400 bg-white transition-all shadow-sm">
-                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"></path></svg>
+                        <a href="/notifications" class="relative w-10 h-10 flex items-center justify-center rounded-full text-gray-600 hover:bg-gray-100 hover:text-black transition-all">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"></path></svg>
                             @auth
                                 @php $unreadNotifications = \App\Models\Notification::where('userId', Auth::id())->where('targetRole', 'customer')->where('isRead', false)->count(); @endphp
                                 @if($unreadNotifications > 0)
-                                    <span class="absolute -top-1 -right-1 min-w-4.5 h-4.5 px-1 bg-red-500 text-white text-[9px] font-bold rounded-full flex items-center justify-center border-2 border-white">{{ $unreadNotifications }}</span>
+                                    <span class="absolute top-1.5 right-1.5 w-2.5 h-2.5 bg-amber-500 rounded-full border-2 border-white"></span>
                                 @endif
                             @endauth
                         </a>
@@ -411,7 +407,7 @@
     <x-chat-widget />
     <x-report-modal />
 
-    <div x-data="{}" class="fixed bottom-20 lg:bottom-6 right-4 lg:right-6 z-50">
+    <div x-data="{}" class="fixed bottom-19 lg:bottom-6 right-3 lg:right-6 z-60">
         <button 
             @click="window.dispatchEvent(new CustomEvent({{ auth()->check() ? "'toggle-chat'" : "'open-auth-gate'" }}, {{ auth()->check() ? '{}' : "{ detail: { message: 'Please log in to chat with artisans.' } }" }}))"
             class="w-12 h-12 bg-black text-white rounded-full flex items-center justify-center shadow-lg hover:bg-gray-800 transition-all"

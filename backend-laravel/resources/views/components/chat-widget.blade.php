@@ -146,7 +146,7 @@ document.addEventListener('alpine:init', () => {
     x-transition:leave="transition ease-in duration-200 transform"
     x-transition:leave-start="opacity-100 translate-y-0 scale-100"
     x-transition:leave-end="opacity-0 translate-y-12 scale-95"
-    class="fixed bottom-24 right-6 w-96 h-[520px] bg-white rounded-3xl shadow-2xl border border-gray-100 flex flex-col z-999 overflow-hidden"
+    class="fixed bottom-19 sm:bottom-24 right-3 sm:right-6 w-[calc(100vw-1.5rem)] sm:w-96 h-130 max-h-[75vh] bg-white rounded-3xl shadow-2xl border border-gray-100 flex flex-col z-999 overflow-hidden"
     style="display: none;"
 >
     <!-- Header -->
@@ -197,7 +197,7 @@ document.addEventListener('alpine:init', () => {
                     <div class="text-right shrink-0 ml-2">
                         <div class="text-[8px] font-bold text-gray-400" x-text="formatTime(conv.timestamp)"></div>
                         <template x-if="conv.unreadCount > 0">
-                            <span class="inline-block min-w-[16px] h-4 px-1 bg-red-500 text-white text-[8px] font-bold rounded-full text-center mt-1"
+                            <span class="inline-block min-w-4 h-4 px-1 bg-red-500 text-white text-[8px] font-bold rounded-full text-center mt-1"
                                   x-text="conv.unreadCount"></span>
                         </template>
                     </div>

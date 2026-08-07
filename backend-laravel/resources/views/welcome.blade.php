@@ -20,204 +20,310 @@
         window.dispatchEvent(new CustomEvent('open-quick-add', { detail: detail }));
     };
 </script>
-<div class="space-y-10">
+<div class="space-y-8" x-data="{ categoriesModalOpen: false, topShopsModalOpen: false }">
 
-    {{-- ====== Hero Banner ====== --}}
-    @if(!request('search') && !request('category'))
-        @if(isset($banners) && $banners->isNotEmpty())
-            <!-- Dynamic Hero Banner Slider -->
-            <div 
-                x-data="{
-                    activeSlide: 0,
-                    slidesCount: {{ $banners->count() }},
-                    autoplayInterval: null,
-                    initAutoplay() {
-                        this.autoplayInterval = setInterval(() => {
-                            this.activeSlide = (this.activeSlide + 1) % this.slidesCount;
-                        }, 6000);
-                    },
-                    stopAutoplay() {
-                        if (this.autoplayInterval) {
-                            clearInterval(this.autoplayInterval);
+        {{-- ====== Shop by Category ====== --}}
+        <div>
+            <div class="flex items-center justify-between mb-4">
+                <h3 class="text-base sm:text-lg font-extrabold text-gray-900">Shop by Category</h3>
+                <button type="button" @click="categoriesModalOpen = true" class="text-xs font-semibold text-amber-700 hover:text-amber-900 hover:underline cursor-pointer">
+                    View all
+                </button>
+            </div>
+
+            @php
+                $catItems = [
+                    ['name' => 'Wedding Barong', 'cat' => 'Wedding Barong', 'img' => '/uploads/categories/wedding_groom.png'],
+                    ['name' => 'Piña Formal Barong', 'cat' => 'Piña Formal Barong', 'img' => '/uploads/categories/pina_formal.png'],
+                    ['name' => 'Jusi Classic Barong', 'cat' => 'Jusi Classic Barong', 'img' => '/uploads/categories/jusi_classic.png'],
+                    ['name' => 'Polo Barong', 'cat' => 'Polo Barong', 'img' => '/uploads/categories/polo_casual.png'],
+                    ['name' => 'Filipiniana Gown', 'cat' => 'Filipiniana Gown', 'img' => '/uploads/categories/women_filipiniana.png'],
+                    ['name' => 'Modern Terno Top', 'cat' => 'Modern Terno Top', 'img' => '/uploads/categories/women_terno.png'],
+                    ['name' => 'Boys\' Barong', 'cat' => 'Boys\' Barong', 'img' => '/uploads/categories/kids_boys.png'],
+                    ['name' => 'Accessories', 'cat' => 'Accessories', 'img' => '/uploads/categories/accessories.png'],
+                ];
+
+                $allCatItems = [
+                    ['name' => 'Wedding Barong', 'cat' => 'Wedding Barong', 'group' => 'Men', 'img' => '/uploads/categories/wedding_groom.png'],
+                    ['name' => 'Piña Formal Barong', 'cat' => 'Piña Formal Barong', 'group' => 'Men', 'img' => '/uploads/categories/pina_formal.png'],
+                    ['name' => 'Jusi Classic Barong', 'cat' => 'Jusi Classic Barong', 'group' => 'Men', 'img' => '/uploads/categories/jusi_classic.png'],
+                    ['name' => 'Polo Barong', 'cat' => 'Polo Barong', 'group' => 'Men', 'img' => '/uploads/categories/polo_casual.png'],
+                    ['name' => 'Camisa de Chino Undershirt', 'cat' => 'Camisa de Chino', 'group' => 'Men', 'img' => '/uploads/categories/camisa_undershirt.png'],
+                    ['name' => 'Filipiniana Gown', 'cat' => 'Filipiniana Gown', 'group' => 'Women', 'img' => '/uploads/categories/women_filipiniana.png'],
+                    ['name' => 'Modern Terno Top', 'cat' => 'Modern Terno Top', 'group' => 'Women', 'img' => '/uploads/categories/women_terno.png'],
+                    ['name' => 'Lady Barong Blouse', 'cat' => 'Lady Barong', 'group' => 'Women', 'img' => '/uploads/categories/women_lady_barong.png'],
+                    ['name' => 'Boys\' Barong Tagalog', 'cat' => 'Boys\' Barong', 'group' => 'Kids', 'img' => '/uploads/categories/kids_boys.png'],
+                    ['name' => 'Girls\' Filipiniana Dress', 'cat' => 'Girls\' Filipiniana', 'group' => 'Kids', 'img' => '/uploads/categories/kids_girls.png'],
+                    ['name' => 'Cufflinks & Heritage Accessories', 'cat' => 'Accessories', 'group' => 'Accessories', 'img' => '/uploads/categories/accessories.png'],
+                ];
+
+                if (isset($categories) && $categories->isNotEmpty()) {
+                    foreach ($categories as $dbCat) {
+                        $exists = false;
+                        foreach ($allCatItems as $item) {
+                            if (strtolower($item['name']) == strtolower($dbCat->name)) {
+                                $exists = true;
+                                break;
+                            }
+                        }
+                        if (!$exists) {
+                            $allCatItems[] = [
+                                'name' => $dbCat->name,
+                                'cat' => $dbCat->name,
+                                'group' => 'Other',
+                                'img' => '/uploads/categories/pina_formal.png'
+                            ];
                         }
                     }
-                }"
-                x-init="initAutoplay()"
-                @mouseenter="stopAutoplay()"
-                @mouseleave="initAutoplay()"
-                class="relative rounded-3xl overflow-hidden min-h-65 lg:min-h-85 flex items-center bg-gray-950 shadow-md group"
-            >
-                <!-- Slides container -->
-                <div class="relative w-full h-full min-h-65 lg:min-h-85">
-                    @foreach($banners as $index => $banner)
-                        <div 
-                            x-show="activeSlide === {{ $index }}"
-                            x-transition:enter="transition ease-out duration-1000 transform"
-                            x-transition:enter-start="opacity-0 translate-x-4"
-                            x-transition:enter-end="opacity-100 translate-x-0"
-                            x-transition:leave="transition ease-in duration-1000 transform absolute inset-0"
-                            x-transition:leave-start="opacity-100 translate-x-0"
-                            x-transition:leave-end="opacity-0 -translate-x-4"
-                            class="w-full h-full min-h-65 lg:min-h-85 flex items-center"
-                            :class="{ 'hidden': activeSlide !== {{ $index }} }"
-                        >
-                            <!-- Slide Background Image with dark overlay -->
-                            <div class="absolute inset-0">
-                                <img src="{{ $banner->getImageUrl() }}" class="w-full h-full object-cover" alt="{{ $banner->title }}">
-                                <div class="absolute inset-0" style="background: linear-gradient(to right, rgba(0, 0, 0, 0.85) 0%, rgba(0, 0, 0, 0.4) 50%, transparent 100%);"></div>
-                            </div>
+                }
 
-                            <!-- Slide Content -->
-                            <div class="relative px-8 lg:px-16 py-12 flex flex-col lg:flex-row items-center gap-8 w-full z-10">
-                                <div class="grow">
-                                    @if($banner->title)
-                                        <h2 class="font-serif text-3xl lg:text-5xl font-bold text-white leading-tight mb-4">
-                                            {!! nl2br(e($banner->title)) !!}
-                                        </h2>
-                                    @endif
-                                    @if($banner->subtitle)
-                                        <p class="text-[#E3D9C9] text-sm leading-relaxed max-w-lg mb-8">
-                                            {{ $banner->subtitle }}
-                                        </p>
-                                    @endif
-                                    <div class="flex flex-wrap gap-3">
-                                        @if($banner->button_text_1 && $banner->button_url_1)
-                                            <a href="{{ $banner->button_url_1 }}" class="px-6 py-3 bg-[#C0422A] text-[#ffffff] text-xs font-black uppercase tracking-widest rounded-full hover:bg-white hover:text-black transition-all">
-                                                {{ $banner->button_text_1 }}
-                                            </a>
-                                        @endif
-                                        @if($banner->button_text_2 && $banner->button_url_2)
-                                            <a href="{{ $banner->button_url_2 }}" class="px-6 py-3 border border-white/30 text-white text-xs font-black uppercase tracking-widest rounded-full hover:bg-white/10 transition-all">
-                                                {{ $banner->button_text_2 }}
-                                            </a>
-                                        @endif
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    @endforeach
-                </div>
+                // Put chosen category in FRONT if selected
+                $selectedCatParam = request('category');
+                if ($selectedCatParam) {
+                    $foundItem = null;
+                    $foundIndex = -1;
 
-                <!-- Slide Indicators / Pagination Dots -->
-                @if($banners->count() > 1)
-                    <div class="absolute bottom-4 left-1/2 transform -translate-x-1/2 z-20 flex gap-2">
-                        <template x-for="i in slidesCount" :key="i">
-                            <button 
-                                @click="activeSlide = i - 1"
-                                class="w-2 h-2 rounded-full transition-all duration-300"
-                                :class="activeSlide === (i - 1) ? 'bg-white w-6' : 'bg-white/40 hover:bg-white/60'"
-                            ></button>
-                        </template>
-                    </div>
+                    foreach ($catItems as $idx => $ci) {
+                        if (strtolower($ci['cat']) === strtolower($selectedCatParam) || strtolower($ci['name']) === strtolower($selectedCatParam)) {
+                            $foundIndex = $idx;
+                            $foundItem = $ci;
+                            break;
+                        }
+                    }
 
-                    <!-- Navigation Arrows (Hidden on mobile, hover visible on desktop) -->
-                    <button 
-                        @click="activeSlide = (activeSlide - 1 + slidesCount) % slidesCount"
-                        class="absolute left-4 w-10 h-10 rounded-full bg-black/20 hover:bg-black/60 text-white items-center justify-center transition-all z-20 focus:outline-none backdrop-blur-sm opacity-0 group-hover:opacity-100 hidden md:flex"
-                    >
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
-                    </button>
-                    <button 
-                        @click="activeSlide = (activeSlide + 1) % slidesCount"
-                        class="absolute right-4 w-10 h-10 rounded-full bg-black/20 hover:bg-black/60 text-white items-center justify-center transition-all z-20 focus:outline-none backdrop-blur-sm opacity-0 group-hover:opacity-100 hidden md:flex"
-                    >
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
-                    </button>
-                @endif
-            </div>
-        @else
-            <!-- Default Static Hero Banner Fallback -->
-            <div class="relative bg-[#2A2A28] rounded-3xl overflow-hidden min-h-65 lg:min-h-80 flex items-center">
-                {{-- Decorative pattern --}}
-                <div class="absolute inset-0 opacity-[0.04]" style="background-image: url('data:image/svg+xml,%3Csvg width=\'60\' height=\'60\' viewBox=\'0 0 60 60\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cg fill=\'none\' fill-rule=\'evenodd\'%3E%3Cg fill=\'%23ffffff\' fill-opacity=\'1\'%3E%3Cpath d=\'M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z\'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E');"></div>
+                    if ($foundItem) {
+                        array_splice($catItems, $foundIndex, 1);
+                        array_unshift($catItems, $foundItem);
+                    } else {
+                        foreach ($allCatItems as $aci) {
+                            if (strtolower($aci['cat']) === strtolower($selectedCatParam) || strtolower($aci['name']) === strtolower($selectedCatParam)) {
+                                array_pop($catItems);
+                                array_unshift($catItems, $aci);
+                                break;
+                            }
+                        }
+                    }
+                }
+            @endphp
 
-                {{-- Accent gradient --}}
-                <div class="absolute right-0 top-0 w-1/2 h-full pointer-events-none" style="background: linear-gradient(to left, rgba(192, 66, 42, 0.2), transparent);"></div>
-
-                <div class="relative px-8 lg:px-16 py-12 flex flex-col lg:flex-row items-center gap-8 w-full">
-                    <div class="flex-1">
-                        <div class="flex items-center gap-2 mb-4">
-                            <div class="w-8 h-[1.5px] bg-[#C0422A]"></div>
-                            <span class="text-[10px] font-black uppercase tracking-[0.3em] text-[#C0422A]">Lumban, Laguna · Est. Heritage</span>
-                        </div>
-                        <h1 class="font-serif text-3xl lg:text-5xl font-bold text-white leading-tight mb-4">
-                            Handcrafted <em class="text-[#E3D9C9] not-italic">Barong</em><br>
-                            <span class="text-white">Tagalog Artistry</span>
-                        </h1>
-                        <p class="text-[#A89880] text-sm leading-relaxed max-w-sm mb-8">
-                            Discover premium hand-embroidered pieces crafted by master artisans from the weaving capital of the Philippines.
-                        </p>
-                        <div class="flex flex-wrap gap-3">
-                            <a href="/?category=Men" class="px-6 py-3 bg-white text-black text-xs font-black uppercase tracking-widest rounded-full hover:bg-[#C0422A] hover:text-white transition-all">Shop Men</a>
-                            <a href="/?category=Women" class="px-6 py-3 border border-white/30 text-white text-xs font-black uppercase tracking-widest rounded-full hover:bg-white/10 transition-all">Shop Women</a>
-                        </div>
-                    </div>
-                    <div class="shrink-0 hidden lg:flex items-center justify-end gap-3">
-                        <div class="text-right">
-                            <div class="text-[#A89880] text-[10px] uppercase tracking-widest font-bold mb-1">Trusted By</div>
-                            <div class="text-white text-3xl font-black">500+</div>
-                            <div class="text-[#A89880] text-xs">Happy Customers</div>
-                        </div>
-                        <div class="w-px h-12 bg-white/10"></div>
-                        <div class="text-right">
-                            <div class="text-[#A89880] text-[10px] uppercase tracking-widest font-bold mb-1">Artisans</div>
-                            <div class="text-white text-3xl font-black">50+</div>
-                            <div class="text-[#A89880] text-xs">Master Weavers</div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        @endif
-    @endif
-
-    {{-- ====== Filters & Search ====== --}}
-    <div id="catalogue-section" class="space-y-12 transition-opacity duration-300">
-    <div class="space-y-3">
-        <!-- Demographics & Search Bar -->
-        <div class="flex flex-wrap items-center gap-3">
-            <div class="flex items-center gap-2 overflow-x-auto no-scrollbar py-1">
-                <a href="/" class="ajax-filter-link px-5 py-2.5 rounded-full border text-sm font-bold transition-all {{ !request('category') ? 'bg-black text-white border-black' : 'bg-white text-gray-600 border-gray-200 hover:border-black hover:text-black' }}">All</a>
-                <a href="/?category=Men" class="ajax-filter-link px-5 py-2.5 rounded-full border text-sm font-bold transition-all {{ in_array(request('category'), ['Male', 'Men']) ? 'bg-black text-white border-black' : 'bg-white text-gray-600 border-gray-200 hover:border-black hover:text-black' }}">Men</a>
-                <a href="/?category=Women" class="ajax-filter-link px-5 py-2.5 rounded-full border text-sm font-bold transition-all {{ in_array(request('category'), ['Female', 'Women']) ? 'bg-black text-white border-black' : 'bg-white text-gray-600 border-gray-200 hover:border-black hover:text-black' }}">Women</a>
-                <a href="/?category=Kids" class="ajax-filter-link px-5 py-2.5 rounded-full border text-sm font-bold transition-all {{ request('category') == 'Kids' ? 'bg-black text-white border-black' : 'bg-white text-gray-600 border-gray-200 hover:border-black hover:text-black' }}">Kids</a>
-            </div>
-
-            <div class="h-8 w-px bg-gray-200 mx-1 hidden md:block"></div>
-
-            <form action="/" method="GET" class="ajax-search-form flex-1 min-w-60 relative">
-                @if(request('category'))
-                    <input type="hidden" name="category" value="{{ request('category') }}">
-                @endif
-                <input type="text" name="search" value="{{ request('search') }}"
-                       placeholder="Search artisan pieces..."
-                       class="w-full bg-white border border-gray-200 rounded-full py-2.5 pl-10 pr-5 text-sm focus:outline-none focus:border-black transition-all shadow-sm">
-                <svg class="w-4 h-4 absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
-            </form>
-
-            @if(request('search'))
-                <div class="text-xs text-gray-400 font-medium">
-                    Results for <span class="font-bold text-black">"{{ request('search') }}"</span>
-                    <a href="{{ request('category') ? '/?category='.request('category') : '/' }}" class="ajax-filter-link ml-2 text-[#C0422A] hover:underline">Clear</a>
-                </div>
-            @endif
-        </div>
-
-        <!-- Product Categories Row -->
-        @if(isset($categories) && $categories->isNotEmpty())
-            <div class="flex items-center gap-2 overflow-x-auto no-scrollbar pb-2 pt-1 border-t border-gray-100">
-                <span class="text-[10px] font-black uppercase tracking-widest text-gray-400 shrink-0 mr-1 hidden sm:inline-block">Categories:</span>
-                @foreach($categories as $cat)
+            <div class="grid grid-cols-4 sm:grid-cols-8 gap-3 sm:gap-4 text-center">
+                @foreach($catItems as $index => $item)
                     @php
-                        $isActiveCategory = request('category') == $cat->id || strtolower(request('category')) == strtolower($cat->name);
+                        $isCurrentSelected = $selectedCatParam && (strtolower($item['cat']) === strtolower($selectedCatParam) || strtolower($item['name']) === strtolower($selectedCatParam));
                     @endphp
-                    <a href="/?category={{ urlencode($cat->id) }}"
-                       class="ajax-filter-link px-4 py-1.5 rounded-full border text-xs font-semibold transition-all shrink-0 {{ $isActiveCategory ? 'bg-[#C0422A] text-white border-[#C0422A] shadow-sm font-bold' : 'bg-white text-gray-700 border-gray-200 hover:border-[#C0422A] hover:text-[#C0422A]' }}">
-                        {{ $cat->name }}
+                    <a href="/?category={{ urlencode($item['cat']) }}" class="group flex flex-col items-center gap-2">
+                        <div class="w-16 h-16 sm:w-20 sm:h-20 rounded-full overflow-hidden bg-gray-100 border-2 {{ $isCurrentSelected ? 'border-amber-600 ring-4 ring-amber-500/25 scale-105 shadow-md' : 'border-transparent group-hover:border-amber-600 shadow-xs group-hover:scale-105' }} transition-all">
+                            <img src="{{ $item['img'] }}" class="w-full h-full object-cover" alt="{{ $item['name'] }}">
+                        </div>
+                        <span class="text-[11px] {{ $isCurrentSelected ? 'font-black text-amber-700' : 'font-medium text-gray-700 group-hover:text-black' }} leading-tight line-clamp-2">{{ $item['name'] }}</span>
                     </a>
                 @endforeach
             </div>
+
+            {{-- All Categories Modal --}}
+            <template x-if="categoriesModalOpen">
+                <div 
+                    class="fixed inset-0 z-9999 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm"
+                    @click="categoriesModalOpen = false"
+                    @keydown.escape.window="categoriesModalOpen = false"
+                    x-transition:enter="transition ease-out duration-200"
+                    x-transition:enter-start="opacity-0"
+                    x-transition:enter-end="opacity-100"
+                    x-transition:leave="transition ease-in duration-150"
+                    x-transition:leave-start="opacity-100"
+                    x-transition:leave-end="opacity-0"
+                >
+                    <div 
+                        @click.stop
+                        class="bg-white w-full max-w-4xl rounded-3xl border border-gray-100 shadow-2xl p-6 sm:p-8 relative max-h-[85vh] flex flex-col overflow-hidden"
+                        x-transition:enter="transition ease-out duration-300 transform"
+                        x-transition:enter-start="opacity-0 scale-95 translate-y-4"
+                        x-transition:enter-end="opacity-100 scale-100 translate-y-0"
+                    >
+                        <!-- Modal Header -->
+                        <div class="flex items-center justify-between pb-4 border-b border-gray-100 mb-6 shrink-0">
+                            <div>
+                                <h3 class="text-lg sm:text-xl font-extrabold text-gray-900">All Categories</h3>
+                                <p class="text-xs text-gray-500 mt-0.5">Explore our complete collection by category</p>
+                            </div>
+                            <button 
+                                type="button"
+                                @click="categoriesModalOpen = false"
+                                class="w-9 h-9 flex items-center justify-center rounded-full text-gray-400 hover:text-black hover:bg-gray-100 transition-colors"
+                            >
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                                </svg>
+                            </button>
+                        </div>
+
+                        <!-- Modal Body (Scrollable Grid of Circular Mini Pictures + Labels) -->
+                        <div class="overflow-y-auto no-scrollbar pr-1 grow">
+                            <div class="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-6 sm:gap-8 text-center py-2">
+                                @foreach($allCatItems as $item)
+                                    <a href="/?category={{ urlencode($item['cat']) }}" 
+                                       @click="categoriesModalOpen = false"
+                                       class="group flex flex-col items-center gap-2.5 hover:scale-105 transition-transform duration-200">
+                                        <div class="w-18 h-18 sm:w-20 sm:h-20 rounded-full overflow-hidden bg-gray-100 border-2 border-gray-200 group-hover:border-amber-600 shadow-sm transition-all shrink-0">
+                                            <img src="{{ $item['img'] }}" class="w-full h-full object-cover" alt="{{ $item['name'] }}">
+                                        </div>
+                                        <span class="text-xs font-semibold text-gray-800 group-hover:text-amber-700 leading-tight line-clamp-2">{{ $item['name'] }}</span>
+                                    </a>
+                                @endforeach
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </template>
+        </div>
+
+        {{-- ====== Featured Sections ====== --}}
+        <div>
+            <div class="mb-4">
+                <h3 class="text-base sm:text-lg font-extrabold text-gray-900">Featured Sections</h3>
+            </div>
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-5">
+                <!-- Best Sellers -->
+                <a href="/?sort=best_sellers#catalogue-section" class="group relative rounded-2xl overflow-hidden bg-gray-900 aspect-4/5 shadow-sm flex flex-col justify-end p-4">
+                    <img src="/uploads/categories/featured_best_sellers.png" class="absolute inset-0 w-full h-full object-cover opacity-85 group-hover:scale-105 transition-transform duration-500" alt="Best Sellers">
+                    <div class="absolute inset-0 bg-linear-to-t from-black/85 via-black/20 to-transparent"></div>
+                    <div class="relative z-10 text-white">
+                        <h4 class="font-bold text-xs sm:text-sm">Best Sellers</h4>
+                        <p class="text-[10px] text-gray-300">Highest selling barongs</p>
+                    </div>
+                </a>
+
+                <!-- Top Rated Shops -->
+                <button type="button" @click="topShopsModalOpen = true" class="group relative rounded-2xl overflow-hidden bg-gray-900 aspect-4/5 shadow-sm flex flex-col justify-end p-4 text-left cursor-pointer">
+                    <img src="/uploads/categories/wedding_groom.png" class="absolute inset-0 w-full h-full object-cover opacity-85 group-hover:scale-105 transition-transform duration-500" alt="Top Rated Shops">
+                    <div class="absolute inset-0 bg-linear-to-t from-black/85 via-black/20 to-transparent"></div>
+                    <div class="relative z-10 text-white">
+                        <h4 class="font-bold text-xs sm:text-sm">Top Rated Shops</h4>
+                        <p class="text-[10px] text-gray-300">Ratings, sales & products</p>
+                    </div>
+                </button>
+
+                <!-- New Arrivals -->
+                <a href="/?sort=newest#catalogue-section" class="group relative rounded-2xl overflow-hidden bg-gray-900 aspect-4/5 shadow-sm flex flex-col justify-end p-4">
+                    <img src="/uploads/categories/jusi_classic.png" class="absolute inset-0 w-full h-full object-cover opacity-85 group-hover:scale-105 transition-transform duration-500" alt="New Arrivals">
+                    <div class="absolute inset-0 bg-linear-to-t from-black/85 via-black/20 to-transparent"></div>
+                    <div class="relative z-10 text-white">
+                        <h4 class="font-bold text-xs sm:text-sm">New Arrivals</h4>
+                        <p class="text-[10px] text-gray-300">Fresh hand-embroidered designs</p>
+                    </div>
+                </a>
+            </div>
+
+            {{-- Top Rated Shops Modal --}}
+            <template x-if="topShopsModalOpen">
+                <div 
+                    class="fixed inset-0 z-9999 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm"
+                    @click="topShopsModalOpen = false"
+                    @keydown.escape.window="topShopsModalOpen = false"
+                    x-transition:enter="transition ease-out duration-200"
+                    x-transition:enter-start="opacity-0"
+                    x-transition:enter-end="opacity-100"
+                    x-transition:leave="transition ease-in duration-150"
+                    x-transition:leave-start="opacity-100"
+                    x-transition:leave-end="opacity-0"
+                >
+                    <div 
+                        @click.stop
+                        class="bg-white w-full max-w-4xl rounded-3xl border border-gray-100 shadow-2xl p-6 sm:p-8 relative max-h-[85vh] flex flex-col overflow-hidden"
+                        x-transition:enter="transition ease-out duration-300 transform"
+                        x-transition:enter-start="opacity-0 scale-95 translate-y-4"
+                        x-transition:enter-end="opacity-100 scale-100 translate-y-0"
+                    >
+                        <!-- Modal Header -->
+                        <div class="flex items-center justify-between pb-4 border-b border-gray-100 mb-6 shrink-0">
+                            <div>
+                                <h3 class="text-lg sm:text-xl font-extrabold text-gray-900 flex items-center gap-2">
+                                    ⭐ Top Rated Shops & Artisans
+                                </h3>
+                                <p class="text-xs text-gray-500 mt-0.5">Verified master embroiderers & top-performing Lumban ateliers</p>
+                            </div>
+                            <button 
+                                type="button"
+                                @click="topShopsModalOpen = false"
+                                class="w-9 h-9 flex items-center justify-center rounded-full text-gray-400 hover:text-black hover:bg-gray-100 transition-colors"
+                            >
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                                </svg>
+                            </button>
+                        </div>
+
+                        <!-- Modal Body (Grid of Top Rated Shops) -->
+                        <div class="overflow-y-auto no-scrollbar pr-1 grow">
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 py-2">
+                                @foreach($topShops as $shop)
+                                    <div class="bg-gray-50/80 hover:bg-amber-50/40 rounded-2xl p-4 border border-gray-100 hover:border-amber-200 transition-all flex flex-col justify-between group">
+                                        <div class="flex items-start gap-3.5">
+                                            <div class="w-14 h-14 rounded-2xl overflow-hidden bg-white border border-gray-200 shrink-0 shadow-xs">
+                                                <img src="{{ $shop->avatar }}" class="w-full h-full object-cover" alt="{{ $shop->name }}">
+                                            </div>
+                                            <div class="grow min-w-0">
+                                                <div class="flex items-center justify-between gap-2">
+                                                    <h4 class="font-extrabold text-sm text-gray-900 truncate group-hover:text-amber-900 transition-colors">{{ $shop->name }}</h4>
+                                                    <div class="flex items-center gap-1 bg-amber-100 text-amber-800 text-[11px] font-black px-2 py-0.5 rounded-full shrink-0">
+                                                        <svg class="w-3 h-3 fill-amber-500 text-amber-500" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg>
+                                                        <span>{{ $shop->rating }}</span>
+                                                    </div>
+                                                </div>
+                                                <p class="text-[11px] text-gray-500 line-clamp-2 mt-1 leading-snug">{{ $shop->description }}</p>
+                                                <span class="text-[10px] text-gray-400 font-medium block mt-1">📍 {{ $shop->location }}</span>
+                                            </div>
+                                        </div>
+
+                                        <div class="mt-4 pt-3 border-t border-gray-200/60 flex items-center justify-between">
+                                            <div class="flex items-center gap-4 text-xs">
+                                                <div>
+                                                    <span class="text-[10px] text-gray-400 block uppercase font-bold tracking-wider">Total Sold</span>
+                                                    <strong class="text-gray-900 font-extrabold text-xs">{{ $shop->total_sold }} barongs</strong>
+                                                </div>
+                                                <div class="w-px h-6 bg-gray-200"></div>
+                                                <div>
+                                                    <span class="text-[10px] text-gray-400 block uppercase font-bold tracking-wider">Products</span>
+                                                    <strong class="text-gray-900 font-extrabold text-xs">{{ $shop->products_count }} items</strong>
+                                                </div>
+                                            </div>
+
+                                            <a href="/?search={{ urlencode($shop->name) }}" 
+                                               @click="topShopsModalOpen = false"
+                                               class="px-3.5 py-1.5 bg-black text-white text-[11px] font-bold rounded-xl hover:bg-amber-700 transition-colors shadow-xs">
+                                                Browse Shop →
+                                            </a>
+                                        </div>
+                                    </div>
+                                @endforeach
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </template>
+        </div>
+
+    {{-- ====== Product Catalogue Section ====== --}}
+    <div id="catalogue-section" class="space-y-8 transition-opacity duration-300">
+        @if(request('sort') === 'best_sellers' || request('sort') === 'trending')
+            <div class="text-xs text-amber-950 font-medium flex items-center justify-between bg-amber-50/90 p-3.5 sm:p-4 rounded-2xl border border-amber-200 shadow-xs">
+                <div class="flex items-center gap-3">
+                    <div class="w-8 h-8 rounded-xl bg-amber-100 text-amber-700 flex items-center justify-center font-bold text-base shrink-0">🔥</div>
+                    <div>
+                        <strong class="text-sm font-extrabold text-amber-950 block leading-tight">Best Sellers Collection</strong>
+                        <span class="text-xs text-amber-800/90">Displaying highest selling authentic Barong Tagalog & Filipiniana pieces</span>
+                    </div>
+                </div>
+                <a href="/" class="text-xs font-bold text-amber-900 hover:underline shrink-0">Show All</a>
+            </div>
         @endif
-    </div>
+
+        @if(request('search'))
+            <div class="text-xs text-gray-500 font-medium flex items-center gap-2 bg-gray-50 p-3 rounded-xl border border-gray-100">
+                <span>Results for <strong class="text-black">"{{ request('search') }}"</strong></span>
+                <a href="{{ request('category') ? '/?category='.request('category') : '/' }}" class="text-[#C0422A] font-bold hover:underline ml-auto">Clear Search</a>
+            </div>
+        @endif
 
     @php
         $discounted = $products->filter(fn($p) => $p->is_on_sale && $p->discount_percentage > 0);

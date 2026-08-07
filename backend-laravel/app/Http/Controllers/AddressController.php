@@ -27,13 +27,17 @@ class AddressController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'recipientName' => 'required|string|max:255',
-            'phone' => 'required|string|max:20',
+            'recipientName' => ['required', 'string', 'max:255', 'regex:/^[a-zA-Z\s\.\,\'\-]+$/'],
+            'phone' => ['required', 'string', 'regex:/^(09|\+639)\d{9}$/'],
             'houseNo' => 'required|string|max:255',
             'city' => 'required|string|max:255',
             'province' => 'required|string|max:255',
             'region' => 'nullable|string|max:255',
-            'postalCode' => 'nullable|string|max:20',
+            'postalCode' => ['nullable', 'string', 'regex:/^\d{4}$/'],
+        ], [
+            'recipientName.regex' => 'Recipient name can only contain letters, spaces, hyphens, and periods (no numbers allowed).',
+            'phone.regex' => 'Phone number must be a valid 11-digit mobile number starting with 09 (e.g., 09123456789).',
+            'postalCode.regex' => 'Postal code must contain exactly 4 numeric digits (e.g., 4103).',
         ]);
 
         if ($request->isDefault) {
@@ -42,15 +46,15 @@ class AddressController extends Controller
 
         $address = Address::create([
             'userId' => Auth::id(),
-            'recipientName' => $request->recipientName,
-            'phone' => $request->phone,
-            'houseNo' => $request->houseNo,
-            'street' => $request->street,
-            'barangay' => $request->barangay,
-            'city' => $request->city,
-            'province' => $request->province,
-            'region' => $request->region,
-            'postalCode' => $request->postalCode,
+            'recipientName' => trim($request->recipientName),
+            'phone' => trim($request->phone),
+            'houseNo' => trim($request->houseNo),
+            'street' => trim($request->street ?? ''),
+            'barangay' => trim($request->barangay ?? ''),
+            'city' => trim($request->city),
+            'province' => trim($request->province),
+            'region' => trim($request->region ?? ''),
+            'postalCode' => trim($request->postalCode ?? ''),
             'latitude' => $request->latitude,
             'longitude' => $request->longitude,
             'isDefault' => $request->isDefault ?? false,
@@ -62,15 +66,29 @@ class AddressController extends Controller
     /**
      * Update an existing address.
      */
-    public function update(Request $request, $id)
+    public function update(Request $request, string $id)
     {
         $address = Address::where('id', $id)->where('userId', Auth::id())->firstOrFail();
+
+        $validated = $request->validate([
+            'recipientName' => ['required', 'string', 'max:255', 'regex:/^[a-zA-Z\s\.\,\'\-]+$/'],
+            'phone' => ['required', 'string', 'regex:/^(09|\+639)\d{9}$/'],
+            'houseNo' => 'required|string|max:255',
+            'city' => 'required|string|max:255',
+            'province' => 'required|string|max:255',
+            'region' => 'nullable|string|max:255',
+            'postalCode' => ['nullable', 'string', 'regex:/^\d{4}$/'],
+        ], [
+            'recipientName.regex' => 'Recipient name can only contain letters, spaces, hyphens, and periods (no numbers allowed).',
+            'phone.regex' => 'Phone number must be a valid 11-digit mobile number starting with 09 (e.g., 09123456789).',
+            'postalCode.regex' => 'Postal code must contain exactly 4 numeric digits (e.g., 4103).',
+        ]);
 
         if ($request->isDefault && !$address->isDefault) {
             Address::where('userId', Auth::id())->update(['isDefault' => false]);
         }
 
-        $address->update($request->all());
+        $address->update($validated);
 
         return response()->json($address);
     }
@@ -78,7 +96,7 @@ class AddressController extends Controller
     /**
      * Delete an address.
      */
-    public function destroy($id)
+    public function destroy(string $id)
     {
         $address = Address::where('id', $id)->where('userId', Auth::id())->firstOrFail();
         $address->delete();
@@ -89,7 +107,7 @@ class AddressController extends Controller
     /**
      * Set an address as default.
      */
-    public function setDefault($id)
+    public function setDefault(string $id)
     {
         Address::where('userId', Auth::id())->update(['isDefault' => false]);
         Address::where('id', $id)->where('userId', Auth::id())->update(['isDefault' => true]);

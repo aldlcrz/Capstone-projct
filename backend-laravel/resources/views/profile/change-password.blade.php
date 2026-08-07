@@ -1,7 +1,7 @@
 @extends('layouts.app')
 
 @section('content')
-<div class="max-w-[1100px] mx-auto py-8">
+<div class="max-w-275 mx-auto py-8">
     <div class="flex flex-col md:flex-row gap-6">
 
         @include('profile._sidebar', ['user' => $user])

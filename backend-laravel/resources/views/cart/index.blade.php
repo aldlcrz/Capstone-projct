@@ -91,9 +91,20 @@
             <div class="space-y-4 max-h-[calc(100vh-200px)] lg:max-h-[calc(100vh-220px)] overflow-y-auto pr-1 sm:pr-2 custom-scrollbar">
                 @forelse($cart as $key => $item)
                     @php
-                        $img    = $item['image'] ?? '';
-                        $imgSrc = (str_starts_with($img, 'http') || str_starts_with($img, '/')) ? $img
-                                : (str_starts_with($img, 'products/') ? asset('storage/'.$img) : asset('uploads/products/'.$img));
+                        $img = $item['image'] ?? '';
+                        $imgSrc = asset('uploads/products/default.jpg');
+                        if ($img) {
+                            $cleanImg = ltrim($img, '/');
+                            if (str_starts_with($img, 'http') || str_starts_with($img, '/')) {
+                                $imgSrc = $img;
+                            } elseif (file_exists(storage_path('app/public/' . $cleanImg))) {
+                                $imgSrc = asset('storage/' . $cleanImg);
+                            } elseif (file_exists(public_path('uploads/' . $cleanImg))) {
+                                $imgSrc = asset('uploads/' . $cleanImg);
+                            } elseif (file_exists(public_path('uploads/products/' . $cleanImg))) {
+                                $imgSrc = asset('uploads/products/' . $cleanImg);
+                            }
+                        }
                     @endphp
                     <div class="bg-white p-4 sm:p-5 rounded-2xl shadow-sm border transition-all duration-200"
                          x-show="items.some(i => i.key === '{{ $key }}')"
