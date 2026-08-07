@@ -34,8 +34,8 @@
             }
         }"
         x-init="autoSlide()"
-        class="relative rounded-2xl overflow-hidden shadow-sm"
-        style="min-height: 220px;"
+        class="relative rounded-2xl overflow-hidden shadow-sm bg-gray-900"
+        style="aspect-ratio: 21/7; min-height: 160px;"
     >
         @foreach($banners as $i => $banner)
         <div
@@ -47,10 +47,9 @@
             x-transition:leave-start="opacity-100"
             x-transition:leave-end="opacity-0"
             class="absolute inset-0 w-full h-full"
-            style="min-height: 220px;"
         >
-            {{-- Background image --}}
-            <img src="{{ $banner->getImageUrl() }}" alt="{{ $banner->title }}" class="absolute inset-0 w-full h-full object-cover object-center">
+            {{-- Background image (object-contain so full image is visible) --}}
+            <img src="{{ $banner->getImageUrl() }}" alt="{{ $banner->title }}" class="absolute inset-0 w-full h-full object-contain">
             {{-- Dark gradient overlay on left --}}
             <div class="absolute inset-0 bg-gradient-to-r from-black/75 via-black/40 to-transparent"></div>
             {{-- Content --}}
