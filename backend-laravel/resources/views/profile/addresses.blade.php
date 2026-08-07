@@ -90,10 +90,11 @@
                  x-transition:leave="transition ease-in duration-150"
                  x-transition:leave-start="opacity-100 scale-100"
                  x-transition:leave-end="opacity-0 scale-95"
-                 @keydown.escape.window="showDeleteModal = false">
+                 @click.stop
+                 @keydown.escape.window.stop="showDeleteModal = false">
                 
                 <div class="relative w-full max-w-xs bg-white rounded-3xl p-6 shadow-2xl border border-gray-100 text-center space-y-4"
-                     @click.away="showDeleteModal = false">
+                     @click.away.stop="showDeleteModal = false">
                     
                     <div class="w-12 h-12 rounded-full bg-red-50 text-red-500 border border-red-100 flex items-center justify-center mx-auto shadow-xs">
                         <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -108,12 +109,12 @@
 
                     <div class="flex items-center gap-3 pt-2">
                         <button type="button"
-                                @click="showDeleteModal = false"
+                                @click.stop="showDeleteModal = false"
                                 class="flex-1 py-2.5 px-4 rounded-xl border border-gray-200 text-gray-700 text-xs font-bold uppercase tracking-wider hover:bg-gray-50 transition-all cursor-pointer">
                             Cancel
                         </button>
                         <button type="button"
-                                @click="confirmDelete()"
+                                @click.stop="confirmDelete()"
                                 class="flex-1 py-2.5 px-4 rounded-xl bg-red-600 hover:bg-red-700 text-white text-xs font-bold uppercase tracking-wider shadow-lg shadow-red-600/20 active:scale-95 transition-all cursor-pointer">
                             OK
                         </button>
