@@ -102,47 +102,43 @@
                         $firstItem = reset($shopItems);
                         $sellerId = $firstItem['sellerId'] ?? null;
                     @endphp
-                    <div class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden mb-4 transition-all"
+                    <div class="bg-white rounded-2xl border border-gray-100 shadow-xs overflow-hidden mb-3 transition-all"
                          x-show="items.some(i => (i.shop_name || 'Lumban Heritage Shop') === '{{ addslashes($shopName) }}')">
 
-                        {{-- Shop Header Bar --}}
-                        <div class="bg-gray-50/80 px-3 sm:px-4 py-2.5 border-b border-gray-100 flex items-center justify-between gap-3">
-                            <div class="flex items-center gap-2 sm:gap-2.5 min-w-0">
-                                <label class="relative w-4.5 h-4.5 sm:w-5 sm:h-5 block cursor-pointer shrink-0">
+                        {{-- Lazada Style Shop Header Bar --}}
+                        <div class="bg-white px-3 sm:px-4 py-2.5 border-b border-gray-100 flex items-center justify-between gap-3">
+                            <div class="flex items-center gap-2 min-w-0">
+                                <label class="relative w-4.5 h-4.5 block cursor-pointer shrink-0">
                                     <input type="checkbox"
                                            @change="toggleShop('{{ addslashes($shopName) }}', $event.target.checked)"
                                            :checked="isShopSelected('{{ addslashes($shopName) }}')"
                                            class="sr-only peer">
-                                    <div class="w-4.5 h-4.5 sm:w-5 sm:h-5 rounded-md border-2 border-gray-300 peer-checked:bg-[#C0422A] peer-checked:border-[#C0422A] transition-all flex items-center justify-center">
+                                    <div class="w-4.5 h-4.5 rounded border-2 border-gray-300 peer-checked:bg-[#C0422A] peer-checked:border-[#C0422A] transition-all flex items-center justify-center">
                                         <svg class="w-3 h-3 text-white fill-current hidden peer-checked:block" viewBox="0 0 20 20">
                                             <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
                                         </svg>
                                     </div>
                                 </label>
 
-                                <div class="flex items-center gap-1.5 min-w-0">
-                                    <svg class="w-4 h-4 text-[#C0422A] shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5m0 0h5m-5 0v-4m0 4h5m-5 0v-4m5 4v-4m-5-4h5"/>
+                                <a href="{{ $sellerId ? '/shops/' . $sellerId : '#' }}" class="flex items-center gap-1.5 font-bold text-xs sm:text-sm text-gray-900 hover:text-[#C0422A] transition-colors truncate">
+                                    <span class="inline-block px-1.5 py-0.5 bg-[#C0422A] text-white text-[8px] font-black rounded uppercase">Artisan</span>
+                                    <span class="truncate">{{ $shopName }}</span>
+                                    <svg class="w-3.5 h-3.5 text-gray-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
                                     </svg>
-                                    @if($sellerId)
-                                        <a href="/shops/{{ $sellerId }}" class="font-extrabold text-xs sm:text-sm text-gray-900 hover:text-[#C0422A] transition-colors truncate">
-                                            {{ $shopName }}
-                                        </a>
-                                    @else
-                                        <span class="font-extrabold text-xs sm:text-sm text-gray-900 truncate">{{ $shopName }}</span>
-                                    @endif
-                                </div>
+                                </a>
                             </div>
 
-                            @if($sellerId)
-                            <a href="/shops/{{ $sellerId }}" class="text-[9px] sm:text-[10px] font-bold text-gray-400 hover:text-black uppercase tracking-wider shrink-0 transition-colors">
-                                Visit Shop &rarr;
-                            </a>
-                            @endif
+                            <span class="inline-flex items-center gap-1 text-[9px] font-bold text-[#C0422A] shrink-0">
+                                <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fill-rule="evenodd" d="M6.267 3.455a3.066 3.066 0 001.745-.723 3.066 3.066 0 013.976 0 3.066 3.066 0 001.745.723 3.066 3.066 0 012.812 2.812c.051.643.304 1.254.723 1.745a3.066 3.066 0 010 3.976 3.066 3.066 0 00-.723 1.745 3.066 3.066 0 01-2.812 2.812 3.066 3.066 0 00-1.745.723 3.066 3.066 0 01-3.976 0 3.066 3.066 0 00-1.745-.723 3.066 3.066 0 01-2.812-2.812 3.066 3.066 0 00-.723-1.745 3.066 3.066 0 010-3.976 3.066 3.066 0 00.723-1.745 3.066 3.066 0 012.812-2.812zm7.44 5.252a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                                </svg>
+                                100% Authentic
+                            </span>
                         </div>
 
-                        {{-- Shop Product Items --}}
-                        <div class="divide-y divide-gray-100 p-2 sm:p-4 space-y-2">
+                        {{-- Lazada Style Product Items --}}
+                        <div class="divide-y divide-gray-100 p-2 sm:p-3 space-y-2">
                             @foreach($shopItems as $cartKey => $item)
                                 @php
                                     $itemKey = (string) $cartKey;
@@ -161,127 +157,102 @@
                                         }
                                     }
                                 @endphp
-                                <div class="p-2 sm:p-4 rounded-xl border transition-all duration-200"
+                                <div class="p-2.5 sm:p-3 rounded-xl border transition-all duration-200"
                                      x-show="items.some(i => String(i.key) === '{{ addslashes($itemKey) }}')"
                                      x-transition
                                      :class="isSelected('{{ addslashes($itemKey) }}')
-                                         ? 'border-[#C0422A]/40 shadow-[#C0422A]/5 shadow-sm bg-[#FDF9F4]'
-                                         : 'border-gray-100'">
+                                         ? 'border-[#C0422A]/40 shadow-[#C0422A]/5 shadow-2xs bg-[#FDF9F4]'
+                                         : 'border-gray-100 bg-white'">
 
-                                    {{-- Main Info Row: Checkbox + Image + Details --}}
-                                    <div class="flex gap-2.5 sm:gap-4 items-start">
+                                    {{-- Main Row: Checkbox + Image + Details --}}
+                                    <div class="flex gap-3 items-start">
                                         {{-- Checkbox --}}
-                                        <div class="pt-1 shrink-0">
-                                            <label class="relative w-4.5 h-4.5 sm:w-5 sm:h-5 block cursor-pointer">
+                                        <div class="pt-1.5 shrink-0">
+                                            <label class="relative w-4.5 h-4.5 block cursor-pointer">
                                                 <input type="checkbox"
                                                        value="{{ $itemKey }}"
                                                        x-model="selected"
                                                        @change="syncSelectAll()"
                                                        class="sr-only peer">
-                                                <div class="w-4.5 h-4.5 sm:w-5 sm:h-5 rounded-md border-2 border-gray-300 peer-checked:bg-[#C0422A] peer-checked:border-[#C0422A] transition-all flex items-center justify-center">
-                                                    <svg class="w-2.5 h-2.5 sm:w-3 sm:h-3 text-white fill-current hidden peer-checked:block" viewBox="0 0 20 20">
+                                                <div class="w-4.5 h-4.5 rounded border-2 border-gray-300 peer-checked:bg-[#C0422A] peer-checked:border-[#C0422A] transition-all flex items-center justify-center">
+                                                    <svg class="w-3 h-3 text-white fill-current hidden peer-checked:block" viewBox="0 0 20 20">
                                                         <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
                                                     </svg>
                                                 </div>
                                             </label>
                                         </div>
 
-                                        {{-- Product Image (Compact on Mobile: w-16 h-18) --}}
+                                        {{-- Product Image (Square 80px) --}}
                                         <a href="/products/{{ $item['id'] ?? '#' }}" class="shrink-0">
-                                            <img src="{{ $imgSrc }}" class="w-16 h-18 sm:w-24 sm:h-28 object-cover rounded-lg sm:rounded-xl bg-gray-50 border border-gray-100">
+                                            <img src="{{ $imgSrc }}" class="w-20 h-20 sm:w-24 sm:h-24 object-cover rounded-lg bg-gray-50 border border-gray-100">
                                         </a>
 
-                                        {{-- Product Info --}}
-                                        <div class="flex-1 min-w-0">
-                                            <div class="flex flex-wrap items-center gap-1 mb-0.5 sm:mb-1">
-                                                @if(!empty($item['category_name']))
-                                                    <span class="inline-block text-[8px] sm:text-[9px] font-black text-[#C0422A] uppercase tracking-wider bg-[#C0422A]/5 px-1.5 py-0.5 rounded">{{ $item['category_name'] }}</span>
-                                                @endif
-                                                @if(!empty($item['is_on_sale']))
-                                                    <span class="inline-flex items-center gap-0.5 text-[8px] sm:text-[9px] font-black text-white bg-[#C0422A] uppercase tracking-wider px-1.5 py-0.5 rounded shadow-xs">
-                                                        <svg class="w-2 h-2 sm:w-2.5 sm:h-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-5 5a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 10V5a2 2 0 012-2z"/>
+                                        {{-- Product Info Container --}}
+                                        <div class="flex-1 min-w-0 flex flex-col justify-between self-stretch">
+                                            <div>
+                                                {{-- Title with Category Tag --}}
+                                                <div class="flex items-start gap-1">
+                                                    @if(!empty($item['category_name']))
+                                                        <span class="inline-block text-[8px] sm:text-[9px] font-black text-white bg-[#C0422A] uppercase tracking-wider px-1.5 py-0.5 rounded shrink-0 mt-0.5">{{ $item['category_name'] }}</span>
+                                                    @endif
+                                                    <a href="/products/{{ $item['id'] ?? '#' }}"
+                                                       class="font-bold text-gray-900 hover:text-[#C0422A] transition-colors block text-xs sm:text-sm leading-snug line-clamp-2">
+                                                        {{ $item['name'] }}
+                                                    </a>
+                                                </div>
+
+                                                {{-- Variant / Size Badge --}}
+                                                <div class="mt-1">
+                                                    <span class="inline-flex items-center gap-1 text-[10px] font-semibold text-gray-500 bg-gray-100 px-1.5 py-0.5 rounded border border-gray-200/60">
+                                                        @if(!empty($item['size']))
+                                                            <span>Size: <strong class="text-gray-900">{{ $item['size'] }}</strong></span>
+                                                        @else
+                                                            <span>Standard</span>
+                                                        @endif
+                                                        @if(!empty($item['variation']))
+                                                            @php
+                                                                $variationLabel = \App\Support\VariationFormatter::label(
+                                                                    $item['variation'],
+                                                                    \App\Models\Product::find($item['id'] ?? null)?->image
+                                                                ) ?? $item['variation'];
+                                                            @endphp
+                                                            <span>• Var: <strong class="text-gray-900">{{ $variationLabel }}</strong></span>
+                                                        @endif
+                                                        <svg class="w-3 h-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
                                                         </svg>
-                                                        Lumban Special
                                                     </span>
-                                                @endif
+                                                </div>
                                             </div>
 
-                                            <a href="/products/{{ $item['id'] ?? '#' }}"
-                                               class="font-bold text-gray-900 hover:text-[#C0422A] transition-colors block text-xs sm:text-base leading-snug line-clamp-2">
-                                                {{ $item['name'] }}
-                                            </a>
+                                            {{-- Bottom Price & Stepper Row (Lazada Style Inline) --}}
+                                            <div class="flex items-end justify-between gap-2 mt-2 pt-1">
+                                                {{-- Price Column --}}
+                                                <div class="flex items-baseline gap-1.5 flex-wrap">
+                                                    @if(!empty($item['is_on_sale']) && ($item['discount_percentage'] ?? 0) > 0)
+                                                        <span class="text-[#C0422A] font-black text-sm sm:text-base">₱{{ number_format($item['price']) }}</span>
+                                                        <span class="text-[10px] text-gray-400 line-through">₱{{ number_format($item['original_price'] ?? $item['price']) }}</span>
+                                                    @else
+                                                        <span class="text-[#C0422A] font-black text-sm sm:text-base">₱{{ number_format($item['price']) }}</span>
+                                                    @endif
+                                                </div>
 
-                                            <div class="flex flex-wrap items-center gap-1.5 mt-1 text-[9px] sm:text-[10px] font-bold text-gray-400 uppercase tracking-widest">
-                                                @if(!empty($item['size']))
-                                                    <span class="bg-gray-100 text-gray-700 px-1.5 py-0.5 rounded">Size: <span class="text-black font-black">{{ $item['size'] }}</span></span>
-                                                @else
-                                                    <span class="bg-gray-50 text-gray-400 px-1.5 py-0.5 rounded">Size: Standard</span>
-                                                @endif
-                                                @if(!empty($item['variation']))
-                                                    @php
-                                                        $variationLabel = \App\Support\VariationFormatter::label(
-                                                            $item['variation'],
-                                                            \App\Models\Product::find($item['id'] ?? null)?->image
-                                                        ) ?? $item['variation'];
-                                                    @endphp
-                                                    <span class="bg-gray-100 text-gray-700 px-1.5 py-0.5 rounded">Var: <span class="text-black font-black">{{ $variationLabel }}</span></span>
-                                                @endif
-                                            </div>
+                                                {{-- Stepper & Delete Action --}}
+                                                <div class="flex items-center gap-2 shrink-0">
+                                                    {{-- Quantity Stepper --}}
+                                                    <div class="flex items-center border border-gray-200 rounded-md overflow-hidden h-7 bg-white shadow-2xs">
+                                                        <button type="button" @click="updateQty('{{ addslashes($itemKey) }}', (items.find(i => String(i.key) === '{{ addslashes($itemKey) }}')?.quantity || {{ $item['quantity'] }}) - 1)" class="w-6 h-7 flex items-center justify-center text-gray-400 hover:text-black hover:bg-gray-100 font-bold text-xs transition-colors">−</button>
+                                                        <span class="w-6 text-center text-xs font-bold text-gray-900 border-x border-gray-200" x-text="items.find(i => String(i.key) === '{{ addslashes($itemKey) }}')?.quantity || {{ $item['quantity'] }}"></span>
+                                                        <button type="button" @click="updateQty('{{ addslashes($itemKey) }}', (items.find(i => String(i.key) === '{{ addslashes($itemKey) }}')?.quantity || {{ $item['quantity'] }}) + 1)" class="w-6 h-7 flex items-center justify-center text-gray-400 hover:text-black hover:bg-gray-100 font-bold text-xs transition-colors">+</button>
+                                                    </div>
 
-                                            {{-- Price --}}
-                                            <div class="flex items-center gap-1.5 mt-1.5">
-                                                @if(!empty($item['is_on_sale']) && ($item['discount_percentage'] ?? 0) > 0)
-                                                    <span class="text-[#C0422A] font-black text-xs sm:text-base">₱{{ number_format($item['price']) }}</span>
-                                                    <span class="text-[10px] sm:text-xs text-gray-400 line-through">₱{{ number_format($item['original_price'] ?? $item['price']) }}</span>
-                                                    <span class="text-[8px] font-black bg-[#C0422A] text-white px-1 py-0.5 rounded-md uppercase tracking-wider">-{{ number_format($item['discount_percentage'], 0) }}%</span>
-                                                @else
-                                                    <span class="text-gray-900 font-black text-xs sm:text-base">₱{{ number_format($item['price']) }}</span>
-                                                @endif
+                                                    {{-- Trash Icon Button --}}
+                                                    <button type="button" @click="promptRemoveItem('{{ addslashes($itemKey) }}')" class="text-gray-300 hover:text-red-500 transition-colors p-1 cursor-pointer">
+                                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+                                                    </button>
+                                                </div>
                                             </div>
                                         </div>
-
-                                        {{-- Desktop Right side (qty + subtotal + remove) --}}
-                                        <div class="hidden sm:flex flex-col items-end gap-3 shrink-0 ml-2">
-                                            {{-- Quantity Stepper --}}
-                                            <div class="flex items-center border border-gray-200 rounded-xl overflow-hidden h-10 bg-white">
-                                                <button type="button" @click="updateQty('{{ addslashes($itemKey) }}', (items.find(i => String(i.key) === '{{ addslashes($itemKey) }}')?.quantity || {{ $item['quantity'] }}) - 1)" class="w-10 h-10 flex items-center justify-center text-gray-400 hover:text-black hover:bg-gray-50 font-bold text-lg transition-colors">−</button>
-                                                <span class="w-10 text-center text-sm font-bold text-gray-900 border-x border-gray-200" x-text="items.find(i => String(i.key) === '{{ addslashes($itemKey) }}')?.quantity || {{ $item['quantity'] }}"></span>
-                                                <button type="button" @click="updateQty('{{ addslashes($itemKey) }}', (items.find(i => String(i.key) === '{{ addslashes($itemKey) }}')?.quantity || {{ $item['quantity'] }}) + 1)" class="w-10 h-10 flex items-center justify-center text-gray-400 hover:text-black hover:bg-gray-50 font-bold text-lg transition-colors">+</button>
-                                            </div>
-
-                                            {{-- Subtotal --}}
-                                            <div class="text-right">
-                                                <div class="text-sm font-black text-black" x-text="'₱' + Number((items.find(i => String(i.key) === '{{ addslashes($itemKey) }}')?.price || 0) * (items.find(i => String(i.key) === '{{ addslashes($itemKey) }}')?.quantity || 0)).toLocaleString()"></div>
-                                                <div class="text-[9px] text-gray-400 uppercase tracking-widest">subtotal</div>
-                                            </div>
-
-                                            {{-- Remove --}}
-                                            <button type="button" @click="removeItem('{{ addslashes($itemKey) }}')" class="w-9 h-9 rounded-full border border-gray-100 flex items-center justify-center text-gray-300 hover:text-red-500 hover:border-red-200 transition-all cursor-pointer">
-                                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
-                                            </button>
-                                        </div>
-                                    </div>
-
-                                    {{-- Mobile Controls Bar (compact design for mobile screen) --}}
-                                    <div class="mt-2 pt-2 border-t border-gray-100 flex items-center justify-between gap-2 sm:hidden">
-                                        {{-- Quantity Stepper --}}
-                                        <div class="flex items-center border border-gray-200 rounded-lg overflow-hidden h-7.5 bg-white shadow-xs">
-                                            <button type="button" @click="updateQty('{{ addslashes($itemKey) }}', (items.find(i => String(i.key) === '{{ addslashes($itemKey) }}')?.quantity || {{ $item['quantity'] }}) - 1)" class="w-7 h-7.5 flex items-center justify-center text-gray-400 hover:text-black hover:bg-gray-50 font-bold text-sm transition-colors">−</button>
-                                            <span class="w-7 text-center text-xs font-bold text-gray-900 border-x border-gray-200" x-text="items.find(i => String(i.key) === '{{ addslashes($itemKey) }}')?.quantity || {{ $item['quantity'] }}"></span>
-                                            <button type="button" @click="updateQty('{{ addslashes($itemKey) }}', (items.find(i => String(i.key) === '{{ addslashes($itemKey) }}')?.quantity || {{ $item['quantity'] }}) + 1)" class="w-7 h-7.5 flex items-center justify-center text-gray-400 hover:text-black hover:bg-gray-50 font-bold text-sm transition-colors">+</button>
-                                        </div>
-
-                                        {{-- Subtotal --}}
-                                        <div class="text-right flex-1">
-                                            <div class="text-[8px] text-gray-400 uppercase tracking-widest font-bold">Subtotal</div>
-                                            <div class="text-xs font-black text-black" x-text="'₱' + Number((items.find(i => String(i.key) === '{{ addslashes($itemKey) }}')?.price || 0) * (items.find(i => String(i.key) === '{{ addslashes($itemKey) }}')?.quantity || 0)).toLocaleString()"></div>
-                                        </div>
-
-                                        {{-- Remove Button --}}
-                                        <button type="button" @click="removeItem('{{ addslashes($itemKey) }}')" class="w-7 h-7 rounded-full border border-red-100 bg-red-50 text-red-500 flex items-center justify-center transition-all cursor-pointer shrink-0">
-                                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
-                                        </button>
                                     </div>
                                 </div>
                             @endforeach
@@ -360,59 +331,71 @@
             </div>
         </div>
 
-        {{-- ===== Mobile Sticky Pricing & Checkout Bar ===== --}}
+        {{-- ===== Lazada Style Mobile Sticky Checkout Bar ===== --}}
         <div x-show="items.length > 0"
              x-cloak
-             class="lg:hidden fixed bottom-16 left-0 right-0 z-40 bg-white/95 backdrop-blur-md border-t border-gray-200 shadow-[0_-6px_24px_rgba(0,0,0,0.12)] px-4 py-3"
+             class="lg:hidden fixed bottom-16 left-0 right-0 z-40 bg-white border-t border-gray-200 shadow-[0_-4px_16px_rgba(0,0,0,0.08)] px-3 py-2.5"
              x-data="{ showMobileBreakdown: false }">
 
-            {{-- Expandable Price Breakdown on Mobile --}}
+            {{-- Price breakdown popup --}}
             <div x-show="showMobileBreakdown" 
                  x-cloak
-                 x-transition:enter="transition ease-out duration-200"
-                 x-transition:enter-start="opacity-0 translate-y-2 scale-95"
-                 x-transition:enter-end="opacity-100 translate-y-0 scale-100"
-                 x-transition:leave="transition ease-in duration-150"
-                 x-transition:leave-start="opacity-100 translate-y-0 scale-100"
-                 x-transition:leave-end="opacity-0 translate-y-2 scale-95"
-                 class="mb-3 p-4 bg-gray-50 rounded-2xl border border-gray-100 text-xs space-y-2 shadow-inner">
-                <div class="flex justify-between items-center text-gray-500">
-                    <span>Subtotal (<span x-text="selected.length"></span> item<span x-show="selected.length !== 1">s</span>)</span>
-                    <span class="font-bold text-black">₱<span x-text="subtotal.toLocaleString('en-PH', {minimumFractionDigits:0,maximumFractionDigits:0})"></span></span>
+                 x-transition
+                 class="mb-2 p-3 bg-gray-50 rounded-xl border border-gray-200 text-xs space-y-1.5">
+                <div class="flex justify-between text-gray-600">
+                    <span>Subtotal (<span x-text="selected.length"></span> items)</span>
+                    <span class="font-bold text-gray-900">₱<span x-text="subtotal.toLocaleString('en-PH', {minimumFractionDigits:0,maximumFractionDigits:0})"></span></span>
                 </div>
-                <div class="flex justify-between items-center text-gray-500">
-                    <span>Estimated Shipping</span>
-                    <span x-show="shipping > 0" class="text-gray-900 font-bold">₱<span x-text="shipping.toLocaleString('en-PH', {minimumFractionDigits:2,maximumFractionDigits:2})"></span></span>
-                    <span x-show="shipping === 0" class="text-green-600 font-bold">Free</span>
+                <div class="flex justify-between text-gray-600">
+                    <span>Shipping Fee</span>
+                    <span x-show="shipping > 0" class="font-bold text-gray-900">₱<span x-text="shipping.toLocaleString('en-PH', {minimumFractionDigits:2,maximumFractionDigits:2})"></span></span>
+                    <span x-show="shipping === 0" class="font-bold text-green-600">Free</span>
                 </div>
             </div>
 
-            {{-- Main Bottom Action Bar --}}
-            <div class="flex items-center justify-between gap-3">
-                {{-- Price & Breakdown Toggle --}}
-                <div class="flex-1 min-w-0">
-                    <button type="button" @click="showMobileBreakdown = !showMobileBreakdown" class="inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-widest text-gray-400 hover:text-black transition-colors">
-                        <span>Total Amount</span>
-                        <svg class="w-3.5 h-3.5 transition-transform duration-200" :class="showMobileBreakdown ? 'rotate-180 text-black' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div class="flex items-center justify-between gap-2">
+                {{-- Left: Select All Checkbox --}}
+                <label class="flex items-center gap-1.5 cursor-pointer select-none shrink-0">
+                    <div class="relative w-4.5 h-4.5">
+                        <input type="checkbox"
+                               x-model="allSelected"
+                               @change="toggleAll()"
+                               class="sr-only peer">
+                        <div class="w-4.5 h-4.5 rounded border-2 border-gray-300 peer-checked:bg-[#C0422A] peer-checked:border-[#C0422A] transition-all flex items-center justify-center">
+                            <svg x-show="allSelected" class="w-2.5 h-2.5 text-white fill-current" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
+                            </svg>
+                        </div>
+                    </div>
+                    <span class="text-xs font-bold text-gray-700">All</span>
+                </label>
+
+                {{-- Middle: Subtotal & Expand --}}
+                <div class="flex-1 text-right min-w-0 pr-1">
+                    <button type="button" @click="showMobileBreakdown = !showMobileBreakdown" class="inline-flex items-center gap-1 text-[11px] font-bold text-gray-700 hover:text-black">
+                        <span>Subtotal:</span>
+                        <span class="text-sm font-black text-[#C0422A]">₱<span x-text="(subtotal + shipping).toLocaleString('en-PH', {minimumFractionDigits:0,maximumFractionDigits:0})"></span></span>
+                        <svg class="w-3.5 h-3.5 transition-transform" :class="showMobileBreakdown ? 'rotate-180' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7"/>
                         </svg>
                     </button>
-                    <div class="text-xl font-black text-[#C0422A] leading-tight truncate">
-                        ₱<span x-text="(subtotal + shipping).toLocaleString('en-PH', {minimumFractionDigits:0,maximumFractionDigits:0})"></span>
+                    <div class="text-[9px] text-gray-400">
+                        Shipping: <span class="font-semibold text-gray-600" x-text="shipping > 0 ? '₱' + shipping.toFixed(2) : 'Free'"></span>
                     </div>
                 </div>
 
-                {{-- Mobile Checkout Button --}}
+                {{-- Right: Checkout Button --}}
                 <button type="button"
                         @click="$refs.checkoutForm.submit()"
                         :disabled="selected.length === 0"
                         :class="selected.length === 0
                             ? 'opacity-40 cursor-not-allowed bg-gray-400'
-                            : 'bg-[#C0422A] hover:bg-black shadow-lg shadow-[#C0422A]/20 active:scale-95 cursor-pointer'"
-                        class="px-6 py-3.5 text-white text-xs font-bold uppercase tracking-widest rounded-xl transition-all shrink-0">
-                    Checkout Now <span x-show="selected.length > 0" x-text="'(' + selected.length + ')'"></span>
+                            : 'bg-[#C0422A] hover:bg-black active:scale-95 shadow-md cursor-pointer'"
+                        class="px-5 py-2.5 text-white text-xs font-bold rounded-md transition-all shrink-0">
+                    Check Out <span x-show="selected.length > 0" x-text="'(' + selected.length + ')'"></span>
                 </button>
             </div>
+        </div>     </div>
         </div>
         @endif
     </div>
