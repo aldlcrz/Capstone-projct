@@ -60,22 +60,12 @@
 
                 @if(!empty($cart))
                 <div class="flex items-center gap-4 flex-wrap">
-                    <label class="flex items-center gap-2.5 cursor-pointer group select-none">
-                        <div class="relative w-4.5 h-4.5 sm:w-5 sm:h-5">
-                            <input type="checkbox"
-                                   id="select-all"
-                                   x-model="allSelected"
-                                   @change="toggleAll()"
-                                   class="sr-only peer">
-                            <div class="w-4.5 h-4.5 sm:w-5 sm:h-5 rounded-md border-2 border-gray-300 peer-checked:bg-[#C0422A] peer-checked:border-[#C0422A] transition-all flex items-center justify-center">
-                                <svg x-show="allSelected" class="w-3 h-3 text-white fill-current" viewBox="0 0 20 20">
-                                    <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
-                                </svg>
-                                <svg x-show="!allSelected && selected.length > 0" class="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M20 12H4"/>
-                                </svg>
-                            </div>
-                        </div>
+                    <label class="flex items-center gap-2 cursor-pointer group select-none">
+                        <input type="checkbox"
+                               id="select-all"
+                               x-model="allSelected"
+                               @change="toggleAll()"
+                               class="w-5 h-5 rounded border-2 border-gray-300 text-[#C0422A] accent-[#C0422A] cursor-pointer shrink-0">
                         <span class="text-xs font-bold text-gray-600 group-hover:text-black transition-colors uppercase tracking-widest">
                             Select All (<span x-text="selected.length"></span>/<span>{{ count($cart) }}</span>)
                         </span>
@@ -108,20 +98,11 @@
                         {{-- Lazada Style Shop Header Bar --}}
                         <div class="bg-white px-3 sm:px-4 py-2.5 border-b border-gray-100 flex items-center justify-between gap-3">
                             <div class="flex items-center gap-2 min-w-0">
-                                <label class="relative w-4.5 h-4.5 block cursor-pointer shrink-0">
+                                <label class="flex items-center cursor-pointer shrink-0">
                                     <input type="checkbox"
                                            @change="toggleShop('{{ addslashes($shopName) }}', $event.target.checked)"
                                            :checked="isShopSelected('{{ addslashes($shopName) }}')"
-                                           class="sr-only peer">
-                                    <div class="w-4.5 h-4.5 rounded border-2 border-gray-300 transition-all flex items-center justify-center"
-                                         :class="isShopSelected('{{ addslashes($shopName) }}') ? 'bg-[#C0422A] border-[#C0422A]' : (isShopIndeterminate('{{ addslashes($shopName) }}') ? 'bg-[#C0422A] border-[#C0422A]' : '')">
-                                        <svg x-show="isShopSelected('{{ addslashes($shopName) }}')" class="w-3 h-3 text-white fill-current" viewBox="0 0 20 20">
-                                            <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
-                                        </svg>
-                                        <svg x-show="!isShopSelected('{{ addslashes($shopName) }}') && isShopIndeterminate('{{ addslashes($shopName) }}')" class="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M20 12H4"/>
-                                        </svg>
-                                    </div>
+                                           class="w-5 h-5 rounded border-2 border-gray-300 text-[#C0422A] accent-[#C0422A] cursor-pointer shrink-0">
                                 </label>
 
                                 <a href="{{ $sellerId ? '/shops/' . $sellerId : '#' }}" class="flex items-center gap-1.5 font-bold text-xs sm:text-sm text-gray-900 hover:text-[#C0422A] transition-colors truncate">
@@ -174,17 +155,12 @@
                                     <div class="flex gap-3 items-start">
                                         {{-- Checkbox --}}
                                         <div class="pt-1.5 shrink-0">
-                                            <label class="relative w-4.5 h-4.5 block cursor-pointer">
+                                            <label class="block cursor-pointer">
                                                 <input type="checkbox"
                                                        value="{{ $itemKey }}"
                                                        x-model="selected"
                                                        @change="syncSelectAll()"
-                                                       class="sr-only peer">
-                                                <div class="w-4.5 h-4.5 rounded border-2 border-gray-300 peer-checked:bg-[#C0422A] peer-checked:border-[#C0422A] transition-all flex items-center justify-center">
-                                                    <svg class="w-3 h-3 text-white fill-current hidden peer-checked:block" viewBox="0 0 20 20">
-                                                        <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
-                                                    </svg>
-                                                </div>
+                                                       class="w-5 h-5 rounded border-2 border-gray-300 text-[#C0422A] accent-[#C0422A] cursor-pointer shrink-0">
                                             </label>
                                         </div>
 
@@ -362,17 +338,10 @@
             <div class="flex items-center justify-between gap-2">
                 {{-- Left: Select All Checkbox --}}
                 <label class="flex items-center gap-1.5 cursor-pointer select-none shrink-0">
-                    <div class="relative w-4.5 h-4.5">
-                        <input type="checkbox"
-                               x-model="allSelected"
-                               @change="toggleAll()"
-                               class="sr-only peer">
-                        <div class="w-4.5 h-4.5 rounded border-2 border-gray-300 peer-checked:bg-[#C0422A] peer-checked:border-[#C0422A] transition-all flex items-center justify-center">
-                            <svg x-show="allSelected" class="w-2.5 h-2.5 text-white fill-current" viewBox="0 0 20 20">
-                                <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
-                            </svg>
-                        </div>
-                    </div>
+                    <input type="checkbox"
+                           x-model="allSelected"
+                           @change="toggleAll()"
+                           class="w-5 h-5 rounded border-2 border-gray-300 text-[#C0422A] accent-[#C0422A] cursor-pointer shrink-0">
                     <span class="text-xs font-bold text-gray-700">All</span>
                 </label>
 
