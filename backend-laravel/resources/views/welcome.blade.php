@@ -24,11 +24,8 @@
 
         {{-- ====== Shop by Category ====== --}}
         <div>
-            <div class="flex items-center justify-between mb-4">
+            <div class="mb-4">
                 <h3 class="text-base sm:text-lg font-extrabold text-gray-900">Shop by Category</h3>
-                <button type="button" @click="categoriesModalOpen = true" class="text-xs font-semibold text-amber-700 hover:text-amber-900 hover:underline cursor-pointer">
-                    View all
-                </button>
             </div>
 
             @php
@@ -107,7 +104,7 @@
                 }
             @endphp
 
-            <div class="flex gap-3 sm:gap-5 overflow-x-auto no-scrollbar pb-1">
+            <div class="flex gap-3 sm:gap-5 overflow-x-auto no-scrollbar pb-1 items-start">
                 @foreach($catItems as $index => $item)
                     @php
                         $isAll = $item['cat'] === '__all__';
@@ -123,6 +120,14 @@
                         <span class="text-[11px] {{ $isCurrentSelected ? 'font-black text-amber-700' : 'font-medium text-gray-700 group-hover:text-black' }} leading-tight text-center line-clamp-2">{{ $item['name'] }}</span>
                     </a>
                 @endforeach
+
+                {{-- View all inline --}}
+                <button type="button" @click="categoriesModalOpen = true" class="shrink-0 flex flex-col items-center gap-2 w-16 sm:w-20 group cursor-pointer">
+                    <div class="w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-amber-50 border-2 border-amber-200 flex items-center justify-center group-hover:border-amber-500 group-hover:bg-amber-100 transition-all shadow-xs">
+                        <svg class="w-6 h-6 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/></svg>
+                    </div>
+                    <span class="text-[11px] font-semibold text-amber-700 group-hover:text-amber-900 leading-tight text-center">View all</span>
+                </button>
             </div>
 
             {{-- All Categories Modal --}}
