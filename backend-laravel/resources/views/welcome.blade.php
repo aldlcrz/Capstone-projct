@@ -107,7 +107,7 @@
                 }
             @endphp
 
-            <div class="grid grid-cols-4 sm:grid-cols-9 gap-3 sm:gap-4 text-center">
+            <div class="flex gap-3 sm:gap-5 overflow-x-auto no-scrollbar pb-1">
                 @foreach($catItems as $index => $item)
                     @php
                         $isAll = $item['cat'] === '__all__';
@@ -116,11 +116,11 @@
                             : ($selectedCatParam && (strtolower($item['cat']) === strtolower($selectedCatParam) || strtolower($item['name']) === strtolower($selectedCatParam)));
                         $itemHref = $isAll ? '/' : '/?category=' . urlencode($item['cat']);
                     @endphp
-                    <a href="{{ $itemHref }}" class="group flex flex-col items-center gap-2">
+                    <a href="{{ $itemHref }}" class="group flex flex-col items-center gap-2 shrink-0 w-16 sm:w-20">
                         <div class="w-16 h-16 sm:w-20 sm:h-20 rounded-full overflow-hidden bg-gray-100 border-2 {{ $isCurrentSelected ? 'border-amber-600 ring-4 ring-amber-500/25 scale-105 shadow-md' : 'border-transparent group-hover:border-amber-600 shadow-xs group-hover:scale-105' }} transition-all">
                             <img src="{{ $item['img'] }}" class="w-full h-full object-cover" alt="{{ $item['name'] }}">
                         </div>
-                        <span class="text-[11px] {{ $isCurrentSelected ? 'font-black text-amber-700' : 'font-medium text-gray-700 group-hover:text-black' }} leading-tight line-clamp-2">{{ $item['name'] }}</span>
+                        <span class="text-[11px] {{ $isCurrentSelected ? 'font-black text-amber-700' : 'font-medium text-gray-700 group-hover:text-black' }} leading-tight text-center line-clamp-2">{{ $item['name'] }}</span>
                     </a>
                 @endforeach
             </div>
