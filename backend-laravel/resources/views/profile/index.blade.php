@@ -271,7 +271,7 @@
             </div>
 
             {{-- Inner Add / Edit Form Modal Popup --}}
-            <div x-show="addEditModalOpen" class="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/50" style="z-index: 60;" x-cloak>
+            <div x-show="addEditModalOpen" class="fixed inset-0 z-60 flex items-center justify-center p-4 bg-black/50" style="z-index: 60;" x-cloak>
                 <div class="relative bg-white rounded-3xl shadow-2xl w-full max-w-md p-6 space-y-4 max-h-[85vh] overflow-y-auto" @click.away="addEditModalOpen = false">
                     <h4 class="text-sm font-extrabold text-gray-900" x-text="editAddressId ? 'Edit Address' : 'Add New Address'"></h4>
 

@@ -82,7 +82,7 @@
             {{-- Custom Delete Address Confirmation Modal --}}
             <div x-show="showDeleteModal"
                  x-cloak
-                 class="fixed inset-0 z-[70] flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs"
+                 class="fixed inset-0 z-70 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs"
                  style="z-index: 70;"
                  x-transition:enter="transition ease-out duration-200"
                  x-transition:enter-start="opacity-0 scale-95"

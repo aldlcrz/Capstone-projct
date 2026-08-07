@@ -28,7 +28,7 @@
     <div class="flex border-b border-gray-100 mb-6 overflow-x-auto no-scrollbar">
         @foreach(['ALL', 'PENDING', 'TO SHIP', 'TO RECEIVE', 'COMPLETED'] as $tab)
             <a href="/orders/my-orders?tab={{ $tab }}"
-               class="flex-shrink-0 whitespace-nowrap px-4 sm:px-6 py-3 text-[10px] font-bold uppercase tracking-widest transition-all border-b-2
+               class="shrink-0 whitespace-nowrap px-4 sm:px-6 py-3 text-[10px] font-bold uppercase tracking-widest transition-all border-b-2
                       {{ (request('tab', 'ALL') == $tab) ? 'border-[#C0422A] text-[#C0422A]' : 'border-transparent text-gray-400 hover:text-black' }}">
                 {{ $tab }}
             </a>
@@ -44,7 +44,7 @@
                 <div class="px-4 sm:px-6 py-3 sm:py-4 bg-gray-50/50 border-b border-gray-100 flex flex-wrap items-center justify-between gap-2">
                     {{-- Order ID + Date --}}
                     <div class="flex flex-wrap items-center gap-1.5 sm:gap-3 text-[9px] sm:text-[10px] font-bold uppercase tracking-wider text-gray-400 min-w-0">
-                        <span class="truncate max-w-[140px] sm:max-w-none">Order #LB-OR-{{ strtoupper(substr($order->id, -8)) }}</span>
+                        <span class="truncate max-w-35 sm:max-w-none">Order #LB-OR-{{ strtoupper(substr($order->id, -8)) }}</span>
                         <span class="w-1 h-1 bg-gray-300 rounded-full shrink-0"></span>
                         <span class="shrink-0">{{ $order->createdAt->format('M d, Y') }}</span>
                     </div>

@@ -481,7 +481,7 @@
                         Proceed to Payment
                     </button>
                     <div x-show="addressStepError" x-cloak
-                         class="text-[9px] font-bold text-red-500 text-right max-w-[180px]"
+                         class="text-[9px] font-bold text-red-500 text-right max-w-45"
                          x-text="addressStepError"></div>
                 </div>
             </template>
