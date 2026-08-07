@@ -278,7 +278,7 @@
                             <input x-model="addressForm.recipientName"
                                    @input="fieldErrors.recipientName = ''; addressForm.recipientName = addressForm.recipientName.replace(/[^a-zA-Z\u00C0-\u024F\s.'-]/g, '')"
                                    type="text" placeholder="Recipient's full name (letters only)"
-                                   maxlength="80"
+                                   maxlength="30"
                                    :class="fieldErrors.recipientName ? 'border-red-400 bg-red-50' : 'border-gray-200'"
                                    class="w-full h-9 px-3 border rounded-xl outline-none focus:border-[#C0422A] transition-colors">
                             <p x-show="fieldErrors.recipientName" x-text="fieldErrors.recipientName" class="mt-1 text-[10px] text-red-500 font-semibold"></p>
