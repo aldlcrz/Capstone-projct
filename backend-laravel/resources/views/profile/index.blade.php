@@ -272,25 +272,39 @@
                     <h4 class="text-sm font-extrabold text-gray-900" x-text="editAddressId ? 'Edit Address' : 'Add New Address'"></h4>
 
                     <div class="space-y-3 text-xs">
+                        {{-- Full Name --}}
                         <div>
                             <label class="font-bold text-gray-700 mb-1 block">Full Name *</label>
-                            <input x-model="addressForm.recipientName" type="text" placeholder="Recipient's full name"
-                                class="w-full h-9 px-3 border border-gray-200 rounded-xl outline-none focus:border-[#C0422A]">
+                            <input x-model="addressForm.recipientName"
+                                   @input="fieldErrors.recipientName = ''"
+                                   type="text" placeholder="Recipient's full name"
+                                   maxlength="80"
+                                   :class="fieldErrors.recipientName ? 'border-red-400 bg-red-50' : 'border-gray-200'"
+                                   class="w-full h-9 px-3 border rounded-xl outline-none focus:border-[#C0422A] transition-colors">
+                            <p x-show="fieldErrors.recipientName" x-text="fieldErrors.recipientName" class="mt-1 text-[10px] text-red-500 font-semibold"></p>
                         </div>
+                        {{-- Phone Number --}}
                         <div>
                             <label class="font-bold text-gray-700 mb-1 block">Phone Number *</label>
-                            <input x-model="addressForm.phone" type="text" placeholder="e.g. 09xxxxxxxxx"
-                                class="w-full h-9 px-3 border border-gray-200 rounded-xl outline-none focus:border-[#C0422A]">
+                            <input x-model="addressForm.phone"
+                                   @input="fieldErrors.phone = ''; addressForm.phone = addressForm.phone.replace(/[^0-9+]/g, '')"
+                                   type="text" placeholder="e.g. 09XXXXXXXXX"
+                                   maxlength="11"
+                                   :class="fieldErrors.phone ? 'border-red-400 bg-red-50' : 'border-gray-200'"
+                                   class="w-full h-9 px-3 border rounded-xl outline-none focus:border-[#C0422A] transition-colors">
+                            <p x-show="fieldErrors.phone" x-text="fieldErrors.phone" class="mt-1 text-[10px] text-red-500 font-semibold"></p>
                         </div>
 
                         {{-- Location Dropdown Selector --}}
                         <div class="relative">
                             <label class="font-bold text-gray-700 mb-1 block">Region, Province, City, Barangay *</label>
-                            <div @click="toggleLocationDropdown()"
-                                 class="w-full h-9 px-3 border border-gray-200 rounded-xl outline-none focus:border-[#C0422A] flex items-center justify-between cursor-pointer bg-gray-50">
+                            <div @click="toggleLocationDropdown(); fieldErrors.location = ''"
+                                 :class="fieldErrors.location ? 'border-red-400 bg-red-50' : 'border-gray-200 bg-gray-50'"
+                                 class="w-full h-9 px-3 border rounded-xl flex items-center justify-between cursor-pointer transition-colors">
                                 <span class="truncate" :class="getLocationSummary() ? 'text-gray-900 font-semibold' : 'text-gray-400'" x-text="getLocationSummary() || 'Select Region, Province, City, Barangay'"></span>
                                 <svg class="w-4 h-4 text-gray-400" :class="locationDropdownOpen ? 'rotate-180' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
                             </div>
+                            <p x-show="fieldErrors.location" x-text="fieldErrors.location" class="mt-1 text-[10px] text-red-500 font-semibold"></p>
 
                             <div x-show="locationDropdownOpen" @click.away="locationDropdownOpen = false"
                                  class="absolute left-0 right-0 z-50 mt-1 bg-white border border-gray-200 rounded-xl shadow-xl overflow-hidden flex flex-col max-h-62.5" x-cloak>
@@ -336,16 +350,28 @@
                             </div>
                         </div>
 
+                        {{-- Street --}}
                         <div>
                             <label class="font-bold text-gray-700 mb-1 block">Street Name, Building, House No. *</label>
-                            <input x-model="addressForm.houseNo" type="text" placeholder="e.g. Unit 402, Sunset Bldg, Main St."
-                                class="w-full h-9 px-3 border border-gray-200 rounded-xl outline-none focus:border-[#C0422A]">
+                            <input x-model="addressForm.houseNo"
+                                   @input="fieldErrors.houseNo = ''"
+                                   type="text" placeholder="e.g. Unit 402, Sunset Bldg, Main St."
+                                   maxlength="150"
+                                   :class="fieldErrors.houseNo ? 'border-red-400 bg-red-50' : 'border-gray-200'"
+                                   class="w-full h-9 px-3 border rounded-xl outline-none focus:border-[#C0422A] transition-colors">
+                            <p x-show="fieldErrors.houseNo" x-text="fieldErrors.houseNo" class="mt-1 text-[10px] text-red-500 font-semibold"></p>
                         </div>
 
+                        {{-- Postal Code --}}
                         <div>
                             <label class="font-bold text-gray-700 mb-1 block">Postal Code</label>
-                            <input x-model="addressForm.postalCode" type="text" placeholder="Postal Code"
-                                class="w-full h-9 px-3 border border-gray-200 rounded-xl outline-none focus:border-[#C0422A]">
+                            <input x-model="addressForm.postalCode"
+                                   @input="fieldErrors.postalCode = ''; addressForm.postalCode = addressForm.postalCode.replace(/[^0-9]/g, '')"
+                                   type="text" placeholder="e.g. 1000"
+                                   maxlength="4"
+                                   :class="fieldErrors.postalCode ? 'border-red-400 bg-red-50' : 'border-gray-200'"
+                                   class="w-full h-9 px-3 border rounded-xl outline-none focus:border-[#C0422A] transition-colors">
+                            <p x-show="fieldErrors.postalCode" x-text="fieldErrors.postalCode" class="mt-1 text-[10px] text-red-500 font-semibold"></p>
                         </div>
 
                         <label class="flex items-center gap-2 cursor-pointer pt-1">
@@ -353,8 +379,6 @@
                             <span class="text-xs font-semibold text-gray-700">Set as default shipping address</span>
                         </label>
                     </div>
-
-                    <div x-show="addressFormError" class="p-2 bg-red-50 text-red-600 text-[11px] font-bold rounded-lg" x-text="addressFormError"></div>
 
                     <div class="flex gap-3 pt-2">
                         <button type="button" @click="addEditModalOpen = false" class="flex-1 py-2 border border-gray-200 text-xs font-bold text-gray-600 rounded-xl hover:bg-gray-50">Cancel</button>
@@ -420,6 +444,7 @@ function profileApp() {
         savingAddress: false,
         editAddressId: null,
         addressFormError: '',
+        fieldErrors: { recipientName: '', phone: '', location: '', houseNo: '', postalCode: '' },
         addressForm: { recipientName:'', phone:'', houseNo:'', street:'', barangay:'', city:'', province:'', region:'', postalCode:'', isDefault: false },
 
         // Location picker variables
@@ -473,6 +498,7 @@ function profileApp() {
             this.editAddressId = null;
             this.addressForm = { recipientName:'', phone:'', houseNo:'', street:'', barangay:'', city:'', province:'', region:'', postalCode:'', isDefault: false };
             this.addressFormError = '';
+            this.fieldErrors = { recipientName: '', phone: '', location: '', houseNo: '', postalCode: '' };
             this.selectedRegion = null;
             this.selectedProvince = null;
             this.selectedCity = null;
@@ -487,6 +513,7 @@ function profileApp() {
             this.editAddressId = addr.id;
             this.addressForm = { ...addr };
             this.addressFormError = '';
+            this.fieldErrors = { recipientName: '', phone: '', location: '', houseNo: '', postalCode: '' };
             this.selectedRegion = addr.region ? { name: addr.region } : null;
             this.selectedProvince = addr.province ? { name: addr.province } : null;
             this.selectedCity = addr.city ? { name: addr.city } : null;
@@ -498,10 +525,47 @@ function profileApp() {
         },
 
         async saveAddress() {
-            if (!this.addressForm.recipientName || !this.addressForm.phone || !this.addressForm.houseNo || !this.addressForm.city || !this.addressForm.province) {
-                this.addressFormError = 'Please fill in all required fields.';
-                return;
+            // Per-field validation
+            this.fieldErrors = { recipientName: '', phone: '', location: '', houseNo: '', postalCode: '' };
+            let hasError = false;
+
+            const name = (this.addressForm.recipientName || '').trim();
+            if (!name) {
+                this.fieldErrors.recipientName = 'Full name is required.';
+                hasError = true;
+            } else if (name.length < 2) {
+                this.fieldErrors.recipientName = 'Name must be at least 2 characters.';
+                hasError = true;
             }
+
+            const phone = (this.addressForm.phone || '').trim();
+            if (!phone) {
+                this.fieldErrors.phone = 'Phone number is required.';
+                hasError = true;
+            } else if (!/^09\d{9}$/.test(phone)) {
+                this.fieldErrors.phone = 'Enter a valid PH number (09XXXXXXXXX, 11 digits).';
+                hasError = true;
+            }
+
+            if (!this.addressForm.city || !this.addressForm.province) {
+                this.fieldErrors.location = 'Please select Region, Province, City, and Barangay.';
+                hasError = true;
+            }
+
+            const street = (this.addressForm.houseNo || '').trim();
+            if (!street) {
+                this.fieldErrors.houseNo = 'Street / house number is required.';
+                hasError = true;
+            }
+
+            const postal = (this.addressForm.postalCode || '').trim();
+            if (postal && (!/^\d{4}$/.test(postal))) {
+                this.fieldErrors.postalCode = 'Postal code must be exactly 4 digits.';
+                hasError = true;
+            }
+
+            if (hasError) return;
+
             this.addressFormError = '';
             this.savingAddress = true;
             const token = document.querySelector('meta[name="csrf-token"]').content;
