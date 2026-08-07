@@ -16,15 +16,19 @@ class SyncUserCart
      */
     public function handle(Request $request, Closure $next)
     {
-        if (Auth::check()) {
-            /** @var User $user */
-            $user = Auth::user();
-            if ($user instanceof User && $user->cart !== null) {
-                $dbCart = json_decode($user->cart, true);
-                if (is_array($dbCart)) {
-                    session(['cart' => $dbCart]);
+        try {
+            if (Auth::check()) {
+                $user = Auth::user();
+                if ($user && isset($user->cart) && $user->cart !== null) {
+                    $rawCart = $user->cart;
+                    $dbCart = is_array($rawCart) ? $rawCart : json_decode($rawCart, true);
+                    if (is_array($dbCart) && !empty($dbCart)) {
+                        session(['cart' => $dbCart]);
+                    }
                 }
             }
+        } catch (\Throwable $e) {
+            // Silently ignore if cart column does not exist on production DB
         }
 
         return $next($request);
