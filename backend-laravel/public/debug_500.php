@@ -60,18 +60,29 @@ try {
         echo "<pre>" . htmlspecialchars($e->getTraceAsString()) . "</pre>";
     }
 
-    // Check latest Laravel log
-    echo "<h2>Latest Laravel Log (last 50 lines)</h2>";
+    // Check latest Laravel log - show the LAST full exception block
+    echo "<h2>Latest Error in Laravel Log</h2>";
     $logPath = __DIR__ . '/../storage/logs/laravel.log';
     if (file_exists($logPath)) {
-        $lines = file($logPath);
-        $last50 = array_slice($lines, -50);
-        echo "<pre style='font-size:11px;max-height:400px;overflow:auto;background:#111;color:#0f0;padding:12px;'>"
-            . htmlspecialchars(implode('', $last50))
+        $content = file_get_contents($logPath);
+        // Find last occurrence of [20 (start of a log timestamp like [2026-)
+        $lastBlock = '';
+        // Split by log entry separator and get last entry
+        $entries = preg_split('/^\[20\d\d-/m', $content);
+        if (count($entries) > 1) {
+            // Get last 2 entries
+            $lastEntries = array_slice($entries, -2);
+            $lastBlock = implode('[20', $lastEntries);
+        } else {
+            $lastBlock = substr($content, -3000);
+        }
+        echo "<pre style='font-size:11px;max-height:600px;overflow:auto;background:#111;color:#f88;padding:12px;white-space:pre-wrap;'>"
+            . htmlspecialchars($lastBlock)
             . "</pre>";
     } else {
         echo "No log file found at: {$logPath}<br>";
     }
+
 
 } catch (\Throwable $e) {
     echo "<h2>Bootstrap Exception</h2>";
