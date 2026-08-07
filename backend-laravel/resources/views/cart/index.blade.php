@@ -84,7 +84,7 @@
                     {{-- Delete Selected / Delete All Button --}}
                     <button type="button"
                             x-show="selected.length > 0"
-                            @click="removeSelectedItems()"
+                            @click="promptDeleteSelected()"
                             class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-red-200 bg-red-50 text-red-600 hover:bg-red-600 hover:text-white transition-all text-xs font-bold uppercase tracking-wider cursor-pointer shadow-sm">
                         <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
@@ -426,6 +426,47 @@
         <p class="text-xs text-gray-400 mb-6">Discover handcrafted Barong Tagalog pieces from Lumban artisans.</p>
         <a href="/" class="px-8 py-3 bg-black text-white text-xs font-bold uppercase tracking-widest rounded-full hover:bg-gray-800 transition-all">Explore Collection</a>
     </div>
+    {{-- Custom Confirmation Modal --}}
+    <div x-show="showDeleteModal"
+         x-cloak
+         class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs"
+         x-transition:enter="transition ease-out duration-200"
+         x-transition:enter-start="opacity-0 scale-95"
+         x-transition:enter-end="opacity-100 scale-100"
+         x-transition:leave="transition ease-in duration-150"
+         x-transition:leave-start="opacity-100 scale-100"
+         x-transition:leave-end="opacity-0 scale-95"
+         @keydown.escape.window="showDeleteModal = false">
+        
+        <div class="relative w-full max-w-sm bg-white rounded-3xl p-6 shadow-2xl border border-gray-100 text-center space-y-4"
+             @click.away="showDeleteModal = false">
+            
+            {{-- Warning Trash Icon --}}
+            <div class="w-12 h-12 rounded-full bg-red-50 text-red-500 border border-red-100 flex items-center justify-center mx-auto shadow-xs">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                </svg>
+            </div>
+
+            <div>
+                <h3 class="text-base font-black text-gray-900" x-text="deleteModalTitle"></h3>
+                <p class="text-xs text-gray-500 font-medium mt-1 leading-relaxed" x-text="deleteModalMessage"></p>
+            </div>
+
+            <div class="flex items-center gap-3 pt-2">
+                <button type="button"
+                        @click="showDeleteModal = false"
+                        class="flex-1 py-2.5 px-4 rounded-xl border border-gray-200 text-gray-700 text-xs font-bold uppercase tracking-wider hover:bg-gray-50 transition-all cursor-pointer">
+                    Cancel
+                </button>
+                <button type="button"
+                        @click="confirmDelete()"
+                        class="flex-1 py-2.5 px-4 rounded-xl bg-red-600 hover:bg-red-700 text-white text-xs font-bold uppercase tracking-wider shadow-lg shadow-red-600/20 active:scale-95 transition-all cursor-pointer">
+                    OK
+                </button>
+            </div>
+        </div>
+    </div>
 </div>
 
 <script>
@@ -434,6 +475,10 @@ function cartApp() {
         items: JSON.parse(document.getElementById('cart-root')?.dataset?.cartItems || '[]'),
         selected: [],
         allSelected: false,
+        showDeleteModal: false,
+        deleteModalTitle: '',
+        deleteModalMessage: '',
+        deleteAction: null,
 
         init() {
             // Pre-select all items on load
@@ -519,7 +564,34 @@ function cartApp() {
             }
         },
 
-        async removeItem(key) {
+        promptDeleteSelected() {
+            if (this.selected.length === 0) return;
+            const isAll = this.selected.length === this.items.length;
+            this.deleteModalTitle = isAll ? 'Delete All Items' : 'Delete Selected Items';
+            this.deleteModalMessage = isAll 
+                ? 'Are you sure you want to delete all items from your cart?' 
+                : 'Are you sure you want to delete the selected (' + this.selected.length + ') item(s) from your cart?';
+            this.deleteAction = () => this.executeRemoveSelected();
+            this.showDeleteModal = true;
+        },
+
+        promptRemoveItem(key) {
+            const item = this.items.find(i => String(i.key) === String(key));
+            const itemName = item ? item.name : 'this item';
+            this.deleteModalTitle = 'Remove Item';
+            this.deleteModalMessage = 'Are you sure you want to remove "' + itemName + '" from your cart?';
+            this.deleteAction = () => this.executeRemoveItem(key);
+            this.showDeleteModal = true;
+        },
+
+        async confirmDelete() {
+            this.showDeleteModal = false;
+            if (typeof this.deleteAction === 'function') {
+                await this.deleteAction();
+            }
+        },
+
+        async executeRemoveItem(key) {
             try {
                 const response = await fetch('/cart/remove/' + encodeURIComponent(key), {
                     method: 'POST',
@@ -540,14 +612,8 @@ function cartApp() {
             } catch(e) {}
         },
 
-        async removeSelectedItems() {
+        async executeRemoveSelected() {
             if (this.selected.length === 0) return;
-            const message = this.selected.length === this.items.length 
-                ? 'Are you sure you want to delete all items from your cart?' 
-                : 'Are you sure you want to delete the selected (' + this.selected.length + ') item(s) from your cart?';
-            
-            if (!confirm(message)) return;
-
             try {
                 const response = await fetch('/cart/remove-selected', {
                     method: 'POST',
