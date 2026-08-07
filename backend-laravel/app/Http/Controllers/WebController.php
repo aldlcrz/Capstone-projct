@@ -257,7 +257,7 @@ class WebController extends Controller
      */
     public function sellerShop(string $id)
     {
-        $seller = \App\Models\User::where('id', $id)->where('role', 'seller')->firstOrFail();
+        $seller = User::where('id', $id)->where('role', 'seller')->firstOrFail();
 
         return view('shops.show', ['id' => $seller->id]);
     }

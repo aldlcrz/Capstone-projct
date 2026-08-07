@@ -51,7 +51,7 @@
             {{-- Background image --}}
             <img src="{{ $banner->getImageUrl() }}" alt="{{ $banner->title }}" class="absolute inset-0 w-full h-full object-cover object-center">
             {{-- Dark gradient overlay on left --}}
-            <div class="absolute inset-0 bg-gradient-to-r from-black/75 via-black/40 to-transparent"></div>
+            <div class="absolute inset-0 bg-linear-to-r from-black/75 via-black/40 to-transparent"></div>
             {{-- Content --}}
             <div class="relative z-10 flex flex-col justify-center h-full px-6 sm:px-10 py-8 sm:py-12 max-w-md">
                 @if($banner->subtitle)
