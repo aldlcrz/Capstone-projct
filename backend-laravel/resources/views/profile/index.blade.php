@@ -203,8 +203,7 @@
          x-transition
          @keydown.escape.window="if (!showDeleteConfirmModal && !addEditModalOpen) showAddressModal = false">
 
-        <div class="relative w-full max-w-lg bg-white rounded-3xl p-6 shadow-2xl border border-gray-100 max-h-[85vh] flex flex-col space-y-4"
-             @click.away="if (!showDeleteConfirmModal && !addEditModalOpen) showAddressModal = false">
+        <div class="relative w-full max-w-lg bg-white rounded-3xl p-6 shadow-2xl border border-gray-100 max-h-[85vh] flex flex-col space-y-4">
 
             <div class="flex items-center justify-between pb-3 border-b border-gray-100 shrink-0">
                 <div>
@@ -362,51 +361,49 @@
                         <button type="button" @click="saveAddress()" :disabled="savingAddress" class="flex-1 py-2 bg-[#C0422A] text-white text-xs font-bold rounded-xl hover:bg-black shadow-xs">
                             <span x-text="savingAddress ? 'Saving...' : 'Save Address'"></span>
                         </button>
-            {{-- Custom Delete Address Confirmation Modal --}}
-            <div x-show="showDeleteConfirmModal"
-                 x-cloak
-                 class="fixed inset-0 z-[70] flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs"
-                 style="z-index: 70;"
-                 x-transition:enter="transition ease-out duration-200"
-                 x-transition:enter-start="opacity-0 scale-95"
-                 x-transition:enter-end="opacity-100 scale-100"
-                 x-transition:leave="transition ease-in duration-150"
-                 x-transition:leave-start="opacity-100 scale-100"
-                 x-transition:leave-end="opacity-0 scale-95"
-                 @click.stop
-                 @keydown.escape.window.stop="showDeleteConfirmModal = false">
-                
-                <div class="relative w-full max-w-xs bg-white rounded-3xl p-6 shadow-2xl border border-gray-100 text-center space-y-4"
-                     @click.away.stop="showDeleteConfirmModal = false">
-                    
-                    <div class="w-12 h-12 rounded-full bg-red-50 text-red-500 border border-red-100 flex items-center justify-center mx-auto shadow-xs">
-                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
-                        </svg>
-                    </div>
-
-                    <div>
-                        <h3 class="text-base font-extrabold text-gray-900">Delete Address</h3>
-                        <p class="text-xs text-gray-500 font-medium mt-1 leading-relaxed">Are you sure you want to delete this address?</p>
-                    </div>
-
-                    <div class="flex items-center gap-3 pt-2">
-                        <button type="button"
-                                @click.stop="showDeleteConfirmModal = false"
-                                class="flex-1 py-2.5 px-4 rounded-xl border border-gray-200 text-gray-700 text-xs font-bold uppercase tracking-wider hover:bg-gray-50 transition-all cursor-pointer">
-                            Cancel
-                        </button>
-                        <button type="button"
-                                @click.stop="confirmDeleteAddress()"
-                                class="flex-1 py-2.5 px-4 rounded-xl bg-red-600 hover:bg-red-700 text-white text-xs font-bold uppercase tracking-wider shadow-lg shadow-red-600/20 active:scale-95 transition-all cursor-pointer">
-                            OK
-                        </button>
                     </div>
                 </div>
             </div>
         </div>
     </div>
+
+    {{-- Custom Delete Address Confirmation Modal (sibling, NOT nested) --}}
+    <div x-show="showDeleteConfirmModal"
+         x-cloak
+         class="fixed inset-0 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs"
+         style="z-index: 9999;"
+         @keydown.escape.window="showDeleteConfirmModal = false">
+
+        <div class="relative w-full max-w-xs bg-white rounded-3xl p-6 shadow-2xl border border-gray-100 text-center space-y-4">
+
+            <div class="w-12 h-12 rounded-full bg-red-50 text-red-500 border border-red-100 flex items-center justify-center mx-auto shadow-xs">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                </svg>
+            </div>
+
+            <div>
+                <h3 class="text-base font-extrabold text-gray-900">Delete Address</h3>
+                <p class="text-xs text-gray-500 font-medium mt-1 leading-relaxed">Are you sure you want to delete this address?</p>
+            </div>
+
+            <div class="flex items-center gap-3 pt-2">
+                <button type="button"
+                        @click="showDeleteConfirmModal = false"
+                        class="flex-1 py-2.5 px-4 rounded-xl border border-gray-200 text-gray-700 text-xs font-bold uppercase tracking-wider hover:bg-gray-50 transition-all cursor-pointer">
+                    Cancel
+                </button>
+                <button type="button"
+                        @click="confirmDeleteAddress()"
+                        class="flex-1 py-2.5 px-4 rounded-xl bg-red-600 hover:bg-red-700 text-white text-xs font-bold uppercase tracking-wider shadow-lg shadow-red-600/20 active:scale-95 transition-all cursor-pointer">
+                    OK
+                </button>
+            </div>
+        </div>
+    </div>
+
 </div>
+
 
 <script>
 function profileApp() {
