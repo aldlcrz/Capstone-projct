@@ -22,12 +22,90 @@
 </script>
 <div class="space-y-8" x-data="{ categoriesModalOpen: false, topShopsModalOpen: false }">
 
+    {{-- ====== Hero Banner Carousel ====== --}}
+    @if(isset($banners) && $banners->isNotEmpty())
+    <div
+        x-data="{
+            active: 0,
+            total: {{ $banners->count() }},
+            autoSlide() {
+                if (this.total <= 1) return;
+                setInterval(() => { this.active = (this.active + 1) % this.total; }, 5000);
+            }
+        }"
+        x-init="autoSlide()"
+        class="relative rounded-2xl overflow-hidden shadow-sm"
+        style="min-height: 220px;"
+    >
+        @foreach($banners as $i => $banner)
+        <div
+            x-show="active === {{ $i }}"
+            x-transition:enter="transition ease-out duration-500"
+            x-transition:enter-start="opacity-0 scale-[1.02]"
+            x-transition:enter-end="opacity-100 scale-100"
+            x-transition:leave="transition ease-in duration-300"
+            x-transition:leave-start="opacity-100"
+            x-transition:leave-end="opacity-0"
+            class="absolute inset-0 w-full h-full"
+            style="min-height: 220px;"
+        >
+            {{-- Background image --}}
+            <img src="{{ $banner->getImageUrl() }}" alt="{{ $banner->title }}" class="absolute inset-0 w-full h-full object-cover object-center">
+            {{-- Dark gradient overlay on left --}}
+            <div class="absolute inset-0 bg-gradient-to-r from-black/75 via-black/40 to-transparent"></div>
+            {{-- Content --}}
+            <div class="relative z-10 flex flex-col justify-center h-full px-6 sm:px-10 py-8 sm:py-12 max-w-md">
+                @if($banner->subtitle)
+                    <p class="text-[11px] sm:text-xs font-bold uppercase tracking-widest text-amber-400 mb-2">{{ $banner->subtitle }}</p>
+                @endif
+                @if($banner->title)
+                    <h2 class="text-2xl sm:text-4xl font-extrabold text-white leading-tight mb-3">{{ $banner->title }}</h2>
+                @endif
+                <div class="flex flex-wrap gap-3 mt-2">
+                    @if($banner->button_text_1)
+                        <a href="{{ $banner->button_url_1 ?: '/' }}" class="inline-flex items-center gap-2 px-5 py-2.5 bg-amber-600 hover:bg-amber-700 text-white text-sm font-bold rounded-xl transition-all shadow-md hover:shadow-lg hover:scale-105">
+                            {{ $banner->button_text_1 }}
+                        </a>
+                    @endif
+                    @if($banner->button_text_2)
+                        <a href="{{ $banner->button_url_2 ?: '/' }}" class="inline-flex items-center gap-2 px-5 py-2.5 bg-white/15 hover:bg-white/25 text-white text-sm font-semibold rounded-xl border border-white/30 backdrop-blur-sm transition-all">
+                            {{ $banner->button_text_2 }}
+                        </a>
+                    @endif
+                </div>
+            </div>
+        </div>
+        @endforeach
+
+        {{-- Dot navigation (only when multiple banners) --}}
+        @if($banners->count() > 1)
+        <div class="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-1.5 z-20">
+            @foreach($banners as $i => $banner)
+            <button
+                type="button"
+                @click="active = {{ $i }}"
+                :class="active === {{ $i }} ? 'w-5 bg-white' : 'w-2 bg-white/50 hover:bg-white/80'"
+                class="h-2 rounded-full transition-all duration-300"
+            ></button>
+            @endforeach
+        </div>
+        {{-- Prev / Next arrows (visible on hover) --}}
+        <button type="button" @click="active = (active - 1 + total) % total" class="absolute left-3 top-1/2 -translate-y-1/2 z-20 w-8 h-8 rounded-full bg-black/30 hover:bg-black/50 text-white flex items-center justify-center transition-all">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 19l-7-7 7-7"/></svg>
+        </button>
+        <button type="button" @click="active = (active + 1) % total" class="absolute right-3 top-1/2 -translate-y-1/2 z-20 w-8 h-8 rounded-full bg-black/30 hover:bg-black/50 text-white flex items-center justify-center transition-all">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5l7 7-7 7"/></svg>
+        </button>
+        @endif
+    </div>
+    @endif
+
         {{-- ====== Shop by Category ====== --}}
         <div>
             <div class="flex items-center justify-between mb-4">
                 <h3 class="text-base sm:text-lg font-extrabold text-gray-900">Shop by Category</h3>
-                {{-- Mobile only: View all text link in header --}}
-                <button type="button" @click="categoriesModalOpen = true" class="sm:hidden text-xs font-semibold text-amber-700 hover:text-amber-900 hover:underline cursor-pointer">
+                {{-- View all: text link on all screen sizes --}}
+                <button type="button" @click="categoriesModalOpen = true" class="text-xs font-semibold text-amber-700 hover:text-amber-900 hover:underline cursor-pointer">
                     View all
                 </button>
             </div>
@@ -124,14 +202,6 @@
                         <span class="text-[11px] {{ $isCurrentSelected ? 'font-black text-amber-700' : 'font-medium text-gray-700 group-hover:text-black' }} leading-tight text-center line-clamp-2">{{ $item['name'] }}</span>
                     </a>
                 @endforeach
-
-                {{-- View all circle: desktop only --}}
-                <button type="button" @click="categoriesModalOpen = true" class="hidden sm:flex shrink-0 flex-col items-center gap-2 w-20 group cursor-pointer">
-                    <div class="w-20 h-20 rounded-full bg-amber-50 border-2 border-amber-200 flex items-center justify-center group-hover:border-amber-500 group-hover:bg-amber-100 transition-all shadow-xs">
-                        <svg class="w-6 h-6 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/></svg>
-                    </div>
-                    <span class="text-[11px] font-semibold text-amber-700 group-hover:text-amber-900 leading-tight text-center">View all</span>
-                </button>
             </div>
 
             {{-- All Categories Modal --}}
