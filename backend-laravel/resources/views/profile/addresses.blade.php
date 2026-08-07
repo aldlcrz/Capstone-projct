@@ -63,7 +63,7 @@
                                     <div class="flex flex-col items-end gap-2 shrink-0">
                                         <div class="flex gap-3">
                                             <button @click="openEdit(addr)" class="text-[#C0420A] text-xs font-semibold hover:underline">Edit</button>
-                                            <button @click="deleteAddress(addr.id)" class="text-gray-400 text-xs font-semibold hover:text-red-500 hover:underline">Delete</button>
+                                            <button @click="promptDelete(addr.id)" class="text-gray-400 text-xs font-semibold hover:text-red-500 hover:underline">Delete</button>
                                         </div>
                                         <template x-if="!addr.isDefault">
                                             <button @click="setDefault(addr.id)"
@@ -77,6 +77,47 @@
                         </template>
                     </div>
                 </template>
+            </div>
+
+            {{-- Custom Delete Address Confirmation Modal --}}
+            <div x-show="showDeleteModal"
+                 x-cloak
+                 class="fixed inset-0 z-70 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs"
+                 x-transition:enter="transition ease-out duration-200"
+                 x-transition:enter-start="opacity-0 scale-95"
+                 x-transition:enter-end="opacity-100 scale-100"
+                 x-transition:leave="transition ease-in duration-150"
+                 x-transition:leave-start="opacity-100 scale-100"
+                 x-transition:leave-end="opacity-0 scale-95"
+                 @keydown.escape.window="showDeleteModal = false">
+                
+                <div class="relative w-full max-w-xs bg-white rounded-3xl p-6 shadow-2xl border border-gray-100 text-center space-y-4"
+                     @click.away="showDeleteModal = false">
+                    
+                    <div class="w-12 h-12 rounded-full bg-red-50 text-red-500 border border-red-100 flex items-center justify-center mx-auto shadow-xs">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                        </svg>
+                    </div>
+
+                    <div>
+                        <h3 class="text-base font-extrabold text-gray-900">Delete Address</h3>
+                        <p class="text-xs text-gray-500 font-medium mt-1 leading-relaxed">Are you sure you want to delete this address?</p>
+                    </div>
+
+                    <div class="flex items-center gap-3 pt-2">
+                        <button type="button"
+                                @click="showDeleteModal = false"
+                                class="flex-1 py-2.5 px-4 rounded-xl border border-gray-200 text-gray-700 text-xs font-bold uppercase tracking-wider hover:bg-gray-50 transition-all cursor-pointer">
+                            Cancel
+                        </button>
+                        <button type="button"
+                                @click="confirmDelete()"
+                                class="flex-1 py-2.5 px-4 rounded-xl bg-red-600 hover:bg-red-700 text-white text-xs font-bold uppercase tracking-wider shadow-lg shadow-red-600/20 active:scale-95 transition-all cursor-pointer">
+                            OK
+                        </button>
+                    </div>
+                </div>
             </div>
 
             {{-- Add / Edit Modal --}}
@@ -277,6 +318,8 @@ function addressManager() {
         loading: true,
         search: '',
         modalOpen: false,
+        showDeleteModal: false,
+        pendingDeleteId: null,
         saving: false,
         editId: null,
         formError: '',
@@ -638,10 +681,19 @@ function addressManager() {
             this.saving = false;
         },
 
-        async deleteAddress(id) {
-            if (!confirm('Delete this address?')) return;
+        promptDelete(id) {
+            this.pendingDeleteId = id;
+            this.showDeleteModal = true;
+        },
+
+        async confirmDelete() {
+            if (!this.pendingDeleteId) return;
+            const id = this.pendingDeleteId;
+            this.showDeleteModal = false;
+            this.pendingDeleteId = null;
+
             const token = document.querySelector('meta[name="csrf-token"]').content;
-            await fetch(`/api/addresses/${id}`, { method:'DELETE', headers:{ 'X-CSRF-TOKEN': token, 'X-Requested-With': 'XMLHttpRequest' } });
+            await fetch(`/api/addresses/${id}`, { method: 'DELETE', headers: { 'X-CSRF-TOKEN': token, 'X-Requested-With': 'XMLHttpRequest' } });
             await this.fetchAddresses();
         },
 
