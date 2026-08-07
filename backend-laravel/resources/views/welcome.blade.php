@@ -33,6 +33,7 @@
 
             @php
                 $catItems = [
+                    ['name' => 'All Barongs', 'cat' => '__all__', 'img' => '/uploads/categories/featured_best_sellers.png'],
                     ['name' => 'Wedding Barong', 'cat' => 'Wedding Barong', 'img' => '/uploads/categories/wedding_groom.png'],
                     ['name' => 'Piña Formal Barong', 'cat' => 'Piña Formal Barong', 'img' => '/uploads/categories/pina_formal.png'],
                     ['name' => 'Jusi Classic Barong', 'cat' => 'Jusi Classic Barong', 'img' => '/uploads/categories/jusi_classic.png'],
@@ -106,12 +107,16 @@
                 }
             @endphp
 
-            <div class="grid grid-cols-4 sm:grid-cols-8 gap-3 sm:gap-4 text-center">
+            <div class="grid grid-cols-4 sm:grid-cols-9 gap-3 sm:gap-4 text-center">
                 @foreach($catItems as $index => $item)
                     @php
-                        $isCurrentSelected = $selectedCatParam && (strtolower($item['cat']) === strtolower($selectedCatParam) || strtolower($item['name']) === strtolower($selectedCatParam));
+                        $isAll = $item['cat'] === '__all__';
+                        $isCurrentSelected = $isAll
+                            ? !$selectedCatParam && !request('search') && !request('sort')
+                            : ($selectedCatParam && (strtolower($item['cat']) === strtolower($selectedCatParam) || strtolower($item['name']) === strtolower($selectedCatParam)));
+                        $itemHref = $isAll ? '/' : '/?category=' . urlencode($item['cat']);
                     @endphp
-                    <a href="/?category={{ urlencode($item['cat']) }}" class="group flex flex-col items-center gap-2">
+                    <a href="{{ $itemHref }}" class="group flex flex-col items-center gap-2">
                         <div class="w-16 h-16 sm:w-20 sm:h-20 rounded-full overflow-hidden bg-gray-100 border-2 {{ $isCurrentSelected ? 'border-amber-600 ring-4 ring-amber-500/25 scale-105 shadow-md' : 'border-transparent group-hover:border-amber-600 shadow-xs group-hover:scale-105' }} transition-all">
                             <img src="{{ $item['img'] }}" class="w-full h-full object-cover" alt="{{ $item['name'] }}">
                         </div>
