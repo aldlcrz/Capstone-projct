@@ -1,8 +1,8 @@
 <!DOCTYPE html>
-<html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
+<html lang="{{ str_replace('_', '-', app()->getLocale()) }}" class="overflow-x-hidden">
 <head>
     <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <meta name="csrf-token" content="{{ csrf_token() }}">
 
     <title>{{ config('app.name', 'LumBarong') }}</title>
@@ -17,6 +17,7 @@
     <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
 
     <style>
+        html, body { overflow-x: hidden !important; max-w: 100vw; }
         body { font-family: 'Inter', sans-serif; background-color: #FAFAFA; }
         .no-scrollbar::-webkit-scrollbar { display: none; }
         .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
@@ -24,15 +25,15 @@
         [x-cloak] { display: none !important; }
     </style>
 </head>
-<body class="antialiased text-gray-900">
-    <div class="min-h-screen flex flex-col">
+<body class="antialiased text-gray-900 overflow-x-hidden max-w-full relative">
+    <div class="min-h-screen flex flex-col overflow-x-hidden w-full max-w-full">
         <!-- Navigation Header -->
         <header class="sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-gray-100 w-full shadow-xs">
-            <div class="flex items-center justify-between px-4 lg:px-12 py-3.5 w-full max-w-7xl mx-auto gap-4">
+            <div class="flex items-center justify-between px-2.5 sm:px-4 lg:px-12 py-2.5 sm:py-3.5 w-full max-w-7xl mx-auto gap-2 sm:gap-4">
                 <!-- Left: Logo & Seller Hub -->
-                <div class="flex items-center gap-6 shrink-0">
-                    <a href="/" class="flex items-center gap-2.5">
-                        <div class="w-9 h-9 bg-black rounded-full text-white flex items-center justify-center font-extrabold text-lg shadow-sm">L</div>
+                <div class="flex items-center gap-2 sm:gap-6 shrink-0">
+                    <a href="/" class="flex items-center gap-2">
+                        <div class="w-8 h-8 sm:w-9 sm:h-9 bg-black rounded-full text-white flex items-center justify-center font-extrabold text-base sm:text-lg shadow-sm">L</div>
                         <span class="text-xl font-extrabold tracking-tight text-gray-900 hidden sm:inline-block">LumBarong</span>
                     </a>
 
@@ -53,31 +54,31 @@
                 </div>
                 
                 <!-- Center: Pill Search Bar (Matching UI design) -->
-                <div class="flex-1 max-w-lg mx-auto">
+                <div class="flex-1 min-w-0 max-w-lg mx-auto">
                     <form action="/" method="GET" class="relative">
                         <input type="text" name="search" value="{{ request('search') }}"
-                               placeholder="Search for barongs, fabric, color, or seller..."
-                               class="w-full bg-gray-50/80 border border-gray-200/80 hover:border-gray-300 focus:bg-white rounded-full py-2.5 pl-5 pr-11 text-xs sm:text-sm text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-black/5 transition-all shadow-xs">
-                        <button type="submit" class="absolute right-3.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-black transition-colors">
+                               placeholder="Search barongs, sellers..."
+                               class="w-full bg-gray-50/80 border border-gray-200/80 hover:border-gray-300 focus:bg-white rounded-full py-2 sm:py-2.5 pl-3.5 sm:pl-5 pr-8 sm:pr-11 text-xs sm:text-sm text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-black/5 transition-all shadow-xs truncate">
+                        <button type="submit" class="absolute right-2.5 sm:right-3.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-black transition-colors">
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
                         </button>
                     </form>
                 </div>
 
                 <!-- Right: Quick Action Icons (Bookmark, Bell, Cart, Avatar) -->
-                <div class="flex items-center gap-2.5 sm:gap-3.5 shrink-0">
+                <div class="flex items-center gap-1.5 sm:gap-3.5 shrink-0">
 
-                    <!-- Wishlist / Saved Items -->
-                    <a href="/cart" class="w-10 h-10 flex items-center justify-center rounded-full text-gray-600 hover:bg-gray-100 hover:text-black transition-all" title="Saved & Cart">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24">
+                    <!-- Wishlist / Saved Items (Desktop/Tablet) -->
+                    <a href="/cart" class="hidden sm:flex w-9 h-9 sm:w-10 sm:h-10 items-center justify-center rounded-full text-gray-600 hover:bg-gray-100 hover:text-black transition-all" title="Saved & Cart">
+                        <svg class="w-4.5 h-4.5 sm:w-5 sm:h-5" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z"/>
                         </svg>
                     </a>
 
-                    <!-- Notifications -->
-                    <div x-data="{ open: false }" class="relative" @mouseenter="open = true" @mouseleave="open = false">
-                        <a href="/notifications" class="relative w-10 h-10 flex items-center justify-center rounded-full text-gray-600 hover:bg-gray-100 hover:text-black transition-all">
-                            <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"></path></svg>
+                    <!-- Notifications (Desktop/Tablet) -->
+                    <div x-data="{ open: false }" class="relative hidden sm:block" @mouseenter="open = true" @mouseleave="open = false">
+                        <a href="/notifications" class="relative w-9 h-9 sm:w-10 sm:h-10 flex items-center justify-center rounded-full text-gray-600 hover:bg-gray-100 hover:text-black transition-all">
+                            <svg class="w-4.5 h-4.5 sm:w-5 sm:h-5" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"></path></svg>
                             @auth
                                 @php $unreadNotifications = \App\Models\Notification::where('userId', Auth::id())->where('targetRole', 'customer')->where('isRead', false)->count(); @endphp
                                 @if($unreadNotifications > 0)
@@ -148,10 +149,10 @@
                             });
                         }
                     }" class="relative" @mouseenter="open = true" @mouseleave="open = false">
-                        <a href="/cart" class="relative w-11 h-11 flex items-center justify-center rounded-full border border-gray-100 text-gray-800 hover:border-gray-400 bg-white transition-all shadow-sm">
-                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"></path></svg>
+                        <a href="/cart" class="relative w-9 h-9 sm:w-11 sm:h-11 flex items-center justify-center rounded-full border border-gray-100 text-gray-800 hover:border-gray-400 bg-white transition-all shadow-sm">
+                            <svg class="w-4.5 h-4.5 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"></path></svg>
                             @auth
-                                <span x-show="cartCount > 0" x-text="cartCount" class="absolute -top-1 -right-1 min-w-4.5 h-4.5 px-1 bg-black text-white text-[9px] font-bold rounded-full flex items-center justify-center border-2 border-white"></span>
+                                <span x-show="cartCount > 0" x-text="cartCount" class="absolute -top-1 -right-1 min-w-4 h-4 px-1 bg-black text-white text-[8px] font-bold rounded-full flex items-center justify-center border-2 border-white"></span>
                             @endauth
                         </a>
 
@@ -197,8 +198,8 @@
                     <!-- Profile Dropdown -->
                     <div x-data="{ open: false }" class="relative" @mouseenter="open = true" @mouseleave="open = false">
                         @auth
-                            <button class="w-11 h-11 rounded-full border border-gray-100 flex items-center justify-center overflow-hidden bg-white hover:border-gray-400 transition-all shadow-sm">
-                                <span class="font-bold text-gray-700 text-sm">{{ strtoupper(substr(Auth::user()->name, 0, 1)) }}</span>
+                            <button class="w-9 h-9 sm:w-11 sm:h-11 rounded-full border border-gray-100 flex items-center justify-center overflow-hidden bg-white hover:border-gray-400 transition-all shadow-sm">
+                                <span class="font-bold text-gray-700 text-xs sm:text-sm">{{ strtoupper(substr(Auth::user()->name, 0, 1)) }}</span>
                             </button>
                             <div x-show="open" 
                                  x-transition:enter="transition ease-out duration-200"
@@ -243,8 +244,8 @@
                                 </form>
                             </div>
                         @else
-                            <a href="/login" class="w-11 h-11 rounded-full border border-gray-100 flex items-center justify-center text-gray-800 hover:border-gray-400 bg-white transition-all shadow-sm">
-                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg>
+                            <a href="/login" class="w-9 h-9 sm:w-11 sm:h-11 rounded-full border border-gray-100 flex items-center justify-center text-gray-800 hover:border-gray-400 bg-white transition-all shadow-sm">
+                                <svg class="w-4.5 h-4.5 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg>
                             </a>
                             <div x-show="open" 
                                  x-transition:enter="transition ease-out duration-200"

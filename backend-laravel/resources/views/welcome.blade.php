@@ -139,16 +139,23 @@
                     foreach ($categories as $dbCat) {
                         $exists = false;
                         foreach ($allCatItems as $item) {
-                            if (strtolower($item['name']) == strtolower($dbCat->name)) {
+                            if (strtolower($item['name']) == strtolower($dbCat->name) || strtolower($item['cat']) == strtolower($dbCat->name)) {
                                 $exists = true;
                                 break;
                             }
                         }
                         if (!$exists) {
+                            $targetGroupStr = 'Other';
+                            if (is_array($dbCat->target_group) && count($dbCat->target_group) > 0) {
+                                $targetGroupStr = implode(', ', $dbCat->target_group);
+                            } elseif (is_string($dbCat->target_group) && !empty($dbCat->target_group)) {
+                                $targetGroupStr = $dbCat->target_group;
+                            }
+
                             $allCatItems[] = [
                                 'name' => $dbCat->name,
                                 'cat' => $dbCat->name,
-                                'group' => 'Other',
+                                'group' => $targetGroupStr,
                                 'img' => '/uploads/categories/pina_formal.png'
                             ];
                         }

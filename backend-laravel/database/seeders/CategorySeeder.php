@@ -1,81 +1,17 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace Database\Seeders;
 
+use Illuminate\Database\Seeder;
 use App\Models\Category;
-use App\Models\Product;
-use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 
-class AdminCategoryController extends Controller
+class CategorySeeder extends Seeder
 {
-    public function index()
-    {
-        $categories = Category::withCount('products')
-            ->orderBy('name', 'asc')
-            ->get();
-            
-        return view('admin.categories.index', compact('categories'));
-    }
-
-    public function store(Request $request)
-    {
-        $request->validate([
-            'name' => 'required|string|max:255|unique:categories,name',
-            'description' => 'nullable|string',
-            'target_group' => 'nullable|array',
-            'target_group.*' => 'in:Men,Women,Kids',
-        ]);
-
-        Category::create([
-            'id' => (string) Str::uuid(),
-            'name' => $request->name,
-            'description' => $request->description,
-            'target_group' => $request->target_group ?? [],
-        ]);
-
-        return redirect()->back()->with('success', 'Category created successfully.');
-    }
-
-    public function update(Request $request, string $id)
-    {
-        $category = Category::findOrFail($id);
-        
-        $request->validate([
-            'name' => 'required|string|max:255|unique:categories,name,' . $id,
-            'description' => 'nullable|string',
-            'target_group' => 'nullable|array',
-            'target_group.*' => 'in:Men,Women,Kids',
-        ]);
-
-        $category->update([
-            'name' => $request->name,
-            'description' => $request->description,
-            'target_group' => $request->target_group ?? [],
-        ]);
-
-        return redirect()->back()->with('success', 'Category updated successfully.');
-    }
-
-    public function destroy(string $id)
-    {
-        $category = Category::findOrFail($id);
-
-        // Check if category has products
-        // Note: Category model has products relationship
-        if ($category->products()->count() > 0) {
-            return redirect()->back()->with('error', 'Cannot delete category with active products.');
-        }
-
-        $category->delete();
-
-        return redirect()->back()->with('success', 'Category deleted successfully.');
-    }
-
     /**
-     * Initialize default categories if they don't exist.
+     * Run the database seeds.
      */
-    public function initializeDefaults()
+    public function run(): void
     {
         $defaults = [
             [
@@ -135,25 +71,20 @@ class AdminCategoryController extends Controller
             ],
         ];
 
-        // Clean up old generic demographic categories if they have no active products
+        // Clean up old generic demographic categories if they have no products
         Category::whereIn('name', ['Men', 'Women', 'Kids'])
             ->doesntHave('products')
             ->delete();
 
-        $added = 0;
-
         foreach ($defaults as $cat) {
-            if (!Category::where('name', $cat['name'])->exists()) {
-                Category::create([
+            Category::firstOrCreate(
+                ['name' => $cat['name']],
+                [
                     'id' => (string) Str::uuid(),
-                    'name' => $cat['name'],
                     'description' => $cat['description'],
                     'target_group' => $cat['target_group'],
-                ]);
-                $added++;
-            }
+                ]
+            );
         }
-
-        return redirect()->back()->with('success', "Initialized {$added} default shop categories.");
     }
 }

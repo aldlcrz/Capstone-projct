@@ -106,14 +106,18 @@ class WebController extends Controller
             $banners = collect([$defaultBanner]);
         }
 
-        // Fetch Top Rated Artisan Shops with ratings, sales, and product counts (safe try-catch for production DBs)
+        $topShops = $this->fetchTopShops();
+        $customerStats = $this->fetchCustomerStats();
+
+        return view('welcome', compact('products', 'categories', 'banners', 'customerStats', 'topShops'));
+    }
+
+    /**
+     * Fetch Top Rated Artisan Shops.
+     */
+    private function fetchTopShops()
+    {
         $topShops = collect();
-        $customerStats = [
-            'recent_orders' => 0,
-            'in_production' => 0,
-            'wishlist' => 0,
-            'reward_points' => 0,
-        ];
 
         try {
             $dbSellers = User::where('role', 'seller')
@@ -160,7 +164,6 @@ class WebController extends Controller
             // Ignore DB schema exceptions on live environment
         }
 
-        // Standard default top rated Lumban shops if DB sellers list is small
         if ($topShops->count() < 3) {
             $defaults = [
                 [
@@ -212,7 +215,20 @@ class WebController extends Controller
             }
         }
 
-        $topShops = $topShops->sortByDesc('rating')->values();
+        return $topShops->sortByDesc('rating')->values();
+    }
+
+    /**
+     * Fetch customer activity stats for current user.
+     */
+    private function fetchCustomerStats()
+    {
+        $customerStats = [
+            'recent_orders' => 0,
+            'in_production' => 0,
+            'wishlist' => 0,
+            'reward_points' => 0,
+        ];
 
         if (Auth::check()) {
             try {
@@ -228,7 +244,7 @@ class WebController extends Controller
             }
         }
 
-        return view('welcome', compact('products', 'categories', 'banners', 'customerStats', 'topShops'));
+        return $customerStats;
     }
 
     /**

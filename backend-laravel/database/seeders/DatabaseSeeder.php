@@ -47,5 +47,8 @@ class DatabaseSeeder extends Seeder
             'password' => 'password',
             'role' => 'customer',
         ]);
+
+        // Seed Categories
+        $this->call(CategorySeeder::class);
     }
 }
