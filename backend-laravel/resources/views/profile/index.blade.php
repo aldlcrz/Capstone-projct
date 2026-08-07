@@ -1,125 +1,207 @@
 @extends('layouts.app')
 
 @section('content')
-<div class="max-w-275 mx-auto py-8">
-    <div class="flex flex-col md:flex-row gap-6">
+<div class="min-h-[calc(100vh-80px)] bg-[#F2F7F2] py-6 px-4 sm:px-6" x-data="{ showEditModal: false }">
+    <div class="max-w-md mx-auto space-y-6">
 
-        {{-- Sidebar --}}
-        @include('profile._sidebar', ['user' => $user])
+        {{-- Top Header --}}
+        <div class="flex items-center justify-between pt-2">
+            <a href="/" class="w-10 h-10 bg-white rounded-2xl flex items-center justify-center text-gray-700 shadow-xs border border-gray-100 hover:bg-gray-50 transition-colors">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+                </svg>
+            </a>
+            <h1 class="text-lg font-extrabold text-gray-900 tracking-tight">Profile</h1>
+            <div class="w-10"></div>
+        </div>
 
-        {{-- Main Panel --}}
-        <main class="flex-1 bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
-            <div class="px-8 py-6 border-b border-gray-100">
-                <h2 class="text-lg font-bold text-gray-900">My Profile</h2>
-                <p class="text-xs text-gray-400 mt-0.5">Manage and protect your account</p>
+        {{-- Profile Avatar & User Card --}}
+        <div class="relative pt-6">
+            {{-- Floating Avatar --}}
+            <div class="relative w-28 h-28 mx-auto -mb-14 z-10">
+                <div class="w-28 h-28 rounded-full overflow-hidden border-4 border-white shadow-lg bg-emerald-100 flex items-center justify-center">
+                    @if($user->profilePhoto)
+                        <img id="avatar-display" src="{{ str_starts_with($user->profilePhoto, 'http') || str_starts_with($user->profilePhoto, '/') ? $user->profilePhoto : asset('storage/' . $user->profilePhoto) }}" class="w-full h-full object-cover">
+                    @else
+                        <span class="text-3xl font-extrabold text-emerald-700">{{ strtoupper(substr($user->name, 0, 1)) }}</span>
+                    @endif
+                </div>
             </div>
 
-            {{-- success is handled by the global floating toast in layouts/app.blade.php --}}
+            {{-- User Info Card --}}
+            <div class="bg-white rounded-3xl pt-16 pb-6 px-6 shadow-xs border border-gray-100/80 text-center relative">
+                {{-- Edit Button (Top Right of Card) --}}
+                <button type="button"
+                        @click="showEditModal = true"
+                        class="absolute top-4 right-4 w-9 h-9 bg-gray-50 hover:bg-gray-100 rounded-xl flex items-center justify-center border border-gray-200/80 text-gray-700 shadow-2xs transition-all cursor-pointer group">
+                    <svg class="w-4 h-4 text-gray-600 group-hover:text-black transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+                    </svg>
+                </button>
 
-            @if($errors->any())
-            <div 
-                x-data="{ show: true, init() { setTimeout(() => this.show = false, 7000) } }"
-                x-show="show"
-                x-transition:enter="transition ease-out duration-300"
-                x-transition:enter-start="opacity-0 translate-y-2 sm:translate-y-0 sm:translate-x-2"
-                x-transition:enter-end="opacity-100 translate-y-0 sm:translate-x-0"
-                x-transition:leave="transition ease-in duration-200"
-                x-transition:leave-start="opacity-100"
-                x-transition:leave-end="opacity-0"
-                class="fixed top-6 right-6 z-9999 w-full max-w-sm bg-white/95 backdrop-blur-md rounded-2xl shadow-2xl border border-gray-100 p-4 flex items-start gap-3.5"
-                style="display: none;"
-                x-cloak
-            >
-                <div class="w-8 h-8 rounded-full bg-red-50 flex items-center justify-center text-red-600 shrink-0 shadow-sm border border-red-100">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12"></path></svg>
+                <h2 class="text-xl font-extrabold text-gray-900 tracking-tight">{{ $user->name }}</h2>
+                @if($user->username && $user->username !== $user->name)
+                    <p class="text-xs text-gray-400 font-medium mt-0.5">{{ '@' . $user->username }}</p>
+                @endif
+            </div>
+        </div>
+
+        {{-- Account Settings Section --}}
+        <div>
+            <h3 class="text-sm font-bold text-gray-800 mb-3 px-1">Account setting</h3>
+
+            <div class="space-y-2.5">
+                {{-- Email --}}
+                <div class="bg-white rounded-2xl p-4 shadow-2xs border border-gray-100 flex items-center justify-between">
+                    <div class="flex items-center gap-3 min-w-0">
+                        <div class="w-9 h-9 rounded-xl bg-[#F0F5F0] text-emerald-800 flex items-center justify-center shrink-0">
+                            <svg class="w-4.5 h-4.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
+                            </svg>
+                        </div>
+                        <span class="font-bold text-sm text-gray-900">Email</span>
+                    </div>
+                    <span class="text-xs font-semibold text-gray-500 truncate max-w-[180px] sm:max-w-xs">{{ $user->email }}</span>
                 </div>
-                <div class="grow pt-0.5">
-                    <h4 class="text-xs font-black text-black uppercase tracking-wider">Please fix the following</h4>
-                    <ul class="text-xs text-gray-500 font-medium mt-1 leading-relaxed space-y-0.5 list-disc list-inside">
-                        @foreach($errors->all() as $error)
-                            <li>{{ $error }}</li>
-                        @endforeach
-                    </ul>
-                </div>
-                <button @click="show = false" class="text-gray-300 hover:text-gray-500 transition-colors shrink-0">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+
+                {{-- Saved Address --}}
+                <a href="{{ route('profile.addresses') }}" class="bg-white rounded-2xl p-4 shadow-2xs border border-gray-100 flex items-center justify-between hover:bg-gray-50/80 transition-colors group cursor-pointer">
+                    <div class="flex items-center gap-3">
+                        <div class="w-9 h-9 rounded-xl bg-[#F0F5F0] text-emerald-800 flex items-center justify-center shrink-0">
+                            <svg class="w-4.5 h-4.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
+                            </svg>
+                        </div>
+                        <span class="font-bold text-sm text-gray-900">Saved address</span>
+                    </div>
+                    <svg class="w-4 h-4 text-gray-400 group-hover:text-black group-hover:translate-x-0.5 transition-all" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5l7 7-7 7"/>
+                    </svg>
+                </a>
+
+                {{-- Orders --}}
+                <a href="{{ route('orders') }}" class="bg-white rounded-2xl p-4 shadow-2xs border border-gray-100 flex items-center justify-between hover:bg-gray-50/80 transition-colors group cursor-pointer">
+                    <div class="flex items-center gap-3">
+                        <div class="w-9 h-9 rounded-xl bg-[#F0F5F0] text-emerald-800 flex items-center justify-center shrink-0">
+                            <svg class="w-4.5 h-4.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/>
+                            </svg>
+                        </div>
+                        <span class="font-bold text-sm text-gray-900">Orders</span>
+                    </div>
+                    <svg class="w-4 h-4 text-gray-400 group-hover:text-black group-hover:translate-x-0.5 transition-all" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5l7 7-7 7"/>
+                    </svg>
+                </a>
+
+                {{-- Change Password --}}
+                <a href="{{ route('profile.change-password') }}" class="bg-white rounded-2xl p-4 shadow-2xs border border-gray-100 flex items-center justify-between hover:bg-gray-50/80 transition-colors group cursor-pointer">
+                    <div class="flex items-center gap-3">
+                        <div class="w-9 h-9 rounded-xl bg-[#F0F5F0] text-emerald-800 flex items-center justify-center shrink-0">
+                            <svg class="w-4.5 h-4.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
+                            </svg>
+                        </div>
+                        <span class="font-bold text-sm text-gray-900">Change Password</span>
+                    </div>
+                    <svg class="w-4 h-4 text-gray-400 group-hover:text-black group-hover:translate-x-0.5 transition-all" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5l7 7-7 7"/>
+                    </svg>
+                </a>
+            </div>
+        </div>
+
+    </div>
+
+    {{-- Edit Profile Modal --}}
+    <div x-show="showEditModal"
+         x-cloak
+         class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs"
+         x-transition:enter="transition ease-out duration-200"
+         x-transition:enter-start="opacity-0 scale-95"
+         x-transition:enter-end="opacity-100 scale-100"
+         x-transition:leave="transition ease-in duration-150"
+         x-transition:leave-start="opacity-100 scale-100"
+         x-transition:leave-end="opacity-0 scale-95"
+         @keydown.escape.window="showEditModal = false">
+
+        <div class="relative w-full max-w-sm bg-white rounded-3xl p-6 shadow-2xl border border-gray-100 space-y-4"
+             @click.away="showEditModal = false">
+
+            <div class="flex items-center justify-between pb-2 border-b border-gray-100">
+                <h3 class="text-base font-extrabold text-gray-900">Edit Profile</h3>
+                <button type="button" @click="showEditModal = false" class="text-gray-400 hover:text-black transition-colors">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
                 </button>
             </div>
-            @endif
 
-            <form action="{{ route('profile.update') }}" method="POST" enctype="multipart/form-data" class="px-4 sm:px-8 py-6 sm:py-8">
+            <form action="{{ route('profile.update') }}" method="POST" enctype="multipart/form-data" class="space-y-4">
                 @csrf
                 @method('PUT')
 
-                <div class="flex flex-col lg:flex-row gap-8 lg:gap-10 lg:items-center">
-                    {{-- Avatar (Top on mobile, Vertically Centered Right Sidebar on desktop) --}}
-                    <div class="order-first lg:order-last flex flex-col items-center justify-center gap-3 lg:w-56 lg:border-l lg:border-gray-100 lg:pl-10 pb-6 lg:pb-0 border-b border-gray-100 lg:border-b-0 lg:py-4">
-                        <div class="w-24 h-24 rounded-full bg-gray-100 border border-gray-200 flex items-center justify-center overflow-hidden shadow-xs">
-                            @if($user->profilePhoto)
-                                <img src="{{ str_starts_with($user->profilePhoto, 'http') || str_starts_with($user->profilePhoto, '/') ? $user->profilePhoto : asset('storage/' . $user->profilePhoto) }}" class="w-full h-full object-cover">
-                            @else
-                                <span class="text-3xl font-bold text-gray-400">{{ strtoupper(substr($user->name, 0, 1)) }}</span>
-                            @endif
-                        </div>
-                        <label class="cursor-pointer">
-                            <input type="file" name="avatar" accept="image/jpeg,image/png" class="hidden" onchange="previewAvatar(this)">
-                            <div class="px-4 py-2 border border-gray-300 rounded-lg text-xs sm:text-sm font-semibold text-gray-700 hover:border-gray-400 bg-white transition-colors shadow-2xs">
-                                Select Image
-                            </div>
+                {{-- Profile Picture Preview & Upload --}}
+                <div class="text-center space-y-2">
+                    <div class="relative w-20 h-20 mx-auto rounded-full overflow-hidden border-2 border-gray-200 bg-gray-50 flex items-center justify-center group">
+                        <img id="modal-avatar-preview"
+                             src="{{ $user->profilePhoto ? (str_starts_with($user->profilePhoto, 'http') || str_starts_with($user->profilePhoto, '/') ? $user->profilePhoto : asset('storage/' . $user->profilePhoto)) : asset('uploads/products/default.jpg') }}"
+                             class="w-full h-full object-cover">
+                        <label class="absolute inset-0 bg-black/40 text-white opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center cursor-pointer">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"/><circle cx="12" cy="13" r="4"/></svg>
+                            <span class="text-[9px] font-bold uppercase mt-0.5">Change</span>
+                            <input type="file" name="avatar" accept="image/*" class="hidden" onchange="previewModalAvatar(this)">
                         </label>
-                        <div class="text-center text-[10px] sm:text-[11px] text-gray-400 leading-relaxed">
-                            File size: maximum 1 MB<br>
-                            File extension: JPEG, PNG
-                        </div>
                     </div>
+                    <p class="text-[10px] text-gray-400 font-medium">Click photo to upload new picture</p>
+                </div>
 
-                    {{-- Form Fields --}}
-                    <div class="flex-1 space-y-4 sm:space-y-5">
+                {{-- Username Input --}}
+                <div class="space-y-1">
+                    <label class="text-xs font-bold text-gray-700" for="modal-username">Username</label>
+                    <input id="modal-username"
+                           type="text"
+                           name="username"
+                           value="{{ old('username', $user->username ?? $user->name) }}"
+                           required
+                           class="w-full h-10 px-3.5 bg-gray-50 border border-gray-200 rounded-xl text-xs font-medium outline-none focus:border-[#C0422A] focus:bg-white transition-colors">
+                </div>
 
-                        {{-- Username (editable) --}}
-                        <div class="flex flex-col sm:grid sm:grid-cols-[140px_1fr] md:grid-cols-[160px_1fr] items-start sm:items-center gap-1.5 sm:gap-4">
-                            <label class="text-xs sm:text-sm font-medium sm:font-normal text-gray-500 text-left sm:text-right" for="username">Username</label>
-                            <input id="username" type="text" name="username" value="{{ old('username', $user->username ?? $user->name) }}"
-                                class="h-10 px-4 bg-white border border-gray-200 rounded-lg text-sm outline-none focus:border-[#C0420A] transition-colors w-full">
-                        </div>
+                {{-- Name Input --}}
+                <div class="space-y-1">
+                    <label class="text-xs font-bold text-gray-700" for="modal-name">Full Name</label>
+                    <input id="modal-name"
+                           type="text"
+                           name="name"
+                           value="{{ old('name', $user->name) }}"
+                           required
+                           class="w-full h-10 px-3.5 bg-gray-50 border border-gray-200 rounded-xl text-xs font-medium outline-none focus:border-[#C0422A] focus:bg-white transition-colors">
+                </div>
 
-                        {{-- Name --}}
-                        <div class="flex flex-col sm:grid sm:grid-cols-[140px_1fr] md:grid-cols-[160px_1fr] items-start sm:items-center gap-1.5 sm:gap-4">
-                            <label class="text-xs sm:text-sm font-medium sm:font-normal text-gray-500 text-left sm:text-right" for="name">Name</label>
-                            <input id="name" type="text" name="name" value="{{ old('name', $user->name) }}"
-                                class="h-10 px-4 bg-white border border-gray-200 rounded-lg text-sm outline-none focus:border-[#C0420A] transition-colors w-full">
-                        </div>
-
-                        {{-- Email (read-only) --}}
-                        <div class="flex flex-col sm:grid sm:grid-cols-[140px_1fr] md:grid-cols-[160px_1fr] items-start sm:items-center gap-1.5 sm:gap-4">
-                            <label class="text-xs sm:text-sm font-medium sm:font-normal text-gray-500 text-left sm:text-right">Email</label>
-                            <div class="flex items-center gap-3 w-full overflow-hidden">
-                                <span class="text-xs sm:text-sm text-gray-800 truncate font-semibold sm:font-normal">{{ $user->email }}</span>
-                            </div>
-                        </div>
-
-                        {{-- Submit --}}
-                        <div class="flex flex-col sm:grid sm:grid-cols-[140px_1fr] md:grid-cols-[160px_1fr] items-start sm:items-center gap-1.5 sm:gap-4 pt-3">
-                            <div class="hidden sm:block"></div>
-                            <button type="submit"
-                                class="w-full sm:w-32 py-2.5 bg-[#C0420A] text-white text-sm font-semibold rounded-lg hover:bg-[#a83808] transition-colors shadow-sm">
-                                Save
-                            </button>
-                        </div>
-                    </div>
+                {{-- Actions --}}
+                <div class="flex items-center gap-3 pt-2">
+                    <button type="button"
+                            @click="showEditModal = false"
+                            class="flex-1 py-2.5 px-4 rounded-xl border border-gray-200 text-gray-700 text-xs font-bold uppercase tracking-wider hover:bg-gray-50 transition-all cursor-pointer">
+                        Cancel
+                    </button>
+                    <button type="submit"
+                            class="flex-1 py-2.5 px-4 rounded-xl bg-[#C0422A] hover:bg-black text-white text-xs font-bold uppercase tracking-wider shadow-md active:scale-95 transition-all cursor-pointer">
+                        Save Changes
+                    </button>
                 </div>
             </form>
-        </main>
+        </div>
     </div>
 </div>
 
 <script>
-function previewAvatar(input) {
+function previewModalAvatar(input) {
     if (input.files && input.files[0]) {
         const reader = new FileReader();
         reader.onload = e => {
-            const container = input.closest('label').previousElementSibling;
-            container.innerHTML = `<img src="${e.target.result}" class="w-full h-full object-cover rounded-full">`;
+            document.getElementById('modal-avatar-preview').src = e.target.result;
+            const topDisplay = document.getElementById('avatar-display');
+            if (topDisplay) topDisplay.src = e.target.result;
         };
         reader.readAsDataURL(input.files[0]);
     }
