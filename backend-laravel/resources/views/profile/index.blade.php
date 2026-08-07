@@ -62,7 +62,7 @@
                         </div>
                         <span class="font-bold text-sm text-gray-900">Email</span>
                     </div>
-                    <span class="text-xs font-semibold text-gray-500 truncate max-w-[180px] sm:max-w-xs">{{ $user->email }}</span>
+                    <span class="text-xs font-semibold text-gray-500 truncate max-w-45 sm:max-w-xs">{{ $user->email }}</span>
                 </div>
 
                 {{-- Saved Address (Opens Modal) --}}
@@ -294,7 +294,7 @@
                             </div>
 
                             <div x-show="locationDropdownOpen" @click.away="locationDropdownOpen = false"
-                                 class="absolute left-0 right-0 z-50 mt-1 bg-white border border-gray-200 rounded-xl shadow-xl overflow-hidden flex flex-col max-h-[250px]" x-cloak>
+                                 class="absolute left-0 right-0 z-50 mt-1 bg-white border border-gray-200 rounded-xl shadow-xl overflow-hidden flex flex-col max-h-62.5" x-cloak>
                                 <div class="flex border-b border-gray-100 bg-gray-50 text-[10px] font-bold text-gray-500">
                                     <button @click="activeTab = 'region'" type="button" :class="activeTab === 'region' ? 'text-[#C0422A] bg-white' : ''" class="flex-1 py-2 text-center">Region</button>
                                     <button @click="if(selectedRegion && hasProvinces) activeTab = 'province'" type="button" :disabled="!selectedRegion || !hasProvinces" :class="activeTab === 'province' ? 'text-[#C0422A] bg-white' : ''" class="flex-1 py-2 text-center disabled:opacity-40">Province</button>
@@ -304,7 +304,7 @@
                                 <div class="p-1.5 border-b border-gray-100 bg-gray-50/50">
                                     <input type="text" x-model="locationSearch" :placeholder="'Search ' + activeTab + '...'" class="w-full h-7 px-2 border border-gray-200 rounded-md text-[11px]">
                                 </div>
-                                <div class="flex-1 overflow-y-auto max-h-[160px] divide-y divide-gray-50 text-[11px]">
+                                <div class="flex-1 overflow-y-auto max-h-40 divide-y divide-gray-50 text-[11px]">
                                     <template x-if="activeTab === 'region' && !loadingGeoData">
                                         <div>
                                             <template x-for="reg in filteredGeoList(regionsList)" :key="reg.code">

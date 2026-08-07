@@ -1,7 +1,7 @@
 @extends('layouts.app')
 
 @section('content')
-<div class="max-w-[1100px] mx-auto py-8">
+<div class="max-w-275 mx-auto py-8">
     <div class="flex flex-col md:flex-row gap-6">
 
         @include('profile._sidebar', ['user' => $user])
@@ -22,7 +22,7 @@
             </div>
 
             {{-- Address List --}}
-            <div class="px-8 py-6 min-h-[260px]">
+            <div class="px-8 py-6 min-h-65">
                 {{-- Search --}}
                 <div class="relative mb-5 max-w-xs">
                     <input x-model="search" type="text" placeholder="Search address..."
@@ -197,7 +197,7 @@
                                  </div>
 
                                  <!-- Scrollable List -->
-                                 <div class="flex-1 overflow-y-auto min-h-[180px] max-h-[220px] divide-y divide-gray-50">
+                                 <div class="flex-1 overflow-y-auto min-h-45 max-h-55 divide-y divide-gray-50">
                                      <!-- Loading Geo Data Spinner -->
                                      <div x-show="loadingGeoData" class="flex items-center justify-center py-10 text-xs text-gray-400 gap-2">
                                          <svg class="animate-spin h-4 w-4 text-[#C0420A]" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
