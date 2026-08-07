@@ -113,9 +113,13 @@
                                            @change="toggleShop('{{ addslashes($shopName) }}', $event.target.checked)"
                                            :checked="isShopSelected('{{ addslashes($shopName) }}')"
                                            class="sr-only peer">
-                                    <div class="w-4.5 h-4.5 rounded border-2 border-gray-300 peer-checked:bg-[#C0422A] peer-checked:border-[#C0422A] transition-all flex items-center justify-center">
-                                        <svg class="w-3 h-3 text-white fill-current hidden peer-checked:block" viewBox="0 0 20 20">
+                                    <div class="w-4.5 h-4.5 rounded border-2 border-gray-300 transition-all flex items-center justify-center"
+                                         :class="isShopSelected('{{ addslashes($shopName) }}') ? 'bg-[#C0422A] border-[#C0422A]' : (isShopIndeterminate('{{ addslashes($shopName) }}') ? 'bg-[#C0422A] border-[#C0422A]' : '')">
+                                        <svg x-show="isShopSelected('{{ addslashes($shopName) }}')" class="w-3 h-3 text-white fill-current" viewBox="0 0 20 20">
                                             <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
+                                        </svg>
+                                        <svg x-show="!isShopSelected('{{ addslashes($shopName) }}') && isShopIndeterminate('{{ addslashes($shopName) }}')" class="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M20 12H4"/>
                                         </svg>
                                     </div>
                                 </label>
@@ -129,12 +133,14 @@
                                 </a>
                             </div>
 
-                            <span class="inline-flex items-center gap-1 text-[9px] font-bold text-[#C0422A] shrink-0">
-                                <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
-                                    <path fill-rule="evenodd" d="M6.267 3.455a3.066 3.066 0 001.745-.723 3.066 3.066 0 013.976 0 3.066 3.066 0 001.745.723 3.066 3.066 0 012.812 2.812c.051.643.304 1.254.723 1.745a3.066 3.066 0 010 3.976 3.066 3.066 0 00-.723 1.745 3.066 3.066 0 01-2.812 2.812 3.066 3.066 0 00-1.745.723 3.066 3.066 0 01-3.976 0 3.066 3.066 0 00-1.745-.723 3.066 3.066 0 01-2.812-2.812 3.066 3.066 0 00-.723-1.745 3.066 3.066 0 010-3.976 3.066 3.066 0 00.723-1.745 3.066 3.066 0 012.812-2.812zm7.44 5.252a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
-                                </svg>
-                                100% Authentic
-                            </span>
+                            <div class="flex items-center gap-2 shrink-0">
+                                <button type="button"
+                                        @click="checkoutShopOnly('{{ addslashes($shopName) }}')"
+                                        class="inline-flex items-center gap-1 text-[10px] font-bold text-[#C0422A] bg-[#C0422A]/10 hover:bg-[#C0422A] hover:text-white px-2 py-1 rounded-md transition-all cursor-pointer">
+                                    <span>Checkout Shop</span>
+                                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
+                                </button>
+                            </div>
                         </div>
 
                         {{-- Lazada Style Product Items --}}
@@ -478,6 +484,12 @@ function cartApp() {
             return shopItems.length > 0 && shopItems.every(i => this.selected.includes(i.key));
         },
 
+        isShopIndeterminate(shopName) {
+            const shopItems = this.items.filter(i => (i.shop_name || 'Lumban Heritage Shop') === shopName);
+            const selectedCount = shopItems.filter(i => this.selected.includes(i.key)).length;
+            return selectedCount > 0 && selectedCount < shopItems.length;
+        },
+
         toggleShop(shopName, isChecked) {
             const shopKeys = this.items
                 .filter(i => (i.shop_name || 'Lumban Heritage Shop') === shopName)
@@ -489,6 +501,20 @@ function cartApp() {
                 this.selected = this.selected.filter(k => !shopKeys.includes(k));
             }
             this.syncSelectAll();
+        },
+
+        checkoutShopOnly(shopName) {
+            const shopKeys = this.items
+                .filter(i => (i.shop_name || 'Lumban Heritage Shop') === shopName)
+                .map(i => i.key);
+            if (shopKeys.length === 0) return;
+            this.selected = shopKeys;
+            this.syncSelectAll();
+            this.$nextTick(() => {
+                if (this.$refs.checkoutForm) {
+                    this.$refs.checkoutForm.submit();
+                }
+            });
         },
 
         toggleAll() {
