@@ -16,6 +16,7 @@ class CartController extends Controller
         $updated = false;
 
         foreach ($cart as $key => &$item) {
+            $item['key'] = (string) $key;
             $product = Product::with('seller')->find($item['id']);
             if (!$product) {
                 unset($cart[$key]);
@@ -124,6 +125,7 @@ class CartController extends Controller
         if (isset($cart[$key])) {
             $newQuantity = $cart[$key]['quantity'] + $quantity;
             $updatedItem = $cart[$key];
+            $updatedItem['key'] = $key;
             $updatedItem['quantity'] = min($newQuantity, $availableStock);
             $updatedItem['image'] = $image;
             $updatedItem['name'] = $product->name;
@@ -131,6 +133,7 @@ class CartController extends Controller
             $cart = [$key => $updatedItem] + $cart;
         } else {
             $newItem = [
+                'key' => $key,
                 'id' => $product->id,
                 'name' => $product->name,
                 'price' => $product->sale_price,
