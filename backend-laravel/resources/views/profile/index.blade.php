@@ -276,8 +276,8 @@
                         <div>
                             <label class="font-bold text-gray-700 mb-1 block">Full Name *</label>
                             <input x-model="addressForm.recipientName"
-                                   @input="fieldErrors.recipientName = ''"
-                                   type="text" placeholder="Recipient's full name"
+                                   @input="fieldErrors.recipientName = ''; addressForm.recipientName = addressForm.recipientName.replace(/[^a-zA-Z\u00C0-\u024F\s.'-]/g, '')"
+                                   type="text" placeholder="Recipient's full name (letters only)"
                                    maxlength="80"
                                    :class="fieldErrors.recipientName ? 'border-red-400 bg-red-50' : 'border-gray-200'"
                                    class="w-full h-9 px-3 border rounded-xl outline-none focus:border-[#C0422A] transition-colors">
@@ -535,6 +535,9 @@ function profileApp() {
                 hasError = true;
             } else if (name.length < 2) {
                 this.fieldErrors.recipientName = 'Name must be at least 2 characters.';
+                hasError = true;
+            } else if (!/^[a-zA-Z\u00C0-\u024F\s.'\-]+$/.test(name)) {
+                this.fieldErrors.recipientName = 'Full name must contain letters only.';
                 hasError = true;
             }
 
