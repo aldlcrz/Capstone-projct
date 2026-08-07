@@ -405,10 +405,15 @@
                     </div>
 
                     <template x-if="step === 1">
-                        <button type="button" @click="step = 2" class="w-full bg-[#C0422A] text-white py-4 rounded-xl text-sm font-bold shadow-lg shadow-[#C0422A]/20 hover:bg-[#A33622] transition-all transform active:scale-[0.99] flex items-center justify-center gap-2">
-                            <span>Proceed to Payment</span>
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
-                        </button>
+                        <div class="space-y-2">
+                            <div x-show="addressStepError" x-cloak
+                                 class="text-[10px] font-bold text-red-500 bg-red-50 border border-red-100 rounded-xl px-3 py-2 text-center"
+                                 x-text="addressStepError"></div>
+                            <button type="button" @click="validateStep1()" class="w-full bg-[#C0422A] text-white py-4 rounded-xl text-sm font-bold shadow-lg shadow-[#C0422A]/20 hover:bg-[#A33622] transition-all transform active:scale-[0.99] flex items-center justify-center gap-2">
+                                <span>Proceed to Payment</span>
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
+                            </button>
+                        </div>
                     </template>
                     <template x-if="step === 2">
                         <div class="flex gap-3">
@@ -471,9 +476,14 @@
 
             {{-- Step 1 Button on Mobile --}}
             <template x-if="step === 1">
-                <button type="button" @click="step = 2" class="px-6 py-3 bg-[#C0422A] text-white text-xs font-bold uppercase tracking-widest rounded-xl shadow-lg hover:bg-[#A33622] transition-all">
-                    Proceed to Payment
-                </button>
+                <div class="flex flex-col items-end gap-1">
+                    <button type="button" @click="validateStep1()" class="px-6 py-3 bg-[#C0422A] text-white text-xs font-bold uppercase tracking-widest rounded-xl shadow-lg hover:bg-[#A33622] transition-all">
+                        Proceed to Payment
+                    </button>
+                    <div x-show="addressStepError" x-cloak
+                         class="text-[9px] font-bold text-red-500 text-right max-w-[180px]"
+                         x-text="addressStepError"></div>
+                </div>
             </template>
 
             {{-- Step 2 Dual Button on Mobile --}}
@@ -698,6 +708,7 @@ function checkoutApp(initialAddress, initialAddresses, defaultPaymentMethod) {
         showEditAddressModal: false,
         savingAddress: false,
         addressError: '',
+        addressStepError: '',
         editForm: {
             id: null,
             recipientName: '',
@@ -869,6 +880,19 @@ function checkoutApp(initialAddress, initialAddresses, defaultPaymentMethod) {
             }
             this.refError = '';
             return true;
+        },
+        validateStep1() {
+            this.addressStepError = '';
+            const addr = this.address || {};
+            if (!addr.recipientName || !addr.city || !addr.province) {
+                this.addressStepError = !addr.recipientName
+                    ? 'Please add a delivery address with a recipient name before proceeding.'
+                    : 'Your saved address is incomplete. Please add a full delivery address.';
+                // scroll into address section
+                document.querySelector('[data-address-section]')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                return;
+            }
+            this.step = 2;
         },
         requestPlaceOrder() {
             if (!this.validateRef()) {

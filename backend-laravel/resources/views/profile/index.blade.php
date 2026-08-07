@@ -1,12 +1,16 @@
 @extends('layouts.app')
 
 @section('content')
-<div class="min-h-[calc(100vh-80px)] bg-[#F2F7F2] py-6 px-4 sm:px-6" x-data="profileApp()" x-init="init()">
+<div class="min-h-[calc(100vh-80px)] bg-white py-6 px-4 sm:px-6" x-data="profileApp()" x-init="init()">
     <div class="max-w-md mx-auto space-y-6">
 
         {{-- Top Header --}}
-        <div class="text-center pt-2">
-            <h1 class="text-lg font-extrabold text-gray-900 tracking-tight">Profile</h1>
+        <div class="pt-2">
+            <div class="flex items-center gap-2 mb-1">
+                <div class="w-5 h-0.5 bg-[#C0422A]"></div>
+                <span class="text-[10px] font-bold uppercase tracking-widest text-[#C0422A]">Account</span>
+            </div>
+            <h1 class="font-serif text-2xl font-bold text-black">My <span class="text-[#C0422A] italic">Profile</span></h1>
         </div>
 
         {{-- Profile Avatar & User Card --}}
@@ -49,13 +53,13 @@
 
         {{-- Account Settings Section --}}
         <div>
-            <h3 class="text-sm font-bold text-gray-800 mb-3 px-1">Account setting</h3>
+            <h3 class="text-[10px] font-bold uppercase tracking-widest text-[#C0422A] mb-3 px-1">Account Settings</h3>
 
             <div class="space-y-2.5">
                 {{-- Email --}}
                 <div class="bg-white rounded-2xl p-4 shadow-2xs border border-gray-100 flex items-center justify-between">
                     <div class="flex items-center gap-3 min-w-0">
-                        <div class="w-9 h-9 rounded-xl bg-[#F0F5F0] text-emerald-800 flex items-center justify-center shrink-0">
+                        <div class="w-9 h-9 rounded-xl bg-[#FDF9F4] text-[#C0422A] border border-[#C0422A]/20 flex items-center justify-center shrink-0">
                             <svg class="w-4.5 h-4.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
                             </svg>
@@ -70,7 +74,7 @@
                         @click="openSavedAddresses()"
                         class="w-full bg-white rounded-2xl p-4 shadow-2xs border border-gray-100 flex items-center justify-between hover:bg-gray-50/80 transition-colors group cursor-pointer text-left">
                     <div class="flex items-center gap-3">
-                        <div class="w-9 h-9 rounded-xl bg-[#F0F5F0] text-emerald-800 flex items-center justify-center shrink-0">
+                        <div class="w-9 h-9 rounded-xl bg-[#FDF9F4] text-[#C0422A] border border-[#C0422A]/20 flex items-center justify-center shrink-0">
                             <svg class="w-4.5 h-4.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
@@ -86,7 +90,7 @@
                 {{-- Orders --}}
                 <a href="{{ route('orders') }}" class="bg-white rounded-2xl p-4 shadow-2xs border border-gray-100 flex items-center justify-between hover:bg-gray-50/80 transition-colors group cursor-pointer">
                     <div class="flex items-center gap-3">
-                        <div class="w-9 h-9 rounded-xl bg-[#F0F5F0] text-emerald-800 flex items-center justify-center shrink-0">
+                        <div class="w-9 h-9 rounded-xl bg-[#FDF9F4] text-[#C0422A] border border-[#C0422A]/20 flex items-center justify-center shrink-0">
                             <svg class="w-4.5 h-4.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/>
                             </svg>
@@ -101,7 +105,7 @@
                 {{-- Change Password --}}
                 <a href="{{ route('profile.change-password') }}" class="bg-white rounded-2xl p-4 shadow-2xs border border-gray-100 flex items-center justify-between hover:bg-gray-50/80 transition-colors group cursor-pointer">
                     <div class="flex items-center gap-3">
-                        <div class="w-9 h-9 rounded-xl bg-[#F0F5F0] text-emerald-800 flex items-center justify-center shrink-0">
+                        <div class="w-9 h-9 rounded-xl bg-[#FDF9F4] text-[#C0422A] border border-[#C0422A]/20 flex items-center justify-center shrink-0">
                             <svg class="w-4.5 h-4.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
                             </svg>
