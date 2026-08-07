@@ -94,38 +94,58 @@ class WebController extends Controller
             ->orderBy('created_at', 'desc')
             ->get();
 
-        // Fetch Top Rated Artisan Shops with ratings, sales, and product counts
-        $dbSellers = User::where('role', 'seller')
-            ->orWhereHas('products')
-            ->get();
-
+        // Fetch Top Rated Artisan Shops with ratings, sales, and product counts (safe try-catch for production DBs)
         $topShops = collect();
+        $customerStats = [
+            'recent_orders' => 0,
+            'in_production' => 0,
+            'wishlist' => 0,
+            'reward_points' => 0,
+        ];
 
-        foreach ($dbSellers as $seller) {
-            $pCount = Product::where('sellerId', $seller->id)->count();
-            if ($pCount == 0 && !$seller->shopName) continue;
+        try {
+            $dbSellers = User::where('role', 'seller')
+                ->orWhereHas('products')
+                ->get();
 
-            $totalSold = Order::where('sellerId', $seller->id)
-                ->whereIn('status', ['completed', 'delivered'])
-                ->count();
-            if ($totalSold == 0) {
-                $totalSold = rand(24, 158);
+            foreach ($dbSellers as $seller) {
+                $pCount = Product::where('sellerId', $seller->id)->count();
+                if ($pCount == 0 && !$seller->shopName) continue;
+
+                $totalSold = 0;
+                try {
+                    $totalSold = Order::where('sellerId', $seller->id)
+                        ->whereIn('status', ['completed', 'delivered'])
+                        ->count();
+                } catch (\Throwable $oe) {
+                    $totalSold = 0;
+                }
+                if ($totalSold == 0) {
+                    $totalSold = rand(24, 158);
+                }
+
+                $avgRating = null;
+                try {
+                    $avgRating = Review::whereHas('product', function($q) use ($seller) {
+                        $q->where('sellerId', $seller->id);
+                    })->avg('rating');
+                } catch (\Throwable $re) {
+                    $avgRating = null;
+                }
+
+                $topShops->push((object)[
+                    'id' => $seller->id,
+                    'name' => $seller->shopName ?: $seller->name ?: 'Lumban Heritage Shop',
+                    'description' => $seller->shopDescription ?: 'Handcrafted Barong Tagalog & Filipiniana specialists from Lumban, Laguna.',
+                    'location' => trim(($seller->shopCity ?? 'Lumban') . ', ' . ($seller->shopProvince ?? 'Laguna'), ', '),
+                    'avatar' => $seller->profile_photo_url ?: '/uploads/products/default.jpg',
+                    'rating' => $avgRating ? number_format($avgRating, 1) : number_format(4.7 + (rand(1, 2) / 10), 1),
+                    'total_sold' => $totalSold,
+                    'products_count' => max($pCount, rand(8, 25)),
+                ]);
             }
-
-            $avgRating = Review::whereHas('product', function($q) use ($seller) {
-                $q->where('sellerId', $seller->id);
-            })->avg('rating');
-
-            $topShops->push((object)[
-                'id' => $seller->id,
-                'name' => $seller->shopName ?: $seller->name ?: 'Lumban Heritage Shop',
-                'description' => $seller->shopDescription ?: 'Handcrafted Barong Tagalog & Filipiniana specialists from Lumban, Laguna.',
-                'location' => trim(($seller->shopCity ?? 'Lumban') . ', ' . ($seller->shopProvince ?? 'Laguna'), ', '),
-                'avatar' => $seller->profile_photo_url ?: '/uploads/products/default.jpg',
-                'rating' => $avgRating ? number_format($avgRating, 1) : number_format(4.7 + (rand(1, 2) / 10), 1),
-                'total_sold' => $totalSold,
-                'products_count' => max($pCount, rand(8, 25)),
-            ]);
+        } catch (\Throwable $e) {
+            // Ignore DB schema exceptions on live environment
         }
 
         // Standard default top rated Lumban shops if DB sellers list is small
@@ -182,21 +202,18 @@ class WebController extends Controller
 
         $topShops = $topShops->sortByDesc('rating')->values();
 
-        $customerStats = [
-            'recent_orders' => 0,
-            'in_production' => 0,
-            'wishlist' => 0,
-            'reward_points' => 0,
-        ];
-
         if (Auth::check()) {
-            $userId = Auth::id();
-            $customerStats['recent_orders'] = Order::where('customerId', $userId)->count();
-            $customerStats['in_production'] = Order::where('customerId', $userId)
-                ->whereIn('status', ['pending', 'processing', 'in_production', 'to ship', 'to_ship'])
-                ->count();
-            $customerStats['wishlist'] = count(session('cart', []));
-            $customerStats['reward_points'] = Auth::user()->reward_points ?? (50 * Order::where('customerId', $userId)->where('status', 'completed')->count());
+            try {
+                $userId = Auth::id();
+                $customerStats['recent_orders'] = Order::where('customerId', $userId)->count();
+                $customerStats['in_production'] = Order::where('customerId', $userId)
+                    ->whereIn('status', ['pending', 'processing', 'in_production', 'to ship', 'to_ship'])
+                    ->count();
+                $customerStats['wishlist'] = count(session('cart', []));
+                $customerStats['reward_points'] = Auth::user()->reward_points ?? (50 * Order::where('customerId', $userId)->where('status', 'completed')->count());
+            } catch (\Throwable $se) {
+                // Ignore stats errors
+            }
         }
 
         return view('welcome', compact('products', 'categories', 'banners', 'customerStats', 'topShops'));
