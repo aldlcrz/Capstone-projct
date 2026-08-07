@@ -1,7 +1,7 @@
 @extends('layouts.app')
 
 @section('content')
-<div class="min-h-[calc(100vh-80px)] bg-[#F2F7F2] py-6 px-4 sm:px-6" x-data="{ showEditModal: false }">
+<div class="min-h-[calc(100vh-80px)] bg-[#F2F7F2] py-6 px-4 sm:px-6" x-data="profileApp()" x-init="init()">
     <div class="max-w-md mx-auto space-y-6">
 
         {{-- Top Header --}}
@@ -23,20 +23,27 @@
             </div>
 
             {{-- User Info Card --}}
-            <div class="bg-white rounded-3xl pt-16 pb-6 px-6 shadow-xs border border-gray-100/80 text-center relative">
-                {{-- Edit Button (Top Right of Card) --}}
-                <button type="button"
-                        @click="showEditModal = true"
-                        class="absolute top-4 right-4 w-9 h-9 bg-gray-50 hover:bg-gray-100 rounded-xl flex items-center justify-center border border-gray-200/80 text-gray-700 shadow-2xs transition-all cursor-pointer group">
-                    <svg class="w-4 h-4 text-gray-600 group-hover:text-black transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
-                    </svg>
-                </button>
+            <div class="bg-white rounded-3xl pt-16 pb-5 px-6 shadow-xs border border-gray-100/80 relative">
+                <div class="flex items-center justify-between gap-3">
+                    {{-- Left-aligned Username & Name --}}
+                    <div class="text-left min-w-0 pr-2">
+                        <h2 class="text-lg font-extrabold text-gray-900 tracking-tight leading-tight truncate">
+                            {{ $user->username ?? $user->name }}
+                        </h2>
+                        @if($user->username && $user->username !== $user->name)
+                            <p class="text-xs text-gray-400 font-medium mt-0.5 truncate">{{ $user->name }}</p>
+                        @endif
+                    </div>
 
-                <h2 class="text-xl font-extrabold text-gray-900 tracking-tight">{{ $user->name }}</h2>
-                @if($user->username && $user->username !== $user->name)
-                    <p class="text-xs text-gray-400 font-medium mt-0.5">{{ '@' . $user->username }}</p>
-                @endif
+                    {{-- Edit Button (Top Right of Card) --}}
+                    <button type="button"
+                            @click="showEditModal = true"
+                            class="w-9 h-9 bg-gray-50 hover:bg-gray-100 rounded-xl flex items-center justify-center border border-gray-200/80 text-gray-700 shadow-2xs transition-all cursor-pointer group shrink-0">
+                        <svg class="w-4 h-4 text-gray-600 group-hover:text-black transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+                        </svg>
+                    </button>
+                </div>
             </div>
         </div>
 
@@ -58,8 +65,10 @@
                     <span class="text-xs font-semibold text-gray-500 truncate max-w-[180px] sm:max-w-xs">{{ $user->email }}</span>
                 </div>
 
-                {{-- Saved Address --}}
-                <a href="{{ route('profile.addresses') }}" class="bg-white rounded-2xl p-4 shadow-2xs border border-gray-100 flex items-center justify-between hover:bg-gray-50/80 transition-colors group cursor-pointer">
+                {{-- Saved Address (Opens Modal) --}}
+                <button type="button"
+                        @click="openSavedAddresses()"
+                        class="w-full bg-white rounded-2xl p-4 shadow-2xs border border-gray-100 flex items-center justify-between hover:bg-gray-50/80 transition-colors group cursor-pointer text-left">
                     <div class="flex items-center gap-3">
                         <div class="w-9 h-9 rounded-xl bg-[#F0F5F0] text-emerald-800 flex items-center justify-center shrink-0">
                             <svg class="w-4.5 h-4.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -72,7 +81,7 @@
                     <svg class="w-4 h-4 text-gray-400 group-hover:text-black group-hover:translate-x-0.5 transition-all" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5l7 7-7 7"/>
                     </svg>
-                </a>
+                </button>
 
                 {{-- Orders --}}
                 <a href="{{ route('orders') }}" class="bg-white rounded-2xl p-4 shadow-2xs border border-gray-100 flex items-center justify-between hover:bg-gray-50/80 transition-colors group cursor-pointer">
@@ -186,9 +195,404 @@
             </form>
         </div>
     </div>
+
+    {{-- Saved Address Modal --}}
+    <div x-show="showAddressModal"
+         x-cloak
+         class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs"
+         x-transition
+         @keydown.escape.window="showAddressModal = false">
+
+        <div class="relative w-full max-w-lg bg-white rounded-3xl p-6 shadow-2xl border border-gray-100 max-h-[85vh] flex flex-col space-y-4"
+             @click.away="showAddressModal = false">
+
+            <div class="flex items-center justify-between pb-3 border-b border-gray-100 shrink-0">
+                <div>
+                    <h3 class="text-base font-extrabold text-gray-900">Saved Addresses</h3>
+                    <p class="text-[10px] text-gray-400 font-medium">Manage your shipping destinations</p>
+                </div>
+                <div class="flex items-center gap-2">
+                    <button type="button" @click="openAddAddress()" class="px-3 py-1.5 bg-[#C0422A] text-white rounded-xl text-xs font-bold shadow-xs hover:bg-black transition-all">
+                        + Add Address
+                    </button>
+                    <button type="button" @click="showAddressModal = false" class="text-gray-400 hover:text-black transition-colors p-1">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                    </button>
+                </div>
+            </div>
+
+            {{-- Address List Body --}}
+            <div class="flex-1 overflow-y-auto space-y-3 pr-1">
+                <template x-if="loadingAddresses">
+                    <div class="py-12 text-center text-xs text-gray-400">Loading saved addresses...</div>
+                </template>
+
+                <template x-if="!loadingAddresses && addresses.length === 0">
+                    <div class="py-12 text-center space-y-2">
+                        <svg class="w-10 h-10 text-gray-200 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+                        <p class="text-xs font-bold text-gray-400">No addresses saved yet</p>
+                    </div>
+                </template>
+
+                <template x-if="!loadingAddresses">
+                    <div class="space-y-3">
+                        <template x-for="addr in addresses" :key="addr.id">
+                            <div class="p-3.5 border border-gray-150 rounded-2xl bg-gray-50/50 hover:bg-white hover:border-gray-300 transition-all space-y-2">
+                                <div class="flex items-start justify-between gap-2">
+                                    <div>
+                                        <div class="flex items-center gap-2 flex-wrap">
+                                            <span class="text-xs font-bold text-gray-900" x-text="addr.recipientName"></span>
+                                            <span class="text-xs text-gray-400 font-semibold" x-text="addr.phone"></span>
+                                            <template x-if="addr.isDefault">
+                                                <span class="px-2 py-0.5 bg-[#C0422A]/10 text-[#C0422A] text-[9px] font-black uppercase rounded">Default</span>
+                                            </template>
+                                        </div>
+                                        <p class="text-xs text-gray-600 mt-1 leading-relaxed"
+                                           x-text="[addr.houseNo, addr.street, addr.barangay, addr.city, addr.province, addr.postalCode].filter(Boolean).join(', ')">
+                                        </p>
+                                    </div>
+                                    <div class="flex items-center gap-2 shrink-0">
+                                        <button type="button" @click="openEditAddress(addr)" class="text-[11px] font-bold text-[#C0422A] hover:underline">Edit</button>
+                                        <button type="button" @click="deleteAddress(addr.id)" class="text-[11px] font-bold text-gray-400 hover:text-red-500 hover:underline">Delete</button>
+                                    </div>
+                                </div>
+                                <template x-if="!addr.isDefault">
+                                    <button type="button" @click="setDefaultAddress(addr.id)" class="text-[10px] font-bold text-gray-500 hover:text-black border border-gray-200 px-2 py-0.5 rounded-md hover:bg-white transition-all">
+                                        Set as Default
+                                    </button>
+                                </template>
+                            </div>
+                        </template>
+                    </div>
+                </template>
+            </div>
+
+            {{-- Inner Add / Edit Form Modal Popup --}}
+            <div x-show="addEditModalOpen" class="fixed inset-0 z-60 flex items-center justify-center p-4 bg-black/50" x-cloak>
+                <div class="relative bg-white rounded-3xl shadow-2xl w-full max-w-md p-6 space-y-4 max-h-[85vh] overflow-y-auto" @click.away="addEditModalOpen = false">
+                    <h4 class="text-sm font-extrabold text-gray-900" x-text="editAddressId ? 'Edit Address' : 'Add New Address'"></h4>
+
+                    <div class="space-y-3 text-xs">
+                        <div>
+                            <label class="font-bold text-gray-700 mb-1 block">Full Name *</label>
+                            <input x-model="addressForm.recipientName" type="text" placeholder="Recipient's full name"
+                                class="w-full h-9 px-3 border border-gray-200 rounded-xl outline-none focus:border-[#C0422A]">
+                        </div>
+                        <div>
+                            <label class="font-bold text-gray-700 mb-1 block">Phone Number *</label>
+                            <input x-model="addressForm.phone" type="text" placeholder="e.g. 09xxxxxxxxx"
+                                class="w-full h-9 px-3 border border-gray-200 rounded-xl outline-none focus:border-[#C0422A]">
+                        </div>
+
+                        {{-- Location Dropdown Selector --}}
+                        <div class="relative">
+                            <label class="font-bold text-gray-700 mb-1 block">Region, Province, City, Barangay *</label>
+                            <div @click="toggleLocationDropdown()"
+                                 class="w-full h-9 px-3 border border-gray-200 rounded-xl outline-none focus:border-[#C0422A] flex items-center justify-between cursor-pointer bg-gray-50">
+                                <span class="truncate" :class="getLocationSummary() ? 'text-gray-900 font-semibold' : 'text-gray-400'" x-text="getLocationSummary() || 'Select Region, Province, City, Barangay'"></span>
+                                <svg class="w-4 h-4 text-gray-400" :class="locationDropdownOpen ? 'rotate-180' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+                            </div>
+
+                            <div x-show="locationDropdownOpen" @click.away="locationDropdownOpen = false"
+                                 class="absolute left-0 right-0 z-50 mt-1 bg-white border border-gray-200 rounded-xl shadow-xl overflow-hidden flex flex-col max-h-[250px]" x-cloak>
+                                <div class="flex border-b border-gray-100 bg-gray-50 text-[10px] font-bold text-gray-500">
+                                    <button @click="activeTab = 'region'" type="button" :class="activeTab === 'region' ? 'text-[#C0422A] bg-white' : ''" class="flex-1 py-2 text-center">Region</button>
+                                    <button @click="if(selectedRegion && hasProvinces) activeTab = 'province'" type="button" :disabled="!selectedRegion || !hasProvinces" :class="activeTab === 'province' ? 'text-[#C0422A] bg-white' : ''" class="flex-1 py-2 text-center disabled:opacity-40">Province</button>
+                                    <button @click="if(selectedProvince || (selectedRegion && !hasProvinces)) activeTab = 'city'" type="button" :disabled="!selectedProvince && (hasProvinces || !selectedRegion)" :class="activeTab === 'city' ? 'text-[#C0422A] bg-white' : ''" class="flex-1 py-2 text-center disabled:opacity-40">City</button>
+                                    <button @click="if(selectedCity) activeTab = 'barangay'" type="button" :disabled="!selectedCity" :class="activeTab === 'barangay' ? 'text-[#C0422A] bg-white' : ''" class="flex-1 py-2 text-center disabled:opacity-40">Barangay</button>
+                                </div>
+                                <div class="p-1.5 border-b border-gray-100 bg-gray-50/50">
+                                    <input type="text" x-model="locationSearch" :placeholder="'Search ' + activeTab + '...'" class="w-full h-7 px-2 border border-gray-200 rounded-md text-[11px]">
+                                </div>
+                                <div class="flex-1 overflow-y-auto max-h-[160px] divide-y divide-gray-50 text-[11px]">
+                                    <template x-if="activeTab === 'region' && !loadingGeoData">
+                                        <div>
+                                            <template x-for="reg in filteredGeoList(regionsList)" :key="reg.code">
+                                                <button type="button" @click="selectRegion(reg)" class="w-full text-left px-3 py-1.5 hover:bg-gray-50 block truncate" x-text="reg.name"></button>
+                                            </template>
+                                        </div>
+                                    </template>
+                                    <template x-if="activeTab === 'province' && !loadingGeoData">
+                                        <div>
+                                            <template x-for="prov in filteredGeoList(provincesList)" :key="prov.code">
+                                                <button type="button" @click="selectProvince(prov)" class="w-full text-left px-3 py-1.5 hover:bg-gray-50 block truncate" x-text="prov.name"></button>
+                                            </template>
+                                        </div>
+                                    </template>
+                                    <template x-if="activeTab === 'city' && !loadingGeoData">
+                                        <div>
+                                            <template x-for="ct in filteredGeoList(citiesList)" :key="ct.code">
+                                                <button type="button" @click="selectCity(ct)" class="w-full text-left px-3 py-1.5 hover:bg-gray-50 block truncate" x-text="ct.name"></button>
+                                            </template>
+                                        </div>
+                                    </template>
+                                    <template x-if="activeTab === 'barangay' && !loadingGeoData">
+                                        <div>
+                                            <template x-for="bgy in filteredGeoList(barangaysList)" :key="bgy.code">
+                                                <button type="button" @click="selectBarangay(bgy)" class="w-full text-left px-3 py-1.5 hover:bg-gray-50 block truncate" x-text="bgy.name"></button>
+                                            </template>
+                                        </div>
+                                    </template>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div>
+                            <label class="font-bold text-gray-700 mb-1 block">Street Name, Building, House No. *</label>
+                            <input x-model="addressForm.houseNo" type="text" placeholder="e.g. Unit 402, Sunset Bldg, Main St."
+                                class="w-full h-9 px-3 border border-gray-200 rounded-xl outline-none focus:border-[#C0422A]">
+                        </div>
+
+                        <div>
+                            <label class="font-bold text-gray-700 mb-1 block">Postal Code</label>
+                            <input x-model="addressForm.postalCode" type="text" placeholder="Postal Code"
+                                class="w-full h-9 px-3 border border-gray-200 rounded-xl outline-none focus:border-[#C0422A]">
+                        </div>
+
+                        <label class="flex items-center gap-2 cursor-pointer pt-1">
+                            <input type="checkbox" x-model="addressForm.isDefault" class="accent-[#C0422A]">
+                            <span class="text-xs font-semibold text-gray-700">Set as default shipping address</span>
+                        </label>
+                    </div>
+
+                    <div x-show="addressFormError" class="p-2 bg-red-50 text-red-600 text-[11px] font-bold rounded-lg" x-text="addressFormError"></div>
+
+                    <div class="flex gap-3 pt-2">
+                        <button type="button" @click="addEditModalOpen = false" class="flex-1 py-2 border border-gray-200 text-xs font-bold text-gray-600 rounded-xl hover:bg-gray-50">Cancel</button>
+                        <button type="button" @click="saveAddress()" :disabled="savingAddress" class="flex-1 py-2 bg-[#C0422A] text-white text-xs font-bold rounded-xl hover:bg-black shadow-xs">
+                            <span x-text="savingAddress ? 'Saving...' : 'Save Address'"></span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
 
 <script>
+function profileApp() {
+    return {
+        showEditModal: false,
+        showAddressModal: false,
+
+        // Address management state
+        addresses: [],
+        loadingAddresses: true,
+        addEditModalOpen: false,
+        savingAddress: false,
+        editAddressId: null,
+        addressFormError: '',
+        addressForm: { recipientName:'', phone:'', houseNo:'', street:'', barangay:'', city:'', province:'', region:'', postalCode:'', isDefault: false },
+
+        // Location picker variables
+        locationDropdownOpen: false,
+        activeTab: 'region',
+        locationSearch: '',
+        regionsList: [],
+        provincesList: [],
+        citiesList: [],
+        barangaysList: [],
+        selectedRegion: null,
+        selectedProvince: null,
+        selectedCity: null,
+        selectedBarangay: null,
+        loadingGeoData: false,
+        hasProvinces: true,
+
+        async init() {
+            await this.fetchAddresses();
+        },
+
+        async fetchAddresses() {
+            this.loadingAddresses = true;
+            try {
+                const r = await fetch('/api/addresses', { headers: { 'X-Requested-With': 'XMLHttpRequest' } });
+                this.addresses = await r.json();
+            } catch(e) { this.addresses = []; }
+            this.loadingAddresses = false;
+        },
+
+        openSavedAddresses() {
+            this.showAddressModal = true;
+            this.fetchAddresses();
+        },
+
+        openAddAddress() {
+            this.editAddressId = null;
+            this.addressForm = { recipientName:'', phone:'', houseNo:'', street:'', barangay:'', city:'', province:'', region:'', postalCode:'', isDefault: false };
+            this.addressFormError = '';
+            this.selectedRegion = null;
+            this.selectedProvince = null;
+            this.selectedCity = null;
+            this.selectedBarangay = null;
+            this.activeTab = 'region';
+            this.locationSearch = '';
+            this.locationDropdownOpen = false;
+            this.addEditModalOpen = true;
+        },
+
+        openEditAddress(addr) {
+            this.editAddressId = addr.id;
+            this.addressForm = { ...addr };
+            this.addressFormError = '';
+            this.selectedRegion = addr.region ? { name: addr.region } : null;
+            this.selectedProvince = addr.province ? { name: addr.province } : null;
+            this.selectedCity = addr.city ? { name: addr.city } : null;
+            this.selectedBarangay = addr.barangay ? { name: addr.barangay } : null;
+            this.activeTab = 'region';
+            this.locationSearch = '';
+            this.locationDropdownOpen = false;
+            this.addEditModalOpen = true;
+        },
+
+        async saveAddress() {
+            if (!this.addressForm.recipientName || !this.addressForm.phone || !this.addressForm.houseNo || !this.addressForm.city || !this.addressForm.province) {
+                this.addressFormError = 'Please fill in all required fields.';
+                return;
+            }
+            this.addressFormError = '';
+            this.savingAddress = true;
+            const token = document.querySelector('meta[name="csrf-token"]').content;
+            try {
+                const url = this.editAddressId ? `/api/addresses/${this.editAddressId}` : '/api/addresses';
+                const method = this.editAddressId ? 'PUT' : 'POST';
+                const r = await fetch(url, {
+                    method, headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': token, 'X-Requested-With': 'XMLHttpRequest' },
+                    body: JSON.stringify(this.addressForm)
+                });
+                if (!r.ok) { const d = await r.json(); this.addressFormError = d.message ?? 'Failed to save.'; }
+                else { this.addEditModalOpen = false; await this.fetchAddresses(); }
+            } catch(e) { this.addressFormError = 'Network error. Please try again.'; }
+            this.savingAddress = false;
+        },
+
+        async deleteAddress(id) {
+            if (!confirm('Delete this address?')) return;
+            const token = document.querySelector('meta[name="csrf-token"]').content;
+            await fetch(`/api/addresses/${id}`, { method:'DELETE', headers:{ 'X-CSRF-TOKEN': token, 'X-Requested-With': 'XMLHttpRequest' } });
+            await this.fetchAddresses();
+        },
+
+        async setDefaultAddress(id) {
+            const token = document.querySelector('meta[name="csrf-token"]').content;
+            await fetch(`/api/addresses/${id}/set-default`, { method:'PATCH', headers:{ 'X-CSRF-TOKEN': token, 'X-Requested-With': 'XMLHttpRequest' } });
+            await this.fetchAddresses();
+        },
+
+        async toggleLocationDropdown() {
+            this.locationDropdownOpen = !this.locationDropdownOpen;
+            if (this.locationDropdownOpen && this.regionsList.length === 0) {
+                await this.loadRegions();
+            }
+        },
+
+        async loadRegions() {
+            this.loadingGeoData = true;
+            try {
+                const res = await fetch('https://psgc.gitlab.io/api/regions/');
+                if (res.ok) this.regionsList = await res.json();
+            } catch(e) {}
+            this.loadingGeoData = false;
+        },
+
+        async selectRegion(region) {
+            this.selectedRegion = region;
+            this.addressForm.region = region.name;
+            this.selectedProvince = null; this.addressForm.province = '';
+            this.selectedCity = null; this.addressForm.city = '';
+            this.selectedBarangay = null; this.addressForm.barangay = '';
+            this.locationSearch = '';
+            if (region.code === '130000000') {
+                this.hasProvinces = false;
+                this.provincesList = [];
+                this.addressForm.province = 'Metro Manila';
+                this.selectedProvince = { code: '130000000', name: 'Metro Manila' };
+                this.activeTab = 'city';
+                await this.loadNCRCities();
+            } else {
+                this.hasProvinces = true;
+                this.activeTab = 'province';
+                await this.loadProvinces(region.code);
+            }
+        },
+
+        async loadNCRCities() {
+            this.loadingGeoData = true;
+            try {
+                const res = await fetch('https://psgc.gitlab.io/api/regions/130000000/cities-municipalities/');
+                if (res.ok) this.citiesList = await res.json();
+            } catch(e) {}
+            this.loadingGeoData = false;
+        },
+
+        async loadProvinces(regionCode) {
+            this.loadingGeoData = true;
+            try {
+                const res = await fetch(`https://psgc.gitlab.io/api/regions/${regionCode}/provinces/`);
+                if (res.ok) this.provincesList = await res.json();
+            } catch(e) {}
+            this.loadingGeoData = false;
+        },
+
+        async selectProvince(province) {
+            this.selectedProvince = province;
+            this.addressForm.province = province.name;
+            this.selectedCity = null; this.addressForm.city = '';
+            this.selectedBarangay = null; this.addressForm.barangay = '';
+            this.locationSearch = '';
+            this.activeTab = 'city';
+            await this.loadCities(province.code);
+        },
+
+        async loadCities(provinceCode) {
+            this.loadingGeoData = true;
+            try {
+                const res = await fetch(`https://psgc.gitlab.io/api/provinces/${provinceCode}/cities-municipalities/`);
+                if (res.ok) this.citiesList = await res.json();
+            } catch(e) {}
+            this.loadingGeoData = false;
+        },
+
+        async selectCity(city) {
+            this.selectedCity = city;
+            this.addressForm.city = city.name;
+            this.selectedBarangay = null; this.addressForm.barangay = '';
+            this.locationSearch = '';
+            this.activeTab = 'barangay';
+            await this.loadBarangays(city.code);
+        },
+
+        async loadBarangays(cityCode) {
+            this.loadingGeoData = true;
+            try {
+                const res = await fetch(`https://psgc.gitlab.io/api/cities-municipalities/${cityCode}/barangays/`);
+                if (res.ok) this.barangaysList = await res.json();
+            } catch(e) {}
+            this.loadingGeoData = false;
+        },
+
+        selectBarangay(barangay) {
+            this.selectedBarangay = barangay;
+            this.addressForm.barangay = barangay.name;
+            this.locationDropdownOpen = false;
+            this.locationSearch = '';
+        },
+
+        filteredGeoList(list) {
+            if (!this.locationSearch) return list;
+            const q = this.locationSearch.toLowerCase();
+            return list.filter(item => item.name && item.name.toLowerCase().includes(q));
+        },
+
+        getLocationSummary() {
+            if (this.addressForm.region || this.addressForm.province || this.addressForm.city || this.addressForm.barangay) {
+                return [this.addressForm.region, this.addressForm.province, this.addressForm.city, this.addressForm.barangay].filter(Boolean).join(', ');
+            }
+            return '';
+        }
+    };
+}
+
 function previewModalAvatar(input) {
     if (input.files && input.files[0]) {
         const reader = new FileReader();
