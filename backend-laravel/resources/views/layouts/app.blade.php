@@ -55,24 +55,13 @@
                 
                 <!-- Center: Pill Search Bar (Matching UI design) -->
                 <div class="flex-1 min-w-0 max-w-lg mx-auto">
-                    <form action="/" method="GET" class="relative group">
-                        {{-- Left Search Icon --}}
-                        <div class="absolute left-3.5 sm:left-4 top-1/2 -translate-y-1/2 pointer-events-none text-gray-400 group-focus-within:text-[#C0422A] transition-colors">
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
-                            </svg>
-                        </div>
-
+                    <form action="/" method="GET" class="relative">
                         <input type="text" name="search" value="{{ request('search') }}"
                                placeholder="Search Barongs, Sellers..."
-                               class="w-full bg-gray-50/90 border border-gray-200 hover:border-gray-300 focus:bg-white rounded-full py-2 sm:py-2.5 pl-10 sm:pl-11 pr-8 sm:pr-10 text-xs sm:text-sm text-gray-800 placeholder-gray-400 focus:outline-none focus:border-[#C0422A] focus:ring-3 focus:ring-[#C0422A]/10 transition-all shadow-2xs truncate">
-
-                        {{-- Clear Button when search active --}}
-                        @if(request('search'))
-                            <a href="/" class="absolute right-3 top-1/2 -translate-y-1/2 p-1 text-gray-400 hover:text-gray-600 transition-colors" title="Clear search">
-                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
-                            </a>
-                        @endif
+                               class="w-full bg-gray-50/80 border border-gray-200/80 hover:border-gray-300 focus:bg-white rounded-full py-2 sm:py-2.5 pl-4 sm:pl-5 pr-10 sm:pr-11 text-xs sm:text-sm text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-black/5 transition-all shadow-xs truncate">
+                        <button type="submit" class="absolute right-3 sm:right-3.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-black transition-colors" title="Search">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+                        </button>
                     </form>
                 </div>
 
