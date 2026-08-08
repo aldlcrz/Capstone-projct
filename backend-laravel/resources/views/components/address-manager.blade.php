@@ -116,7 +116,7 @@
             </div>
 
             <div class="flex items-center gap-3">
-                <input type="checkbox" x-model="editingAddress.isDefault" id="is-default" class="w-5 h-5 accent-[#C0420A] rounded border-gray-200">
+                <input type="checkbox" x-model="editingAddress.isDefault" id="is-default" class="w-4 h-4 accent-[#C0420A] rounded border-gray-200">
                 <label for="is-default" class="text-sm font-bold text-gray-600 select-none">Set as default address</label>
             </div>
 

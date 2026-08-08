@@ -65,7 +65,7 @@
                                id="select-all"
                                x-model="allSelected"
                                @change="toggleAll()"
-                               class="w-5 h-5 rounded border-2 border-gray-300 text-[#C0422A] accent-[#C0422A] cursor-pointer shrink-0">
+                               class="w-4 h-4 rounded border border-gray-300 text-[#C0422A] accent-[#C0422A] cursor-pointer shrink-0">
                         <span class="text-xs font-bold text-gray-600 group-hover:text-black transition-colors uppercase tracking-widest">
                             Select All (<span x-text="selected.length"></span>/<span>{{ count($cart) }}</span>)
                         </span>
@@ -102,7 +102,7 @@
                                     <input type="checkbox"
                                            @change="toggleShop('{{ addslashes($shopName) }}', $event.target.checked)"
                                            :checked="isShopSelected('{{ addslashes($shopName) }}')"
-                                           class="w-5 h-5 rounded border-2 border-gray-300 text-[#C0422A] accent-[#C0422A] cursor-pointer shrink-0">
+                                           class="w-4 h-4 rounded border border-gray-300 text-[#C0422A] accent-[#C0422A] cursor-pointer shrink-0">
                                 </label>
 
                                 <a href="{{ $sellerId ? '/shops/' . $sellerId : '#' }}" class="flex items-center gap-1.5 font-bold text-xs sm:text-sm text-gray-900 hover:text-[#C0422A] transition-colors truncate">
@@ -160,7 +160,7 @@
                                                        value="{{ $itemKey }}"
                                                        x-model="selected"
                                                        @change="syncSelectAll()"
-                                                       class="w-5 h-5 rounded border-2 border-gray-300 text-[#C0422A] accent-[#C0422A] cursor-pointer shrink-0">
+                                                       class="w-4 h-4 rounded border border-gray-300 text-[#C0422A] accent-[#C0422A] cursor-pointer shrink-0">
                                             </label>
                                         </div>
 
@@ -341,7 +341,7 @@
                     <input type="checkbox"
                            x-model="allSelected"
                            @change="toggleAll()"
-                           class="w-5 h-5 rounded border-2 border-gray-300 text-[#C0422A] accent-[#C0422A] cursor-pointer shrink-0">
+                           class="w-4 h-4 rounded border border-gray-300 text-[#C0422A] accent-[#C0422A] cursor-pointer shrink-0">
                     <span class="text-xs font-bold text-gray-700">All</span>
                 </label>
 
