@@ -53,17 +53,16 @@
                     @endauth
                 </div>
                 
-                <!-- Center: Modern Pill Search Bar (Aligned with LumBarong theme) -->
-                <div class="flex-1 min-w-0 max-w-lg mx-auto px-2 sm:px-0">
-                    <form action="/" method="GET" class="relative flex items-center w-full">
+                <!-- Center: Modern Pill Search Bar (LumBarong theme) -->
+                <div class="flex-1 min-w-0 max-w-lg mx-auto">
+                    <form action="/" method="GET" class="relative">
                         <input type="text" name="search" value="{{ request('search') }}"
                                placeholder="Search Barongs, Sellers..."
-                               class="w-full bg-gray-50/90 hover:bg-white focus:bg-white border border-gray-200/90 hover:border-gray-300 focus:border-[#C0422A] focus:ring-4 focus:ring-[#C0422A]/10 rounded-full py-2 sm:py-2.5 pl-4 sm:pl-5 pr-11 sm:pr-13 text-xs sm:text-sm font-medium text-gray-800 placeholder-gray-400 transition-all duration-200 shadow-2xs focus:shadow-sm outline-none truncate">
-                        
-                        <button type="submit" 
-                                class="absolute right-1 sm:right-1.5 top-1/2 -translate-y-1/2 w-7 h-7 sm:w-8 sm:h-8 flex items-center justify-center rounded-full bg-[#C0422A] hover:bg-black text-white transition-all duration-200 shadow-xs active:scale-95 cursor-pointer" 
+                               class="w-full bg-gray-50/90 hover:bg-white focus:bg-white border border-gray-200 hover:border-gray-300 focus:border-[#C0422A] focus:ring-4 focus:ring-[#C0422A]/10 rounded-full py-2 sm:py-2.5 pl-4 sm:pl-5 pr-11 sm:pr-12 text-xs sm:text-sm font-medium text-gray-800 placeholder-gray-400 outline-none transition-all duration-200 shadow-sm truncate">
+                        <button type="submit"
+                                class="absolute right-1 sm:right-1.5 top-1/2 -translate-y-1/2 w-7 h-7 sm:w-8 sm:h-8 flex items-center justify-center rounded-full bg-[#C0422A] hover:bg-black text-white transition-all duration-200 shadow-sm active:scale-95 cursor-pointer"
                                 title="Search">
-                            <svg class="w-3.5 h-3.5 sm:w-4 sm:h-4" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
+                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
                             </svg>
                         </button>
