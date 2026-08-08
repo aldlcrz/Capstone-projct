@@ -27,7 +27,7 @@
         });
     });
 </script>
-<div class="max-w-6xl mx-auto py-4 lg:py-6" x-data="productDetail({{ $product->stock ?? 1 }}, {{ json_encode($product->size_stocks ?? (object)[]) }}, {{ json_encode($productVariations) }})">
+<div class="max-w-6xl mx-auto py-4 lg:py-6" x-data="productDetail({{ (int)($product->stock ?? 1) }}, @js($product->size_stocks ?? (object)[]), @js($productVariations))">
     <!-- Breadcrumb Navigation -->
     <nav class="flex items-center gap-2 text-xs font-semibold text-gray-500 mb-5">
         <a href="/" class="hover:text-black transition-colors">Home</a>
@@ -52,7 +52,7 @@
                             class="relative w-14 h-18 sm:w-16 sm:h-20 rounded-xl overflow-hidden shrink-0 border-2 transition-all shadow-2xs"
                             :class="activeImage === index ? 'border-amber-600 ring-2 ring-amber-500/20 opacity-100 scale-98' : 'border-gray-200 opacity-60 hover:opacity-100'"
                         >
-                            <img :src="imageUrl(variation.url)" onerror="this.src='/uploads/products/default.jpg'" class="w-full h-full object-cover">
+                            <img :src="imageUrl(variation.url)" onerror="this.src='{{ $product->getImageUrl() }}'" class="w-full h-full object-cover">
                         </button>
                     </template>
                 </div>
@@ -94,7 +94,7 @@
                         <img 
                             x-show="activeImage === index"
                             :src="imageUrl(variation.url)"
-                            onerror="this.src='/uploads/products/default.jpg'"
+                            onerror="this.src='{{ $product->getImageUrl() }}'"
                             class="w-full h-full object-cover object-top"
                             :class="isZoomed ? 'scale-[2.2] transition-transform duration-100 ease-out' : 'scale-100 transition-transform duration-300 ease-out'"
                             :style="isZoomed ? { transformOrigin: `${originX}% ${originY}%` } : {}"
@@ -287,7 +287,7 @@
                                 <svg class="w-4 h-4" :class="isWishlisted ? 'fill-red-500 text-red-500' : 'fill-none stroke-current'" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/>
                                 </svg>
-                                <span x-text="isWishlisted ? 'Saved in Wishlist' : 'Add to Wishlist'"></span>
+                                <span x-text="isWishlisted ? 'Saved in Wishlist' : 'Add to Wishlist'">Add to Wishlist</span>
                             </button>
 
                             <button 
@@ -298,7 +298,7 @@
                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/>
                                 </svg>
-                                <span x-text="!selectedSize ? 'Select Size' : (stock <= 0 ? 'Out of Stock' : 'Add to Cart')"></span>
+                                <span x-text="!selectedSize ? 'Select Size' : (stock <= 0 ? 'Out of Stock' : 'Add to Cart')">Add to Cart</span>
                             </button>
                         </div>
 
@@ -309,7 +309,7 @@
                             :disabled="!selectedSize || stock <= 0"
                             class="w-full h-12 rounded-xl bg-[#C89B55] hover:bg-[#B88B45] text-white font-extrabold text-sm tracking-wide shadow-md transition-colors disabled:opacity-50"
                         >
-                            <span x-text="!selectedSize ? 'Select Size' : 'Buy Now'"></span>
+                            <span x-text="!selectedSize ? 'Select Size' : 'Buy Now'">Buy Now</span>
                         </button>
                     </form>
                 </div>
@@ -674,7 +674,7 @@
             selectedVariation: 0,
             showSizeGuide: false,
             selectedColorName: 'Off-White',
-            isWishlisted: @json(auth()->check() && \App\Models\Wishlist::where('user_id', auth()->id())->where('product_id', $product->id)->exists()),
+            isWishlisted: @json($isWishlisted ?? false),
             colorSwatches: [
                 { name: 'Off-White', hex: '#F9F8F6' },
                 { name: 'Ivory', hex: '#EBE4D5' },
@@ -720,7 +720,7 @@
                             'X-CSRF-TOKEN': '{{ csrf_token() }}',
                             'X-Requested-With': 'XMLHttpRequest'
                         },
-                        body: JSON.stringify({ product_id: {{ $product->id }} })
+                        body: JSON.stringify({ product_id: '{{ $product->id }}' })
                     });
                     const data = await res.json();
                     this.isWishlisted = data.status === 'added';
@@ -732,7 +732,7 @@
                 }
             },
             imageUrl(url) {
-                if (!url) return '/uploads/products/default.jpg';
+                if (!url) return '{{ $product->getImageUrl() }}';
                 if (url.startsWith('http')) return url;
                 if (url.startsWith('products/')) return '/storage/' + url;
                 if (url.startsWith('uploads/')) return '/' + url;

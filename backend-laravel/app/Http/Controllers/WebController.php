@@ -265,7 +265,19 @@ class WebController extends Controller
 
         $recommended = $this->getRecommendedProducts($product);
 
-        return view('products.show', compact('product', 'soldCount', 'recommended'));
+        $isWishlisted = false;
+        if (Auth::check()) {
+            try {
+                $isWishlisted = DB::table('wishlists')
+                    ->where('user_id', Auth::id())
+                    ->where('product_id', $id)
+                    ->exists();
+            } catch (\Throwable $e) {
+                $isWishlisted = false;
+            }
+        }
+
+        return view('products.show', compact('product', 'soldCount', 'recommended', 'isWishlisted'));
     }
 
     /**
