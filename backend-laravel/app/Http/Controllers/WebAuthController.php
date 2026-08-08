@@ -498,8 +498,7 @@ class WebAuthController extends Controller
 
     public function changePasswordPage()
     {
-        $user = Auth::user();
-        return view('profile.change-password', compact('user'));
+        return redirect()->route('profile', ['change_password' => 1]);
     }
 
     public function changePassword(Request $request)
@@ -519,7 +518,7 @@ class WebAuthController extends Controller
         $user->password = Hash::make($request->password);
         $user->save();
 
-        return redirect()->route('profile.change-password')->with('success', 'Password changed successfully!');
+        return redirect()->route('profile')->with('success', 'Password changed successfully!');
     }
 }
 
