@@ -8,15 +8,19 @@ return new class extends Migration
 {
     public function up(): void
     {
-        Schema::table('products', function (Blueprint $table) {
-            $table->string('size_guide_image')->nullable()->after('size_stocks');
-        });
+        if (!Schema::hasColumn('products', 'size_guide_image')) {
+            Schema::table('products', function (Blueprint $table) {
+                $table->string('size_guide_image')->nullable()->after('size_stocks');
+            });
+        }
     }
 
     public function down(): void
     {
-        Schema::table('products', function (Blueprint $table) {
-            $table->dropColumn('size_guide_image');
-        });
+        if (Schema::hasColumn('products', 'size_guide_image')) {
+            Schema::table('products', function (Blueprint $table) {
+                $table->dropColumn('size_guide_image');
+            });
+        }
     }
 };
