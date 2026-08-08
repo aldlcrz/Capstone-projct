@@ -166,7 +166,14 @@
                             @php
                                 $sizes = is_string($product->sizes) ? json_decode($product->sizes, true) : $product->sizes;
                                 if (empty($sizes)) {
-                                    $sizes = ['XS', 'S', 'M', 'L', 'XL', 'XXL'];
+                                    $sizes = ['XS', 'S', 'M', 'L', 'XL', 'XXL', 'Custom'];
+                                } else {
+                                    $hasCustom = false;
+                                    foreach($sizes as $sz) {
+                                        $name = is_array($sz) ? ($sz['size'] ?? $sz['name'] ?? '') : $sz;
+                                        if (strtolower($name) === 'custom') { $hasCustom = true; break; }
+                                    }
+                                    if (!$hasCustom) { $sizes[] = 'Custom'; }
                                 }
                             @endphp
                             @foreach($sizes as $size)
@@ -186,6 +193,48 @@
                                     <span class="{{ !$hasSizeStock ? 'text-gray-300 line-through font-normal' : '' }}">{{ $sizeName }}</span>
                                 </button>
                             @endforeach
+                        </div>
+
+                        {{-- Custom Measurements Input Card --}}
+                        <div x-show="selectedSize && (selectedSize === 'Custom' || selectedSize.toLowerCase().includes('custom'))"
+                             x-cloak
+                             x-transition
+                             class="mt-3.5 p-4 bg-[#FDF9F4] border border-[#C0422A]/20 rounded-2xl space-y-3">
+                            <div class="flex items-center gap-2">
+                                <span class="text-xs font-extrabold text-[#C0422A] uppercase tracking-wider">✂️ Tailored Custom Sizing</span>
+                            </div>
+                            <p class="text-[11px] text-gray-500 font-medium">Input your body measurements in inches (in) or centimetres (cm):</p>
+                            
+                            <div class="grid grid-cols-2 sm:grid-cols-3 gap-2.5 text-xs">
+                                <div>
+                                    <label class="font-bold text-gray-700 block mb-1">Neck</label>
+                                    <input type="text" x-model="customMeasurements.neck" placeholder="e.g. 15.5 in / 39 cm" class="w-full h-8.5 px-3 bg-white border border-gray-200 rounded-xl text-xs outline-none focus:border-[#C0422A] transition-colors">
+                                </div>
+                                <div>
+                                    <label class="font-bold text-gray-700 block mb-1">Chest</label>
+                                    <input type="text" x-model="customMeasurements.chest" placeholder="e.g. 38 in / 96 cm" class="w-full h-8.5 px-3 bg-white border border-gray-200 rounded-xl text-xs outline-none focus:border-[#C0422A] transition-colors">
+                                </div>
+                                <div>
+                                    <label class="font-bold text-gray-700 block mb-1">Shoulder</label>
+                                    <input type="text" x-model="customMeasurements.shoulder" placeholder="e.g. 17.5 in / 44 cm" class="w-full h-8.5 px-3 bg-white border border-gray-200 rounded-xl text-xs outline-none focus:border-[#C0422A] transition-colors">
+                                </div>
+                                <div>
+                                    <label class="font-bold text-gray-700 block mb-1">Sleeves</label>
+                                    <input type="text" x-model="customMeasurements.sleeves" placeholder="e.g. 24 in / 60 cm" class="w-full h-8.5 px-3 bg-white border border-gray-200 rounded-xl text-xs outline-none focus:border-[#C0422A] transition-colors">
+                                </div>
+                                <div>
+                                    <label class="font-bold text-gray-700 block mb-1">Waist</label>
+                                    <input type="text" x-model="customMeasurements.waist" placeholder="e.g. 32 in / 81 cm" class="w-full h-8.5 px-3 bg-white border border-gray-200 rounded-xl text-xs outline-none focus:border-[#C0422A] transition-colors">
+                                </div>
+                                <div>
+                                    <label class="font-bold text-gray-700 block mb-1">Full Length</label>
+                                    <input type="text" x-model="customMeasurements.fullLength" placeholder="e.g. 29 in / 74 cm" class="w-full h-8.5 px-3 bg-white border border-gray-200 rounded-xl text-xs outline-none focus:border-[#C0422A] transition-colors">
+                                </div>
+                            </div>
+                            <div>
+                                <label class="font-bold text-gray-700 block mb-1 text-xs">Special Sizing Notes (Optional)</label>
+                                <input type="text" x-model="customMeasurements.notes" placeholder="e.g. Loose fit for wedding ceremony" class="w-full h-8.5 px-3 bg-white border border-gray-200 rounded-xl text-xs outline-none focus:border-[#C0422A] transition-colors">
+                            </div>
                         </div>
                     </div>
 
@@ -231,14 +280,14 @@
                         <div class="flex items-center gap-3">
                             <button 
                                 type="button" 
-                                @click="isWishlisted = !isWishlisted" 
+                                @click="toggleWishlist()" 
                                 class="flex-1 h-12 rounded-xl border border-gray-300 font-bold text-xs flex items-center justify-center gap-2 hover:bg-gray-50 transition-colors shadow-2xs"
                                 :class="isWishlisted ? 'text-red-500 border-red-200 bg-red-50/50' : 'text-gray-900'"
                             >
                                 <svg class="w-4 h-4" :class="isWishlisted ? 'fill-red-500 text-red-500' : 'fill-none stroke-current'" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/>
                                 </svg>
-                                <span>Add to Wishlist</span>
+                                <span x-text="isWishlisted ? 'Saved in Wishlist' : 'Add to Wishlist'"></span>
                             </button>
 
                             <button 
@@ -488,9 +537,10 @@
 
     <!-- ========== SIZE GUIDE MODAL ========== -->
     <div x-show="showSizeGuide"
-         style="display: none;"
+         style="display: none; z-index: 9999;"
+         x-cloak
          @keydown.escape.window="showSizeGuide = false"
-         class="fixed inset-0 z-9999 flex items-center justify-center p-4">
+         class="fixed inset-0 z-[9999] flex items-center justify-center p-4">
         <!-- Backdrop -->
         <div class="absolute inset-0 bg-black/60 backdrop-blur-sm" @click="showSizeGuide = false"></div>
 
@@ -624,7 +674,7 @@
             selectedVariation: 0,
             showSizeGuide: false,
             selectedColorName: 'Off-White',
-            isWishlisted: false,
+            isWishlisted: @json(auth()->check() && \App\Models\Wishlist::where('user_id', auth()->id())->where('product_id', $product->id)->exists()),
             colorSwatches: [
                 { name: 'Off-White', hex: '#F9F8F6' },
                 { name: 'Ivory', hex: '#EBE4D5' },
@@ -634,24 +684,52 @@
                 { name: 'Classic Cream', hex: '#F5EAD9' }
             ],
             customMeasurements: {
+                neck: '',
                 chest: '',
                 shoulder: '',
-                length: '',
-                sleeve: '',
+                sleeves: '',
+                waist: '',
+                fullLength: '',
                 notes: ''
             },
             effectiveSize() {
                 if (!this.selectedSize) return '';
                 if (this.selectedSize === 'Custom' || this.selectedSize.toLowerCase().includes('custom')) {
                     const parts = [];
+                    if (this.customMeasurements.neck) parts.push('Neck: ' + this.customMeasurements.neck);
                     if (this.customMeasurements.chest) parts.push('Chest: ' + this.customMeasurements.chest);
                     if (this.customMeasurements.shoulder) parts.push('Shoulder: ' + this.customMeasurements.shoulder);
-                    if (this.customMeasurements.length) parts.push('Length: ' + this.customMeasurements.length);
-                    if (this.customMeasurements.sleeve) parts.push('Sleeve: ' + this.customMeasurements.sleeve);
+                    if (this.customMeasurements.sleeves) parts.push('Sleeves: ' + this.customMeasurements.sleeves);
+                    if (this.customMeasurements.waist) parts.push('Waist: ' + this.customMeasurements.waist);
+                    if (this.customMeasurements.fullLength) parts.push('Full Length: ' + this.customMeasurements.fullLength);
                     if (this.customMeasurements.notes) parts.push('Notes: ' + this.customMeasurements.notes);
                     return 'Custom (' + (parts.length > 0 ? parts.join(', ') : 'Tailored Sizing') + ')';
                 }
                 return this.selectedSize;
+            },
+            async toggleWishlist() {
+                if (!window.isLoggedIn) {
+                    window.location.href = window.loginUrl + '?next=wishlist';
+                    return;
+                }
+                try {
+                    const res = await fetch('/wishlist/toggle', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                            'X-Requested-With': 'XMLHttpRequest'
+                        },
+                        body: JSON.stringify({ product_id: {{ $product->id }} })
+                    });
+                    const data = await res.json();
+                    this.isWishlisted = data.status === 'added';
+                    if (window.Alpine && Alpine.store('toast')) {
+                        Alpine.store('toast').trigger(data.message, data.status === 'added' ? 'success' : 'info');
+                    }
+                } catch(e) {
+                    this.isWishlisted = !this.isWishlisted;
+                }
             },
             imageUrl(url) {
                 if (!url) return '/uploads/products/default.jpg';

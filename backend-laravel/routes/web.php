@@ -78,6 +78,10 @@ Route::middleware('auth')->group(function () {
     Route::get('/notifications', [WebController::class, 'notifications'])->name('notifications.index');
     Route::post('/notifications/read-all', [WebController::class, 'readAllNotifications'])->name('notifications.read-all');
 
+    // Wishlist
+    Route::get('/wishlist', [\App\Http\Controllers\WishlistController::class, 'index'])->name('wishlist.index');
+    Route::post('/wishlist/toggle', [\App\Http\Controllers\WishlistController::class, 'toggle'])->name('wishlist.toggle');
+
     Route::post('/logout', [WebAuthController::class, 'logout'])->name('logout');
 
     // Address Management

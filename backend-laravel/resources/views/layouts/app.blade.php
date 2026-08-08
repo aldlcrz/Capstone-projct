@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="{{ str_replace('_', '-', app()->getLocale()) }}" class="overflow-x-hidden">
+<html lang="{{ str_replace('_', '-', app()->getLocale()) }}" class="overflow-x-clip">
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
@@ -17,7 +17,7 @@
     <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
 
     <style>
-        html, body { overflow-x: hidden !important; max-w: 100vw; }
+        html, body { overflow-x: clip; max-width: 100vw; }
         body { font-family: 'Inter', sans-serif; background-color: #FAFAFA; }
         .no-scrollbar::-webkit-scrollbar { display: none; }
         .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
@@ -25,10 +25,10 @@
         [x-cloak] { display: none !important; }
     </style>
 </head>
-<body class="antialiased text-gray-900 overflow-x-hidden max-w-full relative">
-    <div class="min-h-screen flex flex-col overflow-x-hidden w-full max-w-full">
+<body class="antialiased text-gray-900 max-w-full relative">
+    <div class="min-h-screen flex flex-col w-full max-w-full">
         <!-- Navigation Header -->
-        <header class="sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-gray-100 w-full shadow-xs">
+        <header class="sticky top-0 z-50 bg-white/95 backdrop-blur-md border-b border-gray-100 w-full shadow-xs">
             <div class="flex items-center justify-between px-2.5 sm:px-4 lg:px-12 py-2.5 sm:py-3.5 w-full max-w-7xl mx-auto gap-2 sm:gap-4">
                 <!-- Left: Logo & Seller Hub -->
                 <div class="flex items-center gap-2 sm:gap-6 shrink-0">
@@ -225,6 +225,7 @@
                                 <a href="/profile" class="flex items-center gap-3 px-4 py-3 text-[11px] font-bold text-gray-600 hover:bg-gray-50 hover:text-black transition-all">My Account</a>
                                 @if(Auth::user()->role !== 'seller')
                                     <a href="/orders/my-orders" class="flex items-center gap-3 px-4 py-3 text-[11px] font-bold text-gray-600 hover:bg-gray-50 hover:text-black transition-all">My Purchase</a>
+                                    <a href="/wishlist" class="flex items-center gap-3 px-4 py-3 text-[11px] font-bold text-gray-600 hover:bg-gray-50 hover:text-black transition-all">My Wishlist</a>
                                 @endif
                                 <form x-ref="logoutForm" action="{{ route('logout') }}" method="POST" class="border-t border-gray-50 mt-1">
                                     @csrf

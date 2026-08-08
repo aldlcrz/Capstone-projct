@@ -114,12 +114,31 @@
                         </div>
                     </div>
 
+@php
+    $resolveQrUrl = function ($qrPath) {
+        if (empty($qrPath)) return null;
+        if (str_starts_with($qrPath, 'http')) return $qrPath;
+        $clean = ltrim($qrPath, '/');
+        if (file_exists(public_path($clean))) {
+            return asset($clean);
+        }
+        if (file_exists(public_path('storage/' . $clean))) {
+            return asset('storage/' . $clean);
+        }
+        if (file_exists(storage_path('app/public/' . $clean))) {
+            return asset('storage/' . $clean);
+        }
+        return asset($clean);
+    };
+    $gcashQrUrl = $paymentSource && !empty($paymentSource->gcashQrCode) ? $resolveQrUrl($paymentSource->gcashQrCode) : null;
+    $mayaQrUrl  = $paymentSource && !empty($paymentSource->mayaQrCode) ? $resolveQrUrl($paymentSource->mayaQrCode) : null;
+@endphp
                     {{-- Store Items Preview Card --}}
                     <div class="bg-white rounded-2xl border border-gray-100 p-4 sm:p-6 shadow-sm mb-6 space-y-4">
                         <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-3 border-b border-gray-100">
                             <div class="flex items-center gap-2 flex-wrap">
-                                <span class="bg-[#C0422A] text-white text-[9px] lg:text-[10px] font-black uppercase px-2.5 py-0.5 rounded-md tracking-wider whitespace-nowrap">LumBarong Store</span>
-                                <span class="text-xs sm:text-sm font-bold text-gray-900">Official Heritage Store</span>
+                                <span class="bg-[#C0422A] text-white text-[9px] lg:text-[10px] font-black uppercase px-2.5 py-0.5 rounded-md tracking-wider whitespace-nowrap">{{ $seller->shopName ?? ($seller->name ?? 'LumBarong Store') }}</span>
+                                <span class="text-xs sm:text-sm font-bold text-gray-900">{{ $seller ? ($seller->shopDescription ?? 'Official Heritage Artisan') : 'Official Heritage Store' }}</span>
                             </div>
                             <span class="text-[10px] lg:text-xs font-bold text-amber-800 uppercase tracking-wider flex items-center gap-1 bg-amber-50 px-2.5 py-1 rounded-md border border-amber-200/60 w-fit">
                                 <svg class="w-3.5 h-3.5 text-amber-600 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
@@ -220,10 +239,10 @@
                             </label>
                             
                             <div x-show="paymentMethod === 'GCash'" class="mt-4 pt-4 border-t border-gray-100 flex flex-col sm:flex-row gap-3 sm:gap-4 items-center" x-transition>
-                                <div class="w-full sm:w-1/3 bg-white border border-gray-100 rounded-2xl p-3 flex flex-col items-center justify-center shadow-xs @if($paymentSource && $paymentSource->gcashQrCode) cursor-zoom-in hover:border-[#C0422A]/40 transition-all group/qr @endif"
-                                     @if($paymentSource && $paymentSource->gcashQrCode) @click="zoomImage = '{{ asset('storage/' . $paymentSource->gcashQrCode) }}'; showZoomModal = true" @endif>
-                                    @if($paymentSource && $paymentSource->gcashQrCode)
-                                        <img src="{{ asset('storage/' . $paymentSource->gcashQrCode) }}" class="w-24 h-24 sm:w-20 sm:h-20 lg:w-24 lg:h-24 object-contain rounded-xl bg-white border border-gray-100 shadow-xs">
+                                <div class="w-full sm:w-1/3 bg-white border border-gray-100 rounded-2xl p-3 flex flex-col items-center justify-center shadow-xs @if($gcashQrUrl) cursor-zoom-in hover:border-[#C0422A]/40 transition-all group/qr @endif"
+                                     @if($gcashQrUrl) @click="zoomImage = '{{ $gcashQrUrl }}'; showZoomModal = true" @endif>
+                                    @if($gcashQrUrl)
+                                        <img src="{{ $gcashQrUrl }}" class="w-24 h-24 sm:w-20 sm:h-20 lg:w-24 lg:h-24 object-contain rounded-xl bg-white border border-gray-100 shadow-xs">
                                     @else
                                         <div class="w-20 h-20 lg:w-24 lg:h-24 bg-gray-50 rounded-xl mb-1 flex items-center justify-center text-gray-300 border border-dashed border-gray-200">
                                             <svg class="w-8 h-8 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z"></path></svg>
@@ -257,10 +276,10 @@
                             </label>
 
                             <div x-show="paymentMethod === 'Maya'" class="mt-4 pt-4 border-t border-gray-100 flex flex-col sm:flex-row gap-3 sm:gap-4 items-center" x-transition>
-                                <div class="w-full sm:w-1/3 bg-white border border-gray-100 rounded-2xl p-3 flex flex-col items-center justify-center shadow-xs @if($paymentSource && $paymentSource->mayaQrCode) cursor-zoom-in hover:border-[#C0422A]/40 transition-all group/qr @endif"
-                                     @if($paymentSource && $paymentSource->mayaQrCode) @click="zoomImage = '{{ asset('storage/' . $paymentSource->mayaQrCode) }}'; showZoomModal = true" @endif>
-                                    @if($paymentSource && $paymentSource->mayaQrCode)
-                                        <img src="{{ asset('storage/' . $paymentSource->mayaQrCode) }}" class="w-24 h-24 sm:w-20 sm:h-20 lg:w-24 lg:h-24 object-contain rounded-xl bg-white border border-gray-100 shadow-xs">
+                                <div class="w-full sm:w-1/3 bg-white border border-gray-100 rounded-2xl p-3 flex flex-col items-center justify-center shadow-xs @if($mayaQrUrl) cursor-zoom-in hover:border-[#C0422A]/40 transition-all group/qr @endif"
+                                     @if($mayaQrUrl) @click="zoomImage = '{{ $mayaQrUrl }}'; showZoomModal = true" @endif>
+                                    @if($mayaQrUrl)
+                                        <img src="{{ $mayaQrUrl }}" class="w-24 h-24 sm:w-20 sm:h-20 lg:w-24 lg:h-24 object-contain rounded-xl bg-white border border-gray-100 shadow-xs">
                                     @else
                                         <div class="w-20 h-20 lg:w-24 lg:h-24 bg-gray-50 rounded-xl mb-1 flex items-center justify-center text-gray-300 border border-dashed border-gray-200">
                                             <svg class="w-8 h-8 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z"></path></svg>
