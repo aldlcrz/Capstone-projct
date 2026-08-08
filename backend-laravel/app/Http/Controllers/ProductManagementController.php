@@ -120,6 +120,16 @@ class ProductManagementController extends Controller
                 $product->maya_qr_code = null;
             }
 
+            // Custom Size Guide Image
+            if ($request->hasFile('size_guide_image')) {
+                $file = $request->file('size_guide_image');
+                $filename = time() . '_sizeguide_' . Str::random(6) . '.' . $file->getClientOriginalExtension();
+                $file->move(public_path('uploads/sizeguides'), $filename);
+                $product->size_guide_image = 'uploads/sizeguides/' . $filename;
+            } else {
+                $product->size_guide_image = null;
+            }
+
             // Lumban Special discount
             $product->is_on_sale          = $request->boolean('is_on_sale');
             $product->discount_percentage = $product->is_on_sale ? ($request->discount_percentage ?? 0) : null;
@@ -169,6 +179,7 @@ class ProductManagementController extends Controller
             'price'               => 'required|numeric|min:1|max:10000',
             'CategoryId'          => 'required|exists:categories,id',
             'images.*'            => 'nullable|image|mimes:jpeg,png,jpg,webp|max:5120',
+            'size_guide_image'    => 'nullable|image|mimes:jpeg,png,jpg,webp|max:5120',
             'sizes'               => 'required|array|min:1',
             'sizes.*'             => 'string',
             'size_stocks.*'       => 'nullable|integer|min:0|max:10000',
@@ -233,6 +244,14 @@ class ProductManagementController extends Controller
             $filename = time() . '_maya_' . Str::random(6) . '.' . $file->getClientOriginalExtension();
             $file->move(public_path('uploads/qrcodes'), $filename);
             $product->maya_qr_code = 'uploads/qrcodes/' . $filename;
+        }
+
+        // Custom Size Guide Image
+        if ($request->hasFile('size_guide_image')) {
+            $file = $request->file('size_guide_image');
+            $filename = time() . '_sizeguide_' . Str::random(6) . '.' . $file->getClientOriginalExtension();
+            $file->move(public_path('uploads/sizeguides'), $filename);
+            $product->size_guide_image = 'uploads/sizeguides/' . $filename;
         }
 
         // Lumban Special discount

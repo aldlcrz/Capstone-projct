@@ -26,6 +26,8 @@ class Product extends Model
         // Per-product payment overrides
         'is_gcash_available', 'gcash_number', 'gcash_qr_code',
         'is_maya_available',  'maya_number',  'maya_qr_code',
+        // Seller Custom Size Guide
+        'size_guide_image',
     ];
 
     /**
@@ -192,5 +194,24 @@ class Product extends Model
 
         // File does not exist physically on disk — return default product placeholder directly
         return '/uploads/products/default.jpg';
+    }
+
+    /**
+     * Get the resolved URL for the seller's custom size guide image.
+     */
+    public function getSizeGuideUrl(): ?string
+    {
+        if (!$this->size_guide_image) {
+            return null;
+        }
+
+        $img = str_replace('\\', '/', $this->size_guide_image);
+        $img = ltrim($img, '/');
+
+        if (str_starts_with($img, 'http://') || str_starts_with($img, 'https://')) {
+            return $img;
+        }
+
+        return '/' . $img;
     }
 }

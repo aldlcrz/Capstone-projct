@@ -125,7 +125,43 @@
                                     oninput="if(parseInt(this.value) > 10000) this.value = 10000; calculateTotalStock();"
                                     class="w-full px-4 py-2.5 bg-white border border-gray-100 rounded-xl outline-none text-xs font-bold text-center size-stock-input">
                             </div>
-                        @endforeach
+                    </div>
+
+                    <!-- Size Guide Image Upload -->
+                    <div class="mt-6 pt-6 border-t border-gray-100 space-y-4">
+                        <label class="text-[10px] font-bold uppercase tracking-widest text-gray-400">Product Size Guide Chart / Image (Optional)</label>
+                        <p class="text-[10px] text-gray-400 -mt-2">Upload a custom size guide chart for this product so customers can see exact measurements on the size guide modal.</p>
+                        <div class="relative group" x-data="{ guidePreview: '{{ $product->getSizeGuideUrl() ?? '' }}' }">
+                            <input type="file" name="size_guide_image" accept="image/*"
+                                class="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
+                                @change="
+                                    const file = $event.target.files[0];
+                                    if (file) {
+                                        const reader = new FileReader();
+                                        reader.onload = (e) => { guidePreview = e.target.result; };
+                                        reader.readAsDataURL(file);
+                                    }
+                                ">
+                            <div class="border-2 border-dashed border-gray-200 bg-white rounded-2xl p-6 flex flex-col items-center justify-center text-center hover:border-[#C0420A] hover:bg-[#C0420A]/5 transition-all">
+                                <template x-if="guidePreview">
+                                    <div class="relative w-full max-h-48 overflow-hidden rounded-xl border border-gray-200">
+                                        <img :src="guidePreview" class="w-full h-48 object-contain">
+                                        <div class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
+                                            <span class="text-xs text-white font-bold uppercase tracking-wider">Click or drag to change Size Guide</span>
+                                        </div>
+                                    </div>
+                                </template>
+                                <template x-if="!guidePreview">
+                                    <div class="space-y-2">
+                                        <svg class="w-8 h-8 text-gray-300 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path>
+                                        </svg>
+                                        <span class="text-xs font-bold text-gray-600 block">Upload Size Guide Chart/Image</span>
+                                        <span class="text-[10px] text-gray-400 font-medium block">PNG, JPG, WEBP up to 5MB</span>
+                                    </div>
+                                </template>
+                            </div>
+                        </div>
                     </div>
                 </div>
 

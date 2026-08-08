@@ -572,6 +572,19 @@
             <!-- Content -->
             <div class="px-8 py-6 space-y-8">
 
+                <!-- Seller's Custom Size Guide Image (if uploaded) -->
+                @if($product->getSizeGuideUrl())
+                    <div class="bg-[#FDF9F4] border border-[#F5EAD9] rounded-2xl p-5 space-y-3">
+                        <div class="flex items-center justify-between gap-2">
+                            <span class="text-xs font-extrabold uppercase tracking-wider text-[#C0422A]">📐 Seller's Custom Size Chart</span>
+                            <span class="text-[9px] bg-[#C0422A]/10 text-[#C0422A] px-2 py-0.5 rounded-full font-bold uppercase tracking-wider">Artisan Size Guide</span>
+                        </div>
+                        <div class="rounded-xl overflow-hidden bg-white border border-gray-200 p-2 shadow-xs">
+                            <img src="{{ $product->getSizeGuideUrl() }}" class="w-full max-h-96 object-contain mx-auto rounded-lg" alt="{{ $product->name }} Size Guide">
+                        </div>
+                    </div>
+                @endif
+
                 <!-- How to Measure tip -->
                 <div class="bg-[#FDF9F4] border border-[#F5EAD9] rounded-2xl p-4 flex gap-4">
                     <div class="w-8 h-8 rounded-full bg-[#C0422A]/10 flex items-center justify-center shrink-0 mt-0.5">
