@@ -162,9 +162,50 @@
                     }
                 }
 
-                // Put chosen category in FRONT if selected
+                // Saved categories logic applies ONLY for logged-in accounts
                 $selectedCatParam = request('category');
-                if ($selectedCatParam) {
+                $savedCategories = auth()->check() ? session('saved_categories', []) : [];
+
+                if (auth()->check()) {
+                    if ($selectedCatParam && $selectedCatParam !== '__all__' && !in_array($selectedCatParam, $savedCategories)) {
+                        array_unshift($savedCategories, $selectedCatParam);
+                    }
+
+                    if (!empty($savedCategories)) {
+                        $savedItems = [];
+                        foreach ($savedCategories as $savedCatName) {
+                            foreach ($allCatItems as $aci) {
+                                if (strtolower($aci['cat']) === strtolower($savedCatName) || strtolower($aci['name']) === strtolower($savedCatName)) {
+                                    $alreadyAdded = false;
+                                    foreach ($savedItems as $si) {
+                                        if (strtolower($si['cat']) === strtolower($aci['cat'])) {
+                                            $alreadyAdded = true;
+                                            break;
+                                        }
+                                    }
+                                    if (!$alreadyAdded) {
+                                        $savedItems[] = $aci;
+                                    }
+                                    break;
+                                }
+                            }
+                        }
+
+                        // Remove saved items from default $catItems to avoid duplicates
+                        foreach ($savedItems as $sItem) {
+                            foreach ($catItems as $idx => $ci) {
+                                if (strtolower($ci['cat']) === strtolower($sItem['cat'])) {
+                                    array_splice($catItems, $idx, 1);
+                                    break;
+                                }
+                            }
+                        }
+
+                        // Insert saved items right after 'All Barongs' at position 1
+                        array_splice($catItems, 1, 0, $savedItems);
+                    }
+                } elseif ($selectedCatParam && $selectedCatParam !== '__all__') {
+                    // For non-logged-in guest users, temporarily move current category to front without saving
                     $foundItem = null;
                     $foundIndex = -1;
 
@@ -178,15 +219,7 @@
 
                     if ($foundItem) {
                         array_splice($catItems, $foundIndex, 1);
-                        array_unshift($catItems, $foundItem);
-                    } else {
-                        foreach ($allCatItems as $aci) {
-                            if (strtolower($aci['cat']) === strtolower($selectedCatParam) || strtolower($aci['name']) === strtolower($selectedCatParam)) {
-                                array_pop($catItems);
-                                array_unshift($catItems, $aci);
-                                break;
-                            }
-                        }
+                        array_splice($catItems, 1, 0, [$foundItem]);
                     }
                 }
             @endphp
@@ -198,13 +231,17 @@
                         $isCurrentSelected = $isAll
                             ? !$selectedCatParam && !request('search') && !request('sort')
                             : ($selectedCatParam && (strtolower($item['cat']) === strtolower($selectedCatParam) || strtolower($item['name']) === strtolower($selectedCatParam)));
+                        $isUserSaved = auth()->check() && in_array($item['cat'], $savedCategories);
                         $itemHref = $isAll ? '/' : '/?category=' . urlencode($item['cat']);
                     @endphp
                     <a href="{{ $itemHref }}" class="group flex flex-col items-center gap-2 shrink-0 w-16 sm:w-20">
-                        <div class="w-16 h-16 sm:w-20 sm:h-20 rounded-full overflow-hidden bg-gray-100 border-2 {{ $isCurrentSelected ? 'border-amber-600 ring-4 ring-amber-500/25 scale-105 shadow-md' : 'border-transparent group-hover:border-amber-600 shadow-xs group-hover:scale-105' }} transition-all">
+                        <div class="relative w-16 h-16 sm:w-20 sm:h-20 rounded-full overflow-hidden bg-gray-100 border-2 {{ $isCurrentSelected ? 'border-amber-600 ring-4 ring-amber-500/25 scale-105 shadow-md' : ($isUserSaved ? 'border-amber-500 shadow-xs' : 'border-transparent group-hover:border-amber-600 shadow-xs group-hover:scale-105') }} transition-all">
                             <img src="{{ $item['img'] }}" class="w-full h-full object-cover" alt="{{ $item['name'] }}">
+                            @if($isUserSaved)
+                                <span class="absolute top-0 right-0 w-4 h-4 bg-amber-600 text-white rounded-full flex items-center justify-center text-[9px] shadow-xs font-black" title="Saved Category">★</span>
+                            @endif
                         </div>
-                        <span class="text-[11px] {{ $isCurrentSelected ? 'font-black text-amber-700' : 'font-medium text-gray-700 group-hover:text-black' }} leading-tight text-center line-clamp-2">{{ $item['name'] }}</span>
+                        <span class="text-[11px] {{ $isCurrentSelected ? 'font-black text-amber-700' : ($isUserSaved ? 'font-bold text-amber-900' : 'font-medium text-gray-700 group-hover:text-black') }} leading-tight text-center line-clamp-2">{{ $item['name'] }}</span>
                     </a>
                 @endforeach
             </div>

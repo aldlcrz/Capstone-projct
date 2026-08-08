@@ -43,6 +43,15 @@ class WebController extends Controller
 
         if ($request->filled('category')) {
             $catVal = $request->category;
+
+            // Save selected category to session saved categories list
+            $savedCats = session()->get('saved_categories', []);
+            $filteredCats = array_filter($savedCats, function($c) use ($catVal) {
+                return strtolower($c) !== strtolower($catVal);
+            });
+            array_unshift($filteredCats, $catVal);
+            session()->put('saved_categories', array_slice(array_values($filteredCats), 0, 8));
+
             $demographics = ['men', 'male', 'women', 'female', 'kids'];
 
             if (in_array(strtolower($catVal), $demographics)) {
