@@ -222,7 +222,31 @@
                     <div class="mb-6">
                         <h2 class="font-serif text-xl lg:text-2xl font-bold text-black mb-1">Select Payment Channel</h2>
                         <p class="text-xs lg:text-sm text-gray-500 font-medium">Choose your e-wallet payment option below and submit your reference receipt.</p>
-                    </div>
+                    @php
+                        $rawGcashQr = $paymentSource->gcashQrCode ?? null;
+                        $gcashQrUrl = null;
+                        if ($rawGcashQr) {
+                            if (str_starts_with($rawGcashQr, 'http')) {
+                                $gcashQrUrl = $rawGcashQr;
+                            } elseif (str_starts_with($rawGcashQr, 'uploads/')) {
+                                $gcashQrUrl = asset($rawGcashQr);
+                            } else {
+                                $gcashQrUrl = asset('storage/' . ltrim($rawGcashQr, '/'));
+                            }
+                        }
+
+                        $rawMayaQr = $paymentSource->mayaQrCode ?? null;
+                        $mayaQrUrl = null;
+                        if ($rawMayaQr) {
+                            if (str_starts_with($rawMayaQr, 'http')) {
+                                $mayaQrUrl = $rawMayaQr;
+                            } elseif (str_starts_with($rawMayaQr, 'uploads/')) {
+                                $mayaQrUrl = asset($rawMayaQr);
+                            } else {
+                                $mayaQrUrl = asset('storage/' . ltrim($rawMayaQr, '/'));
+                            }
+                        }
+                    @endphp
 
                     <div class="space-y-4">
                         @if(!$paymentSource || ($paymentSource->isGcashAvailable ?? true))

@@ -92,32 +92,26 @@ class DashboardController extends Controller
                 case 'today':
                     $from  = Carbon::now()->startOfDay();
                     $to    = Carbon::now()->endOfDay();
-                    $label = 'Today (' . $from->format('M d, Y') . ')';
+                    $label = 'Today';
                     break;
-                case 'yesterday':
-                    $from  = Carbon::yesterday()->startOfDay();
-                    $to    = Carbon::yesterday()->endOfDay();
-                    $label = 'Yesterday (' . $from->format('M d, Y') . ')';
-                    break;
+                case '1_week':
                 case 'last_7_days':
                     $from  = Carbon::now()->subDays(6)->startOfDay();
                     $to    = Carbon::now()->endOfDay();
-                    $label = 'Last 7 Days';
+                    $label = '1 Week';
                     break;
+                case '1_month':
                 case 'last_30_days':
+                case 'this_month':
                     $from  = Carbon::now()->subDays(29)->startOfDay();
                     $to    = Carbon::now()->endOfDay();
-                    $label = 'Last 30 Days';
+                    $label = '1 Month';
                     break;
-                case 'this_month':
-                    $from  = Carbon::now()->startOfMonth();
-                    $to    = Carbon::now()->endOfMonth();
-                    $label = 'This Month (' . Carbon::now()->format('M Y') . ')';
-                    break;
-                case 'last_month':
-                    $from  = Carbon::now()->subMonth()->startOfMonth();
-                    $to    = Carbon::now()->subMonth()->endOfMonth();
-                    $label = 'Last Month (' . Carbon::now()->subMonth()->format('M Y') . ')';
+                case '1_year':
+                case 'last_365_days':
+                    $from  = Carbon::now()->subYear()->startOfDay();
+                    $to    = Carbon::now()->endOfDay();
+                    $label = '1 Year';
                     break;
                 case 'all_time':
                 default:

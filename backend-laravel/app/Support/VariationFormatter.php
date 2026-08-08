@@ -53,7 +53,7 @@ class VariationFormatter
         return is_array($images) ? array_values($images) : [];
     }
 
-    public static function buildVariations(mixed $images): array
+    public static function buildVariations(mixed $images, ?\App\Models\Product $product = null): array
     {
         $variations = [];
 
@@ -70,14 +70,17 @@ class VariationFormatter
                 continue;
             }
 
+            $resolvedUrl = $product ? $product->getImageUrl($url) : $url;
+
             $variations[] = [
-                'url' => $url,
+                'url' => $resolvedUrl,
                 'label' => self::labelForIndex($i, $label),
             ];
         }
 
         if (empty($variations)) {
-            $variations[] = ['url' => '', 'label' => 'Original'];
+            $defaultUrl = $product ? $product->getImageUrl() : '/uploads/products/default.jpg';
+            $variations[] = ['url' => $defaultUrl, 'label' => 'Original'];
         }
 
         return $variations;

@@ -18,7 +18,7 @@ class AdminController extends Controller
 {
     public function dashboard(Request $request): \Illuminate\View\View
     {
-        $range = $request->query('range', 'month');
+        $preset = $request->query('date_preset', $request->query('range', 'all_time'));
         $stats = json_decode($this->getGlobalStats($request)->getContent(), true);
 
         $recentActivity = Notification::where('targetRole', 'admin')
@@ -26,8 +26,15 @@ class AdminController extends Controller
             ->limit(8)
             ->get();
 
+        $filters = [
+            'preset' => $preset,
+            'start_date' => $request->query('start_date', ''),
+            'end_date' => $request->query('end_date', ''),
+        ];
+
         return view('admin.dashboard', [
-            'range'          => $range,
+            'range'          => $preset,
+            'filters'        => $filters,
             'stats'          => $stats,
             'recentActivity' => $recentActivity,
             'revenueTrend'   => $this->getRevenueTrend(),
@@ -161,12 +168,18 @@ class AdminController extends Controller
     public function getGlobalStats(Request $request)
     {
         try {
-            $range = $request->query('range');
-            $query = Order::query();
+            $preset = $request->query('date_preset', $request->query('range', 'all_time'));
+            $startDate = $request->query('start_date');
+            $endDate = $request->query('end_date');
 
-            if ($range && $range !== 'all') {
-                $start = $this->getRangeBounds($range);
-                $query->where('createdAt', '>=', $start);
+            $query = Order::query();
+            $bounds = null;
+
+            if ($preset && !in_array($preset, ['all', 'all_time'])) {
+                $bounds = $this->getRangeBounds($preset, $startDate, $endDate);
+                if (is_array($bounds)) {
+                    $query->whereBetween('createdAt', $bounds);
+                }
             }
 
             $totalSalesValue = $query->whereNotIn('status', ['Cancelled'])->sum('totalAmount') ?: 0;
@@ -179,14 +192,16 @@ class AdminController extends Controller
             $totalProductsCount = Product::count();
 
             // Calculate capital based on order items
-            $totalCapital = DB::table('order_items')
+            $capitalQuery = DB::table('order_items')
                 ->join('orders', 'order_items.orderId', '=', 'orders.id')
                 ->join('products', 'order_items.productId', '=', 'products.id')
-                ->whereNotIn('orders.status', ['Cancelled'])
-                ->when($range && $range !== 'all', function ($q) use ($range) {
-                    return $q->where('orders.createdAt', '>=', $this->getRangeBounds($range));
-                })
-                ->selectRaw('SUM(order_items.quantity * products.costPerPiece) as total_capital')
+                ->whereNotIn('orders.status', ['Cancelled']);
+
+            if (is_array($bounds)) {
+                $capitalQuery->whereBetween('orders.createdAt', $bounds);
+            }
+
+            $totalCapital = $capitalQuery->selectRaw('SUM(order_items.quantity * products.costPerPiece) as total_capital')
                 ->value('total_capital') ?: 0;
 
             $totalProfit = $totalSalesValue - $totalCapital;
@@ -205,14 +220,23 @@ class AdminController extends Controller
         }
     }
 
-    private function getRangeBounds(string $range)
+    private function getRangeBounds(string $range, ?string $startDate = null, ?string $endDate = null)
     {
         switch ($range) {
-            case 'today': return Carbon::today();
-            case 'week': return Carbon::now()->startOfWeek();
-            case 'month': return Carbon::now()->startOfMonth();
-            case 'year': return Carbon::now()->startOfYear();
-            default: return Carbon::now()->subDays(30);
+            case 'today': return [Carbon::today()->startOfDay(), Carbon::today()->endOfDay()];
+            case 'yesterday': return [Carbon::yesterday()->startOfDay(), Carbon::yesterday()->endOfDay()];
+            case 'last_7_days': return [Carbon::now()->subDays(6)->startOfDay(), Carbon::now()->endOfDay()];
+            case 'last_30_days': return [Carbon::now()->subDays(29)->startOfDay(), Carbon::now()->endOfDay()];
+            case 'this_month': return [Carbon::now()->startOfMonth(), Carbon::now()->endOfMonth()];
+            case 'last_month': return [Carbon::now()->subMonth()->startOfMonth(), Carbon::now()->subMonth()->endOfMonth()];
+            case 'week': return [Carbon::now()->startOfWeek(), Carbon::now()->endOfWeek()];
+            case 'month': return [Carbon::now()->startOfMonth(), Carbon::now()->endOfMonth()];
+            case 'year': return [Carbon::now()->startOfYear(), Carbon::now()->endOfYear()];
+            case 'custom':
+                $start = $startDate ? Carbon::parse($startDate)->startOfDay() : Carbon::now()->subDays(30)->startOfDay();
+                $end = $endDate ? Carbon::parse($endDate)->endOfDay() : Carbon::now()->endOfDay();
+                return [$start, $end];
+            default: return null;
         }
     }
 

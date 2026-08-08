@@ -125,6 +125,7 @@
                                     oninput="if(parseInt(this.value) > 10000) this.value = 10000; calculateTotalStock();"
                                     class="w-full px-4 py-2.5 bg-white border border-gray-100 rounded-xl outline-none text-xs font-bold text-center size-stock-input">
                             </div>
+                        @endforeach
                     </div>
 
                     <!-- Size Guide Image Upload -->

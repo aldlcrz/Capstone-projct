@@ -82,4 +82,25 @@ class NotificationController extends Controller
 
         return response()->json($notification);
     }
+
+    /**
+     * Mark a notification as read and redirect to its link.
+     */
+    public function readAndRedirect(Request $request, $id)
+    {
+        $notification = Notification::where('id', $id)
+            ->where('userId', $request->user()->id)
+            ->first();
+
+        if ($notification) {
+            $notification->isRead = true;
+            $notification->save();
+
+            if ($notification->link) {
+                return redirect($notification->link);
+            }
+        }
+
+        return redirect()->back();
+    }
 }

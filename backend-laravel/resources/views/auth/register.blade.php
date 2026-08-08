@@ -7,9 +7,17 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Playfair+Display:wght@700;800&display=swap" rel="stylesheet">
     <style>
-        body { font-family: 'Inter', sans-serif; background: #F7F3EE; }
+        body { font-family: 'Inter', sans-serif; background: #F7F3EE; transition: background 0.3s, color 0.3s; }
         .font-serif { font-family: 'Playfair Display', serif; }
         [x-cloak] { display: none !important; }
+
+        body.dark { background-color: #121212 !important; color: #f3f4f6 !important; }
+        body.dark .login-card { background-color: #1e1e1e !important; border-color: #333333 !important; }
+        body.dark .login-card input { background-color: #2a2a2a !important; color: #ffffff !important; border-color: #444 !important; }
+        body.dark .login-card label,
+        body.dark .login-card p { color: #a1a1aa !important; }
+        body.dark .back-btn { background-color: #2a2a2a !important; color: #d4d4d8 !important; }
+        body.dark .login-card .text-gray-400 { color: #9ca3af !important; }
     </style>
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
 </head>
@@ -18,13 +26,27 @@
     <div class="absolute top-0 right-0 w-140 h-140 rounded-full -translate-y-1/2 translate-x-1/3 blur-3xl opacity-[0.04] pointer-events-none bg-[#C0422A]"></div>
     <div class="absolute bottom-0 left-0 w-95 h-95 rounded-full translate-y-1/2 -translate-x-1/3 blur-3xl opacity-[0.12] pointer-events-none bg-[#D4B896]"></div>
 
-    <div class="w-full max-w-md bg-white rounded-[2.5rem] border border-[#E5DDD5] p-8 shadow-[0_20px_60px_rgba(60,40,20,0.08)] relative z-10">
+    <div class="login-card w-full max-w-md bg-white rounded-[2.5rem] border border-[#E5DDD5] p-8 shadow-[0_20px_60px_rgba(60,40,20,0.08)] relative z-10">
         <div class="relative mb-10 text-center">
-            <a href="/" class="absolute left-0 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-[#F9F6F2] flex items-center justify-center hover:bg-gray-100 text-gray-600 hover:text-[#C0422A] transition-all shadow-sm" title="Back to Home">
+            <!-- Back to Home -->
+            <a href="/" class="back-btn absolute left-0 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-[#F9F6F2] flex items-center justify-center hover:bg-gray-100 text-gray-600 hover:text-[#C0422A] transition-all shadow-sm" title="Back to Home">
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
                 </svg>
             </a>
+            <!-- Dark / Light Mode Toggle -->
+            <button id="dark-mode-toggle"
+                onclick="toggleDarkMode()"
+                title="Toggle dark / light mode"
+                class="back-btn absolute right-0 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-[#F9F6F2] flex items-center justify-center text-gray-500 hover:bg-gray-100 hover:text-[#C0422A] transition-all shadow-sm"
+                aria-label="Toggle dark mode">
+                <svg id="icon-sun" class="w-4 h-4 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364-6.364l-.707.707M6.343 17.657l-.707.707M17.657 17.657l-.707-.707M6.343 6.343l-.707-.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"/>
+                </svg>
+                <svg id="icon-moon" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"/>
+                </svg>
+            </button>
             <h1 class="font-serif text-2xl font-black italic tracking-tight text-[#C0422A] mb-1">LumBarong</h1>
             <p class="text-[11px] font-bold uppercase tracking-[0.3em] text-gray-400">Join the Collective</p>
         </div>
@@ -124,6 +146,13 @@
                 </div>
             </div>
 
+            <div class="px-2 pt-2 flex items-start gap-2.5">
+                <input type="checkbox" name="terms_consent" id="terms_consent" required class="mt-0.5 rounded text-[#C0422A] focus:ring-[#C0422A] cursor-pointer shrink-0">
+                <label for="terms_consent" class="text-xs text-gray-500 leading-snug">
+                    I have read and agree to the <a href="/terms" target="_blank" class="text-[#C0422A] font-bold hover:underline">Terms and Conditions</a> and <a href="/privacy" target="_blank" class="text-[#C0422A] font-bold hover:underline">Privacy Policy</a>.
+                </label>
+            </div>
+
             <button type="submit" class="w-full h-14 bg-[#3D2B1F] text-white rounded-full font-bold uppercase tracking-[0.2em] text-[10px] shadow-xl shadow-black/10 hover:bg-[#C0422A] transition-all mt-4">
                 Register
             </button>
@@ -136,5 +165,32 @@
             </p>
         </div>
     </div>
+
+<script>
+    (function() {
+        const saved = localStorage.getItem('lumbarong_theme');
+        if (saved === 'dark') {
+            document.body.classList.add('dark');
+            document.getElementById('icon-sun').classList.remove('hidden');
+            document.getElementById('icon-moon').classList.add('hidden');
+        }
+    })();
+
+    function toggleDarkMode() {
+        const body = document.body;
+        const isDark = body.classList.toggle('dark');
+        const sun = document.getElementById('icon-sun');
+        const moon = document.getElementById('icon-moon');
+        if (isDark) {
+            sun.classList.remove('hidden');
+            moon.classList.add('hidden');
+            localStorage.setItem('lumbarong_theme', 'dark');
+        } else {
+            sun.classList.add('hidden');
+            moon.classList.remove('hidden');
+            localStorage.setItem('lumbarong_theme', 'light');
+        }
+    }
+</script>
 </body>
 </html>

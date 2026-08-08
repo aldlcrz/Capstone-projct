@@ -16,7 +16,7 @@
     </div>
 
     {{-- Date Filter Toolbar --}}
-    <form method="GET" action="{{ route('seller.dashboard') }}" class="bg-white p-4 rounded-2xl border border-gray-100 shadow-sm flex flex-wrap items-center justify-between gap-4">
+    <form method="GET" action="{{ route('seller.dashboard') }}" x-data="{ selectedPreset: '{{ $filters['preset'] ?? 'all_time' }}' }" class="bg-white p-4 rounded-2xl border border-gray-100 shadow-sm flex flex-wrap items-center justify-between gap-4">
         <div class="flex flex-wrap items-center gap-3">
             <div class="flex items-center gap-2">
                 <svg class="w-4 h-4 text-[#C0422A]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
@@ -24,44 +24,22 @@
             </div>
 
             {{-- Date Presets --}}
-            <select name="date_preset" onchange="this.form.submit()" class="px-3.5 py-2 bg-gray-50 border border-gray-200 rounded-xl text-xs font-bold text-gray-800 outline-none focus:border-[#C0422A] cursor-pointer">
-                <option value="all_time" {{ ($filters['preset'] ?? '') == 'all_time' ? 'selected' : '' }}>All Time</option>
+            <select name="date_preset" x-model="selectedPreset" @change="$el.form.submit()" class="px-3.5 py-2 bg-gray-50 border border-gray-200 rounded-xl text-xs font-bold text-gray-800 outline-none focus:border-[#C0422A] cursor-pointer">
+                <option value="all_time" {{ in_array(($filters['preset'] ?? ''), ['all_time', '']) ? 'selected' : '' }}>All Time</option>
                 <option value="today" {{ ($filters['preset'] ?? '') == 'today' ? 'selected' : '' }}>Today</option>
-                <option value="yesterday" {{ ($filters['preset'] ?? '') == 'yesterday' ? 'selected' : '' }}>Yesterday</option>
-                <option value="last_7_days" {{ ($filters['preset'] ?? '') == 'last_7_days' ? 'selected' : '' }}>Last 7 Days</option>
-                <option value="last_30_days" {{ ($filters['preset'] ?? '') == 'last_30_days' ? 'selected' : '' }}>Last 30 Days</option>
-                <option value="this_month" {{ ($filters['preset'] ?? '') == 'this_month' ? 'selected' : '' }}>This Month</option>
-                <option value="last_month" {{ ($filters['preset'] ?? '') == 'last_month' ? 'selected' : '' }}>Last Month</option>
-                <option value="custom" {{ ($filters['preset'] ?? '') == 'custom' ? 'selected' : '' }}>Custom Date Range...</option>
+                <option value="1_week" {{ in_array(($filters['preset'] ?? ''), ['1_week', 'last_7_days']) ? 'selected' : '' }}>1 Week</option>
+                <option value="1_month" {{ in_array(($filters['preset'] ?? ''), ['1_month', 'last_30_days', 'this_month']) ? 'selected' : '' }}>1 Month</option>
+                <option value="1_year" {{ in_array(($filters['preset'] ?? ''), ['1_year', 'last_365_days']) ? 'selected' : '' }}>1 Year</option>
             </select>
 
-            {{-- Custom Date Pickers --}}
-            <div class="flex items-center gap-2">
-                <input type="date" name="start_date" value="{{ $filters['start_date'] ?? '' }}" class="px-3 py-1.5 bg-gray-50 border border-gray-200 rounded-xl text-xs font-bold text-gray-700 outline-none focus:border-[#C0422A]">
-                <span class="text-xs font-bold text-gray-400">to</span>
-                <input type="date" name="end_date" value="{{ $filters['end_date'] ?? '' }}" class="px-3 py-1.5 bg-gray-50 border border-gray-200 rounded-xl text-xs font-bold text-gray-700 outline-none focus:border-[#C0422A]">
-            </div>
-
-            <button type="submit" class="px-4 py-2 bg-[#C0422A] text-white rounded-xl text-[10px] font-bold uppercase tracking-widest hover:bg-[#a03622] transition-all shadow-sm">
-                Filter
-            </button>
-
-            @if(($filters['preset'] ?? 'all_time') !== 'all_time' || !empty($filters['start_date']) || !empty($filters['end_date']))
+            @if(($filters['preset'] ?? 'all_time') !== 'all_time')
                 <a href="{{ route('seller.dashboard') }}" class="text-[10px] font-bold uppercase tracking-widest text-gray-400 hover:text-red-600 transition-colors">
                     Reset Filter ✕
                 </a>
             @endif
         </div>
 
-        {{-- Active Filter & Realtime Status Badge --}}
         <div class="flex items-center gap-2">
-            <span class="text-[10px] font-black uppercase tracking-widest px-3 py-1.5 bg-emerald-50 text-emerald-700 rounded-full border border-emerald-200 flex items-center gap-1.5 shadow-sm">
-                <span class="relative flex h-2 w-2">
-                    <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                    <span class="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
-                </span>
-                Realtime Sync
-            </span>
             <span class="text-[10px] font-black uppercase tracking-widest px-3 py-1.5 bg-amber-50 text-amber-700 rounded-full border border-amber-200 flex items-center gap-1.5">
                 <svg class="w-3.5 h-3.5 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
                 Range: {{ $filters['label'] ?? 'All Time' }}
@@ -72,14 +50,16 @@
     <div id="seller-dashboard-content" class="space-y-8">
         {{-- Primary KPIs --}}
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            <div class="bg-[#C0422A] p-6 rounded-2xl shadow-xl shadow-[#C0422A]/10 text-white">
+            <div class="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm">
                 <div class="flex items-center justify-between mb-4">
-                    <div class="text-[10px] font-bold uppercase tracking-widest text-white/60">Total Revenue</div>
-                    <svg class="w-5 h-5 text-white/40" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                    <div class="text-[10px] font-bold uppercase tracking-widest text-gray-400">Total Revenue</div>
+                    <div class="w-8 h-8 rounded-xl bg-[#C0422A]/10 text-[#C0422A] flex items-center justify-center">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                    </div>
                 </div>
-                <div class="text-2xl font-black">₱{{ number_format($summary['revenue']) }}</div>
-                <div class="mt-2 text-[10px] font-bold text-white/70 uppercase tracking-widest">
-                    This month: ₱{{ number_format($summary['thisMonthRevenue']) }} — {{ $summary['revenueChange'] >= 0 ? '+' : '' }}{{ $summary['revenueChange'] }}%
+                <div class="text-2xl font-black text-black">₱{{ number_format($summary['revenue']) }}</div>
+                <div class="mt-2 text-[10px] font-bold text-gray-500 uppercase tracking-widest">
+                    This month: ₱{{ number_format($summary['thisMonthRevenue']) }} — <span class="{{ $summary['revenueChange'] >= 0 ? 'text-green-600' : 'text-red-600' }}">{{ $summary['revenueChange'] >= 0 ? '+' : '' }}{{ $summary['revenueChange'] }}%</span>
                 </div>
             </div>
 

@@ -280,6 +280,7 @@ function printSellerOrder(order) {
                                     Order Details
                                 </button>
                                 <button @click="openStatus(order)"
+                                    x-show="!['delivered', 'completed', 'cancelled'].includes(order.status.toLowerCase())"
                                     class="px-5 py-2.5 bg-black text-white rounded-xl text-[9px] font-black uppercase tracking-widest hover:bg-[#C0420A] transition-all whitespace-nowrap">
                                     Update Status
                                 </button>

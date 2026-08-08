@@ -20,7 +20,7 @@
     <div class="flex items-center justify-between">
         <div>
             <div class="text-[10px] font-bold text-[#C0422A] uppercase tracking-[0.2em] mb-1">Content Management</div>
-            <h1 class="font-serif text-3xl font-bold text-black">Hero <span class="text-gray-300 font-light italic">Banners</span></h1>
+            <h1 class="font-serif text-3xl font-bold text-black">Homepage <span class="text-gray-300 font-light italic">Banners</span></h1>
         </div>
         <button @click="showAddModal = true"
             class="flex items-center gap-2 px-6 py-3 bg-[#3D2B1F] text-white rounded-xl text-[10px] font-bold uppercase tracking-widest hover:bg-[#C0422A] transition-all">

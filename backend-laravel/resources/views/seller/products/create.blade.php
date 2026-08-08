@@ -647,10 +647,13 @@ function validateProductForm(e, isEdit = false) {
             if (b) b.remove();
         }, 8000);
 
-        // Smooth scroll to first invalid field
+        // Smooth scroll & focus to first invalid field
         const firstError = document.querySelector('.border-red-500');
         if (firstError) {
             firstError.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            if (typeof firstError.focus === 'function') {
+                firstError.focus();
+            }
         }
 
         return false;

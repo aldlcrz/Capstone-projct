@@ -224,6 +224,13 @@
                     </div>
                 </div>
 
+                <div class="px-2 pt-2 flex items-start gap-2.5">
+                    <input type="checkbox" name="terms_consent" id="seller_terms_consent" required class="mt-0.5 rounded text-[#C0422A] focus:ring-[#C0422A] cursor-pointer shrink-0">
+                    <label for="seller_terms_consent" class="text-xs text-gray-500 leading-snug">
+                        I have read and agree to the <a href="/terms" target="_blank" class="text-[#C0422A] font-bold hover:underline">Terms and Conditions</a> and <a href="/privacy" target="_blank" class="text-[#C0422A] font-bold hover:underline">Privacy Policy</a>.
+                    </label>
+                </div>
+
                 <div class="pt-4">
                     <button type="submit" class="w-full h-14 bg-[#C0422A] text-white rounded-full font-bold uppercase tracking-[0.2em] text-[11px] shadow-xl shadow-[#C0422A]/20 hover:scale-[1.02] transition-all">
                         Sign Up

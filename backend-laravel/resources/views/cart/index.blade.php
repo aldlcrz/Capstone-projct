@@ -500,20 +500,20 @@ function cartApp() {
 
         get subtotal() {
             return this.items
-                .filter(i => this.selected.includes(i.key))
+                .filter(i => this.selected.map(String).includes(String(i.key)))
                 .reduce((sum, i) => sum + i.price * i.quantity, 0);
         },
 
         get shipping() {
             const fees = this.items
-                .filter(i => this.selected.includes(i.key))
+                .filter(i => this.selected.map(String).includes(String(i.key)))
                 .map(i => i.shippingFee);
             return fees.length > 0 ? Math.max(...fees) : 0;
         },
 
         async updateQty(key, newQty) {
             if (newQty < 1) return;
-            const item = this.items.find(i => i.key === key);
+            const item = this.items.find(i => String(i.key) === String(key));
             if (!item) return;
             const originalQty = item.quantity;
             item.quantity = newQty;
@@ -581,8 +581,8 @@ function cartApp() {
                 if (response.ok) {
                     const data = await response.json();
                     if (data.success) {
-                        this.items = this.items.filter(i => i.key !== key);
-                        this.selected = this.selected.filter(k => k !== key);
+                        this.items = this.items.filter(i => String(i.key) !== String(key));
+                        this.selected = this.selected.filter(k => String(k) !== String(key));
                         this.syncSelectAll();
                         window.dispatchEvent(new CustomEvent('cart-updated', { detail: data }));
                     }
@@ -605,8 +605,8 @@ function cartApp() {
                 if (response.ok) {
                     const data = await response.json();
                     if (data.success) {
-                        const removedKeys = [...this.selected];
-                        this.items = this.items.filter(i => !removedKeys.includes(i.key));
+                        const removedKeys = [...this.selected].map(String);
+                        this.items = this.items.filter(i => !removedKeys.includes(String(i.key)));
                         this.selected = [];
                         this.syncSelectAll();
                         window.dispatchEvent(new CustomEvent('cart-updated', { detail: data }));

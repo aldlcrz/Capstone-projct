@@ -71,16 +71,19 @@ class CheckoutController extends Controller
         if (!empty($cart)) {
             $firstItem = reset($cart);
             $sellerId  = $firstItem['sellerId'] ?? null;
+            $productId = $firstItem['id'] ?? null;
 
             if ($sellerId) {
                 $seller = User::find($sellerId);
             }
 
-            // Check if the first cart item's product has its own payment overrides
-            $productId = $firstItem['id'] ?? null;
             if ($productId) {
-                $cartProduct = Product::find($productId);
+                $cartProduct = Product::with('seller')->find($productId);
                 if ($cartProduct) {
+                    if (!$seller && $cartProduct->seller) {
+                        $seller = $cartProduct->seller;
+                    }
+
                     // Build a resolved payment object that merges product overrides onto seller defaults
                     $resolvedPayment = (object) [
                         'isGcashAvailable' => $cartProduct->is_gcash_available ?? ($seller->isGcashAvailable ?? true),
@@ -89,7 +92,7 @@ class CheckoutController extends Controller
                         'isMayaAvailable'  => $cartProduct->is_maya_available  ?? ($seller->isMayaAvailable ?? false),
                         'mayaNumber'       => $cartProduct->maya_number ?: ($seller->mayaNumber ?? null),
                         'mayaQrCode'       => $cartProduct->maya_qr_code ?: ($seller->mayaQrCode ?? null),
-                        'shopName'         => $seller->shopName ?? ($seller->name ?? 'Artisan'),
+                        'shopName'         => ($seller->shopName ?? null) ?: (($seller->name ?? null) ?: 'LumBarong Artisan Shop'),
                     ];
                 }
             }

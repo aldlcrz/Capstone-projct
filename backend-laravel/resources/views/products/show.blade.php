@@ -3,20 +3,27 @@
 @section('content')
 @php
     use App\Support\VariationFormatter;
-    $productVariations = VariationFormatter::buildVariations($product->image);
+    $productVariations = VariationFormatter::buildVariations($product->image, $product);
 @endphp
+{{-- Alpine productDetail component MUST be registered here (before the x-data div below).
+     Alpine.js loads with `defer`, which means `alpine:init` fires during DOM parse before
+     @stack('scripts') at the bottom of body.blade.php. Registering here ensures the
+     component is available when Alpine processes the x-data attribute. --}}
 <div id="product-page-data"
     data-logged-in="{{ auth()->check() ? 'true' : 'false' }}"
     data-login-url="{{ route('login') }}"
+    data-product-id="{{ $product->id }}"
+    data-is-wishlisted="{{ ($isWishlisted ?? false) ? 'true' : 'false' }}"
+    data-default-image-url="{{ $product->getImageUrl() }}"
+    data-csrf-token="{{ csrf_token() }}"
     style="display:none;" aria-hidden="true">
 </div>
 <script>
-    var _pd = document.getElementById('product-page-data').dataset;
+    var _pd = document.getElementById('product-page-data') ? document.getElementById('product-page-data').dataset : {};
     window.isLoggedIn = _pd.loggedIn === 'true';
     window.loginUrl   = _pd.loginUrl;
 
     document.addEventListener('DOMContentLoaded', function () {
-        // Intercept cart/checkout form submissions for guests
         document.querySelectorAll('form[action="/cart/add"], form[action="/checkout"]').forEach(function(form) {
             form.addEventListener('submit', function(e) {
                 if (!window.isLoggedIn) {
@@ -26,6 +33,137 @@
             });
         });
     });
+
+    function productDetail(defaultStock, sizeStocks, variations) {
+        var dataEl = document.getElementById('product-page-data');
+        var dataset = dataEl ? dataEl.dataset : {};
+        var isWishlistedInitial = dataset.isWishlisted === 'true';
+        var productId = dataset.productId || '';
+        var defaultProductImageUrl = dataset.defaultImageUrl || '';
+        var csrfToken = dataset.csrfToken || '';
+
+        return {
+            selectedSize: '',
+            quantity: 1,
+            defaultStock: defaultStock || 1,
+            stock: defaultStock || 1,
+            sizeStocks: sizeStocks || {},
+            activeImage: 0,
+            variations: variations || [],
+            selectedVariation: 0,
+            showSizeGuide: false,
+            selectedColorName: 'Off-White',
+            isWishlisted: isWishlistedInitial,
+            colorSwatches: [
+                { name: 'Off-White', hex: '#F9F8F6' },
+                { name: 'Ivory', hex: '#EBE4D5' },
+                { name: 'Navy Blue', hex: '#1E293B' },
+                { name: 'Natural Linen', hex: '#D6C8B4' },
+                { name: 'Black', hex: '#18181B' },
+                { name: 'Classic Cream', hex: '#F5EAD9' }
+            ],
+            customMeasurements: {
+                neck: '',
+                shoulder: '',
+                sleeves: '',
+                armhole: '',
+                fullLength: '',
+                chest: '',
+                waist: '',
+                notes: ''
+            },
+            effectiveSize: function() {
+                if (!this.selectedSize) return '';
+                if (this.selectedSize === 'Custom' || this.selectedSize.toLowerCase().includes('custom')) {
+                    var parts = [];
+                    if (this.customMeasurements.neck) parts.push('Neck: ' + this.customMeasurements.neck);
+                    if (this.customMeasurements.shoulder) parts.push('Shoulder: ' + this.customMeasurements.shoulder);
+                    if (this.customMeasurements.sleeves) parts.push('Sleeves: ' + this.customMeasurements.sleeves);
+                    if (this.customMeasurements.armhole) parts.push('Armhole: ' + this.customMeasurements.armhole);
+                    if (this.customMeasurements.fullLength) parts.push('Length: ' + this.customMeasurements.fullLength);
+                    if (this.customMeasurements.chest) parts.push('Chest: ' + this.customMeasurements.chest);
+                    if (this.customMeasurements.waist) parts.push('Waist: ' + this.customMeasurements.waist);
+                    if (this.customMeasurements.notes) parts.push('Notes: ' + this.customMeasurements.notes);
+                    return 'Custom (' + (parts.length > 0 ? parts.join(', ') : 'Tailored Sizing') + ')';
+                }
+                return this.selectedSize;
+            },
+            toggleWishlist: async function() {
+                if (!window.isLoggedIn) {
+                    window.location.href = window.loginUrl + '?next=wishlist';
+                    return;
+                }
+                try {
+                    var res = await fetch('/wishlist/toggle', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRF-TOKEN': csrfToken,
+                            'X-Requested-With': 'XMLHttpRequest'
+                        },
+                        body: JSON.stringify({ product_id: productId })
+                    });
+                    var data = await res.json();
+                    this.isWishlisted = data.status === 'added';
+                    if (window.Alpine && Alpine.store('toast')) {
+                        Alpine.store('toast').trigger(data.message, data.status === 'added' ? 'success' : 'info');
+                    }
+                } catch(e) {
+                    this.isWishlisted = !this.isWishlisted;
+                }
+            },
+            imageUrl: function(url) {
+                if (!url) return defaultProductImageUrl;
+                if (url.startsWith('http') || url.startsWith('/')) return url;
+                if (url.startsWith('products/')) return '/storage/' + url;
+                if (url.startsWith('uploads/')) return '/' + url;
+                return '/uploads/products/' + url;
+            },
+            selectedVariationLabel: function() {
+                return (this.variations && this.variations[this.selectedVariation]) ? (this.variations[this.selectedVariation].label || 'Original') : 'Original';
+            },
+            updateStock: function(size) {
+                this.selectedSize = size;
+                if (this.sizeStocks && this.sizeStocks[size] !== undefined) {
+                    this.stock = parseInt(this.sizeStocks[size]) || 0;
+                } else {
+                    this.stock = this.defaultStock;
+                }
+                if (this.quantity > this.stock) {
+                    this.quantity = Math.max(1, this.stock);
+                }
+            },
+            submitAddToCart: async function(e) {
+                if (!window.isLoggedIn) {
+                    window.location.href = window.loginUrl + '?next=cart';
+                    return;
+                }
+                try {
+                    var formData = new FormData(e.target);
+                    var response = await fetch('/cart/add', {
+                        method: 'POST',
+                        headers: {
+                            'Accept': 'application/json',
+                            'X-CSRF-TOKEN': csrfToken
+                        },
+                        body: formData
+                    });
+                    if (response.ok) {
+                        var data = await response.json();
+                        if (data.success) {
+                            window.dispatchEvent(new CustomEvent('cart-updated', { detail: data }));
+                            Alpine.store('toast').trigger('Product successfully added to cart!', 'success');
+                        }
+                    } else {
+                        var errData = await response.json();
+                        Alpine.store('toast').trigger(errData.message || 'Failed to add item to cart.', 'error');
+                    }
+                } catch(err) {
+                    Alpine.store('toast').trigger('Something went wrong. Please try again.', 'error');
+                }
+            }
+        };
+    }
 </script>
 <div class="max-w-6xl mx-auto py-4 lg:py-6" x-data="productDetail({{ (int)($product->stock ?? 1) }}, @js($product->size_stocks ?? (object)[]), @js($productVariations))">
     <!-- Breadcrumb Navigation -->
@@ -52,7 +190,7 @@
                             class="relative w-14 h-18 sm:w-16 sm:h-20 rounded-xl overflow-hidden shrink-0 border-2 transition-all shadow-2xs"
                             :class="activeImage === index ? 'border-amber-600 ring-2 ring-amber-500/20 opacity-100 scale-98' : 'border-gray-200 opacity-60 hover:opacity-100'"
                         >
-                            <img :src="imageUrl(variation.url)" onerror="this.src='{{ $product->getImageUrl() }}'" class="w-full h-full object-cover">
+                            <img :src="imageUrl(variation.url)" onerror="this.src='/uploads/products/default.jpg'" class="w-full h-full object-cover">
                         </button>
                     </template>
                 </div>
@@ -94,7 +232,7 @@
                         <img 
                             x-show="activeImage === index"
                             :src="imageUrl(variation.url)"
-                            onerror="this.src='{{ $product->getImageUrl() }}'"
+                            onerror="this.src='/uploads/products/default.jpg'"
                             class="w-full h-full object-cover object-top"
                             :class="isZoomed ? 'scale-[2.2] transition-transform duration-100 ease-out' : 'scale-100 transition-transform duration-300 ease-out'"
                             :style="isZoomed ? { transformOrigin: `${originX}% ${originY}%` } : {}"
@@ -127,7 +265,7 @@
                         <div class="flex items-center gap-1.5">
                             <span class="text-gray-500 font-medium">by</span>
                             <a href="/shops/{{ $product->sellerId }}" class="font-extrabold text-amber-800 hover:underline flex items-center gap-1.5">
-                                <img src="{{ $product->seller->profile_photo_url ?? '/uploads/categories/wedding_groom.png' }}" class="w-5 h-5 rounded-full object-cover border border-gray-200" alt="Artisan">
+                                <img src="{{ $product->seller->profile_photo_url ?? '/uploads/categories/wedding_groom.png' }}" onerror="this.src='/uploads/categories/wedding_groom.png'" class="w-5 h-5 rounded-full object-cover border border-gray-200" alt="Artisan">
                                 <span>{{ $product->artisan ?? $product->seller->shopName ?? 'BarongniJuan' }}</span>
                             </a>
                         </div>
@@ -160,7 +298,7 @@
                     <div class="mb-6">
                         <div class="flex items-center justify-between mb-2">
                             <span class="text-xs font-bold text-gray-900">Available Sizes:</span>
-                            <button type="button" @click="showSizeGuide = true" class="text-[11px] font-bold text-amber-800 hover:underline">Size Guide</button>
+                            <button type="button" @click="showSizeGuide = true" onclick="openSizeGuideModal()" class="text-[11px] font-bold text-amber-800 hover:underline cursor-pointer">Size Guide</button>
                         </div>
                         <div class="flex flex-wrap gap-2.5">
                             @php
@@ -205,14 +343,10 @@
                             </div>
                             <p class="text-[11px] text-gray-500 font-medium">Input your body measurements in inches (in) or centimetres (cm):</p>
                             
-                            <div class="grid grid-cols-2 sm:grid-cols-3 gap-2.5 text-xs">
+                            <div class="grid grid-cols-2 sm:grid-cols-4 gap-2.5 text-xs">
                                 <div>
                                     <label class="font-bold text-gray-700 block mb-1">Neck</label>
                                     <input type="text" x-model="customMeasurements.neck" placeholder="e.g. 15.5 in / 39 cm" class="w-full h-8.5 px-3 bg-white border border-gray-200 rounded-xl text-xs outline-none focus:border-[#C0422A] transition-colors">
-                                </div>
-                                <div>
-                                    <label class="font-bold text-gray-700 block mb-1">Chest</label>
-                                    <input type="text" x-model="customMeasurements.chest" placeholder="e.g. 38 in / 96 cm" class="w-full h-8.5 px-3 bg-white border border-gray-200 rounded-xl text-xs outline-none focus:border-[#C0422A] transition-colors">
                                 </div>
                                 <div>
                                     <label class="font-bold text-gray-700 block mb-1">Shoulder</label>
@@ -223,12 +357,20 @@
                                     <input type="text" x-model="customMeasurements.sleeves" placeholder="e.g. 24 in / 60 cm" class="w-full h-8.5 px-3 bg-white border border-gray-200 rounded-xl text-xs outline-none focus:border-[#C0422A] transition-colors">
                                 </div>
                                 <div>
-                                    <label class="font-bold text-gray-700 block mb-1">Waist</label>
-                                    <input type="text" x-model="customMeasurements.waist" placeholder="e.g. 32 in / 81 cm" class="w-full h-8.5 px-3 bg-white border border-gray-200 rounded-xl text-xs outline-none focus:border-[#C0422A] transition-colors">
+                                    <label class="font-bold text-gray-700 block mb-1">Armhole</label>
+                                    <input type="text" x-model="customMeasurements.armhole" placeholder="e.g. 19 in / 48 cm" class="w-full h-8.5 px-3 bg-white border border-gray-200 rounded-xl text-xs outline-none focus:border-[#C0422A] transition-colors">
                                 </div>
                                 <div>
-                                    <label class="font-bold text-gray-700 block mb-1">Full Length</label>
+                                    <label class="font-bold text-gray-700 block mb-1">Length</label>
                                     <input type="text" x-model="customMeasurements.fullLength" placeholder="e.g. 29 in / 74 cm" class="w-full h-8.5 px-3 bg-white border border-gray-200 rounded-xl text-xs outline-none focus:border-[#C0422A] transition-colors">
+                                </div>
+                                <div>
+                                    <label class="font-bold text-gray-700 block mb-1">Chest</label>
+                                    <input type="text" x-model="customMeasurements.chest" placeholder="e.g. 38 in / 96 cm" class="w-full h-8.5 px-3 bg-white border border-gray-200 rounded-xl text-xs outline-none focus:border-[#C0422A] transition-colors">
+                                </div>
+                                <div>
+                                    <label class="font-bold text-gray-700 block mb-1">Waist</label>
+                                    <input type="text" x-model="customMeasurements.waist" placeholder="e.g. 32 in / 81 cm" class="w-full h-8.5 px-3 bg-white border border-gray-200 rounded-xl text-xs outline-none focus:border-[#C0422A] transition-colors">
                                 </div>
                             </div>
                             <div>
@@ -316,15 +458,21 @@
             </div>
         </div>
 
-        <!-- Bottom Delivery & Policy Feature Bar -->
-        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 pt-8 mt-8 border-t border-gray-100 text-xs">
+        <!-- Bottom Delivery Feature Bar (Realtime Seller Info) -->
+        @php
+            $minDays = (int)($product->shippingDays ?? 3);
+            $maxDays = $minDays + 2;
+            $locationParts = array_filter([$product->seller->shopCity ?? null, $product->seller->shopProvince ?? null]);
+            $shipsFrom = !empty($locationParts) ? implode(', ', $locationParts) : ($product->seller->shopAddress ?? $product->artisan_region ?? 'Lumban, Laguna');
+        @endphp
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-8 mt-8 border-t border-gray-100 text-xs">
             <div class="flex items-center gap-3">
                 <div class="w-9 h-9 rounded-xl bg-gray-50 flex items-center justify-center text-gray-700 shrink-0 border border-gray-100">
                     🚚
                 </div>
                 <div>
                     <div class="font-medium text-gray-500">Shipping Fee</div>
-                    <div class="font-extrabold text-gray-900">₱80.00</div>
+                    <div class="font-extrabold text-gray-900">{{ ($product->shippingFee ?? 0) > 0 ? '₱' . number_format($product->shippingFee, 2) : 'Free Shipping' }}</div>
                 </div>
             </div>
 
@@ -334,17 +482,7 @@
                 </div>
                 <div>
                     <div class="font-medium text-gray-500">Estimated Delivery</div>
-                    <div class="font-extrabold text-gray-900">2 - 4 days</div>
-                </div>
-            </div>
-
-            <div class="flex items-center gap-3">
-                <div class="w-9 h-9 rounded-xl bg-gray-50 flex items-center justify-center text-gray-700 shrink-0 border border-gray-100">
-                    ⏱️
-                </div>
-                <div>
-                    <div class="font-medium text-gray-500">Return Policy</div>
-                    <div class="font-extrabold text-gray-900">7 days return</div>
+                    <div class="font-extrabold text-gray-900">{{ $minDays }} - {{ $maxDays }} days</div>
                 </div>
             </div>
 
@@ -354,7 +492,7 @@
                 </div>
                 <div>
                     <div class="font-medium text-gray-500">Ships from</div>
-                    <div class="font-extrabold text-gray-900">Manila, PH</div>
+                    <div class="font-extrabold text-gray-900">{{ $shipsFrom }}</div>
                 </div>
             </div>
         </div>
@@ -536,25 +674,20 @@
     @endif
 
     <!-- ========== SIZE GUIDE MODAL ========== -->
-    <div x-show="showSizeGuide"
-         style="display: none; z-index: 9999;"
+    <div id="size-guide-modal"
+         x-show="showSizeGuide"
          x-cloak
-         @keydown.escape.window="showSizeGuide = false"
-         class="fixed inset-0 z-[9999] flex items-center justify-center p-4">
+         @keydown.escape.window="showSizeGuide = false; closeSizeGuideModal();"
+         class="fixed inset-0 flex items-center justify-center p-4"
+         style="display: none; z-index: 999999 !important;">
         <!-- Backdrop -->
-        <div class="absolute inset-0 bg-black/60 backdrop-blur-sm" @click="showSizeGuide = false"></div>
+        <div class="absolute inset-0 bg-black/70 backdrop-blur-sm" @click="showSizeGuide = false" onclick="closeSizeGuideModal()"></div>
 
         <!-- Modal Panel -->
-        <div class="relative bg-white rounded-3xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto"
-             x-transition:enter="transition ease-out duration-200"
-             x-transition:enter-start="opacity-0 scale-95"
-             x-transition:enter-end="opacity-100 scale-100"
-             x-transition:leave="transition ease-in duration-150"
-             x-transition:leave-start="opacity-100 scale-100"
-             x-transition:leave-end="opacity-0 scale-95">
+        <div class="relative z-10 bg-white rounded-3xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto border border-gray-100">
 
             <!-- Header -->
-            <div class="sticky top-0 bg-white px-8 pt-8 pb-6 border-b border-gray-100 flex items-start justify-between">
+            <div class="sticky top-0 bg-white px-8 pt-8 pb-6 border-b border-gray-100 flex items-start justify-between z-20">
                 <div>
                     <div class="flex items-center gap-2 mb-1">
                         <div class="w-5 h-[1.5px] bg-[#C0422A]"></div>
@@ -563,14 +696,14 @@
                     <h2 class="font-serif text-2xl font-bold text-black">Size Guide</h2>
                     <p class="text-xs text-gray-400 mt-0.5">All measurements are in centimetres (cm)</p>
                 </div>
-                <button type="button" @click="showSizeGuide = false"
+                <button type="button" @click="showSizeGuide = false" onclick="closeSizeGuideModal()"
                         class="w-9 h-9 rounded-full border border-gray-200 flex items-center justify-center text-gray-400 hover:text-black hover:border-gray-400 transition-all shrink-0">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
                 </button>
             </div>
 
             <!-- Content -->
-            <div class="px-8 py-6 space-y-8">
+            <div class="px-8 py-6 space-y-6" x-data="{ sizeTab: 'men' }">
 
                 <!-- Seller's Custom Size Guide Image (if uploaded) -->
                 @if($product->getSizeGuideUrl())
@@ -585,6 +718,103 @@
                     </div>
                 @endif
 
+                <!-- Seller Custom Measurements Table (if specified by artisan) -->
+                @if(!empty($product->size_guide_measurements) && is_array($product->size_guide_measurements))
+                    <div class="bg-amber-50/60 border border-amber-200/80 rounded-2xl p-5 space-y-3">
+                        <div class="flex items-center justify-between">
+                            <span class="text-xs font-black uppercase tracking-wider text-[#C0422A]">👕 Seller Specific Product Measurements</span>
+                            <span class="text-[9px] bg-amber-200/60 text-amber-900 px-2 py-0.5 rounded-full font-bold uppercase">Exact Garment Specs</span>
+                        </div>
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-xs">
+                                <thead>
+                                    <tr class="border-b-2 border-amber-300">
+                                        <th class="py-2.5 pr-4 text-left font-black uppercase text-[10px] text-black">Size</th>
+                                        <th class="py-2.5 px-3 text-center font-black uppercase text-[10px] text-gray-700">Chest</th>
+                                        <th class="py-2.5 px-3 text-center font-black uppercase text-[10px] text-gray-700">Shoulder</th>
+                                        <th class="py-2.5 px-3 text-center font-black uppercase text-[10px] text-gray-700">Length</th>
+                                        <th class="py-2.5 px-3 text-center font-black uppercase text-[10px] text-gray-700">Sleeves</th>
+                                        <th class="py-2.5 px-3 text-center font-black uppercase text-[10px] text-gray-700">Width</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="divide-y divide-amber-100">
+                                    @foreach($product->size_guide_measurements as $mRow)
+                                        <tr>
+                                            <td class="py-2.5 pr-4 font-black text-black">{{ $mRow['size'] ?? '—' }}</td>
+                                            <td class="py-2.5 px-3 text-center font-bold text-gray-800">{{ $mRow['chest'] ?? '—' }}</td>
+                                            <td class="py-2.5 px-3 text-center font-bold text-gray-800">{{ $mRow['shoulder'] ?? '—' }}</td>
+                                            <td class="py-2.5 px-3 text-center font-bold text-gray-800">{{ $mRow['length'] ?? '—' }}</td>
+                                            <td class="py-2.5 px-3 text-center font-bold text-gray-800">{{ $mRow['sleeves'] ?? '—' }}</td>
+                                            <td class="py-2.5 px-3 text-center font-bold text-gray-800">{{ $mRow['width'] ?? '—' }}</td>
+                                        </tr>
+                                    @endforeach
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                @endif
+
+                <!-- Default Size Guide Reference with Men / Women / Kids Tabs -->
+                @php
+                $hasSellerGuide = $product->getSizeGuideUrl() || (!empty($product->size_guide_measurements) && is_array($product->size_guide_measurements));
+                @endphp
+
+                <div class="space-y-4">
+                    <div class="flex items-center gap-2 py-1">
+                        <div class="w-5 h-[1.5px] bg-gray-300"></div>
+                        <span class="text-[10px] font-bold uppercase tracking-widest text-gray-400">
+                            {{ $hasSellerGuide ? 'General Barong Reference (All Categories)' : 'Standard Barong Tagalog Size Guide' }}
+                        </span>
+                        <div class="flex-1 h-px bg-gray-100"></div>
+                    </div>
+
+                    <!-- Tab Buttons: Men / Women / Kids -->
+                    <div class="flex gap-2 bg-gray-100 p-1 rounded-2xl w-full">
+                        <button type="button" id="size-tab-btn-men" @click="sizeTab = 'men'" onclick="switchSizeGuideTab('men')"
+                            class="flex-1 py-2.5 rounded-xl text-xs font-black uppercase tracking-widest bg-white shadow-md text-black border border-gray-200 transition-all">
+                            👔 Men
+                        </button>
+                        <button type="button" id="size-tab-btn-women" @click="sizeTab = 'women'" onclick="switchSizeGuideTab('women')"
+                            class="flex-1 py-2.5 rounded-xl text-xs font-semibold uppercase tracking-widest text-gray-400 hover:text-black transition-all">
+                            👗 Women
+                        </button>
+                        <button type="button" id="size-tab-btn-kids" @click="sizeTab = 'kids'" onclick="switchSizeGuideTab('kids')"
+                            class="flex-1 py-2.5 rounded-xl text-xs font-semibold uppercase tracking-widest text-gray-400 hover:text-black transition-all">
+                            🧒 Kids
+                        </button>
+                    </div>
+
+                    <!-- MEN's SIZE DIAGRAM PICTURE -->
+                    <div id="size-tab-content-men" x-show="sizeTab === 'men'" class="space-y-4 text-center" style="display: block;">
+                        <div class="rounded-3xl border border-[#E5DDD5] overflow-hidden bg-[#FDF9F4] p-4 shadow-sm">
+                            <a href="/uploads/size-guides/size_guide_men.png" target="_blank" title="Click to view full size image">
+                                <img src="/uploads/size-guides/size_guide_men.png" alt="Men's Barong Size Guide Chart" class="w-full max-h-[70vh] object-contain rounded-2xl mx-auto shadow-xs hover:scale-[1.02] transition-transform">
+                            </a>
+                        </div>
+                        <p class="text-xs text-gray-500 font-semibold">👔 Men's Barong Tagalog Size Guide Chart • Click image to open high-resolution view</p>
+                    </div>
+
+                    <!-- WOMEN's SIZE DIAGRAM PICTURE -->
+                    <div id="size-tab-content-women" x-show="sizeTab === 'women'" class="space-y-4 text-center" style="display: none;">
+                        <div class="rounded-3xl border border-[#F5EAD9] overflow-hidden bg-[#FDF9F4] p-4 shadow-sm">
+                            <a href="/uploads/size-guides/size_guide_women.png" target="_blank" title="Click to view full size image">
+                                <img src="/uploads/size-guides/size_guide_women.png" alt="Women's Filipiniana Size Guide Chart" class="w-full max-h-[70vh] object-contain rounded-2xl mx-auto shadow-xs hover:scale-[1.02] transition-transform">
+                            </a>
+                        </div>
+                        <p class="text-xs text-gray-500 font-semibold">👗 Women's Baro't Saya / Filipiniana Size Guide Chart • Click image to open high-resolution view</p>
+                    </div>
+
+                    <!-- KIDS' SIZE DIAGRAM PICTURE -->
+                    <div id="size-tab-content-kids" x-show="sizeTab === 'kids'" class="space-y-4 text-center" style="display: none;">
+                        <div class="rounded-3xl border border-gray-200 overflow-hidden bg-[#F4F8F3] p-4 shadow-sm">
+                            <a href="/uploads/size-guides/size_guide_kids.png" target="_blank" title="Click to view full size image">
+                                <img src="/uploads/size-guides/size_guide_kids.png" alt="Kids' Barong Size Guide Chart" class="w-full max-h-[70vh] object-contain rounded-2xl mx-auto shadow-xs hover:scale-[1.02] transition-transform">
+                            </a>
+                        </div>
+                        <p class="text-xs text-gray-500 font-semibold">🧒 Kids' Barong Tagalog Size Guide Chart • Click image to open high-resolution view</p>
+                    </div>
+                </div>
+
                 <!-- How to Measure tip -->
                 <div class="bg-[#FDF9F4] border border-[#F5EAD9] rounded-2xl p-4 flex gap-4">
                     <div class="w-8 h-8 rounded-full bg-[#C0422A]/10 flex items-center justify-center shrink-0 mt-0.5">
@@ -596,74 +826,29 @@
                     </div>
                 </div>
 
-                <!-- Size Table -->
-                <div class="overflow-x-auto">
-                    <table class="w-full text-xs">
-                        <thead>
-                            <tr class="border-b-2 border-black">
-                                <th class="py-3 pr-6 text-left font-black uppercase tracking-widest text-[10px] text-black">Size</th>
-                                <th class="py-3 px-4 text-center font-black uppercase tracking-widest text-[10px] text-gray-500">Chest</th>
-                                <th class="py-3 px-4 text-center font-black uppercase tracking-widest text-[10px] text-gray-500">Shoulders</th>
-                                <th class="py-3 px-4 text-center font-black uppercase tracking-widest text-[10px] text-gray-500">Length</th>
-                                <th class="py-3 px-4 text-center font-black uppercase tracking-widest text-[10px] text-gray-500">Sleeve</th>
-                            </tr>
-                        </thead>
-                        <tbody class="divide-y divide-gray-50">
-                            @php
-                            $sizeChart = [
-                                ['size' => 'XS',  'chest' => '84–88',  'shoulder' => '42',   'length' => '70',  'sleeve' => '57'],
-                                ['size' => 'S',   'chest' => '88–92',  'shoulder' => '43',   'length' => '72',  'sleeve' => '58'],
-                                ['size' => 'M',   'chest' => '92–96',  'shoulder' => '44',   'length' => '74',  'sleeve' => '59'],
-                                ['size' => 'L',   'chest' => '96–100', 'shoulder' => '45.5', 'length' => '76',  'sleeve' => '60'],
-                                ['size' => 'XL',  'chest' => '100–106','shoulder' => '47',   'length' => '78',  'sleeve' => '61'],
-                                ['size' => '2XL', 'chest' => '106–114','shoulder' => '48.5', 'length' => '80',  'sleeve' => '62'],
-                                ['size' => '3XL', 'chest' => '114–122','shoulder' => '50',   'length' => '82',  'sleeve' => '63'],
-                            ];
-                            @endphp
-                            @foreach($sizeChart as $row)
-                                <tr class="hover:bg-gray-50 transition-colors">
-                                    <td class="py-3 pr-6">
-                                        <span @class([
-                                            'inline-flex items-center justify-center w-10 h-10 rounded-xl font-black text-sm',
-                                            'bg-black text-white' => is_array($sizes ?? []) && in_array($row['size'], array_column($sizes ?? [], 'size')),
-                                            'bg-gray-100 text-gray-700' => !(is_array($sizes ?? []) && in_array($row['size'], array_column($sizes ?? [], 'size'))),
-                                        ])>
-                                            {{ $row['size'] }}
-                                        </span>
-                                    </td>
-                                    <td class="py-3 px-4 text-center font-semibold text-gray-700">{{ $row['chest'] }}</td>
-                                    <td class="py-3 px-4 text-center font-semibold text-gray-700">{{ $row['shoulder'] }}</td>
-                                    <td class="py-3 px-4 text-center font-semibold text-gray-700">{{ $row['length'] }}</td>
-                                    <td class="py-3 px-4 text-center font-semibold text-gray-700">{{ $row['sleeve'] }}</td>
-                                </tr>
-                            @endforeach
-                        </tbody>
-                    </table>
-                </div>
-
-                <!-- Measurement Guides -->
-                <div class="grid grid-cols-2 gap-4">
+                <!-- Measurement Guides Grid -->
+                <div class="grid grid-cols-2 gap-3">
                     <div class="bg-gray-50 rounded-2xl p-4">
-                        <div class="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-2">Chest</div>
+                        <div class="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-1.5">Chest / Bust</div>
                         <p class="text-xs text-gray-600 leading-relaxed">Measure around the fullest part of your chest, keeping the tape horizontal under the armpits.</p>
                     </div>
                     <div class="bg-gray-50 rounded-2xl p-4">
-                        <div class="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-2">Shoulders</div>
+                        <div class="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-1.5">Shoulders</div>
                         <p class="text-xs text-gray-600 leading-relaxed">Measure from the edge of one shoulder across the back to the edge of the other shoulder.</p>
                     </div>
                     <div class="bg-gray-50 rounded-2xl p-4">
-                        <div class="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-2">Length</div>
+                        <div class="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-1.5">Length</div>
                         <p class="text-xs text-gray-600 leading-relaxed">Measure from the highest point of the shoulder, straight down to the desired hemline.</p>
                     </div>
                     <div class="bg-gray-50 rounded-2xl p-4">
-                        <div class="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-2">Sleeve</div>
+                        <div class="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-1.5">Sleeve</div>
                         <p class="text-xs text-gray-600 leading-relaxed">Measure from the shoulder seam to the end of the cuff with your arm slightly bent.</p>
                     </div>
                 </div>
 
                 <!-- Note -->
                 <div class="text-center pb-2">
-                    <p class="text-[10px] text-gray-400 font-medium">Sizes may vary slightly between artisans. When in doubt, size up. Contact the artisan for custom sizing.</p>
+                    <p class="text-[10px] text-gray-400 font-medium">Sizes may vary slightly between artisans. When in doubt, size up. Contact the artisan for custom fitting.</p>
                 </div>
 
             </div>
@@ -673,130 +858,46 @@
 
 </div>
 
-@push('scripts')
 <script>
-    document.addEventListener('alpine:init', () => {
-        Alpine.data('productDetail', (defaultStock, sizeStocks, variations) => ({
-            selectedSize: '', 
-            quantity: 1, 
-            defaultStock: defaultStock,
-            stock: defaultStock, 
-            sizeStocks: sizeStocks,
-            activeImage: 0,
-            variations: variations,
-            selectedVariation: 0,
-            showSizeGuide: false,
-            selectedColorName: 'Off-White',
-            isWishlisted: @json($isWishlisted ?? false),
-            colorSwatches: [
-                { name: 'Off-White', hex: '#F9F8F6' },
-                { name: 'Ivory', hex: '#EBE4D5' },
-                { name: 'Navy Blue', hex: '#1E293B' },
-                { name: 'Natural Linen', hex: '#D6C8B4' },
-                { name: 'Black', hex: '#18181B' },
-                { name: 'Classic Cream', hex: '#F5EAD9' }
-            ],
-            customMeasurements: {
-                neck: '',
-                chest: '',
-                shoulder: '',
-                sleeves: '',
-                waist: '',
-                fullLength: '',
-                notes: ''
-            },
-            effectiveSize() {
-                if (!this.selectedSize) return '';
-                if (this.selectedSize === 'Custom' || this.selectedSize.toLowerCase().includes('custom')) {
-                    const parts = [];
-                    if (this.customMeasurements.neck) parts.push('Neck: ' + this.customMeasurements.neck);
-                    if (this.customMeasurements.chest) parts.push('Chest: ' + this.customMeasurements.chest);
-                    if (this.customMeasurements.shoulder) parts.push('Shoulder: ' + this.customMeasurements.shoulder);
-                    if (this.customMeasurements.sleeves) parts.push('Sleeves: ' + this.customMeasurements.sleeves);
-                    if (this.customMeasurements.waist) parts.push('Waist: ' + this.customMeasurements.waist);
-                    if (this.customMeasurements.fullLength) parts.push('Full Length: ' + this.customMeasurements.fullLength);
-                    if (this.customMeasurements.notes) parts.push('Notes: ' + this.customMeasurements.notes);
-                    return 'Custom (' + (parts.length > 0 ? parts.join(', ') : 'Tailored Sizing') + ')';
-                }
-                return this.selectedSize;
-            },
-            async toggleWishlist() {
-                if (!window.isLoggedIn) {
-                    window.location.href = window.loginUrl + '?next=wishlist';
-                    return;
-                }
-                try {
-                    const res = await fetch('/wishlist/toggle', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'X-CSRF-TOKEN': '{{ csrf_token() }}',
-                            'X-Requested-With': 'XMLHttpRequest'
-                        },
-                        body: JSON.stringify({ product_id: '{{ $product->id }}' })
-                    });
-                    const data = await res.json();
-                    this.isWishlisted = data.status === 'added';
-                    if (window.Alpine && Alpine.store('toast')) {
-                        Alpine.store('toast').trigger(data.message, data.status === 'added' ? 'success' : 'info');
-                    }
-                } catch(e) {
-                    this.isWishlisted = !this.isWishlisted;
-                }
-            },
-            imageUrl(url) {
-                if (!url) return '{{ $product->getImageUrl() }}';
-                if (url.startsWith('http')) return url;
-                if (url.startsWith('products/')) return '/storage/' + url;
-                if (url.startsWith('uploads/')) return '/' + url;
-                if (url.startsWith('/uploads/') || url.startsWith('/storage/')) return url;
-                return '/uploads/products/' + url;
-            },
-            selectedVariationLabel() {
-                return this.variations[this.selectedVariation]?.label || 'Original';
-            },
-            updateStock(size) {
-                this.selectedSize = size;
-                if (this.sizeStocks && this.sizeStocks[size] !== undefined) {
-                    this.stock = parseInt(this.sizeStocks[size]) || 0;
+    function openSizeGuideModal() {
+        var modal = document.getElementById('size-guide-modal');
+        if (modal) {
+            modal.style.setProperty('display', 'flex', 'important');
+            document.body.style.overflow = 'hidden';
+        }
+    }
+
+    function closeSizeGuideModal() {
+        var modal = document.getElementById('size-guide-modal');
+        if (modal) {
+            modal.style.setProperty('display', 'none', 'important');
+            document.body.style.overflow = '';
+        }
+    }
+
+    function switchSizeGuideTab(tabName) {
+        var tabs = ['men', 'women', 'kids'];
+        tabs.forEach(function(t) {
+            var content = document.getElementById('size-tab-content-' + t);
+            var btn = document.getElementById('size-tab-btn-' + t);
+            if (content) {
+                content.style.display = (t === tabName) ? 'block' : 'none';
+            }
+            if (btn) {
+                if (t === tabName) {
+                    btn.className = 'flex-1 py-2.5 rounded-xl text-xs font-black uppercase tracking-widest bg-white shadow-md text-black border border-gray-200 transition-all';
                 } else {
-                    this.stock = this.defaultStock;
-                }
-                if (this.quantity > this.stock) {
-                    this.quantity = Math.max(1, this.stock);
-                }
-            },
-            async submitAddToCart(e) {
-                if (!window.isLoggedIn) {
-                    window.location.href = window.loginUrl + '?next=cart';
-                    return;
-                }
-                try {
-                    const formData = new FormData(e.target);
-                    const response = await fetch('/cart/add', {
-                        method: 'POST',
-                        headers: {
-                            'Accept': 'application/json',
-                            'X-CSRF-TOKEN': '{{ csrf_token() }}'
-                        },
-                        body: formData
-                    });
-                    if (response.ok) {
-                        const data = await response.json();
-                        if (data.success) {
-                            window.dispatchEvent(new CustomEvent('cart-updated', { detail: data }));
-                            Alpine.store('toast').trigger('Product successfully added to cart!', 'success');
-                        }
-                    } else {
-                        const errData = await response.json();
-                        Alpine.store('toast').trigger(errData.message || 'Failed to add item to cart.', 'error');
-                    }
-                } catch(err) {
-                    Alpine.store('toast').trigger('Something went wrong. Please try again.', 'error');
+                    btn.className = 'flex-1 py-2.5 rounded-xl text-xs font-semibold uppercase tracking-widest text-gray-400 hover:text-black transition-all';
                 }
             }
-        }));
+        });
+    }
+
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') {
+            closeSizeGuideModal();
+        }
     });
 </script>
-@endpush
+
 @endsection

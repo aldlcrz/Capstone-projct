@@ -24,12 +24,12 @@
         <div class="bg-white rounded-md shadow-sm border border-stone-200 flex flex-col md:flex-row overflow-hidden">
             
             <!-- Left Side: Dark/Gold Premium Banner -->
-            <div class="w-full md:w-[380px] p-5 flex flex-col justify-between shrink-0 relative overflow-hidden transition-all duration-500"
+            <div class="w-full md:w-95 p-5 flex flex-col justify-between shrink-0 relative overflow-hidden transition-all duration-500"
                  :class="seller?.isPremium ? 'border-r border-yellow-500/10' : 'bg-[#1A1A1A]'"
                  :style="seller?.isPremium ? 'background: linear-gradient(to bottom, #2E2A24, #1A1A1A);' : ''">
                 <div class="absolute inset-0 opacity-[0.03] bg-white mix-blend-overlay"></div>
                 <div class="relative z-10 flex gap-4 items-center">
-                    <div class="w-[72px] h-[72px] rounded-full border border-white/20 bg-stone-100 overflow-hidden shrink-0 flex items-center justify-center font-serif text-3xl text-stone-400">
+                    <div class="w-18 h-18 rounded-full border border-white/20 bg-stone-100 overflow-hidden shrink-0 flex items-center justify-center font-serif text-3xl text-stone-400">
                         <template x-if="seller && seller.profilePhoto">
                             <img :src="seller.profilePhoto.startsWith('http') ? seller.profilePhoto : '/storage/' + seller.profilePhoto" class="w-full h-full object-cover" />
                         </template>
@@ -94,7 +94,7 @@
     </div>
 
     <!-- Collection -->
-    <div class="mx-auto max-w-5xl px-4 py-8 sm:px-6 lg:px-8">
+    <div id="shop-catalogue" class="mx-auto max-w-5xl px-4 py-8 sm:px-6 lg:px-8">
         <div class="mb-6 flex flex-col items-center text-center">
             <h3 class="font-serif text-xl sm:text-2xl font-bold tracking-tight text-black mb-4">
                 The <span class="text-[#C0420A] italic">Collection</span>

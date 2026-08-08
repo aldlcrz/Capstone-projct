@@ -244,6 +244,12 @@
                         <span class="text-[11px] {{ $isCurrentSelected ? 'font-black text-amber-700' : ($isUserSaved ? 'font-bold text-amber-900' : 'font-medium text-gray-700 group-hover:text-black') }} leading-tight text-center line-clamp-2">{{ $item['name'] }}</span>
                     </a>
                 @endforeach
+                <button type="button" @click="categoriesModalOpen = true" class="group flex flex-col items-center gap-2 shrink-0 w-16 sm:w-20 cursor-pointer">
+                    <div class="w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-gray-100 border-2 border-dashed border-gray-300 group-hover:border-amber-600 flex items-center justify-center text-gray-500 group-hover:text-amber-700 transition-all shadow-2xs group-hover:scale-105">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 12h.01M12 12h.01M19 12h.01M6 12a1 1 0 11-2 0 1 1 0 012 0zm7 0a1 1 0 11-2 0 1 1 0 012 0zm7 0a1 1 0 11-2 0 1 1 0 012 0z"/></svg>
+                    </div>
+                    <span class="text-[11px] font-bold text-gray-600 group-hover:text-amber-700 leading-tight text-center">More...</span>
+                </button>
             </div>
 
             {{-- All Categories Modal --}}
@@ -414,7 +420,7 @@
                                                 </div>
                                             </div>
 
-                                            <a href="/?search={{ urlencode($shop->name) }}" 
+                                            <a href="/shops/{{ $shop->id }}#shop-catalogue" 
                                                @click="topShopsModalOpen = false"
                                                class="px-3.5 py-1.5 bg-black text-white text-[11px] font-bold rounded-xl hover:bg-amber-700 transition-colors shadow-xs">
                                                 Browse Shop →

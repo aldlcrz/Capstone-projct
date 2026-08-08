@@ -27,7 +27,7 @@ class Product extends Model
         'is_gcash_available', 'gcash_number', 'gcash_qr_code',
         'is_maya_available',  'maya_number',  'maya_qr_code',
         // Seller Custom Size Guide
-        'size_guide_image',
+        'size_guide_image', 'size_guide_measurements',
     ];
 
     /**
@@ -79,17 +79,18 @@ class Product extends Model
     protected function casts(): array
     {
         return [
-            'price'               => 'decimal:2',
-            'costPerPiece'        => 'decimal:2',
-            'shippingFee'         => 'decimal:2',
-            'discount_percentage' => 'decimal:2',
-            'sizes'               => 'array',
-            'categories'          => 'array',
-            'image'               => 'array',
-            'size_stocks'         => 'array',
-            'is_on_sale'          => 'boolean',
-            'is_gcash_available'  => 'boolean',
-            'is_maya_available'   => 'boolean',
+            'price'                   => 'decimal:2',
+            'costPerPiece'            => 'decimal:2',
+            'shippingFee'             => 'decimal:2',
+            'discount_percentage'     => 'decimal:2',
+            'sizes'                   => 'array',
+            'categories'              => 'array',
+            'image'                   => 'array',
+            'size_stocks'             => 'array',
+            'size_guide_measurements' => 'array',
+            'is_on_sale'              => 'boolean',
+            'is_gcash_available'      => 'boolean',
+            'is_maya_available'       => 'boolean',
         ];
     }
 

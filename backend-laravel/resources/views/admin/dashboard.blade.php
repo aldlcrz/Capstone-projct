@@ -23,6 +23,44 @@
         </div>
     </div>
 
+    {{-- Date Filter Toolbar --}}
+    <form method="GET" action="{{ route('admin.dashboard') }}" x-data="{ selectedPreset: '{{ $filters['preset'] ?? 'all_time' }}' }" class="bg-white p-4 rounded-2xl border border-gray-100 shadow-sm flex flex-wrap items-center justify-between gap-4">
+        <div class="flex flex-wrap items-center gap-3">
+            <div class="flex items-center gap-2">
+                <svg class="w-4 h-4 text-[#C0422A]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+                <span class="text-xs font-black uppercase tracking-wider text-black">Filter Date:</span>
+            </div>
+
+            {{-- Date Presets --}}
+            <select name="date_preset" x-model="selectedPreset" @change="$el.form.submit()" class="px-3.5 py-2 bg-gray-50 border border-gray-200 rounded-xl text-xs font-bold text-gray-800 outline-none focus:border-[#C0422A] cursor-pointer">
+                <option value="all_time" {{ ($filters['preset'] ?? '') == 'all_time' ? 'selected' : '' }}>All Time</option>
+                <option value="today" {{ ($filters['preset'] ?? '') == 'today' ? 'selected' : '' }}>Today</option>
+                <option value="yesterday" {{ ($filters['preset'] ?? '') == 'yesterday' ? 'selected' : '' }}>Yesterday</option>
+                <option value="last_7_days" {{ ($filters['preset'] ?? '') == 'last_7_days' ? 'selected' : '' }}>Last 7 Days</option>
+                <option value="last_30_days" {{ ($filters['preset'] ?? '') == 'last_30_days' ? 'selected' : '' }}>Last 30 Days</option>
+                <option value="this_month" {{ ($filters['preset'] ?? '') == 'this_month' ? 'selected' : '' }}>This Month</option>
+                <option value="last_month" {{ ($filters['preset'] ?? '') == 'last_month' ? 'selected' : '' }}>Last Month</option>
+                <option value="custom" {{ ($filters['preset'] ?? '') == 'custom' ? 'selected' : '' }}>Custom Date Range...</option>
+            </select>
+
+            {{-- Custom Date Pickers --}}
+            <div x-show="selectedPreset === 'custom'" x-cloak class="flex items-center gap-2">
+                <input type="date" name="start_date" min="2020-01-01" max="{{ date('Y-m-d') }}" value="{{ $filters['start_date'] ?? '' }}" class="px-3 py-1.5 bg-gray-50 border border-gray-200 rounded-xl text-xs font-bold text-gray-700 outline-none focus:border-[#C0422A]">
+                <span class="text-xs font-bold text-gray-400">to</span>
+                <input type="date" name="end_date" min="2020-01-01" max="{{ date('Y-m-d') }}" value="{{ $filters['end_date'] ?? '' }}" class="px-3 py-1.5 bg-gray-50 border border-gray-200 rounded-xl text-xs font-bold text-gray-700 outline-none focus:border-[#C0422A]">
+                <button type="submit" class="px-4 py-2 bg-[#C0422A] text-white rounded-xl text-[10px] font-bold uppercase tracking-widest hover:bg-[#a03622] transition-all shadow-sm">
+                    Filter
+                </button>
+            </div>
+
+            @if(($filters['preset'] ?? 'all_time') !== 'all_time' || !empty($filters['start_date']) || !empty($filters['end_date']))
+                <a href="{{ route('admin.dashboard') }}" class="text-[10px] font-bold uppercase tracking-widest text-gray-400 hover:text-red-600 transition-colors">
+                    Reset Filter ✕
+                </a>
+            @endif
+        </div>
+    </form>
+
     {{-- ── Pending Action Alerts ── --}}
     @if($pendingTotal > 0)
     <div class="bg-amber-50 border border-amber-200 rounded-2xl p-4 flex flex-wrap items-center gap-3">

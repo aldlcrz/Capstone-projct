@@ -289,6 +289,60 @@
                     </div>
                 </div>
 
+                {{-- Business Details & Legal Registration Documents --}}
+                <div class="border-t border-gray-100 pt-8 space-y-6">
+                    <div>
+                        <h3 class="text-sm font-bold text-black uppercase tracking-widest flex items-center gap-2">
+                            <svg class="w-4 h-4 text-[#C0420A]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                            </svg>
+                            Business Details & Legal Documents
+                        </h3>
+                        <p class="text-[10px] text-gray-400 mt-1">Review your uploaded artisan business registration details and verified permit records.</p>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        {{-- Business Permit --}}
+                        <div class="p-5 bg-gray-50 border border-gray-100 rounded-2xl space-y-2">
+                            <div class="text-[10px] font-bold uppercase tracking-widest text-gray-400">Business Permit</div>
+                            @if($user->businessPermit)
+                                <a href="{{ asset('storage/' . $user->businessPermit) }}" target="_blank" class="inline-flex items-center gap-1.5 text-xs font-bold text-[#C0420A] hover:underline">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+                                    View Document ↗
+                                </a>
+                            @else
+                                <span class="text-xs font-bold text-gray-400">Not Uploaded</span>
+                            @endif
+                        </div>
+
+                        {{-- BIR Certificate --}}
+                        <div class="p-5 bg-gray-50 border border-gray-100 rounded-2xl space-y-2">
+                            <div class="text-[10px] font-bold uppercase tracking-widest text-gray-400">BIR Document</div>
+                            @if($user->birDocument)
+                                <a href="{{ asset('storage/' . $user->birDocument) }}" target="_blank" class="inline-flex items-center gap-1.5 text-xs font-bold text-[#C0420A] hover:underline">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+                                    View Document ↗
+                                </a>
+                            @else
+                                <span class="text-xs font-bold text-gray-400">Not Uploaded</span>
+                            @endif
+                        </div>
+
+                        {{-- Barangay Residency --}}
+                        <div class="p-5 bg-gray-50 border border-gray-100 rounded-2xl space-y-2">
+                            <div class="text-[10px] font-bold uppercase tracking-widest text-gray-400">Residency Certificate</div>
+                            @if($user->residencyCertificate)
+                                <a href="{{ asset('storage/' . $user->residencyCertificate) }}" target="_blank" class="inline-flex items-center gap-1.5 text-xs font-bold text-[#C0420A] hover:underline">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+                                    View Document ↗
+                                </a>
+                            @else
+                                <span class="text-xs font-bold text-gray-400">Not Uploaded</span>
+                            @endif
+                        </div>
+                    </div>
+                </div>
+
                 <div class="flex items-center justify-between pt-4 border-t border-gray-50">
                     <p class="text-[10px] text-gray-400">Member since {{ $user->createdAt->format('F Y') }}</p>
                     <button type="submit"

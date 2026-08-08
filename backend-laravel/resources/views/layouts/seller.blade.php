@@ -215,7 +215,7 @@
                         x-data="{ 
                             show: true, 
                             init() { 
-                                setTimeout(() => this.show = false, 5000) 
+                                setTimeout(() => this.show = false, 2500) 
                             } 
                         }"
                         x-show="show"

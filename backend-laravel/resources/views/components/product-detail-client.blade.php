@@ -1,5 +1,5 @@
 <div x-data="productDetail({ productId: '{{ $id }}' })" x-init="init()" class="min-h-screen bg-[#FAFAFA] pb-24 font-sans text-black">
-    <div class="max-w-[1440px] mx-auto px-4 lg:px-12 pt-8">
+    <div class="max-w-360 mx-auto px-4 lg:px-12 pt-8">
         
         <!-- Breadcrumbs (Simplified) -->
         <nav class="flex items-center gap-3 text-sm text-gray-400 font-medium mb-8">
@@ -14,7 +14,7 @@
             <!-- Left: Image Gallery -->
             <div class="flex flex-col gap-6">
                 <div 
-                    class="relative aspect-[4/5] bg-gray-50 rounded-4xl overflow-hidden cursor-zoom-in border border-gray-100" 
+                    class="relative aspect-4/5 bg-gray-50 rounded-4xl overflow-hidden cursor-zoom-in border border-gray-100" 
                     @click="isZoomOpen = true"
                 >
                     <template x-if="galleryImages[activeImage]">
@@ -67,7 +67,7 @@
 
                 <!-- Quantity -->
                 <div class="flex items-center gap-6 mb-10">
-                    <div class="flex items-center border-2 border-gray-100 rounded-full bg-white h-[60px] w-40 overflow-hidden">
+                    <div class="flex items-center border-2 border-gray-100 rounded-full bg-white h-15 w-40 overflow-hidden">
                         <button 
                             class="w-12 h-full flex items-center justify-center text-gray-400 hover:text-black hover:bg-gray-50 transition-colors"
                             @click="quantity = Math.max(1, quantity - 1)"
@@ -93,7 +93,7 @@
                 <div class="flex flex-col gap-3 mb-12">
                     <button 
                         @click="addToCart" 
-                        class="w-full h-[64px] bg-white border-2 border-black text-black rounded-2xl font-bold text-sm uppercase tracking-widest hover:bg-gray-50 transition-colors flex items-center justify-center gap-3 active:scale-[0.98]"
+                        class="w-full h-16 bg-white border-2 border-black text-black rounded-2xl font-bold text-sm uppercase tracking-widest hover:bg-gray-50 transition-colors flex items-center justify-center gap-3 active:scale-[0.98]"
                     >
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>
                         <span x-text="addedToCart ? 'Added!' : 'Add to Cart'"></span>
@@ -101,7 +101,7 @@
                     
                     <button 
                         @click="buyNow" 
-                        class="w-full h-[64px] bg-black text-white rounded-2xl font-bold text-sm uppercase tracking-widest hover:bg-gray-900 transition-all shadow-xl shadow-black/10 flex items-center justify-center gap-3 active:scale-[0.98]"
+                        class="w-full h-16 bg-black text-white rounded-2xl font-bold text-sm uppercase tracking-widest hover:bg-gray-900 transition-all shadow-xl shadow-black/10 flex items-center justify-center gap-3 active:scale-[0.98]"
                     >
                         Buy It Now
                     </button>
@@ -123,6 +123,7 @@ function productDetail(config) {
         addedToCart: false,
         galleryImages: [],
         availableSizes: [],
+        showSizeGuide: false,
         init() {
             this.fetchProduct();
         },

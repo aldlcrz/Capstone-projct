@@ -101,12 +101,15 @@ class WebAuthController extends Controller
     public function register(Request $request)
     {
         $validator = Validator::make($request->all(), [
-            'username' => 'required|string|max:255|unique:users,username',
-            'email'    => 'required|string|email|max:255|unique:users,email',
-            'password' => 'required|string|min:6|confirmed',
+            'username'      => 'required|string|max:255|unique:users,username',
+            'email'         => 'required|string|email|max:255|unique:users,email',
+            'password'      => 'required|string|min:6|confirmed',
+            'terms_consent' => 'required|accepted',
         ], [
-            'email.unique' => 'This Gmail address is already registered. Please log in or use a different address.',
-            'username.unique' => 'This username is already taken.',
+            'email.unique'          => 'This Gmail address is already registered. Please log in or use a different address.',
+            'username.unique'       => 'This username is already taken.',
+            'terms_consent.required' => 'You must accept the Terms and Conditions and Privacy Policy to proceed.',
+            'terms_consent.accepted' => 'You must accept the Terms and Conditions and Privacy Policy to proceed.',
         ]);
 
         if ($validator->fails()) {
@@ -153,8 +156,11 @@ class WebAuthController extends Controller
             'shopName'             => 'nullable|string|max:255',
             'shopAddress'          => 'nullable|string|max:1000',
             'businessPermit'       => 'required|file|mimes:jpg,jpeg,png,pdf|max:5120',
+            'terms_consent'        => 'required|accepted',
         ], [
-            'email.unique' => 'This Gmail address is already registered. Please log in or use a different address.',
+            'email.unique'          => 'This Gmail address is already registered. Please log in or use a different address.',
+            'terms_consent.required' => 'You must accept the Terms and Conditions and Privacy Policy to proceed.',
+            'terms_consent.accepted' => 'You must accept the Terms and Conditions and Privacy Policy to proceed.',
         ]);
 
         if ($validator->fails()) {

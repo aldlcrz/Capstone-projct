@@ -49,7 +49,7 @@
                             </p>
                             
                             @if($notification->link)
-                                <a href="{{ $notification->link }}" class="inline-flex items-center gap-1 mt-4 text-[10px] font-bold uppercase tracking-widest text-[#C0422A] hover:text-black transition-colors">
+                                <a href="{{ route('notifications.read-and-redirect', $notification->id) }}" class="inline-flex items-center gap-1 mt-4 text-[10px] font-bold uppercase tracking-widest text-[#C0422A] hover:text-black transition-colors">
                                     View Details
                                     <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
                                 </a>

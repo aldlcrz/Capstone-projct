@@ -120,7 +120,7 @@ class ProductManagementController extends Controller
                 $product->maya_qr_code = null;
             }
 
-            // Custom Size Guide Image
+            // Custom Size Guide Image & Measurements
             if ($request->hasFile('size_guide_image')) {
                 $file = $request->file('size_guide_image');
                 $filename = time() . '_sizeguide_' . Str::random(6) . '.' . $file->getClientOriginalExtension();
@@ -128,6 +128,16 @@ class ProductManagementController extends Controller
                 $product->size_guide_image = 'uploads/sizeguides/' . $filename;
             } else {
                 $product->size_guide_image = null;
+            }
+
+            $sizeMeasurements = $request->input('size_guide_measurements', []);
+            if (is_array($sizeMeasurements)) {
+                $cleanMeasurements = array_filter($sizeMeasurements, function($m) {
+                    return !empty($m['size']) && (!empty($m['chest']) || !empty($m['shoulder']) || !empty($m['length']) || !empty($m['sleeves']) || !empty($m['width']));
+                });
+                $product->size_guide_measurements = array_values($cleanMeasurements);
+            } else {
+                $product->size_guide_measurements = null;
             }
 
             // Lumban Special discount
@@ -246,12 +256,20 @@ class ProductManagementController extends Controller
             $product->maya_qr_code = 'uploads/qrcodes/' . $filename;
         }
 
-        // Custom Size Guide Image
+        // Custom Size Guide Image & Measurements
         if ($request->hasFile('size_guide_image')) {
             $file = $request->file('size_guide_image');
             $filename = time() . '_sizeguide_' . Str::random(6) . '.' . $file->getClientOriginalExtension();
             $file->move(public_path('uploads/sizeguides'), $filename);
             $product->size_guide_image = 'uploads/sizeguides/' . $filename;
+        }
+
+        $sizeMeasurements = $request->input('size_guide_measurements', []);
+        if (is_array($sizeMeasurements)) {
+            $cleanMeasurements = array_filter($sizeMeasurements, function($m) {
+                return !empty($m['size']) && (!empty($m['chest']) || !empty($m['shoulder']) || !empty($m['length']) || !empty($m['sleeves']) || !empty($m['width']));
+            });
+            $product->size_guide_measurements = array_values($cleanMeasurements);
         }
 
         // Lumban Special discount
