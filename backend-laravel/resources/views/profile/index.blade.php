@@ -114,10 +114,37 @@
                         </div>
                         <span class="font-bold text-sm text-gray-900">Change Password</span>
                     </div>
-                    <svg class="w-4 h-4 text-gray-400 group-hover:text-black group-hover:translate-x-0.5 transition-all" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5l7 7-7 7"/>
-                    </svg>
                 </button>
+
+                {{-- Logout (Mobile Screens Only) --}}
+                @auth
+                <div class="sm:hidden pt-1">
+                    <form x-ref="mobileProfileLogoutForm" action="{{ route('logout') }}" method="POST">
+                        @csrf
+                        <button type="button"
+                                @click="$dispatch('open-confirmation', { 
+                                    title: 'Logout', 
+                                    message: 'Are you sure you want to logout?', 
+                                    confirmText: 'Logout', 
+                                    type: 'danger', 
+                                    onConfirm: () => $refs.mobileProfileLogoutForm.submit() 
+                                })"
+                                class="w-full bg-red-50 hover:bg-red-100/80 rounded-2xl p-4 shadow-2xs border border-red-100 flex items-center justify-between transition-colors group cursor-pointer text-left">
+                            <div class="flex items-center gap-3">
+                                <div class="w-9 h-9 rounded-xl bg-red-100/80 text-red-600 border border-red-200/50 flex items-center justify-center shrink-0">
+                                    <svg class="w-4.5 h-4.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/>
+                                    </svg>
+                                </div>
+                                <span class="font-bold text-sm text-red-600">Logout</span>
+                            </div>
+                            <svg class="w-4 h-4 text-red-400 group-hover:text-red-600 group-hover:translate-x-0.5 transition-all" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5l7 7-7 7"/>
+                            </svg>
+                        </button>
+                    </form>
+                </div>
+                @endauth
             </div>
         </div>
 

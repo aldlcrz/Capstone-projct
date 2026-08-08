@@ -74,9 +74,9 @@
                 <!-- Right: Quick Action Icons (Bell, Cart, Avatar) -->
                 <div class="flex items-center gap-1.5 sm:gap-3.5 shrink-0">
 
-                    <!-- Notifications (Desktop/Tablet) -->
-                    <div x-data="{ open: false }" class="relative hidden sm:block" @mouseenter="open = true" @mouseleave="open = false">
-                        <a href="/notifications" class="relative w-9 h-9 sm:w-10 sm:h-10 flex items-center justify-center rounded-full text-gray-600 hover:bg-gray-100 hover:text-black transition-all">
+                    <!-- Notifications -->
+                    <div x-data="{ open: false }" class="relative" @mouseenter="open = true" @mouseleave="open = false" @click.away="open = false">
+                        <button type="button" @click="open = !open" class="relative w-9 h-9 sm:w-10 sm:h-10 flex items-center justify-center rounded-full text-gray-600 hover:bg-gray-100 hover:text-black transition-all">
                             <svg class="w-4.5 h-4.5 sm:w-5 sm:h-5" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"></path></svg>
                             @auth
                                 @php $unreadNotifications = \App\Models\Notification::where('userId', Auth::id())->where('targetRole', 'customer')->where('isRead', false)->count(); @endphp
@@ -84,7 +84,7 @@
                                     <span class="absolute top-1.5 right-1.5 w-2.5 h-2.5 bg-amber-500 rounded-full border-2 border-white"></span>
                                 @endif
                             @endauth
-                        </a>
+                        </button>
 
                         <!-- Notifications Dropdown -->
                         <div x-show="open" 
@@ -136,7 +136,7 @@
                         </div>
                     </div>
 
-                    <!-- Cart -->
+                    <!-- Cart (Desktop/Laptop only) -->
                     <div x-data="{ 
                         open: false, 
                         cartCount: {{ auth()->check() ? count(session('cart', [])) : 0 }},
@@ -147,7 +147,7 @@
                                 this.cartItems = Object.values(e.detail.cart || {});
                             });
                         }
-                    }" class="relative" @mouseenter="open = true" @mouseleave="open = false">
+                    }" class="relative hidden sm:block" @mouseenter="open = true" @mouseleave="open = false">
                         <a href="/cart" class="relative w-9 h-9 sm:w-11 sm:h-11 flex items-center justify-center rounded-full border border-gray-100 text-gray-800 hover:border-gray-400 bg-white transition-all shadow-sm">
                             <svg class="w-4.5 h-4.5 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"></path></svg>
                             @auth
@@ -195,9 +195,9 @@
                     </div>
                     
                     <!-- Profile Dropdown -->
-                    <div x-data="{ open: false }" class="relative" @mouseenter="open = true" @mouseleave="open = false">
+                    <div x-data="{ open: false }" class="relative" @mouseenter="open = true" @mouseleave="open = false" @click.away="open = false">
                         @auth
-                            <button class="w-9 h-9 sm:w-11 sm:h-11 rounded-full border border-gray-100 flex items-center justify-center overflow-hidden bg-white hover:border-gray-400 transition-all shadow-sm">
+                            <button type="button" @click="open = !open" class="w-9 h-9 sm:w-11 sm:h-11 rounded-full border border-gray-100 flex items-center justify-center overflow-hidden bg-white hover:border-gray-400 transition-all shadow-sm">
                                 <span class="font-bold text-gray-700 text-xs sm:text-sm">{{ strtoupper(substr(Auth::user()->name, 0, 1)) }}</span>
                             </button>
                             <div x-show="open" 
