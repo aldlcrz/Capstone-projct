@@ -129,9 +129,9 @@
                     @foreach($revenueChart as $day)
                         <div class="flex-1 flex flex-col items-center gap-2">
                             <div class="w-full flex items-end justify-center h-28">
-                                <div class="w-full max-w-10 bg-[#C0422A]/10 rounded-t-lg relative group" style="height: {{ ($maxChartRevenue > 0 ? max(8, ($day['revenue'] / $maxChartRevenue) * 100) : 8) . '%' }};">
-                                    <div class="absolute inset-x-0 bottom-0 bg-[#C0422A] rounded-t-lg transition-all"
-                                         style="height: 100%"></div>
+                                @php $barHeightPct = $maxChartRevenue > 0 ? max(8, ($day['revenue'] / $maxChartRevenue) * 100) : 8; @endphp
+                                <div class="w-full max-w-10 bg-[#C0422A]/10 rounded-t-lg relative group js-bar-height" data-bar-height="{{ $barHeightPct }}">
+                                    <div class="absolute inset-x-0 bottom-0 bg-[#C0422A] rounded-t-lg transition-all" style="height:100%"></div>
                                 </div>
                             </div>
                             <div class="text-center">
@@ -162,8 +162,9 @@
                                 <span>{{ $stage['label'] }}</span>
                                 <span class="text-black">{{ $statusDistribution[$stage['key']] }}</span>
                             </div>
+                            @php $stagePct = ($statusDistribution[$stage['key']] / $pipelineTotal) * 100; @endphp
                             <div class="h-2 w-full bg-gray-50 rounded-full overflow-hidden">
-                                <div class="{{ $stage['color'] }} h-full rounded-full" style="width: {{ (($statusDistribution[$stage['key']] / $pipelineTotal) * 100) . '%' }};"></div>
+                                <div class="{{ $stage['color'] }} h-full rounded-full js-bar-width" data-bar-width="{{ $stagePct }}"></div>
                             </div>
                         </div>
                     @endforeach
@@ -186,8 +187,9 @@
                                 <span>{{ $row['label'] }}</span>
                                 <span class="{{ $row['text'] }}">{{ $row['count'] }}</span>
                             </div>
+                            @php $rowPct = $inventoryHealth['total'] > 0 ? ($row['count'] / $inventoryHealth['total'] * 100) : 0; @endphp
                             <div class="h-2 w-full bg-gray-50 rounded-full overflow-hidden">
-                                <div class="{{ $row['color'] }} h-full rounded-full" style="width: {{ ($inventoryHealth['total'] > 0 ? ($row['count'] / $inventoryHealth['total'] * 100) : 0) . '%' }};"></div>
+                                <div class="{{ $row['color'] }} h-full rounded-full js-bar-width" data-bar-width="{{ $rowPct }}"></div>
                             </div>
                         </div>
                     @endforeach
@@ -303,6 +305,13 @@
 
 <script>
 document.addEventListener('DOMContentLoaded', function () {
+    // Apply dynamic bar heights/widths from data-* attributes (avoids CSS linter false positives)
+    document.querySelectorAll('.js-bar-height[data-bar-height]').forEach(function(el) {
+        el.style.height = el.dataset.barHeight + '%';
+    });
+    document.querySelectorAll('.js-bar-width[data-bar-width]').forEach(function(el) {
+        el.style.width = el.dataset.barWidth + '%';
+    });
     // Background polling every 15 seconds for realtime dashboard updates
     setInterval(function () {
         fetch(window.location.href, {
