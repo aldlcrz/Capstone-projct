@@ -71,15 +71,8 @@
                     </form>
                 </div>
 
-                <!-- Right: Quick Action Icons (Bookmark, Bell, Cart, Avatar) -->
+                <!-- Right: Quick Action Icons (Bell, Cart, Avatar) -->
                 <div class="flex items-center gap-1.5 sm:gap-3.5 shrink-0">
-
-                    <!-- Wishlist / Saved Items (Desktop/Tablet) -->
-                    <a href="/cart" class="hidden sm:flex w-9 h-9 sm:w-10 sm:h-10 items-center justify-center rounded-full text-gray-600 hover:bg-gray-100 hover:text-black transition-all" title="Saved & Cart">
-                        <svg class="w-4.5 h-4.5 sm:w-5 sm:h-5" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z"/>
-                        </svg>
-                    </a>
 
                     <!-- Notifications (Desktop/Tablet) -->
                     <div x-data="{ open: false }" class="relative hidden sm:block" @mouseenter="open = true" @mouseleave="open = false">
