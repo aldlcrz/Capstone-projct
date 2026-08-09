@@ -4,11 +4,11 @@
 <div class="space-y-12">
     <div class="flex items-center justify-between">
         <div>
-            <div class="text-[10px] font-bold text-[#C0420A] uppercase tracking-[0.2em] mb-1">Inventory Management</div>
-            <h1 class="font-serif text-3xl font-bold text-black uppercase">Product <span class="text-[#C0420A] italic lowercase">catalogue</span></h1>
+            <div class="text-[10px] font-bold text-[#C0420A] uppercase tracking-[0.2em] mb-0.5">Inventory Management</div>
+            <h1 class="font-serif text-xl sm:text-3xl font-bold text-black uppercase">Product <span class="text-[#C0420A] italic lowercase">catalogue</span></h1>
         </div>
-        <div class="flex items-center gap-3">
-            <a href="{{ route('seller.products.create') }}" class="flex items-center gap-2 px-8 py-4 bg-black text-white rounded-xl text-[10px] font-bold uppercase tracking-widest hover:bg-[#C0420A] transition-all shadow-xl shadow-black/5">
+        <div class="hidden sm:flex items-center gap-3">
+            <a href="{{ route('seller.products.create') }}" class="flex items-center gap-2 px-6 py-3.5 sm:px-8 sm:py-4 bg-black text-white rounded-xl text-[10px] font-bold uppercase tracking-widest hover:bg-[#C0420A] transition-all shadow-xl shadow-black/5">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
                 List New Heritage
             </a>
@@ -30,54 +30,60 @@
                     <span class="px-2 py-0.5 bg-[#C0420A]/10 text-[#C0420A] text-[9px] font-bold rounded-md">{{ $discounted->count() }} items</span>
                 </h2>
             </div>
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+            <div class="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-6">
                 @foreach($discounted as $product)
-                    <div class="group bg-white rounded-3xl border border-gray-100 shadow-sm hover:shadow-xl transition-all duration-500 overflow-hidden flex flex-col">
+                    <div class="group bg-white rounded-2xl sm:rounded-3xl border border-gray-100 shadow-sm hover:shadow-xl transition-all duration-500 overflow-hidden flex flex-col">
                         <!-- Image Section -->
-                        <div class="relative aspect-3/4 overflow-hidden bg-gray-50">
+                        <div class="relative aspect-4/5 sm:aspect-3/4 overflow-hidden bg-gray-50">
                             <img src="{{ $product->getImageUrl() }}" onerror="this.src='/uploads/products/default.jpg'" class="w-full h-full object-cover object-top group-hover:scale-110 transition-transform duration-700">
                             
-                            <div class="absolute top-4 left-4">
-                                <span class="px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest {{ $product->status === 'approved' ? 'bg-green-100 text-green-600' : 'bg-amber-100 text-amber-600' }}">
+                            <div class="absolute top-2.5 left-2.5 sm:top-4 sm:left-4">
+                                <span class="px-2 py-0.5 sm:px-3 sm:py-1 rounded-full text-[8px] sm:text-[9px] font-black uppercase tracking-widest {{ $product->status === 'approved' ? 'bg-green-100 text-green-600' : 'bg-amber-100 text-amber-600' }}">
                                     {{ $product->status }}
                                 </span>
                             </div>
 
-                            <div class="absolute top-4 right-4 flex flex-col items-end gap-1">
-                                <span class="px-2.5 py-0.5 bg-[#C0420A] text-white text-[8px] font-black uppercase tracking-widest rounded-md shadow-md">
-                                    Lumban Special
+                            <div class="absolute top-2.5 right-2.5 sm:top-4 sm:right-4 flex flex-col items-end gap-1">
+                                <span class="px-1.5 py-0.5 sm:px-2.5 sm:py-0.5 bg-[#C0420A] text-white text-[7px] sm:text-[8px] font-black uppercase tracking-widest rounded-md shadow-md">
+                                    Special
                                 </span>
-                                <span class="px-1.5 py-0.5 bg-black text-white text-[8px] font-black rounded-md">
-                                    -{{ number_format($product->discount_percentage, 0) }}% OFF
+                                <span class="px-1 py-0.5 sm:px-1.5 sm:py-0.5 bg-black text-white text-[7px] sm:text-[8px] font-black rounded-md">
+                                    -{{ number_format($product->discount_percentage, 0) }}%
                                 </span>
                             </div>
 
-                            <div class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-3 backdrop-blur-sm">
-                                <a href="/seller/products/{{ $product->id }}/edit" class="w-12 h-12 bg-white rounded-full flex items-center justify-center text-black hover:bg-[#C0420A] hover:text-white transition-all shadow-xl">
-                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
+                            <div class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-3 backdrop-blur-xs">
+                                <a href="/seller/products/{{ $product->id }}/edit" class="w-10 h-10 sm:w-12 sm:h-12 bg-white rounded-full flex items-center justify-center text-black hover:bg-[#C0420A] hover:text-white transition-all shadow-xl">
+                                    <svg class="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
                                 </a>
                             </div>
                         </div>
 
-                        <div class="p-6 space-y-4 flex-1 flex flex-col">
+                        <div class="p-3.5 sm:p-6 space-y-2 sm:space-y-4 flex-1 flex flex-col">
                             <div class="flex-1">
-                                <h3 class="text-sm font-bold text-black line-clamp-1 uppercase tracking-tight">{{ $product->name }}</h3>
-                                <p class="text-[10px] text-gray-400 mt-1 line-clamp-2 leading-relaxed">{{ $product->description }}</p>
+                                <h3 class="text-xs sm:text-sm font-bold text-black line-clamp-1 uppercase tracking-tight">{{ $product->name }}</h3>
+                                <p class="text-[9px] sm:text-[10px] text-gray-400 mt-0.5 sm:mt-1 line-clamp-2 leading-relaxed">{{ $product->description }}</p>
                             </div>
                             
-                            <div class="flex items-center justify-between pt-4 border-t border-gray-50">
+                            <div class="flex items-center justify-between pt-2.5 sm:pt-4 border-t border-gray-50">
                                 <div>
-                                    <div class="text-[9px] font-bold text-gray-400 uppercase tracking-widest">Price</div>
-                                    <div class="flex items-center gap-1.5">
-                                        <span class="text-sm font-black text-[#C0420A]">₱{{ number_format($product->salePrice) }}</span>
-                                        <span class="text-[10px] text-gray-400 line-through">₱{{ number_format($product->price) }}</span>
+                                    <div class="text-[8px] sm:text-[9px] font-bold text-gray-400 uppercase tracking-widest">Price</div>
+                                    <div class="flex items-center gap-1">
+                                        <span class="text-xs sm:text-sm font-black text-[#C0420A]">₱{{ number_format($product->salePrice) }}</span>
+                                        <span class="text-[9px] sm:text-[10px] text-gray-400 line-through">₱{{ number_format($product->price) }}</span>
                                     </div>
                                 </div>
                                 <div class="text-right">
-                                    <div class="text-[9px] font-bold text-gray-400 uppercase tracking-widest">Stock</div>
-                                    <div class="text-sm font-black {{ $product->stock < 5 ? 'text-red-500' : 'text-green-600' }}">{{ $product->stock }} Units</div>
+                                    <div class="text-[8px] sm:text-[9px] font-bold text-gray-400 uppercase tracking-widest">Stock</div>
+                                    <div class="text-xs sm:text-sm font-black {{ $product->stock < 5 ? 'text-red-500' : 'text-green-600' }}">{{ $product->stock }}</div>
                                 </div>
                             </div>
+
+                            <!-- Mobile Quick Edit Button -->
+                            <a href="/seller/products/{{ $product->id }}/edit" class="sm:hidden w-full py-2 bg-gray-50 text-gray-800 rounded-xl text-[9px] font-black uppercase tracking-wider text-center border border-gray-200 flex items-center justify-center gap-1">
+                                <svg class="w-3 h-3 text-[#C0420A]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
+                                Edit Product
+                            </a>
                         </div>
                     </div>
                 @endforeach
@@ -96,42 +102,48 @@
                 </h2>
             </div>
         @endif
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+        <div class="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-6">
             @forelse($regular as $product)
-                <div class="group bg-white rounded-3xl border border-gray-100 shadow-sm hover:shadow-xl transition-all duration-500 overflow-hidden flex flex-col">
+                <div class="group bg-white rounded-2xl sm:rounded-3xl border border-gray-100 shadow-sm hover:shadow-xl transition-all duration-500 overflow-hidden flex flex-col">
                     <!-- Image Section -->
-                    <div class="relative aspect-3/4 overflow-hidden bg-gray-50">
+                    <div class="relative aspect-4/5 sm:aspect-3/4 overflow-hidden bg-gray-50">
                         <img src="{{ $product->getImageUrl() }}" onerror="this.src='/uploads/products/default.jpg'" class="w-full h-full object-cover object-top group-hover:scale-110 transition-transform duration-700">
                         
-                        <div class="absolute top-4 left-4">
-                            <span class="px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest {{ $product->status === 'approved' ? 'bg-green-100 text-green-600' : 'bg-amber-100 text-amber-600' }}">
+                        <div class="absolute top-2.5 left-2.5 sm:top-4 sm:left-4">
+                            <span class="px-2 py-0.5 sm:px-3 sm:py-1 rounded-full text-[8px] sm:text-[9px] font-black uppercase tracking-widest {{ $product->status === 'approved' ? 'bg-green-100 text-green-600' : 'bg-amber-100 text-amber-600' }}">
                                 {{ $product->status }}
                             </span>
                         </div>
 
-                        <div class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-3 backdrop-blur-sm">
-                            <a href="/seller/products/{{ $product->id }}/edit" class="w-12 h-12 bg-white rounded-full flex items-center justify-center text-black hover:bg-[#C0420A] hover:text-white transition-all shadow-xl">
-                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
+                        <div class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-3 backdrop-blur-xs">
+                            <a href="/seller/products/{{ $product->id }}/edit" class="w-10 h-10 sm:w-12 sm:h-12 bg-white rounded-full flex items-center justify-center text-black hover:bg-[#C0420A] hover:text-white transition-all shadow-xl">
+                                <svg class="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
                             </a>
                         </div>
                     </div>
 
-                    <div class="p-6 space-y-4 flex-1 flex flex-col">
+                    <div class="p-3.5 sm:p-6 space-y-2 sm:space-y-4 flex-1 flex flex-col">
                         <div class="flex-1">
-                            <h3 class="text-sm font-bold text-black line-clamp-1 uppercase tracking-tight">{{ $product->name }}</h3>
-                            <p class="text-[10px] text-gray-400 mt-1 line-clamp-2 leading-relaxed">{{ $product->description }}</p>
+                            <h3 class="text-xs sm:text-sm font-bold text-black line-clamp-1 uppercase tracking-tight">{{ $product->name }}</h3>
+                            <p class="text-[9px] sm:text-[10px] text-gray-400 mt-0.5 sm:mt-1 line-clamp-2 leading-relaxed">{{ $product->description }}</p>
                         </div>
                         
-                        <div class="flex items-center justify-between pt-4 border-t border-gray-50">
+                        <div class="flex items-center justify-between pt-2.5 sm:pt-4 border-t border-gray-50">
                             <div>
-                                <div class="text-[9px] font-bold text-gray-400 uppercase tracking-widest">Price</div>
-                                <div class="text-sm font-black text-black">₱{{ number_format($product->price) }}</div>
+                                <div class="text-[8px] sm:text-[9px] font-bold text-gray-400 uppercase tracking-widest">Price</div>
+                                <div class="text-xs sm:text-sm font-black text-black">₱{{ number_format($product->price) }}</div>
                             </div>
                             <div class="text-right">
-                                <div class="text-[9px] font-bold text-gray-400 uppercase tracking-widest">Stock</div>
-                                <div class="text-sm font-black {{ $product->stock < 5 ? 'text-red-500' : 'text-green-600' }}">{{ $product->stock }} Units</div>
+                                <div class="text-[8px] sm:text-[9px] font-bold text-gray-400 uppercase tracking-widest">Stock</div>
+                                <div class="text-xs sm:text-sm font-black {{ $product->stock < 5 ? 'text-red-500' : 'text-green-600' }}">{{ $product->stock }}</div>
                             </div>
                         </div>
+
+                        <!-- Mobile Quick Edit Button -->
+                        <a href="/seller/products/{{ $product->id }}/edit" class="sm:hidden w-full py-2 bg-gray-50 text-gray-800 rounded-xl text-[9px] font-black uppercase tracking-wider text-center border border-gray-200 flex items-center justify-center gap-1">
+                            <svg class="w-3 h-3 text-[#C0420A]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
+                            Edit Product
+                        </a>
                     </div>
                 </div>
             @empty

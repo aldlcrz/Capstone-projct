@@ -2,12 +2,12 @@
 
 @section('content')
 <div class="max-w-350 mx-auto" x-data="{ deleteModal: false, deleteProductId: null, deleteProductName: '' }">
-    <div class="mb-10">
-        <a href="{{ route('seller.products.index') }}" class="inline-flex items-center gap-2 text-[10px] font-bold text-gray-400 uppercase tracking-widest hover:text-[#C0420A] transition-colors mb-4">
+    <div class="mb-6 sm:mb-10">
+        <a href="{{ route('seller.products.index') }}" class="inline-flex items-center gap-2 text-[10px] font-bold text-gray-400 uppercase tracking-widest hover:text-[#C0420A] transition-colors mb-3">
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
             Back to catalogue
         </a>
-        <h1 class="font-serif text-3xl font-bold text-black uppercase">Edit <span class="text-[#C0420A] italic lowercase">heritage piece</span></h1>
+        <h1 class="font-serif text-2xl sm:text-3xl font-bold text-black uppercase">Edit <span class="text-[#C0420A] italic lowercase">heritage piece</span></h1>
     </div>
 
     @if($errors->any())
@@ -41,13 +41,13 @@
     </div>
     @endif
 
-    <form action="{{ route('seller.products.update', $product->id) }}" method="POST" enctype="multipart/form-data" onsubmit="return validateProductForm(event, true)" class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+    <form action="{{ route('seller.products.update', $product->id) }}" method="POST" enctype="multipart/form-data" onsubmit="return validateProductForm(event, true)" class="grid grid-cols-1 lg:grid-cols-3 gap-5 sm:gap-8">
         @csrf
         @method('PUT')
 
         {{-- Left: Main Details --}}
-        <div class="lg:col-span-2 space-y-8">
-            <div class="bg-white p-8 rounded-3xl border border-gray-100 shadow-sm space-y-8">
+        <div class="lg:col-span-2 space-y-5 sm:space-y-8">
+            <div class="bg-white p-4 sm:p-8 rounded-3xl border border-gray-100 shadow-sm space-y-5 sm:space-y-8">
                 <div class="space-y-4">
                     <label class="text-[10px] font-bold uppercase tracking-widest text-gray-400">Product Name</label>
                     <input type="text" name="name" required value="{{ old('name', $product->name) }}"
@@ -294,8 +294,8 @@
             @endif
         </div>
 
-        <div class="space-y-8">
-            <div class="bg-white p-8 rounded-3xl border border-gray-100 shadow-sm space-y-5">
+        <div class="space-y-5 sm:space-y-8">
+            <div class="bg-white p-4 sm:p-8 rounded-3xl border border-gray-100 shadow-sm space-y-5">
                 <div class="flex items-center justify-between">
                     <h3 class="text-sm font-bold text-black uppercase tracking-widest">Add New Images</h3>
                     <span id="img-count-badge" class="hidden text-[9px] font-black uppercase tracking-widest px-2.5 py-1 bg-[#C0420A]/10 text-[#C0420A] rounded-full">0 photos</span>
@@ -324,7 +324,7 @@
             </div>
 
             {{-- Payment Method Configuration --}}
-            <div class="bg-white p-8 rounded-3xl border border-gray-100 shadow-sm space-y-6">
+            <div class="bg-white p-4 sm:p-8 rounded-3xl border border-gray-100 shadow-sm space-y-6">
                 <div class="flex items-center justify-between">
                     <div>
                         <h3 class="text-sm font-bold text-black uppercase tracking-widest flex items-center gap-2">

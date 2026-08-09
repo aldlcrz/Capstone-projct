@@ -176,6 +176,7 @@ Route::middleware(['auth', 'seller'])->prefix('seller')->group(function () {
     Route::get('/profile', [\App\Http\Controllers\DashboardController::class, 'sellerProfile'])->name('seller.profile');
     Route::put('/profile', [\App\Http\Controllers\DashboardController::class, 'updateSellerProfile'])->name('seller.profile.update');
     Route::get('/orders', [\App\Http\Controllers\DashboardController::class, 'sellerOrders'])->name('seller.orders');
+    Route::get('/customers', [\App\Http\Controllers\DashboardController::class, 'sellerCustomers'])->name('seller.customers');
     Route::get('/commission', [\App\Http\Controllers\DashboardController::class, 'sellerCommission'])->name('seller.commission');
     Route::post('/commission', [\App\Http\Controllers\DashboardController::class, 'submitCommissionPayment'])->name('seller.commission.submit');
     Route::patch('/api/orders/{id}/status', [\App\Http\Controllers\OrderController::class, 'updateOrderStatus']);

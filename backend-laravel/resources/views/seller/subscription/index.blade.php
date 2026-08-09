@@ -13,16 +13,16 @@
     <!-- Header -->
     <div>
         <div class="text-[10px] font-bold text-[#C0422A] uppercase tracking-[0.2em] mb-1">Membership Plan</div>
-        <h1 class="font-serif text-3xl font-bold text-black uppercase">
+        <h1 class="font-serif text-2xl sm:text-3xl font-bold text-black uppercase">
             Premium <span class="text-[#C0422A] italic lowercase">Upgrade</span>
         </h1>
     </div>
 
     @if($user->isPremiumActive())
         <!-- Active Subscription View -->
-        <div class="rounded-3xl p-8 text-white border border-yellow-500/20 shadow-2xl relative overflow-hidden" style="background: linear-gradient(to bottom right, #1A1A1A, #2E2A24);">
+        <div class="rounded-3xl p-5 sm:p-8 text-white border border-yellow-500/20 shadow-2xl relative overflow-hidden" style="background: linear-gradient(to bottom right, #1A1A1A, #2E2A24);">
             <div class="absolute -right-16 -top-16 w-48 h-48 bg-yellow-500/5 rounded-full blur-3xl"></div>
-            <div class="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
+            <div class="relative z-10 flex flex-col sm:flex-row sm:items-center justify-between gap-4 sm:gap-6">
                 <div class="space-y-4">
                     <div class="inline-flex items-center gap-2 px-3 py-1 bg-yellow-500/10 border border-yellow-500/30 text-yellow-400 rounded-full text-[10px] font-bold uppercase tracking-wider">
                         <svg class="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"></path></svg>
@@ -45,7 +45,7 @@
 
     @elseif($latestSubscription && $latestSubscription->status === 'pending')
         <!-- Pending Subscription View -->
-        <div class="bg-white rounded-3xl p-8 border border-amber-100 shadow-lg flex flex-col md:flex-row md:items-center justify-between gap-6">
+        <div class="bg-white rounded-2xl sm:rounded-3xl p-5 sm:p-8 border border-amber-100 shadow-lg flex flex-col sm:flex-row sm:items-center justify-between gap-5 sm:gap-6">
             <div class="space-y-4 flex-1">
                 <div class="inline-flex items-center gap-2 px-3 py-1 bg-amber-50 border border-amber-200 text-amber-700 rounded-full text-[10px] font-bold uppercase tracking-wider">
                     <svg class="w-3.5 h-3.5 animate-spin" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
@@ -68,10 +68,10 @@
 
     @else
         <!-- Subscription Benefits & Upgrade Form -->
-        <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-5 sm:gap-8">
             
             <!-- Benefits Landing (Left) -->
-            <div class="lg:col-span-5 bg-[#3D2B1F] text-white rounded-3xl p-6 md:p-8 space-y-6 shadow-xl relative overflow-hidden">
+            <div class="lg:col-span-5 bg-[#3D2B1F] text-white rounded-2xl sm:rounded-3xl p-5 sm:p-8 space-y-5 sm:space-y-6 shadow-xl relative overflow-hidden">
                 <div class="absolute -right-20 -bottom-20 w-44 h-44 bg-white/5 rounded-full blur-2xl"></div>
                 <div>
                     <div class="text-[9px] font-bold text-yellow-400 uppercase tracking-[0.2em] mb-1">LumBarong Premium</div>
@@ -120,7 +120,7 @@
             </div>
 
             <!-- Payment Portal Form (Right) -->
-            <div class="lg:col-span-7 bg-white rounded-3xl p-6 md:p-8 border border-gray-100 shadow-sm space-y-6">
+            <div class="lg:col-span-7 bg-white rounded-2xl sm:rounded-3xl p-5 sm:p-8 border border-gray-100 shadow-sm space-y-5 sm:space-y-6">
                 @if($latestSubscription && $latestSubscription->status === 'rejected')
                     <!-- Rejected Notice -->
                     <div class="p-4 bg-red-50 border border-red-100 rounded-2xl flex items-start gap-3">

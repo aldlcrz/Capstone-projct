@@ -1,19 +1,20 @@
 @extends('layouts.seller')
 
 @section('content')
-<div class="space-y-8">
-    <div class="flex items-center justify-between">
+<div class="space-y-6 sm:space-y-8">
+    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div>
             <div class="text-[10px] font-bold text-[#C0422A] uppercase tracking-[0.2em] mb-1">Alerts & Status</div>
-            <h1 class="font-serif text-3xl font-bold text-black uppercase">Notifications</h1>
+            <h1 class="font-serif text-2xl sm:text-3xl font-bold text-black uppercase">Notifications</h1>
         </div>
         @if($notifications->count() > 0)
             <div class="flex items-center gap-3">
                 <form action="{{ route('seller.notifications.read-all') }}" method="POST">
                     @csrf
-                    <button type="submit" class="flex items-center gap-2 px-6 py-3 bg-white text-gray-700 rounded-xl text-[10px] font-bold uppercase tracking-widest border border-gray-200 hover:bg-gray-50 transition-all shadow-sm">
+                    <button type="submit" class="flex items-center gap-2 px-4 sm:px-6 py-2.5 sm:py-3 bg-white text-gray-700 rounded-xl text-[10px] font-bold uppercase tracking-widest border border-gray-200 hover:bg-gray-50 transition-all shadow-sm">
                         <svg class="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
-                        Mark All as Read
+                        <span class="hidden sm:inline">Mark All as Read</span>
+                        <span class="sm:hidden">Mark All Read</span>
                     </button>
                 </form>
             </div>
@@ -21,10 +22,10 @@
     </div>
 
     @if($notifications->count() > 0)
-        <div class="space-y-4">
+        <div class="space-y-3 sm:space-y-4">
             @foreach($notifications as $notification)
-                <div class="group bg-white p-6 rounded-2xl border border-gray-100 shadow-sm hover:shadow-md transition-all duration-300 {{ !$notification->isRead ? 'border-l-4 border-l-[#C0422A]' : '' }}">
-                    <div class="flex items-start gap-5">
+                <div class="group bg-white p-4 sm:p-6 rounded-2xl border border-gray-100 shadow-sm hover:shadow-md transition-all duration-300 {{ !$notification->isRead ? 'border-l-4 border-l-[#C0422A]' : '' }}">
+                    <div class="flex items-start gap-3 sm:gap-5">
                         <div class="w-12 h-12 rounded-xl flex items-center justify-center shrink-0 
                             {{ $notification->type === 'order' ? 'bg-blue-50 text-blue-500' : 'bg-gray-50 text-gray-500' }} 
                             {{ $notification->type === 'system' ? 'bg-[#C0422A]/10 text-[#C0422A]' : '' }}">

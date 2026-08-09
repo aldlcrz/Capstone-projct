@@ -1,12 +1,14 @@
 @extends('layouts.seller')
 
 @section('content')
-<div class="max-w-350 mx-auto">
-    <div class="mb-10">
-        <a href="{{ route('seller.products.index') }}" class="inline-flex items-center gap-2 text-[10px] font-bold text-gray-400 uppercase tracking-widest hover:text-[#C0420A] transition-colors mb-4">
+<div class="max-w-350 mx-auto pb-28 lg:pb-12 px-2 sm:px-6">
+    <div class="mb-4 sm:mb-10">
+        <a href="{{ route('seller.products.index') }}" class="inline-flex items-center gap-2 text-[10px] font-bold text-gray-400 uppercase tracking-widest hover:text-[#C0420A] transition-colors mb-2">
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
             Back to catalogue
         </a>
+        <h1 class="font-serif text-xl sm:text-3xl font-bold text-black uppercase">New <span class="text-[#C0420A] italic lowercase">heritage piece</span></h1>
+    </div>
     @if($errors->any() || session('error'))
     <div 
         x-data="{ show: true, init() { setTimeout(() => this.show = false, 8000) } }"
@@ -17,7 +19,7 @@
         x-transition:leave="transition ease-in duration-200"
         x-transition:leave-start="opacity-100"
         x-transition:leave-end="opacity-0"
-        class="fixed top-6 right-6 z-50 w-full max-w-sm bg-white/95 backdrop-blur-md rounded-2xl shadow-2xl border border-red-200 p-4 flex items-start gap-3.5"
+        class="fixed top-6 right-4 sm:right-6 z-50 w-[calc(100%-2rem)] sm:w-full max-w-sm bg-white/95 backdrop-blur-md rounded-2xl shadow-2xl border border-red-200 p-4 flex items-start gap-3.5"
         x-cloak
     >
         <div class="w-8 h-8 rounded-full bg-red-50 flex items-center justify-center text-red-600 shrink-0 shadow-sm border border-red-100">
@@ -42,10 +44,10 @@
     </div>
     @endif
 
-    <form action="{{ route('seller.products.store') }}" method="POST" enctype="multipart/form-data" onsubmit="return validateProductForm(event, false)" class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+    <form action="{{ route('seller.products.store') }}" method="POST" enctype="multipart/form-data" onsubmit="return validateProductForm(event, false)" class="grid grid-cols-1 lg:grid-cols-3 gap-5 sm:gap-8">
         @csrf
-        <div class="lg:col-span-2 space-y-8">
-            <div class="bg-white p-8 rounded-3xl border border-gray-100 shadow-sm space-y-8">
+        <div class="lg:col-span-2 space-y-5 sm:space-y-8">
+            <div class="bg-white p-4 sm:p-8 rounded-3xl border border-gray-100 shadow-sm space-y-5 sm:space-y-8">
                 <div class="space-y-4">
                     <label class="text-[10px] font-bold uppercase tracking-widest text-gray-400">Product Name</label>
                     <input type="text" name="name" required placeholder="e.g. Pina-Silk Formal Barong Tagalog" class="w-full px-6 py-4 bg-gray-50/50 border border-gray-100 rounded-2xl outline-none focus:border-[#C0420A] transition-all font-medium text-lg">
@@ -107,6 +109,7 @@
                                     oninput="if(parseInt(this.value) > 10000) this.value = 10000; calculateTotalStock();"
                                     class="w-full px-4 py-2.5 bg-white border border-gray-100 rounded-xl outline-none text-xs font-bold text-center size-stock-input">
                             </div>
+                        @endforeach
                     </div>
 
                     <!-- Size Guide Image Upload -->
@@ -225,8 +228,8 @@
             </div>
         </div>
 
-        <div class="space-y-8">
-            <div class="bg-white p-8 rounded-3xl border border-gray-100 shadow-sm space-y-5">
+        <div class="space-y-5 sm:space-y-8">
+            <div class="bg-white p-4 sm:p-8 rounded-3xl border border-gray-100 shadow-sm space-y-5">
                 <div class="flex items-center justify-between">
                     <h3 class="text-sm font-bold text-black uppercase tracking-widest">Product Imagery</h3>
                     <span id="img-count-badge" class="hidden text-[9px] font-black uppercase tracking-widest px-2.5 py-1 bg-[#C0420A]/10 text-[#C0420A] rounded-full">0 photos</span>
@@ -255,7 +258,7 @@
             </div>
 
             {{-- Payment Method Configuration --}}
-            <div class="bg-white p-8 rounded-3xl border border-gray-100 shadow-sm space-y-6">
+            <div class="bg-white p-4 sm:p-8 rounded-3xl border border-gray-100 shadow-sm space-y-5 sm:space-y-6">
                 <div class="flex items-center justify-between">
                     <div>
                         <h3 class="text-sm font-bold text-black uppercase tracking-widest flex items-center gap-2">
@@ -378,10 +381,20 @@
                         All new listings are reviewed by administrators to ensure heritage quality standards before appearing in the shop.
                     </p>
                 </div>
-                <button type="submit" class="w-full py-5 bg-black text-white rounded-2xl font-bold uppercase tracking-[0.2em] shadow-xl hover:bg-[#C0420A] transition-all">
+                <button type="submit" class="w-full py-4 sm:py-5 bg-black text-white rounded-2xl font-bold uppercase tracking-[0.2em] shadow-xl hover:bg-[#C0420A] transition-all">
                     Submit Listing
                 </button>
             </div>
+        </div>
+
+        {{-- Mobile Sticky Action Bar --}}
+        <div class="lg:hidden fixed bottom-16 inset-x-0 bg-white/95 backdrop-blur-md border-t border-gray-200 p-3 z-30 shadow-2xl flex items-center justify-between gap-3">
+            <div class="text-[10px] font-bold text-gray-500 uppercase tracking-widest pl-2">
+                <span>New Heritage Listing</span>
+            </div>
+            <button type="submit" class="px-6 py-3 bg-[#C0420A] text-white rounded-xl text-xs font-black uppercase tracking-widest shadow-md hover:bg-black transition-all">
+                Submit Listing
+            </button>
         </div>
     </form>
 </div>

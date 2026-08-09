@@ -1,30 +1,30 @@
 @extends('layouts.seller')
 
 @section('content')
-<div class="space-y-8 max-w-6xl">
+<div class="space-y-6 sm:space-y-8 max-w-6xl pb-28 lg:pb-12 px-2 sm:px-6">
     <div>
         <div class="text-[10px] font-bold text-[#C0422A] uppercase tracking-[0.2em] mb-1">Financial Settlement</div>
-        <h1 class="font-serif text-3xl font-bold text-[#2A2A28]">Seller <span class="text-gray-400 font-light italic">Commission Payment</span></h1>
+        <h1 class="font-serif text-2xl sm:text-3xl font-bold text-[#2A2A28]">Seller <span class="text-gray-400 font-light italic">Commission Payment</span></h1>
         <p class="text-xs text-gray-500 mt-1">Settle your monthly platform commission to maintain an active seller account.</p>
     </div>
 
     {{-- Monthly Summary Card --}}
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <div class="bg-white rounded-3xl p-6 border border-gray-100 shadow-sm space-y-2">
+    <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-6">
+        <div class="bg-white rounded-2xl sm:rounded-3xl p-4 sm:p-6 border border-gray-100 shadow-sm space-y-1 sm:space-y-2">
             <div class="text-[10px] font-bold uppercase tracking-widest text-gray-400">Current Period</div>
-            <div class="text-2xl font-black text-black">{{ \Carbon\Carbon::parse($period . '-01')->format('F Y') }}</div>
+            <div class="text-xl sm:text-2xl font-black text-black">{{ \Carbon\Carbon::parse($period . '-01')->format('F Y') }}</div>
             <div class="text-xs text-gray-500">Commission due by 10th of next month</div>
         </div>
 
-        <div class="bg-white rounded-3xl p-6 border border-gray-100 shadow-sm space-y-2">
+        <div class="bg-white rounded-2xl sm:rounded-3xl p-4 sm:p-6 border border-gray-100 shadow-sm space-y-1 sm:space-y-2">
             <div class="text-[10px] font-bold uppercase tracking-widest text-gray-400">Gross Sales ({{ $rate }}%)</div>
-            <div class="text-2xl font-black text-[#C0422A]">₱{{ number_format($totalSales, 2) }}</div>
-            <div class="text-xs text-gray-500">Total completed & active orders</div>
+            <div class="text-xl sm:text-2xl font-black text-[#C0422A]">₱{{ number_format($totalSales, 2) }}</div>
+            <div class="text-xs text-gray-500">Total completed &amp; active orders</div>
         </div>
 
-        <div class="bg-[#2A2A28] text-white rounded-3xl p-6 shadow-xl space-y-2 relative overflow-hidden">
+        <div class="bg-[#2A2A28] text-white rounded-2xl sm:rounded-3xl p-4 sm:p-6 shadow-xl space-y-1 sm:space-y-2 relative overflow-hidden">
             <div class="text-[10px] font-bold uppercase tracking-widest text-gray-400">Net Commission Due</div>
-            <div class="text-3xl font-black text-amber-400">₱{{ number_format($commissionDue, 2) }}</div>
+            <div class="text-2xl sm:text-3xl font-black text-amber-400">₱{{ number_format($commissionDue, 2) }}</div>
             <div class="text-xs text-gray-300">
                 Status: 
                 @if($currentRecord && $currentRecord->status === 'paid')
@@ -39,9 +39,9 @@
     </div>
 
     {{-- Super Admin Payment Accounts & Submit Form --}}
-    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-5 sm:gap-8">
         {{-- Payment Methods / QR Codes --}}
-        <div class="bg-white rounded-3xl p-8 border border-gray-100 shadow-sm space-y-6">
+        <div class="bg-white rounded-2xl sm:rounded-3xl p-5 sm:p-8 border border-gray-100 shadow-sm space-y-4 sm:space-y-6">
             <h3 class="text-sm font-black uppercase tracking-widest text-black flex items-center gap-2">
                 <svg class="w-4 h-4 text-[#C0422A]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>
                 Super Admin Payment Accounts
@@ -53,7 +53,7 @@
                     <div class="text-xs font-bold text-blue-700 uppercase tracking-widest">GCash Account</div>
                     <div class="text-sm font-black text-black select-all">{{ $paymentSettings['gcash_number'] ?: 'Not provided' }}</div>
                     @if($paymentSettings['gcash_qr'])
-                        <img src="{{ str_starts_with($paymentSettings['gcash_qr'], 'http') || str_starts_with($paymentSettings['gcash_qr'], '/') ? $paymentSettings['gcash_qr'] : asset('storage/' . $paymentSettings['gcash_qr']) }}" class="w-36 h-36 object-contain mx-auto rounded-xl border border-white shadow-sm">
+                        <img src="{{ str_starts_with($paymentSettings['gcash_qr'], 'http') || str_starts_with($paymentSettings['gcash_qr'], '/') ? $paymentSettings['gcash_qr'] : asset('storage/' . $paymentSettings['gcash_qr']) }}" class="w-36 h-36 object-contain mx-auto rounded-xl border border-white shadow-sm" onerror="this.style.display='none'">
                     @else
                         <div class="h-36 bg-white/60 rounded-xl flex items-center justify-center text-[10px] text-gray-400 italic">No QR uploaded</div>
                     @endif
@@ -64,7 +64,7 @@
                     <div class="text-xs font-bold text-emerald-700 uppercase tracking-widest">Maya Account</div>
                     <div class="text-sm font-black text-black select-all">{{ $paymentSettings['maya_number'] ?: 'Not provided' }}</div>
                     @if($paymentSettings['maya_qr'])
-                        <img src="{{ str_starts_with($paymentSettings['maya_qr'], 'http') || str_starts_with($paymentSettings['maya_qr'], '/') ? $paymentSettings['maya_qr'] : asset('storage/' . $paymentSettings['maya_qr']) }}" class="w-36 h-36 object-contain mx-auto rounded-xl border border-white shadow-sm">
+                        <img src="{{ str_starts_with($paymentSettings['maya_qr'], 'http') || str_starts_with($paymentSettings['maya_qr'], '/') ? $paymentSettings['maya_qr'] : asset('storage/' . $paymentSettings['maya_qr']) }}" class="w-36 h-36 object-contain mx-auto rounded-xl border border-white shadow-sm" onerror="this.style.display='none'">
                     @else
                         <div class="h-36 bg-white/60 rounded-xl flex items-center justify-center text-[10px] text-gray-400 italic">No QR uploaded</div>
                     @endif
@@ -73,7 +73,7 @@
         </div>
 
         {{-- Submit Payment Proof Form --}}
-        <div class="bg-white rounded-3xl p-8 border border-gray-100 shadow-sm space-y-6">
+        <div class="bg-white rounded-2xl sm:rounded-3xl p-5 sm:p-8 border border-gray-100 shadow-sm space-y-4 sm:space-y-6">
             <h3 class="text-sm font-black uppercase tracking-widest text-black flex items-center gap-2">
                 <svg class="w-4 h-4 text-[#C0422A]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path></svg>
                 Submit Commission Payment Proof
@@ -123,51 +123,53 @@
     </div>
 
     {{-- Payment History Table --}}
-    <div class="bg-white rounded-3xl border border-gray-100 shadow-sm overflow-hidden space-y-4">
-        <div class="px-6 py-4 border-b border-gray-50 flex items-center justify-between">
-            <h3 class="text-sm font-black uppercase tracking-widest text-black">Commission Settlement History</h3>
+    <div class="bg-white rounded-2xl sm:rounded-3xl border border-gray-100 shadow-sm overflow-hidden space-y-4">
+        <div class="px-4 sm:px-6 py-4 border-b border-gray-50 flex items-center justify-between">
+            <h3 class="text-xs sm:text-sm font-black uppercase tracking-widest text-black">Commission Settlement History</h3>
         </div>
-        <table class="w-full text-left">
-            <thead>
-                <tr class="bg-gray-50/50 border-b border-gray-100">
-                    <th class="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-gray-400">Period</th>
-                    <th class="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-gray-400">Sales</th>
-                    <th class="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-gray-400">Commission</th>
-                    <th class="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-gray-400">Method / Ref</th>
-                    <th class="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-gray-400">Status</th>
-                </tr>
-            </thead>
-            <tbody class="divide-y divide-gray-50">
-                @forelse($pastRecords as $rec)
-                <tr class="hover:bg-gray-50/50 transition-all text-xs">
-                    <td class="px-6 py-4 font-bold text-black">{{ \Carbon\Carbon::parse($rec->period . '-01')->format('M Y') }}</td>
-                    <td class="px-6 py-4 font-semibold text-gray-700">₱{{ number_format($rec->totalSales, 2) }}</td>
-                    <td class="px-6 py-4 font-bold text-[#C0422A]">₱{{ number_format($rec->commissionAmount, 2) }}</td>
-                    <td class="px-6 py-4">
-                        @if($rec->referenceNumber)
-                            <div class="font-bold text-black">{{ $rec->paymentMethod }}</div>
-                            <div class="text-[10px] text-gray-400">Ref: {{ $rec->referenceNumber }}</div>
-                        @else
-                            <span class="text-gray-400 italic">None</span>
-                        @endif
-                    </td>
-                    <td class="px-6 py-4">
-                        @if($rec->status === 'paid')
-                            <span class="px-3 py-1 bg-green-50 text-green-700 rounded-full text-[9px] font-black uppercase tracking-widest">Paid</span>
-                        @elseif($rec->status === 'verification_pending')
-                            <span class="px-3 py-1 bg-amber-50 text-amber-700 rounded-full text-[9px] font-black uppercase tracking-widest">Verification Pending</span>
-                        @else
-                            <span class="px-3 py-1 bg-red-50 text-red-600 rounded-full text-[9px] font-black uppercase tracking-widest">Unpaid</span>
-                        @endif
-                    </td>
-                </tr>
-                @empty
-                <tr>
-                    <td colspan="5" class="py-12 text-center text-xs text-gray-400 italic">No past commission payment records.</td>
-                </tr>
-                @endforelse
-            </tbody>
-        </table>
+        <div class="overflow-x-auto">
+            <table class="w-full text-left min-w-[500px]">
+                <thead>
+                    <tr class="bg-gray-50/50 border-b border-gray-100">
+                        <th class="px-4 sm:px-6 py-3.5 text-[9px] sm:text-[10px] font-black uppercase tracking-widest text-gray-400">Period</th>
+                        <th class="px-4 sm:px-6 py-3.5 text-[9px] sm:text-[10px] font-black uppercase tracking-widest text-gray-400">Sales</th>
+                        <th class="px-4 sm:px-6 py-3.5 text-[9px] sm:text-[10px] font-black uppercase tracking-widest text-gray-400">Commission</th>
+                        <th class="px-4 sm:px-6 py-3.5 text-[9px] sm:text-[10px] font-black uppercase tracking-widest text-gray-400">Method / Ref</th>
+                        <th class="px-4 sm:px-6 py-3.5 text-[9px] sm:text-[10px] font-black uppercase tracking-widest text-gray-400">Status</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-gray-50">
+                    @forelse($pastRecords as $rec)
+                    <tr class="hover:bg-gray-50/50 transition-all text-xs">
+                        <td class="px-4 sm:px-6 py-3.5 font-bold text-black">{{ \Carbon\Carbon::parse($rec->period . '-01')->format('M Y') }}</td>
+                        <td class="px-4 sm:px-6 py-3.5 font-semibold text-gray-700">₱{{ number_format($rec->totalSales, 2) }}</td>
+                        <td class="px-4 sm:px-6 py-3.5 font-bold text-[#C0422A]">₱{{ number_format($rec->commissionAmount, 2) }}</td>
+                        <td class="px-4 sm:px-6 py-3.5">
+                            @if($rec->referenceNumber)
+                                <div class="font-bold text-black">{{ $rec->paymentMethod }}</div>
+                                <div class="text-[10px] text-gray-400">Ref: {{ $rec->referenceNumber }}</div>
+                            @else
+                                <span class="text-gray-400 italic">None</span>
+                            @endif
+                        </td>
+                        <td class="px-4 sm:px-6 py-3.5">
+                            @if($rec->status === 'paid')
+                                <span class="px-2.5 py-0.5 sm:px-3 sm:py-1 bg-green-50 text-green-700 rounded-full text-[8px] sm:text-[9px] font-black uppercase tracking-widest">Paid</span>
+                            @elseif($rec->status === 'verification_pending')
+                                <span class="px-2.5 py-0.5 sm:px-3 sm:py-1 bg-amber-50 text-amber-700 rounded-full text-[8px] sm:text-[9px] font-black uppercase tracking-widest">Verification Pending</span>
+                            @else
+                                <span class="px-2.5 py-0.5 sm:px-3 sm:py-1 bg-red-50 text-red-600 rounded-full text-[8px] sm:text-[9px] font-black uppercase tracking-widest">Unpaid</span>
+                            @endif
+                        </td>
+                    </tr>
+                    @empty
+                    <tr>
+                        <td colspan="5" class="py-12 text-center text-xs text-gray-400 italic">No past commission payment records.</td>
+                    </tr>
+                    @endforelse
+                </tbody>
+            </table>
+        </div>
     </div>
 </div>
 @endsection

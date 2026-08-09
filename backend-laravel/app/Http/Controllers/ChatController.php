@@ -148,8 +148,10 @@ class ChatController extends Controller
     /**
      * Show the seller chat view dashboard.
      */
-    public function sellerChatView()
+    public function sellerChatView(Request $request)
     {
-        return view('seller.chat.index');
+        $autoOpenUserId   = $request->query('userId');
+        $autoOpenUserName = $request->query('name', 'Customer');
+        return view('seller.chat.index', compact('autoOpenUserId', 'autoOpenUserName'));
     }
 }

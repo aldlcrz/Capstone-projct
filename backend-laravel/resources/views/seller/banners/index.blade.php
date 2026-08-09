@@ -1,14 +1,15 @@
 @extends('layouts.seller')
 
 @section('content')
-<div class="max-w-4xl mx-auto space-y-8" x-data="{ showAddModal: false }">
+<div class="max-w-4xl mx-auto space-y-6 sm:space-y-8" x-data="{ showAddModal: false }">
     <!-- Header -->
-    <div>
-        <div class="text-[10px] font-bold text-[#C0422A] uppercase tracking-[0.2em] mb-1">Marketing Tools</div>
-        <h1 class="font-serif text-3xl font-bold text-black uppercase">
-            Hero <span class="text-[#C0422A] italic lowercase">banners</span>
-        </h1>
-    </div>
+    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+        <div>
+            <div class="text-[10px] font-bold text-[#C0422A] uppercase tracking-[0.2em] mb-1">Marketing Tools</div>
+            <h1 class="font-serif text-2xl sm:text-3xl font-bold text-black uppercase">
+                Hero <span class="text-[#C0422A] italic lowercase">banners</span>
+            </h1>
+        </div>
 
     @if(!$isPremium)
         <!-- Upsell view for Non-Premium Sellers -->
@@ -58,11 +59,11 @@
         </div>
     @else
         <!-- Premium Dashboard View -->
-        <div class="flex items-center justify-between border-b border-gray-100 pb-4">
+        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 border-b border-gray-100 pb-4">
             <div>
                 <p class="text-xs text-gray-400">Submit banner requests to be displayed on the platform homepage.</p>
             </div>
-            <button @click="showAddModal = true" class="flex items-center gap-2 px-5 py-2.5 bg-black text-white rounded-xl text-[10px] font-bold uppercase tracking-widest hover:bg-[#C0422A] transition-all">
+            <button @click="showAddModal = true" class="flex items-center gap-2 px-5 py-2.5 bg-black text-white rounded-xl text-[10px] font-bold uppercase tracking-widest hover:bg-[#C0422A] transition-all shrink-0">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"/></svg>
                 Request Banner
             </button>
@@ -77,8 +78,9 @@
                 <p class="text-xs text-gray-400 max-w-sm mx-auto">You haven't requested any custom banners yet. Request one to promote your shop's heritage creations!</p>
             </div>
         @else
-            <div class="bg-white rounded-3xl border border-gray-100 overflow-hidden shadow-sm">
-                <table class="w-full text-left border-collapse">
+            <div class="bg-white rounded-2xl sm:rounded-3xl border border-gray-100 overflow-hidden shadow-sm">
+                <div class="overflow-x-auto">
+                <table class="w-full text-left border-collapse min-w-[560px]">
                     <thead>
                         <tr class="bg-gray-50/50">
                             <th class="px-6 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest w-40">Preview</th>
@@ -152,6 +154,7 @@
                         @endforeach
                     </tbody>
                 </table>
+                </div>
             </div>
             <div class="pt-4">
                 {{ $banners->links() }}
@@ -160,9 +163,9 @@
     @endif
 
     <!-- Add Banner Request Modal -->
-    <div x-show="showAddModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm" x-cloak>
-        <div class="bg-white rounded-3xl w-full max-w-2xl p-8 shadow-2xl overflow-y-auto max-h-[90vh]" @click.away="showAddModal = false">
-            <h2 class="font-serif text-2xl font-bold mb-6">Request Homepage <span class="text-[#C0422A] italic">Hero Banner</span></h2>
+    <div x-show="showAddModal" class="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/50 backdrop-blur-sm" x-cloak>
+        <div class="bg-white rounded-t-3xl sm:rounded-3xl w-full sm:max-w-2xl p-5 sm:p-8 shadow-2xl overflow-y-auto max-h-[92vh]" @click.away="showAddModal = false">
+            <h2 class="font-serif text-xl sm:text-2xl font-bold mb-5 sm:mb-6">Request Homepage <span class="text-[#C0422A] italic">Hero Banner</span></h2>
             <form action="{{ route('seller.banners.store') }}" method="POST" enctype="multipart/form-data" class="space-y-4">
                 @csrf
 

@@ -165,7 +165,7 @@ class DashboardController extends Controller
         $from       = $dateFilter['from'];
         $to         = $dateFilter['to'];
 
-        $ordersQuery = Order::where('sellerId', $sellerId);
+        $ordersQuery = Order::where('sellerId', $sellerId)->with('customer:id,name,email');
         if ($from) {
             $ordersQuery->where('createdAt', '>=', $from);
         }
@@ -267,6 +267,24 @@ class DashboardController extends Controller
             $orderCount
         );
 
+        // Build customer list: unique buyers grouped by customerId with totals
+        $customerList = $activeOrders
+            ->filter(fn ($o) => !empty($o->customerId))
+            ->groupBy('customerId')
+            ->map(function ($customerOrders) {
+                $first = $customerOrders->first();
+                return [
+                    'id'         => $first->customerId,
+                    'name'       => optional($first->customer)->name ?? 'Unknown',
+                    'email'      => optional($first->customer)->email ?? '—',
+                    'orderCount' => $customerOrders->count(),
+                    'totalSpent' => $customerOrders->sum('totalAmount'),
+                    'lastOrder'  => $customerOrders->max('createdAt'),
+                ];
+            })
+            ->sortByDesc('totalSpent')
+            ->values();
+
         return [
             'filters' => $dateFilter,
             'summary' => [
@@ -299,6 +317,7 @@ class DashboardController extends Controller
             ])->values(),
             'revenueChart' => $revenueChart,
             'maxChartRevenue' => $maxChartRevenue,
+            'customerList' => $customerList,
         ];
     }
 
@@ -591,22 +610,25 @@ class DashboardController extends Controller
     {
         $user = $request->user();
         $request->validate([
-            'name'            => 'required|string|max:255',
-            'mobileNumber'    => 'nullable|string|max:20',
-            'shopName'        => 'nullable|string|max:100',
-            'shopDescription' => 'nullable|string|max:500',
-            'gcashNumber'     => 'nullable|string|max:20',
-            'gcashQrCode'     => 'nullable|image|max:2048',
-            'mayaNumber'      => 'nullable|string|max:20',
-            'mayaQrCode'      => 'nullable|image|max:2048',
-            'profilePhoto'    => 'nullable|image|max:2048',
+            'name'                 => 'required|string|max:255',
+            'mobileNumber'         => 'nullable|string|max:20',
+            'shopName'             => 'nullable|string|max:100',
+            'shopDescription'      => 'nullable|string|max:500',
+            'gcashNumber'          => 'nullable|string|max:20',
+            'gcashQrCode'          => 'nullable|image|max:2048',
+            'mayaNumber'           => 'nullable|string|max:20',
+            'mayaQrCode'           => 'nullable|image|max:2048',
+            'profilePhoto'         => 'nullable|image|max:2048',
+            'businessPermit'       => 'nullable|file|mimes:pdf,jpg,jpeg,png|max:5120',
+            'birDocument'          => 'nullable|file|mimes:pdf,jpg,jpeg,png|max:5120',
+            'residencyCertificate' => 'nullable|file|mimes:pdf,jpg,jpeg,png|max:5120',
         ]);
         $user->name            = $request->name;
         $user->mobileNumber    = $request->mobileNumber;
         $user->shopName        = $request->shopName ?? $request->name;
         $user->shopDescription = $request->shopDescription;
-        $user->gcashNumber      = $request->gcashNumber;
-        $user->mayaNumber       = $request->mayaNumber;
+        $user->gcashNumber     = $request->gcashNumber;
+        $user->mayaNumber      = $request->mayaNumber;
         $user->isGcashAvailable = $request->has('isGcashAvailable');
         $user->isMayaAvailable  = $request->has('isMayaAvailable');
 
@@ -629,6 +651,15 @@ class DashboardController extends Controller
             $filename = time() . '_maya_' . \Illuminate\Support\Str::random(8) . '.' . $file->getClientOriginalExtension();
             $file->move(public_path('uploads/qrcodes'), $filename);
             $user->mayaQrCode = '/uploads/qrcodes/' . $filename;
+        }
+
+        foreach (['businessPermit', 'birDocument', 'residencyCertificate'] as $docField) {
+            if ($request->hasFile($docField)) {
+                $file = $request->file($docField);
+                $filename = time() . '_' . $docField . '_' . \Illuminate\Support\Str::random(8) . '.' . $file->getClientOriginalExtension();
+                $file->move(public_path('uploads/requirements'), $filename);
+                $user->{$docField} = '/uploads/requirements/' . $filename;
+            }
         }
 
         $user->save();
@@ -740,5 +771,59 @@ class DashboardController extends Controller
         );
 
         return redirect()->back()->with('success', 'Commission payment proof submitted! Awaiting Super Admin verification.');
+    }
+
+    public function sellerCustomers(Request $request)
+    {
+        $sellerId = $request->user()->id;
+        $orders = Order::where('sellerId', $sellerId)
+            ->with(['customer', 'items.product'])
+            ->orderBy('createdAt', 'desc')
+            ->get();
+
+        $customerList = $orders->groupBy(function ($order) {
+            if (!empty($order->customerId)) {
+                return (string) $order->customerId;
+            }
+            if ($order->customer && !empty($order->customer->email)) {
+                return strtolower(trim($order->customer->email));
+            }
+            if (!empty($order->customer_email)) {
+                return strtolower(trim($order->customer_email));
+            }
+            return 'guest_' . $order->id;
+        })->map(function ($customerOrders) {
+            $firstOrder = $customerOrders->first();
+            $customer = $firstOrder->customer ?? null;
+            return [
+                'id'            => $customer->id ?? null,
+                'name'          => $customer->name ?? $firstOrder->customer_name ?? 'Guest Customer',
+                'email'         => $customer->email ?? $firstOrder->customer_email ?? 'N/A',
+                'phone'         => $customer->mobileNumber ?? $customer->phone ?? $firstOrder->customer_phone ?? 'N/A',
+                'avatar'        => $customer->profilePhoto ?? null,
+                'ordersCount'   => $customerOrders->count(),
+                'totalSpent'    => (float) $customerOrders->sum('totalAmount'),
+                'lastOrderDate' => $customerOrders->max('createdAt'),
+                'history'        => $customerOrders->map(function ($ord) {
+                    return [
+                        'id'            => $ord->id,
+                        'orderNumber'   => $ord->orderNumber ?? '#' . $ord->id,
+                        'status'        => $ord->status ?? 'pending',
+                        'totalAmount'   => (float) $ord->totalAmount,
+                        'paymentMethod' => $ord->paymentMethod ?? $ord->payment_method ?? 'COD',
+                        'date'          => $ord->createdAt ? \Carbon\Carbon::parse($ord->createdAt)->format('M d, Y • g:i A') : 'N/A',
+                        'items'         => $ord->items ? $ord->items->map(function ($it) {
+                            return [
+                                'name'     => $it->product->name ?? 'Artisan Item',
+                                'quantity' => $it->quantity,
+                                'price'    => (float) $it->price,
+                            ];
+                        })->values() : [],
+                    ];
+                })->values(),
+            ];
+        })->values();
+
+        return view('seller.customers.index', compact('customerList'));
     }
 }
