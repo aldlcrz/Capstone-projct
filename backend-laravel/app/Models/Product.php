@@ -95,11 +95,72 @@ class Product extends Model
     }
 
     /**
+     * The accessors to append to the model's array form.
+     *
+     * @var array
+     */
+    protected $appends = ['image_url'];
+
+    /**
+     * Get the image_url appended attribute.
+     */
+    public function getImageUrlAttribute(): string
+    {
+        return $this->getImageUrl();
+    }
+
+    /**
      * Get the clean product name handling special characters like ñ.
      */
     public function getNameAttribute(?string $value): string
     {
         return str_replace(['Pi??a', 'Pi?a'], 'Piña', $value ?? '');
+    }
+
+    /**
+     * Get the image attribute, validating physical file existence on disk.
+     */
+    public function getImageAttribute(array|string|null $value = null): array
+    {
+        if (is_null($value)) {
+            return ['products/default.jpg'];
+        }
+
+        $decoded = is_string($value) ? json_decode($value, true) : $value;
+        if (!is_array($decoded)) {
+            $decoded = [$value];
+        }
+
+        $validImages = [];
+        foreach ($decoded as $img) {
+            if (!$img || $img === 'Array' || $img === '[]' || $img === '[') {
+                continue;
+            }
+            $cleanPath = preg_replace('/^(storage|uploads)\//', '', str_replace('\\', '/', $img));
+            $cleanPath = ltrim($cleanPath, '/');
+
+            $candidates = [
+                public_path('uploads/' . $cleanPath),
+                public_path('uploads/products/' . $cleanPath),
+                storage_path('app/public/' . $cleanPath),
+                storage_path('app/public/products/' . $cleanPath),
+                public_path('storage/' . $cleanPath),
+            ];
+
+            $exists = false;
+            foreach ($candidates as $filePath) {
+                if (file_exists($filePath) && is_file($filePath)) {
+                    $exists = true;
+                    break;
+                }
+            }
+
+            if ($exists || str_starts_with($img, 'http://') || str_starts_with($img, 'https://')) {
+                $validImages[] = $img;
+            }
+        }
+
+        return !empty($validImages) ? $validImages : ['products/default.jpg'];
     }
 
     /**

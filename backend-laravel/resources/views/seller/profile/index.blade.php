@@ -6,7 +6,7 @@
         <div class="relative bg-white rounded-3xl p-6 sm:p-8 border border-gray-100 shadow-sm flex flex-col sm:flex-row items-center sm:items-start gap-6">
             {{-- Avatar: Clickable to change photo --}}
             <div class="relative w-28 h-28 shrink-0 group cursor-pointer" onclick="document.getElementById('profilePhotoInput').click()" title="Click to change profile photo">
-                <div class="w-full h-full rounded-full bg-gradient-to-tr from-[#3D2B1F] to-[#C0420A] flex items-center justify-center text-white font-black text-4xl overflow-hidden shadow-lg border-4 border-white relative">
+                <div class="w-full h-full rounded-full bg-linear-to-tr from-[#3D2B1F] to-[#C0420A] flex items-center justify-center text-white font-black text-4xl overflow-hidden shadow-lg border-4 border-white relative">
                     @if($user->profilePhoto)
                         <img src="{{ str_starts_with($user->profilePhoto, 'http') || str_starts_with($user->profilePhoto, '/') ? $user->profilePhoto : asset('storage/' . $user->profilePhoto) }}" class="w-full h-full object-cover" onerror="this.style.display='none'">
                     @else
@@ -22,7 +22,7 @@
                 </div>
             </div>
 
-            <div class="text-center sm:text-left flex-grow">
+            <div class="text-center sm:text-left grow">
                 <h1 class="text-2xl font-black text-black uppercase tracking-tight">{{ $user->name }}</h1>
                 <p class="text-gray-400 text-sm font-medium">{{ $user->email }}</p>
                 <div class="mt-4 flex flex-wrap gap-2 justify-center sm:justify-start">
@@ -87,7 +87,7 @@
 
         {{-- Quick Links --}}
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <button onclick="document.getElementById('payment-modal').classList.remove('hidden')" class="flex items-center justify-between p-4 bg-white rounded-2xl border border-gray-100 hover:border-[#C0420A] transition-all text-left">
+            <button id="payment-methods" onclick="document.getElementById('payment-modal').classList.remove('hidden')" class="flex items-center justify-between p-4 bg-white rounded-2xl border border-gray-100 hover:border-[#C0420A] transition-all text-left">
                 <div class="flex items-center gap-3">
                     <div class="w-9 h-9 rounded-xl bg-blue-50 border border-blue-100 flex items-center justify-center">
                         <svg class="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"/></svg>
@@ -140,7 +140,7 @@
     </div>
 
     {{-- Payment Methods Modal with In-Modal Editing --}}
-    <div id="payment-modal" x-data="{ editing: false }" class="hidden fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-end sm:items-center justify-center">
+    <div id="payment-modal" x-data="{ editing: false }" class="hidden fixed inset-0 bg-black/50 backdrop-blur-sm z-50 items-end sm:items-center justify-center">
         <div class="w-full sm:max-w-lg bg-white rounded-t-3xl sm:rounded-3xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
             <div class="flex items-center justify-between px-5 py-4 border-b border-gray-100 shrink-0">
                 <div>
@@ -251,7 +251,7 @@
     </div>
 
     {{-- Legal Documents Modal with In-Modal Upload/Edit --}}
-    <div id="legal-modal" x-data="{ editing: false }" class="hidden fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-end sm:items-center justify-center">
+    <div id="legal-modal" x-data="{ editing: false }" class="hidden fixed inset-0 bg-black/50 backdrop-blur-sm z-50 items-end sm:items-center justify-center">
         <div class="w-full sm:max-w-lg bg-white rounded-t-3xl sm:rounded-3xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
             <div class="flex items-center justify-between px-5 py-4 border-b border-gray-100 shrink-0">
                 <div>
@@ -348,4 +348,16 @@
             </div>
         </div>
     </div>
+
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const urlParams = new URLSearchParams(window.location.search);
+        if (urlParams.get('open_payment') === '1' || window.location.hash === '#payment-methods') {
+            const modal = document.getElementById('payment-modal');
+            if (modal) {
+                modal.classList.remove('hidden');
+            }
+        }
+    });
+    </script>
 @endsection

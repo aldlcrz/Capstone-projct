@@ -1,4 +1,4 @@
-<div x-data="editProductComponent()" x-init="init({{ $product->id }})" class="max-w-[1400px] mx-auto space-y-10 relative">
+<div x-data="editProductComponent()" x-init="init({{ $product->id }})" class="max-w-350 mx-auto space-y-10 relative">
     <!-- Header -->
     <div class="flex items-center gap-4">
         <a href="/seller/products" class="w-10 h-10 rounded-full bg-white border border-gray-100 flex items-center justify-center text-gray-400 hover:text-[#C0420A] transition-all">
@@ -97,7 +97,7 @@
                     <!-- Categories -->
                     <div class="space-y-4">
                         <label class="text-[10px] font-bold uppercase tracking-widest text-gray-400">Categories</label>
-                        <div class="flex flex-wrap gap-2 min-h-[42px]">
+                        <div class="flex flex-wrap gap-2 min-h-10.5">
                             <template x-for="cat in formData.categories">
                                 <span class="px-3 py-1.5 bg-[#C0420A] text-white rounded-full text-[10px] font-bold flex items-center gap-2 shadow-sm">
                                     <span x-text="cat"></span>

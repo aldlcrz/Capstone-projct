@@ -47,7 +47,7 @@
                 
                 {{-- Left: Avatar & Info --}}
                 <div class="flex items-center gap-3 min-w-0 flex-1">
-                    <div class="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-gradient-to-tr from-[#3D2B1F] to-[#C0420A] flex items-center justify-center text-white font-black text-xs sm:text-base shadow-sm shrink-0 overflow-hidden group-hover:scale-105 transition-transform">
+                    <div class="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-linear-to-tr from-[#3D2B1F] to-[#C0420A] flex items-center justify-center text-white font-black text-xs sm:text-base shadow-sm shrink-0 overflow-hidden group-hover:scale-105 transition-transform">
                         @if($cust['avatar'])
                             <img src="{{ str_starts_with($cust['avatar'], 'http') || str_starts_with($cust['avatar'], '/') ? $cust['avatar'] : asset('storage/' . $cust['avatar']) }}" class="w-full h-full object-cover" onerror="this.style.display='none'">
                         @else
@@ -98,13 +98,13 @@
              class="w-full sm:max-w-lg bg-white rounded-t-3xl sm:rounded-3xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
             
             {{-- Modal Header --}}
-            <div class="relative bg-gradient-to-br from-[#2A2A28] to-black p-6 text-white text-center shrink-0">
+            <div class="relative bg-linear-to-br from-[#2A2A28] to-black p-6 text-white text-center shrink-0">
                 <button @click="modalOpen = false" class="absolute top-4 right-4 w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 text-white flex items-center justify-center transition-all">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
                 </button>
                 
                 {{-- Single Avatar & Customer Header --}}
-                <div class="w-16 h-16 rounded-full bg-gradient-to-tr from-[#3D2B1F] to-[#C0420A] flex items-center justify-center text-white font-black text-2xl shadow-lg border-2 border-white/20 mx-auto mb-3 overflow-hidden">
+                <div class="w-16 h-16 rounded-full bg-linear-to-tr from-[#3D2B1F] to-[#C0420A] flex items-center justify-center text-white font-black text-2xl shadow-lg border-2 border-white/20 mx-auto mb-3 overflow-hidden">
                     <template x-if="customer &amp;&amp; customer.avatar">
                         <img :src="customer.avatar.startsWith('http') || customer.avatar.startsWith('/') ? customer.avatar : '/storage/' + customer.avatar" class="w-full h-full object-cover">
                     </template>

@@ -141,7 +141,7 @@ document.addEventListener('alpine:init', () => {
 
 <div
     x-data="sellerChat"
-    class="bg-white rounded-2xl sm:rounded-3xl border border-gray-100 shadow-sm overflow-hidden flex h-[calc(100vh-140px)] sm:h-[calc(100vh-180px)] min-h-[450px]"
+    class="bg-white rounded-2xl sm:rounded-3xl border border-gray-100 shadow-sm overflow-hidden flex h-[calc(100vh-140px)] sm:h-[calc(100vh-180px)] min-h-112.5"
 >
     <!-- Left Sidebar: Conversations -->
     <div 
@@ -171,7 +171,7 @@ document.addEventListener('alpine:init', () => {
                         <div class="text-[8px] font-bold text-gray-400" x-text="formatTime(conv.timestamp)"></div>
                         <div class="flex items-center gap-1">
                             <template x-if="conv.unreadCount > 0">
-                                <span class="inline-block min-w-[16px] h-4 px-1 bg-red-500 text-white text-[8px] font-bold rounded-full text-center"
+                                <span class="inline-block min-w-4 h-4 px-1 bg-red-500 text-white text-[8px] font-bold rounded-full text-center"
                                       x-text="conv.unreadCount"></span>
                             </template>
                             <button

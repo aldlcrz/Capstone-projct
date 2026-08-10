@@ -36,7 +36,7 @@
     {{-- Filters --}}
     <form method="GET" class="flex flex-wrap gap-3 items-center">
         <input type="text" name="search" value="{{ request('search') }}" placeholder="Search customers by name, username, or email..."
-            class="flex-1 min-w-[240px] px-4 py-3 bg-white border border-gray-100 rounded-xl text-xs focus:outline-none focus:ring-2 focus:ring-[#C0422A]/10">
+            class="flex-1 min-w-60 px-4 py-3 bg-white border border-gray-100 rounded-xl text-xs focus:outline-none focus:ring-2 focus:ring-[#C0422A]/10">
         <select name="status" class="px-4 py-3 bg-white border border-gray-100 rounded-xl text-xs font-bold outline-none">
             <option value="">All Statuses</option>
             <option value="active"  {{ request('status') === 'active'  ? 'selected' : '' }}>Active</option>

@@ -65,7 +65,7 @@
                         <div class="flex items-center gap-3">
                             <div class="w-12 h-12 bg-gray-50 rounded-lg overflow-hidden shrink-0 border border-gray-100 relative">
                                 <template x-if="item.product && item.product.image">
-                                    <img :src="item.product.image.startsWith('http') ? item.product.image : '/storage/' + item.product.image" class="object-cover w-full h-full" />
+                                    <img :src="item.product.image.startsWith('http') ? item.product.image : '/storage/' + item.product.image" class="object-cover w-full h-full" x-on:error="$event.target.src='/uploads/products/default.jpg'" />
                                 </template>
                                 <template x-if="!item.product || !item.product.image">
                                     <svg class="w-4 h-4 text-gray-200 absolute inset-0 m-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"></path></svg>
@@ -88,7 +88,7 @@
     </div>
 
     <!-- Order Details Modal -->
-    <div x-show="selectedOrder" class="fixed inset-0 z-[100] flex items-center justify-center p-4 overflow-hidden" style="display: none;">
+    <div x-show="selectedOrder" class="fixed inset-0 z-100 flex items-center justify-center p-4 overflow-hidden" style="display: none;">
         <div @click="selectedOrder = null" class="absolute inset-0 bg-black/60 backdrop-blur-sm"></div>
         <div class="bg-white w-full max-w-2xl max-h-[88vh] rounded-3xl shadow-2xl relative z-10 overflow-hidden flex flex-col border border-white/20">
             <template x-if="selectedOrder">
@@ -132,7 +132,7 @@
                                     <div class="flex gap-4 p-4 bg-white border border-gray-100 rounded-2xl shadow-sm items-center">
                                         <div class="w-14 h-14 bg-gray-50 rounded-xl border border-gray-100 relative shrink-0 overflow-hidden">
                                             <template x-if="item.product && item.product.image">
-                                                <img :src="item.product.image.startsWith('http') ? item.product.image : '/storage/' + item.product.image" class="object-cover w-full h-full" />
+                                                <img :src="item.product.image.startsWith('http') ? item.product.image : '/storage/' + item.product.image" class="object-cover w-full h-full" x-on:error="$event.target.src='/uploads/products/default.jpg'" />
                                             </template>
                                         </div>
                                         <div class="flex-1 min-w-0">

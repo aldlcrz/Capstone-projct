@@ -128,7 +128,7 @@
             <h3 class="text-xs sm:text-sm font-black uppercase tracking-widest text-black">Commission Settlement History</h3>
         </div>
         <div class="overflow-x-auto">
-            <table class="w-full text-left min-w-[500px]">
+            <table class="w-full text-left min-w-125">
                 <thead>
                     <tr class="bg-gray-50/50 border-b border-gray-100">
                         <th class="px-4 sm:px-6 py-3.5 text-[9px] sm:text-[10px] font-black uppercase tracking-widest text-gray-400">Period</th>

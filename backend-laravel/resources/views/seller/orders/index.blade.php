@@ -86,7 +86,7 @@ function printSellerOrder(order) {
 }
 </script>
 
-<div class="space-y-8" x-data="{
+<div class="space-y-4 sm:space-y-6 max-w-5xl pb-28 lg:pb-12 px-2 sm:px-6" x-data="{
     orders: {{ $orders->toJson() }},
     searchTerm: '',
     statusFilter: 'all',
@@ -108,16 +108,24 @@ function printSellerOrder(order) {
 
     openDetails(order) {
         this.detailsOrder = order;
+        this.newStatus = order.status;
         this.detailsModal = true;
+    },
+
+    openStatus(order) {
+        this.activeOrder = order;
+        this.newStatus = order.status;
+        this.statusModal = true;
     },
 
     printOrderDetails() {
         printSellerOrder(this.detailsOrder);
     },
 
-    isStatusDisabled(target) {
-        if (!this.activeOrder) return true;
-        const current = this.activeOrder.status.toLowerCase();
+    isStatusDisabled(target, currentOrder) {
+        const order = currentOrder || this.activeOrder || this.detailsOrder;
+        if (!order) return true;
+        const current = (order.status || '').toLowerCase();
         const t = target.toLowerCase();
         if (current === t) return false;
         if (current === 'completed' || current === 'cancelled') return true;
@@ -127,7 +135,7 @@ function printSellerOrder(order) {
         const targetIdx = states.indexOf(t);
         
         if (currentIdx === -1 || targetIdx === -1) return true;
-        return targetIdx < currentIdx; // Disable going backward
+        return targetIdx < currentIdx;
     },
 
     productImage(product) {
@@ -136,7 +144,7 @@ function printSellerOrder(order) {
         if (Array.isArray(rawImg)) {
             rawImg = rawImg[0] ?? '';
         }
-        if (typeof rawImg === 'string' && rawImg.startsWith('[')) {
+        if (typeof rawImg === 'string' && (rawImg.startsWith('[') || rawImg.startsWith('{'))) {
             try {
                 const parsed = JSON.parse(rawImg);
                 rawImg = Array.isArray(parsed) ? (parsed[0] ?? '') : parsed;
@@ -167,39 +175,43 @@ function printSellerOrder(order) {
             return matchSearch && matchStatus;
         });
     },
+
     statusColor(s) {
         if (!s) return 'bg-gray-50 text-gray-600 border-gray-200';
         const m = {
-            'pending': 'bg-yellow-50 text-yellow-700 border-yellow-200',
+            'pending': 'bg-amber-50 text-amber-700 border-amber-200',
             'processing': 'bg-blue-50 text-blue-700 border-blue-200',
             'to ship': 'bg-indigo-50 text-indigo-700 border-indigo-200',
-            'to receive': 'bg-purple-50 text-purple-700 border-purple-200',
             'shipped': 'bg-purple-50 text-purple-700 border-purple-200',
             'delivered': 'bg-teal-50 text-teal-700 border-teal-200',
-            'completed': 'bg-green-50 text-green-700 border-green-200',
+            'completed': 'bg-emerald-50 text-emerald-700 border-emerald-200',
             'cancelled': 'bg-red-50 text-red-700 border-red-200',
         };
         return m[s.toLowerCase()] || 'bg-gray-50 text-gray-600 border-gray-200';
     },
-    openStatus(order) {
-        this.activeOrder = order;
-        this.newStatus = order.status;
-        this.statusModal = true;
-    },
-    async updateStatus() {
-        if (!this.activeOrder) return;
+
+    async updateStatus(targetOrder, statusToSave) {
+        const target = targetOrder || this.detailsOrder || this.activeOrder;
+        const statusVal = statusToSave || this.newStatus;
+        if (!target || !statusVal) return;
+
         try {
-            const res = await fetch('/seller/api/orders/' + this.activeOrder.id + '/status', {
+            const res = await fetch('/seller/api/orders/' + target.id + '/status', {
                 method: 'PATCH',
                 headers: {
                     'Content-Type': 'application/json',
                     'X-CSRF-TOKEN': document.querySelector('meta[name=csrf-token]').content
                 },
-                body: JSON.stringify({ status: this.newStatus })
+                body: JSON.stringify({ status: statusVal })
             });
             if (res.ok) {
-                const idx = this.orders.findIndex(o => o.id === this.activeOrder.id);
-                if (idx !== -1) this.orders[idx].status = this.newStatus;
+                const idx = this.orders.findIndex(o => o.id === target.id);
+                if (idx !== -1) {
+                    this.orders[idx].status = statusVal;
+                    if (this.detailsOrder && this.detailsOrder.id === target.id) {
+                        this.detailsOrder.status = statusVal;
+                    }
+                }
                 this.statusModal = false;
                 this.activeOrder = null;
             } else {
@@ -211,27 +223,30 @@ function printSellerOrder(order) {
     }
 }">
 
-    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+    {{-- Header --}}
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4">
         <div>
-            <div class="text-[10px] font-bold text-[#C0420A] uppercase tracking-[0.2em] mb-1">Order Management</div>
-            <h1 class="font-serif text-3xl font-bold text-black uppercase">
+            <div class="text-[9px] sm:text-[10px] font-bold text-[#C0420A] uppercase tracking-[0.2em] mb-0.5">Order Management</div>
+            <h1 class="font-serif text-xl sm:text-3xl font-bold text-black uppercase">
                 My <span class="text-[#C0420A] italic lowercase">orders</span>
             </h1>
+            <p class="text-[11px] sm:text-xs text-gray-500 mt-0.5">Tap any order capsule to view complete items, buyer details, and update status.</p>
         </div>
-        <div class="flex items-center gap-3 w-full sm:w-auto">
-            <div class="relative w-full sm:w-auto">
-                <input type="text" x-model="searchTerm" placeholder="Search order ID or customer..."
-                    class="pl-10 pr-4 py-2.5 sm:py-3 border border-gray-100 bg-white rounded-xl text-xs focus:outline-none focus:ring-2 focus:ring-[#C0420A]/10 w-full sm:w-72">
-                <svg class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
-            </div>
+        
+        {{-- Search Input --}}
+        <div class="relative w-full sm:w-72">
+            <input type="text" x-model="searchTerm" placeholder="Search order ID or customer..."
+                class="w-full h-10 sm:h-11 pl-9 sm:pl-10 pr-4 bg-white border border-gray-200 rounded-full text-xs font-semibold shadow-sm outline-none focus:border-[#C0420A] transition-all">
+            <svg class="w-4 h-4 text-gray-400 absolute left-3.5 top-3 sm:top-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
         </div>
     </div>
 
+    {{-- Status Filter Tabs (Capsules) --}}
     <div class="flex gap-2 overflow-x-auto no-scrollbar pb-1">
         @foreach(['all' => 'All', 'pending' => 'Pending', 'processing' => 'Processing', 'shipped' => 'Shipped', 'delivered' => 'Delivered', 'completed' => 'Completed', 'cancelled' => 'Cancelled'] as $val => $label)
             <button @click="statusFilter = '{{ $val }}'"
-                :class="statusFilter === '{{ $val }}' ? 'bg-black text-white' : 'bg-white text-gray-500 border border-gray-100 hover:border-gray-300'"
-                class="px-3.5 sm:px-5 py-2 sm:py-2.5 rounded-full text-[9px] sm:text-[10px] font-black uppercase tracking-widest whitespace-nowrap transition-all flex items-center gap-1.5 shrink-0">
+                :class="statusFilter === '{{ $val }}' ? 'bg-black text-white shadow-md' : 'bg-white text-gray-500 border border-gray-200 hover:border-gray-300'"
+                class="px-3.5 sm:px-5 py-2 sm:py-2.5 rounded-full text-[9px] sm:text-[10px] font-black uppercase tracking-widest whitespace-nowrap transition-all flex items-center gap-1.5 shrink-0 active:scale-95">
                 <span>{{ $label }}</span>
                 @if(isset($counts[$val]))
                     <span class="px-1.5 py-0.5 text-[8px] sm:text-[9px] rounded-full" :class="statusFilter === '{{ $val }}' ? 'bg-white/20 text-white' : 'bg-gray-100 text-gray-600'">{{ $counts[$val] }}</span>
@@ -240,247 +255,207 @@ function printSellerOrder(order) {
         @endforeach
     </div>
 
-    {{-- Orders Table --}}
-    <div class="bg-white rounded-2xl sm:rounded-3xl border border-gray-100 shadow-sm overflow-hidden">
+    {{-- Order Capsule List (Pill Layout like Customer Directory) --}}
+    <div class="space-y-2.5 sm:space-y-3">
         <template x-if="filtered.length === 0">
-            <div class="py-16 sm:py-24 text-center">
-                <svg class="w-12 h-12 text-gray-100 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"></path></svg>
-                <p class="text-sm font-bold text-gray-300 uppercase tracking-widest">No orders found</p>
+            <div class="bg-white rounded-3xl p-10 text-center space-y-2 border border-gray-100 shadow-sm">
+                <div class="w-12 h-12 rounded-full bg-gray-100 text-gray-400 flex items-center justify-center mx-auto text-xl">🛍️</div>
+                <h3 class="text-xs sm:text-sm font-black text-black uppercase tracking-wider">No Orders Found</h3>
+                <p class="text-[11px] text-gray-400">When customers place orders matching this filter, they will appear here as clickable capsules.</p>
             </div>
         </template>
 
-        <div class="divide-y divide-gray-50">
-            <template x-for="order in filtered" :key="order.id">
-                <div class="p-4 sm:p-6 hover:bg-gray-50/50 transition-all">
-                    <div class="flex flex-col md:flex-row md:items-center justify-between gap-3 sm:gap-4">
-                        <div class="flex items-start gap-3 sm:gap-4 flex-1 min-w-0">
-                            {{-- Customer avatar --}}
-                            <div class="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-[#C0420A] text-white flex items-center justify-center font-black text-xs sm:text-sm shrink-0"
-                                x-text="(order.customer?.name || '?')[0].toUpperCase()"></div>
-                            <div class="flex-1 min-w-0">
-                                <div class="flex items-center gap-2 flex-wrap">
-                                    <span class="text-xs font-black text-black" x-text="'#LB-' + order.id.slice(-8).toUpperCase()"></span>
-                                    <span class="px-2 py-0.5 rounded-full border text-[8px] sm:text-[9px] font-black uppercase"
-                                        :class="statusColor(order.status)"
-                                        x-text="order.status"></span>
-                                </div>
-                                <p class="text-[11px] text-gray-400 mt-0.5 truncate" x-text="order.customer?.name || 'Unknown Customer'"></p>
-                                <p class="text-[10px] text-gray-300 mt-0.5"
-                                    x-text="order.items ? order.items.length + ' item(s)' : ''"></p>
-                            </div>
-                        </div>
-                        <div class="flex items-center justify-between md:justify-end gap-3 sm:gap-6 border-t md:border-t-0 pt-3 md:pt-0 border-gray-50">
-                            <div class="text-left md:text-right">
-                                <div class="text-sm sm:text-base font-black text-[#C0420A]" x-text="'₱' + Number(order.totalAmount).toLocaleString()"></div>
-                                <div class="text-[9px] sm:text-[10px] text-gray-300" x-text="order.createdAt ? new Date(order.createdAt).toLocaleDateString('en-PH', {month:'short', day:'numeric', year:'numeric'}) : ''"></div>
-                            </div>
-                            <div class="flex items-center gap-2">
-                                <button @click="openDetails(order)"
-                                    class="px-3 sm:px-4 py-2 sm:py-2.5 bg-white border border-gray-200 text-gray-700 rounded-xl text-[8px] sm:text-[9px] font-black uppercase tracking-widest hover:border-[#C0420A] hover:text-[#C0420A] transition-all whitespace-nowrap">
-                                    Details
-                                </button>
-                                <button @click="openStatus(order)"
-                                    x-show="!['delivered', 'completed', 'cancelled'].includes(order.status.toLowerCase())"
-                                    class="px-3.5 sm:px-5 py-2 sm:py-2.5 bg-black text-white rounded-xl text-[8px] sm:text-[9px] font-black uppercase tracking-widest hover:bg-[#C0420A] transition-all whitespace-nowrap">
-                                    Update
-                                </button>
-                            </div>
-                        </div>
+        <template x-for="order in filtered" :key="order.id">
+            <div @click="openDetails(order)"
+                 class="group bg-white hover:bg-gray-50/80 rounded-full p-2.5 sm:p-3.5 px-4 sm:px-6 border border-gray-100 hover:border-[#C0420A]/40 shadow-sm hover:shadow-md transition-all duration-300 cursor-pointer flex items-center justify-between gap-3 active:scale-[0.99]">
+                
+                {{-- Left: Avatar & Order Info --}}
+                <div class="flex items-center gap-3 min-w-0 flex-1">
+                    <div class="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-linear-to-tr from-[#3D2B1F] to-[#C0420A] flex items-center justify-center text-white font-black text-xs sm:text-base shadow-sm shrink-0 overflow-hidden group-hover:scale-105 transition-transform">
+                        <span x-text="(order.customer?.name || 'O')[0].toUpperCase()"></span>
                     </div>
-
-                    {{-- Detailed items and payment block --}}
-                    <template x-if="order.items && order.items.length > 0">
-                        <div class="mt-4 pt-4 border-t border-gray-100 grid grid-cols-1 lg:grid-cols-12 gap-6 ml-0 md:ml-14">
-                            
-                            {{-- Purchased Items list --}}
-                            <div class="lg:col-span-8 flex flex-col min-h-0">
-                                <div class="flex items-center justify-between mb-2 shrink-0">
-                                    <div class="text-[9px] font-black uppercase tracking-widest text-gray-400">Purchased Items</div>
-                                    <span class="text-[9px] font-bold text-gray-300 uppercase tracking-widest"
-                                          x-text="order.items.length + ' item' + (order.items.length !== 1 ? 's' : '')"></span>
-                                </div>
-                                <div class="max-h-64 overflow-y-auto pr-1 space-y-3 scroll-smooth
-                                            [&::-webkit-scrollbar]:w-1.5
-                                            [&::-webkit-scrollbar-track]:bg-gray-50
-                                            [&::-webkit-scrollbar-track]:rounded-full
-                                            [&::-webkit-scrollbar-thumb]:bg-gray-200
-                                            [&::-webkit-scrollbar-thumb]:rounded-full
-                                            hover:[&::-webkit-scrollbar-thumb]:bg-gray-300">
-                                    <template x-for="item in order.items" :key="item.id">
-                                        <div class="flex items-center gap-3 bg-gray-50/50 border border-gray-100 rounded-xl p-3">
-                                            {{-- Thumbnail --}}
-                                            <div class="w-10 h-12 bg-gray-100 rounded-lg overflow-hidden shrink-0 border border-gray-200">
-                                                <img :src="productImage(item.product)" class="w-full h-full object-cover object-top" onerror="this.src='/uploads/products/default.jpg'">
-                                            </div>
-                                            {{-- Info --}}
-                                            <div class="flex-1 min-w-0">
-                                                <h4 class="text-xs font-bold text-black truncate" x-text="item.product?.name || 'Deleted Product'"></h4>
-                                                <div class="flex flex-wrap gap-2 text-[9px] font-bold text-gray-400 uppercase tracking-widest mt-0.5">
-                                                    <span x-show="item.size" x-text="'Size: ' + item.size"></span>
-                                                    <span x-show="item.display_variation && item.display_variation !== 'Original'" x-text="'Variation: ' + item.display_variation"></span>
-                                                </div>
-                                            </div>
-                                            {{-- Price details --}}
-                                            <div class="text-right shrink-0">
-                                                <div class="text-xs font-bold text-black" x-text="item.quantity + ' x ₱' + Number(item.price).toLocaleString()"></div>
-                                                <div class="text-[9px] text-gray-400" x-text="'₱' + (Number(item.price) * item.quantity).toLocaleString() + ' subtotal'"></div>
-                                            </div>
-                                        </div>
-                                    </template>
-                                </div>
-                            </div>
-
-                            {{-- Payment details --}}
-                            <div class="lg:col-span-4 bg-gray-50/40 border border-gray-100 rounded-2xl p-4 space-y-3">
-                                <div class="text-[9px] font-black uppercase tracking-widest text-gray-400 mb-1">Payment Information</div>
-                                <div class="space-y-2 text-xs">
-                                    <div class="flex items-center justify-between">
-                                        <span class="text-gray-400 font-bold text-[9px] uppercase tracking-wider">Method:</span>
-                                        <span class="font-black text-black uppercase" x-text="order.paymentMethod || 'N/A'"></span>
-                                    </div>
-                                    <div class="flex items-center justify-between">
-                                        <span class="text-gray-400 font-bold text-[9px] uppercase tracking-wider">Reference No:</span>
-                                        <span class="font-mono text-xs font-bold text-gray-700" x-text="order.paymentReference || 'N/A'"></span>
-                                    </div>
-                                    <template x-if="order.paymentProof">
-                                        <div class="pt-2 border-t border-gray-100 flex flex-col gap-1.5">
-                                            <span class="text-gray-400 font-bold text-[9px] uppercase tracking-wider">Proof of Payment:</span>
-                                            <button type="button" @click="receiptUrl = '/storage/' + order.paymentProof; receiptModal = true;" class="inline-flex items-center gap-1.5 text-[10px] font-black uppercase tracking-widest text-[#C0420A] hover:underline cursor-pointer">
-                                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
-                                                View Receipt
-                                            </button>
-                                        </div>
-                                    </template>
-                                </div>
-                            </div>
-
+                    <div class="min-w-0 flex-1">
+                        <div class="flex items-center gap-2 flex-wrap">
+                            <h3 class="text-xs sm:text-sm font-black text-black truncate uppercase tracking-tight group-hover:text-[#C0420A] transition-colors"
+                                x-text="'#LB-' + order.id.slice(-8).toUpperCase()"></h3>
+                            <span class="px-2.5 py-0.5 rounded-full border text-[8px] sm:text-[9px] font-black uppercase tracking-wider shrink-0"
+                                  :class="statusColor(order.status)"
+                                  x-text="order.status"></span>
                         </div>
-                    </template>
+                        <p class="text-[10px] sm:text-[11px] text-gray-400 truncate font-medium mt-0.5">
+                            <span class="font-bold text-gray-600" x-text="order.customer?.name || 'Customer'"></span>
+                            <span class="text-gray-300"> • </span>
+                            <span x-text="(order.items ? order.items.length : 0) + ' item' + (order.items && order.items.length !== 1 ? 's' : '')"></span>
+                        </p>
+                    </div>
                 </div>
-            </template>
-        </div>
+
+                {{-- Right: Total Price & Navigation Arrow Pill --}}
+                <div class="flex items-center gap-3 shrink-0">
+                    <div class="text-right">
+                        <div class="text-[8px] sm:text-[9px] font-bold text-gray-400 uppercase tracking-widest"
+                             x-text="order.createdAt ? new Date(order.createdAt).toLocaleDateString('en-PH', {month:'short', day:'numeric'}) : ''"></div>
+                        <div class="text-xs sm:text-sm font-black text-[#C0420A]" x-text="'₱' + Number(order.totalAmount).toLocaleString()"></div>
+                    </div>
+                    <div class="w-8 h-8 rounded-full bg-gray-100 group-hover:bg-[#C0420A] group-hover:text-white flex items-center justify-center text-gray-400 transition-all shrink-0">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+                    </div>
+                </div>
+            </div>
+        </template>
     </div>
 
-    {{-- Order Details Modal --}}
-    <div x-show="detailsModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm" x-cloak>
-        <div @click.away="detailsModal = false" class="bg-white rounded-3xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto p-8 space-y-6">
-            <div class="flex items-start justify-between gap-4">
-                <div>
-                    <h3 class="font-serif text-xl font-bold text-black mb-1">Order Details</h3>
-                    <p class="text-[10px] text-gray-400 uppercase tracking-widest font-bold"
-                       x-text="detailsOrder ? '#LB-' + detailsOrder.id.slice(-8).toUpperCase() : ''"></p>
-                </div>
-                <button type="button" @click="detailsModal = false"
-                    class="w-8 h-8 rounded-full border border-gray-200 flex items-center justify-center text-gray-400 hover:text-black hover:border-gray-400 transition-all shrink-0">
+    {{-- Order Detail Modal (Pill Details Bottom Sheet / Modal) --}}
+    <div x-show="detailsModal" 
+         x-transition:enter="transition ease-out duration-300"
+         x-transition:enter-start="opacity-0"
+         x-transition:enter-end="opacity-100"
+         x-transition:leave="transition ease-in duration-200"
+         x-transition:leave-start="opacity-100"
+         x-transition:leave-end="opacity-0"
+         style="display: none;"
+         class="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-end sm:items-center justify-center p-0 sm:p-4">
+        
+        <div @click.away="detailsModal = false" 
+             class="w-full sm:max-w-xl bg-white rounded-t-3xl sm:rounded-3xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
+            
+            {{-- Modal Header Banner --}}
+            <div class="relative bg-linear-to-br from-[#2A2A28] to-black p-6 text-white text-center shrink-0">
+                <button @click="detailsModal = false" class="absolute top-4 right-4 w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 text-white flex items-center justify-center transition-all">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
                 </button>
+                
+                {{-- Order Icon Circle --}}
+                <div class="w-14 h-14 rounded-full bg-linear-to-tr from-[#3D2B1F] to-[#C0420A] flex items-center justify-center text-white font-black text-xl shadow-lg border-2 border-white/20 mx-auto mb-2 overflow-hidden">
+                    🛍️
+                </div>
+                <h2 class="text-base sm:text-lg font-black uppercase tracking-tight" x-text="detailsOrder ? '#LB-' + detailsOrder.id.slice(-8).toUpperCase() : 'Order Details'"></h2>
+                <p class="text-xs text-gray-300 font-medium mt-0.5" x-text="detailsOrder &amp;&amp; detailsOrder.createdAt ? new Date(detailsOrder.createdAt).toLocaleDateString('en-PH', {month:'long', day:'numeric', year:'numeric'}) : ''"></p>
+                
+                <div class="mt-2.5 inline-flex items-center gap-2 px-3 py-1 bg-white/10 rounded-full text-[10px] font-bold uppercase tracking-widest">
+                    <span>Status:</span>
+                    <span class="px-2 py-0.5 rounded-full text-[9px] font-black uppercase" :class="statusColor(detailsOrder?.status)" x-text="detailsOrder?.status"></span>
+                </div>
             </div>
 
-            <template x-if="detailsOrder">
-                <div class="space-y-6">
-                    {{-- Buyer --}}
-                    <div>
-                        <div class="text-[9px] font-black uppercase tracking-widest text-gray-400 mb-2">Buyer Information</div>
-                        <div class="bg-gray-50/60 border border-gray-100 rounded-2xl p-4 space-y-1 text-sm">
-                            <p class="font-bold text-black" x-text="detailsOrder.customer?.name || 'Unknown Customer'"></p>
-                            <p class="text-gray-500"><span class="font-bold text-gray-400 text-[10px] uppercase">Email:</span> <span x-text="detailsOrder.customer?.email || 'N/A'"></span></p>
-                            <p class="text-gray-500"><span class="font-bold text-gray-400 text-[10px] uppercase">Phone:</span> <span x-text="buyerPhone(detailsOrder)"></span></p>
+            {{-- Modal Body Content --}}
+            <div class="p-5 sm:p-6 overflow-y-auto flex-1 space-y-5">
+                <template x-if="detailsOrder">
+                    <div class="space-y-5">
+                        
+                        {{-- Quick Status Update Row --}}
+                        <div class="p-4 bg-amber-50/60 border border-amber-100 rounded-2xl space-y-2">
+                            <div class="flex items-center justify-between">
+                                <span class="text-[10px] font-black uppercase tracking-wider text-amber-800">Update Order Status</span>
+                                <span class="text-[9px] font-bold text-gray-400 uppercase tracking-widest" x-text="'Current: ' + detailsOrder.status"></span>
+                            </div>
+                            <div class="flex flex-wrap gap-1.5 pt-1">
+                                @foreach(['Pending', 'Processing', 'Shipped', 'Delivered', 'Completed', 'Cancelled'] as $st)
+                                    <button type="button"
+                                        @click="updateStatus(detailsOrder, '{{ $st }}')"
+                                        :disabled="isStatusDisabled('{{ $st }}', detailsOrder)"
+                                        :class="{
+                                            'bg-[#C0420A] text-white font-black shadow-sm': detailsOrder.status.toLowerCase() === '{{ strtolower($st) }}',
+                                            'bg-white text-gray-700 hover:border-[#C0420A] border border-gray-200': detailsOrder.status.toLowerCase() !== '{{ strtolower($st) }}' && !isStatusDisabled('{{ $st }}', detailsOrder),
+                                            'opacity-30 cursor-not-allowed bg-gray-100 text-gray-400 border-gray-100': isStatusDisabled('{{ $st }}', detailsOrder)
+                                        }"
+                                        class="px-3 py-1.5 rounded-full text-[9px] font-bold uppercase tracking-wider transition-all">
+                                        {{ $st }}
+                                    </button>
+                                @endforeach
+                            </div>
                         </div>
-                    </div>
 
-                    {{-- Address --}}
-                    <div>
-                        <div class="text-[9px] font-black uppercase tracking-widest text-gray-400 mb-2">Shipping Address</div>
-                        <div class="bg-gray-50/60 border border-gray-100 rounded-2xl p-4 text-sm text-gray-700 leading-relaxed"
-                             x-text="formatAddress(detailsOrder)"></div>
-                    </div>
+                        {{-- Buyer & Shipping Info Card --}}
+                        <div class="bg-gray-50/80 p-4 rounded-2xl border border-gray-100 space-y-3">
+                            <div class="text-[9px] font-black uppercase tracking-widest text-[#C0420A]">Buyer & Shipping Details</div>
+                            
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+                                <div>
+                                    <div class="text-[9px] font-bold text-gray-400 uppercase tracking-wider">Customer Name</div>
+                                    <div class="font-black text-black mt-0.5" x-text="detailsOrder.customer?.name || 'Unknown Buyer'"></div>
+                                </div>
+                                <div>
+                                    <div class="text-[9px] font-bold text-gray-400 uppercase tracking-wider">Phone Contact</div>
+                                    <div class="font-bold text-black mt-0.5" x-text="buyerPhone(detailsOrder)"></div>
+                                </div>
+                            </div>
 
-                    {{-- Products --}}
-                    <div>
-                        <div class="text-[9px] font-black uppercase tracking-widest text-gray-400 mb-2">Product Details</div>
-                        <div class="space-y-2">
-                            <template x-for="item in detailsOrder.items || []" :key="item.id">
-                                <div class="flex items-center gap-3 bg-gray-50/60 border border-gray-100 rounded-xl p-3">
-                                    <div class="w-10 h-12 bg-gray-100 rounded-lg overflow-hidden shrink-0 border border-gray-200">
-                                        <img :src="productImage(item.product)" class="w-full h-full object-cover object-top" onerror="this.src='/uploads/products/default.jpg'">
-                                    </div>
-                                    <div class="flex-1 min-w-0">
-                                        <h4 class="text-xs font-bold text-black truncate" x-text="item.product?.name || 'Deleted Product'"></h4>
-                                        <div class="flex flex-wrap gap-2 text-[9px] font-bold text-gray-400 uppercase tracking-widest mt-0.5">
-                                            <span x-show="item.size" x-text="'Size: ' + item.size"></span>
-                                            <span x-show="item.display_variation && item.display_variation !== 'Original'" x-text="'Variation: ' + item.display_variation"></span>
+                            <div class="pt-2 border-t border-gray-200/60 text-xs">
+                                <div class="text-[9px] font-bold text-gray-400 uppercase tracking-wider">Delivery Address</div>
+                                <div class="text-gray-700 font-medium mt-0.5 leading-relaxed" x-text="formatAddress(detailsOrder)"></div>
+                            </div>
+                        </div>
+
+                        {{-- Purchased Product Items --}}
+                        <div class="space-y-3">
+                            <div class="flex items-center justify-between">
+                                <div class="text-[9px] font-black uppercase tracking-widest text-[#C0420A]">Purchased Items</div>
+                                <span class="text-[9px] font-bold text-gray-400 uppercase tracking-widest"
+                                      x-text="(detailsOrder.items ? detailsOrder.items.length : 0) + ' item(s)'"></span>
+                            </div>
+
+                            <div class="space-y-2">
+                                <template x-for="item in detailsOrder.items || []" :key="item.id">
+                                    <div class="flex items-center gap-3 bg-white border border-gray-100 rounded-2xl p-3 shadow-xs">
+                                        <div class="w-12 h-14 bg-gray-50 rounded-xl overflow-hidden shrink-0 border border-gray-100">
+                                            <img :src="productImage(item.product)" class="w-full h-full object-cover object-top" x-on:error="$event.target.src='/uploads/products/default.jpg'">
+                                        </div>
+                                        <div class="flex-1 min-w-0">
+                                            <h4 class="text-xs font-bold text-black truncate" x-text="item.product?.name || 'Product Item'"></h4>
+                                            <div class="flex flex-wrap gap-2 text-[9px] font-bold text-gray-400 uppercase tracking-widest mt-1">
+                                                <span x-show="item.size" x-text="'Size: ' + item.size"></span>
+                                                <span x-show="item.display_variation && item.display_variation !== 'Original'" x-text="'Variation: ' + item.display_variation"></span>
+                                            </div>
+                                        </div>
+                                        <div class="text-right shrink-0">
+                                            <div class="text-xs font-black text-black" x-text="item.quantity + ' × ₱' + Number(item.price).toLocaleString()"></div>
+                                            <div class="text-[9px] font-bold text-[#C0420A]" x-text="'₱' + (Number(item.price) * item.quantity).toLocaleString()"></div>
                                         </div>
                                     </div>
-                                    <div class="text-right shrink-0">
-                                        <div class="text-xs font-bold text-black" x-text="item.quantity + ' x ₱' + Number(item.price).toLocaleString()"></div>
-                                        <div class="text-[9px] text-gray-400" x-text="'₱' + (Number(item.price) * item.quantity).toLocaleString()"></div>
-                                    </div>
+                                </template>
+                            </div>
+
+                            <div class="flex items-center justify-between p-3.5 bg-gray-50 rounded-2xl border border-gray-100">
+                                <span class="text-xs font-bold text-gray-500 uppercase tracking-wider">Grand Total Amount</span>
+                                <span class="text-base font-black text-[#C0420A]" x-text="'₱' + Number(detailsOrder.totalAmount).toLocaleString(undefined, {minimumFractionDigits: 2})"></span>
+                            </div>
+                        </div>
+
+                        {{-- Payment Information --}}
+                        <div class="bg-gray-50/80 p-4 rounded-2xl border border-gray-100 space-y-2 text-xs">
+                            <div class="text-[9px] font-black uppercase tracking-widest text-[#C0420A]">Payment Details</div>
+                            <div class="flex items-center justify-between">
+                                <span class="text-gray-400 font-bold text-[9px] uppercase tracking-wider">Method</span>
+                                <span class="font-black text-black uppercase" x-text="detailsOrder.paymentMethod || 'COD'"></span>
+                            </div>
+                            <div class="flex items-center justify-between">
+                                <span class="text-gray-400 font-bold text-[9px] uppercase tracking-wider">Reference No.</span>
+                                <span class="font-mono text-xs font-bold text-gray-700" x-text="detailsOrder.paymentReference || 'N/A'"></span>
+                            </div>
+                            <template x-if="detailsOrder.paymentProof">
+                                <div class="pt-2 border-t border-gray-200/60 flex items-center justify-between">
+                                    <span class="text-gray-400 font-bold text-[9px] uppercase tracking-wider">Receipt File</span>
+                                    <button type="button" @click="receiptUrl = '/storage/' + detailsOrder.paymentProof; receiptModal = true;" class="inline-flex items-center gap-1 text-[10px] font-black uppercase tracking-widest text-[#C0420A] hover:underline">
+                                        View Proof ↗
+                                    </button>
                                 </div>
                             </template>
                         </div>
-                        <div class="flex justify-between items-center pt-4 mt-2 border-t border-gray-100">
-                            <span class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Order Total</span>
-                            <span class="text-lg font-black text-[#C0420A]" x-text="'₱' + Number(detailsOrder.totalAmount).toLocaleString()"></span>
-                        </div>
                     </div>
+                </template>
+            </div>
 
-                    {{-- Payment --}}
-                    <div>
-                        <div class="text-[9px] font-black uppercase tracking-widest text-gray-400 mb-2">Payment Information</div>
-                        <div class="bg-gray-50/60 border border-gray-100 rounded-2xl p-4 space-y-1 text-sm">
-                            <p class="text-gray-500"><span class="font-bold text-gray-400 text-[10px] uppercase">Method:</span> <span class="font-bold text-black uppercase" x-text="detailsOrder.paymentMethod || 'N/A'"></span></p>
-                            <p class="text-gray-500"><span class="font-bold text-gray-400 text-[10px] uppercase">Reference:</span> <span class="font-mono" x-text="detailsOrder.paymentReference || 'N/A'"></span></p>
-                        </div>
-                    </div>
-                </div>
-            </template>
-
-            <div class="flex gap-3 pt-2">
+            {{-- Modal Footer Actions --}}
+            <div class="p-4 sm:p-5 bg-gray-50 border-t border-gray-100 flex gap-3 shrink-0">
                 <button @click="detailsModal = false"
-                    class="flex-1 py-3 rounded-xl border border-gray-200 text-[10px] font-bold uppercase tracking-widest text-gray-500 hover:bg-gray-50 transition-all">
+                    class="flex-1 py-2.5 sm:py-3 rounded-full border border-gray-200 bg-white text-[10px] font-black uppercase tracking-widest text-gray-600 hover:bg-gray-100 transition-all">
                     Close
                 </button>
                 <button @click="printOrderDetails()"
-                    class="flex-1 py-3 bg-black text-white text-[10px] font-bold uppercase tracking-widest hover:bg-[#C0420A] transition-all flex items-center justify-center gap-2">
+                    class="flex-1 py-2.5 sm:py-3 bg-black text-white text-[10px] font-black uppercase tracking-widest hover:bg-[#C0420A] rounded-full transition-all flex items-center justify-center gap-2 shadow-sm">
                     <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"></path></svg>
-                    Print / Save PDF
-                </button>
-            </div>
-        </div>
-    </div>
-
-    {{-- Status Update Modal --}}
-    <div x-show="statusModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm" x-cloak>
-        <div @click.away="statusModal = false" class="bg-white rounded-3xl shadow-2xl w-full max-w-md p-8 space-y-6">
-            <div>
-                <h3 class="font-serif text-xl font-bold text-black mb-1">Update Order Status</h3>
-                <p class="text-[10px] text-gray-400 uppercase tracking-widest font-bold" x-text="activeOrder ? '#LB-' + activeOrder.id.slice(-8).toUpperCase() : ''"></p>
-            </div>
-
-            <div class="space-y-3">
-                @foreach(['Pending', 'Processing', 'Shipped', 'Delivered'] as $s)
-                    <label class="flex items-center gap-3 p-4 rounded-xl border transition-all"
-                        :class="{
-                            'border-[#C0420A] bg-red-50': newStatus === '{{ $s }}',
-                            'border-gray-100 hover:border-gray-300': newStatus !== '{{ $s }}' && !isStatusDisabled('{{ $s }}'),
-                            'opacity-40 cursor-not-allowed bg-gray-50 border-gray-100': isStatusDisabled('{{ $s }}')
-                        }">
-                        <input type="radio" x-model="newStatus" value="{{ $s }}" class="accent-[#C0420A]" :disabled="isStatusDisabled('{{ $s }}')">
-                        <span class="text-xs font-bold text-black uppercase tracking-wider">{{ $s }}</span>
-                    </label>
-                @endforeach
-            </div>
-
-            <div class="flex gap-3">
-                <button @click="statusModal = false"
-                    class="flex-1 py-3 rounded-xl border border-gray-200 text-[10px] font-bold uppercase tracking-widest text-gray-500 hover:bg-gray-50 transition-all">
-                    Cancel
-                </button>
-                <button @click="updateStatus()"
-                    :disabled="!activeOrder || newStatus === activeOrder.status"
-                    :class="(!activeOrder || newStatus === activeOrder.status) ? 'opacity-50 cursor-not-allowed hover:bg-black' : ''"
-                    class="flex-1 py-3 bg-black text-white text-[10px] font-bold uppercase tracking-widest hover:bg-[#C0420A] transition-all">
-                    Save Status
+                    Print PDF
                 </button>
             </div>
         </div>
@@ -511,6 +486,7 @@ function printSellerOrder(order) {
             </div>
         </div>
     </div>
+
     <!-- Floating Scroll Navigator -->
     <div 
         x-data="{
@@ -521,7 +497,6 @@ function printSellerOrder(order) {
                 this.container = document.querySelector('main');
                 if (this.container) {
                     this.container.addEventListener('scroll', () => this.checkScroll());
-                    // Run checkScroll after next tick to ensure DOM is fully rendered
                     this.$nextTick(() => this.checkScroll());
                 }
             },
@@ -556,7 +531,7 @@ function printSellerOrder(order) {
             x-transition:leave="transition ease-in duration-200"
             x-transition:leave-start="opacity-100 translate-y-0"
             x-transition:leave-end="opacity-0 translate-y-4"
-            class="w-12 h-12 bg-black hover:bg-[#C0422A] text-white rounded-full flex items-center justify-center shadow-lg transition-all"
+            class="w-12 h-12 bg-black hover:bg-[#C0420A] text-white rounded-full flex items-center justify-center shadow-lg transition-all"
             title="Scroll to Top"
         >
             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -574,7 +549,7 @@ function printSellerOrder(order) {
             x-transition:leave="transition ease-in duration-200"
             x-transition:leave-start="opacity-100 translate-y-0"
             x-transition:leave-end="opacity-0 -translate-y-4"
-            class="w-12 h-12 bg-black hover:bg-[#C0422A] text-white rounded-full flex items-center justify-center shadow-lg transition-all"
+            class="w-12 h-12 bg-black hover:bg-[#C0420A] text-white rounded-full flex items-center justify-center shadow-lg transition-all"
             title="Scroll to Bottom"
         >
             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">

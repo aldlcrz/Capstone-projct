@@ -19,10 +19,10 @@
     x-transition:leave="transition ease-in duration-200"
     x-transition:leave-start="opacity-100 translate-y-0"
     x-transition:leave-end="opacity-0 -translate-y-10"
-    class="fixed top-6 left-0 right-0 z-[100] flex justify-center px-4 pointer-events-none" 
+    class="fixed top-6 left-0 right-0 z-100 flex justify-center px-4 pointer-events-none" 
     style="display: none;"
 >
-    <div class="pointer-events-auto bg-white border border-gray-100 rounded-2xl shadow-[0_20px_50px_rgba(0,0,0,0.15)] flex items-stretch overflow-hidden max-w-xl w-full min-h-[80px]">
+    <div class="pointer-events-auto bg-white border border-gray-100 rounded-2xl shadow-[0_20px_50px_rgba(0,0,0,0.15)] flex items-stretch overflow-hidden max-w-xl w-full min-h-20">
         <!-- Accent Side Bar -->
         <div class="w-2 bg-[#C0422A] shrink-0"></div>
         

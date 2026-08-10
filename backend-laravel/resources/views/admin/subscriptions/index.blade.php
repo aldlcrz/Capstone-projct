@@ -74,7 +74,7 @@
                         </div>
 
                         <!-- Center: Amount & Receipt Link -->
-                        <div class="flex items-center gap-6 min-w-[150px]">
+                        <div class="flex items-center gap-6 min-w-37.5">
                             <div class="text-right">
                                 <div class="text-sm font-black text-black">₱{{ number_format($sub->amount, 2) }}</div>
                                 @if($sub->paymentProof)
@@ -176,7 +176,7 @@
                         <h3 class="text-xs font-black uppercase text-blue-600 tracking-wider">GCash Account Settings</h3>
                         <label class="relative inline-flex items-center cursor-pointer">
                             <input type="checkbox" name="isGcashAvailable" value="1" class="sr-only peer" {{ $admin && $admin->isGcashAvailable ? 'checked' : '' }}>
-                            <div class="w-9 h-5 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-blue-600"></div>
+                            <div class="w-9 h-5 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-0.5 after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-blue-600"></div>
                             <span class="ml-2 text-[10px] font-bold text-gray-500 uppercase tracking-wider">Available</span>
                         </label>
                     </div>
@@ -216,7 +216,7 @@
                         <h3 class="text-xs font-black uppercase text-teal-600 tracking-wider">Maya Account Settings</h3>
                         <label class="relative inline-flex items-center cursor-pointer">
                             <input type="checkbox" name="isMayaAvailable" value="1" class="sr-only peer" {{ $admin && $admin->isMayaAvailable ? 'checked' : '' }}>
-                            <div class="w-9 h-5 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-teal-600"></div>
+                            <div class="w-9 h-5 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-0.5 after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-teal-600"></div>
                             <span class="ml-2 text-[10px] font-bold text-gray-500 uppercase tracking-wider">Available</span>
                         </label>
                     </div>

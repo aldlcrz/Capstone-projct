@@ -31,7 +31,7 @@
                 <div class="relative z-10 flex gap-4 items-center">
                     <div class="w-18 h-18 rounded-full border border-white/20 bg-stone-100 overflow-hidden shrink-0 flex items-center justify-center font-serif text-3xl text-stone-400">
                         <template x-if="seller && seller.profilePhoto">
-                            <img :src="seller.profilePhoto.startsWith('http') ? seller.profilePhoto : '/storage/' + seller.profilePhoto" class="w-full h-full object-cover" />
+                            <img :src="seller.profilePhoto ? (seller.profilePhoto.startsWith('http') ? seller.profilePhoto : (seller.profilePhoto.startsWith('/storage/') ? seller.profilePhoto : '/storage/' + seller.profilePhoto)) : '/uploads/products/default.jpg'" class="w-full h-full object-cover" x-on:error="$event.target.src='/uploads/products/default.jpg'" />
                         </template>
                         <template x-if="!seller || !seller.profilePhoto">
                             <span x-text="seller?.shopName?.[0] || 'A'"></span>
@@ -139,7 +139,7 @@
             <template x-for="product in displayedProducts" :key="product.id">
                 <a :href="'/products/' + product.id" class="group relative flex flex-col bg-white rounded-sm shadow-sm hover:-translate-y-1 hover:shadow-lg border border-transparent hover:border-[#C0420A] transition-all duration-300">
                     <div class="relative aspect-square overflow-hidden bg-stone-50 rounded-t-sm">
-                        <img :src="product.image && product.image.length > 0 ? (product.image[0].startsWith('http') ? product.image[0] : '/storage/' + product.image[0].replace(/^\//, '')) : '/images/placeholder.png'" class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" />
+                        <img :src="getProductImage(product.image)" class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" x-on:error="$event.target.src='/uploads/products/default.jpg'" />
                         <template x-if="product.is_on_sale">
                             <div class="absolute top-2.5 right-2.5 bg-[#C0420A] text-white px-2.5 py-1 rounded-sm flex items-center gap-1 shadow-md z-10">
                                 <span class="text-[8px] font-black uppercase tracking-widest">Lumban Special</span>
@@ -214,6 +214,22 @@ function shopClient(config) {
                 if (pRes.ok) this.products = await pRes.json();
             } catch (e) { console.error(e); }
             this.loading = false;
+        },
+        getProductImage(img) {
+            if (!img) return '/uploads/products/default.jpg';
+            let path = '';
+            if (Array.isArray(img)) {
+                path = img.length > 0 ? img[0] : '';
+            } else if (typeof img === 'string') {
+                path = img;
+            }
+            if (!path) return '/uploads/products/default.jpg';
+            if (path.startsWith('http')) return path;
+            if (path.startsWith('/storage/')) return path;
+            if (path.startsWith('storage/')) return '/' + path;
+            if (path.startsWith('/uploads/')) return path;
+            if (path.startsWith('uploads/')) return '/' + path;
+            return '/storage/' + path.replace(/^\//, '');
         },
         get displayedProducts() {
             let p = [...this.products];

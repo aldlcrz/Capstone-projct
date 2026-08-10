@@ -80,7 +80,7 @@
         @else
             <div class="bg-white rounded-2xl sm:rounded-3xl border border-gray-100 overflow-hidden shadow-sm">
                 <div class="overflow-x-auto">
-                <table class="w-full text-left border-collapse min-w-[560px]">
+                <table class="w-full text-left border-collapse min-w-140">
                     <thead>
                         <tr class="bg-gray-50/50">
                             <th class="px-6 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest w-40">Preview</th>
@@ -129,7 +129,7 @@
                                         @elseif($banner->status === 'rejected')
                                             <span class="inline-block px-2.5 py-1 bg-red-50 text-red-700 rounded-full text-[9px] font-black uppercase tracking-wider border border-red-200/50" title="Reason: {{ $banner->rejection_reason }}">Rejected</span>
                                             @if($banner->rejection_reason)
-                                                <div class="text-[9px] text-red-500 font-medium max-w-[120px] mx-auto line-clamp-2">{{ $banner->rejection_reason }}</div>
+                                                <div class="text-[9px] text-red-500 font-medium max-w-30 mx-auto line-clamp-2">{{ $banner->rejection_reason }}</div>
                                             @endif
                                         @else
                                             <span class="inline-block px-2.5 py-1 bg-amber-50 text-amber-700 rounded-full text-[9px] font-black uppercase tracking-wider border border-amber-200/50">Pending Review</span>

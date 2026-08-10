@@ -10,7 +10,7 @@
         x-transition:enter="transition ease-out duration-200"
         x-transition:enter-start="opacity-0 translate-y-2"
         x-transition:enter-end="opacity-100 translate-y-0"
-        class="absolute top-full left-0 right-0 z-50 mt-1 bg-white border border-gray-200 rounded-xl shadow-2xl overflow-hidden flex flex-col max-h-[350px]"
+        class="absolute top-full left-0 right-0 z-50 mt-1 bg-white border border-gray-200 rounded-xl shadow-2xl overflow-hidden flex flex-col max-h-87.5"
     >
         <div class="flex border-b border-gray-100 shrink-0 bg-gray-50/50">
             <template x-for="t in ['Region', 'Province', 'City', 'Barangay']">

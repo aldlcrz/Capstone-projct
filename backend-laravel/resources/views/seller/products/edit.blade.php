@@ -1,13 +1,13 @@
 @extends('layouts.seller')
 
 @section('content')
-<div class="max-w-350 mx-auto" x-data="{ deleteModal: false, deleteProductId: null, deleteProductName: '' }">
-    <div class="mb-6 sm:mb-10">
-        <a href="{{ route('seller.products.index') }}" class="inline-flex items-center gap-2 text-[10px] font-bold text-gray-400 uppercase tracking-widest hover:text-[#C0420A] transition-colors mb-3">
+<div class="max-w-350 mx-auto pb-36 sm:pb-28 lg:pb-12 px-2.5 sm:px-6" x-data="{ deleteModal: false, deleteProductId: null, deleteProductName: '' }">
+    <div class="mb-3 sm:mb-10">
+        <a href="{{ route('seller.products.index') }}" class="inline-flex items-center gap-2 text-[10px] font-bold text-gray-400 uppercase tracking-widest hover:text-[#C0420A] transition-colors mb-1.5 sm:mb-3">
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
             Back to catalogue
         </a>
-        <h1 class="font-serif text-2xl sm:text-3xl font-bold text-black uppercase">Edit <span class="text-[#C0420A] italic lowercase">heritage piece</span></h1>
+        <h1 class="font-serif text-xl sm:text-3xl font-bold text-black uppercase">Edit <span class="text-[#C0420A] italic lowercase">heritage piece</span></h1>
     </div>
 
     @if($errors->any())
@@ -41,80 +41,80 @@
     </div>
     @endif
 
-    <form action="{{ route('seller.products.update', $product->id) }}" method="POST" enctype="multipart/form-data" onsubmit="return validateProductForm(event, true)" class="grid grid-cols-1 lg:grid-cols-3 gap-5 sm:gap-8">
+    <form action="{{ route('seller.products.update', $product->id) }}" method="POST" enctype="multipart/form-data" onsubmit="return validateProductForm(event, true)" class="grid grid-cols-1 lg:grid-cols-3 gap-3.5 sm:gap-8">
         @csrf
         @method('PUT')
 
         {{-- Left: Main Details --}}
-        <div class="lg:col-span-2 space-y-5 sm:space-y-8">
-            <div class="bg-white p-4 sm:p-8 rounded-3xl border border-gray-100 shadow-sm space-y-5 sm:space-y-8">
-                <div class="space-y-4">
+        <div class="lg:col-span-2 space-y-3.5 sm:space-y-8">
+            <div class="bg-white p-3.5 sm:p-8 rounded-2xl sm:rounded-3xl border border-gray-100 shadow-sm space-y-3 sm:space-y-8">
+                <div class="space-y-1.5 sm:space-y-4">
                     <label class="text-[10px] font-bold uppercase tracking-widest text-gray-400">Product Name</label>
                     <input type="text" name="name" required value="{{ old('name', $product->name) }}"
                         placeholder="e.g. Pina-Silk Formal Barong Tagalog"
-                        class="w-full px-6 py-4 bg-gray-50/50 border border-gray-100 rounded-2xl outline-none focus:border-[#C0420A] transition-all font-medium text-lg">
+                        class="w-full px-3.5 py-2.5 sm:px-6 sm:py-4 bg-gray-50/50 border border-gray-100 rounded-xl sm:rounded-2xl outline-none focus:border-[#C0420A] transition-all font-medium text-sm sm:text-lg">
                 </div>
 
-                <div class="space-y-4">
+                <div class="space-y-1.5 sm:space-y-4">
                     <label class="text-[10px] font-bold uppercase tracking-widest text-gray-400">Artisan Description</label>
-                    <textarea name="description" required rows="6"
+                    <textarea name="description" required rows="3"
                         placeholder="Describe the craftsmanship, materials, and the story..."
-                        class="w-full px-6 py-4 bg-gray-50/50 border border-gray-100 rounded-2xl outline-none focus:border-[#C0420A] transition-all font-medium resize-none">{{ old('description', $product->description) }}</textarea>
+                        class="w-full px-3.5 py-2.5 sm:px-6 sm:py-4 bg-gray-50/50 border border-gray-100 rounded-xl sm:rounded-2xl outline-none focus:border-[#C0420A] transition-all font-medium resize-none sm:rows-6 text-sm sm:text-base">{{ old('description', $product->description) }}</textarea>
                 </div>
 
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
-                    <div class="space-y-4">
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-8">
+                    <div class="space-y-1.5 sm:space-y-4">
                         <label class="text-[10px] font-bold uppercase tracking-widest text-gray-400">Price (₱)</label>
                         <input type="number" name="price" required min="1" max="10000" step="0.01"
                             value="{{ old('price', $product->price) }}"
                             oninput="if(parseFloat(this.value) > 10000) this.value = 10000; updateDiscountPreview();"
-                            class="w-full px-6 py-4 bg-gray-50/50 border border-gray-100 rounded-2xl outline-none focus:border-[#C0420A] transition-all font-bold text-xl">
+                            class="w-full px-3.5 py-2.5 sm:px-6 sm:py-4 bg-gray-50/50 border border-gray-100 rounded-xl sm:rounded-2xl outline-none focus:border-[#C0420A] transition-all font-bold text-base sm:text-xl">
                     </div>
-                    <div class="space-y-4">
+                    <div class="space-y-1.5 sm:space-y-4">
                         <label class="text-[10px] font-bold uppercase tracking-widest text-gray-400">Total Stock</label>
                         <input type="number" name="stock" id="total_stock" min="0"
                             value="{{ old('stock', $product->stock) }}"
                             readonly tabindex="-1"
-                            class="w-full px-6 py-4 bg-gray-100 border border-gray-100 rounded-2xl outline-none font-bold text-xl text-gray-400 cursor-not-allowed select-none">
-                        <p class="text-[9px] text-gray-400 italic -mt-2">Auto-calculated from sizes below.</p>
+                            class="w-full px-3.5 py-2.5 sm:px-6 sm:py-4 bg-gray-100 border border-gray-100 rounded-xl sm:rounded-2xl outline-none font-bold text-base sm:text-xl text-gray-400 cursor-not-allowed select-none">
+                        <p class="text-[9px] text-gray-400 italic -mt-1 sm:-mt-2">Auto-calculated from sizes below.</p>
                     </div>
                 </div>
 
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
-                    <div class="space-y-4">
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-8">
+                    <div class="space-y-1.5 sm:space-y-4">
                         <label class="text-[10px] font-bold uppercase tracking-widest text-gray-400">Shipping Fee (₱)</label>
                         <input type="number" name="shippingFee" min="0" max="500" step="0.01" placeholder="0.00"
                             value="{{ old('shippingFee', $product->shippingFee ?? 0) }}"
                             oninput="if(parseFloat(this.value) > 500) this.value = 500;"
-                            class="w-full px-6 py-4 bg-gray-50/50 border border-gray-100 rounded-2xl outline-none focus:border-[#C0420A] transition-all font-bold text-xl">
-                        <p class="text-[9px] text-gray-400 italic -mt-2">Enter 0 for free shipping.</p>
+                            class="w-full px-3.5 py-2.5 sm:px-6 sm:py-4 bg-gray-50/50 border border-gray-100 rounded-xl sm:rounded-2xl outline-none focus:border-[#C0420A] transition-all font-bold text-base sm:text-xl">
+                        <p class="text-[9px] text-gray-400 italic -mt-1 sm:-mt-2">Enter 0 for free shipping.</p>
                     </div>
-                    <div class="space-y-4">
+                    <div class="space-y-1.5 sm:space-y-4">
                         <label class="text-[10px] font-bold uppercase tracking-widest text-gray-400">Est. Shipping Days</label>
                         <input type="number" name="shippingDays" min="1" max="30" step="1" placeholder="e.g. 5"
                             value="{{ old('shippingDays', $product->shippingDays ?? 5) }}"
                             oninput="if(parseInt(this.value) > 30) this.value = 30;"
-                            class="w-full px-6 py-4 bg-gray-50/50 border border-gray-100 rounded-2xl outline-none focus:border-[#C0420A] transition-all font-bold text-xl">
+                            class="w-full px-3.5 py-2.5 sm:px-6 sm:py-4 bg-gray-50/50 border border-gray-100 rounded-xl sm:rounded-2xl outline-none focus:border-[#C0420A] transition-all font-bold text-base sm:text-xl">
                     </div>
                 </div>
 
-                <div id="sizing-section" class="space-y-6 pt-6 border-t border-gray-100 rounded-2xl p-4 transition-all">
-                    <h3 class="text-sm font-bold text-black uppercase tracking-widest">Heritage Sizing & Stock</h3>
+                <div id="sizing-section" class="space-y-3 sm:space-y-6 pt-3.5 sm:pt-6 border-t border-gray-100 rounded-xl sm:rounded-2xl p-2.5 sm:p-4 transition-all">
+                    <h3 class="text-xs sm:text-sm font-bold text-black uppercase tracking-widest">Heritage Sizing & Stock</h3>
                     <p class="text-[10px] text-gray-400">Select sizes and assign stock for each size. The overall stock will update automatically.</p>
                     @php
                         $currentSizes = is_array($product->sizes) ? $product->sizes : (json_decode($product->sizes ?? '[]', true) ?? []);
                         $currentSizeStocks = is_array($product->size_stocks) ? $product->size_stocks : (json_decode($product->size_stocks ?? '[]', true) ?? []);
                     @endphp
-                    <div class="grid grid-cols-2 sm:grid-cols-3 gap-4">
+                    <div class="grid grid-cols-2 sm:grid-cols-3 gap-2 sm:gap-4">
                         @foreach(['S', 'M', 'L', 'XL', 'XXL', 'Custom'] as $size)
                             @php
                                 $hasSize = in_array($size, $currentSizes);
                                 $sizeStock = $currentSizeStocks[$size] ?? 0;
                             @endphp
-                            <div class="p-4 border border-gray-100 bg-gray-50/50 rounded-2xl flex flex-col justify-between gap-3">
-                                <label class="flex items-center gap-2 cursor-pointer font-bold text-xs text-gray-600">
+                            <div class="p-2.5 sm:p-4 border border-gray-100 bg-gray-50/50 rounded-xl sm:rounded-2xl flex flex-col justify-between gap-1.5 sm:gap-3">
+                                <label class="flex items-center gap-1.5 cursor-pointer font-bold text-xs text-gray-600">
                                     <input type="checkbox" name="sizes[]" value="{{ $size }}" 
-                                        class="rounded text-[#C0420A] focus:ring-[#C0420A] w-4 h-4 size-checkbox"
+                                        class="rounded text-[#C0420A] focus:ring-[#C0420A] w-3.5 h-3.5 size-checkbox"
                                         {{ $hasSize ? 'checked' : '' }}
                                         onchange="toggleSizeStock(this, '{{ $size }}')">
                                     <span>Size {{ $size }}</span>
@@ -123,15 +123,15 @@
                                     value="{{ old('size_stocks.'.$size, $sizeStock) }}" min="0" max="10000"
                                     {{ $hasSize ? '' : 'disabled' }}
                                     oninput="if(parseInt(this.value) > 10000) this.value = 10000; calculateTotalStock();"
-                                    class="w-full px-4 py-2.5 bg-white border border-gray-100 rounded-xl outline-none text-xs font-bold text-center size-stock-input">
+                                    class="w-full px-2.5 py-1.5 sm:px-4 sm:py-2.5 bg-white border border-gray-100 rounded-xl outline-none text-xs font-bold text-center size-stock-input">
                             </div>
                         @endforeach
                     </div>
 
                     <!-- Size Guide Image Upload -->
-                    <div class="mt-6 pt-6 border-t border-gray-100 space-y-4">
+                    <div class="mt-3.5 pt-3.5 sm:mt-6 sm:pt-6 border-t border-gray-100 space-y-2.5 sm:space-y-4">
                         <label class="text-[10px] font-bold uppercase tracking-widest text-gray-400">Product Size Guide Chart / Image (Optional)</label>
-                        <p class="text-[10px] text-gray-400 -mt-2">Upload a custom size guide chart for this product so customers can see exact measurements on the size guide modal.</p>
+                        <p class="text-[10px] text-gray-400 -mt-1 sm:-mt-2">Upload a custom size guide chart for this product so customers can see exact measurements on the size guide modal.</p>
                         <div class="relative group" x-data="{ guidePreview: '{{ $product->getSizeGuideUrl() ?? '' }}' }">
                             <input type="file" name="size_guide_image" accept="image/*"
                                 class="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
@@ -143,7 +143,7 @@
                                         reader.readAsDataURL(file);
                                     }
                                 ">
-                            <div class="border-2 border-dashed border-gray-200 bg-white rounded-2xl p-6 flex flex-col items-center justify-center text-center hover:border-[#C0420A] hover:bg-[#C0420A]/5 transition-all">
+                            <div class="border-2 border-dashed border-gray-200 bg-white rounded-2xl p-3.5 sm:p-6 flex flex-col items-center justify-center text-center hover:border-[#C0420A] hover:bg-[#C0420A]/5 transition-all">
                                 <template x-if="guidePreview">
                                     <div class="relative w-full max-h-48 overflow-hidden rounded-xl border border-gray-200">
                                         <img :src="guidePreview" class="w-full h-48 object-contain">
@@ -153,8 +153,8 @@
                                     </div>
                                 </template>
                                 <template x-if="!guidePreview">
-                                    <div class="space-y-2">
-                                        <svg class="w-8 h-8 text-gray-300 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <div class="space-y-1.5">
+                                        <svg class="w-7 h-7 sm:w-8 sm:h-8 text-gray-300 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path>
                                         </svg>
                                         <span class="text-xs font-bold text-gray-600 block">Upload Size Guide Chart/Image</span>
@@ -166,10 +166,10 @@
                     </div>
                 </div>
 
-                <div class="space-y-4 pt-6 border-t border-gray-100">
+                <div class="space-y-1.5 sm:space-y-4 pt-3.5 sm:pt-6 border-t border-gray-100">
                     <label class="text-[10px] font-bold uppercase tracking-widest text-gray-400">Product Category</label>
                     <select name="CategoryId" id="categorySelect" required
-                        class="w-full px-6 py-4 bg-gray-50/50 border border-gray-100 rounded-2xl outline-none focus:border-[#C0420A] transition-all font-bold text-sm appearance-none">
+                        class="w-full px-3.5 py-2.5 sm:px-6 sm:py-4 bg-gray-50/50 border border-gray-100 rounded-xl sm:rounded-2xl outline-none focus:border-[#C0420A] transition-all font-bold text-xs sm:text-sm appearance-none">
                         <option value="" disabled>Select a category</option>
                         @foreach($categories as $category)
                             <option value="{{ $category->id }}" data-name="{{ strtolower($category->name) }}" {{ $product->CategoryId == $category->id ? 'selected' : '' }}>
@@ -184,53 +184,53 @@
                     $isOnSale = old('is_on_sale', $product->is_on_sale ?? false);
                     $discountPct = old('discount_percentage', $product->discount_percentage ?? '');
                 @endphp
-                <div class="space-y-5 pt-6 border-t border-[#C0420A]/15">
-                    <div class="flex items-center gap-3">
-                        <div class="w-8 h-8 bg-[#C0420A] rounded-xl flex items-center justify-center shrink-0">
-                            <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <div class="space-y-3 sm:space-y-5 pt-3.5 sm:pt-6 border-t border-[#C0420A]/15">
+                    <div class="flex items-center gap-2.5 sm:gap-3">
+                        <div class="w-7 h-7 sm:w-8 sm:h-8 bg-[#C0420A] rounded-xl flex items-center justify-center shrink-0">
+                            <svg class="w-3.5 h-3.5 sm:w-4 sm:h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-5 5a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 10V5a2 2 0 012-2z"/>
                             </svg>
                         </div>
                         <div>
-                            <h4 class="text-sm font-black text-[#C0420A] uppercase tracking-widest">Lumban Special</h4>
+                            <h4 class="text-xs sm:text-sm font-black text-[#C0420A] uppercase tracking-widest">Lumban Special</h4>
                             <p class="text-[9px] text-gray-400 uppercase tracking-widest">Sale / Discount Configuration — Independent of category</p>
                         </div>
                     </div>
 
-                    <div class="rounded-2xl p-5 border border-[#C0420A]/15 space-y-4" style="background: linear-gradient(to bottom right, #FFF5F0, #fff);">
+                    <div class="rounded-2xl p-3.5 sm:p-5 border border-[#C0420A]/15 space-y-3 sm:space-y-4" style="background: linear-gradient(to bottom right, #FFF5F0, #fff);">
                         <input type="hidden" name="is_on_sale" id="isOnSaleInput" value="{{ $isOnSale ? '1' : '0' }}">
 
-                        <div class="flex items-center justify-between p-4 bg-white rounded-xl border border-[#C0420A]/20">
+                        <div class="flex items-center justify-between p-3 sm:p-4 bg-white rounded-xl border border-[#C0420A]/20">
                             <div>
                                 <div class="text-xs font-black text-gray-700 uppercase tracking-widest">Mark as Lumban Special Sale</div>
                                 <div class="text-[9px] text-gray-400 mt-0.5">Products will display a "Lumban Special" badge with discount</div>
                             </div>
-                            <label class="relative inline-flex items-center cursor-pointer">
+                            <label class="relative inline-flex items-center cursor-pointer shrink-0">
                                 <input type="checkbox" id="discountToggle" class="sr-only peer"
                                     {{ $isOnSale ? 'checked' : '' }}
                                     onchange="toggleDiscount(this)">
-                                <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-0.5 after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#C0420A]"></div>
-                                <span class="ml-2 text-[10px] font-bold text-gray-500 uppercase tracking-widest peer-checked:text-[#C0420A]">On Sale</span>
+                                <div class="w-10 h-5.5 sm:w-11 sm:h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-0.5 after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4.5 after:w-4.5 sm:after:h-5 sm:after:w-5 after:transition-all peer-checked:bg-[#C0420A]"></div>
+                                <span class="ml-1.5 text-[10px] font-bold text-gray-500 uppercase tracking-widest peer-checked:text-[#C0420A]">On Sale</span>
                             </label>
                         </div>
 
-                        <div id="discountFields" class="{{ $isOnSale ? '' : 'hidden' }} space-y-4">
-                            <div class="space-y-2">
+                        <div id="discountFields" class="{{ $isOnSale ? '' : 'hidden' }} space-y-3 sm:space-y-4">
+                            <div class="space-y-1.5 sm:space-y-2">
                                 <label class="text-[10px] font-black uppercase tracking-widest text-gray-400">Discount Percentage (%)</label>
                                 <div class="relative">
                                     <input type="number" name="discount_percentage" id="discountPercentage"
                                         min="1" max="99" step="1" placeholder="e.g. 20"
                                         value="{{ $discountPct }}"
-                                        class="w-full px-6 py-4 bg-white border border-[#C0420A]/30 rounded-2xl outline-none focus:border-[#C0420A] transition-all font-black text-xl text-[#C0420A]"
+                                        class="w-full px-4 py-2.5 sm:px-6 sm:py-4 bg-white border border-[#C0420A]/30 rounded-xl sm:rounded-2xl outline-none focus:border-[#C0420A] transition-all font-black text-lg sm:text-xl text-[#C0420A]"
                                         oninput="if(parseInt(this.value) > 99) this.value = 99; updateDiscountPreview();">
-                                    <span class="absolute right-5 top-1/2 -translate-y-1/2 text-lg font-black text-[#C0420A]">%</span>
+                                    <span class="absolute right-4 sm:right-5 top-1/2 -translate-y-1/2 text-base sm:text-lg font-black text-[#C0420A]">%</span>
                                 </div>
                             </div>
-                            <div id="discountPreview" class="hidden p-4 bg-[#C0420A]/5 rounded-xl border border-[#C0420A]/20">
+                            <div id="discountPreview" class="hidden p-3 sm:p-4 bg-[#C0420A]/5 rounded-xl border border-[#C0420A]/20">
                                 <div class="text-[9px] font-black uppercase tracking-widest text-gray-400 mb-1">Preview</div>
-                                <div class="flex items-center gap-3">
-                                    <span id="previewOriginal" class="text-sm text-gray-400 line-through font-bold"></span>
-                                    <span id="previewSale" class="text-xl font-black text-[#C0420A]"></span>
+                                <div class="flex items-center gap-2.5 sm:gap-3">
+                                    <span id="previewOriginal" class="text-xs sm:text-sm text-gray-400 line-through font-bold"></span>
+                                    <span id="previewSale" class="text-lg sm:text-xl font-black text-[#C0420A]"></span>
                                     <span class="px-2 py-0.5 bg-[#C0420A] text-white text-[9px] font-black uppercase tracking-widest rounded-full">Lumban Special</span>
                                 </div>
                             </div>
@@ -238,14 +238,14 @@
                     </div>
                 </div>
 
-                <div class="space-y-4 pt-6 border-t border-gray-100">
+                <div class="space-y-2.5 sm:space-y-4 pt-3.5 sm:pt-6 border-t border-gray-100">
                     <label class="text-[10px] font-bold uppercase tracking-widest text-gray-400">Who is this for?</label>
-                    <div class="flex gap-3">
+                    <div class="flex gap-2 sm:gap-3">
                         @foreach(['Men', 'Women', 'Kids'] as $group)
                             <label class="flex-1 cursor-pointer group">
                                 <input type="radio" name="target_group" value="{{ $group }}" class="hidden peer"
                                     {{ old('target_group', $product->target_group) == $group ? 'checked' : '' }}>
-                                <div class="w-full py-3 rounded-xl border-2 border-gray-100 bg-gray-50/50 text-xs font-black text-gray-400 text-center uppercase tracking-widest peer-checked:border-[#C0420A] peer-checked:bg-[#C0420A]/5 peer-checked:text-[#C0420A] peer-checked:shadow-md peer-checked:shadow-[#C0420A]/10 hover:border-gray-300 transition-all">
+                                <div class="w-full py-2.5 sm:py-3 rounded-xl border-2 border-gray-100 bg-gray-50/50 text-xs font-black text-gray-400 text-center uppercase tracking-widest peer-checked:border-[#C0420A] peer-checked:bg-[#C0420A]/5 peer-checked:text-[#C0420A] peer-checked:shadow-md peer-checked:shadow-[#C0420A]/10 hover:border-gray-300 transition-all">
                                     {{ $group }}
                                 </div>
                             </label>
@@ -263,9 +263,9 @@
                 }
             @endphp
             @if(count($images) > 0)
-            <div class="bg-white p-8 rounded-3xl border border-gray-100 shadow-sm space-y-6">
-                <h3 class="text-sm font-bold text-black uppercase tracking-widest">Current Images</h3>
-                <div class="grid grid-cols-3 md:grid-cols-4 gap-4">
+            <div class="bg-white p-3.5 sm:p-8 rounded-2xl sm:rounded-3xl border border-gray-100 shadow-sm space-y-3.5 sm:space-y-6">
+                <h3 class="text-xs sm:text-sm font-bold text-black uppercase tracking-widest">Current Images</h3>
+                <div class="grid grid-cols-3 md:grid-cols-4 gap-2.5 sm:gap-4">
                     @foreach($images as $i => $img)
                         @php
                             if (str_starts_with($img, 'http')) {
@@ -282,7 +282,7 @@
                             <img src="{{ $imgSrc }}" class="w-full h-full object-cover">
                             <label class="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 flex items-center justify-center cursor-pointer transition-opacity">
                                 <input type="checkbox" name="remove_images[]" value="{{ $img }}" class="hidden peer">
-                                <div class="px-3 py-1.5 rounded-lg bg-red-500 text-white text-[9px] font-black uppercase tracking-widest peer-checked:bg-red-700">
+                                <div class="px-2.5 py-1 rounded-lg bg-red-500 text-white text-[9px] font-black uppercase tracking-widest peer-checked:bg-red-700">
                                     Remove
                                 </div>
                             </label>
@@ -294,53 +294,53 @@
             @endif
         </div>
 
-        <div class="space-y-5 sm:space-y-8">
-            <div class="bg-white p-4 sm:p-8 rounded-3xl border border-gray-100 shadow-sm space-y-5">
+        <div class="space-y-3.5 sm:space-y-8">
+            <div class="bg-white p-3.5 sm:p-8 rounded-2xl sm:rounded-3xl border border-gray-100 shadow-sm space-y-3.5 sm:space-y-5">
                 <div class="flex items-center justify-between">
-                    <h3 class="text-sm font-bold text-black uppercase tracking-widest">Add New Images</h3>
+                    <h3 class="text-xs sm:text-sm font-bold text-black uppercase tracking-widest">Add New Images</h3>
                     <span id="img-count-badge" class="hidden text-[9px] font-black uppercase tracking-widest px-2.5 py-1 bg-[#C0420A]/10 text-[#C0420A] rounded-full">0 photos</span>
                 </div>
 
                 {{-- Drop Zone --}}
                 <label for="imageUploadInput"
                     id="dropZone"
-                    class="flex flex-col items-center justify-center gap-3 w-full min-h-40 rounded-2xl border-2 border-dashed border-gray-200 bg-gray-50 hover:bg-white hover:border-[#C0420A] transition-all cursor-pointer group px-6 py-8 text-center">
-                    <div class="w-12 h-12 rounded-2xl bg-gray-100 group-hover:bg-[#C0420A]/10 flex items-center justify-center transition-colors">
-                        <svg class="w-6 h-6 text-gray-300 group-hover:text-[#C0420A] transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                    class="flex flex-col items-center justify-center gap-2 sm:gap-3 w-full min-h-32 sm:min-h-40 rounded-2xl border-2 border-dashed border-gray-200 bg-gray-50 hover:bg-white hover:border-[#C0420A] transition-all cursor-pointer group px-4 py-5 sm:px-6 sm:py-8 text-center">
+                    <div class="w-10 h-10 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl bg-gray-100 group-hover:bg-[#C0420A]/10 flex items-center justify-center transition-colors">
+                        <svg class="w-5 h-5 sm:w-6 sm:h-6 text-gray-300 group-hover:text-[#C0420A] transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2 2v12a2 2 0 002 2z"/>
                         </svg>
                     </div>
                     <div>
                         <div class="text-xs font-black text-gray-600 group-hover:text-[#C0420A] uppercase tracking-widest transition-colors">Click to Add Photos</div>
-                        <p class="text-[9px] text-gray-400 mt-1">Optional &mdash; only if replacing or adding new shots</p>
+                        <p class="text-[9px] text-gray-400 mt-0.5 sm:mt-1">Optional &mdash; only if replacing or adding new shots</p>
                     </div>
                     <input type="file" id="imageUploadInput" name="images[]" multiple class="hidden" onchange="previewImages(this)">
                 </label>
 
                 {{-- New Upload Preview Grid --}}
-                <div id="image-preview-grid" class="hidden grid-cols-3 gap-3">
+                <div id="image-preview-grid" class="hidden grid-cols-3 gap-2 sm:gap-3">
                     {{-- JS-populated --}}
                 </div>
             </div>
 
             {{-- Payment Method Configuration --}}
-            <div class="bg-white p-4 sm:p-8 rounded-3xl border border-gray-100 shadow-sm space-y-6">
-                <div class="flex items-center justify-between">
+            <div class="bg-white p-3.5 sm:p-8 rounded-2xl sm:rounded-3xl border border-gray-100 shadow-sm space-y-3.5 sm:space-y-6">
+                <div class="flex items-center justify-between gap-2">
                     <div>
-                        <h3 class="text-sm font-bold text-black uppercase tracking-widest flex items-center gap-2">
+                        <h3 class="text-xs sm:text-sm font-bold text-black uppercase tracking-widest flex items-center gap-1.5 sm:gap-2">
                             <svg class="w-4 h-4 text-[#C0420A]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"></path></svg>
                             Payment Methods
                         </h3>
-                        <p class="text-[10px] text-gray-400 mt-1">Select accepted payment methods for this product and upload your QR codes.</p>
+                        <p class="text-[10px] text-gray-400 mt-0.5 sm:mt-1">Select accepted payment methods for this product and upload your QR codes.</p>
                     </div>
-                    <a href="{{ route('seller.profile') }}" target="_blank" class="text-[10px] font-bold text-[#C0420A] hover:underline flex items-center gap-1 shrink-0">
+                    <a href="{{ route('seller.profile') }}?open_payment=1#payment-methods" class="text-[9px] sm:text-[10px] font-bold text-[#C0420A] hover:underline flex items-center gap-1 shrink-0">
                         Profile Payment Settings
-                        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path></svg>
+                        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
                     </a>
                 </div>
 
                 {{-- GCash --}}
-                <div class="p-5 bg-gray-50/50 border border-gray-100 rounded-2xl space-y-4">
+                <div class="p-3.5 sm:p-5 bg-gray-50/50 border border-gray-100 rounded-2xl space-y-3 sm:space-y-4">
                     <div class="flex items-center justify-between">
                         <div class="flex items-center gap-2">
                             <span class="w-2 h-2 rounded-full bg-blue-500"></span>
@@ -349,17 +349,17 @@
                         <label class="relative inline-flex items-center cursor-pointer">
                             <input type="checkbox" name="product_is_gcash_available" value="1" class="sr-only peer"
                                 {{ old('product_is_gcash_available', $product->is_gcash_available) ? 'checked' : '' }}>
-                            <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-0.5 after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
-                            <span class="ml-2 text-[10px] font-bold text-gray-500 uppercase tracking-widest peer-checked:text-blue-600">Available</span>
+                            <div class="w-10 h-5.5 sm:w-11 sm:h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-0.5 after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4.5 after:w-4.5 sm:after:h-5 sm:after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                            <span class="ml-1.5 text-[10px] font-bold text-gray-500 uppercase tracking-widest peer-checked:text-blue-600">Available</span>
                         </label>
                     </div>
 
-                    <div class="space-y-2">
+                    <div class="space-y-1.5 sm:space-y-2">
                         <label class="text-[9px] font-black uppercase tracking-widest text-gray-400">GCash Number</label>
-                        <input type="text" name="gcashNumber" value="{{ old('gcashNumber', $product->gcash_number ?? auth()->user()->gcashNumber) }}" placeholder="e.g. 0917 123 4567" class="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl text-xs font-bold text-gray-800 outline-none focus:border-blue-500 transition-all">
+                        <input type="text" name="gcashNumber" value="{{ old('gcashNumber', $product->gcash_number ?? auth()->user()->gcashNumber) }}" placeholder="e.g. 0917 123 4567" class="w-full px-3.5 py-2.5 sm:px-4 sm:py-3 bg-white border border-gray-200 rounded-xl text-xs font-bold text-gray-800 outline-none focus:border-blue-500 transition-all">
                     </div>
 
-                    <div class="space-y-2">
+                    <div class="space-y-1.5 sm:space-y-2">
                         <label class="text-[9px] font-black uppercase tracking-widest text-gray-400">GCash QR Code</label>
                         <div class="relative group" x-data="{ qrPreview: '{{ $product->gcash_qr_code ? asset('storage/' . $product->gcash_qr_code) : (auth()->user()->gcashQrCode ? asset('storage/' . auth()->user()->gcashQrCode) : '') }}' }">
                             <input type="file" name="gcashQrCode" accept="image/*" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10" @change="
@@ -370,9 +370,9 @@
                                     reader.readAsDataURL(file);
                                 }
                             ">
-                            <div class="border-2 border-dashed border-gray-200 bg-white rounded-2xl p-4 flex flex-col items-center justify-center text-center hover:border-blue-500 hover:bg-blue-50/10 transition-all min-h-25">
+                            <div class="border-2 border-dashed border-gray-200 bg-white rounded-2xl p-3 sm:p-4 flex flex-col items-center justify-center text-center hover:border-blue-500 hover:bg-blue-50/10 transition-all min-h-20 sm:min-h-25">
                                 <template x-if="qrPreview">
-                                    <div class="relative w-24 h-24">
+                                    <div class="relative w-20 h-20 sm:w-24 sm:h-24">
                                         <img :src="qrPreview" class="w-full h-full object-contain rounded-lg">
                                         <div class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center rounded-lg transition-opacity">
                                             <span class="text-[8px] text-white font-bold uppercase tracking-widest">Change QR</span>
@@ -381,7 +381,7 @@
                                 </template>
                                 <template x-if="!qrPreview">
                                     <div class="space-y-1">
-                                        <svg class="w-6 h-6 text-gray-300 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path></svg>
+                                        <svg class="w-5 h-5 sm:w-6 sm:h-6 text-gray-300 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path></svg>
                                         <span class="text-[10px] font-bold text-gray-400 uppercase tracking-widest block">Upload GCash QR Code</span>
                                     </div>
                                 </template>
@@ -391,7 +391,7 @@
                 </div>
 
                 {{-- Maya --}}
-                <div class="p-5 bg-gray-50/50 border border-gray-100 rounded-2xl space-y-4">
+                <div class="p-3.5 sm:p-5 bg-gray-50/50 border border-gray-100 rounded-2xl space-y-3 sm:space-y-4">
                     <div class="flex items-center justify-between">
                         <div class="flex items-center gap-2">
                             <span class="w-2 h-2 rounded-full bg-green-500"></span>
@@ -400,17 +400,17 @@
                         <label class="relative inline-flex items-center cursor-pointer">
                             <input type="checkbox" name="product_is_maya_available" value="1" class="sr-only peer"
                                 {{ old('product_is_maya_available', $product->is_maya_available) ? 'checked' : '' }}>
-                            <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-0.5 after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-green-600"></div>
-                            <span class="ml-2 text-[10px] font-bold text-gray-500 uppercase tracking-widest peer-checked:text-green-600">Available</span>
+                            <div class="w-10 h-5.5 sm:w-11 sm:h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-0.5 after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4.5 after:w-4.5 sm:after:h-5 sm:after:w-5 after:transition-all peer-checked:bg-green-600"></div>
+                            <span class="ml-1.5 text-[10px] font-bold text-gray-500 uppercase tracking-widest peer-checked:text-green-600">Available</span>
                         </label>
                     </div>
 
-                    <div class="space-y-2">
+                    <div class="space-y-1.5 sm:space-y-2">
                         <label class="text-[9px] font-black uppercase tracking-widest text-gray-400">Maya Number</label>
-                        <input type="text" name="mayaNumber" value="{{ old('mayaNumber', $product->maya_number ?? auth()->user()->mayaNumber) }}" placeholder="e.g. 0917 123 4567" class="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl text-xs font-bold text-gray-800 outline-none focus:border-green-500 transition-all">
+                        <input type="text" name="mayaNumber" value="{{ old('mayaNumber', $product->maya_number ?? auth()->user()->mayaNumber) }}" placeholder="e.g. 0917 123 4567" class="w-full px-3.5 py-2.5 sm:px-4 sm:py-3 bg-white border border-gray-200 rounded-xl text-xs font-bold text-gray-800 outline-none focus:border-green-500 transition-all">
                     </div>
 
-                    <div class="space-y-2">
+                    <div class="space-y-1.5 sm:space-y-2">
                         <label class="text-[9px] font-black uppercase tracking-widest text-gray-400">Maya QR Code</label>
                         <div class="relative group" x-data="{ qrPreview: '{{ $product->maya_qr_code ? asset('storage/' . $product->maya_qr_code) : (auth()->user()->mayaQrCode ? asset('storage/' . auth()->user()->mayaQrCode) : '') }}' }">
                             <input type="file" name="mayaQrCode" accept="image/*" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10" @change="
@@ -421,9 +421,9 @@
                                     reader.readAsDataURL(file);
                                 }
                             ">
-                            <div class="border-2 border-dashed border-gray-200 bg-white rounded-2xl p-4 flex flex-col items-center justify-center text-center hover:border-green-500 hover:bg-green-50/10 transition-all min-h-25">
+                            <div class="border-2 border-dashed border-gray-200 bg-white rounded-2xl p-3 sm:p-4 flex flex-col items-center justify-center text-center hover:border-green-500 hover:bg-green-50/10 transition-all min-h-20 sm:min-h-25">
                                 <template x-if="qrPreview">
-                                    <div class="relative w-24 h-24">
+                                    <div class="relative w-20 h-20 sm:w-24 sm:h-24">
                                         <img :src="qrPreview" class="w-full h-full object-contain rounded-lg">
                                         <div class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center rounded-lg transition-opacity">
                                             <span class="text-[8px] text-white font-bold uppercase tracking-widest">Change QR</span>
@@ -432,7 +432,7 @@
                                 </template>
                                 <template x-if="!qrPreview">
                                     <div class="space-y-1">
-                                        <svg class="w-6 h-6 text-gray-300 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path></svg>
+                                        <svg class="w-5 h-5 sm:w-6 sm:h-6 text-gray-300 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path></svg>
                                         <span class="text-[10px] font-bold text-gray-400 uppercase tracking-widest block">Upload Maya QR Code</span>
                                     </div>
                                 </template>
@@ -442,9 +442,9 @@
                 </div>
             </div>
 
-            <div class="bg-white p-8 rounded-3xl border border-gray-100 shadow-sm space-y-4">
-                <h3 class="text-sm font-bold text-black uppercase tracking-widest">Listing Status</h3>
-                <div class="flex items-center gap-3 p-4 rounded-2xl bg-gray-50 border border-gray-100">
+            <div class="bg-white p-3.5 sm:p-8 rounded-2xl sm:rounded-3xl border border-gray-100 shadow-sm space-y-3 sm:space-y-4">
+                <h3 class="text-xs sm:text-sm font-bold text-black uppercase tracking-widest">Listing Status</h3>
+                <div class="flex items-center gap-2.5 p-3 sm:p-4 rounded-xl sm:rounded-2xl bg-gray-50 border border-gray-100">
                     <div class="w-2.5 h-2.5 rounded-full {{ $product->status === 'approved' ? 'bg-green-500' : 'bg-amber-500' }}"></div>
                     <span class="text-xs font-black uppercase tracking-widest {{ $product->status === 'approved' ? 'text-green-600' : 'text-amber-600' }}">
                         {{ ucfirst($product->status) }}
@@ -455,14 +455,33 @@
                 @endif
 
                 <button type="submit"
-                    class="w-full py-5 bg-black text-white rounded-2xl font-bold uppercase tracking-[0.2em] shadow-xl hover:bg-[#C0420A] transition-all">
+                    class="w-full py-3.5 sm:py-5 bg-black text-white rounded-xl sm:rounded-2xl font-bold uppercase tracking-[0.2em] shadow-xl hover:bg-[#C0420A] transition-all text-xs sm:text-sm">
                     Save Changes
                 </button>
 
                 <button type="button"
                     @click="deleteModal = true; deleteProductId = '{{ $product->id }}'; deleteProductName = '{{ addslashes($product->name) }}'"
-                    class="w-full py-4 border-2 border-red-100 text-red-400 rounded-2xl font-bold text-[10px] uppercase tracking-widest hover:bg-red-50 hover:border-red-200 hover:text-red-600 transition-all">
+                    class="w-full py-3 sm:py-4 border-2 border-red-100 text-red-400 rounded-xl sm:rounded-2xl font-bold text-[10px] uppercase tracking-widest hover:bg-red-50 hover:border-red-200 hover:text-red-600 transition-all">
                     Delete Listing
+                </button>
+            </div>
+        </div>
+
+        {{-- Mobile Sticky Action Bar --}}
+        <div class="lg:hidden fixed bottom-16 inset-x-0 bg-white/95 backdrop-blur-md border-t border-gray-200 px-3.5 py-2.5 z-30 shadow-2xl flex items-center justify-between gap-2.5">
+            <div class="min-w-0">
+                <div class="text-[10px] font-black text-black uppercase tracking-wider truncate" title="{{ $product->name }}">{{ $product->name }}</div>
+                <div class="text-[9px] text-[#C0420A] font-bold uppercase tracking-widest truncate">Editing Listing</div>
+            </div>
+            <div class="flex items-center gap-2 shrink-0">
+                <button type="button"
+                    @click="deleteModal = true; deleteProductId = '{{ $product->id }}'; deleteProductName = '{{ addslashes($product->name) }}'"
+                    class="p-2.5 bg-red-50 text-red-600 rounded-xl text-xs font-bold transition-all hover:bg-red-100"
+                    title="Delete Listing">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                </button>
+                <button type="submit" class="px-4 py-2 bg-[#C0420A] text-white rounded-xl text-[11px] font-black uppercase tracking-widest shadow-md hover:bg-black transition-all">
+                    Save Changes
                 </button>
             </div>
         </div>
@@ -476,7 +495,7 @@
                     <svg class="w-8 h-8 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
                 </div>
                 <h3 class="font-serif text-xl font-bold text-black mb-1">Delete This Listing?</h3>
-                <p class="text-xs text-gray-500" x-text="'\"' + deleteProductName + '\" will be permanently removed.'"></p>
+                <p class="text-xs text-gray-500">&quot;<span x-text="deleteProductName"></span>&quot; will be permanently removed.</p>
             </div>
             <form :action="'/seller/products/' + deleteProductId" method="POST" class="flex gap-3">
                 @csrf
@@ -516,7 +535,7 @@ function previewImages(input) {
                 card.style.aspectRatio = '3/4';
                 card.innerHTML = `
                     <img src="${e.target.result}" class="w-full h-full object-cover object-top transition-transform duration-300 group-hover:scale-105">
-                    <div class="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-end p-2">
+                    <div class="absolute inset-0 bg-linear-to-t from-black/40 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-end p-2">
                         <span class="text-[8px] font-black text-white uppercase tracking-widest">${file.name.length > 16 ? file.name.substring(0, 14) + '…' : file.name}</span>
                     </div>
                     <div class="absolute top-2 left-2 w-5 h-5 bg-black/60 rounded-full flex items-center justify-center text-[8px] font-black text-white">${idx + 1}</div>

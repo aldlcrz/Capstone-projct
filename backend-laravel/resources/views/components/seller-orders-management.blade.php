@@ -40,7 +40,7 @@
     <!-- Main Content -->
     <div class="bg-white rounded-[2.5rem] border border-gray-100 overflow-hidden shadow-xl shadow-stone-200/50">
         <div class="overflow-x-auto">
-            <table class="w-full text-left border-collapse min-w-[1000px]">
+            <table class="w-full text-left border-collapse min-w-250">
                 <thead>
                     <tr class="bg-stone-50 border-b border-gray-100">
                         <th class="px-8 py-5 text-[10px] font-bold uppercase tracking-widest text-gray-400">Order ID</th>
@@ -65,7 +65,7 @@
                                     <div class="w-10 h-10 rounded-full bg-[#3D2B1F] text-white flex items-center justify-center font-bold shadow-md" x-text="(order.customer?.name || 'C')[0]"></div>
                                     <div class="min-w-0">
                                         <div class="font-bold text-xs text-black truncate tracking-tight uppercase" x-text="order.customer?.name || 'Customer'"></div>
-                                        <div class="text-[10px] text-gray-400 font-medium italic truncate max-w-[200px]" x-text="formatAddress(order.shippingAddress)"></div>
+                                        <div class="text-[10px] text-gray-400 font-medium italic truncate max-w-50" x-text="formatAddress(order.shippingAddress)"></div>
                                     </div>
                                 </div>
                             </td>
@@ -74,7 +74,7 @@
                                     @click="updateStatus(order)"
                                     :disabled="updatingId === order.id"
                                     :class="getStatusClasses(order.status)"
-                                    class="px-4 py-1.5 rounded-lg text-[10px] font-black tracking-[0.1em] shadow-sm transition-all border"
+                                    class="px-4 py-1.5 rounded-lg text-[10px] font-black tracking-widest shadow-sm transition-all border"
                                 >
                                     <span x-text="updatingId === order.id ? 'UPDATING...' : (order.status || 'PENDING').toUpperCase()"></span>
                                 </button>
@@ -96,7 +96,7 @@
     </div>
     
     <!-- Order Details Modal (Seller) -->
-    <div x-show="selectedOrder" class="fixed inset-0 z-[100] flex items-center justify-center p-4 overflow-hidden" style="display: none;">
+    <div x-show="selectedOrder" class="fixed inset-0 z-100 flex items-center justify-center p-4 overflow-hidden" style="display: none;">
         <div @click="selectedOrder = null" class="absolute inset-0 bg-black/60 backdrop-blur-sm"></div>
         <div class="bg-white w-full max-w-2xl max-h-[88vh] rounded-3xl shadow-2xl relative z-10 overflow-hidden flex flex-col border border-white/20">
             <template x-if="selectedOrder">
@@ -142,7 +142,7 @@
                                     <div class="flex gap-4 p-4 bg-white border border-gray-100 rounded-2xl shadow-sm items-center">
                                         <div class="w-14 h-14 bg-gray-50 rounded-xl border border-gray-100 relative shrink-0 overflow-hidden">
                                             <template x-if="item.product && item.product.image">
-                                                <img :src="item.product.image.startsWith('http') ? item.product.image : '/storage/' + item.product.image" class="object-cover w-full h-full" />
+                                                <img :src="item.product.image.startsWith('http') ? item.product.image : '/storage/' + item.product.image" class="object-cover w-full h-full" x-on:error="$event.target.src='/uploads/products/default.jpg'" />
                                             </template>
                                         </div>
                                         <div class="flex-1 min-w-0">

@@ -45,8 +45,8 @@
 <body class="bg-[#121212] text-[#E3D9C9] font-sans antialiased min-h-screen flex flex-col justify-between relative overflow-hidden selection:bg-[#C0422A] selection:text-white">
     
     <!-- Decorative Ambient Glows -->
-    <div class="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[350px] h-[350px] sm:w-[500px] sm:h-[500px] rounded-full bg-[#C0422A] glow-effect pointer-events-none z-0"></div>
-    <div class="absolute bottom-0 right-0 w-[300px] h-[300px] rounded-full bg-[#A89880] opacity-5 blur-[80px] pointer-events-none z-0"></div>
+    <div class="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-87.5 h-87.5 sm:w-125 sm:h-125 rounded-full bg-[#C0422A] glow-effect pointer-events-none z-0"></div>
+    <div class="absolute bottom-0 right-0 w-75 h-75 rounded-full bg-[#A89880] opacity-5 blur-[80px] pointer-events-none z-0"></div>
 
     <!-- Header / Logo -->
     <header class="relative z-10 w-full px-6 py-8 flex justify-center border-b border-white/5 backdrop-blur-sm bg-black/10">
@@ -90,7 +90,7 @@
     </main>
 
     <!-- Footer -->
-    <footer class="relative z-10 w-full px-6 py-8 border-t border-white/5 text-center flex flex-col sm:flex-row items-center justify-between gap-4 max-w-[1440px] mx-auto text-xs text-gray-500 font-medium bg-black/10">
+    <footer class="relative z-10 w-full px-6 py-8 border-t border-white/5 text-center flex flex-col sm:flex-row items-center justify-between gap-4 max-w-360 mx-auto text-xs text-gray-500 font-medium bg-black/10">
         <div>
             LumBarong &copy; 2026. Handcrafted Heritage & Artistry.
         </div>

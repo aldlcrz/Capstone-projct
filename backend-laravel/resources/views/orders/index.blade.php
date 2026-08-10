@@ -1,36 +1,59 @@
 @extends('layouts.app')
 
 @section('content')
-<div class="max-w-5xl mx-auto px-4 sm:px-6 py-6 sm:py-10">
+<div class="max-w-5xl mx-auto px-3 sm:px-6 py-6 sm:py-10 space-y-6 sm:space-y-8"
+     x-data="{
+        detailsModal: false,
+        selectedOrder: null,
+        getStepIndex(status) {
+            const s = (status || '').toLowerCase();
+            if (s === 'completed' || s === 'delivered') return 3;
+            if (s === 'to receive' || s === 'shipped') return 2;
+            if (s === 'to ship' || s === 'processing') return 1;
+            return 0;
+        },
+        getStatusColor(status) {
+            const s = (status || '').toLowerCase();
+            if (s === 'completed' || s === 'delivered') return 'bg-emerald-50 text-emerald-700 border-emerald-200';
+            if (s === 'to receive' || s === 'shipped') return 'bg-purple-50 text-purple-700 border-purple-200';
+            if (s === 'to ship' || s === 'processing') return 'bg-blue-50 text-blue-700 border-blue-200';
+            if (s === 'cancelled') return 'bg-red-50 text-red-700 border-red-200';
+            return 'bg-amber-50 text-amber-700 border-amber-200';
+        }
+     }">
 
     {{-- Page Header --}}
-    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6 sm:mb-10">
+    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
             <div class="flex items-center gap-2 mb-1">
-                <div class="w-5 h-0.5 bg-[#C0422A]"></div>
-                <span class="text-[10px] font-bold uppercase tracking-widest text-[#C0422A]">Account</span>
+                <span class="w-2 h-2 rounded-full bg-[#C0420A]"></span>
+                <span class="text-[9px] sm:text-[10px] font-black uppercase tracking-widest text-[#C0420A]">Customer Account</span>
             </div>
-            <h1 class="font-serif text-2xl sm:text-3xl font-bold text-black">My <span class="text-[#C0422A] italic">Orders</span></h1>
+            <h1 class="font-serif text-xl sm:text-3xl font-bold text-black uppercase tracking-tight">My <span class="text-[#C0420A] italic lowercase">Orders</span></h1>
+            <p class="text-xs text-gray-500 mt-0.5">Track your barong purchases, view receipts, and manage deliveries.</p>
         </div>
 
-        {{-- Search --}}
-        <form action="/orders/my-orders" method="GET" class="relative w-full sm:w-64">
+        {{-- Search Input --}}
+        <form action="/orders/my-orders" method="GET" class="relative w-full sm:w-72">
             <input type="text" name="search" value="{{ request('search') }}"
-                   placeholder="Search orders..."
-                   class="w-full bg-white border border-gray-200 rounded-xl py-2.5 sm:py-3 px-10 text-xs focus:outline-none focus:ring-2 focus:ring-[#C0422A]/10">
-            <svg class="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                   placeholder="Search order ID or item..."
+                   class="w-full h-10 sm:h-11 pl-9 sm:pl-10 pr-4 bg-white border border-gray-200 rounded-full text-xs font-semibold shadow-xs outline-none focus:border-[#C0420A] transition-all">
+            <svg class="w-4 h-4 text-gray-400 absolute left-3.5 top-3 sm:top-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
             </svg>
         </form>
     </div>
 
-    {{-- Tabs — horizontally scrollable, no wrap --}}
-    <div class="flex border-b border-gray-100 mb-6 overflow-x-auto no-scrollbar">
-        @foreach(['ALL', 'PENDING', 'TO SHIP', 'TO RECEIVE', 'COMPLETED'] as $tab)
-            <a href="/orders/my-orders?tab={{ $tab }}"
-               class="shrink-0 whitespace-nowrap px-4 sm:px-6 py-3 text-[10px] font-bold uppercase tracking-widest transition-all border-b-2
-                      {{ (request('tab', 'ALL') == $tab) ? 'border-[#C0422A] text-[#C0422A]' : 'border-transparent text-gray-400 hover:text-black' }}">
-                {{ $tab }}
+    {{-- Filter Capsule Tabs --}}
+    <div class="flex gap-2 overflow-x-auto no-scrollbar pb-1">
+        @foreach(['ALL' => 'All', 'PENDING' => 'Pending', 'TO SHIP' => 'To Ship', 'TO RECEIVE' => 'To Receive', 'COMPLETED' => 'Completed', 'CANCELLED' => 'Cancelled'] as $key => $label)
+            @php
+                $isActive = request('tab', 'ALL') == $key;
+            @endphp
+            <a href="/orders/my-orders?tab={{ $key }}"
+               class="shrink-0 whitespace-nowrap px-4 sm:px-5 py-2 sm:py-2.5 rounded-full text-[9px] sm:text-[10px] font-black uppercase tracking-widest transition-all flex items-center gap-1.5 active:scale-95
+                      {{ $isActive ? 'bg-black text-white shadow-md shadow-black/10' : 'bg-white text-gray-500 border border-gray-200 hover:border-gray-300' }}">
+                <span>{{ $label }}</span>
             </a>
         @endforeach
     </div>
@@ -38,94 +61,328 @@
     {{-- Orders List --}}
     <div class="space-y-4 sm:space-y-6">
         @forelse($orders as $order)
-            <div class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+            @php
+                $addr = $order->normalized_shipping_address;
+                $recipient = $addr['recipientName'] ?? $addr['fullName'] ?? $addr['name'] ?? 'Buyer';
+                $streetLine = trim(implode(' ', array_filter([
+                    $addr['houseNo'] ?? '',
+                    $addr['street'] ?? '',
+                    $addr['address'] ?? '',
+                ])));
+                $locality = collect([
+                    $addr['barangay'] ?? null,
+                    $addr['city'] ?? null,
+                    $addr['province'] ?? null,
+                ])->filter()->implode(', ');
+
+                $orderData = [
+                    'id' => $order->id,
+                    'shortId' => strtoupper(substr($order->id, -8)),
+                    'status' => $order->status,
+                    'createdAt' => $order->createdAt ? $order->createdAt->format('F d, Y \a\t h:i A') : '',
+                    'totalAmount' => number_format($order->totalAmount, 2),
+                    'paymentMethod' => $order->paymentMethod ?? 'COD',
+                    'paymentStatus' => $order->resolved_payment_status,
+                    'paymentReference' => $order->paymentReference ?? null,
+                    'recipient' => $recipient,
+                    'streetLine' => $streetLine,
+                    'locality' => $locality,
+                    'postalCode' => $addr['postalCode'] ?? '',
+                    'phone' => $addr['phone'] ?? '',
+                    'seller' => $order->seller ? [
+                        'id' => $order->seller->id,
+                        'name' => $order->seller->display_name,
+                        'isVerified' => (bool) $order->seller->isVerified,
+                        'photo' => $order->seller->profilePhoto ? (str_starts_with($order->seller->profilePhoto, 'http') ? $order->seller->profilePhoto : asset('storage/' . $order->seller->profilePhoto)) : null,
+                    ] : null,
+                    'items' => $order->items->map(fn($item) => [
+                        'id' => $item->id,
+                        'name' => $item->product ? $item->product->name : 'Heritage Product',
+                        'image' => $item->product ? $item->product->getImageUrl() : asset('uploads/products/default.jpg'),
+                        'size' => $item->size,
+                        'quantity' => $item->quantity,
+                        'price' => number_format($item->price),
+                        'subtotal' => number_format($item->price * $item->quantity),
+                    ])->values()
+                ];
+            @endphp
+
+            <div class="bg-white rounded-2xl sm:rounded-3xl border border-gray-100 shadow-sm hover:shadow-md transition-all overflow-hidden group">
 
                 {{-- Card Header --}}
-                <div class="px-4 sm:px-6 py-3 sm:py-4 bg-gray-50/50 border-b border-gray-100 flex flex-wrap items-center justify-between gap-2">
-                    {{-- Order ID + Date --}}
-                    <div class="flex flex-wrap items-center gap-1.5 sm:gap-3 text-[9px] sm:text-[10px] font-bold uppercase tracking-wider text-gray-400 min-w-0">
-                        <span class="truncate max-w-35 sm:max-w-none">Order #LB-OR-{{ strtoupper(substr($order->id, -8)) }}</span>
+                <div class="px-4 sm:px-6 py-3.5 sm:py-4 bg-gray-50/60 border-b border-gray-100 flex flex-wrap items-center justify-between gap-2">
+                    <div class="flex flex-wrap items-center gap-2 sm:gap-3 text-[9px] sm:text-[10px] font-bold uppercase tracking-wider text-gray-500 min-w-0">
+                        <span class="font-black text-black">#LB-OR-{{ $orderData['shortId'] }}</span>
                         <span class="w-1 h-1 bg-gray-300 rounded-full shrink-0"></span>
-                        <span class="shrink-0">{{ $order->createdAt->format('M d, Y') }}</span>
+                        <span class="text-gray-400">{{ $order->createdAt->format('M d, Y • g:i A') }}</span>
                     </div>
-                    {{-- Status Badge --}}
+
                     @php
                         $statusColors = [
-                            'pending'              => 'bg-yellow-50 text-yellow-600 border-yellow-100',
-                            'processing'           => 'bg-blue-50 text-blue-600 border-blue-100',
-                            'to ship'              => 'bg-blue-50 text-blue-600 border-blue-100',
-                            'to receive'           => 'bg-indigo-50 text-indigo-600 border-indigo-100',
-                            'shipped'              => 'bg-indigo-50 text-indigo-600 border-indigo-100',
-                            'delivered'            => 'bg-teal-50 text-teal-600 border-teal-100',
-                            'completed'            => 'bg-green-50 text-green-600 border-green-100',
-                            'cancelled'            => 'bg-red-50 text-red-600 border-red-100',
-                            'cancellation pending' => 'bg-orange-50 text-orange-600 border-orange-100',
+                            'pending'              => 'bg-amber-50 text-amber-700 border-amber-200',
+                            'processing'           => 'bg-blue-50 text-blue-700 border-blue-200',
+                            'to ship'              => 'bg-blue-50 text-blue-700 border-blue-200',
+                            'to receive'           => 'bg-indigo-50 text-indigo-700 border-indigo-200',
+                            'shipped'              => 'bg-purple-50 text-purple-700 border-purple-200',
+                            'delivered'            => 'bg-teal-50 text-teal-700 border-teal-200',
+                            'completed'            => 'bg-emerald-50 text-emerald-700 border-emerald-200',
+                            'cancelled'            => 'bg-red-50 text-red-700 border-red-200',
+                            'cancellation pending' => 'bg-orange-50 text-orange-700 border-orange-200',
                         ];
-                        $statusClass = $statusColors[strtolower($order->status)] ?? 'bg-gray-50 text-gray-600 border-gray-100';
+                        $statusClass = $statusColors[strtolower($order->status)] ?? 'bg-gray-50 text-gray-600 border-gray-200';
                     @endphp
-                    <span class="shrink-0 px-2.5 py-0.5 rounded-full border text-[9px] font-black uppercase tracking-widest {{ $statusClass }}">
+                    <span class="shrink-0 px-3 py-1 rounded-full border text-[9px] font-black uppercase tracking-widest {{ $statusClass }}">
                         {{ $order->status }}
                     </span>
                 </div>
 
-                {{-- Items --}}
-                <div class="px-4 sm:px-6 py-4 space-y-4">
+                {{-- Product Items --}}
+                <div class="px-4 sm:px-6 py-4 space-y-3.5 cursor-pointer" @click="selectedOrder = {{ json_encode($orderData) }}; detailsModal = true;">
                     @foreach($order->items as $item)
                         <div class="flex items-center gap-3 sm:gap-4">
                             {{-- Thumbnail --}}
-                            <div class="w-14 h-16 sm:w-16 sm:h-20 bg-gray-50 rounded-lg overflow-hidden border border-gray-100 shrink-0">
+                            <div class="w-14 h-16 sm:w-16 sm:h-20 bg-gray-50 rounded-xl overflow-hidden border border-gray-100 shrink-0">
                                 @php
                                     $imgSrc = $item->product ? $item->product->getImageUrl() : asset('uploads/products/default.jpg');
                                 @endphp
-                                <img src="{{ $imgSrc }}" class="w-full h-full object-cover"
+                                <img src="{{ $imgSrc }}" class="w-full h-full object-cover object-top"
                                      onerror="this.src='/uploads/products/default.jpg'"
                                      alt="{{ $item->product->name ?? 'Product' }}">
                             </div>
-                            {{-- Name + Meta --}}
-                            <div class="flex-1 min-w-0">
-                                <h4 class="text-xs sm:text-sm font-bold text-black mb-1 truncate">{{ $item->product->name }}</h4>
-                                <div class="flex items-center gap-2 text-[9px] sm:text-[10px] font-bold text-gray-400 uppercase tracking-widest">
-                                    <span>Size: {{ $item->size }}</span>
-                                    <span>·</span>
+
+                            {{-- Title & Meta --}}
+                            <div class="flex-1 min-w-0 space-y-1">
+                                <h4 class="text-xs sm:text-base font-bold text-black truncate group-hover:text-[#C0420A] transition-colors">{{ $item->product->name }}</h4>
+                                <div class="flex flex-wrap items-center gap-2 text-[9px] sm:text-[10px] font-bold text-gray-400 uppercase tracking-widest">
+                                    @if($item->size)<span class="px-2 py-0.5 bg-gray-100 rounded-md text-gray-600">Size: {{ $item->size }}</span>@endif
                                     <span>Qty: {{ $item->quantity }}</span>
                                 </div>
                             </div>
-                            {{-- Price --}}
+
+                            {{-- Item Price --}}
                             <div class="text-right shrink-0">
-                                <div class="text-sm sm:text-base font-bold text-black">₱{{ number_format($item->price) }}</div>
+                                <div class="text-xs sm:text-base font-black text-black">₱{{ number_format($item->price) }}</div>
+                                <div class="text-[9px] text-gray-400 font-bold uppercase tracking-wider">each</div>
                             </div>
                         </div>
                     @endforeach
                 </div>
 
                 {{-- Card Footer --}}
-                <div class="px-4 sm:px-6 py-3 sm:py-4 border-t border-gray-50 bg-white">
+                <div class="px-4 sm:px-6 py-3.5 sm:py-4 border-t border-gray-100 bg-gray-50/40">
                     <div class="flex items-center justify-between gap-3">
-                        <div class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Total Amount</div>
-                        <div class="flex items-center gap-3">
-                            <div class="text-base sm:text-lg font-black text-[#C0422A]">₱{{ number_format($order->totalAmount) }}</div>
-                            <a href="/orders/{{ $order->id }}"
-                               class="px-4 sm:px-5 py-2 rounded-full bg-black text-white text-[9px] font-black uppercase tracking-widest hover:bg-[#C0422A] transition-all whitespace-nowrap">
-                                View Details
-                            </a>
+                        <div>
+                            <div class="text-[9px] font-bold text-gray-400 uppercase tracking-widest">Total Amount</div>
+                            <div class="text-base sm:text-xl font-black text-[#C0420A]">₱{{ number_format($order->totalAmount, 2) }}</div>
                         </div>
+
+                        <button type="button"
+                                @click="selectedOrder = {{ json_encode($orderData) }}; detailsModal = true;"
+                                class="px-5 sm:px-6 py-2.5 rounded-full bg-black text-white text-[9px] sm:text-[10px] font-black uppercase tracking-widest hover:bg-[#C0420A] transition-all whitespace-nowrap shadow-sm active:scale-95 flex items-center gap-1.5 cursor-pointer">
+                            <span>View Details</span>
+                            <span class="text-xs">→</span>
+                        </button>
                     </div>
                 </div>
 
             </div>
         @empty
-            <div class="py-16 sm:py-20 text-center">
-                <div class="w-14 h-14 sm:w-16 sm:h-16 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-4 border border-gray-100">
-                    <svg class="w-7 h-7 sm:w-8 sm:h-8 text-gray-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/>
-                    </svg>
+            <div class="bg-white rounded-3xl p-10 sm:p-16 text-center border border-gray-100 shadow-sm space-y-3">
+                <div class="w-14 h-14 sm:w-16 sm:h-16 bg-gray-50 text-gray-400 rounded-full flex items-center justify-center mx-auto text-2xl border border-gray-100">
+                    🛍️
                 </div>
-                <h3 class="text-xs sm:text-sm font-bold text-black uppercase tracking-widest">No Orders Yet</h3>
-                <p class="text-xs text-gray-400 mt-1">Start your heritage collection today.</p>
+                <h3 class="text-xs sm:text-sm font-black text-black uppercase tracking-widest">No Orders Found</h3>
+                <p class="text-xs text-gray-400 max-w-sm mx-auto">You have not placed any orders matching this filter yet.</p>
+                <div class="pt-2">
+                    <a href="/" class="inline-flex items-center gap-2 px-6 py-3 rounded-full bg-[#C0420A] text-white text-xs font-black uppercase tracking-widest hover:bg-black transition-all shadow-md">
+                        Explore Collection
+                    </a>
+                </div>
             </div>
         @endforelse
     </div>
 
+    {{-- Interactive Order Details Modal / Bottom Sheet --}}
+    <div x-show="detailsModal"
+         x-transition:enter="transition ease-out duration-300"
+         x-transition:enter-start="opacity-0"
+         x-transition:enter-end="opacity-100"
+         x-transition:leave="transition ease-in duration-200"
+         x-transition:leave-start="opacity-100"
+         x-transition:leave-end="opacity-0"
+         style="display: none;"
+         class="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-end sm:items-center justify-center p-0 sm:p-4">
+
+        <div @click.away="detailsModal = false"
+             class="w-full sm:max-w-2xl bg-white rounded-t-3xl sm:rounded-3xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
+
+            {{-- Modal Header Banner --}}
+            <div class="relative bg-linear-to-br from-[#2A2A28] to-black p-5 sm:p-6 text-white shrink-0 flex items-center justify-between">
+                <div>
+                    <div class="flex items-center gap-2 mb-1">
+                        <span class="w-2 h-2 rounded-full bg-[#C0420A]"></span>
+                        <span class="text-[9px] font-black uppercase tracking-widest text-[#C0420A]">Order Details</span>
+                    </div>
+                    <h2 class="text-lg sm:text-2xl font-black uppercase tracking-tight" x-text="selectedOrder ? '#LB-OR-' + selectedOrder.shortId : ''"></h2>
+                    <p class="text-[11px] sm:text-xs text-gray-300 mt-0.5" x-text="selectedOrder ? selectedOrder.createdAt : ''"></p>
+                </div>
+
+                <div class="flex items-center gap-3">
+                    <template x-if="selectedOrder">
+                        <span class="px-3.5 py-1.5 rounded-full border text-[9px] font-black uppercase tracking-wider"
+                              :class="getStatusColor(selectedOrder.status)"
+                              x-text="selectedOrder.status"></span>
+                    </template>
+
+                    <button @click="detailsModal = false"
+                            class="w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 text-white flex items-center justify-center transition-all cursor-pointer">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                    </button>
+                </div>
+            </div>
+
+            {{-- Modal Scrollable Body --}}
+            <div class="p-5 sm:p-6 overflow-y-auto flex-1 space-y-6" x-show="selectedOrder">
+                <template x-if="selectedOrder">
+                    <div class="space-y-6">
+
+                        {{-- Order Timeline Progress --}}
+                        <div class="bg-gray-50/80 p-4 sm:p-6 rounded-2xl border border-gray-100" x-show="selectedOrder.status.toLowerCase() !== 'cancelled'">
+                            <div class="text-[9px] font-black uppercase tracking-widest text-[#C0420A] mb-4">Delivery Progress</div>
+                            <div class="flex items-center justify-between relative px-2">
+                                <div class="absolute left-4 right-4 top-4 h-1 bg-gray-200 z-0 rounded-full"></div>
+                                <div class="absolute left-4 top-4 h-1 bg-[#C0420A] z-0 transition-all duration-500 rounded-full"
+                                     :style="'width: calc(' + (getStepIndex(selectedOrder.status) * 33.33) + '% - 8px);'"></div>
+
+                                <template x-for="(stLabel, idx) in ['Order Placed', 'Processing', 'Shipped', 'Delivered']">
+                                    <div class="flex flex-col items-center gap-1.5 z-10">
+                                        <div class="w-8 h-8 rounded-full border-2 flex items-center justify-center text-[10px] font-black transition-all"
+                                             :class="idx <= getStepIndex(selectedOrder.status) ? 'bg-[#C0420A] border-[#C0420A] text-white shadow-md' : 'bg-white border-gray-200 text-gray-400'">
+                                            <span x-text="idx < getStepIndex(selectedOrder.status) ? '✓' : (idx + 1)"></span>
+                                        </div>
+                                        <span class="text-[8px] sm:text-[9px] font-bold uppercase tracking-wider text-center"
+                                              :class="idx <= getStepIndex(selectedOrder.status) ? 'text-[#C0420A]' : 'text-gray-400'"
+                                              x-text="stLabel"></span>
+                                    </div>
+                                </template>
+                            </div>
+                        </div>
+
+                        {{-- Cancelled Alert --}}
+                        <div class="p-4 bg-red-50 border border-red-100 rounded-2xl flex items-center gap-3 text-xs" x-show="selectedOrder.status.toLowerCase() === 'cancelled'">
+                            <span class="text-xl">⚠️</span>
+                            <div>
+                                <div class="font-black uppercase tracking-wider text-red-700">Order Cancelled</div>
+                                <p class="text-[11px] text-red-500 mt-0.5">This order has been cancelled and cannot be fulfilled.</p>
+                            </div>
+                        </div>
+
+                        {{-- Purchased Items --}}
+                        <div class="space-y-3">
+                            <div class="flex items-center justify-between">
+                                <span class="text-[9px] font-black uppercase tracking-widest text-[#C0420A]">Items Ordered</span>
+                                <span class="text-[9px] font-bold text-gray-400 uppercase tracking-widest" x-text="selectedOrder.items.length + ' item(s)'"></span>
+                            </div>
+
+                            <div class="space-y-2">
+                                <template x-for="item in selectedOrder.items" :key="item.id">
+                                    <div class="flex items-center gap-3 bg-white border border-gray-100 rounded-2xl p-3 shadow-xs">
+                                        <div class="w-14 h-16 bg-gray-50 rounded-xl overflow-hidden shrink-0 border border-gray-100">
+                                            <img :src="item.image" class="w-full h-full object-cover object-top" x-on:error="$event.target.src='/uploads/products/default.jpg'">
+                                        </div>
+                                        <div class="flex-1 min-w-0">
+                                            <h4 class="text-xs sm:text-sm font-bold text-black truncate" x-text="item.name"></h4>
+                                            <div class="flex flex-wrap gap-2 text-[9px] font-bold text-gray-400 uppercase tracking-widest mt-1">
+                                                <span x-show="item.size" class="px-2 py-0.5 bg-gray-100 rounded text-gray-600" x-text="'Size: ' + item.size"></span>
+                                                <span x-text="'Qty: ' + item.quantity"></span>
+                                            </div>
+                                        </div>
+                                        <div class="text-right shrink-0">
+                                            <div class="text-xs sm:text-sm font-black text-black" x-text="'₱' + item.subtotal"></div>
+                                            <div class="text-[9px] text-gray-400 font-bold uppercase tracking-wider" x-text="'₱' + item.price + ' ea'"></div>
+                                        </div>
+                                    </div>
+                                </template>
+                            </div>
+
+                            <div class="flex items-center justify-between p-4 bg-gray-50 rounded-2xl border border-gray-100">
+                                <span class="text-xs font-bold text-gray-500 uppercase tracking-wider">Grand Total Amount</span>
+                                <span class="text-lg font-black text-[#C0420A]" x-text="'₱' + selectedOrder.totalAmount"></span>
+                            </div>
+                        </div>
+
+                        {{-- Payment & Shipping Cards Grid --}}
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            {{-- Payment Card --}}
+                            <div class="bg-gray-50/80 p-4 rounded-2xl border border-gray-100 space-y-2.5 text-xs">
+                                <div class="flex items-center justify-between">
+                                    <span class="text-[9px] font-black uppercase tracking-widest text-[#C0420A]">Payment Info</span>
+                                    <span class="px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider bg-emerald-50 text-emerald-700 border border-emerald-200"
+                                          x-text="selectedOrder.paymentStatus"></span>
+                                </div>
+                                <div class="flex items-center justify-between pt-1">
+                                    <span class="text-gray-400 font-bold text-[9px] uppercase tracking-wider">Method</span>
+                                    <span class="font-black text-black uppercase" x-text="selectedOrder.paymentMethod"></span>
+                                </div>
+                                <div class="pt-2 border-t border-gray-200/60" x-show="selectedOrder.paymentReference">
+                                    <span class="text-gray-400 font-bold text-[9px] uppercase tracking-wider block mb-0.5">Reference No.</span>
+                                    <span class="font-mono text-xs font-bold text-gray-700 bg-white px-2 py-1 rounded border border-gray-100 block truncate" x-text="selectedOrder.paymentReference"></span>
+                                </div>
+                            </div>
+
+                            {{-- Shipping Card --}}
+                            <div class="bg-gray-50/80 p-4 rounded-2xl border border-gray-100 space-y-2 text-xs">
+                                <div class="text-[9px] font-black uppercase tracking-widest text-[#C0420A]">Ship To</div>
+                                <div>
+                                    <div class="font-black text-black" x-text="selectedOrder.recipient"></div>
+                                    <p class="text-gray-600 font-medium mt-0.5 leading-relaxed text-[11px]">
+                                        <span x-text="selectedOrder.streetLine"></span><br>
+                                        <span x-text="selectedOrder.locality"></span>
+                                        <template x-if="selectedOrder.postalCode">
+                                            <span x-text="' ' + selectedOrder.postalCode"></span>
+                                        </template>
+                                    </p>
+                                    <div class="text-[#C0420A] font-bold mt-1 text-[11px]" x-show="selectedOrder.phone" x-text="'📞 ' + selectedOrder.phone"></div>
+                                </div>
+                            </div>
+                        </div>
+
+                        {{-- Sold By Seller Card --}}
+                        <div class="bg-gray-50/80 p-4 rounded-2xl border border-gray-100 flex items-center justify-between gap-3" x-show="selectedOrder.seller">
+                            <div class="flex items-center gap-3">
+                                <div class="w-10 h-10 rounded-xl bg-linear-to-tr from-[#3D2B1F] to-[#C0420A] text-white flex items-center justify-center font-black text-sm shrink-0 overflow-hidden">
+                                    <template x-if="selectedOrder.seller && selectedOrder.seller.photo">
+                                        <img :src="selectedOrder.seller.photo" class="w-full h-full object-cover">
+                                    </template>
+                                    <template x-if="!selectedOrder.seller || !selectedOrder.seller.photo">
+                                        <span x-text="selectedOrder.seller ? selectedOrder.seller.name[0].toUpperCase() : 'S'"></span>
+                                    </template>
+                                </div>
+                                <div>
+                                    <div class="text-xs font-black text-black" x-text="selectedOrder.seller ? selectedOrder.seller.name : ''"></div>
+                                    <div class="text-[9px] font-bold text-gray-400 uppercase tracking-widest" x-text="selectedOrder.seller && selectedOrder.seller.isVerified ? 'Verified Artisan ✓' : 'Artisan Seller'"></div>
+                                </div>
+                            </div>
+                            <template x-if="selectedOrder.seller">
+                                <a :href="'/shops/' + selectedOrder.seller.id" class="px-3.5 py-1.5 bg-white border border-gray-200 hover:border-[#C0420A] text-[9px] font-black uppercase tracking-widest text-[#C0420A] rounded-full transition-all">
+                                    Shop →
+                                </a>
+                            </template>
+                        </div>
+
+                    </div>
+                </template>
+            </div>
+
+            {{-- Modal Footer --}}
+            <div class="p-4 sm:p-5 bg-gray-50 border-t border-gray-100 flex gap-3 shrink-0">
+                <button @click="detailsModal = false"
+                    class="w-full py-3 sm:py-3.5 rounded-full bg-black text-white hover:bg-[#C0420A] text-[10px] font-black uppercase tracking-widest transition-all cursor-pointer shadow-sm active:scale-95">
+                    Close Details
+                </button>
+            </div>
+        </div>
+    </div>
+
 </div>
 @endsection
-

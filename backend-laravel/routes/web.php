@@ -172,6 +172,7 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->group(function () {
 // Seller Routes
 Route::middleware(['auth', 'seller'])->prefix('seller')->group(function () {
     Route::get('/dashboard', [\App\Http\Controllers\DashboardController::class, 'sellerDashboard'])->name('seller.dashboard');
+    Route::get('/analytics', [\App\Http\Controllers\AnalyticsController::class, 'sellerAnalytics'])->name('seller.analytics');
     Route::get('/export-report', [\App\Http\Controllers\DashboardController::class, 'exportSellerReport'])->name('seller.export');
     Route::get('/profile', [\App\Http\Controllers\DashboardController::class, 'sellerProfile'])->name('seller.profile');
     Route::put('/profile', [\App\Http\Controllers\DashboardController::class, 'updateSellerProfile'])->name('seller.profile.update');
@@ -225,16 +226,26 @@ Route::get('/storage/{path}', function ($path) {
 
     $candidates = [
         storage_path('app/public/' . $cleanPath),
+        storage_path('app/public/profiles/' . $cleanPath),
         storage_path('app/public/products/' . $cleanPath),
         public_path('storage/' . $cleanPath),
+        public_path('storage/profiles/' . $cleanPath),
         public_path('uploads/' . $cleanPath),
         public_path('uploads/products/' . $cleanPath),
+        public_path('uploads/profiles/' . $cleanPath),
         base_path('uploads/' . $cleanPath),
     ];
 
     foreach ($candidates as $filePath) {
         if (file_exists($filePath) && is_file($filePath)) {
             return response()->file($filePath);
+        }
+    }
+
+    if (str_contains($cleanPath, 'profiles')) {
+        $defaultAvatar = public_path('images/default-avatar.png');
+        if (file_exists($defaultAvatar)) {
+            return response()->file($defaultAvatar);
         }
     }
 
