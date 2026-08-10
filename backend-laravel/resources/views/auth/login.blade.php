@@ -78,7 +78,7 @@
                     name="email" 
                     value="{{ old('email') }}"
                     required 
-                    class="w-full h-14 bg-[#F9F6F2] rounded-full px-8 text-sm font-medium border-2 @error('email') border-red-400 @else border-transparent @enderror focus:border-[#C0422A] focus:bg-white outline-none transition-all"
+                    class="w-full h-14 bg-[#F9F6F2] rounded-full px-8 text-sm font-medium border-2 {{ $errors->has('email') ? 'border-red-400' : 'border-transparent' }} focus:border-[#C0422A] focus:bg-white outline-none transition-all"
                 >
                 @error('email')
                     <p class="text-[10px] font-bold text-red-500 px-5 mt-1">{{ $message }}</p>
@@ -95,7 +95,7 @@
                         :type="show ? 'text' : 'password'"
                         name="password" 
                         required 
-                        class="w-full h-14 bg-[#F9F6F2] rounded-full px-8 pr-14 text-sm font-medium border-2 @error('password') border-red-400 @else border-transparent @enderror focus:border-[#C0422A] focus:bg-white outline-none transition-all"
+                        class="w-full h-14 bg-[#F9F6F2] rounded-full px-8 pr-14 text-sm font-medium border-2 {{ $errors->has('password') ? 'border-red-400' : 'border-transparent' }} focus:border-[#C0422A] focus:bg-white outline-none transition-all"
                     >
                     <button type="button" @click="show = !show"
                         class="absolute right-5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-[#C0422A] transition-colors">
