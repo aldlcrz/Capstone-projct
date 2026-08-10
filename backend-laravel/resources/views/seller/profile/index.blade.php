@@ -87,6 +87,19 @@
 
         {{-- Quick Links --}}
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <a href="{{ route('seller.products.index') }}" class="flex items-center justify-between p-4 bg-white rounded-2xl border border-gray-100 hover:border-[#C0420A] transition-all">
+                <div class="flex items-center gap-3">
+                    <div class="w-9 h-9 rounded-xl bg-orange-50 border border-orange-100 flex items-center justify-center">
+                        <svg class="w-4 h-4 text-[#C0420A]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/></svg>
+                    </div>
+                    <div>
+                        <span class="text-xs font-bold text-black uppercase block">My Products</span>
+                        <span class="text-[9px] text-gray-400 font-medium">Manage & edit catalogue listings</span>
+                    </div>
+                </div>
+                <svg class="w-4 h-4 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+            </a>
+
             <button id="payment-methods" onclick="document.getElementById('payment-modal').classList.remove('hidden')" class="flex items-center justify-between p-4 bg-white rounded-2xl border border-gray-100 hover:border-[#C0420A] transition-all text-left">
                 <div class="flex items-center gap-3">
                     <div class="w-9 h-9 rounded-xl bg-blue-50 border border-blue-100 flex items-center justify-center">
