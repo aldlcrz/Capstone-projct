@@ -39,7 +39,7 @@
     @endif
 
     {{-- Toggle Form --}}
-    <div class="bg-white dark:bg-[#1A1A2B] rounded-2xl border border-(--border) p-6 space-y-5" x-data="{ showModal: false }">
+    <div class="bg-white rounded-2xl border border-(--border) p-6 space-y-5" x-data="{ showModal: false }">
         <h2 class="text-xs font-bold uppercase tracking-widest text-(--muted) pb-3 border-b border-(--border)">Toggle Maintenance</h2>
 
         <form id="maintenanceForm" action="{{ route('admin.maintenance.toggle') }}" method="POST" class="space-y-5" @submit.prevent="showModal = true">
@@ -72,7 +72,7 @@
              x-transition:leave-end="opacity-0"
              x-cloak>
             <div @click.outside="showModal = false" 
-                 class="bg-white dark:bg-[#1A1A2B] w-full max-w-md rounded-3xl border border-gray-100 dark:border-[#2E2E42] shadow-2xl p-6 relative overflow-hidden text-left"
+                 class="bg-white w-full max-w-md rounded-3xl border border-gray-100 shadow-2xl p-6 relative overflow-hidden text-left"
                  x-transition:enter="transition ease-out duration-300 transform"
                  x-transition:enter-start="opacity-0 scale-95 translate-y-4"
                  x-transition:enter-end="opacity-100 scale-100 translate-y-0"
@@ -83,13 +83,13 @@
                 <!-- Icon & Header -->
                 <div class="flex items-start gap-4 mb-6">
                     @if($isMaintenanceMode)
-                        <div class="w-10 h-10 rounded-full bg-green-50 dark:bg-green-500/10 flex items-center justify-center text-green-600 dark:text-green-400 shrink-0 shadow-sm border border-green-100 dark:border-green-500/20">
+                        <div class="w-10 h-10 rounded-full bg-green-50 flex items-center justify-center text-green-600 shrink-0 shadow-sm border border-green-100">
                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
                             </svg>
                         </div>
                     @else
-                        <div class="w-10 h-10 rounded-full bg-amber-50 dark:bg-amber-500/10 flex items-center justify-center text-amber-600 dark:text-amber-400 shrink-0 shadow-sm border border-amber-100 dark:border-amber-500/20 animate-pulse">
+                        <div class="w-10 h-10 rounded-full bg-amber-50 flex items-center justify-center text-amber-600 shrink-0 shadow-sm border border-amber-100 animate-pulse">
                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
                             </svg>
@@ -104,15 +104,15 @@
                 </div>
 
                 <!-- Warning/Information Details -->
-                <div class="bg-gray-50 dark:bg-black/10 rounded-2xl p-4 border border-gray-100 dark:border-white/5 space-y-3 mb-6">
+                <div class="bg-gray-50 rounded-2xl p-4 border border-gray-100 space-y-3 mb-6">
                     @if($isMaintenanceMode)
-                        <p class="text-xs text-gray-600 dark:text-gray-400 leading-relaxed font-medium">
+                        <p class="text-xs text-gray-600 leading-relaxed font-medium">
                             Enabling the website will immediately restore public access to the entire platform. 
                             Regular customers will be able to browse and purchase, and sellers can access their portals.
                         </p>
                     @else
-                        <p class="text-xs text-amber-800 dark:text-amber-500 font-bold uppercase tracking-wider text-[10px]">What happens when active?</p>
-                        <ul class="text-xs text-gray-500 dark:text-gray-400 space-y-2 list-disc list-inside leading-relaxed font-medium">
+                        <p class="text-xs text-amber-800 font-bold uppercase tracking-wider text-[10px]">What happens when active?</p>
+                        <ul class="text-xs text-gray-500 space-y-2 list-disc list-inside leading-relaxed font-medium">
                             <li><span class="font-bold text-(--charcoal)">Customers / Guests</span> will be blocked from accessing any shop pages and see the notice.</li>
                             <li><span class="font-bold text-(--charcoal)">Sellers</span> will be blocked from their portals, product listings, and order tracking.</li>
                             <li><span class="font-bold text-(--charcoal)">API Services</span> will return 503 errors and be disabled.</li>
@@ -122,9 +122,9 @@
                 </div>
 
                 <!-- Actions -->
-                <div class="flex items-center justify-end gap-3 pt-3 border-t border-gray-100 dark:border-white/5">
+                <div class="flex items-center justify-end gap-3 pt-3 border-t border-gray-100">
                     <button type="button" @click="showModal = false" 
-                        class="px-5 py-2.5 rounded-xl border border-(--border) text-xs font-bold uppercase tracking-wider text-gray-500 hover:bg-gray-50 dark:hover:bg-white/5 transition-all">
+                        class="px-5 py-2.5 rounded-xl border border-(--border) text-xs font-bold uppercase tracking-wider text-gray-500 hover:bg-gray-50 transition-all">
                         Cancel
                     </button>
                     <button type="button" @click="document.getElementById('maintenanceForm').submit()"

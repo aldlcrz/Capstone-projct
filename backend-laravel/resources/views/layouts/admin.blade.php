@@ -1,24 +1,14 @@
 <!DOCTYPE html>
-<html lang="en" x-data="adminApp()" :class="{ 'dark': darkMode }" x-init="init()">
+<html lang="en" x-data="adminApp()" x-init="init()">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>{{ $title ?? 'Admin Panel' }} | LumBarong</title>
 
-    {{-- ① BLOCKING: apply dark class BEFORE first paint so there is no flash --}}
-    <script>
-        (function () {
-            if (localStorage.getItem('adminDarkMode') === 'true') {
-                document.documentElement.classList.add('dark');
-            }
-        })();
-    </script>
-
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
         tailwind.config = {
-            darkMode: 'class',          /* ② tell Tailwind about class-based dark mode */
             theme: {
                 extend: {
                     aspectRatio: {
@@ -42,35 +32,6 @@
             --charcoal: #2A2A2A;
             --muted: #8E8E8E;
             --border: #E5E5E5;
-        }
-        /* ── Dark mode overrides ─────────────────────────────────── */
-        .dark {
-            --cream: #1E1E2E;
-            --charcoal: #F0EEE9;
-            --muted: #9A9AB0;
-            --border: #2E2E42;
-        }
-        .dark body { background-color: #13131F; }
-        .dark aside { background-color: #1A1A2B !important; border-color: #2E2E42 !important; }
-        .dark header { background-color: #1A1A2B !important; border-color: #2E2E42 !important; }
-        .dark main { background-color: #13131F !important; }
-        /* Dark mode toggle track */
-        .toggle-track {
-            width: 40px; height: 22px;
-            border-radius: 999px;
-            transition: background 0.3s;
-            position: relative;
-            cursor: pointer;
-            flex-shrink: 0;
-        }
-        .toggle-thumb {
-            width: 16px; height: 16px;
-            border-radius: 50%;
-            background: white;
-            position: absolute;
-            top: 3px; left: 3px;
-            transition: transform 0.25s cubic-bezier(.4,0,.2,1), box-shadow 0.25s;
-            box-shadow: 0 1px 3px rgba(0,0,0,.3);
         }
         body { font-family: 'Inter', sans-serif; background-color: #F7F3EE; }
         .font-serif { font-family: 'Playfair Display', serif; }
@@ -151,29 +112,6 @@
                 </nav>
 
                 <div class="mt-6 pt-6 border-t border-(--border) shrink-0 space-y-3">
-                    {{-- Dark Mode Toggle --}}
-                    <button
-                        @click="toggleDark()"
-                        class="flex items-center justify-between w-full px-4 py-3 rounded-xl transition-all duration-300 hover:bg-(--cream) group"
-                        title="Toggle dark mode"
-                    >
-                        <div class="flex items-center gap-3">
-                            {{-- Sun icon (shown in dark mode) --}}
-                            <svg x-show="darkMode" class="w-5 h-5 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364-6.364l-.707.707M6.343 17.657l-.707.707M17.657 17.657l-.707-.707M6.343 6.343l-.707-.707M12 8a4 4 0 100 8 4 4 0 000-8z"/>
-                            </svg>
-                            {{-- Moon icon (shown in light mode) --}}
-                            <svg x-show="!darkMode" class="w-5 h-5 text-(--muted) group-hover:text-(--rust)" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"/>
-                            </svg>
-                            <span class="text-sm font-medium text-(--charcoal) group-hover:text-(--rust) transition-colors" x-text="darkMode ? 'Light Mode' : 'Dark Mode'"></span>
-                        </div>
-                        {{-- Toggle track --}}
-                        <div class="toggle-track" :style="darkMode ? 'background:#C0420A' : 'background:#D1D5DB'">
-                            <div class="toggle-thumb" :style="darkMode ? 'transform:translateX(18px)' : ''"></div>
-                        </div>
-                    </button>
-
                     {{-- User card --}}
                     <div class="flex items-center gap-3 px-2">
                         <div class="w-10 h-10 rounded-xl bg-(--charcoal) text-white flex items-center justify-center font-bold">
@@ -335,77 +273,12 @@
     <x-broadcast-notification />
     @stack('scripts')
     <script>
-        /* ③ dark mode CSS injected AFTER Tailwind CDN — always wins the cascade */
-        (function () {
-            var DARK_CSS = [
-                /* ── Layout ─────────────────────────────────────────── */
-                'html.dark body{background-color:#13131F}',
-                'html.dark aside{background-color:#1A1A2B!important;border-color:#2E2E42!important}',
-                'html.dark header{background-color:#1A1A2B!important;border-color:#2E2E42!important}',
-                'html.dark main{background-color:#13131F!important}',
-                /* ── Panels / cards ──────────────────────────────────── */
-                'html.dark .bg-white{background-color:#1E1E2E!important}',
-                'html.dark .bg-white\/95{background-color:rgba(30,30,46,.97)!important}',
-                'html.dark .bg-gray-50{background-color:#18182A!important}',
-                'html.dark .bg-gray-100{background-color:#252538!important}',
-                'html.dark .bg-gray-200{background-color:#2E2E42!important}',
-                'html.dark .bg-gray-300{background-color:#3A3A54!important}',
-                /* ── Borders ─────────────────────────────────────────── */
-                'html.dark .border-gray-50,html.dark .border-gray-100,html.dark .border-gray-200{border-color:#2E2E42!important}',
-                'html.dark .divide-y>*+*,html.dark .divide-gray-100>*+*{border-color:#2E2E42!important}',
-                /* ── Text ────────────────────────────────────────────── */
-                'html.dark .text-black{color:#E8E6E1!important}',
-                'html.dark .text-gray-300{color:#5A5A7A!important}',
-                'html.dark .text-gray-400{color:#7A7A9A!important}',
-                'html.dark .text-gray-500{color:#8A8AA8!important}',
-                'html.dark .text-gray-600{color:#9A9AB8!important}',
-                'html.dark .text-gray-700{color:#B0B0D0!important}',
-                'html.dark .text-gray-800{color:#D0CEE8!important}',
-                'html.dark .text-gray-900{color:#E8E6F8!important}',
-                /* ── Inputs ──────────────────────────────────────────── */
-                'html.dark input[type=text],html.dark input[type=email],html.dark input[type=number],html.dark input[type=password],html.dark input[type=search],html.dark input[type=date],html.dark textarea,html.dark select{background-color:#252538!important;border-color:#2E2E42!important;color:#E8E6E1!important}',
-                /* ── Tables ─────────────────────────────────────────── */
-                'html.dark table{background-color:#1E1E2E}',
-                'html.dark thead,html.dark thead tr{background-color:#191929!important}',
-                'html.dark tbody tr:hover{background-color:rgba(255,255,255,.035)!important}',
-                'html.dark td,html.dark th{border-color:#2E2E42!important}',
-                /* ── Hover states ────────────────────────────────────── */
-                'html.dark .hover\\:bg-gray-50:hover{background-color:rgba(255,255,255,.05)!important}',
-                'html.dark .hover\\:bg-gray-100:hover{background-color:rgba(255,255,255,.08)!important}',
-                'html.dark .hover\\:shadow-md:hover{box-shadow:0 4px 16px rgba(0,0,0,.5)!important}',
-                /* ── Dropdowns / modals ──────────────────────────────── */
-                'html.dark .shadow-2xl.rounded-2xl,html.dark .shadow-xl.rounded-2xl,html.dark .shadow-lg.rounded-2xl{background-color:#1E1E2E!important}',
-                /* ── Shadows ─────────────────────────────────────────── */
-                'html.dark .shadow-sm{box-shadow:0 1px 6px rgba(0,0,0,.45)!important}',
-                /* ── Amber alerts ────────────────────────────────────── */
-                'html.dark .bg-amber-50{background-color:rgba(251,191,36,.10)!important}',
-                'html.dark .border-amber-200{border-color:rgba(251,191,36,.3)!important}',
-                'html.dark .text-amber-700{color:#FBB924!important}',
-                /* ── Red / danger ────────────────────────────────────── */
-                'html.dark .bg-red-50{background-color:rgba(239,68,68,.12)!important}',
-            ].join('\n');
-
-            var el = document.getElementById('admin-dark-overrides');
-            if (!el) {
-                el = document.createElement('style');
-                el.id = 'admin-dark-overrides';
-                document.head.appendChild(el);
-            }
-            el.textContent = DARK_CSS;
-        })();
-
         function adminApp() {
             return {
-                darkMode: false,
                 isMobileMenuOpen: false,
                 init() {
-                    this.darkMode = localStorage.getItem('adminDarkMode') === 'true';
-                    document.documentElement.classList.toggle('dark', this.darkMode);
-                },
-                toggleDark() {
-                    this.darkMode = !this.darkMode;
-                    localStorage.setItem('adminDarkMode', this.darkMode);
-                    document.documentElement.classList.toggle('dark', this.darkMode);
+                    localStorage.removeItem('adminDarkMode');
+                    document.documentElement.classList.remove('dark');
                 }
             }
         }
