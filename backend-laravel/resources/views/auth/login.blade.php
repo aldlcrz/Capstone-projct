@@ -25,6 +25,18 @@
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
 </head>
 <body class="min-h-screen flex items-center justify-center p-6 relative overflow-hidden" id="auth-body">
+    @php
+        $gcashNumber = \App\Models\SystemSetting::where('key', 'superadmin_gcash_number')->value('value') ?? '';
+        $gcashQr     = \App\Models\SystemSetting::where('key', 'superadmin_gcash_qr')->value('value') ?? '';
+        $mayaNumber  = \App\Models\SystemSetting::where('key', 'superadmin_maya_number')->value('value') ?? '';
+        $mayaQr      = \App\Models\SystemSetting::where('key', 'superadmin_maya_qr')->value('value') ?? '';
+        $errMsg      = $errors->first();
+        $isFrozenErr = $errors->any() && (
+            str_contains(strtolower((string)$errMsg), 'commission') || 
+            str_contains(strtolower((string)$errMsg), 'frozen')
+        );
+    @endphp
+
     <!-- Subtle warm blobs -->
     <div class="absolute top-0 right-0 w-140 h-140 rounded-full -translate-y-1/2 translate-x-1/3 blur-3xl opacity-[0.04] pointer-events-none bg-[#C0422A]"></div>
     <div class="absolute bottom-0 left-0 w-95 h-95 rounded-full translate-y-1/2 -translate-x-1/3 blur-3xl opacity-[0.12] pointer-events-none bg-[#D4B896]"></div>
@@ -182,17 +194,6 @@
     </div>
 
     <!-- ==================== ACCOUNT FROZEN / LOGIN ERROR MODALS ==================== -->
-    @php
-        $gcashNumber = \App\Models\SystemSetting::where('key', 'superadmin_gcash_number')->value('value') ?? '';
-        $gcashQr     = \App\Models\SystemSetting::where('key', 'superadmin_gcash_qr')->value('value') ?? '';
-        $mayaNumber  = \App\Models\SystemSetting::where('key', 'superadmin_maya_number')->value('value') ?? '';
-        $mayaQr      = \App\Models\SystemSetting::where('key', 'superadmin_maya_qr')->value('value') ?? '';
-        $errMsg      = $errors->first();
-        $isFrozenErr = $errors->any() && (
-            str_contains(strtolower($errMsg), 'commission') || 
-            str_contains(strtolower($errMsg), 'frozen')
-        );
-    @endphp
 
     @if(session('payment_submitted'))
     <!-- Payment Submitted Success Modal -->
