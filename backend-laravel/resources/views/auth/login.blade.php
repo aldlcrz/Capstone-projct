@@ -58,6 +58,19 @@
 
         <form action="/login" method="POST" class="space-y-6">
             @csrf
+
+            @if($errors->any() && !$isFrozenErr)
+            <div class="p-4 rounded-2xl bg-red-50 border border-red-200/80 text-red-700 text-xs font-medium flex items-start gap-3 shadow-sm mb-2">
+                <div class="w-6 h-6 rounded-full bg-red-100 text-red-600 flex items-center justify-center shrink-0 font-bold text-xs mt-0.5">
+                    !
+                </div>
+                <div class="grow">
+                    <h4 class="font-bold text-red-800 uppercase tracking-wider text-[10px] mb-0.5">Authentication Error</h4>
+                    <p class="leading-relaxed text-red-600 text-xs">{{ $errors->first() }}</p>
+                </div>
+            </div>
+            @endif
+
             <div class="space-y-2">
                 <label class="text-[10px] font-bold uppercase tracking-widest px-5 block text-gray-500">Email Address</label>
                 <input 
@@ -65,8 +78,11 @@
                     name="email" 
                     value="{{ old('email') }}"
                     required 
-                    class="w-full h-14 bg-[#F9F6F2] rounded-full px-8 text-sm font-medium border-2 border-transparent focus:border-[#C0422A] focus:bg-white outline-none transition-all"
+                    class="w-full h-14 bg-[#F9F6F2] rounded-full px-8 text-sm font-medium border-2 @error('email') border-red-400 @else border-transparent @enderror focus:border-[#C0422A] focus:bg-white outline-none transition-all"
                 >
+                @error('email')
+                    <p class="text-[10px] font-bold text-red-500 px-5 mt-1">{{ $message }}</p>
+                @enderror
             </div>
 
             <div class="space-y-2" x-data="{ show: false }">
@@ -79,7 +95,7 @@
                         :type="show ? 'text' : 'password'"
                         name="password" 
                         required 
-                        class="w-full h-14 bg-[#F9F6F2] rounded-full px-8 pr-14 text-sm font-medium border-2 border-transparent focus:border-[#C0422A] focus:bg-white outline-none transition-all"
+                        class="w-full h-14 bg-[#F9F6F2] rounded-full px-8 pr-14 text-sm font-medium border-2 @error('password') border-red-400 @else border-transparent @enderror focus:border-[#C0422A] focus:bg-white outline-none transition-all"
                     >
                     <button type="button" @click="show = !show"
                         class="absolute right-5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-[#C0422A] transition-colors">
@@ -97,6 +113,9 @@
                         </svg>
                     </button>
                 </div>
+                @error('password')
+                    <p class="text-[10px] font-bold text-red-500 px-5 mt-1">{{ $message }}</p>
+                @enderror
             </div>
 
             <button type="submit" class="w-full h-14 bg-[#3D2B1F] text-white rounded-full font-bold uppercase tracking-[0.2em] text-[10px] shadow-xl shadow-black/10 hover:bg-[#C0422A] transition-all">
@@ -179,7 +198,7 @@
     <!-- Payment Submitted Success Modal -->
     <div x-data="{ show: true }" x-show="show"
          class="fixed inset-0 z-99999 flex items-center justify-center p-4 bg-black/60 backdrop-blur-md"
-         style="display: none;" x-cloak>
+         x-cloak>
         <div @click.away="show = false" class="w-full max-w-md bg-white rounded-4xl p-6 lg:p-8 shadow-2xl border border-gray-100 text-center space-y-4">
             <div class="w-14 h-14 rounded-2xl bg-green-50 text-green-600 border border-green-200 flex items-center justify-center mx-auto shadow-sm">
                 <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"></path></svg>
@@ -204,7 +223,6 @@
         x-transition:leave-start="opacity-100 scale-100"
         x-transition:leave-end="opacity-0 scale-95"
         class="fixed inset-0 z-9999 flex items-center justify-center p-4 bg-black/60 backdrop-blur-md overflow-y-auto"
-        style="display: none;"
         x-cloak
         @keydown.escape.window="show = false"
     >
