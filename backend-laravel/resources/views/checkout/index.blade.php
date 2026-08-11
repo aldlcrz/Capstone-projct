@@ -1,7 +1,7 @@
 @extends('layouts.app')
 
 @section('content')
-<div class="max-w-300 mx-auto px-4 py-4 sm:py-6 lg:py-8" x-data="checkoutApp(
+<div class="max-w-4xl mx-auto px-4 py-4 sm:py-6 lg:py-8" x-data="checkoutApp(
     @js($addresses->first() ?? [
         'recipientName' => '',
         'phone' => '',
@@ -18,12 +18,12 @@
 
     {{-- Back Link & Page Title Header --}}
     <div class="mb-6 lg:mb-8">
-        <a href="/cart" class="inline-flex items-center gap-2 text-[10px] font-bold text-gray-400 uppercase tracking-widest hover:text-[#C0422A] transition-colors mb-3">
+        <button type="button" @click="if (step === 2) { step = 1; window.scrollTo({ top: 0, behavior: 'smooth' }); } else if (window.history.length > 1) { window.history.back(); } else { window.location.href='/cart'; }" class="inline-flex items-center gap-2 text-[10px] font-bold text-gray-400 uppercase tracking-widest hover:text-[#C0422A] transition-colors mb-3">
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
             </svg>
-            Back to Cart
-        </a>
+            Back
+        </button>
         <div class="flex items-center justify-between flex-wrap gap-4">
             <div>
                 <div class="flex items-center gap-2 mb-1">
@@ -37,49 +37,19 @@
         </div>
     </div>
 
-    <!-- Stepper Header (Desktop) -->
-    <div class="hidden lg:flex items-center gap-8 mb-8 bg-white rounded-2xl border border-gray-100 p-4 shadow-xs">
-        <div class="flex items-center gap-3 flex-1 pb-1 border-b-2 transition-all duration-300" :class="step >= 1 ? 'border-[#C0422A]' : 'border-transparent text-gray-300'">
-            <div class="w-8 h-8 rounded-full flex items-center justify-center font-bold text-xs transition-colors" :class="step > 1 ? 'bg-[#C0422A] text-white' : (step === 1 ? 'bg-[#C0422A] text-white shadow-md shadow-[#C0422A]/20' : 'bg-gray-100 text-gray-400')">
-                <template x-if="step > 1">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"></path></svg>
-                </template>
-                <template x-if="step === 1">
-                    <span>1</span>
-                </template>
-            </div>
-            <div>
-                <div class="text-xs font-bold uppercase tracking-wider" :class="step >= 1 ? 'text-[#C0422A]' : 'text-gray-400'">Step 1</div>
-                <div class="text-sm font-bold whitespace-nowrap" :class="step >= 1 ? 'text-gray-900' : 'text-gray-400'">Shipping Information</div>
-            </div>
-        </div>
 
-        <div class="flex items-center text-gray-300">
-            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
-        </div>
-
-        <div class="flex items-center gap-3 flex-1 pb-1 border-b-2 transition-all duration-300" :class="step >= 2 ? 'border-[#C0422A]' : 'border-transparent text-gray-300'">
-            <div class="w-8 h-8 rounded-full flex items-center justify-center font-bold text-xs transition-colors" :class="step >= 2 ? 'bg-[#C0422A] text-white shadow-md shadow-[#C0422A]/20' : 'bg-gray-100 text-gray-400'">
-                <span>2</span>
-            </div>
-            <div>
-                <div class="text-xs font-bold uppercase tracking-wider" :class="step >= 2 ? 'text-[#C0422A]' : 'text-gray-400'">Step 2</div>
-                <div class="text-sm font-bold whitespace-nowrap" :class="step >= 2 ? 'text-gray-900' : 'text-gray-400'">Payment Details</div>
-            </div>
-        </div>
-    </div>
 
     <form id="checkout-form" action="{{ route('checkout.store') }}" method="POST" enctype="multipart/form-data">
         @csrf
         <input type="hidden" name="mode" value="{{ $mode }}">
         <input type="hidden" name="shippingAddress" :value="JSON.stringify(address)">
 
-        <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start pb-32 lg:pb-0">
+        <div class="space-y-6 pb-32 lg:pb-0 w-full">
             <!-- Main Content Area -->
-            <div class="lg:col-span-7 space-y-6">
+            <div class="space-y-6 w-full">
                 
                 <!-- STEP 1: SHIPPING INFORMATION -->
-                <div x-show="step === 1" x-transition>
+                <div x-show="step === 1" x-transition class="space-y-6">
                     
                     {{-- Delivery Address Card --}}
                     <div class="bg-white rounded-2xl border border-gray-100 p-4 sm:p-6 shadow-sm mb-6 relative overflow-hidden">
@@ -218,34 +188,24 @@
                 </div>
 
                 <!-- STEP 2: PAYMENT METHOD & PROOF UPLOAD -->
-                <div x-show="step === 2" x-transition>
+                <div x-show="step === 2" x-transition class="space-y-6">
                     <div class="mb-6">
                         <h2 class="font-serif text-xl lg:text-2xl font-bold text-black mb-1">Select Payment Channel</h2>
                         <p class="text-xs lg:text-sm text-gray-500 font-medium">Choose your e-wallet payment option below and submit your reference receipt.</p>
                     @php
-                        $rawGcashQr = $paymentSource->gcashQrCode ?? null;
-                        $gcashQrUrl = null;
-                        if ($rawGcashQr) {
-                            if (str_starts_with($rawGcashQr, 'http')) {
-                                $gcashQrUrl = $rawGcashQr;
-                            } elseif (str_starts_with($rawGcashQr, 'uploads/')) {
-                                $gcashQrUrl = asset($rawGcashQr);
-                            } else {
-                                $gcashQrUrl = asset('storage/' . ltrim($rawGcashQr, '/'));
-                            }
-                        }
+                        $resolveQrUrl = function ($qrPath) {
+                            if (empty($qrPath)) return null;
+                            if (str_starts_with($qrPath, 'http')) return $qrPath;
+                            $clean = ltrim($qrPath, '/');
+                            if (str_starts_with($clean, 'uploads/')) return asset($clean);
+                            return asset('storage/' . $clean);
+                        };
 
-                        $rawMayaQr = $paymentSource->mayaQrCode ?? null;
-                        $mayaQrUrl = null;
-                        if ($rawMayaQr) {
-                            if (str_starts_with($rawMayaQr, 'http')) {
-                                $mayaQrUrl = $rawMayaQr;
-                            } elseif (str_starts_with($rawMayaQr, 'uploads/')) {
-                                $mayaQrUrl = asset($rawMayaQr);
-                            } else {
-                                $mayaQrUrl = asset('storage/' . ltrim($rawMayaQr, '/'));
-                            }
-                        }
+                        $rawGcashQr = $paymentSource->gcashQrCode ?? ($seller->gcashQrCode ?? null);
+                        $gcashQrUrl = $rawGcashQr ? $resolveQrUrl($rawGcashQr) : null;
+
+                        $rawMayaQr  = $paymentSource->mayaQrCode ?? ($seller->mayaQrCode ?? null);
+                        $mayaQrUrl  = $rawMayaQr ? $resolveQrUrl($rawMayaQr) : null;
                     @endphp
 
                     <div class="space-y-4">
@@ -412,71 +372,69 @@
 
             </div>
 
-            <!-- Sidebar: Order Summary -->
-            <div class="hidden lg:block lg:col-span-5 self-stretch">
-                <div class="bg-white rounded-3xl p-6 lg:p-8 border border-gray-100 sticky top-24 flex flex-col max-h-[calc(100vh-120px)] shadow-sm space-y-6">
-                    <div>
-                        <div class="flex items-center gap-2 mb-1">
-                            <div class="w-4 h-[1.5px] bg-[#C0422A]"></div>
-                            <span class="text-[9px] font-bold uppercase tracking-widest text-[#C0422A]">Order Overview</span>
-                        </div>
-                        <h2 class="font-serif text-2xl font-bold text-gray-900">Order Summary</h2>
-                        <p class="text-xs text-gray-400 font-bold uppercase tracking-wider mt-1">
-                            {{ count($cart) }} item(s) selected
-                        </p>
+            <!-- Order Summary Card -->
+            <div class="w-full bg-white rounded-3xl p-6 lg:p-8 border border-gray-100 shadow-sm space-y-6">
+                <div>
+                    <div class="flex items-center gap-2 mb-1">
+                        <div class="w-4 h-[1.5px] bg-[#C0422A]"></div>
+                        <span class="text-[9px] font-bold uppercase tracking-widest text-[#C0422A]">Order Overview</span>
                     </div>
+                    <h2 class="font-serif text-2xl font-bold text-gray-900">Order Summary</h2>
+                    <p class="text-xs text-gray-400 font-bold uppercase tracking-wider mt-1">
+                        {{ count($cart) }} item(s) selected
+                    </p>
+                </div>
 
-                    <div class="space-y-3.5 border-t border-gray-100 pt-6">
-                        <div class="flex justify-between items-center">
-                            <span class="text-sm text-gray-600 font-medium">Subtotal</span>
-                            <span class="text-sm font-bold text-gray-900">₱{{ number_format($subtotal) }}</span>
-                        </div>
-                        <div class="flex justify-between items-center">
-                            <span class="text-sm text-gray-600 font-medium">Estimated Delivery</span>
-                            <span class="text-sm font-bold text-gray-900">
-                                @if($shippingFee > 0)
-                                    ₱{{ number_format($shippingFee, 2) }}
-                                @else
-                                    <span class="text-emerald-600 uppercase text-xs">Free</span>
-                                @endif
-                            </span>
-                        </div>
-                        <div class="flex justify-between items-center pt-4 border-t border-dashed border-gray-200">
-                            <span class="text-base font-bold text-gray-900">Total Payment</span>
-                            <span class="text-2xl lg:text-3xl font-black text-[#C0422A]">₱{{ number_format($subtotal + $shippingFee) }}</span>
-                        </div>
+                <div class="space-y-3.5 border-t border-gray-100 pt-6">
+                    <div class="flex justify-between items-center">
+                        <span class="text-sm text-gray-600 font-medium">Subtotal</span>
+                        <span class="text-sm font-bold text-gray-900">₱{{ number_format($subtotal) }}</span>
                     </div>
-
-                    <template x-if="step === 1">
-                        <div class="space-y-2">
-                            <div x-show="addressStepError" x-cloak
-                                 class="text-[10px] font-bold text-red-500 bg-red-50 border border-red-100 rounded-xl px-3 py-2 text-center"
-                                 x-text="addressStepError"></div>
-                            <button type="button" @click="validateStep1()" class="w-full bg-[#C0422A] text-white py-4 rounded-xl text-sm font-bold shadow-lg shadow-[#C0422A]/20 hover:bg-[#A33622] transition-all transform active:scale-[0.99] flex items-center justify-center gap-2">
-                                <span>Proceed to Payment</span>
-                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
-                            </button>
-                        </div>
-                    </template>
-                    <template x-if="step === 2">
-                        <div class="flex gap-3">
-                            <button type="button" @click="step = 1" class="px-4 py-4 border border-gray-200 rounded-xl flex items-center justify-center text-gray-500 hover:text-black hover:border-black transition-colors">
-                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path></svg>
-                            </button>
-                            <button type="button" @click="requestPlaceOrder()" class="flex-1 bg-[#C0422A] text-white py-4 rounded-xl text-sm font-bold shadow-lg shadow-[#C0422A]/20 hover:bg-[#A33622] transition-all transform active:scale-[0.99] flex items-center justify-center gap-2">
-                                <span>Place Order</span>
-                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
-                            </button>
-                        </div>
-                    </template>
-
-                    <div class="bg-gray-50/80 rounded-2xl p-4 border border-gray-100/80 text-[11px] text-gray-500 leading-relaxed space-y-1">
-                        <div class="font-bold text-gray-700 flex items-center gap-1.5">
-                            <svg class="w-3.5 h-3.5 text-[#C0422A]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
-                            LumBarong Buyer Protection
-                        </div>
-                        <p class="text-[10px]">Your order payment is securely processed and verified directly by the seller before fulfillment.</p>
+                    <div class="flex justify-between items-center">
+                        <span class="text-sm text-gray-600 font-medium">Estimated Delivery</span>
+                        <span class="text-sm font-bold text-gray-900">
+                            @if($shippingFee > 0)
+                                ₱{{ number_format($shippingFee, 2) }}
+                            @else
+                                <span class="text-emerald-600 uppercase text-xs">Free</span>
+                            @endif
+                        </span>
                     </div>
+                    <div class="flex justify-between items-center pt-4 border-t border-dashed border-gray-200">
+                        <span class="text-base font-bold text-gray-900">Total Payment</span>
+                        <span class="text-2xl lg:text-3xl font-black text-[#C0422A]">₱{{ number_format($subtotal + $shippingFee) }}</span>
+                    </div>
+                </div>
+
+                <template x-if="step === 1">
+                    <div class="space-y-2">
+                        <div x-show="addressStepError" x-cloak
+                             class="text-[10px] font-bold text-red-500 bg-red-50 border border-red-100 rounded-xl px-3 py-2 text-center"
+                             x-text="addressStepError"></div>
+                        <button type="button" @click="validateStep1()" class="w-full bg-[#C0422A] text-white py-4 rounded-xl text-sm font-bold shadow-lg shadow-[#C0422A]/20 hover:bg-[#A33622] transition-all transform active:scale-[0.99] flex items-center justify-center gap-2">
+                            <span>Proceed to Payment</span>
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
+                        </button>
+                    </div>
+                </template>
+                <template x-if="step === 2">
+                    <div class="flex gap-3">
+                        <button type="button" @click="step = 1" class="px-4 py-4 border border-gray-200 rounded-xl flex items-center justify-center text-gray-500 hover:text-black hover:border-black transition-colors">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path></svg>
+                        </button>
+                        <button type="button" @click="requestPlaceOrder()" class="flex-1 bg-[#C0422A] text-white py-4 rounded-xl text-sm font-bold shadow-lg shadow-[#C0422A]/20 hover:bg-[#A33622] transition-all transform active:scale-[0.99] flex items-center justify-center gap-2">
+                            <span>Place Order</span>
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                        </button>
+                    </div>
+                </template>
+
+                <div class="bg-gray-50/80 rounded-2xl p-4 border border-gray-100/80 text-[11px] text-gray-500 leading-relaxed space-y-1">
+                    <div class="font-bold text-gray-700 flex items-center gap-1.5">
+                        <svg class="w-3.5 h-3.5 text-[#C0422A]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
+                        LumBarong Buyer Protection
+                    </div>
+                    <p class="text-[10px]">Your order payment is securely processed and verified directly by the seller before fulfillment.</p>
                 </div>
             </div>
         </div>
@@ -640,43 +598,161 @@
 
             <div x-show="addressError" x-cloak x-text="addressError" class="p-3 bg-red-50 border border-red-200 text-red-600 rounded-xl text-xs font-bold"></div>
 
-            <div class="grid grid-cols-2 gap-4">
-                <div class="col-span-2 space-y-1">
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+                <div class="col-span-1 sm:col-span-2 space-y-1">
                     <label class="text-[10px] font-bold text-gray-500 uppercase tracking-wider block">Recipient Full Name <span class="text-[#C0422A]">*</span></label>
                     <input type="text" x-model="editForm.recipientName" @input="editForm.recipientName = editForm.recipientName.replace(/[^a-zA-Z\s\.\,\'\-]/g, '')" placeholder="e.g. John Doe (letters only)" class="w-full px-4 py-2.5 bg-gray-50/50 border border-gray-200 rounded-xl text-sm font-semibold outline-none focus:border-[#C0422A] focus:bg-white transition-all">
                 </div>
 
-                <div class="col-span-2 space-y-1">
+                <div class="col-span-1 sm:col-span-2 space-y-1">
                     <label class="text-[10px] font-bold text-gray-500 uppercase tracking-wider block">Phone Number <span class="text-[#C0422A]">*</span></label>
                     <input type="text" x-model="editForm.phone" @input="editForm.phone = editForm.phone.replace(/[^0-9]/g, '').slice(0, 11)" placeholder="e.g. 09123456789 (11 digits)" inputmode="numeric" maxlength="11" class="w-full px-4 py-2.5 bg-gray-50/50 border border-gray-200 rounded-xl text-sm font-semibold outline-none focus:border-[#C0422A] focus:bg-white transition-all">
                 </div>
 
-                <div class="col-span-2 space-y-1">
+                <div class="col-span-1 sm:col-span-2 space-y-1">
                     <label class="text-[10px] font-bold text-gray-500 uppercase tracking-wider block">House / Building / Unit No. <span class="text-[#C0422A]">*</span></label>
                     <input type="text" x-model="editForm.houseNo" placeholder="e.g. Block 1 Lot 2 Mango St." class="w-full px-4 py-2.5 bg-gray-50/50 border border-gray-200 rounded-xl text-sm font-semibold outline-none focus:border-[#C0422A] focus:bg-white transition-all">
                 </div>
 
-                <div class="space-y-1">
-                    <label class="text-[10px] font-bold text-gray-500 uppercase tracking-wider block">Street</label>
+                <!-- Region, Province, City, Barangay Dropdown Selector -->
+                <div class="col-span-1 sm:col-span-2 relative space-y-1">
+                    <label class="text-[10px] font-bold text-gray-500 uppercase tracking-wider block">Region, Province, City, Barangay <span class="text-[#C0422A]">*</span></label>
+                    <div @click="toggleLocationDropdown()"
+                         class="w-full px-4 py-2.5 bg-gray-50/50 border border-gray-200 rounded-xl text-xs sm:text-sm font-semibold outline-none focus:border-[#C0422A] focus:bg-white flex items-center justify-between cursor-pointer transition-all">
+                        <span class="truncate" :class="getLocationSummary() ? 'text-gray-900 font-bold' : 'text-gray-400'" x-text="getLocationSummary() || 'Select Region, Province, City, Barangay'"></span>
+                        <svg class="w-4 h-4 text-gray-400 transition-transform duration-200 shrink-0" :class="locationDropdownOpen ? 'rotate-180' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                        </svg>
+                    </div>
+
+                    <!-- Location Dropdown Panel -->
+                    <div x-show="locationDropdownOpen"
+                         @click.away="locationDropdownOpen = false"
+                         class="absolute left-0 right-0 z-50 mt-1 bg-white border border-gray-200 rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-87.5"
+                         x-cloak>
+
+                         <!-- Tabs -->
+                         <div class="flex border-b border-gray-150 bg-gray-50 text-[11px] font-bold text-gray-500">
+                             <button @click="activeTab = 'region'"
+                                     type="button"
+                                     :class="activeTab === 'region' ? 'text-[#C0422A] border-b-2 border-[#C0422A] bg-white' : ''"
+                                     class="flex-1 py-2.5 text-center border-b border-transparent hover:bg-white transition-colors">
+                                 Region
+                             </button>
+                             <button @click="if(selectedRegion && hasProvinces) activeTab = 'province'"
+                                     type="button"
+                                     :disabled="!selectedRegion || !hasProvinces"
+                                     :class="activeTab === 'province' ? 'text-[#C0422A] border-b-2 border-[#C0422A] bg-white' : ''"
+                                     class="flex-1 py-2.5 text-center border-b border-transparent hover:bg-white transition-colors disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-1">
+                                 Province
+                                 <span x-show="!selectedRegion" class="text-[10px] text-red-500">🚫</span>
+                             </button>
+                             <button @click="if(selectedProvince || (selectedRegion && !hasProvinces)) activeTab = 'city'"
+                                     type="button"
+                                     :disabled="!selectedProvince && (hasProvinces || !selectedRegion)"
+                                     :class="activeTab === 'city' ? 'text-[#C0422A] border-b-2 border-[#C0422A] bg-white' : ''"
+                                     class="flex-1 py-2.5 text-center border-b border-transparent hover:bg-white transition-colors disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-1">
+                                 City
+                                 <span x-show="!selectedProvince && hasProvinces" class="text-[10px] text-red-500">🚫</span>
+                             </button>
+                             <button @click="if(selectedCity) activeTab = 'barangay'"
+                                     type="button"
+                                     :disabled="!selectedCity"
+                                     :class="activeTab === 'barangay' ? 'text-[#C0422A] border-b-2 border-[#C0422A] bg-white' : ''"
+                                     class="flex-1 py-2.5 text-center border-b border-transparent hover:bg-white transition-colors disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-1">
+                                 Barangay
+                                 <span x-show="!selectedCity" class="text-[10px] text-red-500">🚫</span>
+                             </button>
+                         </div>
+
+                         <!-- Inline Search Field -->
+                         <div class="p-2 border-b border-gray-100 bg-gray-50/50">
+                             <input type="text" x-model="locationSearch" :placeholder="'Search ' + activeTab + '...'"
+                                    class="w-full h-8 px-3 bg-white border border-gray-200 rounded-lg text-xs outline-none focus:border-[#C0422A] transition-colors">
+                         </div>
+
+                         <!-- Scrollable List -->
+                         <div class="flex-1 overflow-y-auto min-h-45 max-h-55 divide-y divide-gray-50 text-xs">
+                             <!-- Loading Geo Data Spinner -->
+                             <div x-show="loadingGeoData" class="flex items-center justify-center py-10 text-xs text-gray-400 gap-2">
+                                 <svg class="animate-spin h-4 w-4 text-[#C0422A]" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                     <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                     <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                 </svg>
+                                 <span>Loading geographical data...</span>
+                             </div>
+
+                             <!-- Region List -->
+                             <template x-if="activeTab === 'region' && !loadingGeoData">
+                                 <div class="py-1">
+                                     <template x-for="reg in filteredGeoList(regionsList)" :key="reg.code">
+                                         <button type="button" @click="selectRegion(reg)"
+                                              :class="selectedRegion?.code === reg.code ? 'bg-[#C0422A]/5 text-[#C0422A] font-bold' : 'text-gray-700 hover:bg-gray-50'"
+                                              class="w-full text-left px-4 py-2.5 text-xs transition-colors flex items-center justify-between">
+                                              <span x-text="reg.name + ' (' + reg.regionName + ')'"></span>
+                                              <span x-show="selectedRegion?.code === reg.code" class="text-xs">✓</span>
+                                         </button>
+                                     </template>
+                                 </div>
+                             </template>
+
+                             <!-- Province List -->
+                             <template x-if="activeTab === 'province' && !loadingGeoData">
+                                 <div class="py-1">
+                                     <template x-for="prov in filteredGeoList(provincesList)" :key="prov.code">
+                                         <button type="button" @click="selectProvince(prov)"
+                                              :class="selectedProvince?.code === prov.code ? 'bg-[#C0422A]/5 text-[#C0422A] font-bold' : 'text-gray-700 hover:bg-gray-50'"
+                                              class="w-full text-left px-4 py-2.5 text-xs transition-colors flex items-center justify-between">
+                                              <span x-text="prov.name"></span>
+                                              <span x-show="selectedProvince?.code === prov.code" class="text-xs">✓</span>
+                                         </button>
+                                     </template>
+                                 </div>
+                             </template>
+
+                             <!-- City List -->
+                             <template x-if="activeTab === 'city' && !loadingGeoData">
+                                 <div class="py-1">
+                                     <template x-for="ct in filteredGeoList(citiesList)" :key="ct.code">
+                                         <button type="button" @click="selectCity(ct)"
+                                              :class="selectedCity?.code === ct.code ? 'bg-[#C0422A]/5 text-[#C0422A] font-bold' : 'text-gray-700 hover:bg-gray-50'"
+                                              class="w-full text-left px-4 py-2.5 text-xs transition-colors flex items-center justify-between">
+                                              <span x-text="ct.name"></span>
+                                              <span x-show="selectedCity?.code === ct.code" class="text-xs">✓</span>
+                                         </button>
+                                     </template>
+                                 </div>
+                             </template>
+
+                             <!-- Barangay List -->
+                             <template x-if="activeTab === 'barangay' && !loadingGeoData">
+                                 <div class="py-1">
+                                     <template x-for="brgy in filteredGeoList(barangaysList)" :key="brgy.code">
+                                         <button type="button" @click="selectBarangay(brgy)"
+                                              :class="selectedBarangay?.code === brgy.code ? 'bg-[#C0422A]/5 text-[#C0422A] font-bold' : 'text-gray-700 hover:bg-gray-50'"
+                                              class="w-full text-left px-4 py-2.5 text-xs transition-colors flex items-center justify-between">
+                                              <span x-text="brgy.name"></span>
+                                              <span x-show="selectedBarangay?.code === brgy.code" class="text-xs">✓</span>
+                                         </button>
+                                     </template>
+                                 </div>
+                             </template>
+
+                             <!-- Empty Geo Results -->
+                             <div x-show="!loadingGeoData && filteredGeoList(getCurrentTabList()).length === 0"
+                                  class="p-8 text-center text-xs text-gray-400">
+                                  No items found.
+                             </div>
+                         </div>
+                    </div>
+                </div>
+
+                <div class="col-span-1 sm:col-span-2 space-y-1">
+                    <label class="text-[10px] font-bold text-gray-500 uppercase tracking-wider block">Street (Optional)</label>
                     <input type="text" x-model="editForm.street" placeholder="e.g. Mango St." class="w-full px-4 py-2.5 bg-gray-50/50 border border-gray-200 rounded-xl text-sm font-semibold outline-none focus:border-[#C0422A] focus:bg-white transition-all">
                 </div>
 
-                <div class="space-y-1">
-                    <label class="text-[10px] font-bold text-gray-500 uppercase tracking-wider block">Barangay</label>
-                    <input type="text" x-model="editForm.barangay" placeholder="e.g. Bucandala III" class="w-full px-4 py-2.5 bg-gray-50/50 border border-gray-200 rounded-xl text-sm font-semibold outline-none focus:border-[#C0422A] focus:bg-white transition-all">
-                </div>
-
-                <div class="space-y-1">
-                    <label class="text-[10px] font-bold text-gray-500 uppercase tracking-wider block">City / Municipality <span class="text-[#C0422A]">*</span></label>
-                    <input type="text" x-model="editForm.city" placeholder="e.g. City of Imus" class="w-full px-4 py-2.5 bg-gray-50/50 border border-gray-200 rounded-xl text-sm font-semibold outline-none focus:border-[#C0422A] focus:bg-white transition-all">
-                </div>
-
-                <div class="space-y-1">
-                    <label class="text-[10px] font-bold text-gray-500 uppercase tracking-wider block">Province <span class="text-[#C0422A]">*</span></label>
-                    <input type="text" x-model="editForm.province" placeholder="e.g. Cavite" class="w-full px-4 py-2.5 bg-gray-50/50 border border-gray-200 rounded-xl text-sm font-semibold outline-none focus:border-[#C0422A] focus:bg-white transition-all">
-                </div>
-
-                <div class="col-span-2 space-y-1">
+                <div class="col-span-1 sm:col-span-2 space-y-1">
                     <label class="text-[10px] font-bold text-gray-500 uppercase tracking-wider block">Postal Code</label>
                     <input type="text" x-model="editForm.postalCode" @input="editForm.postalCode = editForm.postalCode.replace(/[^0-9]/g, '').slice(0, 4)" placeholder="e.g. 4103 (4 digits)" inputmode="numeric" maxlength="4" class="w-full px-4 py-2.5 bg-gray-50/50 border border-gray-200 rounded-xl text-sm font-semibold outline-none focus:border-[#C0422A] focus:bg-white transition-all">
                 </div>
@@ -771,6 +847,20 @@ function checkoutApp(initialAddress, initialAddresses, defaultPaymentMethod) {
         paymentRef: '',
         refError: '',
 
+        locationDropdownOpen: false,
+        activeTab: 'region',
+        regionsList: [],
+        provincesList: [],
+        citiesList: [],
+        barangaysList: [],
+        selectedRegion: null,
+        selectedProvince: null,
+        selectedCity: null,
+        selectedBarangay: null,
+        loadingGeoData: false,
+        locationSearch: '',
+        hasProvinces: true,
+
         handleFileChange(e) {
             const file = e.target.files && e.target.files[0];
             if (file) {
@@ -815,8 +905,221 @@ function checkoutApp(initialAddress, initialAddresses, defaultPaymentMethod) {
                 province: target.province || '',
                 postalCode: target.postalCode || ''
             };
+
+            this.selectedRegion = target.province || target.city ? { name: target.province || 'Default Region' } : null;
+            this.selectedProvince = target.province ? { name: target.province } : null;
+            this.selectedCity = target.city ? { name: target.city } : null;
+            this.selectedBarangay = target.barangay ? { name: target.barangay } : null;
+            this.activeTab = 'region';
+            this.locationSearch = '';
             this.addressError = '';
             this.showEditAddressModal = true;
+        },
+
+        async toggleLocationDropdown() {
+            this.locationDropdownOpen = !this.locationDropdownOpen;
+            if (this.locationDropdownOpen && this.regionsList.length === 0) {
+                await this.loadRegions();
+            }
+        },
+
+        async loadRegions() {
+            this.loadingGeoData = true;
+            try {
+                const res = await fetch('https://psgc.gitlab.io/api/regions/');
+                if (res.ok) {
+                    this.regionsList = await res.json();
+                }
+            } catch(e) {
+                console.error("Failed to load regions", e);
+            }
+            this.loadingGeoData = false;
+        },
+
+        async selectRegion(region) {
+            this.selectedRegion = region;
+            this.editForm.region = region.name;
+
+            this.selectedProvince = null;
+            this.editForm.province = '';
+            this.selectedCity = null;
+            this.editForm.city = '';
+            this.selectedBarangay = null;
+            this.editForm.barangay = '';
+            this.locationSearch = '';
+
+            if (region.code === '130000000') {
+                this.hasProvinces = false;
+                this.provincesList = [];
+                this.editForm.province = 'Metro Manila';
+                this.selectedProvince = { code: '130000000', name: 'Metro Manila' };
+                this.activeTab = 'city';
+                await this.loadNCRCities();
+            } else {
+                this.hasProvinces = true;
+                this.activeTab = 'province';
+                await this.loadProvinces(region.code);
+            }
+        },
+
+        async loadNCRCities() {
+            this.loadingGeoData = true;
+            try {
+                const res = await fetch('https://psgc.gitlab.io/api/regions/130000000/cities-municipalities/');
+                if (res.ok) {
+                    this.citiesList = await res.json();
+                }
+            } catch(e) {
+                console.error("Failed to load NCR cities", e);
+            }
+            this.loadingGeoData = false;
+        },
+
+        async loadProvinces(regionCode) {
+            this.loadingGeoData = true;
+            try {
+                const res = await fetch(`https://psgc.gitlab.io/api/regions/${regionCode}/provinces/`);
+                if (res.ok) {
+                    this.provincesList = await res.json();
+                }
+            } catch(e) {
+                console.error("Failed to load provinces", e);
+            }
+            this.loadingGeoData = false;
+        },
+
+        async selectProvince(province) {
+            this.selectedProvince = province;
+            this.editForm.province = province.name;
+
+            this.selectedCity = null;
+            this.editForm.city = '';
+            this.selectedBarangay = null;
+            this.editForm.barangay = '';
+            this.locationSearch = '';
+
+            this.activeTab = 'city';
+            await this.loadCities(province.code);
+        },
+
+        async loadCities(provinceCode) {
+            this.loadingGeoData = true;
+            try {
+                const res = await fetch(`https://psgc.gitlab.io/api/provinces/${provinceCode}/cities-municipalities/`);
+                if (res.ok) {
+                    this.citiesList = await res.json();
+                }
+            } catch(e) {
+                console.error("Failed to load cities", e);
+            }
+            this.loadingGeoData = false;
+        },
+
+        async selectCity(city) {
+            this.selectedCity = city;
+            this.editForm.city = city.name;
+
+            this.selectedBarangay = null;
+            this.editForm.barangay = '';
+            this.locationSearch = '';
+
+            if (!this.editForm.postalCode) {
+                this.editForm.postalCode = this.autoPostalCode(city.name, this.editForm.province);
+            }
+
+            this.activeTab = 'barangay';
+            await this.loadBarangays(city.code);
+        },
+
+        async loadBarangays(cityCode) {
+            this.loadingGeoData = true;
+            try {
+                const res = await fetch(`https://psgc.gitlab.io/api/cities-municipalities/${cityCode}/barangays/`);
+                if (res.ok) {
+                    this.barangaysList = await res.json();
+                }
+            } catch(e) {
+                console.error("Failed to load barangays", e);
+            }
+            this.loadingGeoData = false;
+        },
+
+        selectBarangay(barangay) {
+            this.selectedBarangay = barangay;
+            this.editForm.barangay = barangay.name;
+            this.locationDropdownOpen = false;
+            this.locationSearch = '';
+
+            if (!this.editForm.postalCode) {
+                this.editForm.postalCode = this.autoPostalCode(this.editForm.city, this.editForm.province);
+            }
+        },
+
+        autoPostalCode(cityName, provinceName) {
+            if (!cityName) return '';
+            const c = cityName.toLowerCase().trim();
+            const p = (provinceName || '').toLowerCase().trim();
+
+            const postalMap = {
+                'lumban': '4014',
+                'santa cruz': p.includes('laguna') ? '4009' : '1003',
+                'calamba': '4027',
+                'los baños': '4030',
+                'los banos': '4030',
+                'biñan': '4024',
+                'binan': '4024',
+                'san pedro': '4023',
+                'santa rosa': '4026',
+                'san pablo': '4000',
+                'pagsanjan': '4008',
+                'manila': '1000',
+                'quezon city': '1100',
+                'makati': '1200',
+                'pasig': '1600',
+                'taguig': '1630',
+                'imus': '4103',
+                'dasariñas': '4114',
+                'dasmarinas': '4114',
+                'bacoor': '4102'
+            };
+
+            for (const key in postalMap) {
+                if (c.includes(key)) return postalMap[key];
+            }
+            return '4000';
+        },
+
+        filteredGeoList(list) {
+            if (!list) return [];
+            if (!this.locationSearch) return list;
+            const q = this.locationSearch.toLowerCase();
+            return list.filter(item =>
+                (item.name && item.name.toLowerCase().includes(q)) ||
+                (item.regionName && item.regionName.toLowerCase().includes(q))
+            );
+        },
+
+        getCurrentTabList() {
+            if (this.activeTab === 'region') return this.regionsList;
+            if (this.activeTab === 'province') return this.provincesList;
+            if (this.activeTab === 'city') return this.citiesList;
+            if (this.activeTab === 'barangay') return this.barangaysList;
+            return [];
+        },
+
+        getLocationSummary() {
+            if (this.selectedRegion || this.selectedProvince || this.selectedCity || this.selectedBarangay) {
+                return [
+                    this.selectedRegion?.name,
+                    this.selectedProvince?.name,
+                    this.selectedCity?.name,
+                    this.selectedBarangay?.name
+                ].filter(Boolean).join(', ');
+            }
+            if (this.editForm.city || this.editForm.province) {
+                return [this.editForm.province, this.editForm.city, this.editForm.barangay].filter(Boolean).join(', ');
+            }
+            return '';
         },
         async saveEditAddress() {
             this.addressError = '';

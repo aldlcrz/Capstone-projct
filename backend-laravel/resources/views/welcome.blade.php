@@ -316,7 +316,7 @@
             </div>
             <div class="grid grid-cols-2 md:grid-cols-4 gap-5">
                 <!-- Best Sellers -->
-                <a href="/?sort=best_sellers#catalogue-section" class="group relative rounded-2xl overflow-hidden bg-gray-900 aspect-4/5 shadow-sm flex flex-col justify-end p-4">
+                <a href="/?sort=best_sellers#catalogue-section" class="ajax-filter-link group relative rounded-2xl overflow-hidden bg-gray-900 aspect-4/5 shadow-sm flex flex-col justify-end p-4">
                     <img src="/uploads/categories/featured_best_sellers.png" class="absolute inset-0 w-full h-full object-cover opacity-85 group-hover:scale-105 transition-transform duration-500" alt="Best Sellers">
                     <div class="absolute inset-0 bg-linear-to-t from-black/85 via-black/20 to-transparent"></div>
                     <div class="relative z-10 text-white">
@@ -336,12 +336,23 @@
                 </button>
 
                 <!-- New Arrivals -->
-                <a href="/?sort=newest#catalogue-section" class="group relative rounded-2xl overflow-hidden bg-gray-900 aspect-4/5 shadow-sm flex flex-col justify-end p-4">
+                <a href="/?sort=newest#catalogue-section" class="ajax-filter-link group relative rounded-2xl overflow-hidden bg-gray-900 aspect-4/5 shadow-sm flex flex-col justify-end p-4">
                     <img src="/uploads/categories/jusi_classic.png" class="absolute inset-0 w-full h-full object-cover opacity-85 group-hover:scale-105 transition-transform duration-500" alt="New Arrivals">
                     <div class="absolute inset-0 bg-linear-to-t from-black/85 via-black/20 to-transparent"></div>
                     <div class="relative z-10 text-white">
                         <h4 class="font-bold text-xs sm:text-sm">New Arrivals</h4>
                         <p class="text-[10px] text-gray-300">Fresh hand-embroidered designs</p>
+                    </div>
+                </a>
+
+                <!-- Lumban Special -->
+                <a href="/?sort=lumban_special#catalogue-section" class="ajax-filter-link group relative rounded-2xl overflow-hidden bg-gray-900 aspect-4/5 shadow-sm flex flex-col justify-end p-4">
+                    <img src="/uploads/categories/pina_formal.png" class="absolute inset-0 w-full h-full object-cover opacity-85 group-hover:scale-105 transition-transform duration-500" alt="Lumban Special">
+                    <div class="absolute inset-0 bg-linear-to-t from-black/85 via-black/20 to-transparent"></div>
+                    <div class="relative z-10 text-white">
+                        <span class="px-2 py-0.5 bg-[#C0420A] text-white text-[8px] font-black uppercase tracking-widest rounded-md mb-1 inline-block">Special Sale</span>
+                        <h4 class="font-bold text-xs sm:text-sm">Lumban Special</h4>
+                        <p class="text-[10px] text-gray-300">Exclusive discounted barongs</p>
                     </div>
                 </a>
             </div>
@@ -458,113 +469,28 @@
         @endif
 
     @php
-        $discounted = $products->filter(fn($p) => $p->is_on_sale && $p->discount_percentage > 0);
-        $regular = $products->reject(fn($p) => $p->is_on_sale && $p->discount_percentage > 0);
         $catReq = request('category');
         $activeCatObj = isset($categories) && $catReq ? $categories->first(fn($c) => $c->id == $catReq || strtolower($c->name) == strtolower($catReq)) : null;
         $displayCatName = $activeCatObj ? $activeCatObj->name : $catReq;
+        $headerTitle = request('sort') === 'lumban_special' || request('lumban_special') 
+            ? 'Lumban Special Collection' 
+            : ($displayCatName ? $displayCatName.' Collection' : (request('search') ? 'Search Results' : 'Recommended Products'));
     @endphp
 
-    {{-- ====== Lumban Specials & Discounted Section ====== --}}
-    @if($discounted->isNotEmpty())
-        <div class="space-y-6">
-            <div class="flex items-center justify-between">
-                <div class="flex items-center gap-3">
-                    <div class="w-6 h-[1.5px] bg-[#C0422A]"></div>
-                    <span class="text-[10px] font-black uppercase tracking-widest text-[#C0422A] flex items-center gap-2">
-                        Lumban Specials & Discounted Products
-                        <span class="px-2 py-0.5 bg-[#C0422A]/10 text-[#C0422A] text-[9px] font-bold rounded-md">{{ $discounted->count() }} specials</span>
-                    </span>
-                </div>
-            </div>
-
-            <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-5">
-                @foreach($discounted as $product)
-                @php
-                    $pSizes = is_string($product->sizes) ? json_decode($product->sizes, true) : $product->sizes;
-                    if (empty($pSizes)) {
-                        $pSizes = ['S', 'M', 'L', 'XL'];
-                    }
-                @endphp
-                <div class="group cursor-pointer"
-                     onclick="if(!event.target.closest('button') && !event.target.closest('form') && !event.target.closest('a')) window.location.href='/products/{{ $product->id }}'">
-                    <div class="aspect-4/5 bg-gray-100 rounded-2xl overflow-hidden mb-3 relative shadow-sm">
-                        <img src="{{ $product->getImageUrl() }}"
-                             onerror="this.src='/uploads/products/default.jpg'"
-                             alt="{{ $product->name }}"
-                             class="w-full h-full object-cover object-top group-hover:scale-105 transition-transform duration-500 ease-out">
-
-                        {{-- Hover overlay --}}
-                        <div class="absolute inset-x-0 bottom-0 p-3 translate-y-1 opacity-0 group-hover:opacity-100 group-hover:translate-y-0 transition-all duration-300">
-                            <button type="button" 
-                                    data-id="{{ $product->id }}"
-                                    data-name="{{ $product->name }}"
-                                    data-price="{{ $product->sale_price }}"
-                                    data-image="{{ $product->getImageUrl() }}"
-                                    data-sizes='{!! json_encode($pSizes) !!}'
-                                    data-size-stocks='{!! json_encode($product->size_stocks ?? (object)[]) !!}'
-                                    data-default-stock="{{ $product->stock ?? 1 }}"
-                                    onclick="event.stopPropagation(); window.openQuickAdd({ id: this.dataset.id, name: this.dataset.name, price: this.dataset.price, image: this.dataset.image, sizes: JSON.parse(this.dataset.sizes), sizeStocks: JSON.parse(this.dataset.sizeStocks), defaultStock: parseInt(this.dataset.defaultStock) })"
-                                    class="w-full bg-black/90 backdrop-blur-sm text-white py-2 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-[#C0422A] transition-colors shadow-lg">
-                                + Add to Cart
-                            </button>
-                        </div>
-
-                        {{-- Lumban Special sale badge --}}
-                        <div class="absolute top-2.5 left-2.5 flex flex-col gap-1">
-                            <div class="flex items-center gap-1 bg-[#C0422A] text-white px-2 py-0.5 rounded-full shadow-lg">
-                                <svg class="w-2.5 h-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-5 5a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 10V5a2 2 0 012-2z"/>
-                                </svg>
-                                <span class="text-[8px] font-black uppercase tracking-widest">Lumban Special</span>
-                            </div>
-                            <div class="bg-black/80 text-white text-[8px] font-black px-2 py-0.5 rounded-full w-fit">
-                                -{{ number_format($product->discount_percentage, 0) }}% OFF
-                            </div>
-                        </div>
-                    </div>
-                    <a href="/products/{{ $product->id }}" class="block">
-                        <h3 class="font-bold text-sm text-gray-900 group-hover:text-[#C0422A] transition-colors leading-tight line-clamp-2">{{ $product->name }}</h3>
-                    </a>
-                    @if($product->avgRating)
-                        <div class="flex items-center gap-1 text-[10px] font-bold text-yellow-500 mt-1">
-                            <span>★</span>
-                            <span>{{ number_format($product->avgRating, 1) }}</span>
-                            <span class="text-gray-400">({{ $product->reviewCount }})</span>
-                        </div>
-                    @endif
-                    <div class="flex items-center gap-2 mt-1">
-                        <p class="text-sm font-black text-[#C0422A]">₱{{ number_format($product->salePrice) }}</p>
-                        <p class="text-xs font-bold text-gray-400 line-through">₱{{ number_format($product->price) }}</p>
-                    </div>
-                    @if($product->artisan)
-                        <p class="text-[10px] text-gray-400 mt-0.5 font-medium flex items-center gap-1">
-                            by {{ $product->artisan }}
-                            @if($product->seller && $product->seller->isPremiumActive())
-                                <span class="text-yellow-500 font-extrabold text-[9px]" title="Premium Seller">👑</span>
-                            @endif
-                        </p>
-                    @endif
-                </div>
-                @endforeach
-            </div>
-        </div>
-    @endif
-
-    {{-- ====== Standard Catalogue & Recommendations ====== --}}
+    {{-- ====== Unified Product Catalogue ====== --}}
     <div class="space-y-6">
         <div class="flex items-center justify-between">
             <div class="flex items-center gap-3">
-                <div class="w-6 h-[1.5px] bg-[#2A2A28]"></div>
+                <div class="w-6 h-[1.5px] bg-[#C0422A]"></div>
                 <span class="text-[10px] font-black uppercase tracking-widest text-[#2A2A28]">
-                    {{ $displayCatName ? $displayCatName.' Collection' : (request('search') ? 'Search Results' : 'Recommended Products') }}
+                    {{ $headerTitle }}
                 </span>
             </div>
-            <span class="text-[10px] text-gray-400 font-bold">{{ $regular->count() }} {{ Str::plural('piece', $regular->count()) }}</span>
+            <span class="text-[10px] text-gray-400 font-bold">{{ $products->count() }} {{ Str::plural('piece', $products->count()) }}</span>
         </div>
 
         <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-5">
-            @foreach($regular as $product)
+            @foreach($products as $product)
             @php
                 $pSizes = is_string($product->sizes) ? json_decode($product->sizes, true) : $product->sizes;
                 if (empty($pSizes)) {
@@ -595,7 +521,19 @@
                         </button>
                     </div>
 
-                    @if($product->target_group)
+                    @if($product->is_on_sale && $product->discount_percentage > 0)
+                        <div class="absolute top-2.5 left-2.5 flex flex-col gap-1">
+                            <div class="flex items-center gap-1 bg-[#C0422A] text-white px-2 py-0.5 rounded-full shadow-lg">
+                                <svg class="w-2.5 h-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-5 5a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 10V5a2 2 0 012-2z"/>
+                                </svg>
+                                <span class="text-[8px] font-black uppercase tracking-widest">Lumban Special</span>
+                            </div>
+                            <div class="bg-black/80 text-white text-[8px] font-black px-2 py-0.5 rounded-full w-fit">
+                                -{{ number_format($product->discount_percentage, 0) }}% OFF
+                            </div>
+                        </div>
+                    @elseif($product->target_group)
                         <div class="absolute top-2.5 left-2.5 bg-white/90 backdrop-blur-sm text-[8px] font-black uppercase tracking-widest text-gray-500 px-2 py-0.5 rounded-full">
                             {{ $product->target_group }}
                         </div>
@@ -611,7 +549,14 @@
                         <span class="text-gray-400">({{ $product->reviewCount }})</span>
                     </div>
                 @endif
-                <p class="text-sm font-black text-gray-800 mt-1">₱{{ number_format($product->price) }}</p>
+                <div class="flex items-center gap-2 mt-1">
+                    <p class="text-sm font-black {{ $product->is_on_sale && $product->discount_percentage > 0 ? 'text-[#C0422A]' : 'text-gray-800' }}">
+                        ₱{{ number_format($product->salePrice) }}
+                    </p>
+                    @if($product->is_on_sale && $product->discount_percentage > 0)
+                        <p class="text-xs font-bold text-gray-400 line-through">₱{{ number_format($product->price) }}</p>
+                    @endif
+                </div>
                 @if($product->artisan)
                     <p class="text-[10px] text-gray-400 mt-0.5 font-medium flex items-center gap-1">
                         by {{ $product->artisan }}
@@ -898,6 +843,23 @@
             if (link && link.href) {
                 e.preventDefault();
                 loadCatalogue(link.href);
+            }
+        });
+
+        let searchDebounceTimer = null;
+        document.addEventListener('input', function(e) {
+            const input = e.target.closest('.ajax-search-form input[name="search"], input[name="search"]');
+            if (input) {
+                clearTimeout(searchDebounceTimer);
+                searchDebounceTimer = setTimeout(function() {
+                    const form = input.closest('form');
+                    if (form) {
+                        const formData = new FormData(form);
+                        const params = new URLSearchParams(formData).toString();
+                        const url = (form.action || '/') + (params ? '?' + params : '');
+                        loadCatalogue(url);
+                    }
+                }, 200);
             }
         });
 

@@ -1,14 +1,23 @@
 @extends('layouts.seller')
 
 @section('content')
+    @php
+        $getImgUrl = function($path) {
+            if (empty($path)) return null;
+            if (str_starts_with($path, 'http')) return $path;
+            $clean = ltrim($path, '/');
+            if (str_starts_with($clean, 'uploads/')) return asset($clean);
+            return asset('storage/' . $clean);
+        };
+    @endphp
     <div class="max-w-4xl mx-auto space-y-6">
         {{-- Profile Hero Card --}}
         <div class="relative bg-white rounded-3xl p-6 sm:p-8 border border-gray-100 shadow-sm flex flex-col sm:flex-row items-center sm:items-start gap-6">
             {{-- Avatar: Clickable to change photo --}}
             <div class="relative w-28 h-28 shrink-0 group cursor-pointer" onclick="document.getElementById('profilePhotoInput').click()" title="Click to change profile photo">
                 <div class="w-full h-full rounded-full bg-linear-to-tr from-[#3D2B1F] to-[#C0420A] flex items-center justify-center text-white font-black text-4xl overflow-hidden shadow-lg border-4 border-white relative">
-                    @if($user->profilePhoto)
-                        <img src="{{ str_starts_with($user->profilePhoto, 'http') || str_starts_with($user->profilePhoto, '/') ? $user->profilePhoto : asset('storage/' . $user->profilePhoto) }}" class="w-full h-full object-cover" onerror="this.style.display='none'">
+                    @if($user->profilePhoto && $getImgUrl($user->profilePhoto))
+                        <img src="{{ $getImgUrl($user->profilePhoto) }}" class="w-full h-full object-cover" onerror="this.style.display='none'">
                     @else
                         {{ strtoupper(substr($user->name, 0, 1)) }}
                     @endif
@@ -100,7 +109,7 @@
                 <svg class="w-4 h-4 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
             </a>
 
-            <button id="payment-methods" onclick="document.getElementById('payment-modal').classList.remove('hidden')" class="flex items-center justify-between p-4 bg-white rounded-2xl border border-gray-100 hover:border-[#C0420A] transition-all text-left">
+            <button id="payment-methods" onclick="document.getElementById('payment-modal').style.display='flex'" class="flex items-center justify-between p-4 bg-white rounded-2xl border border-gray-100 hover:border-[#C0420A] transition-all text-left">
                 <div class="flex items-center gap-3">
                     <div class="w-9 h-9 rounded-xl bg-blue-50 border border-blue-100 flex items-center justify-center">
                         <svg class="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"/></svg>
@@ -110,7 +119,7 @@
                 <svg class="w-4 h-4 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
             </button>
 
-            <button onclick="document.getElementById('legal-modal').classList.remove('hidden')" class="flex items-center justify-between p-4 bg-white rounded-2xl border border-gray-100 hover:border-[#C0420A] transition-all text-left">
+            <button onclick="document.getElementById('legal-modal').style.display='flex'" class="flex items-center justify-between p-4 bg-white rounded-2xl border border-gray-100 hover:border-[#C0420A] transition-all text-left">
                 <div class="flex items-center gap-3">
                     <div class="w-9 h-9 rounded-xl bg-green-50 border border-green-100 flex items-center justify-center">
                         <svg class="w-4 h-4 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
@@ -153,14 +162,14 @@
     </div>
 
     {{-- Payment Methods Modal with In-Modal Editing --}}
-    <div id="payment-modal" x-data="{ editing: false }" class="hidden fixed inset-0 bg-black/50 backdrop-blur-sm z-50 items-end sm:items-center justify-center">
+    <div id="payment-modal" x-data="{ editing: false }" style="display: none;" class="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-end sm:items-center justify-center">
         <div class="w-full sm:max-w-lg bg-white rounded-t-3xl sm:rounded-3xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
             <div class="flex items-center justify-between px-5 py-4 border-b border-gray-100 shrink-0">
                 <div>
                     <h2 class="text-sm font-black uppercase tracking-widest text-black">Payment Methods</h2>
                     <p class="text-[10px] text-gray-400 mt-0.5" x-text="editing ? 'Edit your payment numbers and upload QR code files' : 'Your payment accounts for receiving payouts & sales'"></p>
                 </div>
-                <button onclick="document.getElementById('payment-modal').classList.add('hidden')" class="w-8 h-8 rounded-xl bg-gray-100 flex items-center justify-center text-gray-500 hover:bg-gray-200 transition-all">
+                <button onclick="document.getElementById('payment-modal').style.display='none'" class="w-8 h-8 rounded-xl bg-gray-100 flex items-center justify-center text-gray-500 hover:bg-gray-200 transition-all">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
                 </button>
             </div>
@@ -176,10 +185,10 @@
                             <span class="text-[10px] font-black uppercase tracking-widest text-blue-700">GCash Account</span>
                         </div>
                         <div class="text-sm font-black text-black">{{ $user->gcashNumber ?: 'No GCash number added' }}</div>
-                        @if(!empty($user->gcashQrCode))
+                        @if(!empty($user->gcashQrCode) && $getImgUrl($user->gcashQrCode))
                             <div class="pt-2">
                                 <span class="text-[9px] font-bold text-gray-400 uppercase tracking-widest block mb-1">Uploaded QR Code:</span>
-                                <img src="{{ asset('storage/' . $user->gcashQrCode) }}" class="w-28 h-28 object-contain rounded-xl border border-blue-100 bg-white" onerror="this.parentElement.removeChild(this)">
+                                <img src="{{ $getImgUrl($user->gcashQrCode) }}" class="w-28 h-28 object-contain rounded-xl border border-blue-100 bg-white" onerror="this.parentElement.removeChild(this)">
                             </div>
                         @else
                             <div class="text-[10px] text-gray-400 italic">No QR code uploaded</div>
@@ -192,10 +201,10 @@
                             <span class="text-[10px] font-black uppercase tracking-widest text-green-700">Maya Account</span>
                         </div>
                         <div class="text-sm font-black text-black">{{ $user->mayaNumber ?: 'No Maya number added' }}</div>
-                        @if(!empty($user->mayaQrCode))
+                        @if(!empty($user->mayaQrCode) && $getImgUrl($user->mayaQrCode))
                             <div class="pt-2">
                                 <span class="text-[9px] font-bold text-gray-400 uppercase tracking-widest block mb-1">Uploaded QR Code:</span>
-                                <img src="{{ asset('storage/' . $user->mayaQrCode) }}" class="w-28 h-28 object-contain rounded-xl border border-green-100 bg-white" onerror="this.parentElement.removeChild(this)">
+                                <img src="{{ $getImgUrl($user->mayaQrCode) }}" class="w-28 h-28 object-contain rounded-xl border border-green-100 bg-white" onerror="this.parentElement.removeChild(this)">
                             </div>
                         @else
                             <div class="text-[10px] text-gray-400 italic">No QR code uploaded</div>
@@ -256,7 +265,7 @@
                 <button @click="editing = true" class="flex-1 py-3 bg-[#C0420A] text-white rounded-2xl text-xs font-black uppercase tracking-widest hover:bg-black transition-all shadow-md">
                     ✏ Edit Payment Info & QR Codes
                 </button>
-                <button onclick="document.getElementById('payment-modal').classList.add('hidden')" class="px-5 py-3 bg-gray-100 text-gray-700 rounded-2xl text-xs font-black uppercase tracking-widest hover:bg-gray-200 transition-all">
+                <button onclick="document.getElementById('payment-modal').style.display='none'" class="px-5 py-3 bg-gray-100 text-gray-700 rounded-2xl text-xs font-black uppercase tracking-widest hover:bg-gray-200 transition-all">
                     Close
                 </button>
             </div>
@@ -264,14 +273,14 @@
     </div>
 
     {{-- Legal Documents Modal with In-Modal Upload/Edit --}}
-    <div id="legal-modal" x-data="{ editing: false }" class="hidden fixed inset-0 bg-black/50 backdrop-blur-sm z-50 items-end sm:items-center justify-center">
+    <div id="legal-modal" x-data="{ editing: false }" style="display: none;" class="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-end sm:items-center justify-center">
         <div class="w-full sm:max-w-lg bg-white rounded-t-3xl sm:rounded-3xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
             <div class="flex items-center justify-between px-5 py-4 border-b border-gray-100 shrink-0">
                 <div>
                     <h2 class="text-sm font-black uppercase tracking-widest text-black">Legal Documents</h2>
                     <p class="text-[10px] text-gray-400 mt-0.5">Verification status: <span class="{{ $user->isVerified ? 'text-green-600' : 'text-amber-500' }} font-bold uppercase">{{ $user->isVerified ? 'Verified ✓' : 'Pending Verification' }}</span></p>
                 </div>
-                <button onclick="document.getElementById('legal-modal').classList.add('hidden')" class="w-8 h-8 rounded-xl bg-gray-100 flex items-center justify-center text-gray-500 hover:bg-gray-200 transition-all">
+                <button onclick="document.getElementById('legal-modal').style.display='none'" class="w-8 h-8 rounded-xl bg-gray-100 flex items-center justify-center text-gray-500 hover:bg-gray-200 transition-all">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
                 </button>
             </div>
@@ -298,7 +307,7 @@
                             @endif
                         </div>
                         @if($user->{$doc['field']})
-                            <a href="{{ asset('storage/' . $user->{$doc['field']}) }}" target="_blank" class="text-[10px] font-black text-[#C0420A] hover:underline uppercase tracking-widest shrink-0">View ↗</a>
+                            <a href="{{ $getImgUrl($user->{$doc['field']}) }}" target="_blank" class="text-[10px] font-black text-[#C0420A] hover:underline uppercase tracking-widest shrink-0">View ↗</a>
                         @endif
                     </div>
                     @endforeach
@@ -355,7 +364,7 @@
                 <button @click="editing = true" class="flex-1 py-3 bg-[#C0420A] text-white rounded-2xl text-xs font-black uppercase tracking-widest hover:bg-black transition-all shadow-md">
                     ✏ Upload / Edit Legal Documents
                 </button>
-                <button onclick="document.getElementById('legal-modal').classList.add('hidden')" class="px-5 py-3 bg-gray-100 text-gray-700 rounded-2xl text-xs font-black uppercase tracking-widest hover:bg-gray-200 transition-all">
+                <button onclick="document.getElementById('legal-modal').style.display='none'" class="px-5 py-3 bg-gray-100 text-gray-700 rounded-2xl text-xs font-black uppercase tracking-widest hover:bg-gray-200 transition-all">
                     Close
                 </button>
             </div>
@@ -368,7 +377,7 @@
         if (urlParams.get('open_payment') === '1' || window.location.hash === '#payment-methods') {
             const modal = document.getElementById('payment-modal');
             if (modal) {
-                modal.classList.remove('hidden');
+                modal.style.display = 'flex';
             }
         }
     });

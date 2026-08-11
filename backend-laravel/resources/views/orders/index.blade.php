@@ -91,9 +91,9 @@
                     'phone' => $addr['phone'] ?? '',
                     'seller' => $order->seller ? [
                         'id' => $order->seller->id,
-                        'name' => $order->seller->display_name,
+                        'name' => $order->seller->display_name ?? $order->seller->shopName ?? $order->seller->name ?? 'Artisan Shop',
                         'isVerified' => (bool) $order->seller->isVerified,
-                        'photo' => $order->seller->profilePhoto ? (str_starts_with($order->seller->profilePhoto, 'http') ? $order->seller->profilePhoto : asset('storage/' . $order->seller->profilePhoto)) : null,
+                        'photo' => $order->seller->profilePhoto ? (str_starts_with($order->seller->profilePhoto, 'http') ? $order->seller->profilePhoto : asset(ltrim($order->seller->profilePhoto, '/'))) : null,
                     ] : null,
                     'items' => $order->items->map(fn($item) => [
                         'id' => $item->id,

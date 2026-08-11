@@ -5,7 +5,16 @@
     {{-- Header & Date Filter Toolbar --}}
     <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-            <div class="text-[10px] font-bold text-[#C0422A] uppercase tracking-[0.2em] mb-1">Seller Performance Overview</div>
+            @php
+                $userRole = auth()->user()->role ?? 'seller';
+                $roleLabel = match(strtolower($userRole)) {
+                    'superadmin' => 'SuperAdmin',
+                    'admin' => 'Admin',
+                    default => 'Seller',
+                };
+            @endphp
+            <div class="text-xs font-bold text-[#C0422A] uppercase tracking-[0.15em] mb-1">Welcome Back, {{ $roleLabel }} {{ auth()->user()->name }}</div>
+            <div class="text-[10px] font-bold text-gray-400 uppercase tracking-[0.2em] mb-1">Seller Performance Overview</div>
             <h1 class="font-serif text-2xl sm:text-3xl font-bold text-black uppercase">Seller <span class="text-[#C0422A] italic lowercase">dashboard</span></h1>
         </div>
     </div>

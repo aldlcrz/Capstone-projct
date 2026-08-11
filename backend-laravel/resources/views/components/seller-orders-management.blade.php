@@ -229,7 +229,7 @@ function sellerOrders() {
             if (currentIdx === -1 || currentIdx === this.statusCycle.length - 1) return;
             
             const nextStatus = this.statusCycle[currentIdx + 1];
-            if (!confirm(`Update order status to ${nextStatus}?`)) return;
+            if (!confirm("Are you sure want to proceed?")) return;
             
             this.updatingId = order.id;
             try {

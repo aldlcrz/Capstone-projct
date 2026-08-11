@@ -62,6 +62,11 @@
                         class="w-full px-3.5 py-2.5 sm:px-6 sm:py-4 bg-gray-50/50 border border-gray-100 rounded-xl sm:rounded-2xl outline-none focus:border-[#C0420A] transition-all font-medium resize-none sm:rows-6 text-sm sm:text-base">{{ old('description', $product->description) }}</textarea>
                 </div>
 
+                <div class="space-y-1.5 sm:space-y-4">
+                    <label class="text-[10px] font-bold uppercase tracking-widest text-gray-400">Materials Used (Fabric)</label>
+                    <input type="text" name="fabric_type" value="{{ old('fabric_type', $product->fabric_type ?? '100% Piña') }}" placeholder="e.g. 100% Piña, Piña Organza, Jusi, Linen" class="w-full px-3.5 py-2.5 sm:px-6 sm:py-4 bg-gray-50/50 border border-gray-100 rounded-xl sm:rounded-2xl outline-none focus:border-[#C0420A] transition-all font-medium text-sm sm:text-base">
+                </div>
+
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-8">
                     <div class="space-y-1.5 sm:space-y-4">
                         <label class="text-[10px] font-bold uppercase tracking-widest text-gray-400">Price (₱)</label>
@@ -126,43 +131,6 @@
                                     class="w-full px-2.5 py-1.5 sm:px-4 sm:py-2.5 bg-white border border-gray-100 rounded-xl outline-none text-xs font-bold text-center size-stock-input">
                             </div>
                         @endforeach
-                    </div>
-
-                    <!-- Size Guide Image Upload -->
-                    <div class="mt-3.5 pt-3.5 sm:mt-6 sm:pt-6 border-t border-gray-100 space-y-2.5 sm:space-y-4">
-                        <label class="text-[10px] font-bold uppercase tracking-widest text-gray-400">Product Size Guide Chart / Image (Optional)</label>
-                        <p class="text-[10px] text-gray-400 -mt-1 sm:-mt-2">Upload a custom size guide chart for this product so customers can see exact measurements on the size guide modal.</p>
-                        <div class="relative group" x-data="{ guidePreview: '{{ $product->getSizeGuideUrl() ?? '' }}' }">
-                            <input type="file" name="size_guide_image" accept="image/*"
-                                class="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
-                                @change="
-                                    const file = $event.target.files[0];
-                                    if (file) {
-                                        const reader = new FileReader();
-                                        reader.onload = (e) => { guidePreview = e.target.result; };
-                                        reader.readAsDataURL(file);
-                                    }
-                                ">
-                            <div class="border-2 border-dashed border-gray-200 bg-white rounded-2xl p-3.5 sm:p-6 flex flex-col items-center justify-center text-center hover:border-[#C0420A] hover:bg-[#C0420A]/5 transition-all">
-                                <template x-if="guidePreview">
-                                    <div class="relative w-full max-h-48 overflow-hidden rounded-xl border border-gray-200">
-                                        <img :src="guidePreview" class="w-full h-48 object-contain">
-                                        <div class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
-                                            <span class="text-xs text-white font-bold uppercase tracking-wider">Click or drag to change Size Guide</span>
-                                        </div>
-                                    </div>
-                                </template>
-                                <template x-if="!guidePreview">
-                                    <div class="space-y-1.5">
-                                        <svg class="w-7 h-7 sm:w-8 sm:h-8 text-gray-300 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path>
-                                        </svg>
-                                        <span class="text-xs font-bold text-gray-600 block">Upload Size Guide Chart/Image</span>
-                                        <span class="text-[10px] text-gray-400 font-medium block">PNG, JPG, WEBP up to 5MB</span>
-                                    </div>
-                                </template>
-                            </div>
-                        </div>
                     </div>
                 </div>
 
@@ -265,7 +233,7 @@
             @if(count($images) > 0)
             <div class="bg-white p-3.5 sm:p-8 rounded-2xl sm:rounded-3xl border border-gray-100 shadow-sm space-y-3.5 sm:space-y-6">
                 <h3 class="text-xs sm:text-sm font-bold text-black uppercase tracking-widest">Current Images</h3>
-                <div class="grid grid-cols-3 md:grid-cols-4 gap-2.5 sm:gap-4">
+                <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 sm:gap-4">
                     @foreach($images as $i => $img)
                         @php
                             if (str_starts_with($img, 'http')) {
@@ -278,18 +246,25 @@
                                 $imgSrc = asset('uploads/products/' . $img);
                             }
                         @endphp
-                        <div class="relative group aspect-3/4 rounded-xl overflow-hidden border border-gray-100">
+                        <div class="relative group aspect-3/4 rounded-2xl overflow-hidden border-2 transition-all shadow-sm select-none"
+                             x-data="{ marked: false }"
+                             :class="marked ? 'border-red-500 opacity-60 scale-95' : 'border-gray-100 hover:border-gray-300'">
                             <img src="{{ $imgSrc }}" class="w-full h-full object-cover">
-                            <label class="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 flex items-center justify-center cursor-pointer transition-opacity">
-                                <input type="checkbox" name="remove_images[]" value="{{ $img }}" class="hidden peer">
-                                <div class="px-2.5 py-1 rounded-lg bg-red-500 text-white text-[9px] font-black uppercase tracking-widest peer-checked:bg-red-700">
-                                    Remove
-                                </div>
-                            </label>
+                            <input type="checkbox" name="remove_images[]" value="{{ $img }}" :checked="marked" class="hidden">
+                            
+                            {{-- Delete toggle button --}}
+                            <button type="button" @click="marked = !marked"
+                                class="absolute top-2 right-2 px-2.5 py-1 rounded-lg text-[9px] font-black uppercase tracking-wider shadow-md transition-all z-10 flex items-center gap-1"
+                                :class="marked ? 'bg-red-600 text-white' : 'bg-black/70 text-white hover:bg-red-600'">
+                                <span x-text="marked ? '✕ Marked to Delete' : '🗑 Delete Photo'"></span>
+                            </button>
+                            <div x-show="marked" class="absolute inset-0 bg-red-900/40 flex items-center justify-center pointer-events-none">
+                                <span class="text-white text-[10px] font-black uppercase tracking-widest bg-red-600 px-3 py-1 rounded-full shadow-lg">Will be deleted on save</span>
+                            </div>
                         </div>
                     @endforeach
                 </div>
-                <p class="text-[10px] text-gray-400">Hover over an image and tick "Remove" to delete it when you save.</p>
+                <p class="text-[10px] text-gray-400 font-medium">Click "Delete Photo" on any image to mark it for deletion when saving changes.</p>
             </div>
             @endif
         </div>

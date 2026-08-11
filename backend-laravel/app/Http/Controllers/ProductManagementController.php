@@ -84,6 +84,7 @@ class ProductManagementController extends Controller
             $product->sellerId = Auth::id();
             $product->name = $request->name;
             $product->description = $request->description;
+            $product->fabric_type = $request->input('fabric_type', '100% Piña');
             $product->price = $request->price;
             $product->shippingFee = $request->shippingFee ?? 0;
             $product->shippingDays = $request->shippingDays ?? 5;
@@ -222,6 +223,7 @@ class ProductManagementController extends Controller
 
         $product->name         = $request->name;
         $product->description  = $request->description;
+        $product->fabric_type  = $request->input('fabric_type', '100% Piña');
         $product->price        = $request->price;
         $product->shippingFee  = $request->shippingFee ?? 0;
         $product->shippingDays = $request->shippingDays ?? 5;
@@ -344,5 +346,54 @@ class ProductManagementController extends Controller
         $product->delete();
 
         return redirect()->route('seller.products.index')->with('success', 'Product listing removed.');
+    }
+
+    public function updateSizeGuides(Request $request)
+    {
+        $request->validate([
+            'target_group'     => 'required|in:Men,Women,Kids',
+            'size_guide_image' => 'required|image|mimes:jpeg,png,jpg,webp|max:5120',
+        ], [
+            'size_guide_image.required' => 'Please select a size guide image file to upload.',
+            'size_guide_image.image'    => 'The file must be a valid image (JPEG, PNG, WEBP).',
+        ]);
+
+        $user = Auth::user();
+        $targetGroup = $request->input('target_group');
+        $sizeGuides = is_array($user->size_guides) ? $user->size_guides : [];
+
+        if ($request->hasFile('size_guide_image')) {
+            $file = $request->file('size_guide_image');
+            $filename = time() . '_sg_' . strtolower($targetGroup) . '_' . Str::random(6) . '.' . $file->getClientOriginalExtension();
+            $file->move(public_path('uploads/sizeguides'), $filename);
+            $sizeGuides[$targetGroup] = 'uploads/sizeguides/' . $filename;
+        }
+
+        $user->size_guides = $sizeGuides;
+        $user->save();
+
+        return redirect()->back()->with('success', 'Size guide for ' . $targetGroup . ' updated successfully!');
+    }
+
+    public function deleteSizeGuide(string $targetGroup)
+    {
+        if (!in_array($targetGroup, ['Men', 'Women', 'Kids'])) {
+            return redirect()->back()->with('error', 'Invalid target group.');
+        }
+
+        $user = Auth::user();
+        $sizeGuides = is_array($user->size_guides) ? $user->size_guides : [];
+
+        if (isset($sizeGuides[$targetGroup])) {
+            $filePath = public_path($sizeGuides[$targetGroup]);
+            if (file_exists($filePath)) {
+                @unlink($filePath);
+            }
+            unset($sizeGuides[$targetGroup]);
+            $user->size_guides = $sizeGuides;
+            $user->save();
+        }
+
+        return redirect()->back()->with('success', 'Size guide for ' . $targetGroup . ' removed.');
     }
 }

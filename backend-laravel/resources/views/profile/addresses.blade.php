@@ -128,13 +128,13 @@
                 <div class="relative bg-white rounded-2xl shadow-2xl w-full max-w-lg p-6 space-y-5 max-h-[90vh] overflow-y-auto">
                     <h3 class="text-base font-bold text-gray-900" x-text="editId ? 'Edit Address' : 'Add New Address'"></h3>
 
-                    <div class="grid grid-cols-2 gap-4">
-                        <div class="col-span-2">
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div class="col-span-1 sm:col-span-2">
                             <label class="text-xs font-semibold text-gray-500 mb-1 block">Full Name *</label>
                             <input x-model="form.recipientName" type="text" placeholder="Recipient's full name"
                                 class="w-full h-10 px-3 border border-gray-200 rounded-lg text-sm outline-none focus:border-[#C0420A]">
                         </div>
-                        <div class="col-span-2">
+                        <div class="col-span-1 sm:col-span-2">
                             <label class="text-xs font-semibold text-gray-500 mb-1 block">Phone Number *</label>
                             <input x-model="form.phone" type="text" placeholder="e.g. 09xxxxxxxxx"
                                 class="w-full h-10 px-3 border border-gray-200 rounded-lg text-sm outline-none focus:border-[#C0420A]">
@@ -274,17 +274,17 @@
                             </div>
                         </div>
 
-                        <div class="col-span-2">
+                        <div class="col-span-1 sm:col-span-2">
                             <label class="text-xs font-semibold text-gray-500 mb-1 block">House / Unit / Bldg No. *</label>
                             <input x-model="form.houseNo" type="text" placeholder="House no., building, unit"
                                 class="w-full h-10 px-3 border border-gray-200 rounded-lg text-sm outline-none focus:border-[#C0420A]">
                         </div>
-                        <div>
+                        <div class="col-span-1">
                             <label class="text-xs font-semibold text-gray-500 mb-1 block">Street</label>
                             <input x-model="form.street" type="text" placeholder="Street name"
                                 class="w-full h-10 px-3 border border-gray-200 rounded-lg text-sm outline-none focus:border-[#C0420A]">
                         </div>
-                        <div>
+                        <div class="col-span-1">
                             <label class="text-xs font-semibold text-gray-500 mb-1 block">Postal Code</label>
                             <input x-model="form.postalCode" type="text" placeholder="Postal code"
                                 class="w-full h-10 px-3 border border-gray-200 rounded-lg text-sm outline-none focus:border-[#C0420A]">

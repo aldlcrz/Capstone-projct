@@ -188,6 +188,8 @@ Route::middleware(['auth', 'seller'])->prefix('seller')->group(function () {
     Route::get('/products/{id}/edit', [\App\Http\Controllers\ProductManagementController::class, 'edit'])->name('seller.products.edit');
     Route::put('/products/{id}', [\App\Http\Controllers\ProductManagementController::class, 'update'])->name('seller.products.update');
     Route::delete('/products/{id}', [\App\Http\Controllers\ProductManagementController::class, 'destroy'])->name('seller.products.destroy');
+    Route::post('/size-guides', [\App\Http\Controllers\ProductManagementController::class, 'updateSizeGuides'])->name('seller.sizeguides.update');
+    Route::delete('/size-guides/{targetGroup}', [\App\Http\Controllers\ProductManagementController::class, 'deleteSizeGuide'])->name('seller.sizeguides.delete');
 
     // Seller Notifications
     Route::get('/notifications', [\App\Http\Controllers\DashboardController::class, 'notifications'])->name('seller.notifications.index');

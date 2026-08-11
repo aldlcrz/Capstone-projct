@@ -58,6 +58,11 @@
                     <textarea name="description" required rows="3" placeholder="Describe the craftsmanship, materials used, and the story behind this piece..." class="w-full px-3.5 py-2.5 sm:px-6 sm:py-4 bg-gray-50/50 border border-gray-100 rounded-xl sm:rounded-2xl outline-none focus:border-[#C0420A] transition-all font-medium resize-none sm:rows-6 text-sm sm:text-base"></textarea>
                 </div>
 
+                <div class="space-y-1.5 sm:space-y-4">
+                    <label class="text-[10px] font-bold uppercase tracking-widest text-gray-400">Materials Used (Fabric)</label>
+                    <input type="text" name="fabric_type" value="{{ old('fabric_type', '100% Piña') }}" placeholder="e.g. 100% Piña, Piña Organza, Jusi, Linen" class="w-full px-3.5 py-2.5 sm:px-6 sm:py-4 bg-gray-50/50 border border-gray-100 rounded-xl sm:rounded-2xl outline-none focus:border-[#C0420A] transition-all font-medium text-sm sm:text-base">
+                </div>
+
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-8">
                     <div class="space-y-1.5 sm:space-y-4">
                         <label class="text-[10px] font-bold uppercase tracking-widest text-gray-400">Price (₱)</label>
@@ -110,40 +115,6 @@
                                     class="w-full px-2.5 py-1.5 sm:px-4 sm:py-2.5 bg-white border border-gray-100 rounded-xl outline-none text-xs font-bold text-center size-stock-input">
                             </div>
                         @endforeach
-                    </div>
-
-                    <!-- Size Guide Image Upload -->
-                    <div class="mt-3.5 pt-3.5 sm:mt-6 sm:pt-6 border-t border-gray-100 space-y-2.5 sm:space-y-4">
-                        <label class="text-[10px] font-bold uppercase tracking-widest text-gray-400">Product Size Guide Chart / Image (Optional)</label>
-                        <p class="text-[10px] text-gray-400 -mt-1 sm:-mt-2">Upload a custom size guide chart for this product so customers can see exact measurements on the size guide modal.</p>
-                        <div class="relative group" x-data="{ guidePreview: '' }">
-                            <input type="file" name="size_guide_image" accept="image/*"
-                                class="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
-                                @change="
-                                    const file = $event.target.files[0];
-                                    if (file) {
-                                        const reader = new FileReader();
-                                        reader.onload = (e) => { guidePreview = e.target.result; };
-                                        reader.readAsDataURL(file);
-                                    }
-                                ">
-                            <div class="border-2 border-dashed border-gray-200 bg-white rounded-2xl p-3.5 sm:p-6 flex flex-col items-center justify-center text-center hover:border-[#C0420A] hover:bg-[#C0420A]/5 transition-all">
-                                <template x-if="guidePreview">
-                                    <div class="relative w-full max-h-48 overflow-hidden rounded-xl border border-gray-200">
-                                        <img :src="guidePreview" class="w-full h-48 object-contain">
-                                    </div>
-                                </template>
-                                <template x-if="!guidePreview">
-                                    <div class="space-y-1.5">
-                                        <svg class="w-7 h-7 sm:w-8 sm:h-8 text-gray-300 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path>
-                                        </svg>
-                                        <span class="text-xs font-bold text-gray-600 block">Upload Size Guide Chart/Image</span>
-                                        <span class="text-[10px] text-gray-400 font-medium block">PNG, JPG, WEBP up to 5MB</span>
-                                    </div>
-                                </template>
-                            </div>
-                        </div>
                     </div>
                 </div>
 
@@ -401,20 +372,47 @@
 </div>
 
 <script>
+let productImagesDT = new DataTransfer();
+
 function previewImages(input) {
+    if (input.files && input.files.length > 0) {
+        Array.from(input.files).forEach(file => {
+            productImagesDT.items.add(file);
+        });
+        input.files = productImagesDT.files;
+    }
+    renderImagePreviews();
+}
+
+function removeImageAt(index) {
+    const input = document.getElementById('imageUploadInput');
+    const newDT = new DataTransfer();
+    Array.from(productImagesDT.files).forEach((file, i) => {
+        if (i !== index) newDT.items.add(file);
+    });
+    productImagesDT = newDT;
+    if (input) input.files = productImagesDT.files;
+    renderImagePreviews();
+}
+
+function renderImagePreviews() {
     const grid = document.getElementById('image-preview-grid');
     const badge = document.getElementById('img-count-badge');
-    const dropLabel = document.getElementById('dropZone').querySelector('div:last-of-type div:first-child');
+    const dropLabel = document.getElementById('dropZone')?.querySelector('div:last-of-type div:first-child');
+    if (!grid) return;
     grid.innerHTML = '';
 
-    if (input.files && input.files.length > 0) {
+    const files = productImagesDT.files;
+    if (files && files.length > 0) {
         grid.classList.remove('hidden');
         grid.classList.add('grid');
-        badge.classList.remove('hidden');
-        badge.textContent = input.files.length + ' photo' + (input.files.length !== 1 ? 's' : '');
-        if (dropLabel) dropLabel.textContent = 'Change Photos';
+        if (badge) {
+            badge.classList.remove('hidden');
+            badge.textContent = files.length + ' photo' + (files.length !== 1 ? 's' : '');
+        }
+        if (dropLabel) dropLabel.textContent = '+ Add More Photos';
 
-        Array.from(input.files).forEach((file, idx) => {
+        Array.from(files).forEach((file, idx) => {
             const reader = new FileReader();
             reader.onload = function(e) {
                 const card = document.createElement('div');
@@ -422,7 +420,8 @@ function previewImages(input) {
                 card.style.aspectRatio = '3/4';
                 card.innerHTML = `
                     <img src="${e.target.result}" class="w-full h-full object-cover object-top transition-transform duration-300 group-hover:scale-105">
-                    <div class="absolute inset-0 bg-linear-to-t from-black/40 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-end p-2">
+                    <button type="button" onclick="removeImageAt(${idx})" class="absolute top-2 right-2 w-6 h-6 bg-red-600 text-white rounded-full flex items-center justify-center text-xs font-bold shadow-md hover:bg-black transition-colors z-10" title="Remove photo">✕</button>
+                    <div class="absolute inset-0 bg-linear-to-t from-black/40 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-end p-2 pointer-events-none">
                         <span class="text-[8px] font-black text-white uppercase tracking-widest">${file.name.length > 16 ? file.name.substring(0, 14) + '…' : file.name}</span>
                     </div>
                     <div class="absolute top-2 left-2 w-5 h-5 bg-black/60 rounded-full flex items-center justify-center text-[8px] font-black text-white">${idx + 1}</div>
@@ -434,7 +433,7 @@ function previewImages(input) {
     } else {
         grid.classList.add('hidden');
         grid.classList.remove('grid');
-        badge.classList.add('hidden');
+        if (badge) badge.classList.add('hidden');
         if (dropLabel) dropLabel.textContent = 'Click to Upload Photos';
     }
 }

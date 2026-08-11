@@ -55,7 +55,7 @@
                 
                 <!-- Center: Modern Pill Search Bar (LumBarong theme) -->
                 <div class="flex-1 min-w-0 max-w-lg mx-auto">
-                    <form action="/" method="GET" style="position: relative; width: 100%;">
+                    <form action="/" method="GET" class="ajax-search-form" style="position: relative; width: 100%;">
                         <input type="text" name="search" value="{{ request('search') }}"
                                placeholder="Search Barongs, Sellers..."
                                style="padding-left: 18px; padding-right: 44px;"
@@ -472,6 +472,7 @@
     </script>
 
     <x-confirmation-modal />
+    <x-modal-scroll-lock />
     @stack('scripts')
 </body>
 </html>

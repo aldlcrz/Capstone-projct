@@ -51,14 +51,16 @@ This project has been migrated to a modern **Laravel** architecture, providing a
 2. Start Apache and MySQL in the XAMPP Control Panel.
 3. Access the site via your configured local URL (e.g., `http://localhost/Capstone-projct-main/backend-laravel/public`).
 
-### Option B: Using Artisan Serve
-1. In the `backend-laravel` directory, run:
-   ```bash
-   php artisan serve
+### Option B: Using Artisan Serve (Windows / XAMPP)
+
+1. **Terminal 1: Start Backend Server**
+   ```powershell
+   cd backend-laravel ; C:\xampp\php\php.exe artisan serve
    ```
-2. In a separate terminal, run Vite for frontend assets:
-   ```bash
-   npm run dev
+
+2. **Terminal 2: Start Frontend Assets (Vite)**
+   ```powershell
+   cd backend-laravel ; npm run dev
    ```
 
 ---

@@ -271,6 +271,7 @@
     
     <x-confirmation-modal />
     <x-broadcast-notification />
+    <x-modal-scroll-lock />
     @stack('scripts')
     <script>
         function adminApp() {

@@ -86,6 +86,10 @@ class WebController extends Controller
             });
         }
 
+        if ($request->has('lumban_special') || $request->sort === 'lumban_special') {
+            $query->where('is_on_sale', true)->where('discount_percentage', '>', 0);
+        }
+
         if ($request->has('sort')) {
             if (in_array($request->sort, ['trending', 'best_sellers', 'most_sold'])) {
                 $query->orderBy('views', 'desc')->orderBy('createdAt', 'desc');
@@ -359,7 +363,7 @@ class WebController extends Controller
     public function orders(Request $request)
     {
         $query = Order::where('customerId', Auth::id())
-            ->with(['items.product'])
+            ->with(['items.product', 'seller'])
             ->orderBy('createdAt', 'desc');
 
         // Filter by status tab

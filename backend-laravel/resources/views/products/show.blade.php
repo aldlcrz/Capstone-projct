@@ -503,10 +503,14 @@
             <div class="lg:col-span-5">
                 <h3 class="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-4">Artisan's Story</h3>
                 <div class="flex items-center gap-4">
-                    <div class="w-14 h-14 bg-gray-50 rounded-2xl flex items-center justify-center text-xl font-bold text-gray-300 border border-gray-100 shadow-sm shrink-0 relative">
-                        {{ strtoupper(substr($product->artisan ?? 'A', 0, 1)) }}
+                    <div class="w-14 h-14 bg-gray-50 rounded-2xl flex items-center justify-center text-xl font-bold text-gray-300 border border-gray-100 shadow-sm shrink-0 relative overflow-hidden">
+                        @if($product->seller && $product->seller->profilePhoto)
+                            <img src="{{ str_starts_with($product->seller->profilePhoto, 'http') ? $product->seller->profilePhoto : asset(ltrim($product->seller->profilePhoto, '/')) }}" class="w-full h-full object-cover" onerror="this.style.display='none'">
+                        @else
+                            {{ strtoupper(substr($product->artisan ?? 'A', 0, 1)) }}
+                        @endif
                         @if($product->seller && $product->seller->isPremiumActive())
-                            <span class="absolute -top-1 -right-1 text-sm bg-yellow-400 border border-white rounded-full w-5 h-5 flex items-center justify-center shadow-xs">👑</span>
+                            <span class="absolute -top-1 -right-1 text-sm bg-yellow-400 border border-white rounded-full w-5 h-5 flex items-center justify-center shadow-xs z-10">👑</span>
                         @endif
                     </div>
                     <div>
@@ -528,7 +532,11 @@
                 </div>
             </div>
             <div class="lg:col-span-7">
-                <h3 class="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-4">Product Details</h3>
+                <h3 class="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-3">Product Details</h3>
+                <div class="mb-4 text-xs font-bold uppercase tracking-wider flex items-center gap-2">
+                    <span class="text-gray-400 font-bold">Material:</span>
+                    <span class="px-2.5 py-1 bg-orange-50 border border-orange-100 text-[#C0420A] font-black text-xs rounded-lg">🧵 {{ $product->fabric_type ?? $product->fabric ?? '100% Piña' }}</span>
+                </div>
                 <p class="text-gray-600 text-sm leading-relaxed whitespace-pre-line">
                     {{ $product->description }}
                 </p>
@@ -754,16 +762,30 @@
                     </div>
                 @endif
 
-                <!-- Default Size Guide Reference with Men / Women / Kids Tabs -->
+                <!-- Size Guide Reference with Men / Women / Kids Tabs -->
                 @php
-                $hasSellerGuide = $product->getSizeGuideUrl() || (!empty($product->size_guide_measurements) && is_array($product->size_guide_measurements));
+                    $sellerSizeGuides = $product->seller->size_guides ?? [];
+                    $resolveSgUrl = function($targetGroup, $defaultPath) use ($sellerSizeGuides) {
+                        if (!empty($sellerSizeGuides[$targetGroup])) {
+                            $path = $sellerSizeGuides[$targetGroup];
+                            return str_starts_with($path, 'http') ? $path : asset(ltrim($path, '/'));
+                        }
+                        return asset($defaultPath);
+                    };
+                    $menGuideUrl   = $resolveSgUrl('Men', 'uploads/size-guides/size_guide_men.png');
+                    $womenGuideUrl = $resolveSgUrl('Women', 'uploads/size-guides/size_guide_women.png');
+                    $kidsGuideUrl  = $resolveSgUrl('Kids', 'uploads/size-guides/size_guide_kids.png');
+
+                    $isCustomMen   = !empty($sellerSizeGuides['Men']);
+                    $isCustomWomen = !empty($sellerSizeGuides['Women']);
+                    $isCustomKids  = !empty($sellerSizeGuides['Kids']);
                 @endphp
 
                 <div class="space-y-4">
                     <div class="flex items-center gap-2 py-1">
                         <div class="w-5 h-[1.5px] bg-gray-300"></div>
                         <span class="text-[10px] font-bold uppercase tracking-widest text-gray-400">
-                            {{ $hasSellerGuide ? 'General Barong Reference (All Categories)' : 'Standard Barong Tagalog Size Guide' }}
+                            Barong & Filipiniana Size Guide Reference
                         </span>
                         <div class="flex-1 h-px bg-gray-100"></div>
                     </div>
@@ -787,31 +809,37 @@
                     <!-- MEN's SIZE DIAGRAM PICTURE -->
                     <div id="size-tab-content-men" x-show="sizeTab === 'men'" class="space-y-4 text-center" style="display: block;">
                         <div class="rounded-3xl border border-[#E5DDD5] overflow-hidden bg-[#FDF9F4] p-4 shadow-sm">
-                            <a href="/uploads/size-guides/size_guide_men.png" target="_blank" title="Click to view full size image">
-                                <img src="/uploads/size-guides/size_guide_men.png" alt="Men's Barong Size Guide Chart" class="w-full max-h-[70vh] object-contain rounded-2xl mx-auto shadow-xs hover:scale-[1.02] transition-transform">
+                            <a href="{{ $menGuideUrl }}" target="_blank" title="Click to view full size image">
+                                <img src="{{ $menGuideUrl }}" alt="Men's Size Guide Chart" class="w-full max-h-[70vh] object-contain rounded-2xl mx-auto shadow-xs hover:scale-[1.02] transition-transform">
                             </a>
                         </div>
-                        <p class="text-xs text-gray-500 font-semibold">👔 Men's Barong Tagalog Size Guide Chart • Click image to open high-resolution view</p>
+                        <p class="text-xs text-gray-500 font-semibold">
+                            👔 {{ $isCustomMen ? "Artisan's Shop Men's Size Guide Chart" : "Men's Barong Tagalog Standard Size Guide Chart" }} • Click image to open high-resolution view
+                        </p>
                     </div>
 
                     <!-- WOMEN's SIZE DIAGRAM PICTURE -->
                     <div id="size-tab-content-women" x-show="sizeTab === 'women'" class="space-y-4 text-center" style="display: none;">
                         <div class="rounded-3xl border border-[#F5EAD9] overflow-hidden bg-[#FDF9F4] p-4 shadow-sm">
-                            <a href="/uploads/size-guides/size_guide_women.png" target="_blank" title="Click to view full size image">
-                                <img src="/uploads/size-guides/size_guide_women.png" alt="Women's Filipiniana Size Guide Chart" class="w-full max-h-[70vh] object-contain rounded-2xl mx-auto shadow-xs hover:scale-[1.02] transition-transform">
+                            <a href="{{ $womenGuideUrl }}" target="_blank" title="Click to view full size image">
+                                <img src="{{ $womenGuideUrl }}" alt="Women's Size Guide Chart" class="w-full max-h-[70vh] object-contain rounded-2xl mx-auto shadow-xs hover:scale-[1.02] transition-transform">
                             </a>
                         </div>
-                        <p class="text-xs text-gray-500 font-semibold">👗 Women's Baro't Saya / Filipiniana Size Guide Chart • Click image to open high-resolution view</p>
+                        <p class="text-xs text-gray-500 font-semibold">
+                            👗 {{ $isCustomWomen ? "Artisan's Shop Women's Size Guide Chart" : "Women's Baro't Saya / Filipiniana Standard Size Guide Chart" }} • Click image to open high-resolution view
+                        </p>
                     </div>
 
                     <!-- KIDS' SIZE DIAGRAM PICTURE -->
                     <div id="size-tab-content-kids" x-show="sizeTab === 'kids'" class="space-y-4 text-center" style="display: none;">
                         <div class="rounded-3xl border border-gray-200 overflow-hidden bg-[#F4F8F3] p-4 shadow-sm">
-                            <a href="/uploads/size-guides/size_guide_kids.png" target="_blank" title="Click to view full size image">
-                                <img src="/uploads/size-guides/size_guide_kids.png" alt="Kids' Barong Size Guide Chart" class="w-full max-h-[70vh] object-contain rounded-2xl mx-auto shadow-xs hover:scale-[1.02] transition-transform">
+                            <a href="{{ $kidsGuideUrl }}" target="_blank" title="Click to view full size image">
+                                <img src="{{ $kidsGuideUrl }}" alt="Kids' Size Guide Chart" class="w-full max-h-[70vh] object-contain rounded-2xl mx-auto shadow-xs hover:scale-[1.02] transition-transform">
                             </a>
                         </div>
-                        <p class="text-xs text-gray-500 font-semibold">🧒 Kids' Barong Tagalog Size Guide Chart • Click image to open high-resolution view</p>
+                        <p class="text-xs text-gray-500 font-semibold">
+                            🧒 {{ $isCustomKids ? "Artisan's Shop Kids' Size Guide Chart" : "Kids' Barong Tagalog Standard Size Guide Chart" }} • Click image to open high-resolution view
+                        </p>
                     </div>
                 </div>
 

@@ -132,6 +132,7 @@
         </div>
     </div>
     <x-confirmation-modal />
+    <x-modal-scroll-lock />
     @stack('scripts')
 </body>
 </html>

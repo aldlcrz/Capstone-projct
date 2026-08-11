@@ -107,6 +107,7 @@ class User extends Authenticatable
             'updatedAt'         => 'datetime',
             'isPremium'         => 'boolean',
             'premiumEndsAt'     => 'datetime',
+            'size_guides'       => 'array',
         ];
     }
 
