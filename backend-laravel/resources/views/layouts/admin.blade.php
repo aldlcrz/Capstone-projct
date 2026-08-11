@@ -310,8 +310,97 @@
                             <a href="{{ route('admin.notifications.index') }}" class="block w-full py-3 text-center text-[10px] font-bold uppercase tracking-widest text-gray-400 hover:text-black hover:bg-gray-50 border-t border-gray-100 transition-all">View All</a>
                         </div>
                     </div>
-                    <div class="text-sm font-bold text-(--muted) hidden sm:block">
-                        {{ date('M d, Y') }}
+                    
+                    <!-- Admin Profile Dropdown with Overflow Tools -->
+                    <div x-data="{ profileOpen: false }" class="relative" @click.away="profileOpen = false">
+                        <button @click="profileOpen = !profileOpen" class="flex items-center gap-3 hover:opacity-80 transition-all cursor-pointer focus:outline-none" title="Admin Profile & Settings">
+                            <div class="text-right hidden sm:block">
+                                <div class="text-sm font-bold text-gray-900 flex items-center gap-1.5 justify-end">
+                                    {{ Auth::user()->name }}
+                                    <span class="text-xs text-[#C0420A]" title="System Administrator">🛡️</span>
+                                </div>
+                                <div class="text-[10px] font-bold uppercase tracking-widest text-[#C0420A]">
+                                    Administrator
+                                </div>
+                            </div>
+                            <div class="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-black text-white flex items-center justify-center font-bold shadow-md overflow-hidden shrink-0 border-2 border-white">
+                                @if(Auth::user()->profilePhoto)
+                                    <img src="{{ str_starts_with(Auth::user()->profilePhoto, 'http') || str_starts_with(Auth::user()->profilePhoto, '/') ? Auth::user()->profilePhoto : asset('storage/' . Auth::user()->profilePhoto) }}" class="w-full h-full object-cover" onerror="this.style.display='none'">
+                                @else
+                                    {{ strtoupper(substr(Auth::user()->name, 0, 1)) }}
+                                @endif
+                            </div>
+                            <svg class="w-4 h-4 text-gray-400 hidden sm:block transition-transform duration-200" :class="{ 'rotate-180': profileOpen }" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                            </svg>
+                        </button>
+
+                        <!-- Admin Profile & Overflow Menu Dropdown Panel -->
+                        <div x-show="profileOpen"
+                             x-transition:enter="transition ease-out duration-200"
+                             x-transition:enter-start="opacity-0 translate-y-1 scale-95"
+                             x-transition:enter-end="opacity-100 translate-y-0 scale-100"
+                             x-transition:leave="transition ease-in duration-150"
+                             x-transition:leave-start="opacity-100 translate-y-0 scale-100"
+                             x-transition:leave-end="opacity-0 translate-y-1 scale-95"
+                             class="absolute right-0 mt-2 w-64 bg-white rounded-2xl shadow-2xl border border-gray-100 z-50 overflow-hidden"
+                             style="display: none;"
+                             x-cloak>
+                            
+                            <!-- Header / Admin Info -->
+                            <div class="px-4 py-3.5 bg-gray-50 border-b border-gray-100 flex items-center gap-3">
+                                <div class="w-9 h-9 rounded-xl bg-black text-white flex items-center justify-center font-bold text-xs shrink-0">
+                                    {{ strtoupper(substr(Auth::user()->name, 0, 1)) }}
+                                </div>
+                                <div class="min-w-0">
+                                    <div class="text-xs font-bold text-gray-900 truncate">{{ Auth::user()->name }}</div>
+                                    <div class="text-[10px] text-gray-400 truncate">{{ Auth::user()->email }}</div>
+                                </div>
+                            </div>
+
+                            <!-- Overflow Administrative Features & Settings -->
+                            <div class="py-1">
+                                <div class="px-4 py-1.5 text-[9px] font-bold uppercase tracking-widest text-gray-400">System Utilities</div>
+
+                                <a href="{{ route('admin.maintenance') }}" class="flex items-center gap-2.5 px-4 py-2.5 text-xs font-semibold text-gray-700 hover:bg-[#C0420A]/10 hover:text-[#C0420A] transition-colors">
+                                    <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z"></path></svg>
+                                    <span>Maintenance Mode</span>
+                                </a>
+
+                                <a href="{{ route('admin.audit-logs') }}" class="flex items-center gap-2.5 px-4 py-2.5 text-xs font-semibold text-gray-700 hover:bg-[#C0420A]/10 hover:text-[#C0420A] transition-colors">
+                                    <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"></path></svg>
+                                    <span>Audit Logs</span>
+                                </a>
+
+                                <a href="{{ route('admin.platform') }}" class="flex items-center gap-2.5 px-4 py-2.5 text-xs font-semibold text-gray-700 hover:bg-[#C0420A]/10 hover:text-[#C0420A] transition-colors">
+                                    <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                                    <span>Platform Info</span>
+                                </a>
+
+                                <a href="{{ route('admin.export') }}" class="flex items-center gap-2.5 px-4 py-2.5 text-xs font-semibold text-gray-700 hover:bg-[#C0420A]/10 hover:text-[#C0420A] transition-colors">
+                                    <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
+                                    <span>Export Global Report</span>
+                                </a>
+                            </div>
+
+                            <div class="p-2 border-t border-gray-100 bg-gray-50/50">
+                                <form x-ref="dropdownLogoutForm" action="{{ route('logout') }}" method="POST">
+                                    @csrf
+                                    <button type="button"
+                                            @click="$dispatch('open-confirmation', {
+                                                title: 'Logout',
+                                                message: 'Are you sure you want to logout?',
+                                                confirmText: 'Logout',
+                                                type: 'danger',
+                                                onConfirm: () => $refs.dropdownLogoutForm.submit()
+                                            })"
+                                            class="flex items-center justify-center gap-2 w-full py-2 bg-red-50 text-red-600 rounded-xl hover:bg-red-100 transition-all font-bold text-[10px] tracking-widest uppercase cursor-pointer">
+                                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path></svg>
+                                        Logout
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </header>
