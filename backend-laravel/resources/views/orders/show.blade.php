@@ -135,7 +135,7 @@
 
                             {{-- Info --}}
                             <div class="flex-1 min-w-0 space-y-1">
-                                <h4 class="text-xs sm:text-base font-bold text-black truncate">{{ $item->product->name }}</h4>
+                                <h4 class="text-xs sm:text-base font-bold text-black truncate">{{ $item->product->name ?? 'Heritage Product' }}</h4>
                                 <div class="flex flex-wrap items-center gap-2 sm:gap-3 text-[9px] sm:text-[10px] font-bold text-gray-400 uppercase tracking-widest">
                                     @if($item->size)<span class="px-2 py-0.5 bg-gray-100 rounded-md text-gray-600">Size: {{ $item->size }}</span>@endif
                                     <span>Qty: {{ $item->quantity }}</span>
