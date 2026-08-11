@@ -21,23 +21,23 @@
         this.deleteModal = true;
     }
 }">
-    <div class="flex items-center justify-between">
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div>
             <div class="text-[10px] font-bold text-[#C0422A] uppercase tracking-[0.2em] mb-1">User Registry</div>
-            <h1 class="font-serif text-3xl font-bold text-black">
+            <h1 class="font-serif text-2xl sm:text-3xl font-bold text-black">
                 Customer <span class="text-gray-300 font-light italic">Management</span>
             </h1>
         </div>
         <div class="flex items-center gap-2 text-xs font-bold text-gray-400">
-            Total Customers: <span class="text-black text-lg font-black">{{ $users->total() }}</span>
+            Total Customers: <span class="text-black text-base sm:text-lg font-black">{{ $users->total() }}</span>
         </div>
     </div>
 
     {{-- Filters --}}
-    <form method="GET" class="flex flex-wrap gap-3 items-center">
+    <form method="GET" class="flex flex-col sm:flex-row gap-3 items-stretch sm:items-center">
         <input type="text" name="search" value="{{ request('search') }}" placeholder="Search customers by name, username, or email..."
-            class="flex-1 min-w-60 px-4 py-3 bg-white border border-gray-100 rounded-xl text-xs focus:outline-none focus:ring-2 focus:ring-[#C0422A]/10">
-        <select name="status" class="px-4 py-3 bg-white border border-gray-100 rounded-xl text-xs font-bold outline-none">
+            class="flex-1 min-w-0 px-4 py-3 bg-white border border-gray-100 rounded-xl text-xs focus:outline-none focus:ring-2 focus:ring-[#C0422A]/10">
+        <select name="status" class="px-4 py-3 bg-white border border-gray-100 rounded-xl text-xs font-bold outline-none cursor-pointer">
             <option value="">All Statuses</option>
             <option value="active"  {{ request('status') === 'active'  ? 'selected' : '' }}>Active</option>
             <option value="blocked" {{ request('status') === 'blocked' ? 'selected' : '' }}>Blocked</option>
@@ -47,13 +47,14 @@
             Filter
         </button>
         @if(request()->hasAny(['search','status']))
-            <a href="/admin/users" class="px-4 py-3 border border-gray-200 text-gray-400 rounded-xl text-[10px] font-bold hover:bg-gray-50 transition-all">Clear</a>
+            <a href="/admin/users" class="px-4 py-3 border border-gray-200 text-gray-400 rounded-xl text-[10px] font-bold text-center hover:bg-gray-50 transition-all">Clear</a>
         @endif
     </form>
 
     {{-- Table --}}
     <div class="bg-white rounded-3xl border border-gray-100 shadow-sm overflow-hidden">
-        <table class="w-full text-left">
+        <div class="overflow-x-auto no-scrollbar">
+            <table class="w-full text-left min-w-[550px]">
             <thead>
                 <tr class="bg-gray-50/50 border-b border-gray-100">
                     <th class="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-gray-400">Customer</th>
@@ -118,6 +119,7 @@
                 @endforelse
             </tbody>
         </table>
+        </div>
         <div class="px-6 py-4 border-t border-gray-50">
             {{ $users->withQueryString()->links() }}
         </div>

@@ -48,8 +48,8 @@
                                     <button type="submit"
                                         class="w-full py-2.5 bg-black text-white text-[10px] font-bold uppercase tracking-widest rounded-xl hover:bg-green-600 transition-all">Approve</button>
                                 </form>
-                                <button @click="rejectModal = true; rejectProductId = {{ $product->id }}"
-                                    class="w-full py-2.5 bg-white border border-gray-100 text-red-500 text-[10px] font-bold uppercase tracking-widest rounded-xl hover:bg-red-50 transition-all">Reject</button>
+                                <button @click="rejectModal = true; rejectProductId = '{{ $product->id }}'"
+                                    class="w-full py-2.5 bg-white border border-gray-100 text-red-500 text-[10px] font-bold uppercase tracking-widest rounded-xl hover:bg-red-50 transition-all cursor-pointer">Reject</button>
                             </div>
                         </div>
                     </div>

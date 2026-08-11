@@ -6,19 +6,19 @@
     showEditModal: false, 
     editingCategory: { id: '', name: '', description: '' } 
 }">
-    <div class="flex items-center justify-between">
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div>
             <div class="text-[10px] font-bold text-[#C0422A] uppercase tracking-[0.2em] mb-1">Catalog Management</div>
-            <h1 class="font-serif text-3xl font-bold text-black">Product <span class="text-gray-300 font-light italic">Categories</span></h1>
+            <h1 class="font-serif text-2xl sm:text-3xl font-bold text-black">Product <span class="text-gray-300 font-light italic">Categories</span></h1>
         </div>
-        <div class="flex items-center gap-3">
+        <div class="flex items-center gap-2 flex-wrap">
             <form action="{{ route('admin.categories.initialize') }}" method="POST">
                 @csrf
-                <button type="submit" class="flex items-center gap-2 px-6 py-3 bg-gray-100 text-gray-700 rounded-xl text-[10px] font-bold uppercase tracking-widest hover:bg-gray-200 transition-all">
+                <button type="submit" class="flex items-center gap-2 px-4 sm:px-6 py-2.5 sm:py-3 bg-gray-100 text-gray-700 rounded-xl text-[9px] sm:text-[10px] font-bold uppercase tracking-widest hover:bg-gray-200 transition-all cursor-pointer">
                     Initialize Defaults
                 </button>
             </form>
-            <button @click="showAddModal = true" class="flex items-center gap-2 px-6 py-3 bg-[#3D2B1F] text-white rounded-xl text-[10px] font-bold uppercase tracking-widest hover:bg-[#C0422A] transition-all">
+            <button @click="showAddModal = true" class="flex items-center gap-2 px-4 sm:px-6 py-2.5 sm:py-3 bg-[#3D2B1F] text-white rounded-xl text-[9px] sm:text-[10px] font-bold uppercase tracking-widest hover:bg-[#C0422A] transition-all cursor-pointer">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
                 Add Category
             </button>
@@ -26,7 +26,8 @@
     </div>
 
     <div class="bg-white rounded-3xl border border-gray-100 overflow-hidden shadow-sm">
-        <table class="w-full text-left border-collapse">
+        <div class="overflow-x-auto no-scrollbar">
+            <table class="w-full text-left border-collapse min-w-[550px]">
             <thead>
                 <tr class="bg-gray-50/50">
                     <th class="px-6 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest">Name</th>
@@ -92,6 +93,7 @@
                 @endforelse
             </tbody>
         </table>
+        </div>
     </div>
 
     <!-- Add Modal -->

@@ -6,19 +6,19 @@
     resolvingReport: { id: '', reason: '', description: '' } 
 }">
     {{-- Header --}}
-    <div class="flex items-center justify-between">
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-            <h2 class="text-2xl font-black text-[#3D2B1F] tracking-tight">System Reports</h2>
+            <h2 class="text-xl sm:text-2xl font-black text-[#3D2B1F] tracking-tight">System Reports</h2>
             <p class="text-xs text-gray-500 mt-1 uppercase tracking-widest font-bold">Review and moderate platform disputes</p>
         </div>
-        <div class="flex gap-2">
-            <a href="{{ route('admin.reports', ['status' => 'Pending']) }}" class="px-4 py-2 {{ $status == 'Pending' ? 'bg-[#3D2B1F] text-white' : 'bg-white text-gray-600' }} rounded-xl text-[10px] font-bold uppercase tracking-widest border border-gray-100 transition-all">
+        <div class="flex items-center gap-2 flex-wrap">
+            <a href="{{ route('admin.reports', ['status' => 'Pending']) }}" class="px-3 sm:px-4 py-2 {{ $status == 'Pending' ? 'bg-[#3D2B1F] text-white' : 'bg-white text-gray-600' }} rounded-xl text-[9px] sm:text-[10px] font-bold uppercase tracking-widest border border-gray-100 transition-all">
                 Pending ({{ $counts['pending'] }})
             </a>
-            <a href="{{ route('admin.reports', ['status' => 'Resolved']) }}" class="px-4 py-2 {{ $status == 'Resolved' ? 'bg-[#3D2B1F] text-white' : 'bg-white text-gray-600' }} rounded-xl text-[10px] font-bold uppercase tracking-widest border border-gray-100 transition-all">
+            <a href="{{ route('admin.reports', ['status' => 'Resolved']) }}" class="px-3 sm:px-4 py-2 {{ $status == 'Resolved' ? 'bg-[#3D2B1F] text-white' : 'bg-white text-gray-600' }} rounded-xl text-[9px] sm:text-[10px] font-bold uppercase tracking-widest border border-gray-100 transition-all">
                 Resolved ({{ $counts['resolved'] }})
             </a>
-            <a href="{{ route('admin.reports', ['status' => 'all']) }}" class="px-4 py-2 {{ $status == 'all' ? 'bg-[#3D2B1F] text-white' : 'bg-white text-gray-600' }} rounded-xl text-[10px] font-bold uppercase tracking-widest border border-gray-100 transition-all">
+            <a href="{{ route('admin.reports', ['status' => 'all']) }}" class="px-3 sm:px-4 py-2 {{ $status == 'all' ? 'bg-[#3D2B1F] text-white' : 'bg-white text-gray-600' }} rounded-xl text-[9px] sm:text-[10px] font-bold uppercase tracking-widest border border-gray-100 transition-all">
                 All Reports
             </a>
         </div>
@@ -26,7 +26,8 @@
 
     {{-- Reports List --}}
     <div class="bg-white border border-gray-100 rounded-3xl overflow-hidden shadow-sm">
-        <table class="w-full text-left border-collapse">
+        <div class="overflow-x-auto no-scrollbar">
+            <table class="w-full text-left border-collapse min-w-[650px]">
             <thead>
                 <tr class="bg-gray-50/50 border-bottom border-gray-100">
                     <th class="px-6 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest">Reporter</th>
@@ -112,6 +113,7 @@
                 @endforelse
             </tbody>
         </table>
+        </div>
     </div>
 
     {{-- Pagination --}}

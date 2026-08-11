@@ -17,13 +17,13 @@
 }">
 
     {{-- Page Header --}}
-    <div class="flex items-center justify-between">
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div>
             <div class="text-[10px] font-bold text-[#C0422A] uppercase tracking-[0.2em] mb-1">Content Management</div>
-            <h1 class="font-serif text-3xl font-bold text-black">Homepage <span class="text-gray-300 font-light italic">Banners</span></h1>
+            <h1 class="font-serif text-2xl sm:text-3xl font-bold text-black">Homepage <span class="text-gray-300 font-light italic">Banners</span></h1>
         </div>
         <button @click="showAddModal = true"
-            class="flex items-center gap-2 px-6 py-3 bg-[#3D2B1F] text-white rounded-xl text-[10px] font-bold uppercase tracking-widest hover:bg-[#C0422A] transition-all">
+            class="flex items-center gap-2 px-5 sm:px-6 py-2.5 sm:py-3 bg-[#3D2B1F] text-white rounded-xl text-[9px] sm:text-[10px] font-bold uppercase tracking-widest hover:bg-[#C0422A] transition-all cursor-pointer">
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
             </svg>

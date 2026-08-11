@@ -36,29 +36,29 @@
 
     {{-- Pending Verification --}}
     @if($pendingSellers->count() > 0)
-    <div class="bg-amber-50 border border-amber-100 rounded-3xl p-6 space-y-4">
-        <h3 class="text-sm font-black uppercase tracking-widest text-amber-800 flex items-center gap-2">
+    <div class="bg-amber-50 border border-amber-100 rounded-3xl p-4 sm:p-6 space-y-4">
+        <h3 class="text-xs sm:text-sm font-black uppercase tracking-widest text-amber-800 flex items-center gap-2">
             <span class="w-2 h-2 rounded-full bg-amber-500 animate-pulse"></span>
             Awaiting Verification ({{ $pendingSellers->count() }})
         </h3>
         <div class="space-y-3">
             @foreach($pendingSellers as $seller)
-            <div class="bg-white rounded-2xl p-5 flex items-center justify-between shadow-sm">
+            <div class="bg-white rounded-2xl p-4 sm:p-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shadow-sm">
                 <div class="flex items-center gap-3">
-                    <div class="w-10 h-10 rounded-xl bg-amber-100 text-amber-800 flex items-center justify-center font-black">
+                    <div class="w-10 h-10 rounded-xl bg-amber-100 text-amber-800 flex items-center justify-center font-black shrink-0">
                         {{ strtoupper(substr($seller->name, 0, 1)) }}
                     </div>
-                    <div>
-                        <div class="text-sm font-bold text-black">{{ $seller->name }}</div>
-                        <div class="text-[10px] text-gray-400">{{ $seller->email }}</div>
+                    <div class="min-w-0">
+                        <div class="text-sm font-bold text-black truncate">{{ $seller->name }}</div>
+                        <div class="text-[10px] text-gray-400 truncate">{{ $seller->email }}</div>
                     </div>
                 </div>
-                <div class="flex gap-2">
-                    <form action="/admin/sellers/{{ $seller->id }}/verify" method="POST">
+                <div class="flex gap-2 w-full sm:w-auto">
+                    <form action="/admin/sellers/{{ $seller->id }}/verify" method="POST" class="flex-1 sm:flex-initial">
                         @csrf @method('PATCH')
-                        <button type="submit" class="px-5 py-2 bg-green-600 text-white rounded-xl text-[9px] font-black uppercase tracking-widest hover:bg-green-700 transition-all">Verify</button>
+                        <button type="submit" class="w-full sm:w-auto px-5 py-2 bg-green-600 text-white rounded-xl text-[9px] font-black uppercase tracking-widest hover:bg-green-700 transition-all">Verify</button>
                     </form>
-                    <button type="button" @click="openSuspend({{ json_encode($seller) }})" class="px-5 py-2 bg-red-50 text-red-600 rounded-xl text-[9px] font-black uppercase tracking-widest hover:bg-red-500 hover:text-white transition-all">Reject / Suspend</button>
+                    <button type="button" @click="openSuspend({{ json_encode($seller) }})" class="flex-1 sm:flex-initial px-5 py-2 bg-red-50 text-red-600 rounded-xl text-[9px] font-black uppercase tracking-widest hover:bg-red-500 hover:text-white transition-all">Reject / Suspend</button>
                 </div>
             </div>
             @endforeach
@@ -71,7 +71,8 @@
         <div class="px-6 py-4 border-b border-gray-50 flex items-center justify-between">
             <h3 class="text-sm font-black uppercase tracking-widest text-black">All Sellers</h3>
         </div>
-        <table class="w-full text-left">
+        <div class="overflow-x-auto no-scrollbar">
+            <table class="w-full text-left min-w-[550px]">
             <thead>
                 <tr class="bg-gray-50/50 border-b border-gray-100">
                     <th class="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-gray-400">Seller</th>
@@ -130,6 +131,7 @@
                 @endforelse
             </tbody>
         </table>
+        </div>
         <div class="px-6 py-4 border-t border-gray-50">
             {{ $sellers->links() }}
         </div>
