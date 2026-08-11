@@ -141,11 +141,112 @@
             </div>
         </aside>
 
+        <!-- Mobile Drawer Overlay -->
+        <div x-show="isMobileMenuOpen"
+             x-transition:enter="transition ease-out duration-300"
+             x-transition:enter-start="opacity-0"
+             x-transition:enter-end="opacity-100"
+             x-transition:leave="transition ease-in duration-200"
+             x-transition:leave-start="opacity-100"
+             x-transition:leave-end="opacity-0"
+             class="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm lg:hidden"
+             style="display: none;"
+             x-cloak>
+            <div @click.away="isMobileMenuOpen = false"
+                 x-show="isMobileMenuOpen"
+                 x-transition:enter="transition ease-out duration-300 transform"
+                 x-transition:enter-start="-translate-x-full"
+                 x-transition:enter-end="translate-x-0"
+                 x-transition:leave="transition ease-in duration-200 transform"
+                 x-transition:leave-start="translate-x-0"
+                 x-transition:leave-end="-translate-x-full"
+                 class="w-72 max-w-[85vw] h-full bg-white flex flex-col justify-between p-6 overflow-y-auto no-scrollbar shadow-2xl">
+                <div>
+                    <div class="flex items-center justify-between mb-6 pb-4 border-b border-gray-100">
+                        <div>
+                            <a href="/admin/dashboard" class="font-serif text-lg font-bold text-[#2A2A2A] tracking-tighter">
+                                LUMBARONG
+                            </a>
+                            <div class="flex items-center gap-1.5 mt-1 text-[#C0420A] font-bold tracking-widest text-[9px]">
+                                CONTROL PANEL
+                            </div>
+                        </div>
+                        <button @click="isMobileMenuOpen = false" class="w-8 h-8 rounded-lg bg-gray-100 flex items-center justify-center text-gray-500 hover:text-black">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                        </button>
+                    </div>
+
+                    <nav class="space-y-5">
+                        @foreach($sidebarGroups as $group => $items)
+                            @if(!$loop->first)
+                                <div class="border-t border-gray-100"></div>
+                            @endif
+                            <div class="space-y-1">
+                                <div class="text-[9px] font-bold text-gray-400 tracking-widest uppercase px-2 mb-1.5">{{ $group }}</div>
+                                @foreach($items as $item)
+                                    <a href="/{{ $item['path'] }}"
+                                       @click="isMobileMenuOpen = false"
+                                       class="flex items-center justify-between px-3 py-2.5 rounded-xl transition-all text-xs font-semibold {{ request()->is($item['path'] . '*') ? 'bg-[#C0420A]/10 text-[#C0420A] font-bold border-l-3 border-[#C0420A]' : 'text-gray-700 hover:bg-gray-50' }}">
+                                        <div class="flex items-center gap-2.5">
+                                            <svg class="w-4 h-4 {{ request()->is($item['path'] . '*') ? 'text-[#C0420A]' : 'text-gray-400' }}" fill="none" stroke="currentColor" viewBox="0 0 24 24">{!! $item['icon'] !!}</svg>
+                                            <span>{{ $item['label'] }}</span>
+                                        </div>
+                                        @if(isset($item['badge']) && $item['badge'] > 0)
+                                            <span class="px-2 py-0.5 bg-red-500 text-white text-[8px] font-bold rounded-full">{{ $item['badge'] }}</span>
+                                        @endif
+                                    </a>
+                                @endforeach
+                            </div>
+                        @endforeach
+                    </nav>
+                </div>
+
+                <div class="pt-4 border-t border-gray-100 mt-6 space-y-3">
+                    <div class="flex items-center gap-3 px-1">
+                        <div class="w-9 h-9 rounded-xl bg-black text-white flex items-center justify-center font-bold text-xs">
+                            {{ strtoupper(substr(Auth::user()->name, 0, 1)) }}
+                        </div>
+                        <div>
+                            <div class="text-xs font-bold text-gray-900">{{ Auth::user()->name }}</div>
+                            <div class="text-[9px] text-gray-400 font-bold uppercase tracking-wider">Administrator</div>
+                        </div>
+                    </div>
+                    <form x-ref="mobileLogoutForm" action="{{ route('logout') }}" method="POST">
+                        @csrf
+                        <button type="button"
+                                @click="$dispatch('open-confirmation', {
+                                    title: 'Logout',
+                                    message: 'Are you sure you want to logout?',
+                                    confirmText: 'Logout',
+                                    type: 'danger',
+                                    onConfirm: () => $refs.mobileLogoutForm.submit()
+                                })"
+                                class="flex items-center justify-center gap-2 w-full py-2.5 bg-red-50 text-red-600 rounded-xl font-bold text-[10px] tracking-widest uppercase">
+                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path></svg>
+                            Logout
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
         <!-- Main Content Area -->
         <div class="flex-1 flex flex-col h-full relative overflow-hidden">
             <!-- Header -->
             <header class="sticky top-0 z-40 bg-white border-b border-(--border) h-18 flex items-center shrink-0 px-4 lg:px-10 justify-between">
-                <div class="lg:hidden font-serif font-bold text-(--charcoal) tracking-tighter">LUMBARONG ADMIN</div>
+                <div class="flex items-center gap-3">
+                    <button type="button"
+                            @click="isMobileMenuOpen = !isMobileMenuOpen"
+                            class="lg:hidden w-10 h-10 rounded-xl bg-gray-100 flex items-center justify-center text-gray-700 hover:bg-[#C0420A] hover:text-white transition-all cursor-pointer">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
+                        </svg>
+                    </button>
+                    <a href="/admin/dashboard" class="lg:hidden font-serif font-bold text-[#2A2A2A] tracking-tighter text-sm flex items-center gap-1.5">
+                        <span>LUMBARONG</span>
+                        <span class="text-[9px] font-black text-[#C0420A] px-1.5 py-0.5 bg-[#C0420A]/10 rounded uppercase">Admin</span>
+                    </a>
+                </div>
                 <div class="hidden lg:block"></div>
                 <div class="flex items-center gap-4">
                     <!-- Admin Notifications -->
