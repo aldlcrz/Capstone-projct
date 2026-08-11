@@ -141,108 +141,12 @@
             </div>
         </aside>
 
-        <!-- Mobile Drawer Overlay -->
-        <div x-show="isMobileMenuOpen"
-             x-transition:enter="transition ease-out duration-300"
-             x-transition:enter-start="opacity-0"
-             x-transition:enter-end="opacity-100"
-             x-transition:leave="transition ease-in duration-200"
-             x-transition:leave-start="opacity-100"
-             x-transition:leave-end="opacity-0"
-             class="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm lg:hidden"
-             style="display: none;"
-             x-cloak>
-            <div @click.away="isMobileMenuOpen = false"
-                 x-show="isMobileMenuOpen"
-                 x-transition:enter="transition ease-out duration-300 transform"
-                 x-transition:enter-start="-translate-x-full"
-                 x-transition:enter-end="translate-x-0"
-                 x-transition:leave="transition ease-in duration-200 transform"
-                 x-transition:leave-start="translate-x-0"
-                 x-transition:leave-end="-translate-x-full"
-                 class="w-72 max-w-[85vw] h-full bg-white flex flex-col justify-between p-6 overflow-y-auto no-scrollbar shadow-2xl">
-                <div>
-                    <div class="flex items-center justify-between mb-6 pb-4 border-b border-gray-100">
-                        <div>
-                            <a href="/admin/dashboard" class="font-serif text-lg font-bold text-[#2A2A2A] tracking-tighter">
-                                LUMBARONG
-                            </a>
-                            <div class="flex items-center gap-1.5 mt-1 text-[#C0420A] font-bold tracking-widest text-[9px]">
-                                CONTROL PANEL
-                            </div>
-                        </div>
-                        <button @click="isMobileMenuOpen = false" class="w-8 h-8 rounded-lg bg-gray-100 flex items-center justify-center text-gray-500 hover:text-black">
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
-                        </button>
-                    </div>
-
-                    <nav class="space-y-5">
-                        @foreach($sidebarGroups as $group => $items)
-                            @if(!$loop->first)
-                                <div class="border-t border-gray-100"></div>
-                            @endif
-                            <div class="space-y-1">
-                                <div class="text-[9px] font-bold text-gray-400 tracking-widest uppercase px-2 mb-1.5">{{ $group }}</div>
-                                @foreach($items as $item)
-                                    <a href="/{{ $item['path'] }}"
-                                       @click="isMobileMenuOpen = false"
-                                       class="flex items-center justify-between px-3 py-2.5 rounded-xl transition-all text-xs font-semibold {{ request()->is($item['path'] . '*') ? 'bg-[#C0420A]/10 text-[#C0420A] font-bold border-l-3 border-[#C0420A]' : 'text-gray-700 hover:bg-gray-50' }}">
-                                        <div class="flex items-center gap-2.5">
-                                            <svg class="w-4 h-4 {{ request()->is($item['path'] . '*') ? 'text-[#C0420A]' : 'text-gray-400' }}" fill="none" stroke="currentColor" viewBox="0 0 24 24">{!! $item['icon'] !!}</svg>
-                                            <span>{{ $item['label'] }}</span>
-                                        </div>
-                                        @if(isset($item['badge']) && $item['badge'] > 0)
-                                            <span class="px-2 py-0.5 bg-red-500 text-white text-[8px] font-bold rounded-full">{{ $item['badge'] }}</span>
-                                        @endif
-                                    </a>
-                                @endforeach
-                            </div>
-                        @endforeach
-                    </nav>
-                </div>
-
-                <div class="pt-4 border-t border-gray-100 mt-6 space-y-3">
-                    <div class="flex items-center gap-3 px-1">
-                        <div class="w-9 h-9 rounded-xl bg-black text-white flex items-center justify-center font-bold text-xs">
-                            {{ strtoupper(substr(Auth::user()->name, 0, 1)) }}
-                        </div>
-                        <div>
-                            <div class="text-xs font-bold text-gray-900">{{ Auth::user()->name }}</div>
-                            <div class="text-[9px] text-gray-400 font-bold uppercase tracking-wider">Administrator</div>
-                        </div>
-                    </div>
-                    <form x-ref="mobileLogoutForm" action="{{ route('logout') }}" method="POST">
-                        @csrf
-                        <button type="button"
-                                @click="$dispatch('open-confirmation', {
-                                    title: 'Logout',
-                                    message: 'Are you sure you want to logout?',
-                                    confirmText: 'Logout',
-                                    type: 'danger',
-                                    onConfirm: () => $refs.mobileLogoutForm.submit()
-                                })"
-                                class="flex items-center justify-center gap-2 w-full py-2.5 bg-red-50 text-red-600 rounded-xl font-bold text-[10px] tracking-widest uppercase">
-                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path></svg>
-                            Logout
-                        </button>
-                    </form>
-                </div>
-            </div>
-        </div>
-
         <!-- Main Content Area -->
         <div class="flex-1 flex flex-col h-full relative overflow-hidden">
             <!-- Header -->
-            <header class="sticky top-0 z-40 bg-white border-b border-(--border) h-18 flex items-center shrink-0 px-4 lg:px-10 justify-between">
-                <div class="flex items-center gap-3">
-                    <button type="button"
-                            @click="isMobileMenuOpen = !isMobileMenuOpen"
-                            class="lg:hidden w-10 h-10 rounded-xl bg-gray-100 flex items-center justify-center text-gray-700 hover:bg-[#C0420A] hover:text-white transition-all cursor-pointer">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
-                        </svg>
-                    </button>
-                    <a href="/admin/dashboard" class="lg:hidden font-serif font-bold text-[#2A2A2A] tracking-tighter text-sm flex items-center gap-1.5">
+            <header class="sticky top-0 z-40 bg-white border-b border-(--border) h-16 lg:h-18 flex items-center shrink-0 px-4 lg:px-10 justify-between">
+                <div class="flex items-center gap-2">
+                    <a href="/admin/dashboard" class="lg:hidden font-serif font-bold text-[#2A2A2A] tracking-tighter text-base flex items-center gap-1.5">
                         <span>LUMBARONG</span>
                         <span class="text-[9px] font-black text-[#C0420A] px-1.5 py-0.5 bg-[#C0420A]/10 rounded uppercase">Admin</span>
                     </a>
@@ -456,6 +360,115 @@
                     @yield('content')
                 </div>
             </main>
+
+            <!-- Admin Mobile Fixed Bottom Navigation Bar -->
+            <nav class="lg:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200/80 h-16 flex items-center justify-around px-2 z-40 shadow-lg">
+                <!-- Dashboard -->
+                <a href="{{ route('admin.dashboard') }}" class="flex flex-col items-center gap-0.5 px-2.5 py-1 {{ request()->is('admin/dashboard') ? 'text-[#C0420A]' : 'text-gray-500 hover:text-gray-700' }}">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M3 12l9-9 9 9M5 10v10a1 1 0 001 1h3a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1h3a1 1 0 001-1V10"></path>
+                    </svg>
+                    <span class="text-[9px] font-semibold">Dashboard</span>
+                </a>
+
+                <!-- Users -->
+                <a href="{{ route('admin.users') }}" class="flex flex-col items-center gap-0.5 px-2.5 py-1 {{ request()->is('admin/users*') ? 'text-[#C0420A]' : 'text-gray-500 hover:text-gray-700' }}">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path>
+                    </svg>
+                    <span class="text-[9px] font-semibold">Users</span>
+                </a>
+
+                <!-- Sellers -->
+                <a href="{{ route('admin.sellers') }}" class="flex flex-col items-center gap-0.5 px-2.5 py-1 {{ request()->is('admin/sellers*') ? 'text-[#C0420A]' : 'text-gray-500 hover:text-gray-700' }}">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"></path>
+                    </svg>
+                    <span class="text-[9px] font-semibold">Sellers</span>
+                </a>
+
+                <!-- Products -->
+                <a href="{{ route('admin.products') }}" class="flex flex-col items-center gap-0.5 px-2.5 py-1 {{ request()->is('admin/products*') ? 'text-[#C0420A]' : 'text-gray-500 hover:text-gray-700' }}">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"></path>
+                    </svg>
+                    <span class="text-[9px] font-semibold">Products</span>
+                </a>
+
+                <!-- Admin Profile / More Tools Sheet -->
+                <div x-data="{ mobileMoreOpen: false }" class="relative">
+                    <button @click="mobileMoreOpen = !mobileMoreOpen" class="flex flex-col items-center gap-0.5 px-2.5 py-1 text-gray-500 hover:text-gray-700 cursor-pointer">
+                        <div class="w-6 h-6 rounded-full bg-black text-white flex items-center justify-center text-[10px] font-bold overflow-hidden border border-white">
+                            {{ strtoupper(substr(Auth::user()->name, 0, 1)) }}
+                        </div>
+                        <span class="text-[9px] font-semibold">More ▾</span>
+                    </button>
+
+                    <!-- Admin Profile Overflow Menu Popup -->
+                    <div x-show="mobileMoreOpen"
+                         @click.away="mobileMoreOpen = false"
+                         x-transition:enter="transition ease-out duration-200"
+                         x-transition:enter-start="opacity-0 translate-y-4 scale-95"
+                         x-transition:enter-end="opacity-100 translate-y-0 scale-100"
+                         x-transition:leave="transition ease-in duration-150"
+                         x-transition:leave-start="opacity-100 translate-y-0 scale-100"
+                         x-transition:leave-end="opacity-0 translate-y-4 scale-95"
+                         class="absolute right-0 bottom-14 w-60 bg-white rounded-2xl shadow-2xl border border-gray-100 z-50 overflow-hidden"
+                         style="display: none;"
+                         x-cloak>
+                        
+                        <div class="px-4 py-3 bg-gray-50 border-b border-gray-100">
+                            <div class="text-xs font-bold text-gray-900 truncate">{{ Auth::user()->name }}</div>
+                            <div class="text-[9px] font-bold text-[#C0420A] uppercase tracking-wider">System Administrator</div>
+                        </div>
+
+                        <div class="py-1">
+                            <a href="{{ route('admin.categories.index') }}" class="flex items-center gap-2.5 px-4 py-2 text-xs font-semibold text-gray-700 hover:bg-gray-50">
+                                <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h16M4 14h16M4 18h16"></path></svg>
+                                <span>Categories</span>
+                            </a>
+                            <a href="{{ route('admin.banners.index') }}" class="flex items-center gap-2.5 px-4 py-2 text-xs font-semibold text-gray-700 hover:bg-gray-50">
+                                <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+                                <span>Banners</span>
+                            </a>
+                            <a href="{{ route('admin.reports') }}" class="flex items-center gap-2.5 px-4 py-2 text-xs font-semibold text-gray-700 hover:bg-gray-50">
+                                <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
+                                <span>Reports</span>
+                            </a>
+                            <a href="{{ route('admin.maintenance') }}" class="flex items-center gap-2.5 px-4 py-2 text-xs font-semibold text-gray-700 hover:bg-gray-50">
+                                <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z"></path></svg>
+                                <span>Maintenance</span>
+                            </a>
+                            <a href="{{ route('admin.audit-logs') }}" class="flex items-center gap-2.5 px-4 py-2 text-xs font-semibold text-gray-700 hover:bg-gray-50">
+                                <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"></path></svg>
+                                <span>Audit Logs</span>
+                            </a>
+                            <a href="{{ route('admin.platform') }}" class="flex items-center gap-2.5 px-4 py-2 text-xs font-semibold text-gray-700 hover:bg-gray-50">
+                                <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                                <span>Platform Info</span>
+                            </a>
+                        </div>
+
+                        <div class="p-2 border-t border-gray-100 bg-gray-50">
+                            <form x-ref="mobileBottomLogoutForm" action="{{ route('logout') }}" method="POST">
+                                @csrf
+                                <button type="button"
+                                        @click="$dispatch('open-confirmation', {
+                                            title: 'Logout',
+                                            message: 'Are you sure you want to logout?',
+                                            confirmText: 'Logout',
+                                            type: 'danger',
+                                            onConfirm: () => $refs.mobileBottomLogoutForm.submit()
+                                        })"
+                                        class="flex items-center justify-center gap-2 w-full py-2 bg-red-50 text-red-600 rounded-xl font-bold text-[10px] tracking-widest uppercase cursor-pointer">
+                                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path></svg>
+                                    Logout
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </nav>
         </div>
     </div>
     
