@@ -148,8 +148,15 @@ class ProductManagementController extends Controller
             $product->status = 'pending'; // Needs admin approval
 
             $images = [];
+            $uploadedHashes = [];
             if ($request->hasFile('images')) {
                 foreach ($request->file('images') as $image) {
+                    $hash = md5_file($image->getRealPath());
+                    if (in_array($hash, $uploadedHashes)) {
+                        continue; // Skip duplicate image in same upload batch
+                    }
+                    $uploadedHashes[] = $hash;
+
                     $filename = time() . '_' . Str::random(8) . '.' . $image->getClientOriginalExtension();
                     $image->move(public_path('uploads/products'), $filename);
                     $images[] = 'uploads/products/' . $filename;
@@ -303,10 +310,30 @@ class ProductManagementController extends Controller
             }
         }
 
-        // Handle new image uploads (prepend new images so the newest photo becomes primary thumbnail)
+        // Handle new image uploads (prepend new images so the newest photo becomes primary thumbnail, skip duplicates)
         if ($request->hasFile('images')) {
             $newImages = [];
+            $existingHashes = [];
+
+            foreach ($currentImages as $existingImgPath) {
+                $cleanPath = preg_replace('/^(storage|uploads)\//', '', str_replace('\\', '/', $existingImgPath));
+                $cleanPath = ltrim($cleanPath, '/');
+                $fullPath = public_path('uploads/' . $cleanPath);
+                if (!file_exists($fullPath)) {
+                    $fullPath = public_path('uploads/products/' . $cleanPath);
+                }
+                if (file_exists($fullPath) && is_file($fullPath)) {
+                    $existingHashes[] = md5_file($fullPath);
+                }
+            }
+
             foreach ($request->file('images') as $image) {
+                $hash = md5_file($image->getRealPath());
+                if (in_array($hash, $existingHashes)) {
+                    continue; // Skip duplicate image file
+                }
+                $existingHashes[] = $hash;
+
                 $filename = time() . '_' . Str::random(8) . '.' . $image->getClientOriginalExtension();
                 $image->move(public_path('uploads/products'), $filename);
                 $newImages[] = 'uploads/products/' . $filename;
@@ -358,6 +385,7 @@ class ProductManagementController extends Controller
             'size_guide_image.image'    => 'The file must be a valid image (JPEG, PNG, WEBP).',
         ]);
 
+        /** @var \App\Models\User $user */
         $user = Auth::user();
         $targetGroup = $request->input('target_group');
         $sizeGuides = is_array($user->size_guides) ? $user->size_guides : [];
@@ -381,6 +409,7 @@ class ProductManagementController extends Controller
             return redirect()->back()->with('error', 'Invalid target group.');
         }
 
+        /** @var \App\Models\User $user */
         $user = Auth::user();
         $sizeGuides = is_array($user->size_guides) ? $user->size_guides : [];
 

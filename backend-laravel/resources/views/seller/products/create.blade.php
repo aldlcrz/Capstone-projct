@@ -44,315 +44,247 @@
     </div>
     @endif
 
-    <form action="{{ route('seller.products.store') }}" method="POST" enctype="multipart/form-data" onsubmit="return validateProductForm(event, false)" class="grid grid-cols-1 lg:grid-cols-3 gap-3.5 sm:gap-8">
+    <form action="{{ route('seller.products.store') }}" method="POST" enctype="multipart/form-data" onsubmit="return validateProductForm(event, false)" class="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
         @csrf
-        <div class="lg:col-span-2 space-y-3.5 sm:space-y-8">
-            <div class="bg-white p-3.5 sm:p-8 rounded-2xl sm:rounded-3xl border border-gray-100 shadow-sm space-y-3 sm:space-y-8">
-                <div class="space-y-1.5 sm:space-y-4">
-                    <label class="text-[10px] font-bold uppercase tracking-widest text-gray-400">Product Name</label>
-                    <input type="text" name="name" required placeholder="e.g. Pina-Silk Formal Barong Tagalog" class="w-full px-3.5 py-2.5 sm:px-6 sm:py-4 bg-gray-50/50 border border-gray-100 rounded-xl sm:rounded-2xl outline-none focus:border-[#C0420A] transition-all font-medium text-sm sm:text-lg">
+
+        {{-- Left Column: Core Product Data (2 cols) --}}
+        <div class="lg:col-span-2 space-y-4">
+
+            {{-- 1. Basic Product Information --}}
+            <div class="bg-white p-4 sm:p-6 rounded-2xl border border-gray-100 shadow-xs space-y-4">
+                <h3 class="text-xs sm:text-sm font-bold text-black uppercase tracking-widest flex items-center gap-2">
+                    <svg class="w-4 h-4 text-[#C0420A]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                    Basic Information
+                </h3>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div class="space-y-1.5">
+                        <label class="text-[10px] font-bold uppercase tracking-widest text-gray-400">Product Name</label>
+                        <input type="text" name="name" required placeholder="e.g. Pina-Silk Formal Barong Tagalog"
+                            class="w-full px-4 py-2.5 bg-gray-50/50 border border-gray-200/80 rounded-xl outline-none focus:border-[#C0420A] focus:bg-white transition-all font-medium text-sm text-gray-800">
+                    </div>
+
+                    <div class="space-y-1.5">
+                        <label class="text-[10px] font-bold uppercase tracking-widest text-gray-400">Materials Used (Fabric)</label>
+                        <input type="text" name="fabric_type" value="{{ old('fabric_type', '100% Piña') }}"
+                            placeholder="e.g. 100% Piña, Piña Organza, Jusi"
+                            class="w-full px-4 py-2.5 bg-gray-50/50 border border-gray-200/80 rounded-xl outline-none focus:border-[#C0420A] focus:bg-white transition-all font-medium text-sm text-gray-800">
+                    </div>
                 </div>
 
-                <div class="space-y-1.5 sm:space-y-4">
+                <div class="space-y-1.5">
                     <label class="text-[10px] font-bold uppercase tracking-widest text-gray-400">Artisan Description</label>
-                    <textarea name="description" required rows="3" placeholder="Describe the craftsmanship, materials used, and the story behind this piece..." class="w-full px-3.5 py-2.5 sm:px-6 sm:py-4 bg-gray-50/50 border border-gray-100 rounded-xl sm:rounded-2xl outline-none focus:border-[#C0420A] transition-all font-medium resize-none sm:rows-6 text-sm sm:text-base"></textarea>
+                    <div class="relative">
+                        <textarea name="description" id="artisanDescription" required rows="3" maxlength="500"
+                            oninput="updateCharCount(this)"
+                            placeholder="Describe the craftsmanship, materials used, and the story behind this piece..."
+                            class="w-full px-4 py-2.5 bg-gray-50/50 border border-gray-200/80 rounded-xl outline-none focus:border-[#C0420A] focus:bg-white transition-all font-medium resize-none text-sm text-gray-800 pb-7"></textarea>
+                        <div id="charCounter" class="absolute bottom-2.5 right-3.5 text-[10px] font-bold text-gray-400 pointer-events-none">
+                            0 / 500
+                        </div>
+                    </div>
                 </div>
+            </div>
 
-                <div class="space-y-1.5 sm:space-y-4">
-                    <label class="text-[10px] font-bold uppercase tracking-widest text-gray-400">Materials Used (Fabric)</label>
-                    <input type="text" name="fabric_type" value="{{ old('fabric_type', '100% Piña') }}" placeholder="e.g. 100% Piña, Piña Organza, Jusi, Linen" class="w-full px-3.5 py-2.5 sm:px-6 sm:py-4 bg-gray-50/50 border border-gray-100 rounded-xl sm:rounded-2xl outline-none focus:border-[#C0420A] transition-all font-medium text-sm sm:text-base">
-                </div>
-
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-8">
-                    <div class="space-y-1.5 sm:space-y-4">
-                        <label class="text-[10px] font-bold uppercase tracking-widest text-gray-400">Price (₱)</label>
+            {{-- 2. Pricing & Shipping Stat Card --}}
+            <div class="bg-white p-4 sm:p-6 rounded-2xl border border-gray-100 shadow-xs">
+                <div class="grid grid-cols-2 lg:grid-cols-4 gap-3">
+                    <div class="p-3.5 bg-[#F9F8F6] border border-stone-200/60 rounded-xl flex flex-col justify-between h-24 sm:h-26">
+                        <label class="text-[9px] font-bold uppercase tracking-widest text-stone-500">Price (₱)</label>
                         <input type="number" name="price" required min="1" max="10000" step="0.01" placeholder="0.00"
                             oninput="if(parseFloat(this.value) > 10000) this.value = 10000; updateDiscountPreview();"
-                            class="w-full px-3.5 py-2.5 sm:px-6 sm:py-4 bg-gray-50/50 border border-gray-100 rounded-xl sm:rounded-2xl outline-none focus:border-[#C0420A] transition-all font-bold text-base sm:text-xl">
+                            class="w-full bg-transparent font-sans text-lg font-bold text-gray-900 outline-none border-b border-transparent focus:border-[#C0420A] transition-all">
+                        <p class="text-[8px] text-stone-400 font-medium">Item base price</p>
                     </div>
-                    <div class="space-y-1.5 sm:space-y-4">
-                        <label class="text-[10px] font-bold uppercase tracking-widest text-gray-400">Total Stock</label>
+
+                    <div class="p-3.5 bg-[#F9F8F6] border border-stone-200/60 rounded-xl flex flex-col justify-between h-24 sm:h-26">
+                        <label class="text-[9px] font-bold uppercase tracking-widest text-stone-500">Total Stock</label>
                         <input type="number" name="stock" id="total_stock" min="0" placeholder="0"
                             readonly tabindex="-1"
-                            class="w-full px-3.5 py-2.5 sm:px-6 sm:py-4 bg-gray-100 border border-gray-100 rounded-xl sm:rounded-2xl outline-none font-bold text-base sm:text-xl text-gray-400 cursor-not-allowed select-none">
-                        <p class="text-[9px] text-gray-400 italic -mt-1 sm:-mt-2">Auto-calculated from sizes below.</p>
+                            class="w-full bg-transparent font-sans text-lg font-bold text-gray-900 outline-none select-none cursor-not-allowed">
+                        <p class="text-[8px] text-stone-400 font-medium">Auto-calculated</p>
                     </div>
-                </div>
 
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-8">
-                    <div class="space-y-1.5 sm:space-y-4">
-                        <label class="text-[10px] font-bold uppercase tracking-widest text-gray-400">Shipping Fee (₱)</label>
+                    <div class="p-3.5 bg-[#F9F8F6] border border-stone-200/60 rounded-xl flex flex-col justify-between h-24 sm:h-26">
+                        <label class="text-[9px] font-bold uppercase tracking-widest text-stone-500">Shipping Fee (₱)</label>
                         <input type="number" name="shippingFee" min="0" max="500" step="0.01" placeholder="0.00"
                             value="{{ old('shippingFee', 0) }}"
                             oninput="if(parseFloat(this.value) > 500) this.value = 500;"
-                            class="w-full px-3.5 py-2.5 sm:px-6 sm:py-4 bg-gray-50/50 border border-gray-100 rounded-xl sm:rounded-2xl outline-none focus:border-[#C0420A] transition-all font-bold text-base sm:text-xl">
-                        <p class="text-[9px] text-gray-400 italic -mt-1 sm:-mt-2">Enter 0 for free shipping.</p>
+                            class="w-full bg-transparent font-sans text-lg font-bold text-gray-900 outline-none border-b border-transparent focus:border-[#C0420A] transition-all">
+                        <p class="text-[8px] text-stone-400 font-medium">Enter 0 for free</p>
                     </div>
-                    <div class="space-y-1.5 sm:space-y-4">
-                        <label class="text-[10px] font-bold uppercase tracking-widest text-gray-400">Est. Shipping Days</label>
-                        <input type="number" name="shippingDays" min="1" max="30" step="1" placeholder="e.g. 5"
+
+                    <div class="p-3.5 bg-[#F9F8F6] border border-stone-200/60 rounded-xl flex flex-col justify-between h-24 sm:h-26">
+                        <label class="text-[9px] font-bold uppercase tracking-widest text-stone-500">Est. Shipping Days</label>
+                        <input type="number" name="shippingDays" min="1" max="30" step="1" placeholder="5"
                             value="{{ old('shippingDays', 5) }}"
                             oninput="if(parseInt(this.value) > 30) this.value = 30;"
-                            class="w-full px-3.5 py-2.5 sm:px-6 sm:py-4 bg-gray-50/50 border border-gray-100 rounded-xl sm:rounded-2xl outline-none focus:border-[#C0420A] transition-all font-bold text-base sm:text-xl">
+                            class="w-full bg-transparent font-sans text-lg font-bold text-gray-900 outline-none border-b border-transparent focus:border-[#C0420A] transition-all">
+                        <p class="text-[8px] text-stone-400 font-medium">To deliver</p>
                     </div>
-                </div>
-
-                <div id="sizing-section" class="space-y-3 sm:space-y-6 pt-3.5 sm:pt-6 border-t border-gray-100 rounded-xl sm:rounded-2xl p-2.5 sm:p-4 transition-all">
-                    <h3 class="text-xs sm:text-sm font-bold text-black uppercase tracking-widest">Heritage Sizing & Stock</h3>
-                    <p class="text-[10px] text-gray-400">Select sizes and assign stock for each size. The overall stock will update automatically.</p>
-                    <div class="grid grid-cols-2 sm:grid-cols-3 gap-2 sm:gap-4">
-                        @foreach(['S', 'M', 'L', 'XL', 'XXL', 'Custom'] as $size)
-                            <div class="p-2.5 sm:p-4 border border-gray-100 bg-gray-50/50 rounded-xl sm:rounded-2xl flex flex-col justify-between gap-1.5 sm:gap-3">
-                                <label class="flex items-center gap-1.5 cursor-pointer font-bold text-xs text-gray-600">
-                                    <input type="checkbox" name="sizes[]" value="{{ $size }}" 
-                                        class="rounded text-[#C0420A] focus:ring-[#C0420A] w-3.5 h-3.5 size-checkbox"
-                                        onchange="toggleSizeStock(this, '{{ $size }}')">
-                                    <span>Size {{ $size }}</span>
-                                </label>
-                                <input type="number" name="size_stocks[{{ $size }}]" id="stock_{{ $size }}" 
-                                    value="0" min="0" max="10000" disabled
-                                    oninput="if(parseInt(this.value) > 10000) this.value = 10000; calculateTotalStock();"
-                                    class="w-full px-2.5 py-1.5 sm:px-4 sm:py-2.5 bg-white border border-gray-100 rounded-xl outline-none text-xs font-bold text-center size-stock-input">
-                            </div>
-                        @endforeach
-                    </div>
-                </div>
-
-                <div class="space-y-1.5 sm:space-y-4 pt-3.5 sm:pt-6 border-t border-gray-100">
-                    <label class="text-[10px] font-bold uppercase tracking-widest text-gray-400">Product Category</label>
-                    <select name="CategoryId" id="categorySelect" required
-                        class="w-full px-3.5 py-2.5 sm:px-6 sm:py-4 bg-gray-50/50 border border-gray-100 rounded-xl sm:rounded-2xl outline-none focus:border-[#C0420A] transition-all font-bold text-xs sm:text-sm appearance-none">
-                        <option value="" disabled selected>Select a category</option>
-                        @foreach($categories as $category)
-                            <option value="{{ $category->id }}" data-name="{{ strtolower($category->name) }}">{{ $category->name }}</option>
-                        @endforeach
-                    </select>
-                </div>
-
-                {{-- Lumban Special Discount Panel (always visible, independent of category) --}}
-                <div class="space-y-3 sm:space-y-5 pt-3.5 sm:pt-6 border-t border-[#C0420A]/15">
-                    <div class="flex items-center gap-2.5 sm:gap-3">
-                        <div class="w-7 h-7 sm:w-8 sm:h-8 bg-[#C0420A] rounded-xl flex items-center justify-center shrink-0">
-                            <svg class="w-3.5 h-3.5 sm:w-4 sm:h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-5 5a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 10V5a2 2 0 012-2z"/>
-                            </svg>
-                        </div>
-                        <div>
-                            <h4 class="text-xs sm:text-sm font-black text-[#C0420A] uppercase tracking-widest">Lumban Special</h4>
-                            <p class="text-[9px] text-gray-400 uppercase tracking-widest">Sale / Discount Configuration — Independent of category</p>
-                        </div>
-                    </div>
-
-                    <div class="rounded-2xl p-3.5 sm:p-5 border border-[#C0420A]/15 space-y-3 sm:space-y-4" style="background: linear-gradient(to bottom right, #FFF5F0, #fff);">
-                        <input type="hidden" name="is_on_sale" id="isOnSaleInput" value="0">
-
-                        <div class="flex items-center justify-between p-3 sm:p-4 bg-white rounded-xl border border-[#C0420A]/20">
-                            <div>
-                                <div class="text-xs font-black text-gray-700 uppercase tracking-widest">Mark as Lumban Special Sale</div>
-                                <div class="text-[9px] text-gray-400 mt-0.5">Products will display a "Lumban Special" badge with discount</div>
-                            </div>
-                            <label class="relative inline-flex items-center cursor-pointer shrink-0">
-                                <input type="checkbox" id="discountToggle" class="sr-only peer"
-                                    onchange="toggleDiscount(this)">
-                                <div class="w-10 h-5.5 sm:w-11 sm:h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-0.5 after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4.5 after:w-4.5 sm:after:h-5 sm:after:w-5 after:transition-all peer-checked:bg-[#C0420A]"></div>
-                                <span class="ml-1.5 text-[10px] font-bold text-gray-500 uppercase tracking-widest peer-checked:text-[#C0420A]">On Sale</span>
-                            </label>
-                        </div>
-
-                        <div id="discountFields" class="hidden space-y-3 sm:space-y-4">
-                            <div class="space-y-1.5 sm:space-y-2">
-                                <label class="text-[10px] font-black uppercase tracking-widest text-gray-400">Discount Percentage (%)</label>
-                                <div class="relative">
-                                    <input type="number" name="discount_percentage" id="discountPercentage"
-                                        min="1" max="99" step="1" placeholder="e.g. 20"
-                                        class="w-full px-4 py-2.5 sm:px-6 sm:py-4 bg-white border border-[#C0420A]/30 rounded-xl sm:rounded-2xl outline-none focus:border-[#C0420A] transition-all font-black text-lg sm:text-xl text-[#C0420A]"
-                                        oninput="if(parseInt(this.value) > 99) this.value = 99; updateDiscountPreview();">
-                                    <span class="absolute right-4 sm:right-5 top-1/2 -translate-y-1/2 text-base sm:text-lg font-black text-[#C0420A]">%</span>
-                                </div>
-                            </div>
-                            <div id="discountPreview" class="hidden p-3 sm:p-4 bg-[#C0420A]/5 rounded-xl border border-[#C0420A]/20">
-                                <div class="text-[9px] font-black uppercase tracking-widest text-gray-400 mb-1">Preview</div>
-                                <div class="flex items-center gap-2.5 sm:gap-3">
-                                    <span id="previewOriginal" class="text-xs sm:text-sm text-gray-400 line-through font-bold"></span>
-                                    <span id="previewSale" class="text-lg sm:text-xl font-black text-[#C0420A]"></span>
-                                    <span class="px-2 py-0.5 bg-[#C0420A] text-white text-[9px] font-black uppercase tracking-widest rounded-full">Lumban Special</span>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="space-y-2.5 sm:space-y-4 pt-3.5 sm:pt-6 border-t border-gray-100">
-                    <label class="text-[10px] font-bold uppercase tracking-widest text-gray-400">Who is this for?</label>
-                    <div class="flex gap-2 sm:gap-3">
-                        @foreach(['Men', 'Women', 'Kids'] as $group)
-                            <label class="flex-1 cursor-pointer group">
-                                <input type="radio" name="target_group" value="{{ $group }}" class="hidden peer" {{ old('target_group') == $group ? 'checked' : '' }}>
-                                <div class="w-full py-2.5 sm:py-3 rounded-xl border-2 border-gray-100 bg-gray-50/50 text-xs font-black text-gray-400 text-center uppercase tracking-widest peer-checked:border-[#C0420A] peer-checked:bg-[#C0420A]/5 peer-checked:text-[#C0420A] peer-checked:shadow-md peer-checked:shadow-[#C0420A]/10 hover:border-gray-300 transition-all">
-                                    {{ $group }}
-                                </div>
-                            </label>
-                        @endforeach
-                    </div>
-                    <p class="text-[9px] text-gray-400 italic">Selecting a target group makes this product appear when customers filter by Men, Women, or Kids.</p>
                 </div>
             </div>
-        </div>
 
-        <div class="space-y-3.5 sm:space-y-8">
-            <div class="bg-white p-3.5 sm:p-8 rounded-2xl sm:rounded-3xl border border-gray-100 shadow-sm space-y-3.5 sm:space-y-5">
+            {{-- 3. Heritage Sizing & Inventory Card --}}
+            <div id="sizing-section" class="bg-white p-4 sm:p-6 rounded-2xl border border-gray-100 shadow-xs space-y-3">
                 <div class="flex items-center justify-between">
-                    <h3 class="text-xs sm:text-sm font-bold text-black uppercase tracking-widest">Product Imagery</h3>
-                    <span id="img-count-badge" class="hidden text-[9px] font-black uppercase tracking-widest px-2.5 py-1 bg-[#C0420A]/10 text-[#C0420A] rounded-full">0 photos</span>
+                    <h3 class="text-xs sm:text-sm font-bold text-black uppercase tracking-widest">Heritage Sizing & Stock</h3>
+                    <span class="text-[10px] text-gray-400 font-medium">Assign stock per size</span>
+                </div>
+                <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-2.5">
+                    @foreach(['S', 'M', 'L', 'XL', 'XXL', 'Custom'] as $size)
+                        <div class="p-2.5 border border-gray-100 bg-gray-50/50 rounded-xl flex flex-col justify-between gap-2">
+                            <label class="flex items-center gap-1.5 cursor-pointer font-bold text-xs text-gray-700">
+                                <input type="checkbox" name="sizes[]" value="{{ $size }}" 
+                                    class="rounded text-[#C0420A] focus:ring-[#C0420A] w-3.5 h-3.5 size-checkbox"
+                                    onchange="toggleSizeStock(this, '{{ $size }}')">
+                                <span>Size {{ $size }}</span>
+                            </label>
+                            <input type="number" name="size_stocks[{{ $size }}]" id="stock_{{ $size }}" 
+                                value="0" min="0" max="10000" disabled
+                                oninput="if(parseInt(this.value) > 10000) this.value = 10000; calculateTotalStock();"
+                                class="w-full px-2 py-1.5 bg-white border border-gray-200 rounded-lg outline-none text-xs font-bold text-center size-stock-input">
+                        </div>
+                    @endforeach
+                </div>
+            </div>
+
+            {{-- 4. Category & Sale Configuration --}}
+            <div class="bg-white p-4 sm:p-6 rounded-2xl border border-gray-100 shadow-xs space-y-4">
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div class="space-y-1.5">
+                        <label class="text-[10px] font-bold uppercase tracking-widest text-gray-400">Product Category</label>
+                        <select name="CategoryId" id="categorySelect" required
+                            class="w-full px-4 py-2.5 bg-gray-50/50 border border-gray-200/80 rounded-xl outline-none focus:border-[#C0420A] transition-all font-bold text-xs appearance-none">
+                            <option value="" disabled selected>Select a category</option>
+                            @foreach($categories as $category)
+                                <option value="{{ $category->id }}" data-name="{{ strtolower($category->name) }}">{{ $category->name }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+
+                    <div class="space-y-1.5">
+                        <label class="text-[10px] font-bold uppercase tracking-widest text-gray-400">Who is this for?</label>
+                        <div class="flex gap-2">
+                            @foreach(['Men', 'Women', 'Kids'] as $group)
+                                <label class="flex-1 cursor-pointer">
+                                    <input type="radio" name="target_group" value="{{ $group }}" class="hidden peer" {{ old('target_group') == $group ? 'checked' : '' }}>
+                                    <div class="w-full py-2 rounded-xl border border-gray-200 bg-gray-50/50 text-xs font-bold text-gray-500 text-center uppercase tracking-wider peer-checked:border-[#C0420A] peer-checked:bg-[#C0420A]/5 peer-checked:text-[#C0420A] transition-all">
+                                        {{ $group }}
+                                    </div>
+                                </label>
+                            @endforeach
+                        </div>
+                    </div>
                 </div>
 
-                {{-- Drop Zone --}}
-                <label for="imageUploadInput"
-                    id="dropZone"
-                    class="flex flex-col items-center justify-center gap-2 sm:gap-3 w-full min-h-32 sm:min-h-40 rounded-2xl border-2 border-dashed border-gray-200 bg-gray-50 hover:bg-white hover:border-[#C0420A] transition-all cursor-pointer group px-4 py-5 sm:px-6 sm:py-8 text-center">
-                    <div class="w-10 h-10 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl bg-gray-100 group-hover:bg-[#C0420A]/10 flex items-center justify-center transition-colors">
-                        <svg class="w-5 h-5 sm:w-6 sm:h-6 text-gray-300 group-hover:text-[#C0420A] transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                {{-- Lumban Special Discount Panel --}}
+                <div class="p-4 rounded-xl border border-[#C0420A]/15 bg-orange-50/20 space-y-3">
+                    <input type="hidden" name="is_on_sale" id="isOnSaleInput" value="0">
+
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center gap-2">
+                            <span class="w-2 h-2 rounded-full bg-[#C0420A]"></span>
+                            <span class="text-xs font-black text-[#C0420A] uppercase tracking-widest">Lumban Special Sale</span>
+                        </div>
+                        <label class="relative inline-flex items-center cursor-pointer shrink-0">
+                            <input type="checkbox" id="discountToggle" class="sr-only peer"
+                                onchange="toggleDiscount(this)">
+                            <div class="w-9 h-5 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-0.5 after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-[#C0420A]"></div>
+                        </label>
+                    </div>
+
+                    <div id="discountFields" class="hidden space-y-2.5 pt-2 border-t border-[#C0420A]/10">
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 items-end">
+                            <div>
+                                <label class="text-[9px] font-bold uppercase tracking-widest text-gray-400 mb-1 block">Discount (%)</label>
+                                <input type="number" name="discount_percentage" id="discountPercentage"
+                                    min="1" max="99" step="1" placeholder="e.g. 20"
+                                    class="w-full px-3.5 py-2.5 bg-white border border-[#C0420A]/30 rounded-xl outline-none font-bold text-sm text-[#C0420A]"
+                                    oninput="if(parseInt(this.value) > 99) this.value = 99; updateDiscountPreview();">
+                            </div>
+                            <div>
+                                <label class="text-[9px] font-bold uppercase tracking-widest text-gray-400 mb-1 block">Price Preview</label>
+                                <div id="discountPreview" class="hidden w-full px-3.5 py-2.5 bg-white rounded-xl border border-[#C0420A]/20 items-center justify-center gap-2 h-10.5">
+                                    <span id="previewOriginal" class="text-xs text-gray-400 line-through font-bold"></span>
+                                    <span id="previewSale" class="text-sm font-black text-[#C0420A]"></span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+        {{-- Right Column: Media & Submission Controls (1 col) --}}
+        <div class="space-y-4">
+
+            {{-- Product Media --}}
+            <div class="bg-white p-4 sm:p-6 rounded-2xl border border-gray-100 shadow-xs space-y-4">
+                <div class="flex items-center justify-between">
+                    <h3 class="text-xs sm:text-sm font-bold text-black uppercase tracking-widest">Product Images</h3>
+                    <span id="img-count-badge" class="hidden text-[9px] font-black uppercase tracking-widest px-2.5 py-0.5 bg-[#C0420A]/10 text-[#C0420A] rounded-full">0 photos</span>
+                </div>
+
+                <div class="space-y-2">
+                    <label for="imageUploadInput"
+                        id="dropZone"
+                        class="flex flex-col items-center justify-center gap-2 w-full min-h-32 rounded-xl border-2 border-dashed border-gray-200 bg-gray-50/50 hover:bg-white hover:border-[#C0420A] transition-all cursor-pointer p-4 text-center relative overflow-hidden">
+                        <svg class="w-6 h-6 text-gray-400 group-hover:text-[#C0420A] transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/>
                         </svg>
-                    </div>
-                    <div>
-                        <div class="text-xs font-black text-gray-600 group-hover:text-[#C0420A] uppercase tracking-widest transition-colors">Click to Upload Photos</div>
-                        <p class="text-[9px] text-gray-400 mt-0.5 sm:mt-1">PNG, JPG, WEBP &mdash; portrait shots recommended</p>
-                    </div>
-                    <input type="file" id="imageUploadInput" name="images[]" multiple required class="hidden" onchange="previewImages(this)">
-                </label>
+                        <div id="dropZoneTitle" class="text-xs font-bold text-gray-700 uppercase tracking-widest">Click to Upload Photos</div>
+                        <p id="dropZoneSubtitle" class="text-[9px] text-gray-400">PNG, JPG, WEBP &mdash; portrait shots</p>
+                        <input type="file" id="imageUploadInput" name="images[]" multiple required class="hidden" onchange="previewImages(this)">
+                    </label>
 
-                {{-- Preview Grid --}}
-                <div id="image-preview-grid" class="hidden grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2 sm:gap-3">
-                    {{-- JS-populated --}}
+                    <div id="image-preview-grid" class="hidden grid-cols-3 gap-2">
+                        {{-- JS populated --}}
+                    </div>
                 </div>
             </div>
 
             {{-- Payment Method Configuration --}}
-            <div class="bg-white p-3.5 sm:p-8 rounded-2xl sm:rounded-3xl border border-gray-100 shadow-sm space-y-3.5 sm:space-y-6">
-                <div class="flex items-center justify-between gap-2">
-                    <div>
-                        <h3 class="text-xs sm:text-sm font-bold text-black uppercase tracking-widest flex items-center gap-1.5 sm:gap-2">
-                            <svg class="w-4 h-4 text-[#C0420A]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"></path></svg>
-                            Payment Methods
-                        </h3>
-                        <p class="text-[10px] text-gray-400 mt-0.5 sm:mt-1">Select accepted payment methods for this product and upload your QR codes.</p>
-                    </div>
-                    <a href="{{ route('seller.profile') }}?open_payment=1#payment-methods" class="text-[9px] sm:text-[10px] font-bold text-[#C0420A] hover:underline flex items-center gap-1 shrink-0">
-                        Profile Payment Settings
-                        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
-                    </a>
+            <div class="bg-white p-4 sm:p-6 rounded-2xl border border-gray-100 shadow-xs space-y-3">
+                <div class="flex items-center justify-between">
+                    <h3 class="text-xs sm:text-sm font-bold text-black uppercase tracking-widest">Payment Methods</h3>
+                    <a href="{{ route('seller.profile') }}?open_payment=1#payment-methods" class="text-[9px] font-bold text-[#C0420A] hover:underline">Settings &rarr;</a>
                 </div>
 
                 {{-- GCash --}}
-                <div class="p-3.5 sm:p-5 bg-gray-50/50 border border-gray-100 rounded-2xl space-y-3 sm:space-y-4">
+                <div class="p-3 bg-gray-50/50 border border-gray-100 rounded-xl space-y-2">
                     <div class="flex items-center justify-between">
-                        <div class="flex items-center gap-2">
-                            <span class="w-2 h-2 rounded-full bg-blue-500"></span>
-                            <span class="text-[11px] font-black uppercase tracking-widest text-[#0060AA]">GCash Method</span>
-                        </div>
+                        <span class="text-[10px] font-black uppercase tracking-widest text-[#0060AA]">GCash</span>
                         <label class="relative inline-flex items-center cursor-pointer">
                             <input type="checkbox" name="product_is_gcash_available" value="1" class="sr-only peer" {{ old('product_is_gcash_available', true) ? 'checked' : '' }}>
-                            <div class="w-10 h-5.5 sm:w-11 sm:h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-0.5 after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4.5 after:w-4.5 sm:after:h-5 sm:after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
-                            <span class="ml-1.5 text-[10px] font-bold text-gray-500 uppercase tracking-widest peer-checked:text-blue-600">Available</span>
+                            <div class="w-8 h-4.5 bg-gray-200 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-0.5 after:bg-white after:border-gray-300 after:border after:rounded-full after:h-3.5 after:w-3.5 after:transition-all peer-checked:bg-blue-600"></div>
                         </label>
                     </div>
-
-                    <div class="space-y-1.5 sm:space-y-2">
-                        <label class="text-[9px] font-black uppercase tracking-widest text-gray-400">GCash Number</label>
-                        <input type="text" name="gcashNumber" value="{{ old('gcashNumber', auth()->user()->gcashNumber) }}" placeholder="e.g. 0917 123 4567" class="w-full px-3.5 py-2.5 sm:px-4 sm:py-3 bg-white border border-gray-200 rounded-xl text-xs font-bold text-gray-800 outline-none focus:border-blue-500 transition-all">
-                    </div>
-
-                    <div class="space-y-1.5 sm:space-y-2">
-                        <label class="text-[9px] font-black uppercase tracking-widest text-gray-400">GCash QR Code</label>
-                        <div class="relative group" x-data="{ qrPreview: '{{ auth()->user()->gcashQrCode ? asset('storage/' . auth()->user()->gcashQrCode) : '' }}' }">
-                            <input type="file" name="gcashQrCode" accept="image/*" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10" @change="
-                                const file = $event.target.files[0];
-                                if (file) {
-                                    const reader = new FileReader();
-                                    reader.onload = (e) => { qrPreview = e.target.result; };
-                                    reader.readAsDataURL(file);
-                                }
-                            ">
-                            <div class="border-2 border-dashed border-gray-200 bg-white rounded-2xl p-3 sm:p-4 flex flex-col items-center justify-center text-center hover:border-blue-500 hover:bg-blue-50/10 transition-all min-h-20 sm:min-h-25">
-                                <template x-if="qrPreview">
-                                    <div class="relative w-20 h-20 sm:w-24 sm:h-24">
-                                        <img :src="qrPreview" class="w-full h-full object-contain rounded-lg">
-                                        <div class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center rounded-lg transition-opacity">
-                                            <span class="text-[8px] text-white font-bold uppercase tracking-widest">Change QR</span>
-                                        </div>
-                                    </div>
-                                </template>
-                                <template x-if="!qrPreview">
-                                    <div class="space-y-1">
-                                        <svg class="w-5 h-5 sm:w-6 sm:h-6 text-gray-300 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path></svg>
-                                        <span class="text-[10px] font-bold text-gray-400 uppercase tracking-widest block">Upload GCash QR Code</span>
-                                    </div>
-                                </template>
-                            </div>
-                        </div>
-                    </div>
+                    <input type="text" name="gcashNumber" value="{{ old('gcashNumber', auth()->user()->gcashNumber) }}" placeholder="GCash Number" class="w-full px-3 py-2 bg-white border border-gray-200 rounded-lg text-xs font-bold text-gray-800 outline-none">
                 </div>
 
                 {{-- Maya --}}
-                <div class="p-3.5 sm:p-5 bg-gray-50/50 border border-gray-100 rounded-2xl space-y-3 sm:space-y-4">
+                <div class="p-3 bg-gray-50/50 border border-gray-100 rounded-xl space-y-2">
                     <div class="flex items-center justify-between">
-                        <div class="flex items-center gap-2">
-                            <span class="w-2 h-2 rounded-full bg-green-500"></span>
-                            <span class="text-[11px] font-black uppercase tracking-widest text-[#00B050]">Maya Method</span>
-                        </div>
+                        <span class="text-[10px] font-black uppercase tracking-widest text-[#00B050]">Maya</span>
                         <label class="relative inline-flex items-center cursor-pointer">
                             <input type="checkbox" name="product_is_maya_available" value="1" class="sr-only peer" {{ old('product_is_maya_available', false) ? 'checked' : '' }}>
-                            <div class="w-10 h-5.5 sm:w-11 sm:h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-0.5 after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4.5 after:w-4.5 sm:after:h-5 sm:after:w-5 after:transition-all peer-checked:bg-green-600"></div>
-                            <span class="ml-1.5 text-[10px] font-bold text-gray-500 uppercase tracking-widest peer-checked:text-green-600">Available</span>
+                            <div class="w-8 h-4.5 bg-gray-200 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-0.5 after:bg-white after:border-gray-300 after:border after:rounded-full after:h-3.5 after:w-3.5 after:transition-all peer-checked:bg-green-600"></div>
                         </label>
                     </div>
-
-                    <div class="space-y-1.5 sm:space-y-2">
-                        <label class="text-[9px] font-black uppercase tracking-widest text-gray-400">Maya Number</label>
-                        <input type="text" name="mayaNumber" value="{{ old('mayaNumber', auth()->user()->mayaNumber) }}" placeholder="e.g. 0917 123 4567" class="w-full px-3.5 py-2.5 sm:px-4 sm:py-3 bg-white border border-gray-200 rounded-xl text-xs font-bold text-gray-800 outline-none focus:border-green-500 transition-all">
-                    </div>
-
-                    <div class="space-y-1.5 sm:space-y-2">
-                        <label class="text-[9px] font-black uppercase tracking-widest text-gray-400">Maya QR Code</label>
-                        <div class="relative group" x-data="{ qrPreview: '{{ auth()->user()->mayaQrCode ? asset('storage/' . auth()->user()->mayaQrCode) : '' }}' }">
-                            <input type="file" name="mayaQrCode" accept="image/*" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10" @change="
-                                const file = $event.target.files[0];
-                                if (file) {
-                                    const reader = new FileReader();
-                                    reader.onload = (e) => { qrPreview = e.target.result; };
-                                    reader.readAsDataURL(file);
-                                }
-                            ">
-                            <div class="border-2 border-dashed border-gray-200 bg-white rounded-2xl p-3 sm:p-4 flex flex-col items-center justify-center text-center hover:border-green-500 hover:bg-green-50/10 transition-all min-h-20 sm:min-h-25">
-                                <template x-if="qrPreview">
-                                    <div class="relative w-20 h-20 sm:w-24 sm:h-24">
-                                        <img :src="qrPreview" class="w-full h-full object-contain rounded-lg">
-                                        <div class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center rounded-lg transition-opacity">
-                                            <span class="text-[8px] text-white font-bold uppercase tracking-widest">Change QR</span>
-                                        </div>
-                                    </div>
-                                </template>
-                                <template x-if="!qrPreview">
-                                    <div class="space-y-1">
-                                        <svg class="w-5 h-5 sm:w-6 sm:h-6 text-gray-300 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path></svg>
-                                        <span class="text-[10px] font-bold text-gray-400 uppercase tracking-widest block">Upload Maya QR Code</span>
-                                    </div>
-                                </template>
-                            </div>
-                        </div>
-                    </div>
+                    <input type="text" name="mayaNumber" value="{{ old('mayaNumber', auth()->user()->mayaNumber) }}" placeholder="Maya Number" class="w-full px-3 py-2 bg-white border border-gray-200 rounded-lg text-xs font-bold text-gray-800 outline-none">
                 </div>
             </div>
 
-            <div class="bg-white p-3.5 sm:p-8 rounded-2xl sm:rounded-3xl border border-gray-100 shadow-sm space-y-3 sm:space-y-6">
-                <h3 class="text-xs sm:text-sm font-bold text-black uppercase tracking-widest">Listing Status</h3>
-                <div class="p-3 sm:p-4 rounded-xl sm:rounded-2xl bg-amber-50 border border-amber-100">
-                    <p class="text-[10px] text-amber-800 leading-relaxed font-bold italic uppercase tracking-wider">
-                        All new listings are reviewed by administrators to ensure heritage quality standards before appearing in the shop.
+            {{-- Submission Action Card --}}
+            <div class="bg-white p-4 sm:p-6 rounded-2xl border border-gray-100 shadow-xs space-y-3">
+                <div class="p-3 rounded-xl bg-amber-50/60 border border-amber-100">
+                    <p class="text-[9px] text-amber-800 font-bold uppercase tracking-wider">
+                        New listings are reviewed by admin before appearing in shop.
                     </p>
                 </div>
-                <button type="submit" class="w-full py-3.5 sm:py-5 bg-black text-white rounded-xl sm:rounded-2xl font-bold uppercase tracking-[0.2em] shadow-xl hover:bg-[#C0420A] transition-all text-xs sm:text-sm">
+                <button type="submit" class="w-full py-3.5 bg-black text-white rounded-xl font-bold uppercase tracking-[0.15em] shadow-md hover:bg-[#C0420A] transition-all text-xs">
                     Submit Listing
                 </button>
             </div>
@@ -374,11 +306,43 @@
 <script>
 let productImagesDT = new DataTransfer();
 
+function triggerAppModal(title, message, type = 'warning') {
+    window.dispatchEvent(new CustomEvent('open-confirmation', {
+        detail: {
+            title: title,
+            message: message,
+            type: type,
+            confirmText: 'Got It',
+            cancelText: 'Dismiss',
+            onConfirm: null
+        }
+    }));
+}
+
 function previewImages(input) {
     if (input.files && input.files.length > 0) {
+        let duplicateCount = 0;
+        let oversizedCount = 0;
+
         Array.from(input.files).forEach(file => {
-            productImagesDT.items.add(file);
+            if (file.size > 5 * 1024 * 1024) {
+                oversizedCount++;
+                return;
+            }
+            const exists = Array.from(productImagesDT.files).some(f => f.name === file.name && f.size === file.size);
+            if (exists) {
+                duplicateCount++;
+            } else {
+                productImagesDT.items.add(file);
+            }
         });
+
+        if (oversizedCount > 0) {
+            triggerAppModal('Image Exceeds 5MB', `${oversizedCount} photo(s) exceeded the 5MB size limit and were skipped.`, 'warning');
+        } else if (duplicateCount > 0) {
+            triggerAppModal('Duplicate Image Skipped', `${duplicateCount} duplicate image(s) already added and were skipped.`, 'warning');
+        }
+
         input.files = productImagesDT.files;
     }
     renderImagePreviews();
@@ -398,7 +362,9 @@ function removeImageAt(index) {
 function renderImagePreviews() {
     const grid = document.getElementById('image-preview-grid');
     const badge = document.getElementById('img-count-badge');
-    const dropLabel = document.getElementById('dropZone')?.querySelector('div:last-of-type div:first-child');
+    const titleEl = document.getElementById('dropZoneTitle');
+    const subEl = document.getElementById('dropZoneSubtitle');
+
     if (!grid) return;
     grid.innerHTML = '';
 
@@ -410,21 +376,24 @@ function renderImagePreviews() {
             badge.classList.remove('hidden');
             badge.textContent = files.length + ' photo' + (files.length !== 1 ? 's' : '');
         }
-        if (dropLabel) dropLabel.textContent = '+ Add More Photos';
+        if (titleEl) titleEl.textContent = '+ Add More Photos';
+        if (subEl) subEl.textContent = `${files.length} photo(s) selected — click or drop to add more`;
 
         Array.from(files).forEach((file, idx) => {
             const reader = new FileReader();
             reader.onload = function(e) {
                 const card = document.createElement('div');
-                card.className = 'relative group rounded-2xl overflow-hidden border border-gray-100 bg-gray-50 shadow-sm';
+                card.className = 'relative group rounded-2xl overflow-hidden border border-gray-200/80 bg-gray-50 shadow-sm hover:shadow-md transition-all duration-300';
                 card.style.aspectRatio = '3/4';
                 card.innerHTML = `
-                    <img src="${e.target.result}" class="w-full h-full object-cover object-top transition-transform duration-300 group-hover:scale-105">
-                    <button type="button" onclick="removeImageAt(${idx})" class="absolute top-2 right-2 w-6 h-6 bg-red-600 text-white rounded-full flex items-center justify-center text-xs font-bold shadow-md hover:bg-black transition-colors z-10" title="Remove photo">✕</button>
-                    <div class="absolute inset-0 bg-linear-to-t from-black/40 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-end p-2 pointer-events-none">
-                        <span class="text-[8px] font-black text-white uppercase tracking-widest">${file.name.length > 16 ? file.name.substring(0, 14) + '…' : file.name}</span>
+                    <img src="${e.target.result}" class="w-full h-full object-cover object-top group-hover:scale-105 transition-transform duration-500">
+                    <div class="absolute inset-0 bg-linear-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end p-2 pointer-events-none">
+                        <span class="text-[9px] font-bold text-white truncate">${file.name}</span>
                     </div>
-                    <div class="absolute top-2 left-2 w-5 h-5 bg-black/60 rounded-full flex items-center justify-center text-[8px] font-black text-white">${idx + 1}</div>
+                    <div class="absolute top-2 left-2 px-2 py-0.5 bg-black/75 backdrop-blur-md rounded-full text-[9px] font-black text-white shadow-sm border border-white/10">
+                        ${idx + 1}
+                    </div>
+                    <button type="button" onclick="removeImageAt(${idx})" class="absolute top-2 right-2 w-7 h-7 bg-red-600/95 hover:bg-red-600 text-white rounded-full flex items-center justify-center text-xs font-black shadow-lg hover:scale-110 active:scale-95 transition-all z-10" title="Remove photo">✕</button>
                 `;
                 grid.appendChild(card);
             };
@@ -434,9 +403,65 @@ function renderImagePreviews() {
         grid.classList.add('hidden');
         grid.classList.remove('grid');
         if (badge) badge.classList.add('hidden');
-        if (dropLabel) dropLabel.textContent = 'Click to Upload Photos';
+        if (titleEl) titleEl.textContent = 'Click to Upload Photos';
+        if (subEl) subEl.textContent = 'PNG, JPG, WEBP — portrait shots recommended';
     }
 }
+
+document.addEventListener('DOMContentLoaded', function() {
+    const dropZone = document.getElementById('dropZone');
+    const input = document.getElementById('imageUploadInput');
+    
+    if (dropZone && input) {
+        ['dragenter', 'dragover'].forEach(evt => {
+            dropZone.addEventListener(evt, (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                dropZone.classList.add('border-[#C0420A]', 'bg-orange-50/40');
+            });
+        });
+
+        ['dragleave', 'drop'].forEach(evt => {
+            dropZone.addEventListener(evt, (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                dropZone.classList.remove('border-[#C0420A]', 'bg-orange-50/40');
+            });
+        });
+
+        dropZone.addEventListener('drop', (e) => {
+            const files = e.dataTransfer?.files;
+            if (files && files.length > 0) {
+                let duplicateCount = 0;
+                let oversizedCount = 0;
+
+                Array.from(files).forEach(file => {
+                    if (file.type.startsWith('image/')) {
+                        if (file.size > 5 * 1024 * 1024) {
+                            oversizedCount++;
+                            return;
+                        }
+                        const exists = Array.from(productImagesDT.files).some(f => f.name === file.name && f.size === file.size);
+                        if (exists) {
+                            duplicateCount++;
+                        } else {
+                            productImagesDT.items.add(file);
+                        }
+                    }
+                });
+
+                if (oversizedCount > 0) {
+                    triggerAppModal('Image Exceeds 5MB', `${oversizedCount} photo(s) exceeded the 5MB size limit and were skipped.`, 'warning');
+                } else if (duplicateCount > 0) {
+                    triggerAppModal('Duplicate Image Skipped', `${duplicateCount} duplicate image(s) already added and were skipped.`, 'warning');
+                }
+
+                input.files = productImagesDT.files;
+                renderImagePreviews();
+            }
+        });
+    }
+});
 
 function toggleSizeStock(checkbox, size) {
     const stockInput = document.getElementById('stock_' + size);
@@ -517,8 +542,10 @@ function updateDiscountPreview() {
         previewOriginal.textContent = '₱' + price.toLocaleString('en-PH', {minimumFractionDigits: 2, maximumFractionDigits: 2});
         previewSale.textContent = '₱' + salePrice.toLocaleString('en-PH', {minimumFractionDigits: 2, maximumFractionDigits: 2});
         preview.classList.remove('hidden');
+        preview.classList.add('flex');
     } else {
         preview.classList.add('hidden');
+        preview.classList.remove('flex');
     }
 }
 

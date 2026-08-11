@@ -231,17 +231,13 @@
                         $isCurrentSelected = $isAll
                             ? !$selectedCatParam && !request('search') && !request('sort')
                             : ($selectedCatParam && (strtolower($item['cat']) === strtolower($selectedCatParam) || strtolower($item['name']) === strtolower($selectedCatParam)));
-                        $isUserSaved = auth()->check() && in_array($item['cat'], $savedCategories);
                         $itemHref = $isAll ? '/' : '/?category=' . urlencode($item['cat']);
                     @endphp
                     <a href="{{ $itemHref }}" class="group flex flex-col items-center gap-2 shrink-0 w-16 sm:w-20">
-                        <div class="relative w-16 h-16 sm:w-20 sm:h-20 rounded-full overflow-hidden bg-gray-100 border-2 {{ $isCurrentSelected ? 'border-amber-600 ring-4 ring-amber-500/25 scale-105 shadow-md' : ($isUserSaved ? 'border-amber-500 shadow-xs' : 'border-transparent group-hover:border-amber-600 shadow-xs group-hover:scale-105') }} transition-all">
+                        <div class="relative w-16 h-16 sm:w-20 sm:h-20 rounded-full overflow-hidden bg-gray-100 border-2 {{ $isCurrentSelected ? 'border-amber-600 ring-4 ring-amber-500/25 scale-105 shadow-md' : 'border-gray-200/80 group-hover:border-amber-600 shadow-xs group-hover:scale-105' }} transition-all">
                             <img src="{{ $item['img'] }}" class="w-full h-full object-cover" alt="{{ $item['name'] }}">
-                            @if($isUserSaved)
-                                <span class="absolute top-0 right-0 w-4 h-4 bg-amber-600 text-white rounded-full flex items-center justify-center text-[9px] shadow-xs font-black" title="Saved Category">★</span>
-                            @endif
                         </div>
-                        <span class="text-[11px] {{ $isCurrentSelected ? 'font-black text-amber-700' : ($isUserSaved ? 'font-bold text-amber-900' : 'font-medium text-gray-700 group-hover:text-black') }} leading-tight text-center line-clamp-2">{{ $item['name'] }}</span>
+                        <span class="text-[11px] {{ $isCurrentSelected ? 'font-black text-amber-700' : 'font-medium text-gray-700 group-hover:text-black' }} leading-tight text-center line-clamp-2">{{ $item['name'] }}</span>
                     </a>
                 @endforeach
                 <button type="button" @click="categoriesModalOpen = true" class="group flex flex-col items-center gap-2 shrink-0 w-16 sm:w-20 cursor-pointer">
