@@ -28,7 +28,22 @@
             form.addEventListener('submit', function(e) {
                 if (!window.isLoggedIn) {
                     e.preventDefault();
-                    window.location.href = window.loginUrl + '?next=cart';
+                    var pId = form.querySelector('[name="productId"]')?.value || (_pd ? _pd.productId : '');
+                    var sz  = form.querySelector('[name="size"]')?.value || '';
+                    var qty = parseInt(form.querySelector('[name="quantity"]')?.value || '1', 10);
+                    var varLbl = form.querySelector('[name="variation"]')?.value || 'Original';
+                    var act = form.getAttribute('action') === '/checkout' ? 'buy_now' : 'add_to_cart';
+
+                    var intent = {
+                        action: act,
+                        productId: pId,
+                        quantity: qty,
+                        size: sz,
+                        variation: varLbl,
+                        redirectUrl: act === 'buy_now' ? '/checkout?mode=buy_now' : window.location.href
+                    };
+                    try { localStorage.setItem('lumbarong_pending_intent', JSON.stringify(intent)); } catch(err) {}
+                    window.location.href = window.loginUrl;
                 }
             });
         });
@@ -90,7 +105,13 @@
             },
             toggleWishlist: async function() {
                 if (!window.isLoggedIn) {
-                    window.location.href = window.loginUrl + '?next=wishlist';
+                    const intent = {
+                        action: 'wishlist',
+                        productId: productId,
+                        redirectUrl: window.location.href
+                    };
+                    try { localStorage.setItem('lumbarong_pending_intent', JSON.stringify(intent)); } catch(err) {}
+                    window.location.href = window.loginUrl;
                     return;
                 }
                 try {
@@ -135,7 +156,16 @@
             },
             submitAddToCart: async function(e) {
                 if (!window.isLoggedIn) {
-                    window.location.href = window.loginUrl + '?next=cart';
+                    const intent = {
+                        action: 'add_to_cart',
+                        productId: '{{ $product->id }}',
+                        quantity: this.quantity,
+                        size: this.effectiveSize(),
+                        variation: this.selectedVariationLabel(),
+                        redirectUrl: window.location.href
+                    };
+                    try { localStorage.setItem('lumbarong_pending_intent', JSON.stringify(intent)); } catch(err) {}
+                    window.location.href = window.loginUrl;
                     return;
                 }
                 try {
@@ -161,6 +191,22 @@
                 } catch(err) {
                     Alpine.store('toast').trigger('Something went wrong. Please try again.', 'error');
                 }
+            },
+            chatWithSeller: function(sellerId, sellerName) {
+                if (!window.isLoggedIn) {
+                    var intent = {
+                        action: 'chat',
+                        sellerId: sellerId,
+                        sellerName: sellerName,
+                        redirectUrl: window.location.href
+                    };
+                    try { localStorage.setItem('lumbarong_pending_intent', JSON.stringify(intent)); } catch(err) {}
+                    window.location.href = window.loginUrl;
+                    return;
+                }
+                window.dispatchEvent(new CustomEvent('open-chat', { 
+                    detail: { sellerId: sellerId, sellerName: sellerName } 
+                }));
             }
         };
     }
@@ -447,7 +493,24 @@
                         <!-- Full Width Gold Buy Now Button -->
                         <button 
                             type="button" 
-                            @click="if(selectedSize && stock > 0) window.location.href = '/checkout?productId={{ $product->id }}&size=' + effectiveSize() + '&quantity=' + quantity + '&direct=1'"
+                            @click="
+                                if (selectedSize && stock > 0) {
+                                    if (!window.isLoggedIn) {
+                                        const intent = {
+                                            action: 'buy_now',
+                                            productId: '{{ $product->id }}',
+                                            quantity: quantity,
+                                            size: effectiveSize(),
+                                            variation: selectedVariationLabel(),
+                                            redirectUrl: '/checkout?mode=buy_now'
+                                        };
+                                        try { localStorage.setItem('lumbarong_pending_intent', JSON.stringify(intent)); } catch(err) {}
+                                        window.location.href = window.loginUrl;
+                                        return;
+                                    }
+                                    window.location.href = '/checkout?productId={{ $product->id }}&size=' + effectiveSize() + '&quantity=' + quantity + '&direct=1';
+                                }
+                            "
                             :disabled="!selectedSize || stock <= 0"
                             class="w-full h-12 rounded-xl bg-[#C89B55] hover:bg-[#B88B45] text-white font-extrabold text-sm tracking-wide shadow-md transition-colors disabled:opacity-50"
                         >
@@ -522,11 +585,18 @@
                             @endif
                         </div>
                         
-                        <div class="mt-2">
+                        <div class="mt-2 flex items-center gap-2">
                             <a href="/shops/{{ $product->sellerId }}" class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-stone-100 hover:bg-[#C0420A] text-[9px] font-black uppercase tracking-widest text-stone-700 hover:text-white rounded-lg border border-stone-200/60 transition-all shadow-sm">
                                 <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"></path></svg>
                                 View Shop
                             </a>
+                            <button 
+                                type="button" 
+                                @click="chatWithSeller('{{ $product->sellerId }}', '{{ e($product->seller->shopName ?? $product->seller->name ?? 'Artisan') }}')"
+                                class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-amber-50 hover:bg-[#C0422A] text-[9px] font-black uppercase tracking-widest text-amber-900 hover:text-white rounded-lg border border-amber-200/60 transition-all shadow-sm"
+                            >
+                                💬 Chat with Seller
+                            </button>
                         </div>
                     </div>
                 </div>
@@ -577,6 +647,32 @@
             </div>
 
             @if($product->reviews && $product->reviews->count() > 0)
+                {{-- Rating Distribution Breakdown --}}
+                @php
+                    $totalRevCount = $product->reviews->count();
+                    $distribution = [5 => 0, 4 => 0, 3 => 0, 2 => 0, 1 => 0];
+                    foreach($product->reviews as $r) {
+                        $distKey = min(max((int)$r->rating, 1), 5);
+                        $distribution[$distKey]++;
+                    }
+                @endphp
+                <div class="bg-gray-50/70 border border-gray-100 rounded-2xl p-5 mb-8 max-w-lg space-y-2">
+                    <span class="text-[10px] font-black uppercase tracking-widest text-gray-500 block mb-1">Rating Distribution</span>
+                    @for($star = 5; $star >= 1; $star--)
+                        @php
+                            $count = $distribution[$star] ?? 0;
+                            $pct = $totalRevCount > 0 ? round(($count / $totalRevCount) * 100) : 0;
+                        @endphp
+                        <div class="flex items-center gap-3 text-xs">
+                            <span class="w-8 font-bold text-gray-600 text-right">{{ $star }} ★</span>
+                            <div class="flex-1 h-2 bg-gray-200 rounded-full overflow-hidden">
+                                <div class="h-full bg-amber-400 rounded-full" style="width: {{ $pct }}%"></div>
+                            </div>
+                            <span class="w-10 text-[10px] font-bold text-gray-400 text-right">{{ $count }}</span>
+                        </div>
+                    @endfor
+                </div>
+
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                     @foreach($product->reviews as $review)
                         <div class="bg-gray-50/50 border border-gray-100 rounded-2xl p-6 space-y-3">
@@ -589,15 +685,22 @@
                                     @endif
                                 </div>
                                 <div class="flex-1 min-w-0">
-                                    <div class="flex items-center gap-2 flex-wrap">
-                                        <span class="text-xs font-bold text-black">{{ $review->customer->name ?? 'Anonymous Customer' }}</span>
-                                        <div class="flex items-center gap-0.5">
-                                            @for($i = 1; $i <= 5; $i++)
-                                                <svg class="w-3.5 h-3.5 fill-current {{ $i <= $review->rating ? 'text-yellow-400' : 'text-gray-200' }}" viewBox="0 0 20 20">
-                                                    <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/>
-                                                </svg>
-                                            @endfor
+                                    <div class="flex items-center justify-between flex-wrap gap-2">
+                                        <div class="flex items-center gap-2 flex-wrap">
+                                            <span class="text-xs font-bold text-black">{{ $review->customer->name ?? 'Anonymous Customer' }}</span>
+                                            <div class="flex items-center gap-0.5">
+                                                @for($i = 1; $i <= 5; $i++)
+                                                    <svg class="w-3.5 h-3.5 fill-current {{ $i <= $review->rating ? 'text-yellow-400' : 'text-gray-200' }}" viewBox="0 0 20 20">
+                                                        <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/>
+                                                    </svg>
+                                                @endfor
+                                            </div>
                                         </div>
+                                        @if($review->orderId || $review->orderItemId)
+                                            <span class="px-2 py-0.5 bg-emerald-100 text-emerald-800 rounded-full text-[8px] font-black uppercase tracking-widest">
+                                                ✓ Verified Purchase
+                                            </span>
+                                        @endif
                                     </div>
                                     <div class="text-[9px] text-gray-400 font-bold uppercase tracking-widest mt-0.5">{{ $review->createdAt->format('F d, Y') }}</div>
                                 </div>

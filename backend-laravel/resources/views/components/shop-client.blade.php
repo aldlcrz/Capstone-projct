@@ -254,9 +254,14 @@ function shopClient(config) {
                     } 
                 }));
             } else {
-                window.dispatchEvent(new CustomEvent('open-auth-gate', { 
-                    detail: { message: 'Please log in to chat with artisans.' } 
-                }));
+                const intent = {
+                    action: 'chat',
+                    sellerId: this.sellerId,
+                    sellerName: this.seller?.shopName || 'Artisan',
+                    redirectUrl: window.location.href
+                };
+                try { localStorage.setItem('lumbarong_pending_intent', JSON.stringify(intent)); } catch(e) {}
+                window.location.href = '/login';
             }
         },
         reportStore() {

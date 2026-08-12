@@ -1,4 +1,16 @@
 @auth
+@if(session()->has('open_chat'))
+    @php
+        $openChatData = session('open_chat');
+        session()->forget('open_chat');
+    @endphp
+    <script>
+        window._autoOpenChat = {
+            sellerId: {!! json_encode($openChatData['sellerId'] ?? '') !!},
+            sellerName: {!! json_encode($openChatData['sellerName'] ?? 'Artisan') !!}
+        };
+    </script>
+@endif
 <script>
 document.addEventListener('alpine:init', () => {
     Alpine.data('chatWidget', () => ({
@@ -32,6 +44,15 @@ document.addEventListener('alpine:init', () => {
                 this.isOpen = true;
                 this.startConversation(e.detail.sellerId, e.detail.sellerName);
             });
+
+            if (window._autoOpenChat && window._autoOpenChat.sellerId) {
+                const autoData = window._autoOpenChat;
+                delete window._autoOpenChat;
+                setTimeout(() => {
+                    this.isOpen = true;
+                    this.startConversation(autoData.sellerId, autoData.sellerName || 'Artisan');
+                }, 300);
+            }
         },
 
         csrfToken() {

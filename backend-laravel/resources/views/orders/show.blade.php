@@ -1,7 +1,12 @@
 @extends('layouts.app')
 
 @section('content')
-<div class="max-w-6xl mx-auto px-3 sm:px-6 lg:px-8 py-6 sm:py-10 space-y-6 sm:space-y-8" x-data="{ confirmModal: false, reviewModal: false, reviewProductId: null, reviewProductName: '' }">
+<div class="max-w-6xl mx-auto px-3 sm:px-6 lg:px-8 py-6 sm:py-10 space-y-6 sm:space-y-8" x-data="{ confirmModal: false, reviewModal: false, reviewProductId: null, reviewProductName: '', reviewOrderItemId: null, copiedToast: false }">
+
+    {{-- Toast for clipboard copy feedback --}}
+    <div x-show="copiedToast" x-transition class="fixed top-6 right-6 z-999 bg-black text-white text-xs font-bold px-4 py-2.5 rounded-2xl shadow-xl flex items-center gap-2" style="display: none;">
+        <span>📋 Tracking number copied to clipboard!</span>
+    </div>
 
     {{-- Back Button --}}
     <div>
@@ -17,13 +22,19 @@
             'pending'              => 'bg-amber-50 text-amber-700 border-amber-200',
             'processing'           => 'bg-blue-50 text-blue-700 border-blue-200',
             'to ship'              => 'bg-blue-50 text-blue-700 border-blue-200',
+            'ready to ship'        => 'bg-sky-50 text-sky-700 border-sky-200',
+            'ready_to_ship'        => 'bg-sky-50 text-sky-700 border-sky-200',
+            'shipped'              => 'bg-indigo-50 text-indigo-700 border-indigo-200',
             'to receive'           => 'bg-indigo-50 text-indigo-700 border-indigo-200',
-            'shipped'              => 'bg-purple-50 text-purple-700 border-purple-200',
+            'in transit'           => 'bg-purple-50 text-purple-700 border-purple-200',
+            'in_transit'           => 'bg-purple-50 text-purple-700 border-purple-200',
+            'out for delivery'     => 'bg-orange-50 text-orange-700 border-orange-200',
+            'out_for_delivery'     => 'bg-orange-50 text-orange-700 border-orange-200',
+            'delivered'            => 'bg-teal-50 text-teal-700 border-teal-200',
             'completed'            => 'bg-emerald-50 text-emerald-700 border-emerald-200',
             'cancelled'            => 'bg-red-50 text-red-700 border-red-200',
-            'cancellation pending' => 'bg-orange-50 text-orange-700 border-orange-200',
         ];
-        $statusClass = $statusColors[strtolower($order->status)] ?? 'bg-gray-50 text-gray-700 border-gray-200';
+        $statusClass = $statusColors[strtolower(trim($order->status))] ?? 'bg-gray-50 text-gray-700 border-gray-200';
     @endphp
 
     <div class="bg-white rounded-2xl sm:rounded-3xl p-5 sm:p-7 border border-gray-100 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4">
@@ -45,53 +56,81 @@
         </div>
     </div>
 
-    {{-- Order Progress Timeline (Mobile & Desktop Optimized) --}}
+    {{-- Order Progress Timeline --}}
     @php
         $steps = [
-            ['label' => 'Order Placed',  'status' => 'pending'],
-            ['label' => 'Processing',    'status' => 'to ship'],
-            ['label' => 'Shipped',       'status' => 'to receive'],
-            ['label' => 'Delivered',     'status' => 'completed'],
+            ['label' => 'Order Placed',     'status' => 'pending'],
+            ['label' => 'Processing',       'status' => 'processing'],
+            ['label' => 'Ready to Ship',   'status' => 'ready to ship'],
+            ['label' => 'Shipped',          'status' => 'shipped'],
+            ['label' => 'In Transit',       'status' => 'in transit'],
+            ['label' => 'Out for Delivery', 'status' => 'out for delivery'],
+            ['label' => 'Delivered',        'status' => 'delivered'],
+            ['label' => 'Completed',        'status' => 'completed'],
         ];
-        $statusOrder = [
-            'pending'              => 0,
-            'processing'           => 1,
-            'to ship'              => 1,
-            'to receive'           => 2,
-            'shipped'              => 2,
-            'delivered'            => 3,
-            'completed'            => 3,
-            'cancelled'            => -1,
-            'cancellation pending' => -1,
+
+        $statusRanks = [
+            'pending'          => 0,
+            'processing'       => 1,
+            'to ship'          => 1,
+            'ready to ship'    => 2,
+            'ready_to_ship'    => 2,
+            'shipped'          => 3,
+            'to receive'       => 3,
+            'in transit'       => 4,
+            'in_transit'       => 4,
+            'out for delivery' => 5,
+            'out_for_delivery' => 5,
+            'delivered'        => 6,
+            'completed'        => 7,
+            'cancelled'        => -1,
         ];
-        $currentStep = $statusOrder[strtolower($order->status)] ?? 0;
-        $isCancelled = strtolower($order->status) === 'cancelled';
-        $progressPct = $currentStep >= 3 ? 100 : round($currentStep * 33.33, 2);
+
+        $currentStep = $statusRanks[strtolower(trim($order->status))] ?? 0;
+        $isCancelled = strtolower(trim($order->status)) === 'cancelled';
+        $progressPct = $currentStep >= 7 ? 100 : round(($currentStep / 7) * 100, 2);
+
+        // Map status history timestamps
+        $historyDates = [];
+        if ($order->statusHistories) {
+            foreach ($order->statusHistories as $h) {
+                $historyDates[strtolower(trim($h->newStatus))] = $h->createdAt ? $h->createdAt->format('M d, g:i A') : null;
+            }
+        }
     @endphp
 
     @if(!$isCancelled)
-    <div class="bg-white rounded-2xl sm:rounded-3xl border border-gray-100 shadow-sm p-4 sm:p-8">
-        <div class="flex items-center justify-between relative px-2 sm:px-6">
-            {{-- Background Progress Line --}}
-            <div class="absolute left-6 right-6 top-4 sm:top-5 h-1 bg-gray-100 z-0 rounded-full"></div>
-            {{-- Active Progress Line --}}
-            <div class="absolute left-6 top-4 sm:top-5 h-1 bg-[#C0420A] z-0 transition-all duration-700 rounded-full js-progress-bar"
-                 data-progress="{{ $progressPct }}"></div>
+    <div class="bg-white rounded-2xl sm:rounded-3xl border border-gray-100 shadow-sm p-5 sm:p-8 space-y-4">
+        <div class="flex items-center justify-between">
+            <span class="text-[10px] sm:text-xs font-black uppercase tracking-widest text-[#C0420A]">Live Shipment Tracking</span>
+            <span class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Step {{ min($currentStep + 1, 8) }} of 8</span>
+        </div>
 
+        <div class="flex gap-2 overflow-x-auto no-scrollbar py-3 px-1">
             @foreach($steps as $i => $step)
-                <div class="flex flex-col items-center gap-1.5 sm:gap-2 z-10">
+                @php
+                    $isDone = $i <= $currentStep;
+                    $isCurrent = $i === $currentStep;
+                    $stepKey = strtolower($step['status']);
+                    $timeLabel = $historyDates[$stepKey] ?? ($i === 0 ? $order->createdAt->format('M d, g:i A') : null);
+                @endphp
+                <div class="flex-1 min-w-25 flex flex-col items-center gap-2 relative group">
                     <div class="w-8 h-8 sm:w-10 sm:h-10 rounded-full border-2 flex items-center justify-center text-xs font-black transition-all
-                        {{ $i <= $currentStep ? 'bg-[#C0420A] border-[#C0420A] text-white shadow-md shadow-[#C0420A]/20 scale-105' : 'bg-white border-gray-200 text-gray-400' }}">
-                        @if($i < $currentStep)
-                            <svg class="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path></svg>
+                        {{ $isCurrent ? 'bg-[#C0420A] border-[#C0420A] text-white shadow-lg shadow-[#C0420A]/30 scale-110' : ($isDone ? 'bg-black border-black text-white' : 'bg-white border-gray-200 text-gray-300') }}">
+                        @if($isDone && !$isCurrent)
+                            ✓
                         @else
                             {{ $i + 1 }}
                         @endif
                     </div>
-                    <span class="text-[8px] sm:text-[10px] font-black uppercase tracking-wider text-center max-w-16 sm:max-w-none
-                        {{ $i <= $currentStep ? 'text-[#C0420A]' : 'text-gray-400' }}">
-                        {{ $step['label'] }}
-                    </span>
+                    <div class="text-center">
+                        <span class="text-[9px] sm:text-[10px] font-black uppercase tracking-wider block {{ $isDone ? ($isCurrent ? 'text-[#C0420A]' : 'text-black') : 'text-gray-300' }}">
+                            {{ $step['label'] }}
+                        </span>
+                        @if($timeLabel && $isDone)
+                            <span class="text-[8px] font-medium text-gray-400 block mt-0.5 whitespace-nowrap">{{ $timeLabel }}</span>
+                        @endif
+                    </div>
                 </div>
             @endforeach
         </div>
@@ -113,8 +152,53 @@
     {{-- Main Content Grid: Left (Items & Actions) | Right (Summary Cards) --}}
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 sm:gap-8">
 
-        {{-- Left Column: Purchased Items List --}}
+        {{-- Left Column: Purchased Items List & Shipment Card --}}
         <div class="lg:col-span-2 space-y-6">
+
+            {{-- Manual Courier Shipping Details Card --}}
+            @if($order->courierName || $order->trackingNumber || $order->trackingLink || in_array(strtolower(trim($order->status)), ['shipped', 'to receive', 'in transit', 'in_transit', 'out for delivery', 'out_for_delivery', 'delivered', 'completed']))
+            <div class="bg-linear-to-br from-gray-900 to-black text-white rounded-2xl sm:rounded-3xl p-5 sm:p-7 shadow-lg space-y-4">
+                <div class="flex items-center justify-between border-b border-white/10 pb-3">
+                    <div class="flex items-center gap-2">
+                        <span class="text-base">📦</span>
+                        <h3 class="text-xs sm:text-sm font-black uppercase tracking-widest">Shipment Information</h3>
+                    </div>
+                    <span class="px-2.5 py-0.5 bg-white/10 text-white rounded-full text-[9px] font-bold uppercase tracking-wider">
+                        {{ $order->status }}
+                    </span>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
+                    <div>
+                        <span class="text-[9px] font-bold uppercase tracking-widest text-gray-400 block mb-0.5">Courier Company</span>
+                        <span class="font-black text-sm text-white">{{ $order->courierName ?? 'J&T Express' }}</span>
+                    </div>
+
+                    <div>
+                        <span class="text-[9px] font-bold uppercase tracking-widest text-gray-400 block mb-0.5">Tracking Number</span>
+                        <div class="flex items-center gap-2">
+                            <span class="font-mono text-sm font-bold text-amber-400">{{ $order->trackingNumber ?? 'Pending Dispatch' }}</span>
+                            @if($order->trackingNumber)
+                                <button type="button" 
+                                    @click="navigator.clipboard.writeText('{{ $order->trackingNumber }}'); copiedToast = true; setTimeout(() => copiedToast = false, 2500);"
+                                    class="px-2 py-0.5 bg-white/10 hover:bg-white/20 text-white rounded-md text-[9px] font-bold uppercase tracking-wider transition-all flex items-center gap-1 active:scale-95">
+                                    📋 Copy
+                                </button>
+                            @endif
+                        </div>
+                    </div>
+                </div>
+
+                @if($order->trackingLink)
+                <div class="pt-2">
+                    <a href="{{ $order->trackingLink }}" target="_blank" rel="noopener noreferrer"
+                        class="inline-flex items-center justify-center gap-2 w-full sm:w-auto px-6 py-3 bg-[#C0420A] hover:bg-[#d94a0d] text-white rounded-full text-xs font-black uppercase tracking-widest transition-all shadow-md active:scale-95">
+                        <span>Track Package ↗</span>
+                    </a>
+                </div>
+                @endif
+            </div>
+            @endif
 
             <div class="bg-white rounded-2xl sm:rounded-3xl border border-gray-100 shadow-sm overflow-hidden">
                 <div class="px-5 sm:px-7 py-4 bg-gray-50/60 border-b border-gray-100 flex items-center justify-between">
@@ -126,6 +210,12 @@
                     @foreach($order->items as $item)
                         @php
                             $imgSrc = $item->product ? $item->product->getImageUrl() : asset('uploads/products/default.jpg');
+                            $itemStatus = strtolower(trim($order->status));
+                            $canRate = in_array($itemStatus, ['delivered', 'completed'], true);
+                            $existingReview = $order->reviews ? $order->reviews->where('orderItemId', $item->id)->first() : null;
+                            if (!$existingReview && $order->reviews) {
+                                $existingReview = $order->reviews->where('productId', $item->productId)->first();
+                            }
                         @endphp
                         <div class="p-4 sm:p-6 flex items-center gap-3 sm:gap-5">
                             {{-- Product Image --}}
@@ -142,25 +232,30 @@
                                     <span>₱{{ number_format($item->price) }} each</span>
                                 </div>
 
-                                {{-- Leave a Review Button for Completed Orders --}}
-                                @if(strtolower($order->status) === 'completed')
-                                    @php
-                                        $hasReview = $order->reviews->where('productId', $item->productId)->first();
-                                    @endphp
-                                    @if($hasReview)
-                                        <div class="mt-2 flex flex-col gap-0.5">
-                                            <span class="text-[9px] font-black uppercase tracking-widest text-emerald-600 flex items-center gap-1">
-                                                <svg class="w-3 h-3 text-emerald-500 fill-current" viewBox="0 0 20 20">
-                                                    <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/>
-                                                </svg>
-                                                Reviewed ({{ $hasReview->rating }} ★)
-                                            </span>
-                                            <p class="text-[10px] text-gray-400 italic truncate">"{{ $hasReview->comment }}"</p>
+                                {{-- Rating & Review Controls for Delivered or Completed Orders --}}
+                                @if($canRate)
+                                    @if($existingReview)
+                                        <div class="mt-2.5 p-3 bg-emerald-50/60 border border-emerald-100/80 rounded-2xl space-y-1">
+                                            <div class="flex items-center justify-between flex-wrap gap-2">
+                                                <div class="flex items-center gap-1 text-amber-400">
+                                                    @for($s = 1; $s <= 5; $s++)
+                                                        <span class="text-xs">{{ $s <= $existingReview->rating ? '★' : '☆' }}</span>
+                                                    @endfor
+                                                    <span class="text-[10px] font-black text-emerald-800 ml-1">{{ $existingReview->rating }}/5</span>
+                                                </div>
+                                                <span class="px-2 py-0.5 bg-emerald-100 text-emerald-800 rounded-full text-[8px] font-black uppercase tracking-widest flex items-center gap-1">
+                                                    ✓ Verified Purchase
+                                                </span>
+                                            </div>
+                                            @if($existingReview->comment)
+                                                <p class="text-[11px] text-gray-700 italic leading-relaxed">"{{ $existingReview->comment }}"</p>
+                                            @endif
                                         </div>
                                     @else
-                                        <button @click="reviewModal = true; reviewProductId = '{{ $item->productId }}'; reviewProductName = '{{ addslashes($item->product->name) }}'"
-                                            class="mt-2 inline-flex items-center gap-1 text-[10px] font-black uppercase tracking-widest text-[#C0420A] hover:underline cursor-pointer">
-                                            <span>+ Leave a Review</span>
+                                        <button type="button"
+                                            @click="reviewModal = true; reviewProductId = '{{ $item->productId }}'; reviewOrderItemId = '{{ $item->id }}'; reviewProductName = '{{ addslashes($item->product->name ?? 'Product') }}'"
+                                            class="mt-2.5 inline-flex items-center gap-1.5 px-3.5 py-1.5 bg-black hover:bg-[#C0420A] text-white rounded-full text-[10px] font-black uppercase tracking-widest transition-all shadow-xs active:scale-95 cursor-pointer">
+                                            <span>⭐ Rate Product</span>
                                         </button>
                                     @endif
                                 @endif
@@ -410,6 +505,7 @@
                 @csrf
                 <input type="hidden" name="productId" :value="reviewProductId">
                 <input type="hidden" name="orderId" value="{{ $order->id }}">
+                <input type="hidden" name="orderItemId" :value="reviewOrderItemId">
                 
                 {{-- Star Rating --}}
                 <div class="space-y-1.5">

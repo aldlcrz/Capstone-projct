@@ -30,6 +30,27 @@ class WishlistController extends Controller
      */
     public function toggle(Request $request)
     {
+        if (!Auth::check()) {
+            $intent = [
+                'action'      => 'wishlist',
+                'productId'   => $request->input('product_id'),
+                'redirectUrl' => $request->headers->get('referer') ?: route('wishlist.index'),
+            ];
+            session(['pending_intent' => $intent]);
+            session()->put('url.intended', $intent['redirectUrl']);
+
+            if ($request->wantsJson() || $request->ajax()) {
+                return response()->json([
+                    'success'       => false,
+                    'error'         => 'unauthorized',
+                    'redirect'      => route('login'),
+                    'pendingIntent' => $intent,
+                    'message'       => 'Please log in or register to save items to your wishlist.'
+                ], 401);
+            }
+            return redirect()->route('login')->with('info', 'Please log in or register to save items to your wishlist.');
+        }
+
         $request->validate([
             'product_id' => 'required|string|exists:products,id',
         ]);

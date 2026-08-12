@@ -13,10 +13,14 @@
             return 0;
         },
         getStatusColor(status) {
-            const s = (status || '').toLowerCase();
-            if (s === 'completed' || s === 'delivered') return 'bg-emerald-50 text-emerald-700 border-emerald-200';
-            if (s === 'to receive' || s === 'shipped') return 'bg-purple-50 text-purple-700 border-purple-200';
-            if (s === 'to ship' || s === 'processing') return 'bg-blue-50 text-blue-700 border-blue-200';
+            const s = (status || '').toLowerCase().trim();
+            if (s === 'completed') return 'bg-emerald-50 text-emerald-700 border-emerald-200';
+            if (s === 'delivered') return 'bg-teal-50 text-teal-700 border-teal-200';
+            if (s === 'out for delivery' || s === 'out_for_delivery') return 'bg-orange-50 text-orange-700 border-orange-200';
+            if (s === 'in transit' || s === 'in_transit') return 'bg-purple-50 text-purple-700 border-purple-200';
+            if (s === 'shipped' || s === 'to receive') return 'bg-indigo-50 text-indigo-700 border-indigo-200';
+            if (s === 'ready to ship' || s === 'ready_to_ship') return 'bg-sky-50 text-sky-700 border-sky-200';
+            if (s === 'processing' || s === 'to ship') return 'bg-blue-50 text-blue-700 border-blue-200';
             if (s === 'cancelled') return 'bg-red-50 text-red-700 border-red-200';
             return 'bg-amber-50 text-amber-700 border-amber-200';
         }
@@ -46,7 +50,7 @@
 
     {{-- Filter Capsule Tabs --}}
     <div class="flex gap-2 overflow-x-auto no-scrollbar pb-1">
-        @foreach(['ALL' => 'All', 'PENDING' => 'Pending', 'TO SHIP' => 'To Ship', 'TO RECEIVE' => 'To Receive', 'COMPLETED' => 'Completed', 'CANCELLED' => 'Cancelled'] as $key => $label)
+        @foreach(['ALL' => 'All', 'PENDING' => 'Pending', 'TO SHIP' => 'To Ship', 'TO RECEIVE' => 'To Receive', 'DELIVERED' => 'Delivered', 'COMPLETED' => 'Completed', 'CANCELLED' => 'Cancelled'] as $key => $label)
             @php
                 $isActive = request('tab', 'ALL') == $key;
             @endphp

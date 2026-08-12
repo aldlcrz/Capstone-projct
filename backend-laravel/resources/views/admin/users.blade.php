@@ -54,7 +54,7 @@
     {{-- Table --}}
     <div class="bg-white rounded-3xl border border-gray-100 shadow-sm overflow-hidden">
         <div class="overflow-x-auto no-scrollbar">
-            <table class="w-full text-left min-w-[550px]">
+            <table class="w-full text-left min-w-137.5">
             <thead>
                 <tr class="bg-gray-50/50 border-b border-gray-100">
                     <th class="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-gray-400">Customer</th>

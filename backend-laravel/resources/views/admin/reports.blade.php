@@ -27,7 +27,7 @@
     {{-- Reports List --}}
     <div class="bg-white border border-gray-100 rounded-3xl overflow-hidden shadow-sm">
         <div class="overflow-x-auto no-scrollbar">
-            <table class="w-full text-left border-collapse min-w-[650px]">
+            <table class="w-full text-left border-collapse min-w-162.5">
             <thead>
                 <tr class="bg-gray-50/50 border-bottom border-gray-100">
                     <th class="px-6 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest">Reporter</th>

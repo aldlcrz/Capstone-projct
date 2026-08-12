@@ -68,8 +68,40 @@
             <p class="text-[11px] font-bold uppercase tracking-[0.3em] text-gray-400">Authentication Portal</p>
         </div>
 
-        <form action="/login" method="POST" class="space-y-6">
+        <form action="/login" method="POST" class="space-y-6" id="login-form">
             @csrf
+
+            @php
+                $pendingIntent = session('pending_intent');
+                $pendingAction = $pendingIntent['action'] ?? 'add_to_cart';
+                $pendingProduct = !empty($pendingIntent['productId']) ? \App\Models\Product::find($pendingIntent['productId']) : null;
+                $pendingSellerName = $pendingIntent['sellerName'] ?? 'Artisan';
+            @endphp
+
+            <div id="js-pending-banner" class="{{ empty($pendingIntent) ? 'hidden' : '' }} p-4 rounded-2xl bg-amber-50 border border-amber-200 text-amber-900 text-xs font-medium flex items-start gap-3 shadow-sm mb-4">
+                <div class="text-xl shrink-0" id="js-pending-icon">
+                    @if($pendingAction === 'chat') 💬 @elseif($pendingAction === 'view_shop') 🏪 @else 🛍️ @endif
+                </div>
+                <div class="flex-1">
+                    <h4 class="font-black uppercase tracking-wider text-[10px] text-[#C0422A] mb-0.5" id="js-pending-title">
+                        @if($pendingAction === 'chat') Chat Request Saved @elseif($pendingAction === 'view_shop') Shop View Saved @else Selection Saved @endif
+                    </h4>
+                    <p class="leading-relaxed text-amber-800 text-xs" id="js-pending-message">
+                        @if($pendingAction === 'chat')
+                            Log in or register to open the message box with <strong>{{ $pendingSellerName }}</strong>.
+                        @elseif($pendingAction === 'view_shop')
+                            Log in or register to return directly to the shop view.
+                        @else
+                            Log in or register to complete adding 
+                            <strong id="js-pending-product-name">{{ $pendingProduct ? $pendingProduct->name : 'your selected item' }}</strong>
+                            @if(!empty($pendingIntent['size'])) (Size: {{ $pendingIntent['size'] }}) @endif
+                            to your cart and proceed.
+                        @endif
+                    </p>
+                </div>
+            </div>
+
+            <input type="hidden" name="pending_intent" id="hidden_pending_intent" value="{{ json_encode($pendingIntent) }}">
 
             @if($errors->any() && !$isFrozenErr)
             <div class="p-4 rounded-2xl bg-red-50 border border-red-200/80 text-red-700 text-xs font-medium flex items-start gap-3 shadow-sm mb-2">
@@ -407,6 +439,38 @@
             localStorage.setItem('lumbarong_theme', 'light');
         }
     }
+
+    // Client-side Pending Intent Context Sync
+    document.addEventListener('DOMContentLoaded', function() {
+        try {
+            const raw = localStorage.getItem('lumbarong_pending_intent');
+            if (raw) {
+                const intent = JSON.parse(raw);
+                const hiddenInput = document.getElementById('hidden_pending_intent');
+                if (hiddenInput && (!hiddenInput.value || hiddenInput.value === 'null')) {
+                    hiddenInput.value = JSON.stringify(intent);
+                }
+                const iconEl = document.getElementById('js-pending-icon');
+                const titleEl = document.getElementById('js-pending-title');
+                const msgEl = document.getElementById('js-pending-message');
+
+                if (intent.action === 'chat') {
+                    if (iconEl) iconEl.textContent = '💬';
+                    if (titleEl) titleEl.textContent = 'Chat Request Saved';
+                    if (msgEl) msgEl.innerHTML = 'Log in or register to open the message box with <strong>' + (intent.sellerName || 'Artisan') + '</strong>.';
+                } else if (intent.action === 'view_shop') {
+                    if (iconEl) iconEl.textContent = '🏪';
+                    if (titleEl) titleEl.textContent = 'Shop View Saved';
+                    if (msgEl) msgEl.innerHTML = 'Log in or register to return directly to the shop view.';
+                }
+
+                const banner = document.getElementById('js-pending-banner');
+                if (banner && banner.classList.contains('hidden')) {
+                    banner.classList.remove('hidden');
+                }
+            }
+        } catch(e) {}
+    });
 </script>
 </body>
 </html>

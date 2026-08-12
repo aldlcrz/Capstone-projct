@@ -26,6 +26,9 @@ class Order extends Model
         'paymentProof',
         'paymentStatus',
         'shippingAddress',
+        'courierName',
+        'trackingNumber',
+        'trackingLink',
         'cancellationReason',
         'visitorSessionId',
     ];
@@ -122,7 +125,7 @@ class Order extends Model
         if (
             $this->paymentProof
             || in_array(strtolower((string) $this->status), [
-                'processing', 'to ship', 'shipped', 'to receive', 'delivered', 'completed',
+                'processing', 'to ship', 'ready_to_ship', 'shipped', 'to receive', 'in_transit', 'out_for_delivery', 'delivered', 'completed',
             ], true)
         ) {
             return 'Paid';
@@ -161,5 +164,13 @@ class Order extends Model
     public function reviews()
     {
         return $this->hasMany(Review::class, 'orderId');
+    }
+
+    /**
+     * Get the status histories for the order.
+     */
+    public function statusHistories()
+    {
+        return $this->hasMany(OrderStatusHistory::class, 'orderId')->orderBy('createdAt', 'asc');
     }
 }

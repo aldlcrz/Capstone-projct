@@ -72,6 +72,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/orders/my-orders', [WebController::class, 'orders'])->name('orders');
     Route::get('/orders/{id}', [WebController::class, 'orderDetail'])->name('orders.show');
     Route::patch('/orders/{id}/confirm', [\App\Http\Controllers\OrderController::class, 'confirmReceived'])->name('orders.confirm');
+    Route::patch('/api/orders/{id}/status', [\App\Http\Controllers\OrderController::class, 'updateOrderStatus']);
 
 
     // Notifications

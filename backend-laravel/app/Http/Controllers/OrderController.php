@@ -9,6 +9,7 @@ use App\Models\Address;
 use App\Models\User;
 use App\Models\SystemSetting;
 use App\Models\Notification;
+use App\Models\OrderStatusHistory;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
@@ -42,7 +43,7 @@ class OrderController extends Controller
     public function getMyOrders(Request $request)
     {
         $orders = Order::where('customerId', $request->user()->id)
-            ->with(['seller:id,name,email,profilePhoto', 'items.product'])
+            ->with(['seller:id,name,email,profilePhoto', 'items.product', 'statusHistories'])
             ->orderBy('createdAt', 'desc')
             ->get();
 
@@ -59,7 +60,7 @@ class OrderController extends Controller
             : $request->user()->id;
 
         $orders = Order::where('sellerId', $sellerId)
-            ->with(['customer:id,name,email,profilePhoto', 'items.product'])
+            ->with(['customer:id,name,email,profilePhoto', 'items.product', 'statusHistories'])
             ->orderBy('createdAt', 'desc')
             ->get();
 
@@ -154,6 +155,16 @@ class OrderController extends Controller
                     'visitorSessionId' => $request->header('x-visitor-session'),
                 ]);
 
+                // Record initial OrderStatusHistory
+                OrderStatusHistory::create([
+                    'orderId' => $order->id,
+                    'previousStatus' => null,
+                    'newStatus' => 'Pending',
+                    'updatedBy' => $customerId,
+                    'userRole' => 'customer',
+                    'notes' => 'Order placed by customer.',
+                ]);
+
                 foreach ($preparedItems as $pItem) {
                     $pItem['product']->decrement('stock', $pItem['quantity']);
 
@@ -206,41 +217,157 @@ class OrderController extends Controller
         $order = Order::find($id);
         if (!$order) return response()->json(['message' => 'Order not found'], 404);
 
+        $targetStatus = trim($request->status ?? '');
+        $normalizedTarget = strtolower($targetStatus);
+
         $blockedStatuses = ['cancelled', 'cancellation pending', 'cancellation requested'];
-        if (in_array(strtolower($request->status), $blockedStatuses, true)) {
+        if (in_array($normalizedTarget, $blockedStatuses, true)) {
             return response()->json(['message' => 'Paid orders cannot be cancelled. Contact the seller or platform support for refund disputes.'], 400);
         }
 
+        $user = $request->user();
         // Permissions
-        if ($request->user()->role === 'customer') {
-            if ($order->customerId !== $request->user()->id) return response()->json(['message' => 'Unauthorized'], 403);
-            if (!in_array($request->status, ['Received by Buyer', 'Completed'])) {
-                return response()->json(['message' => 'Customers can only confirm receipt'], 403);
+        if ($user->role === 'customer') {
+            if ($order->customerId !== $user->id) return response()->json(['message' => 'Unauthorized'], 403);
+            if (!in_array($normalizedTarget, ['received by buyer', 'completed'], true)) {
+                return response()->json(['message' => 'Customers can only confirm receipt.'], 403);
             }
-        } elseif ($request->user()->role === 'seller') {
-            if ($order->sellerId !== $request->user()->id) return response()->json(['message' => 'Unauthorized'], 403);
+        } elseif ($user->role === 'seller') {
+            if ($order->sellerId !== $user->id && $user->role !== 'admin') return response()->json(['message' => 'Unauthorized'], 403);
         }
 
-        $order->status = $request->status;
+        $currentStatus = $order->status;
+        $normalizedCurrent = strtolower($currentStatus);
+
+        // Edit locking for shipping details
+        if (in_array($normalizedCurrent, ['delivered', 'completed', 'cancelled'], true)) {
+            if ($request->has('courierName') || $request->has('trackingNumber') || $request->has('trackingLink')) {
+                return response()->json(['message' => 'Shipping information is locked and cannot be edited after order is delivered or completed.'], 400);
+            }
+            if (($normalizedCurrent === 'completed' || $normalizedCurrent === 'cancelled') && $normalizedTarget !== $normalizedCurrent) {
+                return response()->json(['message' => "Order is already {$order->status} and cannot be modified."], 400);
+            }
+        }
+
+        // Status mapping to canonical names
+        $statusKeyMap = [
+            'pending' => 'Pending',
+            'processing' => 'Processing',
+            'to ship' => 'Processing',
+            'ready to ship' => 'Ready to Ship',
+            'ready_to_ship' => 'Ready to Ship',
+            'shipped' => 'Shipped',
+            'to receive' => 'Shipped',
+            'in transit' => 'In Transit',
+            'in_transit' => 'In Transit',
+            'out for delivery' => 'Out for Delivery',
+            'out_for_delivery' => 'Out for Delivery',
+            'delivered' => 'Delivered',
+            'received by buyer' => 'Completed',
+            'completed' => 'Completed',
+            'cancelled' => 'Cancelled',
+        ];
+
+        $canonicalTarget = $statusKeyMap[$normalizedTarget] ?? $targetStatus;
+        $canonicalCurrent = $statusKeyMap[$normalizedCurrent] ?? $currentStatus;
+
+        // Transition rank checks (blocks backward status regressions)
+        $statusRank = [
+            'Pending' => 0,
+            'Processing' => 1,
+            'Ready to Ship' => 2,
+            'Shipped' => 3,
+            'In Transit' => 4,
+            'Out for Delivery' => 5,
+            'Delivered' => 6,
+            'Completed' => 7,
+            'Cancelled' => -1,
+        ];
+
+        $currRank = $statusRank[$canonicalCurrent] ?? 0;
+        $targetRank = $statusRank[$canonicalTarget] ?? 0;
+
+        if ($targetRank >= 0 && $currRank >= 0 && $targetRank < $currRank) {
+            return response()->json(['message' => "Invalid status transition from {$canonicalCurrent} to {$canonicalTarget}."], 400);
+        }
+
+        // Shipping validation when marking as Shipped
+        $shippingUpdated = false;
+        if ($canonicalTarget === 'Shipped') {
+            $courier = trim($request->courierName ?? $order->courierName ?? '');
+            $trackingNum = trim($request->trackingNumber ?? $order->trackingNumber ?? '');
+            $trackingLink = trim($request->trackingLink ?? $order->trackingLink ?? '');
+
+            if (empty($courier) || empty($trackingNum) || empty($trackingLink)) {
+                return response()->json(['message' => 'Please provide courier, tracking number, and tracking link before marking this order as Shipped.'], 422);
+            }
+
+            if (!filter_var($trackingLink, FILTER_VALIDATE_URL)) {
+                return response()->json(['message' => 'Please enter a valid tracking URL (e.g. https://www.jtexpress.ph/track).'], 422);
+            }
+
+            if ($order->courierName !== $courier || $order->trackingNumber !== $trackingNum || $order->trackingLink !== $trackingLink) {
+                $shippingUpdated = true;
+            }
+
+            $order->courierName = $courier;
+            $order->trackingNumber = $trackingNum;
+            $order->trackingLink = $trackingLink;
+        } else {
+            if ($request->filled('courierName') && $order->courierName !== trim($request->courierName)) {
+                $order->courierName = trim($request->courierName);
+                $shippingUpdated = true;
+            }
+            if ($request->filled('trackingNumber') && $order->trackingNumber !== trim($request->trackingNumber)) {
+                $order->trackingNumber = trim($request->trackingNumber);
+                $shippingUpdated = true;
+            }
+            if ($request->filled('trackingLink')) {
+                if (!filter_var($request->trackingLink, FILTER_VALIDATE_URL)) {
+                    return response()->json(['message' => 'Please enter a valid tracking URL.'], 422);
+                }
+                if ($order->trackingLink !== trim($request->trackingLink)) {
+                    $order->trackingLink = trim($request->trackingLink);
+                    $shippingUpdated = true;
+                }
+            }
+        }
+
+        $order->status = $canonicalTarget;
         $order->save();
 
-        $statusMsg = [
-            'Processing' => 'Your order is now being prepared for shipment.',
-            'Shipped' => 'Your order has been shipped and is on the way.',
-            'Delivered' => 'Your order has been marked as delivered.',
-            'Completed' => 'Your order has been completed.',
-        ][$request->status] ?? "Your order status is now {$request->status}.";
+        if ($canonicalCurrent !== $canonicalTarget || $shippingUpdated) {
+            OrderStatusHistory::create([
+                'orderId' => $order->id,
+                'previousStatus' => $canonicalCurrent,
+                'newStatus' => $canonicalTarget,
+                'updatedBy' => $user->id,
+                'userRole' => $user->role,
+                'notes' => $request->notes ?? ($canonicalCurrent !== $canonicalTarget ? "Status updated to {$canonicalTarget}." : "Shipping information updated."),
+            ]);
+        }
 
-        $this->sendNotification($order->customerId, "Order {$request->status}", $statusMsg, 'order', '/orders', 'customer');
+        $statusMsgMap = [
+            'Processing' => 'Your order is being processed and prepared.',
+            'Ready to Ship' => 'Your order is packed and ready to ship.',
+            'Shipped' => "Your order has been shipped via {$order->courierName} (Tracking: {$order->trackingNumber}).",
+            'In Transit' => 'Your order is in transit with the courier.',
+            'Out for Delivery' => 'Your order is out for delivery today!',
+            'Delivered' => 'Your order has been delivered. Please inspect your item and rate your purchase.',
+            'Completed' => 'Your order has been marked as completed.',
+        ];
 
-        // Gmail Notification to Customer
+        $statusMsg = $statusMsgMap[$canonicalTarget] ?? "Your order status is now {$canonicalTarget}.";
+
+        $this->sendNotification($order->customerId, "Order {$canonicalTarget}", $statusMsg, 'order', '/orders', 'customer');
+
         $customerUser = User::find($order->customerId);
         if ($customerUser && $customerUser->email) {
-            $mailable = new \App\Mail\OrderStatusUpdatedMail($customerUser->name, $order->id, $request->status, $statusMsg);
+            $mailable = new \App\Mail\OrderStatusUpdatedMail($customerUser->name, $order->id, $canonicalTarget, $statusMsg);
             \App\Services\EmailNotificationService::sendNotification($customerUser->email, $mailable, 'order_status_updated', $customerUser->id, 'Order', $order->id);
         }
 
-        return response()->json($order->load(['customer', 'seller', 'items.product']));
+        return response()->json($order->load(['customer', 'seller', 'items.product', 'statusHistories']));
     }
 
     /**
@@ -298,13 +425,23 @@ class OrderController extends Controller
     {
         $order = Order::where('id', $id)->where('customerId', auth()->id())->firstOrFail();
 
-        $receivable = ['to receive', 'shipped'];
-        if (!in_array(strtolower($order->status), $receivable)) {
+        $receivable = ['shipped', 'to receive', 'in transit', 'in_transit', 'out for delivery', 'out_for_delivery', 'delivered'];
+        if (!in_array(strtolower($order->status), $receivable, true)) {
             return redirect()->back()->with('error', 'You cannot confirm this order at this stage.');
         }
 
+        $prevStatus = $order->status;
         $order->status = 'Completed';
         $order->save();
+
+        OrderStatusHistory::create([
+            'orderId' => $order->id,
+            'previousStatus' => $prevStatus,
+            'newStatus' => 'Completed',
+            'updatedBy' => auth()->id(),
+            'userRole' => 'customer',
+            'notes' => 'Receipt confirmed by customer.',
+        ]);
 
         $this->sendNotification(
             $order->sellerId,

@@ -142,6 +142,9 @@
                         cartCount: {{ auth()->check() ? count(session('cart', [])) : 0 }},
                         cartItems: {{ json_encode(array_values(session('cart', [])), JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP) }},
                         init() {
+                            @auth
+                                try { localStorage.removeItem('lumbarong_pending_intent'); } catch(e) {}
+                            @endauth
                             window.addEventListener('cart-updated', (e) => {
                                 this.cartCount = e.detail.cartCount;
                                 this.cartItems = Object.values(e.detail.cart || {});

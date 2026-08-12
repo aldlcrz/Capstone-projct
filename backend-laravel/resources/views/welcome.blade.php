@@ -11,10 +11,19 @@
     window.isLoggedIn = _pd.loggedIn === 'true';
     window.loginUrl   = _pd.loginUrl;
 
-    // Guard: redirect guests to login instead of opening the Quick-Add modal
+    // Guard: save pending intent and redirect guests to login instead of opening the Quick-Add modal
     window.openQuickAdd = function(detail) {
         if (!window.isLoggedIn) {
-            window.location.href = window.loginUrl + '?next=cart';
+            var intent = {
+                action: 'add_to_cart',
+                productId: detail.id,
+                quantity: 1,
+                size: null,
+                variation: 'Original',
+                redirectUrl: window.location.href
+            };
+            try { localStorage.setItem('lumbarong_pending_intent', JSON.stringify(intent)); } catch(e) {}
+            window.location.href = window.loginUrl;
             return;
         }
         window.dispatchEvent(new CustomEvent('open-quick-add', { detail: detail }));
@@ -771,7 +780,16 @@
             },
             async submitAddToCart(e) {
                 if (!window.isLoggedIn) {
-                    window.location.href = window.loginUrl + '?next=cart';
+                    const intent = {
+                        action: 'add_to_cart',
+                        productId: this.product ? this.product.id : null,
+                        quantity: this.quantity || 1,
+                        size: this.selectedSize || null,
+                        variation: 'Original',
+                        redirectUrl: window.location.href
+                    };
+                    try { localStorage.setItem('lumbarong_pending_intent', JSON.stringify(intent)); } catch(err) {}
+                    window.location.href = window.loginUrl;
                     return;
                 }
                 try {

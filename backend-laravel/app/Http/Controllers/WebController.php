@@ -363,19 +363,25 @@ class WebController extends Controller
     public function orders(Request $request)
     {
         $query = Order::where('customerId', Auth::id())
-            ->with(['items.product', 'seller'])
+            ->with(['items.product', 'seller', 'reviews', 'statusHistories'])
             ->orderBy('createdAt', 'desc');
 
         // Filter by status tab
         $tab = strtolower($request->input('tab', 'all'));
-        $statusMap = [
-            'pending'    => 'pending',
-            'to ship'    => 'to ship',
-            'to receive' => 'to receive',
-            'completed'  => 'completed',
+        $statusGroupMap = [
+            'pending'           => ['Pending', 'pending'],
+            'to ship'           => ['Processing', 'To Ship', 'Ready to Ship', 'processing', 'to ship', 'ready_to_ship'],
+            'ready to ship'     => ['Ready to Ship', 'ready_to_ship'],
+            'to receive'        => ['Shipped', 'To Receive', 'In Transit', 'Out for Delivery', 'shipped', 'to receive', 'in_transit', 'out_for_delivery'],
+            'in transit'        => ['In Transit', 'in_transit'],
+            'out for delivery'  => ['Out for Delivery', 'out_for_delivery'],
+            'delivered'         => ['Delivered', 'delivered'],
+            'completed'         => ['Completed', 'completed'],
+            'cancelled'         => ['Cancelled', 'cancelled'],
         ];
-        if ($tab !== 'all' && isset($statusMap[$tab])) {
-            $query->where('status', $statusMap[$tab]);
+
+        if ($tab !== 'all' && isset($statusGroupMap[$tab])) {
+            $query->whereIn('status', $statusGroupMap[$tab]);
         }
 
         // Filter by search
@@ -400,7 +406,7 @@ class WebController extends Controller
     {
         $order = Order::where('id', $id)
             ->where('customerId', Auth::id())
-            ->with(['items.product', 'seller', 'reviews'])
+            ->with(['items.product', 'seller', 'reviews', 'statusHistories'])
             ->firstOrFail();
 
         $recommended = $this->getRecommendedProductsForOrder($order);

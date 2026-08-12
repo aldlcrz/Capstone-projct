@@ -49,7 +49,7 @@ function printSellerOrder(order) {
             + '</tr>';
     }).join('');
 
-    const html = '<!DOCTYPE html><html><head><title>Order ' + orderId + '</title>'
+    const html = '<!DOCTYPE html><html><head><title>Receipt ' + orderId + '</title>'
         + '<style>'
         + 'body{font-family:Arial,sans-serif;color:#111;padding:32px;max-width:800px;margin:0 auto;}'
         + 'h1{font-size:22px;margin:0 0 4px;}'
@@ -60,7 +60,7 @@ function printSellerOrder(order) {
         + 'th{text-align:left;padding:8px;border-bottom:2px solid #ddd;font-size:11px;text-transform:uppercase;color:#666;}'
         + '.total{text-align:right;font-size:18px;font-weight:bold;margin-top:16px;}'
         + '</style></head><body>'
-        + '<h1>LumBarong — Order Details</h1>'
+        + '<h1>LumBarong — Order Receipt</h1>'
         + '<div class="meta">' + orderId + ' · ' + date + ' · Status: ' + order.status + '</div>'
         + '<h2>Buyer Information</h2>'
         + '<div class="box"><strong>' + (order.customer?.name || 'Unknown Customer') + '</strong><br>'
@@ -97,6 +97,10 @@ function printSellerOrder(order) {
     receiptUrl: '',
     detailsModal: false,
     detailsOrder: null,
+    courierName: '',
+    trackingNumber: '',
+    trackingLink: '',
+    shippingError: '',
 
     formatAddress(order) {
         return formatOrderAddress(order);
@@ -109,33 +113,49 @@ function printSellerOrder(order) {
     openDetails(order) {
         this.detailsOrder = order;
         this.newStatus = order.status;
+        this.courierName = order.courierName || 'J&T Express';
+        this.trackingNumber = order.trackingNumber || '';
+        this.trackingLink = order.trackingLink || '';
+        this.shippingError = '';
         this.detailsModal = true;
     },
 
     openStatus(order) {
         this.activeOrder = order;
         this.newStatus = order.status;
+        this.courierName = order.courierName || 'J&T Express';
+        this.trackingNumber = order.trackingNumber || '';
+        this.trackingLink = order.trackingLink || '';
+        this.shippingError = '';
         this.statusModal = true;
     },
 
     printOrderDetails() {
         printSellerOrder(this.detailsOrder);
+        this.detailsModal = false;
     },
 
     isStatusDisabled(target, currentOrder) {
         const order = currentOrder || this.activeOrder || this.detailsOrder;
         if (!order) return true;
-        const current = (order.status || '').toLowerCase();
-        const t = target.toLowerCase();
+        const current = (order.status || '').toLowerCase().trim();
+        const t = target.toLowerCase().trim();
         if (current === t) return false;
         if (current === 'completed' || current === 'cancelled') return true;
         
-        const states = ['pending', 'processing', 'shipped', 'delivered', 'completed'];
+        const states = ['pending', 'processing', 'ready to ship', 'shipped', 'in transit', 'out for delivery', 'delivered', 'completed'];
         const currentIdx = states.indexOf(current);
         const targetIdx = states.indexOf(t);
         
         if (currentIdx === -1 || targetIdx === -1) return true;
         return targetIdx < currentIdx;
+    },
+
+    isShippingLocked(currentOrder) {
+        const order = currentOrder || this.detailsOrder || this.activeOrder;
+        if (!order) return false;
+        const s = (order.status || '').toLowerCase().trim();
+        return s === 'delivered' || s === 'completed' || s === 'cancelled';
     },
 
     productImage(product) {
@@ -171,7 +191,8 @@ function printSellerOrder(order) {
             const matchSearch = !this.searchTerm ||
                 o.id.toLowerCase().includes(this.searchTerm.toLowerCase()) ||
                 (o.customer?.name || '').toLowerCase().includes(this.searchTerm.toLowerCase());
-            const matchStatus = this.statusFilter === 'all' || o.status.toLowerCase() === this.statusFilter;
+            const s = (o.status || '').toLowerCase().trim();
+            const matchStatus = this.statusFilter === 'all' || s === this.statusFilter;
             return matchSearch && matchStatus;
         });
     },
@@ -181,13 +202,15 @@ function printSellerOrder(order) {
         const m = {
             'pending': 'bg-amber-50 text-amber-700 border-amber-200',
             'processing': 'bg-blue-50 text-blue-700 border-blue-200',
-            'to ship': 'bg-indigo-50 text-indigo-700 border-indigo-200',
-            'shipped': 'bg-purple-50 text-purple-700 border-purple-200',
+            'ready to ship': 'bg-sky-50 text-sky-700 border-sky-200',
+            'shipped': 'bg-indigo-50 text-indigo-700 border-indigo-200',
+            'in transit': 'bg-purple-50 text-purple-700 border-purple-200',
+            'out for delivery': 'bg-orange-50 text-orange-700 border-orange-200',
             'delivered': 'bg-teal-50 text-teal-700 border-teal-200',
             'completed': 'bg-emerald-50 text-emerald-700 border-emerald-200',
             'cancelled': 'bg-red-50 text-red-700 border-red-200',
         };
-        return m[s.toLowerCase()] || 'bg-gray-50 text-gray-600 border-gray-200';
+        return m[s.toLowerCase().trim()] || 'bg-gray-50 text-gray-600 border-gray-200';
     },
 
     async updateStatus(targetOrder, statusToSave) {
@@ -195,30 +218,57 @@ function printSellerOrder(order) {
         const statusVal = statusToSave || this.newStatus;
         if (!target || !statusVal) return;
 
+        this.shippingError = '';
+
+        // Front-end check for Shipped transition
+        if (statusVal.toLowerCase().trim() === 'shipped') {
+            if (!this.courierName || !this.trackingNumber || !this.trackingLink) {
+                this.shippingError = 'Please fill out Courier, Tracking Number, and Tracking Link before marking as Shipped.';
+                return;
+            }
+            try {
+                new URL(this.trackingLink);
+            } catch(e) {
+                this.shippingError = 'Please enter a valid tracking URL (e.g. https://www.jtexpress.ph/track).';
+                return;
+            }
+        }
+
         try {
+            const payload = {
+                status: statusVal,
+                courierName: this.courierName,
+                trackingNumber: this.trackingNumber,
+                trackingLink: this.trackingLink
+            };
+
             const res = await fetch('/seller/api/orders/' + target.id + '/status', {
                 method: 'PATCH',
                 headers: {
                     'Content-Type': 'application/json',
                     'X-CSRF-TOKEN': document.querySelector('meta[name=csrf-token]').content
                 },
-                body: JSON.stringify({ status: statusVal })
+                body: JSON.stringify(payload)
             });
+
+            const data = await res.json();
+
             if (res.ok) {
                 const idx = this.orders.findIndex(o => o.id === target.id);
                 if (idx !== -1) {
-                    this.orders[idx].status = statusVal;
+                    this.orders[idx] = data;
                     if (this.detailsOrder && this.detailsOrder.id === target.id) {
-                        this.detailsOrder.status = statusVal;
+                        this.detailsOrder = data;
                     }
                 }
                 this.statusModal = false;
                 this.activeOrder = null;
+                this.shippingError = '';
             } else {
-                alert('Failed to update status. Please try again.');
+                this.shippingError = data.message || 'Failed to update status. Please check fields and try again.';
             }
         } catch(e) {
-            alert('Network error. Please try again.');
+            this.shippingError = 'Network error. Please try again.';
         }
     }
 }">
@@ -230,7 +280,7 @@ function printSellerOrder(order) {
             <h1 class="font-serif text-xl sm:text-3xl font-bold text-black uppercase">
                 My <span class="text-[#C0420A] italic lowercase">orders</span>
             </h1>
-            <p class="text-[11px] sm:text-xs text-gray-500 mt-0.5">Tap any order capsule to view complete items, buyer details, and update status.</p>
+            <p class="text-[11px] sm:text-xs text-gray-500 mt-0.5">Tap any order capsule to view complete items, buyer details, enter tracking info, and update status.</p>
         </div>
         
         {{-- Search Input --}}
@@ -243,7 +293,7 @@ function printSellerOrder(order) {
 
     {{-- Status Filter Tabs (Capsules) --}}
     <div class="flex gap-2 overflow-x-auto no-scrollbar pb-1">
-        @foreach(['all' => 'All', 'pending' => 'Pending', 'processing' => 'Processing', 'shipped' => 'Shipped', 'delivered' => 'Delivered', 'completed' => 'Completed', 'cancelled' => 'Cancelled'] as $val => $label)
+        @foreach(['all' => 'All', 'pending' => 'Pending', 'processing' => 'Processing', 'ready to ship' => 'Ready to Ship', 'shipped' => 'Shipped', 'in transit' => 'In Transit', 'out for delivery' => 'Out for Delivery', 'delivered' => 'Delivered', 'completed' => 'Completed', 'cancelled' => 'Cancelled'] as $val => $label)
             <button @click="statusFilter = '{{ $val }}'"
                 :class="statusFilter === '{{ $val }}' ? 'bg-black text-white shadow-md' : 'bg-white text-gray-500 border border-gray-200 hover:border-gray-300'"
                 class="px-3.5 sm:px-5 py-2 sm:py-2.5 rounded-full text-[9px] sm:text-[10px] font-black uppercase tracking-widest whitespace-nowrap transition-all flex items-center gap-1.5 shrink-0 active:scale-95">
@@ -344,19 +394,24 @@ function printSellerOrder(order) {
                     <div class="space-y-5">
                         
                         {{-- Quick Status Update Row --}}
-                        <div class="p-4 bg-amber-50/60 border border-amber-100 rounded-2xl space-y-2">
+                        <div class="p-4 bg-amber-50/60 border border-amber-100 rounded-2xl space-y-3">
                             <div class="flex items-center justify-between">
-                                <span class="text-[10px] font-black uppercase tracking-wider text-amber-800">Update Order Status</span>
+                                <span class="text-[10px] font-black uppercase tracking-wider text-amber-800">Update Order Lifecycle</span>
                                 <span class="text-[9px] font-bold text-gray-400 uppercase tracking-widest" x-text="'Current: ' + detailsOrder.status"></span>
                             </div>
+
+                            <template x-if="shippingError">
+                                <div class="p-2.5 bg-red-50 border border-red-200 rounded-xl text-[10px] font-bold text-red-600 leading-tight" x-text="shippingError"></div>
+                            </template>
+
                             <div class="flex flex-wrap gap-1.5 pt-1">
-                                @foreach(['Pending', 'Processing', 'Shipped', 'Delivered', 'Completed', 'Cancelled'] as $st)
+                                @foreach(['Pending', 'Processing', 'Ready to Ship', 'Shipped', 'In Transit', 'Out for Delivery', 'Delivered', 'Completed', 'Cancelled'] as $st)
                                     <button type="button"
                                         @click="updateStatus(detailsOrder, '{{ $st }}')"
                                         :disabled="isStatusDisabled('{{ $st }}', detailsOrder)"
                                         :class="{
-                                            'bg-[#C0420A] text-white font-black shadow-sm': detailsOrder.status.toLowerCase() === '{{ strtolower($st) }}',
-                                            'bg-white text-gray-700 hover:border-[#C0420A] border border-gray-200': detailsOrder.status.toLowerCase() !== '{{ strtolower($st) }}' && !isStatusDisabled('{{ $st }}', detailsOrder),
+                                            'bg-[#C0420A] text-white font-black shadow-sm': detailsOrder.status.toLowerCase().trim() === '{{ strtolower($st) }}',
+                                            'bg-white text-gray-700 hover:border-[#C0420A] border border-gray-200': detailsOrder.status.toLowerCase().trim() !== '{{ strtolower($st) }}' && !isStatusDisabled('{{ $st }}', detailsOrder),
                                             'opacity-30 cursor-not-allowed bg-gray-100 text-gray-400 border-gray-100': isStatusDisabled('{{ $st }}', detailsOrder)
                                         }"
                                         class="px-3 py-1.5 rounded-full text-[9px] font-bold uppercase tracking-wider transition-all">
@@ -365,6 +420,72 @@ function printSellerOrder(order) {
                                 @endforeach
                             </div>
                         </div>
+
+                        {{-- Courier Shipping & Manual Tracking Card --}}
+                        <div class="bg-indigo-50/50 p-4 rounded-2xl border border-indigo-100/70 space-y-3">
+                            <div class="flex items-center justify-between">
+                                <div class="text-[9px] font-black uppercase tracking-widest text-indigo-900 flex items-center gap-1.5">
+                                    <span>🚚 Courier & Shipping Information</span>
+                                </div>
+                                <template x-if="isShippingLocked(detailsOrder)">
+                                    <span class="px-2 py-0.5 bg-amber-100 text-amber-800 rounded-md text-[9px] font-black uppercase tracking-widest flex items-center gap-1">
+                                        🔒 Read Only / Locked
+                                    </span>
+                                </template>
+                            </div>
+
+                            <template x-if="isShippingLocked(detailsOrder)">
+                                <p class="text-[10px] text-amber-700 font-medium italic leading-relaxed">
+                                    Shipping information is locked and read-only because the order has been delivered, completed, or cancelled.
+                                </p>
+                            </template>
+
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+                                <div>
+                                    <label class="text-[9px] font-bold text-gray-500 uppercase tracking-wider block mb-1">Courier / Shipping Company</label>
+                                    <select x-model="courierName" :disabled="isShippingLocked(detailsOrder)"
+                                        class="w-full h-9 px-3 bg-white border border-gray-200 rounded-xl text-xs font-semibold outline-none focus:border-[#C0420A] disabled:bg-gray-100 disabled:text-gray-500">
+                                        <option value="J&T Express">J&T Express</option>
+                                        <option value="LBC Express">LBC Express</option>
+                                        <option value="Flash Express">Flash Express</option>
+                                        <option value="Ninja Van">Ninja Van</option>
+                                        <option value="Other Courier">Other Courier</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="text-[9px] font-bold text-gray-500 uppercase tracking-wider block mb-1">Tracking Number</label>
+                                    <input type="text" x-model="trackingNumber" placeholder="e.g. 123456789012" :disabled="isShippingLocked(detailsOrder)"
+                                        class="w-full h-9 px-3 bg-white border border-gray-200 rounded-xl text-xs font-semibold outline-none focus:border-[#C0420A] disabled:bg-gray-100 disabled:text-gray-500">
+                                </div>
+                            </div>
+
+                            <div>
+                                <label class="text-[9px] font-bold text-gray-500 uppercase tracking-wider block mb-1">Courier Tracking URL</label>
+                                <input type="url" x-model="trackingLink" placeholder="https://www.jtexpress.ph/track" :disabled="isShippingLocked(detailsOrder)"
+                                    class="w-full h-9 px-3 bg-white border border-gray-200 rounded-xl text-xs font-semibold outline-none focus:border-[#C0420A] disabled:bg-gray-100 disabled:text-gray-500">
+                            </div>
+                        </div>
+
+                        {{-- Order Status History Timeline Audit Trail --}}
+                        <template x-if="detailsOrder.status_histories && detailsOrder.status_histories.length > 0">
+                            <div class="bg-gray-50/80 p-4 rounded-2xl border border-gray-100 space-y-3">
+                                <div class="text-[9px] font-black uppercase tracking-widest text-[#C0420A] flex items-center justify-between">
+                                    <span>Order Status History Audit Trail</span>
+                                    <span class="text-gray-400" x-text="detailsOrder.status_histories.length + ' entry(ies)'"></span>
+                                </div>
+                                <div class="space-y-2 max-h-40 overflow-y-auto pr-1">
+                                    <template x-for="hist in detailsOrder.status_histories" :key="hist.id">
+                                        <div class="flex items-start justify-between text-xs py-1.5 border-b border-gray-200/50 last:border-0">
+                                            <div>
+                                                <span class="font-black text-black text-[11px]" x-text="hist.newStatus"></span>
+                                                <span class="text-[9px] text-gray-400 block" x-text="'Updated by ' + (hist.userRole || 'system')"></span>
+                                            </div>
+                                            <div class="text-right text-[10px] font-medium text-gray-500" x-text="hist.createdAt ? new Date(hist.createdAt).toLocaleString('en-PH', {month:'short', day:'numeric', hour:'numeric', minute:'2-digit'}) : ''"></div>
+                                        </div>
+                                    </template>
+                                </div>
+                            </div>
+                        </template>
 
                         {{-- Buyer & Shipping Info Card --}}
                         <div class="bg-gray-50/80 p-4 rounded-2xl border border-gray-100 space-y-3">
@@ -455,7 +576,7 @@ function printSellerOrder(order) {
                 <button @click="printOrderDetails()"
                     class="flex-1 py-2.5 sm:py-3 bg-black text-white text-[10px] font-black uppercase tracking-widest hover:bg-[#C0420A] rounded-full transition-all flex items-center justify-center gap-2 shadow-sm">
                     <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"></path></svg>
-                    Print PDF
+                    Print Receipt
                 </button>
             </div>
         </div>

@@ -76,18 +76,34 @@ class CartController extends Controller
 
     public function add(Request $request)
     {
-        // Only logged-in customers can add to cart
+        // Save intent for guest customers before redirecting to login
         if (!Auth::check()) {
+            $intentAction = $request->input('action') === 'buy_now' ? 'buy_now' : 'add_to_cart';
+            $redirectTarget = $intentAction === 'buy_now' ? route('checkout') : ($request->headers->get('referer') ?: route('cart.index'));
+
+            $intent = [
+                'action'      => $intentAction,
+                'productId'   => $request->input('productId'),
+                'quantity'    => (int) $request->input('quantity', 1),
+                'size'        => $request->input('size'),
+                'variation'   => $request->input('variation'),
+                'redirectUrl' => $redirectTarget,
+            ];
+
+            session(['pending_intent' => $intent]);
+            session()->put('url.intended', $redirectTarget);
+
             if ($request->wantsJson() || $request->ajax()) {
                 return response()->json([
-                    'success' => false,
-                    'error' => 'unauthorized',
-                    'redirect' => route('login'),
-                    'message' => 'Please log in to add items to your cart.'
+                    'success'       => false,
+                    'error'         => 'unauthorized',
+                    'redirect'      => route('login'),
+                    'pendingIntent' => $intent,
+                    'message'       => 'Please log in or register to complete adding this item to your cart.'
                 ], 401);
             }
             return redirect()->route('login')
-                ->with('info', 'Please log in to add items to your cart.');
+                ->with('info', 'Please log in or register to complete adding this item to your cart.');
         }
 
         $productId = $request->input('productId');

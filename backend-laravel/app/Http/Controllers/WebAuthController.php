@@ -85,6 +85,10 @@ class WebAuthController extends Controller
             if ($user->role === 'admin') return redirect()->route('admin.dashboard');
             if ($user->role === 'seller') return redirect()->route('seller.dashboard');
 
+            // Restore guest customer pending context (Add to cart / Buy now / Wishlist / Checkout restoration)
+            $contextRedirect = $this->restorePendingContext($user, $request);
+            if ($contextRedirect) return $contextRedirect;
+
             return redirect()->intended('/');
         }
 
@@ -241,6 +245,10 @@ class WebAuthController extends Controller
             $user->save();
             \App\Services\EmailNotificationService::consumeCode($email, 'registration');
             Auth::login($user);
+
+            $contextRedirect = $this->restorePendingContext($user, $request);
+            if ($contextRedirect) return $contextRedirect;
+
             return redirect('/')->with('success', 'Your Gmail address has been verified successfully!');
         }
 
@@ -340,6 +348,9 @@ class WebAuthController extends Controller
 
             Auth::login($user);
             $request->session()->regenerate();
+
+            $contextRedirect = $this->restorePendingContext($user, $request);
+            if ($contextRedirect) return $contextRedirect;
 
             return redirect()->intended('/');
         } catch (\Exception $e) {
@@ -525,6 +536,111 @@ class WebAuthController extends Controller
         $user->save();
 
         return redirect()->route('profile')->with('success', 'Password changed successfully!');
+    }
+
+    /**
+     * Restore previous guest customer context and execute pending action (Add to Cart / Buy Now / Wishlist) upon login/verification.
+     */
+    protected function restorePendingContext(User $user, Request $request)
+    {
+        $intent = session()->get('pending_intent') ?: $request->input('pending_intent');
+
+        if (is_string($intent)) {
+            $intent = json_decode($intent, true);
+        }
+
+        if (!empty($intent) && is_array($intent)) {
+            $action    = $intent['action'] ?? 'add_to_cart';
+            $productId = $intent['productId'] ?? null;
+            $quantity  = (int) ($intent['quantity'] ?? 1);
+            $size      = $intent['size'] ?? null;
+            $variation = $intent['variation'] ?? null;
+            $redirect  = $intent['redirectUrl'] ?? null;
+
+            session()->forget('pending_intent');
+
+            if ($productId) {
+                $product = \App\Models\Product::with('seller')->find($productId);
+                if ($product) {
+                    if ($action === 'add_to_cart' || $action === 'buy_now') {
+                        $cart = session()->get('cart', []);
+                        $key  = $productId . '_' . ($size ?? '') . '_' . ($variation ?? '');
+
+                        $availableStock = $product->stock;
+                        if ($size && !empty($product->size_stocks) && isset($product->size_stocks[$size])) {
+                            $availableStock = (int) $product->size_stocks[$size];
+                        }
+
+                        $newItem = [
+                            'key'                 => $key,
+                            'id'                  => $product->id,
+                            'name'                => $product->name,
+                            'price'               => $product->sale_price,
+                            'image'               => $product->getImageUrl(),
+                            'quantity'            => min(max($quantity, 1), max($availableStock, 1)),
+                            'size'                => $size,
+                            'variation'           => $variation,
+                            'sellerId'            => $product->sellerId,
+                            'shippingFee'         => $product->shippingFee ?? 0,
+                            'original_price'      => $product->price,
+                            'discount_percentage' => $product->discount_percentage,
+                            'is_on_sale'          => $product->is_on_sale && ($product->discount_percentage > 0),
+                            'category_name'       => $product->category->name ?? 'Traditional',
+                            'shop_name'           => $product->seller ? ($product->seller->shopName ?: $product->seller->name ?: 'Lumban Heritage Shop') : 'Lumban Heritage Shop',
+                        ];
+
+                        if (isset($cart[$key])) {
+                            $cart[$key]['quantity'] = min($cart[$key]['quantity'] + $quantity, max($availableStock, 1));
+                        } else {
+                            $cart[$key] = $newItem;
+                        }
+
+                        session()->put('cart', $cart);
+                        $user->update(['cart' => json_encode($cart)]);
+
+                        if ($action === 'buy_now') {
+                            session()->put('buy_now_item', $newItem);
+                            session()->flash('success', "Welcome back, {$user->name}! Restored your selection for \"{$product->name}\". Proceeding to checkout.");
+                            return redirect('/checkout?mode=buy_now');
+                        }
+
+                        session()->flash('success', "Welcome back, {$user->name}! \"{$product->name}\" was automatically added to your cart.");
+                        return redirect($redirect ?: '/cart');
+                    }
+
+                    if ($action === 'wishlist') {
+                        \App\Models\Wishlist::firstOrCreate([
+                            'user_id'    => $user->id,
+                            'product_id' => $product->id,
+                        ]);
+                        session()->flash('success', "Welcome back, {$user->name}! Added \"{$product->name}\" to your wishlist.");
+                        return redirect($redirect ?: '/wishlist');
+                    }
+                }
+            }
+
+            if ($action === 'chat') {
+                $sellerId   = $intent['sellerId'] ?? null;
+                $sellerName = $intent['sellerName'] ?? 'Artisan';
+                if ($sellerId) {
+                    session(['open_chat' => ['sellerId' => $sellerId, 'sellerName' => $sellerName]]);
+                }
+                session()->flash('success', "Welcome back, {$user->name}! Opening message box with {$sellerName}.");
+                return redirect($redirect ?: ($sellerId ? "/shops/{$sellerId}" : '/'));
+            }
+
+            if ($action === 'view_shop') {
+                $shopId = $intent['shopId'] ?? $intent['sellerId'] ?? null;
+                session()->flash('success', "Welcome back, {$user->name}!");
+                return redirect($shopId ? "/shops/{$shopId}" : ($redirect ?: '/'));
+            }
+
+            if (!empty($redirect)) {
+                return redirect($redirect);
+            }
+        }
+
+        return null;
     }
 }
 
