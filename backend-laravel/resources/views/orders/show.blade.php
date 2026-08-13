@@ -20,8 +20,7 @@
     @php
         $statusColors = [
             'pending'              => 'bg-amber-50 text-amber-700 border-amber-200',
-            'processing'           => 'bg-blue-50 text-blue-700 border-blue-200',
-            'to ship'              => 'bg-blue-50 text-blue-700 border-blue-200',
+            'to ship'              => 'bg-sky-50 text-sky-700 border-sky-200',
             'ready to ship'        => 'bg-sky-50 text-sky-700 border-sky-200',
             'ready_to_ship'        => 'bg-sky-50 text-sky-700 border-sky-200',
             'shipped'              => 'bg-indigo-50 text-indigo-700 border-indigo-200',
@@ -60,8 +59,7 @@
     @php
         $steps = [
             ['label' => 'Order Placed',     'status' => 'pending'],
-            ['label' => 'Processing',       'status' => 'processing'],
-            ['label' => 'Ready to Ship',   'status' => 'ready to ship'],
+            ['label' => 'Ready to Ship',    'status' => 'ready to ship'],
             ['label' => 'Shipped',          'status' => 'shipped'],
             ['label' => 'In Transit',       'status' => 'in transit'],
             ['label' => 'Out for Delivery', 'status' => 'out for delivery'],
@@ -71,24 +69,23 @@
 
         $statusRanks = [
             'pending'          => 0,
-            'processing'       => 1,
             'to ship'          => 1,
-            'ready to ship'    => 2,
-            'ready_to_ship'    => 2,
-            'shipped'          => 3,
-            'to receive'       => 3,
-            'in transit'       => 4,
-            'in_transit'       => 4,
-            'out for delivery' => 5,
-            'out_for_delivery' => 5,
-            'delivered'        => 6,
-            'completed'        => 7,
+            'ready to ship'    => 1,
+            'ready_to_ship'    => 1,
+            'shipped'          => 2,
+            'to receive'       => 2,
+            'in transit'       => 3,
+            'in_transit'       => 3,
+            'out for delivery' => 4,
+            'out_for_delivery' => 4,
+            'delivered'        => 5,
+            'completed'        => 6,
             'cancelled'        => -1,
         ];
 
         $currentStep = $statusRanks[strtolower(trim($order->status))] ?? 0;
         $isCancelled = strtolower(trim($order->status)) === 'cancelled';
-        $progressPct = $currentStep >= 7 ? 100 : round(($currentStep / 7) * 100, 2);
+        $progressPct = $currentStep >= 6 ? 100 : round(($currentStep / 6) * 100, 2);
 
         // Map status history timestamps
         $historyDates = [];

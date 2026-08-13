@@ -252,8 +252,7 @@ class OrderController extends Controller
         // Status mapping to canonical names
         $statusKeyMap = [
             'pending' => 'Pending',
-            'processing' => 'Processing',
-            'to ship' => 'Processing',
+            'to ship' => 'Ready to Ship',
             'ready to ship' => 'Ready to Ship',
             'ready_to_ship' => 'Ready to Ship',
             'shipped' => 'Shipped',
@@ -274,13 +273,12 @@ class OrderController extends Controller
         // Transition rank checks (blocks backward status regressions)
         $statusRank = [
             'Pending' => 0,
-            'Processing' => 1,
-            'Ready to Ship' => 2,
-            'Shipped' => 3,
-            'In Transit' => 4,
-            'Out for Delivery' => 5,
-            'Delivered' => 6,
-            'Completed' => 7,
+            'Ready to Ship' => 1,
+            'Shipped' => 2,
+            'In Transit' => 3,
+            'Out for Delivery' => 4,
+            'Delivered' => 5,
+            'Completed' => 6,
             'Cancelled' => -1,
         ];
 
@@ -348,7 +346,6 @@ class OrderController extends Controller
         }
 
         $statusMsgMap = [
-            'Processing' => 'Your order is being processed and prepared.',
             'Ready to Ship' => 'Your order is packed and ready to ship.',
             'Shipped' => "Your order has been shipped via {$order->courierName} (Tracking: {$order->trackingNumber}).",
             'In Transit' => 'Your order is in transit with the courier.',

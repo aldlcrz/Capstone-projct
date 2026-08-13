@@ -148,7 +148,7 @@ function printSellerOrder(order) {
         if (current === t) return false;
         if (current === 'completed' || current === 'cancelled') return true;
         
-        const states = ['pending', 'processing', 'ready to ship', 'shipped', 'in transit', 'out for delivery', 'delivered', 'completed'];
+        const states = ['pending', 'ready to ship', 'shipped', 'in transit', 'out for delivery', 'delivered', 'completed'];
         const currentIdx = states.indexOf(current);
         const targetIdx = states.indexOf(t);
         
@@ -208,8 +208,6 @@ function printSellerOrder(order) {
         const norm = this.normalizeStatus(s);
         const m = {
             'pending': 'bg-amber-50 text-amber-700 border-amber-200',
-            'processing': 'bg-blue-50 text-blue-700 border-blue-200',
-            'to ship': 'bg-blue-50 text-blue-700 border-blue-200',
             'ready to ship': 'bg-sky-50 text-sky-700 border-sky-200',
             'shipped': 'bg-indigo-50 text-indigo-700 border-indigo-200',
             'to receive': 'bg-indigo-50 text-indigo-700 border-indigo-200',
@@ -416,7 +414,7 @@ function printSellerOrder(order) {
                             </template>
 
                             <div class="flex flex-wrap gap-1.5 pt-1">
-                                @foreach(['Pending', 'Processing', 'Ready to Ship', 'Shipped', 'In Transit', 'Out for Delivery', 'Delivered', 'Completed', 'Cancelled'] as $st)
+                                @foreach(['Pending', 'Ready to Ship', 'Shipped', 'In Transit', 'Out for Delivery', 'Delivered', 'Completed', 'Cancelled'] as $st)
                                     <button type="button"
                                         @click="updateStatus(detailsOrder, '{{ $st }}')"
                                         :disabled="isStatusDisabled('{{ $st }}', detailsOrder)"
@@ -432,8 +430,8 @@ function printSellerOrder(order) {
                             </div>
                         </div>
 
-                        {{-- Courier Shipping & Manual Tracking Card --}}
-                        <div class="bg-indigo-50/50 p-4 rounded-2xl border border-indigo-100/70 space-y-3">
+                        {{-- Courier Shipping & Manual Tracking Card (hidden when Pending) --}}
+                        <div x-show="normalizeStatus(detailsOrder.status) !== 'pending'" x-transition class="bg-indigo-50/50 p-4 rounded-2xl border border-indigo-100/70 space-y-3">
                             <div class="flex items-center justify-between">
                                 <div class="text-[9px] font-black uppercase tracking-widest text-indigo-900 flex items-center gap-1.5">
                                     <span>🚚 Courier & Shipping Information</span>
@@ -584,11 +582,24 @@ function printSellerOrder(order) {
                     class="flex-1 py-2.5 sm:py-3 rounded-full border border-gray-200 bg-white text-[10px] font-black uppercase tracking-widest text-gray-600 hover:bg-gray-100 transition-all">
                     Close
                 </button>
-                <button @click="printOrderDetails()"
-                    class="flex-1 py-2.5 sm:py-3 bg-black text-white text-[10px] font-black uppercase tracking-widest hover:bg-[#C0420A] rounded-full transition-all flex items-center justify-center gap-2 shadow-sm">
-                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"></path></svg>
-                    Print Receipt
-                </button>
+
+                {{-- Accept Order button: only shown when Pending --}}
+                <template x-if="detailsOrder && normalizeStatus(detailsOrder.status) === 'pending'">
+                    <button @click="updateStatus(detailsOrder, 'Ready to Ship'); detailsModal = false"
+                        class="flex-1 py-2.5 sm:py-3 bg-emerald-600 hover:bg-emerald-700 text-white text-[10px] font-black uppercase tracking-widest rounded-full transition-all flex items-center justify-center gap-2 shadow-sm">
+                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
+                        Accept Order
+                    </button>
+                </template>
+
+                {{-- Print Receipt button: only shown when NOT Pending --}}
+                <template x-if="detailsOrder && normalizeStatus(detailsOrder.status) !== 'pending'">
+                    <button @click="printOrderDetails()"
+                        class="flex-1 py-2.5 sm:py-3 bg-black text-white text-[10px] font-black uppercase tracking-widest hover:bg-[#C0420A] rounded-full transition-all flex items-center justify-center gap-2 shadow-sm">
+                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"></path></svg>
+                        Print Receipt
+                    </button>
+                </template>
             </div>
         </div>
     </div>

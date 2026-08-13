@@ -9,7 +9,7 @@
             const s = (status || '').toLowerCase();
             if (s === 'completed' || s === 'delivered') return 3;
             if (s === 'to receive' || s === 'shipped') return 2;
-            if (s === 'to ship' || s === 'processing') return 1;
+            if (s === 'to ship' || s === 'ready to ship' || s === 'ready_to_ship') return 1;
             return 0;
         },
         getStatusColor(status) {
@@ -20,7 +20,6 @@
             if (s === 'in transit' || s === 'in_transit') return 'bg-purple-50 text-purple-700 border-purple-200';
             if (s === 'shipped' || s === 'to receive') return 'bg-indigo-50 text-indigo-700 border-indigo-200';
             if (s === 'ready to ship' || s === 'ready_to_ship') return 'bg-sky-50 text-sky-700 border-sky-200';
-            if (s === 'processing' || s === 'to ship') return 'bg-blue-50 text-blue-700 border-blue-200';
             if (s === 'cancelled') return 'bg-red-50 text-red-700 border-red-200';
             return 'bg-amber-50 text-amber-700 border-amber-200';
         }
@@ -124,8 +123,7 @@
                     @php
                         $statusColors = [
                             'pending'              => 'bg-amber-50 text-amber-700 border-amber-200',
-                            'processing'           => 'bg-blue-50 text-blue-700 border-blue-200',
-                            'to ship'              => 'bg-blue-50 text-blue-700 border-blue-200',
+                            'to ship'              => 'bg-sky-50 text-sky-700 border-sky-200',
                             'to receive'           => 'bg-indigo-50 text-indigo-700 border-indigo-200',
                             'shipped'              => 'bg-purple-50 text-purple-700 border-purple-200',
                             'delivered'            => 'bg-teal-50 text-teal-700 border-teal-200',
@@ -258,7 +256,7 @@
                                 <div class="absolute left-4 top-4 h-1 bg-[#C0420A] z-0 transition-all duration-500 rounded-full"
                                      :style="'width: calc(' + (getStepIndex(selectedOrder.status) * 33.33) + '% - 8px);'"></div>
 
-                                <template x-for="(stLabel, idx) in ['Order Placed', 'Processing', 'Shipped', 'Delivered']">
+                                <template x-for="(stLabel, idx) in ['Order Placed', 'Ready to Ship', 'Shipped', 'Delivered']">
                                     <div class="flex flex-col items-center gap-1.5 z-10">
                                         <div class="w-8 h-8 rounded-full border-2 flex items-center justify-center text-[10px] font-black transition-all"
                                              :class="idx <= getStepIndex(selectedOrder.status) ? 'bg-[#C0420A] border-[#C0420A] text-white shadow-md' : 'bg-white border-gray-200 text-gray-400'">
