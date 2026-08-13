@@ -1,7 +1,7 @@
 @extends('layouts.app')
 
 @section('content')
-<div class="max-w-6xl mx-auto px-3 sm:px-6 lg:px-8 py-6 sm:py-10 space-y-6 sm:space-y-8" x-data="{ confirmModal: false, reviewModal: false, reviewProductId: null, reviewProductName: '', reviewOrderItemId: null, copiedToast: false }">
+<div class="max-w-6xl mx-auto px-3 sm:px-6 lg:px-8 py-6 sm:py-10 space-y-6 sm:space-y-8" x-data="{ confirmModal: false, reviewModal: false, reviewProductId: null, reviewProductName: '', reviewOrderItemId: null, copiedToast: false, packingModal: false, packingModalUrl: '' }">
 
     {{-- Toast for clipboard copy feedback --}}
     <div x-show="copiedToast" x-transition class="fixed top-6 right-6 z-999 bg-black text-white text-xs font-bold px-4 py-2.5 rounded-2xl shadow-xl flex items-center gap-2" style="display: none;">
@@ -192,6 +192,21 @@
                         class="inline-flex items-center justify-center gap-2 w-full sm:w-auto px-6 py-3 bg-[#C0420A] hover:bg-[#d94a0d] text-white rounded-full text-xs font-black uppercase tracking-widest transition-all shadow-md active:scale-95">
                         <span>Track Package ↗</span>
                     </a>
+                </div>
+                @endif
+
+                @if($order->packingProof)
+                <div class="pt-3 border-t border-white/10 flex items-center justify-between flex-wrap gap-2">
+                    <div>
+                        <span class="text-[9px] font-bold uppercase tracking-widest text-emerald-400 block mb-0.5">📦 Seller Packing Proof Photo</span>
+                        <span class="text-[10px] text-gray-300 font-medium">Uploaded by seller before handover to courier</span>
+                    </div>
+                    <button type="button" 
+                        @click="packingModalUrl = '{{ asset('storage/' . $order->packingProof) }}'; packingModal = true;"
+                        class="px-4 py-2 bg-emerald-500 hover:bg-emerald-400 text-black text-[10px] font-black uppercase tracking-widest rounded-full transition-all flex items-center gap-1.5 shadow-md active:scale-95">
+                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+                        <span>View Packing Proof ↗</span>
+                    </button>
                 </div>
                 @endif
             </div>
@@ -538,6 +553,35 @@
                     </button>
                 </div>
             </form>
+        </div>
+    </div>
+
+    {{-- Packing Proof Image Viewer Modal --}}
+    <div x-show="packingModal" class="fixed inset-0 z-9999 flex items-center justify-center p-4 bg-black/70 backdrop-blur-md" x-cloak style="display: none;">
+        <div @click.away="packingModal = false" class="relative max-w-lg w-full bg-white rounded-3xl overflow-hidden shadow-2xl p-6 flex flex-col items-center">
+            <div class="w-full flex items-center justify-between pb-4 border-b border-gray-100 mb-4">
+                <div class="flex items-center gap-2">
+                    <span class="text-xl">📦</span>
+                    <h3 class="font-serif text-lg font-bold text-black">Seller Packing Proof</h3>
+                </div>
+                <button type="button" @click="packingModal = false"
+                    class="w-8 h-8 rounded-full border border-gray-200 flex items-center justify-center text-gray-400 hover:text-black hover:border-gray-400 transition-all shrink-0">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                </button>
+            </div>
+            
+            <div class="w-full bg-gray-50 rounded-2xl overflow-hidden flex items-center justify-center border border-gray-100 max-h-[70vh]">
+                <img :src="packingModalUrl" class="max-w-full max-h-[60vh] object-contain" alt="Seller Packing Proof">
+            </div>
+            
+            <div class="w-full mt-4 flex gap-3">
+                <a :href="packingModalUrl" download="packing-proof.jpg" class="flex-1 py-3 bg-gray-100 hover:bg-gray-200 text-gray-700 text-center rounded-xl text-[10px] font-bold uppercase tracking-widest transition-all">
+                    Download Image
+                </a>
+                <button type="button" @click="packingModal = false" class="flex-1 py-3 bg-black hover:bg-[#C0420A] text-white rounded-xl text-[10px] font-bold uppercase tracking-widest transition-all">
+                    Close
+                </button>
+            </div>
         </div>
     </div>
 </div>

@@ -87,6 +87,7 @@
                     'paymentMethod' => $order->paymentMethod ?? 'COD',
                     'paymentStatus' => $order->resolved_payment_status,
                     'paymentReference' => $order->paymentReference ?? null,
+                    'packingProof' => $order->packingProof ? asset('storage/' . $order->packingProof) : null,
                     'recipient' => $recipient,
                     'streetLine' => $streetLine,
                     'locality' => $locality,
@@ -311,6 +312,17 @@
                                 <span class="text-xs font-bold text-gray-500 uppercase tracking-wider">Grand Total Amount</span>
                                 <span class="text-lg font-black text-[#C0420A]" x-text="'₱' + selectedOrder.totalAmount"></span>
                             </div>
+                        </div>
+
+                        {{-- Packing Proof Banner --}}
+                        <div class="bg-emerald-50/80 p-4 rounded-2xl border border-emerald-100 flex items-center justify-between gap-3 text-xs" x-show="selectedOrder && selectedOrder.packingProof">
+                            <div>
+                                <div class="font-black text-emerald-900 uppercase tracking-wider text-[10px]">📦 Seller Packing Proof</div>
+                                <p class="text-[10px] text-emerald-700 font-medium mt-0.5">Seller uploaded a photo showing the packed order.</p>
+                            </div>
+                            <a :href="selectedOrder.packingProof" target="_blank" class="px-3.5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-full text-[9px] font-black uppercase tracking-widest transition-all shrink-0 shadow-xs">
+                                View Photo ↗
+                            </a>
                         </div>
 
                         {{-- Payment & Shipping Cards Grid --}}
