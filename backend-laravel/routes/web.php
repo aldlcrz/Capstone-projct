@@ -69,6 +69,7 @@ Route::middleware('auth')->group(function () {
     Route::post('/checkout/selected', [\App\Http\Controllers\CheckoutController::class, 'fromSelected'])->name('checkout.selected');
 
     // Orders
+    Route::get('/orders', fn() => redirect()->route('orders'));
     Route::get('/orders/my-orders', [WebController::class, 'orders'])->name('orders');
     Route::get('/orders/{id}', [WebController::class, 'orderDetail'])->name('orders.show');
     Route::patch('/orders/{id}/confirm', [\App\Http\Controllers\OrderController::class, 'confirmReceived'])->name('orders.confirm');
