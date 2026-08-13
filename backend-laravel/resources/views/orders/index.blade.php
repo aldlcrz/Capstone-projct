@@ -276,35 +276,22 @@
                             </div>
                         </div>
 
-                        {{-- Seller Packing Proof Card (Always shown under Delivery Progress) --}}
-                        <div class="bg-emerald-50/90 border border-emerald-200/80 rounded-2xl p-4 flex items-center justify-between gap-3 text-xs" x-show="selectedOrder && selectedOrder.status.toLowerCase() !== 'cancelled'">
+                        {{-- Seller Packing Proof Card (Shown ONLY when seller has uploaded a proof photo) --}}
+                        <div class="bg-emerald-50/90 border border-emerald-200/80 rounded-2xl p-4 flex items-center justify-between gap-3 text-xs" x-show="selectedOrder && selectedOrder.packingProof">
                             <div class="flex items-center gap-3 min-w-0">
                                 <div class="w-9 h-9 rounded-xl bg-emerald-100 border border-emerald-200 flex items-center justify-center text-lg shrink-0">
                                     📦
                                 </div>
                                 <div class="min-w-0">
                                     <div class="font-black text-emerald-900 uppercase tracking-wider text-[10px]">Seller Packing Proof</div>
-                                    <template x-if="selectedOrder && selectedOrder.packingProof">
-                                        <p class="text-[10px] text-emerald-700 font-medium truncate mt-0.5">Photo uploaded by seller prior to dispatch</p>
-                                    </template>
-                                    <template x-if="selectedOrder && !selectedOrder.packingProof">
-                                        <p class="text-[10px] text-gray-500 font-medium italic truncate mt-0.5">Awaiting seller to upload packing photo</p>
-                                    </template>
+                                    <p class="text-[10px] text-emerald-700 font-medium truncate mt-0.5">Photo uploaded by seller prior to dispatch</p>
                                 </div>
                             </div>
                             
-                            <template x-if="selectedOrder && selectedOrder.packingProof">
-                                <button type="button" @click="packingModalUrl = selectedOrder.packingProof; packingModal = true;"
-                                    class="px-3.5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-full text-[9px] font-black uppercase tracking-widest transition-all shrink-0 shadow-xs flex items-center gap-1 active:scale-95">
-                                    <span>View Proof ↗</span>
-                                </button>
-                            </template>
-                            
-                            <template x-if="selectedOrder && !selectedOrder.packingProof">
-                                <span class="px-3 py-1 bg-gray-200/80 text-gray-500 rounded-full text-[8px] font-bold uppercase tracking-wider shrink-0">
-                                    Pending Upload
-                                </span>
-                            </template>
+                            <button type="button" @click="packingModalUrl = selectedOrder.packingProof; packingModal = true;"
+                                class="px-3.5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-full text-[9px] font-black uppercase tracking-widest transition-all shrink-0 shadow-xs flex items-center gap-1 active:scale-95">
+                                <span>View Proof ↗</span>
+                            </button>
                         </div>
 
                         {{-- Courier Tracking Details (Shown when Shipped) --}}
