@@ -106,6 +106,8 @@ function printSellerOrder(order) {
     packingUploading: false,
     packingUploadSuccess: false,
     packingUploadError: '',
+    showCameraModal: false,
+    cameraStream: null,
 
     formatAddress(order) {
         return formatOrderAddress(order);
@@ -127,6 +129,7 @@ function printSellerOrder(order) {
         this.packingUploading = false;
         this.packingUploadSuccess = !!order.packingProof;
         this.packingUploadError = '';
+        this.closeCameraModal();
         this.detailsModal = true;
     },
 
@@ -180,6 +183,60 @@ function printSellerOrder(order) {
         } finally {
             this.packingUploading = false;
         }
+    },
+
+    async openCameraModal() {
+        this.packingUploadError = '';
+        if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+            alert('Camera API is not supported on this browser or connection. Please upload a photo using Gallery instead.');
+            return;
+        }
+        try {
+            this.showCameraModal = true;
+            await this.$nextTick();
+            const stream = await navigator.mediaDevices.getUserMedia({
+                video: { facingMode: { ideal: 'environment' }, width: { ideal: 1280 }, height: { ideal: 720 } }
+            });
+            this.cameraStream = stream;
+            if (this.$refs.cameraVideo) {
+                this.$refs.cameraVideo.srcObject = stream;
+            }
+        } catch(err) {
+            console.error('Camera error:', err);
+            alert('Could not access camera (' + (err.message || 'permission denied') + '). Please upload a photo using Gallery instead.');
+            this.closeCameraModal();
+        }
+    },
+
+    takePhoto() {
+        const video = this.$refs.cameraVideo;
+        if (!video) return;
+        const canvas = document.createElement('canvas');
+        canvas.width = video.videoWidth || 640;
+        canvas.height = video.videoHeight || 480;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+        
+        canvas.toBlob((blob) => {
+            if (!blob) {
+                alert('Failed to capture photo.');
+                return;
+            }
+            const file = new File([blob], 'packing_proof_' + Date.now() + '.jpg', { type: 'image/jpeg' });
+            this.packingPhotoFile = file;
+            this.packingPhotoPreview = canvas.toDataURL('image/jpeg');
+            this.packingUploadError = '';
+            this.packingUploadSuccess = false;
+            this.closeCameraModal();
+        }, 'image/jpeg', 0.9);
+    },
+
+    closeCameraModal() {
+        if (this.cameraStream) {
+            this.cameraStream.getTracks().forEach(track => track.stop());
+            this.cameraStream = null;
+        }
+        this.showCameraModal = false;
     },
 
     normalizeStatus(statusStr) {
@@ -524,16 +581,15 @@ function printSellerOrder(order) {
                                         <div class="p-2.5 bg-red-50 border border-red-200 rounded-xl text-[10px] font-bold text-red-600" x-text="packingUploadError"></div>
                                     </template>
 
-                                    {{-- File picker buttons --}}
+                                    {{-- File picker / camera buttons --}}
                                     <div class="grid grid-cols-2 gap-2">
-                                        <label class="flex flex-col items-center justify-center gap-1.5 py-4 rounded-2xl border-2 border-dashed border-emerald-300 bg-white hover:bg-emerald-50 cursor-pointer transition-all group">
+                                        <button type="button" @click="openCameraModal()" class="flex flex-col items-center justify-center gap-1.5 py-4 rounded-2xl border-2 border-dashed border-emerald-300 bg-white hover:bg-emerald-50 cursor-pointer transition-all group">
                                             <svg class="w-6 h-6 text-emerald-500 group-hover:scale-110 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
-                                            <span class="text-[9px] font-black uppercase tracking-wider text-emerald-700">Camera</span>
-                                            <input type="file" class="hidden" accept="image/*" capture="environment" @change="onPackingFileChange($event)">
-                                        </label>
+                                            <span class="text-[9px] font-black uppercase tracking-wider text-emerald-700">Open Camera</span>
+                                        </button>
                                         <label class="flex flex-col items-center justify-center gap-1.5 py-4 rounded-2xl border-2 border-dashed border-emerald-300 bg-white hover:bg-emerald-50 cursor-pointer transition-all group">
                                             <svg class="w-6 h-6 text-emerald-500 group-hover:scale-110 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16v1a2 2 0 002 2h12a2 2 0 002-2v-1M12 12V4m0 0L8 8m4-4l4 4"/></svg>
-                                            <span class="text-[9px] font-black uppercase tracking-wider text-emerald-700">Gallery</span>
+                                            <span class="text-[9px] font-black uppercase tracking-wider text-emerald-700">Gallery / Files</span>
                                             <input type="file" class="hidden" accept="image/*" @change="onPackingFileChange($event)">
                                         </label>
                                     </div>
@@ -752,6 +808,37 @@ function printSellerOrder(order) {
                 </a>
                 <button type="button" @click="receiptModal = false" class="flex-1 py-3 bg-black hover:bg-[#C0420A] text-white rounded-xl text-[10px] font-bold uppercase tracking-widest transition-all">
                     Close
+                </button>
+            </div>
+        </div>
+    </div>
+
+    {{-- Live Camera Overlay Modal --}}
+    <div x-show="showCameraModal" class="fixed inset-0 z-9999 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md" x-cloak style="display: none;">
+        <div @click.away="closeCameraModal()" class="relative max-w-md w-full bg-black rounded-3xl overflow-hidden shadow-2xl flex flex-col items-center border border-white/20 p-5 space-y-4">
+            <div class="w-full flex items-center justify-between text-white">
+                <h3 class="text-xs font-black uppercase tracking-widest flex items-center gap-2">
+                    <span>📷 Capture Packing Proof</span>
+                </h3>
+                <button type="button" @click="closeCameraModal()" class="w-8 h-8 rounded-full bg-white/20 text-white flex items-center justify-center hover:bg-white/30 transition-all">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                </button>
+            </div>
+
+            {{-- Live Video Stream Container --}}
+            <div class="w-full bg-gray-900 rounded-2xl overflow-hidden aspect-4/3 relative flex items-center justify-center border border-white/10 shadow-inner">
+                <video x-ref="cameraVideo" autoplay playsinline class="w-full h-full object-cover"></video>
+                <div class="absolute inset-0 border-2 border-emerald-500/30 rounded-2xl pointer-events-none"></div>
+            </div>
+
+            {{-- Capture & Cancel Actions --}}
+            <div class="w-full flex items-center justify-center gap-3 pt-1">
+                <button type="button" @click="closeCameraModal()" class="flex-1 py-3 rounded-xl bg-white/10 hover:bg-white/20 text-white text-[10px] font-bold uppercase tracking-wider transition-all text-center">
+                    Cancel
+                </button>
+                <button type="button" @click="takePhoto()" class="flex-2 py-3 bg-emerald-500 hover:bg-emerald-400 text-black font-black text-xs uppercase tracking-widest rounded-xl shadow-lg flex items-center justify-center gap-2 transition-all active:scale-95">
+                    <span class="w-3 h-3 rounded-full bg-black"></span>
+                    Snap Photo
                 </button>
             </div>
         </div>
