@@ -775,8 +775,24 @@ function printSellerOrder(order) {
                     </button>
                 </template>
 
-                {{-- Print Receipt button: only shown when NOT Pending --}}
-                <template x-if="detailsOrder && normalizeStatus(detailsOrder.status) !== 'pending'">
+                {{-- Upload Packing Proof button: shown when Ready to Ship --}}
+                <template x-if="detailsOrder && normalizeStatus(detailsOrder.status) === 'ready to ship'">
+                    <button type="button"
+                        @click="if (packingPhotoFile) { uploadPackingProof(); } else { openCameraModal(); }"
+                        :disabled="packingUploading"
+                        class="flex-1 py-2.5 sm:py-3 bg-emerald-600 hover:bg-emerald-700 text-white text-[10px] font-black uppercase tracking-widest rounded-full transition-all flex items-center justify-center gap-2 shadow-sm">
+                        <template x-if="packingUploading">
+                            <svg class="w-3.5 h-3.5 animate-spin" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"/></svg>
+                        </template>
+                        <template x-if="!packingUploading">
+                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a2 2 0 002 2h12a2 2 0 002-2v-1M12 12V4m0 0L8 8m4-4l4 4"/></svg>
+                        </template>
+                        <span x-text="packingUploading ? 'Uploading...' : (packingPhotoFile ? 'Upload Selected Photo' : 'Upload Packing Proof')"></span>
+                    </button>
+                </template>
+
+                {{-- Print Receipt button: only shown for Shipped / Completed / other non-Pending and non-Ready-to-Ship statuses --}}
+                <template x-if="detailsOrder && normalizeStatus(detailsOrder.status) !== 'pending' && normalizeStatus(detailsOrder.status) !== 'ready to ship'">
                     <button @click="printOrderDetails()"
                         class="flex-1 py-2.5 sm:py-3 bg-black text-white text-[10px] font-black uppercase tracking-widest hover:bg-[#C0420A] rounded-full transition-all flex items-center justify-center gap-2 shadow-sm">
                         <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"></path></svg>
