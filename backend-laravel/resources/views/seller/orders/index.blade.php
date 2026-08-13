@@ -196,7 +196,9 @@ function printSellerOrder(order) {
             const matchSearch = !this.searchTerm ||
                 o.id.toLowerCase().includes(this.searchTerm.toLowerCase()) ||
                 (o.customer?.name || '').toLowerCase().includes(this.searchTerm.toLowerCase());
-            const s = this.normalizeStatus(o.status);
+            let s = this.normalizeStatus(o.status);
+            // Treat legacy 'processing' orders as 'ready to ship'
+            if (s === 'processing' || s === 'to ship') s = 'ready to ship';
             const f = this.normalizeStatus(this.statusFilter);
             const matchStatus = f === 'all' || s === f;
             return matchSearch && matchStatus;
@@ -302,7 +304,7 @@ function printSellerOrder(order) {
 
     {{-- Status Filter Tabs (Capsules) --}}
     <div class="flex gap-2 overflow-x-auto no-scrollbar pb-1">
-        @foreach(['all' => 'All', 'pending' => 'Pending', 'processing' => 'Processing', 'ready to ship' => 'Ready to Ship', 'shipped' => 'Shipped', 'in transit' => 'In Transit', 'out for delivery' => 'Out for Delivery', 'delivered' => 'Delivered', 'completed' => 'Completed', 'cancelled' => 'Cancelled'] as $val => $label)
+        @foreach(['all' => 'All', 'pending' => 'Pending', 'ready to ship' => 'Ready to Ship', 'shipped' => 'Shipped', 'in transit' => 'In Transit', 'out for delivery' => 'Out for Delivery', 'delivered' => 'Delivered', 'completed' => 'Completed', 'cancelled' => 'Cancelled'] as $val => $label)
             <button @click="statusFilter = '{{ $val }}'"
                 :class="statusFilter === '{{ $val }}' ? 'bg-black text-white shadow-md' : 'bg-white text-gray-500 border border-gray-200 hover:border-gray-300'"
                 class="px-3.5 sm:px-5 py-2 sm:py-2.5 rounded-full text-[9px] sm:text-[10px] font-black uppercase tracking-widest whitespace-nowrap transition-all flex items-center gap-1.5 shrink-0 active:scale-95">
