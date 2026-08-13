@@ -90,6 +90,9 @@
                     'paymentStatus' => $order->resolved_payment_status,
                     'paymentReference' => $order->paymentReference ?? null,
                     'packingProof' => $order->packingProof ? asset('storage/' . $order->packingProof) : null,
+                    'courierName' => $order->courierName ?? null,
+                    'trackingNumber' => $order->trackingNumber ?? null,
+                    'trackingLink' => $order->trackingLink ?? null,
                     'recipient' => $recipient,
                     'streetLine' => $streetLine,
                     'locality' => $locality,
@@ -301,6 +304,38 @@
                                 <span class="px-3 py-1 bg-gray-200/80 text-gray-500 rounded-full text-[8px] font-bold uppercase tracking-wider shrink-0">
                                     Pending Upload
                                 </span>
+                            </template>
+                        </div>
+
+                        {{-- Courier Tracking Details (Shown when Shipped) --}}
+                        <div class="bg-linear-to-br from-gray-900 to-black text-white p-4 rounded-2xl space-y-3 shadow-md"
+                             x-show="selectedOrder && (selectedOrder.courierName || selectedOrder.trackingNumber || selectedOrder.trackingLink)">
+                            <div class="flex items-center justify-between border-b border-white/10 pb-2">
+                                <div class="flex items-center gap-1.5">
+                                    <span class="text-base">🚚</span>
+                                    <span class="text-[9px] font-black uppercase tracking-widest text-gray-300">Courier Shipping Details</span>
+                                </div>
+                                <span class="px-2 py-0.5 bg-white/10 rounded-full text-[8px] font-black uppercase tracking-widest text-amber-400" x-text="selectedOrder.status"></span>
+                            </div>
+
+                            <div class="grid grid-cols-2 gap-3 text-xs">
+                                <div>
+                                    <span class="text-[8px] font-bold uppercase tracking-widest text-gray-400 block">Courier</span>
+                                    <span class="font-black text-white text-xs" x-text="selectedOrder.courierName || 'J&T Express'"></span>
+                                </div>
+                                <div>
+                                    <span class="text-[8px] font-bold uppercase tracking-widest text-gray-400 block">Tracking Number</span>
+                                    <span class="font-mono font-black text-amber-400 text-xs" x-text="selectedOrder.trackingNumber || 'Pending Dispatch'"></span>
+                                </div>
+                            </div>
+
+                            <template x-if="selectedOrder && selectedOrder.trackingLink">
+                                <div class="pt-1">
+                                    <a :href="selectedOrder.trackingLink" target="_blank" rel="noopener noreferrer"
+                                       class="inline-flex items-center justify-center gap-1.5 w-full py-2 bg-[#C0420A] hover:bg-[#d94a0d] text-white rounded-xl text-[9px] font-black uppercase tracking-widest transition-all shadow-xs">
+                                        <span>Track Package on Courier Site ↗</span>
+                                    </a>
+                                </div>
                             </template>
                         </div>
 
