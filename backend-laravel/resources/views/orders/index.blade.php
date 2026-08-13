@@ -412,5 +412,34 @@
         </div>
     </div>
 
+    {{-- Floating Packing Proof Photo Viewer Modal --}}
+    <div x-show="packingModal" class="fixed inset-0 z-9999 flex items-center justify-center p-4 bg-black/70 backdrop-blur-md" x-cloak style="display: none;">
+        <div @click.away="packingModal = false" class="relative max-w-lg w-full bg-white rounded-3xl overflow-hidden shadow-2xl p-6 flex flex-col items-center">
+            <div class="w-full flex items-center justify-between pb-4 border-b border-gray-100 mb-4">
+                <div class="flex items-center gap-2">
+                    <span class="text-xl">📦</span>
+                    <h3 class="font-serif text-lg font-bold text-black">Seller Packing Proof</h3>
+                </div>
+                <button type="button" @click="packingModal = false"
+                    class="w-8 h-8 rounded-full border border-gray-200 flex items-center justify-center text-gray-400 hover:text-black hover:border-gray-400 transition-all shrink-0">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                </button>
+            </div>
+            
+            <div class="w-full bg-gray-50 rounded-2xl overflow-hidden flex items-center justify-center border border-gray-100 max-h-[70vh]">
+                <img :src="packingModalUrl" class="max-w-full max-h-[60vh] object-contain" alt="Packing Proof">
+            </div>
+            
+            <div class="w-full mt-4 flex gap-3">
+                <a :href="packingModalUrl" download="packing-proof.jpg" target="_blank" class="flex-1 py-3 bg-gray-100 hover:bg-gray-200 text-gray-700 text-center rounded-xl text-[10px] font-bold uppercase tracking-widest transition-all">
+                    Download Image
+                </a>
+                <button type="button" @click="packingModal = false" class="flex-1 py-3 bg-black hover:bg-[#C0420A] text-white rounded-xl text-[10px] font-bold uppercase tracking-widest transition-all">
+                    Close
+                </button>
+            </div>
+        </div>
+    </div>
+
 </div>
 @endsection
