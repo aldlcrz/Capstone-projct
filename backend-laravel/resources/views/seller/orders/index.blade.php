@@ -135,11 +135,16 @@ function printSellerOrder(order) {
         this.detailsModal = false;
     },
 
+    normalizeStatus(statusStr) {
+        if (!statusStr) return '';
+        return String(statusStr).toLowerCase().trim().replace(/_/g, ' ');
+    },
+
     isStatusDisabled(target, currentOrder) {
         const order = currentOrder || this.activeOrder || this.detailsOrder;
         if (!order) return true;
-        const current = (order.status || '').toLowerCase().trim();
-        const t = target.toLowerCase().trim();
+        const current = this.normalizeStatus(order.status);
+        const t = this.normalizeStatus(target);
         if (current === t) return false;
         if (current === 'completed' || current === 'cancelled') return true;
         
@@ -154,7 +159,7 @@ function printSellerOrder(order) {
     isShippingLocked(currentOrder) {
         const order = currentOrder || this.detailsOrder || this.activeOrder;
         if (!order) return false;
-        const s = (order.status || '').toLowerCase().trim();
+        const s = this.normalizeStatus(order.status);
         return s === 'delivered' || s === 'completed' || s === 'cancelled';
     },
 
@@ -191,26 +196,32 @@ function printSellerOrder(order) {
             const matchSearch = !this.searchTerm ||
                 o.id.toLowerCase().includes(this.searchTerm.toLowerCase()) ||
                 (o.customer?.name || '').toLowerCase().includes(this.searchTerm.toLowerCase());
-            const s = (o.status || '').toLowerCase().trim();
-            const matchStatus = this.statusFilter === 'all' || s === this.statusFilter;
+            const s = this.normalizeStatus(o.status);
+            const f = this.normalizeStatus(this.statusFilter);
+            const matchStatus = f === 'all' || s === f;
             return matchSearch && matchStatus;
         });
     },
 
     statusColor(s) {
         if (!s) return 'bg-gray-50 text-gray-600 border-gray-200';
+        const norm = this.normalizeStatus(s);
         const m = {
             'pending': 'bg-amber-50 text-amber-700 border-amber-200',
             'processing': 'bg-blue-50 text-blue-700 border-blue-200',
+            'to ship': 'bg-blue-50 text-blue-700 border-blue-200',
             'ready to ship': 'bg-sky-50 text-sky-700 border-sky-200',
             'shipped': 'bg-indigo-50 text-indigo-700 border-indigo-200',
+            'to receive': 'bg-indigo-50 text-indigo-700 border-indigo-200',
             'in transit': 'bg-purple-50 text-purple-700 border-purple-200',
             'out for delivery': 'bg-orange-50 text-orange-700 border-orange-200',
             'delivered': 'bg-teal-50 text-teal-700 border-teal-200',
             'completed': 'bg-emerald-50 text-emerald-700 border-emerald-200',
             'cancelled': 'bg-red-50 text-red-700 border-red-200',
+            'cancellation pending': 'bg-red-50 text-red-700 border-red-200',
+            'cancellation requested': 'bg-red-50 text-red-700 border-red-200',
         };
-        return m[s.toLowerCase().trim()] || 'bg-gray-50 text-gray-600 border-gray-200';
+        return m[norm] || 'bg-gray-50 text-gray-600 border-gray-200';
     },
 
     async updateStatus(targetOrder, statusToSave) {

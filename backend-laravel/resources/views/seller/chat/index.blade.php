@@ -3,14 +3,14 @@
 @section('content')
 <script>
 document.addEventListener('alpine:init', () => {
-    Alpine.data('sellerChat', () => ({
+    Alpine.data('sellerChat', (config = {}) => ({
         conversations: [],
         messages: [],
         activeUser: null,
         newMessage: '',
-        autoOpenUserId: @json($autoOpenUserId ?? ''),
-        autoOpenUserName: @json($autoOpenUserName ?? 'Customer'),
-        currentUserId: @json(Auth::id()),
+        autoOpenUserId: config.autoOpenUserId || '',
+        autoOpenUserName: config.autoOpenUserName || 'Customer',
+        currentUserId: config.currentUserId || null,
         pollInterval: null,
 
         init() {
@@ -140,7 +140,7 @@ document.addEventListener('alpine:init', () => {
 </script>
 
 <div
-    x-data="sellerChat"
+    x-data="sellerChat({ autoOpenUserId: '{{ $autoOpenUserId ?? '' }}', autoOpenUserName: '{{ addslashes($autoOpenUserName ?? 'Customer') }}', currentUserId: {{ Auth::id() ?? 'null' }} })"
     class="bg-white rounded-2xl sm:rounded-3xl border border-gray-100 shadow-sm overflow-hidden flex h-[calc(100vh-140px)] sm:h-[calc(100vh-180px)] min-h-112.5"
 >
     <!-- Left Sidebar: Conversations -->

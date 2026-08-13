@@ -207,7 +207,7 @@ class AnalyticsController extends Controller
         $products = Product::where('sellerId', $sellerId)->get();
 
         $productStats = $products->map(function ($product) use ($sellerId, $from, $to) {
-            /** @var \App\Models\Product $product */
+            /** @var Product $product */
             $itemsQuery = DB::table('order_items')
                 ->join('orders', 'order_items.orderId', '=', 'orders.id')
                 ->where('order_items.productId', $product->id)

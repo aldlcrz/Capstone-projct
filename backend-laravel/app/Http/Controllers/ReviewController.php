@@ -9,6 +9,7 @@ use App\Models\OrderItem;
 use App\Models\Notification;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 
 class ReviewController extends Controller
 {
@@ -98,7 +99,7 @@ class ReviewController extends Controller
                 ]);
             }
         } catch (\Exception $e) {
-            \Log::error('Review notification error: ' . $e->getMessage());
+            Log::error('Review notification error: ' . $e->getMessage());
         }
 
         if ($request->ajax() || $request->wantsJson()) {
@@ -113,6 +114,8 @@ class ReviewController extends Controller
 
     /**
      * Get reviews for a specific product.
+     *
+     * @param int|string $productId
      */
     public function getProductReviews($productId)
     {
@@ -130,6 +133,8 @@ class ReviewController extends Controller
 
     /**
      * Get reviews for a specific seller's products.
+     *
+     * @param int|string $sellerId
      */
     public function getSellerReviews($sellerId)
     {

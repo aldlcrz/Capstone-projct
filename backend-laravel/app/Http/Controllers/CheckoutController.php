@@ -174,7 +174,14 @@ class CheckoutController extends Controller
             
             $itemsBySeller = [];
             foreach ($cart as $item) {
-                $itemsBySeller[$item['sellerId']][] = $item;
+                $sellerId = $item['sellerId'] ?? null;
+                if (!$sellerId && !empty($item['id'])) {
+                    $prod = Product::find($item['id']);
+                    $sellerId = $prod?->sellerId;
+                }
+                if ($sellerId) {
+                    $itemsBySeller[$sellerId][] = $item;
+                }
             }
 
             $orders = [];
@@ -213,6 +220,16 @@ class CheckoutController extends Controller
                     'shippingAddress' => $addressData,
                     'createdAt' => now(),
                     'updatedAt' => now(),
+                ]);
+
+                // Record initial OrderStatusHistory
+                \App\Models\OrderStatusHistory::create([
+                    'orderId' => $orderId,
+                    'previousStatus' => null,
+                    'newStatus' => 'Pending',
+                    'updatedBy' => Auth::id(),
+                    'userRole' => 'customer',
+                    'notes' => 'Order placed by customer.',
                 ]);
 
                 if ($request->hasFile('paymentScreenshot')) {

@@ -39,17 +39,17 @@
 
                     @auth
                         @if(Auth::user()->role === 'superadmin')
-                            <a href="/superadmin/dashboard" class="hidden md:flex text-[10px] font-extrabold uppercase tracking-widest text-amber-600 hover:text-amber-800 transition-colors">👑 Governance</a>
+                            <a href="/superadmin/dashboard" class="flex text-[9px] sm:text-[10px] font-extrabold uppercase tracking-widest text-amber-600 hover:text-amber-800 transition-colors whitespace-nowrap">👑 Governance</a>
                         @elseif(Auth::user()->role === 'admin')
-                            <a href="/admin/dashboard" class="hidden md:flex text-[10px] font-extrabold uppercase tracking-widest text-gray-700 hover:text-black transition-colors">Admin Panel</a>
+                            <a href="/admin/dashboard" class="flex text-[9px] sm:text-[10px] font-extrabold uppercase tracking-widest text-gray-700 hover:text-black transition-colors whitespace-nowrap">Admin Panel</a>
                         @elseif(Auth::user()->role === 'seller')
-                            <a href="/seller/dashboard" class="hidden md:flex items-center gap-1.5 text-[10px] font-extrabold uppercase tracking-widest text-[#C0422A] hover:underline">
+                            <a href="/seller/dashboard" class="flex items-center gap-1 text-[9px] sm:text-[10px] font-extrabold uppercase tracking-widest text-[#C0422A] hover:underline whitespace-nowrap">
                                 <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"></path></svg>
                                 Seller Hub
                             </a>
                         @endif
                     @else
-                        <a href="{{ route('seller.register') }}" class="hidden md:flex text-[10px] font-extrabold uppercase tracking-widest text-gray-400 hover:text-black transition-colors">Sell on LumBarong</a>
+                        <a href="{{ route('seller.register') }}" class="flex text-[9px] sm:text-[10px] font-extrabold uppercase tracking-widest text-[#C0422A] sm:text-gray-400 hover:text-black transition-colors whitespace-nowrap">Sell on LumBarong</a>
                     @endauth
                 </div>
                 
@@ -262,6 +262,7 @@
                                  x-cloak>
                                 <a href="{{ route('login') }}" class="flex items-center gap-3 px-4 py-3 text-[11px] font-bold text-gray-600 hover:bg-gray-50 hover:text-black transition-all">Login</a>
                                 <a href="{{ route('register') }}" class="flex items-center gap-3 px-4 py-3 text-[11px] font-bold text-gray-600 hover:bg-gray-50 hover:text-black transition-all">Sign Up</a>
+                                <a href="{{ route('seller.register') }}" class="flex items-center gap-3 px-4 py-3 text-[11px] font-bold text-[#C0422A] hover:bg-[#C0422A]/10 transition-all border-t border-gray-100">🏪 Sell on LumBarong</a>
                             </div>
                         @endauth
                     </div>
