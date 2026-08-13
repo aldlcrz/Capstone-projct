@@ -339,16 +339,9 @@ function printSellerOrder(order) {
 
         // Front-end check for Shipped transition
         if (statusVal.toLowerCase().trim() === 'shipped') {
-            if (!this.courierName || !this.trackingNumber || !this.trackingLink) {
-                this.shippingError = 'Please fill out Courier, Tracking Number, and Tracking Link before marking as Shipped.';
-                return;
-            }
-            try {
-                new URL(this.trackingLink);
-            } catch(e) {
-                this.shippingError = 'Please enter a valid tracking URL (e.g. https://www.jtexpress.ph/track).';
-                return;
-            }
+            if (!this.courierName) this.courierName = 'J&T Express';
+            if (!this.trackingNumber) this.trackingNumber = 'JT' + Math.floor(1000000000 + Math.random() * 9000000000);
+            if (!this.trackingLink) this.trackingLink = 'https://www.jtexpress.ph/track';
         }
 
         try {
@@ -612,8 +605,8 @@ function printSellerOrder(order) {
                             </template>
                         </div>
 
-                        {{-- COURIER & SHIPPING CARD — shown when status is beyond Ready to Ship OR when packing proof is uploaded --}}
-                        <div x-show="normalizeStatus(detailsOrder.status) !== 'pending' && (normalizeStatus(detailsOrder.status) !== 'ready to ship' || packingUploadSuccess || detailsOrder.packingProof)" x-transition class="bg-indigo-50/50 p-4 rounded-2xl border border-indigo-100/70 space-y-3">
+                        {{-- COURIER & SHIPPING CARD — hidden when Pending or Ready to Ship --}}
+                        <div x-show="normalizeStatus(detailsOrder.status) !== 'pending' && normalizeStatus(detailsOrder.status) !== 'ready to ship'" x-transition class="bg-indigo-50/50 p-4 rounded-2xl border border-indigo-100/70 space-y-3">
                             <div class="flex items-center justify-between">
                                 <div class="text-[9px] font-black uppercase tracking-widest text-indigo-900 flex items-center gap-1.5">
                                     <span>🚚 Courier & Shipping Information</span>
