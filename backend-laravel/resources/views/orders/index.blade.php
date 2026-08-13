@@ -5,6 +5,8 @@
      x-data="{
         detailsModal: false,
         selectedOrder: null,
+        packingModal: false,
+        packingModalUrl: '',
         getStepIndex(status) {
             const s = (status || '').toLowerCase();
             if (s === 'completed' || s === 'delivered') return 3;
@@ -271,58 +273,35 @@
                             </div>
                         </div>
 
-                        {{-- Cancelled Alert --}}
-                        <div class="p-4 bg-red-50 border border-red-100 rounded-2xl flex items-center gap-3 text-xs" x-show="selectedOrder.status.toLowerCase() === 'cancelled'">
-                            <span class="text-xl">⚠️</span>
-                            <div>
-                                <div class="font-black uppercase tracking-wider text-red-700">Order Cancelled</div>
-                                <p class="text-[11px] text-red-500 mt-0.5">This order has been cancelled and cannot be fulfilled.</p>
+                        {{-- Seller Packing Proof Card (Always shown under Delivery Progress) --}}
+                        <div class="bg-emerald-50/90 border border-emerald-200/80 rounded-2xl p-4 flex items-center justify-between gap-3 text-xs" x-show="selectedOrder && selectedOrder.status.toLowerCase() !== 'cancelled'">
+                            <div class="flex items-center gap-3 min-w-0">
+                                <div class="w-9 h-9 rounded-xl bg-emerald-100 border border-emerald-200 flex items-center justify-center text-lg shrink-0">
+                                    📦
+                                </div>
+                                <div class="min-w-0">
+                                    <div class="font-black text-emerald-900 uppercase tracking-wider text-[10px]">Seller Packing Proof</div>
+                                    <template x-if="selectedOrder && selectedOrder.packingProof">
+                                        <p class="text-[10px] text-emerald-700 font-medium truncate mt-0.5">Photo uploaded by seller prior to dispatch</p>
+                                    </template>
+                                    <template x-if="selectedOrder && !selectedOrder.packingProof">
+                                        <p class="text-[10px] text-gray-500 font-medium italic truncate mt-0.5">Awaiting seller to upload packing photo</p>
+                                    </template>
+                                </div>
                             </div>
-                        </div>
-
-                        {{-- Purchased Items --}}
-                        <div class="space-y-3">
-                            <div class="flex items-center justify-between">
-                                <span class="text-[9px] font-black uppercase tracking-widest text-[#C0420A]">Items Ordered</span>
-                                <span class="text-[9px] font-bold text-gray-400 uppercase tracking-widest" x-text="selectedOrder.items.length + ' item(s)'"></span>
-                            </div>
-
-                            <div class="space-y-2">
-                                <template x-for="item in selectedOrder.items" :key="item.id">
-                                    <div class="flex items-center gap-3 bg-white border border-gray-100 rounded-2xl p-3 shadow-xs">
-                                        <div class="w-14 h-16 bg-gray-50 rounded-xl overflow-hidden shrink-0 border border-gray-100">
-                                            <img :src="item.image" class="w-full h-full object-cover object-top" x-on:error="$event.target.src='/uploads/products/default.jpg'">
-                                        </div>
-                                        <div class="flex-1 min-w-0">
-                                            <h4 class="text-xs sm:text-sm font-bold text-black truncate" x-text="item.name"></h4>
-                                            <div class="flex flex-wrap gap-2 text-[9px] font-bold text-gray-400 uppercase tracking-widest mt-1">
-                                                <span x-show="item.size" class="px-2 py-0.5 bg-gray-100 rounded text-gray-600" x-text="'Size: ' + item.size"></span>
-                                                <span x-text="'Qty: ' + item.quantity"></span>
-                                            </div>
-                                        </div>
-                                        <div class="text-right shrink-0">
-                                            <div class="text-xs sm:text-sm font-black text-black" x-text="'₱' + item.subtotal"></div>
-                                            <div class="text-[9px] text-gray-400 font-bold uppercase tracking-wider" x-text="'₱' + item.price + ' ea'"></div>
-                                        </div>
-                                    </div>
-                                </template>
-                            </div>
-
-                            <div class="flex items-center justify-between p-4 bg-gray-50 rounded-2xl border border-gray-100">
-                                <span class="text-xs font-bold text-gray-500 uppercase tracking-wider">Grand Total Amount</span>
-                                <span class="text-lg font-black text-[#C0420A]" x-text="'₱' + selectedOrder.totalAmount"></span>
-                            </div>
-                        </div>
-
-                        {{-- Packing Proof Banner --}}
-                        <div class="bg-emerald-50/80 p-4 rounded-2xl border border-emerald-100 flex items-center justify-between gap-3 text-xs" x-show="selectedOrder && selectedOrder.packingProof">
-                            <div>
-                                <div class="font-black text-emerald-900 uppercase tracking-wider text-[10px]">📦 Seller Packing Proof</div>
-                                <p class="text-[10px] text-emerald-700 font-medium mt-0.5">Seller uploaded a photo showing the packed order.</p>
-                            </div>
-                            <a :href="selectedOrder.packingProof" target="_blank" class="px-3.5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-full text-[9px] font-black uppercase tracking-widest transition-all shrink-0 shadow-xs">
-                                View Photo ↗
-                            </a>
+                            
+                            <template x-if="selectedOrder && selectedOrder.packingProof">
+                                <button type="button" @click="packingModalUrl = selectedOrder.packingProof; packingModal = true;"
+                                    class="px-3.5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-full text-[9px] font-black uppercase tracking-widest transition-all shrink-0 shadow-xs flex items-center gap-1 active:scale-95">
+                                    <span>View Proof ↗</span>
+                                </button>
+                            </template>
+                            
+                            <template x-if="selectedOrder && !selectedOrder.packingProof">
+                                <span class="px-3 py-1 bg-gray-200/80 text-gray-500 rounded-full text-[8px] font-bold uppercase tracking-wider shrink-0">
+                                    Pending Upload
+                                </span>
+                            </template>
                         </div>
 
                         {{-- Payment & Shipping Cards Grid --}}
