@@ -481,10 +481,10 @@ function printSellerOrder(order) {
          x-transition:leave-start="opacity-100"
          x-transition:leave-end="opacity-0"
          style="display: none;"
-         class="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-end sm:items-center justify-center p-0 sm:p-4">
+         class="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-end sm:items-center justify-center p-0 sm:p-4"
+         @click.self="detailsModal = false">
         
-        <div @click.away="detailsModal = false" 
-             class="w-full sm:max-w-xl bg-white rounded-t-3xl sm:rounded-3xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
+        <div class="w-full sm:max-w-xl bg-white rounded-t-3xl sm:rounded-3xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
             
             {{-- Modal Header Banner --}}
             <div class="relative bg-linear-to-br from-[#2A2A28] to-black p-6 text-white text-center shrink-0">
@@ -830,8 +830,8 @@ function printSellerOrder(order) {
     </div>
 
     {{-- Live Camera Overlay Modal --}}
-    <div x-show="showCameraModal" class="fixed inset-0 z-9999 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md" x-cloak style="display: none;">
-        <div @click.away="closeCameraModal()" class="relative max-w-md w-full bg-black rounded-3xl overflow-hidden shadow-2xl flex flex-col items-center border border-white/20 p-5 space-y-4">
+    <div x-show="showCameraModal" @click.self="closeCameraModal()" class="fixed inset-0 z-9999 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md" x-cloak style="display: none;">
+        <div class="relative max-w-md w-full bg-black rounded-3xl overflow-hidden shadow-2xl flex flex-col items-center border border-white/20 p-5 space-y-4">
             <div class="w-full flex items-center justify-between text-white">
                 <h3 class="text-xs font-black uppercase tracking-widest flex items-center gap-2">
                     <span>📷 Capture Packing Proof</span>
