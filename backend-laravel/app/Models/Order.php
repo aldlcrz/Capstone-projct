@@ -29,6 +29,7 @@ class Order extends Model
         'courierName',
         'trackingNumber',
         'trackingLink',
+        'packingProof',
         'cancellationReason',
         'visitorSessionId',
     ];

@@ -101,6 +101,11 @@ function printSellerOrder(order) {
     trackingNumber: '',
     trackingLink: '',
     shippingError: '',
+    packingPhotoFile: null,
+    packingPhotoPreview: null,
+    packingUploading: false,
+    packingUploadSuccess: false,
+    packingUploadError: '',
 
     formatAddress(order) {
         return formatOrderAddress(order);
@@ -117,6 +122,11 @@ function printSellerOrder(order) {
         this.trackingNumber = order.trackingNumber || '';
         this.trackingLink = order.trackingLink || '';
         this.shippingError = '';
+        this.packingPhotoFile = null;
+        this.packingPhotoPreview = order.packingProof ? '/storage/' + order.packingProof : null;
+        this.packingUploading = false;
+        this.packingUploadSuccess = !!order.packingProof;
+        this.packingUploadError = '';
         this.detailsModal = true;
     },
 
@@ -133,6 +143,43 @@ function printSellerOrder(order) {
     printOrderDetails() {
         printSellerOrder(this.detailsOrder);
         this.detailsModal = false;
+    },
+
+    onPackingFileChange(event) {
+        const file = event.target.files[0];
+        if (!file) return;
+        this.packingPhotoFile = file;
+        this.packingUploadError = '';
+        const reader = new FileReader();
+        reader.onload = (e) => { this.packingPhotoPreview = e.target.result; };
+        reader.readAsDataURL(file);
+    },
+
+    async uploadPackingProof() {
+        if (!this.packingPhotoFile || !this.detailsOrder) return;
+        this.packingUploading = true;
+        this.packingUploadError = '';
+        try {
+            const formData = new FormData();
+            formData.append('packingPhoto', this.packingPhotoFile);
+            formData.append('_token', document.querySelector('meta[name=csrf-token]')?.content || '');
+            const res = await fetch(`/seller/api/orders/${this.detailsOrder.id}/packing-proof`, {
+                method: 'POST',
+                body: formData,
+            });
+            const data = await res.json();
+            if (!res.ok) throw new Error(data.message || 'Upload failed.');
+            this.packingUploadSuccess = true;
+            this.packingPhotoPreview = data.packingProofUrl;
+            this.detailsOrder.packingProof = data.packingProof;
+            // Update the order in the orders array too
+            const idx = this.orders.findIndex(o => o.id === this.detailsOrder.id);
+            if (idx !== -1) this.orders[idx].packingProof = data.packingProof;
+        } catch(e) {
+            this.packingUploadError = e.message || 'Upload failed. Please try again.';
+        } finally {
+            this.packingUploading = false;
+        }
     },
 
     normalizeStatus(statusStr) {
@@ -432,8 +479,83 @@ function printSellerOrder(order) {
                             </div>
                         </div>
 
-                        {{-- Courier Shipping & Manual Tracking Card (hidden when Pending) --}}
-                        <div x-show="normalizeStatus(detailsOrder.status) !== 'pending'" x-transition class="bg-indigo-50/50 p-4 rounded-2xl border border-indigo-100/70 space-y-3">
+                        {{-- PACKING PROOF UPLOAD CARD — shown ONLY when Ready to Ship --}}
+                        <div x-show="normalizeStatus(detailsOrder.status) === 'ready to ship'" x-transition class="bg-emerald-50/60 p-4 rounded-2xl border border-emerald-200/70 space-y-3">
+                            <div class="flex items-center gap-2">
+                                <span class="text-xl">📦</span>
+                                <div>
+                                    <div class="text-[9px] font-black uppercase tracking-widest text-emerald-900">Packing Proof Required</div>
+                                    <div class="text-[10px] text-emerald-700 mt-0.5">Upload a photo showing the packed order before handing it to the courier.</div>
+                                </div>
+                            </div>
+
+                            {{-- Success state: already uploaded --}}
+                            <template x-if="packingUploadSuccess && packingPhotoPreview">
+                                <div class="space-y-2">
+                                    <div class="w-full rounded-2xl overflow-hidden border-2 border-emerald-300 bg-white max-h-52 flex items-center justify-center">
+                                        <img :src="packingPhotoPreview" class="max-h-52 w-full object-contain" alt="Packing Proof">
+                                    </div>
+                                    <div class="flex items-center gap-2 text-[10px] font-bold text-emerald-700">
+                                        <svg class="w-3.5 h-3.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
+                                        Packing proof uploaded. You can replace it by uploading again.
+                                    </div>
+                                    <label class="flex items-center justify-center gap-2 w-full py-2 rounded-xl border border-emerald-300 bg-white text-[10px] font-black uppercase tracking-widest text-emerald-700 hover:bg-emerald-50 cursor-pointer transition-all">
+                                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a2 2 0 002 2h12a2 2 0 002-2v-1M12 12V4m0 0L8 8m4-4l4 4"/></svg>
+                                        Replace Photo
+                                        <input type="file" class="hidden" accept="image/*" capture="environment" @change="onPackingFileChange($event); packingUploadSuccess = false;">
+                                    </label>
+                                </div>
+                            </template>
+
+                            {{-- Upload state: no photo yet or replacing --}}
+                            <template x-if="!packingUploadSuccess">
+                                <div class="space-y-3">
+                                    {{-- Preview if file chosen --}}
+                                    <template x-if="packingPhotoPreview">
+                                        <div class="w-full rounded-2xl overflow-hidden border-2 border-dashed border-emerald-300 bg-white max-h-52 flex items-center justify-center">
+                                            <img :src="packingPhotoPreview" class="max-h-52 w-full object-contain" alt="Preview">
+                                        </div>
+                                    </template>
+
+                                    {{-- Error --}}
+                                    <template x-if="packingUploadError">
+                                        <div class="p-2.5 bg-red-50 border border-red-200 rounded-xl text-[10px] font-bold text-red-600" x-text="packingUploadError"></div>
+                                    </template>
+
+                                    {{-- File picker buttons --}}
+                                    <div class="grid grid-cols-2 gap-2">
+                                        <label class="flex flex-col items-center justify-center gap-1.5 py-4 rounded-2xl border-2 border-dashed border-emerald-300 bg-white hover:bg-emerald-50 cursor-pointer transition-all group">
+                                            <svg class="w-6 h-6 text-emerald-500 group-hover:scale-110 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+                                            <span class="text-[9px] font-black uppercase tracking-wider text-emerald-700">Camera</span>
+                                            <input type="file" class="hidden" accept="image/*" capture="environment" @change="onPackingFileChange($event)">
+                                        </label>
+                                        <label class="flex flex-col items-center justify-center gap-1.5 py-4 rounded-2xl border-2 border-dashed border-emerald-300 bg-white hover:bg-emerald-50 cursor-pointer transition-all group">
+                                            <svg class="w-6 h-6 text-emerald-500 group-hover:scale-110 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16v1a2 2 0 002 2h12a2 2 0 002-2v-1M12 12V4m0 0L8 8m4-4l4 4"/></svg>
+                                            <span class="text-[9px] font-black uppercase tracking-wider text-emerald-700">Gallery</span>
+                                            <input type="file" class="hidden" accept="image/*" @change="onPackingFileChange($event)">
+                                        </label>
+                                    </div>
+
+                                    {{-- Upload button --}}
+                                    <button type="button"
+                                        @click="uploadPackingProof()"
+                                        :disabled="!packingPhotoFile || packingUploading"
+                                        :class="(!packingPhotoFile || packingUploading) ? 'opacity-50 cursor-not-allowed' : 'hover:bg-emerald-700'"
+                                        class="w-full py-2.5 bg-emerald-600 text-white text-[10px] font-black uppercase tracking-widest rounded-xl transition-all flex items-center justify-center gap-2">
+                                        <template x-if="packingUploading">
+                                            <svg class="w-3.5 h-3.5 animate-spin" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"/></svg>
+                                        </template>
+                                        <template x-if="!packingUploading">
+                                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a2 2 0 002 2h12a2 2 0 002-2v-1M12 12V4m0 0L8 8m4-4l4 4"/></svg>
+                                        </template>
+                                        <span x-text="packingUploading ? 'Uploading...' : 'Upload Packing Proof'"></span>
+                                    </button>
+                                </div>
+                            </template>
+                        </div>
+
+                        {{-- COURIER & SHIPPING CARD — hidden when Pending or Ready to Ship --}}
+                        <div x-show="normalizeStatus(detailsOrder.status) !== 'pending' && normalizeStatus(detailsOrder.status) !== 'ready to ship'" x-transition class="bg-indigo-50/50 p-4 rounded-2xl border border-indigo-100/70 space-y-3">
                             <div class="flex items-center justify-between">
                                 <div class="text-[9px] font-black uppercase tracking-widest text-indigo-900 flex items-center gap-1.5">
                                     <span>🚚 Courier & Shipping Information</span>
@@ -476,6 +598,7 @@ function printSellerOrder(order) {
                                     class="w-full h-9 px-3 bg-white border border-gray-200 rounded-xl text-xs font-semibold outline-none focus:border-[#C0420A] disabled:bg-gray-100 disabled:text-gray-500">
                             </div>
                         </div>
+
 
                         {{-- Order Status History Timeline Audit Trail --}}
                         <template x-if="detailsOrder.status_histories && detailsOrder.status_histories.length > 0">

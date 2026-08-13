@@ -73,6 +73,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/orders/{id}', [WebController::class, 'orderDetail'])->name('orders.show');
     Route::patch('/orders/{id}/confirm', [\App\Http\Controllers\OrderController::class, 'confirmReceived'])->name('orders.confirm');
     Route::patch('/api/orders/{id}/status', [\App\Http\Controllers\OrderController::class, 'updateOrderStatus']);
+    Route::post('/seller/api/orders/{id}/packing-proof', [\App\Http\Controllers\OrderController::class, 'uploadPackingProof'])->name('orders.packing-proof');
 
 
     // Notifications

@@ -449,4 +449,43 @@ class OrderController extends Controller
 
         return redirect()->route('orders.show', $id)->with('success', 'Order marked as received. Thank you!');
     }
+
+    /**
+     * Upload a packing proof photo for a Ready to Ship order.
+     * Accessible by the seller only.
+     */
+    public function uploadPackingProof(Request $request, string $id)
+    {
+        $user = auth()->user();
+
+        if (!$user || !in_array($user->role, ['seller', 'admin'])) {
+            return response()->json(['message' => 'Unauthorized.'], 403);
+        }
+
+        $order = Order::find($id);
+
+        if (!$order) {
+            return response()->json(['message' => 'Order not found.'], 404);
+        }
+
+        if ($user->role === 'seller' && $order->sellerId !== $user->id) {
+            return response()->json(['message' => 'You do not own this order.'], 403);
+        }
+
+        $request->validate([
+            'packingPhoto' => ['required', 'file', 'image', 'max:8192', 'mimes:jpg,jpeg,png,webp,heic'],
+        ]);
+
+        // Store in storage/app/public/packing-proofs
+        $path = $request->file('packingPhoto')->store('packing-proofs', 'public');
+
+        $order->packingProof = $path;
+        $order->save();
+
+        return response()->json([
+            'message' => 'Packing proof uploaded successfully.',
+            'packingProof' => $path,
+            'packingProofUrl' => asset('storage/' . $path),
+        ]);
+    }
 }
