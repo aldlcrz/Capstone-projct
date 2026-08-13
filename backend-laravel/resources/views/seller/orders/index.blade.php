@@ -184,7 +184,9 @@ function printSellerOrder(order) {
 
     normalizeStatus(statusStr) {
         if (!statusStr) return '';
-        return String(statusStr).toLowerCase().trim().replace(/_/g, ' ');
+        let s = String(statusStr).toLowerCase().trim().replace(/_/g, ' ');
+        if (s === 'processing' || s === 'to ship') return 'ready to ship';
+        return s;
     },
 
     isStatusDisabled(target, currentOrder) {
@@ -388,7 +390,7 @@ function printSellerOrder(order) {
                                 x-text="'#LB-' + order.id.slice(-8).toUpperCase()"></h3>
                             <span class="px-2.5 py-0.5 rounded-full border text-[8px] sm:text-[9px] font-black uppercase tracking-wider shrink-0"
                                   :class="statusColor(order.status)"
-                                  x-text="order.status"></span>
+                                  x-text="normalizeStatus(order.status) === 'ready to ship' ? 'Ready to Ship' : order.status"></span>
                         </div>
                         <p class="text-[10px] sm:text-[11px] text-gray-400 truncate font-medium mt-0.5">
                             <span class="font-bold text-gray-600" x-text="order.customer?.name || 'Customer'"></span>
@@ -442,7 +444,7 @@ function printSellerOrder(order) {
                 
                 <div class="mt-2.5 inline-flex items-center gap-2 px-3 py-1 bg-white/10 rounded-full text-[10px] font-bold uppercase tracking-widest">
                     <span>Status:</span>
-                    <span class="px-2 py-0.5 rounded-full text-[9px] font-black uppercase" :class="statusColor(detailsOrder?.status)" x-text="detailsOrder?.status"></span>
+                    <span class="px-2 py-0.5 rounded-full text-[9px] font-black uppercase" :class="statusColor(detailsOrder?.status)" x-text="normalizeStatus(detailsOrder?.status) === 'ready to ship' ? 'Ready to Ship' : detailsOrder?.status"></span>
                 </div>
             </div>
 
@@ -455,7 +457,7 @@ function printSellerOrder(order) {
                         <div class="p-4 bg-amber-50/60 border border-amber-100 rounded-2xl space-y-3">
                             <div class="flex items-center justify-between">
                                 <span class="text-[10px] font-black uppercase tracking-wider text-amber-800">Update Order Lifecycle</span>
-                                <span class="text-[9px] font-bold text-gray-400 uppercase tracking-widest" x-text="'Current: ' + detailsOrder.status"></span>
+                                <span class="text-[9px] font-bold text-gray-400 uppercase tracking-widest" x-text="'Current: ' + (normalizeStatus(detailsOrder.status) === 'ready to ship' ? 'Ready to Ship' : detailsOrder.status)"></span>
                             </div>
 
                             <template x-if="shippingError">
@@ -468,8 +470,8 @@ function printSellerOrder(order) {
                                         @click="updateStatus(detailsOrder, '{{ $st }}')"
                                         :disabled="isStatusDisabled('{{ $st }}', detailsOrder)"
                                         :class="{
-                                            'bg-[#C0420A] text-white font-black shadow-sm': detailsOrder.status.toLowerCase().trim() === '{{ strtolower($st) }}',
-                                            'bg-white text-gray-700 hover:border-[#C0420A] border border-gray-200': detailsOrder.status.toLowerCase().trim() !== '{{ strtolower($st) }}' && !isStatusDisabled('{{ $st }}', detailsOrder),
+                                            'bg-[#C0420A] text-white font-black shadow-sm': normalizeStatus(detailsOrder.status) === normalizeStatus('{{ $st }}'),
+                                            'bg-white text-gray-700 hover:border-[#C0420A] border border-gray-200': normalizeStatus(detailsOrder.status) !== normalizeStatus('{{ $st }}') && !isStatusDisabled('{{ $st }}', detailsOrder),
                                             'opacity-30 cursor-not-allowed bg-gray-100 text-gray-400 border-gray-100': isStatusDisabled('{{ $st }}', detailsOrder)
                                         }"
                                         class="px-3 py-1.5 rounded-full text-[9px] font-bold uppercase tracking-wider transition-all">
