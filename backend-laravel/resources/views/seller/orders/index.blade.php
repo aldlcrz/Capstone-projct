@@ -612,8 +612,8 @@ function printSellerOrder(order) {
                             </template>
                         </div>
 
-                        {{-- COURIER & SHIPPING CARD — hidden when Pending or Ready to Ship --}}
-                        <div x-show="normalizeStatus(detailsOrder.status) !== 'pending' && normalizeStatus(detailsOrder.status) !== 'ready to ship'" x-transition class="bg-indigo-50/50 p-4 rounded-2xl border border-indigo-100/70 space-y-3">
+                        {{-- COURIER & SHIPPING CARD — shown when status is beyond Ready to Ship OR when packing proof is uploaded --}}
+                        <div x-show="normalizeStatus(detailsOrder.status) !== 'pending' && (normalizeStatus(detailsOrder.status) !== 'ready to ship' || packingUploadSuccess || detailsOrder.packingProof)" x-transition class="bg-indigo-50/50 p-4 rounded-2xl border border-indigo-100/70 space-y-3">
                             <div class="flex items-center justify-between">
                                 <div class="text-[9px] font-black uppercase tracking-widest text-indigo-900 flex items-center gap-1.5">
                                     <span>🚚 Courier & Shipping Information</span>
@@ -775,19 +775,19 @@ function printSellerOrder(order) {
                     </button>
                 </template>
 
-                {{-- Upload Packing Proof button: shown when Ready to Ship --}}
+                {{-- Button for Ready to Ship status: Upload Packing Proof (before upload) or Continue (after upload) --}}
                 <template x-if="detailsOrder && normalizeStatus(detailsOrder.status) === 'ready to ship'">
                     <button type="button"
-                        @click="if (packingPhotoFile) { uploadPackingProof(); } else { openCameraModal(); }"
+                        @click="if (!packingUploadSuccess && !detailsOrder.packingProof) { if (packingPhotoFile) { uploadPackingProof(); } else { openCameraModal(); } } else { updateStatus(detailsOrder, 'Shipped'); }"
                         :disabled="packingUploading"
                         class="flex-1 py-2.5 sm:py-3 bg-emerald-600 hover:bg-emerald-700 text-white text-[10px] font-black uppercase tracking-widest rounded-full transition-all flex items-center justify-center gap-2 shadow-sm">
                         <template x-if="packingUploading">
                             <svg class="w-3.5 h-3.5 animate-spin" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"/></svg>
                         </template>
                         <template x-if="!packingUploading">
-                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a2 2 0 002 2h12a2 2 0 002-2v-1M12 12V4m0 0L8 8m4-4l4 4"/></svg>
+                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
                         </template>
-                        <span x-text="packingUploading ? 'Uploading...' : (packingPhotoFile ? 'Upload Selected Photo' : 'Upload Packing Proof')"></span>
+                        <span x-text="packingUploading ? 'Uploading...' : ((packingUploadSuccess || detailsOrder.packingProof) ? 'Continue ➔' : (packingPhotoFile ? 'Upload Selected Photo' : 'Upload Packing Proof'))"></span>
                     </button>
                 </template>
 
