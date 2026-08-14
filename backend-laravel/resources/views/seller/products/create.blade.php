@@ -100,34 +100,34 @@
             {{-- 2. Pricing & Shipping Stat Card --}}
             <div class="bg-white p-4 sm:p-6 rounded-2xl border border-gray-100 shadow-xs">
                 <div class="grid grid-cols-2 lg:grid-cols-4 gap-3">
-                    <div class="p-3.5 bg-[#F9F8F6] border border-stone-200/60 rounded-xl flex flex-col justify-between h-24 sm:h-26">
-                        <label class="text-[9px] font-bold uppercase tracking-widest text-stone-500">Price (₱)</label>
-                        <input type="number" name="price" required min="1" max="10000" step="0.01" placeholder="0.00"
+                    <div id="price-card" class="p-3.5 bg-[#F9F8F6] border border-stone-200/60 rounded-xl flex flex-col justify-between h-24 sm:h-26 transition-all">
+                        <label class="text-[9px] font-bold uppercase tracking-widest text-stone-500">Price (₱) <span class="text-[#C0420A]">*</span></label>
+                        <input type="number" name="price" id="priceInput" required min="1" max="10000" step="0.01" placeholder="0.00"
                             oninput="if(parseFloat(this.value) > 10000) this.value = 10000; updateDiscountPreview();"
                             class="w-full bg-transparent font-sans text-lg font-bold text-gray-900 outline-none border-b border-transparent focus:border-[#C0420A] transition-all">
                         <p class="text-[8px] text-stone-400 font-medium">Item base price</p>
                     </div>
 
-                    <div class="p-3.5 bg-[#F9F8F6] border border-stone-200/60 rounded-xl flex flex-col justify-between h-24 sm:h-26">
-                        <label class="text-[9px] font-bold uppercase tracking-widest text-stone-500">Total Stock</label>
+                    <div id="stock-card" class="p-3.5 bg-[#F9F8F6] border border-stone-200/60 rounded-xl flex flex-col justify-between h-24 sm:h-26 transition-all">
+                        <label class="text-[9px] font-bold uppercase tracking-widest text-stone-500">Total Stock <span class="text-[#C0420A]">*</span></label>
                         <input type="number" name="stock" id="total_stock" min="0" placeholder="0"
                             readonly tabindex="-1"
                             class="w-full bg-transparent font-sans text-lg font-bold text-gray-900 outline-none select-none cursor-not-allowed">
                         <p class="text-[8px] text-stone-400 font-medium">Auto-calculated</p>
                     </div>
 
-                    <div class="p-3.5 bg-[#F9F8F6] border border-stone-200/60 rounded-xl flex flex-col justify-between h-24 sm:h-26">
-                        <label class="text-[9px] font-bold uppercase tracking-widest text-stone-500">Shipping Fee (₱)</label>
-                        <input type="number" name="shippingFee" min="0" max="500" step="0.01" placeholder="0.00"
+                    <div id="shipping-fee-card" class="p-3.5 bg-[#F9F8F6] border border-stone-200/60 rounded-xl flex flex-col justify-between h-24 sm:h-26 transition-all">
+                        <label class="text-[9px] font-bold uppercase tracking-widest text-stone-500">Shipping Fee (₱) <span class="text-[#C0420A]">*</span></label>
+                        <input type="number" name="shippingFee" id="shippingFeeInput" required min="0" max="500" step="0.01" placeholder="0.00"
                             value="{{ old('shippingFee', 0) }}"
                             oninput="if(parseFloat(this.value) > 500) this.value = 500;"
                             class="w-full bg-transparent font-sans text-lg font-bold text-gray-900 outline-none border-b border-transparent focus:border-[#C0420A] transition-all">
                         <p class="text-[8px] text-stone-400 font-medium">Enter 0 for free</p>
                     </div>
 
-                    <div class="p-3.5 bg-[#F9F8F6] border border-stone-200/60 rounded-xl flex flex-col justify-between h-24 sm:h-26">
-                        <label class="text-[9px] font-bold uppercase tracking-widest text-stone-500">Est. Shipping Days</label>
-                        <input type="number" name="shippingDays" min="1" max="30" step="1" placeholder="5"
+                    <div id="shipping-days-card" class="p-3.5 bg-[#F9F8F6] border border-stone-200/60 rounded-xl flex flex-col justify-between h-24 sm:h-26 transition-all">
+                        <label class="text-[9px] font-bold uppercase tracking-widest text-stone-500">Est. Shipping Days <span class="text-[#C0420A]">*</span></label>
+                        <input type="number" name="shippingDays" id="shippingDaysInput" required min="1" max="30" step="1" placeholder="5"
                             value="{{ old('shippingDays', 5) }}"
                             oninput="if(parseInt(this.value) > 30) this.value = 30;"
                             class="w-full bg-transparent font-sans text-lg font-bold text-gray-900 outline-none border-b border-transparent focus:border-[#C0420A] transition-all">
@@ -137,16 +137,16 @@
             </div>
 
             {{-- 3. Heritage Sizing & Inventory Card --}}
-            <div id="sizing-section" class="bg-white p-4 sm:p-6 rounded-2xl border border-gray-100 shadow-xs space-y-3">
+            <div id="sizing-section" class="bg-white p-4 sm:p-6 rounded-2xl border border-gray-100 shadow-xs space-y-3 transition-all">
                 <div class="flex items-center justify-between">
-                    <h3 class="text-xs sm:text-sm font-bold text-black uppercase tracking-widest">Heritage Sizing & Stock</h3>
+                    <h3 class="text-xs sm:text-sm font-bold text-black uppercase tracking-widest">Heritage Sizing & Stock <span class="text-[#C0420A]">*</span></h3>
                     <span class="text-[10px] text-gray-400 font-medium">Assign stock per size</span>
                 </div>
                 <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-2.5">
                     @foreach(['S', 'M', 'L', 'XL', 'XXL', 'Custom'] as $size)
-                        <div class="p-2.5 border border-gray-100 bg-gray-50/50 rounded-xl flex flex-col justify-between gap-2">
-                            <label class="flex items-center gap-1.5 cursor-pointer font-bold text-xs text-gray-700">
-                                <input type="checkbox" name="sizes[]" value="{{ $size }}" 
+                        <div class="p-2.5 bg-gray-50 border border-gray-200 rounded-xl space-y-2 text-center transition-all hover:bg-white hover:border-gray-300">
+                            <label class="flex items-center justify-center gap-1.5 text-xs font-black uppercase text-gray-700 cursor-pointer select-none">
+                                <input type="checkbox" name="sizes[]" value="{{ $size }}" id="size_cb_{{ $size }}"
                                     class="rounded text-[#C0420A] focus:ring-[#C0420A] w-3.5 h-3.5 size-checkbox"
                                     onchange="toggleSizeStock(this, '{{ $size }}')">
                                 <span>Size {{ $size }}</span>
@@ -164,7 +164,7 @@
             <div class="bg-white p-4 sm:p-6 rounded-2xl border border-gray-100 shadow-xs space-y-4">
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div class="space-y-1.5">
-                        <label class="text-[10px] font-bold uppercase tracking-widest text-gray-400">Product Category</label>
+                        <label class="text-[10px] font-bold uppercase tracking-widest text-gray-400">Product Category <span class="text-[#C0420A]">*</span></label>
                         <select name="CategoryId" id="categorySelect" required
                             class="w-full px-4 py-2.5 bg-gray-50/50 border border-gray-200/80 rounded-xl outline-none focus:border-[#C0420A] transition-all font-bold text-xs appearance-none">
                             <option value="" disabled selected>Select a category</option>
@@ -174,12 +174,12 @@
                         </select>
                     </div>
 
-                    <div class="space-y-1.5">
-                        <label class="text-[10px] font-bold uppercase tracking-widest text-gray-400">Who is this for?</label>
+                    <div id="target-group-container" class="space-y-1.5 p-1 rounded-xl transition-all">
+                        <label class="text-[10px] font-bold uppercase tracking-widest text-gray-400">Who is this for? <span class="text-[#C0420A]">*</span></label>
                         <div class="flex gap-2">
                             @foreach(['Men', 'Women', 'Kids'] as $group)
                                 <label class="flex-1 cursor-pointer">
-                                    <input type="radio" name="target_group" value="{{ $group }}" class="hidden peer" {{ old('target_group') == $group ? 'checked' : '' }}>
+                                    <input type="radio" name="target_group" value="{{ $group }}" class="hidden peer target-group-radio" {{ old('target_group') == $group ? 'checked' : '' }}>
                                     <div class="w-full py-2 rounded-xl border border-gray-200 bg-gray-50/50 text-xs font-bold text-gray-500 text-center uppercase tracking-wider peer-checked:border-[#C0420A] peer-checked:bg-[#C0420A]/5 peer-checked:text-[#C0420A] transition-all">
                                         {{ $group }}
                                     </div>
@@ -197,6 +197,7 @@
                         <div class="flex items-center gap-2">
                             <span class="w-2 h-2 rounded-full bg-[#C0420A]"></span>
                             <span class="text-xs font-black text-[#C0420A] uppercase tracking-widest">Lumban Special Sale</span>
+                            <span class="text-[9px] text-gray-400 font-bold uppercase tracking-wider">(Optional)</span>
                         </div>
                         <label class="relative inline-flex items-center cursor-pointer shrink-0">
                             <input type="checkbox" id="discountToggle" class="sr-only peer"
@@ -234,7 +235,7 @@
             {{-- Product Media --}}
             <div class="bg-white p-4 sm:p-6 rounded-2xl border border-gray-100 shadow-xs space-y-4">
                 <div class="flex items-center justify-between">
-                    <h3 class="text-xs sm:text-sm font-bold text-black uppercase tracking-widest">Product Images</h3>
+                    <h3 class="text-xs sm:text-sm font-bold text-black uppercase tracking-widest">Product Images <span class="text-[#C0420A]">*</span></h3>
                     <span id="img-count-badge" class="hidden text-[9px] font-black uppercase tracking-widest px-2.5 py-0.5 bg-[#C0420A]/10 text-[#C0420A] rounded-full">0 photos</span>
                 </div>
 
@@ -257,9 +258,9 @@
             </div>
 
             {{-- Payment Method Configuration --}}
-            <div class="bg-white p-4 sm:p-6 rounded-2xl border border-gray-100 shadow-xs space-y-3">
+            <div id="payment-methods-card" class="bg-white p-4 sm:p-6 rounded-2xl border border-gray-100 shadow-xs space-y-3 transition-all">
                 <div class="flex items-center justify-between mb-1">
-                    <h3 class="text-xs sm:text-sm font-black text-black uppercase tracking-widest">Payment Methods</h3>
+                    <h3 class="text-xs sm:text-sm font-black text-black uppercase tracking-widest">Payment Methods <span class="text-[#C0420A]">*</span></h3>
                     <a href="{{ route('seller.profile') }}?open_payment=1#payment-methods" class="text-[11px] font-bold text-[#C0420A] hover:underline flex items-center gap-1">
                         <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><circle cx="12" cy="12" r="3"/></svg>
                         Settings
@@ -637,14 +638,19 @@ function validateProductForm(e, isEdit = false) {
     const errors = [];
     
     // Clear previous error styles
-    document.querySelectorAll('.border-red-500').forEach(el => el.classList.remove('border-red-500'));
+    document.querySelectorAll('.border-red-500, .ring-2.ring-red-500').forEach(el => {
+        el.classList.remove('border-red-500', 'ring-2', 'ring-red-500');
+    });
     const oldJsBanner = document.getElementById('js-error-banner');
     if (oldJsBanner) oldJsBanner.remove();
 
-    // 1. Name & Description
+    // 1. Basic Information (Name & Description)
     const nameInput = document.querySelector('input[name="name"]');
     if (!nameInput || !nameInput.value.trim()) {
         errors.push('Product Name is required.');
+        if (nameInput) nameInput.classList.add('border-red-500');
+    } else if (nameInput.value.trim().length < 3) {
+        errors.push('Product Name must be at least 3 characters.');
         if (nameInput) nameInput.classList.add('border-red-500');
     }
 
@@ -652,36 +658,48 @@ function validateProductForm(e, isEdit = false) {
     if (!descInput || !descInput.value.trim()) {
         errors.push('Artisan Description is required.');
         if (descInput) descInput.classList.add('border-red-500');
+    } else if (descInput.value.trim().length < 10) {
+        errors.push('Artisan Description must be at least 10 characters.');
+        if (descInput) descInput.classList.add('border-red-500');
     }
 
-    // 2. Price
+    // 2. Pricing & Shipping
     const priceInput = document.querySelector('input[name="price"]');
+    const priceCard = document.getElementById('price-card');
     const priceVal = parseFloat(priceInput ? priceInput.value : 0);
     if (!priceInput || isNaN(priceVal) || priceVal < 1) {
-        errors.push('Price must be at least ₱1.00.');
+        errors.push('Product Price is required (must be at least ₱1.00).');
+        if (priceCard) priceCard.classList.add('border-red-500');
         if (priceInput) priceInput.classList.add('border-red-500');
     } else if (priceVal > 10000) {
-        errors.push('Price cannot exceed ₱10,000.00.');
+        errors.push('Product Price cannot exceed ₱10,000.00.');
+        if (priceCard) priceCard.classList.add('border-red-500');
         if (priceInput) priceInput.classList.add('border-red-500');
     }
 
-    // Shipping Fee
     const shipFeeInput = document.querySelector('input[name="shippingFee"]');
-    if (shipFeeInput) {
-        const shipFeeVal = parseFloat(shipFeeInput.value) || 0;
+    const shipFeeCard = document.getElementById('shipping-fee-card');
+    if (!shipFeeInput || shipFeeInput.value === '' || isNaN(parseFloat(shipFeeInput.value))) {
+        errors.push('Shipping Fee is required (enter 0 for free delivery).');
+        if (shipFeeCard) shipFeeCard.classList.add('border-red-500');
+    } else {
+        const shipFeeVal = parseFloat(shipFeeInput.value);
         if (shipFeeVal < 0 || shipFeeVal > 500) {
             errors.push('Shipping Fee must be between ₱0.00 and ₱500.00.');
-            shipFeeInput.classList.add('border-red-500');
+            if (shipFeeCard) shipFeeCard.classList.add('border-red-500');
         }
     }
 
-    // Shipping Days
     const shipDaysInput = document.querySelector('input[name="shippingDays"]');
-    if (shipDaysInput) {
-        const shipDaysVal = parseInt(shipDaysInput.value) || 0;
+    const shipDaysCard = document.getElementById('shipping-days-card');
+    if (!shipDaysInput || !shipDaysInput.value || isNaN(parseInt(shipDaysInput.value))) {
+        errors.push('Estimated Shipping Days is required.');
+        if (shipDaysCard) shipDaysCard.classList.add('border-red-500');
+    } else {
+        const shipDaysVal = parseInt(shipDaysInput.value);
         if (shipDaysVal < 1 || shipDaysVal > 30) {
             errors.push('Estimated Shipping Days must be between 1 and 30 days.');
-            shipDaysInput.classList.add('border-red-500');
+            if (shipDaysCard) shipDaysCard.classList.add('border-red-500');
         }
     }
 
@@ -716,16 +734,47 @@ function validateProductForm(e, isEdit = false) {
     const totalStock = parseInt(document.getElementById('total_stock')?.value || 0);
     if (totalStock <= 0) {
         errors.push('Total product stock must be greater than 0.');
+        const stockCard = document.getElementById('stock-card');
+        if (stockCard) stockCard.classList.add('border-red-500');
     }
 
-    // 4. Product Category
+    // 4. Product Category & Target Group
     const categorySelect = document.getElementById('categorySelect');
     if (!categorySelect || !categorySelect.value) {
         errors.push('Please select a Product Category.');
         if (categorySelect) categorySelect.classList.add('border-red-500');
     }
 
-    // 5. Lumban Special Discount
+    const targetGroupChecked = document.querySelector('input[name="target_group"]:checked');
+    const targetGroupContainer = document.getElementById('target-group-container');
+    if (!targetGroupChecked) {
+        errors.push('Please specify who this product is for (Men, Women, or Kids).');
+        if (targetGroupContainer) targetGroupContainer.classList.add('border-red-500', 'border');
+    }
+
+    // 5. Product Imagery
+    if (!isEdit) {
+        const hasFiles = (productImagesDT && productImagesDT.files && productImagesDT.files.length > 0) ||
+                         (document.getElementById('imageUploadInput')?.files?.length > 0);
+        if (!hasFiles) {
+            errors.push('Please upload at least one product image.');
+            const dropZone = document.getElementById('dropZone');
+            if (dropZone) dropZone.classList.add('border-red-500');
+        }
+    }
+
+    // 6. Payment Methods
+    const gcashToggle = document.getElementById('gcash_toggle_create');
+    const mayaToggle = document.getElementById('maya_toggle_create');
+    const paymentCard = document.getElementById('payment-methods-card');
+    const isGcashChecked = gcashToggle ? gcashToggle.checked : false;
+    const isMayaChecked = mayaToggle ? mayaToggle.checked : false;
+    if (!isGcashChecked && !isMayaChecked) {
+        errors.push('Please enable at least one payment method (GCash or Maya).');
+        if (paymentCard) paymentCard.classList.add('border-red-500');
+    }
+
+    // 7. Lumban Special Discount (Optional)
     const isOnSale = document.getElementById('discountToggle')?.checked;
     if (isOnSale) {
         const pctInput = document.getElementById('discountPercentage');
@@ -733,16 +782,6 @@ function validateProductForm(e, isEdit = false) {
         if (isNaN(pctVal) || pctVal < 1 || pctVal > 99) {
             errors.push('Discount percentage must be between 1% and 99%.');
             if (pctInput) pctInput.classList.add('border-red-500');
-        }
-    }
-
-    // 6. Product Imagery
-    if (!isEdit) {
-        const imgInput = document.getElementById('imageUploadInput');
-        if (!imgInput || !imgInput.files || imgInput.files.length === 0) {
-            errors.push('Please upload at least one product image.');
-            const dropZone = document.getElementById('dropZone');
-            if (dropZone) dropZone.classList.add('border-red-500');
         }
     }
 

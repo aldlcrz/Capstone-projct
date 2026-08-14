@@ -42,31 +42,41 @@ class ProductManagementController extends Controller
 
         $request->validate([
             'name'                => 'required|string|max:100',
-            'description'         => 'required|string',
+            'description'         => 'required|string|min:10|max:500',
             'price'               => 'required|numeric|min:1|max:10000',
+            'shippingFee'         => 'required|numeric|min:0|max:500',
+            'shippingDays'        => 'required|integer|min:1|max:30',
             'CategoryId'          => 'required|exists:categories,id',
+            'target_group'        => 'required|string|in:Men,Women,Kids',
             'images'              => 'required|array|min:1',
             'images.*'            => 'image|mimes:jpeg,png,jpg,webp|max:5120',
             'sizes'               => 'required|array|min:1',
             'sizes.*'             => 'string',
             'size_stocks.*'       => 'nullable|integer|min:0|max:10000',
-            'shippingFee'         => 'nullable|numeric|min:0|max:500',
-            'shippingDays'        => 'nullable|integer|min:1|max:30',
             'discount_percentage' => 'nullable|numeric|min:1|max:99',
         ], [
-            'name.required'        => 'Product Name is required.',
-            'description.required' => 'Artisan Description is required.',
-            'price.required'       => 'Product Price is required.',
-            'price.min'            => 'Product Price must be at least ₱1.00.',
-            'price.max'            => 'Product Price cannot exceed ₱10,000.00.',
-            'shippingFee.max'      => 'Shipping Fee cannot exceed ₱500.00.',
-            'shippingDays.max'     => 'Estimated Shipping Days cannot exceed 30 days.',
+            'name.required'         => 'Product Name is required.',
+            'description.required'  => 'Artisan Description is required.',
+            'description.min'       => 'Artisan Description must be at least 10 characters.',
+            'price.required'        => 'Product Price is required.',
+            'price.min'             => 'Product Price must be at least ₱1.00.',
+            'price.max'             => 'Product Price cannot exceed ₱10,000.00.',
+            'shippingFee.required'  => 'Shipping Fee is required (enter 0 for free delivery).',
+            'shippingFee.max'       => 'Shipping Fee cannot exceed ₱500.00.',
+            'shippingDays.required' => 'Estimated Shipping Days is required.',
+            'shippingDays.min'      => 'Estimated Shipping Days must be at least 1 day.',
+            'shippingDays.max'      => 'Estimated Shipping Days cannot exceed 30 days.',
+            'CategoryId.required'   => 'Please select a Product Category.',
+            'target_group.required' => 'Please select who this product is for (Men, Women, or Kids).',
+            'images.required'       => 'Please upload at least one product image.',
+            'sizes.required'        => 'Please select at least one Heritage Size (e.g. S, M, L, XL, XXL, Custom).',
+            'sizes.min'             => 'Please select at least one Heritage Size (e.g. S, M, L, XL, XXL, Custom).',
             'size_stocks.*.max'    => 'Size stock quantity cannot exceed 10,000 units.',
-            'CategoryId.required'  => 'Please select a Product Category.',
-            'images.required'      => 'Please upload at least one product image.',
-            'sizes.required'       => 'Please select at least one Heritage Size (e.g. S, M, L, XL, XXL, Custom).',
-            'sizes.min'            => 'Please select at least one Heritage Size (e.g. S, M, L, XL, XXL, Custom).',
         ]);
+
+        if (!$request->has('product_is_gcash_available') && !$request->has('product_is_maya_available')) {
+            return redirect()->back()->withInput()->with('error', 'Please enable at least one payment method (GCash or Maya).');
+        }
 
         $selectedSizes = $request->sizes ?? [];
         $sizeStocks = is_array($request->size_stocks) ? array_filter($request->size_stocks, function($key) use ($selectedSizes) {
