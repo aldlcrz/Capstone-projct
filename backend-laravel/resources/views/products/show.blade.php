@@ -718,8 +718,8 @@
                 </div>
 
                 @if($product->reviews->isNotEmpty())
-                    <div class="bg-[#FCFAF8] border border-[#F3EDE2] rounded-2xl px-6 py-3.5 flex items-center gap-4 shadow-xs">
-                        <div class="text-center pr-4 border-r border-[#EFE8DC]">
+                    <div class="rounded-2xl px-6 py-3.5 flex items-center gap-4 shadow-xs" style="background-color: #FAF9F6; border: 1px solid #EFEAE2;">
+                        <div class="text-center pr-4 border-r" style="border-color: #E5DEC3;">
                             <span class="text-3xl font-black text-[#C0420A] leading-none">{{ number_format($product->avgRating, 1) }}</span>
                             <span class="text-[9px] text-gray-400 font-bold block mt-0.5">out of 5</span>
                         </div>
@@ -739,7 +739,7 @@
 
             @if($product->reviews->isNotEmpty())
                 {{-- Rating Distribution Breakdown (Matching Mockup) --}}
-                <div class="bg-[#FCFAF8] border border-[#F3EDE2] rounded-3xl p-6 sm:p-7 mb-8 max-w-xl shadow-xs space-y-2.5">
+                <div class="rounded-3xl p-6 sm:p-7 mb-8 max-w-xl shadow-xs space-y-3" style="background-color: #FAF9F6; border: 1px solid #EFEAE2;">
                     <span class="text-[10px] font-black uppercase tracking-widest text-gray-400 block mb-3">Rating Distribution</span>
                     @for($star = 5; $star >= 1; $star--)
                         @php
@@ -748,8 +748,8 @@
                         @endphp
                         <div class="flex items-center gap-3 text-xs">
                             <span class="w-8 font-bold text-gray-600 text-right">{{ $star }} ★</span>
-                            <div class="flex-1 h-2.5 bg-[#ECE7DE] rounded-full overflow-hidden">
-                                <div class="h-full bg-amber-400 rounded-full" style="{{ 'width: ' . $pct . '%;' }}"></div>
+                            <div class="flex-1 h-3 rounded-full overflow-hidden" style="background-color: #ECE7DE; min-height: 10px;">
+                                <div class="h-full rounded-full" style="background-color: #F59E0B; width: <?php echo $pct; ?>%; min-height: 10px;"></div>
                             </div>
                             <span class="w-8 text-[11px] font-bold text-gray-400 text-right">{{ $count }}</span>
                         </div>
@@ -759,10 +759,10 @@
                 {{-- Stacked Single-Column Customer Reviews List (Matching Mockup) --}}
                 <div class="space-y-4">
                     @foreach($product->reviews->take(3) as $review)
-                        <div class="bg-[#FCFAF8] border border-[#F3EDE2] rounded-2xl p-5 sm:p-6 space-y-3 shadow-xs">
+                        <div class="rounded-2xl p-5 sm:p-6 space-y-3 shadow-xs" style="background-color: #FAF9F6; border: 1px solid #EFEAE2;">
                             <div class="flex items-center justify-between flex-wrap gap-2">
                                 <div class="flex items-center gap-3">
-                                    <div class="w-11 h-11 rounded-full bg-[#EAE8E4] flex items-center justify-center font-bold text-gray-700 text-sm overflow-hidden shrink-0">
+                                    <div class="w-11 h-11 rounded-full flex items-center justify-center font-bold text-gray-700 text-sm overflow-hidden shrink-0" style="background-color: #EAE8E4;">
                                         @if($review->customer && $review->customer->profile_photo_url)
                                             <img src="{{ $review->customer->profile_photo_url }}" class="w-full h-full object-cover" onerror="this.style.display='none'">
                                         @else
@@ -785,7 +785,7 @@
                                 </div>
 
                                 @if($review->orderId || $review->orderItemId)
-                                    <span class="px-3 py-1 bg-[#E8F8F0] text-[#1E9E65] border border-[#D0F0E0] rounded-full text-[9px] font-black uppercase tracking-widest flex items-center gap-1">
+                                    <span class="px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest flex items-center gap-1" style="background-color: #E8F8F0; color: #1E9E65; border: 1px solid #D0F0E0;">
                                         ✓ Verified Purchase
                                     </span>
                                 @endif
@@ -816,7 +816,7 @@
                                                                 ? asset('storage/' . $rImg) 
                                                                 : asset('uploads/reviews/' . $rImg))));
                                             @endphp
-                                            <a href="{{ $rImgUrl }}" target="_blank" class="w-14 h-14 rounded-xl overflow-hidden border border-gray-200 bg-white shrink-0 hover:opacity-90 transition-opacity block shadow-xs">
+                                            <a href="{{ $rImgUrl }}" target="_blank" class="w-14 h-14 rounded-xl overflow-hidden bg-white shrink-0 hover:opacity-90 transition-opacity block shadow-xs" style="border: 1px solid #EFEAE2;">
                                                 <img src="{{ $rImgUrl }}" class="w-full h-full object-cover" onerror="this.style.display='none'" alt="Review Photo">
                                             </a>
                                         @endif
@@ -831,7 +831,8 @@
                 <div class="mt-6">
                     <button type="button" 
                             @click="reviewsModal = true"
-                            class="w-full py-4 px-6 border border-[#E88058] bg-[#FCFAF8] hover:bg-[#C0420A] text-[#C0420A] hover:text-white rounded-2xl text-xs font-black uppercase tracking-widest transition-all shadow-xs flex items-center justify-center gap-2 cursor-pointer group active:scale-[0.99]">
+                            class="w-full py-4 px-6 rounded-2xl text-xs font-black uppercase tracking-widest transition-all shadow-xs flex items-center justify-center gap-2 cursor-pointer group active:scale-[0.99] hover:bg-[#C0420A] hover:text-white"
+                            style="background-color: #FAF9F6; border: 1px solid #E88058; color: #C0420A;">
                         <span>VIEW ALL REVIEWS ({{ $totalRevCount }})</span>
                         <span class="group-hover:translate-y-0.5 transition-transform text-sm font-bold">⌄</span>
                     </button>
