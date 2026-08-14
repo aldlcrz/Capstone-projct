@@ -10,7 +10,7 @@
             return asset('storage/' . $clean);
         };
     @endphp
-    <div class="max-w-4xl mx-auto space-y-6">
+    <div class="max-w-4xl mx-auto space-y-4 sm:space-y-6">
         {{-- Profile Hero Card --}}
         <div class="relative bg-white rounded-3xl p-6 sm:p-8 border border-gray-100 shadow-sm flex flex-col sm:flex-row items-center sm:items-start gap-6">
             {{-- Avatar: Clickable to change photo --}}
@@ -153,12 +153,12 @@
                 </div>
             </div>
 
-            <div class="mt-8 flex flex-wrap items-center justify-center gap-3">
+            <div class="mt-4 sm:mt-5 flex flex-wrap items-center justify-center gap-3">
                 {{-- View Mode: Edit Profile Button --}}
                 <button type="button" 
                         x-show="!isEditing" 
                         @click="isEditing = true; $nextTick(() => { if ($refs.shopNameInput) $refs.shopNameInput.focus(); })" 
-                        class="w-full sm:w-auto px-10 py-3.5 bg-gray-900 text-white rounded-xl text-xs font-black uppercase tracking-widest hover:bg-[#C0420A] transition-all shadow-md flex items-center justify-center gap-2 cursor-pointer">
+                        class="w-full sm:w-auto px-8 py-3 bg-gray-900 text-white rounded-xl text-xs font-black uppercase tracking-widest hover:bg-[#C0420A] transition-all shadow-md flex items-center justify-center gap-2 cursor-pointer">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/></svg>
                     <span>Edit Profile</span>
                 </button>
@@ -168,7 +168,7 @@
                         x-show="isEditing" 
                         x-cloak
                         @click="cancelEdit()" 
-                        class="w-full sm:w-auto px-7 py-3.5 bg-gray-100 text-gray-700 rounded-xl text-xs font-black uppercase tracking-widest hover:bg-gray-200 transition-all cursor-pointer">
+                        class="w-full sm:w-auto px-6 py-3 bg-gray-100 text-gray-700 rounded-xl text-xs font-black uppercase tracking-widest hover:bg-gray-200 transition-all cursor-pointer">
                     Cancel
                 </button>
 
@@ -178,7 +178,7 @@
                         x-cloak
                         :disabled="!hasChanges()"
                         :class="hasChanges() ? 'bg-[#C0420A] text-white hover:bg-black cursor-pointer shadow-md' : 'bg-gray-200 text-gray-400 cursor-not-allowed opacity-75'"
-                        class="w-full sm:w-auto px-10 py-3.5 rounded-xl text-xs font-black uppercase tracking-widest transition-all flex items-center justify-center gap-2">
+                        class="w-full sm:w-auto px-8 py-3 rounded-xl text-xs font-black uppercase tracking-widest transition-all flex items-center justify-center gap-2">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
                     <span>Save Changes</span>
                 </button>
@@ -186,10 +186,10 @@
         </form>
 
         {{-- Quick Links --}}
-        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <a href="{{ route('seller.products.index') }}" class="flex items-center justify-between p-4 bg-white rounded-2xl border border-gray-100 hover:border-[#C0420A] transition-all">
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5 sm:gap-3">
+            <a href="{{ route('seller.products.index') }}" class="flex items-center justify-between px-4 py-3 sm:py-3.5 bg-white rounded-2xl border border-gray-100 hover:border-[#C0420A] transition-all">
                 <div class="flex items-center gap-3">
-                    <div class="w-9 h-9 rounded-xl bg-orange-50 border border-orange-100 flex items-center justify-center">
+                    <div class="w-8 h-8 rounded-xl bg-orange-50 border border-orange-100 flex items-center justify-center">
                         <svg class="w-4 h-4 text-[#C0420A]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/></svg>
                     </div>
                     <div>
@@ -200,9 +200,9 @@
                 <svg class="w-4 h-4 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
             </a>
 
-            <button id="payment-methods" onclick="document.getElementById('payment-modal').style.display='flex'" class="flex items-center justify-between p-4 bg-white rounded-2xl border border-gray-100 hover:border-[#C0420A] transition-all text-left">
+            <button id="payment-methods" onclick="document.getElementById('payment-modal').style.display='flex'" class="flex items-center justify-between px-4 py-3 sm:py-3.5 bg-white rounded-2xl border border-gray-100 hover:border-[#C0420A] transition-all text-left cursor-pointer">
                 <div class="flex items-center gap-3">
-                    <div class="w-9 h-9 rounded-xl bg-blue-50 border border-blue-100 flex items-center justify-center">
+                    <div class="w-8 h-8 rounded-xl bg-blue-50 border border-blue-100 flex items-center justify-center">
                         <svg class="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"/></svg>
                     </div>
                     <span class="text-xs font-bold text-black uppercase">Payment Methods</span>
@@ -210,9 +210,9 @@
                 <svg class="w-4 h-4 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
             </button>
 
-            <button onclick="document.getElementById('legal-modal').style.display='flex'" class="flex items-center justify-between p-4 bg-white rounded-2xl border border-gray-100 hover:border-[#C0420A] transition-all text-left">
+            <button onclick="document.getElementById('legal-modal').style.display='flex'" class="flex items-center justify-between px-4 py-3 sm:py-3.5 bg-white rounded-2xl border border-gray-100 hover:border-[#C0420A] transition-all text-left cursor-pointer">
                 <div class="flex items-center gap-3">
-                    <div class="w-9 h-9 rounded-xl bg-green-50 border border-green-100 flex items-center justify-center">
+                    <div class="w-8 h-8 rounded-xl bg-green-50 border border-green-100 flex items-center justify-center">
                         <svg class="w-4 h-4 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
                     </div>
                     <span class="text-xs font-bold text-black uppercase">Legal Documents</span>
@@ -220,9 +220,9 @@
                 <svg class="w-4 h-4 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
             </button>
 
-            <a href="{{ route('seller.commission') }}" class="flex items-center justify-between p-4 bg-white rounded-2xl border border-gray-100 hover:border-[#C0420A] transition-all">
+            <a href="{{ route('seller.commission') }}" class="flex items-center justify-between px-4 py-3 sm:py-3.5 bg-white rounded-2xl border border-gray-100 hover:border-[#C0420A] transition-all">
                 <div class="flex items-center gap-3">
-                    <div class="w-9 h-9 rounded-xl bg-amber-50 border border-amber-100 flex items-center justify-center">
+                    <div class="w-8 h-8 rounded-xl bg-amber-50 border border-amber-100 flex items-center justify-center">
                         <svg class="w-4 h-4 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
                     </div>
                     <span class="text-xs font-bold text-black uppercase">Pay Commission</span>
@@ -230,9 +230,9 @@
                 <svg class="w-4 h-4 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
             </a>
 
-            <a href="{{ route('seller.customers') }}" class="flex items-center justify-between p-4 bg-white rounded-2xl border border-gray-100 hover:border-[#C0420A] transition-all">
+            <a href="{{ route('seller.customers') }}" class="flex items-center justify-between px-4 py-3 sm:py-3.5 bg-white rounded-2xl border border-gray-100 hover:border-[#C0420A] transition-all">
                 <div class="flex items-center gap-3">
-                    <div class="w-9 h-9 rounded-xl bg-[#C0420A]/10 border border-[#C0420A]/20 flex items-center justify-center">
+                    <div class="w-8 h-8 rounded-xl bg-[#C0420A]/10 border border-[#C0420A]/20 flex items-center justify-center">
                         <svg class="w-4 h-4 text-[#C0420A]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
                     </div>
                     <span class="text-xs font-bold text-black uppercase">Customer List</span>
@@ -242,10 +242,10 @@
         </div>
 
         {{-- Mobile Logout Button --}}
-        <div class="lg:hidden pt-4 border-t border-gray-100 mt-4">
+        <div class="lg:hidden pt-2.5 border-t border-gray-100 mt-2.5">
             <form action="{{ route('logout') }}" method="POST">
                 @csrf
-                <button type="submit" class="w-full py-3.5 bg-red-50 text-red-600 rounded-2xl text-xs font-black uppercase tracking-widest border border-red-100 hover:bg-red-600 hover:text-white transition-all shadow-xs cursor-pointer">
+                <button type="submit" class="w-full py-3 bg-red-50 text-red-600 rounded-2xl text-xs font-black uppercase tracking-widest border border-red-100 hover:bg-red-600 hover:text-white transition-all shadow-xs cursor-pointer">
                     Logout
                 </button>
             </form>
