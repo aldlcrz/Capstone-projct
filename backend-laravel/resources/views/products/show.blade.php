@@ -712,6 +712,20 @@
                             <p class="text-xs text-gray-600 leading-relaxed italic">
                                 "{{ $review->comment }}"
                             </p>
+                            @php
+                                $revImages = is_string($review->images) ? json_decode($review->images, true) : $review->images;
+                            @endphp
+                            @if(!empty($revImages) && is_array($revImages))
+                                <div class="flex flex-wrap gap-2 pt-1">
+                                    @foreach($revImages as $rImg)
+                                        @if($rImg)
+                                            <div class="w-14 h-14 rounded-xl overflow-hidden border border-gray-200 bg-white shrink-0">
+                                                <img src="{{ str_starts_with($rImg, 'http') ? $rImg : asset(ltrim($rImg, '/')) }}" class="w-full h-full object-cover" onerror="this.style.display='none'" alt="Review Photo">
+                                            </div>
+                                        @endif
+                                    @endforeach
+                                </div>
+                            @endif
                         </div>
                     @endforeach
                 </div>

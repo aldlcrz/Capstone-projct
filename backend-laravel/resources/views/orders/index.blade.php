@@ -12,6 +12,7 @@
         reviewOrderId: '',
         reviewOrderItemId: '',
         reviewProductName: '',
+        reviewProductImage: '',
         getStepIndex(status) {
             const s = (status || '').toLowerCase().trim();
             if (s === 'completed' || s === 'delivered') return 4;
@@ -133,7 +134,8 @@
                 ];
             @endphp
 
-            <div class="bg-white rounded-2xl sm:rounded-3xl border border-gray-100 shadow-sm hover:shadow-md transition-all overflow-hidden group">
+            <div class="bg-white rounded-2xl sm:rounded-3xl border border-gray-100 shadow-sm hover:shadow-md transition-all overflow-hidden group cursor-pointer"
+                 onclick="window.location.href='/orders/{{ $order->id }}'">
 
                 {{-- Card Header --}}
                 <div class="px-4 sm:px-6 py-3.5 sm:py-4 bg-gray-50/60 border-b border-gray-100 flex flex-wrap items-center justify-between gap-2">
@@ -162,11 +164,12 @@
                 </div>
 
                 {{-- Product Items --}}
-                <div class="px-4 sm:px-6 py-4 space-y-3.5 cursor-pointer" @click="selectedOrder = {{ json_encode($orderData) }}; detailsModal = true;">
+                <div class="px-4 sm:px-6 py-4 space-y-3.5">
                     @foreach($order->items as $item)
                         <div class="flex items-center gap-3 sm:gap-4">
                             {{-- Thumbnail --}}
-                            <div class="w-14 h-16 sm:w-16 sm:h-20 bg-gray-50 rounded-xl overflow-hidden border border-gray-100 shrink-0">
+                            <div class="w-14 h-16 sm:w-16 sm:h-20 bg-gray-50 rounded-xl overflow-hidden border border-gray-100 shrink-0"
+                                 onclick="event.stopPropagation(); window.location.href='/products/{{ $item->productId }}';">
                                 @php
                                     $imgSrc = $item->product ? $item->product->getImageUrl() : asset('uploads/products/default.jpg');
                                 @endphp
@@ -177,7 +180,14 @@
 
                             {{-- Title & Meta --}}
                             <div class="flex-1 min-w-0 space-y-1">
-                                <h4 class="text-xs sm:text-base font-bold text-black truncate group-hover:text-[#C0420A] transition-colors">{{ $item->product->name ?? 'Heritage Product' }}</h4>
+                                <h4 class="text-xs sm:text-base font-bold text-black truncate">
+                                    <a href="/products/{{ $item->productId }}"
+                                       onclick="event.stopPropagation();"
+                                       @click.stop
+                                       class="hover:text-[#C0420A] transition-colors">
+                                        {{ $item->product->name ?? 'Heritage Product' }}
+                                    </a>
+                                </h4>
                                 <div class="flex flex-wrap items-center gap-2 text-[9px] sm:text-[10px] font-bold text-gray-400 uppercase tracking-widest">
                                     @if($item->size)<span class="px-2 py-0.5 bg-gray-100 rounded-md text-gray-600">Size: {{ $item->size }}</span>@endif
                                     <span>Qty: {{ $item->quantity }}</span>
@@ -219,7 +229,7 @@
 
                         <div class="flex items-center gap-2">
                             @if($canDeliver)
-                                <form action="{{ route('orders.confirm', $order->id) }}" method="POST" @click.stop onsubmit="return confirm('Confirm that you have received your order?');">
+                                <form action="{{ route('orders.confirm', $order->id) }}" method="POST" onclick="event.stopPropagation();" @click.stop onsubmit="return confirm('Confirm that you have received your order?');">
                                     @csrf
                                     @method('PATCH')
                                     <button type="submit"
@@ -231,12 +241,13 @@
                             @elseif($isDeliveredOrCompleted)
                                 @if($unreviewedItem)
                                     <button type="button"
-                                            @click.stop="reviewModal = true; reviewProductId = '{{ $unreviewedItem->productId }}'; reviewOrderId = '{{ $order->id }}'; reviewOrderItemId = '{{ $unreviewedItem->id }}'; reviewProductName = '{{ addslashes($unreviewedItem->product->name ?? 'Product') }}'"
+                                            onclick="event.stopPropagation();"
+                                            @click.stop="reviewModal = true; reviewProductId = '{{ $unreviewedItem->productId }}'; reviewOrderId = '{{ $order->id }}'; reviewOrderItemId = '{{ $unreviewedItem->id }}'; reviewProductName = '{{ addslashes($unreviewedItem->product->name ?? 'Product') }}'; reviewProductImage = '{{ $unreviewedItem->product ? $unreviewedItem->product->getImageUrl() : asset('uploads/products/default.jpg') }}'"
                                             class="px-5 sm:px-6 py-2.5 rounded-full bg-black hover:bg-[#C0420A] text-white text-[9px] sm:text-[10px] font-black uppercase tracking-widest transition-all whitespace-nowrap shadow-sm active:scale-95 flex items-center gap-1.5 cursor-pointer">
                                         <span>⭐ Rate Product</span>
                                     </button>
                                 @else
-                                    <span class="inline-flex items-center gap-1 px-4 py-2 bg-emerald-50 text-emerald-800 border border-emerald-200 rounded-full text-[9px] sm:text-[10px] font-black uppercase tracking-wider">
+                                    <span onclick="event.stopPropagation();" class="inline-flex items-center gap-1 px-4 py-2 bg-emerald-50 text-emerald-800 border border-emerald-200 rounded-full text-[9px] sm:text-[10px] font-black uppercase tracking-wider">
                                         ★ {{ $firstReview ? $firstReview->rating . '/5 ' : '' }}Reviewed
                                     </span>
                                 @endif
@@ -502,9 +513,14 @@
     {{-- Leave Review Modal --}}
     <div x-show="reviewModal" class="fixed inset-0 z-9999 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm" x-cloak style="display: none;">
         <div @click.away="reviewModal = false" class="bg-white rounded-3xl shadow-2xl w-full max-w-md p-6 sm:p-8 space-y-5">
-            <div>
-                <div class="text-[9px] font-black uppercase tracking-widest text-[#C0420A]">Leave a Review</div>
-                <h3 class="font-serif text-lg font-bold text-black mt-0.5" x-text="reviewProductName"></h3>
+            <div class="flex items-center gap-3.5 pb-3 border-b border-gray-100">
+                <div class="w-14 h-16 bg-gray-50 rounded-xl overflow-hidden border border-gray-100 shrink-0">
+                    <img :src="reviewProductImage || '/uploads/products/default.jpg'" class="w-full h-full object-cover object-top" onerror="this.src='/uploads/products/default.jpg'" :alt="reviewProductName">
+                </div>
+                <div class="min-w-0 flex-1">
+                    <div class="text-[9px] font-black uppercase tracking-widest text-[#C0420A]">Leave a Review</div>
+                    <h3 class="font-serif text-base font-bold text-black truncate mt-0.5" x-text="reviewProductName"></h3>
+                </div>
             </div>
             <form action="/api/reviews" method="POST" enctype="multipart/form-data" class="space-y-4" x-data="{ rating: 0, hover: 0, photoFiles: [], videoFile: null }" @submit="if (rating === 0) { $event.preventDefault(); alert('Please select a rating of at least 1 star before submitting.'); }">
                 @csrf

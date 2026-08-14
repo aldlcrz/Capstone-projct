@@ -1,7 +1,7 @@
 @extends('layouts.app')
 
 @section('content')
-<div class="max-w-6xl mx-auto px-3 sm:px-6 lg:px-8 py-6 sm:py-10 space-y-6 sm:space-y-8" x-data="{ confirmModal: false, reviewModal: false, reviewProductId: null, reviewProductName: '', reviewOrderItemId: null, copiedToast: false, packingModal: false, packingModalUrl: '' }">
+<div class="max-w-6xl mx-auto px-3 sm:px-6 lg:px-8 py-6 sm:py-10 space-y-6 sm:space-y-8" x-data="{ confirmModal: false, reviewModal: false, reviewProductId: null, reviewProductName: '', reviewOrderItemId: null, reviewProductImage: '', copiedToast: false, packingModal: false, packingModalUrl: '' }">
 
     {{-- Toast for clipboard copy feedback --}}
     <div x-show="copiedToast" x-transition class="fixed top-6 right-6 z-999 bg-black text-white text-xs font-bold px-4 py-2.5 rounded-2xl shadow-xl flex items-center gap-2" style="display: none;">
@@ -281,10 +281,22 @@
                                             @if($existingReview->comment)
                                                 <p class="text-[11px] text-gray-700 italic leading-relaxed">"{{ $existingReview->comment }}"</p>
                                             @endif
+                                            @php
+                                                $revImages = is_string($existingReview->images) ? json_decode($existingReview->images, true) : $existingReview->images;
+                                            @endphp
+                                            @if(!empty($revImages) && is_array($revImages))
+                                                <div class="flex flex-wrap gap-1.5 pt-1">
+                                                    @foreach($revImages as $rImg)
+                                                        @if($rImg)
+                                                            <img src="{{ str_starts_with($rImg, 'http') ? $rImg : asset(ltrim($rImg, '/')) }}" class="w-10 h-10 rounded-lg object-cover border border-emerald-200" onerror="this.style.display='none'">
+                                                        @endif
+                                                    @endforeach
+                                                </div>
+                                            @endif
                                         </div>
                                     @else
                                         <button type="button"
-                                            @click="reviewModal = true; reviewProductId = '{{ $item->productId }}'; reviewOrderItemId = '{{ $item->id }}'; reviewProductName = '{{ addslashes($item->product->name ?? 'Product') }}'"
+                                            @click="reviewModal = true; reviewProductId = '{{ $item->productId }}'; reviewOrderItemId = '{{ $item->id }}'; reviewProductName = '{{ addslashes($item->product->name ?? 'Product') }}'; reviewProductImage = '{{ $item->product ? $item->product->getImageUrl() : asset('uploads/products/default.jpg') }}'"
                                             class="mt-2.5 inline-flex items-center gap-1.5 px-3.5 py-1.5 bg-black hover:bg-[#C0420A] text-white rounded-full text-[10px] font-black uppercase tracking-widest transition-all shadow-xs active:scale-95 cursor-pointer">
                                             <span>⭐ Rate Product</span>
                                         </button>
@@ -528,9 +540,14 @@
     {{-- Leave Review Modal --}}
     <div x-show="reviewModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm" x-cloak style="display: none;">
         <div @click.away="reviewModal = false" class="bg-white rounded-3xl shadow-2xl w-full max-w-md p-6 sm:p-8 space-y-5">
-            <div>
-                <div class="text-[9px] font-black uppercase tracking-widest text-[#C0420A]">Leave a Review</div>
-                <h3 class="font-serif text-lg font-bold text-black mt-0.5" x-text="reviewProductName"></h3>
+            <div class="flex items-center gap-3.5 pb-3 border-b border-gray-100">
+                <div class="w-14 h-16 bg-gray-50 rounded-xl overflow-hidden border border-gray-100 shrink-0">
+                    <img :src="reviewProductImage || '/uploads/products/default.jpg'" class="w-full h-full object-cover object-top" onerror="this.src='/uploads/products/default.jpg'" :alt="reviewProductName">
+                </div>
+                <div class="min-w-0 flex-1">
+                    <div class="text-[9px] font-black uppercase tracking-widest text-[#C0420A]">Leave a Review</div>
+                    <h3 class="font-serif text-base font-bold text-black truncate mt-0.5" x-text="reviewProductName"></h3>
+                </div>
             </div>
             <form action="/api/reviews" method="POST" enctype="multipart/form-data" class="space-y-4" x-data="{ rating: 0, hover: 0, photoFiles: [], videoFile: null }" @submit="if (rating === 0) { $event.preventDefault(); alert('Please select a rating of at least 1 star before submitting.'); }">
                 @csrf
