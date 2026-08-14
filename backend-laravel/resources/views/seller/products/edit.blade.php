@@ -190,12 +190,12 @@
                         </select>
                     </div>
 
-                    <div class="space-y-1.5">
-                        <label class="text-[10px] font-bold uppercase tracking-widest text-gray-400">Who is this for?</label>
+                    <div id="target-group-container" class="space-y-1.5 p-1 rounded-xl transition-all">
+                        <label class="text-[10px] font-bold uppercase tracking-widest text-gray-400">Who is this for? <span class="text-[#C0420A]">*</span></label>
                         <div class="flex gap-2">
                             @foreach(['Men', 'Women', 'Kids'] as $group)
                                 <label class="flex-1 cursor-pointer">
-                                    <input type="radio" name="target_group" value="{{ $group }}" class="hidden peer"
+                                    <input type="radio" name="target_group" value="{{ $group }}" class="hidden peer target-group-radio"
                                         {{ old('target_group', $product->target_group) == $group ? 'checked' : '' }}>
                                     <div class="w-full py-2 rounded-xl border border-gray-200 bg-gray-50/50 text-xs font-bold text-gray-500 text-center uppercase tracking-wider peer-checked:border-[#C0420A] peer-checked:bg-[#C0420A]/5 peer-checked:text-[#C0420A] transition-all">
                                         {{ $group }}
@@ -844,14 +844,21 @@ function validateProductForm(e, isEdit = true) {
         errors.push('Total product stock must be greater than 0.');
     }
 
-    // 4. Product Category
+    // 4. Product Category & Target Group
     const categorySelect = document.getElementById('categorySelect');
     if (!categorySelect || !categorySelect.value) {
         errors.push('Please select a Product Category.');
         if (categorySelect) categorySelect.classList.add('border-red-500');
     }
 
-    // 5. Lumban Special Discount
+    const targetGroupChecked = document.querySelector('input[name="target_group"]:checked');
+    const targetGroupContainer = document.getElementById('target-group-container');
+    if (!targetGroupChecked) {
+        errors.push('Please specify who this product is for (Men, Women, or Kids).');
+        if (targetGroupContainer) targetGroupContainer.classList.add('border-red-500', 'border');
+    }
+
+    // 5. Lumban Special Discount (Optional)
     const isOnSale = document.getElementById('discountToggle')?.checked;
     if (isOnSale) {
         const pctInput = document.getElementById('discountPercentage');
@@ -906,6 +913,15 @@ document.addEventListener('DOMContentLoaded', function() {
         priceInput.addEventListener('input', updateDiscountPreview);
     }
     updateDiscountPreview();
+
+    document.querySelectorAll('.target-group-radio').forEach(radio => {
+        radio.addEventListener('change', function() {
+            const container = document.getElementById('target-group-container');
+            if (container) {
+                container.classList.remove('border-red-500', 'border');
+            }
+        });
+    });
 });
 </script>
 @endsection

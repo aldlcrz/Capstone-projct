@@ -825,12 +825,21 @@ function validateProductForm(e, isEdit = false) {
     return true;
 }
 
-// Also update preview when price changes
+// Also update preview when price changes & clear radio validation errors
 document.addEventListener('DOMContentLoaded', function() {
     const priceInput = document.querySelector('input[name="price"]');
     if (priceInput) {
         priceInput.addEventListener('input', updateDiscountPreview);
     }
+
+    document.querySelectorAll('.target-group-radio').forEach(radio => {
+        radio.addEventListener('change', function() {
+            const container = document.getElementById('target-group-container');
+            if (container) {
+                container.classList.remove('border-red-500', 'border');
+            }
+        });
+    });
 });
 </script>
 @endsection
