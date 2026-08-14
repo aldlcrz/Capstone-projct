@@ -816,74 +816,81 @@
 
             {{-- Shopee/Lazada Style All Reviews Modal with Filter Tabs & Pagination --}}
             <div x-show="reviewsModal" class="fixed inset-0 z-9999 flex items-center justify-center p-3 sm:p-6 bg-black/60 backdrop-blur-sm" x-cloak style="display: none;">
-                <div @click.away="reviewsModal = false" class="bg-white rounded-3xl shadow-2xl w-full max-w-3xl max-h-[90vh] flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+                <div @click.away="reviewsModal = false" class="bg-white rounded-3xl shadow-2xl w-full max-w-2xl max-h-[85vh] flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-200 border border-gray-100">
                     
                     {{-- Modal Header --}}
-                    <div class="px-6 py-5 border-b border-gray-100 flex items-center justify-between bg-white shrink-0">
+                    <div class="px-5 sm:px-6 py-4 sm:py-5 border-b border-gray-100 flex items-center justify-between bg-white shrink-0">
                         <div class="flex items-center gap-3">
-                            <div class="w-10 h-10 rounded-2xl bg-amber-50 border border-amber-100 flex items-center justify-center text-amber-500 font-black text-base shadow-xs shrink-0">
+                            <div class="w-10 h-10 rounded-2xl bg-amber-50 border border-amber-100 flex items-center justify-center text-amber-500 font-black text-sm shadow-xs shrink-0">
                                 ★
                             </div>
                             <div>
-                                <h3 class="font-serif text-lg sm:text-xl font-bold text-black">Customer Reviews</h3>
-                                <p class="text-xs text-gray-500 font-medium">
-                                    <span class="font-bold text-amber-500">★ {{ number_format($product->avgRating, 1) }}</span> out of 5 • <span class="font-bold text-black" x-text="allReviews.length + ' Total Reviews'"></span>
+                                <h3 class="font-serif text-base sm:text-lg font-bold text-gray-900">Customer Reviews</h3>
+                                <p class="text-xs text-gray-500 font-medium mt-0.5">
+                                    <span class="font-bold text-amber-500">★ {{ number_format($product->avgRating, 1) }}</span> out of 5 • <span class="font-semibold text-gray-700" x-text="allReviews.length + ' Total ' + (allReviews.length === 1 ? 'Review' : 'Reviews')"></span>
                                 </p>
                             </div>
                         </div>
-                        <button type="button" @click="reviewsModal = false" class="w-8 h-8 rounded-full border border-gray-200 flex items-center justify-center text-gray-400 hover:text-black hover:border-black transition-all cursor-pointer">
+                        <button type="button" @click="reviewsModal = false" class="w-8 h-8 rounded-full border border-gray-200 bg-gray-50 hover:bg-gray-100 flex items-center justify-center text-gray-400 hover:text-gray-900 transition-all cursor-pointer">
                             ✕
                         </button>
                     </div>
 
                     {{-- Shopee/Lazada Style Filter Tabs --}}
-                    <div class="px-6 py-3.5 bg-gray-50/80 border-b border-gray-100 flex items-center gap-2 overflow-x-auto no-scrollbar shrink-0">
+                    <div class="px-5 sm:px-6 py-3 bg-gray-50/70 border-b border-gray-100 flex items-center gap-2 overflow-x-auto no-scrollbar shrink-0">
                         <button type="button" 
                             @click="setFilter('all')"
-                            :class="activeFilter === 'all' ? 'bg-[#C0420A] text-white shadow-xs' : 'bg-white text-gray-700 border border-gray-200 hover:border-gray-300'"
-                            class="px-4 py-2 rounded-xl text-xs font-black uppercase tracking-wider transition-all whitespace-nowrap cursor-pointer">
-                            All (<span x-text="countFilter('all')"></span>)
+                            :class="activeFilter === 'all' ? 'bg-[#C0420A] text-white shadow-xs font-bold' : 'bg-white text-gray-700 border border-gray-200 hover:border-gray-300 hover:bg-gray-50 font-medium'"
+                            class="px-3.5 py-1.5 rounded-full text-xs transition-all whitespace-nowrap cursor-pointer flex items-center gap-1">
+                            <span>All</span>
+                            <span class="opacity-80" x-text="'(' + countFilter('all') + ')'"></span>
                         </button>
                         <button type="button" 
                             @click="setFilter('5')"
-                            :class="activeFilter === '5' ? 'bg-[#C0420A] text-white shadow-xs' : 'bg-white text-gray-700 border border-gray-200 hover:border-gray-300'"
-                            class="px-4 py-2 rounded-xl text-xs font-black uppercase tracking-wider transition-all whitespace-nowrap cursor-pointer flex items-center gap-1">
-                            <span>5 Star</span> (<span x-text="countFilter('5')"></span>)
+                            :class="activeFilter === '5' ? 'bg-[#C0420A] text-white shadow-xs font-bold' : 'bg-white text-gray-700 border border-gray-200 hover:border-gray-300 hover:bg-gray-50 font-medium'"
+                            class="px-3.5 py-1.5 rounded-full text-xs transition-all whitespace-nowrap cursor-pointer flex items-center gap-1">
+                            <span>5 Star</span>
+                            <span class="opacity-80" x-text="'(' + countFilter('5') + ')'"></span>
                         </button>
                         <button type="button" 
                             @click="setFilter('4')"
-                            :class="activeFilter === '4' ? 'bg-[#C0420A] text-white shadow-xs' : 'bg-white text-gray-700 border border-gray-200 hover:border-gray-300'"
-                            class="px-4 py-2 rounded-xl text-xs font-black uppercase tracking-wider transition-all whitespace-nowrap cursor-pointer flex items-center gap-1">
-                            <span>4 Star</span> (<span x-text="countFilter('4')"></span>)
+                            :class="activeFilter === '4' ? 'bg-[#C0420A] text-white shadow-xs font-bold' : 'bg-white text-gray-700 border border-gray-200 hover:border-gray-300 hover:bg-gray-50 font-medium'"
+                            class="px-3.5 py-1.5 rounded-full text-xs transition-all whitespace-nowrap cursor-pointer flex items-center gap-1">
+                            <span>4 Star</span>
+                            <span class="opacity-80" x-text="'(' + countFilter('4') + ')'"></span>
                         </button>
                         <button type="button" 
                             @click="setFilter('3')"
-                            :class="activeFilter === '3' ? 'bg-[#C0420A] text-white shadow-xs' : 'bg-white text-gray-700 border border-gray-200 hover:border-gray-300'"
-                            class="px-4 py-2 rounded-xl text-xs font-black uppercase tracking-wider transition-all whitespace-nowrap cursor-pointer flex items-center gap-1">
-                            <span>3 Star</span> (<span x-text="countFilter('3')"></span>)
+                            :class="activeFilter === '3' ? 'bg-[#C0420A] text-white shadow-xs font-bold' : 'bg-white text-gray-700 border border-gray-200 hover:border-gray-300 hover:bg-gray-50 font-medium'"
+                            class="px-3.5 py-1.5 rounded-full text-xs transition-all whitespace-nowrap cursor-pointer flex items-center gap-1">
+                            <span>3 Star</span>
+                            <span class="opacity-80" x-text="'(' + countFilter('3') + ')'"></span>
                         </button>
                         <button type="button" 
                             @click="setFilter('2')"
-                            :class="activeFilter === '2' ? 'bg-[#C0420A] text-white shadow-xs' : 'bg-white text-gray-700 border border-gray-200 hover:border-gray-300'"
-                            class="px-4 py-2 rounded-xl text-xs font-black uppercase tracking-wider transition-all whitespace-nowrap cursor-pointer flex items-center gap-1">
-                            <span>2 Star</span> (<span x-text="countFilter('2')"></span>)
+                            :class="activeFilter === '2' ? 'bg-[#C0420A] text-white shadow-xs font-bold' : 'bg-white text-gray-700 border border-gray-200 hover:border-gray-300 hover:bg-gray-50 font-medium'"
+                            class="px-3.5 py-1.5 rounded-full text-xs transition-all whitespace-nowrap cursor-pointer flex items-center gap-1">
+                            <span>2 Star</span>
+                            <span class="opacity-80" x-text="'(' + countFilter('2') + ')'"></span>
                         </button>
                         <button type="button" 
                             @click="setFilter('1')"
-                            :class="activeFilter === '1' ? 'bg-[#C0420A] text-white shadow-xs' : 'bg-white text-gray-700 border border-gray-200 hover:border-gray-300'"
-                            class="px-4 py-2 rounded-xl text-xs font-black uppercase tracking-wider transition-all whitespace-nowrap cursor-pointer flex items-center gap-1">
-                            <span>1 Star</span> (<span x-text="countFilter('1')"></span>)
+                            :class="activeFilter === '1' ? 'bg-[#C0420A] text-white shadow-xs font-bold' : 'bg-white text-gray-700 border border-gray-200 hover:border-gray-300 hover:bg-gray-50 font-medium'"
+                            class="px-3.5 py-1.5 rounded-full text-xs transition-all whitespace-nowrap cursor-pointer flex items-center gap-1">
+                            <span>1 Star</span>
+                            <span class="opacity-80" x-text="'(' + countFilter('1') + ')'"></span>
                         </button>
                         <button type="button" 
                             @click="setFilter('media')"
-                            :class="activeFilter === 'media' ? 'bg-[#C0420A] text-white shadow-xs' : 'bg-white text-gray-700 border border-gray-200 hover:border-gray-300'"
-                            class="px-4 py-2 rounded-xl text-xs font-black uppercase tracking-wider transition-all whitespace-nowrap cursor-pointer flex items-center gap-1">
-                            <span>📷 With Photos</span> (<span x-text="countFilter('media')"></span>)
+                            :class="activeFilter === 'media' ? 'bg-[#C0420A] text-white shadow-xs font-bold' : 'bg-white text-gray-700 border border-gray-200 hover:border-gray-300 hover:bg-gray-50 font-medium'"
+                            class="px-3.5 py-1.5 rounded-full text-xs transition-all whitespace-nowrap cursor-pointer flex items-center gap-1">
+                            <span>📷 With Photos</span>
+                            <span class="opacity-80" x-text="'(' + countFilter('media') + ')'"></span>
                         </button>
                     </div>
 
                     {{-- Reviews Content (Scrollable) --}}
-                    <div class="flex-1 overflow-y-auto p-6 space-y-4">
+                    <div class="flex-1 overflow-y-auto p-4 sm:p-6 space-y-3.5 bg-gray-50/40">
                         <template x-if="filteredReviews.length === 0">
                             <div class="text-center py-12 text-gray-400 space-y-2">
                                 <div class="text-3xl">💬</div>
@@ -892,10 +899,10 @@
                         </template>
 
                         <template x-for="review in paginatedReviews" :key="review.id">
-                            <div class="bg-gray-50/50 border border-gray-100 rounded-2xl p-5 space-y-3">
+                            <div class="bg-white border border-gray-100 rounded-2xl p-4 sm:p-5 space-y-2.5 shadow-xs hover:border-gray-200 transition-all">
                                 <div class="flex items-center justify-between flex-wrap gap-2">
                                     <div class="flex items-center gap-3">
-                                        <div class="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center font-black text-gray-600 text-sm overflow-hidden shrink-0">
+                                        <div class="w-10 h-10 rounded-full bg-gray-100 border border-gray-200/60 flex items-center justify-center font-bold text-gray-700 text-sm overflow-hidden shrink-0 shadow-xs">
                                             <template x-if="review.customerPhoto">
                                                 <img :src="review.customerPhoto" class="w-full h-full object-cover">
                                             </template>
@@ -905,33 +912,33 @@
                                         </div>
                                         <div>
                                             <div class="flex items-center gap-2 flex-wrap">
-                                                <span class="text-xs font-bold text-black" x-text="review.customerName"></span>
+                                                <span class="text-xs sm:text-sm font-bold text-gray-900" x-text="review.customerName"></span>
                                                 <div class="flex items-center gap-0.5 text-amber-400 text-xs">
                                                     <template x-for="s in 5" :key="s">
                                                         <span x-text="s <= review.rating ? '★' : '☆'"></span>
                                                     </template>
                                                 </div>
                                             </div>
-                                            <div class="text-[9px] text-gray-400 font-bold uppercase tracking-widest mt-0.5" x-text="review.date"></div>
+                                            <div class="text-[10px] text-gray-400 font-semibold uppercase tracking-wider mt-0.5" x-text="review.date"></div>
                                         </div>
                                     </div>
 
                                     <template x-if="review.verified">
-                                        <span class="px-3 py-1 bg-emerald-50 text-emerald-700 border border-emerald-100 rounded-full text-[8px] sm:text-[9px] font-black uppercase tracking-widest flex items-center gap-1">
+                                        <span class="px-2.5 py-0.5 bg-emerald-50 text-emerald-700 border border-emerald-100/80 rounded-full text-[9px] font-black uppercase tracking-wider flex items-center gap-1">
                                             ✓ Verified Purchase
                                         </span>
                                     </template>
                                 </div>
 
                                 <template x-if="review.comment">
-                                    <p class="text-xs text-gray-700 leading-relaxed italic" x-text="'“' + review.comment + '”'"></p>
+                                    <p class="text-xs sm:text-sm text-gray-800 leading-relaxed italic" x-text="'“' + review.comment + '”'"></p>
                                 </template>
 
                                 {{-- Review Photos in Modal --}}
                                 <template x-if="review.images && review.images.length > 0">
                                     <div class="flex flex-wrap gap-2 pt-1">
                                         <template x-for="(img, idx) in review.images" :key="idx">
-                                            <a :href="img" target="_blank" class="w-14 h-14 rounded-xl overflow-hidden border border-gray-200 bg-white shrink-0 hover:opacity-90 transition-opacity">
+                                            <a :href="img" target="_blank" class="w-16 h-16 sm:w-20 sm:h-20 rounded-xl overflow-hidden border border-gray-200 bg-gray-50 shrink-0 hover:scale-105 transition-all shadow-xs block">
                                                 <img :src="img" class="w-full h-full object-cover" alt="Review Photo">
                                             </a>
                                         </template>
@@ -942,9 +949,9 @@
                     </div>
 
                     {{-- Modal Pagination Footer (Shopee / Lazada Style) --}}
-                    <div class="px-6 py-4 bg-gray-50 border-t border-gray-100 flex items-center justify-between flex-wrap gap-3 shrink-0">
+                    <div class="px-5 sm:px-6 py-3.5 bg-white border-t border-gray-100 flex items-center justify-between flex-wrap gap-3 shrink-0">
                         <div class="text-xs text-gray-500 font-medium">
-                            Showing page <span class="font-bold text-black" x-text="currentPage"></span> of <span class="font-bold text-black" x-text="totalPages"></span> (<span x-text="filteredReviews.length"></span> reviews)
+                            Showing page <span class="font-bold text-gray-900" x-text="currentPage"></span> of <span class="font-bold text-gray-900" x-text="totalPages"></span> (<span x-text="filteredReviews.length"></span> reviews)
                         </div>
 
                         <div class="flex items-center gap-1.5" x-show="totalPages > 1">
@@ -975,7 +982,7 @@
                         </div>
 
                         <button type="button" @click="reviewsModal = false"
-                            class="py-2 px-5 bg-black text-white text-[10px] font-black uppercase tracking-widest rounded-full hover:bg-[#C0420A] transition-all cursor-pointer">
+                            class="py-2 px-5 bg-black text-white text-[10px] font-black uppercase tracking-widest rounded-full hover:bg-[#C0420A] transition-all shadow-xs active:scale-95 cursor-pointer">
                             Close
                         </button>
                     </div>
