@@ -742,15 +742,16 @@ function printSellerOrder(order) {
             {{-- Modal Footer Actions --}}
             <div class="p-4 sm:p-5 bg-gray-50 border-t border-gray-100 flex gap-3 shrink-0">
                 <button @click="detailsModal = false"
-                    class="flex-1 py-2.5 sm:py-3 rounded-full border border-gray-200 bg-white text-[10px] font-black uppercase tracking-widest text-gray-600 hover:bg-gray-100 transition-all">
+                    class="flex-1 py-2.5 sm:py-3 rounded-full border border-gray-300 bg-white text-[10px] font-black uppercase tracking-widest text-gray-800 hover:bg-gray-100 transition-all cursor-pointer">
                     Close
                 </button>
 
                 {{-- Accept Order button: only shown when Pending --}}
                 <template x-if="detailsOrder && normalizeStatus(detailsOrder.status) === 'pending'">
                     <button @click="updateStatus(detailsOrder, 'To Ship')"
-                        class="flex-1 py-2.5 sm:py-3 bg-emerald-600 hover:bg-emerald-700 text-white text-[10px] font-black uppercase tracking-widest rounded-full transition-all flex items-center justify-center gap-2 shadow-sm">
-                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
+                        style="background-color: #059669; color: #ffffff;"
+                        class="flex-1 py-2.5 sm:py-3 bg-emerald-600 hover:bg-emerald-700 text-white text-[10px] font-black uppercase tracking-widest rounded-full transition-all flex items-center justify-center gap-2 shadow-sm cursor-pointer">
+                        <svg class="w-3.5 h-3.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
                         <span>Proceed Order (To Ship)</span>
                     </button>
                 </template>
@@ -760,14 +761,15 @@ function printSellerOrder(order) {
                     <button type="button"
                         @click="if (!packingUploadSuccess && !detailsOrder.packingProof) { if (packingPhotoFile) { uploadPackingProof().then(() => updateStatus(detailsOrder, 'Shipped')); } else { openCameraModal(); } } else { updateStatus(detailsOrder, 'Shipped'); }"
                         :disabled="packingUploading"
-                        class="flex-1 py-2.5 sm:py-3 bg-indigo-600 hover:bg-indigo-700 text-white text-[10px] font-black uppercase tracking-widest rounded-full transition-all flex items-center justify-center gap-2 shadow-sm">
+                        :style="(packingUploadSuccess || detailsOrder.packingProof) ? 'background-color: #C0420A; color: #ffffff;' : 'background-color: #000000; color: #ffffff;'"
+                        class="flex-1 py-2.5 sm:py-3 bg-black hover:bg-[#C0420A] text-white text-[10px] font-black uppercase tracking-widest rounded-full transition-all flex items-center justify-center gap-2 shadow-md cursor-pointer">
                         <template x-if="packingUploading">
-                            <svg class="w-3.5 h-3.5 animate-spin" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"/></svg>
+                            <svg class="w-3.5 h-3.5 animate-spin text-white" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"/></svg>
                         </template>
                         <template x-if="!packingUploading">
-                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+                            <svg class="w-3.5 h-3.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
                         </template>
-                        <span x-text="packingUploading ? 'Uploading...' : ((packingUploadSuccess || detailsOrder.packingProof) ? 'Confirm Shipment (Mark Shipped) ➔' : (packingPhotoFile ? 'Upload Proof & Mark Shipped ➔' : 'Upload Packing Proof Photo'))"></span>
+                        <span x-text="packingUploading ? 'Uploading...' : ((packingUploadSuccess || detailsOrder.packingProof) ? 'Confirm Shipment (Mark Shipped) ➔' : (packingPhotoFile ? 'Upload Proof & Mark Shipped ➔' : 'Upload Packing Proof Photo ➔'))"></span>
                     </button>
                 </template>
 
@@ -775,8 +777,9 @@ function printSellerOrder(order) {
                 <template x-if="detailsOrder && normalizeStatus(detailsOrder.status) === 'shipped'">
                     <button type="button"
                         @click="if (!trackingNumber || !trackingNumber.trim()) { shippingError = 'Please enter a tracking number before marking this order as In Transit.'; } else { updateStatus(detailsOrder, 'In Transit'); }"
-                        class="flex-1 py-2.5 sm:py-3 bg-purple-600 hover:bg-purple-700 text-white text-[10px] font-black uppercase tracking-widest rounded-full transition-all flex items-center justify-center gap-2 shadow-sm">
-                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+                        style="background-color: #000000; color: #ffffff;"
+                        class="flex-1 py-2.5 sm:py-3 bg-black hover:bg-[#C0420A] text-white text-[10px] font-black uppercase tracking-widest rounded-full transition-all flex items-center justify-center gap-2 shadow-md cursor-pointer">
+                        <svg class="w-3.5 h-3.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
                         <span>Mark In Transit ➔</span>
                     </button>
                 </template>
@@ -785,8 +788,9 @@ function printSellerOrder(order) {
                 <template x-if="detailsOrder && normalizeStatus(detailsOrder.status) === 'in transit'">
                     <button type="button"
                         @click="confirmMarkAsDelivered(detailsOrder)"
-                        class="flex-1 py-2.5 sm:py-3 bg-teal-600 hover:bg-teal-700 text-white text-[10px] font-black uppercase tracking-widest rounded-full transition-all flex items-center justify-center gap-2 shadow-sm">
-                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
+                        style="background-color: #059669; color: #ffffff;"
+                        class="flex-1 py-2.5 sm:py-3 bg-emerald-600 hover:bg-emerald-700 text-white text-[10px] font-black uppercase tracking-widest rounded-full transition-all flex items-center justify-center gap-2 shadow-sm cursor-pointer">
+                        <svg class="w-3.5 h-3.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
                         <span>Mark as Delivered ➔</span>
                     </button>
                 </template>
