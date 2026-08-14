@@ -84,11 +84,18 @@ document.addEventListener('alpine:init', () => {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
+                    'Accept': 'application/json',
                     'X-CSRF-TOKEN': this.csrfToken()
                 },
                 body: JSON.stringify({ message: query })
             })
-            .then(res => res.json())
+            .then(async res => {
+                if (!res.ok) {
+                    const errText = await res.text();
+                    throw new Error(`HTTP ${res.status}: ${errText}`);
+                }
+                return res.json();
+            })
             .then(data => {
                 this.aiMessages.push({
                     role: 'assistant',
@@ -97,7 +104,8 @@ document.addEventListener('alpine:init', () => {
                 });
                 this.scrollAiToBottom();
             })
-            .catch(() => {
+            .catch((err) => {
+                console.error('Smart Assistance request failed:', err);
                 this.aiMessages.push({
                     role: 'assistant',
                     text: 'I apologize, but I encountered a momentary connection glitch. Piña-Seda and Cocoon Barongs remain our top recommendation for formal events!',
