@@ -618,40 +618,102 @@
         </div>
 
         <!-- Reviews Section -->
-        <div class="mt-16 pt-10 border-t border-gray-100">
-            <div class="flex flex-wrap items-center gap-6 mb-8">
+        @php
+            $reviewsList = ($product->reviews ?? collect())->map(function($rev) {
+                $customerName = $rev->customer->name ?? 'customer';
+                $initial = strtoupper(substr($customerName, 0, 1));
+                $photo = $rev->customer && $rev->customer->profilePhoto 
+                    ? (str_starts_with($rev->customer->profilePhoto, 'http') ? $rev->customer->profilePhoto : asset($rev->customer->profilePhoto))
+                    : null;
+                $images = is_string($rev->images) ? json_decode($rev->images, true) : $rev->images;
+                $images = is_array($images) ? array_values(array_filter($images)) : [];
+                $images = array_map(function($img) {
+                    return str_starts_with($img, 'http') ? $img : asset(ltrim($img, '/'));
+                }, $images);
+
+                return [
+                    'id' => $rev->id,
+                    'rating' => (int)$rev->rating,
+                    'comment' => $rev->comment,
+                    'date' => $rev->createdAt ? $rev->createdAt->format('F d, Y') : '',
+                    'customerName' => $customerName,
+                    'initial' => $initial,
+                    'customerPhoto' => $photo,
+                    'images' => $images,
+                    'video' => $rev->video ? (str_starts_with($rev->video, 'http') ? $rev->video : asset(ltrim($rev->video, '/'))) : null,
+                    'verified' => (bool)($rev->orderId || $rev->orderItemId),
+                ];
+            })->values();
+        @endphp
+
+        <div class="mt-16 pt-10 border-t border-gray-100"
+             x-data="{
+                 allReviews: {{ json_encode($reviewsList) }},
+                 reviewsModal: false,
+                 activeFilter: 'all',
+                 currentPage: 1,
+                 perPage: 5,
+                 get filteredReviews() {
+                     if (this.activeFilter === 'all') return this.allReviews;
+                     if (this.activeFilter === 'media') {
+                         return this.allReviews.filter(r => (r.images && r.images.length > 0) || r.video);
+                     }
+                     const star = parseInt(this.activeFilter, 10);
+                     return this.allReviews.filter(r => r.rating === star);
+                 },
+                 get totalPages() {
+                     return Math.max(1, Math.ceil(this.filteredReviews.length / this.perPage));
+                 },
+                 get paginatedReviews() {
+                     const start = (this.currentPage - 1) * this.perPage;
+                     return this.filteredReviews.slice(start, start + this.perPage);
+                 },
+                 setFilter(f) {
+                     this.activeFilter = f;
+                     this.currentPage = 1;
+                 },
+                 countFilter(f) {
+                     if (f === 'all') return this.allReviews.length;
+                     if (f === 'media') return this.allReviews.filter(r => (r.images && r.images.length > 0) || r.video).length;
+                     const star = parseInt(f, 10);
+                     return this.allReviews.filter(r => r.rating === star).length;
+                 }
+             }">
+
+            {{-- Reviews Header --}}
+            <div class="flex flex-wrap items-center justify-between gap-6 mb-8">
                 <div>
-                    <div class="flex items-center gap-2 mb-1">
-                        <div class="w-5 h-[1.5px] bg-[#C0422A]"></div>
-                        <span class="text-[10px] font-bold uppercase tracking-widest text-[#C0422A]">Reviews & Feedback</span>
+                    <div class="flex items-center gap-2 mb-1.5">
+                        <div class="w-5 h-[2px] bg-[#C0422A]"></div>
+                        <span class="text-[10px] font-black uppercase tracking-widest text-[#C0422A]">Reviews & Feedback</span>
                     </div>
-                    <h2 class="font-serif text-2xl font-bold text-black">Customer Reviews</h2>
+                    <h2 class="font-serif text-2xl sm:text-3xl font-bold text-black">Customer Reviews</h2>
                 </div>
                 
-                {{-- Average rating summary badge --}}
+                {{-- Average rating summary badge (matching screenshot) --}}
                 @if(($product->reviewCount ?? 0) > 0)
-                    <div class="flex items-center gap-4 bg-[#FDF9F4] border border-[#F5EAD9] px-5 py-2.5 rounded-2xl">
+                    <div class="flex items-center gap-4 bg-[#FDF9F4] border border-[#F5EAD9] px-5 py-2.5 rounded-2xl shadow-xs">
                         <div class="text-center">
-                            <span class="text-2xl font-extrabold text-[#C0422A]">{{ number_format($product->avgRating, 1) }}</span>
-                            <span class="text-[10px] text-gray-400 font-bold block">out of 5</span>
+                            <span class="text-2xl sm:text-3xl font-extrabold text-[#C0422A] leading-none">{{ number_format($product->avgRating, 1) }}</span>
+                            <span class="text-[9px] text-gray-400 font-bold block mt-0.5">out of 5</span>
                         </div>
                         <div class="w-px h-8 bg-gray-200"></div>
                         <div>
-                            <div class="flex items-center gap-0.5 text-yellow-400">
+                            <div class="flex items-center gap-0.5 text-amber-400 text-sm">
                                 @for($i = 1; $i <= 5; $i++)
-                                    <svg class="w-3.5 h-3.5 fill-current {{ $i <= round($product->avgRating) ? 'text-yellow-400' : 'text-gray-200' }}" viewBox="0 0 20 20">
-                                        <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/>
-                                    </svg>
+                                    <span>{{ $i <= round($product->avgRating) ? '★' : '☆' }}</span>
                                 @endfor
                             </div>
-                            <span class="text-[9px] font-bold text-gray-400 uppercase tracking-widest block mt-0.5">{{ $product->reviewCount }} review{{ ($product->reviewCount ?? 0) != 1 ? 's' : '' }}</span>
+                            <span class="text-[9px] font-black text-gray-400 uppercase tracking-widest block mt-0.5">
+                                {{ $product->reviewCount }} {{ Str::plural('REVIEW', $product->reviewCount) }}
+                            </span>
                         </div>
                     </div>
                 @endif
             </div>
 
             @if($product->reviews && $product->reviews->count() > 0)
-                {{-- Rating Distribution Breakdown --}}
+                {{-- Rating Distribution Breakdown (matching screenshot) --}}
                 @php
                     $totalRevCount = $product->reviews->count();
                     $distribution = [5 => 0, 4 => 0, 3 => 0, 2 => 0, 1 => 0];
@@ -677,41 +739,46 @@
                     @endfor
                 </div>
 
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    @foreach($product->reviews as $review)
-                        <div class="bg-gray-50/50 border border-gray-100 rounded-2xl p-6 space-y-3">
-                            <div class="flex items-center gap-3">
-                                <div class="w-9 h-9 rounded-xl bg-gray-200 flex items-center justify-center font-bold text-gray-600 text-sm overflow-hidden shrink-0">
-                                    @if($review->customer && $review->customer->profilePhoto)
-                                        <img src="{{ str_starts_with($review->customer->profilePhoto, 'http') ? $review->customer->profilePhoto : asset($review->customer->profilePhoto) }}" class="w-full h-full object-cover" onerror="this.style.display='none'">
-                                    @else
-                                        {{ strtoupper(substr($review->customer->name ?? 'A', 0, 1)) }}
-                                    @endif
-                                </div>
-                                <div class="flex-1 min-w-0">
-                                    <div class="flex items-center justify-between flex-wrap gap-2">
+                {{-- Stacked Single-Column Customer Reviews List (matching screenshot) --}}
+                <div class="space-y-4">
+                    @foreach($product->reviews->take(3) as $review)
+                        <div class="bg-[#FDFDFD] sm:bg-gray-50/40 border border-gray-100 rounded-2xl p-5 sm:p-6 space-y-3 shadow-xs">
+                            <div class="flex items-center justify-between flex-wrap gap-2">
+                                <div class="flex items-center gap-3">
+                                    <div class="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center font-black text-gray-600 text-sm overflow-hidden shrink-0">
+                                        @if($review->customer && $review->customer->profilePhoto)
+                                            <img src="{{ str_starts_with($review->customer->profilePhoto, 'http') ? $review->customer->profilePhoto : asset($review->customer->profilePhoto) }}" class="w-full h-full object-cover" onerror="this.style.display='none'">
+                                        @else
+                                            {{ strtoupper(substr($review->customer->name ?? 'C', 0, 1)) }}
+                                        @endif
+                                    </div>
+                                    <div>
                                         <div class="flex items-center gap-2 flex-wrap">
-                                            <span class="text-xs font-bold text-black">{{ $review->customer->name ?? 'Anonymous Customer' }}</span>
-                                            <div class="flex items-center gap-0.5">
+                                            <span class="text-xs font-bold text-black">{{ $review->customer->name ?? 'customer' }}</span>
+                                            <div class="flex items-center gap-0.5 text-amber-400 text-xs">
                                                 @for($i = 1; $i <= 5; $i++)
-                                                    <svg class="w-3.5 h-3.5 fill-current {{ $i <= $review->rating ? 'text-yellow-400' : 'text-gray-200' }}" viewBox="0 0 20 20">
-                                                        <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/>
-                                                    </svg>
+                                                    <span>{{ $i <= $review->rating ? '★' : '☆' }}</span>
                                                 @endfor
                                             </div>
                                         </div>
-                                        @if($review->orderId || $review->orderItemId)
-                                            <span class="px-2 py-0.5 bg-emerald-100 text-emerald-800 rounded-full text-[8px] font-black uppercase tracking-widest">
-                                                ✓ Verified Purchase
-                                            </span>
-                                        @endif
+                                        <div class="text-[9px] text-gray-400 font-bold uppercase tracking-widest mt-0.5">{{ $review->createdAt ? $review->createdAt->format('F d, Y') : '' }}</div>
                                     </div>
-                                    <div class="text-[9px] text-gray-400 font-bold uppercase tracking-widest mt-0.5">{{ $review->createdAt->format('F d, Y') }}</div>
                                 </div>
+
+                                @if($review->orderId || $review->orderItemId)
+                                    <span class="px-3 py-1 bg-emerald-50 text-emerald-700 border border-emerald-100 rounded-full text-[8px] sm:text-[9px] font-black uppercase tracking-widest flex items-center gap-1">
+                                        ✓ Verified Purchase
+                                    </span>
+                                @endif
                             </div>
-                            <p class="text-xs text-gray-600 leading-relaxed italic">
-                                "{{ $review->comment }}"
-                            </p>
+
+                            @if($review->comment)
+                                <p class="text-xs text-gray-700 leading-relaxed italic">
+                                    "{{ $review->comment }}"
+                                </p>
+                            @endif
+
+                            {{-- Review Photos --}}
                             @php
                                 $revImages = is_string($review->images) ? json_decode($review->images, true) : $review->images;
                             @endphp
@@ -719,7 +786,7 @@
                                 <div class="flex flex-wrap gap-2 pt-1">
                                     @foreach($revImages as $rImg)
                                         @if($rImg)
-                                            <div class="w-14 h-14 rounded-xl overflow-hidden border border-gray-200 bg-white shrink-0">
+                                            <div class="w-14 h-14 rounded-xl overflow-hidden border border-gray-200 bg-white shrink-0 shadow-xs">
                                                 <img src="{{ str_starts_with($rImg, 'http') ? $rImg : asset(ltrim($rImg, '/')) }}" class="w-full h-full object-cover" onerror="this.style.display='none'" alt="Review Photo">
                                             </div>
                                         @endif
@@ -729,12 +796,193 @@
                         </div>
                     @endforeach
                 </div>
+
+                {{-- View All Reviews Button (matching screenshot) --}}
+                <div class="mt-6">
+                    <button type="button" 
+                            @click="reviewsModal = true"
+                            class="w-full py-3.5 px-6 border border-[#C0420A] bg-white hover:bg-[#C0420A] text-[#C0420A] hover:text-white rounded-2xl text-xs font-black uppercase tracking-widest transition-all shadow-xs flex items-center justify-center gap-2 cursor-pointer group">
+                        <span>VIEW ALL REVIEWS ({{ $totalRevCount }})</span>
+                        <span class="group-hover:translate-y-0.5 transition-transform text-sm">⌄</span>
+                    </button>
+                </div>
+
             @else
                 <div class="text-center py-12 bg-gray-50/50 rounded-2xl border border-gray-100">
                     <p class="text-xs text-gray-400 font-bold uppercase tracking-widest">No reviews yet for this heritage piece.</p>
                     <p class="text-[10px] text-gray-400 mt-1">Purchased items can be rated once they are received.</p>
                 </div>
             @endif
+
+            {{-- Shopee/Lazada Style All Reviews Modal with Filter Tabs & Pagination --}}
+            <div x-show="reviewsModal" class="fixed inset-0 z-9999 flex items-center justify-center p-3 sm:p-6 bg-black/60 backdrop-blur-sm" x-cloak style="display: none;">
+                <div @click.away="reviewsModal = false" class="bg-white rounded-3xl shadow-2xl w-full max-w-3xl max-h-[90vh] flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+                    
+                    {{-- Modal Header --}}
+                    <div class="px-6 py-5 border-b border-gray-100 flex items-center justify-between bg-white shrink-0">
+                        <div class="flex items-center gap-3">
+                            <div class="w-10 h-10 rounded-2xl bg-amber-50 border border-amber-100 flex items-center justify-center text-amber-500 font-black text-base shadow-xs shrink-0">
+                                ★
+                            </div>
+                            <div>
+                                <h3 class="font-serif text-lg sm:text-xl font-bold text-black">Customer Reviews</h3>
+                                <p class="text-xs text-gray-500 font-medium">
+                                    <span class="font-bold text-amber-500">★ {{ number_format($product->avgRating, 1) }}</span> out of 5 • <span class="font-bold text-black" x-text="allReviews.length + ' Total Reviews'"></span>
+                                </p>
+                            </div>
+                        </div>
+                        <button type="button" @click="reviewsModal = false" class="w-8 h-8 rounded-full border border-gray-200 flex items-center justify-center text-gray-400 hover:text-black hover:border-black transition-all cursor-pointer">
+                            ✕
+                        </button>
+                    </div>
+
+                    {{-- Shopee/Lazada Style Filter Tabs --}}
+                    <div class="px-6 py-3.5 bg-gray-50/80 border-b border-gray-100 flex items-center gap-2 overflow-x-auto no-scrollbar shrink-0">
+                        <button type="button" 
+                            @click="setFilter('all')"
+                            :class="activeFilter === 'all' ? 'bg-[#C0420A] text-white shadow-xs' : 'bg-white text-gray-700 border border-gray-200 hover:border-gray-300'"
+                            class="px-4 py-2 rounded-xl text-xs font-black uppercase tracking-wider transition-all whitespace-nowrap cursor-pointer">
+                            All (<span x-text="countFilter('all')"></span>)
+                        </button>
+                        <button type="button" 
+                            @click="setFilter('5')"
+                            :class="activeFilter === '5' ? 'bg-[#C0420A] text-white shadow-xs' : 'bg-white text-gray-700 border border-gray-200 hover:border-gray-300'"
+                            class="px-4 py-2 rounded-xl text-xs font-black uppercase tracking-wider transition-all whitespace-nowrap cursor-pointer flex items-center gap-1">
+                            <span>5 Star</span> (<span x-text="countFilter('5')"></span>)
+                        </button>
+                        <button type="button" 
+                            @click="setFilter('4')"
+                            :class="activeFilter === '4' ? 'bg-[#C0420A] text-white shadow-xs' : 'bg-white text-gray-700 border border-gray-200 hover:border-gray-300'"
+                            class="px-4 py-2 rounded-xl text-xs font-black uppercase tracking-wider transition-all whitespace-nowrap cursor-pointer flex items-center gap-1">
+                            <span>4 Star</span> (<span x-text="countFilter('4')"></span>)
+                        </button>
+                        <button type="button" 
+                            @click="setFilter('3')"
+                            :class="activeFilter === '3' ? 'bg-[#C0420A] text-white shadow-xs' : 'bg-white text-gray-700 border border-gray-200 hover:border-gray-300'"
+                            class="px-4 py-2 rounded-xl text-xs font-black uppercase tracking-wider transition-all whitespace-nowrap cursor-pointer flex items-center gap-1">
+                            <span>3 Star</span> (<span x-text="countFilter('3')"></span>)
+                        </button>
+                        <button type="button" 
+                            @click="setFilter('2')"
+                            :class="activeFilter === '2' ? 'bg-[#C0420A] text-white shadow-xs' : 'bg-white text-gray-700 border border-gray-200 hover:border-gray-300'"
+                            class="px-4 py-2 rounded-xl text-xs font-black uppercase tracking-wider transition-all whitespace-nowrap cursor-pointer flex items-center gap-1">
+                            <span>2 Star</span> (<span x-text="countFilter('2')"></span>)
+                        </button>
+                        <button type="button" 
+                            @click="setFilter('1')"
+                            :class="activeFilter === '1' ? 'bg-[#C0420A] text-white shadow-xs' : 'bg-white text-gray-700 border border-gray-200 hover:border-gray-300'"
+                            class="px-4 py-2 rounded-xl text-xs font-black uppercase tracking-wider transition-all whitespace-nowrap cursor-pointer flex items-center gap-1">
+                            <span>1 Star</span> (<span x-text="countFilter('1')"></span>)
+                        </button>
+                        <button type="button" 
+                            @click="setFilter('media')"
+                            :class="activeFilter === 'media' ? 'bg-[#C0420A] text-white shadow-xs' : 'bg-white text-gray-700 border border-gray-200 hover:border-gray-300'"
+                            class="px-4 py-2 rounded-xl text-xs font-black uppercase tracking-wider transition-all whitespace-nowrap cursor-pointer flex items-center gap-1">
+                            <span>📷 With Photos</span> (<span x-text="countFilter('media')"></span>)
+                        </button>
+                    </div>
+
+                    {{-- Reviews Content (Scrollable) --}}
+                    <div class="flex-1 overflow-y-auto p-6 space-y-4">
+                        <template x-if="filteredReviews.length === 0">
+                            <div class="text-center py-12 text-gray-400 space-y-2">
+                                <div class="text-3xl">💬</div>
+                                <p class="text-xs font-bold uppercase tracking-widest">No reviews found under this filter.</p>
+                            </div>
+                        </template>
+
+                        <template x-for="review in paginatedReviews" :key="review.id">
+                            <div class="bg-gray-50/50 border border-gray-100 rounded-2xl p-5 space-y-3">
+                                <div class="flex items-center justify-between flex-wrap gap-2">
+                                    <div class="flex items-center gap-3">
+                                        <div class="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center font-black text-gray-600 text-sm overflow-hidden shrink-0">
+                                            <template x-if="review.customerPhoto">
+                                                <img :src="review.customerPhoto" class="w-full h-full object-cover">
+                                            </template>
+                                            <template x-if="!review.customerPhoto">
+                                                <span x-text="review.initial"></span>
+                                            </template>
+                                        </div>
+                                        <div>
+                                            <div class="flex items-center gap-2 flex-wrap">
+                                                <span class="text-xs font-bold text-black" x-text="review.customerName"></span>
+                                                <div class="flex items-center gap-0.5 text-amber-400 text-xs">
+                                                    <template x-for="s in 5" :key="s">
+                                                        <span x-text="s <= review.rating ? '★' : '☆'"></span>
+                                                    </template>
+                                                </div>
+                                            </div>
+                                            <div class="text-[9px] text-gray-400 font-bold uppercase tracking-widest mt-0.5" x-text="review.date"></div>
+                                        </div>
+                                    </div>
+
+                                    <template x-if="review.verified">
+                                        <span class="px-3 py-1 bg-emerald-50 text-emerald-700 border border-emerald-100 rounded-full text-[8px] sm:text-[9px] font-black uppercase tracking-widest flex items-center gap-1">
+                                            ✓ Verified Purchase
+                                        </span>
+                                    </template>
+                                </div>
+
+                                <template x-if="review.comment">
+                                    <p class="text-xs text-gray-700 leading-relaxed italic" x-text="'“' + review.comment + '”'"></p>
+                                </template>
+
+                                {{-- Review Photos in Modal --}}
+                                <template x-if="review.images && review.images.length > 0">
+                                    <div class="flex flex-wrap gap-2 pt-1">
+                                        <template x-for="(img, idx) in review.images" :key="idx">
+                                            <a :href="img" target="_blank" class="w-14 h-14 rounded-xl overflow-hidden border border-gray-200 bg-white shrink-0 hover:opacity-90 transition-opacity">
+                                                <img :src="img" class="w-full h-full object-cover" alt="Review Photo">
+                                            </a>
+                                        </template>
+                                    </div>
+                                </template>
+                            </div>
+                        </template>
+                    </div>
+
+                    {{-- Modal Pagination Footer (Shopee / Lazada Style) --}}
+                    <div class="px-6 py-4 bg-gray-50 border-t border-gray-100 flex items-center justify-between flex-wrap gap-3 shrink-0">
+                        <div class="text-xs text-gray-500 font-medium">
+                            Showing page <span class="font-bold text-black" x-text="currentPage"></span> of <span class="font-bold text-black" x-text="totalPages"></span> (<span x-text="filteredReviews.length"></span> reviews)
+                        </div>
+
+                        <div class="flex items-center gap-1.5" x-show="totalPages > 1">
+                            <button type="button" 
+                                @click="if(currentPage > 1) currentPage--"
+                                :disabled="currentPage === 1"
+                                :class="currentPage === 1 ? 'opacity-40 cursor-not-allowed' : 'hover:bg-gray-200 cursor-pointer'"
+                                class="px-3 py-1.5 rounded-lg border border-gray-200 bg-white text-xs font-bold text-gray-700 transition-all">
+                                ‹ Prev
+                            </button>
+
+                            <template x-for="p in totalPages" :key="p">
+                                <button type="button" 
+                                    @click="currentPage = p"
+                                    :class="currentPage === p ? 'bg-[#C0420A] text-white border-[#C0420A]' : 'bg-white text-gray-700 border-gray-200 hover:bg-gray-100'"
+                                    class="w-8 h-8 rounded-lg border text-xs font-bold transition-all cursor-pointer flex items-center justify-center"
+                                    x-text="p">
+                                </button>
+                            </template>
+
+                            <button type="button" 
+                                @click="if(currentPage < totalPages) currentPage++"
+                                :disabled="currentPage === totalPages"
+                                :class="currentPage === totalPages ? 'opacity-40 cursor-not-allowed' : 'hover:bg-gray-200 cursor-pointer'"
+                                class="px-3 py-1.5 rounded-lg border border-gray-200 bg-white text-xs font-bold text-gray-700 transition-all">
+                                Next ›
+                            </button>
+                        </div>
+
+                        <button type="button" @click="reviewsModal = false"
+                            class="py-2 px-5 bg-black text-white text-[10px] font-black uppercase tracking-widest rounded-full hover:bg-[#C0420A] transition-all cursor-pointer">
+                            Close
+                        </button>
+                    </div>
+
+                </div>
+            </div>
+
         </div>
 
     </div>
