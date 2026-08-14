@@ -31,7 +31,7 @@
                 <div class="relative z-10 flex gap-4 items-center">
                     <div class="w-18 h-18 rounded-full border border-white/20 bg-stone-100 overflow-hidden shrink-0 flex items-center justify-center font-serif text-3xl text-stone-400">
                         <template x-if="seller && seller.profilePhoto">
-                            <img :src="seller.profilePhoto ? (seller.profilePhoto.startsWith('http') ? seller.profilePhoto : (seller.profilePhoto.startsWith('/storage/') ? seller.profilePhoto : '/storage/' + seller.profilePhoto)) : '/uploads/products/default.jpg'" class="w-full h-full object-cover" x-on:error="$event.target.src='/uploads/products/default.jpg'" />
+                            <img :src="getProductImage(seller.profilePhoto)" class="w-full h-full object-cover" x-on:error="$event.target.src='/uploads/products/default.jpg'" />
                         </template>
                         <template x-if="!seller || !seller.profilePhoto">
                             <span x-text="seller?.shopName?.[0] || 'A'"></span>
@@ -206,9 +206,10 @@ function shopClient(config) {
         async fetchData() {
             this.loading = true;
             try {
+                const ts = Date.now();
                 const [sRes, pRes] = await Promise.all([
-                    fetch(`/api/v1/user/seller/${this.sellerId}`),
-                    fetch(`/api/v1/products?seller=${this.sellerId}`)
+                    fetch(`/api/v1/user/seller/${this.sellerId}?t=${ts}`, { cache: 'no-store' }),
+                    fetch(`/api/v1/products?seller=${this.sellerId}&t=${ts}`, { cache: 'no-store' })
                 ]);
                 if (sRes.ok) this.seller = await sRes.json();
                 if (pRes.ok) this.products = await pRes.json();

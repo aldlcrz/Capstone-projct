@@ -129,10 +129,20 @@ document.addEventListener('alpine:init', () => {
             });
         },
 
-        formatTime(dateStr) {
+        formatDateTime(dateStr) {
             if (!dateStr) return '';
             try {
-                return new Date(dateStr).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                const d = new Date(dateStr);
+                if (isNaN(d.getTime())) return '';
+                const now = new Date();
+                const isToday = d.toDateString() === now.toDateString();
+                const timeStr = d.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit', hour12: true });
+                if (isToday) {
+                    return `Today, ${timeStr}`;
+                }
+                const isThisYear = d.getFullYear() === now.getFullYear();
+                const datePart = d.toLocaleDateString([], { month: 'short', day: 'numeric', ...(isThisYear ? {} : { year: 'numeric' }) });
+                return `${datePart} • ${timeStr}`;
             } catch { return ''; }
         }
     }));
@@ -140,7 +150,7 @@ document.addEventListener('alpine:init', () => {
 </script>
 
 <div
-    x-data="sellerChat({ autoOpenUserId: '{{ $autoOpenUserId ?? '' }}', autoOpenUserName: '{{ addslashes($autoOpenUserName ?? 'Customer') }}', currentUserId: {{ Auth::id() ?? 'null' }} })"
+    x-data="sellerChat({ autoOpenUserId: '{{ $autoOpenUserId ?? '' }}', autoOpenUserName: '{{ addslashes($autoOpenUserName ?? 'Customer') }}', currentUserId: '{{ Auth::id() ?? '' }}' })"
     class="bg-white rounded-2xl sm:rounded-3xl border border-gray-100 shadow-sm overflow-hidden flex h-[calc(100vh-140px)] sm:h-[calc(100vh-180px)] min-h-112.5"
 >
     <!-- Left Sidebar: Conversations -->
@@ -168,7 +178,7 @@ document.addEventListener('alpine:init', () => {
                         </div>
                     </div>
                     <div class="text-right shrink-0 ml-2 flex flex-col items-end gap-1.5">
-                        <div class="text-[8px] font-bold text-gray-400" x-text="formatTime(conv.timestamp)"></div>
+                        <div class="text-[9px] font-medium text-gray-400" x-text="formatDateTime(conv.timestamp)"></div>
                         <div class="flex items-center gap-1">
                             <template x-if="conv.unreadCount > 0">
                                 <span class="inline-block min-w-4 h-4 px-1 bg-red-500 text-white text-[8px] font-bold rounded-full text-center"
@@ -223,7 +233,7 @@ document.addEventListener('alpine:init', () => {
                                      ? 'bg-[#C0422A] text-white rounded-tr-none'
                                      : 'bg-gray-100 text-gray-800 rounded-tl-none border border-gray-200/50'"
                                  x-text="msg.content"></div>
-                            <span class="text-[8px] font-bold text-gray-400 mt-1" x-text="formatTime(msg.createdAt)"></span>
+                            <span class="text-[9px] font-medium text-gray-400 mt-1" x-text="formatDateTime(msg.createdAt)"></span>
                         </div>
                     </template>
                     <template x-if="messages.length === 0">

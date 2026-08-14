@@ -52,35 +52,46 @@
 
             {{-- 1. Basic Product Information --}}
             <div class="bg-white p-4 sm:p-6 rounded-2xl border border-gray-100 shadow-xs space-y-4">
-                <h3 class="text-xs sm:text-sm font-bold text-black uppercase tracking-widest flex items-center gap-2">
-                    <svg class="w-4 h-4 text-[#C0420A]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                    Basic Information
-                </h3>
-
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <div class="space-y-1.5">
-                        <label class="text-[10px] font-bold uppercase tracking-widest text-gray-400">Product Name</label>
-                        <input type="text" name="name" required placeholder="e.g. Pina-Silk Formal Barong Tagalog"
-                            class="w-full px-4 py-2.5 bg-gray-50/50 border border-gray-200/80 rounded-xl outline-none focus:border-[#C0420A] focus:bg-white transition-all font-medium text-sm text-gray-800">
+                <div class="flex items-center gap-2.5 pb-2 border-b border-gray-100/80">
+                    <div class="w-7 h-7 rounded-lg bg-[#C0420A]/10 flex items-center justify-center text-[#C0420A] shrink-0">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
                     </div>
-
-                    <div class="space-y-1.5">
-                        <label class="text-[10px] font-bold uppercase tracking-widest text-gray-400">Materials Used (Fabric)</label>
-                        <input type="text" name="fabric_type" value="{{ old('fabric_type', '100% Piña') }}"
-                            placeholder="e.g. 100% Piña, Piña Organza, Jusi"
-                            class="w-full px-4 py-2.5 bg-gray-50/50 border border-gray-200/80 rounded-xl outline-none focus:border-[#C0420A] focus:bg-white transition-all font-medium text-sm text-gray-800">
+                    <div>
+                        <h3 class="text-xs sm:text-sm font-black text-gray-900 uppercase tracking-widest leading-none">Basic Information</h3>
+                        <p class="text-[10px] text-gray-400 font-medium mt-0.5">Core title and artisan craftsmanship story</p>
                     </div>
                 </div>
 
-                <div class="space-y-1.5">
-                    <label class="text-[10px] font-bold uppercase tracking-widest text-gray-400">Artisan Description</label>
-                    <div class="relative">
-                        <textarea name="description" id="artisanDescription" required rows="3" maxlength="500"
-                            oninput="updateCharCount(this)"
-                            placeholder="Describe the craftsmanship, materials used, and the story behind this piece..."
-                            class="w-full px-4 py-2.5 bg-gray-50/50 border border-gray-200/80 rounded-xl outline-none focus:border-[#C0420A] focus:bg-white transition-all font-medium resize-none text-sm text-gray-800 pb-7"></textarea>
-                        <div id="charCounter" class="absolute bottom-2.5 right-3.5 text-[10px] font-bold text-gray-400 pointer-events-none">
-                            0 / 500
+                <div class="space-y-3.5 sm:space-y-4">
+                    {{-- Product Name --}}
+                    <div class="space-y-1.5">
+                        <div class="flex items-center justify-between">
+                            <label class="text-[10px] sm:text-[11px] font-bold uppercase tracking-wider text-gray-700">
+                                Product Name <span class="text-[#C0420A]">*</span>
+                            </label>
+                            <span class="text-[9px] text-gray-400 font-medium hidden sm:inline-block">Concise & descriptive</span>
+                        </div>
+                        <input type="text" name="name" required value="{{ old('name') }}"
+                            placeholder="e.g. Hand-Woven Piña Barong Tagalog"
+                            class="w-full px-3.5 py-2.5 sm:px-4 sm:py-3 bg-gray-50/70 border border-gray-200/90 rounded-xl outline-none focus:border-[#C0420A] focus:bg-white focus:ring-2 focus:ring-[#C0420A]/10 transition-all font-semibold text-sm text-gray-800 placeholder:text-gray-400 placeholder:font-normal">
+                    </div>
+
+                    {{-- Artisan Description --}}
+                    <div class="space-y-1.5">
+                        <div class="flex items-center justify-between">
+                            <label class="text-[10px] sm:text-[11px] font-bold uppercase tracking-wider text-gray-700">
+                                Artisan Description <span class="text-[#C0420A]">*</span>
+                            </label>
+                            <span class="text-[9px] text-gray-400 font-medium hidden sm:inline-block">Max 500 characters</span>
+                        </div>
+                        <div class="relative group">
+                            <textarea name="description" id="artisanDescription" required rows="4" maxlength="500"
+                                oninput="updateCharCount(this)"
+                                placeholder="Describe the craftsmanship, cultural heritage, weaving techniques, and unique story behind this piece..."
+                                class="w-full px-3.5 py-2.5 sm:px-4 sm:py-3 bg-gray-50/70 border border-gray-200/90 rounded-xl outline-none focus:border-[#C0420A] focus:bg-white focus:ring-2 focus:ring-[#C0420A]/10 transition-all font-normal text-sm text-gray-800 placeholder:text-gray-400 resize-none pb-7 sm:pb-8">{{ old('description') }}</textarea>
+                            <div class="absolute bottom-2 right-2.5 sm:bottom-2.5 sm:right-3.5 flex items-center gap-1 bg-white/95 backdrop-blur-xs px-2 py-0.5 rounded-md border border-gray-100 text-[9px] sm:text-[10px] font-bold text-gray-400 pointer-events-none shadow-2xs">
+                                <span id="charCounter">{{ strlen(old('description', '')) }}</span><span class="text-gray-300">/</span><span>500</span>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -247,33 +258,99 @@
 
             {{-- Payment Method Configuration --}}
             <div class="bg-white p-4 sm:p-6 rounded-2xl border border-gray-100 shadow-xs space-y-3">
-                <div class="flex items-center justify-between">
-                    <h3 class="text-xs sm:text-sm font-bold text-black uppercase tracking-widest">Payment Methods</h3>
-                    <a href="{{ route('seller.profile') }}?open_payment=1#payment-methods" class="text-[9px] font-bold text-[#C0420A] hover:underline">Settings &rarr;</a>
+                <div class="flex items-center justify-between mb-1">
+                    <h3 class="text-xs sm:text-sm font-black text-black uppercase tracking-widest">Payment Methods</h3>
+                    <a href="{{ route('seller.profile') }}?open_payment=1#payment-methods" class="text-[11px] font-bold text-[#C0420A] hover:underline flex items-center gap-1">
+                        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><circle cx="12" cy="12" r="3"/></svg>
+                        Settings
+                    </a>
                 </div>
 
                 {{-- GCash --}}
-                <div class="p-3 bg-gray-50/50 border border-gray-100 rounded-xl space-y-2">
-                    <div class="flex items-center justify-between">
-                        <span class="text-[10px] font-black uppercase tracking-widest text-[#0060AA]">GCash</span>
+                @php $user = auth()->user(); @endphp
+                <div class="rounded-xl border border-blue-100 overflow-hidden">
+                    {{-- Header --}}
+                    <div class="flex items-center justify-between px-3 py-2.5 bg-linear-to-r from-blue-600 to-blue-500">
+                        <div class="flex items-center gap-2">
+                            <div class="w-6 h-6 rounded-md bg-white/20 flex items-center justify-center">
+                                <svg class="w-3.5 h-3.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"/></svg>
+                            </div>
+                            <span class="text-[10px] font-black uppercase tracking-widest text-white">GCash</span>
+                        </div>
                         <label class="relative inline-flex items-center cursor-pointer">
-                            <input type="checkbox" name="product_is_gcash_available" value="1" class="sr-only peer" {{ old('product_is_gcash_available', true) ? 'checked' : '' }}>
-                            <div class="w-8 h-4.5 bg-gray-200 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-0.5 after:bg-white after:border-gray-300 after:border after:rounded-full after:h-3.5 after:w-3.5 after:transition-all peer-checked:bg-blue-600"></div>
+                            <input type="checkbox" name="product_is_gcash_available" value="1" id="gcash_toggle_create" class="sr-only peer" {{ old('product_is_gcash_available', true) ? 'checked' : '' }} onchange="document.getElementById('gcash_fields_create').style.display = this.checked ? '' : 'none'">
+                            <div class="w-9 h-5 bg-white/30 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-0.5 after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-white/40 border border-white/40"></div>
                         </label>
                     </div>
-                    <input type="text" name="gcashNumber" value="{{ old('gcashNumber', auth()->user()->gcashNumber) }}" placeholder="GCash Number" class="w-full px-3 py-2 bg-white border border-gray-200 rounded-lg text-xs font-bold text-gray-800 outline-none">
+                    {{-- Body --}}
+                    <div id="gcash_fields_create" {{ old('product_is_gcash_available', true) ? '' : 'style=display:none' }} class="p-3 bg-white flex items-center gap-3">
+                        @if(!empty($user->gcashQrCode))
+                            @php
+                                $gcashQr = $user->gcashQrCode;
+                                $gcashQrUrl = str_starts_with($gcashQr, 'http') ? $gcashQr : (str_starts_with(ltrim($gcashQr,'/'), 'uploads/') ? asset(ltrim($gcashQr,'/')) : asset('storage/' . ltrim($gcashQr,'/')));
+                            @endphp
+                            <img src="{{ $gcashQrUrl }}" class="w-12 h-12 object-contain rounded-lg border-2 border-blue-100 bg-blue-50/40 shrink-0" onerror="this.style.display='none'">
+                        @else
+                            <div class="w-12 h-12 rounded-lg border-2 border-dashed border-blue-100 bg-blue-50/30 flex items-center justify-center shrink-0">
+                                <svg class="w-5 h-5 text-blue-200" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z"/></svg>
+                            </div>
+                        @endif
+                        <div class="flex-1 min-w-0">
+                            @if($user->gcashNumber)
+                                <div class="text-sm font-black text-gray-900 tracking-wide">{{ $user->gcashNumber }}</div>
+                                <div class="text-[9px] text-blue-500 font-bold uppercase tracking-widest mt-0.5 flex items-center gap-1">
+                                    <svg class="w-2.5 h-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/></svg>
+                                    Ready
+                                </div>
+                            @else
+                                <div class="text-[10px] text-gray-400 italic">Not configured</div>
+                                <a href="{{ route('seller.profile') }}?open_payment=1#payment-methods" class="text-[9px] text-blue-600 font-bold underline">Add in Settings →</a>
+                            @endif
+                        </div>
+                    </div>
                 </div>
 
                 {{-- Maya --}}
-                <div class="p-3 bg-gray-50/50 border border-gray-100 rounded-xl space-y-2">
-                    <div class="flex items-center justify-between">
-                        <span class="text-[10px] font-black uppercase tracking-widest text-[#00B050]">Maya</span>
+                <div class="rounded-xl border border-green-100 overflow-hidden">
+                    {{-- Header --}}
+                    <div class="flex items-center justify-between px-3 py-2.5 bg-linear-to-r from-green-600 to-green-500">
+                        <div class="flex items-center gap-2">
+                            <div class="w-6 h-6 rounded-md bg-white/20 flex items-center justify-center">
+                                <svg class="w-3.5 h-3.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"/></svg>
+                            </div>
+                            <span class="text-[10px] font-black uppercase tracking-widest text-white">Maya</span>
+                        </div>
                         <label class="relative inline-flex items-center cursor-pointer">
-                            <input type="checkbox" name="product_is_maya_available" value="1" class="sr-only peer" {{ old('product_is_maya_available', false) ? 'checked' : '' }}>
-                            <div class="w-8 h-4.5 bg-gray-200 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-0.5 after:bg-white after:border-gray-300 after:border after:rounded-full after:h-3.5 after:w-3.5 after:transition-all peer-checked:bg-green-600"></div>
+                            <input type="checkbox" name="product_is_maya_available" value="1" id="maya_toggle_create" class="sr-only peer" {{ old('product_is_maya_available', false) ? 'checked' : '' }} onchange="document.getElementById('maya_fields_create').style.display = this.checked ? '' : 'none'">
+                            <div class="w-9 h-5 bg-white/30 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-0.5 after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-white/40 border border-white/40"></div>
                         </label>
                     </div>
-                    <input type="text" name="mayaNumber" value="{{ old('mayaNumber', auth()->user()->mayaNumber) }}" placeholder="Maya Number" class="w-full px-3 py-2 bg-white border border-gray-200 rounded-lg text-xs font-bold text-gray-800 outline-none">
+                    {{-- Body --}}
+                    <div id="maya_fields_create" {{ old('product_is_maya_available', false) ? '' : 'style=display:none' }} class="p-3 bg-white flex items-center gap-3">
+                        @if(!empty($user->mayaQrCode))
+                            @php
+                                $mayaQr = $user->mayaQrCode;
+                                $mayaQrUrl = str_starts_with($mayaQr, 'http') ? $mayaQr : (str_starts_with(ltrim($mayaQr,'/'), 'uploads/') ? asset(ltrim($mayaQr,'/')) : asset('storage/' . ltrim($mayaQr,'/')));
+                            @endphp
+                            <img src="{{ $mayaQrUrl }}" class="w-12 h-12 object-contain rounded-lg border-2 border-green-100 bg-green-50/40 shrink-0" onerror="this.style.display='none'">
+                        @else
+                            <div class="w-12 h-12 rounded-lg border-2 border-dashed border-green-100 bg-green-50/30 flex items-center justify-center shrink-0">
+                                <svg class="w-5 h-5 text-green-200" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z"/></svg>
+                            </div>
+                        @endif
+                        <div class="flex-1 min-w-0">
+                            @if($user->mayaNumber)
+                                <div class="text-sm font-black text-gray-900 tracking-wide">{{ $user->mayaNumber }}</div>
+                                <div class="text-[9px] text-green-600 font-bold uppercase tracking-widest mt-0.5 flex items-center gap-1">
+                                    <svg class="w-2.5 h-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/></svg>
+                                    Ready
+                                </div>
+                            @else
+                                <div class="text-[10px] text-gray-400 italic">Not configured</div>
+                                <a href="{{ route('seller.profile') }}?open_payment=1#payment-methods" class="text-[9px] text-green-600 font-bold underline">Add in Settings →</a>
+                            @endif
+                        </div>
+                    </div>
                 </div>
             </div>
 
@@ -462,6 +539,13 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 });
+
+function updateCharCount(el) {
+    const counter = document.getElementById('charCounter');
+    if (counter) {
+        counter.textContent = el.value.length;
+    }
+}
 
 function toggleSizeStock(checkbox, size) {
     const stockInput = document.getElementById('stock_' + size);

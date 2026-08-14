@@ -115,13 +115,14 @@ class UserController extends Controller
         return response()->json([
             'id' => $seller->id,
             'shopName' => $seller->shopName ?: $seller->name,
+            'shopDescription' => $seller->shopDescription,
             'location' => $seller->shopCity ? "{$seller->shopCity}, {$seller->shopProvince}" : "Lumban, Laguna",
             'rating' => number_format($avgRating, 1),
             'reviewCount' => $reviewCount,
             'productCount' => $productCount,
             'joined' => $joined,
             'isVerified' => (bool)$seller->isVerified,
-            'profilePhoto' => $seller->profilePhoto,
+            'profilePhoto' => $seller->profile_photo_url ?: ($seller->profilePhoto ? (str_starts_with($seller->profilePhoto, 'http') ? $seller->profilePhoto : asset(ltrim($seller->profilePhoto, '/'))) : null),
             'isPremium' => (bool)$seller->isPremiumActive(),
         ]);
     }

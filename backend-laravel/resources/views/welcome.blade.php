@@ -44,7 +44,7 @@
         }"
         x-init="autoSlide()"
         class="relative rounded-2xl overflow-hidden shadow-sm bg-gray-900"
-        style="aspect-ratio: 16/7; min-height: 140px;"
+        style="aspect-ratio: 16/4; min-height: 100px;"
     >
         @foreach($banners as $i => $banner)
         <div

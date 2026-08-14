@@ -44,24 +44,39 @@
         </div>
 
         {{-- Stats Row --}}
+        @php
+            $sellerListingCount = \App\Models\Product::where('sellerId', $user->id)->count();
+            $sellerOrderCount = \App\Models\Order::where('sellerId', $user->id)->count();
+            $sellerTotalEarnings = \App\Models\Order::where('sellerId', $user->id)
+                ->whereIn('status', ['Completed', 'Delivered', 'delivered', 'completed'])
+                ->sum('totalAmount');
+            $sellerAvgRating = \App\Models\Review::whereHas('product', fn($q) => $q->where('sellerId', $user->id))->avg('rating');
+        @endphp
         <div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
             <div class="bg-white p-4 rounded-2xl border border-gray-100 text-center shadow-sm">
-                <div class="text-lg font-black text-[#C0420A]">0</div>
+                <div class="text-lg font-black text-[#C0420A]">{{ $sellerListingCount }}</div>
                 <div class="text-[9px] font-bold text-gray-400 uppercase tracking-widest">Active Listings</div>
             </div>
             <div class="bg-white p-4 rounded-2xl border border-gray-100 text-center shadow-sm">
-                <div class="text-lg font-black text-black">0</div>
+                <div class="text-lg font-black text-black">{{ $sellerOrderCount }}</div>
                 <div class="text-[9px] font-bold text-gray-400 uppercase tracking-widest">Total Orders</div>
             </div>
             <div class="bg-white p-4 rounded-2xl border border-gray-100 text-center shadow-sm">
-                <div class="text-lg font-black text-black">₱0</div>
-                <div class="text-[9px] font-bold text-gray-400 uppercase tracking-widest">Balance</div>
+                <div class="text-lg font-black text-black">₱{{ number_format($sellerTotalEarnings, 0) }}</div>
+                <div class="text-[9px] font-bold text-gray-400 uppercase tracking-widest">Completed Sales</div>
             </div>
             <div class="bg-white p-4 rounded-2xl border border-gray-100 text-center shadow-sm">
-                <div class="text-lg font-black text-black">—</div>
+                <div class="text-lg font-black text-black">{{ $sellerAvgRating ? number_format($sellerAvgRating, 1) : '—' }}</div>
                 <div class="text-[9px] font-bold text-gray-400 uppercase tracking-widest">Rating</div>
             </div>
         </div>
+
+        @if(session('success'))
+            <div class="p-4 bg-green-50 border border-green-200 rounded-2xl text-green-700 text-xs font-bold flex items-center gap-2 shadow-xs">
+                <svg class="w-4 h-4 text-green-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                <span>{{ session('success') }}</span>
+            </div>
+        @endif
 
         {{-- Main Settings Form --}}
         <form action="{{ route('seller.profile.update') }}" method="POST" enctype="multipart/form-data" id="profileForm" class="bg-white rounded-3xl p-6 sm:p-8 border border-gray-100 shadow-sm space-y-6">
@@ -89,8 +104,11 @@
                 </div>
             </div>
 
-            <div class="mt-8 flex justify-center">
-                <button type="submit" class="px-10 py-3.5 bg-[#C0420A] text-white rounded-xl text-xs font-black uppercase tracking-widest hover:bg-black transition-all shadow-md">Edit Profile</button>
+            <div class="mt-8 flex justify-center sm:justify-end">
+                <button type="submit" class="w-full sm:w-auto px-10 py-3.5 bg-[#C0420A] text-white rounded-xl text-xs font-black uppercase tracking-widest hover:bg-black transition-all shadow-md flex items-center justify-center gap-2">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                    <span>Save Changes</span>
+                </button>
             </div>
         </form>
 
@@ -175,41 +193,120 @@
             </div>
 
             {{-- Modal Body --}}
-            <div class="overflow-y-auto flex-1 p-5">
+            <div class="overflow-y-auto flex-1 p-5 space-y-4">
                 {{-- View Mode --}}
-                <div x-show="!editing" class="space-y-4">
-                    {{-- GCash --}}
-                    <div class="p-4 border border-blue-100 rounded-2xl bg-blue-50/30 space-y-2">
-                        <div class="flex items-center gap-2 mb-1">
-                            <span class="relative flex h-2 w-2"><span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span><span class="relative inline-flex rounded-full h-2 w-2 bg-blue-500"></span></span>
-                            <span class="text-[10px] font-black uppercase tracking-widest text-blue-700">GCash Account</span>
-                        </div>
-                        <div class="text-sm font-black text-black">{{ $user->gcashNumber ?: 'No GCash number added' }}</div>
-                        @if(!empty($user->gcashQrCode) && $getImgUrl($user->gcashQrCode))
-                            <div class="pt-2">
-                                <span class="text-[9px] font-bold text-gray-400 uppercase tracking-widest block mb-1">Uploaded QR Code:</span>
-                                <img src="{{ $getImgUrl($user->gcashQrCode) }}" class="w-28 h-28 object-contain rounded-xl border border-blue-100 bg-white" onerror="this.parentElement.removeChild(this)">
+                <div x-show="!editing" class="space-y-3">
+
+                    {{-- GCash Card --}}
+                    <div class="rounded-2xl border border-blue-100 overflow-hidden">
+                        {{-- Card Header --}}
+                        <div class="flex items-center justify-between px-4 py-3 bg-linear-to-r from-blue-600 to-blue-500">
+                            <div class="flex items-center gap-2.5">
+                                <div class="w-7 h-7 rounded-lg bg-white/20 flex items-center justify-center">
+                                    <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"/></svg>
+                                </div>
+                                <span class="text-[11px] font-black uppercase tracking-widest text-white">GCash</span>
                             </div>
-                        @else
-                            <div class="text-[10px] text-gray-400 italic">No QR code uploaded</div>
-                        @endif
-                    </div>
-                    {{-- Maya --}}
-                    <div class="p-4 border border-green-100 rounded-2xl bg-green-50/30 space-y-2">
-                        <div class="flex items-center gap-2 mb-1">
-                            <span class="relative flex h-2 w-2"><span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span><span class="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span></span>
-                            <span class="text-[10px] font-black uppercase tracking-widest text-green-700">Maya Account</span>
+                            @if($user->gcashNumber)
+                                <span class="text-[9px] font-bold bg-white/25 text-white px-2.5 py-0.5 rounded-full uppercase tracking-widest">Active</span>
+                            @else
+                                <span class="text-[9px] font-bold bg-black/20 text-white/70 px-2.5 py-0.5 rounded-full uppercase tracking-widest">Not Set</span>
+                            @endif
                         </div>
-                        <div class="text-sm font-black text-black">{{ $user->mayaNumber ?: 'No Maya number added' }}</div>
-                        @if(!empty($user->mayaQrCode) && $getImgUrl($user->mayaQrCode))
-                            <div class="pt-2">
-                                <span class="text-[9px] font-bold text-gray-400 uppercase tracking-widest block mb-1">Uploaded QR Code:</span>
-                                <img src="{{ $getImgUrl($user->mayaQrCode) }}" class="w-28 h-28 object-contain rounded-xl border border-green-100 bg-white" onerror="this.parentElement.removeChild(this)">
+                        {{-- Card Body --}}
+                        <div class="p-4 bg-white flex items-start gap-4">
+                            {{-- QR Code: click to view full size --}}
+                            <div class="shrink-0">
+                                @if(!empty($user->gcashQrCode) && $getImgUrl($user->gcashQrCode))
+                                    <img src="{{ $getImgUrl($user->gcashQrCode) }}"
+                                         class="w-20 h-20 object-contain rounded-xl border-2 border-blue-100 bg-blue-50/40 shadow-sm cursor-zoom-in"
+                                         title="Click to view full size"
+                                         onclick="document.getElementById('qr-lightbox-img').src=this.src; document.getElementById('qr-lightbox').style.display='flex'">
+                                @else
+                                    <div class="w-20 h-20 rounded-xl border-2 border-dashed border-blue-100 bg-blue-50/40 flex flex-col items-center justify-center gap-1">
+                                        <svg class="w-6 h-6 text-blue-200" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z"/></svg>
+                                        <span class="text-[8px] text-blue-300 font-bold uppercase">No QR</span>
+                                    </div>
+                                @endif
                             </div>
-                        @else
-                            <div class="text-[10px] text-gray-400 italic">No QR code uploaded</div>
-                        @endif
+                            {{-- Info --}}
+                            <div class="flex-1 min-w-0">
+                                <div class="text-[9px] font-bold text-gray-400 uppercase tracking-widest mb-1">Mobile Number</div>
+                                @if($user->gcashNumber)
+                                    <div class="text-base font-black text-gray-900 tracking-wider select-all">{{ $user->gcashNumber }}</div>
+                                    <div class="text-[9px] text-blue-500 font-bold uppercase tracking-widest mt-1 flex items-center gap-1">
+                                        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
+                                        Ready to receive payments
+                                    </div>
+                                @else
+                                    <div class="text-sm font-bold text-gray-300 italic">Not configured</div>
+                                    <div class="text-[9px] text-gray-400 font-bold mt-1">Click Edit below to add your number</div>
+                                @endif
+                                @if(!empty($user->gcashQrCode) && $getImgUrl($user->gcashQrCode))
+                                    <div class="mt-2 flex items-center gap-1">
+                                        <svg class="w-3 h-3 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
+                                        <span class="text-[9px] font-bold text-blue-500 uppercase tracking-widest">QR Code uploaded</span>
+                                    </div>
+                                @endif
+                            </div>
+                        </div>
                     </div>
+
+                    {{-- Maya Card --}}
+                    <div class="rounded-2xl border border-green-100 overflow-hidden">
+                        {{-- Card Header --}}
+                        <div class="flex items-center justify-between px-4 py-3 bg-linear-to-r from-green-600 to-green-500">
+                            <div class="flex items-center gap-2.5">
+                                <div class="w-7 h-7 rounded-lg bg-white/20 flex items-center justify-center">
+                                    <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"/></svg>
+                                </div>
+                                <span class="text-[11px] font-black uppercase tracking-widest text-white">Maya</span>
+                            </div>
+                            @if($user->mayaNumber)
+                                <span class="text-[9px] font-bold bg-white/25 text-white px-2.5 py-0.5 rounded-full uppercase tracking-widest">Active</span>
+                            @else
+                                <span class="text-[9px] font-bold bg-black/20 text-white/70 px-2.5 py-0.5 rounded-full uppercase tracking-widest">Not Set</span>
+                            @endif
+                        </div>
+                        {{-- Card Body --}}
+                        <div class="p-4 bg-white flex items-start gap-4">
+                            {{-- QR Code: click to view full size --}}
+                            <div class="shrink-0">
+                                @if(!empty($user->mayaQrCode) && $getImgUrl($user->mayaQrCode))
+                                    <img src="{{ $getImgUrl($user->mayaQrCode) }}"
+                                         class="w-20 h-20 object-contain rounded-xl border-2 border-green-100 bg-green-50/40 shadow-sm cursor-zoom-in"
+                                         title="Click to view full size"
+                                         onclick="document.getElementById('qr-lightbox-img').src=this.src; document.getElementById('qr-lightbox').style.display='flex'">
+                                @else
+                                    <div class="w-20 h-20 rounded-xl border-2 border-dashed border-green-100 bg-green-50/40 flex flex-col items-center justify-center gap-1">
+                                        <svg class="w-6 h-6 text-green-200" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z"/></svg>
+                                        <span class="text-[8px] text-green-300 font-bold uppercase">No QR</span>
+                                    </div>
+                                @endif
+                            </div>
+                            {{-- Info --}}
+                            <div class="flex-1 min-w-0">
+                                <div class="text-[9px] font-bold text-gray-400 uppercase tracking-widest mb-1">Mobile Number</div>
+                                @if($user->mayaNumber)
+                                    <div class="text-base font-black text-gray-900 tracking-wider select-all">{{ $user->mayaNumber }}</div>
+                                    <div class="text-[9px] text-green-600 font-bold uppercase tracking-widest mt-1 flex items-center gap-1">
+                                        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
+                                        Ready to receive payments
+                                    </div>
+                                @else
+                                    <div class="text-sm font-bold text-gray-300 italic">Not configured</div>
+                                    <div class="text-[9px] text-gray-400 font-bold mt-1">Click Edit below to add your number</div>
+                                @endif
+                                @if(!empty($user->mayaQrCode) && $getImgUrl($user->mayaQrCode))
+                                    <div class="mt-2 flex items-center gap-1">
+                                        <svg class="w-3 h-3 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
+                                        <span class="text-[9px] font-bold text-green-600 uppercase tracking-widest">QR Code uploaded</span>
+                                    </div>
+                                @endif
+                            </div>
+                        </div>
+                    </div>
+
                 </div>
 
                 {{-- Edit Mode Form --}}
@@ -229,8 +326,17 @@
                                 <label class="text-[9px] font-bold uppercase text-gray-500">GCash Mobile Number</label>
                                 <input type="text" name="gcashNumber" value="{{ old('gcashNumber', $user->gcashNumber) }}" placeholder="e.g. 0917 123 4567" class="w-full px-4 py-2.5 bg-white border border-gray-200 rounded-xl text-xs font-bold outline-none focus:border-blue-500">
                             </div>
-                            <div class="space-y-1">
-                                <label class="text-[9px] font-bold uppercase text-gray-500">Choose GCash QR Code Image</label>
+                            <div class="space-y-2">
+                                <label class="text-[9px] font-bold uppercase text-gray-500">GCash QR Code</label>
+                                @if(!empty($user->gcashQrCode) && $getImgUrl($user->gcashQrCode))
+                                    <div class="flex items-center gap-3">
+                                        <img src="{{ $getImgUrl($user->gcashQrCode) }}"
+                                             class="w-16 h-16 object-contain rounded-xl border-2 border-blue-100 bg-white shadow-sm cursor-zoom-in"
+                                             title="Click to view"
+                                             onclick="document.getElementById('qr-lightbox-img').src=this.src; document.getElementById('qr-lightbox').style.display='flex'">
+                                        <div class="text-[9px] text-gray-500 font-bold leading-relaxed">Current QR uploaded.<br><span class="text-blue-600">Choose a new file below to replace it.</span></div>
+                                    </div>
+                                @endif
                                 <input type="file" name="gcashQrCode" accept="image/*" class="w-full text-xs text-gray-500 file:mr-3 file:py-2 file:px-3 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-blue-600 file:text-white hover:file:bg-blue-700">
                             </div>
                         </div>
@@ -242,8 +348,17 @@
                                 <label class="text-[9px] font-bold uppercase text-gray-500">Maya Mobile Number</label>
                                 <input type="text" name="mayaNumber" value="{{ old('mayaNumber', $user->mayaNumber) }}" placeholder="e.g. 0917 123 4567" class="w-full px-4 py-2.5 bg-white border border-gray-200 rounded-xl text-xs font-bold outline-none focus:border-green-500">
                             </div>
-                            <div class="space-y-1">
-                                <label class="text-[9px] font-bold uppercase text-gray-500">Choose Maya QR Code Image</label>
+                            <div class="space-y-2">
+                                <label class="text-[9px] font-bold uppercase text-gray-500">Maya QR Code</label>
+                                @if(!empty($user->mayaQrCode) && $getImgUrl($user->mayaQrCode))
+                                    <div class="flex items-center gap-3">
+                                        <img src="{{ $getImgUrl($user->mayaQrCode) }}"
+                                             class="w-16 h-16 object-contain rounded-xl border-2 border-green-100 bg-white shadow-sm cursor-zoom-in"
+                                             title="Click to view"
+                                             onclick="document.getElementById('qr-lightbox-img').src=this.src; document.getElementById('qr-lightbox').style.display='flex'">
+                                        <div class="text-[9px] text-gray-500 font-bold leading-relaxed">Current QR uploaded.<br><span class="text-green-600">Choose a new file below to replace it.</span></div>
+                                    </div>
+                                @endif
                                 <input type="file" name="mayaQrCode" accept="image/*" class="w-full text-xs text-gray-500 file:mr-3 file:py-2 file:px-3 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-green-600 file:text-white hover:file:bg-green-700">
                             </div>
                         </div>
@@ -262,8 +377,9 @@
 
             {{-- View Mode Footer --}}
             <div x-show="!editing" class="px-5 py-4 border-t border-gray-100 shrink-0 flex items-center gap-3">
-                <button @click="editing = true" class="flex-1 py-3 bg-[#C0420A] text-white rounded-2xl text-xs font-black uppercase tracking-widest hover:bg-black transition-all shadow-md">
-                    ✏ Edit Payment Info & QR Codes
+                <button @click="editing = true" class="flex-1 py-3 bg-[#C0420A] text-white rounded-2xl text-xs font-black uppercase tracking-widest hover:bg-black transition-all shadow-md flex items-center justify-center gap-2">
+                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/></svg>
+                    Edit Payment Info & QR Codes
                 </button>
                 <button onclick="document.getElementById('payment-modal').style.display='none'" class="px-5 py-3 bg-gray-100 text-gray-700 rounded-2xl text-xs font-black uppercase tracking-widest hover:bg-gray-200 transition-all">
                     Close
@@ -371,6 +487,21 @@
         </div>
     </div>
 
+    {{-- QR Code Lightbox --}}
+    <div id="qr-lightbox"
+         style="display:none;"
+         class="fixed inset-0 z-200 bg-black/80 backdrop-blur-sm flex items-center justify-center p-6"
+         onclick="if(event.target===this) this.style.display='none'">
+        <div class="relative bg-white rounded-3xl p-4 shadow-2xl max-w-xs w-full flex flex-col items-center gap-4">
+            <button onclick="document.getElementById('qr-lightbox').style.display='none'"
+                class="absolute top-3 right-3 w-8 h-8 rounded-xl bg-gray-100 flex items-center justify-center text-gray-500 hover:bg-gray-200 transition-all">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+            </button>
+            <p class="text-[9px] font-bold text-gray-400 uppercase tracking-widest">QR Code Preview</p>
+            <img id="qr-lightbox-img" src="" class="w-full max-w-60 h-auto object-contain rounded-2xl border border-gray-100 shadow-sm">
+        </div>
+    </div>
+
     <script>
     document.addEventListener('DOMContentLoaded', function() {
         const urlParams = new URLSearchParams(window.location.search);
@@ -380,6 +511,12 @@
                 modal.style.display = 'flex';
             }
         }
+        // Close lightbox on Escape
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                document.getElementById('qr-lightbox').style.display = 'none';
+            }
+        });
     });
     </script>
 @endsection

@@ -270,6 +270,14 @@ class WebController extends Controller
             ->withCount('reviews as reviewCount')
             ->findOrFail($id);
 
+        if ($product->status !== 'approved') {
+            $isOwner = Auth::check() && Auth::id() === $product->sellerId;
+            $isAdmin = Auth::check() && in_array(Auth::user()->role, ['admin', 'superadmin']);
+            if (!$isOwner && !$isAdmin) {
+                abort(404, 'This product is currently under review or unavailable.');
+            }
+        }
+
         $soldCount = DB::table('order_items')
             ->join('orders', 'order_items.orderId', '=', 'orders.id')
             ->where('order_items.productId', $id)

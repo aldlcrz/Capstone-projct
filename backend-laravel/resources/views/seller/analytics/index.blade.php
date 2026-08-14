@@ -132,9 +132,13 @@
                 <div class="flex items-end justify-between gap-3 h-44 min-w-80 pt-4">
                     @foreach($salesTrendChart['points'] as $pt)
                         <div class="flex-1 flex flex-col items-center gap-2">
-                            @php $heightPct = $salesTrendChart['max'] > 0 ? max(8, ($pt['revenue'] / $salesTrendChart['max']) * 100) : 8; @endphp
-                            <div class="w-full max-w-12 bg-[#C0422A]/10 rounded-t-xl relative js-bar-height" data-bar-height="{{ $heightPct }}" style="height: 120px;">
-                                <div class="absolute inset-x-0 bottom-0 bg-[#C0422A] rounded-t-xl transition-all" style="height:100%"></div>
+                            @php 
+                                $heightPct = $salesTrendChart['max'] > 0 
+                                    ? ($pt['revenue'] > 0 ? max(8, round(($pt['revenue'] / $salesTrendChart['max']) * 100)) : 4) 
+                                    : 4; 
+                            @endphp
+                            <div class="w-full max-w-12 bg-gray-100 rounded-t-xl relative overflow-hidden h-32">
+                                <div class="absolute inset-x-0 bottom-0 bg-[#C0422A] rounded-t-xl transition-all duration-500" style="height: {{ $heightPct }}%;"></div>
                             </div>
                             <div class="text-center">
                                 <div class="text-[9px] font-black text-gray-400 uppercase">{{ $pt['label'] }}</div>

@@ -102,7 +102,7 @@ Route::prefix('v1')->group(function () {
     // Review Routes
     Route::get('/reviews/product/{productId}', [ReviewController::class, 'getProductReviews']);
     Route::middleware('auth:sanctum')->group(function () {
-        Route::post('/reviews', [ReviewController::class, 'createReview']);
+        Route::post('/reviews', [ReviewController::class, 'store']);
         Route::get('/reviews/seller', [ReviewController::class, 'getSellerReviews']);
     });
 

@@ -427,20 +427,35 @@ class AnalyticsController extends Controller
 
         if ($from && $to) {
             $diffDays = max(1, (int) $from->diffInDays($to));
-            $stepDays = max(1, (int) ceil($diffDays / 7));
-            for ($i = 7; $i >= 0; $i--) {
-                $day = $to->copy()->subDays($i * $stepDays);
-                $periodStart = $day->copy()->startOfDay();
-                $periodEnd   = ($stepDays > 1) ? $day->copy()->addDays($stepDays - 1)->endOfDay() : $day->copy()->endOfDay();
+            if ($diffDays <= 1) {
+                for ($h = 0; $h < 24; $h += 4) {
+                    $periodStart = $from->copy()->addHours($h);
+                    $periodEnd   = $periodStart->copy()->addHours(4)->subSecond();
+                    $rev = (float) $activeOrders
+                        ->filter(fn ($o) => Carbon::parse($o->createdAt)->between($periodStart, $periodEnd))
+                        ->sum('totalAmount');
+                    $chart[] = [
+                        'label'   => $periodStart->format('g A'),
+                        'revenue' => $rev,
+                    ];
+                }
+            } else {
+                $numSteps = min(7, max(4, $diffDays));
+                $stepDays = max(1, (int) ceil($diffDays / $numSteps));
+                for ($i = $numSteps - 1; $i >= 0; $i--) {
+                    $day = $to->copy()->subDays($i * $stepDays);
+                    $periodStart = $day->copy()->startOfDay();
+                    $periodEnd   = ($stepDays > 1) ? $day->copy()->addDays($stepDays - 1)->endOfDay() : $day->copy()->endOfDay();
 
-                $rev = (float) $activeOrders
-                    ->filter(fn ($o) => Carbon::parse($o->createdAt)->between($periodStart, $periodEnd))
-                    ->sum('totalAmount');
+                    $rev = (float) $activeOrders
+                        ->filter(fn ($o) => Carbon::parse($o->createdAt)->between($periodStart, $periodEnd))
+                        ->sum('totalAmount');
 
-                $chart[] = [
-                    'label'   => $diffDays <= 7 ? $periodStart->format('D') : $periodStart->format('M d'),
-                    'revenue' => $rev,
-                ];
+                    $chart[] = [
+                        'label'   => $diffDays <= 7 ? $periodStart->format('D') : $periodStart->format('M d'),
+                        'revenue' => $rev,
+                    ];
+                }
             }
         } else {
             for ($i = 6; $i >= 0; $i--) {

@@ -281,6 +281,18 @@ class CheckoutController extends Controller
                 \App\Models\Notification::send(Auth::id(), 'Order Placed', 'Your order has been placed successfully and is awaiting confirmation.', 'order', '/orders/' . $orderId, 'customer');
                 \App\Models\Notification::send($sellerId, 'New order received', 'A customer has placed a new order in your shop.', 'order', '/seller/orders', 'seller');
 
+                // Automatic conversational confirmation to the buyer's thread with this seller
+                try {
+                    \App\Models\Message::create([
+                        'senderId'   => $sellerId,
+                        'receiverId' => Auth::id(),
+                        'content'    => "Thank you for placing your order (#" . substr($orderId, 0, 8) . ")! We have received your order and will prepare your handcrafted pieces with care. Feel free to message us here if you have any questions or custom requests.",
+                        'read'       => false,
+                    ]);
+                } catch (\Throwable $e) {
+                    \Illuminate\Support\Facades\Log::warning('Automatic checkout chat message error: ' . $e->getMessage());
+                }
+
                 // Gmail Notifications
                 $customerUser = Auth::user();
                 if ($customerUser && $customerUser->email) {

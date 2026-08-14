@@ -16,8 +16,11 @@ class ProductController extends Controller
 {
     /**
      * Serialize a product to match frontend expectations.
+     *
+     * @param Request $request
+     * @param \App\Models\Product|array $product
      */
-    private function serializeProduct(Request $request, $product)
+    private function serializeProduct(Request $request, Product|array $product)
     {
         $data = is_array($product) ? $product : $product->toArray();
 
@@ -160,7 +163,7 @@ class ProductController extends Controller
                 'ip_address' => $request->ip(),
             ]);
         } catch (\Exception $e) {
-            \Log::error('View tracking error: ' . $e->getMessage());
+            Log::error('View tracking error: ' . $e->getMessage());
         }
 
         return response()->json($this->serializeProduct($request, $product));
@@ -247,11 +250,14 @@ class ProductController extends Controller
             return response()->json(['message' => 'Product not found or access denied'], 404);
         }
 
-        $product->update($request->only([
-            'name', 'description', 'price', 'costPerPiece', 'stock', 
-            'shippingFee', 'shippingDays', 'CategoryId', 
-            'availableColors', 'availableDesigns'
-        ]));
+        $product->update(array_merge(
+            $request->only([
+                'name', 'description', 'price', 'costPerPiece', 'stock', 
+                'shippingFee', 'shippingDays', 'CategoryId', 
+                'availableColors', 'availableDesigns'
+            ]),
+            ['status' => 'pending']
+        ));
 
         return response()->json($this->serializeProduct($request, $product));
     }
