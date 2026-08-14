@@ -872,10 +872,10 @@ function validateProductForm(e, isEdit = true) {
     if (errors.length > 0) {
         e.preventDefault();
 
-        // Create floating error banner
+        // Create floating error banner (Centered at top)
         const banner = document.createElement('div');
         banner.id = 'js-error-banner';
-        banner.className = 'fixed top-6 right-6 z-50 w-full max-w-md bg-white rounded-2xl shadow-2xl border border-red-200 p-4 flex items-start gap-3.5';
+        banner.className = 'fixed top-8 left-1/2 -translate-x-1/2 z-50 w-[92%] max-w-md bg-white rounded-2xl shadow-2xl border border-red-200 p-4.5 flex items-start gap-3.5 transition-all';
         banner.innerHTML = `
             <div class="w-8 h-8 rounded-full bg-red-50 flex items-center justify-center text-red-600 shrink-0 border border-red-100 font-bold">✕</div>
             <div class="grow pt-0.5">
