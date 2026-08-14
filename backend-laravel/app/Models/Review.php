@@ -20,9 +20,11 @@ class Review extends Model
         'productId',
         'customerId',
         'orderId',
+        'orderItemId',
         'rating',
         'comment',
         'images',
+        'video',
     ];
 
     /**

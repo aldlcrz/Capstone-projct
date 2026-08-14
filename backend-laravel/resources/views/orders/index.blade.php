@@ -7,11 +7,17 @@
         selectedOrder: null,
         packingModal: false,
         packingModalUrl: '',
+        reviewModal: false,
+        reviewProductId: '',
+        reviewOrderId: '',
+        reviewOrderItemId: '',
+        reviewProductName: '',
         getStepIndex(status) {
-            const s = (status || '').toLowerCase();
-            if (s === 'completed' || s === 'delivered') return 3;
-            if (s === 'to receive' || s === 'shipped') return 2;
-            if (s === 'to ship' || s === 'ready to ship' || s === 'ready_to_ship') return 1;
+            const s = (status || '').toLowerCase().trim();
+            if (s === 'completed' || s === 'delivered') return 4;
+            if (s === 'in transit' || s === 'in_transit') return 3;
+            if (s === 'shipped' || s === 'to receive') return 2;
+            if (s === 'ready to ship' || s === 'ready_to_ship' || s === 'to ship' || s === 'processing') return 1;
             return 0;
         },
         getStatusColor(status) {
@@ -89,7 +95,7 @@
                     'paymentMethod' => $order->paymentMethod ?? 'COD',
                     'paymentStatus' => $order->resolved_payment_status,
                     'paymentReference' => $order->paymentReference ?? null,
-                    'packingProof' => $order->packingProof ? asset('storage/' . $order->packingProof) : null,
+                    'packingProof' => $order->packingProof ? (str_starts_with($order->packingProof, 'http') ? $order->packingProof : (str_starts_with(ltrim($order->packingProof, '/'), 'storage/') ? asset(ltrim($order->packingProof, '/')) : asset('storage/' . ltrim($order->packingProof, '/')))) : null,
                     'courierName' => $order->courierName ?? null,
                     'trackingNumber' => $order->trackingNumber ?? null,
                     'trackingLink' => $order->trackingLink ?? null,
@@ -104,15 +110,26 @@
                         'isVerified' => (bool) $order->seller->isVerified,
                         'photo' => $order->seller->profilePhoto ? (str_starts_with($order->seller->profilePhoto, 'http') ? $order->seller->profilePhoto : asset(ltrim($order->seller->profilePhoto, '/'))) : null,
                     ] : null,
-                    'items' => $order->items->map(fn($item) => [
-                        'id' => $item->id,
-                        'name' => $item->product ? $item->product->name : 'Heritage Product',
-                        'image' => $item->product ? $item->product->getImageUrl() : asset('uploads/products/default.jpg'),
-                        'size' => $item->size,
-                        'quantity' => $item->quantity,
-                        'price' => number_format($item->price),
-                        'subtotal' => number_format($item->price * $item->quantity),
-                    ])->values()
+                    'items' => $order->items->map(function($item) use ($order) {
+                        $existingReview = $order->reviews ? $order->reviews->where('orderItemId', $item->id)->first() : null;
+                        if (!$existingReview && $order->reviews) {
+                            $existingReview = $order->reviews->where('productId', $item->productId)->first();
+                        }
+                        return [
+                            'id' => $item->id,
+                            'productId' => $item->productId,
+                            'name' => $item->product ? $item->product->name : 'Heritage Product',
+                            'image' => $item->product ? $item->product->getImageUrl() : asset('uploads/products/default.jpg'),
+                            'size' => $item->size,
+                            'quantity' => $item->quantity,
+                            'price' => number_format($item->price),
+                            'subtotal' => number_format($item->price * $item->quantity),
+                            'review' => $existingReview ? [
+                                'rating' => $existingReview->rating,
+                                'comment' => $existingReview->comment,
+                            ] : null,
+                        ];
+                    })->values()
                 ];
             @endphp
 
@@ -165,6 +182,29 @@
                                     @if($item->size)<span class="px-2 py-0.5 bg-gray-100 rounded-md text-gray-600">Size: {{ $item->size }}</span>@endif
                                     <span>Qty: {{ $item->quantity }}</span>
                                 </div>
+
+                                {{-- Review Action / Badge --}}
+                                @php
+                                    $canRate = in_array(strtolower(trim($order->status)), ['delivered', 'completed'], true);
+                                    $existingReview = $order->reviews ? $order->reviews->where('orderItemId', $item->id)->first() : null;
+                                    if (!$existingReview && $order->reviews) {
+                                        $existingReview = $order->reviews->where('productId', $item->productId)->first();
+                                    }
+                                @endphp
+                                @if($canRate)
+                                    <div class="pt-1" @click.stop>
+                                        @if($existingReview)
+                                            <span class="inline-flex items-center gap-1 px-2.5 py-0.5 bg-emerald-50 text-emerald-800 border border-emerald-200 rounded-full text-[9px] font-black uppercase tracking-wider">
+                                                ★ {{ $existingReview->rating }}/5 Reviewed
+                                            </span>
+                                        @else
+                                            <button type="button" @click.stop="reviewModal = true; reviewProductId = '{{ $item->productId }}'; reviewOrderId = '{{ $order->id }}'; reviewOrderItemId = '{{ $item->id }}'; reviewProductName = '{{ addslashes($item->product->name ?? 'Product') }}'"
+                                                class="inline-flex items-center gap-1 px-3 py-1 bg-black hover:bg-[#C0420A] text-white rounded-full text-[9px] font-black uppercase tracking-widest transition-all shadow-xs active:scale-95 cursor-pointer">
+                                                <span>⭐ Rate Product</span>
+                                            </button>
+                                        @endif
+                                    </div>
+                                @endif
                             </div>
 
                             {{-- Item Price --}}
@@ -260,9 +300,9 @@
                             <div class="flex items-center justify-between relative px-2">
                                 <div class="absolute left-4 right-4 top-4 h-1 bg-gray-200 z-0 rounded-full"></div>
                                 <div class="absolute left-4 top-4 h-1 bg-[#C0420A] z-0 transition-all duration-500 rounded-full"
-                                     :style="'width: calc(' + (getStepIndex(selectedOrder.status) * 33.33) + '% - 8px);'"></div>
+                                     :style="'width: calc(' + (getStepIndex(selectedOrder.status) * 25) + '% - 8px);'"></div>
 
-                                <template x-for="(stLabel, idx) in ['Order Placed', 'Ready to Ship', 'Shipped', 'Delivered']">
+                                <template x-for="(stLabel, idx) in ['Order Placed', 'Ready to Ship', 'Shipped', 'In Transit', 'Delivered']">
                                     <div class="flex flex-col items-center gap-1.5 z-10">
                                         <div class="w-8 h-8 rounded-full border-2 flex items-center justify-center text-[10px] font-black transition-all"
                                              :class="idx <= getStepIndex(selectedOrder.status) ? 'bg-[#C0420A] border-[#C0420A] text-white shadow-md' : 'bg-white border-gray-200 text-gray-400'">
@@ -276,27 +316,35 @@
                             </div>
                         </div>
 
-                        {{-- Seller Packing Proof Card (Shown ONLY when seller has uploaded a proof photo) --}}
-                        <div class="bg-emerald-50/90 border border-emerald-200/80 rounded-2xl p-4 flex items-center justify-between gap-3 text-xs" x-show="selectedOrder && selectedOrder.packingProof">
-                            <div class="flex items-center gap-3 min-w-0">
-                                <div class="w-9 h-9 rounded-xl bg-emerald-100 border border-emerald-200 flex items-center justify-center text-lg shrink-0">
-                                    📦
+                        {{-- Seller Packing Proof Card (Shown whenever seller has uploaded a proof photo) --}}
+                        <div class="bg-emerald-50/90 border border-emerald-200/80 rounded-2xl p-4 space-y-3" x-show="selectedOrder && selectedOrder.packingProof">
+                            <div class="flex items-center justify-between gap-3">
+                                <div class="flex items-center gap-2.5">
+                                    <span class="text-base">📦</span>
+                                    <div>
+                                        <div class="font-black text-emerald-950 uppercase tracking-wider text-[10px]">Seller Packing Proof</div>
+                                        <p class="text-[10px] text-emerald-700 font-medium mt-0.5">Photo uploaded by seller before handing order to courier</p>
+                                    </div>
                                 </div>
-                                <div class="min-w-0">
-                                    <div class="font-black text-emerald-900 uppercase tracking-wider text-[10px]">Seller Packing Proof</div>
-                                    <p class="text-[10px] text-emerald-700 font-medium truncate mt-0.5">Photo uploaded by seller prior to dispatch</p>
+                                <button type="button" @click="packingModalUrl = selectedOrder.packingProof; packingModal = true;"
+                                    class="px-3.5 py-1.5 bg-emerald-700 hover:bg-emerald-800 text-white rounded-full text-[9px] font-black uppercase tracking-widest transition-all shrink-0 shadow-xs flex items-center gap-1 active:scale-95">
+                                    <span>View Full Photo ↗</span>
+                                </button>
+                            </div>
+
+                            {{-- Thumbnail Image Preview --}}
+                            <div @click="packingModalUrl = selectedOrder.packingProof; packingModal = true;" 
+                                 class="w-full max-h-48 rounded-xl overflow-hidden bg-white border border-emerald-200 cursor-pointer group relative flex items-center justify-center">
+                                <img :src="selectedOrder.packingProof" class="w-full max-h-48 object-cover group-hover:scale-105 transition-transform duration-300" alt="Packing Proof Preview" x-on:error="$event.target.style.display='none'">
+                                <div class="absolute inset-0 bg-black/20 group-hover:bg-black/10 transition-colors flex items-center justify-center">
+                                    <span class="px-3 py-1 bg-black/60 text-white text-[9px] font-bold rounded-full backdrop-blur-xs group-hover:scale-110 transition-transform">🔍 Click to Enlarge</span>
                                 </div>
                             </div>
-                            
-                            <button type="button" @click="packingModalUrl = selectedOrder.packingProof; packingModal = true;"
-                                class="px-3.5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-full text-[9px] font-black uppercase tracking-widest transition-all shrink-0 shadow-xs flex items-center gap-1 active:scale-95">
-                                <span>View Proof ↗</span>
-                            </button>
                         </div>
 
-                        {{-- Courier Tracking Details (Shown when Shipped) --}}
+                        {{-- Courier Tracking Details (Shown ONLY when Shipped / Dispatched) --}}
                         <div class="bg-linear-to-br from-gray-900 to-black text-white p-4 rounded-2xl space-y-3 shadow-md"
-                             x-show="selectedOrder && (selectedOrder.courierName || selectedOrder.trackingNumber || selectedOrder.trackingLink)">
+                             x-show="selectedOrder && !['pending', 'processing', 'to ship', 'ready to ship', 'to_ship', 'ready_to_ship'].includes((selectedOrder.status || '').toLowerCase()) && (selectedOrder.courierName || selectedOrder.trackingNumber || selectedOrder.trackingLink)">
                             <div class="flex items-center justify-between border-b border-white/10 pb-2">
                                 <div class="flex items-center gap-1.5">
                                     <span class="text-base">🚚</span>
@@ -308,7 +356,7 @@
                             <div class="grid grid-cols-2 gap-3 text-xs">
                                 <div>
                                     <span class="text-[8px] font-bold uppercase tracking-widest text-gray-400 block">Courier</span>
-                                    <span class="font-black text-white text-xs" x-text="selectedOrder.courierName || 'J&T Express'"></span>
+                                    <span class="font-black text-white text-xs" x-text="selectedOrder.courierName || 'Pending Assignment'"></span>
                                 </div>
                                 <div>
                                     <span class="text-[8px] font-bold uppercase tracking-widest text-gray-400 block">Tracking Number</span>
@@ -391,8 +439,19 @@
 
             {{-- Modal Footer --}}
             <div class="p-4 sm:p-5 bg-gray-50 border-t border-gray-100 flex gap-3 shrink-0">
+                <template x-if="selectedOrder && ['shipped', 'to receive', 'in transit', 'in_transit'].includes((selectedOrder.status || '').toLowerCase())">
+                    <form :action="'/orders/' + selectedOrder.id + '/confirm'" method="POST" class="flex-1">
+                        @csrf
+                        @method('PATCH')
+                        <button type="submit"
+                            class="w-full py-3 bg-emerald-600 hover:bg-emerald-700 text-white rounded-full text-[10px] font-black uppercase tracking-widest transition-all shadow-sm active:scale-95 flex items-center justify-center gap-1.5">
+                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
+                            <span>Confirm Received</span>
+                        </button>
+                    </form>
+                </template>
                 <button @click="detailsModal = false"
-                    class="w-full py-3 sm:py-3.5 rounded-full bg-black text-white hover:bg-[#C0420A] text-[10px] font-black uppercase tracking-widest transition-all cursor-pointer shadow-sm active:scale-95">
+                    class="flex-1 py-3 sm:py-3.5 rounded-full bg-black text-white hover:bg-[#C0420A] text-[10px] font-black uppercase tracking-widest transition-all cursor-pointer shadow-sm active:scale-95">
                     Close Details
                 </button>
             </div>
@@ -425,6 +484,84 @@
                     Close
                 </button>
             </div>
+        </div>
+    {{-- Leave Review Modal --}}
+    <div x-show="reviewModal" class="fixed inset-0 z-9999 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm" x-cloak style="display: none;">
+        <div @click.away="reviewModal = false" class="bg-white rounded-3xl shadow-2xl w-full max-w-md p-6 sm:p-8 space-y-5">
+            <div>
+                <div class="text-[9px] font-black uppercase tracking-widest text-[#C0420A]">Leave a Review</div>
+                <h3 class="font-serif text-lg font-bold text-black mt-0.5" x-text="reviewProductName"></h3>
+            </div>
+            <form action="/api/reviews" method="POST" enctype="multipart/form-data" class="space-y-4" x-data="{ rating: 0, hover: 0, photoFiles: [], videoFile: null }" @submit="if (rating === 0) { $event.preventDefault(); alert('Please select a rating of at least 1 star before submitting.'); }">
+                @csrf
+                <input type="hidden" name="productId" :value="reviewProductId">
+                <input type="hidden" name="orderId" :value="reviewOrderId || (selectedOrder ? selectedOrder.id : '')">
+                <input type="hidden" name="orderItemId" :value="reviewOrderItemId">
+                
+                {{-- Star Rating --}}
+                <div class="space-y-1.5">
+                    <label class="text-[10px] font-black uppercase tracking-widest text-gray-500">Star Rating <span class="text-red-500">*</span></label>
+                    <div class="flex gap-2 items-center">
+                        @for($i = 1; $i <= 5; $i++)
+                            <button type="button"
+                                @click="rating = {{ $i }}"
+                                @mouseenter="hover = {{ $i }}"
+                                @mouseleave="hover = 0"
+                                class="text-3xl transition-transform active:scale-125 focus:outline-none">
+                                <span :class="(hover || rating) >= {{ $i }} ? 'text-amber-400' : 'text-gray-200'">★</span>
+                            </button>
+                        @endfor
+                        <span class="text-xs font-bold text-gray-500 ml-2" x-text="rating > 0 ? rating + ' / 5 Stars' : 'Select Rating'"></span>
+                        <input type="hidden" name="rating" :value="rating">
+                    </div>
+                </div>
+
+                {{-- Comment --}}
+                <div class="space-y-1.5">
+                    <label class="text-[10px] font-black uppercase tracking-widest text-gray-500">Your Review / Feedback <span class="text-red-500">*</span></label>
+                    <textarea name="comment" rows="3" required placeholder="Share your detailed feedback on product quality, fit, and craftsmanship..."
+                        class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-2xl text-xs outline-none focus:border-[#C0420A] focus:bg-white transition-all resize-none"></textarea>
+                </div>
+
+                {{-- Photo Attachments --}}
+                <div class="space-y-1.5">
+                    <label class="text-[10px] font-black uppercase tracking-widest text-gray-500 flex items-center justify-between">
+                        <span>📷 Add Photos (Optional)</span>
+                        <span class="text-[9px] font-bold text-gray-400">JPG, PNG (Max 10MB)</span>
+                    </label>
+                    <input type="file" name="photos[]" multiple accept="image/*"
+                        @change="photoFiles = Array.from($event.target.files)"
+                        class="w-full text-xs text-gray-500 file:mr-3 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-[10px] file:font-black file:uppercase file:bg-gray-100 file:text-black hover:file:bg-[#C0420A] hover:file:text-white transition-all">
+                    <template x-if="photoFiles.length > 0">
+                        <p class="text-[10px] font-bold text-emerald-600 mt-1" x-text="photoFiles.length + ' photo(s) selected'"></p>
+                    </template>
+                </div>
+
+                {{-- Video Attachment --}}
+                <div class="space-y-1.5">
+                    <label class="text-[10px] font-black uppercase tracking-widest text-gray-500 flex items-center justify-between">
+                        <span>🎥 Add Video (Optional)</span>
+                        <span class="text-[9px] font-bold text-gray-400">MP4, MOV, WEBM (Max 50MB)</span>
+                    </label>
+                    <input type="file" name="video" accept="video/*"
+                        @change="videoFile = $event.target.files[0] ? $event.target.files[0].name : null"
+                        class="w-full text-xs text-gray-500 file:mr-3 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-[10px] file:font-black file:uppercase file:bg-gray-100 file:text-black hover:file:bg-[#C0420A] hover:file:text-white transition-all">
+                    <template x-if="videoFile">
+                        <p class="text-[10px] font-bold text-emerald-600 mt-1" x-text="'Video selected: ' + videoFile"></p>
+                    </template>
+                </div>
+
+                <div class="flex gap-3 pt-2">
+                    <button type="button" @click="reviewModal = false"
+                        class="flex-1 py-3 rounded-full border border-gray-200 text-[10px] font-black uppercase tracking-widest text-gray-500 hover:bg-gray-50 transition-all">
+                        Cancel
+                    </button>
+                    <button type="submit"
+                        class="flex-1 py-3 rounded-full bg-black text-white text-[10px] font-black uppercase tracking-widest hover:bg-[#C0420A] transition-all shadow-sm">
+                        Submit Review
+                    </button>
+                </div>
+            </form>
         </div>
     </div>
 

@@ -370,11 +370,10 @@ class WebController extends Controller
         $tab = strtolower($request->input('tab', 'all'));
         $statusGroupMap = [
             'pending'           => ['Pending', 'pending'],
-            'to ship'           => ['Processing', 'To Ship', 'Ready to Ship', 'processing', 'to ship', 'ready_to_ship'],
+            'to ship'           => ['Pending', 'pending', 'Processing', 'processing', 'To Ship', 'to ship', 'to_ship', 'Ready to Ship', 'ready_to_ship', 'Shipped', 'shipped'],
             'ready to ship'     => ['Ready to Ship', 'ready_to_ship'],
-            'to receive'        => ['Shipped', 'To Receive', 'In Transit', 'Out for Delivery', 'shipped', 'to receive', 'in_transit', 'out_for_delivery'],
+            'to receive'        => ['In Transit', 'in_transit', 'To Receive', 'to receive', 'Out for Delivery', 'out_for_delivery'],
             'in transit'        => ['In Transit', 'in_transit'],
-            'out for delivery'  => ['Out for Delivery', 'out_for_delivery'],
             'delivered'         => ['Delivered', 'delivered'],
             'completed'         => ['Completed', 'completed'],
             'cancelled'         => ['Cancelled', 'cancelled'],

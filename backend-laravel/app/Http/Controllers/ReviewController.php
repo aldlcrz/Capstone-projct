@@ -19,12 +19,15 @@ class ReviewController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'productId' => 'required|exists:products,id',
-            'orderId' => 'required|exists:orders,id',
+            'productId'   => 'required|exists:products,id',
+            'orderId'     => 'required|exists:orders,id',
             'orderItemId' => 'nullable|exists:order_items,id',
-            'rating' => 'required|integer|min:1|max:5',
-            'comment' => 'nullable|string|max:1000',
-            'images' => 'nullable|array',
+            'rating'      => 'required|integer|min:1|max:5',
+            'comment'     => 'required|string|max:1000',
+            'photos'      => 'nullable|array',
+            'photos.*'    => 'nullable|file|mimes:jpeg,png,jpg,gif,webp|max:10240',
+            'images'      => 'nullable|array',
+            'video'       => 'nullable|file|mimes:mp4,mov,avi,webm,mkv|max:51200',
         ]);
 
         $customerId = Auth::id();
@@ -73,15 +76,35 @@ class ReviewController extends Controller
             return $this->errorResponse($request, 'You have already submitted a review for this purchased product.', 422);
         }
 
-        // 5. Create Review
+        // 5. Handle File Uploads (Photos & Video)
+        $uploadedImages = [];
+        if ($request->hasFile('photos')) {
+            foreach ($request->file('photos') as $file) {
+                if ($file && $file->isValid()) {
+                    $path = $file->store('reviews/photos', 'public');
+                    $uploadedImages[] = asset('storage/' . $path);
+                }
+            }
+        } elseif ($request->filled('images') && is_array($request->images)) {
+            $uploadedImages = $request->images;
+        }
+
+        $uploadedVideo = null;
+        if ($request->hasFile('video') && $request->file('video')->isValid()) {
+            $videoPath = $request->file('video')->store('reviews/videos', 'public');
+            $uploadedVideo = asset('storage/' . $videoPath);
+        }
+
+        // 6. Create Review
         $review = Review::create([
-            'productId' => $productId,
-            'customerId' => $customerId,
-            'orderId' => $order->id,
+            'productId'   => $productId,
+            'customerId'  => $customerId,
+            'orderId'     => $order->id,
             'orderItemId' => $orderItem->id,
-            'rating' => $request->rating,
-            'comment' => $request->comment,
-            'images' => $request->images ? json_encode($request->images) : null,
+            'rating'      => $request->rating,
+            'comment'     => $request->comment,
+            'images'      => !empty($uploadedImages) ? json_encode($uploadedImages) : null,
+            'video'       => $uploadedVideo,
         ]);
 
         // 6. Notify Seller of new product review

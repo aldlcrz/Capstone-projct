@@ -117,6 +117,6 @@ class SendCommissionReminders extends Command
         }
 
         $this->info("Commission reminder checks complete. Dispatched {$sentCount} notifications.");
-        return Command::SUCCESS;
+        return self::SUCCESS;
     }
 }

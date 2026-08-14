@@ -108,6 +108,20 @@ function printSellerOrder(order) {
     packingUploadError: '',
     showCameraModal: false,
     cameraStream: null,
+    showDeliveryConfirmModal: false,
+    deliveryConfirmOrder: null,
+
+    confirmMarkAsDelivered(order) {
+        this.deliveryConfirmOrder = order || this.detailsOrder;
+        this.showDeliveryConfirmModal = true;
+    },
+
+    async executeMarkAsDelivered() {
+        if (!this.deliveryConfirmOrder) return;
+        await this.updateStatus(this.deliveryConfirmOrder, 'Delivered');
+        this.showDeliveryConfirmModal = false;
+        this.deliveryConfirmOrder = null;
+    },
 
     formatAddress(order) {
         return formatOrderAddress(order);
@@ -242,7 +256,7 @@ function printSellerOrder(order) {
     normalizeStatus(statusStr) {
         if (!statusStr) return '';
         let s = String(statusStr).toLowerCase().trim().replace(/_/g, ' ');
-        if (s === 'processing' || s === 'to ship') return 'ready to ship';
+        if (s === 'processing') return 'to ship';
         return s;
     },
 
@@ -253,8 +267,9 @@ function printSellerOrder(order) {
         const t = this.normalizeStatus(target);
         if (current === t) return false;
         if (current === 'completed' || current === 'cancelled') return true;
+        if (t === 'completed') return true; // Seller cannot manually mark as Completed
         
-        const states = ['pending', 'ready to ship', 'shipped', 'in transit', 'out for delivery', 'delivered', 'completed'];
+        const states = ['pending', 'to ship', 'ready to ship', 'shipped', 'in transit', 'delivered'];
         const currentIdx = states.indexOf(current);
         const targetIdx = states.indexOf(t);
         
@@ -403,7 +418,7 @@ function printSellerOrder(order) {
 
     {{-- Status Filter Tabs (Capsules) --}}
     <div class="flex gap-2 overflow-x-auto no-scrollbar pb-1">
-        @foreach(['all' => 'All', 'pending' => 'Pending', 'ready to ship' => 'Ready to Ship', 'shipped' => 'Shipped', 'in transit' => 'In Transit', 'out for delivery' => 'Out for Delivery', 'delivered' => 'Delivered', 'completed' => 'Completed', 'cancelled' => 'Cancelled'] as $val => $label)
+        @foreach(['all' => 'All', 'pending' => 'Pending', 'to ship' => 'To Ship', 'ready to ship' => 'Ready to Ship', 'shipped' => 'Shipped', 'in transit' => 'In Transit', 'delivered' => 'Delivered', 'completed' => 'Completed', 'cancelled' => 'Cancelled'] as $val => $label)
             <button @click="statusFilter = '{{ $val }}'"
                 :class="statusFilter === '{{ $val }}' ? 'bg-black text-white shadow-md' : 'bg-white text-gray-500 border border-gray-200 hover:border-gray-300'"
                 class="px-3.5 sm:px-5 py-2 sm:py-2.5 rounded-full text-[9px] sm:text-[10px] font-black uppercase tracking-widest whitespace-nowrap transition-all flex items-center gap-1.5 shrink-0 active:scale-95">
@@ -515,12 +530,12 @@ function printSellerOrder(order) {
                             </template>
 
                             <div class="flex flex-wrap gap-1.5 pt-1">
-                                @foreach(['Pending', 'Ready to Ship', 'Shipped', 'In Transit', 'Out for Delivery', 'Delivered', 'Completed', 'Cancelled'] as $st)
+                                @foreach(['Pending', 'To Ship', 'Ready to Ship', 'Shipped', 'In Transit', 'Delivered', 'Cancelled'] as $st)
                                     <button type="button"
-                                        @click="updateStatus(detailsOrder, '{{ $st }}')"
+                                        @click="if ('{{ $st }}' === 'Delivered') { confirmMarkAsDelivered(detailsOrder); } else { updateStatus(detailsOrder, '{{ $st }}'); }"
                                         :disabled="isStatusDisabled('{{ $st }}', detailsOrder)"
                                         :class="{
-                                            'bg-[#C0420A] text-white font-black shadow-sm': normalizeStatus(detailsOrder.status) === normalizeStatus('{{ $st }}'),
+                                            'bg-[#C0420A] text-[#ffffff] font-black shadow-sm': normalizeStatus(detailsOrder.status) === normalizeStatus('{{ $st }}'),
                                             'bg-white text-gray-700 hover:border-[#C0420A] border border-gray-200': normalizeStatus(detailsOrder.status) !== normalizeStatus('{{ $st }}') && !isStatusDisabled('{{ $st }}', detailsOrder),
                                             'opacity-30 cursor-not-allowed bg-gray-100 text-gray-400 border-gray-100': isStatusDisabled('{{ $st }}', detailsOrder)
                                         }"
@@ -761,17 +776,17 @@ function printSellerOrder(order) {
 
                 {{-- Accept Order button: only shown when Pending --}}
                 <template x-if="detailsOrder && normalizeStatus(detailsOrder.status) === 'pending'">
-                    <button @click="updateStatus(detailsOrder, 'Ready to Ship'); detailsModal = false"
+                    <button @click="updateStatus(detailsOrder, 'To Ship')"
                         class="flex-1 py-2.5 sm:py-3 bg-emerald-600 hover:bg-emerald-700 text-white text-[10px] font-black uppercase tracking-widest rounded-full transition-all flex items-center justify-center gap-2 shadow-sm">
                         <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
-                        Accept Order
+                        <span>Accept Order (To Ship)</span>
                     </button>
                 </template>
 
-                {{-- Button for Ready to Ship status: Upload Packing Proof (before upload) or Continue (after upload) --}}
-                <template x-if="detailsOrder && normalizeStatus(detailsOrder.status) === 'ready to ship'">
+                {{-- Button for To Ship status: Upload Packing Proof & Mark as Ready to Ship --}}
+                <template x-if="detailsOrder && normalizeStatus(detailsOrder.status) === 'to ship'">
                     <button type="button"
-                        @click="if (!packingUploadSuccess && !detailsOrder.packingProof) { if (packingPhotoFile) { uploadPackingProof(); } else { openCameraModal(); } } else { updateStatus(detailsOrder, 'Shipped'); }"
+                        @click="if (!packingUploadSuccess && !detailsOrder.packingProof) { if (packingPhotoFile) { uploadPackingProof().then(() => updateStatus(detailsOrder, 'Ready to Ship')); } else { openCameraModal(); } } else { updateStatus(detailsOrder, 'Ready to Ship'); }"
                         :disabled="packingUploading"
                         class="flex-1 py-2.5 sm:py-3 bg-emerald-600 hover:bg-emerald-700 text-white text-[10px] font-black uppercase tracking-widest rounded-full transition-all flex items-center justify-center gap-2 shadow-sm">
                         <template x-if="packingUploading">
@@ -780,12 +795,56 @@ function printSellerOrder(order) {
                         <template x-if="!packingUploading">
                             <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
                         </template>
-                        <span x-text="packingUploading ? 'Uploading...' : ((packingUploadSuccess || detailsOrder.packingProof) ? 'Continue ➔' : (packingPhotoFile ? 'Upload Selected Photo' : 'Upload Packing Proof'))"></span>
+                        <span x-text="packingUploading ? 'Uploading...' : ((packingUploadSuccess || detailsOrder.packingProof) ? 'Mark as Ready to Ship ➔' : (packingPhotoFile ? 'Upload & Mark Ready to Ship' : 'Upload Packing Proof'))"></span>
                     </button>
                 </template>
 
-                {{-- Print Receipt button: only shown for Shipped / Completed / other non-Pending and non-Ready-to-Ship statuses --}}
-                <template x-if="detailsOrder && normalizeStatus(detailsOrder.status) !== 'pending' && normalizeStatus(detailsOrder.status) !== 'ready to ship'">
+                {{-- Button for Ready to Ship status: Confirm Shipment & Mark as Shipped --}}
+                <template x-if="detailsOrder && normalizeStatus(detailsOrder.status) === 'ready to ship'">
+                    <button type="button"
+                        @click="updateStatus(detailsOrder, 'Shipped')"
+                        class="flex-1 py-2.5 sm:py-3 bg-indigo-600 hover:bg-indigo-700 text-white text-[10px] font-black uppercase tracking-widest rounded-full transition-all flex items-center justify-center gap-2 shadow-sm">
+                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+                        <span>Confirm Shipment (Mark Shipped) ➔</span>
+                    </button>
+                </template>
+
+                {{-- Button for Shipped status: Mark In Transit --}}
+                <template x-if="detailsOrder && normalizeStatus(detailsOrder.status) === 'shipped'">
+                    <button type="button"
+                        @click="updateStatus(detailsOrder, 'In Transit')"
+                        class="flex-1 py-2.5 sm:py-3 bg-purple-600 hover:bg-purple-700 text-white text-[10px] font-black uppercase tracking-widest rounded-full transition-all flex items-center justify-center gap-2 shadow-sm">
+                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+                        <span>Mark In Transit ➔</span>
+                    </button>
+                </template>
+
+                {{-- Button for In Transit status: Mark as Delivered --}}
+                <template x-if="detailsOrder && normalizeStatus(detailsOrder.status) === 'in transit'">
+                    <button type="button"
+                        @click="confirmMarkAsDelivered(detailsOrder)"
+                        class="flex-1 py-2.5 sm:py-3 bg-teal-600 hover:bg-teal-700 text-white text-[10px] font-black uppercase tracking-widest rounded-full transition-all flex items-center justify-center gap-2 shadow-sm">
+                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
+                        <span>Mark as Delivered ➔</span>
+                    </button>
+                </template>
+
+                {{-- Status notice for Delivered status --}}
+                <template x-if="detailsOrder && normalizeStatus(detailsOrder.status) === 'delivered'">
+                    <div class="flex-1 py-2.5 sm:py-3 bg-teal-50 border border-teal-200 text-teal-800 text-[10px] font-black uppercase tracking-widest rounded-full flex items-center justify-center gap-2">
+                        <span>📦 Delivered — Awaiting Customer Receipt Confirmation</span>
+                    </div>
+                </template>
+
+                {{-- Status notice for Completed status --}}
+                <template x-if="detailsOrder && normalizeStatus(detailsOrder.status) === 'completed'">
+                    <div class="flex-1 py-2.5 sm:py-3 bg-emerald-50 border border-emerald-200 text-emerald-800 text-[10px] font-black uppercase tracking-widest rounded-full flex items-center justify-center gap-2">
+                        <span>✓ Order Completed by Customer</span>
+                    </div>
+                </template>
+
+                {{-- Print Receipt button: only shown for non-Pending statuses --}}
+                <template x-if="detailsOrder && normalizeStatus(detailsOrder.status) !== 'pending'">
                     <button @click="printOrderDetails()"
                         class="flex-1 py-2.5 sm:py-3 bg-black text-white text-[10px] font-black uppercase tracking-widest hover:bg-[#C0420A] rounded-full transition-all flex items-center justify-center gap-2 shadow-sm">
                         <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"></path></svg>
@@ -922,6 +981,54 @@ function printSellerOrder(order) {
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7"></path>
             </svg>
         </button>
+    </div>
+
+    {{-- Delivery Confirmation Modal --}}
+    <div x-show="showDeliveryConfirmModal" 
+         x-transition:enter="transition ease-out duration-300"
+         x-transition:enter-start="opacity-0"
+         x-transition:enter-end="opacity-100"
+         x-transition:leave="transition ease-in duration-200"
+         x-transition:leave-start="opacity-100"
+         x-transition:leave-end="opacity-0"
+         style="display: none;"
+         class="fixed inset-0 bg-black/60 backdrop-blur-sm z-9999 flex items-center justify-center p-4"
+         @click.self="showDeliveryConfirmModal = false"
+         x-cloak>
+        
+        <div class="w-full max-w-md bg-white rounded-3xl shadow-2xl p-6 text-center space-y-4 border border-gray-100 relative overflow-hidden">
+            <div class="h-1.5 w-full bg-linear-to-r from-emerald-500 to-teal-600 absolute top-0 left-0"></div>
+
+            <div class="w-14 h-14 rounded-full bg-emerald-50 text-emerald-600 flex items-center justify-center mx-auto text-2xl shadow-inner mt-2">
+                🚚
+            </div>
+
+            <div>
+                <h3 class="text-base font-black text-black uppercase tracking-tight">Confirm Order Delivery</h3>
+                <p class="text-xs text-gray-500 font-medium mt-1">Are you sure this order has been delivered?</p>
+                <template x-if="deliveryConfirmOrder">
+                    <div class="mt-2 py-1.5 px-3 bg-gray-50 rounded-xl text-[11px] font-bold text-gray-700 inline-block border border-gray-100">
+                        <span x-text="'#LB-' + deliveryConfirmOrder.id.slice(-8).toUpperCase()"></span>
+                        <span class="text-gray-400"> • </span>
+                        <span x-text="deliveryConfirmOrder.customer?.name || 'Customer'"></span>
+                    </div>
+                </template>
+            </div>
+
+            <div class="flex gap-3 pt-2">
+                <button type="button" 
+                    @click="showDeliveryConfirmModal = false"
+                    class="flex-1 py-2.5 rounded-full border border-gray-200 bg-white text-[10px] font-black uppercase tracking-widest text-gray-600 hover:bg-gray-100 transition-all">
+                    Cancel
+                </button>
+                <button type="button" 
+                    @click="executeMarkAsDelivered()"
+                    class="flex-1 py-2.5 rounded-full bg-emerald-600 hover:bg-emerald-700 text-white text-[10px] font-black uppercase tracking-widest transition-all shadow-md flex items-center justify-center gap-1.5">
+                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
+                    Yes, Delivered
+                </button>
+            </div>
+        </div>
     </div>
 </div>
 @endsection

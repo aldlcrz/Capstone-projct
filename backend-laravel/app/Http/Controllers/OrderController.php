@@ -11,7 +11,9 @@ use App\Models\SystemSetting;
 use App\Models\Notification;
 use App\Models\OrderStatusHistory;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Str;
 
@@ -20,7 +22,7 @@ class OrderController extends Controller
     /**
      * Helper to send notifications.
      */
-    private function sendNotification($userId, $title, $message, $type = 'system', $link = null, $role = 'customer')
+    private function sendNotification(mixed $userId, string $title, string $message, string $type = 'system', ?string $link = null, string $role = 'customer')
     {
         try {
             Notification::create([
@@ -33,7 +35,7 @@ class OrderController extends Controller
                 'isRead' => false
             ]);
         } catch (\Exception $e) {
-            \Log::error('Notification error: ' . $e->getMessage());
+            Log::error('Notification error: ' . $e->getMessage());
         }
     }
 
@@ -212,7 +214,7 @@ class OrderController extends Controller
     /**
      * Update order status.
      */
-    public function updateOrderStatus(Request $request, $id)
+    public function updateOrderStatus(Request $request, string $id)
     {
         $order = Order::find($id);
         if (!$order) return response()->json(['message' => 'Order not found'], 404);
@@ -252,15 +254,16 @@ class OrderController extends Controller
         // Status mapping to canonical names
         $statusKeyMap = [
             'pending' => 'Pending',
-            'to ship' => 'Ready to Ship',
+            'to ship' => 'To Ship',
+            'to_ship' => 'To Ship',
             'ready to ship' => 'Ready to Ship',
             'ready_to_ship' => 'Ready to Ship',
             'shipped' => 'Shipped',
             'to receive' => 'Shipped',
             'in transit' => 'In Transit',
             'in_transit' => 'In Transit',
-            'out for delivery' => 'Out for Delivery',
-            'out_for_delivery' => 'Out for Delivery',
+            'out for delivery' => 'In Transit',
+            'out_for_delivery' => 'In Transit',
             'delivered' => 'Delivered',
             'received by buyer' => 'Completed',
             'completed' => 'Completed',
@@ -273,10 +276,10 @@ class OrderController extends Controller
         // Transition rank checks (blocks backward status regressions)
         $statusRank = [
             'Pending' => 0,
-            'Ready to Ship' => 1,
-            'Shipped' => 2,
-            'In Transit' => 3,
-            'Out for Delivery' => 4,
+            'To Ship' => 1,
+            'Ready to Ship' => 2,
+            'Shipped' => 3,
+            'In Transit' => 4,
             'Delivered' => 5,
             'Completed' => 6,
             'Cancelled' => -1,
@@ -287,6 +290,16 @@ class OrderController extends Controller
 
         if ($targetRank >= 0 && $currRank >= 0 && $targetRank < $currRank) {
             return response()->json(['message' => "Invalid status transition from {$canonicalCurrent} to {$canonicalTarget}."], 400);
+        }
+
+        // Sellers cannot manually set Completed (Only customer delivery confirmation marks Completed)
+        if ($canonicalTarget === 'Completed' && strtolower($user->role) === 'seller') {
+            return response()->json(['message' => 'Sellers cannot manually mark orders as Completed. Order completion is triggered when the customer confirms delivery.'], 403);
+        }
+
+        // Packing Proof validation when marking as Ready to Ship
+        if ($canonicalTarget === 'Ready to Ship' && empty($order->packingProof) && !$request->hasFile('packingPhoto')) {
+            return response()->json(['message' => 'Please upload a packing proof photo before marking this order as Ready to Ship.'], 422);
         }
 
         // Shipping validation when marking as Shipped
@@ -418,12 +431,12 @@ class OrderController extends Controller
     /**
      * Confirm order received from the customer-facing Blade form (PATCH).
      */
-    public function confirmReceived($id)
+    public function confirmReceived(string $id)
     {
-        $order = Order::where('id', $id)->where('customerId', auth()->id())->firstOrFail();
+        $order = Order::where('id', $id)->where('customerId', Auth::id())->firstOrFail();
 
-        $receivable = ['shipped', 'to receive', 'in transit', 'in_transit', 'out for delivery', 'out_for_delivery', 'delivered'];
-        if (!in_array(strtolower($order->status), $receivable, true)) {
+        $receivable = ['shipped', 'to receive', 'in transit', 'in_transit', 'out for delivery', 'out_for_delivery'];
+        if (!in_array(strtolower(trim($order->status)), $receivable, true)) {
             return redirect()->back()->with('error', 'You cannot confirm this order at this stage.');
         }
 
@@ -432,22 +445,22 @@ class OrderController extends Controller
         $order->save();
 
         OrderStatusHistory::create([
-            'orderId' => $order->id,
+            'orderId'        => $order->id,
             'previousStatus' => $prevStatus,
-            'newStatus' => 'Completed',
-            'updatedBy' => auth()->id(),
-            'userRole' => 'customer',
-            'notes' => 'Receipt confirmed by customer.',
+            'newStatus'      => 'Completed',
+            'updatedBy'      => Auth::id(),
+            'userRole'       => 'customer',
+            'notes'          => 'Order confirmed delivered & completed by customer.',
         ]);
 
         $this->sendNotification(
             $order->sellerId,
             'Order Completed',
-            'A customer has confirmed receipt of their order.',
+            "Customer has confirmed delivery for order #LB-OR-" . strtoupper(substr($order->id, -8)) . ". Status updated to Completed.",
             'order', '/seller/orders', 'seller'
         );
 
-        return redirect()->route('orders.show', $id)->with('success', 'Order marked as received. Thank you!');
+        return redirect()->route('orders.show', $id)->with('success', 'Thank you! Delivery confirmed and order marked as Completed. You can now rate your purchase.');
     }
 
     /**
@@ -456,7 +469,7 @@ class OrderController extends Controller
      */
     public function uploadPackingProof(Request $request, string $id)
     {
-        $user = auth()->user();
+        $user = Auth::user();
 
         if (!$user || !in_array($user->role, ['seller', 'admin'])) {
             return response()->json(['message' => 'Unauthorized.'], 403);

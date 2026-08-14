@@ -58,13 +58,11 @@
     {{-- Order Progress Timeline --}}
     @php
         $steps = [
-            ['label' => 'Order Placed',     'status' => 'pending'],
-            ['label' => 'Ready to Ship',    'status' => 'ready to ship'],
-            ['label' => 'Shipped',          'status' => 'shipped'],
-            ['label' => 'In Transit',       'status' => 'in transit'],
-            ['label' => 'Out for Delivery', 'status' => 'out for delivery'],
-            ['label' => 'Delivered',        'status' => 'delivered'],
-            ['label' => 'Completed',        'status' => 'completed'],
+            ['label' => 'Order Placed',  'status' => 'pending'],
+            ['label' => 'Ready to Ship', 'status' => 'ready to ship'],
+            ['label' => 'Shipped',       'status' => 'shipped'],
+            ['label' => 'In Transit',    'status' => 'in transit'],
+            ['label' => 'Delivered',     'status' => 'delivered'],
         ];
 
         $statusRanks = [
@@ -72,20 +70,21 @@
             'to ship'          => 1,
             'ready to ship'    => 1,
             'ready_to_ship'    => 1,
+            'processing'       => 1,
             'shipped'          => 2,
             'to receive'       => 2,
             'in transit'       => 3,
             'in_transit'       => 3,
-            'out for delivery' => 4,
-            'out_for_delivery' => 4,
-            'delivered'        => 5,
-            'completed'        => 6,
+            'out for delivery' => 3,
+            'out_for_delivery' => 3,
+            'delivered'        => 4,
+            'completed'        => 4,
             'cancelled'        => -1,
         ];
 
         $currentStep = $statusRanks[strtolower(trim($order->status))] ?? 0;
         $isCancelled = strtolower(trim($order->status)) === 'cancelled';
-        $progressPct = $currentStep >= 6 ? 100 : round(($currentStep / 6) * 100, 2);
+        $maxSteps = count($steps);
 
         // Map status history timestamps
         $historyDates = [];
@@ -100,7 +99,7 @@
     <div class="bg-white rounded-2xl sm:rounded-3xl border border-gray-100 shadow-sm p-5 sm:p-8 space-y-4">
         <div class="flex items-center justify-between">
             <span class="text-[10px] sm:text-xs font-black uppercase tracking-widest text-[#C0420A]">Live Shipment Tracking</span>
-            <span class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Step {{ min($currentStep + 1, 8) }} of 8</span>
+            <span class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Step {{ min($currentStep + 1, $maxSteps) }} of {{ $maxSteps }}</span>
         </div>
 
         <div class="flex gap-2 overflow-x-auto no-scrollbar py-3 px-1">
@@ -152,8 +151,28 @@
         {{-- Left Column: Purchased Items List & Shipment Card --}}
         <div class="lg:col-span-2 space-y-6">
 
-            {{-- Manual Courier Shipping Details Card --}}
-            @if($order->courierName || $order->trackingNumber || $order->trackingLink || in_array(strtolower(trim($order->status)), ['shipped', 'to receive', 'in transit', 'in_transit', 'out for delivery', 'out_for_delivery', 'delivered', 'completed']))
+            {{-- Manual Courier Shipping Details Card (Only shown when order has actually been Shipped/Dispatched) --}}
+            @php
+                $statusNormalized = strtolower(trim($order->status ?? ''));
+                $isToShip = in_array($statusNormalized, ['pending', 'processing', 'to ship', 'ready to ship', 'to_ship', 'ready_to_ship']);
+            @endphp
+
+            @if($order->packingProof && $isToShip)
+            <div class="bg-emerald-950/80 border border-emerald-500/30 text-white rounded-2xl sm:rounded-3xl p-5 shadow-lg flex items-center justify-between flex-wrap gap-3">
+                <div>
+                    <span class="text-[10px] font-black uppercase tracking-widest text-emerald-400 block mb-0.5">📦 Seller Packing Proof Photo</span>
+                    <span class="text-xs text-gray-300 font-medium">Uploaded by seller before handover to courier</span>
+                </div>
+                <button type="button" 
+                    @click="packingModalUrl = '{{ asset('storage/' . $order->packingProof) }}'; packingModal = true;"
+                    class="px-4 py-2 bg-emerald-500 hover:bg-emerald-400 text-black text-[10px] font-black uppercase tracking-widest rounded-full transition-all flex items-center gap-1.5 shadow-md active:scale-95">
+                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+                    <span>View Packing Proof ↗</span>
+                </button>
+            </div>
+            @endif
+
+            @if(!$isToShip && ($order->courierName || $order->trackingNumber || $order->trackingLink || in_array($statusNormalized, ['shipped', 'to receive', 'in transit', 'in_transit', 'out for delivery', 'out_for_delivery', 'delivered', 'completed'])))
             <div class="bg-linear-to-br from-gray-900 to-black text-white rounded-2xl sm:rounded-3xl p-5 sm:p-7 shadow-lg space-y-4">
                 <div class="flex items-center justify-between border-b border-white/10 pb-3">
                     <div class="flex items-center gap-2">
@@ -168,7 +187,7 @@
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
                     <div>
                         <span class="text-[9px] font-bold uppercase tracking-widest text-gray-400 block mb-0.5">Courier Company</span>
-                        <span class="font-black text-sm text-white">{{ $order->courierName ?? 'J&T Express' }}</span>
+                        <span class="font-black text-sm text-white">{{ $order->courierName ?? 'Pending Assignment' }}</span>
                     </div>
 
                     <div>
@@ -290,7 +309,7 @@
             </div>
 
             {{-- Confirm Received Action Button --}}
-            @if(strtolower($order->status) === 'to receive' || strtolower($order->status) === 'shipped')
+            @if(in_array(strtolower(trim($order->status)), ['shipped', 'to receive', 'in transit', 'in_transit', 'out for delivery', 'out_for_delivery'], true))
                 <div class="bg-emerald-50/60 border border-emerald-100 rounded-2xl sm:rounded-3xl p-5 flex flex-col sm:flex-row items-center justify-between gap-4">
                     <div>
                         <h4 class="text-xs font-black uppercase tracking-wider text-emerald-800">Has your parcel arrived?</h4>
@@ -507,13 +526,13 @@
     </div>
 
     {{-- Leave Review Modal --}}
-    <div x-show="reviewModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm" x-cloak>
+    <div x-show="reviewModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm" x-cloak style="display: none;">
         <div @click.away="reviewModal = false" class="bg-white rounded-3xl shadow-2xl w-full max-w-md p-6 sm:p-8 space-y-5">
             <div>
                 <div class="text-[9px] font-black uppercase tracking-widest text-[#C0420A]">Leave a Review</div>
                 <h3 class="font-serif text-lg font-bold text-black mt-0.5" x-text="reviewProductName"></h3>
             </div>
-            <form action="/api/reviews" method="POST" class="space-y-4" x-data="{ rating: 0, hover: 0 }" @submit="if (rating === 0) { $event.preventDefault(); alert('Please select a rating of at least 1 star before submitting.'); }">
+            <form action="/api/reviews" method="POST" enctype="multipart/form-data" class="space-y-4" x-data="{ rating: 0, hover: 0, photoFiles: [], videoFile: null }" @submit="if (rating === 0) { $event.preventDefault(); alert('Please select a rating of at least 1 star before submitting.'); }">
                 @csrf
                 <input type="hidden" name="productId" :value="reviewProductId">
                 <input type="hidden" name="orderId" value="{{ $order->id }}">
@@ -521,28 +540,58 @@
                 
                 {{-- Star Rating --}}
                 <div class="space-y-1.5">
-                    <label class="text-[10px] font-black uppercase tracking-widest text-gray-400">Rating</label>
-                    <div class="flex gap-1.5">
+                    <label class="text-[10px] font-black uppercase tracking-widest text-gray-500">Star Rating <span class="text-red-500">*</span></label>
+                    <div class="flex gap-2 items-center">
                         @for($i = 1; $i <= 5; $i++)
                             <button type="button"
                                 @click="rating = {{ $i }}"
                                 @mouseenter="hover = {{ $i }}"
                                 @mouseleave="hover = 0"
-                                class="text-3xl transition-transform active:scale-125">
+                                class="text-3xl transition-transform active:scale-125 focus:outline-none">
                                 <span :class="(hover || rating) >= {{ $i }} ? 'text-amber-400' : 'text-gray-200'">★</span>
                             </button>
                         @endfor
+                        <span class="text-xs font-bold text-gray-500 ml-2" x-text="rating > 0 ? rating + ' / 5 Stars' : 'Select Rating'"></span>
                         <input type="hidden" name="rating" :value="rating">
                     </div>
                 </div>
 
+                {{-- Comment --}}
                 <div class="space-y-1.5">
-                    <label class="text-[10px] font-black uppercase tracking-widest text-gray-400">Your Review</label>
-                    <textarea name="comment" rows="4" required placeholder="Share your experience with this heritage piece..."
+                    <label class="text-[10px] font-black uppercase tracking-widest text-gray-500">Your Review / Feedback <span class="text-red-500">*</span></label>
+                    <textarea name="comment" rows="3" required placeholder="Share your detailed feedback on product quality, fit, and craftsmanship..."
                         class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-2xl text-xs outline-none focus:border-[#C0420A] focus:bg-white transition-all resize-none"></textarea>
                 </div>
 
-                <div class="flex gap-3 pt-1">
+                {{-- Photo Attachments --}}
+                <div class="space-y-1.5">
+                    <label class="text-[10px] font-black uppercase tracking-widest text-gray-500 flex items-center justify-between">
+                        <span>📷 Add Photos (Optional)</span>
+                        <span class="text-[9px] font-bold text-gray-400">JPG, PNG (Max 10MB)</span>
+                    </label>
+                    <input type="file" name="photos[]" multiple accept="image/*"
+                        @change="photoFiles = Array.from($event.target.files)"
+                        class="w-full text-xs text-gray-500 file:mr-3 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-[10px] file:font-black file:uppercase file:bg-gray-100 file:text-black hover:file:bg-[#C0420A] hover:file:text-white transition-all">
+                    <template x-if="photoFiles.length > 0">
+                        <p class="text-[10px] font-bold text-emerald-600 mt-1" x-text="photoFiles.length + ' photo(s) selected'"></p>
+                    </template>
+                </div>
+
+                {{-- Video Attachment --}}
+                <div class="space-y-1.5">
+                    <label class="text-[10px] font-black uppercase tracking-widest text-gray-500 flex items-center justify-between">
+                        <span>🎥 Add Video (Optional)</span>
+                        <span class="text-[9px] font-bold text-gray-400">MP4, MOV, WEBM (Max 50MB)</span>
+                    </label>
+                    <input type="file" name="video" accept="video/*"
+                        @change="videoFile = $event.target.files[0] ? $event.target.files[0].name : null"
+                        class="w-full text-xs text-gray-500 file:mr-3 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-[10px] file:font-black file:uppercase file:bg-gray-100 file:text-black hover:file:bg-[#C0420A] hover:file:text-white transition-all">
+                    <template x-if="videoFile">
+                        <p class="text-[10px] font-bold text-emerald-600 mt-1" x-text="'Video selected: ' + videoFile"></p>
+                    </template>
+                </div>
+
+                <div class="flex gap-3 pt-2">
                     <button type="button" @click="reviewModal = false"
                         class="flex-1 py-3 rounded-full border border-gray-200 text-[10px] font-black uppercase tracking-widest text-gray-500 hover:bg-gray-50 transition-all">
                         Cancel
