@@ -816,7 +816,7 @@
 
             {{-- Shopee/Lazada Style All Reviews Modal with Filter Tabs & Pagination --}}
             <div x-show="reviewsModal" class="fixed inset-0 z-9999 flex items-center justify-center p-3 sm:p-6 bg-black/60 backdrop-blur-sm" x-cloak style="display: none;">
-                <div @click.away="reviewsModal = false" class="bg-white rounded-3xl shadow-2xl w-full max-w-2xl max-h-[85vh] flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-200 border border-gray-100">
+                <div @click.away="reviewsModal = false" class="bg-white rounded-3xl shadow-2xl w-full max-w-3xl max-h-[85vh] flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-200 border border-gray-100">
                     
                     {{-- Modal Header --}}
                     <div class="px-5 sm:px-6 py-4 sm:py-5 border-b border-gray-100 flex items-center justify-between bg-white shrink-0">
@@ -837,53 +837,53 @@
                     </div>
 
                     {{-- Shopee/Lazada Style Filter Tabs --}}
-                    <div class="px-5 sm:px-6 py-3 bg-gray-50/70 border-b border-gray-100 flex items-center gap-2 overflow-x-auto no-scrollbar shrink-0">
+                    <div class="px-4 sm:px-6 py-3 bg-gray-50/70 border-b border-gray-100 flex items-center gap-1.5 sm:gap-2 overflow-x-auto no-scrollbar shrink-0">
                         <button type="button" 
                             @click="setFilter('all')"
                             :class="activeFilter === 'all' ? 'bg-[#C0420A] text-white shadow-xs font-bold' : 'bg-white text-gray-700 border border-gray-200 hover:border-gray-300 hover:bg-gray-50 font-medium'"
-                            class="px-3.5 py-1.5 rounded-full text-xs transition-all whitespace-nowrap cursor-pointer flex items-center gap-1">
+                            class="px-3 py-1.5 sm:px-3.5 sm:py-1.5 rounded-full text-[11px] sm:text-xs transition-all whitespace-nowrap cursor-pointer flex items-center gap-1 shrink-0">
                             <span>All</span>
                             <span class="opacity-80" x-text="'(' + countFilter('all') + ')'"></span>
                         </button>
                         <button type="button" 
                             @click="setFilter('5')"
                             :class="activeFilter === '5' ? 'bg-[#C0420A] text-white shadow-xs font-bold' : 'bg-white text-gray-700 border border-gray-200 hover:border-gray-300 hover:bg-gray-50 font-medium'"
-                            class="px-3.5 py-1.5 rounded-full text-xs transition-all whitespace-nowrap cursor-pointer flex items-center gap-1">
+                            class="px-3 py-1.5 sm:px-3.5 sm:py-1.5 rounded-full text-[11px] sm:text-xs transition-all whitespace-nowrap cursor-pointer flex items-center gap-1 shrink-0">
                             <span>5 Star</span>
                             <span class="opacity-80" x-text="'(' + countFilter('5') + ')'"></span>
                         </button>
                         <button type="button" 
                             @click="setFilter('4')"
                             :class="activeFilter === '4' ? 'bg-[#C0420A] text-white shadow-xs font-bold' : 'bg-white text-gray-700 border border-gray-200 hover:border-gray-300 hover:bg-gray-50 font-medium'"
-                            class="px-3.5 py-1.5 rounded-full text-xs transition-all whitespace-nowrap cursor-pointer flex items-center gap-1">
+                            class="px-3 py-1.5 sm:px-3.5 sm:py-1.5 rounded-full text-[11px] sm:text-xs transition-all whitespace-nowrap cursor-pointer flex items-center gap-1 shrink-0">
                             <span>4 Star</span>
                             <span class="opacity-80" x-text="'(' + countFilter('4') + ')'"></span>
                         </button>
                         <button type="button" 
                             @click="setFilter('3')"
                             :class="activeFilter === '3' ? 'bg-[#C0420A] text-white shadow-xs font-bold' : 'bg-white text-gray-700 border border-gray-200 hover:border-gray-300 hover:bg-gray-50 font-medium'"
-                            class="px-3.5 py-1.5 rounded-full text-xs transition-all whitespace-nowrap cursor-pointer flex items-center gap-1">
+                            class="px-3 py-1.5 sm:px-3.5 sm:py-1.5 rounded-full text-[11px] sm:text-xs transition-all whitespace-nowrap cursor-pointer flex items-center gap-1 shrink-0">
                             <span>3 Star</span>
                             <span class="opacity-80" x-text="'(' + countFilter('3') + ')'"></span>
                         </button>
                         <button type="button" 
                             @click="setFilter('2')"
                             :class="activeFilter === '2' ? 'bg-[#C0420A] text-white shadow-xs font-bold' : 'bg-white text-gray-700 border border-gray-200 hover:border-gray-300 hover:bg-gray-50 font-medium'"
-                            class="px-3.5 py-1.5 rounded-full text-xs transition-all whitespace-nowrap cursor-pointer flex items-center gap-1">
+                            class="px-3 py-1.5 sm:px-3.5 sm:py-1.5 rounded-full text-[11px] sm:text-xs transition-all whitespace-nowrap cursor-pointer flex items-center gap-1 shrink-0">
                             <span>2 Star</span>
                             <span class="opacity-80" x-text="'(' + countFilter('2') + ')'"></span>
                         </button>
                         <button type="button" 
                             @click="setFilter('1')"
                             :class="activeFilter === '1' ? 'bg-[#C0420A] text-white shadow-xs font-bold' : 'bg-white text-gray-700 border border-gray-200 hover:border-gray-300 hover:bg-gray-50 font-medium'"
-                            class="px-3.5 py-1.5 rounded-full text-xs transition-all whitespace-nowrap cursor-pointer flex items-center gap-1">
+                            class="px-3 py-1.5 sm:px-3.5 sm:py-1.5 rounded-full text-[11px] sm:text-xs transition-all whitespace-nowrap cursor-pointer flex items-center gap-1 shrink-0">
                             <span>1 Star</span>
                             <span class="opacity-80" x-text="'(' + countFilter('1') + ')'"></span>
                         </button>
                         <button type="button" 
                             @click="setFilter('media')"
                             :class="activeFilter === 'media' ? 'bg-[#C0420A] text-white shadow-xs font-bold' : 'bg-white text-gray-700 border border-gray-200 hover:border-gray-300 hover:bg-gray-50 font-medium'"
-                            class="px-3.5 py-1.5 rounded-full text-xs transition-all whitespace-nowrap cursor-pointer flex items-center gap-1">
+                            class="px-3.5 py-1.5 sm:px-4 sm:py-1.5 rounded-full text-[11px] sm:text-xs transition-all whitespace-nowrap cursor-pointer flex items-center gap-1 shrink-0">
                             <span>📷 With Photos</span>
                             <span class="opacity-80" x-text="'(' + countFilter('media') + ')'"></span>
                         </button>
