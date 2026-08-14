@@ -231,7 +231,7 @@ document.addEventListener('alpine:init', () => {
     x-transition:leave="transition ease-in duration-200 transform"
     x-transition:leave-start="opacity-100 translate-y-0 scale-100"
     x-transition:leave-end="opacity-0 translate-y-12 scale-95"
-    class="fixed bottom-19 sm:bottom-24 right-3 sm:right-6 w-[calc(100vw-1.5rem)] sm:w-105 h-140 max-h-[80vh] bg-white rounded-3xl shadow-2xl border border-gray-100 flex flex-col z-999 overflow-hidden"
+    class="fixed bottom-20 lg:bottom-22 right-3 sm:right-6 w-[calc(100vw-1.5rem)] sm:w-[400px] max-w-[calc(100vw-1.5rem)] h-[550px] max-h-[calc(100vh-7rem)] bg-white rounded-3xl shadow-2xl border border-gray-150 flex flex-col z-60 overflow-hidden"
     style="display: none;"
     x-cloak
 >

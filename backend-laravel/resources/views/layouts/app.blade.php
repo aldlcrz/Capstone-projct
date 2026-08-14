@@ -413,7 +413,7 @@
     <x-chat-widget />
     <x-report-modal />
 
-    <div x-data="{}" class="fixed bottom-19 lg:bottom-6 right-3 lg:right-6 z-60">
+    <div x-data="{}" class="fixed bottom-20 lg:bottom-6 right-3 lg:right-6 z-60">
         <button 
             @click="window.dispatchEvent(new CustomEvent('toggle-chat'))"
             class="w-12 h-12 bg-black text-white rounded-full flex items-center justify-center shadow-lg hover:bg-gray-800 hover:scale-105 transition-all cursor-pointer group"
