@@ -890,7 +890,7 @@
                     </div>
 
                     {{-- Reviews Content (Scrollable) --}}
-                    <div class="flex-1 overflow-y-auto p-4 sm:p-6 space-y-3.5 bg-gray-50/40">
+                    <div x-ref="reviewsContainer" class="flex-1 overflow-y-auto p-4 sm:p-6 space-y-3.5 bg-gray-50/40">
                         <template x-if="filteredReviews.length === 0">
                             <div class="text-center py-12 text-gray-400 space-y-2">
                                 <div class="text-3xl">💬</div>
@@ -948,43 +948,47 @@
                         </template>
                     </div>
 
-                    {{-- Modal Pagination Footer (Shopee / Lazada Style) --}}
-                    <div class="px-5 sm:px-6 py-3.5 bg-white border-t border-gray-100 flex items-center justify-between flex-wrap gap-3 shrink-0">
-                        <div class="text-xs text-gray-500 font-medium">
+                    {{-- Modal Pagination Footer (Matching Screenshot) --}}
+                    <div class="p-5 sm:p-6 bg-white border-t border-gray-100 flex flex-col items-center gap-3 shrink-0 relative">
+                        <div class="text-xs text-gray-500 font-medium text-center">
                             Showing page <span class="font-bold text-gray-900" x-text="currentPage"></span> of <span class="font-bold text-gray-900" x-text="totalPages"></span> (<span x-text="filteredReviews.length"></span> reviews)
                         </div>
 
-                        <div class="flex items-center gap-1.5" x-show="totalPages > 1">
+                        {{-- Pagination Buttons (‹ 1 2 3 ›) --}}
+                        <div class="flex items-center gap-2">
                             <button type="button" 
-                                @click="if(currentPage > 1) currentPage--"
+                                @click="if(currentPage > 1) { currentPage--; if($refs.reviewsContainer) $refs.reviewsContainer.scrollTop = 0; }"
                                 :disabled="currentPage === 1"
-                                :class="currentPage === 1 ? 'opacity-40 cursor-not-allowed' : 'hover:bg-gray-200 cursor-pointer'"
-                                class="px-3 py-1.5 rounded-lg border border-gray-200 bg-white text-xs font-bold text-gray-700 transition-all">
-                                ‹ Prev
+                                :class="currentPage === 1 ? 'opacity-30 cursor-not-allowed text-gray-400 bg-gray-50' : 'hover:border-[#C0420A] hover:text-[#C0420A] text-gray-700 bg-white cursor-pointer'"
+                                class="w-10 h-10 rounded-xl border border-gray-200 flex items-center justify-center text-sm font-bold transition-all shadow-xs">
+                                ‹
                             </button>
 
                             <template x-for="p in totalPages" :key="p">
                                 <button type="button" 
-                                    @click="currentPage = p"
-                                    :class="currentPage === p ? 'bg-[#C0420A] text-white border-[#C0420A]' : 'bg-white text-gray-700 border-gray-200 hover:bg-gray-100'"
-                                    class="w-8 h-8 rounded-lg border text-xs font-bold transition-all cursor-pointer flex items-center justify-center"
+                                    @click="currentPage = p; if($refs.reviewsContainer) $refs.reviewsContainer.scrollTop = 0;"
+                                    :class="currentPage === p ? 'border-[#C0420A] text-[#C0420A] bg-white font-black shadow-xs' : 'border-gray-200 text-gray-700 hover:border-gray-300 hover:bg-gray-50 font-bold'"
+                                    class="w-10 h-10 rounded-xl border text-sm transition-all cursor-pointer flex items-center justify-center"
                                     x-text="p">
                                 </button>
                             </template>
 
                             <button type="button" 
-                                @click="if(currentPage < totalPages) currentPage++"
+                                @click="if(currentPage < totalPages) { currentPage++; if($refs.reviewsContainer) $refs.reviewsContainer.scrollTop = 0; }"
                                 :disabled="currentPage === totalPages"
-                                :class="currentPage === totalPages ? 'opacity-40 cursor-not-allowed' : 'hover:bg-gray-200 cursor-pointer'"
-                                class="px-3 py-1.5 rounded-lg border border-gray-200 bg-white text-xs font-bold text-gray-700 transition-all">
-                                Next ›
+                                :class="currentPage === totalPages ? 'opacity-30 cursor-not-allowed text-gray-400 bg-gray-50' : 'hover:border-[#C0420A] hover:text-[#C0420A] text-gray-700 bg-white cursor-pointer'"
+                                class="w-10 h-10 rounded-xl border border-gray-200 flex items-center justify-center text-sm font-bold transition-all shadow-xs">
+                                ›
                             </button>
                         </div>
 
-                        <button type="button" @click="reviewsModal = false"
-                            class="py-2 px-5 bg-black text-white text-[10px] font-black uppercase tracking-widest rounded-full hover:bg-[#C0420A] transition-all shadow-xs active:scale-95 cursor-pointer">
-                            Close
-                        </button>
+                        {{-- Close Button on Bottom Right --}}
+                        <div class="w-full sm:w-auto sm:absolute sm:right-6 sm:bottom-5 flex justify-end mt-2 sm:mt-0">
+                            <button type="button" @click="reviewsModal = false"
+                                class="w-full sm:w-auto px-7 py-3 bg-[#111] text-white text-xs font-black uppercase tracking-widest rounded-xl hover:bg-[#C0420A] transition-all shadow-md active:scale-95 cursor-pointer">
+                                CLOSE
+                            </button>
+                        </div>
                     </div>
 
                 </div>
