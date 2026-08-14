@@ -79,7 +79,31 @@
         @endif
 
         {{-- Main Settings Form --}}
-        <form action="{{ route('seller.profile.update') }}" method="POST" enctype="multipart/form-data" id="profileForm" class="bg-white rounded-3xl p-6 sm:p-8 border border-gray-100 shadow-sm space-y-6">
+        <form action="{{ route('seller.profile.update') }}" 
+              method="POST" 
+              enctype="multipart/form-data" 
+              id="profileForm" 
+              x-data="{
+                  isEditing: false,
+                  initialName: @js(old('name', $user->name ?? '')),
+                  initialMobile: @js(old('mobileNumber', $user->mobileNumber ?? '')),
+                  initialDescription: @js(old('shopDescription', $user->shopDescription ?? '')),
+                  name: @js(old('name', $user->name ?? '')),
+                  mobileNumber: @js(old('mobileNumber', $user->mobileNumber ?? '')),
+                  shopDescription: @js(old('shopDescription', $user->shopDescription ?? '')),
+                  hasChanges() {
+                      return this.name !== this.initialName || 
+                             this.mobileNumber !== this.initialMobile || 
+                             this.shopDescription !== this.initialDescription;
+                  },
+                  cancelEdit() {
+                      this.name = this.initialName;
+                      this.mobileNumber = this.initialMobile;
+                      this.shopDescription = this.initialDescription;
+                      this.isEditing = false;
+                  }
+              }"
+              class="bg-white rounded-3xl p-6 sm:p-8 border border-gray-100 shadow-sm space-y-6">
             @csrf
             @method('PUT')
             
@@ -87,25 +111,74 @@
             <input type="file" id="profilePhotoInput" name="profilePhoto" class="hidden" onchange="document.getElementById('profileForm').submit()">
             
             <div>
-                <h2 class="text-sm font-black uppercase tracking-widest text-black mb-6 border-b border-gray-100 pb-4">Account Settings</h2>
+                <div class="flex items-center justify-between border-b border-gray-100 pb-4 mb-6">
+                    <div>
+                        <h2 class="text-sm font-black uppercase tracking-widest text-black">Account Settings</h2>
+                        <p class="text-[10px] text-gray-400 mt-0.5" x-text="isEditing ? 'Make your adjustments and save your profile changes' : 'Your basic artisan shop details and contact info'"></p>
+                    </div>
+                    <span x-show="isEditing" x-transition class="text-[9px] font-black uppercase tracking-widest px-2.5 py-1 bg-amber-50 text-amber-600 rounded-full border border-amber-200">
+                        Editing Mode
+                    </span>
+                </div>
+
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div class="space-y-1">
                         <label class="text-[10px] font-bold uppercase text-gray-400">Shop Name</label>
-                        <input type="text" name="name" value="{{ old('name', $user->name) }}" class="w-full px-4 py-3 bg-gray-50 border-0 rounded-xl text-sm font-bold">
+                        <input type="text" 
+                               name="name" 
+                               x-ref="shopNameInput"
+                               x-model="name"
+                               :disabled="!isEditing"
+                               :class="isEditing ? 'bg-white border-gray-200 ring-2 ring-[#C0420A]/10 text-black shadow-xs' : 'bg-gray-50 border-transparent text-gray-700 cursor-default'"
+                               class="w-full px-4 py-3 border rounded-xl text-sm font-bold transition-all">
                     </div>
                     <div class="space-y-1">
                         <label class="text-[10px] font-bold uppercase text-gray-400">Mobile Number</label>
-                        <input type="text" name="mobileNumber" value="{{ old('mobileNumber', $user->mobileNumber) }}" class="w-full px-4 py-3 bg-gray-50 border-0 rounded-xl text-sm font-bold">
+                        <input type="text" 
+                               name="mobileNumber" 
+                               x-model="mobileNumber"
+                               :disabled="!isEditing"
+                               :class="isEditing ? 'bg-white border-gray-200 ring-2 ring-[#C0420A]/10 text-black shadow-xs' : 'bg-gray-50 border-transparent text-gray-700 cursor-default'"
+                               class="w-full px-4 py-3 border rounded-xl text-sm font-bold transition-all">
                     </div>
                     <div class="col-span-full space-y-1">
                         <label class="text-[10px] font-bold uppercase text-gray-400">Shop Description</label>
-                        <textarea name="shopDescription" rows="3" class="w-full px-4 py-3 bg-gray-50 border-0 rounded-xl text-sm font-medium">{{ old('shopDescription', $user->shopDescription) }}</textarea>
+                        <textarea name="shopDescription" 
+                                  rows="3" 
+                                  x-model="shopDescription"
+                                  :disabled="!isEditing"
+                                  :class="isEditing ? 'bg-white border-gray-200 ring-2 ring-[#C0420A]/10 text-black shadow-xs' : 'bg-gray-50 border-transparent text-gray-700 cursor-default'"
+                                  class="w-full px-4 py-3 border rounded-xl text-sm font-medium transition-all"></textarea>
                     </div>
                 </div>
             </div>
 
-            <div class="mt-8 flex justify-center sm:justify-end">
-                <button type="submit" class="w-full sm:w-auto px-10 py-3.5 bg-[#C0420A] text-white rounded-xl text-xs font-black uppercase tracking-widest hover:bg-black transition-all shadow-md flex items-center justify-center gap-2">
+            <div class="mt-8 flex flex-wrap items-center justify-center sm:justify-end gap-3">
+                {{-- View Mode: Edit Profile Button --}}
+                <button type="button" 
+                        x-show="!isEditing" 
+                        @click="isEditing = true; $nextTick(() => { if ($refs.shopNameInput) $refs.shopNameInput.focus(); })" 
+                        class="w-full sm:w-auto px-8 py-3.5 bg-gray-900 text-white rounded-xl text-xs font-black uppercase tracking-widest hover:bg-[#C0420A] transition-all shadow-md flex items-center justify-center gap-2">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/></svg>
+                    <span>Edit Profile</span>
+                </button>
+
+                {{-- Edit Mode: Cancel Button --}}
+                <button type="button" 
+                        x-show="isEditing" 
+                        x-cloak
+                        @click="cancelEdit()" 
+                        class="w-full sm:w-auto px-6 py-3.5 bg-gray-100 text-gray-700 rounded-xl text-xs font-black uppercase tracking-widest hover:bg-gray-200 transition-all">
+                    Cancel
+                </button>
+
+                {{-- Edit Mode: Save Changes Button (Dynamic State) --}}
+                <button type="submit" 
+                        x-show="isEditing" 
+                        x-cloak
+                        :disabled="!hasChanges()"
+                        :class="hasChanges() ? 'bg-[#C0420A] text-white hover:bg-black cursor-pointer shadow-md' : 'bg-gray-200 text-gray-400 cursor-not-allowed opacity-75'"
+                        class="w-full sm:w-auto px-8 py-3.5 rounded-xl text-xs font-black uppercase tracking-widest transition-all flex items-center justify-center gap-2">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
                     <span>Save Changes</span>
                 </button>
