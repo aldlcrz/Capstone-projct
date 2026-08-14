@@ -326,9 +326,9 @@
             </div>
 
             {{-- Payment Method Configuration --}}
-            <div class="bg-white p-4 sm:p-6 rounded-2xl border border-gray-100 shadow-xs space-y-3">
+            <div id="payment-methods-card" class="bg-white p-4 sm:p-6 rounded-2xl border border-gray-100 shadow-xs space-y-3 transition-all">
                 <div class="flex items-center justify-between mb-1">
-                    <h3 class="text-xs sm:text-sm font-black text-black uppercase tracking-widest">Payment Methods</h3>
+                    <h3 class="text-xs sm:text-sm font-black text-black uppercase tracking-widest">Payment Methods <span class="text-[#C0420A]">*</span></h3>
                     <a href="{{ route('seller.profile') }}?open_payment=1#payment-methods" class="text-[11px] font-bold text-[#C0420A] hover:underline flex items-center gap-1">
                         <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><circle cx="12" cy="12" r="3"/></svg>
                         Settings
@@ -336,7 +336,14 @@
                 </div>
 
                 {{-- GCash --}}
-                @php $seller = auth()->user(); @endphp
+                @php 
+                    $seller = auth()->user(); 
+                    $hasGcashNumber = !empty($product->gcash_number) || !empty($seller->gcashNumber);
+                    $hasGcashQr = !empty($product->gcash_qr_code) || !empty($seller->gcashQrCode);
+                    $isGcashComplete = $hasGcashNumber && $hasGcashQr;
+                    $gcashNumber = $product->gcash_number ?: $seller->gcashNumber;
+                    $gcashQr = $product->gcash_qr_code ?: $seller->gcashQrCode;
+                @endphp
                 <div class="rounded-xl border border-blue-100 overflow-hidden">
                     {{-- Header --}}
                     <div class="flex items-center justify-between px-3 py-2.5 bg-linear-to-r from-blue-600 to-blue-500">
@@ -354,9 +361,8 @@
                     </div>
                     {{-- Body --}}
                     <div id="gcash_fields_edit" {{ old('product_is_gcash_available', $product->is_gcash_available) ? '' : 'style=display:none' }} class="p-3 bg-white flex items-center gap-3">
-                        @if(!empty($seller->gcashQrCode))
+                        @if($hasGcashQr)
                             @php
-                                $gcashQr = $seller->gcashQrCode;
                                 $gcashQrUrl = str_starts_with($gcashQr, 'http') ? $gcashQr : (str_starts_with(ltrim($gcashQr,'/'), 'uploads/') ? asset(ltrim($gcashQr,'/')) : asset('storage/' . ltrim($gcashQr,'/')));
                             @endphp
                             <img src="{{ $gcashQrUrl }}" class="w-12 h-12 object-contain rounded-lg border-2 border-blue-100 bg-blue-50/40 shrink-0" onerror="this.style.display='none'">
@@ -366,14 +372,22 @@
                             </div>
                         @endif
                         <div class="flex-1 min-w-0">
-                            @if($seller->gcashNumber)
-                                <div class="text-sm font-black text-gray-900 tracking-wide">{{ $seller->gcashNumber }}</div>
+                            @if($isGcashComplete)
+                                <div class="text-sm font-black text-gray-900 tracking-wide">{{ $gcashNumber }}</div>
                                 <div class="text-[9px] text-blue-500 font-bold uppercase tracking-widest mt-0.5 flex items-center gap-1">
                                     <svg class="w-2.5 h-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/></svg>
-                                    Ready
+                                    Ready (Number & QR Set)
                                 </div>
+                            @elseif($hasGcashNumber && !$hasGcashQr)
+                                <div class="text-xs font-black text-gray-900">{{ $gcashNumber }}</div>
+                                <div class="text-[9px] text-amber-600 font-bold mt-0.5">Missing QR Code (Required)</div>
+                                <a href="{{ route('seller.profile') }}?open_payment=1#payment-methods" class="text-[9px] text-blue-600 font-bold underline">Upload QR in Settings →</a>
+                            @elseif(!$hasGcashNumber && $hasGcashQr)
+                                <div class="text-[10px] text-amber-600 font-bold">Missing Mobile Number (Required)</div>
+                                <a href="{{ route('seller.profile') }}?open_payment=1#payment-methods" class="text-[9px] text-blue-600 font-bold underline">Add Number in Settings →</a>
                             @else
                                 <div class="text-[10px] text-gray-400 italic">Not configured</div>
+                                <div class="text-[8px] text-gray-400 font-medium">Both Number & QR required</div>
                                 <a href="{{ route('seller.profile') }}?open_payment=1#payment-methods" class="text-[9px] text-blue-600 font-bold underline">Add in Settings →</a>
                             @endif
                         </div>
@@ -381,6 +395,13 @@
                 </div>
 
                 {{-- Maya --}}
+                @php 
+                    $hasMayaNumber = !empty($product->maya_number) || !empty($seller->mayaNumber);
+                    $hasMayaQr = !empty($product->maya_qr_code) || !empty($seller->mayaQrCode);
+                    $isMayaComplete = $hasMayaNumber && $hasMayaQr;
+                    $mayaNumber = $product->maya_number ?: $seller->mayaNumber;
+                    $mayaQr = $product->maya_qr_code ?: $seller->mayaQrCode;
+                @endphp
                 <div class="rounded-xl border border-green-100 overflow-hidden">
                     {{-- Header --}}
                     <div class="flex items-center justify-between px-3 py-2.5 bg-linear-to-r from-green-600 to-green-500">
@@ -398,9 +419,8 @@
                     </div>
                     {{-- Body --}}
                     <div id="maya_fields_edit" {{ old('product_is_maya_available', $product->is_maya_available) ? '' : 'style=display:none' }} class="p-3 bg-white flex items-center gap-3">
-                        @if(!empty($seller->mayaQrCode))
+                        @if($hasMayaQr)
                             @php
-                                $mayaQr = $seller->mayaQrCode;
                                 $mayaQrUrl = str_starts_with($mayaQr, 'http') ? $mayaQr : (str_starts_with(ltrim($mayaQr,'/'), 'uploads/') ? asset(ltrim($mayaQr,'/')) : asset('storage/' . ltrim($mayaQr,'/')));
                             @endphp
                             <img src="{{ $mayaQrUrl }}" class="w-12 h-12 object-contain rounded-lg border-2 border-green-100 bg-green-50/40 shrink-0" onerror="this.style.display='none'">
@@ -410,14 +430,22 @@
                             </div>
                         @endif
                         <div class="flex-1 min-w-0">
-                            @if($seller->mayaNumber)
-                                <div class="text-sm font-black text-gray-900 tracking-wide">{{ $seller->mayaNumber }}</div>
+                            @if($isMayaComplete)
+                                <div class="text-sm font-black text-gray-900 tracking-wide">{{ $mayaNumber }}</div>
                                 <div class="text-[9px] text-green-600 font-bold uppercase tracking-widest mt-0.5 flex items-center gap-1">
                                     <svg class="w-2.5 h-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/></svg>
-                                    Ready
+                                    Ready (Number & QR Set)
                                 </div>
+                            @elseif($hasMayaNumber && !$hasMayaQr)
+                                <div class="text-xs font-black text-gray-900">{{ $mayaNumber }}</div>
+                                <div class="text-[9px] text-amber-600 font-bold mt-0.5">Missing QR Code (Required)</div>
+                                <a href="{{ route('seller.profile') }}?open_payment=1#payment-methods" class="text-[9px] text-green-600 font-bold underline">Upload QR in Settings →</a>
+                            @elseif(!$hasMayaNumber && $hasMayaQr)
+                                <div class="text-[10px] text-amber-600 font-bold">Missing Mobile Number (Required)</div>
+                                <a href="{{ route('seller.profile') }}?open_payment=1#payment-methods" class="text-[9px] text-green-600 font-bold underline">Add Number in Settings →</a>
                             @else
                                 <div class="text-[10px] text-gray-400 italic">Not configured</div>
+                                <div class="text-[8px] text-gray-400 font-medium">Both Number & QR required</div>
                                 <a href="{{ route('seller.profile') }}?open_payment=1#payment-methods" class="text-[9px] text-green-600 font-bold underline">Add in Settings →</a>
                             @endif
                         </div>
@@ -858,7 +886,60 @@ function validateProductForm(e, isEdit = true) {
         if (targetGroupContainer) targetGroupContainer.classList.add('border-red-500', 'border');
     }
 
-    // 5. Lumban Special Discount (Optional)
+    // 5. Payment Methods (Both Number and QR Code strictly required)
+    const gcashToggle = document.getElementById('gcash_toggle_edit');
+    const mayaToggle = document.getElementById('maya_toggle_edit');
+    const paymentCard = document.getElementById('payment-methods-card');
+    const isGcashChecked = gcashToggle ? gcashToggle.checked : false;
+    const isMayaChecked = mayaToggle ? mayaToggle.checked : false;
+
+    const hasGcashNumber = {{ (!empty($product->gcash_number) || !empty($seller->gcashNumber)) ? 'true' : 'false' }};
+    const hasGcashQr = {{ (!empty($product->gcash_qr_code) || !empty($seller->gcashQrCode)) ? 'true' : 'false' }};
+
+    const hasMayaNumber = {{ (!empty($product->maya_number) || !empty($seller->mayaNumber)) ? 'true' : 'false' }};
+    const hasMayaQr = {{ (!empty($product->maya_qr_code) || !empty($seller->mayaQrCode)) ? 'true' : 'false' }};
+
+    let hasAnyCompleteEnabled = false;
+
+    if (isGcashChecked) {
+        if (!hasGcashNumber || !hasGcashQr) {
+            if (!hasGcashNumber && !hasGcashQr) {
+                errors.push('GCash is enabled but not configured. Both Mobile Number and QR Code are required (Add in Settings).');
+            } else if (!hasGcashQr) {
+                errors.push('GCash is enabled but missing a QR Code. Both Mobile Number and QR Code are required (Upload in Settings).');
+            } else {
+                errors.push('GCash is enabled but missing a Mobile Number. Both Mobile Number and QR Code are required (Add in Settings).');
+            }
+            if (paymentCard) paymentCard.classList.add('border-red-500');
+        } else {
+            hasAnyCompleteEnabled = true;
+        }
+    }
+
+    if (isMayaChecked) {
+        if (!hasMayaNumber || !hasMayaQr) {
+            if (!hasMayaNumber && !hasMayaQr) {
+                errors.push('Maya is enabled but not configured. Both Account Number and QR Code are required (Add in Settings).');
+            } else if (!hasMayaQr) {
+                errors.push('Maya is enabled but missing a QR Code. Both Account Number and QR Code are required (Upload in Settings).');
+            } else {
+                errors.push('Maya is enabled but missing an Account Number. Both Account Number and QR Code are required (Add in Settings).');
+            }
+            if (paymentCard) paymentCard.classList.add('border-red-500');
+        } else {
+            hasAnyCompleteEnabled = true;
+        }
+    }
+
+    if (!isGcashChecked && !isMayaChecked) {
+        errors.push('Please enable at least one payment method (GCash or Maya).');
+        if (paymentCard) paymentCard.classList.add('border-red-500');
+    } else if (!hasAnyCompleteEnabled && !errors.some(e => e.includes('GCash') || e.includes('Maya'))) {
+        errors.push('Please enable at least one complete payment method with both a mobile number and a QR code.');
+        if (paymentCard) paymentCard.classList.add('border-red-500');
+    }
+
+    // 6. Lumban Special Discount (Optional)
     const isOnSale = document.getElementById('discountToggle')?.checked;
     if (isOnSale) {
         const pctInput = document.getElementById('discountPercentage');

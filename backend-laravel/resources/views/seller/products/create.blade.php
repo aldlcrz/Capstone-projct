@@ -268,7 +268,12 @@
                 </div>
 
                 {{-- GCash --}}
-                @php $user = auth()->user(); @endphp
+                @php 
+                    $user = auth()->user(); 
+                    $hasGcashNumber = !empty($user->gcashNumber);
+                    $hasGcashQr = !empty($user->gcashQrCode);
+                    $isGcashComplete = $hasGcashNumber && $hasGcashQr;
+                @endphp
                 <div class="rounded-xl border border-blue-100 overflow-hidden">
                     {{-- Header --}}
                     <div class="flex items-center justify-between px-3 py-2.5 bg-linear-to-r from-blue-600 to-blue-500">
@@ -285,7 +290,7 @@
                     </div>
                     {{-- Body --}}
                     <div id="gcash_fields_create" {{ old('product_is_gcash_available', true) ? '' : 'style=display:none' }} class="p-3 bg-white flex items-center gap-3">
-                        @if(!empty($user->gcashQrCode))
+                        @if($hasGcashQr)
                             @php
                                 $gcashQr = $user->gcashQrCode;
                                 $gcashQrUrl = str_starts_with($gcashQr, 'http') ? $gcashQr : (str_starts_with(ltrim($gcashQr,'/'), 'uploads/') ? asset(ltrim($gcashQr,'/')) : asset('storage/' . ltrim($gcashQr,'/')));
@@ -297,14 +302,22 @@
                             </div>
                         @endif
                         <div class="flex-1 min-w-0">
-                            @if($user->gcashNumber)
+                            @if($isGcashComplete)
                                 <div class="text-sm font-black text-gray-900 tracking-wide">{{ $user->gcashNumber }}</div>
                                 <div class="text-[9px] text-blue-500 font-bold uppercase tracking-widest mt-0.5 flex items-center gap-1">
                                     <svg class="w-2.5 h-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/></svg>
-                                    Ready
+                                    Ready (Number & QR Set)
                                 </div>
+                            @elseif($hasGcashNumber && !$hasGcashQr)
+                                <div class="text-xs font-black text-gray-900">{{ $user->gcashNumber }}</div>
+                                <div class="text-[9px] text-amber-600 font-bold mt-0.5">Missing QR Code (Required)</div>
+                                <a href="{{ route('seller.profile') }}?open_payment=1#payment-methods" class="text-[9px] text-blue-600 font-bold underline">Upload QR in Settings →</a>
+                            @elseif(!$hasGcashNumber && $hasGcashQr)
+                                <div class="text-[10px] text-amber-600 font-bold">Missing Mobile Number (Required)</div>
+                                <a href="{{ route('seller.profile') }}?open_payment=1#payment-methods" class="text-[9px] text-blue-600 font-bold underline">Add Number in Settings →</a>
                             @else
                                 <div class="text-[10px] text-gray-400 italic">Not configured</div>
+                                <div class="text-[8px] text-gray-400 font-medium">Both Number & QR required</div>
                                 <a href="{{ route('seller.profile') }}?open_payment=1#payment-methods" class="text-[9px] text-blue-600 font-bold underline">Add in Settings →</a>
                             @endif
                         </div>
@@ -312,6 +325,11 @@
                 </div>
 
                 {{-- Maya --}}
+                @php 
+                    $hasMayaNumber = !empty($user->mayaNumber);
+                    $hasMayaQr = !empty($user->mayaQrCode);
+                    $isMayaComplete = $hasMayaNumber && $hasMayaQr;
+                @endphp
                 <div class="rounded-xl border border-green-100 overflow-hidden">
                     {{-- Header --}}
                     <div class="flex items-center justify-between px-3 py-2.5 bg-linear-to-r from-green-600 to-green-500">
@@ -328,7 +346,7 @@
                     </div>
                     {{-- Body --}}
                     <div id="maya_fields_create" {{ old('product_is_maya_available', false) ? '' : 'style=display:none' }} class="p-3 bg-white flex items-center gap-3">
-                        @if(!empty($user->mayaQrCode))
+                        @if($hasMayaQr)
                             @php
                                 $mayaQr = $user->mayaQrCode;
                                 $mayaQrUrl = str_starts_with($mayaQr, 'http') ? $mayaQr : (str_starts_with(ltrim($mayaQr,'/'), 'uploads/') ? asset(ltrim($mayaQr,'/')) : asset('storage/' . ltrim($mayaQr,'/')));
@@ -340,14 +358,22 @@
                             </div>
                         @endif
                         <div class="flex-1 min-w-0">
-                            @if($user->mayaNumber)
+                            @if($isMayaComplete)
                                 <div class="text-sm font-black text-gray-900 tracking-wide">{{ $user->mayaNumber }}</div>
                                 <div class="text-[9px] text-green-600 font-bold uppercase tracking-widest mt-0.5 flex items-center gap-1">
                                     <svg class="w-2.5 h-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/></svg>
-                                    Ready
+                                    Ready (Number & QR Set)
                                 </div>
+                            @elseif($hasMayaNumber && !$hasMayaQr)
+                                <div class="text-xs font-black text-gray-900">{{ $user->mayaNumber }}</div>
+                                <div class="text-[9px] text-amber-600 font-bold mt-0.5">Missing QR Code (Required)</div>
+                                <a href="{{ route('seller.profile') }}?open_payment=1#payment-methods" class="text-[9px] text-green-600 font-bold underline">Upload QR in Settings →</a>
+                            @elseif(!$hasMayaNumber && $hasMayaQr)
+                                <div class="text-[10px] text-amber-600 font-bold">Missing Mobile Number (Required)</div>
+                                <a href="{{ route('seller.profile') }}?open_payment=1#payment-methods" class="text-[9px] text-green-600 font-bold underline">Add Number in Settings →</a>
                             @else
                                 <div class="text-[10px] text-gray-400 italic">Not configured</div>
+                                <div class="text-[8px] text-gray-400 font-medium">Both Number & QR required</div>
                                 <a href="{{ route('seller.profile') }}?open_payment=1#payment-methods" class="text-[9px] text-green-600 font-bold underline">Add in Settings →</a>
                             @endif
                         </div>
@@ -763,14 +789,56 @@ function validateProductForm(e, isEdit = false) {
         }
     }
 
-    // 6. Payment Methods
+    // 6. Payment Methods (Both Number and QR Code strictly required)
     const gcashToggle = document.getElementById('gcash_toggle_create');
     const mayaToggle = document.getElementById('maya_toggle_create');
     const paymentCard = document.getElementById('payment-methods-card');
     const isGcashChecked = gcashToggle ? gcashToggle.checked : false;
     const isMayaChecked = mayaToggle ? mayaToggle.checked : false;
+
+    const hasGcashNumber = {{ !empty($user->gcashNumber) ? 'true' : 'false' }};
+    const hasGcashQr = {{ !empty($user->gcashQrCode) ? 'true' : 'false' }};
+
+    const hasMayaNumber = {{ !empty($user->mayaNumber) ? 'true' : 'false' }};
+    const hasMayaQr = {{ !empty($user->mayaQrCode) ? 'true' : 'false' }};
+
+    let hasAnyCompleteEnabled = false;
+
+    if (isGcashChecked) {
+        if (!hasGcashNumber || !hasGcashQr) {
+            if (!hasGcashNumber && !hasGcashQr) {
+                errors.push('GCash is enabled but not configured. Both Mobile Number and QR Code are required (Add in Settings).');
+            } else if (!hasGcashQr) {
+                errors.push('GCash is enabled but missing a QR Code. Both Mobile Number and QR Code are required (Upload in Settings).');
+            } else {
+                errors.push('GCash is enabled but missing a Mobile Number. Both Mobile Number and QR Code are required (Add in Settings).');
+            }
+            if (paymentCard) paymentCard.classList.add('border-red-500');
+        } else {
+            hasAnyCompleteEnabled = true;
+        }
+    }
+
+    if (isMayaChecked) {
+        if (!hasMayaNumber || !hasMayaQr) {
+            if (!hasMayaNumber && !hasMayaQr) {
+                errors.push('Maya is enabled but not configured. Both Account Number and QR Code are required (Add in Settings).');
+            } else if (!hasMayaQr) {
+                errors.push('Maya is enabled but missing a QR Code. Both Account Number and QR Code are required (Upload in Settings).');
+            } else {
+                errors.push('Maya is enabled but missing an Account Number. Both Account Number and QR Code are required (Add in Settings).');
+            }
+            if (paymentCard) paymentCard.classList.add('border-red-500');
+        } else {
+            hasAnyCompleteEnabled = true;
+        }
+    }
+
     if (!isGcashChecked && !isMayaChecked) {
         errors.push('Please enable at least one payment method (GCash or Maya).');
+        if (paymentCard) paymentCard.classList.add('border-red-500');
+    } else if (!hasAnyCompleteEnabled && !errors.some(e => e.includes('GCash') || e.includes('Maya'))) {
+        errors.push('Please enable at least one complete payment method with both a mobile number and a QR code.');
         if (paymentCard) paymentCard.classList.add('border-red-500');
     }
 

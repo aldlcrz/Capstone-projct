@@ -74,8 +74,30 @@ class ProductManagementController extends Controller
             'size_stocks.*.max'    => 'Size stock quantity cannot exceed 10,000 units.',
         ]);
 
-        if (!$request->has('product_is_gcash_available') && !$request->has('product_is_maya_available')) {
-            return redirect()->back()->withInput()->with('error', 'Please enable at least one payment method (GCash or Maya).');
+        $hasCompletePayment = false;
+
+        // GCash validation
+        if ($request->has('product_is_gcash_available')) {
+            $hasGcashNumber = !empty($request->gcashNumber) || !empty($user->gcashNumber);
+            $hasGcashQr = $request->hasFile('gcashQrCode') || !empty($user->gcashQrCode);
+            if (!$hasGcashNumber || !$hasGcashQr) {
+                return redirect()->back()->withInput()->with('error', 'GCash is enabled but incomplete. Both a GCash Mobile Number and a QR Code are required.');
+            }
+            $hasCompletePayment = true;
+        }
+
+        // Maya validation
+        if ($request->has('product_is_maya_available')) {
+            $hasMayaNumber = !empty($request->mayaNumber) || !empty($user->mayaNumber);
+            $hasMayaQr = $request->hasFile('mayaQrCode') || !empty($user->mayaQrCode);
+            if (!$hasMayaNumber || !$hasMayaQr) {
+                return redirect()->back()->withInput()->with('error', 'Maya is enabled but incomplete. Both a Maya Account Number and a QR Code are required.');
+            }
+            $hasCompletePayment = true;
+        }
+
+        if (!$hasCompletePayment) {
+            return redirect()->back()->withInput()->with('error', 'Please enable at least one complete payment method with both a mobile number and a QR code.');
         }
 
         $selectedSizes = $request->sizes ?? [];
@@ -232,6 +254,33 @@ class ProductManagementController extends Controller
             'sizes.required'        => 'Please select at least one Heritage Size (e.g. S, M, L, XL, XXL, Custom).',
             'sizes.min'             => 'Please select at least one Heritage Size (e.g. S, M, L, XL, XXL, Custom).',
         ]);
+
+        $user = Auth::user();
+        $hasCompletePayment = false;
+
+        // GCash validation
+        if ($request->has('product_is_gcash_available')) {
+            $hasGcashNumber = !empty($request->gcashNumber) || !empty($product->gcash_number) || !empty($user->gcashNumber);
+            $hasGcashQr = $request->hasFile('gcashQrCode') || !empty($product->gcash_qr_code) || !empty($user->gcashQrCode);
+            if (!$hasGcashNumber || !$hasGcashQr) {
+                return redirect()->back()->withInput()->with('error', 'GCash is enabled but incomplete. Both a GCash Mobile Number and a QR Code are required.');
+            }
+            $hasCompletePayment = true;
+        }
+
+        // Maya validation
+        if ($request->has('product_is_maya_available')) {
+            $hasMayaNumber = !empty($request->mayaNumber) || !empty($product->maya_number) || !empty($user->mayaNumber);
+            $hasMayaQr = $request->hasFile('mayaQrCode') || !empty($product->maya_qr_code) || !empty($user->mayaQrCode);
+            if (!$hasMayaNumber || !$hasMayaQr) {
+                return redirect()->back()->withInput()->with('error', 'Maya is enabled but incomplete. Both a Maya Account Number and a QR Code are required.');
+            }
+            $hasCompletePayment = true;
+        }
+
+        if (!$hasCompletePayment) {
+            return redirect()->back()->withInput()->with('error', 'Please enable at least one complete payment method with both a mobile number and a QR code.');
+        }
 
         $selectedSizes = $request->sizes ?? [];
         $sizeStocks = is_array($request->size_stocks) ? array_filter($request->size_stocks, function($key) use ($selectedSizes) {

@@ -691,6 +691,24 @@ class DashboardController extends Controller
             'birDocument'          => 'nullable|file|mimes:pdf,jpg,jpeg,png|max:5120',
             'residencyCertificate' => 'nullable|file|mimes:pdf,jpg,jpeg,png|max:5120',
         ]);
+        // Validate GCash: both number and QR required if configured
+        if ($request->filled('gcashNumber') || $request->hasFile('gcashQrCode')) {
+            $hasGcashNumber = $request->filled('gcashNumber');
+            $hasGcashQr = $request->hasFile('gcashQrCode') || !empty($user->gcashQrCode);
+            if (!$hasGcashNumber || !$hasGcashQr) {
+                return redirect()->back()->withInput()->with('error', 'GCash requires both a mobile number and a QR code image.');
+            }
+        }
+
+        // Validate Maya: both number and QR required if configured
+        if ($request->filled('mayaNumber') || $request->hasFile('mayaQrCode')) {
+            $hasMayaNumber = $request->filled('mayaNumber');
+            $hasMayaQr = $request->hasFile('mayaQrCode') || !empty($user->mayaQrCode);
+            if (!$hasMayaNumber || !$hasMayaQr) {
+                return redirect()->back()->withInput()->with('error', 'Maya requires both an account number and a QR code image.');
+            }
+        }
+
         $user->name            = $request->name;
         $user->mobileNumber    = $request->mobileNumber;
         $user->shopName        = $request->shopName ?? $request->name;

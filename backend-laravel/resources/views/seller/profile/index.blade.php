@@ -384,7 +384,13 @@
 
                 {{-- Edit Mode Form --}}
                 <div x-show="editing" style="display: none;">
-                    <form action="{{ route('seller.profile.update') }}" method="POST" enctype="multipart/form-data" class="space-y-4">
+                    {{-- Requirement Reminder Banner --}}
+                    <div class="p-3 mb-3 bg-amber-50 border border-amber-200 rounded-2xl text-amber-800 text-[10px] font-bold flex items-start gap-2 leading-relaxed">
+                        <svg class="w-4 h-4 text-amber-600 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+                        <span><strong>Requirement:</strong> Both a <strong>Mobile Number</strong> and a <strong>QR Code Image</strong> are strictly required for GCash and Maya. Providing only one will not work.</span>
+                    </div>
+
+                    <form action="{{ route('seller.profile.update') }}" method="POST" enctype="multipart/form-data" class="space-y-4" onsubmit="return validatePaymentModalForm(event, this)">
                         @csrf
                         @method('PUT')
                         {{-- Preserved required profile values --}}
@@ -394,10 +400,13 @@
 
                         {{-- GCash Edit --}}
                         <div class="p-4 border border-blue-100 rounded-2xl bg-blue-50/30 space-y-3">
-                            <div class="text-[10px] font-black uppercase tracking-widest text-blue-700">GCash Configuration</div>
+                            <div class="flex items-center justify-between">
+                                <div class="text-[10px] font-black uppercase tracking-widest text-blue-700">GCash Configuration</div>
+                                <span class="text-[8px] font-bold uppercase text-blue-500 bg-white/70 px-2 py-0.5 rounded-md border border-blue-100">Number & QR Required</span>
+                            </div>
                             <div class="space-y-1">
                                 <label class="text-[9px] font-bold uppercase text-gray-500">GCash Mobile Number</label>
-                                <input type="text" name="gcashNumber" value="{{ old('gcashNumber', $user->gcashNumber) }}" placeholder="e.g. 0917 123 4567" class="w-full px-4 py-2.5 bg-white border border-gray-200 rounded-xl text-xs font-bold outline-none focus:border-blue-500">
+                                <input type="text" id="modalGcashNumber" name="gcashNumber" value="{{ old('gcashNumber', $user->gcashNumber) }}" placeholder="e.g. 0917 123 4567" class="w-full px-4 py-2.5 bg-white border border-gray-200 rounded-xl text-xs font-bold outline-none focus:border-blue-500">
                             </div>
                             <div class="space-y-2">
                                 <label class="text-[9px] font-bold uppercase text-gray-500">GCash QR Code</label>
@@ -410,16 +419,19 @@
                                         <div class="text-[9px] text-gray-500 font-bold leading-relaxed">Current QR uploaded.<br><span class="text-blue-600">Choose a new file below to replace it.</span></div>
                                     </div>
                                 @endif
-                                <input type="file" name="gcashQrCode" accept="image/*" class="w-full text-xs text-gray-500 file:mr-3 file:py-2 file:px-3 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-blue-600 file:text-white hover:file:bg-blue-700">
+                                <input type="file" id="modalGcashQr" name="gcashQrCode" accept="image/*" class="w-full text-xs text-gray-500 file:mr-3 file:py-2 file:px-3 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-blue-600 file:text-white hover:file:bg-blue-700">
                             </div>
                         </div>
 
                         {{-- Maya Edit --}}
                         <div class="p-4 border border-green-100 rounded-2xl bg-green-50/30 space-y-3">
-                            <div class="text-[10px] font-black uppercase tracking-widest text-green-700">Maya Configuration</div>
+                            <div class="flex items-center justify-between">
+                                <div class="text-[10px] font-black uppercase tracking-widest text-green-700">Maya Configuration</div>
+                                <span class="text-[8px] font-bold uppercase text-green-600 bg-white/70 px-2 py-0.5 rounded-md border border-green-100">Number & QR Required</span>
+                            </div>
                             <div class="space-y-1">
                                 <label class="text-[9px] font-bold uppercase text-gray-500">Maya Mobile Number</label>
-                                <input type="text" name="mayaNumber" value="{{ old('mayaNumber', $user->mayaNumber) }}" placeholder="e.g. 0917 123 4567" class="w-full px-4 py-2.5 bg-white border border-gray-200 rounded-xl text-xs font-bold outline-none focus:border-green-500">
+                                <input type="text" id="modalMayaNumber" name="mayaNumber" value="{{ old('mayaNumber', $user->mayaNumber) }}" placeholder="e.g. 0917 123 4567" class="w-full px-4 py-2.5 bg-white border border-gray-200 rounded-xl text-xs font-bold outline-none focus:border-green-500">
                             </div>
                             <div class="space-y-2">
                                 <label class="text-[9px] font-bold uppercase text-gray-500">Maya QR Code</label>
@@ -432,15 +444,15 @@
                                         <div class="text-[9px] text-gray-500 font-bold leading-relaxed">Current QR uploaded.<br><span class="text-green-600">Choose a new file below to replace it.</span></div>
                                     </div>
                                 @endif
-                                <input type="file" name="mayaQrCode" accept="image/*" class="w-full text-xs text-gray-500 file:mr-3 file:py-2 file:px-3 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-green-600 file:text-white hover:file:bg-green-700">
+                                <input type="file" id="modalMayaQr" name="mayaQrCode" accept="image/*" class="w-full text-xs text-gray-500 file:mr-3 file:py-2 file:px-3 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-green-600 file:text-white hover:file:bg-green-700">
                             </div>
                         </div>
 
                         <div class="pt-2 flex items-center gap-3">
-                            <button type="submit" class="flex-1 py-3 bg-[#C0420A] text-white rounded-2xl text-xs font-black uppercase tracking-widest hover:bg-black transition-all shadow-md">
+                            <button type="submit" class="flex-1 py-3 bg-[#C0420A] text-white rounded-2xl text-xs font-black uppercase tracking-widest hover:bg-black transition-all shadow-md cursor-pointer">
                                 Save Payment Info
                             </button>
-                            <button type="button" @click="editing = false" class="px-5 py-3 bg-gray-100 text-gray-700 rounded-2xl text-xs font-black uppercase tracking-widest hover:bg-gray-200 transition-all">
+                            <button type="button" @click="editing = false" class="px-5 py-3 bg-gray-100 text-gray-700 rounded-2xl text-xs font-black uppercase tracking-widest hover:bg-gray-200 transition-all cursor-pointer">
                                 Cancel
                             </button>
                         </div>
@@ -576,6 +588,43 @@
     </div>
 
     <script>
+    function validatePaymentModalForm(e, form) {
+        const gcashNum = document.getElementById('modalGcashNumber')?.value.trim();
+        const gcashFile = document.getElementById('modalGcashQr')?.files?.length > 0;
+        const hasExistingGcashQr = {{ !empty($user->gcashQrCode) ? 'true' : 'false' }};
+
+        const mayaNum = document.getElementById('modalMayaNumber')?.value.trim();
+        const mayaFile = document.getElementById('modalMayaQr')?.files?.length > 0;
+        const hasExistingMayaQr = {{ !empty($user->mayaQrCode) ? 'true' : 'false' }};
+
+        const errors = [];
+
+        // GCash check: if either is provided, both must be present
+        if (gcashNum || gcashFile) {
+            const hasQr = gcashFile || hasExistingGcashQr;
+            if (!gcashNum || !hasQr) {
+                if (!gcashNum) errors.push('Please provide a GCash mobile number.');
+                if (!hasQr) errors.push('Please upload a GCash QR Code image.');
+            }
+        }
+
+        // Maya check: if either is provided, both must be present
+        if (mayaNum || mayaFile) {
+            const hasQr = mayaFile || hasExistingMayaQr;
+            if (!mayaNum || !hasQr) {
+                if (!mayaNum) errors.push('Please provide a Maya account number.');
+                if (!hasQr) errors.push('Please upload a Maya QR Code image.');
+            }
+        }
+
+        if (errors.length > 0) {
+            e.preventDefault();
+            alert('Payment Method Incomplete:\n\n• ' + errors.join('\n• ') + '\n\nEvery payment method requires BOTH a valid mobile number and a QR code image.');
+            return false;
+        }
+        return true;
+    }
+
     document.addEventListener('DOMContentLoaded', function() {
         const urlParams = new URLSearchParams(window.location.search);
         if (urlParams.get('open_payment') === '1' || window.location.hash === '#payment-methods') {
