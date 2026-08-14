@@ -70,12 +70,18 @@
                 @endif
                 <div class="flex flex-wrap items-center gap-2 sm:gap-3 mt-1 sm:mt-2">
                     @if($banner->button_text_1)
-                        <a href="{{ $banner->button_url_1 ?: '/' }}" class="inline-flex items-center justify-center px-4 py-2 sm:px-5 sm:py-2.5 bg-amber-600 hover:bg-amber-700 text-white text-xs sm:text-sm font-bold rounded-xl transition-all shadow-md hover:shadow-lg hover:scale-105 active:scale-95">
+                        @php $url1 = $banner->getResolvedButtonUrl1(); @endphp
+                        <a href="{{ $url1 }}"
+                           @if($url1 === '#catalogue-section') onclick="event.preventDefault(); document.getElementById('catalogue-section')?.scrollIntoView({ behavior: 'smooth' });" @endif
+                           class="inline-flex items-center justify-center px-4 py-2 sm:px-5 sm:py-2.5 bg-amber-600 hover:bg-amber-700 text-white text-xs sm:text-sm font-bold rounded-xl transition-all shadow-md hover:shadow-lg hover:scale-105 active:scale-95 cursor-pointer">
                             {{ $banner->button_text_1 }}
                         </a>
                     @endif
                     @if($banner->button_text_2)
-                        <a href="{{ $banner->button_url_2 ?: '/' }}" class="inline-flex items-center justify-center px-4 py-2 sm:px-5 sm:py-2.5 bg-white/15 hover:bg-white/25 text-white text-xs sm:text-sm font-semibold rounded-xl border border-white/30 backdrop-blur-sm transition-all active:scale-95">
+                        @php $url2 = $banner->getResolvedButtonUrl2(); @endphp
+                        <a href="{{ $url2 }}"
+                           @if($url2 === '#catalogue-section') onclick="event.preventDefault(); document.getElementById('catalogue-section')?.scrollIntoView({ behavior: 'smooth' });" @endif
+                           class="inline-flex items-center justify-center px-4 py-2 sm:px-5 sm:py-2.5 bg-white/15 hover:bg-white/25 text-white text-xs sm:text-sm font-semibold rounded-xl border border-white/30 backdrop-blur-sm transition-all active:scale-95 cursor-pointer">
                             {{ $banner->button_text_2 }}
                         </a>
                     @endif

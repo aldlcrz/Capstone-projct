@@ -55,4 +55,54 @@ class Banner extends Model
         }
         return asset('uploads/banners/' . $this->image_path);
     }
+
+    /**
+     * Resolve the first button URL intelligently.
+     */
+    public function getResolvedButtonUrl1()
+    {
+        if ($this->button_url_1 && $this->button_url_1 !== '#' && $this->button_url_1 !== '/') {
+            return $this->button_url_1;
+        }
+
+        // If the banner is created by or belongs to a seller
+        if ($this->userId) {
+            return route('shops.show', ['id' => $this->userId]) . '#shop-catalogue';
+        }
+
+        return '#catalogue-section';
+    }
+
+    /**
+     * Resolve the second button URL intelligently.
+     */
+    public function getResolvedButtonUrl2()
+    {
+        if ($this->button_url_2 && $this->button_url_2 !== '#' && $this->button_url_2 !== '/') {
+            return $this->button_url_2;
+        }
+
+        // If banner has seller user attached
+        if ($this->userId) {
+            return route('shops.show', ['id' => $this->userId]);
+        }
+
+        // If subtitle or title mentions a seller/store name (e.g., 'MACAPAGAL')
+        $possibleName = trim($this->subtitle ?: '');
+        if ($possibleName && strlen($possibleName) <= 50) {
+            $seller = User::where('role', 'seller')
+                ->where(function($q) use ($possibleName) {
+                    $q->where('shopName', 'like', '%' . $possibleName . '%')
+                      ->orWhere('name', 'like', '%' . $possibleName . '%');
+                })->first();
+
+            if ($seller) {
+                return route('shops.show', ['id' => $seller->id]);
+            }
+
+            return '/?search=' . urlencode($possibleName) . '#catalogue-section';
+        }
+
+        return '#catalogue-section';
+    }
 }
