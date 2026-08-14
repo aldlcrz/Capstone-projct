@@ -153,12 +153,12 @@
                 </div>
             </div>
 
-            <div class="mt-8 flex flex-wrap items-center justify-center sm:justify-end gap-3">
+            <div class="mt-8 flex flex-wrap items-center justify-center gap-3">
                 {{-- View Mode: Edit Profile Button --}}
                 <button type="button" 
                         x-show="!isEditing" 
                         @click="isEditing = true; $nextTick(() => { if ($refs.shopNameInput) $refs.shopNameInput.focus(); })" 
-                        class="w-full sm:w-auto px-8 py-3.5 bg-gray-900 text-white rounded-xl text-xs font-black uppercase tracking-widest hover:bg-[#C0420A] transition-all shadow-md flex items-center justify-center gap-2">
+                        class="w-full sm:w-auto px-10 py-3.5 bg-gray-900 text-white rounded-xl text-xs font-black uppercase tracking-widest hover:bg-[#C0420A] transition-all shadow-md flex items-center justify-center gap-2 cursor-pointer">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/></svg>
                     <span>Edit Profile</span>
                 </button>
@@ -168,7 +168,7 @@
                         x-show="isEditing" 
                         x-cloak
                         @click="cancelEdit()" 
-                        class="w-full sm:w-auto px-6 py-3.5 bg-gray-100 text-gray-700 rounded-xl text-xs font-black uppercase tracking-widest hover:bg-gray-200 transition-all">
+                        class="w-full sm:w-auto px-7 py-3.5 bg-gray-100 text-gray-700 rounded-xl text-xs font-black uppercase tracking-widest hover:bg-gray-200 transition-all cursor-pointer">
                     Cancel
                 </button>
 
@@ -178,7 +178,7 @@
                         x-cloak
                         :disabled="!hasChanges()"
                         :class="hasChanges() ? 'bg-[#C0420A] text-white hover:bg-black cursor-pointer shadow-md' : 'bg-gray-200 text-gray-400 cursor-not-allowed opacity-75'"
-                        class="w-full sm:w-auto px-8 py-3.5 rounded-xl text-xs font-black uppercase tracking-widest transition-all flex items-center justify-center gap-2">
+                        class="w-full sm:w-auto px-10 py-3.5 rounded-xl text-xs font-black uppercase tracking-widest transition-all flex items-center justify-center gap-2">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
                     <span>Save Changes</span>
                 </button>
