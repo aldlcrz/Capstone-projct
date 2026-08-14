@@ -30,12 +30,12 @@
             <table class="w-full text-left border-collapse min-w-162.5">
             <thead>
                 <tr class="bg-gray-50/50 border-bottom border-gray-100">
-                    <th class="px-6 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest">Reporter</th>
-                    <th class="px-6 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest">Reported</th>
-                    <th class="px-6 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest">Issue</th>
-                    <th class="px-6 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest">Date</th>
-                    <th class="px-6 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest">Status</th>
-                    <th class="px-6 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest text-right">Actions</th>
+                    <th class="px-6 py-4 text-[10px] font-black text-gray-700 uppercase tracking-widest">Reporter</th>
+                    <th class="px-6 py-4 text-[10px] font-black text-gray-700 uppercase tracking-widest">Reported</th>
+                    <th class="px-6 py-4 text-[10px] font-black text-gray-700 uppercase tracking-widest">Issue</th>
+                    <th class="px-6 py-4 text-[10px] font-black text-gray-700 uppercase tracking-widest">Date</th>
+                    <th class="px-6 py-4 text-[10px] font-black text-gray-700 uppercase tracking-widest">Status</th>
+                    <th class="px-6 py-4 text-[10px] font-black text-gray-700 uppercase tracking-widest text-right">Actions</th>
                 </tr>
             </thead>
             <tbody class="divide-y divide-gray-50">
@@ -48,17 +48,17 @@
                             </div>
                             <div>
                                 <div class="text-[11px] font-black text-[#3D2B1F] uppercase tracking-wide">{{ $report->reporter->name ?? 'Deleted User' }}</div>
-                                <div class="text-[9px] text-gray-400 font-bold uppercase">{{ $report->type == 'CustomerReportingSeller' ? 'Customer' : 'Seller' }}</div>
+                                <div class="text-[9px] text-gray-500 font-bold uppercase">{{ $report->type == 'CustomerReportingSeller' ? 'Customer' : 'Seller' }}</div>
                             </div>
                         </div>
                     </td>
                     <td class="px-6 py-4">
-                        <div class="text-[11px] font-black text-gray-600 uppercase tracking-wide">{{ $report->reported->name ?? 'Deleted User' }}</div>
-                        <div class="text-[9px] text-gray-400 font-bold uppercase">ID: {{ substr($report->reportedId, 0, 8) }}...</div>
+                        <div class="text-[11px] font-black text-gray-700 uppercase tracking-wide">{{ $report->reported->name ?? 'Deleted User' }}</div>
+                        <div class="text-[9px] text-gray-500 font-bold uppercase">ID: {{ substr($report->reportedId, 0, 8) }}...</div>
                     </td>
                     <td class="px-6 py-4 max-w-xs">
                         <div class="text-[11px] font-bold text-[#3D2B1F]">{{ $report->reason }}</div>
-                        <div class="text-[10px] text-gray-500 mt-1 line-clamp-2 italic">"{{ $report->description }}"</div>
+                        <div class="text-[10px] text-gray-600 mt-1 line-clamp-2 italic">"{{ $report->description }}"</div>
                         @if($report->evidence)
                             <div class="mt-2 flex items-center gap-1 text-[9px] font-black text-red-600 uppercase tracking-widest bg-red-50 w-fit px-2 py-0.5 rounded border border-red-100">
                                 <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
@@ -67,11 +67,11 @@
                         @endif
                     </td>
                     <td class="px-6 py-4">
-                        <div class="text-[10px] font-bold text-gray-500">{{ $report->createdAt->format('M d, Y') }}</div>
-                        <div class="text-[9px] text-gray-400 uppercase font-black">{{ $report->createdAt->format('h:i A') }}</div>
+                        <div class="text-[10px] font-bold text-gray-700">{{ $report->createdAt->format('M d, Y') }}</div>
+                        <div class="text-[9px] text-gray-500 uppercase font-bold">{{ $report->createdAt->format('h:i A') }}</div>
                     </td>
                     <td class="px-6 py-4">
-                        <span class="px-2 py-1 {{ $report->status == 'Pending' ? 'bg-amber-50 text-amber-600' : 'bg-emerald-50 text-emerald-600' }} rounded text-[9px] font-black uppercase tracking-widest">
+                        <span class="px-2 py-1 {{ $report->status == 'Pending' ? 'bg-amber-50 text-amber-700 border border-amber-200' : 'bg-emerald-50 text-emerald-700 border border-emerald-200' }} rounded text-[9px] font-black uppercase tracking-widest">
                             {{ $report->status }}
                         </span>
                     </td>
@@ -87,14 +87,14 @@
                                 reporterRole: '{{ $report->type == 'CustomerReportingSeller' ? 'Customer' : 'Seller' }}',
                                 reportedName: '{{ addslashes($report->reported->name ?? 'Deleted User') }}',
                                 createdAt: '{{ $report->createdAt->format('M d, Y h:i A') }}'
-                            }; showResolveModal = true" class="px-3 py-1.5 bg-rust text-white rounded-lg text-[9px] font-black uppercase tracking-widest hover:bg-[#C0422A] transition-all">
+                            }; showResolveModal = true" class="px-3 py-1.5 bg-rust text-white rounded-lg text-[9px] font-black uppercase tracking-widest hover:bg-[#C0422A] transition-all cursor-pointer">
                                 Resolve
                             </button>
                             @endif
                             <form action="{{ route('admin.reports.delete', $report->id) }}" method="POST" onsubmit="return confirm('Permanently delete this report record?')">
                                 @csrf
                                 @method('DELETE')
-                                <button type="submit" class="p-2 text-gray-400 hover:text-red-600 transition-colors">
+                                <button type="submit" class="p-2 text-gray-400 hover:text-red-600 transition-colors cursor-pointer">
                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
                                 </button>
                             </form>

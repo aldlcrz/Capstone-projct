@@ -9,7 +9,7 @@
     <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div>
             <div class="text-[10px] font-bold text-[#C0422A] uppercase tracking-[0.2em] mb-1">Catalog Management</div>
-            <h1 class="font-serif text-2xl sm:text-3xl font-bold text-black">Product <span class="text-gray-300 font-light italic">Categories</span></h1>
+            <h1 class="font-serif text-2xl sm:text-3xl font-bold text-black">Product <span class="text-[#C0420A] font-light italic">Categories</span></h1>
         </div>
         <div class="flex items-center gap-2 flex-wrap">
             <form action="{{ route('admin.categories.initialize') }}" method="POST">
@@ -30,11 +30,11 @@
             <table class="w-full text-left border-collapse min-w-137.5">
             <thead>
                 <tr class="bg-gray-50/50">
-                    <th class="px-6 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest">Name</th>
-                    <th class="px-6 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest">Description</th>
-                    <th class="px-6 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest">Target</th>
-                    <th class="px-6 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest text-center">Products</th>
-                    <th class="px-6 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest text-right">Actions</th>
+                    <th class="px-6 py-4 text-[10px] font-black text-gray-700 uppercase tracking-widest">Name</th>
+                    <th class="px-6 py-4 text-[10px] font-black text-gray-700 uppercase tracking-widest">Description</th>
+                    <th class="px-6 py-4 text-[10px] font-black text-gray-700 uppercase tracking-widest">Target</th>
+                    <th class="px-6 py-4 text-[10px] font-black text-gray-700 uppercase tracking-widest text-center">Products</th>
+                    <th class="px-6 py-4 text-[10px] font-black text-gray-700 uppercase tracking-widest text-right">Actions</th>
                 </tr>
             </thead>
             <tbody class="divide-y divide-gray-50">

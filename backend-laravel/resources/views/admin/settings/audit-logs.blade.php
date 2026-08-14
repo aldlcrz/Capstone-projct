@@ -10,21 +10,21 @@
     {{-- Header --}}
     <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-            <h1 class="text-2xl font-bold text-(--charcoal) font-serif">Audit Logs</h1>
-            <p class="text-sm text-(--muted) mt-1">Recent platform activity broken down by type.</p>
+            <h1 class="text-2xl sm:text-3xl font-bold text-black font-serif">Audit <span class="text-[#C0420A] font-light italic">Logs</span></h1>
+            <p class="text-xs sm:text-sm text-gray-600 font-medium mt-1">Recent platform activity broken down by type.</p>
         </div>
         <form method="GET" action="{{ route('admin.audit-logs') }}" class="flex gap-2">
             <input type="hidden" name="tab" value="{{ $activeTab }}">
             <input type="text" name="search" value="{{ $search }}" placeholder="Search logs..."
-                class="px-4 py-2.5 rounded-xl border border-(--border) text-sm focus:outline-none focus:ring-2 focus:ring-(--rust)/20 focus:border-(--rust) bg-(--cream) w-56">
-            <button type="submit" class="px-4 py-2.5 bg-(--rust) text-white text-sm font-bold rounded-xl hover:opacity-90 transition-all">
+                class="px-4 py-2.5 rounded-xl border border-gray-200 text-xs sm:text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-[#C0420A]/20 focus:border-[#C0420A] bg-white w-56">
+            <button type="submit" class="px-4 py-2.5 bg-[#C0420A] text-white text-sm font-bold rounded-xl hover:bg-[#a33707] transition-all cursor-pointer">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
                 </svg>
             </button>
             @if($search)
                 <a href="{{ route('admin.audit-logs', ['tab' => $activeTab]) }}"
-                   class="px-4 py-2.5 bg-gray-100 text-gray-600 text-sm font-bold rounded-xl hover:bg-gray-200 transition-all">
+                   class="px-4 py-2.5 bg-gray-100 text-gray-700 text-xs sm:text-sm font-bold rounded-xl hover:bg-gray-200 transition-all">
                     Clear
                 </a>
             @endif
@@ -44,14 +44,14 @@
     <div class="flex gap-2 flex-wrap">
         @foreach($tabs as $key => $t)
             <a href="{{ route('admin.audit-logs', array_filter(['tab' => $key, 'search' => $search])) }}"
-               class="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold border transition-all duration-200
+               class="flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs sm:text-sm font-bold border transition-all duration-200
                       {{ $activeTab === $key
-                          ? 'bg-(--rust) text-white border-(--rust) shadow-sm'
-                          : 'bg-white border-(--border) text-(--charcoal) hover:border-(--rust) hover:text-(--rust)' }}">
-                <span class="w-2 h-2 rounded-full {{ $activeTab === $key ? 'bg-white/70' : $t['dot'] }}"></span>
+                          ? 'bg-[#C0420A] text-white border-[#C0420A] shadow-sm'
+                          : 'bg-white border-gray-200 text-gray-700 hover:border-[#C0420A] hover:text-[#C0420A]' }}">
+                <span class="w-2 h-2 rounded-full {{ $activeTab === $key ? 'bg-white' : $t['dot'] }}"></span>
                 {{ $t['label'] }}
-                <span class="ml-1 px-1.5 py-0.5 rounded-md text-[10px] font-bold
-                             {{ $activeTab === $key ? 'bg-white/20 text-white' : 'bg-gray-100 text-gray-500' }}">
+                <span class="ml-1 px-1.5 py-0.5 rounded-md text-[10px] font-black
+                             {{ $activeTab === $key ? 'bg-white/20 text-white' : 'bg-gray-100 text-gray-600' }}">
                     {{ $t['count'] }}
                 </span>
             </a>
@@ -76,7 +76,7 @@
         </div>
         <div>
             <p class="text-sm font-bold {{ $cardConfig['text'] }}">{{ $cardConfig['label'] }}</p>
-            <p class="text-xs {{ $cardConfig['text'] }} opacity-70 mt-0.5">
+            <p class="text-xs {{ $cardConfig['text'] }} font-medium opacity-80 mt-0.5">
                 {{ $counts[$activeTab] }} {{ Str::plural('entry', $counts[$activeTab]) }}{{ $search ? ' matching "' . e($search) . '"' : '' }}
             </p>
         </div>
@@ -85,65 +85,65 @@
     @endif
 
     {{-- Log Table --}}
-    <div class="bg-white rounded-2xl border border-(--border) overflow-hidden">
-        <div class="overflow-x-auto">
-            <table class="w-full">
+    <div class="bg-white rounded-3xl border border-gray-100 shadow-sm overflow-hidden">
+        <div class="overflow-x-auto no-scrollbar">
+            <table class="w-full text-left min-w-137.5">
                 <thead>
-                    <tr class="border-b border-(--border) bg-(--cream)">
-                        <th class="text-left px-5 py-3.5 text-[10px] font-bold uppercase tracking-widest text-(--muted)">Time</th>
+                    <tr class="border-b border-gray-100 bg-gray-50/50">
+                        <th class="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-gray-700">Time</th>
                         @if($activeTab === 'all')
-                        <th class="text-left px-5 py-3.5 text-[10px] font-bold uppercase tracking-widest text-(--muted)">Type</th>
+                        <th class="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-gray-700">Type</th>
                         @endif
-                        <th class="text-left px-5 py-3.5 text-[10px] font-bold uppercase tracking-widest text-(--muted)">
+                        <th class="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-gray-700">
                             {{ $activeTab === 'orders' ? 'Customer' : ($activeTab === 'products' ? 'Seller' : ($activeTab === 'users' ? 'User' : 'Actor')) }}
                         </th>
-                        <th class="text-left px-5 py-3.5 text-[10px] font-bold uppercase tracking-widest text-(--muted)">Action</th>
-                        <th class="text-left px-5 py-3.5 text-[10px] font-bold uppercase tracking-widest text-(--muted)">Detail</th>
+                        <th class="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-gray-700">Action</th>
+                        <th class="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-gray-700">Detail</th>
                     </tr>
                 </thead>
-                <tbody class="divide-y divide-(--border)">
+                <tbody class="divide-y divide-gray-50">
                     @forelse($logs as $log)
                     @php
                         $typeStyles = [
-                            'order'   => 'bg-blue-50 text-blue-700',
-                            'product' => 'bg-purple-50 text-purple-700',
-                            'user'    => 'bg-green-50 text-green-700',
+                            'order'   => 'bg-blue-50 text-blue-700 border border-blue-200',
+                            'product' => 'bg-purple-50 text-purple-700 border border-purple-200',
+                            'user'    => 'bg-green-50 text-green-700 border border-green-200',
                         ];
                         $typeLabels = [
                             'order'   => 'Order',
                             'product' => 'Product',
                             'user'    => 'User',
                         ];
-                        $badge = $typeStyles[$log['type']] ?? 'bg-gray-100 text-gray-600';
+                        $badge = $typeStyles[$log['type']] ?? 'bg-gray-100 text-gray-700 border border-gray-200';
                         $label = $typeLabels[$log['type']] ?? 'System';
 
                         $rowAccent = match($log['type']) {
-                            'order'   => 'hover:bg-blue-50/40',
-                            'product' => 'hover:bg-purple-50/40',
-                            'user'    => 'hover:bg-green-50/40',
-                            default   => 'hover:bg-(--cream)',
+                            'order'   => 'hover:bg-blue-50/30',
+                            'product' => 'hover:bg-purple-50/30',
+                            'user'    => 'hover:bg-green-50/30',
+                            default   => 'hover:bg-gray-50/50',
                         };
                     @endphp
                     <tr class="{{ $rowAccent }} transition-colors">
-                        <td class="px-5 py-3.5 text-xs text-(--muted) whitespace-nowrap">
+                        <td class="px-6 py-4 text-xs text-gray-600 font-medium whitespace-nowrap">
                             {{ ($log['time'] instanceof \Carbon\Carbon ? $log['time'] : \Carbon\Carbon::parse($log['time']))->format('M d, Y H:i') }}
                         </td>
                         @if($activeTab === 'all')
-                        <td class="px-5 py-3.5">
-                            <span class="px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider {{ $badge }}">{{ $label }}</span>
+                        <td class="px-6 py-4">
+                            <span class="px-2.5 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider {{ $badge }}">{{ $label }}</span>
                         </td>
                         @endif
-                        <td class="px-5 py-3.5 text-sm font-medium text-(--charcoal)">{{ $log['actor'] }}</td>
-                        <td class="px-5 py-3.5 text-sm font-bold text-(--charcoal)">{{ $log['action'] }}</td>
-                        <td class="px-5 py-3.5 text-xs text-(--muted) max-w-xs truncate">{{ $log['detail'] }}</td>
+                        <td class="px-6 py-4 text-sm font-medium text-black">{{ $log['actor'] }}</td>
+                        <td class="px-6 py-4 text-sm font-bold text-black">{{ $log['action'] }}</td>
+                        <td class="px-6 py-4 text-xs text-gray-600 font-medium max-w-xs truncate">{{ $log['detail'] }}</td>
                     </tr>
                     @empty
                     <tr>
-                        <td colspan="{{ $activeTab === 'all' ? 5 : 4 }}" class="px-5 py-16 text-center">
-                            <svg class="w-10 h-10 text-gray-200 mx-auto mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <td colspan="{{ $activeTab === 'all' ? 5 : 4 }}" class="px-6 py-16 text-center">
+                            <svg class="w-10 h-10 text-gray-300 mx-auto mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
                             </svg>
-                            <p class="text-sm text-(--muted)">No logs found{{ $search ? ' for "' . e($search) . '"' : '' }}.</p>
+                            <p class="text-sm text-gray-500 italic">No logs found{{ $search ? ' for "' . e($search) . '"' : '' }}.</p>
                         </td>
                     </tr>
                     @endforelse
@@ -153,20 +153,20 @@
 
         {{-- Pagination --}}
         @if($logs->hasPages())
-        <div class="px-5 py-4 border-t border-(--border) flex items-center justify-between">
-            <p class="text-xs text-(--muted)">
+        <div class="px-6 py-4 border-t border-gray-100 flex items-center justify-between">
+            <p class="text-xs text-gray-600 font-medium">
                 Showing {{ $logs->firstItem() }}–{{ $logs->lastItem() }} of {{ $logs->total() }} entries
             </p>
             <div class="flex gap-1">
                 @if($logs->onFirstPage())
-                    <span class="px-3 py-1.5 text-xs rounded-lg text-(--muted) bg-(--cream) cursor-not-allowed">← Prev</span>
+                    <span class="px-3 py-1.5 text-xs rounded-lg text-gray-400 bg-gray-100 cursor-not-allowed font-bold">← Prev</span>
                 @else
-                    <a href="{{ $logs->previousPageUrl() }}" class="px-3 py-1.5 text-xs rounded-lg text-(--charcoal) bg-(--cream) hover:bg-(--border) transition-all">← Prev</a>
+                    <a href="{{ $logs->previousPageUrl() }}" class="px-3 py-1.5 text-xs rounded-lg text-gray-700 bg-gray-100 hover:bg-gray-200 font-bold transition-all">← Prev</a>
                 @endif
                 @if($logs->hasMorePages())
-                    <a href="{{ $logs->nextPageUrl() }}" class="px-3 py-1.5 text-xs rounded-lg text-(--charcoal) bg-(--cream) hover:bg-(--border) transition-all">Next →</a>
+                    <a href="{{ $logs->nextPageUrl() }}" class="px-3 py-1.5 text-xs rounded-lg text-gray-700 bg-gray-100 hover:bg-gray-200 font-bold transition-all">Next →</a>
                 @else
-                    <span class="px-3 py-1.5 text-xs rounded-lg text-(--muted) bg-(--cream) cursor-not-allowed">Next →</span>
+                    <span class="px-3 py-1.5 text-xs rounded-lg text-gray-400 bg-gray-100 cursor-not-allowed font-bold">Next →</span>
                 @endif
             </div>
         </div>

@@ -31,18 +31,18 @@
     <!-- Tab navigation -->
     <div class="flex gap-2 border-b border-gray-100 pb-1">
         <button @click="tab = 'pending'"
-            :class="tab === 'pending' ? 'border-b-2 border-black text-black font-black' : 'text-gray-400 font-bold hover:text-gray-600'"
-            class="px-4 py-2 text-[10px] uppercase tracking-widest transition-all">
+            :class="tab === 'pending' ? 'border-b-2 border-black text-black font-black' : 'text-gray-500 font-bold hover:text-gray-700'"
+            class="px-4 py-2 text-[10px] uppercase tracking-widest transition-all cursor-pointer">
             Pending Approval ({{ $pending->count() }})
         </button>
         <button @click="tab = 'history'"
-            :class="tab === 'history' ? 'border-b-2 border-black text-black font-black' : 'text-gray-400 font-bold hover:text-gray-600'"
-            class="px-4 py-2 text-[10px] uppercase tracking-widest transition-all">
+            :class="tab === 'history' ? 'border-b-2 border-black text-black font-black' : 'text-gray-500 font-bold hover:text-gray-700'"
+            class="px-4 py-2 text-[10px] uppercase tracking-widest transition-all cursor-pointer">
             Verification History
         </button>
         <button @click="tab = 'settings'"
-            :class="tab === 'settings' ? 'border-b-2 border-black text-black font-black' : 'text-gray-400 font-bold hover:text-gray-600'"
-            class="px-4 py-2 text-[10px] uppercase tracking-widest transition-all">
+            :class="tab === 'settings' ? 'border-b-2 border-black text-black font-black' : 'text-gray-500 font-bold hover:text-gray-700'"
+            class="px-4 py-2 text-[10px] uppercase tracking-widest transition-all cursor-pointer">
             Payment Account Settings
         </button>
     </div>
@@ -51,8 +51,8 @@
     <div x-show="tab === 'pending'" class="space-y-4">
         @if($pending->isEmpty())
             <div class="bg-white rounded-3xl border border-gray-100 p-12 text-center shadow-sm">
-                <svg class="w-12 h-12 text-gray-200 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z"></path></svg>
-                <p class="text-sm font-bold text-gray-300 uppercase tracking-widest">No pending subscription payments</p>
+                <svg class="w-12 h-12 text-gray-300 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z"></path></svg>
+                <p class="text-sm font-bold text-gray-500 uppercase tracking-widest">No pending subscription payments</p>
             </div>
         @else
             <div class="bg-white rounded-3xl border border-gray-100 shadow-sm overflow-hidden divide-y divide-gray-50">
@@ -68,8 +68,8 @@
                                     <span class="text-xs font-black text-black">{{ $sub->user->shopName ?: $sub->user->name }}</span>
                                     <span class="px-2 py-0.5 rounded-full border border-blue-200 bg-blue-50 text-blue-700 text-[8px] font-black uppercase tracking-wider">{{ $sub->paymentMethod }}</span>
                                 </div>
-                                <p class="text-[10px] text-gray-400">Reference: <span class="font-mono text-gray-600 font-bold select-all">{{ $sub->paymentReference }}</span></p>
-                                <p class="text-[10px] text-gray-300">{{ $sub->createdAt ? $sub->createdAt->format('M d, Y · h:i A') : '' }}</p>
+                                <p class="text-[10px] text-gray-500">Reference: <span class="font-mono text-gray-700 font-bold select-all">{{ $sub->paymentReference }}</span></p>
+                                <p class="text-[10px] text-gray-500 font-medium">{{ $sub->createdAt ? $sub->createdAt->format('M d, Y · h:i A') : '' }}</p>
                             </div>
                         </div>
 
@@ -91,12 +91,12 @@
                             <form action="{{ route('admin.subscriptions.approve', $sub->id) }}" method="POST">
                                 @csrf
                                 @method('PATCH')
-                                <button type="submit" class="px-5 py-2.5 bg-black text-white hover:bg-green-600 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all">
+                                <button type="submit" class="px-5 py-2.5 bg-black text-white hover:bg-green-600 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all cursor-pointer">
                                     Approve
                                 </button>
                             </form>
                             
-                            <button type="button" @click="openReject('{{ route('admin.subscriptions.reject', $sub->id) }}', '{{ $sub->user->name }}')" class="px-4 py-2.5 bg-white border border-gray-200 text-red-600 hover:bg-red-50 hover:border-red-200 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all">
+                            <button type="button" @click="openReject('{{ route('admin.subscriptions.reject', $sub->id) }}', '{{ $sub->user->name }}')" class="px-4 py-2.5 bg-white border border-gray-200 text-red-600 hover:bg-red-50 hover:border-red-200 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all cursor-pointer">
                                 Reject
                             </button>
                         </div>
@@ -110,14 +110,14 @@
     <div x-show="tab === 'history'" class="space-y-4" style="display: none;">
         @if($history->isEmpty())
             <div class="bg-white rounded-3xl border border-gray-100 p-12 text-center shadow-sm">
-                <p class="text-xs text-gray-400 italic">No processed subscriptions in history yet.</p>
+                <p class="text-xs text-gray-500 italic">No processed subscriptions in history yet.</p>
             </div>
         @else
             <div class="bg-white rounded-3xl border border-gray-100 shadow-sm overflow-hidden divide-y divide-gray-50">
                 @foreach($history as $sub)
                     <div class="p-6 flex flex-col md:flex-row md:items-center justify-between gap-6">
                         <div class="flex items-start gap-4">
-                            <div class="w-10 h-10 rounded-xl bg-gray-50 text-gray-500 flex items-center justify-center font-bold text-sm shrink-0 border border-gray-100">
+                            <div class="w-10 h-10 rounded-xl bg-gray-50 text-gray-700 flex items-center justify-center font-bold text-sm shrink-0 border border-gray-200">
                                 {{ strtoupper(substr($sub->user->name ?? 'A', 0, 1)) }}
                             </div>
                             <div class="space-y-1">
@@ -126,17 +126,17 @@
                                     @if($sub->status === 'active')
                                         <span class="px-2 py-0.5 rounded-full border border-green-200 bg-green-50 text-green-700 text-[8px] font-black uppercase tracking-wider">Active</span>
                                     @elseif($sub->status === 'expired')
-                                        <span class="px-2 py-0.5 rounded-full border border-gray-200 bg-gray-50 text-gray-500 text-[8px] font-black uppercase tracking-wider">Expired</span>
+                                        <span class="px-2 py-0.5 rounded-full border border-gray-200 bg-gray-50 text-gray-600 text-[8px] font-black uppercase tracking-wider">Expired</span>
                                     @else
                                         <span class="px-2 py-0.5 rounded-full border border-red-200 bg-red-50 text-red-700 text-[8px] font-black uppercase tracking-wider">Rejected</span>
                                     @endif
                                 </div>
-                                <p class="text-[10px] text-gray-400">Reference: <span class="font-mono">{{ $sub->paymentReference }}</span> · Paid: {{ $sub->paymentMethod }}</p>
+                                <p class="text-[10px] text-gray-600">Reference: <span class="font-mono text-gray-800 font-bold">{{ $sub->paymentReference }}</span> · Paid: <span class="font-semibold">{{ $sub->paymentMethod }}</span></p>
                                 @if($sub->status === 'rejected' && $sub->rejectionReason)
-                                    <p class="text-[10px] text-red-500 font-bold">Reason: {{ $sub->rejectionReason }}</p>
+                                    <p class="text-[10px] text-red-600 font-bold">Reason: {{ $sub->rejectionReason }}</p>
                                 @endif
                                 @if($sub->startsAt && $sub->endsAt)
-                                    <p class="text-[9px] text-gray-400 uppercase tracking-wider font-bold">Duration: {{ $sub->startsAt->format('M d, Y') }} - {{ $sub->endsAt->format('M d, Y') }}</p>
+                                    <p class="text-[9px] text-gray-500 uppercase tracking-wider font-bold">Duration: {{ $sub->startsAt->format('M d, Y') }} - {{ $sub->endsAt->format('M d, Y') }}</p>
                                 @endif
                             </div>
                         </div>
@@ -163,7 +163,7 @@
     <div x-show="tab === 'settings'" class="space-y-6" style="display: none;" x-cloak>
         <div class="bg-white rounded-3xl border border-gray-100 p-8 shadow-sm max-w-2xl">
             <h2 class="font-serif text-2xl font-bold tracking-tight text-black mb-1">Configure Payment Accounts</h2>
-            <p class="text-xs text-gray-500 leading-relaxed mb-6">
+            <p class="text-xs text-gray-600 leading-relaxed mb-6 font-medium">
                 Update the GCash and Maya accounts that sellers will pay to when upgrading to Premium. The numbers and QR codes configured here will be displayed to sellers on their checkout page.
             </p>
 
@@ -173,25 +173,25 @@
                 <!-- GCash Settings Section -->
                 <div class="p-6 bg-blue-50/30 border border-blue-100 rounded-2xl space-y-4">
                     <div class="flex items-center justify-between">
-                        <h3 class="text-xs font-black uppercase text-blue-600 tracking-wider">GCash Account Settings</h3>
+                        <h3 class="text-xs font-black uppercase text-blue-700 tracking-wider">GCash Account Settings</h3>
                         <label class="relative inline-flex items-center cursor-pointer">
                             <input type="checkbox" name="isGcashAvailable" value="1" class="sr-only peer" {{ $admin && $admin->isGcashAvailable ? 'checked' : '' }}>
                             <div class="w-9 h-5 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-0.5 after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-blue-600"></div>
-                            <span class="ml-2 text-[10px] font-bold text-gray-500 uppercase tracking-wider">Available</span>
+                            <span class="ml-2 text-[10px] font-bold text-gray-700 uppercase tracking-wider">Available</span>
                         </label>
                     </div>
 
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div>
-                            <label for="gcashNumber" class="text-[9px] font-bold text-gray-400 uppercase tracking-widest block mb-1.5">GCash Phone Number</label>
+                            <label for="gcashNumber" class="text-[9px] font-bold text-gray-700 uppercase tracking-widest block mb-1.5">GCash Phone Number</label>
                             <input type="text" name="gcashNumber" id="gcashNumber" value="{{ $admin->gcashNumber ?? '' }}" placeholder="e.g. 09171234567"
-                                class="w-full px-4 py-3 border border-gray-100 rounded-xl text-xs focus:outline-none focus:ring-2 focus:ring-blue-500/10 bg-white">
+                                class="w-full px-4 py-3 border border-gray-200 rounded-xl text-xs text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500/10 bg-white">
                         </div>
 
                         <div>
-                            <label for="gcashQrCode" class="text-[9px] font-bold text-gray-400 uppercase tracking-widest block mb-1.5">Upload GCash QR Code</label>
+                            <label for="gcashQrCode" class="text-[9px] font-bold text-gray-700 uppercase tracking-widest block mb-1.5">Upload GCash QR Code</label>
                             <input type="file" name="gcashQrCode" id="gcashQrCode" accept="image/*"
-                                class="w-full text-xs text-gray-500 file:mr-4 file:py-2 file:px-3 file:rounded-xl file:border-0 file:text-[9px] file:font-black file:uppercase file:tracking-widest file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100">
+                                class="w-full text-xs text-gray-600 file:mr-4 file:py-2 file:px-3 file:rounded-xl file:border-0 file:text-[9px] file:font-black file:uppercase file:tracking-widest file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100">
                         </div>
                     </div>
 
@@ -201,8 +201,8 @@
                                 <img src="{{ asset('storage/' . $admin->gcashQrCode) }}" class="w-full h-full object-contain">
                             </div>
                             <div>
-                                <div class="text-[9px] font-bold text-gray-400 uppercase tracking-widest">Current QR Code</div>
-                                <button type="button" @click="openZoom('{{ asset('storage/' . $admin->gcashQrCode) }}')" class="text-[9px] font-black uppercase tracking-widest text-[#C0422A] hover:underline">
+                                <div class="text-[9px] font-bold text-gray-600 uppercase tracking-widest">Current QR Code</div>
+                                <button type="button" @click="openZoom('{{ asset('storage/' . $admin->gcashQrCode) }}')" class="text-[9px] font-black uppercase tracking-widest text-[#C0422A] hover:underline cursor-pointer">
                                     Preview / Zoom
                                 </button>
                             </div>
@@ -213,25 +213,25 @@
                 <!-- Maya Settings Section -->
                 <div class="p-6 bg-teal-50/30 border border-teal-100 rounded-2xl space-y-4">
                     <div class="flex items-center justify-between">
-                        <h3 class="text-xs font-black uppercase text-teal-600 tracking-wider">Maya Account Settings</h3>
+                        <h3 class="text-xs font-black uppercase text-teal-700 tracking-wider">Maya Account Settings</h3>
                         <label class="relative inline-flex items-center cursor-pointer">
                             <input type="checkbox" name="isMayaAvailable" value="1" class="sr-only peer" {{ $admin && $admin->isMayaAvailable ? 'checked' : '' }}>
                             <div class="w-9 h-5 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-0.5 after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-teal-600"></div>
-                            <span class="ml-2 text-[10px] font-bold text-gray-500 uppercase tracking-wider">Available</span>
+                            <span class="ml-2 text-[10px] font-bold text-gray-700 uppercase tracking-wider">Available</span>
                         </label>
                     </div>
 
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div>
-                            <label for="mayaNumber" class="text-[9px] font-bold text-gray-400 uppercase tracking-widest block mb-1.5">Maya Phone Number</label>
+                            <label for="mayaNumber" class="text-[9px] font-bold text-gray-700 uppercase tracking-widest block mb-1.5">Maya Phone Number</label>
                             <input type="text" name="mayaNumber" id="mayaNumber" value="{{ $admin->mayaNumber ?? '' }}" placeholder="e.g. 09171234567"
-                                class="w-full px-4 py-3 border border-gray-100 rounded-xl text-xs focus:outline-none focus:ring-2 focus:ring-teal-500/10 bg-white">
+                                class="w-full px-4 py-3 border border-gray-200 rounded-xl text-xs text-gray-800 focus:outline-none focus:ring-2 focus:ring-teal-500/10 bg-white">
                         </div>
 
                         <div>
-                            <label for="mayaQrCode" class="text-[9px] font-bold text-gray-400 uppercase tracking-widest block mb-1.5">Upload Maya QR Code</label>
+                            <label for="mayaQrCode" class="text-[9px] font-bold text-gray-700 uppercase tracking-widest block mb-1.5">Upload Maya QR Code</label>
                             <input type="file" name="mayaQrCode" id="mayaQrCode" accept="image/*"
-                                class="w-full text-xs text-gray-500 file:mr-4 file:py-2 file:px-3 file:rounded-xl file:border-0 file:text-[9px] file:font-black file:uppercase file:tracking-widest file:bg-teal-50 file:text-teal-700 hover:file:bg-teal-100">
+                                class="w-full text-xs text-gray-600 file:mr-4 file:py-2 file:px-3 file:rounded-xl file:border-0 file:text-[9px] file:font-black file:uppercase file:tracking-widest file:bg-teal-50 file:text-teal-700 hover:file:bg-teal-100">
                         </div>
                     </div>
 
@@ -241,8 +241,8 @@
                                 <img src="{{ asset('storage/' . $admin->mayaQrCode) }}" class="w-full h-full object-contain">
                             </div>
                             <div>
-                                <div class="text-[9px] font-bold text-gray-400 uppercase tracking-widest">Current QR Code</div>
-                                <button type="button" @click="openZoom('{{ asset('storage/' . $admin->mayaQrCode) }}')" class="text-[9px] font-black uppercase tracking-widest text-[#C0422A] hover:underline">
+                                <div class="text-[9px] font-bold text-gray-600 uppercase tracking-widest">Current QR Code</div>
+                                <button type="button" @click="openZoom('{{ asset('storage/' . $admin->mayaQrCode) }}')" class="text-[9px] font-black uppercase tracking-widest text-[#C0422A] hover:underline cursor-pointer">
                                     Preview / Zoom
                                 </button>
                             </div>
@@ -251,7 +251,7 @@
                 </div>
 
                 <div class="pt-4 flex justify-end">
-                    <button type="submit" class="px-6 py-3 bg-black hover:bg-[#C0422A] text-white rounded-xl text-[10px] font-black uppercase tracking-widest transition-all">
+                    <button type="submit" class="px-6 py-3 bg-black hover:bg-[#C0422A] text-white rounded-xl text-[10px] font-black uppercase tracking-widest transition-all cursor-pointer">
                         Save Payment Settings
                     </button>
                 </div>

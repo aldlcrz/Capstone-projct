@@ -15,7 +15,7 @@
         <div class="overflow-x-auto">
             <table class="w-full text-left border-collapse">
                 <thead>
-                    <tr class="bg-gray-50/50 border-b border-gray-100 text-[11px] font-bold uppercase tracking-wider text-gray-400">
+                    <tr class="bg-gray-50/50 border-b border-gray-100 text-[11px] font-black uppercase tracking-wider text-gray-700">
                         <th class="px-6 py-4">Recipient</th>
                         <th class="px-6 py-4">Notification Type</th>
                         <th class="px-6 py-4">Subject</th>
@@ -30,38 +30,38 @@
                             <td class="px-6 py-4 font-bold text-gray-900">
                                 {{ $log->recipient_email }}
                                 @if($log->user)
-                                    <span class="block text-[10px] font-medium text-gray-400">({{ $log->user->name }} - {{ ucfirst($log->user->role) }})</span>
+                                    <span class="block text-[10px] font-medium text-gray-500">({{ $log->user->name }} - {{ ucfirst($log->user->role) }})</span>
                                 @endif
                             </td>
                             <td class="px-6 py-4 font-semibold text-gray-700">
-                                <span class="px-2.5 py-1 bg-gray-100 rounded-lg text-[10px] font-bold text-gray-600 uppercase">
+                                <span class="px-2.5 py-1 bg-gray-100 rounded-lg text-[10px] font-bold text-gray-700 uppercase">
                                     {{ str_replace('_', ' ', $log->notification_type) }}
                                 </span>
                             </td>
-                            <td class="px-6 py-4 text-gray-600 font-medium max-w-xs truncate">
+                            <td class="px-6 py-4 text-gray-700 font-medium max-w-xs truncate">
                                 {{ $log->subject }}
                             </td>
                             <td class="px-6 py-4 font-bold">
                                 @if($log->delivery_status === 'sent')
-                                    <span class="px-2.5 py-1 bg-emerald-50 text-emerald-700 rounded-lg text-[10px]">SUCCESS</span>
+                                    <span class="px-2.5 py-1 bg-emerald-50 text-emerald-700 border border-emerald-200 rounded-lg text-[10px]">SUCCESS</span>
                                 @else
-                                    <span class="px-2.5 py-1 bg-rose-50 text-rose-700 rounded-lg text-[10px]" title="{{ $log->error_message }}">FAILED</span>
+                                    <span class="px-2.5 py-1 bg-rose-50 text-rose-700 border border-rose-200 rounded-lg text-[10px]" title="{{ $log->error_message }}">FAILED</span>
                                 @endif
                             </td>
-                            <td class="px-6 py-4 text-gray-500">
+                            <td class="px-6 py-4 text-gray-600 font-medium">
                                 @if($log->related_type && $log->related_id)
                                     <span class="font-mono text-[11px]">{{ $log->related_type }} #{{ substr($log->related_id, 0, 8) }}</span>
                                 @else
                                     -
                                 @endif
                             </td>
-                            <td class="px-6 py-4 text-gray-400 font-medium">
+                            <td class="px-6 py-4 text-gray-600 font-medium">
                                 {{ $log->sent_at ? $log->sent_at->format('M d, Y h:i A') : $log->created_at->format('M d, Y h:i A') }}
                             </td>
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="6" class="px-6 py-12 text-center text-gray-400 font-medium">
+                            <td colspan="6" class="px-6 py-12 text-center text-gray-500 italic font-medium">
                                 No email logs recorded yet.
                             </td>
                         </tr>

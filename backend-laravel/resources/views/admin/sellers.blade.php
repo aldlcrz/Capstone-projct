@@ -15,22 +15,22 @@
 }">
     <div>
         <div class="text-[10px] font-bold text-[#C0422A] uppercase tracking-[0.2em] mb-1">Artisan Registry</div>
-        <h1 class="font-serif text-3xl font-bold text-black">Seller <span class="text-gray-300 font-light italic">Management</span></h1>
+        <h1 class="font-serif text-3xl font-bold text-black">Seller <span class="text-[#C0420A] font-light italic">Management</span></h1>
     </div>
 
     {{-- Stats --}}
     <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <div class="bg-white rounded-2xl border border-gray-100 p-5 shadow-sm flex items-center gap-4">
             <div class="w-10 h-10 rounded-xl bg-green-50 text-green-600 flex items-center justify-center font-black text-lg">✓</div>
-            <div><div class="text-xl font-black text-black">{{ $counts['verified'] }}</div><div class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Verified</div></div>
+            <div><div class="text-xl font-black text-black">{{ $counts['verified'] }}</div><div class="text-[10px] font-bold text-gray-500 uppercase tracking-widest">Verified</div></div>
         </div>
         <div class="bg-white rounded-2xl border border-gray-100 p-5 shadow-sm flex items-center gap-4">
             <div class="w-10 h-10 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center font-black text-lg">⏳</div>
-            <div><div class="text-xl font-black text-black">{{ $counts['pending'] }}</div><div class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Pending</div></div>
+            <div><div class="text-xl font-black text-black">{{ $counts['pending'] }}</div><div class="text-[10px] font-bold text-gray-500 uppercase tracking-widest">Pending</div></div>
         </div>
         <div class="bg-white rounded-2xl border border-gray-100 p-5 shadow-sm flex items-center gap-4">
             <div class="w-10 h-10 rounded-xl bg-red-50 text-red-600 flex items-center justify-center font-black text-lg">✕</div>
-            <div><div class="text-xl font-black text-black">{{ $counts['suspended'] }}</div><div class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Suspended</div></div>
+            <div><div class="text-xl font-black text-black">{{ $counts['suspended'] }}</div><div class="text-[10px] font-bold text-gray-500 uppercase tracking-widest">Suspended</div></div>
         </div>
     </div>
 
@@ -50,15 +50,15 @@
                     </div>
                     <div class="min-w-0">
                         <div class="text-sm font-bold text-black truncate">{{ $seller->name }}</div>
-                        <div class="text-[10px] text-gray-400 truncate">{{ $seller->email }}</div>
+                        <div class="text-[10px] text-gray-500 font-medium truncate">{{ $seller->email }}</div>
                     </div>
                 </div>
                 <div class="flex gap-2 w-full sm:w-auto">
                     <form action="/admin/sellers/{{ $seller->id }}/verify" method="POST" class="flex-1 sm:flex-initial">
                         @csrf @method('PATCH')
-                        <button type="submit" class="w-full sm:w-auto px-5 py-2 bg-green-600 text-white rounded-xl text-[9px] font-black uppercase tracking-widest hover:bg-green-700 transition-all">Verify</button>
+                        <button type="submit" class="w-full sm:w-auto px-5 py-2 bg-green-600 text-white rounded-xl text-[9px] font-black uppercase tracking-widest hover:bg-green-700 transition-all cursor-pointer">Verify</button>
                     </form>
-                    <button type="button" @click="openSuspend({{ json_encode($seller) }})" class="flex-1 sm:flex-initial px-5 py-2 bg-red-50 text-red-600 rounded-xl text-[9px] font-black uppercase tracking-widest hover:bg-red-500 hover:text-white transition-all">Reject / Suspend</button>
+                    <button type="button" @click="openSuspend({{ json_encode($seller) }})" class="flex-1 sm:flex-initial px-5 py-2 bg-red-50 text-red-600 rounded-xl text-[9px] font-black uppercase tracking-widest hover:bg-red-500 hover:text-white transition-all cursor-pointer">Reject / Suspend</button>
                 </div>
             </div>
             @endforeach
@@ -75,11 +75,11 @@
             <table class="w-full text-left min-w-137.5">
             <thead>
                 <tr class="bg-gray-50/50 border-b border-gray-100">
-                    <th class="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-gray-400">Seller</th>
-                    <th class="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-gray-400 hidden md:table-cell">Products</th>
-                    <th class="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-gray-400 hidden md:table-cell">Orders</th>
-                    <th class="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-gray-400">Status</th>
-                    <th class="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-gray-400 text-right">Actions</th>
+                    <th class="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-gray-700">Seller</th>
+                    <th class="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-gray-700 hidden md:table-cell">Products</th>
+                    <th class="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-gray-700 hidden md:table-cell">Orders</th>
+                    <th class="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-gray-700">Status</th>
+                    <th class="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-gray-700 text-right">Actions</th>
                 </tr>
             </thead>
             <tbody class="divide-y divide-gray-50">
@@ -97,28 +97,36 @@
                                         <span class="text-green-500 text-[9px]">✓</span>
                                     @endif
                                 </div>
-                                <div class="text-[10px] text-gray-400">{{ $seller->email }}</div>
+                                <div class="text-[10px] text-gray-500 font-medium">{{ $seller->email }}</div>
                             </div>
                         </div>
                     </td>
                     <td class="px-6 py-4 text-sm font-bold text-black hidden md:table-cell">{{ $seller->products_count ?? 0 }}</td>
                     <td class="px-6 py-4 text-sm font-bold text-black hidden md:table-cell">{{ $seller->orders_count ?? 0 }}</td>
                     <td class="px-6 py-4">
-                        @php $sc = ['active' => 'bg-green-50 text-green-600', 'blocked' => 'bg-red-50 text-red-600', 'frozen' => 'bg-amber-50 text-amber-600']; @endphp
-                        <span class="px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest {{ $sc[$seller->status] ?? 'bg-gray-50 text-gray-500' }}">
+                        @php $sc = ['active' => 'bg-green-50 text-green-700 border border-green-200', 'blocked' => 'bg-red-50 text-red-700 border border-red-200', 'frozen' => 'bg-amber-50 text-amber-700 border border-amber-200']; @endphp
+                        <span class="px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest {{ $sc[$seller->status] ?? 'bg-gray-50 text-gray-600 border border-gray-200' }}">
                             {{ $seller->status }}
                         </span>
                     </td>
                     <td class="px-6 py-4">
                         <div class="flex items-center justify-end gap-2">
+                            <form action="/admin/sellers/{{ $seller->id }}/{{ $seller->isVerified ? 'unverify' : 'verify' }}" method="POST">
+                                @csrf @method('PATCH')
+                                <button type="submit" class="px-4 py-2 {{ $seller->isVerified ? 'bg-gray-50 text-gray-600 hover:bg-gray-200' : 'bg-green-50 text-green-700 hover:bg-green-500 hover:text-white' }} rounded-lg text-[9px] font-black uppercase tracking-widest transition-all cursor-pointer">
+                                    {{ $seller->isVerified ? 'Revoke Verified' : 'Verify' }}
+                                </button>
+                            </form>
                             @if($seller->status === 'active')
-                                <button type="button" @click="openSuspend({{ json_encode($seller) }})" class="px-4 py-2 bg-red-50 text-red-600 rounded-lg text-[9px] font-black uppercase tracking-widest hover:bg-red-500 hover:text-white transition-all">
+                                <button type="button" @click="openSuspend({{ json_encode($seller) }})" class="px-4 py-2 bg-red-50 text-red-700 rounded-lg text-[9px] font-black uppercase tracking-widest hover:bg-red-500 hover:text-white transition-all cursor-pointer">
                                     Suspend
                                 </button>
                             @else
-                                <form action="/admin/sellers/{{ $seller->id }}/verify" method="POST">
+                                <form action="/admin/sellers/{{ $seller->id }}/unsuspend" method="POST">
                                     @csrf @method('PATCH')
-                                    <button type="submit" class="px-4 py-2 bg-green-50 text-green-600 rounded-lg text-[9px] font-black uppercase tracking-widest hover:bg-green-500 hover:text-white transition-all">Restore</button>
+                                    <button type="submit" class="px-4 py-2 bg-green-50 text-green-700 rounded-lg text-[9px] font-black uppercase tracking-widest hover:bg-green-500 hover:text-white transition-all cursor-pointer">
+                                        Restore
+                                    </button>
                                 </form>
                             @endif
                         </div>
@@ -126,7 +134,7 @@
                 </tr>
                 @empty
                 <tr>
-                    <td colspan="5" class="py-16 text-center text-sm text-gray-300 italic">No seller accounts found.</td>
+                    <td colspan="5" class="py-16 text-center text-sm text-gray-500 italic">No seller accounts found.</td>
                 </tr>
                 @endforelse
             </tbody>

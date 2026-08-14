@@ -11,6 +11,13 @@
         tailwind.config = {
             theme: {
                 extend: {
+                    colors: {
+                        rust: '#C0420A',
+                        cream: '#F8F7F4',
+                        charcoal: '#1F2937',
+                        muted: '#4B5563',
+                        border: '#E5E7EB',
+                    },
                     aspectRatio: {
                         '4/5': '4 / 5',
                         '3/4': '3 / 4',
@@ -29,9 +36,9 @@
         :root {
             --rust: #C0420A;
             --cream: #F8F7F4;
-            --charcoal: #2A2A2A;
-            --muted: #8E8E8E;
-            --border: #E5E5E5;
+            --charcoal: #1F2937;
+            --muted: #4B5563;
+            --border: #E5E7EB;
         }
         body { font-family: 'Inter', sans-serif; background-color: #F7F3EE; }
         .font-serif { font-family: 'Playfair Display', serif; }
@@ -75,7 +82,7 @@
                             ],
                             'CONTENT MANAGEMENT' => [
                                 [
-                                    'label' => 'Homepage Banners',
+                                    'label' => 'Promotions',
                                     'path'  => 'admin/banners',
                                     'icon'  => '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>',
                                     'badge' => \App\Models\Banner::whereNotNull('userId')->where('status','pending')->count()
@@ -94,12 +101,12 @@
                             <div class="border-t border-(--border)"></div>
                         @endif
                         <div class="space-y-1">
-                            <div class="text-[10px] font-bold text-(--muted) opacity-60 tracking-widest uppercase px-3 mb-2">{{ $group }}</div>
+                            <div class="text-[10px] font-black text-gray-500 tracking-widest uppercase px-3 mb-2">{{ $group }}</div>
                             @foreach($items as $item)
                                 <a href="/{{ $item['path'] }}"
                                     class="flex items-center justify-between px-4 py-3.5 rounded-xl transition-all duration-300 group tracking-wide text-sm font-medium {{ request()->is($item['path'] . '*') ? 'bg-[rgba(192,66,42,0.08)] text-(--rust) border-l-4 border-(--rust)' : 'text-(--charcoal) hover:bg-(--cream) hover:text-(--rust)' }}">
                                     <div class="flex items-center gap-3">
-                                        <svg class="w-5 h-5 {{ request()->is($item['path'] . '*') ? 'text-(--rust)' : 'text-(--muted) group-hover:text-(--rust)' }}" fill="none" stroke="currentColor" viewBox="0 0 24 24">{!! $item['icon'] !!}</svg>
+                                        <svg class="w-5 h-5 {{ request()->is($item['path'] . '*') ? 'text-(--rust)' : 'text-gray-500 group-hover:text-(--rust)' }}" fill="none" stroke="currentColor" viewBox="0 0 24 24">{!! $item['icon'] !!}</svg>
                                         {{ $item['label'] }}
                                     </div>
                                     @if(isset($item['badge']) && $item['badge'] > 0)
@@ -429,7 +436,7 @@
                             </a>
                             <a href="{{ route('admin.banners.index') }}" class="flex items-center gap-2.5 px-4 py-2 text-xs font-semibold text-gray-700 hover:bg-gray-50">
                                 <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
-                                <span>Banners</span>
+                                <span>Promotions</span>
                             </a>
                             <a href="{{ route('admin.reports') }}" class="flex items-center gap-2.5 px-4 py-2 text-xs font-semibold text-gray-700 hover:bg-gray-50">
                                 <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>

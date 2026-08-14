@@ -11,8 +11,8 @@
     <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
             <div class="text-[10px] font-bold text-[#C0422A] uppercase tracking-[0.2em] mb-1">Enterprise Analytics</div>
-            <h1 class="font-serif text-3xl font-bold text-black">Dashboard <span class="text-gray-300 font-light italic">Insights</span></h1>
-            <p class="text-xs text-gray-400 mt-1">{{ now()->format('l, F j, Y') }} · Platform overview</p>
+            <h1 class="font-serif text-3xl font-bold text-black">Dashboard <span class="text-[#C0420A] font-light italic">Insights</span></h1>
+            <p class="text-xs text-gray-600 font-medium mt-1">{{ now()->format('l, F j, Y') }} · Platform overview</p>
         </div>
         <div class="flex items-center gap-2">
             <a href="/admin/export-global-report"
@@ -46,7 +46,7 @@
             {{-- Custom Date Pickers --}}
             <div x-show="selectedPreset === 'custom'" x-cloak class="flex items-center gap-2">
                 <input type="date" name="start_date" min="2020-01-01" max="{{ date('Y-m-d') }}" value="{{ $filters['start_date'] ?? '' }}" class="px-3 py-1.5 bg-gray-50 border border-gray-200 rounded-xl text-xs font-bold text-gray-700 outline-none focus:border-[#C0422A]">
-                <span class="text-xs font-bold text-gray-400">to</span>
+                <span class="text-xs font-bold text-gray-500">to</span>
                 <input type="date" name="end_date" min="2020-01-01" max="{{ date('Y-m-d') }}" value="{{ $filters['end_date'] ?? '' }}" class="px-3 py-1.5 bg-gray-50 border border-gray-200 rounded-xl text-xs font-bold text-gray-700 outline-none focus:border-[#C0422A]">
                 <button type="submit" class="px-4 py-2 bg-[#C0422A] text-white rounded-xl text-[10px] font-bold uppercase tracking-widest hover:bg-[#a03622] transition-all shadow-sm">
                     Filter
@@ -71,7 +71,7 @@
         <div class="flex flex-wrap gap-2">
             @if(!empty($pendingActions['products'])) <a href="/admin/products?status=pending" class="px-3 py-1 bg-white border border-amber-200 rounded-full text-[9px] font-black text-amber-700 hover:bg-amber-100 transition-all">{{ $pendingActions['products'] }} Product{{ $pendingActions['products'] !== 1 ? 's' : '' }}</a>@endif
             @if(!empty($pendingActions['sellers']))  <a href="/admin/sellers"          class="px-3 py-1 bg-white border border-amber-200 rounded-full text-[9px] font-black text-amber-700 hover:bg-amber-100 transition-all">{{ $pendingActions['sellers'] }} Seller{{ $pendingActions['sellers'] !== 1 ? 's' : '' }}</a>@endif
-            @if(!empty($pendingActions['banners']))  <a href="/admin/banners"          class="px-3 py-1 bg-white border border-amber-200 rounded-full text-[9px] font-black text-amber-700 hover:bg-amber-100 transition-all">{{ $pendingActions['banners'] }} Banner{{ $pendingActions['banners'] !== 1 ? 's' : '' }}</a>@endif
+            @if(!empty($pendingActions['banners']))  <a href="/admin/banners"          class="px-3 py-1 bg-white border border-amber-200 rounded-full text-[9px] font-black text-amber-700 hover:bg-amber-100 transition-all">{{ $pendingActions['banners'] }} Promotion{{ $pendingActions['banners'] !== 1 ? 's' : '' }}</a>@endif
             @if(!empty($pendingActions['reports']))  <a href="/admin/reports"          class="px-3 py-1 bg-white border border-amber-200 rounded-full text-[9px] font-black text-amber-700 hover:bg-amber-100 transition-all">{{ $pendingActions['reports'] }} Report{{ $pendingActions['reports'] !== 1 ? 's' : '' }}</a>@endif
         </div>
     </div>
@@ -100,8 +100,8 @@
             </div>
             <div>
                 <div class="text-xl font-black text-black leading-none">{{ $kpi['value'] }}</div>
-                <div class="text-[9px] font-black uppercase tracking-widest text-gray-400 mt-1">{{ $kpi['label'] }}</div>
-                <div class="text-[9px] text-gray-300 mt-0.5">{{ $kpi['sub'] }}</div>
+                <div class="text-[9px] font-black uppercase tracking-widest text-gray-600 mt-1">{{ $kpi['label'] }}</div>
+                <div class="text-[9px] text-gray-500 font-medium mt-0.5">{{ $kpi['sub'] }}</div>
             </div>
         </div>
         @endforeach
@@ -114,7 +114,7 @@
         <div class="lg:col-span-2 bg-white rounded-3xl border border-gray-100 shadow-sm p-6">
             <div class="flex items-center justify-between mb-6">
                 <div>
-                    <div class="text-[9px] font-black uppercase tracking-widest text-gray-400 mb-0.5">Last 7 Days</div>
+                    <div class="text-[9px] font-black uppercase tracking-widest text-gray-500 mb-0.5">Last 7 Days</div>
                     <h3 class="text-base font-bold text-black">Daily Revenue</h3>
                 </div>
                 <div class="text-[10px] font-black text-[#C0422A] bg-red-50 px-3 py-1.5 rounded-full">
@@ -228,26 +228,26 @@
     {{-- ── Activity Feed + Quick Links ── --}}
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
 
-        {{-- Recent Activity --}}
+        {{-- Recent Activity Feed --}}
         <div class="lg:col-span-2 bg-white rounded-3xl border border-gray-100 shadow-sm p-6">
             <div class="flex items-center justify-between mb-5">
                 <h3 class="text-sm font-bold text-black">Recent Activity</h3>
-                <a href="{{ route('admin.notifications.index') }}" class="text-[9px] font-black uppercase tracking-widest text-[#C0422A] hover:underline">View All</a>
+                <span class="text-[9px] font-black uppercase tracking-widest text-gray-500">Live Feed</span>
             </div>
-            <div class="space-y-1">
+            <div class="space-y-3 max-h-56 overflow-y-auto no-scrollbar">
                 @forelse($recentActivity as $activity)
-                <div class="flex items-start gap-3 py-2.5 border-b border-gray-50 last:border-0">
-                    <div class="w-7 h-7 rounded-full bg-gray-50 border border-gray-100 flex items-center justify-center text-gray-400 shrink-0 mt-0.5">
+                <div class="flex items-start gap-3">
+                    <div class="w-7 h-7 rounded-full bg-gray-50 border border-gray-200 flex items-center justify-center text-gray-600 shrink-0 mt-0.5">
                         <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
                     </div>
                     <div class="flex-1 min-w-0">
                         <div class="text-xs font-bold text-black truncate">{{ $activity->title }}</div>
-                        <div class="text-[9px] text-gray-400">{{ $activity->createdAt->diffForHumans() }}</div>
+                        <div class="text-[9px] text-gray-500 font-medium">{{ $activity->createdAt->diffForHumans() }}</div>
                     </div>
-                    <div class="text-[8px] font-black text-gray-300 uppercase tracking-widest shrink-0 mt-0.5">{{ $activity->type ?? 'system' }}</div>
+                    <div class="text-[8px] font-black text-gray-500 uppercase tracking-widest shrink-0 mt-0.5">{{ $activity->type ?? 'system' }}</div>
                 </div>
                 @empty
-                <p class="text-xs text-gray-300 text-center py-6">No recent activity</p>
+                <p class="text-xs text-gray-500 italic text-center py-6">No recent activity</p>
                 @endforelse
             </div>
         </div>
@@ -255,31 +255,31 @@
         {{-- Quick Action Panel --}}
         <div class="space-y-3">
             <div class="bg-[#3D2B1F] text-white rounded-3xl p-6">
-                <div class="text-[9px] font-black uppercase tracking-widest text-white/40 mb-1">Net Profit</div>
+                <div class="text-[9px] font-black uppercase tracking-widest text-white/70 mb-1">Net Profit</div>
                 <div class="text-3xl font-black text-[#C0422A] mt-2">{{ $stats['totalProfit'] }}</div>
-                <div class="text-[9px] text-white/50 mt-1">Revenue: {{ $stats['totalRevenue'] }}</div>
-                <div class="text-[9px] text-white/50">Capital: {{ $stats['totalCapital'] }}</div>
+                <div class="text-[10px] text-white/80 font-medium mt-1">Revenue: {{ $stats['totalRevenue'] }}</div>
+                <div class="text-[10px] text-white/80 font-medium">Capital: {{ $stats['totalCapital'] }}</div>
                 <div class="mt-4 pt-4 border-t border-white/10 flex items-center gap-1.5">
                     <span class="text-[9px] text-green-400 font-black">↑ Healthy</span>
-                    <span class="text-[9px] text-white/30">vs platform cost</span>
+                    <span class="text-[9px] text-white/60">vs platform cost</span>
                 </div>
             </div>
 
             <div class="bg-white rounded-3xl border border-gray-100 shadow-sm p-5">
-                <div class="text-[9px] font-black uppercase tracking-widest text-gray-400 mb-3">Quick Links</div>
+                <div class="text-[9px] font-black uppercase tracking-widest text-gray-500 mb-3">Quick Links</div>
                 <div class="space-y-1.5">
                     @foreach([
-                        ['label'=>'Pending Products', 'href'=>'/admin/products?status=pending', 'count'=>$pendingActions['products'] ?? 0],
-                        ['label'=>'Pending Sellers',  'href'=>'/admin/sellers',                  'count'=>$pendingActions['sellers'] ?? 0],
-                        ['label'=>'Banner Requests',  'href'=>'/admin/banners',                  'count'=>$pendingActions['banners'] ?? 0],
-                        ['label'=>'Open Reports',     'href'=>'/admin/reports',                  'count'=>$pendingActions['reports'] ?? 0],
+                        ['label'=>'Pending Products',   'href'=>'/admin/products?status=pending', 'count'=>$pendingActions['products'] ?? 0],
+                        ['label'=>'Pending Sellers',    'href'=>'/admin/sellers',                  'count'=>$pendingActions['sellers'] ?? 0],
+                        ['label'=>'Promotion Requests', 'href'=>'/admin/banners',                  'count'=>$pendingActions['banners'] ?? 0],
+                        ['label'=>'Open Reports',       'href'=>'/admin/reports',                  'count'=>$pendingActions['reports'] ?? 0],
                     ] as $link)
                     <a href="{{ $link['href'] }}" class="flex items-center justify-between px-3 py-2 rounded-xl hover:bg-gray-50 transition-all group">
                         <span class="text-[10px] font-bold text-gray-700 group-hover:text-[#C0422A] transition-colors">{{ $link['label'] }}</span>
                         @if($link['count'] > 0)
                             <span class="px-2 py-0.5 bg-red-500 text-white text-[8px] font-black rounded-full">{{ $link['count'] }}</span>
                         @else
-                            <span class="text-[8px] font-bold text-gray-300">—</span>
+                            <span class="text-[8px] font-bold text-gray-400">—</span>
                         @endif
                     </a>
                     @endforeach

@@ -25,10 +25,10 @@
         <div>
             <div class="text-[10px] font-bold text-[#C0422A] uppercase tracking-[0.2em] mb-1">User Registry</div>
             <h1 class="font-serif text-2xl sm:text-3xl font-bold text-black">
-                Customer <span class="text-gray-300 font-light italic">Management</span>
+                Customer <span class="text-[#C0420A] font-light italic">Management</span>
             </h1>
         </div>
-        <div class="flex items-center gap-2 text-xs font-bold text-gray-400">
+        <div class="flex items-center gap-2 text-xs font-bold text-gray-600">
             Total Customers: <span class="text-black text-base sm:text-lg font-black">{{ $users->total() }}</span>
         </div>
     </div>
@@ -36,18 +36,18 @@
     {{-- Filters --}}
     <form method="GET" class="flex flex-col sm:flex-row gap-3 items-stretch sm:items-center">
         <input type="text" name="search" value="{{ request('search') }}" placeholder="Search customers by name, username, or email..."
-            class="flex-1 min-w-0 px-4 py-3 bg-white border border-gray-100 rounded-xl text-xs focus:outline-none focus:ring-2 focus:ring-[#C0422A]/10">
-        <select name="status" class="px-4 py-3 bg-white border border-gray-100 rounded-xl text-xs font-bold outline-none cursor-pointer">
+            class="flex-1 min-w-0 px-4 py-3 bg-white border border-gray-200 rounded-xl text-xs text-gray-800 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-[#C0422A]/10">
+        <select name="status" class="px-4 py-3 bg-white border border-gray-200 rounded-xl text-xs font-bold text-gray-800 outline-none cursor-pointer">
             <option value="">All Statuses</option>
             <option value="active"  {{ request('status') === 'active'  ? 'selected' : '' }}>Active</option>
             <option value="blocked" {{ request('status') === 'blocked' ? 'selected' : '' }}>Blocked</option>
             <option value="frozen"  {{ request('status') === 'frozen'  ? 'selected' : '' }}>Frozen</option>
         </select>
-        <button type="submit" class="px-6 py-3 bg-black text-white rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-[#C0422A] transition-all">
+        <button type="submit" class="px-6 py-3 bg-black text-white rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-[#C0422A] transition-all cursor-pointer">
             Filter
         </button>
         @if(request()->hasAny(['search','status']))
-            <a href="/admin/users" class="px-4 py-3 border border-gray-200 text-gray-400 rounded-xl text-[10px] font-bold text-center hover:bg-gray-50 transition-all">Clear</a>
+            <a href="/admin/users" class="px-4 py-3 border border-gray-300 text-gray-600 rounded-xl text-[10px] font-bold text-center hover:bg-gray-50 transition-all">Clear</a>
         @endif
     </form>
 
@@ -57,21 +57,21 @@
             <table class="w-full text-left min-w-137.5">
             <thead>
                 <tr class="bg-gray-50/50 border-b border-gray-100">
-                    <th class="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-gray-400">Customer</th>
-                    <th class="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-gray-400 hidden lg:table-cell">Joined</th>
-                    <th class="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-gray-400">Status</th>
-                    <th class="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-gray-400 text-right">Actions</th>
+                    <th class="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-gray-700">Customer</th>
+                    <th class="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-gray-700 hidden lg:table-cell">Joined</th>
+                    <th class="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-gray-700">Status</th>
+                    <th class="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-gray-700 text-right">Actions</th>
                 </tr>
             </thead>
             <tbody class="divide-y divide-gray-50">
                 @forelse($users as $user)
                     @php
-                        $statusColors = ['active' => 'bg-green-50 text-green-600', 'blocked' => 'bg-red-50 text-red-600', 'frozen' => 'bg-amber-50 text-amber-600'];
+                        $statusColors = ['active' => 'bg-green-50 text-green-700 border border-green-200', 'blocked' => 'bg-red-50 text-red-700 border border-red-200', 'frozen' => 'bg-amber-50 text-amber-700 border border-amber-200'];
                     @endphp
                     <tr class="hover:bg-gray-50/50 transition-all">
                         <td class="px-6 py-4">
                             <div class="flex items-center gap-3">
-                                <div class="w-9 h-9 rounded-xl bg-gray-100 flex items-center justify-center font-black text-sm text-gray-600 shrink-0 overflow-hidden">
+                                <div class="w-9 h-9 rounded-xl bg-gray-100 flex items-center justify-center font-black text-sm text-gray-700 shrink-0 overflow-hidden">
                                     @if($user->profilePhoto)
                                         <img src="{{ str_starts_with($user->profilePhoto, 'http') || str_starts_with($user->profilePhoto, '/') ? $user->profilePhoto : asset('storage/' . $user->profilePhoto) }}" class="w-full h-full object-cover">
                                     @else
@@ -80,33 +80,33 @@
                                 </div>
                                 <div>
                                     <div class="text-sm font-bold text-black">{{ $user->name }}</div>
-                                    <div class="text-[10px] text-gray-400">{{ $user->email }}</div>
+                                    <div class="text-[10px] text-gray-500 font-medium">{{ $user->email }}</div>
                                 </div>
                             </div>
                         </td>
-                        <td class="px-6 py-4 text-[11px] text-gray-400 hidden lg:table-cell">
+                        <td class="px-6 py-4 text-[11px] text-gray-600 font-medium hidden lg:table-cell">
                             {{ $user->createdAt ? $user->createdAt->format('M d, Y') : 'N/A' }}
                         </td>
                         <td class="px-6 py-4">
-                            <span class="px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest {{ $statusColors[$user->status] ?? 'bg-gray-50 text-gray-500' }}">
+                            <span class="px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest {{ $statusColors[$user->status] ?? 'bg-gray-50 text-gray-600 border border-gray-200' }}">
                                 {{ $user->status }}
                             </span>
                         </td>
                         <td class="px-6 py-4">
                             <div class="flex items-center justify-end gap-2">
                                 @if($user->status === 'active')
-                                    <button type="button" @click="openBan({{ json_encode($user) }})" class="px-4 py-2 bg-red-50 text-red-600 rounded-lg text-[9px] font-black uppercase tracking-widest hover:bg-red-500 hover:text-white transition-all">
+                                    <button type="button" @click="openBan({{ json_encode($user) }})" class="px-4 py-2 bg-red-50 text-red-600 rounded-lg text-[9px] font-black uppercase tracking-widest hover:bg-red-500 hover:text-white transition-all cursor-pointer">
                                         Ban Customer
                                     </button>
                                 @else
                                     <form action="/admin/users/{{ $user->id }}/unban" method="POST">
                                         @csrf @method('PATCH')
-                                        <button type="submit" class="px-4 py-2 bg-green-50 text-green-600 rounded-lg text-[9px] font-black uppercase tracking-widest hover:bg-green-500 hover:text-white transition-all">
+                                        <button type="submit" class="px-4 py-2 bg-green-50 text-green-600 rounded-lg text-[9px] font-black uppercase tracking-widest hover:bg-green-500 hover:text-white transition-all cursor-pointer">
                                             Restore Account
                                         </button>
                                     </form>
                                 @endif
-                                <button type="button" @click="openDelete({{ json_encode($user) }})" class="px-4 py-2 bg-gray-50 text-gray-500 rounded-lg text-[9px] font-black uppercase tracking-widest hover:bg-red-500 hover:text-white transition-all">
+                                <button type="button" @click="openDelete({{ json_encode($user) }})" class="px-4 py-2 bg-gray-50 text-gray-600 rounded-lg text-[9px] font-black uppercase tracking-widest hover:bg-red-500 hover:text-white transition-all cursor-pointer">
                                     Delete
                                 </button>
                             </div>
@@ -114,11 +114,11 @@
                     </tr>
                 @empty
                     <tr>
-                        <td colspan="4" class="py-20 text-center text-sm text-gray-300 italic">No customer accounts found.</td>
+                        <td colspan="4" class="py-20 text-center text-sm text-gray-500 italic">No customer accounts found.</td>
                     </tr>
                 @endforelse
             </tbody>
-        </table>
+            </table>
         </div>
         <div class="px-6 py-4 border-t border-gray-50">
             {{ $users->withQueryString()->links() }}

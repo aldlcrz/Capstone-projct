@@ -34,11 +34,11 @@
                                 <h3 class="text-sm font-bold text-gray-900 truncate">
                                     {{ $notification->title }}
                                 </h3>
-                                <span class="text-[10px] font-bold text-gray-400">
+                                <span class="text-[10px] font-bold text-gray-500">
                                     {{ $notification->createdAt->diffForHumans() }}
                                 </span>
                             </div>
-                            <p class="text-xs text-gray-500 leading-relaxed">
+                            <p class="text-xs text-gray-600 font-medium leading-relaxed">
                                 {{ $notification->message }}
                             </p>
                             
