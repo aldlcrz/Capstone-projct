@@ -698,87 +698,71 @@
                  }
              }">
 
-            {{-- Reviews Section Header --}}
-            <div class="flex items-center justify-between mb-6 pb-3 border-b border-gray-100 flex-wrap gap-4">
+            @php
+                $totalRevCount = $product->reviews->count();
+                $starBreakdown = [5 => 0, 4 => 0, 3 => 0, 2 => 0, 1 => 0];
+                foreach($product->reviews as $r) {
+                    $s = (int)$r->rating;
+                    if(isset($starBreakdown[$s])) $starBreakdown[$s]++;
+                }
+            @endphp
+
+            {{-- Reviews Section Header & Summary Badge (Matching Mockup) --}}
+            <div class="flex items-center gap-6 sm:gap-10 mb-8 flex-wrap">
                 <div>
-                    <div class="flex items-center gap-2 mb-1">
-                        <span class="h-1.5 w-6 bg-[#C0420A] rounded-full"></span>
-                        <span class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Reviews & Feedback</span>
+                    <div class="flex items-center gap-1.5 mb-1">
+                        <span class="text-[#C0420A] font-bold text-xs">—</span>
+                        <span class="text-[10px] font-black text-[#C0420A] uppercase tracking-widest">Reviews & Feedback</span>
                     </div>
-                    <h2 class="font-serif text-xl sm:text-2xl font-bold text-black">Customer Reviews</h2>
+                    <h2 class="font-serif text-2xl sm:text-3xl font-bold text-black">Customer Reviews</h2>
                 </div>
-            </div>
 
-            @if($product->reviews->isNotEmpty())
-                @php
-                    $totalRevCount = $product->reviews->count();
-                    $starBreakdown = [5 => 0, 4 => 0, 3 => 0, 2 => 0, 1 => 0];
-                    foreach($product->reviews as $r) {
-                        $s = (int)$r->rating;
-                        if(isset($starBreakdown[$s])) $starBreakdown[$s]++;
-                    }
-                @endphp
-
-                {{-- Unified Review Summary Hero Dashboard --}}
-                <div class="bg-gradient-to-br from-[#FAF9F6] to-[#F5F2EB] border border-[#EAE3D9] rounded-3xl p-6 sm:p-8 mb-8 shadow-xs">
-                    <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8 items-center">
-                        
-                        {{-- Left Column: Overall Rating Score --}}
-                        <div class="lg:col-span-4 flex flex-col items-center lg:items-start text-center lg:text-left space-y-2 border-b lg:border-b-0 lg:border-r border-[#E5DEC3]/80 pb-6 lg:pb-0 lg:pr-6">
-                            <div class="flex items-baseline gap-1">
-                                <span class="text-4xl sm:text-5xl font-black text-gray-900 tracking-tight leading-none">{{ number_format($product->avgRating, 1) }}</span>
-                                <span class="text-xs font-bold text-gray-400">/ 5.0</span>
-                            </div>
-                            <div class="flex items-center gap-1 text-amber-400 text-base">
+                @if($product->reviews->isNotEmpty())
+                    <div class="bg-[#FCFAF8] border border-[#F3EDE2] rounded-2xl px-6 py-3.5 flex items-center gap-4 shadow-xs">
+                        <div class="text-center pr-4 border-r border-[#EFE8DC]">
+                            <span class="text-3xl font-black text-[#C0420A] leading-none">{{ number_format($product->avgRating, 1) }}</span>
+                            <span class="text-[9px] text-gray-400 font-bold block mt-0.5">out of 5</span>
+                        </div>
+                        <div>
+                            <div class="flex items-center gap-0.5 text-amber-400 text-sm">
                                 @for($i = 1; $i <= 5; $i++)
                                     <span>{{ $i <= round($product->avgRating) ? '★' : '☆' }}</span>
                                 @endfor
                             </div>
-                            <p class="text-xs font-semibold text-gray-600">
-                                Based on <span class="font-bold text-gray-900">{{ $totalRevCount }}</span> verified {{ $totalRevCount === 1 ? 'customer review' : 'customer reviews' }}
-                            </p>
-                            <div class="pt-2 w-full">
-                                <button type="button" @click="reviewsModal = true" class="w-full sm:w-auto px-5 py-2.5 bg-[#C0420A] hover:bg-[#a33707] text-white text-xs font-black uppercase tracking-widest rounded-xl transition-all shadow-xs flex items-center justify-center gap-2 cursor-pointer active:scale-95">
-                                    <span>View All Reviews ({{ $totalRevCount }})</span>
-                                    <span class="text-sm">⌄</span>
-                                </button>
-                            </div>
+                            <span class="text-[10px] font-bold text-gray-400 uppercase tracking-widest mt-0.5 block">
+                                {{ $totalRevCount }} {{ $totalRevCount === 1 ? 'REVIEW' : 'REVIEWS' }}
+                            </span>
                         </div>
-
-                        {{-- Right Column: Rating Distribution Bars --}}
-                        <div class="lg:col-span-8 space-y-2.5">
-                            <div class="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1 flex items-center justify-between">
-                                <span>Rating Breakdown</span>
-                                <span class="text-gray-400">{{ $totalRevCount }} {{ $totalRevCount === 1 ? 'rating' : 'ratings' }}</span>
-                            </div>
-                            @for($star = 5; $star >= 1; $star--)
-                                @php
-                                    $count = $starBreakdown[$star] ?? 0;
-                                    $pct = $totalRevCount > 0 ? round(($count / $totalRevCount) * 100) : 0;
-                                @endphp
-                                <div class="flex items-center gap-3 text-xs">
-                                    <span class="w-10 font-bold text-gray-700 text-right flex items-center justify-end gap-1">
-                                        <span>{{ $star }}</span>
-                                        <span class="text-amber-500">★</span>
-                                    </span>
-                                    <div class="flex-1 h-2.5 bg-gray-200/80 rounded-full overflow-hidden">
-                                        <div class="h-full bg-amber-400 rounded-full transition-all duration-500" style="{{ 'width: ' . $pct . '%;' }}"></div>
-                                    </div>
-                                    <span class="w-12 text-[11px] font-bold text-gray-500 text-right">{{ $count }}</span>
-                                </div>
-                            @endfor
-                        </div>
-
                     </div>
+                @endif
+            </div>
+
+            @if($product->reviews->isNotEmpty())
+                {{-- Rating Distribution Breakdown (Matching Mockup) --}}
+                <div class="bg-[#FCFAF8] border border-[#F3EDE2] rounded-3xl p-6 sm:p-7 mb-8 max-w-xl shadow-xs space-y-2.5">
+                    <span class="text-[10px] font-black uppercase tracking-widest text-gray-400 block mb-3">Rating Distribution</span>
+                    @for($star = 5; $star >= 1; $star--)
+                        @php
+                            $count = $starBreakdown[$star] ?? 0;
+                            $pct = $totalRevCount > 0 ? round(($count / $totalRevCount) * 100) : 0;
+                        @endphp
+                        <div class="flex items-center gap-3 text-xs">
+                            <span class="w-8 font-bold text-gray-600 text-right">{{ $star }} ★</span>
+                            <div class="flex-1 h-2.5 bg-[#ECE7DE] rounded-full overflow-hidden">
+                                <div class="h-full bg-amber-400 rounded-full" style="{{ 'width: ' . $pct . '%;' }}"></div>
+                            </div>
+                            <span class="w-8 text-[11px] font-bold text-gray-400 text-right">{{ $count }}</span>
+                        </div>
+                    @endfor
                 </div>
 
-                {{-- Stacked Single-Column Customer Reviews List --}}
+                {{-- Stacked Single-Column Customer Reviews List (Matching Mockup) --}}
                 <div class="space-y-4">
                     @foreach($product->reviews->take(3) as $review)
-                        <div class="bg-white border border-gray-100 rounded-2xl p-5 sm:p-6 space-y-3.5 shadow-xs hover:border-gray-200 transition-all">
+                        <div class="bg-[#FCFAF8] border border-[#F3EDE2] rounded-2xl p-5 sm:p-6 space-y-3 shadow-xs">
                             <div class="flex items-center justify-between flex-wrap gap-2">
                                 <div class="flex items-center gap-3">
-                                    <div class="w-11 h-11 rounded-full bg-gray-100 border border-gray-200/80 flex items-center justify-center font-bold text-gray-700 text-sm overflow-hidden shrink-0 shadow-xs">
+                                    <div class="w-11 h-11 rounded-full bg-[#EAE8E4] flex items-center justify-center font-bold text-gray-700 text-sm overflow-hidden shrink-0">
                                         @if($review->customer && $review->customer->profile_photo_url)
                                             <img src="{{ $review->customer->profile_photo_url }}" class="w-full h-full object-cover" onerror="this.style.display='none'">
                                         @else
@@ -787,32 +771,30 @@
                                     </div>
                                     <div>
                                         <div class="flex items-center gap-2 flex-wrap">
-                                            <span class="text-sm font-bold text-gray-900">{{ $review->customer->name ?? 'Customer' }}</span>
+                                            <span class="text-sm font-bold text-black">{{ $review->customer->name ?? 'Customer' }}</span>
                                             <div class="flex items-center gap-0.5 text-amber-400 text-xs">
                                                 @for($i = 1; $i <= 5; $i++)
                                                     <span>{{ $i <= $review->rating ? '★' : '☆' }}</span>
                                                 @endfor
                                             </div>
                                         </div>
-                                        <div class="text-[10px] text-gray-400 font-semibold uppercase tracking-wider mt-0.5">
+                                        <div class="text-[10px] text-gray-400 font-bold uppercase tracking-widest mt-0.5">
                                             {{ $review->createdAt ? $review->createdAt->format('F d, Y') : '' }}
                                         </div>
                                     </div>
                                 </div>
 
                                 @if($review->orderId || $review->orderItemId)
-                                    <span class="px-3 py-1 bg-emerald-50 text-emerald-700 border border-emerald-100/80 rounded-full text-[9px] font-black uppercase tracking-wider flex items-center gap-1">
+                                    <span class="px-3 py-1 bg-[#E8F8F0] text-[#1E9E65] border border-[#D0F0E0] rounded-full text-[9px] font-black uppercase tracking-widest flex items-center gap-1">
                                         ✓ Verified Purchase
                                     </span>
                                 @endif
                             </div>
 
                             @if($review->comment)
-                                <div class="bg-gray-50/60 rounded-xl p-3.5 border border-gray-100/60">
-                                    <p class="text-xs sm:text-sm text-gray-800 leading-relaxed italic">
-                                        "{{ $review->comment }}"
-                                    </p>
-                                </div>
+                                <p class="text-xs sm:text-sm text-gray-700 italic leading-relaxed">
+                                    "{{ $review->comment }}"
+                                </p>
                             @endif
 
                             {{-- Review Photos --}}
@@ -820,7 +802,7 @@
                                 $revImages = is_string($review->images) ? json_decode($review->images, true) : $review->images;
                             @endphp
                             @if(!empty($revImages) && is_array($revImages))
-                                <div class="flex flex-wrap gap-2.5 pt-1">
+                                <div class="flex flex-wrap gap-2 pt-1">
                                     @foreach($revImages as $rImg)
                                         @if($rImg)
                                             @php
@@ -834,7 +816,7 @@
                                                                 ? asset('storage/' . $rImg) 
                                                                 : asset('uploads/reviews/' . $rImg))));
                                             @endphp
-                                            <a href="{{ $rImgUrl }}" target="_blank" class="w-16 h-16 sm:w-20 sm:h-20 rounded-xl overflow-hidden border border-gray-200 bg-gray-50 shrink-0 hover:scale-105 transition-all shadow-xs block">
+                                            <a href="{{ $rImgUrl }}" target="_blank" class="w-14 h-14 rounded-xl overflow-hidden border border-gray-200 bg-white shrink-0 hover:opacity-90 transition-opacity block shadow-xs">
                                                 <img src="{{ $rImgUrl }}" class="w-full h-full object-cover" onerror="this.style.display='none'" alt="Review Photo">
                                             </a>
                                         @endif
@@ -845,11 +827,11 @@
                     @endforeach
                 </div>
 
-                {{-- Bottom View All Reviews Button --}}
+                {{-- View All Reviews Button (Matching Mockup) --}}
                 <div class="mt-6">
                     <button type="button" 
                             @click="reviewsModal = true"
-                            class="w-full py-4 px-6 border-2 border-[#C0420A] bg-white hover:bg-[#C0420A] text-[#C0420A] hover:text-white rounded-2xl text-xs font-black uppercase tracking-widest transition-all shadow-xs flex items-center justify-center gap-2 cursor-pointer group active:scale-[0.99]">
+                            class="w-full py-4 px-6 border border-[#E88058] bg-[#FCFAF8] hover:bg-[#C0420A] text-[#C0420A] hover:text-white rounded-2xl text-xs font-black uppercase tracking-widest transition-all shadow-xs flex items-center justify-center gap-2 cursor-pointer group active:scale-[0.99]">
                         <span>VIEW ALL REVIEWS ({{ $totalRevCount }})</span>
                         <span class="group-hover:translate-y-0.5 transition-transform text-sm font-bold">⌄</span>
                     </button>
