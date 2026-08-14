@@ -587,15 +587,25 @@
         </div>
     </div>
 
+    <script id="payment-config" type="application/json">
+    {
+        "hasExistingGcashQr": {{ !empty($user->gcashQrCode) ? 'true' : 'false' }},
+        "hasExistingMayaQr": {{ !empty($user->mayaQrCode) ? 'true' : 'false' }}
+    }
+    </script>
+
     <script>
     function validatePaymentModalForm(e, form) {
+        const configEl = document.getElementById('payment-config');
+        const config = configEl ? JSON.parse(configEl.textContent || '{}') : {};
+        const hasExistingGcashQr = Boolean(config.hasExistingGcashQr);
+        const hasExistingMayaQr = Boolean(config.hasExistingMayaQr);
+
         const gcashNum = document.getElementById('modalGcashNumber')?.value.trim();
-        const gcashFile = document.getElementById('modalGcashQr')?.files?.length > 0;
-        const hasExistingGcashQr = {{ !empty($user->gcashQrCode) ? 'true' : 'false' }};
+        const gcashFile = (document.getElementById('modalGcashQr')?.files?.length || 0) > 0;
 
         const mayaNum = document.getElementById('modalMayaNumber')?.value.trim();
-        const mayaFile = document.getElementById('modalMayaQr')?.files?.length > 0;
-        const hasExistingMayaQr = {{ !empty($user->mayaQrCode) ? 'true' : 'false' }};
+        const mayaFile = (document.getElementById('modalMayaQr')?.files?.length || 0) > 0;
 
         const errors = [];
 
