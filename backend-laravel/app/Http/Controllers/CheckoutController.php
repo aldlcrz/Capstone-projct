@@ -132,16 +132,45 @@ class CheckoutController extends Controller
 
     public function store(Request $request)
     {
+        $paymentMethod = trim($request->input('paymentMethod', 'GCash'));
+        $isGcash = strcasecmp($paymentMethod, 'GCash') === 0;
+        $isMaya  = strcasecmp($paymentMethod, 'Maya') === 0;
+
         $request->validate([
-            'paymentMethod' => 'required',
+            'paymentMethod' => 'required|string',
             'paymentReference' => [
                 'required',
                 'string',
-                'regex:/^[\d\s\-]{10,20}$/',
-                function ($attribute, $value, $fail) {
-                    $digits = preg_replace('/\D/', '', (string)$value);
-                    if (strlen($digits) < 10 || strlen($digits) > 16) {
-                        $fail('The payment reference number must contain between 10 and 16 digits (e.g., 13-digit GCash or 12-digit Maya reference number).');
+                function ($attribute, $value, $fail) use ($isGcash, $isMaya) {
+                    $raw = trim((string)$value);
+
+                    if (preg_match('/^(\d)\1+$/', $raw)) {
+                        $fail('Invalid payment reference number. Repeated digit sequences are not allowed.');
+                        return;
+                    }
+
+                    if ($isGcash) {
+                        if (!preg_match('/^\d{13}$/', $raw)) {
+                            $fail('Reference number must be exactly 13 digits.');
+                            return;
+                        }
+                    } elseif ($isMaya) {
+                        if (!preg_match('/^\d{12}$/', $raw)) {
+                            $fail('Reference number must be exactly 12 digits.');
+                            return;
+                        }
+                    } else {
+                        if (!preg_match('/^\d{10,16}$/', $raw)) {
+                            $fail('The payment reference number must contain between 10 and 16 digits.');
+                            return;
+                        }
+                    }
+
+                    // Security: Reject already-used payment reference numbers
+                    $isDuplicate = \App\Models\Order::where('paymentReference', $raw)->exists();
+                    if ($isDuplicate) {
+                        $fail('This payment reference number has already been used in another order. Please provide a new and unique payment reference.');
+                        return;
                     }
                 },
             ],
@@ -149,7 +178,6 @@ class CheckoutController extends Controller
             'shippingAddress' => 'required',
         ], [
             'paymentReference.required' => 'Please provide your payment reference number.',
-            'paymentReference.regex' => 'Payment reference number must consist of digits only (e.g., 1002345678901). Letters and special characters are not allowed.',
         ]);
 
         try {

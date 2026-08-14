@@ -177,7 +177,7 @@
                                 <template x-for="item in cartItems.slice(0, 5)" :key="item.id + '_' + (item.size || '') + '_' + (item.variation || '')">
                                     <div class="flex items-center gap-4 p-4 border-b border-gray-50 last:border-0 hover:bg-gray-50 transition-all">
                                         <div class="w-12 h-12 rounded-lg bg-gray-100 overflow-hidden shrink-0 border border-gray-200">
-                                            <img :src="item.image ? (item.image.startsWith('http') || item.image.startsWith('/') ? item.image : (item.image.startsWith('products/') ? '/storage/' + item.image : '/uploads/products/' + item.image)) : '/uploads/products/default.jpg'" class="w-full h-full object-cover">
+                                            <img :src="window.getAppProductImage ? window.getAppProductImage(item.image) : '/uploads/products/default.jpg'" class="w-full h-full object-cover" x-on:error="$event.target.src='/uploads/products/default.jpg'">
                                         </div>
                                         <div class="flex-1 min-w-0">
                                             <div class="text-[11px] font-bold text-black truncate" x-text="item.name"></div>
@@ -409,18 +409,26 @@
 
     <!-- Global Components -->
     <x-auth-gate-modal />
+    @if(!request()->is('checkout*'))
     <x-chat-widget />
     <x-report-modal />
 
     <div x-data="{}" class="fixed bottom-19 lg:bottom-6 right-3 lg:right-6 z-60">
         <button 
-            @click="window.dispatchEvent(new CustomEvent({{ auth()->check() ? "'toggle-chat'" : "'open-auth-gate'" }}, {{ auth()->check() ? '{}' : "{ detail: { message: 'Please log in to chat with artisans.' } }" }}))"
-            class="w-12 h-12 bg-black text-white rounded-full flex items-center justify-center shadow-lg hover:bg-gray-800 transition-all"
-            title="Chat with Artisans"
+            @click="window.dispatchEvent(new CustomEvent('toggle-chat'))"
+            class="w-12 h-12 bg-black text-white rounded-full flex items-center justify-center shadow-lg hover:bg-gray-800 hover:scale-105 transition-all cursor-pointer group"
+            title="Lumbarong Smart Assistance & Messages"
         >
-            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"></path></svg>
+            <span class="absolute -top-1 -right-1 flex h-3 w-3">
+                <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#C0422A] opacity-75"></span>
+                <span class="relative inline-flex rounded-full h-3 w-3 bg-[#C0422A]"></span>
+            </span>
+            <svg class="w-6 h-6 group-hover:scale-110 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"></path></svg>
         </button>
     </div>
+    @else
+    <x-report-modal />
+    @endif
 
     <!-- Global dynamic toast component -->
     <div 
@@ -458,6 +466,32 @@
     </div>
 
     <script>
+        function getAppProductImage(raw) {
+            if (!raw) return '/uploads/products/default.jpg';
+            if (Array.isArray(raw)) {
+                raw = raw[0] ?? '';
+            }
+            if (typeof raw === 'string') {
+                const trimmed = raw.trim();
+                if (trimmed.startsWith('[') || trimmed.startsWith('{')) {
+                    try {
+                        const parsed = JSON.parse(trimmed);
+                        raw = Array.isArray(parsed) ? (parsed[0] ?? '') : (parsed.url || parsed.image || parsed);
+                    } catch(e) {}
+                }
+            }
+            if (!raw || typeof raw !== 'string') return '/uploads/products/default.jpg';
+            raw = raw.trim();
+            if (!raw || raw === 'Array' || raw === '[]' || raw === '[') return '/uploads/products/default.jpg';
+            if (raw.startsWith('http://') || raw.startsWith('https://')) return raw;
+            if (raw.startsWith('/')) return raw;
+            if (raw.startsWith('products/')) return '/storage/' + raw;
+            if (raw.startsWith('storage/')) return '/' + raw;
+            if (raw.startsWith('uploads/')) return '/' + raw;
+            return '/uploads/products/' + raw;
+        }
+        window.getAppProductImage = getAppProductImage;
+
         document.addEventListener('alpine:init', () => {
             Alpine.store('toast', {
                 show: false,

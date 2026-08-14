@@ -248,7 +248,7 @@ class AuthController extends Controller
      */
     public function forgotPassword(Request $request)
     {
-        $email = strtolower($request->email);
+        $email = strtolower(trim($request->email));
         if (!$email) return response()->json(['message' => 'Email is required'], 400);
 
         $user = User::where('email', $email)->first();
@@ -257,17 +257,19 @@ class AuthController extends Controller
             return response()->json(['message' => 'If an account exists, a 6-digit code has been sent.']);
         }
 
-        $otp = (string) rand(100000, 999999);
-        $user->resetPasswordToken = hash('sha256', $otp);
-        $user->resetPasswordExpires = Carbon::now()->addMinutes(60);
+        $verification = \App\Services\EmailNotificationService::createVerificationCode($email, 'password_reset');
+        $user->resetPasswordToken = hash('sha256', $verification->code);
+        $user->resetPasswordExpires = $verification->expires_at;
         $user->save();
 
-        // In a real app, send the email here. For now, we'll log it or return it in dev.
-        Log::info("Password Reset OTP for {$email}: {$otp}");
+        $mailable = new \App\Mail\PasswordResetCodeMail($user->name, $verification->code);
+        \App\Services\EmailNotificationService::sendNotification($email, $mailable, 'forgot_password', $user->id, 'User', $user->id);
 
-        $response = ['message' => 'A 6-digit code has been sent to your email.'];
+        Log::info("Password Reset OTP for {$email}: {$verification->code}");
+
+        $response = ['message' => 'A 6-digit verification code has been sent to your Gmail address.'];
         if (config('app.debug')) {
-            $response['devOtp'] = $otp; // Helping the user during development
+            $response['devOtp'] = $verification->code;
         }
 
         return response()->json($response);

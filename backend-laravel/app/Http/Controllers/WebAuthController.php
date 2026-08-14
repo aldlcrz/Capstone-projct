@@ -13,7 +13,11 @@ class WebAuthController extends Controller
 {
     public function showLogin()
     {
-        return view('auth.login');
+        return response()
+            ->view('auth.login')
+            ->header('Cache-Control', 'no-cache, no-store, max-age=0, must-revalidate')
+            ->header('Pragma', 'no-cache')
+            ->header('Expires', 'Sun, 02 Jan 1990 00:00:00 GMT');
     }
 
     public function login(Request $request)
@@ -99,7 +103,11 @@ class WebAuthController extends Controller
 
     public function showRegister()
     {
-        return view('auth.register');
+        return response()
+            ->view('auth.register')
+            ->header('Cache-Control', 'no-cache, no-store, max-age=0, must-revalidate')
+            ->header('Pragma', 'no-cache')
+            ->header('Expires', 'Sun, 02 Jan 1990 00:00:00 GMT');
     }
 
     public function register(Request $request)
@@ -144,7 +152,11 @@ class WebAuthController extends Controller
 
     public function showSellerRegister()
     {
-        return view('auth.seller-register');
+        return response()
+            ->view('auth.seller-register')
+            ->header('Cache-Control', 'no-cache, no-store, max-age=0, must-revalidate')
+            ->header('Pragma', 'no-cache')
+            ->header('Expires', 'Sun, 02 Jan 1990 00:00:00 GMT');
     }
 
     public function sellerRegister(Request $request)
@@ -220,9 +232,13 @@ class WebAuthController extends Controller
         return redirect()->route('verify.email')->with('success', 'Application submitted! Please verify your Gmail address to proceed.');
     }
 
-    public function showVerifyEmail()
+    public function showVerifyEmail(Request $request)
     {
-        return view('auth.verify-email');
+        if ($request->filled('email')) {
+            session(['verify_email' => strtolower(trim($request->email))]);
+        }
+        $email = session('verify_email') ?? (Auth::check() ? Auth::user()->email : null);
+        return view('auth.verify-email', compact('email'));
     }
 
     public function verifyEmail(Request $request)
@@ -391,9 +407,13 @@ class WebAuthController extends Controller
         return redirect()->route('password.verify.code')->with('success', 'A 6-digit password reset code has been sent to your Gmail address.');
     }
 
-    public function showVerifyResetCode()
+    public function showVerifyResetCode(Request $request)
     {
-        return view('auth.verify-reset-code');
+        if ($request->filled('email')) {
+            session(['reset_email' => strtolower(trim($request->email))]);
+        }
+        $email = session('reset_email');
+        return view('auth.verify-reset-code', compact('email'));
     }
 
     public function verifyResetCode(Request $request)

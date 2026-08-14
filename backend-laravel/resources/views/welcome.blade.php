@@ -43,8 +43,7 @@
             }
         }"
         x-init="autoSlide()"
-        class="relative rounded-2xl overflow-hidden shadow-sm bg-gray-900"
-        style="aspect-ratio: 16/4; min-height: 100px;"
+        class="relative rounded-2xl sm:rounded-3xl overflow-hidden shadow-sm bg-gray-900 min-h-55 sm:min-h-70 md:min-h-85 lg:aspect-16/4 lg:min-h-0"
     >
         @foreach($banners as $i => $banner)
         <div
@@ -60,23 +59,23 @@
             {{-- Background image --}}
             <img src="{{ $banner->getImageUrl() }}" alt="{{ $banner->title }}" class="absolute inset-0 w-full h-full object-cover object-center">
             {{-- Dark gradient overlay on left --}}
-            <div class="absolute inset-0 bg-linear-to-r from-black/75 via-black/40 to-transparent"></div>
+            <div class="absolute inset-0 bg-linear-to-r from-black/85 via-black/50 to-transparent"></div>
             {{-- Content --}}
-            <div class="relative z-10 flex flex-col justify-center h-full px-6 sm:px-10 py-8 sm:py-12 max-w-md">
+            <div class="relative z-10 flex flex-col justify-center h-full px-5 sm:px-10 py-6 sm:py-10 max-w-xs sm:max-w-md">
                 @if($banner->subtitle)
-                    <p class="text-[11px] sm:text-xs font-bold uppercase tracking-widest text-amber-400 mb-2">{{ $banner->subtitle }}</p>
+                    <p class="text-[10px] sm:text-xs font-bold uppercase tracking-widest text-amber-400 mb-1 sm:mb-2">{{ $banner->subtitle }}</p>
                 @endif
                 @if($banner->title)
-                    <h2 class="text-2xl sm:text-4xl font-extrabold text-white leading-tight mb-3">{{ $banner->title }}</h2>
+                    <h2 class="text-xl sm:text-3xl lg:text-4xl font-extrabold text-white leading-tight mb-2.5 sm:mb-3">{{ $banner->title }}</h2>
                 @endif
-                <div class="flex flex-wrap gap-3 mt-2">
+                <div class="flex flex-wrap items-center gap-2 sm:gap-3 mt-1 sm:mt-2">
                     @if($banner->button_text_1)
-                        <a href="{{ $banner->button_url_1 ?: '/' }}" class="inline-flex items-center gap-2 px-5 py-2.5 bg-amber-600 hover:bg-amber-700 text-white text-sm font-bold rounded-xl transition-all shadow-md hover:shadow-lg hover:scale-105">
+                        <a href="{{ $banner->button_url_1 ?: '/' }}" class="inline-flex items-center justify-center px-4 py-2 sm:px-5 sm:py-2.5 bg-amber-600 hover:bg-amber-700 text-white text-xs sm:text-sm font-bold rounded-xl transition-all shadow-md hover:shadow-lg hover:scale-105 active:scale-95">
                             {{ $banner->button_text_1 }}
                         </a>
                     @endif
                     @if($banner->button_text_2)
-                        <a href="{{ $banner->button_url_2 ?: '/' }}" class="inline-flex items-center gap-2 px-5 py-2.5 bg-white/15 hover:bg-white/25 text-white text-sm font-semibold rounded-xl border border-white/30 backdrop-blur-sm transition-all">
+                        <a href="{{ $banner->button_url_2 ?: '/' }}" class="inline-flex items-center justify-center px-4 py-2 sm:px-5 sm:py-2.5 bg-white/15 hover:bg-white/25 text-white text-xs sm:text-sm font-semibold rounded-xl border border-white/30 backdrop-blur-sm transition-all active:scale-95">
                             {{ $banner->button_text_2 }}
                         </a>
                     @endif
@@ -87,22 +86,22 @@
 
         {{-- Dot navigation (only when multiple banners) --}}
         @if($banners->count() > 1)
-        <div class="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-1.5 z-20">
+        <div class="absolute bottom-2.5 sm:bottom-3 left-1/2 -translate-x-1/2 flex gap-1.5 z-20">
             @foreach($banners as $i => $banner)
             <button
                 type="button"
                 @click="active = {{ $i }}"
                 :class="active === {{ $i }} ? 'w-5 bg-white' : 'w-2 bg-white/50 hover:bg-white/80'"
-                class="h-2 rounded-full transition-all duration-300"
+                class="h-1.5 sm:h-2 rounded-full transition-all duration-300 cursor-pointer"
             ></button>
             @endforeach
         </div>
         {{-- Prev / Next arrows (visible on hover) --}}
-        <button type="button" @click="active = (active - 1 + total) % total" class="absolute left-3 top-1/2 -translate-y-1/2 z-20 w-8 h-8 rounded-full bg-black/30 hover:bg-black/50 text-white flex items-center justify-center transition-all">
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 19l-7-7 7-7"/></svg>
+        <button type="button" @click="active = (active - 1 + total) % total" class="absolute left-2 sm:left-3 top-1/2 -translate-y-1/2 z-20 w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-black/40 hover:bg-black/60 text-white flex items-center justify-center transition-all cursor-pointer">
+            <svg class="w-3.5 h-3.5 sm:w-4 sm:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 19l-7-7 7-7"/></svg>
         </button>
-        <button type="button" @click="active = (active + 1) % total" class="absolute right-3 top-1/2 -translate-y-1/2 z-20 w-8 h-8 rounded-full bg-black/30 hover:bg-black/50 text-white flex items-center justify-center transition-all">
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5l7 7-7 7"/></svg>
+        <button type="button" @click="active = (active + 1) % total" class="absolute right-2 sm:right-3 top-1/2 -translate-y-1/2 z-20 w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-black/40 hover:bg-black/60 text-white flex items-center justify-center transition-all cursor-pointer">
+            <svg class="w-3.5 h-3.5 sm:w-4 sm:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5l7 7-7 7"/></svg>
         </button>
         @endif
     </div>
@@ -510,22 +509,6 @@
                          alt="{{ $product->name }}"
                          class="w-full h-full object-cover object-top group-hover:scale-105 transition-transform duration-500 ease-out">
 
-                    {{-- Hover overlay --}}
-                    <div class="absolute inset-x-0 bottom-0 p-3 translate-y-1 opacity-0 group-hover:opacity-100 group-hover:translate-y-0 transition-all duration-300">
-                        <button type="button" 
-                                data-id="{{ $product->id }}"
-                                data-name="{{ $product->name }}"
-                                data-price="{{ $product->sale_price }}"
-                                data-image="{{ $product->getImageUrl() }}"
-                                data-sizes='{!! json_encode($pSizes) !!}'
-                                data-size-stocks='{!! json_encode($product->size_stocks ?? (object)[]) !!}'
-                                data-default-stock="{{ $product->stock ?? 1 }}"
-                                onclick="event.stopPropagation(); window.openQuickAdd({ id: this.dataset.id, name: this.dataset.name, price: this.dataset.price, image: this.dataset.image, sizes: JSON.parse(this.dataset.sizes), sizeStocks: JSON.parse(this.dataset.sizeStocks), defaultStock: parseInt(this.dataset.defaultStock) })"
-                                class="w-full bg-black/90 backdrop-blur-sm text-white py-2 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-[#C0422A] transition-colors shadow-lg">
-                            + Add to Cart
-                        </button>
-                    </div>
-
                     @if($product->is_on_sale && $product->discount_percentage > 0)
                         <div class="absolute top-2.5 left-2.5 flex flex-col gap-1">
                             <div class="flex items-center gap-1 bg-[#C0422A] text-white px-2 py-0.5 rounded-full shadow-lg">
@@ -637,7 +620,7 @@
                     {{-- Product Summary Header --}}
                     <div class="flex gap-4 items-start mb-6">
                         <div class="w-20 h-24 rounded-2xl bg-gray-50 overflow-hidden border border-gray-100 shrink-0">
-                            <img :src="product.image" class="w-full h-full object-cover object-top" alt="">
+                            <img :src="window.getAppProductImage ? window.getAppProductImage(product.image) : '/uploads/products/default.jpg'" class="w-full h-full object-cover object-top" x-on:error="$event.target.src='/uploads/products/default.jpg'" alt="">
                         </div>
                         <div class="flex-1 min-w-0">
                             <div class="text-[9px] font-bold uppercase tracking-[0.2em] text-[#C0422A] mb-1">Quick Add</div>

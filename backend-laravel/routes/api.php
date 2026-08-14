@@ -142,4 +142,14 @@ Route::prefix('v1')->group(function () {
         Route::patch('/refunds/{id}/status', [RefundController::class, 'updateRefundStatus']);
     });
 
+    // AI Core Feature Routes
+    Route::prefix('ai')->group(function () {
+        Route::post('/stylist/chat', [\App\Http\Controllers\AiController::class, 'chatStylist']);
+        Route::post('/sizing/recommend', [\App\Http\Controllers\AiController::class, 'recommendSize']);
+        Route::post('/seller/generate-description', [\App\Http\Controllers\AiController::class, 'generateSellerListing']);
+        Route::post('/security/password-check', [\App\Http\Controllers\AiController::class, 'analyzePassword']);
+        Route::post('/payment-reference/check', [\App\Http\Controllers\AiController::class, 'checkPaymentReference']);
+        Route::post('/receipt/verify', [\App\Http\Controllers\AiController::class, 'verifyReceipt']);
+    });
+
 });

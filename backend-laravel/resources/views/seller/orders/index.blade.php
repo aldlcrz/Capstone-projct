@@ -84,314 +84,418 @@ function printSellerOrder(order) {
     win.focus();
     win.print();
 }
-</script>
 
-<div class="space-y-4 sm:space-y-6 max-w-5xl pb-28 lg:pb-12 px-2 sm:px-6" x-data="{
-    orders: {{ $orders->toJson() }},
-    searchTerm: '',
-    statusFilter: 'all',
-    activeOrder: null,
-    statusModal: false,
-    newStatus: '',
-    receiptModal: false,
-    receiptUrl: '',
-    detailsModal: false,
-    detailsOrder: null,
-    courierName: '',
-    trackingNumber: '',
-    trackingLink: '',
-    shippingError: '',
-    packingPhotoFile: null,
-    packingPhotoPreview: null,
-    packingUploading: false,
-    packingUploadSuccess: false,
-    packingUploadError: '',
-    showCameraModal: false,
-    cameraStream: null,
-    showDeliveryConfirmModal: false,
-    deliveryConfirmOrder: null,
+function sellerOrdersManager(initialOrders) {
+    return {
+        orders: initialOrders || [],
+        searchTerm: '',
+        statusFilter: 'all',
+        activeOrder: null,
+        statusModal: false,
+        newStatus: '',
+        receiptModal: false,
+        receiptUrl: '',
+        detailsModal: false,
+        detailsOrder: null,
+        courierName: '',
+        trackingNumber: '',
+        trackingLink: '',
+        shippingError: '',
+        packingPhotoFile: null,
+        packingPhotoPreview: null,
+        packingUploading: false,
+        packingUploadSuccess: false,
+        packingUploadError: '',
+        showCameraModal: false,
+        cameraStream: null,
+        showDeliveryConfirmModal: false,
+        deliveryConfirmOrder: null,
+        deliveryConfirmLoading: false,
+        deliveryConfirmSuccess: false,
+        deliveryConfirmError: '',
+        statusUpdating: false,
+        toastMessage: '',
+        toastTimeout: null,
 
-    confirmMarkAsDelivered(order) {
-        this.deliveryConfirmOrder = order || this.detailsOrder;
-        this.showDeliveryConfirmModal = true;
-    },
+        showToast(msg) {
+            this.toastMessage = msg;
+            clearTimeout(this.toastTimeout);
+            this.toastTimeout = setTimeout(() => { this.toastMessage = ''; }, 3500);
+        },
 
-    async executeMarkAsDelivered() {
-        if (!this.deliveryConfirmOrder) return;
-        await this.updateStatus(this.deliveryConfirmOrder, 'Delivered');
-        this.showDeliveryConfirmModal = false;
-        this.deliveryConfirmOrder = null;
-    },
+        confirmMarkAsDelivered(order) {
+            this.deliveryConfirmOrder = order || this.detailsOrder;
+            this.deliveryConfirmLoading = false;
+            this.deliveryConfirmSuccess = false;
+            this.deliveryConfirmError = '';
+            this.showDeliveryConfirmModal = true;
+        },
 
-    formatAddress(order) {
-        return formatOrderAddress(order);
-    },
+        async executeMarkAsDelivered() {
+            if (!this.deliveryConfirmOrder || this.deliveryConfirmLoading) return;
+            this.deliveryConfirmLoading = true;
+            this.deliveryConfirmError = '';
 
-    buyerPhone(order) {
-        return buyerOrderPhone(order);
-    },
+            const target = this.deliveryConfirmOrder;
 
-    openDetails(order) {
-        this.detailsOrder = order;
-        this.newStatus = order.status;
-        this.courierName = order.courierName || 'J&T Express';
-        this.trackingNumber = order.trackingNumber || '';
-        this.trackingLink = order.trackingLink || '';
-        this.shippingError = '';
-        this.packingPhotoFile = null;
-        this.packingPhotoPreview = order.packingProof ? '/storage/' + order.packingProof : null;
-        this.packingUploading = false;
-        this.packingUploadSuccess = !!order.packingProof;
-        this.packingUploadError = '';
-        this.closeCameraModal();
-        this.detailsModal = true;
-    },
+            try {
+                const payload = {
+                    status: 'Delivered',
+                    courierName: this.courierName || target.courierName || 'J&T Express',
+                    trackingNumber: this.trackingNumber || target.trackingNumber || ('JT-' + target.id.slice(-8).toUpperCase()),
+                    trackingLink: this.trackingLink || target.trackingLink || 'https://www.jtexpress.ph/track'
+                };
 
-    openStatus(order) {
-        this.activeOrder = order;
-        this.newStatus = order.status;
-        this.courierName = order.courierName || 'J&T Express';
-        this.trackingNumber = order.trackingNumber || '';
-        this.trackingLink = order.trackingLink || '';
-        this.shippingError = '';
-        this.statusModal = true;
-    },
+                const token = document.querySelector('meta[name="csrf-token"]')?.content || document.querySelector('input[name="_token"]')?.value || '';
 
-    printOrderDetails() {
-        printSellerOrder(this.detailsOrder);
-        this.detailsModal = false;
-    },
+                const res = await fetch('/seller/api/orders/' + target.id + '/status', {
+                    method: 'PATCH',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json',
+                        'X-CSRF-TOKEN': token
+                    },
+                    body: JSON.stringify(payload)
+                });
 
-    onPackingFileChange(event) {
-        const file = event.target.files[0];
-        if (!file) return;
-        this.packingPhotoFile = file;
-        this.packingUploadError = '';
-        const reader = new FileReader();
-        reader.onload = (e) => { this.packingPhotoPreview = e.target.result; };
-        reader.readAsDataURL(file);
-    },
+                const data = await res.json();
 
-    async uploadPackingProof() {
-        if (!this.packingPhotoFile || !this.detailsOrder) return;
-        this.packingUploading = true;
-        this.packingUploadError = '';
-        try {
-            const formData = new FormData();
-            formData.append('packingPhoto', this.packingPhotoFile);
-            formData.append('_token', document.querySelector('meta[name=csrf-token]')?.content || '');
-            const res = await fetch(`/seller/api/orders/${this.detailsOrder.id}/packing-proof`, {
-                method: 'POST',
-                body: formData,
-            });
-            const data = await res.json();
-            if (!res.ok) throw new Error(data.message || 'Upload failed.');
-            this.packingUploadSuccess = true;
-            this.packingPhotoPreview = data.packingProofUrl;
-            this.detailsOrder.packingProof = data.packingProof;
-            // Update the order in the orders array too
-            const idx = this.orders.findIndex(o => o.id === this.detailsOrder.id);
-            if (idx !== -1) this.orders[idx].packingProof = data.packingProof;
-        } catch(e) {
-            this.packingUploadError = e.message || 'Upload failed. Please try again.';
-        } finally {
-            this.packingUploading = false;
-        }
-    },
-
-    async openCameraModal() {
-        this.packingUploadError = '';
-        if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-            alert('Camera API is not supported on this browser or connection. Please upload a photo using Gallery instead.');
-            return;
-        }
-        try {
-            this.showCameraModal = true;
-            await this.$nextTick();
-            const stream = await navigator.mediaDevices.getUserMedia({
-                video: { facingMode: { ideal: 'environment' }, width: { ideal: 1280 }, height: { ideal: 720 } }
-            });
-            this.cameraStream = stream;
-            if (this.$refs.cameraVideo) {
-                this.$refs.cameraVideo.srcObject = stream;
+                if (res.ok) {
+                    const idx = this.orders.findIndex(o => o.id === target.id);
+                    if (idx !== -1) {
+                        this.orders.splice(idx, 1, data);
+                        this.orders = [...this.orders];
+                        if (this.detailsOrder && this.detailsOrder.id === target.id) {
+                            this.detailsOrder = data;
+                        }
+                        if (this.activeOrder && this.activeOrder.id === target.id) {
+                            this.activeOrder = data;
+                        }
+                    }
+                    this.deliveryConfirmSuccess = true;
+                    this.showToast('✓ Order successfully marked as Delivered!');
+                    setTimeout(() => {
+                        this.showDeliveryConfirmModal = false;
+                        this.detailsModal = false;
+                        this.deliveryConfirmOrder = null;
+                        this.deliveryConfirmLoading = false;
+                        this.deliveryConfirmSuccess = false;
+                    }, 2000);
+                } else {
+                    this.deliveryConfirmError = data.message || 'Failed to update status to Delivered. Please try again.';
+                    this.deliveryConfirmLoading = false;
+                }
+            } catch(e) {
+                this.deliveryConfirmError = 'Network error. Please try again.';
+                this.deliveryConfirmLoading = false;
             }
-        } catch(err) {
-            console.error('Camera error:', err);
-            alert('Could not access camera (' + (err.message || 'permission denied') + '). Please upload a photo using Gallery instead.');
-            this.closeCameraModal();
-        }
-    },
+        },
 
-    takePhoto() {
-        const video = this.$refs.cameraVideo;
-        if (!video) return;
-        const canvas = document.createElement('canvas');
-        canvas.width = video.videoWidth || 640;
-        canvas.height = video.videoHeight || 480;
-        const ctx = canvas.getContext('2d');
-        ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-        
-        canvas.toBlob((blob) => {
-            if (!blob) {
-                alert('Failed to capture photo.');
+        formatAddress(order) {
+            return formatOrderAddress(order);
+        },
+
+        buyerPhone(order) {
+            return buyerOrderPhone(order);
+        },
+
+        openDetails(order) {
+            this.detailsOrder = order;
+            this.newStatus = order.status;
+            this.courierName = order.courierName || 'J&T Express';
+            this.trackingNumber = order.trackingNumber || '';
+            this.trackingLink = order.trackingLink || '';
+            this.shippingError = '';
+            this.packingPhotoFile = null;
+            this.packingPhotoPreview = order.packingProof ? '/storage/' + order.packingProof : null;
+            this.packingUploading = false;
+            this.packingUploadSuccess = !!order.packingProof;
+            this.packingUploadError = '';
+            this.closeCameraModal();
+            this.detailsModal = true;
+        },
+
+        openStatus(order) {
+            this.activeOrder = order;
+            this.newStatus = order.status;
+            this.courierName = order.courierName || 'J&T Express';
+            this.trackingNumber = order.trackingNumber || '';
+            this.trackingLink = order.trackingLink || '';
+            this.shippingError = '';
+            this.statusModal = true;
+        },
+
+        printOrderDetails() {
+            printSellerOrder(this.detailsOrder);
+            this.detailsModal = false;
+        },
+
+        onPackingFileChange(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            this.packingPhotoFile = file;
+            this.packingUploadError = '';
+            const reader = new FileReader();
+            reader.onload = (e) => { this.packingPhotoPreview = e.target.result; };
+            reader.readAsDataURL(file);
+        },
+
+        async uploadPackingProof() {
+            if (!this.packingPhotoFile || !this.detailsOrder) return;
+            this.packingUploading = true;
+            this.packingUploadError = '';
+            try {
+                const formData = new FormData();
+                formData.append('packingPhoto', this.packingPhotoFile);
+                formData.append('_token', document.querySelector('meta[name="csrf-token"]')?.content || '');
+                const res = await fetch(`/seller/api/orders/${this.detailsOrder.id}/packing-proof`, {
+                    method: 'POST',
+                    body: formData,
+                });
+                const data = await res.json();
+                if (!res.ok) throw new Error(data.message || 'Upload failed.');
+                this.packingUploadSuccess = true;
+                this.packingPhotoPreview = data.packingProofUrl;
+                this.detailsOrder.packingProof = data.packingProof;
+                const idx = this.orders.findIndex(o => o.id === this.detailsOrder.id);
+                if (idx !== -1) this.orders[idx].packingProof = data.packingProof;
+            } catch(e) {
+                this.packingUploadError = e.message || 'Upload failed. Please try again.';
+            } finally {
+                this.packingUploading = false;
+            }
+        },
+
+        async openCameraModal() {
+            this.packingUploadError = '';
+            if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+                alert('Camera API is not supported on this browser or connection. Please upload a photo using Gallery instead.');
                 return;
             }
-            const file = new File([blob], 'packing_proof_' + Date.now() + '.jpg', { type: 'image/jpeg' });
-            this.packingPhotoFile = file;
-            this.packingPhotoPreview = canvas.toDataURL('image/jpeg');
-            this.packingUploadError = '';
-            this.packingUploadSuccess = false;
-            this.closeCameraModal();
-        }, 'image/jpeg', 0.9);
-    },
-
-    closeCameraModal() {
-        if (this.cameraStream) {
-            this.cameraStream.getTracks().forEach(track => track.stop());
-            this.cameraStream = null;
-        }
-        this.showCameraModal = false;
-    },
-
-    normalizeStatus(statusStr) {
-        if (!statusStr) return '';
-        let s = String(statusStr).toLowerCase().trim().replace(/_/g, ' ');
-        if (s === 'processing') return 'to ship';
-        return s;
-    },
-
-    isStatusDisabled(target, currentOrder) {
-        const order = currentOrder || this.activeOrder || this.detailsOrder;
-        if (!order) return true;
-        const current = this.normalizeStatus(order.status);
-        const t = this.normalizeStatus(target);
-        if (current === t) return false;
-        if (current === 'completed' || current === 'cancelled') return true;
-        if (t === 'completed') return true; // Seller cannot manually mark as Completed
-        
-        const states = ['pending', 'to ship', 'shipped', 'in transit', 'delivered'];
-        const currentIdx = states.indexOf(current);
-        const targetIdx = states.indexOf(t);
-        
-        if (currentIdx === -1 || targetIdx === -1) return true;
-        return targetIdx < currentIdx;
-    },
-
-    isShippingLocked(currentOrder) {
-        const order = currentOrder || this.detailsOrder || this.activeOrder;
-        if (!order) return false;
-        const s = this.normalizeStatus(order.status);
-        return s === 'delivered' || s === 'completed' || s === 'cancelled';
-    },
-
-    productImage(product) {
-        if (!product) return '/uploads/products/default.jpg';
-        let rawImg = product.image;
-        if (Array.isArray(rawImg)) {
-            rawImg = rawImg[0] ?? '';
-        }
-        if (typeof rawImg === 'string' && (rawImg.startsWith('[') || rawImg.startsWith('{'))) {
             try {
-                const parsed = JSON.parse(rawImg);
-                rawImg = Array.isArray(parsed) ? (parsed[0] ?? '') : parsed;
-            } catch(e) {}
-        }
-        if (!rawImg) return '/uploads/products/default.jpg';
-        if (rawImg.startsWith('http://') || rawImg.startsWith('https://')) {
-            return rawImg;
-        }
-        if (rawImg.startsWith('products/')) {
-            return '/storage/' + rawImg;
-        }
-        if (rawImg.startsWith('uploads/')) {
-            return '/' + rawImg;
-        }
-        if (rawImg.startsWith('/uploads/')) {
-            return rawImg;
-        }
-        return '/uploads/products/' + rawImg;
-    },
-
-    get filtered() {
-        return this.orders.filter(o => {
-            const matchSearch = !this.searchTerm ||
-                o.id.toLowerCase().includes(this.searchTerm.toLowerCase()) ||
-                (o.customer?.name || '').toLowerCase().includes(this.searchTerm.toLowerCase());
-            let s = this.normalizeStatus(o.status);
-            // Treat legacy 'processing' or 'ready to ship' orders as 'to ship'
-            if (s === 'processing' || s === 'ready to ship' || s === 'ready_to_ship') s = 'to ship';
-            const f = this.normalizeStatus(this.statusFilter);
-            const matchStatus = f === 'all' || s === f;
-            return matchSearch && matchStatus;
-        });
-    },
-
-    statusColor(s) {
-        if (!s) return 'bg-gray-50 text-gray-600 border-gray-200';
-        const norm = this.normalizeStatus(s);
-        const m = {
-            'pending': 'bg-amber-50 text-amber-700 border-amber-200',
-            'to ship': 'bg-sky-50 text-sky-700 border-sky-200',
-            'shipped': 'bg-indigo-50 text-indigo-700 border-indigo-200',
-            'to receive': 'bg-indigo-50 text-indigo-700 border-indigo-200',
-            'in transit': 'bg-purple-50 text-purple-700 border-purple-200',
-            'out for delivery': 'bg-orange-50 text-orange-700 border-orange-200',
-            'delivered': 'bg-teal-50 text-teal-700 border-teal-200',
-            'completed': 'bg-emerald-50 text-emerald-700 border-emerald-200',
-            'cancelled': 'bg-red-50 text-red-700 border-red-200',
-            'cancellation pending': 'bg-red-50 text-red-700 border-red-200',
-            'cancellation requested': 'bg-red-50 text-red-700 border-red-200',
-        };
-        return m[norm] || 'bg-gray-50 text-gray-600 border-gray-200';
-    },
-
-    async updateStatus(targetOrder, statusToSave) {
-        const target = targetOrder || this.detailsOrder || this.activeOrder;
-        const statusVal = statusToSave || this.newStatus;
-        if (!target || !statusVal) return;
-
-        this.shippingError = '';
-
-
-        try {
-            const payload = {
-                status: statusVal,
-                courierName: this.courierName,
-                trackingNumber: this.trackingNumber,
-                trackingLink: this.trackingLink
-            };
-
-            const res = await fetch('/seller/api/orders/' + target.id + '/status', {
-                method: 'PATCH',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': document.querySelector('meta[name=csrf-token]').content
-                },
-                body: JSON.stringify(payload)
-            });
-
-            const data = await res.json();
-
-            if (res.ok) {
-                const idx = this.orders.findIndex(o => o.id === target.id);
-                if (idx !== -1) {
-                    this.orders[idx] = data;
-                    if (this.detailsOrder && this.detailsOrder.id === target.id) {
-                        this.detailsOrder = data;
-                    }
+                this.showCameraModal = true;
+                await this.$nextTick();
+                const stream = await navigator.mediaDevices.getUserMedia({
+                    video: { facingMode: { ideal: 'environment' }, width: { ideal: 1280 }, height: { ideal: 720 } }
+                });
+                this.cameraStream = stream;
+                if (this.$refs.cameraVideo) {
+                    this.$refs.cameraVideo.srcObject = stream;
                 }
-                this.statusModal = false;
-                this.detailsModal = false;
-                this.activeOrder = null;
-                this.shippingError = '';
-            } else {
-                this.shippingError = data.message || 'Failed to update status. Please check fields and try again.';
+            } catch(err) {
+                console.error('Camera error:', err);
+                alert('Could not access camera (' + (err.message || 'permission denied') + '). Please upload a photo using Gallery instead.');
+                this.closeCameraModal();
             }
-        } catch(e) {
-            this.shippingError = 'Network error. Please try again.';
+        },
+
+        takePhoto() {
+            const video = this.$refs.cameraVideo;
+            if (!video) return;
+            const canvas = document.createElement('canvas');
+            canvas.width = video.videoWidth || 640;
+            canvas.height = video.videoHeight || 480;
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+            
+            canvas.toBlob((blob) => {
+                if (!blob) {
+                    alert('Failed to capture photo.');
+                    return;
+                }
+                const file = new File([blob], 'packing_proof_' + Date.now() + '.jpg', { type: 'image/jpeg' });
+                this.packingPhotoFile = file;
+                this.packingPhotoPreview = canvas.toDataURL('image/jpeg');
+                this.packingUploadError = '';
+                this.packingUploadSuccess = false;
+                this.closeCameraModal();
+            }, 'image/jpeg', 0.9);
+        },
+
+        closeCameraModal() {
+            if (this.cameraStream) {
+                this.cameraStream.getTracks().forEach(track => track.stop());
+                this.cameraStream = null;
+            }
+            this.showCameraModal = false;
+        },
+
+        normalizeStatus(statusStr) {
+            if (!statusStr) return '';
+            let s = String(statusStr).toLowerCase().trim().replace(/_/g, ' ');
+            if (s === 'processing') return 'to ship';
+            return s;
+        },
+
+        isStatusDisabled(target, currentOrder) {
+            const order = currentOrder || this.activeOrder || this.detailsOrder;
+            if (!order) return true;
+            const current = this.normalizeStatus(order.status);
+            const t = this.normalizeStatus(target);
+            if (current === t) return false;
+            if (current === 'completed' || current === 'cancelled') return true;
+            if (t === 'completed') return true;
+            
+            const states = ['pending', 'to ship', 'shipped', 'in transit', 'delivered'];
+            const currentIdx = states.indexOf(current);
+            const targetIdx = states.indexOf(t);
+            
+            if (currentIdx === -1 || targetIdx === -1) return true;
+            return targetIdx < currentIdx;
+        },
+
+        isShippingLocked(currentOrder) {
+            const order = currentOrder || this.detailsOrder || this.activeOrder;
+            if (!order) return false;
+            const s = this.normalizeStatus(order.status);
+            return s === 'delivered' || s === 'completed' || s === 'cancelled';
+        },
+
+        productImage(product) {
+            if (!product) return '/uploads/products/default.jpg';
+            if (window.getAppProductImage) {
+                return window.getAppProductImage(product.image_url || product.image);
+            }
+            let rawImg = product.image_url || product.image;
+            if (Array.isArray(rawImg)) {
+                rawImg = rawImg[0] ?? '';
+            }
+            if (typeof rawImg === 'string' && (rawImg.startsWith('[') || rawImg.startsWith('{'))) {
+                try {
+                    const parsed = JSON.parse(rawImg);
+                    rawImg = Array.isArray(parsed) ? (parsed[0] ?? '') : parsed;
+                } catch(e) {}
+            }
+            if (!rawImg || typeof rawImg !== 'string') return '/uploads/products/default.jpg';
+            if (rawImg.startsWith('http://') || rawImg.startsWith('https://')) return rawImg;
+            if (rawImg.startsWith('/')) return rawImg;
+            if (rawImg.startsWith('products/')) return '/storage/' + rawImg;
+            if (rawImg.startsWith('uploads/')) return '/' + rawImg;
+            return '/uploads/products/' + rawImg;
+        },
+
+        get filtered() {
+            return this.orders.filter(o => {
+                const matchSearch = !this.searchTerm ||
+                    o.id.toLowerCase().includes(this.searchTerm.toLowerCase()) ||
+                    (o.customer?.name || '').toLowerCase().includes(this.searchTerm.toLowerCase());
+                let s = this.normalizeStatus(o.status);
+                if (s === 'processing' || s === 'ready to ship' || s === 'ready_to_ship') s = 'to ship';
+                const f = this.normalizeStatus(this.statusFilter);
+                const matchStatus = f === 'all' || s === f;
+                return matchSearch && matchStatus;
+            });
+        },
+
+        statusColor(s) {
+            if (!s) return 'bg-gray-50 text-gray-600 border-gray-200';
+            const norm = this.normalizeStatus(s);
+            const m = {
+                'pending': 'bg-amber-50 text-amber-700 border-amber-200',
+                'to ship': 'bg-sky-50 text-sky-700 border-sky-200',
+                'shipped': 'bg-indigo-50 text-indigo-700 border-indigo-200',
+                'to receive': 'bg-indigo-50 text-indigo-700 border-indigo-200',
+                'in transit': 'bg-purple-50 text-purple-700 border-purple-200',
+                'out for delivery': 'bg-orange-50 text-orange-700 border-orange-200',
+                'delivered': 'bg-teal-50 text-teal-700 border-teal-200',
+                'completed': 'bg-emerald-50 text-emerald-700 border-emerald-200',
+                'cancelled': 'bg-red-50 text-red-700 border-red-200',
+                'cancellation pending': 'bg-red-50 text-red-700 border-red-200',
+                'cancellation requested': 'bg-red-50 text-red-700 border-red-200',
+            };
+            return m[norm] || 'bg-gray-50 text-gray-600 border-gray-200';
+        },
+
+        countForStatus(statusKey) {
+            if (statusKey === 'all') return this.orders.length;
+            const normKey = this.normalizeStatus(statusKey);
+            return this.orders.filter(o => {
+                let s = this.normalizeStatus(o.status);
+                if (s === 'processing' || s === 'ready to ship' || s === 'ready_to_ship') s = 'to ship';
+                return s === normKey;
+            }).length;
+        },
+
+        async updateStatus(targetOrder, statusToSave) {
+            const target = targetOrder || this.detailsOrder || this.activeOrder;
+            const statusVal = statusToSave || this.newStatus;
+            if (!target || !statusVal) return;
+
+            this.shippingError = '';
+            this.statusUpdating = true;
+
+            try {
+                const currentCourier = this.courierName || target.courierName || 'J&T Express';
+                let currentTracking = (this.trackingNumber || target.trackingNumber || '').trim();
+                if (!currentTracking && (statusVal === 'Shipped' || statusVal === 'In Transit')) {
+                    currentTracking = 'JT-' + target.id.slice(-8).toUpperCase();
+                    this.trackingNumber = currentTracking;
+                }
+                const currentLink = this.trackingLink || target.trackingLink || (currentCourier === 'J&T Express' ? 'https://www.jtexpress.ph/track' : '');
+
+                const payload = {
+                    status: statusVal,
+                    courierName: currentCourier,
+                    trackingNumber: currentTracking,
+                    trackingLink: currentLink
+                };
+
+                const token = document.querySelector('meta[name="csrf-token"]')?.content || document.querySelector('input[name="_token"]')?.value || '';
+
+                const res = await fetch('/seller/api/orders/' + target.id + '/status', {
+                    method: 'PATCH',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json',
+                        'X-CSRF-TOKEN': token
+                    },
+                    body: JSON.stringify(payload)
+                });
+
+                const data = await res.json();
+
+                if (res.ok) {
+                    const idx = this.orders.findIndex(o => o.id === target.id);
+                    if (idx !== -1) {
+                        this.orders.splice(idx, 1, data);
+                        this.orders = [...this.orders];
+                        if (this.detailsOrder && this.detailsOrder.id === target.id) {
+                            this.detailsOrder = data;
+                        }
+                        if (this.activeOrder && this.activeOrder.id === target.id) {
+                            this.activeOrder = data;
+                        }
+                    }
+                    this.statusModal = false;
+                    this.detailsModal = false;
+                    this.activeOrder = null;
+                    this.shippingError = '';
+                    this.showToast('✓ Order status updated to ' + (data.status || statusVal));
+                } else {
+                    this.shippingError = data.message || 'Failed to update status. Please check fields and try again.';
+                }
+            } catch(e) {
+                this.shippingError = 'Network error: ' + (e.message || 'Please try again.');
+            } finally {
+                this.statusUpdating = false;
+            }
         }
-    }
-}">
+    };
+}
+</script>
+
+<div class="space-y-4 sm:space-y-6 max-w-5xl pb-28 lg:pb-12 px-2 sm:px-6" x-data="sellerOrdersManager({{ $orders->toJson() }})">
+
+    {{-- Floating Toast Notification --}}
+    <div x-show="toastMessage" x-transition:enter="transition ease-out duration-300 transform"
+         x-transition:enter-start="opacity-0 translate-y-2"
+         x-transition:enter-end="opacity-100 translate-y-0"
+         x-transition:leave="transition ease-in duration-200"
+         class="fixed top-6 right-6 z-9999 bg-black text-white text-xs font-bold px-4 py-3 rounded-2xl shadow-2xl flex items-center gap-2 border border-white/10" 
+         style="display: none;">
+        <svg class="w-4 h-4 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
+        <span x-text="toastMessage"></span>
+    </div>
 
     {{-- Header --}}
     <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4">
@@ -418,9 +522,11 @@ function printSellerOrder(order) {
                 :class="statusFilter === '{{ $val }}' ? 'bg-black text-white shadow-md' : 'bg-white text-gray-500 border border-gray-200 hover:border-gray-300'"
                 class="px-3.5 sm:px-5 py-2 sm:py-2.5 rounded-full text-[9px] sm:text-[10px] font-black uppercase tracking-widest whitespace-nowrap transition-all flex items-center gap-1.5 shrink-0 active:scale-95">
                 <span>{{ $label }}</span>
-                @if(isset($counts[$val]))
-                    <span class="px-1.5 py-0.5 text-[8px] sm:text-[9px] rounded-full" :class="statusFilter === '{{ $val }}' ? 'bg-white/20 text-white' : 'bg-gray-100 text-gray-600'">{{ $counts[$val] }}</span>
-                @endif
+                <span class="px-1.5 py-0.5 text-[8px] sm:text-[9px] rounded-full" 
+                      :class="statusFilter === '{{ $val }}' ? 'bg-white/20 text-white' : 'bg-gray-100 text-gray-600'"
+                      x-text="countForStatus('{{ $val }}')">
+                    {{ $counts[$val] ?? 0 }}
+                </span>
             </button>
         @endforeach
     </div>
@@ -740,76 +846,101 @@ function printSellerOrder(order) {
             </div>
 
             {{-- Modal Footer Actions --}}
-            <div class="p-4 sm:p-5 bg-gray-50 border-t border-gray-100 flex gap-3 shrink-0">
-                <button @click="detailsModal = false"
-                    class="flex-1 py-2.5 sm:py-3 rounded-full border border-gray-300 bg-white text-[10px] font-black uppercase tracking-widest text-gray-800 hover:bg-gray-100 transition-all cursor-pointer">
-                    Close
-                </button>
-
-                {{-- Accept Order button: only shown when Pending --}}
-                <template x-if="detailsOrder && normalizeStatus(detailsOrder.status) === 'pending'">
-                    <button @click="updateStatus(detailsOrder, 'To Ship')"
-                        style="background-color: #059669; color: #ffffff;"
-                        class="flex-1 py-2.5 sm:py-3 bg-emerald-600 hover:bg-emerald-700 text-white text-[10px] font-black uppercase tracking-widest rounded-full transition-all flex items-center justify-center gap-2 shadow-sm cursor-pointer">
-                        <svg class="w-3.5 h-3.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
-                        <span>Proceed Order (To Ship)</span>
-                    </button>
-                </template>
-
-                {{-- Button for To Ship status: Upload Packing Proof & Confirm Shipment --}}
-                <template x-if="detailsOrder && normalizeStatus(detailsOrder.status) === 'to ship'">
-                    <button type="button"
-                        @click="if (!packingUploadSuccess && !detailsOrder.packingProof) { if (packingPhotoFile) { uploadPackingProof().then(() => updateStatus(detailsOrder, 'Shipped')); } else { openCameraModal(); } } else { updateStatus(detailsOrder, 'Shipped'); }"
-                        :disabled="packingUploading"
-                        :style="(packingUploadSuccess || detailsOrder.packingProof) ? 'background-color: #C0420A; color: #ffffff;' : 'background-color: #000000; color: #ffffff;'"
-                        class="flex-1 py-2.5 sm:py-3 bg-black hover:bg-[#C0420A] text-white text-[10px] font-black uppercase tracking-widest rounded-full transition-all flex items-center justify-center gap-2 shadow-md cursor-pointer">
-                        <template x-if="packingUploading">
-                            <svg class="w-3.5 h-3.5 animate-spin text-white" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"/></svg>
-                        </template>
-                        <template x-if="!packingUploading">
-                            <svg class="w-3.5 h-3.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
-                        </template>
-                        <span x-text="packingUploading ? 'Uploading...' : ((packingUploadSuccess || detailsOrder.packingProof) ? 'Confirm Shipment (Mark Shipped) ➔' : (packingPhotoFile ? 'Upload Proof & Mark Shipped ➔' : 'Upload Packing Proof Photo ➔'))"></span>
-                    </button>
-                </template>
-
-                {{-- Button for Shipped status: Mark In Transit (tracking number required) --}}
-                <template x-if="detailsOrder && normalizeStatus(detailsOrder.status) === 'shipped'">
-                    <button type="button"
-                        @click="if (!trackingNumber || !trackingNumber.trim()) { shippingError = 'Please enter a tracking number before marking this order as In Transit.'; } else { updateStatus(detailsOrder, 'In Transit'); }"
-                        style="background-color: #000000; color: #ffffff;"
-                        class="flex-1 py-2.5 sm:py-3 bg-black hover:bg-[#C0420A] text-white text-[10px] font-black uppercase tracking-widest rounded-full transition-all flex items-center justify-center gap-2 shadow-md cursor-pointer">
-                        <svg class="w-3.5 h-3.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
-                        <span>Mark In Transit ➔</span>
-                    </button>
-                </template>
-
-                {{-- Button for In Transit status: Mark as Delivered --}}
-                <template x-if="detailsOrder && normalizeStatus(detailsOrder.status) === 'in transit'">
-                    <button type="button"
-                        @click="confirmMarkAsDelivered(detailsOrder)"
-                        style="background-color: #059669; color: #ffffff;"
-                        class="flex-1 py-2.5 sm:py-3 bg-emerald-600 hover:bg-emerald-700 text-white text-[10px] font-black uppercase tracking-widest rounded-full transition-all flex items-center justify-center gap-2 shadow-sm cursor-pointer">
-                        <svg class="w-3.5 h-3.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
-                        <span>Mark as Delivered ➔</span>
-                    </button>
-                </template>
-
-                {{-- Status notice for Delivered status --}}
-                <template x-if="detailsOrder && normalizeStatus(detailsOrder.status) === 'delivered'">
-                    <div class="flex-1 py-2.5 sm:py-3 bg-teal-50 border border-teal-200 text-teal-800 text-[10px] font-black uppercase tracking-widest rounded-full flex items-center justify-center gap-2">
-                        <span>📦 Delivered — Awaiting Customer Receipt Confirmation</span>
+            <div class="p-4 sm:p-5 bg-gray-50 border-t border-gray-100 flex flex-col gap-3 shrink-0">
+                <template x-if="shippingError">
+                    <div class="p-3 bg-red-50 border border-red-200 rounded-2xl text-[11px] font-bold text-red-600 flex items-center gap-2">
+                        <svg class="w-4 h-4 text-red-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                        <span x-text="shippingError"></span>
                     </div>
                 </template>
 
-                {{-- Status notice for Completed status --}}
-                <template x-if="detailsOrder && normalizeStatus(detailsOrder.status) === 'completed'">
-                    <div class="flex-1 py-2.5 sm:py-3 bg-emerald-50 border border-emerald-200 text-emerald-800 text-[10px] font-black uppercase tracking-widest rounded-full flex items-center justify-center gap-2">
-                        <span>✓ Order Completed by Customer</span>
-                    </div>
-                </template>
+                <div class="flex gap-3">
+                    <button @click="detailsModal = false"
+                        class="flex-1 py-2.5 sm:py-3 rounded-full border border-gray-300 bg-white text-[10px] font-black uppercase tracking-widest text-gray-800 hover:bg-gray-100 transition-all cursor-pointer">
+                        Close
+                    </button>
 
+                    {{-- Accept Order button: only shown when Pending --}}
+                    <template x-if="detailsOrder && normalizeStatus(detailsOrder.status) === 'pending'">
+                        <button type="button" @click="updateStatus(detailsOrder, 'To Ship')"
+                            :disabled="statusUpdating"
+                            style="background-color: #059669; color: #ffffff;"
+                            class="flex-1 py-2.5 sm:py-3 bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 text-white text-[10px] font-black uppercase tracking-widest rounded-full transition-all flex items-center justify-center gap-2 shadow-sm cursor-pointer">
+                            <template x-if="statusUpdating">
+                                <svg class="w-3.5 h-3.5 animate-spin text-white" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"/></svg>
+                            </template>
+                            <template x-if="!statusUpdating">
+                                <svg class="w-3.5 h-3.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
+                            </template>
+                            <span x-text="statusUpdating ? 'Processing...' : 'Proceed Order (To Ship) ➔'"></span>
+                        </button>
+                    </template>
 
+                    {{-- Button for To Ship status: Upload Packing Proof & Confirm Shipment --}}
+                    <template x-if="detailsOrder && normalizeStatus(detailsOrder.status) === 'to ship'">
+                        <button type="button"
+                            @click="if (packingPhotoFile && !packingUploadSuccess && !detailsOrder.packingProof) { uploadPackingProof().then(() => updateStatus(detailsOrder, 'Shipped')); } else { updateStatus(detailsOrder, 'Shipped'); }"
+                            :disabled="packingUploading || statusUpdating"
+                            :style="(packingUploadSuccess || detailsOrder.packingProof) ? 'background-color: #C0420A; color: #ffffff;' : 'background-color: #000000; color: #ffffff;'"
+                            class="flex-1 py-2.5 sm:py-3 bg-black hover:bg-[#C0420A] disabled:opacity-50 text-white text-[10px] font-black uppercase tracking-widest rounded-full transition-all flex items-center justify-center gap-2 shadow-md cursor-pointer">
+                            <template x-if="packingUploading || statusUpdating">
+                                <svg class="w-3.5 h-3.5 animate-spin text-white" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"/></svg>
+                            </template>
+                            <template x-if="!packingUploading && !statusUpdating">
+                                <svg class="w-3.5 h-3.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+                            </template>
+                            <span x-text="packingUploading ? 'Uploading Photo...' : (statusUpdating ? 'Updating Status...' : ((packingUploadSuccess || detailsOrder.packingProof) ? 'Confirm Shipment (Mark Shipped) ➔' : (packingPhotoFile ? 'Upload & Mark Shipped ➔' : 'Mark Shipped ➔')))"></span>
+                        </button>
+                    </template>
+
+                    {{-- Button for Shipped status: Mark In Transit (auto-generates tracking if empty) --}}
+                    <template x-if="detailsOrder && normalizeStatus(detailsOrder.status) === 'shipped'">
+                        <button type="button"
+                            @click="if (!trackingNumber || !trackingNumber.trim()) { trackingNumber = 'JT-' + detailsOrder.id.slice(-8).toUpperCase(); } updateStatus(detailsOrder, 'In Transit');"
+                            :disabled="statusUpdating"
+                            style="background-color: #000000; color: #ffffff;"
+                            class="flex-1 py-2.5 sm:py-3 bg-black hover:bg-[#C0420A] disabled:opacity-50 text-white text-[10px] font-black uppercase tracking-widest rounded-full transition-all flex items-center justify-center gap-2 shadow-md cursor-pointer">
+                            <template x-if="statusUpdating">
+                                <svg class="w-3.5 h-3.5 animate-spin text-white" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"/></svg>
+                            </template>
+                            <template x-if="!statusUpdating">
+                                <svg class="w-3.5 h-3.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+                            </template>
+                            <span x-text="statusUpdating ? 'Updating...' : 'Mark In Transit ➔'"></span>
+                        </button>
+                    </template>
+
+                    {{-- Button for In Transit status: Mark as Delivered --}}
+                    <template x-if="detailsOrder && normalizeStatus(detailsOrder.status) === 'in transit'">
+                        <button type="button"
+                            @click="confirmMarkAsDelivered(detailsOrder)"
+                            :disabled="statusUpdating"
+                            style="background-color: #059669; color: #ffffff;"
+                            class="flex-1 py-2.5 sm:py-3 bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 text-white text-[10px] font-black uppercase tracking-widest rounded-full transition-all flex items-center justify-center gap-2 shadow-sm cursor-pointer">
+                            <template x-if="statusUpdating">
+                                <svg class="w-3.5 h-3.5 animate-spin text-white" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"/></svg>
+                            </template>
+                            <template x-if="!statusUpdating">
+                                <svg class="w-3.5 h-3.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
+                            </template>
+                            <span x-text="statusUpdating ? 'Updating...' : 'Mark as Delivered ➔'"></span>
+                        </button>
+                    </template>
+
+                    {{-- Status notice for Delivered status --}}
+                    <template x-if="detailsOrder && normalizeStatus(detailsOrder.status) === 'delivered'">
+                        <div class="flex-1 py-2.5 sm:py-3 bg-teal-50 border border-teal-200 text-teal-800 text-[10px] font-black uppercase tracking-widest rounded-full flex items-center justify-center gap-2">
+                            <span>📦 Delivered — Awaiting Customer Receipt Confirmation</span>
+                        </div>
+                    </template>
+
+                    {{-- Status notice for Completed status --}}
+                    <template x-if="detailsOrder && normalizeStatus(detailsOrder.status) === 'completed'">
+                        <div class="flex-1 py-2.5 sm:py-3 bg-emerald-50 border border-emerald-200 text-emerald-800 text-[10px] font-black uppercase tracking-widest rounded-full flex items-center justify-center gap-2">
+                            <span>✓ Order Completed by Customer</span>
+                        </div>
+                    </template>
+                </div>
             </div>
         </div>
     </div>
@@ -958,13 +1089,14 @@ function printSellerOrder(order) {
         <div class="w-full max-w-md bg-white rounded-3xl shadow-2xl p-6 text-center space-y-4 border border-gray-100 relative overflow-hidden">
             <div class="h-1.5 w-full bg-linear-to-r from-emerald-500 to-teal-600 absolute top-0 left-0"></div>
 
-            <div class="w-14 h-14 rounded-full bg-emerald-50 text-emerald-600 flex items-center justify-center mx-auto text-2xl shadow-inner mt-2">
-                🚚
+            <div class="w-14 h-14 rounded-full flex items-center justify-center mx-auto text-2xl shadow-inner mt-2 transition-all"
+                 :class="deliveryConfirmSuccess ? 'bg-emerald-100 text-emerald-700 ring-4 ring-emerald-200' : 'bg-emerald-50 text-emerald-600'">
+                <span x-text="deliveryConfirmSuccess ? '✓' : '🚚'"></span>
             </div>
 
             <div>
-                <h3 class="text-base font-black text-black uppercase tracking-tight">Confirm Order Delivery</h3>
-                <p class="text-xs text-gray-500 font-medium mt-1">Are you sure this order has been delivered?</p>
+                <h3 class="text-base font-black text-black uppercase tracking-tight" x-text="deliveryConfirmSuccess ? 'Order Marked as Delivered!' : 'Confirm Order Delivery'"></h3>
+                <p class="text-xs text-gray-500 font-medium mt-1" x-text="deliveryConfirmSuccess ? 'Status updated. Closing in 2 seconds...' : 'Are you sure this order has been delivered?'"></p>
                 <template x-if="deliveryConfirmOrder">
                     <div class="mt-2 py-1.5 px-3 bg-gray-50 rounded-xl text-[11px] font-bold text-gray-700 inline-block border border-gray-100">
                         <span x-text="'#LB-' + deliveryConfirmOrder.id.slice(-8).toUpperCase()"></span>
@@ -974,17 +1106,32 @@ function printSellerOrder(order) {
                 </template>
             </div>
 
+            <template x-if="deliveryConfirmError">
+                <div class="p-3 bg-red-50 border border-red-200 rounded-xl text-xs font-bold text-red-600" x-text="deliveryConfirmError"></div>
+            </template>
+
             <div class="flex gap-3 pt-2">
                 <button type="button" 
                     @click="showDeliveryConfirmModal = false"
-                    class="flex-1 py-2.5 rounded-full border border-gray-200 bg-white text-[10px] font-black uppercase tracking-widest text-gray-600 hover:bg-gray-100 transition-all">
+                    :disabled="deliveryConfirmLoading || deliveryConfirmSuccess"
+                    class="flex-1 py-2.5 rounded-full border border-gray-200 bg-white text-[10px] font-black uppercase tracking-widest text-gray-600 hover:bg-gray-100 disabled:opacity-40 disabled:cursor-not-allowed transition-all">
                     Cancel
                 </button>
                 <button type="button" 
                     @click="executeMarkAsDelivered()"
-                    class="flex-1 py-2.5 rounded-full bg-emerald-600 hover:bg-emerald-700 text-white text-[10px] font-black uppercase tracking-widest transition-all shadow-md flex items-center justify-center gap-1.5">
-                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
-                    Yes, Delivered
+                    :disabled="deliveryConfirmLoading || deliveryConfirmSuccess"
+                    :class="deliveryConfirmSuccess ? 'bg-emerald-700' : 'bg-emerald-600 hover:bg-emerald-700'"
+                    class="flex-1 py-2.5 rounded-full text-white text-[10px] font-black uppercase tracking-widest transition-all shadow-md flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-75 disabled:cursor-not-allowed">
+                    <template x-if="deliveryConfirmLoading">
+                        <svg class="w-3.5 h-3.5 animate-spin text-white" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"/></svg>
+                    </template>
+                    <template x-if="!deliveryConfirmLoading && !deliveryConfirmSuccess">
+                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
+                    </template>
+                    <template x-if="deliveryConfirmSuccess">
+                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/></svg>
+                    </template>
+                    <span x-text="deliveryConfirmLoading ? 'Processing...' : (deliveryConfirmSuccess ? '✓ Delivered! Closing...' : 'Yes, Delivered')"></span>
                 </button>
             </div>
         </div>

@@ -75,13 +75,94 @@
                     </div>
 
                     {{-- Artisan Description --}}
-                    <div class="space-y-1.5">
+                    <div class="space-y-1.5" x-data="{
+                        showAiGen: false,
+                        aiFabric: '{{ $product->fabric ?? "Piña-Seda Silk" }}',
+                        aiEmbroidery: 'Lumban Calado Hand Embroidery',
+                        aiCollar: 'Mandarin / Chinese Collar',
+                        aiTheme: 'Wedding & Formal Gala',
+                        aiGenLoading: false,
+                        generateAiStory() {
+                            this.aiGenLoading = true;
+                            fetch('/ai/seller/generate-description', {
+                                method: 'POST',
+                                headers: {
+                                    'Content-Type': 'application/json',
+                                    'X-CSRF-TOKEN': document.querySelector('input[name=_token]').value
+                                },
+                                body: JSON.stringify({
+                                    fabric: this.aiFabric,
+                                    embroidery: this.aiEmbroidery,
+                                    collar: this.aiCollar,
+                                    theme: this.aiTheme,
+                                    category: '{{ $product->category->name ?? "Barong Tagalog" }}'
+                                })
+                            })
+                            .then(res => res.json())
+                            .then(data => {
+                                const descInput = document.getElementById('artisanDescription');
+                                if (descInput) {
+                                    descInput.value = (data.description || '').substring(0, 500);
+                                    updateCharCount(descInput);
+                                }
+                                this.showAiGen = false;
+                                if (window.Alpine && Alpine.store('toast')) {
+                                    Alpine.store('toast').trigger('AI artisan description refreshed!', 'success');
+                                }
+                            })
+                            .catch(() => {})
+                            .finally(() => { this.aiGenLoading = false; });
+                        }
+                    }">
                         <div class="flex items-center justify-between">
                             <label class="text-[10px] sm:text-[11px] font-bold uppercase tracking-wider text-gray-700">
                                 Artisan Description <span class="text-[#C0420A]">*</span>
                             </label>
-                            <span class="text-[9px] text-gray-400 font-medium hidden sm:inline-block">Max 500 characters</span>
+                            <div class="flex items-center gap-2">
+                                <button type="button" @click="showAiGen = !showAiGen" class="text-[10px] font-extrabold text-[#C0420A] bg-red-50 hover:bg-red-100 px-2 py-0.5 rounded-md border border-red-100 flex items-center gap-1 transition-colors cursor-pointer">
+                                    <span>✨</span>
+                                    <span>AI Story Generator</span>
+                                </button>
+                                <span class="text-[9px] text-gray-400 font-medium hidden sm:inline-block">Max 500 characters</span>
+                            </div>
                         </div>
+
+                        <!-- AI Generator Quick Dropdown -->
+                        <div x-show="showAiGen" x-transition x-cloak class="p-3.5 bg-amber-50/70 border border-amber-200/80 rounded-xl space-y-2.5 mb-2">
+                            <div class="flex items-center justify-between">
+                                <span class="text-xs font-black text-amber-900 flex items-center gap-1">
+                                    <span>✨</span>
+                                    <span>Lumban Artisan Storycraft AI</span>
+                                </span>
+                                <button type="button" @click="showAiGen = false" class="text-xs text-amber-700 hover:text-amber-950">✕</button>
+                            </div>
+                            <div class="grid grid-cols-2 gap-2 text-xs">
+                                <div>
+                                    <label class="block text-[9px] font-bold uppercase text-amber-800 mb-0.5">Fabric</label>
+                                    <select x-model="aiFabric" class="w-full bg-white border border-amber-200 rounded-lg p-1.5 text-xs font-semibold outline-none">
+                                        <option value="Piña-Seda Silk">Piña-Seda Silk</option>
+                                        <option value="Cocoon Silk">Cocoon Silk</option>
+                                        <option value="Jusi Silk Blend">Jusi Silk Blend</option>
+                                        <option value="High-Grade Organza">Organza</option>
+                                        <option value="Natural Linen">Natural Linen</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="block text-[9px] font-bold uppercase text-amber-800 mb-0.5">Embroidery Style</label>
+                                    <select x-model="aiEmbroidery" class="w-full bg-white border border-amber-200 rounded-lg p-1.5 text-xs font-semibold outline-none">
+                                        <option value="Lumban Calado Hand Embroidery">Lumban Calado Hand Embroidery</option>
+                                        <option value="Full Pechera Hand-Needlework">Full Pechera Needlework</option>
+                                        <option value="Geometric Contemporary Burda">Geometric Burda</option>
+                                        <option value="Floral Vine Monochromatic">Floral Vine Monochromatic</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <button type="button" @click="generateAiStory()" :disabled="aiGenLoading" class="w-full py-2 bg-[#C0420A] hover:bg-[#a33708] disabled:opacity-50 text-white font-black text-xs uppercase tracking-wider rounded-lg shadow-sm transition-all flex items-center justify-center gap-1.5 cursor-pointer">
+                                <span x-show="!aiGenLoading">✨ Auto-Generate Story Description</span>
+                                <span x-show="aiGenLoading" class="flex items-center gap-1"><span>Weaving story...</span></span>
+                            </button>
+                        </div>
+
                         <div class="relative group">
                             <textarea name="description" id="artisanDescription" required rows="4" maxlength="500"
                                 oninput="updateCharCount(this)"
@@ -521,6 +602,15 @@
     </div>
 </div>
 
+<script type="application/json" id="seller-payment-config">
+{!! json_encode([
+    'hasGcashNumber' => !empty($product->gcash_number) || !empty($seller->gcashNumber),
+    'hasGcashQr' => !empty($product->gcash_qr_code) || !empty($seller->gcashQrCode),
+    'hasMayaNumber' => !empty($product->maya_number) || !empty($seller->mayaNumber),
+    'hasMayaQr' => !empty($product->maya_qr_code) || !empty($seller->mayaQrCode),
+]) !!}
+</script>
+
 <script>
 let editProductImagesDT = new DataTransfer();
 
@@ -893,11 +983,11 @@ function validateProductForm(e, isEdit = true) {
     const isGcashChecked = gcashToggle ? gcashToggle.checked : false;
     const isMayaChecked = mayaToggle ? mayaToggle.checked : false;
 
-    const hasGcashNumber = {{ (!empty($product->gcash_number) || !empty($seller->gcashNumber)) ? 'true' : 'false' }};
-    const hasGcashQr = {{ (!empty($product->gcash_qr_code) || !empty($seller->gcashQrCode)) ? 'true' : 'false' }};
-
-    const hasMayaNumber = {{ (!empty($product->maya_number) || !empty($seller->mayaNumber)) ? 'true' : 'false' }};
-    const hasMayaQr = {{ (!empty($product->maya_qr_code) || !empty($seller->mayaQrCode)) ? 'true' : 'false' }};
+    const paymentConfig = JSON.parse(document.getElementById('seller-payment-config')?.textContent || '{}');
+    const hasGcashNumber = Boolean(paymentConfig.hasGcashNumber);
+    const hasGcashQr = Boolean(paymentConfig.hasGcashQr);
+    const hasMayaNumber = Boolean(paymentConfig.hasMayaNumber);
+    const hasMayaQr = Boolean(paymentConfig.hasMayaQr);
 
     let hasAnyCompleteEnabled = false;
 

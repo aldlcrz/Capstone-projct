@@ -3,6 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
     <title>Seller Registration | LumBarong</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
@@ -246,5 +249,14 @@
             </p>
         </div>
     </div>
+
+    <script>
+        // Auto-reload on Back/Forward navigation from bfcache to get fresh CSRF token
+        window.addEventListener('pageshow', function(event) {
+            if (event.persisted || (window.performance && window.performance.navigation && window.performance.navigation.type === 2)) {
+                window.location.reload();
+            }
+        });
+    </script>
 </body>
 </html>

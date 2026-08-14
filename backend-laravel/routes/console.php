@@ -9,3 +9,14 @@ Artisan::command('inspire', function () {
 
 Illuminate\Support\Facades\Schedule::command('commission:send-reminders')->daily();
 
+Artisan::command('mail:test {email}', function ($email) {
+    try {
+        $code = '123456';
+        $mailable = new \App\Mail\VerificationCodeMail('Tester', $code);
+        \Illuminate\Support\Facades\Mail::to($email)->send($mailable);
+        $this->info("SUCCESS: Email sent to {$email}");
+    } catch (\Throwable $e) {
+        $this->error("ERROR: " . $e->getMessage());
+    }
+});
+

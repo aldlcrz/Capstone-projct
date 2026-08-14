@@ -1,7 +1,7 @@
 @extends('layouts.app')
 
 @section('content')
-<div class="max-w-4xl mx-auto px-4 py-4 sm:py-6 lg:py-8" x-data="checkoutApp(
+<div class="max-w-4xl mx-auto px-4 pt-2 pb-0 sm:py-6 lg:py-8" x-data="checkoutApp(
     @js($addresses->first() ?? [
         'recipientName' => '',
         'phone' => '',
@@ -39,12 +39,12 @@
 
 
 
-    <form id="checkout-form" action="{{ route('checkout.store') }}" method="POST" enctype="multipart/form-data">
+    <form id="checkout-form" action="{{ route('checkout.store') }}" method="POST" enctype="multipart/form-data" @submit="isSubmitting = true">
         @csrf
         <input type="hidden" name="mode" value="{{ $mode }}">
         <input type="hidden" name="shippingAddress" :value="JSON.stringify(address)">
 
-        <div class="space-y-6 pb-32 lg:pb-0 w-full">
+        <div class="space-y-6 pb-24 lg:pb-0 w-full">
             <!-- Main Content Area -->
             <div class="space-y-6 w-full">
                 
@@ -292,24 +292,30 @@
                         
                         <div class="space-y-4">
                             <div class="space-y-1.5">
-                                <label class="text-[9px] lg:text-[10px] font-bold text-gray-500 uppercase tracking-widest block">Payment Reference Number <span class="text-[#C0422A]">*</span></label>
+                                <div class="flex items-center justify-between flex-wrap gap-1">
+                                    <label class="text-[9px] lg:text-[10px] font-bold text-gray-500 uppercase tracking-widest block">Payment Reference Number <span class="text-[#C0422A]">*</span></label>
+                                    <span class="text-[9px] font-bold text-gray-400" x-text="paymentMethod === 'GCash' ? 'GCash requirement: 13 digits' : 'Maya requirement: 12 digits'"></span>
+                                </div>
                                 <input type="text"
                                        id="paymentReferenceInput"
                                        name="paymentReference"
                                        x-model="paymentRef"
-                                       @input="paymentRef = paymentRef.replace(/[^0-9\s\-]/g, ''); validateRef()"
+                                       @input="handleRefInput()"
                                        @blur="validateRef()"
                                        inputmode="numeric"
-                                       pattern="[\d\s\-]{10,20}"
-                                       maxlength="20"
+                                       :maxlength="paymentMethod === 'GCash' ? 13 : 12"
                                        required
-                                       placeholder="e.g. 1002345678901 (10 to 16 numeric digits)"
-                                       :class="refError ? 'border-red-500 focus:ring-red-200 bg-red-50/20' : 'border-gray-200 focus:border-[#C0422A] focus:ring-[#C0422A]/10 bg-gray-50/50'"
+                                       :placeholder="paymentMethod === 'GCash' ? 'e.g. 1002345678901 (13-digit GCash Reference)' : 'e.g. 123456789012 (12-digit Maya Reference)'"
+                                       :class="refError ? 'border-red-500 focus:ring-red-200 bg-red-50/20' : (hasReceiptMismatch() ? 'border-rose-400 focus:border-rose-400 focus:ring-rose-200 bg-rose-50/20' : (isRefValid() ? 'border-emerald-500 focus:border-emerald-500 focus:ring-emerald-500/10 bg-emerald-50/10' : 'border-gray-200 focus:border-[#C0422A] focus:ring-[#C0422A]/10 bg-gray-50/50'))"
                                        class="w-full px-4 py-3 border rounded-xl text-sm lg:text-base font-bold outline-none focus:ring-4 transition-all">
                                 <div x-show="refError" x-cloak x-text="refError" class="text-xs font-bold text-red-500 px-1 mt-1"></div>
-                                <div x-show="!refError && paymentRef.length > 0" x-cloak class="text-[10px] lg:text-xs text-emerald-600 font-bold px-1 mt-0.5 flex items-center gap-1">
-                                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
-                                    Valid Reference Format (<span x-text="paymentRef.replace(/\D/g, '').length"></span> digits)
+                                <div x-show="!refError && hasReceiptMismatch()" x-cloak class="text-[10px] lg:text-xs text-rose-600 font-bold px-1 mt-0.5 flex items-center gap-1">
+                                    <svg class="w-3.5 h-3.5 text-rose-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+                                    <span>Format valid, but attached image is not a recognized payment receipt screenshot.</span>
+                                </div>
+                                <div x-show="!refError && !hasReceiptMismatch() && isRefValid()" x-cloak class="text-[10px] lg:text-xs text-emerald-600 font-bold px-1 mt-0.5 flex items-center gap-1">
+                                    <svg class="w-3.5 h-3.5 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
+                                    <span x-text="isReceiptVerified() ? (paymentMethod === 'GCash' ? '✓ Valid GCash Reference & Receipt Verified (13 digits)' : '✓ Valid Maya Reference & Receipt Verified (12 digits)') : (paymentMethod === 'GCash' ? 'Valid GCash Reference Format (13 digits)' : 'Valid Maya Reference Format (12 digits)')"></span>
                                 </div>
                             </div>
 
@@ -341,30 +347,52 @@
                                 </div>
 
                                 <!-- Active Attached File Display -->
-                                <div x-show="fileName" x-cloak class="p-3.5 bg-[#FDF9F4] border-2 border-[#C0422A]/30 rounded-2xl flex items-center justify-between gap-3 shadow-xs">
-                                    <div class="flex items-center gap-3 min-w-0">
-                                        <template x-if="filePreview">
-                                            <img :src="filePreview" class="w-12 h-12 object-cover rounded-xl border border-gray-200 shrink-0 bg-white">
-                                        </template>
-                                        <template x-if="!filePreview">
-                                            <div class="w-10 h-10 rounded-xl bg-emerald-100 text-emerald-700 flex items-center justify-center shrink-0">
-                                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
+                                <div x-show="fileName" x-cloak class="space-y-2">
+                                    <div class="p-3.5 bg-[#FDF9F4] border-2 border-[#C0422A]/30 rounded-2xl flex items-center justify-between gap-3 shadow-xs">
+                                        <div class="flex items-center gap-3 min-w-0">
+                                            <template x-if="filePreview">
+                                                <img :src="filePreview" class="w-12 h-12 object-cover rounded-xl border border-gray-200 shrink-0 bg-white">
+                                            </template>
+                                            <template x-if="!filePreview">
+                                                <div class="w-10 h-10 rounded-xl bg-emerald-100 text-emerald-700 flex items-center justify-center shrink-0">
+                                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
+                                                </div>
+                                            </template>
+                                            <div class="min-w-0">
+                                                <div class="flex items-center gap-1.5">
+                                                    <span class="text-xs font-bold text-gray-900 truncate" x-text="fileName"></span>
+                                                    <span class="text-[9px] font-black uppercase text-emerald-600 bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-200 shrink-0">Attached</span>
+                                                </div>
+                                                <p class="text-[10px] text-gray-500 font-medium" x-text="aiChecking ? 'Verifying receipt...' : (aiVerificationResult ? 'Verification Complete' : 'Receipt image attached')"></p>
                                             </div>
-                                        </template>
-                                        <div class="min-w-0">
-                                            <div class="flex items-center gap-1.5">
-                                                <span class="text-xs font-bold text-gray-900 truncate" x-text="fileName"></span>
-                                                <span class="text-[9px] font-black uppercase text-emerald-600 bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-200 shrink-0">Attached</span>
-                                            </div>
-                                            <p class="text-[10px] text-gray-500 font-medium">Receipt image ready for verification</p>
                                         </div>
+                                        <button type="button" @click="removeFile()" class="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-xl transition-colors shrink-0 cursor-pointer" title="Remove photo">
+                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                                        </button>
                                     </div>
-                                    <button type="button" @click="removeFile()" class="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-xl transition-colors shrink-0" title="Remove photo">
-                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
-                                    </button>
+
+                                    <!-- Verification Status Card -->
+                                    <div x-show="aiChecking" x-cloak class="p-3 bg-amber-50/80 border border-amber-200 rounded-xl flex items-center gap-2.5 text-xs text-amber-900 font-bold animate-pulse">
+                                        <span class="inline-block w-2.5 h-2.5 rounded-full bg-[#C0422A] animate-ping"></span>
+                                        <span>Scanning receipt image & cross-referencing with payment details...</span>
+                                    </div>
+
+                                    <template x-if="!aiChecking && aiVerificationResult">
+                                        <div class="p-3 rounded-xl border flex items-start gap-2.5 text-xs font-bold transition-all"
+                                             :class="aiVerificationResult.is_receipt 
+                                                 ? 'bg-emerald-50/80 border-emerald-200 text-emerald-800' 
+                                                 : 'bg-rose-50/80 border-rose-200 text-rose-800'">
+                                            <span class="text-sm shrink-0" x-text="aiVerificationResult.is_receipt ? '✓' : '⚠️'"></span>
+                                            <div class="space-y-0.5">
+                                                <div class="font-extrabold uppercase text-[10px] tracking-wider"
+                                                     x-text="aiVerificationResult.is_receipt ? 'Receipt Verification Passed' : 'Receipt Verification Alert'"></div>
+                                                <p class="text-[11px] font-medium leading-relaxed" x-text="aiVerificationResult.message"></p>
+                                            </div>
+                                        </div>
+                                    </template>
                                 </div>
 
-                                <div x-show="screenshotError" x-cloak x-text="screenshotError" class="text-xs font-bold text-red-500 px-1 mt-1"></div>
+                                <div x-show="screenshotError && !aiVerificationResult" x-cloak x-text="screenshotError" class="text-xs font-bold text-red-500 px-1 mt-1"></div>
                             </div>
                         </div>
                     </div>
@@ -372,20 +400,20 @@
 
             </div>
 
-            <!-- Order Summary Card -->
-            <div class="w-full bg-white rounded-3xl p-6 lg:p-8 border border-gray-100 shadow-sm space-y-6">
+            <!-- Order Summary Card (Desktop only, mobile uses the sticky place order bar) -->
+            <div class="hidden lg:block w-full bg-white rounded-3xl p-5 sm:p-6 lg:p-8 border border-gray-100 shadow-sm space-y-5 sm:space-y-6">
                 <div>
                     <div class="flex items-center gap-2 mb-1">
                         <div class="w-4 h-[1.5px] bg-[#C0422A]"></div>
                         <span class="text-[9px] font-bold uppercase tracking-widest text-[#C0422A]">Order Overview</span>
                     </div>
-                    <h2 class="font-serif text-2xl font-bold text-gray-900">Order Summary</h2>
+                    <h2 class="font-serif text-xl sm:text-2xl font-bold text-gray-900">Order Summary</h2>
                     <p class="text-xs text-gray-400 font-bold uppercase tracking-wider mt-1">
                         {{ count($cart) }} item(s) selected
                     </p>
                 </div>
 
-                <div class="space-y-3.5 border-t border-gray-100 pt-6">
+                <div class="space-y-3.5 border-t border-gray-100 pt-5 sm:pt-6">
                     <div class="flex justify-between items-center">
                         <span class="text-sm text-gray-600 font-medium">Subtotal</span>
                         <span class="text-sm font-bold text-gray-900">₱{{ number_format($subtotal) }}</span>
@@ -407,7 +435,7 @@
                 </div>
 
                 <template x-if="step === 1">
-                    <div class="space-y-2">
+                    <div class="space-y-2 hidden lg:block">
                         <div x-show="addressStepError" x-cloak
                              class="text-[10px] font-bold text-red-500 bg-red-50 border border-red-100 rounded-xl px-3 py-2 text-center"
                              x-text="addressStepError"></div>
@@ -418,7 +446,7 @@
                     </div>
                 </template>
                 <template x-if="step === 2">
-                    <div class="flex gap-3">
+                    <div class="gap-3 hidden lg:flex">
                         <button type="button" @click="step = 1" class="px-4 py-4 border border-gray-200 rounded-xl flex items-center justify-center text-gray-500 hover:text-black hover:border-black transition-colors">
                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path></svg>
                         </button>
@@ -441,7 +469,8 @@
     </form>
 
     <!-- Mobile Sticky Place Order Bar -->
-    <div class="lg:hidden fixed bottom-0 left-0 right-0 z-50 bg-white border-t border-gray-200 shadow-[0_-6px_24px_rgba(0,0,0,0.12)] p-3"
+    <div class="lg:hidden fixed inset-x-0 bottom-0 z-50 bg-white border-t border-gray-200 shadow-[0_-4px_20px_rgba(0,0,0,0.08)] px-4 py-3"
+         style="position: fixed; bottom: 0 !important; left: 0 !important; right: 0 !important; width: 100% !important; margin: 0 !important; padding-bottom: max(12px, env(safe-area-inset-bottom, 12px)) !important;"
          x-data="{ showCheckoutBreakdown: false }">
 
         {{-- Expandable Price Breakdown on Mobile --}}
@@ -846,6 +875,94 @@ function checkoutApp(initialAddress, initialAddresses, defaultPaymentMethod) {
         showZoomModal: false,
         paymentRef: '',
         refError: '',
+        isRefDuplicate: false,
+        refCheckTimer: null,
+        aiChecking: false,
+        aiVerificationResult: null,
+
+        init() {
+            this.$watch('paymentMethod', () => {
+                if (this.paymentRef) {
+                    this.validateRef();
+                } else {
+                    this.refError = '';
+                }
+                if (this.fileName) {
+                    this.runAiReceiptVerification();
+                }
+            });
+        },
+
+        handleRefInput() {
+            if (this.paymentRef) {
+                const isValidFormat = this.validateRef();
+                if (isValidFormat) {
+                    // Debounce duplicate check to server
+                    clearTimeout(this.refCheckTimer);
+                    this.refCheckTimer = setTimeout(() => {
+                        this.checkServerReference();
+                    }, 400);
+                }
+            } else {
+                this.refError = '';
+                this.isRefDuplicate = false;
+            }
+        },
+
+        checkServerReference() {
+            const val = (this.paymentRef || '').trim();
+            if (!val) return;
+            const csrfToken = document.querySelector('input[name=_token]')?.value || '';
+
+            fetch('/ai/payment-reference/check', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': csrfToken
+                },
+                body: JSON.stringify({ reference: val, method: this.paymentMethod })
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.is_duplicate) {
+                    this.refError = '❌ Security Alert: This payment reference number has already been used in another order.';
+                    this.isRefDuplicate = true;
+                } else if (!data.is_valid && data.message) {
+                    this.refError = data.message;
+                    this.isRefDuplicate = false;
+                } else {
+                    this.isRefDuplicate = false;
+                    if (this.refError.includes('Security Alert') || this.refError.includes('already been used')) {
+                        this.refError = '';
+                    }
+                }
+                // Also trigger AI receipt check if image is already attached
+                if (this.fileName && !this.isRefDuplicate) {
+                    this.runAiReceiptVerification();
+                }
+            })
+            .catch(() => {});
+        },
+
+        isRefValid() {
+            const val = (this.paymentRef || '').trim();
+            if (!val || this.isRefDuplicate || this.refError) return false;
+            if (/^(\d)\1+$/.test(val)) return false;
+            const isGcash = this.paymentMethod === 'GCash';
+            if (isGcash) {
+                return /^\d{13}$/.test(val);
+            } else {
+                return /^\d{12}$/.test(val);
+            }
+        },
+
+        hasReceiptMismatch() {
+            return Boolean(this.fileName && this.aiVerificationResult && this.aiVerificationResult.is_receipt === false);
+        },
+
+        isReceiptVerified() {
+            return Boolean(this.fileName && this.aiVerificationResult && this.aiVerificationResult.is_receipt === true);
+        },
 
         locationDropdownOpen: false,
         activeTab: 'region',
@@ -869,6 +986,7 @@ function checkoutApp(initialAddress, initialAddresses, defaultPaymentMethod) {
                     e.target.value = '';
                     this.fileName = '';
                     this.filePreview = '';
+                    this.aiVerificationResult = null;
                     return;
                 }
                 this.screenshotError = '';
@@ -878,14 +996,61 @@ function checkoutApp(initialAddress, initialAddresses, defaultPaymentMethod) {
                 } else {
                     this.filePreview = '';
                 }
+                // Run AI receipt analysis
+                this.runAiReceiptVerification();
             }
         },
+
+        runAiReceiptVerification() {
+            const fileInput = document.getElementById('paymentScreenshotInput');
+            const file = fileInput && fileInput.files && fileInput.files[0];
+            if (!file) return;
+
+            const csrfToken = document.querySelector('input[name=_token]')?.value || '';
+            const formData = new FormData();
+            formData.append('receipt', file);
+            formData.append('reference', (this.paymentRef || '').trim());
+            formData.append('method', this.paymentMethod);
+            formData.append('amount', '{{ (float)($grandTotal ?? 0) }}');
+
+            this.aiChecking = true;
+            this.aiVerificationResult = null;
+
+            fetch('/ai/receipt/verify', {
+                method: 'POST',
+                headers: {
+                    'X-CSRF-TOKEN': csrfToken
+                },
+                body: formData
+            })
+            .then(res => res.json())
+            .then(data => {
+                this.aiVerificationResult = data;
+                if (data.is_receipt === false) {
+                    this.screenshotError = data.message || 'Attached file is not a valid receipt.';
+                } else {
+                    this.screenshotError = '';
+                }
+            })
+            .catch(() => {
+                this.aiVerificationResult = {
+                    is_receipt: true,
+                    message: '✓ Receipt screenshot attached.'
+                };
+            })
+            .finally(() => {
+                this.aiChecking = false;
+            });
+        },
+
         removeFile() {
             const input = document.getElementById('paymentScreenshotInput');
             if (input) input.value = '';
             this.fileName = '';
             this.filePreview = '';
             this.screenshotError = '';
+            this.aiVerificationResult = null;
+            this.aiChecking = false;
         },
 
         selectAddress(addr) {
@@ -1209,21 +1374,27 @@ function checkoutApp(initialAddress, initialAddresses, defaultPaymentMethod) {
             }
         },
         validateRef() {
-            if (this.step < 2) return true;
             const val = (this.paymentRef || '').trim();
-            const digits = val.replace(/\D/g, '');
+            const isGcash = this.paymentMethod === 'GCash';
+            const requiredDigits = isGcash ? 13 : 12;
+
             if (!val) {
-                this.refError = 'Payment reference number is required.';
+                this.refError = isGcash 
+                    ? 'Reference number must be exactly 13 digits.' 
+                    : 'Reference number must be exactly 12 digits.';
                 return false;
             }
-            if (/[a-zA-Z]/.test(val)) {
-                this.refError = 'Reference number must contain numbers only (no letters allowed).';
+
+            if (/^(\d)\1+$/.test(val)) {
+                this.refError = 'Invalid reference number. Repeated digit sequences are not allowed.';
                 return false;
             }
-            if (digits.length < 10 || digits.length > 16) {
-                this.refError = 'Invalid length. Reference number must be 10 to 16 digits (e.g. 13-digit GCash or 12-digit Maya ref #).';
+
+            if (!/^\d+$/.test(val) || val.length !== requiredDigits) {
+                this.refError = `Reference number must be exactly ${requiredDigits} digits.`;
                 return false;
             }
+
             this.refError = '';
             return true;
         },
@@ -1241,7 +1412,10 @@ function checkoutApp(initialAddress, initialAddresses, defaultPaymentMethod) {
             this.step = 2;
         },
         requestPlaceOrder() {
-            if (!this.validateRef()) {
+            if (!this.validateRef() || this.isRefDuplicate) {
+                if (this.isRefDuplicate) {
+                    this.refError = '❌ Security Alert: This payment reference number has already been used in another order.';
+                }
                 document.getElementById('paymentReferenceInput')?.focus();
                 return;
             }
@@ -1251,12 +1425,27 @@ function checkoutApp(initialAddress, initialAddresses, defaultPaymentMethod) {
                 document.getElementById('paymentScreenshotInput')?.focus();
                 return;
             }
+            if (this.aiVerificationResult && this.aiVerificationResult.is_receipt === false) {
+                this.screenshotError = this.aiVerificationResult.message || 'Attached file is not a valid receipt.';
+                document.getElementById('paymentScreenshotInput')?.focus();
+                return;
+            }
             this.screenshotError = '';
             const form = document.getElementById('checkout-form');
             if (!form || !form.reportValidity()) return;
             this.showConfirmModal = true;
         },
         confirmPlaceOrder() {
+            if (!this.validateRef() || this.isRefDuplicate) {
+                this.showConfirmModal = false;
+                document.getElementById('paymentReferenceInput')?.focus();
+                return;
+            }
+            if (this.aiVerificationResult && this.aiVerificationResult.is_receipt === false) {
+                this.showConfirmModal = false;
+                document.getElementById('paymentScreenshotInput')?.focus();
+                return;
+            }
             this.showConfirmModal = false;
             document.getElementById('checkout-form')?.submit();
         }

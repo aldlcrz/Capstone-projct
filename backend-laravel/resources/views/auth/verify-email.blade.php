@@ -4,53 +4,111 @@
 
 @section('content')
 <div class="min-h-screen bg-linear-to-b from-amber-50/50 via-white to-gray-50 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
-    <div class="max-w-md w-full space-y-8 bg-white p-8 sm:p-10 rounded-3xl shadow-xl border border-gray-100">
+    <div class="max-w-md w-full space-y-6 bg-white p-8 sm:p-10 rounded-3xl shadow-xl border border-gray-100"
+         x-data="{
+             email: '{{ session('verify_email', $email ?? (auth()->user()->email ?? '')) }}',
+             code: '',
+             showAiHelper: false,
+             timer: 60,
+             canResend: true,
+             init() {
+                 if (this.canResend) {
+                     // Ready
+                 }
+             }
+         }">
+        
         <div class="text-center">
-            <div class="w-16 h-16 bg-[#C0420A]/10 text-[#C0420A] rounded-2xl flex items-center justify-center mx-auto mb-4">
+            <div class="w-16 h-16 bg-[#C0420A]/10 text-[#C0420A] rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-sm">
                 <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 002-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path>
                 </svg>
             </div>
             <h2 class="text-2xl font-black text-gray-900 tracking-tight">Verify Your Gmail</h2>
             <p class="mt-2 text-xs font-semibold text-gray-500">
-                We sent a 6-digit verification code to <span class="font-bold text-gray-800">{{ session('verify_email', auth()->user()->email ?? 'your email') }}</span>.
+                We sent a 6-digit verification code to:
             </p>
+            <div class="mt-1 font-bold text-gray-900 text-sm bg-gray-50 py-1.5 px-3 rounded-xl border border-gray-200 inline-block max-w-full truncate" x-text="email || 'your registered Gmail'"></div>
         </div>
 
         @if(session('success'))
-            <div class="bg-emerald-50 border border-emerald-200 text-emerald-700 px-4 py-3 rounded-xl text-xs font-bold">
-                {{ session('success') }}
+            <div class="bg-emerald-50 border border-emerald-200 text-emerald-700 px-4 py-3 rounded-2xl text-xs font-bold flex items-center gap-2">
+                <svg class="w-4 h-4 text-emerald-600 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
+                <span>{{ session('success') }}</span>
             </div>
         @endif
 
         @if($errors->any())
-            <div class="bg-rose-50 border border-rose-200 text-rose-700 px-4 py-3 rounded-xl text-xs font-bold">
-                {{ $errors->first() }}
+            <div class="bg-rose-50 border border-rose-200 text-rose-700 px-4 py-3 rounded-2xl text-xs font-bold flex items-center gap-2">
+                <svg class="w-4 h-4 text-rose-600 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12"/></svg>
+                <span>{{ $errors->first() }}</span>
             </div>
         @endif
 
-        <form action="{{ route('verify.email.submit') }}" method="POST" class="mt-8 space-y-6">
+        <form action="{{ route('verify.email.submit') }}" method="POST" class="mt-6 space-y-5">
             @csrf
-            <input type="hidden" name="email" value="{{ session('verify_email', auth()->user()->email ?? '') }}">
+            <input type="hidden" name="email" :value="email">
+
+            <!-- Fallback email input if empty -->
+            <div x-show="!email" class="space-y-1.5" x-cloak>
+                <label class="block text-[10px] font-bold uppercase tracking-wider text-gray-500">Your Registered Gmail</label>
+                <input type="email" x-model="email" placeholder="example@gmail.com" required
+                       class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm font-bold outline-none focus:border-[#C0420A] focus:ring-2 focus:ring-[#C0420A]/10 transition-all">
+            </div>
 
             <div>
                 <label class="block text-xs font-bold uppercase tracking-wider text-gray-500 mb-2 text-center">6-Digit Verification Code</label>
-                <input type="text" name="code" maxlength="6" required pattern="[0-9]{6}" placeholder="123456" autofocus
-                    class="w-full text-center text-3xl font-black tracking-[0.5em] px-4 py-3.5 bg-gray-50 border border-gray-200 rounded-2xl outline-none focus:border-[#C0420A] focus:ring-4 focus:ring-[#C0420A]/10 transition-all">
+                <input type="text" 
+                       name="code" 
+                       x-model="code"
+                       maxlength="6" 
+                       required 
+                       pattern="[0-9]{6}" 
+                       inputmode="numeric"
+                       placeholder="123456" 
+                       autofocus
+                       class="w-full text-center text-3xl font-black tracking-[0.4em] px-4 py-3.5 bg-gray-50 border border-gray-200 rounded-2xl outline-none focus:border-[#C0420A] focus:ring-4 focus:ring-[#C0420A]/10 transition-all">
             </div>
 
-            <button type="submit" class="w-full py-4 bg-[#C0420A] text-white font-black text-sm uppercase tracking-wider rounded-2xl shadow-lg shadow-[#C0420A]/20 hover:bg-[#a33708] transition-all">
+            <button type="submit" 
+                    :disabled="code.length !== 6"
+                    :class="code.length === 6 ? 'bg-[#C0420A] hover:bg-[#a33708] shadow-lg shadow-[#C0420A]/20 cursor-pointer' : 'bg-gray-300 opacity-60 cursor-not-allowed'"
+                    class="w-full py-4 text-white font-black text-sm uppercase tracking-wider rounded-2xl transition-all">
                 Activate Account
             </button>
         </form>
 
-        <div class="pt-4 border-t border-gray-100 text-center">
-            <p class="text-xs text-gray-500 mb-2">Didn't receive the code?</p>
+        <!-- AI Verification & Delivery Diagnostic Helper -->
+        <div class="bg-amber-50/60 border border-amber-200/70 rounded-2xl p-4 space-y-2.5">
+            <div class="flex items-center justify-between cursor-pointer" @click="showAiHelper = !showAiHelper">
+                <div class="flex items-center gap-2">
+                    <span class="text-base">✨</span>
+                    <span class="text-xs font-black text-amber-900 uppercase tracking-wider">AI Verification Diagnostics</span>
+                </div>
+                <button type="button" class="text-xs font-bold text-amber-800 hover:text-amber-950">
+                    <span x-text="showAiHelper ? 'Hide Tips' : 'Delivery Tips'"></span>
+                </button>
+            </div>
+            
+            <div x-show="showAiHelper" x-transition class="text-xs text-amber-900 space-y-2 pt-1 border-t border-amber-200/50">
+                <p class="leading-relaxed">
+                    💡 <strong>Gmail Delivery Checklist:</strong>
+                </p>
+                <ul class="list-disc list-inside space-y-1 text-[11px] text-amber-800">
+                    <li>Check your Gmail <strong>Spam</strong> and <strong>Promotions</strong> folders.</li>
+                    <li>Search your inbox for: <code class="bg-amber-100/80 px-1.5 py-0.5 rounded font-mono font-bold">LumBarong Verification</code>.</li>
+                    <li>Verification codes expire in <strong>10 minutes</strong> for your security.</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="pt-2 border-t border-gray-100 text-center">
+            <p class="text-xs text-gray-500 mb-2">Didn't receive the email code?</p>
             <form action="{{ route('verify.email.resend') }}" method="POST">
                 @csrf
-                <input type="hidden" name="email" value="{{ session('verify_email', auth()->user()->email ?? '') }}">
-                <button type="submit" class="text-xs font-bold text-[#C0420A] hover:underline">
-                    Resend Verification Code
+                <input type="hidden" name="email" :value="email">
+                <button type="submit" class="text-xs font-bold text-[#C0420A] hover:underline cursor-pointer">
+                    Resend Verification Code to Gmail
                 </button>
             </form>
         </div>

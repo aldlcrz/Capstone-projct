@@ -74,6 +74,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/orders/{id}', [WebController::class, 'orderDetail'])->name('orders.show');
     Route::patch('/orders/{id}/confirm', [\App\Http\Controllers\OrderController::class, 'confirmReceived'])->name('orders.confirm');
     Route::patch('/api/orders/{id}/status', [\App\Http\Controllers\OrderController::class, 'updateOrderStatus']);
+    Route::patch('/seller/api/orders/{id}/status', [\App\Http\Controllers\OrderController::class, 'updateOrderStatus']);
     Route::post('/seller/api/orders/{id}/packing-proof', [\App\Http\Controllers\OrderController::class, 'uploadPackingProof'])->name('orders.packing-proof');
 
 
@@ -286,5 +287,15 @@ Route::get('/uploads/{path}', function ($path) {
 
     abort(404);
 })->where('path', '.*');
+
+// Web AI Service Routes
+Route::prefix('ai')->group(function () {
+    Route::post('/stylist/chat', [\App\Http\Controllers\AiController::class, 'chatStylist'])->name('ai.stylist');
+    Route::post('/sizing/recommend', [\App\Http\Controllers\AiController::class, 'recommendSize'])->name('ai.sizing');
+    Route::post('/seller/generate-description', [\App\Http\Controllers\AiController::class, 'generateSellerListing'])->name('ai.seller.description');
+    Route::post('/security/password-check', [\App\Http\Controllers\AiController::class, 'analyzePassword'])->name('ai.security.password');
+    Route::post('/payment-reference/check', [\App\Http\Controllers\AiController::class, 'checkPaymentReference'])->name('ai.payment.check');
+    Route::post('/receipt/verify', [\App\Http\Controllers\AiController::class, 'verifyReceipt'])->name('ai.receipt.verify');
+});
 
 

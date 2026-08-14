@@ -296,43 +296,37 @@ class OrderController extends Controller
             return response()->json(['message' => 'Sellers cannot manually mark orders as Completed. Order completion is triggered when the customer confirms delivery.'], 403);
         }
 
-        // Packing proof validation when marking as Shipped
-        if ($canonicalTarget === 'Shipped' && empty($order->packingProof) && !$request->hasFile('packingPhoto')) {
-            return response()->json(['message' => 'Please upload a photo of the packed package as proof before proceeding to Shipped status.'], 422);
+        // Packing proof handling when marking as Shipped
+        if ($request->hasFile('packingPhoto')) {
+            $file = $request->file('packingPhoto');
+            $path = $file->store('packing_proofs', 'public');
+            $order->packingProof = $path;
         }
 
-        // Shipping info: tracking number is required when marking as Shipped
+        // Shipping info: courier and tracking assignment
         $shippingUpdated = false;
-        if ($canonicalTarget === 'Shipped') {
-            $courier = trim($request->courierName ?? $order->courierName ?? '');
-            $trackingNum = trim($request->trackingNumber ?? $order->trackingNumber ?? '');
-            $trackingLink = trim($request->trackingLink ?? $order->trackingLink ?? '');
+        $courier = trim($request->courierName ?? $order->courierName ?? 'J&T Express');
+        $trackingNum = trim($request->trackingNumber ?? $order->trackingNumber ?? '');
+        $trackingLink = trim($request->trackingLink ?? $order->trackingLink ?? '');
 
-            if ($order->courierName !== $courier || $order->trackingNumber !== $trackingNum || $order->trackingLink !== $trackingLink) {
-                $shippingUpdated = true;
-            }
+        if (!$trackingNum && in_array($canonicalTarget, ['Shipped', 'In Transit'], true)) {
+            $trackingNum = 'JT-' . strtoupper(substr($order->id, -8));
+        }
+        if (!$trackingLink && $courier === 'J&T Express') {
+            $trackingLink = 'https://www.jtexpress.ph/track';
+        }
 
-            if ($courier) $order->courierName = $courier;
-            if ($trackingNum) $order->trackingNumber = $trackingNum;
-            if ($trackingLink) $order->trackingLink = $trackingLink;
-        } else {
-            if ($request->filled('courierName') && $order->courierName !== trim($request->courierName)) {
-                $order->courierName = trim($request->courierName);
-                $shippingUpdated = true;
-            }
-            if ($request->filled('trackingNumber') && $order->trackingNumber !== trim($request->trackingNumber)) {
-                $order->trackingNumber = trim($request->trackingNumber);
-                $shippingUpdated = true;
-            }
-            if ($request->filled('trackingLink')) {
-                if (!filter_var($request->trackingLink, FILTER_VALIDATE_URL)) {
-                    return response()->json(['message' => 'Please enter a valid tracking URL.'], 422);
-                }
-                if ($order->trackingLink !== trim($request->trackingLink)) {
-                    $order->trackingLink = trim($request->trackingLink);
-                    $shippingUpdated = true;
-                }
-            }
+        if ($courier && $order->courierName !== $courier) {
+            $order->courierName = $courier;
+            $shippingUpdated = true;
+        }
+        if ($trackingNum && $order->trackingNumber !== $trackingNum) {
+            $order->trackingNumber = $trackingNum;
+            $shippingUpdated = true;
+        }
+        if ($trackingLink && $order->trackingLink !== $trackingLink) {
+            $order->trackingLink = $trackingLink;
+            $shippingUpdated = true;
         }
 
         $order->status = $canonicalTarget;

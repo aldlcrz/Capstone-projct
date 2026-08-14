@@ -242,10 +242,10 @@
         </div>
 
         {{-- Mobile Logout Button --}}
-        <div class="lg:hidden pt-4 border-t border-gray-100">
+        <div class="lg:hidden pt-4 border-t border-gray-100 mt-4">
             <form action="{{ route('logout') }}" method="POST">
                 @csrf
-                <button type="submit" class="w-full py-3.5 bg-red-50 text-red-600 rounded-2xl text-xs font-black uppercase tracking-widest border border-red-100 hover:bg-red-600 hover:text-white transition-all shadow-sm">
+                <button type="submit" class="w-full py-3.5 bg-red-50 text-red-600 rounded-2xl text-xs font-black uppercase tracking-widest border border-red-100 hover:bg-red-600 hover:text-white transition-all shadow-xs cursor-pointer">
                     Logout
                 </button>
             </form>

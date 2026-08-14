@@ -141,9 +141,7 @@
                                 <template x-for="item in selectedOrder.items" :key="item.id">
                                     <div class="flex gap-4 p-4 bg-white border border-gray-100 rounded-2xl shadow-sm items-center">
                                         <div class="w-14 h-14 bg-gray-50 rounded-xl border border-gray-100 relative shrink-0 overflow-hidden">
-                                            <template x-if="item.product && item.product.image">
-                                                <img :src="item.product.image.startsWith('http') ? item.product.image : '/storage/' + item.product.image" class="object-cover w-full h-full" x-on:error="$event.target.src='/uploads/products/default.jpg'" />
-                                            </template>
+                                            <img :src="getItemImage(item.product)" class="object-cover w-full h-full" x-on:error="$event.target.src='/uploads/products/default.jpg'" />
                                         </div>
                                         <div class="flex-1 min-w-0">
                                             <div class="font-bold text-[#2A2A2A] text-sm truncate" x-text="item.product?.name"></div>
@@ -233,10 +231,11 @@ function sellerOrders() {
             
             this.updatingId = order.id;
             try {
-                const res = await fetch(`/api/v1/orders/${order.id}/status`, {
+                const res = await fetch(`/api/orders/${order.id}/status`, {
                     method: 'PATCH',
                     headers: {
                         'Content-Type': 'application/json',
+                        'Accept': 'application/json',
                         'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content || ''
                     },
                     body: JSON.stringify({ status: nextStatus })
@@ -244,6 +243,12 @@ function sellerOrders() {
                 if (res.ok) this.fetchOrders();
             } catch (e) { console.error(e); }
             this.updatingId = null;
+        },
+        getItemImage(product) {
+            if (window.getAppProductImage) {
+                return window.getAppProductImage(product?.image_url || product?.image);
+            }
+            return '/uploads/products/default.jpg';
         }
     }
 }
