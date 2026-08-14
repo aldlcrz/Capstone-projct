@@ -426,7 +426,7 @@ class OrderController extends Controller
     {
         $order = Order::where('id', $id)->where('customerId', Auth::id())->firstOrFail();
 
-        $receivable = ['shipped', 'to receive', 'in transit', 'in_transit', 'out for delivery', 'out_for_delivery'];
+        $receivable = ['shipped', 'to receive', 'in transit', 'in_transit', 'out for delivery', 'out_for_delivery', 'delivered'];
         if (!in_array(strtolower(trim($order->status)), $receivable, true)) {
             return redirect()->back()->with('error', 'You cannot confirm this order at this stage.');
         }
@@ -451,7 +451,7 @@ class OrderController extends Controller
             'order', '/seller/orders', 'seller'
         );
 
-        return redirect()->route('orders.show', $id)->with('success', 'Thank you! Delivery confirmed and order marked as Completed. You can now rate your purchase.');
+        return redirect()->back()->with('success', 'Thank you! Delivery confirmed and order marked as Completed. You can now rate your purchase.');
     }
 
     /**

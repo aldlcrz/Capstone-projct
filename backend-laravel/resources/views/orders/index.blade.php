@@ -182,29 +182,6 @@
                                     @if($item->size)<span class="px-2 py-0.5 bg-gray-100 rounded-md text-gray-600">Size: {{ $item->size }}</span>@endif
                                     <span>Qty: {{ $item->quantity }}</span>
                                 </div>
-
-                                {{-- Review Action / Badge --}}
-                                @php
-                                    $canRate = in_array(strtolower(trim($order->status)), ['delivered', 'completed'], true);
-                                    $existingReview = $order->reviews ? $order->reviews->where('orderItemId', $item->id)->first() : null;
-                                    if (!$existingReview && $order->reviews) {
-                                        $existingReview = $order->reviews->where('productId', $item->productId)->first();
-                                    }
-                                @endphp
-                                @if($canRate)
-                                    <div class="pt-1" @click.stop>
-                                        @if($existingReview)
-                                            <span class="inline-flex items-center gap-1 px-2.5 py-0.5 bg-emerald-50 text-emerald-800 border border-emerald-200 rounded-full text-[9px] font-black uppercase tracking-wider">
-                                                ★ {{ $existingReview->rating }}/5 Reviewed
-                                            </span>
-                                        @else
-                                            <button type="button" @click.stop="reviewModal = true; reviewProductId = '{{ $item->productId }}'; reviewOrderId = '{{ $order->id }}'; reviewOrderItemId = '{{ $item->id }}'; reviewProductName = '{{ addslashes($item->product->name ?? 'Product') }}'"
-                                                class="inline-flex items-center gap-1 px-3 py-1 bg-black hover:bg-[#C0420A] text-white rounded-full text-[9px] font-black uppercase tracking-widest transition-all shadow-xs active:scale-95 cursor-pointer">
-                                                <span>⭐ Rate Product</span>
-                                            </button>
-                                        @endif
-                                    </div>
-                                @endif
                             </div>
 
                             {{-- Item Price --}}
@@ -224,12 +201,47 @@
                             <div class="text-base sm:text-xl font-black text-[#C0420A]">₱{{ number_format($order->totalAmount, 2) }}</div>
                         </div>
 
-                        <button type="button"
-                                @click="selectedOrder = {{ json_encode($orderData) }}; detailsModal = true;"
-                                class="px-5 sm:px-6 py-2.5 rounded-full bg-black text-white text-[9px] sm:text-[10px] font-black uppercase tracking-widest hover:bg-[#C0420A] transition-all whitespace-nowrap shadow-sm active:scale-95 flex items-center gap-1.5 cursor-pointer">
-                            <span>View Details</span>
-                            <span class="text-xs">→</span>
-                        </button>
+                        @php
+                            $statusLower = strtolower(trim($order->status));
+                            $canDeliver = in_array($statusLower, ['shipped', 'to receive', 'in transit', 'in_transit', 'out for delivery', 'out_for_delivery', 'delivered'], true) && $statusLower !== 'completed';
+                            $isDeliveredOrCompleted = in_array($statusLower, ['delivered', 'completed'], true);
+                            
+                            $firstItem = $order->items->first();
+                            $unreviewedItem = null;
+                            $firstReview = null;
+                            if ($firstItem) {
+                                $unreviewedItem = $order->items->first(function($itm) use ($order) {
+                                    return !$order->reviews || !$order->reviews->where('orderItemId', $itm->id)->first();
+                                });
+                                $firstReview = $order->reviews ? $order->reviews->first() : null;
+                            }
+                        @endphp
+
+                        <div class="flex items-center gap-2">
+                            @if($canDeliver)
+                                <form action="{{ route('orders.confirm', $order->id) }}" method="POST" @click.stop onsubmit="return confirm('Confirm that you have received your order?');">
+                                    @csrf
+                                    @method('PATCH')
+                                    <button type="submit"
+                                            class="px-5 sm:px-6 py-2.5 rounded-full bg-emerald-600 hover:bg-emerald-700 text-white text-[9px] sm:text-[10px] font-black uppercase tracking-widest transition-all whitespace-nowrap shadow-sm active:scale-95 flex items-center gap-1.5 cursor-pointer">
+                                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"></path></svg>
+                                        <span>Delivered</span>
+                                    </button>
+                                </form>
+                            @elseif($isDeliveredOrCompleted)
+                                @if($unreviewedItem)
+                                    <button type="button"
+                                            @click.stop="reviewModal = true; reviewProductId = '{{ $unreviewedItem->productId }}'; reviewOrderId = '{{ $order->id }}'; reviewOrderItemId = '{{ $unreviewedItem->id }}'; reviewProductName = '{{ addslashes($unreviewedItem->product->name ?? 'Product') }}'"
+                                            class="px-5 sm:px-6 py-2.5 rounded-full bg-black hover:bg-[#C0420A] text-white text-[9px] sm:text-[10px] font-black uppercase tracking-widest transition-all whitespace-nowrap shadow-sm active:scale-95 flex items-center gap-1.5 cursor-pointer">
+                                        <span>⭐ Rate Product</span>
+                                    </button>
+                                @else
+                                    <span class="inline-flex items-center gap-1 px-4 py-2 bg-emerald-50 text-emerald-800 border border-emerald-200 rounded-full text-[9px] sm:text-[10px] font-black uppercase tracking-wider">
+                                        ★ {{ $firstReview ? $firstReview->rating . '/5 ' : '' }}Reviewed
+                                    </span>
+                                @endif
+                            @endif
+                        </div>
                     </div>
                 </div>
 
@@ -439,14 +451,14 @@
 
             {{-- Modal Footer --}}
             <div class="p-4 sm:p-5 bg-gray-50 border-t border-gray-100 flex gap-3 shrink-0">
-                <template x-if="selectedOrder && ['shipped', 'to receive', 'in transit', 'in_transit'].includes((selectedOrder.status || '').toLowerCase())">
+                <template x-if="selectedOrder && ['shipped', 'to receive', 'in transit', 'in_transit', 'out for delivery', 'out_for_delivery', 'delivered'].includes((selectedOrder.status || '').toLowerCase())">
                     <form :action="'/orders/' + selectedOrder.id + '/confirm'" method="POST" class="flex-1">
                         @csrf
                         @method('PATCH')
                         <button type="submit"
-                            class="w-full py-3 bg-emerald-600 hover:bg-emerald-700 text-white rounded-full text-[10px] font-black uppercase tracking-widest transition-all shadow-sm active:scale-95 flex items-center justify-center gap-1.5">
+                            class="w-full py-3 bg-emerald-600 hover:bg-emerald-700 text-white rounded-full text-[10px] font-black uppercase tracking-widest transition-all shadow-sm active:scale-95 flex items-center justify-center gap-1.5 cursor-pointer">
                             <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
-                            <span>Confirm Received</span>
+                            <span>Delivered</span>
                         </button>
                     </form>
                 </template>
@@ -485,6 +497,8 @@
                 </button>
             </div>
         </div>
+    </div>
+
     {{-- Leave Review Modal --}}
     <div x-show="reviewModal" class="fixed inset-0 z-9999 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm" x-cloak style="display: none;">
         <div @click.away="reviewModal = false" class="bg-white rounded-3xl shadow-2xl w-full max-w-md p-6 sm:p-8 space-y-5">

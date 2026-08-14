@@ -309,7 +309,7 @@
             </div>
 
             {{-- Confirm Received Action Button --}}
-            @if(in_array(strtolower(trim($order->status)), ['shipped', 'to receive', 'in transit', 'in_transit', 'out for delivery', 'out_for_delivery'], true))
+            @if(in_array(strtolower(trim($order->status)), ['shipped', 'to receive', 'in transit', 'in_transit', 'out for delivery', 'out_for_delivery', 'delivered'], true))
                 <div class="bg-emerald-50/60 border border-emerald-100 rounded-2xl sm:rounded-3xl p-5 flex flex-col sm:flex-row items-center justify-between gap-4">
                     <div>
                         <h4 class="text-xs font-black uppercase tracking-wider text-emerald-800">Has your parcel arrived?</h4>
