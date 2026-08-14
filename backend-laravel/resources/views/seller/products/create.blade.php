@@ -247,7 +247,7 @@
                         </svg>
                         <div id="dropZoneTitle" class="text-xs font-bold text-gray-700 uppercase tracking-widest">Click to Upload Photos</div>
                         <p id="dropZoneSubtitle" class="text-[9px] text-gray-400">PNG, JPG, WEBP &mdash; portrait shots</p>
-                        <input type="file" id="imageUploadInput" name="images[]" multiple required class="hidden" onchange="previewImages(this)">
+                        <input type="file" id="imageUploadInput" name="images[]" multiple class="hidden" onchange="previewImages(this)">
                     </label>
 
                     <div id="image-preview-grid" class="hidden grid-cols-3 gap-2">
