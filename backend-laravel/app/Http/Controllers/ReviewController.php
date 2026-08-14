@@ -79,10 +79,16 @@ class ReviewController extends Controller
         // 5. Handle File Uploads (Photos & Video)
         $uploadedImages = [];
         if ($request->hasFile('photos')) {
+            $destDir = public_path('uploads/reviews');
+            if (!file_exists($destDir)) {
+                mkdir($destDir, 0777, true);
+            }
             foreach ($request->file('photos') as $file) {
                 if ($file && $file->isValid()) {
-                    $path = $file->store('reviews/photos', 'public');
-                    $uploadedImages[] = asset('storage/' . $path);
+                    $ext = $file->getClientOriginalExtension() ?: 'jpg';
+                    $filename = uniqid('rev_', true) . '.' . $ext;
+                    $file->move($destDir, $filename);
+                    $uploadedImages[] = '/uploads/reviews/' . $filename;
                 }
             }
         } elseif ($request->filled('images') && is_array($request->images)) {
@@ -91,8 +97,14 @@ class ReviewController extends Controller
 
         $uploadedVideo = null;
         if ($request->hasFile('video') && $request->file('video')->isValid()) {
-            $videoPath = $request->file('video')->store('reviews/videos', 'public');
-            $uploadedVideo = asset('storage/' . $videoPath);
+            $videoDir = public_path('uploads/reviews/videos');
+            if (!file_exists($videoDir)) {
+                mkdir($videoDir, 0777, true);
+            }
+            $vExt = $request->file('video')->getClientOriginalExtension() ?: 'mp4';
+            $vFilename = uniqid('vid_', true) . '.' . $vExt;
+            $request->file('video')->move($videoDir, $vFilename);
+            $uploadedVideo = '/uploads/reviews/videos/' . $vFilename;
         }
 
         // 6. Create Review

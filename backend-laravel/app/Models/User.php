@@ -163,15 +163,25 @@ class User extends Authenticatable
             return null;
         }
 
-        if (str_starts_with($this->profilePhoto, 'http://') || str_starts_with($this->profilePhoto, 'https://')) {
-            return $this->profilePhoto;
+        $photo = trim($this->profilePhoto);
+
+        if (str_starts_with($photo, 'http://') || str_starts_with($photo, 'https://')) {
+            return $photo;
         }
 
-        if (str_starts_with($this->profilePhoto, '/')) {
-            return asset($this->profilePhoto);
+        if (str_starts_with($photo, '/')) {
+            return asset(ltrim($photo, '/'));
         }
 
-        return asset('storage/' . $this->profilePhoto);
+        if (str_starts_with($photo, 'uploads/') || str_starts_with($photo, 'storage/')) {
+            return asset($photo);
+        }
+
+        if (str_starts_with($photo, 'profiles/')) {
+            return asset('storage/' . $photo);
+        }
+
+        return asset('storage/profiles/' . $photo);
     }
 
     public function wishlists()

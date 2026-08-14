@@ -571,8 +571,8 @@
                 <h3 class="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-4">Artisan's Story</h3>
                 <div class="flex items-center gap-4">
                     <div class="w-14 h-14 bg-gray-50 rounded-2xl flex items-center justify-center text-xl font-bold text-gray-300 border border-gray-100 shadow-sm shrink-0 relative overflow-hidden">
-                        @if($product->seller && $product->seller->profilePhoto)
-                            <img src="{{ str_starts_with($product->seller->profilePhoto, 'http') ? $product->seller->profilePhoto : asset(ltrim($product->seller->profilePhoto, '/')) }}" class="w-full h-full object-cover" onerror="this.style.display='none'">
+                        @if($product->seller && $product->seller->profile_photo_url)
+                            <img src="{{ $product->seller->profile_photo_url }}" class="w-full h-full object-cover" onerror="this.style.display='none'">
                         @else
                             {{ strtoupper(substr($product->artisan ?? 'A', 0, 1)) }}
                         @endif
@@ -622,14 +622,32 @@
             $reviewsList = ($product->reviews ?? collect())->map(function($rev) {
                 $customerName = $rev->customer->name ?? 'customer';
                 $initial = strtoupper(substr($customerName, 0, 1));
-                $photo = $rev->customer && $rev->customer->profilePhoto 
-                    ? (str_starts_with($rev->customer->profilePhoto, 'http') ? $rev->customer->profilePhoto : asset($rev->customer->profilePhoto))
-                    : null;
+                $photo = $rev->customer ? $rev->customer->profile_photo_url : null;
                 $images = is_string($rev->images) ? json_decode($rev->images, true) : $rev->images;
                 $images = is_array($images) ? array_values(array_filter($images)) : [];
                 $images = array_map(function($img) {
-                    return str_starts_with($img, 'http') ? $img : asset(ltrim($img, '/'));
+                    if (!$img) return null;
+                    if (str_starts_with($img, 'http://') || str_starts_with($img, 'https://')) return $img;
+                    if (str_starts_with($img, '/')) return asset(ltrim($img, '/'));
+                    if (str_starts_with($img, 'uploads/')) return asset($img);
+                    if (str_starts_with($img, 'storage/')) return asset($img);
+                    if (str_starts_with($img, 'reviews/')) return asset('storage/' . $img);
+                    return asset('uploads/reviews/' . $img);
                 }, $images);
+                $images = array_values(array_filter($images));
+
+                $videoUrl = null;
+                if ($rev->video) {
+                    if (str_starts_with($rev->video, 'http://') || str_starts_with($rev->video, 'https://')) {
+                        $videoUrl = $rev->video;
+                    } elseif (str_starts_with($rev->video, '/')) {
+                        $videoUrl = asset(ltrim($rev->video, '/'));
+                    } elseif (str_starts_with($rev->video, 'uploads/') || str_starts_with($rev->video, 'storage/')) {
+                        $videoUrl = asset($rev->video);
+                    } else {
+                        $videoUrl = asset('storage/' . $rev->video);
+                    }
+                }
 
                 return [
                     'id' => $rev->id,
@@ -640,7 +658,7 @@
                     'initial' => $initial,
                     'customerPhoto' => $photo,
                     'images' => $images,
-                    'video' => $rev->video ? (str_starts_with($rev->video, 'http') ? $rev->video : asset(ltrim($rev->video, '/'))) : null,
+                    'video' => $videoUrl,
                     'verified' => (bool)($rev->orderId || $rev->orderItemId),
                 ];
             })->values();
@@ -680,53 +698,53 @@
                  }
              }">
 
-            {{-- Reviews Header --}}
-            <div class="flex flex-wrap items-center justify-between gap-6 mb-8">
+            {{-- Reviews Section Header & Summary --}}
+            <div class="flex items-center justify-between mb-8 pb-4 border-b border-gray-100 flex-wrap gap-4">
                 <div>
-                    <div class="flex items-center gap-2 mb-1.5">
-                        <div class="w-5 h-[2px] bg-[#C0422A]"></div>
-                        <span class="text-[10px] font-black uppercase tracking-widest text-[#C0422A]">Reviews & Feedback</span>
+                    <div class="flex items-center gap-2 mb-1">
+                        <span class="h-1.5 w-6 bg-[#C0420A] rounded-full"></span>
+                        <span class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Reviews & Feedback</span>
                     </div>
-                    <h2 class="font-serif text-2xl sm:text-3xl font-bold text-black">Customer Reviews</h2>
+                    <h2 class="font-serif text-xl sm:text-2xl font-bold text-black">Customer Reviews</h2>
                 </div>
-                
-                {{-- Average rating summary badge (matching screenshot) --}}
-                @if(($product->reviewCount ?? 0) > 0)
-                    <div class="flex items-center gap-4 bg-[#FDF9F4] border border-[#F5EAD9] px-5 py-2.5 rounded-2xl shadow-xs">
-                        <div class="text-center">
-                            <span class="text-2xl sm:text-3xl font-extrabold text-[#C0422A] leading-none">{{ number_format($product->avgRating, 1) }}</span>
-                            <span class="text-[9px] text-gray-400 font-bold block mt-0.5">out of 5</span>
+
+                @if($product->reviews->isNotEmpty())
+                    @php
+                        $totalRevCount = $product->reviews->count();
+                        $starBreakdown = [5 => 0, 4 => 0, 3 => 0, 2 => 0, 1 => 0];
+                        foreach($product->reviews as $r) {
+                            $s = (int)$r->rating;
+                            if(isset($starBreakdown[$s])) $starBreakdown[$s]++;
+                        }
+                    @endphp
+
+                    {{-- Summary rating badge matching mockup --}}
+                    <div class="flex items-center gap-4 bg-gray-50 border border-gray-100 px-5 py-3 rounded-2xl shadow-xs">
+                        <div class="text-center pr-3 border-r border-gray-200">
+                            <span class="text-2xl font-black text-black leading-none">{{ number_format($product->avgRating, 1) }}</span>
+                            <span class="text-[10px] text-gray-400 block font-bold mt-0.5">out of 5</span>
                         </div>
-                        <div class="w-px h-8 bg-gray-200"></div>
                         <div>
                             <div class="flex items-center gap-0.5 text-amber-400 text-sm">
                                 @for($i = 1; $i <= 5; $i++)
                                     <span>{{ $i <= round($product->avgRating) ? '★' : '☆' }}</span>
                                 @endfor
                             </div>
-                            <span class="text-[9px] font-black text-gray-400 uppercase tracking-widest block mt-0.5">
-                                {{ $product->reviewCount }} {{ Str::plural('REVIEW', $product->reviewCount) }}
+                            <span class="text-[10px] font-bold text-gray-500 uppercase tracking-wider mt-0.5 block">
+                                {{ $totalRevCount }} {{ $totalRevCount === 1 ? 'Review' : 'Reviews' }}
                             </span>
                         </div>
                     </div>
                 @endif
             </div>
 
-            @if($product->reviews && $product->reviews->count() > 0)
-                {{-- Rating Distribution Breakdown (matching screenshot) --}}
-                @php
-                    $totalRevCount = $product->reviews->count();
-                    $distribution = [5 => 0, 4 => 0, 3 => 0, 2 => 0, 1 => 0];
-                    foreach($product->reviews as $r) {
-                        $distKey = min(max((int)$r->rating, 1), 5);
-                        $distribution[$distKey]++;
-                    }
-                @endphp
-                <div class="bg-gray-50/70 border border-gray-100 rounded-2xl p-5 mb-8 max-w-lg space-y-2">
-                    <span class="text-[10px] font-black uppercase tracking-widest text-gray-500 block mb-1">Rating Distribution</span>
+            @if($product->reviews->isNotEmpty())
+                {{-- Rating Distribution Breakdown (matching mockup) --}}
+                <div class="bg-gray-50/70 border border-gray-100 rounded-2xl p-5 mb-8 max-w-xl space-y-2">
+                    <div class="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-3">Rating Distribution</div>
                     @for($star = 5; $star >= 1; $star--)
                         @php
-                            $count = $distribution[$star] ?? 0;
+                            $count = $starBreakdown[$star] ?? 0;
                             $pct = $totalRevCount > 0 ? round(($count / $totalRevCount) * 100) : 0;
                         @endphp
                         <div class="flex items-center gap-3 text-xs">
@@ -739,15 +757,15 @@
                     @endfor
                 </div>
 
-                {{-- Stacked Single-Column Customer Reviews List (matching screenshot) --}}
+                {{-- Stacked Single-Column Customer Reviews List --}}
                 <div class="space-y-4">
                     @foreach($product->reviews->take(3) as $review)
                         <div class="bg-[#FDFDFD] sm:bg-gray-50/40 border border-gray-100 rounded-2xl p-5 sm:p-6 space-y-3 shadow-xs">
                             <div class="flex items-center justify-between flex-wrap gap-2">
                                 <div class="flex items-center gap-3">
                                     <div class="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center font-black text-gray-600 text-sm overflow-hidden shrink-0">
-                                        @if($review->customer && $review->customer->profilePhoto)
-                                            <img src="{{ str_starts_with($review->customer->profilePhoto, 'http') ? $review->customer->profilePhoto : asset($review->customer->profilePhoto) }}" class="w-full h-full object-cover" onerror="this.style.display='none'">
+                                        @if($review->customer && $review->customer->profile_photo_url)
+                                            <img src="{{ $review->customer->profile_photo_url }}" class="w-full h-full object-cover" onerror="this.style.display='none'">
                                         @else
                                             {{ strtoupper(substr($review->customer->name ?? 'C', 0, 1)) }}
                                         @endif
@@ -786,8 +804,19 @@
                                 <div class="flex flex-wrap gap-2 pt-1">
                                     @foreach($revImages as $rImg)
                                         @if($rImg)
+                                            @php
+                                                $rImgUrl = (str_starts_with($rImg, 'http://') || str_starts_with($rImg, 'https://'))
+                                                    ? $rImg
+                                                    : (str_starts_with($rImg, '/') 
+                                                        ? asset(ltrim($rImg, '/')) 
+                                                        : (str_starts_with($rImg, 'uploads/') || str_starts_with($rImg, 'storage/') 
+                                                            ? asset($rImg) 
+                                                            : (str_starts_with($rImg, 'reviews/') 
+                                                                ? asset('storage/' . $rImg) 
+                                                                : asset('uploads/reviews/' . $rImg))));
+                                            @endphp
                                             <div class="w-14 h-14 rounded-xl overflow-hidden border border-gray-200 bg-white shrink-0 shadow-xs">
-                                                <img src="{{ str_starts_with($rImg, 'http') ? $rImg : asset(ltrim($rImg, '/')) }}" class="w-full h-full object-cover" onerror="this.style.display='none'" alt="Review Photo">
+                                                <img src="{{ $rImgUrl }}" class="w-full h-full object-cover" onerror="this.style.display='none'" alt="Review Photo">
                                             </div>
                                         @endif
                                     @endforeach
