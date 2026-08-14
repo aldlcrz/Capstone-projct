@@ -670,7 +670,7 @@
                         <div class="flex items-center gap-3 text-xs">
                             <span class="w-8 font-bold text-gray-600 text-right">{{ $star }} ★</span>
                             <div class="flex-1 h-2 bg-gray-200 rounded-full overflow-hidden">
-                                <div class="h-full bg-amber-400 rounded-full" style="width: {{ $pct }}%"></div>
+                                <div class="h-full bg-amber-400 rounded-full" style="{{ 'width: ' . $pct . '%;' }}"></div>
                             </div>
                             <span class="w-10 text-[10px] font-bold text-gray-400 text-right">{{ $count }}</span>
                         </div>
