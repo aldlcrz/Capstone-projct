@@ -5,6 +5,8 @@
      x-data="{
         detailsModal: false,
         selectedOrder: null,
+        confirmModal: false,
+        confirmOrderId: '',
         packingModal: false,
         packingModalUrl: '',
         reviewModal: false,
@@ -229,15 +231,13 @@
 
                         <div class="flex items-center gap-2">
                             @if($canDeliver)
-                                <form action="{{ route('orders.confirm', $order->id) }}" method="POST" onclick="event.stopPropagation();" @click.stop onsubmit="return confirm('Confirm that you have received your order?');">
-                                    @csrf
-                                    @method('PATCH')
-                                    <button type="submit"
-                                            class="px-5 sm:px-6 py-2.5 rounded-full bg-emerald-600 hover:bg-emerald-700 text-white text-[9px] sm:text-[10px] font-black uppercase tracking-widest transition-all whitespace-nowrap shadow-sm active:scale-95 flex items-center gap-1.5 cursor-pointer">
-                                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"></path></svg>
-                                        <span>Delivered</span>
-                                    </button>
-                                </form>
+                                <button type="button"
+                                        onclick="event.stopPropagation();"
+                                        @click.stop="confirmOrderId = '{{ $order->id }}'; confirmModal = true;"
+                                        class="px-5 sm:px-6 py-2.5 rounded-full bg-emerald-600 hover:bg-emerald-700 text-white text-[9px] sm:text-[10px] font-black uppercase tracking-widest transition-all whitespace-nowrap shadow-sm active:scale-95 flex items-center gap-1.5 cursor-pointer">
+                                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"></path></svg>
+                                    <span>Delivered</span>
+                                </button>
                             @elseif($isDeliveredOrCompleted)
                                 @if($unreviewedItem)
                                     <button type="button"
@@ -463,15 +463,12 @@
             {{-- Modal Footer --}}
             <div class="p-4 sm:p-5 bg-gray-50 border-t border-gray-100 flex gap-3 shrink-0">
                 <template x-if="selectedOrder && ['shipped', 'to receive', 'in transit', 'in_transit', 'out for delivery', 'out_for_delivery', 'delivered'].includes((selectedOrder.status || '').toLowerCase())">
-                    <form :action="'/orders/' + selectedOrder.id + '/confirm'" method="POST" class="flex-1">
-                        @csrf
-                        @method('PATCH')
-                        <button type="submit"
-                            class="w-full py-3 bg-emerald-600 hover:bg-emerald-700 text-white rounded-full text-[10px] font-black uppercase tracking-widest transition-all shadow-sm active:scale-95 flex items-center justify-center gap-1.5 cursor-pointer">
-                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
-                            <span>Delivered</span>
-                        </button>
-                    </form>
+                    <button type="button"
+                        @click="confirmOrderId = selectedOrder.id; confirmModal = true;"
+                        class="flex-1 py-3 bg-emerald-600 hover:bg-emerald-700 text-white rounded-full text-[10px] font-black uppercase tracking-widest transition-all shadow-sm active:scale-95 flex items-center justify-center gap-1.5 cursor-pointer">
+                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
+                        <span>Delivered</span>
+                    </button>
                 </template>
                 <button @click="detailsModal = false"
                     class="flex-1 py-3 sm:py-3.5 rounded-full bg-black text-white hover:bg-[#C0420A] text-[10px] font-black uppercase tracking-widest transition-all cursor-pointer shadow-sm active:scale-95">
@@ -507,6 +504,31 @@
                     Close
                 </button>
             </div>
+        </div>
+    </div>
+
+    {{-- Confirm Received Modal --}}
+    <div x-show="confirmModal" class="fixed inset-0 z-9999 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm" x-cloak style="display: none;">
+        <div @click.away="confirmModal = false" class="bg-white rounded-3xl shadow-2xl w-full max-w-md p-6 sm:p-8 space-y-6">
+            <div class="text-center space-y-2">
+                <div class="w-14 h-14 rounded-full bg-emerald-50 border border-emerald-100 flex items-center justify-center mx-auto text-2xl text-emerald-600 shadow-sm">
+                    ✓
+                </div>
+                <h3 class="font-serif text-lg sm:text-xl font-bold text-black">Confirm Order Received?</h3>
+                <p class="text-xs text-gray-500 leading-relaxed">Please only confirm once you have physically received and inspected all items in your package.</p>
+            </div>
+            <form :action="'/orders/' + confirmOrderId + '/confirm'" method="POST" class="flex gap-3">
+                @csrf
+                @method('PATCH')
+                <button type="button" @click="confirmModal = false"
+                    class="flex-1 py-3 rounded-full border border-gray-200 text-[10px] font-black uppercase tracking-widest text-gray-600 hover:bg-gray-50 transition-all cursor-pointer">
+                    Not Yet
+                </button>
+                <button type="submit"
+                    class="flex-1 py-3 rounded-full bg-emerald-600 text-white text-[10px] font-black uppercase tracking-widest hover:bg-emerald-700 transition-all shadow-md shadow-emerald-600/20 cursor-pointer">
+                    Confirm Received
+                </button>
+            </form>
         </div>
     </div>
 
