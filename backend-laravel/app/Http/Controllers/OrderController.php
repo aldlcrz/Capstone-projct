@@ -256,8 +256,8 @@ class OrderController extends Controller
             'pending' => 'Pending',
             'to ship' => 'To Ship',
             'to_ship' => 'To Ship',
-            'ready to ship' => 'Ready to Ship',
-            'ready_to_ship' => 'Ready to Ship',
+            'ready to ship' => 'To Ship',
+            'ready_to_ship' => 'To Ship',
             'shipped' => 'Shipped',
             'to receive' => 'Shipped',
             'in transit' => 'In Transit',
@@ -277,11 +277,10 @@ class OrderController extends Controller
         $statusRank = [
             'Pending' => 0,
             'To Ship' => 1,
-            'Ready to Ship' => 2,
-            'Shipped' => 3,
-            'In Transit' => 4,
-            'Delivered' => 5,
-            'Completed' => 6,
+            'Shipped' => 2,
+            'In Transit' => 3,
+            'Delivered' => 4,
+            'Completed' => 5,
             'Cancelled' => -1,
         ];
 
@@ -297,33 +296,25 @@ class OrderController extends Controller
             return response()->json(['message' => 'Sellers cannot manually mark orders as Completed. Order completion is triggered when the customer confirms delivery.'], 403);
         }
 
-        // Packing Proof validation when marking as Ready to Ship
-        if ($canonicalTarget === 'Ready to Ship' && empty($order->packingProof) && !$request->hasFile('packingPhoto')) {
-            return response()->json(['message' => 'Please upload a packing proof photo before marking this order as Ready to Ship.'], 422);
+        // Packing proof validation when marking as Shipped
+        if ($canonicalTarget === 'Shipped' && empty($order->packingProof) && !$request->hasFile('packingPhoto')) {
+            return response()->json(['message' => 'Please upload a photo of the packed package as proof before proceeding to Shipped status.'], 422);
         }
 
-        // Shipping validation when marking as Shipped
+        // Shipping info: tracking number is required when marking as Shipped
         $shippingUpdated = false;
         if ($canonicalTarget === 'Shipped') {
             $courier = trim($request->courierName ?? $order->courierName ?? '');
             $trackingNum = trim($request->trackingNumber ?? $order->trackingNumber ?? '');
             $trackingLink = trim($request->trackingLink ?? $order->trackingLink ?? '');
 
-            if (empty($courier) || empty($trackingNum) || empty($trackingLink)) {
-                return response()->json(['message' => 'Please provide courier, tracking number, and tracking link before marking this order as Shipped.'], 422);
-            }
-
-            if (!filter_var($trackingLink, FILTER_VALIDATE_URL)) {
-                return response()->json(['message' => 'Please enter a valid tracking URL (e.g. https://www.jtexpress.ph/track).'], 422);
-            }
-
             if ($order->courierName !== $courier || $order->trackingNumber !== $trackingNum || $order->trackingLink !== $trackingLink) {
                 $shippingUpdated = true;
             }
 
-            $order->courierName = $courier;
-            $order->trackingNumber = $trackingNum;
-            $order->trackingLink = $trackingLink;
+            if ($courier) $order->courierName = $courier;
+            if ($trackingNum) $order->trackingNumber = $trackingNum;
+            if ($trackingLink) $order->trackingLink = $trackingLink;
         } else {
             if ($request->filled('courierName') && $order->courierName !== trim($request->courierName)) {
                 $order->courierName = trim($request->courierName);
@@ -359,7 +350,7 @@ class OrderController extends Controller
         }
 
         $statusMsgMap = [
-            'Ready to Ship' => 'Your order is packed and ready to ship.',
+            'To Ship' => 'Your order is being processed and prepared for shipping.',
             'Shipped' => "Your order has been shipped via {$order->courierName} (Tracking: {$order->trackingNumber}).",
             'In Transit' => 'Your order is in transit with the courier.',
             'Out for Delivery' => 'Your order is out for delivery today!',

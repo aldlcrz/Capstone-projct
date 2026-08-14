@@ -655,15 +655,14 @@ class DashboardController extends Controller
 
         $allOrders = Order::where('sellerId', $sellerId)->get();
         $counts = [
-            'all'           => $allOrders->count(),
-            'pending'       => $allOrders->filter(fn($o) => strtolower($o->status) === 'pending')->count(),
-            'to ship'       => $allOrders->filter(fn($o) => in_array(strtolower($o->status), ['to ship', 'to_ship', 'processing']))->count(),
-            'ready to ship' => $allOrders->filter(fn($o) => in_array(strtolower($o->status), ['ready to ship', 'ready_to_ship']))->count(),
-            'shipped'       => $allOrders->filter(fn($o) => strtolower($o->status) === 'shipped')->count(),
-            'in transit'    => $allOrders->filter(fn($o) => in_array(strtolower($o->status), ['in transit', 'in_transit']))->count(),
-            'delivered'     => $allOrders->filter(fn($o) => strtolower($o->status) === 'delivered')->count(),
-            'completed'     => $allOrders->filter(fn($o) => strtolower($o->status) === 'completed')->count(),
-            'cancelled'     => $allOrders->filter(fn($o) => in_array(strtolower($o->status), ['cancelled', 'cancellation pending', 'cancellation requested']))->count(),
+            'all'        => $allOrders->count(),
+            'pending'    => $allOrders->filter(fn($o) => strtolower($o->status) === 'pending')->count(),
+            'to ship'    => $allOrders->filter(fn($o) => in_array(strtolower($o->status), ['to ship', 'to_ship', 'processing', 'ready to ship', 'ready_to_ship']))->count(),
+            'shipped'    => $allOrders->filter(fn($o) => strtolower($o->status) === 'shipped')->count(),
+            'in transit' => $allOrders->filter(fn($o) => in_array(strtolower($o->status), ['in transit', 'in_transit']))->count(),
+            'delivered'  => $allOrders->filter(fn($o) => strtolower($o->status) === 'delivered')->count(),
+            'completed'  => $allOrders->filter(fn($o) => strtolower($o->status) === 'completed')->count(),
+            'cancelled'  => $allOrders->filter(fn($o) => in_array(strtolower($o->status), ['cancelled', 'cancellation pending', 'cancellation requested']))->count(),
         ];
 
         return view('seller.orders.index', compact('orders', 'counts', 'status'));

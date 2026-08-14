@@ -59,7 +59,7 @@
     @php
         $steps = [
             ['label' => 'Order Placed',  'status' => 'pending'],
-            ['label' => 'Ready to Ship', 'status' => 'ready to ship'],
+            ['label' => 'To Ship',       'status' => 'to ship'],
             ['label' => 'Shipped',       'status' => 'shipped'],
             ['label' => 'In Transit',    'status' => 'in transit'],
             ['label' => 'Delivered',     'status' => 'delivered'],

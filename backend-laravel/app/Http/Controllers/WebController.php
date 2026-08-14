@@ -369,14 +369,13 @@ class WebController extends Controller
         // Filter by status tab
         $tab = strtolower($request->input('tab', 'all'));
         $statusGroupMap = [
-            'pending'           => ['Pending', 'pending'],
-            'to ship'           => ['Pending', 'pending', 'Processing', 'processing', 'To Ship', 'to ship', 'to_ship', 'Ready to Ship', 'ready_to_ship', 'Shipped', 'shipped'],
-            'ready to ship'     => ['Ready to Ship', 'ready_to_ship'],
-            'to receive'        => ['In Transit', 'in_transit', 'To Receive', 'to receive', 'Out for Delivery', 'out_for_delivery'],
-            'in transit'        => ['In Transit', 'in_transit'],
-            'delivered'         => ['Delivered', 'delivered'],
-            'completed'         => ['Completed', 'completed'],
-            'cancelled'         => ['Cancelled', 'cancelled'],
+            'pending'    => ['Pending', 'pending'],
+            'to ship'    => ['Pending', 'pending', 'Processing', 'processing', 'To Ship', 'to ship', 'to_ship', 'Ready to Ship', 'ready_to_ship'],
+            'to receive' => ['Shipped', 'shipped', 'In Transit', 'in_transit', 'To Receive', 'to receive', 'Out for Delivery', 'out_for_delivery'],
+            'in transit' => ['In Transit', 'in_transit'],
+            'delivered'  => ['Delivered', 'delivered'],
+            'completed'  => ['Completed', 'completed'],
+            'cancelled'  => ['Cancelled', 'cancelled'],
         ];
 
         if ($tab !== 'all' && isset($statusGroupMap[$tab])) {

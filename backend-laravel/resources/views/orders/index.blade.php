@@ -27,7 +27,7 @@
             if (s === 'out for delivery' || s === 'out_for_delivery') return 'bg-orange-50 text-orange-700 border-orange-200';
             if (s === 'in transit' || s === 'in_transit') return 'bg-purple-50 text-purple-700 border-purple-200';
             if (s === 'shipped' || s === 'to receive') return 'bg-indigo-50 text-indigo-700 border-indigo-200';
-            if (s === 'ready to ship' || s === 'ready_to_ship') return 'bg-sky-50 text-sky-700 border-sky-200';
+            if (s === 'to ship' || s === 'ready to ship' || s === 'ready_to_ship' || s === 'processing') return 'bg-sky-50 text-sky-700 border-sky-200';
             if (s === 'cancelled') return 'bg-red-50 text-red-700 border-red-200';
             return 'bg-amber-50 text-amber-700 border-amber-200';
         }
@@ -57,7 +57,7 @@
 
     {{-- Filter Capsule Tabs --}}
     <div class="flex gap-2 overflow-x-auto no-scrollbar pb-1">
-        @foreach(['ALL' => 'All', 'PENDING' => 'Pending', 'TO SHIP' => 'To Ship', 'TO RECEIVE' => 'To Receive', 'DELIVERED' => 'Delivered', 'COMPLETED' => 'Completed', 'CANCELLED' => 'Cancelled'] as $key => $label)
+        @foreach(['ALL' => 'All', 'PENDING' => 'Pending', 'TO SHIP' => 'To Ship', 'TO RECEIVE' => 'To Receive', 'DELIVERED' => 'Delivered', 'COMPLETED' => 'Completed'] as $key => $label)
             @php
                 $isActive = request('tab', 'ALL') == $key;
             @endphp
@@ -302,7 +302,7 @@
                                 <div class="absolute left-4 top-4 h-1 bg-[#C0420A] z-0 transition-all duration-500 rounded-full"
                                      :style="'width: calc(' + (getStepIndex(selectedOrder.status) * 25) + '% - 8px);'"></div>
 
-                                <template x-for="(stLabel, idx) in ['Order Placed', 'Ready to Ship', 'Shipped', 'In Transit', 'Delivered']">
+                                <template x-for="(stLabel, idx) in ['Order Placed', 'To Ship', 'Shipped', 'In Transit', 'Delivered']">
                                     <div class="flex flex-col items-center gap-1.5 z-10">
                                         <div class="w-8 h-8 rounded-full border-2 flex items-center justify-center text-[10px] font-black transition-all"
                                              :class="idx <= getStepIndex(selectedOrder.status) ? 'bg-[#C0420A] border-[#C0420A] text-white shadow-md' : 'bg-white border-gray-200 text-gray-400'">

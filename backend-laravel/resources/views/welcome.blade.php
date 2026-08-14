@@ -44,7 +44,7 @@
         }"
         x-init="autoSlide()"
         class="relative rounded-2xl overflow-hidden shadow-sm bg-gray-900"
-        style="aspect-ratio: 21/7; min-height: 160px;"
+        style="aspect-ratio: 16/7; min-height: 140px;"
     >
         @foreach($banners as $i => $banner)
         <div
@@ -494,7 +494,7 @@
             <span class="text-[10px] text-gray-400 font-bold">{{ $products->count() }} {{ Str::plural('piece', $products->count()) }}</span>
         </div>
 
-        <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-5">
+        <div class="grid grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 sm:gap-5">
             @foreach($products as $product)
             @php
                 $pSizes = is_string($product->sizes) ? json_decode($product->sizes, true) : $product->sizes;

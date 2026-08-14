@@ -176,7 +176,7 @@
                 <a href="{{ route('seller.orders') }}" class="p-3.5 bg-blue-50/60 rounded-xl border border-blue-100 hover:border-blue-300 transition-all flex items-center gap-3">
                     <div class="w-8 h-8 rounded-lg bg-blue-100 text-blue-700 flex items-center justify-center font-black text-sm shrink-0">{{ $salesSummary['readyToShip'] ?? 0 }}</div>
                     <div class="min-w-0">
-                        <div class="text-xs font-bold text-black truncate">Ready to Ship</div>
+                        <div class="text-xs font-bold text-black truncate">To Ship</div>
                         <div class="text-[9px] text-blue-700 font-bold uppercase">In Packing</div>
                     </div>
                 </a>
