@@ -565,9 +565,11 @@ STRICT SECURITY PROHIBITIONS & BOUNDARIES:
     }
 
     /**
-     * AI Verification of Uploaded Receipt Image against reference number and payment method.
+     * AI Screening of Uploaded Receipt Image against reference number, payment method, and expected amount.
+     * Returns a 3-tier status: 'PASS', 'REVIEW', or 'REJECT'.
+     * Final payment verification is always confirmed by the seller/artisan against their wallet balance.
      */
-    public static function verifyReceipt(string $imagePath, string $referenceNumber, string $paymentMethod = 'GCash', float $totalAmount = 0.0): array
+    public static function verifyReceipt(string $imagePath, string $referenceNumber, string $paymentMethod = 'GCash', float $expectedAmount = 0.0): array
     {
         $ref = trim($referenceNumber);
         $method = trim($paymentMethod);
@@ -580,11 +582,12 @@ STRICT SECURITY PROHIBITIONS & BOUNDARIES:
                 $mimeType = mime_content_type($imagePath) ?: 'image/jpeg';
 
                 $url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={$apiKey}";
+                $amountPrompt = $expectedAmount > 0 ? " Expected payment amount is around ₱" . number_format($expectedAmount, 2) . "." : "";
                 $prompt = "Analyze this uploaded image for a Philippine e-commerce store (LumBarong). "
-                    . "1. Is this a legitimate mobile payment receipt or transaction screenshot (from {$method}, GCash, Maya, or Bank)? "
+                    . "1. Is this a legitimate mobile payment receipt or transaction screenshot (from {$method}, GCash, Maya, or Philippine bank)? "
                     . "Or is it an unrelated image (such as clothing, people, scenery, general product photo, meme, or costume)? "
-                    . "2. Does it contain the payment reference number '{$ref}'? "
-                    . "Respond strictly in JSON: {\"is_receipt\": boolean, \"ref_matched\": boolean, \"confidence\": number, \"detected_ref\": string, \"message\": string}";
+                    . "2. Does it contain the payment reference number '{$ref}'?{$amountPrompt} "
+                    . "Respond strictly in JSON: {\"status\": \"PASS\"|\"REVIEW\"|\"REJECT\", \"is_receipt\": boolean, \"ref_matched\": boolean, \"confidence\": number, \"detected_ref\": string, \"message\": string}";
 
                 $payload = [
                     'contents' => [
@@ -609,12 +612,21 @@ STRICT SECURITY PROHIBITIONS & BOUNDARIES:
                     if (preg_match('/\{[\s\S]*\}/', $rawText, $m)) {
                         $parsed = json_decode($m[0], true);
                         if (is_array($parsed)) {
+                            $isReceipt = (bool) ($parsed['is_receipt'] ?? false);
+                            $refMatched = (bool) ($parsed['ref_matched'] ?? false);
+                            $tier = strtoupper(trim((string) ($parsed['status'] ?? '')));
+                            if (!in_array($tier, ['PASS', 'REVIEW', 'REJECT'], true)) {
+                                $tier = (!$isReceipt) ? 'REJECT' : ($refMatched ? 'PASS' : 'REVIEW');
+                            }
+
                             return [
-                                'is_receipt' => (bool) ($parsed['is_receipt'] ?? false),
-                                'ref_matched' => (bool) ($parsed['ref_matched'] ?? false),
+                                'status' => $tier,
+                                'is_receipt' => $isReceipt,
+                                'ref_matched' => $refMatched,
                                 'confidence' => (int) ($parsed['confidence'] ?? 85),
                                 'detected_ref' => (string) ($parsed['detected_ref'] ?? ''),
-                                'message' => (string) ($parsed['message'] ?? 'Receipt analysis complete.')
+                                'needs_seller_verification' => true,
+                                'message' => (string) ($parsed['message'] ?? 'Receipt screening complete.')
                             ];
                         }
                     }
@@ -625,13 +637,13 @@ STRICT SECURITY PROHIBITIONS & BOUNDARIES:
         }
 
         // 2. Intelligent Built-in Heuristic Receipt Classifier
-        return self::heuristicReceiptAnalysis($imagePath, $ref, $method);
+        return self::heuristicReceiptAnalysis($imagePath, $ref, $method, $expectedAmount);
     }
 
     /**
      * Built-in Heuristic Receipt & Image Analysis.
      */
-    private static function heuristicReceiptAnalysis(string $imagePath, string $ref, string $method): array
+    private static function heuristicReceiptAnalysis(string $imagePath, string $ref, string $method, float $expectedAmount = 0.0): array
     {
         $filename = strtolower(basename($imagePath));
 
@@ -645,9 +657,11 @@ STRICT SECURITY PROHIBITIONS & BOUNDARIES:
         foreach ($nonReceiptKeywords as $kw) {
             if (str_contains($filename, $kw)) {
                 return [
+                    'status' => 'REJECT',
                     'is_receipt' => false,
                     'ref_matched' => false,
                     'confidence' => 95,
+                    'needs_seller_verification' => true,
                     'message' => 'The attached file appears to be a general photo/product image, not a ' . $method . ' transaction receipt screenshot. Please attach your actual payment confirmation screenshot.'
                 ];
             }
@@ -665,9 +679,11 @@ STRICT SECURITY PROHIBITIONS & BOUNDARIES:
                     $ratio = $height / $width;
                     if ($ratio < 1.15 && !str_contains($filename, 'receipt') && !str_contains($filename, 'screenshot') && !str_contains($filename, 'gcash') && !str_contains($filename, 'maya')) {
                         return [
+                            'status' => 'REJECT',
                             'is_receipt' => false,
                             'ref_matched' => false,
                             'confidence' => 88,
+                            'needs_seller_verification' => true,
                             'message' => 'The uploaded image dimensions indicate a general photo or square image rather than a vertical ' . $method . ' mobile receipt screenshot.'
                         ];
                     }
@@ -675,11 +691,14 @@ STRICT SECURITY PROHIBITIONS & BOUNDARIES:
             }
         }
 
+        // Heuristic fallback: image passed geometry screening, but reference match cannot be verified without OCR/Gemini
         return [
+            'status' => 'REVIEW',
             'is_receipt' => true,
-            'ref_matched' => true,
-            'confidence' => 92,
-            'message' => "Receipt screenshot format matches {$method} transaction standards."
+            'ref_matched' => false,
+            'confidence' => 55,
+            'needs_seller_verification' => true,
+            'message' => "Image geometry is consistent with a vertical mobile screenshot. The artisan will verify the {$method} reference number and amount in their wallet before proceeding."
         ];
     }
 

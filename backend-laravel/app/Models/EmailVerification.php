@@ -18,15 +18,17 @@ class EmailVerification extends Model
         'type',
         'expires_at',
         'resend_count',
+        'failed_attempts',
         'last_sent_at',
     ];
 
     protected function casts(): array
     {
         return [
-            'expires_at'   => 'datetime',
-            'last_sent_at'  => 'datetime',
-            'resend_count'  => 'integer',
+            'expires_at'      => 'datetime',
+            'last_sent_at'     => 'datetime',
+            'resend_count'     => 'integer',
+            'failed_attempts' => 'integer',
         ];
     }
 

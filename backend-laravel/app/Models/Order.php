@@ -31,6 +31,7 @@ class Order extends Model
         'trackingLink',
         'packingProof',
         'cancellationReason',
+        'paymentRejectionReason',
         'visitorSessionId',
     ];
 
@@ -149,24 +150,29 @@ class Order extends Model
     {
         $paymentStatus = strtolower(trim((string) ($this->paymentStatus ?? '')));
 
-        if (in_array($paymentStatus, ['paid', 'verified', 'confirmed'], true)) {
-            return 'Paid';
+        if (in_array($paymentStatus, ['verified', 'paid', 'confirmed'], true)) {
+            return 'Verified';
+        }
+
+        if (in_array($paymentStatus, ['rejected', 'payment rejected', 'payment_rejected'], true)) {
+            return 'Payment Rejected';
         }
 
         if ($paymentStatus === 'failed') {
             return 'Failed';
         }
 
-        if (
-            $this->paymentProof
-            || in_array(strtolower((string) $this->status), [
-                'processing', 'to ship', 'ready_to_ship', 'shipped', 'to receive', 'in_transit', 'out_for_delivery', 'delivered', 'completed',
-            ], true)
-        ) {
-            return 'Paid';
+        if (in_array(strtolower((string) $this->status), [
+            'processing', 'to ship', 'ready_to_ship', 'shipped', 'to receive', 'in_transit', 'out_for_delivery', 'delivered', 'completed',
+        ], true)) {
+            return 'Verified';
         }
 
-        return 'Pending';
+        if ($paymentStatus === 'payment submitted' || $paymentStatus === 'submitted' || !empty($this->paymentProof)) {
+            return 'Payment Submitted';
+        }
+
+        return 'Pending Submission';
     }
 
     /**

@@ -183,9 +183,7 @@ class CheckoutController extends Controller
             'paymentReference.required' => 'Please provide your payment reference number.',
         ]);
 
-        try {
-            DB::beginTransaction();
-
+            // 1. Resolve cart items
             $mode = $request->input('mode', 'cart');
             if ($mode === 'buy_now') {
                 $cart = [session()->get('buy_now_item')];
@@ -197,12 +195,8 @@ class CheckoutController extends Controller
             
             if (empty($cart)) throw new \Exception('Cart is empty');
 
-            $addressData = json_decode($request->input('shippingAddress'), true);
-            
-            // In a real app, we might group by sellerId. 
-            // For now, let's follow the existing logic which seems to create one order per checkout or group by seller.
-            // The frontend send "items" as a whole. Let's group by sellerId to create multiple orders if needed.
-            
+            // 2. Calculate true server-side total amount for screening
+            $totalExpectedAmount = 0;
             $itemsBySeller = [];
             foreach ($cart as $item) {
                 $sellerId = $item['sellerId'] ?? null;
@@ -215,7 +209,6 @@ class CheckoutController extends Controller
                 }
             }
 
-            $orders = [];
             foreach ($itemsBySeller as $sellerId => $items) {
                 $sellerUser = User::find($sellerId);
                 if ($sellerUser && $sellerUser->status === 'frozen') {
@@ -223,6 +216,40 @@ class CheckoutController extends Controller
                     throw new \Exception("The shop '{$shopName}' is currently frozen and cannot process orders at this time.");
                 }
 
+                $sellerSubtotal = 0;
+                $maxShipping = 0;
+                foreach ($items as $item) {
+                    $sellerSubtotal += ((float)$item['price']) * ((int)$item['quantity']);
+                    $itemShipping = (float) ($item['shippingFee'] ?? 0);
+                    if ($itemShipping > $maxShipping) {
+                        $maxShipping = $itemShipping;
+                    }
+                }
+                $totalExpectedAmount += ($sellerSubtotal + $maxShipping);
+            }
+
+            // 3. Server-side Receipt Screening (reject obvious non-receipts)
+            if ($request->hasFile('paymentScreenshot')) {
+                $tempPath = $request->file('paymentScreenshot')->getRealPath();
+                $screening = \App\Services\AiService::verifyReceipt(
+                    $tempPath,
+                    $request->paymentReference,
+                    $request->paymentMethod,
+                    $totalExpectedAmount
+                );
+
+                if (($screening['status'] ?? '') === 'REJECT' || !($screening['is_receipt'] ?? true)) {
+                    $errorMessage = $screening['message'] ?? 'The uploaded file does not appear to be a valid mobile payment receipt screenshot. Please attach a genuine transaction confirmation.';
+                    return redirect()->back()->withInput()->with('error', $errorMessage);
+                }
+            }
+
+            DB::beginTransaction();
+
+            $addressData = json_decode($request->input('shippingAddress'), true);
+            $orders = [];
+            foreach ($itemsBySeller as $sellerId => $items) {
+                $sellerUser = User::find($sellerId);
                 $orderId = (string) Str::uuid();
                 $totalAmount = 0;
                 foreach ($items as $item) {
@@ -247,7 +274,7 @@ class CheckoutController extends Controller
                     'status' => 'Pending',
                     'paymentMethod' => $request->paymentMethod,
                     'paymentReference' => $request->paymentReference,
-                    'paymentStatus' => 'Paid',
+                    'paymentStatus' => 'Payment Submitted',
                     'shippingAddress' => $addressData,
                     'createdAt' => now(),
                     'updatedAt' => now(),
@@ -260,7 +287,7 @@ class CheckoutController extends Controller
                     'newStatus' => 'Pending',
                     'updatedBy' => Auth::id(),
                     'userRole' => 'customer',
-                    'notes' => 'Order placed by customer.',
+                    'notes' => 'Order placed by customer. Payment proof submitted, awaiting artisan verification.',
                 ]);
 
                 if ($request->hasFile('paymentScreenshot')) {

@@ -113,6 +113,14 @@ function sellerOrdersManager(initialOrders) {
         deliveryConfirmLoading: false,
         deliveryConfirmSuccess: false,
         deliveryConfirmError: '',
+        showVerifyModal: false,
+        verifyOrderTarget: null,
+        showRejectModal: false,
+        rejectOrderTarget: null,
+        rejectReason: 'Reference number does not match',
+        rejectCustomReason: '',
+        rejectLoading: false,
+        rejectError: '',
         statusUpdating: false,
         toastMessage: '',
         toastTimeout: null,
@@ -121,6 +129,71 @@ function sellerOrdersManager(initialOrders) {
             this.toastMessage = msg;
             clearTimeout(this.toastTimeout);
             this.toastTimeout = setTimeout(() => { this.toastMessage = ''; }, 3500);
+        },
+
+        paymentBadge(order) {
+            const ps = String(order?.paymentStatus || '').toLowerCase();
+            if (ps.includes('rejected')) return { text: '✕ Payment Rejected', class: 'bg-red-50 text-red-700 border-red-200' };
+            if (ps.includes('submitted') || (order?.paymentProof && !ps.includes('verified') && !ps.includes('paid'))) return { text: '⏳ Verify Payment', class: 'bg-amber-50 text-amber-800 border-amber-300' };
+            if (ps.includes('verified') || ps.includes('paid') || (order?.status && order.status !== 'Pending')) return { text: '✓ Verified', class: 'bg-emerald-50 text-emerald-700 border-emerald-200' };
+            return { text: 'Pending Submission', class: 'bg-gray-50 text-gray-600 border-gray-200' };
+        },
+
+        openVerifyPaymentModal(order) {
+            this.verifyOrderTarget = order || this.detailsOrder;
+            this.showVerifyModal = true;
+        },
+
+        openRejectPaymentModal(order) {
+            this.rejectOrderTarget = order || this.detailsOrder;
+            this.rejectReason = 'Reference number does not match';
+            this.rejectCustomReason = '';
+            this.rejectError = '';
+            this.rejectLoading = false;
+            this.showRejectModal = true;
+        },
+
+        async executeRejectPayment() {
+            if (!this.rejectOrderTarget || this.rejectLoading) return;
+            const finalReason = this.rejectReason === 'Other' ? this.rejectCustomReason.trim() : this.rejectReason;
+            if (!finalReason) {
+                this.rejectError = 'Please provide a reason for rejecting the payment.';
+                return;
+            }
+            this.rejectLoading = true;
+            this.rejectError = '';
+            try {
+                const token = document.querySelector('meta[name="csrf-token"]')?.content || document.querySelector('input[name="_token"]')?.value || '';
+                const res = await fetch('/seller/api/orders/' + this.rejectOrderTarget.id + '/reject-payment', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json',
+                        'X-CSRF-TOKEN': token
+                    },
+                    body: JSON.stringify({ reason: finalReason })
+                });
+                const data = await res.json();
+                if (res.ok) {
+                    const idx = this.orders.findIndex(o => o.id === this.rejectOrderTarget.id);
+                    if (idx !== -1) {
+                        this.orders.splice(idx, 1, data.order || data);
+                        this.orders = [...this.orders];
+                        if (this.detailsOrder && this.detailsOrder.id === this.rejectOrderTarget.id) {
+                            this.detailsOrder = data.order || data;
+                        }
+                    }
+                    this.showToast('Payment rejected. Customer has been notified.');
+                    this.showRejectModal = false;
+                    this.detailsModal = false;
+                } else {
+                    this.rejectError = data.message || 'Failed to reject payment.';
+                }
+            } catch(e) {
+                this.rejectError = 'Network error while rejecting payment.';
+            } finally {
+                this.rejectLoading = false;
+            }
         },
 
         confirmMarkAsDelivered(order) {
@@ -895,20 +968,23 @@ function sellerOrdersManager(initialOrders) {
                         Close
                     </button>
 
-                    {{-- Accept Order button: only shown when Pending --}}
+                    {{-- Pending Order Actions: Reject Payment OR Verify & Accept --}}
                     <template x-if="detailsOrder && normalizeStatus(detailsOrder.status) === 'pending'">
-                        <button type="button" @click="updateStatus(detailsOrder, 'To Ship')"
-                            :disabled="statusUpdating"
-                            style="background-color: #059669; color: #ffffff;"
-                            class="flex-1 py-2.5 sm:py-3 bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 text-white text-[10px] font-black uppercase tracking-widest rounded-full transition-all flex items-center justify-center gap-2 shadow-sm cursor-pointer">
-                            <template x-if="statusUpdating">
-                                <svg class="w-3.5 h-3.5 animate-spin text-white" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"/></svg>
-                            </template>
-                            <template x-if="!statusUpdating">
+                        <div class="flex-1 flex gap-2">
+                            <button type="button" 
+                                @click="openRejectPaymentModal(detailsOrder)"
+                                class="px-4 py-2.5 sm:py-3 border border-red-200 hover:bg-red-50 text-red-600 rounded-full text-[10px] font-black uppercase tracking-widest transition-all cursor-pointer">
+                                ✕ Reject
+                            </button>
+                            <button type="button" 
+                                @click="openVerifyPaymentModal(detailsOrder)"
+                                :disabled="statusUpdating"
+                                style="background-color: #059669; color: #ffffff;"
+                                class="flex-1 py-2.5 sm:py-3 bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 text-white text-[10px] font-black uppercase tracking-widest rounded-full transition-all flex items-center justify-center gap-2 shadow-sm cursor-pointer">
                                 <svg class="w-3.5 h-3.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
-                            </template>
-                            <span x-text="statusUpdating ? 'Processing...' : 'Proceed Order (To Ship) ➔'"></span>
-                        </button>
+                                <span>Verify Payment & Accept ➔</span>
+                            </button>
+                        </div>
                     </template>
 
                     {{-- Button for To Ship status: Upload Packing Proof & Confirm Shipment --}}
@@ -1166,7 +1242,160 @@ function sellerOrdersManager(initialOrders) {
                     <template x-if="deliveryConfirmSuccess">
                         <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/></svg>
                     </template>
-                    <span x-text="deliveryConfirmLoading ? 'Processing...' : (deliveryConfirmSuccess ? '✓ Delivered! Closing...' : 'Yes, Delivered')"></span>
+            </div>
+        </div>
+    </div>
+
+    {{-- Verify Payment Confirmation Modal --}}
+    <div x-show="showVerifyModal" 
+         x-transition:enter="transition ease-out duration-300"
+         x-transition:enter-start="opacity-0"
+         x-transition:enter-end="opacity-100"
+         x-transition:leave="transition ease-in duration-200"
+         x-transition:leave-start="opacity-100"
+         x-transition:leave-end="opacity-0"
+         class="fixed inset-0 bg-black/70 backdrop-blur-sm z-9999 flex items-center justify-center p-4"
+         @click.self="showVerifyModal = false"
+         x-cloak
+         style="display: none;">
+        <div class="w-full max-w-md bg-white rounded-3xl shadow-2xl p-6 space-y-4 border border-gray-100 relative overflow-hidden">
+            <div class="h-1.5 w-full bg-linear-to-r from-emerald-500 to-teal-600 absolute top-0 left-0"></div>
+
+            <div class="flex items-center gap-3 border-b border-gray-100 pb-3">
+                <div class="w-10 h-10 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center font-bold text-lg shrink-0">
+                    💳
+                </div>
+                <div>
+                    <h3 class="text-sm font-black text-black uppercase tracking-tight">Verify Payment & Accept Order</h3>
+                    <p class="text-[10px] text-gray-500 font-medium">Verify that the payment was credited to your account.</p>
+                </div>
+            </div>
+
+            <template x-if="verifyOrderTarget">
+                <div class="space-y-3 text-xs">
+                    <div class="p-3.5 bg-gray-50 rounded-2xl border border-gray-100 space-y-2">
+                        <div class="flex justify-between items-center">
+                            <span class="text-gray-400 font-bold text-[10px] uppercase">Payment Method</span>
+                            <span class="font-black text-black uppercase" x-text="verifyOrderTarget.paymentMethod || 'GCash'"></span>
+                        </div>
+                        <div class="flex justify-between items-center">
+                            <span class="text-gray-400 font-bold text-[10px] uppercase">Reference Number</span>
+                            <span class="font-mono font-bold text-indigo-700 text-xs px-2 py-0.5 bg-indigo-50 rounded-md" x-text="verifyOrderTarget.paymentReference || 'N/A'"></span>
+                        </div>
+                        <div class="flex justify-between items-center">
+                            <span class="text-gray-400 font-bold text-[10px] uppercase">Expected Amount</span>
+                            <span class="font-black text-emerald-700 text-sm" x-text="'₱' + Number(verifyOrderTarget.totalAmount).toLocaleString(undefined, {minimumFractionDigits:2})"></span>
+                        </div>
+                    </div>
+
+                    {{-- Mini receipt preview thumbnail --}}
+                    <template x-if="verifyOrderTarget.paymentProof">
+                        <div class="space-y-1">
+                            <span class="text-gray-400 font-bold text-[10px] uppercase">Customer Receipt Proof</span>
+                            <div class="p-2 bg-gray-50 rounded-2xl border border-gray-100 flex items-center justify-between gap-3">
+                                <div class="w-12 h-14 bg-black/5 rounded-xl overflow-hidden shrink-0 border border-gray-200">
+                                    <img :src="'/storage/' + verifyOrderTarget.paymentProof" class="w-full h-full object-cover" alt="Proof">
+                                </div>
+                                <div class="flex-1 min-w-0">
+                                    <p class="text-[11px] font-bold text-gray-700">Receipt Screenshot</p>
+                                    <p class="text-[10px] text-gray-400">Click to view in full resolution</p>
+                                </div>
+                                <button type="button" @click="receiptUrl = '/storage/' + verifyOrderTarget.paymentProof; receiptModal = true;" class="px-3 py-1.5 bg-black text-white text-[9px] font-black uppercase tracking-wider rounded-xl hover:bg-[#C0420A] transition-all">
+                                    Inspect ↗
+                                </button>
+                            </div>
+                        </div>
+                    </template>
+
+                    <div class="p-3 bg-amber-50 border border-amber-200 rounded-2xl text-[10px] text-amber-900 leading-relaxed">
+                        <span class="font-black uppercase tracking-wider block mb-0.5">⚠️ Artisan Verification Check</span>
+                        Please confirm in your <strong x-text="verifyOrderTarget.paymentMethod || 'GCash'"></strong> mobile app that you received <strong>₱<span x-text="Number(verifyOrderTarget.totalAmount).toLocaleString(undefined, {minimumFractionDigits:2})"></span></strong> with reference <strong x-text="verifyOrderTarget.paymentReference"></strong> before proceeding.
+                    </div>
+                </div>
+            </template>
+
+            <div class="flex gap-3 pt-2">
+                <button type="button" 
+                    @click="showVerifyModal = false"
+                    class="flex-1 py-3 rounded-full border border-gray-200 text-[10px] font-black uppercase tracking-widest text-gray-500 hover:bg-gray-50 transition-all cursor-pointer">
+                    Cancel
+                </button>
+                <button type="button" 
+                    @click="showVerifyModal = false; updateStatus(verifyOrderTarget, 'To Ship');"
+                    style="background-color: #059669; color: #ffffff;"
+                    class="flex-1 py-3 rounded-full bg-emerald-600 hover:bg-emerald-700 text-white text-[10px] font-black uppercase tracking-widest shadow-md transition-all flex items-center justify-center gap-1.5 cursor-pointer">
+                    <span>✓ Confirm & Accept Order</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    {{-- Reject Payment Reason Modal --}}
+    <div x-show="showRejectModal" 
+         x-transition:enter="transition ease-out duration-300"
+         x-transition:enter-start="opacity-0"
+         x-transition:enter-end="opacity-100"
+         x-transition:leave="transition ease-in duration-200"
+         x-transition:leave-start="opacity-100"
+         x-transition:leave-end="opacity-0"
+         class="fixed inset-0 bg-black/70 backdrop-blur-sm z-9999 flex items-center justify-center p-4"
+         @click.self="showRejectModal = false"
+         x-cloak
+         style="display: none;">
+        <div class="w-full max-w-md bg-white rounded-3xl shadow-2xl p-6 space-y-4 border border-gray-100 relative overflow-hidden">
+            <div class="h-1.5 w-full bg-red-600 absolute top-0 left-0"></div>
+
+            <div class="flex items-center gap-3 border-b border-gray-100 pb-3">
+                <div class="w-10 h-10 rounded-full bg-red-100 text-red-600 flex items-center justify-center font-bold text-lg shrink-0">
+                    ✕
+                </div>
+                <div>
+                    <h3 class="text-sm font-black text-black uppercase tracking-tight">Reject Payment Proof</h3>
+                    <p class="text-[10px] text-gray-500 font-medium">Select a reason to notify the customer to resubmit.</p>
+                </div>
+            </div>
+
+            <div class="space-y-3 text-xs">
+                <template x-if="rejectError">
+                    <div class="p-2.5 bg-red-50 border border-red-200 rounded-xl text-[10px] font-bold text-red-600" x-text="rejectError"></div>
+                </template>
+
+                <div class="space-y-1.5">
+                    <label class="text-[10px] font-black uppercase tracking-widest text-gray-500">Rejection Reason <span class="text-red-500">*</span></label>
+                    <select x-model="rejectReason" class="w-full px-3.5 py-2.5 bg-gray-50 border border-gray-200 rounded-2xl text-xs font-bold text-gray-800 outline-none focus:border-red-500 focus:bg-white transition-all">
+                        <option value="Reference number does not match">Reference number does not match receipt</option>
+                        <option value="Amount does not match">Amount paid does not match order total</option>
+                        <option value="Receipt unclear or unreadable">Receipt screenshot is blurry or cropped</option>
+                        <option value="Payment not received in wallet">Transaction not received in artisan account/wallet</option>
+                        <option value="Duplicate reference number">Duplicate or recycled transaction reference</option>
+                        <option value="Sent to wrong account / QR">Payment sent to wrong recipient/QR</option>
+                        <option value="Other">Other / Custom reason</option>
+                    </select>
+                </div>
+
+                <template x-if="rejectReason === 'Other'">
+                    <div class="space-y-1">
+                        <label class="text-[10px] font-black uppercase tracking-widest text-gray-500">Custom Explanation <span class="text-red-500">*</span></label>
+                        <textarea x-model="rejectCustomReason" rows="3" placeholder="Provide specific feedback for the customer..." class="w-full px-3.5 py-2.5 bg-gray-50 border border-gray-200 rounded-2xl text-xs font-medium outline-none focus:border-red-500 focus:bg-white resize-none"></textarea>
+                    </div>
+                </template>
+            </div>
+
+            <div class="flex gap-3 pt-2">
+                <button type="button" 
+                    @click="showRejectModal = false"
+                    :disabled="rejectLoading"
+                    class="flex-1 py-3 rounded-full border border-gray-200 text-[10px] font-black uppercase tracking-widest text-gray-500 hover:bg-gray-50 transition-all cursor-pointer">
+                    Cancel
+                </button>
+                <button type="button" 
+                    @click="executeRejectPayment()"
+                    :disabled="rejectLoading"
+                    class="flex-1 py-3 rounded-full bg-red-600 hover:bg-red-700 text-white text-[10px] font-black uppercase tracking-widest shadow-md transition-all flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-50">
+                    <template x-if="rejectLoading">
+                        <svg class="w-3.5 h-3.5 animate-spin text-white" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"/></svg>
+                    </template>
+                    <span x-text="rejectLoading ? 'Submitting...' : 'Confirm Rejection'"></span>
                 </button>
             </div>
         </div>

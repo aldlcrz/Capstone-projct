@@ -322,7 +322,11 @@ class WebAuthController extends Controller
 
         $verification = \App\Services\EmailNotificationService::createVerificationCode($email, 'registration');
         $mailable = new \App\Mail\VerificationCodeMail($user->name, $verification->code);
-        \App\Services\EmailNotificationService::sendNotification($email, $mailable, 'email_verification', $user->id, 'User', $user->id);
+        $sent = \App\Services\EmailNotificationService::sendNotification($email, $mailable, 'email_verification', $user->id, 'User', $user->id);
+
+        if (!$sent) {
+            return back()->withErrors(['code' => 'Unable to send verification code to your Gmail address at this time. Please try again.']);
+        }
 
         session(['verify_email' => $email]);
 
@@ -433,7 +437,11 @@ class WebAuthController extends Controller
 
         $verification = \App\Services\EmailNotificationService::createVerificationCode($email, 'password_reset');
         $mailable = new \App\Mail\PasswordResetCodeMail($user->name, $verification->code);
-        \App\Services\EmailNotificationService::sendNotification($email, $mailable, 'forgot_password', $user->id, 'User', $user->id);
+        $sent = \App\Services\EmailNotificationService::sendNotification($email, $mailable, 'forgot_password', $user->id, 'User', $user->id);
+
+        if (!$sent) {
+            return back()->withErrors(['email' => 'We were unable to deliver the reset code to your Gmail address at this time. Please check your connection and try again.'])->withInput();
+        }
 
         session(['reset_email' => $email]);
 
@@ -460,7 +468,7 @@ class WebAuthController extends Controller
         $isValid = \App\Services\EmailNotificationService::verifyCode($email, $request->code, 'password_reset');
 
         if (!$isValid) {
-            return back()->withErrors(['code' => 'Invalid or expired password reset code. Please request a new code.']);
+            return back()->withErrors(['code' => 'Invalid or expired password reset code (maximum 5 attempts allowed per code).']);
         }
 
         session(['validated_reset_email' => $email]);
@@ -478,12 +486,18 @@ class WebAuthController extends Controller
 
     public function resetPassword(Request $request)
     {
-        $request->validate([
-            'email'    => 'required|email',
-            'password' => 'required|string|min:8|confirmed',
-        ]);
+        $email = session('validated_reset_email');
+        if (!$email) {
+            return redirect()->route('password.request')->with('error', 'Security session expired. Please start the password reset process again.');
+        }
 
-        $email = strtolower(trim($request->email));
+        $request->validate([
+            'password' => 'required|string|min:8|confirmed',
+        ], [
+            'password.required' => 'Please enter your new password.',
+            'password.min' => 'Password must be at least 8 characters.',
+            'password.confirmed' => 'Password confirmation does not match.',
+        ]);
 
         $user = User::where('email', $email)->first();
         if (!$user) {

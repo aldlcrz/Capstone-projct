@@ -25,23 +25,23 @@ class EmailNotificationService
         $code = str_pad((string) random_int(100000, 999999), 6, '0', STR_PAD_LEFT);
 
         return EmailVerification::create([
-            'email'        => strtolower($email),
-            'code'         => $code,
-            'type'         => $type,
-            'expires_at'   => Carbon::now()->addMinutes(10),
-            'resend_count' => 0,
-            'last_sent_at' => Carbon::now(),
+            'email'           => strtolower($email),
+            'code'            => $code,
+            'type'            => $type,
+            'expires_at'      => Carbon::now()->addMinutes(10),
+            'resend_count'    => 0,
+            'failed_attempts' => 0,
+            'last_sent_at'    => Carbon::now(),
         ]);
     }
 
     /**
-     * Validate a verification code.
+     * Validate a verification code with 5-attempt maximum limit.
      */
     public static function verifyCode(string $email, string $code, string $type = 'registration'): bool
     {
         $verification = EmailVerification::where('email', strtolower($email))
             ->where('type', $type)
-            ->where('code', trim($code))
             ->first();
 
         if (!$verification) {
@@ -49,6 +49,20 @@ class EmailNotificationService
         }
 
         if ($verification->isExpired()) {
+            return false;
+        }
+
+        // Lockout if already reached 5 failed attempts
+        if ((int) $verification->failed_attempts >= 5) {
+            EmailVerification::where('email', strtolower($email))->where('type', $type)->delete();
+            return false;
+        }
+
+        if ($verification->code !== trim($code)) {
+            EmailVerification::where('email', strtolower($email))->where('type', $type)->increment('failed_attempts');
+            if (((int) $verification->failed_attempts + 1) >= 5) {
+                EmailVerification::where('email', strtolower($email))->where('type', $type)->delete();
+            }
             return false;
         }
 

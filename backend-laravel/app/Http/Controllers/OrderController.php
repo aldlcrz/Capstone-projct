@@ -335,6 +335,10 @@ class OrderController extends Controller
         }
 
         $order->status = $canonicalTarget;
+        if ($canonicalTarget === 'To Ship') {
+            $order->paymentStatus = 'Verified';
+            $order->paymentRejectionReason = null;
+        }
         $order->save();
 
         if ($canonicalCurrent !== $canonicalTarget || $shippingUpdated) {
@@ -344,7 +348,7 @@ class OrderController extends Controller
                 'newStatus' => $canonicalTarget,
                 'updatedBy' => $user->id,
                 'userRole' => $user->role,
-                'notes' => $request->notes ?? ($canonicalCurrent !== $canonicalTarget ? "Status updated to {$canonicalTarget}." : "Shipping information updated."),
+                'notes' => $request->notes ?? ($canonicalTarget === 'To Ship' ? "Payment verified and order accepted for preparation." : ($canonicalCurrent !== $canonicalTarget ? "Status updated to {$canonicalTarget}." : "Shipping information updated.")),
             ]);
         }
 
@@ -496,6 +500,157 @@ class OrderController extends Controller
             'message' => 'Packing proof uploaded successfully.',
             'packingProof' => $path,
             'packingProofUrl' => $order->packing_proof_url ?? asset($path),
+        ]);
+    }
+
+    /**
+     * Reject order payment (Seller or Admin only).
+     */
+    public function rejectPayment(Request $request, string $id)
+    {
+        $order = Order::find($id);
+        if (!$order) return response()->json(['message' => 'Order not found'], 404);
+
+        $user = $request->user();
+        if ($user->role === 'seller' && $order->sellerId !== $user->id && $user->role !== 'admin') {
+            return response()->json(['message' => 'Unauthorized'], 403);
+        }
+
+        $validator = Validator::make($request->all(), [
+            'reason' => 'required|string|max:500',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json(['message' => 'A clear rejection reason is required.', 'errors' => $validator->errors()], 422);
+        }
+
+        $order->paymentStatus = 'Payment Rejected';
+        $order->paymentRejectionReason = trim($request->reason);
+        $order->save();
+
+        OrderStatusHistory::create([
+            'orderId' => $order->id,
+            'previousStatus' => $order->status,
+            'newStatus' => $order->status,
+            'updatedBy' => $user->id,
+            'userRole' => $user->role,
+            'notes' => "Payment rejected by seller. Reason: {$order->paymentRejectionReason}",
+        ]);
+
+        $this->sendNotification(
+            $order->customerId,
+            'Payment Proof Rejected',
+            "Your payment proof for Order #" . substr($order->id, 0, 8) . " was rejected: {$order->paymentRejectionReason}. Please visit your orders page to resubmit valid payment details.",
+            'order',
+            '/orders/' . $order->id,
+            'customer'
+        );
+
+        $customerUser = User::find($order->customerId);
+        if ($customerUser && $customerUser->email) {
+            $mail = new \App\Mail\OrderStatusUpdatedMail(
+                $customerUser->name,
+                $order->id,
+                'Payment Rejected',
+                "Your payment proof was not accepted by the artisan. Reason: {$order->paymentRejectionReason}. Please visit your order details page to resubmit your payment."
+            );
+            \App\Services\EmailNotificationService::sendNotification($customerUser->email, $mail, 'payment_rejected', $customerUser->id, 'Order', $order->id);
+        }
+
+        return response()->json([
+            'message' => 'Payment has been rejected and the customer has been notified.',
+            'order' => $order->load(['seller', 'items.product', 'statusHistories'])
+        ]);
+    }
+
+    /**
+     * Customer resubmit payment proof for a rejected order payment.
+     */
+    public function resubmitPayment(Request $request, string $id)
+    {
+        $order = Order::find($id);
+        if (!$order) return response()->json(['message' => 'Order not found'], 404);
+
+        $user = $request->user();
+        if ($order->customerId !== $user->id) {
+            return response()->json(['message' => 'Unauthorized'], 403);
+        }
+
+        $isGcash = strcasecmp($order->paymentMethod, 'GCash') === 0;
+        $isMaya  = strcasecmp($order->paymentMethod, 'Maya') === 0;
+
+        $request->validate([
+            'paymentReference' => [
+                'required',
+                'string',
+                function ($attribute, $value, $fail) use ($isGcash, $isMaya, $order) {
+                    $raw = trim((string)$value);
+                    if (preg_match('/^(\d)\1+$/', $raw)) {
+                        $fail('Invalid payment reference number. Repeated digit sequences are not allowed.');
+                        return;
+                    }
+                    if ($isGcash && !preg_match('/^\d{13}$/', $raw)) {
+                        $fail('GCash reference number must be exactly 13 digits.');
+                        return;
+                    } elseif ($isMaya && !preg_match('/^\d{12}$/', $raw)) {
+                        $fail('Maya reference number must be exactly 12 digits.');
+                        return;
+                    }
+                    $isDuplicate = Order::where('paymentReference', $raw)->where('id', '!=', $order->id)->exists();
+                    if ($isDuplicate) {
+                        $fail('This payment reference number has already been used in another order.');
+                        return;
+                    }
+                }
+            ],
+            'paymentScreenshot' => 'required|image|max:10240',
+        ]);
+
+        if ($request->hasFile('paymentScreenshot')) {
+            $tempPath = $request->file('paymentScreenshot')->getRealPath();
+            $screening = \App\Services\AiService::verifyReceipt(
+                $tempPath,
+                $request->paymentReference,
+                $order->paymentMethod,
+                (float) $order->totalAmount
+            );
+
+            if (($screening['status'] ?? '') === 'REJECT' || !($screening['is_receipt'] ?? true)) {
+                return response()->json([
+                    'message' => $screening['message'] ?? 'The uploaded file does not appear to be a valid payment receipt screenshot.'
+                ], 422);
+            }
+
+            $path = $request->file('paymentScreenshot')->store('payments', 'public');
+            $order->paymentProof = $path;
+        }
+
+        $order->paymentReference = trim($request->paymentReference);
+        $order->paymentStatus = 'Payment Submitted';
+        $order->paymentRejectionReason = null;
+        $order->save();
+
+        OrderStatusHistory::create([
+            'orderId' => $order->id,
+            'previousStatus' => $order->status,
+            'newStatus' => $order->status,
+            'updatedBy' => $user->id,
+            'userRole' => 'customer',
+            'notes' => 'Customer resubmitted payment proof with reference: ' . $order->paymentReference,
+        ]);
+
+        $this->sendNotification(
+            $order->sellerId,
+            'Payment Proof Resubmitted',
+            "Customer resubmitted payment for Order #" . substr($order->id, 0, 8) . ". Please verify in your wallet.",
+            'order',
+            '/seller/orders',
+            'seller'
+        );
+
+        return response()->json([
+            'message' => 'Payment proof resubmitted successfully. Awaiting artisan verification.',
+            'order' => $order->load(['seller', 'items.product', 'statusHistories'])
         ]);
     }
 }

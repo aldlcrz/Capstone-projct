@@ -337,12 +337,22 @@
                             </div>
 
                             <div class="flex items-center justify-between text-xs">
-                                <span class="font-bold text-gray-400 uppercase tracking-wider text-[9px]">Status</span>
+                                <span class="font-bold text-gray-400 uppercase tracking-wider text-[9px]">Payment Status</span>
                                 @php
                                     $resolvedPayment = $order->resolved_payment_status;
-                                    $payColor = $resolvedPayment === 'Paid' ? 'text-emerald-700 bg-emerald-50 border-emerald-200' : ($resolvedPayment === 'Failed' ? 'text-red-700 bg-red-50 border-red-200' : 'text-amber-700 bg-amber-50 border-amber-200');
+                                    $payColor = ($resolvedPayment === 'Verified' || $resolvedPayment === 'Paid') ? 'text-emerald-700 bg-emerald-50 border-emerald-200' : ($resolvedPayment === 'Payment Rejected' || $resolvedPayment === 'Failed' ? 'text-red-700 bg-red-50 border-red-200' : 'text-amber-800 bg-amber-50 border-amber-200');
                                 @endphp
-                                <span class="font-bold text-[10px] uppercase tracking-wider px-2 py-0.5 rounded-full border {{ $payColor }}">{{ $resolvedPayment }}</span>
+                                <span class="font-bold text-[10px] uppercase tracking-wider px-2 py-0.5 rounded-full border {{ $payColor }}">
+                                    @if($resolvedPayment === 'Payment Submitted')
+                                        ⏳ Awaiting Verification
+                                    @elseif($resolvedPayment === 'Verified' || $resolvedPayment === 'Paid')
+                                        ✓ Verified
+                                    @elseif($resolvedPayment === 'Payment Rejected')
+                                        ✕ Payment Rejected
+                                    @else
+                                        {{ $resolvedPayment }}
+                                    @endif
+                                </span>
                             </div>
 
                             @if($order->paymentReference)
@@ -364,11 +374,28 @@
                         </div>
                     </div>
 
-                    @if($order->resolved_payment_status === 'Paid')
+                    @if($order->resolved_payment_status === 'Verified' || $order->resolved_payment_status === 'Paid')
                     <div class="p-2.5 bg-emerald-50/70 border border-emerald-100 rounded-xl mt-2">
                         <div class="flex items-start gap-2 text-[11px] text-emerald-900 leading-relaxed font-medium">
                             <svg class="w-3.5 h-3.5 text-emerald-600 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/></svg>
-                            <span>Payment confirmed. Orders are final sale. Message the seller for updates.</span>
+                            <span>Payment verified by artisan. Your order is queued for handcrafting.</span>
+                        </div>
+                    </div>
+                    @elseif($order->resolved_payment_status === 'Payment Rejected')
+                    <div class="p-2.5 bg-red-50 border border-red-200 rounded-xl mt-2 space-y-1.5">
+                        <div class="flex items-start gap-2 text-[11px] text-red-900 font-bold">
+                            <svg class="w-3.5 h-3.5 text-red-600 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                            <span>Payment Rejected by Artisan</span>
+                        </div>
+                        @if($order->paymentRejectionReason)
+                            <p class="text-[10px] text-red-700 leading-tight">Reason: {{ $order->paymentRejectionReason }}</p>
+                        @endif
+                    </div>
+                    @else
+                    <div class="p-2.5 bg-amber-50 border border-amber-200/70 rounded-xl mt-2">
+                        <div class="flex items-start gap-2 text-[11px] text-amber-900 leading-relaxed font-medium">
+                            <span class="text-xs">⏳</span>
+                            <span>Payment proof submitted. The artisan will verify the payment against their wallet before starting work.</span>
                         </div>
                     </div>
                     @endif
