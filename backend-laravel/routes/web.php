@@ -112,7 +112,7 @@ Route::middleware('auth')->group(function () {
     Route::post('/wishlist/toggle', [WishlistController::class, 'toggle'])->name('wishlist.toggle');
     Route::get('/notifications/{id}/read', [NotificationController::class, 'readAndRedirect'])->name('notifications.read-and-redirect');
 
-    Route::post('/logout', [WebAuthController::class, 'logout'])->name('logout');
+    Route::match(['get', 'post'], '/logout', [WebAuthController::class, 'logout'])->name('logout');
 
     // Address Management
     Route::get('/api/addresses', [AddressController::class, 'index']);
@@ -225,7 +225,7 @@ Route::middleware(['auth', 'seller'])->prefix('seller')->group(function () {
 // ─── Super Admin Routes ────────────────────────────────────────────────────
 Route::get('/superadmin/login',  [SuperAdminController::class, 'showLogin'])->name('superadmin.login');
 Route::post('/superadmin/login', [SuperAdminController::class, 'login'])->name('superadmin.login.submit');
-Route::post('/superadmin/logout',[SuperAdminController::class, 'logout'])->name('superadmin.logout');
+Route::match(['get', 'post'], '/superadmin/logout', [SuperAdminController::class, 'logout'])->name('superadmin.logout');
 
 Route::middleware(['auth', 'superadmin'])->prefix('superadmin')->group(function () {
     Route::get('/dashboard',    [SuperAdminController::class, 'dashboard'])->name('superadmin.dashboard');

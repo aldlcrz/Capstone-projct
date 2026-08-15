@@ -15,6 +15,11 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->trustProxies(at: '*');
 
+        $middleware->validateCsrfTokens(except: [
+            'logout',
+            'superadmin/logout',
+        ]);
+
         $middleware->alias([
             'admin'        => \App\Http\Middleware\AdminMiddleware::class,
             'seller'       => \App\Http\Middleware\SellerMiddleware::class,
@@ -29,6 +34,17 @@ return Application::configure(basePath: dirname(__DIR__))
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         $exceptions->render(function (\Illuminate\Session\TokenMismatchException $e, \Illuminate\Http\Request $request) {
+            if ($request->is('logout') || $request->is('superadmin/logout')) {
+                \Illuminate\Support\Facades\Auth::logout();
+                $request->session()->invalidate();
+                $request->session()->regenerateToken();
+                return redirect()->route('login')->with('info', 'You have been logged out.');
+            }
+
+            if ($request->expectsJson()) {
+                return response()->json(['message' => 'Your session has expired. Please refresh the page.'], 419);
+            }
+
             return redirect()->back()
                 ->withInput($request->except('_token', 'password', 'password_confirmation'))
                 ->with('error', 'Session expired. Please try submitting again.');
