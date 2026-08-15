@@ -1029,54 +1029,50 @@ function sellerOrdersManager(initialOrders) {
                     </div>
                 </template>
 
-                <div class="flex gap-3">
+                <div class="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2.5 sm:gap-3">
                     <button @click="detailsModal = false"
-                        class="flex-1 py-2.5 sm:py-3 rounded-full border border-gray-300 bg-white text-[10px] font-black uppercase tracking-widest text-gray-800 hover:bg-gray-100 transition-all cursor-pointer">
+                        class="px-5 sm:px-6 py-2.5 sm:py-3 rounded-full border border-gray-300 bg-white text-[10px] font-black uppercase tracking-widest text-gray-700 hover:bg-gray-100 hover:border-gray-400 transition-all cursor-pointer shrink-0 text-center order-last sm:order-first">
                         Close
                     </button>
 
-                    {{-- Pending Order Actions: Reject Payment OR Cancel OR Verify & Accept --}}
+                    {{-- Pending Order Actions: Reject Payment (counts as Cancel) OR Verify & Accept --}}
                     <template x-if="detailsOrder && normalizeStatus(detailsOrder.status) === 'pending'">
-                        <div class="flex-1 flex gap-2">
+                        <div class="flex-1 flex flex-wrap sm:flex-nowrap items-center justify-end gap-2">
                             <button type="button" 
                                 @click="openRejectPaymentModal(detailsOrder)"
-                                class="px-3 sm:px-4 py-2.5 sm:py-3 border border-red-200 hover:bg-red-50 text-red-600 rounded-full text-[10px] font-black uppercase tracking-widest transition-all cursor-pointer">
-                                ✕ Reject Proof
-                            </button>
-                            <button type="button" 
-                                @click="openCancelOrderModal(detailsOrder)"
-                                class="px-3 sm:px-4 py-2.5 sm:py-3 border border-gray-200 hover:bg-gray-100 text-gray-600 rounded-full text-[10px] font-black uppercase tracking-widest transition-all cursor-pointer">
-                                Cancel Order
+                                class="px-4 py-2.5 sm:py-3 border border-red-200 hover:bg-red-50 text-red-600 rounded-full text-[10px] font-black uppercase tracking-wider whitespace-nowrap transition-all cursor-pointer shrink-0 flex items-center justify-center gap-1.5">
+                                <span>✕</span> Reject & Cancel
                             </button>
                             <button type="button" 
                                 @click="openVerifyPaymentModal(detailsOrder)"
                                 :disabled="statusUpdating"
                                 style="background-color: #059669; color: #ffffff;"
-                                class="flex-1 py-2.5 sm:py-3 bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 text-white text-[10px] font-black uppercase tracking-widest rounded-full transition-all flex items-center justify-center gap-2 shadow-sm cursor-pointer">
-                                <svg class="w-3.5 h-3.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
-                                <span>Verify & Accept ➔</span>
+                                class="flex-1 sm:flex-none px-6 py-2.5 sm:py-3 bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 text-white text-[10px] font-black uppercase tracking-wider whitespace-nowrap rounded-full transition-all flex items-center justify-center gap-1.5 shadow-sm cursor-pointer shrink-0">
+                                <svg class="w-3.5 h-3.5 text-white shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
+                                <span>Verify & Accept</span>
+                                <span class="text-xs">➔</span>
                             </button>
                         </div>
                     </template>
 
                     {{-- Button for To Ship status: Upload Packing Proof & Confirm Shipment --}}
                     <template x-if="detailsOrder && normalizeStatus(detailsOrder.status) === 'to ship'">
-                        <div class="flex-1 flex gap-2">
+                        <div class="flex-1 flex flex-wrap sm:flex-nowrap items-center justify-end gap-2">
                             <button type="button" 
                                 @click="openCancelOrderModal(detailsOrder)"
-                                class="px-3.5 sm:px-4 py-2.5 sm:py-3 border border-red-200 hover:bg-red-50 text-red-600 rounded-full text-[10px] font-black uppercase tracking-widest transition-all cursor-pointer">
+                                class="px-3.5 sm:px-4 py-2.5 sm:py-3 border border-red-200 hover:bg-red-50 text-red-600 rounded-full text-[10px] font-black uppercase tracking-wider whitespace-nowrap transition-all cursor-pointer shrink-0">
                                 Cancel Order
                             </button>
                             <button type="button"
                                 @click="if (!packingPhotoFile && !packingUploadSuccess && !detailsOrder.packingProof) { packingUploadError = 'Please upload or capture a packing proof photo before confirming shipment.'; } else if (packingPhotoFile && !packingUploadSuccess && !detailsOrder.packingProof) { uploadPackingProof().then(() => updateStatus(detailsOrder, 'Shipped')); } else { updateStatus(detailsOrder, 'Shipped'); }"
                                 :disabled="packingUploading || statusUpdating"
                                 :style="(packingUploadSuccess || detailsOrder.packingProof) ? 'background-color: #C0420A; color: #ffffff;' : 'background-color: #000000; color: #ffffff;'"
-                                class="flex-1 py-2.5 sm:py-3 bg-black hover:bg-[#C0420A] disabled:opacity-50 text-white text-[10px] font-black uppercase tracking-widest rounded-full transition-all flex items-center justify-center gap-2 shadow-md cursor-pointer">
+                                class="flex-1 sm:flex-none px-5 sm:px-6 py-2.5 sm:py-3 bg-black hover:bg-[#C0420A] disabled:opacity-50 text-white text-[10px] font-black uppercase tracking-wider whitespace-nowrap rounded-full transition-all flex items-center justify-center gap-2 shadow-md cursor-pointer">
                                 <template x-if="packingUploading || statusUpdating">
-                                    <svg class="w-3.5 h-3.5 animate-spin text-white" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"/></svg>
+                                    <svg class="w-3.5 h-3.5 animate-spin text-white shrink-0" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"/></svg>
                                 </template>
                                 <template x-if="!packingUploading && !statusUpdating">
-                                    <svg class="w-3.5 h-3.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+                                    <svg class="w-3.5 h-3.5 text-white shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
                                 </template>
                                 <span x-text="packingUploading ? 'Uploading Photo...' : (statusUpdating ? 'Updating Status...' : ((packingUploadSuccess || detailsOrder.packingProof) ? 'Confirm Shipment (Mark Shipped) ➔' : (packingPhotoFile ? 'Upload & Confirm Shipment ➔' : 'Upload Proof & Confirm Shipment ➔')))"></span>
                             </button>
@@ -1085,55 +1081,59 @@ function sellerOrdersManager(initialOrders) {
 
                     {{-- Button for Shipped status: Mark In Transit (requires seller to input tracking number) --}}
                     <template x-if="detailsOrder && normalizeStatus(detailsOrder.status) === 'shipped'">
-                        <button type="button"
-                            @click="if (!trackingNumber || !trackingNumber.trim()) { shippingError = 'Please enter the official courier tracking number in the field above before moving to In Transit.'; } else { updateStatus(detailsOrder, 'In Transit'); }"
-                            :disabled="statusUpdating"
-                            style="background-color: #000000; color: #ffffff;"
-                            class="flex-1 py-2.5 sm:py-3 bg-black hover:bg-[#C0420A] disabled:opacity-50 text-white text-[10px] font-black uppercase tracking-widest rounded-full transition-all flex items-center justify-center gap-2 shadow-md cursor-pointer">
-                            <template x-if="statusUpdating">
-                                <svg class="w-3.5 h-3.5 animate-spin text-white" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"/></svg>
-                            </template>
-                            <template x-if="!statusUpdating">
-                                <svg class="w-3.5 h-3.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
-                            </template>
-                            <span x-text="statusUpdating ? 'Updating...' : 'Mark In Transit ➔'"></span>
-                        </button>
+                        <div class="flex-1 flex justify-end">
+                            <button type="button"
+                                @click="if (!trackingNumber || !trackingNumber.trim()) { shippingError = 'Please enter the official courier tracking number in the field above before moving to In Transit.'; } else { updateStatus(detailsOrder, 'In Transit'); }"
+                                :disabled="statusUpdating"
+                                style="background-color: #000000; color: #ffffff;"
+                                class="flex-1 sm:flex-none px-6 py-2.5 sm:py-3 bg-black hover:bg-[#C0420A] disabled:opacity-50 text-white text-[10px] font-black uppercase tracking-wider whitespace-nowrap rounded-full transition-all flex items-center justify-center gap-2 shadow-md cursor-pointer">
+                                <template x-if="statusUpdating">
+                                    <svg class="w-3.5 h-3.5 animate-spin text-white shrink-0" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"/></svg>
+                                </template>
+                                <template x-if="!statusUpdating">
+                                    <svg class="w-3.5 h-3.5 text-white shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+                                </template>
+                                <span x-text="statusUpdating ? 'Updating...' : 'Mark In Transit ➔'"></span>
+                            </button>
+                        </div>
                     </template>
 
                     {{-- Button for In Transit status: Mark as Delivered --}}
                     <template x-if="detailsOrder && normalizeStatus(detailsOrder.status) === 'in transit'">
-                        <button type="button"
-                            @click="confirmMarkAsDelivered(detailsOrder)"
-                            :disabled="statusUpdating"
-                            style="background-color: #059669; color: #ffffff;"
-                            class="flex-1 py-2.5 sm:py-3 bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 text-white text-[10px] font-black uppercase tracking-widest rounded-full transition-all flex items-center justify-center gap-2 shadow-sm cursor-pointer">
-                            <template x-if="statusUpdating">
-                                <svg class="w-3.5 h-3.5 animate-spin text-white" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"/></svg>
-                            </template>
-                            <template x-if="!statusUpdating">
-                                <svg class="w-3.5 h-3.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
-                            </template>
-                            <span x-text="statusUpdating ? 'Updating...' : 'Mark as Delivered ➔'"></span>
-                        </button>
+                        <div class="flex-1 flex justify-end">
+                            <button type="button"
+                                @click="confirmMarkAsDelivered(detailsOrder)"
+                                :disabled="statusUpdating"
+                                style="background-color: #059669; color: #ffffff;"
+                                class="flex-1 sm:flex-none px-6 py-2.5 sm:py-3 bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 text-white text-[10px] font-black uppercase tracking-wider whitespace-nowrap rounded-full transition-all flex items-center justify-center gap-2 shadow-sm cursor-pointer">
+                                <template x-if="statusUpdating">
+                                    <svg class="w-3.5 h-3.5 animate-spin text-white shrink-0" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"/></svg>
+                                </template>
+                                <template x-if="!statusUpdating">
+                                    <svg class="w-3.5 h-3.5 text-white shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
+                                </template>
+                                <span x-text="statusUpdating ? 'Updating...' : 'Mark as Delivered ➔'"></span>
+                            </button>
+                        </div>
                     </template>
 
                     {{-- Status notice for Delivered status --}}
                     <template x-if="detailsOrder && normalizeStatus(detailsOrder.status) === 'delivered'">
-                        <div class="flex-1 py-2.5 sm:py-3 bg-teal-50 border border-teal-200 text-teal-800 text-[10px] font-black uppercase tracking-widest rounded-full flex items-center justify-center gap-2">
+                        <div class="flex-1 py-2.5 sm:py-3 px-4 bg-teal-50 border border-teal-200 text-teal-800 text-[10px] font-black uppercase tracking-wider rounded-full flex items-center justify-center gap-2 text-center">
                             <span>📦 Delivered — Awaiting Customer Receipt Confirmation</span>
                         </div>
                     </template>
 
                     {{-- Status notice for Completed status --}}
                     <template x-if="detailsOrder && normalizeStatus(detailsOrder.status) === 'completed'">
-                        <div class="flex-1 py-2.5 sm:py-3 bg-emerald-50 border border-emerald-200 text-emerald-800 text-[10px] font-black uppercase tracking-widest rounded-full flex items-center justify-center gap-2">
+                        <div class="flex-1 py-2.5 sm:py-3 px-4 bg-emerald-50 border border-emerald-200 text-emerald-800 text-[10px] font-black uppercase tracking-wider rounded-full flex items-center justify-center gap-2 text-center">
                             <span>✓ Order Completed by Customer</span>
                         </div>
                     </template>
 
                     {{-- Status notice for Cancelled status --}}
                     <template x-if="detailsOrder && normalizeStatus(detailsOrder.status) === 'cancelled'">
-                        <div class="flex-1 py-2.5 sm:py-3 bg-red-50 border border-red-200 text-red-800 text-[10px] font-black uppercase tracking-widest rounded-full flex items-center justify-center gap-2">
+                        <div class="flex-1 py-2.5 sm:py-3 px-4 bg-red-50 border border-red-200 text-red-800 text-[10px] font-black uppercase tracking-wider rounded-full flex items-center justify-center gap-2 text-center">
                             <span>✕ Order Cancelled</span>
                             <span class="font-normal text-[10px] text-red-600 truncate max-w-xs" x-text="detailsOrder.cancellationReason ? '(' + detailsOrder.cancellationReason + ')' : ''"></span>
                         </div>
@@ -1437,8 +1437,8 @@ function sellerOrdersManager(initialOrders) {
                     ✕
                 </div>
                 <div>
-                    <h3 class="text-sm font-black text-black uppercase tracking-tight">Reject Payment Proof</h3>
-                    <p class="text-[10px] text-gray-500 font-medium">Select a reason to notify the customer to resubmit.</p>
+                    <h3 class="text-sm font-black text-black uppercase tracking-tight">Reject Payment & Cancel Order</h3>
+                    <p class="text-[10px] text-gray-500 font-medium">Rejecting this payment will cancel the order and return stock to inventory.</p>
                 </div>
             </div>
 
@@ -1466,6 +1466,10 @@ function sellerOrdersManager(initialOrders) {
                         <textarea x-model="rejectCustomReason" rows="3" placeholder="Provide specific feedback for the customer..." class="w-full px-3.5 py-2.5 bg-gray-50 border border-gray-200 rounded-2xl text-xs font-medium outline-none focus:border-red-500 focus:bg-white resize-none"></textarea>
                     </div>
                 </template>
+
+                <div class="p-3 bg-red-50 border border-red-200 rounded-2xl text-[10px] text-red-700 leading-relaxed">
+                    <strong>Notice:</strong> Rejecting will automatically cancel the order, restore stock to your inventory, and notify the customer.
+                </div>
             </div>
 
             <div class="flex gap-3 pt-2">
@@ -1473,7 +1477,7 @@ function sellerOrdersManager(initialOrders) {
                     @click="showRejectModal = false"
                     :disabled="rejectLoading"
                     class="flex-1 py-3 rounded-full border border-gray-200 text-[10px] font-black uppercase tracking-widest text-gray-500 hover:bg-gray-50 transition-all cursor-pointer">
-                    Cancel
+                    Back
                 </button>
                 <button type="button" 
                     @click="executeRejectPayment()"
@@ -1482,7 +1486,7 @@ function sellerOrdersManager(initialOrders) {
                     <template x-if="rejectLoading">
                         <svg class="w-3.5 h-3.5 animate-spin text-white" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"/></svg>
                     </template>
-                    <span x-text="rejectLoading ? 'Submitting...' : 'Confirm Rejection'"></span>
+                    <span x-text="rejectLoading ? 'Submitting...' : '✕ Reject & Cancel Order'"></span>
                 </button>
             </div>
         </div>

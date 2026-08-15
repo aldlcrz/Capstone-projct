@@ -507,7 +507,7 @@ class OrderController extends Controller
      */
     public function rejectPayment(Request $request, string $id)
     {
-        $order = Order::find($id);
+        $order = Order::with('items.product')->find($id);
         if (!$order) return response()->json(['message' => 'Order not found'], 404);
 
         $user = $request->user();
@@ -523,43 +523,75 @@ class OrderController extends Controller
             return response()->json(['message' => 'A clear rejection reason is required.', 'errors' => $validator->errors()], 422);
         }
 
-        $order->paymentStatus = 'Payment Rejected';
-        $order->paymentRejectionReason = trim($request->reason);
-        $order->save();
+        $reason = trim($request->reason);
+        $prevStatus = $order->status;
 
-        OrderStatusHistory::create([
-            'orderId' => $order->id,
-            'previousStatus' => $order->status,
-            'newStatus' => $order->status,
-            'updatedBy' => $user->id,
-            'userRole' => $user->role,
-            'notes' => "Payment rejected by seller. Reason: {$order->paymentRejectionReason}",
-        ]);
+        DB::beginTransaction();
+        try {
+            // Restore inventory stock since rejection cancels the order
+            if ($prevStatus !== 'Cancelled') {
+                foreach ($order->items as $item) {
+                    if ($item->product) {
+                        $item->product->increment('stock', $item->quantity);
+                        
+                        // Restore size stock if available
+                        if (!empty($item->product->size_stocks) && !empty($item->size)) {
+                            $sizeStocks = $item->product->size_stocks;
+                            if (isset($sizeStocks[$item->size])) {
+                                $sizeStocks[$item->size] = (int)$sizeStocks[$item->size] + (int)$item->quantity;
+                                $item->product->size_stocks = $sizeStocks;
+                                $item->product->save();
+                            }
+                        }
+                    }
+                }
+            }
 
-        $this->sendNotification(
-            $order->customerId,
-            'Payment Proof Rejected',
-            "Your payment proof for Order #" . substr($order->id, 0, 8) . " was rejected: {$order->paymentRejectionReason}. Please visit your orders page to resubmit valid payment details.",
-            'order',
-            '/orders/' . $order->id,
-            'customer'
-        );
+            $order->status = 'Cancelled';
+            $order->paymentStatus = 'Payment Rejected';
+            $order->paymentRejectionReason = $reason;
+            $order->cancellationReason = "Payment rejected: {$reason}";
+            $order->save();
 
-        $customerUser = User::find($order->customerId);
-        if ($customerUser && $customerUser->email) {
-            $mail = new \App\Mail\OrderStatusUpdatedMail(
-                $customerUser->name,
-                $order->id,
-                'Payment Rejected',
-                "Your payment proof was not accepted by the artisan. Reason: {$order->paymentRejectionReason}. Please visit your order details page to resubmit your payment."
+            OrderStatusHistory::create([
+                'orderId' => $order->id,
+                'previousStatus' => $prevStatus,
+                'newStatus' => 'Cancelled',
+                'updatedBy' => $user->id,
+                'userRole' => $user->role,
+                'notes' => "Order cancelled due to rejected payment. Reason: {$reason}",
+            ]);
+
+            $this->sendNotification(
+                $order->customerId,
+                'Order Cancelled (Payment Rejected)',
+                "Your order #" . substr($order->id, 0, 8) . " was cancelled because the payment proof was rejected: {$reason}. Product stock has been returned to inventory.",
+                'order',
+                '/orders/' . $order->id,
+                'customer'
             );
-            \App\Services\EmailNotificationService::sendNotification($customerUser->email, $mail, 'payment_rejected', $customerUser->id, 'Order', $order->id);
-        }
 
-        return response()->json([
-            'message' => 'Payment has been rejected and the customer has been notified.',
-            'order' => $order->load(['seller', 'items.product', 'statusHistories'])
-        ]);
+            $customerUser = User::find($order->customerId);
+            if ($customerUser && $customerUser->email) {
+                $mail = new \App\Mail\OrderStatusUpdatedMail(
+                    $customerUser->name,
+                    $order->id,
+                    'Order Cancelled',
+                    "Your order #" . substr($order->id, 0, 8) . " was cancelled because your payment proof was rejected by the artisan. Reason: {$reason}."
+                );
+                \App\Services\EmailNotificationService::sendNotification($customerUser->email, $mail, 'order_status_updated', $customerUser->id, 'Order', $order->id);
+            }
+
+            DB::commit();
+
+            return response()->json([
+                'message' => 'Payment rejected. Order has been cancelled and stock restored.',
+                'order' => $order->load(['seller', 'items.product', 'statusHistories'])
+            ]);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return response()->json(['message' => 'Failed to reject and cancel order: ' . $e->getMessage()], 500);
+        }
     }
 
     /**
