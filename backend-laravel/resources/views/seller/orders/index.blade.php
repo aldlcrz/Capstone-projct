@@ -1057,17 +1057,12 @@ function sellerOrdersManager(initialOrders) {
 
                     {{-- Button for To Ship status: Upload Packing Proof & Confirm Shipment --}}
                     <template x-if="detailsOrder && normalizeStatus(detailsOrder.status) === 'to ship'">
-                        <div class="flex-1 flex flex-wrap sm:flex-nowrap items-center justify-end gap-2">
-                            <button type="button" 
-                                @click="openCancelOrderModal(detailsOrder)"
-                                class="px-3.5 sm:px-4 py-2.5 sm:py-3 border border-red-200 hover:bg-red-50 text-red-600 rounded-full text-[10px] font-black uppercase tracking-wider whitespace-nowrap transition-all cursor-pointer shrink-0">
-                                Cancel Order
-                            </button>
+                        <div class="flex-1 flex justify-end">
                             <button type="button"
                                 @click="if (!packingPhotoFile && !packingUploadSuccess && !detailsOrder.packingProof) { packingUploadError = 'Please upload or capture a packing proof photo before confirming shipment.'; } else if (packingPhotoFile && !packingUploadSuccess && !detailsOrder.packingProof) { uploadPackingProof().then(() => updateStatus(detailsOrder, 'Shipped')); } else { updateStatus(detailsOrder, 'Shipped'); }"
                                 :disabled="packingUploading || statusUpdating"
                                 :style="(packingUploadSuccess || detailsOrder.packingProof) ? 'background-color: #C0420A; color: #ffffff;' : 'background-color: #000000; color: #ffffff;'"
-                                class="flex-1 sm:flex-none px-5 sm:px-6 py-2.5 sm:py-3 bg-black hover:bg-[#C0420A] disabled:opacity-50 text-white text-[10px] font-black uppercase tracking-wider whitespace-nowrap rounded-full transition-all flex items-center justify-center gap-2 shadow-md cursor-pointer">
+                                class="flex-1 sm:flex-none px-6 py-2.5 sm:py-3 bg-black hover:bg-[#C0420A] disabled:opacity-50 text-white text-[10px] font-black uppercase tracking-wider whitespace-nowrap rounded-full transition-all flex items-center justify-center gap-2 shadow-md cursor-pointer">
                                 <template x-if="packingUploading || statusUpdating">
                                     <svg class="w-3.5 h-3.5 animate-spin text-white shrink-0" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"/></svg>
                                 </template>

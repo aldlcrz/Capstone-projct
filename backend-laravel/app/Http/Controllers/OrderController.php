@@ -740,12 +740,12 @@ class OrderController extends Controller
             }
         }
 
-        // Seller constraint: while status is Pending or To Ship (before it has shipped)
+        // Seller constraint: only while status is Pending (before it is accepted)
         if ($isSeller) {
-            if (!in_array($currentStatus, ['pending', 'to ship', 'to_ship', 'processing'], true)) {
+            if (!in_array($currentStatus, ['pending'], true)) {
                 return $request->expectsJson()
-                    ? response()->json(['message' => 'Orders that have already shipped cannot be cancelled.'], 400)
-                    : redirect()->back()->with('error', 'Orders that have already shipped cannot be cancelled.');
+                    ? response()->json(['message' => 'Orders that have already been accepted cannot be cancelled directly.'], 400)
+                    : redirect()->back()->with('error', 'Orders that have already been accepted cannot be cancelled directly.');
             }
         }
 
