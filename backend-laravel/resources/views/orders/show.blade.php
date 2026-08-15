@@ -245,7 +245,7 @@
                                 @php
                                     $imgSrc = $item->product ? $item->product->getImageUrl() : asset('uploads/products/default.jpg');
                                     $itemStatus = strtolower(trim($order->status ?? ''));
-                                    $canRate = in_array($itemStatus, ['delivered', 'completed'], true);
+                                    $canRate = ($itemStatus === 'completed');
                                     $existingReview = $order->reviews ? $order->reviews->where('orderItemId', $item->id)->first() : null;
                                     if (!$existingReview && $order->reviews) {
                                         $existingReview = $order->reviews->where('productId', $item->productId)->first();
@@ -478,12 +478,14 @@
 
                         <div class="flex items-center gap-3 pt-2">
                             <div class="w-10 h-10 rounded-xl bg-linear-to-tr from-[#3D2B1F] to-[#C0420A] text-white flex items-center justify-center font-bold text-xs shrink-0 overflow-hidden shadow-2xs">
-                                @if($order->seller->profilePhoto)
-                                    <img src="{{ str_starts_with($order->seller->profilePhoto, 'http') ? $order->seller->profilePhoto : asset('storage/' . $order->seller->profilePhoto) }}"
+                                @if($order->seller->profile_photo_url)
+                                    <img src="{{ $order->seller->profile_photo_url }}"
                                          alt="{{ $order->seller->display_name }}"
-                                         class="w-full h-full object-cover" onerror="this.style.display='none'">
+                                         class="w-full h-full object-cover" onerror="this.src='/uploads/products/default.jpg'">
                                 @else
-                                    {{ strtoupper(substr($order->seller->display_name ?? 'S', 0, 2)) }}
+                                    <img src="{{ asset('uploads/products/default.jpg') }}"
+                                         alt="{{ $order->seller->display_name }}"
+                                         class="w-full h-full object-cover">
                                 @endif
                             </div>
                             <div class="min-w-0 flex-1">
@@ -502,7 +504,7 @@
 
         {{-- ROW 3: Packing Proof & Courier Tracking --}}
         @php
-            $hasCourierTracking = in_array(strtolower(str_replace('_', ' ', $order->status)), ['in transit', 'out for delivery', 'delivered', 'completed']) && ($order->trackingNumber || $order->trackingLink);
+            $hasCourierTracking = in_array(strtolower(str_replace('_', ' ', $order->status)), ['in transit', 'out for delivery', 'delivered', 'completed']) && !empty(trim($order->trackingNumber ?? ''));
         @endphp
 
         @if($hasCourierTracking)

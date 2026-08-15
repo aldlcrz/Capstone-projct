@@ -170,24 +170,24 @@ class User extends Authenticatable
         }
 
         $clean = ltrim($photo, '/');
-        if (str_starts_with($clean, 'uploads/')) {
-            return file_exists(public_path($clean)) ? asset($clean) : null;
-        }
-        if (str_starts_with($clean, 'storage/')) {
-            $subPath = substr($clean, 8);
-            return (file_exists(public_path($clean)) || file_exists(storage_path('app/public/' . $subPath))) ? asset($clean) : null;
-        }
-        if (file_exists(public_path('storage/' . $clean)) || file_exists(storage_path('app/public/' . $clean))) {
-            return asset('storage/' . $clean);
-        }
-        if (file_exists(public_path('uploads/' . $clean))) {
-            return asset('uploads/' . $clean);
-        }
-        if (file_exists(public_path($clean))) {
+
+        if (str_starts_with($clean, 'uploads/') || str_starts_with($clean, 'storage/')) {
             return asset($clean);
         }
 
-        return null;
+        if (file_exists(public_path('uploads/avatars/' . $clean))) {
+            return asset('uploads/avatars/' . $clean);
+        }
+
+        if (file_exists(public_path('uploads/' . $clean))) {
+            return asset('uploads/' . $clean);
+        }
+
+        if (file_exists(public_path('storage/' . $clean))) {
+            return asset('storage/' . $clean);
+        }
+
+        return asset('uploads/' . $clean);
     }
 
     public function wishlists()

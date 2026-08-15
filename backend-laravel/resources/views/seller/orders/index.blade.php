@@ -360,7 +360,7 @@ function sellerOrdersManager(initialOrders) {
             this.newStatus = order.status;
             this.courierName = order.courierName || 'J&T Express';
             this.trackingNumber = order.trackingNumber || '';
-            this.trackingLink = order.trackingLink || this.getCourierDefaultLink(this.courierName) || 'https://www.jtexpress.ph/track';
+            this.trackingLink = order.trackingLink || (order.courierName ? this.getCourierDefaultLink(order.courierName) : 'https://www.jtexpress.ph/track');
             this.shippingError = '';
             this.packingPhotoFile = null;
             let proof = order.packingProofUrl || order.packingProof || null;
@@ -380,7 +380,7 @@ function sellerOrdersManager(initialOrders) {
             this.newStatus = order.status;
             this.courierName = order.courierName || 'J&T Express';
             this.trackingNumber = order.trackingNumber || '';
-            this.trackingLink = order.trackingLink || this.getCourierDefaultLink(this.courierName) || 'https://www.jtexpress.ph/track';
+            this.trackingLink = order.trackingLink || (order.courierName ? this.getCourierDefaultLink(order.courierName) : 'https://www.jtexpress.ph/track');
             this.shippingError = '';
             this.statusModal = true;
         },
@@ -585,7 +585,6 @@ function sellerOrdersManager(initialOrders) {
             this.statusUpdating = true;
 
             try {
-                const currentCourier = this.courierName || target.courierName || 'J&T Express';
                 const currentTracking = (this.trackingNumber || target.trackingNumber || '').trim();
 
                 if (this.normalizeStatus(statusVal) === 'in transit' && !currentTracking) {
@@ -594,12 +593,18 @@ function sellerOrdersManager(initialOrders) {
                     return;
                 }
 
-                const currentLink = this.trackingLink || target.trackingLink || (currentCourier === 'J&T Express' ? 'https://www.jtexpress.ph/track' : '');
+                let currentCourier = target.courierName || null;
+                let currentLink = target.trackingLink || null;
+
+                if (currentTracking) {
+                    currentCourier = this.courierName || target.courierName || 'J&T Express';
+                    currentLink = this.trackingLink || target.trackingLink || this.getCourierDefaultLink(currentCourier) || '';
+                }
 
                 const payload = {
                     status: statusVal,
                     courierName: currentCourier,
-                    trackingNumber: currentTracking,
+                    trackingNumber: currentTracking || null,
                     trackingLink: currentLink
                 };
 

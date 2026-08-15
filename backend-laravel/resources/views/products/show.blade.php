@@ -311,7 +311,7 @@
                         <div class="flex items-center gap-1.5">
                             <span class="text-gray-500 font-medium">by</span>
                             <a href="/shops/{{ $product->sellerId }}" class="font-extrabold text-amber-800 hover:underline flex items-center gap-1.5">
-                                <img src="{{ $product->seller->profile_photo_url ?? '/uploads/categories/wedding_groom.png' }}" onerror="this.src='/uploads/categories/wedding_groom.png'" class="w-5 h-5 rounded-full object-cover border border-gray-200" alt="Artisan">
+                                <img src="{{ $product->seller->profile_photo_url ?? '/uploads/products/default.jpg' }}" onerror="this.src='/uploads/products/default.jpg'" class="w-5 h-5 rounded-full object-cover border border-gray-200" alt="Artisan">
                                 <span>{{ $product->artisan ?? $product->seller->shopName ?? 'BarongniJuan' }}</span>
                             </a>
                         </div>
@@ -591,9 +591,9 @@
                 <div class="flex items-center gap-4">
                     <div class="w-14 h-14 bg-gray-50 rounded-2xl flex items-center justify-center text-xl font-bold text-gray-300 border border-gray-100 shadow-sm shrink-0 relative overflow-hidden">
                         @if($product->seller && $product->seller->profile_photo_url)
-                            <img src="{{ $product->seller->profile_photo_url }}" class="w-full h-full object-cover" onerror="this.style.display='none'">
+                            <img src="{{ $product->seller->profile_photo_url }}" class="w-full h-full object-cover" onerror="this.src='/uploads/products/default.jpg'">
                         @else
-                            {{ strtoupper(substr($product->artisan ?? 'A', 0, 1)) }}
+                            <img src="{{ asset('uploads/products/default.jpg') }}" class="w-full h-full object-cover" alt="Artisan">
                         @endif
                         @if($product->seller && $product->seller->isPremiumActive())
                             <span class="absolute -top-1 -right-1 text-sm bg-yellow-400 border border-white rounded-full w-5 h-5 flex items-center justify-center shadow-xs z-10">👑</span>

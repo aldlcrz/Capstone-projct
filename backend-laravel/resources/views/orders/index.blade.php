@@ -131,7 +131,7 @@
                         'id' => $order->seller->id,
                         'name' => $order->seller->display_name ?? $order->seller->shopName ?? $order->seller->name ?? 'Artisan Shop',
                         'isVerified' => (bool) $order->seller->isVerified,
-                        'photo' => $order->seller->profilePhoto ? (str_starts_with($order->seller->profilePhoto, 'http') ? $order->seller->profilePhoto : asset(ltrim($order->seller->profilePhoto, '/'))) : null,
+                        'photo' => $order->seller->profile_photo_url,
                     ] : null,
                     'items' => $order->items->map(function($item) use ($order) {
                         $existingReview = $order->reviews ? $order->reviews->where('orderItemId', $item->id)->first() : null;
@@ -429,9 +429,9 @@
                             </span>
                         </div>
 
-                        {{-- Courier Tracking Details (Shown ONLY when In Transit or later) --}}
+                        {{-- Courier Tracking Details (Shown ONLY when In Transit or later with active tracking number) --}}
                         <div class="bg-linear-to-br from-gray-900 to-black text-white p-4 rounded-2xl space-y-3 shadow-md"
-                             x-show="selectedOrder && ['in transit', 'out for delivery', 'delivered', 'completed'].includes((selectedOrder.status || '').toLowerCase().replace(/_/g, ' ')) && (selectedOrder.courierName || selectedOrder.trackingNumber || selectedOrder.trackingLink)">
+                             x-show="selectedOrder && ['in transit', 'out for delivery', 'delivered', 'completed'].includes((selectedOrder.status || '').toLowerCase().replace(/_/g, ' ')) && selectedOrder.trackingNumber">
                             <div class="flex items-center justify-between border-b border-white/10 pb-2">
                                 <div class="flex items-center gap-1.5">
                                     <span class="text-base">🚚</span>
