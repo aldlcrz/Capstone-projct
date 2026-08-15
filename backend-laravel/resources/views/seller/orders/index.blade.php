@@ -684,11 +684,11 @@ function sellerOrdersManager(initialOrders) {
     </div>
 
     {{-- Status Filter Tabs (Capsules) --}}
-    <div class="flex gap-2 overflow-x-auto no-scrollbar pb-1">
+    <div class="flex flex-wrap gap-1.5 sm:gap-2 pb-1">
         @foreach(['all' => 'All', 'pending' => 'Pending', 'to ship' => 'To Ship', 'shipped' => 'Shipped', 'in transit' => 'In Transit', 'delivered' => 'Delivered', 'completed' => 'Completed', 'cancelled' => 'Cancelled'] as $val => $label)
             <button @click="statusFilter = '{{ $val }}'"
                 :class="statusFilter === '{{ $val }}' ? 'bg-black text-white shadow-md' : 'bg-white text-gray-500 border border-gray-200 hover:border-gray-300'"
-                class="px-3.5 sm:px-5 py-2 sm:py-2.5 rounded-full text-[9px] sm:text-[10px] font-black uppercase tracking-widest whitespace-nowrap transition-all flex items-center gap-1.5 shrink-0 active:scale-95">
+                class="px-3 sm:px-4 py-1.5 sm:py-2 rounded-full text-[9px] sm:text-[10px] font-black uppercase tracking-wider whitespace-nowrap transition-all flex items-center gap-1.5 shrink-0 active:scale-95 cursor-pointer">
                 <span>{{ $label }}</span>
                 <span class="px-1.5 py-0.5 text-[8px] sm:text-[9px] rounded-full" 
                       :class="statusFilter === '{{ $val }}' ? 'bg-white/20 text-white' : 'bg-gray-100 text-gray-600'"

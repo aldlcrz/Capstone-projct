@@ -79,13 +79,13 @@
     </div>
 
     {{-- Filter Capsule Tabs --}}
-    <div class="flex gap-2 overflow-x-auto no-scrollbar pb-1">
+    <div class="flex flex-wrap gap-1.5 sm:gap-2 pb-1">
         @foreach(['ALL' => 'All', 'PENDING' => 'Pending', 'TO SHIP' => 'To Ship', 'TO RECEIVE' => 'To Receive', 'DELIVERED' => 'Delivered', 'COMPLETED' => 'Completed', 'CANCELLED' => 'Cancelled'] as $key => $label)
             @php
                 $isActive = request('tab', 'ALL') == $key;
             @endphp
             <a href="/orders/my-orders?tab={{ $key }}"
-               class="shrink-0 whitespace-nowrap px-4 sm:px-5 py-2 sm:py-2.5 rounded-full text-[9px] sm:text-[10px] font-black uppercase tracking-widest transition-all flex items-center gap-1.5 active:scale-95
+               class="shrink-0 whitespace-nowrap px-3.5 sm:px-4 py-1.5 sm:py-2 rounded-full text-[9px] sm:text-[10px] font-black uppercase tracking-wider transition-all flex items-center gap-1.5 active:scale-95
                       {{ $isActive ? 'bg-black text-white shadow-md shadow-black/10' : 'bg-white text-gray-500 border border-gray-200 hover:border-gray-300' }}">
                 <span>{{ $label }}</span>
             </a>
