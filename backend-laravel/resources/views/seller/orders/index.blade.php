@@ -1496,7 +1496,7 @@ function sellerOrdersManager(initialOrders) {
          x-transition:leave="transition ease-in duration-150"
          x-transition:leave-start="opacity-100 scale-100"
          x-transition:leave-end="opacity-0 scale-95"
-         class="fixed inset-0 bg-black/90 backdrop-blur-md z-[100000] flex flex-col items-center justify-center p-4"
+         class="fixed inset-0 bg-black/90 backdrop-blur-md z-100000 flex flex-col items-center justify-center p-4"
          @click.self="receiptModal = false"
          @keydown.escape.window="receiptModal = false"
          x-cloak

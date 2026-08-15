@@ -780,8 +780,8 @@
                         @endphp
                         <div class="flex items-center gap-3 text-xs">
                             <span class="w-8 font-bold text-gray-600 text-right">{{ $star }} ★</span>
-                            <div class="flex-1 h-3 rounded-full overflow-hidden" style="background-color: #ECE7DE; min-height: 10px;">
-                                <div class="h-full rounded-full" style="background-color: #F59E0B; width: {{ $starPct }}%; min-height: 10px;"></div>
+                            <div class="flex-1 h-3 rounded-full overflow-hidden bg-[#ECE7DE] min-h-[10px]">
+                                <div class="h-full rounded-full bg-amber-500 min-h-[10px]" :style="'width: ' + {{ (int)$starPct }} + '%'"></div>
                             </div>
                             <span class="w-8 text-[11px] font-bold text-gray-400 text-right">{{ $starCount }}</span>
                         </div>

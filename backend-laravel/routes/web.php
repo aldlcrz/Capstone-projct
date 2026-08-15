@@ -7,6 +7,21 @@ use App\Http\Controllers\CartController;
 use App\Http\Controllers\OrderController;
 use App\Http\Controllers\WishlistController;
 use App\Http\Controllers\NotificationController;
+use App\Http\Controllers\AddressController;
+use App\Http\Controllers\ChatController;
+use App\Http\Controllers\ReviewController;
+use App\Http\Controllers\CategoryController;
+use App\Http\Controllers\RefundController;
+use App\Http\Controllers\ReturnRequestController;
+use App\Http\Controllers\AdminController;
+use App\Http\Controllers\AdminCategoryController;
+use App\Http\Controllers\AdminBannerController;
+use App\Http\Controllers\AdminSettingsController;
+use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\AnalyticsController;
+use App\Http\Controllers\AiController;
+use App\Http\Controllers\ProductManagementController;
+use App\Http\Controllers\SuperAdminController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -61,31 +76,31 @@ Route::middleware('auth')->group(function () {
     Route::post('/profile/change-password', [WebAuthController::class, 'changePassword'])->name('profile.change-password.submit');
 
     // Cart
-    Route::get('/cart', [\App\Http\Controllers\CartController::class, 'index'])->name('cart.index');
-    Route::post('/cart/add', [\App\Http\Controllers\CartController::class, 'add'])->name('cart.add');
-    Route::post('/cart/update', [\App\Http\Controllers\CartController::class, 'update'])->name('cart.update');
-    Route::post('/cart/remove-selected', [\App\Http\Controllers\CartController::class, 'removeSelected'])->name('cart.remove-selected');
-    Route::post('/cart/clear', [\App\Http\Controllers\CartController::class, 'clear'])->name('cart.clear');
-    Route::post('/cart/remove/{key}', [\App\Http\Controllers\CartController::class, 'remove'])->name('cart.remove')->where('key', '.*');
+    Route::get('/cart', [CartController::class, 'index'])->name('cart.index');
+    Route::post('/cart/add', [CartController::class, 'add'])->name('cart.add');
+    Route::post('/cart/update', [CartController::class, 'update'])->name('cart.update');
+    Route::post('/cart/remove-selected', [CartController::class, 'removeSelected'])->name('cart.remove-selected');
+    Route::post('/cart/clear', [CartController::class, 'clear'])->name('cart.clear');
+    Route::post('/cart/remove/{key}', [CartController::class, 'remove'])->name('cart.remove')->where('key', '.*');
 
     // Checkout
-    Route::get('/checkout', [\App\Http\Controllers\CheckoutController::class, 'index'])->name('checkout.index');
-    Route::post('/checkout', [\App\Http\Controllers\CheckoutController::class, 'store'])->name('checkout.store');
-    Route::post('/checkout/selected', [\App\Http\Controllers\CheckoutController::class, 'fromSelected'])->name('checkout.selected');
+    Route::get('/checkout', [CheckoutController::class, 'index'])->name('checkout.index');
+    Route::post('/checkout', [CheckoutController::class, 'store'])->name('checkout.store');
+    Route::post('/checkout/selected', [CheckoutController::class, 'fromSelected'])->name('checkout.selected');
 
     // Orders
     Route::get('/orders', fn() => redirect()->route('orders'));
     Route::get('/orders/my-orders', [WebController::class, 'orders'])->name('orders');
     Route::get('/orders/{id}', [WebController::class, 'orderDetail'])->name('orders.show');
-    Route::patch('/orders/{id}/confirm', [\App\Http\Controllers\OrderController::class, 'confirmReceived'])->name('orders.confirm');
-    Route::patch('/api/orders/{id}/status', [\App\Http\Controllers\OrderController::class, 'updateOrderStatus']);
-    Route::patch('/seller/api/orders/{id}/status', [\App\Http\Controllers\OrderController::class, 'updateOrderStatus']);
-    Route::post('/orders/{id}/cancel', [\App\Http\Controllers\OrderController::class, 'cancelOrder'])->name('orders.cancel');
-    Route::post('/api/orders/{id}/cancel', [\App\Http\Controllers\OrderController::class, 'cancelOrder']);
-    Route::post('/seller/api/orders/{id}/cancel', [\App\Http\Controllers\OrderController::class, 'cancelOrder'])->name('orders.seller-cancel');
-    Route::post('/seller/api/orders/{id}/reject-payment', [\App\Http\Controllers\OrderController::class, 'rejectPayment'])->name('orders.reject-payment');
-    Route::post('/api/orders/{id}/resubmit-payment', [\App\Http\Controllers\OrderController::class, 'resubmitPayment'])->name('orders.resubmit-payment');
-    Route::post('/seller/api/orders/{id}/packing-proof', [\App\Http\Controllers\OrderController::class, 'uploadPackingProof'])->name('orders.packing-proof');
+    Route::patch('/orders/{id}/confirm', [OrderController::class, 'confirmReceived'])->name('orders.confirm');
+    Route::patch('/api/orders/{id}/status', [OrderController::class, 'updateOrderStatus']);
+    Route::patch('/seller/api/orders/{id}/status', [OrderController::class, 'updateOrderStatus']);
+    Route::post('/orders/{id}/cancel', [OrderController::class, 'cancelOrder'])->name('orders.cancel');
+    Route::post('/api/orders/{id}/cancel', [OrderController::class, 'cancelOrder']);
+    Route::post('/seller/api/orders/{id}/cancel', [OrderController::class, 'cancelOrder'])->name('orders.seller-cancel');
+    Route::post('/seller/api/orders/{id}/reject-payment', [OrderController::class, 'rejectPayment'])->name('orders.reject-payment');
+    Route::post('/api/orders/{id}/resubmit-payment', [OrderController::class, 'resubmitPayment'])->name('orders.resubmit-payment');
+    Route::post('/seller/api/orders/{id}/packing-proof', [OrderController::class, 'uploadPackingProof'])->name('orders.packing-proof');
 
 
     // Notifications
@@ -93,149 +108,134 @@ Route::middleware('auth')->group(function () {
     Route::post('/notifications/read-all', [WebController::class, 'readAllNotifications'])->name('notifications.read-all');
 
     // Wishlist
-    Route::get('/wishlist', [\App\Http\Controllers\WishlistController::class, 'index'])->name('wishlist.index');
-    Route::post('/wishlist/toggle', [\App\Http\Controllers\WishlistController::class, 'toggle'])->name('wishlist.toggle');
-    Route::get('/notifications/{id}/read', [\App\Http\Controllers\NotificationController::class, 'readAndRedirect'])->name('notifications.read-and-redirect');
+    Route::get('/wishlist', [WishlistController::class, 'index'])->name('wishlist.index');
+    Route::post('/wishlist/toggle', [WishlistController::class, 'toggle'])->name('wishlist.toggle');
+    Route::get('/notifications/{id}/read', [NotificationController::class, 'readAndRedirect'])->name('notifications.read-and-redirect');
 
     Route::post('/logout', [WebAuthController::class, 'logout'])->name('logout');
 
     // Address Management
-    Route::get('/api/addresses', [\App\Http\Controllers\AddressController::class, 'index']);
-    Route::post('/api/addresses', [\App\Http\Controllers\AddressController::class, 'store']);
-    Route::put('/api/addresses/{id}', [\App\Http\Controllers\AddressController::class, 'update']);
-    Route::delete('/api/addresses/{id}', [\App\Http\Controllers\AddressController::class, 'destroy']);
-    Route::patch('/api/addresses/{id}/set-default', [\App\Http\Controllers\AddressController::class, 'setDefault']);
+    Route::get('/api/addresses', [AddressController::class, 'index']);
+    Route::post('/api/addresses', [AddressController::class, 'store']);
+    Route::put('/api/addresses/{id}', [AddressController::class, 'update']);
+    Route::delete('/api/addresses/{id}', [AddressController::class, 'destroy']);
+    Route::patch('/api/addresses/{id}/set-default', [AddressController::class, 'setDefault']);
 
     // Chat
-    Route::get('/api/chat/conversations', [\App\Http\Controllers\ChatController::class, 'getConversations']);
-    Route::get('/api/chat/conversation/{otherUserId}', [\App\Http\Controllers\ChatController::class, 'getConversation']);
-    Route::post('/api/chat/message', [\App\Http\Controllers\ChatController::class, 'sendMessage']);
-    Route::delete('/api/chat/conversation/{otherUserId}', [\App\Http\Controllers\ChatController::class, 'destroy']);
+    Route::get('/api/chat/conversations', [ChatController::class, 'getConversations']);
+    Route::get('/api/chat/conversation/{otherUserId}', [ChatController::class, 'getConversation']);
+    Route::post('/api/chat/message', [ChatController::class, 'sendMessage']);
+    Route::delete('/api/chat/conversation/{otherUserId}', [ChatController::class, 'destroy']);
 
     // Reviews
-    Route::post('/api/reviews', [\App\Http\Controllers\ReviewController::class, 'store']);
-    Route::get('/api/reviews/seller/{sellerId}', [\App\Http\Controllers\ReviewController::class, 'getSellerReviews']);
+    Route::post('/api/reviews', [ReviewController::class, 'store']);
+    Route::get('/api/reviews/seller/{sellerId}', [ReviewController::class, 'getSellerReviews']);
 
     // Categories
-    Route::get('/api/categories', [\App\Http\Controllers\CategoryController::class, 'index']);
+    Route::get('/api/categories', [CategoryController::class, 'index']);
 
     // Refunds & Returns
-    Route::post('/api/refunds', [\App\Http\Controllers\RefundController::class, 'store']);
-    Route::get('/api/refunds/customer', [\App\Http\Controllers\RefundController::class, 'customerIndex']);
-    Route::post('/api/returns', [\App\Http\Controllers\ReturnRequestController::class, 'store']);
-    Route::get('/api/returns', [\App\Http\Controllers\ReturnRequestController::class, 'index']);
+    Route::post('/api/refunds', [RefundController::class, 'store']);
+    Route::get('/api/refunds/customer', [RefundController::class, 'customerIndex']);
+    Route::post('/api/returns', [ReturnRequestController::class, 'store']);
+    Route::get('/api/returns', [ReturnRequestController::class, 'index']);
 });
 
 // Admin Routes
 Route::middleware(['auth', 'admin'])->prefix('admin')->group(function () {
-    Route::get('/dashboard', [\App\Http\Controllers\AdminController::class, 'dashboard'])->name('admin.dashboard');
-    Route::get('/export-global-report', [\App\Http\Controllers\AdminController::class, 'exportGlobalReport'])->name('admin.export');
-    Route::get('/users', [\App\Http\Controllers\AdminController::class, 'users'])->name('admin.users');
-    Route::patch('/users/{id}/ban', [\App\Http\Controllers\AdminController::class, 'banUser'])->name('admin.users.ban');
-    Route::patch('/users/{id}/unban', [\App\Http\Controllers\AdminController::class, 'unbanUser'])->name('admin.users.unban');
-    Route::delete('/users/{id}', [\App\Http\Controllers\AdminController::class, 'deleteUser'])->name('admin.users.delete');
-    Route::get('/sellers', [\App\Http\Controllers\AdminController::class, 'sellers'])->name('admin.sellers');
-    Route::patch('/sellers/{id}/verify', [\App\Http\Controllers\AdminController::class, 'verifySellerWeb'])->name('admin.sellers.verify');
-    Route::patch('/sellers/{id}/suspend', [\App\Http\Controllers\AdminController::class, 'suspendSeller'])->name('admin.sellers.suspend');
-    Route::get('/products', [\App\Http\Controllers\AdminController::class, 'products'])->name('admin.products');
-    Route::patch('/products/{id}/approve', [\App\Http\Controllers\AdminController::class, 'approveProductWeb'])->name('admin.products.approve');
-    Route::patch('/products/{id}/reject', [\App\Http\Controllers\AdminController::class, 'rejectProductWeb'])->name('admin.products.reject');
+    Route::get('/dashboard', [AdminController::class, 'dashboard'])->name('admin.dashboard');
+    Route::get('/export-global-report', [AdminController::class, 'exportGlobalReport'])->name('admin.export');
+    Route::get('/users', [AdminController::class, 'users'])->name('admin.users');
+    Route::patch('/users/{id}/ban', [AdminController::class, 'banUser'])->name('admin.users.ban');
+    Route::patch('/users/{id}/unban', [AdminController::class, 'unbanUser'])->name('admin.users.unban');
+    Route::delete('/users/{id}', [AdminController::class, 'deleteUser'])->name('admin.users.delete');
+    Route::get('/sellers', [AdminController::class, 'sellers'])->name('admin.sellers');
+    Route::patch('/sellers/{id}/verify', [AdminController::class, 'verifySellerWeb'])->name('admin.sellers.verify');
+    Route::patch('/sellers/{id}/suspend', [AdminController::class, 'suspendSeller'])->name('admin.sellers.suspend');
+    Route::get('/products', [AdminController::class, 'products'])->name('admin.products');
+    Route::patch('/products/{id}/approve', [AdminController::class, 'approveProductWeb'])->name('admin.products.approve');
+    Route::patch('/products/{id}/reject', [AdminController::class, 'rejectProductWeb'])->name('admin.products.reject');
 
     // Categories
-    Route::get('/categories', [\App\Http\Controllers\AdminCategoryController::class, 'index'])->name('admin.categories.index');
-    Route::post('/categories', [\App\Http\Controllers\AdminCategoryController::class, 'store'])->name('admin.categories.store');
-    Route::put('/categories/{id}', [\App\Http\Controllers\AdminCategoryController::class, 'update'])->name('admin.categories.update');
-    Route::delete('/categories/{id}', [\App\Http\Controllers\AdminCategoryController::class, 'destroy'])->name('admin.categories.destroy');
+    Route::get('/categories', [AdminCategoryController::class, 'index'])->name('admin.categories.index');
+    Route::post('/categories', [AdminCategoryController::class, 'store'])->name('admin.categories.store');
+    Route::put('/categories/{id}', [AdminCategoryController::class, 'update'])->name('admin.categories.update');
+    Route::delete('/categories/{id}', [AdminCategoryController::class, 'destroy'])->name('admin.categories.destroy');
     Route::get('/categories/{id}', function() { return redirect()->route('admin.categories.index'); });
-    Route::post('/categories/initialize', [\App\Http\Controllers\AdminCategoryController::class, 'initializeDefaults'])->name('admin.categories.initialize');
+    Route::post('/categories/initialize', [AdminCategoryController::class, 'initializeDefaults'])->name('admin.categories.initialize');
 
     // Hero Banners
-    Route::get('/banners', [\App\Http\Controllers\AdminBannerController::class, 'index'])->name('admin.banners.index');
-    Route::post('/banners', [\App\Http\Controllers\AdminBannerController::class, 'store'])->name('admin.banners.store');
-    Route::put('/banners/{id}', [\App\Http\Controllers\AdminBannerController::class, 'update'])->name('admin.banners.update');
-    Route::delete('/banners/{id}', [\App\Http\Controllers\AdminBannerController::class, 'destroy'])->name('admin.banners.destroy');
-    Route::patch('/banners/{id}/toggle', [\App\Http\Controllers\AdminBannerController::class, 'toggleActive'])->name('admin.banners.toggle');
-    Route::patch('/banners/{id}/approve', [\App\Http\Controllers\AdminBannerController::class, 'approve'])->name('admin.banners.approve');
-    Route::patch('/banners/{id}/reject', [\App\Http\Controllers\AdminBannerController::class, 'reject'])->name('admin.banners.reject');
+    Route::get('/banners', [AdminBannerController::class, 'index'])->name('admin.banners.index');
+    Route::post('/banners', [AdminBannerController::class, 'store'])->name('admin.banners.store');
+    Route::put('/banners/{id}', [AdminBannerController::class, 'update'])->name('admin.banners.update');
+    Route::delete('/banners/{id}', [AdminBannerController::class, 'destroy'])->name('admin.banners.destroy');
+    Route::patch('/banners/{id}/toggle', [AdminBannerController::class, 'toggleActive'])->name('admin.banners.toggle');
+    Route::patch('/banners/{id}/approve', [AdminBannerController::class, 'approve'])->name('admin.banners.approve');
+    Route::patch('/banners/{id}/reject', [AdminBannerController::class, 'reject'])->name('admin.banners.reject');
     
     // Reports
-    Route::get('/reports', [\App\Http\Controllers\AdminController::class, 'reports'])->name('admin.reports');
-    Route::patch('/reports/{id}/resolve', [\App\Http\Controllers\AdminController::class, 'resolveReport'])->name('admin.reports.resolve');
-    Route::delete('/reports/{id}', [\App\Http\Controllers\AdminController::class, 'deleteReport'])->name('admin.reports.delete');
+    Route::get('/reports', [AdminController::class, 'reports'])->name('admin.reports');
+    Route::patch('/reports/{id}/resolve', [AdminController::class, 'resolveReport'])->name('admin.reports.resolve');
+    Route::delete('/reports/{id}', [AdminController::class, 'deleteReport'])->name('admin.reports.delete');
 
     // Admin Notifications
-    Route::get('/notifications', [\App\Http\Controllers\AdminController::class, 'notifications'])->name('admin.notifications.index');
-    Route::post('/notifications/read-all', [\App\Http\Controllers\AdminController::class, 'readAllNotifications'])->name('admin.notifications.read-all');
-
-    // Subscription Management (Feature Removed)
-    // Route::get('/subscriptions', [\App\Http\Controllers\AdminSubscriptionController::class, 'index'])->name('admin.subscriptions.index');
-    // Route::patch('/subscriptions/{id}/approve', [\App\Http\Controllers\AdminSubscriptionController::class, 'approve'])->name('admin.subscriptions.approve');
-    // Route::patch('/subscriptions/{id}/reject', [\App\Http\Controllers\AdminSubscriptionController::class, 'reject'])->name('admin.subscriptions.reject');
-    // Route::post('/subscriptions/settings', [\App\Http\Controllers\AdminSubscriptionController::class, 'updateSettings'])->name('admin.subscriptions.settings.update');
+    Route::get('/notifications', [AdminController::class, 'notifications'])->name('admin.notifications.index');
+    Route::post('/notifications/read-all', [AdminController::class, 'readAllNotifications'])->name('admin.notifications.read-all');
 
     // Settings Pages
-    Route::get('/settings',    [\App\Http\Controllers\AdminSettingsController::class, 'index'])->name('admin.settings');
-    Route::post('/settings',   [\App\Http\Controllers\AdminSettingsController::class, 'update'])->name('admin.settings.update');
-    Route::get('/maintenance', [\App\Http\Controllers\AdminSettingsController::class, 'maintenance'])->name('admin.maintenance');
-    Route::post('/maintenance/toggle', [\App\Http\Controllers\AdminSettingsController::class, 'toggleMaintenance'])->name('admin.maintenance.toggle');
-    Route::get('/audit-logs',  [\App\Http\Controllers\AdminSettingsController::class, 'auditLogs'])->name('admin.audit-logs');
-    Route::get('/email-logs',  [\App\Http\Controllers\AdminController::class, 'emailLogs'])->name('admin.email-logs');
-    Route::get('/platform',    [\App\Http\Controllers\AdminSettingsController::class, 'platform'])->name('admin.platform');
+    Route::get('/settings',    [AdminSettingsController::class, 'index'])->name('admin.settings');
+    Route::post('/settings',   [AdminSettingsController::class, 'update'])->name('admin.settings.update');
+    Route::get('/maintenance', [AdminSettingsController::class, 'maintenance'])->name('admin.maintenance');
+    Route::post('/maintenance/toggle', [AdminSettingsController::class, 'toggleMaintenance'])->name('admin.maintenance.toggle');
+    Route::get('/audit-logs',  [AdminSettingsController::class, 'auditLogs'])->name('admin.audit-logs');
+    Route::get('/email-logs',  [AdminController::class, 'emailLogs'])->name('admin.email-logs');
+    Route::get('/platform',    [AdminSettingsController::class, 'platform'])->name('admin.platform');
 });
 
 // Seller Routes
 Route::middleware(['auth', 'seller'])->prefix('seller')->group(function () {
-    Route::get('/dashboard', [\App\Http\Controllers\DashboardController::class, 'sellerDashboard'])->name('seller.dashboard');
-    Route::get('/analytics', [\App\Http\Controllers\AnalyticsController::class, 'sellerAnalytics'])->name('seller.analytics');
-    Route::get('/export-report', [\App\Http\Controllers\DashboardController::class, 'exportSellerReport'])->name('seller.export');
-    Route::get('/profile', [\App\Http\Controllers\DashboardController::class, 'sellerProfile'])->name('seller.profile');
-    Route::put('/profile', [\App\Http\Controllers\DashboardController::class, 'updateSellerProfile'])->name('seller.profile.update');
-    Route::get('/policies', [\App\Http\Controllers\DashboardController::class, 'sellerPolicies'])->name('seller.policies.index');
-    Route::put('/policies', [\App\Http\Controllers\DashboardController::class, 'updateSellerPolicies'])->name('seller.policies.update');
-    Route::post('/policies/ai-assist', [\App\Http\Controllers\AiController::class, 'assistPolicy'])->name('seller.policies.ai');
-    Route::get('/orders', [\App\Http\Controllers\DashboardController::class, 'sellerOrders'])->name('seller.orders');
-    Route::get('/customers', [\App\Http\Controllers\DashboardController::class, 'sellerCustomers'])->name('seller.customers');
-    Route::get('/commission', [\App\Http\Controllers\DashboardController::class, 'sellerCommission'])->name('seller.commission');
-    Route::post('/commission', [\App\Http\Controllers\DashboardController::class, 'submitCommissionPayment'])->name('seller.commission.submit');
-    Route::patch('/api/orders/{id}/status', [\App\Http\Controllers\OrderController::class, 'updateOrderStatus']);
-    Route::get('/messages', [\App\Http\Controllers\ChatController::class, 'sellerChatView'])->name('seller.messages');
-    Route::get('/products', [\App\Http\Controllers\ProductManagementController::class, 'index'])->name('seller.products.index');
-    Route::get('/products/create', [\App\Http\Controllers\ProductManagementController::class, 'create'])->name('seller.products.create');
-    Route::post('/products', [\App\Http\Controllers\ProductManagementController::class, 'store'])->name('seller.products.store');
-    Route::get('/products/{id}/edit', [\App\Http\Controllers\ProductManagementController::class, 'edit'])->name('seller.products.edit');
-    Route::put('/products/{id}', [\App\Http\Controllers\ProductManagementController::class, 'update'])->name('seller.products.update');
-    Route::delete('/products/{id}', [\App\Http\Controllers\ProductManagementController::class, 'destroy'])->name('seller.products.destroy');
-    Route::post('/size-guides', [\App\Http\Controllers\ProductManagementController::class, 'updateSizeGuides'])->name('seller.sizeguides.update');
-    Route::delete('/size-guides/{targetGroup}', [\App\Http\Controllers\ProductManagementController::class, 'deleteSizeGuide'])->name('seller.sizeguides.delete');
+    Route::get('/dashboard', [DashboardController::class, 'sellerDashboard'])->name('seller.dashboard');
+    Route::get('/analytics', [AnalyticsController::class, 'sellerAnalytics'])->name('seller.analytics');
+    Route::get('/export-report', [DashboardController::class, 'exportSellerReport'])->name('seller.export');
+    Route::get('/profile', [DashboardController::class, 'sellerProfile'])->name('seller.profile');
+    Route::put('/profile', [DashboardController::class, 'updateSellerProfile'])->name('seller.profile.update');
+    Route::get('/policies', [DashboardController::class, 'sellerPolicies'])->name('seller.policies.index');
+    Route::put('/policies', [DashboardController::class, 'updateSellerPolicies'])->name('seller.policies.update');
+    Route::post('/policies/ai-assist', [AiController::class, 'assistPolicy'])->name('seller.policies.ai');
+    Route::get('/orders', [DashboardController::class, 'sellerOrders'])->name('seller.orders');
+    Route::get('/customers', [DashboardController::class, 'sellerCustomers'])->name('seller.customers');
+    Route::get('/commission', [DashboardController::class, 'sellerCommission'])->name('seller.commission');
+    Route::post('/commission', [DashboardController::class, 'submitCommissionPayment'])->name('seller.commission.submit');
+    Route::patch('/api/orders/{id}/status', [OrderController::class, 'updateOrderStatus']);
+    Route::get('/messages', [ChatController::class, 'sellerChatView'])->name('seller.messages');
+    Route::get('/products', [ProductManagementController::class, 'index'])->name('seller.products.index');
+    Route::get('/products/create', [ProductManagementController::class, 'create'])->name('seller.products.create');
+    Route::post('/products', [ProductManagementController::class, 'store'])->name('seller.products.store');
+    Route::get('/products/{id}/edit', [ProductManagementController::class, 'edit'])->name('seller.products.edit');
+    Route::put('/products/{id}', [ProductManagementController::class, 'update'])->name('seller.products.update');
+    Route::delete('/products/{id}', [ProductManagementController::class, 'destroy'])->name('seller.products.destroy');
+    Route::post('/size-guides', [ProductManagementController::class, 'updateSizeGuides'])->name('seller.sizeguides.update');
+    Route::delete('/size-guides/{targetGroup}', [ProductManagementController::class, 'deleteSizeGuide'])->name('seller.sizeguides.delete');
 
     // Seller Notifications
-    Route::get('/notifications', [\App\Http\Controllers\DashboardController::class, 'notifications'])->name('seller.notifications.index');
-    Route::post('/notifications/read-all', [\App\Http\Controllers\DashboardController::class, 'readAllNotifications'])->name('seller.notifications.read-all');
-
-    // Subscription Upgrade (Disabled)
-    // Route::get('/subscription', [\App\Http\Controllers\SellerSubscriptionController::class, 'index'])->name('seller.subscription.index');
-    // Route::post('/subscription/subscribe', [\App\Http\Controllers\SellerSubscriptionController::class, 'subscribe'])->name('seller.subscription.subscribe');
-
-    // Seller Hero Banners (Disabled)
-    // Route::get('/banners', [\App\Http\Controllers\SellerBannerController::class, 'index'])->name('seller.banners.index');
-    // Route::post('/banners', [\App\Http\Controllers\SellerBannerController::class, 'store'])->name('seller.banners.store');
-    // Route::delete('/banners/{id}', [\App\Http\Controllers\SellerBannerController::class, 'destroy'])->name('seller.banners.destroy');
+    Route::get('/notifications', [DashboardController::class, 'notifications'])->name('seller.notifications.index');
+    Route::post('/notifications/read-all', [DashboardController::class, 'readAllNotifications'])->name('seller.notifications.read-all');
 });
 
 // ─── Super Admin Routes ────────────────────────────────────────────────────
-Route::get('/superadmin/login',  [\App\Http\Controllers\SuperAdminController::class, 'showLogin'])->name('superadmin.login');
-Route::post('/superadmin/login', [\App\Http\Controllers\SuperAdminController::class, 'login'])->name('superadmin.login.submit');
-Route::post('/superadmin/logout',[\App\Http\Controllers\SuperAdminController::class, 'logout'])->name('superadmin.logout');
+Route::get('/superadmin/login',  [SuperAdminController::class, 'showLogin'])->name('superadmin.login');
+Route::post('/superadmin/login', [SuperAdminController::class, 'login'])->name('superadmin.login.submit');
+Route::post('/superadmin/logout',[SuperAdminController::class, 'logout'])->name('superadmin.logout');
 
 Route::middleware(['auth', 'superadmin'])->prefix('superadmin')->group(function () {
-    Route::get('/dashboard',    [\App\Http\Controllers\SuperAdminController::class, 'dashboard'])->name('superadmin.dashboard');
-    Route::get('/commissions',  [\App\Http\Controllers\SuperAdminController::class, 'commissions'])->name('superadmin.commissions');
-    Route::get('/payment-settings', [\App\Http\Controllers\SuperAdminController::class, 'paymentSettings'])->name('superadmin.payment-settings');
-    Route::post('/payment-settings', [\App\Http\Controllers\SuperAdminController::class, 'updatePaymentSettings'])->name('superadmin.payment-settings.update');
-    Route::post('/commission-rate', [\App\Http\Controllers\SuperAdminController::class, 'updateCommissionRate'])->name('superadmin.commission-rate');
-    Route::patch('/commissions/{sellerId}/mark-paid', [\App\Http\Controllers\SuperAdminController::class, 'markPaid'])->name('superadmin.commissions.mark-paid');
-    Route::patch('/shops/{id}/freeze',   [\App\Http\Controllers\SuperAdminController::class, 'freezeShop'])->name('superadmin.shops.freeze');
-    Route::patch('/shops/{id}/unfreeze', [\App\Http\Controllers\SuperAdminController::class, 'unfreezeShop'])->name('superadmin.shops.unfreeze');
+    Route::get('/dashboard',    [SuperAdminController::class, 'dashboard'])->name('superadmin.dashboard');
+    Route::get('/commissions',  [SuperAdminController::class, 'commissions'])->name('superadmin.commissions');
+    Route::get('/payment-settings', [SuperAdminController::class, 'paymentSettings'])->name('superadmin.payment-settings');
+    Route::post('/payment-settings', [SuperAdminController::class, 'updatePaymentSettings'])->name('superadmin.payment-settings.update');
+    Route::post('/commission-rate', [SuperAdminController::class, 'updateCommissionRate'])->name('superadmin.commission-rate');
+    Route::patch('/commissions/{sellerId}/mark-paid', [SuperAdminController::class, 'markPaid'])->name('superadmin.commissions.mark-paid');
+    Route::patch('/shops/{id}/freeze',   [SuperAdminController::class, 'freezeShop'])->name('superadmin.shops.freeze');
+    Route::patch('/shops/{id}/unfreeze', [SuperAdminController::class, 'unfreezeShop'])->name('superadmin.shops.unfreeze');
 });
 
 // ─── Storage & Upload Fallback Routes ──────────────────────────────────────────
@@ -303,12 +303,10 @@ Route::get('/uploads/{path}', function ($path) {
 
 // Web AI Service Routes
 Route::prefix('ai')->group(function () {
-    Route::post('/stylist/chat', [\App\Http\Controllers\AiController::class, 'chatStylist'])->name('ai.stylist');
-    Route::post('/sizing/recommend', [\App\Http\Controllers\AiController::class, 'recommendSize'])->name('ai.sizing');
-    Route::post('/seller/generate-description', [\App\Http\Controllers\AiController::class, 'generateSellerListing'])->name('ai.seller.description');
-    Route::post('/security/password-check', [\App\Http\Controllers\AiController::class, 'analyzePassword'])->name('ai.security.password');
-    Route::post('/payment-reference/check', [\App\Http\Controllers\AiController::class, 'checkPaymentReference'])->name('ai.payment.check');
-    Route::post('/receipt/verify', [\App\Http\Controllers\AiController::class, 'verifyReceipt'])->name('ai.receipt.verify');
+    Route::post('/stylist/chat', [AiController::class, 'chatStylist'])->name('ai.stylist');
+    Route::post('/sizing/recommend', [AiController::class, 'recommendSize'])->name('ai.sizing');
+    Route::post('/seller/generate-description', [AiController::class, 'generateSellerListing'])->name('ai.seller.description');
+    Route::post('/security/password-check', [AiController::class, 'analyzePassword'])->name('ai.security.password');
+    Route::post('/payment-reference/check', [AiController::class, 'checkPaymentReference'])->name('ai.payment.check');
+    Route::post('/receipt/verify', [AiController::class, 'verifyReceipt'])->name('ai.receipt.verify');
 });
-
-
