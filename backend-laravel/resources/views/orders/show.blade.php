@@ -4,6 +4,9 @@
 <div class="min-h-screen bg-[#FBF9F5] text-gray-800 py-6 sm:py-8 px-3 sm:px-6 lg:px-8 font-sans -mt-6 sm:-mt-8 -mb-12"
      x-data="{ 
         confirmModal: false, 
+        cancelModal: false,
+        cancellationReason: 'Need to change shipping address / details',
+        cancelLoading: false,
         reviewModal: false, 
         reviewProductId: null, 
         reviewProductName: '', 
@@ -105,7 +108,13 @@
                 </p>
             </div>
 
-            <div class="self-start sm:self-center">
+            <div class="self-start sm:self-center flex items-center gap-2">
+                @if($statusLower === 'pending')
+                    <button type="button" @click="cancelModal = true" class="px-3 py-1 bg-white hover:bg-red-50 text-red-600 border border-red-200 text-[10px] sm:text-[11px] font-bold tracking-wider uppercase rounded-full shadow-2xs transition-all cursor-pointer flex items-center gap-1">
+                        <svg class="w-3 h-3 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                        <span>Cancel Order</span>
+                    </button>
+                @endif
                 <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] sm:text-[11px] font-bold tracking-wider uppercase border shadow-2xs {{ $badgeClasses }}">
                     <span class="w-1.5 h-1.5 rounded-full {{ $dotClasses }}"></span>
                     <span>{{ $customerStatusDisplay }}</span>
@@ -945,6 +954,58 @@
                     <video x-ref="lightboxVideo" :src="lightboxUrl" controls autoplay playsinline class="max-w-full max-h-[78vh] rounded-xl bg-black shadow-2xl"></video>
                 </template>
             </div>
+        </div>
+    </div>
+
+    {{-- Cancel Order Modal --}}
+    <div x-show="cancelModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm" x-cloak style="display: none;">
+        <div @click.away="cancelModal = false" class="bg-white border border-gray-150 rounded-2xl shadow-2xl w-full max-w-md p-6 space-y-4 text-gray-900">
+            <div class="flex items-center gap-3 pb-3 border-b border-gray-100">
+                <div class="w-10 h-10 rounded-full bg-red-100 text-red-600 flex items-center justify-center font-bold text-lg shrink-0">
+                    ✕
+                </div>
+                <div>
+                    <h3 class="text-sm font-black text-black uppercase tracking-tight">Cancel Order</h3>
+                    <p class="text-[10px] text-gray-500 font-medium">Please select a reason for cancelling this order.</p>
+                </div>
+            </div>
+
+            <form action="{{ route('orders.cancel', $order->id) }}" method="POST" class="space-y-3.5" @submit="cancelLoading = true">
+                @csrf
+                <div class="space-y-1.5">
+                    <label class="text-[10px] font-black uppercase tracking-widest text-gray-500">Reason for Cancellation <span class="text-red-500">*</span></label>
+                    <select name="cancellationReason" x-model="cancellationReason" class="w-full px-3.5 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-xs font-semibold text-gray-800 outline-none focus:border-red-500 focus:bg-white transition-all">
+                        <option value="Need to change shipping address / details">Need to change shipping address / details</option>
+                        <option value="Changed mind / ordered by mistake">Changed mind / ordered by mistake</option>
+                        <option value="Decided to buy another item">Decided to buy another item</option>
+                        <option value="Need to change payment method">Need to change payment method</option>
+                        <option value="Other">Other / Custom reason</option>
+                    </select>
+                </div>
+
+                <template x-if="cancellationReason === 'Other'">
+                    <div class="space-y-1">
+                        <label class="text-[10px] font-black uppercase tracking-widest text-gray-500">Explanation</label>
+                        <textarea name="reason" rows="3" placeholder="Provide a brief explanation..." class="w-full px-3.5 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-xs font-medium outline-none focus:border-red-500 focus:bg-white resize-none"></textarea>
+                    </div>
+                </template>
+
+                <div class="p-3 bg-red-50 border border-red-200 rounded-xl text-[10px] text-red-700 leading-relaxed">
+                    <strong>Note:</strong> Once cancelled, product stock will be returned to inventory. If you already submitted payment proof, the artisan will not charge or verify this transaction.
+                </div>
+
+                <div class="flex gap-2.5 pt-2">
+                    <button type="button" @click="cancelModal = false" :disabled="cancelLoading" class="flex-1 py-2.5 rounded-full border border-gray-200 text-xs font-bold text-gray-600 hover:bg-gray-50 transition-all cursor-pointer">
+                        Keep Order
+                    </button>
+                    <button type="submit" :disabled="cancelLoading" class="flex-1 py-2.5 rounded-full bg-red-600 hover:bg-red-700 text-white text-xs font-bold uppercase tracking-wider shadow-sm transition-all flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-50">
+                        <template x-if="cancelLoading">
+                            <svg class="w-3.5 h-3.5 animate-spin text-white" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"/></svg>
+                        </template>
+                        <span x-text="cancelLoading ? 'Cancelling...' : 'Confirm Cancel'"></span>
+                    </button>
+                </div>
+            </form>
         </div>
     </div>
 

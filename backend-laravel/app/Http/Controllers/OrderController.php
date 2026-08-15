@@ -222,9 +222,8 @@ class OrderController extends Controller
         $targetStatus = trim($request->status ?? '');
         $normalizedTarget = strtolower($targetStatus);
 
-        $blockedStatuses = ['cancelled', 'cancellation pending', 'cancellation requested'];
-        if (in_array($normalizedTarget, $blockedStatuses, true)) {
-            return response()->json(['message' => 'Paid orders cannot be cancelled. Contact the seller or platform support for refund disputes.'], 400);
+        if ($normalizedTarget === 'cancelled') {
+            return $this->cancelOrder($request, $id);
         }
 
         $user = $request->user();
@@ -652,5 +651,160 @@ class OrderController extends Controller
             'message' => 'Payment proof resubmitted successfully. Awaiting artisan verification.',
             'order' => $order->load(['seller', 'items.product', 'statusHistories'])
         ]);
+    }
+
+    /**
+     * Cancel an order (Customer or Seller/Admin) with stock restoration.
+     */
+    public function cancelOrder(Request $request, string $id)
+    {
+        $order = Order::with('items.product')->find($id);
+        if (!$order) {
+            return $request->expectsJson() 
+                ? response()->json(['message' => 'Order not found.'], 404)
+                : redirect()->back()->with('error', 'Order not found.');
+        }
+
+        $user = $request->user();
+        if (!$user) {
+            $user = Auth::user();
+        }
+
+        if (!$user) {
+            return $request->expectsJson() 
+                ? response()->json(['message' => 'Unauthenticated.'], 401)
+                : redirect()->route('login');
+        }
+
+        $isCustomer = ($user->id === $order->customerId);
+        $isSeller = ($user->id === $order->sellerId || $user->role === 'admin');
+
+        if (!$isCustomer && !$isSeller) {
+            return $request->expectsJson()
+                ? response()->json(['message' => 'Unauthorized.'], 403)
+                : redirect()->back()->with('error', 'Unauthorized to cancel this order.');
+        }
+
+        $currentStatus = strtolower(trim($order->status));
+
+        // Order already cancelled or completed
+        if ($currentStatus === 'cancelled') {
+            return $request->expectsJson()
+                ? response()->json(['message' => 'Order is already cancelled.'], 400)
+                : redirect()->back()->with('info', 'Order is already cancelled.');
+        }
+        if ($currentStatus === 'completed' || $currentStatus === 'delivered') {
+            return $request->expectsJson()
+                ? response()->json(['message' => 'Delivered or completed orders cannot be cancelled.'], 400)
+                : redirect()->back()->with('error', 'Delivered or completed orders cannot be cancelled.');
+        }
+
+        // Customer constraint: only while status is Pending
+        if ($isCustomer && !$isSeller) {
+            if ($currentStatus !== 'pending') {
+                return $request->expectsJson()
+                    ? response()->json(['message' => 'Orders that have already been accepted or prepared cannot be cancelled directly. Please message the artisan.'], 400)
+                    : redirect()->back()->with('error', 'Orders in progress cannot be cancelled directly. Please contact the artisan.');
+            }
+        }
+
+        // Seller constraint: while status is Pending or To Ship (before it has shipped)
+        if ($isSeller) {
+            if (!in_array($currentStatus, ['pending', 'to ship', 'to_ship', 'processing'], true)) {
+                return $request->expectsJson()
+                    ? response()->json(['message' => 'Orders that have already shipped cannot be cancelled.'], 400)
+                    : redirect()->back()->with('error', 'Orders that have already shipped cannot be cancelled.');
+            }
+        }
+
+        $reason = trim($request->input('cancellationReason') ?? $request->input('reason') ?? '');
+        if (!$reason) {
+            $reason = $isCustomer ? 'Cancelled by customer' : 'Cancelled by artisan';
+        }
+
+        DB::beginTransaction();
+        try {
+            // Restore inventory stock for each product
+            foreach ($order->items as $item) {
+                if ($item->product) {
+                    $item->product->increment('stock', $item->quantity);
+                }
+            }
+
+            $prevStatus = $order->status;
+            $order->status = 'Cancelled';
+            $order->cancellationReason = $reason;
+            $order->save();
+
+            OrderStatusHistory::create([
+                'orderId' => $order->id,
+                'previousStatus' => $prevStatus,
+                'newStatus' => 'Cancelled',
+                'updatedBy' => $user->id,
+                'userRole' => $isCustomer ? 'customer' : 'seller',
+                'notes' => ($isCustomer ? "Order cancelled by customer. Reason: " : "Order cancelled by artisan. Reason: ") . $reason,
+            ]);
+
+            // Notify counterpart
+            if ($isCustomer) {
+                $this->sendNotification(
+                    $order->sellerId,
+                    'Order Cancelled by Customer',
+                    "Order #" . substr($order->id, 0, 8) . " was cancelled by the buyer. Reason: {$reason}. Inventory has been restored.",
+                    'order',
+                    '/seller/orders',
+                    'seller'
+                );
+
+                $sellerUser = User::find($order->sellerId);
+                if ($sellerUser && $sellerUser->email) {
+                    $mail = new \App\Mail\OrderStatusUpdatedMail(
+                        $sellerUser->name,
+                        $order->id,
+                        'Cancelled',
+                        "Buyer cancelled order #{$order->id}. Reason: {$reason}. Inventory has been replenished."
+                    );
+                    \App\Services\EmailNotificationService::sendNotification($sellerUser->email, $mail, 'order_cancelled', $sellerUser->id, 'Order', $order->id);
+                }
+            } else {
+                $this->sendNotification(
+                    $order->customerId,
+                    'Order Cancelled by Artisan',
+                    "Your order #" . substr($order->id, 0, 8) . " was cancelled by the artisan. Reason: {$reason}.",
+                    'order',
+                    '/orders/' . $order->id,
+                    'customer'
+                );
+
+                $customerUser = User::find($order->customerId);
+                if ($customerUser && $customerUser->email) {
+                    $mail = new \App\Mail\OrderStatusUpdatedMail(
+                        $customerUser->name,
+                        $order->id,
+                        'Cancelled',
+                        "Your order has been cancelled by the artisan. Reason: {$reason}."
+                    );
+                    \App\Services\EmailNotificationService::sendNotification($customerUser->email, $mail, 'order_cancelled', $customerUser->id, 'Order', $order->id);
+                }
+            }
+
+            DB::commit();
+
+            if ($request->expectsJson() || $request->is('api/*') || $request->is('seller/api/*')) {
+                return response()->json([
+                    'message' => 'Order has been successfully cancelled.',
+                    'order' => $order->load(['seller', 'customer', 'items.product', 'statusHistories'])
+                ]);
+            }
+
+            return redirect()->back()->with('success', 'Order has been successfully cancelled.');
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            if ($request->expectsJson() || $request->is('api/*') || $request->is('seller/api/*')) {
+                return response()->json(['message' => 'Failed to cancel order: ' . $e->getMessage()], 500);
+            }
+            return redirect()->back()->with('error', 'Failed to cancel order: ' . $e->getMessage());
+        }
     }
 }

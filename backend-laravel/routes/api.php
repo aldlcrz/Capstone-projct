@@ -58,6 +58,7 @@ Route::prefix('v1')->group(function () {
         Route::get('/seller/orders', [OrderController::class, 'getSellerOrders']);
         Route::post('/orders', [OrderController::class, 'createOrder']);
         Route::patch('/orders/{id}/status', [OrderController::class, 'updateOrderStatus']);
+        Route::post('/orders/{id}/cancel', [OrderController::class, 'cancelOrder']);
         Route::post('/orders/{id}/reject-payment', [OrderController::class, 'rejectPayment']);
         Route::post('/orders/{id}/resubmit-payment', [OrderController::class, 'resubmitPayment']);
         Route::get('/seller/report/export', [OrderController::class, 'exportSellerReport']);

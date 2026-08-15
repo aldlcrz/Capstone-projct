@@ -80,6 +80,9 @@ Route::middleware('auth')->group(function () {
     Route::patch('/orders/{id}/confirm', [\App\Http\Controllers\OrderController::class, 'confirmReceived'])->name('orders.confirm');
     Route::patch('/api/orders/{id}/status', [\App\Http\Controllers\OrderController::class, 'updateOrderStatus']);
     Route::patch('/seller/api/orders/{id}/status', [\App\Http\Controllers\OrderController::class, 'updateOrderStatus']);
+    Route::post('/orders/{id}/cancel', [\App\Http\Controllers\OrderController::class, 'cancelOrder'])->name('orders.cancel');
+    Route::post('/api/orders/{id}/cancel', [\App\Http\Controllers\OrderController::class, 'cancelOrder']);
+    Route::post('/seller/api/orders/{id}/cancel', [\App\Http\Controllers\OrderController::class, 'cancelOrder'])->name('orders.seller-cancel');
     Route::post('/seller/api/orders/{id}/reject-payment', [\App\Http\Controllers\OrderController::class, 'rejectPayment'])->name('orders.reject-payment');
     Route::post('/api/orders/{id}/resubmit-payment', [\App\Http\Controllers\OrderController::class, 'resubmitPayment'])->name('orders.resubmit-payment');
     Route::post('/seller/api/orders/{id}/packing-proof', [\App\Http\Controllers\OrderController::class, 'uploadPackingProof'])->name('orders.packing-proof');

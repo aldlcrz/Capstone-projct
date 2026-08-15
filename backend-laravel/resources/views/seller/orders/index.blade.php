@@ -117,6 +117,12 @@ function sellerOrdersManager(initialOrders) {
         verifyOrderTarget: null,
         showRejectModal: false,
         rejectOrderTarget: null,
+        showCancelOrderModal: false,
+        cancelOrderTarget: null,
+        sellerCancelReason: 'Out of stock / fabric unavailable',
+        sellerCustomCancelReason: '',
+        sellerCancelLoading: false,
+        sellerCancelError: '',
         receiptModal: false,
         receiptUrl: '',
         rejectReason: 'Reference number does not match',
@@ -195,6 +201,60 @@ function sellerOrdersManager(initialOrders) {
                 this.rejectError = 'Network error while rejecting payment.';
             } finally {
                 this.rejectLoading = false;
+            }
+        },
+
+        openCancelOrderModal(order) {
+            this.cancelOrderTarget = order || this.detailsOrder;
+            this.sellerCancelReason = 'Out of stock / fabric unavailable';
+            this.sellerCustomCancelReason = '';
+            this.sellerCancelError = '';
+            this.sellerCancelLoading = false;
+            this.showCancelOrderModal = true;
+        },
+
+        async executeSellerCancelOrder() {
+            if (!this.cancelOrderTarget || this.sellerCancelLoading) return;
+            const finalReason = this.sellerCancelReason === 'Other' ? this.sellerCustomCancelReason.trim() : this.sellerCancelReason;
+            if (!finalReason) {
+                this.sellerCancelError = 'Please specify a reason for cancellation.';
+                return;
+            }
+            this.sellerCancelLoading = true;
+            this.sellerCancelError = '';
+
+            try {
+                const token = document.querySelector('meta[name="csrf-token"]')?.content || document.querySelector('input[name="_token"]')?.value || '';
+                const res = await fetch('/seller/api/orders/' + this.cancelOrderTarget.id + '/cancel', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json',
+                        'X-CSRF-TOKEN': token
+                    },
+                    body: JSON.stringify({ cancellationReason: finalReason })
+                });
+
+                const data = await res.json();
+                if (res.ok) {
+                    const idx = this.orders.findIndex(o => o.id === this.cancelOrderTarget.id);
+                    if (idx !== -1) {
+                        this.orders.splice(idx, 1, data.order || data);
+                        this.orders = [...this.orders];
+                        if (this.detailsOrder && this.detailsOrder.id === this.cancelOrderTarget.id) {
+                            this.detailsOrder = data.order || data;
+                        }
+                    }
+                    this.showToast('✓ Order cancelled successfully. Stock restored.');
+                    this.showCancelOrderModal = false;
+                    this.detailsModal = false;
+                } else {
+                    this.sellerCancelError = data.message || 'Failed to cancel order.';
+                }
+            } catch(e) {
+                this.sellerCancelError = 'Network error while cancelling order.';
+            } finally {
+                this.sellerCancelLoading = false;
             }
         },
 
@@ -620,7 +680,7 @@ function sellerOrdersManager(initialOrders) {
 
     {{-- Status Filter Tabs (Capsules) --}}
     <div class="flex gap-2 overflow-x-auto no-scrollbar pb-1">
-        @foreach(['all' => 'All', 'pending' => 'Pending', 'to ship' => 'To Ship', 'shipped' => 'Shipped', 'in transit' => 'In Transit', 'delivered' => 'Delivered', 'completed' => 'Completed'] as $val => $label)
+        @foreach(['all' => 'All', 'pending' => 'Pending', 'to ship' => 'To Ship', 'shipped' => 'Shipped', 'in transit' => 'In Transit', 'delivered' => 'Delivered', 'completed' => 'Completed', 'cancelled' => 'Cancelled'] as $val => $label)
             <button @click="statusFilter = '{{ $val }}'"
                 :class="statusFilter === '{{ $val }}' ? 'bg-black text-white shadow-md' : 'bg-white text-gray-500 border border-gray-200 hover:border-gray-300'"
                 class="px-3.5 sm:px-5 py-2 sm:py-2.5 rounded-full text-[9px] sm:text-[10px] font-black uppercase tracking-widest whitespace-nowrap transition-all flex items-center gap-1.5 shrink-0 active:scale-95">
@@ -970,13 +1030,18 @@ function sellerOrdersManager(initialOrders) {
                         Close
                     </button>
 
-                    {{-- Pending Order Actions: Reject Payment OR Verify & Accept --}}
+                    {{-- Pending Order Actions: Reject Payment OR Cancel OR Verify & Accept --}}
                     <template x-if="detailsOrder && normalizeStatus(detailsOrder.status) === 'pending'">
                         <div class="flex-1 flex gap-2">
                             <button type="button" 
                                 @click="openRejectPaymentModal(detailsOrder)"
-                                class="px-4 py-2.5 sm:py-3 border border-red-200 hover:bg-red-50 text-red-600 rounded-full text-[10px] font-black uppercase tracking-widest transition-all cursor-pointer">
-                                ✕ Reject
+                                class="px-3 sm:px-4 py-2.5 sm:py-3 border border-red-200 hover:bg-red-50 text-red-600 rounded-full text-[10px] font-black uppercase tracking-widest transition-all cursor-pointer">
+                                ✕ Reject Proof
+                            </button>
+                            <button type="button" 
+                                @click="openCancelOrderModal(detailsOrder)"
+                                class="px-3 sm:px-4 py-2.5 sm:py-3 border border-gray-200 hover:bg-gray-100 text-gray-600 rounded-full text-[10px] font-black uppercase tracking-widest transition-all cursor-pointer">
+                                Cancel Order
                             </button>
                             <button type="button" 
                                 @click="openVerifyPaymentModal(detailsOrder)"
@@ -984,26 +1049,33 @@ function sellerOrdersManager(initialOrders) {
                                 style="background-color: #059669; color: #ffffff;"
                                 class="flex-1 py-2.5 sm:py-3 bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 text-white text-[10px] font-black uppercase tracking-widest rounded-full transition-all flex items-center justify-center gap-2 shadow-sm cursor-pointer">
                                 <svg class="w-3.5 h-3.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
-                                <span>Verify Payment & Accept ➔</span>
+                                <span>Verify & Accept ➔</span>
                             </button>
                         </div>
                     </template>
 
                     {{-- Button for To Ship status: Upload Packing Proof & Confirm Shipment --}}
                     <template x-if="detailsOrder && normalizeStatus(detailsOrder.status) === 'to ship'">
-                        <button type="button"
-                            @click="if (!packingPhotoFile && !packingUploadSuccess && !detailsOrder.packingProof) { packingUploadError = 'Please upload or capture a packing proof photo before confirming shipment.'; } else if (packingPhotoFile && !packingUploadSuccess && !detailsOrder.packingProof) { uploadPackingProof().then(() => updateStatus(detailsOrder, 'Shipped')); } else { updateStatus(detailsOrder, 'Shipped'); }"
-                            :disabled="packingUploading || statusUpdating"
-                            :style="(packingUploadSuccess || detailsOrder.packingProof) ? 'background-color: #C0420A; color: #ffffff;' : 'background-color: #000000; color: #ffffff;'"
-                            class="flex-1 py-2.5 sm:py-3 bg-black hover:bg-[#C0420A] disabled:opacity-50 text-white text-[10px] font-black uppercase tracking-widest rounded-full transition-all flex items-center justify-center gap-2 shadow-md cursor-pointer">
-                            <template x-if="packingUploading || statusUpdating">
-                                <svg class="w-3.5 h-3.5 animate-spin text-white" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"/></svg>
-                            </template>
-                            <template x-if="!packingUploading && !statusUpdating">
-                                <svg class="w-3.5 h-3.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
-                            </template>
-                            <span x-text="packingUploading ? 'Uploading Photo...' : (statusUpdating ? 'Updating Status...' : ((packingUploadSuccess || detailsOrder.packingProof) ? 'Confirm Shipment (Mark Shipped) ➔' : (packingPhotoFile ? 'Upload & Confirm Shipment ➔' : 'Upload Proof & Confirm Shipment ➔')))"></span>
-                        </button>
+                        <div class="flex-1 flex gap-2">
+                            <button type="button" 
+                                @click="openCancelOrderModal(detailsOrder)"
+                                class="px-3.5 sm:px-4 py-2.5 sm:py-3 border border-red-200 hover:bg-red-50 text-red-600 rounded-full text-[10px] font-black uppercase tracking-widest transition-all cursor-pointer">
+                                Cancel Order
+                            </button>
+                            <button type="button"
+                                @click="if (!packingPhotoFile && !packingUploadSuccess && !detailsOrder.packingProof) { packingUploadError = 'Please upload or capture a packing proof photo before confirming shipment.'; } else if (packingPhotoFile && !packingUploadSuccess && !detailsOrder.packingProof) { uploadPackingProof().then(() => updateStatus(detailsOrder, 'Shipped')); } else { updateStatus(detailsOrder, 'Shipped'); }"
+                                :disabled="packingUploading || statusUpdating"
+                                :style="(packingUploadSuccess || detailsOrder.packingProof) ? 'background-color: #C0420A; color: #ffffff;' : 'background-color: #000000; color: #ffffff;'"
+                                class="flex-1 py-2.5 sm:py-3 bg-black hover:bg-[#C0420A] disabled:opacity-50 text-white text-[10px] font-black uppercase tracking-widest rounded-full transition-all flex items-center justify-center gap-2 shadow-md cursor-pointer">
+                                <template x-if="packingUploading || statusUpdating">
+                                    <svg class="w-3.5 h-3.5 animate-spin text-white" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"/></svg>
+                                </template>
+                                <template x-if="!packingUploading && !statusUpdating">
+                                    <svg class="w-3.5 h-3.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+                                </template>
+                                <span x-text="packingUploading ? 'Uploading Photo...' : (statusUpdating ? 'Updating Status...' : ((packingUploadSuccess || detailsOrder.packingProof) ? 'Confirm Shipment (Mark Shipped) ➔' : (packingPhotoFile ? 'Upload & Confirm Shipment ➔' : 'Upload Proof & Confirm Shipment ➔')))"></span>
+                            </button>
+                        </div>
                     </template>
 
                     {{-- Button for Shipped status: Mark In Transit (requires seller to input tracking number) --}}
@@ -1051,6 +1123,14 @@ function sellerOrdersManager(initialOrders) {
                     <template x-if="detailsOrder && normalizeStatus(detailsOrder.status) === 'completed'">
                         <div class="flex-1 py-2.5 sm:py-3 bg-emerald-50 border border-emerald-200 text-emerald-800 text-[10px] font-black uppercase tracking-widest rounded-full flex items-center justify-center gap-2">
                             <span>✓ Order Completed by Customer</span>
+                        </div>
+                    </template>
+
+                    {{-- Status notice for Cancelled status --}}
+                    <template x-if="detailsOrder && normalizeStatus(detailsOrder.status) === 'cancelled'">
+                        <div class="flex-1 py-2.5 sm:py-3 bg-red-50 border border-red-200 text-red-800 text-[10px] font-black uppercase tracking-widest rounded-full flex items-center justify-center gap-2">
+                            <span>✕ Order Cancelled</span>
+                            <span class="font-normal text-[10px] text-red-600 truncate max-w-xs" x-text="detailsOrder.cancellationReason ? '(' + detailsOrder.cancellationReason + ')' : ''"></span>
                         </div>
                     </template>
                 </div>
@@ -1435,6 +1515,80 @@ function sellerOrdersManager(initialOrders) {
         {{-- Lightbox Image Box --}}
         <div class="max-w-2xl max-h-[80vh] bg-black/40 rounded-2xl overflow-hidden border border-white/10 flex items-center justify-center shadow-2xl p-2">
             <img :src="receiptUrl" class="max-w-full max-h-[75vh] object-contain rounded-xl" alt="Payment Receipt">
+        </div>
+    </div>
+
+    {{-- Cancel Order (Artisan) Modal --}}
+    <div x-show="showCancelOrderModal" 
+         x-transition:enter="transition ease-out duration-300"
+         x-transition:enter-start="opacity-0"
+         x-transition:enter-end="opacity-100"
+         x-transition:leave="transition ease-in duration-200"
+         x-transition:leave-start="opacity-100"
+         x-transition:leave-end="opacity-0"
+         class="fixed inset-0 bg-black/70 backdrop-blur-sm z-9999 flex items-center justify-center p-4"
+         @click.self="showCancelOrderModal = false"
+         x-cloak
+         style="display: none;">
+        <div class="w-full max-w-md bg-white rounded-3xl shadow-2xl p-6 space-y-4 border border-gray-100 relative overflow-hidden">
+            <div class="h-1.5 w-full bg-red-600 absolute top-0 left-0"></div>
+
+            <div class="flex items-center gap-3 border-b border-gray-100 pb-3">
+                <div class="w-10 h-10 rounded-full bg-red-100 text-red-600 flex items-center justify-center font-bold text-lg shrink-0">
+                    ✕
+                </div>
+                <div>
+                    <h3 class="text-sm font-black text-black uppercase tracking-tight">Cancel Order</h3>
+                    <p class="text-[10px] text-gray-500 font-medium">Please specify why this order is being cancelled.</p>
+                </div>
+            </div>
+
+            <div class="space-y-3 text-xs">
+                <template x-if="sellerCancelError">
+                    <div class="p-2.5 bg-red-50 border border-red-200 rounded-xl text-[10px] font-bold text-red-600" x-text="sellerCancelError"></div>
+                </template>
+
+                <div class="space-y-1.5">
+                    <label class="text-[10px] font-black uppercase tracking-widest text-gray-500">Cancellation Reason <span class="text-red-500">*</span></label>
+                    <select x-model="sellerCancelReason" class="w-full px-3.5 py-2.5 bg-gray-50 border border-gray-200 rounded-2xl text-xs font-bold text-gray-800 outline-none focus:border-red-500 focus:bg-white transition-all">
+                        <option value="Out of stock / fabric unavailable">Out of stock / fabric unavailable</option>
+                        <option value="Customization cannot be fulfilled">Customization cannot be fulfilled</option>
+                        <option value="Buyer requested cancellation">Buyer requested cancellation</option>
+                        <option value="Unreachable / unresponsive buyer">Unreachable / unresponsive buyer</option>
+                        <option value="Incorrect pricing or listing error">Incorrect pricing or listing error</option>
+                        <option value="Other">Other / Custom reason</option>
+                    </select>
+                </div>
+
+                <template x-if="sellerCancelReason === 'Other'">
+                    <div class="space-y-1">
+                        <label class="text-[10px] font-black uppercase tracking-widest text-gray-500">Custom Explanation <span class="text-red-500">*</span></label>
+                        <textarea x-model="sellerCustomCancelReason" rows="3" placeholder="Provide specific reason for cancellation..." class="w-full px-3.5 py-2.5 bg-gray-50 border border-gray-200 rounded-2xl text-xs font-medium outline-none focus:border-red-500 focus:bg-white resize-none"></textarea>
+                    </div>
+                </template>
+
+                <div class="p-3 bg-red-50 border border-red-200 rounded-2xl text-[10px] text-red-700 leading-relaxed">
+                    <strong>Notice:</strong> Cancelling will automatically replenish product stock in your inventory and notify the customer.
+                </div>
+            </div>
+
+            <div class="flex gap-3 pt-2">
+                <button type="button" 
+                    @click="showCancelOrderModal = false"
+                    :disabled="sellerCancelLoading"
+                    class="flex-1 py-3 rounded-full border border-gray-200 text-[10px] font-black uppercase tracking-widest text-gray-500 hover:bg-gray-50 transition-all cursor-pointer">
+                    Back
+                </button>
+                <button type="button" 
+                    @click="executeSellerCancelOrder()"
+                    :disabled="sellerCancelLoading"
+                    class="flex-1 py-3 rounded-full bg-red-600 hover:bg-red-700 text-white text-[10px] font-black uppercase tracking-widest shadow-md transition-all flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-50">
+                    <template x-if="sellerCancelLoading">
+                        <svg class="w-3.5 h-3.5 animate-spin text-white" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"/></svg>
+                    </template>
+                    <span x-text="sellerCancelLoading ? 'Cancelling...' : 'Confirm Cancellation'"></span>
+                </button>
+            </div>
         </div>
     </div>
 </div>
