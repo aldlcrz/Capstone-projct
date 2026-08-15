@@ -131,6 +131,15 @@ class WebAuthController extends Controller
 
     public function register(Request $request)
     {
+        $email = strtolower(trim($request->email));
+        $username = trim($request->username);
+
+        // Delete any stale unverified user record with this email so it doesn't block re-registering
+        $staleUser = User::where('email', $email)->where('isVerified', false)->first();
+        if ($staleUser) {
+            $staleUser->delete();
+        }
+
         $validator = Validator::make($request->all(), [
             'username'      => 'required|string|min:3|max:50|unique:users,username',
             'email'         => 'required|string|email|max:255|unique:users,email',
@@ -161,26 +170,31 @@ class WebAuthController extends Controller
             return back()->withErrors($validator)->withInput();
         }
 
-        $email = strtolower(trim($request->email));
-
-        $user = User::create([
-            'name'       => $request->username,
-            'username'   => $request->username,
-            'email'      => $email,
-            'password'   => Hash::make($request->password),
-            'role'       => 'customer',
-            'status'     => 'active',
-            'isVerified' => false, // Requires Gmail verification
+        // Account is NOT created in DB until verification code is entered!
+        session([
+            'pending_registration' => [
+                'name'              => $username,
+                'username'          => $username,
+                'email'             => $email,
+                'password'          => Hash::make($request->password),
+                'role'              => 'customer',
+                'status'            => 'active',
+                'isVerified'        => true,
+                'email_verified_at' => now(),
+            ],
+            'verify_email' => $email,
         ]);
 
         // Generate verification code and send email
         $verification = \App\Services\EmailNotificationService::createVerificationCode($email, 'registration');
-        $mailable = new \App\Mail\VerificationCodeMail($user->name, $verification->code);
-        \App\Services\EmailNotificationService::sendNotification($email, $mailable, 'email_verification', $user->id, 'User', $user->id);
+        $mailable = new \App\Mail\VerificationCodeMail($username, $verification->code);
+        $sent = \App\Services\EmailNotificationService::sendNotification($email, $mailable, 'email_verification');
 
-        session(['verify_email' => $email]);
+        if (!$sent) {
+            return redirect()->route('verify.email')->with('warning', 'Verification code created, but sending email may be delayed. Please check your Gmail or click Resend.');
+        }
 
-        return redirect()->route('verify.email')->with('success', 'Account created! Please enter the 6-digit verification code sent to your Gmail.');
+        return redirect()->route('verify.email')->with('success', 'Verification code sent to your Gmail! Enter the 6-digit code below to create and activate your account.');
     }
 
     public function showSellerRegister()
@@ -288,30 +302,53 @@ class WebAuthController extends Controller
             return back()->withErrors(['code' => 'Invalid or expired verification code. Please request a new code if expired.']);
         }
 
-        $user = User::where('email', $email)->first();
+        // 1. Create account from session if pending registration exists
+        $pending = session('pending_registration');
+        $user = null;
+        if ($pending && isset($pending['email']) && strtolower($pending['email']) === $email) {
+            $user = User::create($pending);
+            session()->forget('pending_registration');
+        } else {
+            // 2. Fallback to existing unverified user record (e.g. seller registration)
+            $user = User::where('email', $email)->first();
+            if ($user) {
+                $user->isVerified = true;
+                $user->email_verified_at = now();
+                $user->save();
+            }
+        }
+
         if ($user) {
-            $user->isVerified = true;
-            $user->save();
             \App\Services\EmailNotificationService::consumeCode($email, 'registration');
             Auth::login($user);
 
             $contextRedirect = $this->restorePendingContext($user, $request);
             if ($contextRedirect) return $contextRedirect;
 
-            return redirect('/')->with('success', 'Your Gmail address has been verified successfully!');
+            return redirect('/')->with('success', 'Your Gmail address has been verified and your account is now created!');
         }
 
-        return redirect()->route('login')->with('error', 'User account not found.');
+        return redirect()->route('register')->with('error', 'Registration session expired. Please register again.');
     }
 
     public function resendVerificationCode(Request $request)
     {
         $request->validate(['email' => 'required|email']);
         $email = strtolower(trim($request->email));
+
+        $pending = session('pending_registration');
         $user = User::where('email', $email)->first();
 
-        if (!$user) {
-            return back()->withErrors(['email' => 'No account found with this Gmail address.']);
+        $userName = 'Customer';
+        $userId = null;
+
+        if ($pending && isset($pending['email']) && strtolower($pending['email']) === $email) {
+            $userName = $pending['name'] ?? 'Customer';
+        } elseif ($user) {
+            $userName = $user->name;
+            $userId = $user->id;
+        } else {
+            return back()->withErrors(['email' => 'No pending registration found for this Gmail address. Please register first.']);
         }
 
         $existing = \App\Models\EmailVerification::where('email', $email)->where('type', 'registration')->first();
@@ -321,8 +358,8 @@ class WebAuthController extends Controller
         }
 
         $verification = \App\Services\EmailNotificationService::createVerificationCode($email, 'registration');
-        $mailable = new \App\Mail\VerificationCodeMail($user->name, $verification->code);
-        $sent = \App\Services\EmailNotificationService::sendNotification($email, $mailable, 'email_verification', $user->id, 'User', $user->id);
+        $mailable = new \App\Mail\VerificationCodeMail($userName, $verification->code);
+        $sent = \App\Services\EmailNotificationService::sendNotification($email, $mailable, 'email_verification', $userId, 'User', $userId);
 
         if (!$sent) {
             return back()->withErrors(['code' => 'Unable to send verification code to your Gmail address at this time. Please try again.']);

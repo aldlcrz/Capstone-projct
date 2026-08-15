@@ -22,8 +22,8 @@ class VerificationCodeMail extends Mailable
 
     public function build()
     {
-        $fromAddress = config('mail.from.address', 'no-reply@lumbarong.com');
-        $fromName    = config('mail.from.name', 'LumBarong Automated Notifications');
+        $fromAddress = config('mail.from.address') ?: (config('mail.mailers.smtp.username') ?: 'lumbarongsupport@gmail.com');
+        $fromName    = config('mail.from.name', 'LumBarong Notifications');
 
         return $this->from($fromAddress, $fromName)
                     ->replyTo($fromAddress, $fromName)
