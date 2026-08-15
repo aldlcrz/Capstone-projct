@@ -307,15 +307,12 @@ class OrderController extends Controller
             $order->packingProof = 'uploads/packing-proofs/' . $filename;
         }
 
-        // Shipping info: courier and tracking assignment
+        // Shipping info: courier and tracking assignment (must be manually entered by seller)
         $shippingUpdated = false;
         $courier = trim($request->courierName ?? $order->courierName ?? 'J&T Express');
         $trackingNum = trim($request->trackingNumber ?? $order->trackingNumber ?? '');
         $trackingLink = trim($request->trackingLink ?? $order->trackingLink ?? '');
 
-        if (!$trackingNum && in_array($canonicalTarget, ['Shipped', 'In Transit'], true)) {
-            $trackingNum = 'JT-' . strtoupper(substr($order->id, -8));
-        }
         if (!$trackingLink && $courier === 'J&T Express') {
             $trackingLink = 'https://www.jtexpress.ph/track';
         }
@@ -324,13 +321,18 @@ class OrderController extends Controller
             $order->courierName = $courier;
             $shippingUpdated = true;
         }
-        if ($trackingNum && $order->trackingNumber !== $trackingNum) {
+        if ($trackingNum !== '' && $order->trackingNumber !== $trackingNum) {
             $order->trackingNumber = $trackingNum;
             $shippingUpdated = true;
         }
         if ($trackingLink && $order->trackingLink !== $trackingLink) {
             $order->trackingLink = $trackingLink;
             $shippingUpdated = true;
+        }
+
+        // Strictly require manual tracking number before moving to In Transit
+        if (in_array($canonicalTarget, ['In Transit'], true) && empty($order->trackingNumber)) {
+            return response()->json(['message' => 'Please enter the official courier tracking number before moving to In Transit.'], 422);
         }
 
         $order->status = $canonicalTarget;

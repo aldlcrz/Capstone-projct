@@ -277,8 +277,8 @@ function sellerOrdersManager(initialOrders) {
                 const payload = {
                     status: 'Delivered',
                     courierName: this.courierName || target.courierName || 'J&T Express',
-                    trackingNumber: this.trackingNumber || target.trackingNumber || ('JT-' + target.id.slice(-8).toUpperCase()),
-                    trackingLink: this.trackingLink || target.trackingLink || 'https://www.jtexpress.ph/track'
+                    trackingNumber: (this.trackingNumber || target.trackingNumber || '').trim() || null,
+                    trackingLink: this.trackingLink || target.trackingLink || null
                 };
 
                 const token = document.querySelector('meta[name="csrf-token"]')?.content || document.querySelector('input[name="_token"]')?.value || '';
