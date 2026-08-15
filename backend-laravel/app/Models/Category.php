@@ -1,0 +1,126 @@
+<?php
+
+namespace App\Models;
+
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Str;
+
+class Category extends Model
+{
+    use HasFactory;
+
+    /**
+     * The attributes that are mass assignable.
+     *
+     * @var array<int, string>
+     */
+    protected $fillable = [
+        'id',
+        'name',
+        'description',
+        'parentId',
+        'target_group',
+        'image',
+    ];
+
+    /**
+     * Get the full URL for the category image.
+     */
+    public function getImageUrl(): string
+    {
+        if (!empty($this->image)) {
+            if (str_starts_with($this->image, 'http') || str_starts_with($this->image, '/uploads/')) {
+                return $this->image;
+            }
+            return '/' . ltrim($this->image, '/');
+        }
+        return '/uploads/categories/pina_formal.png';
+    }
+
+    /**
+     * The primary key type.
+     *
+     * @var string
+     */
+    protected $keyType = 'string';
+
+    /**
+     * Indicates if the IDs are auto-incrementing.
+     *
+     * @var bool
+     */
+    public $incrementing = false;
+
+    /**
+     * The table associated with the model.
+     *
+     * @var string
+     */
+    protected $table = 'categories';
+
+    /**
+     * Disable timestamps.
+     *
+     * @var bool
+     */
+    public $timestamps = false;
+
+    /**
+     * Boot function from Laravel.
+     */
+    protected static function boot()
+    {
+        parent::boot();
+
+        static::creating(function ($model) {
+            if (empty($model->{$model->getKeyName()})) {
+                $model->{$model->getKeyName()} = (string) Str::uuid();
+            }
+        });
+    }
+
+    /**
+     * Get the attributes that should be cast.
+     *
+     * @return array<string, string>
+     */
+    protected function casts(): array
+    {
+        return [
+            'target_group' => 'array',
+        ];
+    }
+
+    /**
+     * Get the clean category name handling special characters like ñ.
+     */
+    public function getNameAttribute($value): string
+    {
+        return str_replace(['Pi??a', 'Pi?a'], 'Piña', $value ?? '');
+    }
+
+    /**
+     * Get the products for the category.
+     */
+    public function products()
+    {
+        return $this->hasMany(Product::class, 'CategoryId');
+    }
+
+    /**
+     * Get the parent category.
+     */
+    public function parent()
+    {
+        return $this->belongsTo(Category::class, 'parentId');
+    }
+
+    /**
+     * Get the subcategories.
+     */
+    public function children()
+    {
+        return $this->hasMany(Category::class, 'parentId');
+    }
+}

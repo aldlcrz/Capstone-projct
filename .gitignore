@@ -1,0 +1,42 @@
+# Laravel
+backend-laravel/.env
+backend-laravel/storage/*.key
+backend-laravel/vendor/
+backend-laravel/node_modules/
+backend-laravel/public/storage
+backend-laravel/public/build
+backend-laravel/storage/framework/cache/data/*
+backend-laravel/storage/framework/sessions/*
+backend-laravel/storage/framework/testing/*
+backend-laravel/storage/framework/views/*
+backend-laravel/storage/logs/*
+
+# Archives & Binaries
+backend-laravel/composer.phar
+backend-laravel/vendor.zip
+*.zip
+*.phar
+
+# Temp SQL & Debug Scripts
+database.sql latest
+database_latest.sql
+backend-laravel/storage/check_passwords.php
+
+# Uploads & User Files
+backend-laravel/public/uploads/requirements/*
+!backend-laravel/public/uploads/requirements/.gitkeep
+backend-laravel/public/uploads/payments/*
+!backend-laravel/public/uploads/payments/.gitkeep
+backend-laravel/public/uploads/reports/*
+!backend-laravel/public/uploads/reports/.gitkeep
+
+# OS Files
+.DS_Store
+Thumbs.db
+*.local
+
+# IDEs
+.idea/
+.vscode/
+*.swp
+*.bak

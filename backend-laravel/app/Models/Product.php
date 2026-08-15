@@ -1,0 +1,279 @@
+<?php
+
+namespace App\Models;
+
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Str;
+
+class Product extends Model
+{
+    use HasFactory;
+
+    /**
+     * The attributes that are mass assignable.
+     *
+     * @var array<int, string>
+     */
+    protected $fillable = [
+        'id', 'name', 'description', 'price', 'costPerPiece', 'stock',
+        'sizes', 'categories', 'image', 'shippingFee', 'shippingDays',
+        'sellerId', 'status', 'rejectionReason', 'views',
+        'sku', 'fabric_type', 'collar_type', 'artisan_region', 'CategoryId',
+        'target_group', 'size_stocks',
+        // Lumban Special discount
+        'is_on_sale', 'discount_percentage',
+        // Per-product payment overrides
+        'is_gcash_available', 'gcash_number', 'gcash_qr_code',
+        'is_maya_available',  'maya_number',  'maya_qr_code',
+        // Seller Custom Size Guide
+        'size_guide_image', 'size_guide_measurements',
+    ];
+
+    /**
+     * The primary key type.
+     *
+     * @var string
+     */
+    protected $keyType = 'string';
+
+    /**
+     * Indicates if the IDs are auto-incrementing.
+     *
+     * @var bool
+     */
+    public $incrementing = false;
+
+    /**
+     * The table associated with the model.
+     *
+     * @var string
+     */
+    protected $table = 'products';
+
+    /**
+     * The names of the columns that should be used for the timestamps.
+     */
+    const CREATED_AT = 'createdAt';
+    const UPDATED_AT = 'updatedAt';
+
+    /**
+     * Boot function from Laravel.
+     */
+    protected static function boot()
+    {
+        parent::boot();
+
+        static::creating(function ($model) {
+            if (empty($model->{$model->getKeyName()})) {
+                $model->{$model->getKeyName()} = (string) Str::uuid();
+            }
+        });
+    }
+
+    /**
+     * Get the attributes that should be cast.
+     *
+     * @return array<string, string>
+     */
+    protected function casts(): array
+    {
+        return [
+            'price'                   => 'decimal:2',
+            'costPerPiece'            => 'decimal:2',
+            'shippingFee'             => 'decimal:2',
+            'discount_percentage'     => 'decimal:2',
+            'sizes'                   => 'array',
+            'categories'              => 'array',
+            'image'                   => 'array',
+            'size_stocks'             => 'array',
+            'size_guide_measurements' => 'array',
+            'is_on_sale'              => 'boolean',
+            'is_gcash_available'      => 'boolean',
+            'is_maya_available'       => 'boolean',
+        ];
+    }
+
+    /**
+     * The accessors to append to the model's array form.
+     *
+     * @var array
+     */
+    protected $appends = ['image_url'];
+
+    /**
+     * Get the image_url appended attribute.
+     */
+    public function getImageUrlAttribute(): string
+    {
+        return $this->getImageUrl();
+    }
+
+    /**
+     * Get the clean product name handling special characters like ñ.
+     */
+    public function getNameAttribute(?string $value): string
+    {
+        return str_replace(['Pi??a', 'Pi?a'], 'Piña', $value ?? '');
+    }
+
+    /**
+     * Get the image attribute, validating physical file existence on disk.
+     */
+    public function getImageAttribute(array|string|null $value = null): array
+    {
+        if (is_null($value)) {
+            return ['products/default.jpg'];
+        }
+
+        $decoded = is_string($value) ? json_decode($value, true) : $value;
+        if (!is_array($decoded)) {
+            $decoded = [$value];
+        }
+
+        $validImages = [];
+        foreach ($decoded as $img) {
+            if (!$img || $img === 'Array' || $img === '[]' || $img === '[') {
+                continue;
+            }
+            $cleanPath = preg_replace('/^(storage|uploads)\//', '', str_replace('\\', '/', $img));
+            $cleanPath = ltrim($cleanPath, '/');
+
+            $candidates = [
+                public_path('uploads/' . $cleanPath),
+                public_path('uploads/products/' . $cleanPath),
+                storage_path('app/public/' . $cleanPath),
+                storage_path('app/public/products/' . $cleanPath),
+                public_path('storage/' . $cleanPath),
+            ];
+
+            $exists = false;
+            foreach ($candidates as $filePath) {
+                if (file_exists($filePath) && is_file($filePath)) {
+                    $exists = true;
+                    break;
+                }
+            }
+
+            if ($exists || str_starts_with($img, 'http://') || str_starts_with($img, 'https://')) {
+                $validImages[] = $img;
+            }
+        }
+
+        return !empty($validImages) ? $validImages : ['products/default.jpg'];
+    }
+
+    /**
+     * Get the final sale price after discount.
+     */
+    public function getSalePriceAttribute(): float
+    {
+        if ($this->is_on_sale && $this->discount_percentage > 0) {
+            return round($this->price * (1 - $this->discount_percentage / 100), 2);
+        }
+        return (float) $this->price;
+    }
+
+    /**
+     * Get the artisan (seller) name.
+     */
+    public function getArtisanAttribute(): ?string
+    {
+        return $this->seller ? $this->seller->displayName : null;
+    }
+
+    /**
+     * Get the seller that owns the product.
+     */
+    public function seller()
+    {
+        return $this->belongsTo(User::class, 'sellerId');
+    }
+
+    /**
+     * Get the category that the product belongs to.
+     */
+    public function category()
+    {
+        return $this->belongsTo(Category::class, 'CategoryId');
+    }
+
+    /**
+     * Get the reviews for the product.
+     */
+    public function reviews()
+    {
+        return $this->hasMany(Review::class, 'productId');
+    }
+
+    /**
+     * Get the resolved URL for a product image.
+     */
+    public function getImageUrl($image = null)
+    {
+        $img = $image ?? $this->image;
+
+        if (is_array($img)) {
+            $img = $img[0] ?? null;
+        } elseif (is_string($img)) {
+            $decoded = json_decode($img, true);
+            if (is_array($decoded) && !empty($decoded)) {
+                $img = $decoded[0];
+            }
+        }
+
+        if (!$img || $img === 'Array' || $img === '[]' || $img === '[') {
+            return '/uploads/products/default.jpg';
+        }
+
+        $img = str_replace('\\', '/', $img);
+        $img = ltrim($img, '/');
+
+        if (str_starts_with($img, 'http://') || str_starts_with($img, 'https://')) {
+            return $img;
+        }
+
+        $cleanPath = preg_replace('/^(storage|uploads)\//', '', $img);
+        $cleanPath = ltrim(str_replace('\\', '/', $cleanPath), '/');
+
+        $candidates = [
+            public_path('uploads/' . $cleanPath),
+            public_path('uploads/products/' . $cleanPath),
+            storage_path('app/public/' . $cleanPath),
+            storage_path('app/public/products/' . $cleanPath),
+            public_path('storage/' . $cleanPath),
+            public_path($img),
+        ];
+
+        foreach ($candidates as $filePath) {
+            if (file_exists($filePath) && is_file($filePath)) {
+                if (str_contains($filePath, 'public/uploads') || str_contains($filePath, 'public\uploads')) {
+                    return str_starts_with($cleanPath, 'products/') ? '/uploads/' . $cleanPath : '/uploads/products/' . $cleanPath;
+                }
+                return str_starts_with($cleanPath, 'products/') ? '/storage/' . $cleanPath : '/storage/products/' . $cleanPath;
+            }
+        }
+
+        // File does not exist physically on disk — return default product placeholder directly
+        return '/uploads/products/default.jpg';
+    }
+
+    /**
+     * Get the resolved URL for the seller's custom size guide image.
+     */
+    public function getSizeGuideUrl(): ?string
+    {
+        if (!$this->size_guide_image) {
+            return null;
+        }
+
+        $img = str_replace('\\', '/', $this->size_guide_image);
+        $img = ltrim($img, '/');
+
+        if (str_starts_with($img, 'http://') || str_starts_with($img, 'https://')) {
+            return $img;
+        }
+
+        return '/' . $img;
+    }
+}
