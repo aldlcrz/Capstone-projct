@@ -117,6 +117,8 @@ function sellerOrdersManager(initialOrders) {
         verifyOrderTarget: null,
         showRejectModal: false,
         rejectOrderTarget: null,
+        receiptModal: false,
+        receiptUrl: '',
         rejectReason: 'Reference number does not match',
         rejectCustomReason: '',
         rejectLoading: false,
@@ -1398,6 +1400,41 @@ function sellerOrdersManager(initialOrders) {
                     <span x-text="rejectLoading ? 'Submitting...' : 'Confirm Rejection'"></span>
                 </button>
             </div>
+        </div>
+    </div>
+
+    {{-- Fullscreen Receipt Lightbox Modal (High z-index to overlay verify modal) --}}
+    <div x-show="receiptModal" 
+         x-transition:enter="transition ease-out duration-200"
+         x-transition:enter-start="opacity-0 scale-95"
+         x-transition:enter-end="opacity-100 scale-100"
+         x-transition:leave="transition ease-in duration-150"
+         x-transition:leave-start="opacity-100 scale-100"
+         x-transition:leave-end="opacity-0 scale-95"
+         class="fixed inset-0 bg-black/90 backdrop-blur-md z-[100000] flex flex-col items-center justify-center p-4"
+         @click.self="receiptModal = false"
+         @keydown.escape.window="receiptModal = false"
+         x-cloak
+         style="display: none;">
+        
+        {{-- Lightbox Header --}}
+        <div class="w-full max-w-2xl flex items-center justify-between text-white pb-3 px-2">
+            <div class="flex items-center gap-2">
+                <span class="text-xs font-black uppercase tracking-widest text-emerald-400">📄 Customer Receipt Proof</span>
+            </div>
+            <div class="flex items-center gap-3">
+                <a :href="receiptUrl" target="_blank" download class="px-3 py-1.5 bg-white/10 hover:bg-white/20 text-white text-[10px] font-bold rounded-full transition-all flex items-center gap-1">
+                    <span>Open in new tab</span> ↗
+                </a>
+                <button type="button" @click="receiptModal = false" class="w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 text-white flex items-center justify-center font-bold text-sm transition-all cursor-pointer">
+                    ✕
+                </button>
+            </div>
+        </div>
+
+        {{-- Lightbox Image Box --}}
+        <div class="max-w-2xl max-h-[80vh] bg-black/40 rounded-2xl overflow-hidden border border-white/10 flex items-center justify-center shadow-2xl p-2">
+            <img :src="receiptUrl" class="max-w-full max-h-[75vh] object-contain rounded-xl" alt="Payment Receipt">
         </div>
     </div>
 </div>
