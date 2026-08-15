@@ -2,6 +2,11 @@
 
 use App\Http\Controllers\WebController;
 use App\Http\Controllers\WebAuthController;
+use App\Http\Controllers\CheckoutController;
+use App\Http\Controllers\CartController;
+use App\Http\Controllers\OrderController;
+use App\Http\Controllers\WishlistController;
+use App\Http\Controllers\NotificationController;
 use Illuminate\Support\Facades\Route;
 
 /*

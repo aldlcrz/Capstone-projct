@@ -220,7 +220,7 @@ STRICT SECURITY PROHIBITIONS & BOUNDARIES:
                 return [
                     'id' => $p->id,
                     'name' => $p->name,
-                    'price' => number_format($p->price, 2),
+                    'price' => number_format((float) ($p->price ?? 0), 2),
                     'image' => method_exists($p, 'getImageUrl') ? $p->getImageUrl() : asset('uploads/products/default.jpg'),
                     'url' => url('/products/' . $p->id),
                     'fabric' => $p->fabric_type ?? 'Lumban Hand-Embroidered',

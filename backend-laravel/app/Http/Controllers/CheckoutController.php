@@ -183,6 +183,7 @@ class CheckoutController extends Controller
             'paymentReference.required' => 'Please provide your payment reference number.',
         ]);
 
+        try {
             // 1. Resolve cart items
             $mode = $request->input('mode', 'cart');
             if ($mode === 'buy_now') {
