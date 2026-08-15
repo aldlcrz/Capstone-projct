@@ -4,7 +4,6 @@ backend-laravel/storage/*.key
 backend-laravel/vendor/
 backend-laravel/node_modules/
 backend-laravel/public/storage
-backend-laravel/public/build
 backend-laravel/storage/framework/cache/data/*
 backend-laravel/storage/framework/sessions/*
 backend-laravel/storage/framework/testing/*
