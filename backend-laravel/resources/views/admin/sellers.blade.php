@@ -89,8 +89,8 @@
                     <th class="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-gray-700 text-center hidden md:table-cell">Products</th>
                     <th class="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-gray-700 text-center hidden md:table-cell">Orders</th>
                     <th class="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-gray-700 hidden sm:table-cell">Joined</th>
-                    <th class="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-gray-700">Status</th>
-                    <th class="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-gray-700 text-right">Actions</th>
+                    <th class="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-gray-700 text-center">Status</th>
+                    <th class="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-gray-700 text-center">Actions</th>
                 </tr>
             </thead>
             <tbody class="divide-y divide-gray-50">
@@ -120,14 +120,14 @@
                     <td class="px-6 py-4 text-[11px] text-gray-500 font-medium hidden sm:table-cell">
                         {{ $seller->createdAt ? $seller->createdAt->format('M d, Y') : '—' }}
                     </td>
-                    <td class="px-6 py-4">
+                    <td class="px-6 py-4 text-center">
                         @php $sc = ['active' => 'bg-green-50 text-green-700 border border-green-200', 'blocked' => 'bg-red-50 text-red-700 border border-red-200', 'frozen' => 'bg-amber-50 text-amber-700 border border-amber-200', 'pending_approval' => 'bg-blue-50 text-blue-700 border border-blue-200']; @endphp
                         <span class="px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest inline-block {{ $sc[$seller->status] ?? 'bg-gray-50 text-gray-600 border border-gray-200' }}">
                             {{ $seller->status === 'pending_approval' ? 'Pending' : $seller->status }}
                         </span>
                     </td>
                     <td class="px-6 py-4">
-                        <div class="flex items-center justify-end gap-2">
+                        <div class="flex items-center justify-center gap-2">
                             @if(!$seller->isVerified)
                                 <form action="/admin/sellers/{{ $seller->id }}/verify" method="POST">
                                     @csrf @method('PATCH')
