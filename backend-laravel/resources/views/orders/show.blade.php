@@ -993,7 +993,7 @@
                 </template>
 
                 <div class="p-3 bg-red-50 border border-red-200 rounded-xl text-[10px] text-red-700 leading-relaxed">
-                    <strong>Note:</strong> Once cancelled, product stock will be returned to inventory. If you already submitted payment proof, the artisan will not charge or verify this transaction.
+                    <strong>Note:</strong> Cancellations and refunds are subject to the shop’s policy. Please contact the seller for assistance.
                 </div>
 
                 <div class="flex gap-2.5 pt-2">
