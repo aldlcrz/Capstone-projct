@@ -152,6 +152,7 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->group(function () {
     Route::delete('/users/{id}', [AdminController::class, 'deleteUser'])->name('admin.users.delete');
     Route::get('/sellers', [AdminController::class, 'sellers'])->name('admin.sellers');
     Route::patch('/sellers/{id}/verify', [AdminController::class, 'verifySellerWeb'])->name('admin.sellers.verify');
+    Route::patch('/sellers/{id}/unverify', [AdminController::class, 'unverifySellerWeb'])->name('admin.sellers.unverify');
     Route::patch('/sellers/{id}/suspend', [AdminController::class, 'suspendSeller'])->name('admin.sellers.suspend');
     Route::patch('/sellers/{id}/unsuspend', [AdminController::class, 'unsuspendSeller'])->name('admin.sellers.unsuspend');
     Route::delete('/sellers/{id}', [AdminController::class, 'deleteSeller'])->name('admin.sellers.delete');

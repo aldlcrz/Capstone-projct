@@ -682,6 +682,16 @@ class AdminController extends Controller
         return redirect()->back()->with('success', 'Seller verified.');
     }
 
+    public function unverifySellerWeb(string $id)
+    {
+        $user = User::findOrFail($id);
+        $user->isVerified = false;
+        $user->status     = 'pending_approval';
+        $user->save();
+        $this->sendNotification($user->id, 'Verification Revoked', 'Your artisan workshop verification has been revoked by an administrator.', 'system', '/profile', 'seller');
+        return redirect()->back()->with('success', 'Seller verification revoked. Account moved back to Pending.');
+    }
+
     public function suspendSeller(Request $request, string $id)
     {
         $user = User::findOrFail($id);
