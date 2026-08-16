@@ -6,6 +6,10 @@
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>{{ $title ?? 'Admin Panel' }} | LumBarong</title>
 
+    <!-- Favicon -->
+    <link rel="icon" type="image/x-icon" href="{{ asset('favicon.ico') }}">
+    <link rel="apple-touch-icon" sizes="180x180" href="{{ asset('images/apple-touch-icon.png') }}">
+
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
         tailwind.config = {
@@ -53,15 +57,18 @@
         
         <!-- Desktop Sidebar -->
         <aside class="hidden lg:flex flex-col w-70 h-full bg-white border-r border-(--border) overflow-hidden">
-            <div class="p-10 flex flex-col h-full">
-                <div class="mb-12 shrink-0">
-                    <a href="/admin/dashboard" class="font-serif text-lg font-bold text-(--charcoal) tracking-tighter">
-                        LUMBARONG
+            <div class="p-8 flex flex-col h-full">
+                <div class="mb-10 shrink-0">
+                    <a href="/admin/dashboard" class="flex items-center gap-3 group">
+                        <img src="{{ asset('images/logo-icon.png') }}" alt="LumBarong Logo" class="w-9 h-9 object-contain rounded-full shadow-xs group-hover:scale-105 transition-transform">
+                        <div>
+                            <span class="font-serif text-lg font-bold text-(--charcoal) tracking-tight">LUMBARONG</span>
+                            <div class="flex items-center gap-1.5 px-0.5 text-(--rust) font-bold tracking-widest text-[9px]">
+                                <svg class="w-2.5 h-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path></svg>
+                                CONTROL PANEL
+                            </div>
+                        </div>
                     </a>
-                    <div class="flex items-center gap-1.5 mt-2 px-1 text-(--rust) font-bold tracking-widest text-[10px]">
-                        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path></svg>
-                        CONTROL PANEL
-                    </div>
                 </div>
 
                 <nav class="flex-1 space-y-6 overflow-y-auto no-scrollbar">
@@ -154,8 +161,9 @@
             <!-- Header -->
             <header class="sticky top-0 z-40 bg-white border-b border-(--border) h-16 lg:h-18 flex items-center shrink-0 px-4 lg:px-10 justify-between">
                 <div class="flex items-center gap-2">
-                    <a href="/admin/dashboard" class="lg:hidden font-serif font-bold text-[#2A2A2A] tracking-tighter text-base flex items-center gap-1.5">
-                        <span>LUMBARONG</span>
+                    <a href="/admin/dashboard" class="lg:hidden flex items-center gap-2">
+                        <img src="{{ asset('images/logo-icon.png') }}" alt="LumBarong" class="w-7 h-7 object-contain rounded-full shadow-xs">
+                        <span class="font-serif font-bold text-[#2A2A2A] tracking-tight text-base">LUMBARONG</span>
                         <span class="text-[9px] font-black text-[#C0420A] px-1.5 py-0.5 bg-[#C0420A]/10 rounded uppercase">Admin</span>
                     </a>
                 </div>

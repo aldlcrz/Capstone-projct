@@ -37,6 +37,7 @@
         <div class="px-6 pt-6 pb-4 border-b border-gray-100 shrink-0 bg-white">
             <div class="flex items-center justify-between mb-4">
                 <div class="flex items-center gap-2">
+                    <img src="{{ asset('images/logo-icon.png') }}" alt="LumBarong" class="w-6 h-6 object-contain rounded-full shadow-xs">
                     <span class="px-2.5 py-0.5 bg-[#C0420A]/10 text-[#C0420A] text-[9px] font-black uppercase tracking-widest rounded-full">
                         LumBarong
                     </span>

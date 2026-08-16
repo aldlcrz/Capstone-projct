@@ -7,6 +7,9 @@
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
     <title>Seller Registration | LumBarong</title>
+    <!-- Favicon -->
+    <link rel="icon" type="image/x-icon" href="{{ asset('favicon.ico') }}">
+    <link rel="apple-touch-icon" sizes="180x180" href="{{ asset('images/apple-touch-icon.png') }}">
     <script src="https://cdn.tailwindcss.com"></script>
     <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Playfair+Display:wght@700;800&display=swap" rel="stylesheet">
@@ -71,7 +74,7 @@
          x-data="{ step: {{ $errors->has('mobileNumber') || $errors->has('residencyCertificate') || $errors->has('businessPermit') || $errors->has('birDocument') || $errors->has('terms_consent') ? 2 : 1 }} }" x-cloak>
         
         <!-- Header -->
-        <div class="relative mb-12 text-center">
+        <div class="relative mb-10 text-center">
             <!-- Back Button -->
             <button x-show="step > 1" @click="step--" class="absolute left-0 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-[#F9F6F2] flex items-center justify-center hover:bg-gray-100 transition-all">
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -84,7 +87,10 @@
                 </svg>
             </button>
 
-            <h1 class="font-serif text-4xl font-black tracking-tight text-[#C0422A] mb-1">LumBarong</h1>
+            <div class="flex justify-center mb-3">
+                <img src="{{ asset('images/logo-icon.png') }}" alt="LumBarong Logo" class="w-14 h-14 object-contain rounded-full shadow-md hover:scale-105 transition-transform">
+            </div>
+            <h1 class="font-serif text-3xl md:text-4xl font-black tracking-tight text-[#C0422A] mb-1">LumBarong</h1>
             <p class="text-[10px] font-bold uppercase tracking-[0.4em] text-[#9CA3AF]">Seller Registration</p>
         </div>
 

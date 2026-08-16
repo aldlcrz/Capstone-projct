@@ -5,6 +5,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>{{ $title ?? 'Super Admin' }} | LumBarong Governance</title>
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/x-icon" href="{{ asset('favicon.ico') }}">
+    <link rel="apple-touch-icon" sizes="180x180" href="{{ asset('images/apple-touch-icon.png') }}">
+
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Playfair+Display:wght@700;800&display=swap" rel="stylesheet">
     <script defer src="https://unpkg.com/@alpinejs/collapse@3.x.x/dist/cdn.min.js"></script>
@@ -25,12 +30,15 @@
             <div class="p-8 flex flex-col h-full">
                 <!-- App Brand -->
                 <div class="mb-10 shrink-0">
-                    <a href="/superadmin/dashboard" class="font-serif text-lg font-black italic tracking-tight text-[#C0422A]">
-                        LumBarong
+                    <a href="/superadmin/dashboard" class="flex items-center gap-3 group">
+                        <img src="{{ asset('images/logo-icon.png') }}" alt="LumBarong" class="w-9 h-9 object-contain rounded-full shadow-xs group-hover:scale-105 transition-transform">
+                        <div>
+                            <span class="font-serif text-lg font-black italic tracking-tight text-[#C0422A]">LumBarong</span>
+                            <div class="flex items-center gap-1 px-1.5 py-0.5 rounded-full bg-[#C0422A]/10 border border-[#C0422A]/20 text-[#C0422A] font-bold tracking-widest text-[8px] w-fit mt-0.5">
+                                👑 SUPER ADMIN
+                            </div>
+                        </div>
                     </a>
-                    <div class="flex items-center gap-1.5 mt-2 px-2 py-0.5 rounded-full bg-[#C0422A]/10 border border-[#C0422A]/20 text-[#C0422A] font-bold tracking-widest text-[9px] w-fit">
-                        👑 SUPER ADMIN GOVERNANCE
-                    </div>
                 </div>
 
                 <!-- Navigation -->
@@ -105,8 +113,9 @@
             <!-- Header -->
             <header class="h-16 bg-white border-b border-[#E5DDD5] flex items-center justify-between px-4 lg:px-10 shrink-0 shadow-sm">
                 <div class="flex items-center gap-3">
-                    <a href="/superadmin/dashboard" class="lg:hidden font-serif text-base font-black italic tracking-tight text-[#C0422A]">
-                        LumBarong
+                    <a href="/superadmin/dashboard" class="lg:hidden flex items-center gap-2">
+                        <img src="{{ asset('images/logo-icon.png') }}" alt="LumBarong" class="w-7 h-7 object-contain rounded-full shadow-xs">
+                        <span class="font-serif text-base font-black italic tracking-tight text-[#C0422A]">LumBarong</span>
                     </a>
                     <h2 class="hidden sm:block text-xs sm:text-sm font-bold text-gray-500 uppercase tracking-widest">Super Admin Governance</h2>
                 </div>

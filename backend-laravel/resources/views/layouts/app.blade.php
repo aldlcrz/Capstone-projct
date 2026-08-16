@@ -7,6 +7,10 @@
 
     <title>{{ config('app.name', 'LumBarong') }}</title>
 
+    <!-- Favicon -->
+    <link rel="icon" type="image/x-icon" href="{{ asset('favicon.ico') }}">
+    <link rel="apple-touch-icon" sizes="180x180" href="{{ asset('images/apple-touch-icon.png') }}">
+
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -33,8 +37,8 @@
             <div class="flex items-center justify-between px-2.5 sm:px-4 lg:px-12 py-2.5 sm:py-3.5 w-full max-w-7xl mx-auto gap-2 sm:gap-4">
                 <!-- Left: Logo & Seller Hub -->
                 <div class="flex items-center gap-2 sm:gap-6 shrink-0">
-                    <a href="/" class="flex items-center gap-2">
-                        <div class="w-8 h-8 sm:w-9 sm:h-9 bg-black rounded-full text-white flex items-center justify-center font-extrabold text-base sm:text-lg shadow-sm">L</div>
+                    <a href="/" class="flex items-center gap-2.5 group">
+                        <img src="{{ asset('images/logo-icon.png') }}" alt="LumBarong Logo" class="w-8 h-8 sm:w-9 sm:h-9 object-contain rounded-full shadow-xs group-hover:scale-105 transition-transform duration-200">
                         <span class="text-xl font-extrabold tracking-tight text-gray-900 hidden sm:inline-block">LumBarong</span>
                     </a>
 
@@ -406,12 +410,12 @@
             <div class="max-w-360 mx-auto px-4 lg:px-12">
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-12">
                     <div class="space-y-4">
-                        <div class="flex items-center gap-2">
-                            <div class="w-8 h-8 bg-black rounded-full text-white flex items-center justify-center font-bold text-lg shadow-md">L</div>
+                        <div class="flex items-center gap-2.5">
+                            <img src="{{ asset('images/logo-icon.png') }}" alt="LumBarong Logo" class="w-8 h-8 object-contain rounded-full shadow-sm">
                             <span class="text-xl font-bold tracking-tight text-black">LumBarong</span>
                         </div>
                         <p class="text-sm text-gray-500 leading-relaxed max-w-sm">
-                            We have clothes that suits your style and which you're proud to wear. From women to men.
+                            Preserving Filipino heritage with modern elegance. Authentic handcrafted Barong Tagalog direct from the artisans of Lumban, Laguna.
                         </p>
                         <div class="text-[11px] font-medium text-gray-400 tracking-widest pt-2">
                             LumBarong © {{ date('Y') }}. All Rights Reserved

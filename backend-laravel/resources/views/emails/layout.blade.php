@@ -125,8 +125,11 @@
 <body>
     <div class="container">
         <div class="header">
+            <div style="margin-bottom: 10px;">
+                <img src="{{ config('app.url') }}/images/logo-icon.png" alt="LumBarong" width="52" height="52" style="border-radius: 50%; display: inline-block; vertical-align: middle; box-shadow: 0 4px 10px rgba(0,0,0,0.15);">
+            </div>
             <h1>LumBarong</h1>
-            <p>Heritage Artisan Marketplace</p>
+            <p>Filipino Heritage, Modern Elegance</p>
         </div>
         <div class="body">
             @yield('content')

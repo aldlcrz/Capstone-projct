@@ -5,6 +5,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>{{ $title ?? 'Seller Dashboard' }} | LumBarong</title>
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/x-icon" href="{{ asset('favicon.ico') }}">
+    <link rel="apple-touch-icon" sizes="180x180" href="{{ asset('images/apple-touch-icon.png') }}">
+
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     <script>
         tailwind = {
@@ -47,15 +52,18 @@
         
         <!-- Desktop Sidebar -->
         <aside class="hidden lg:flex flex-col w-70 h-full bg-white border-r border-(--border) overflow-hidden">
-            <div class="p-10 flex flex-col h-full">
-                <div class="mb-12 shrink-0">
-                    <a href="/seller/dashboard" class="font-serif text-lg font-bold text-(--charcoal) tracking-tighter">
-                        LUMBARONG
+            <div class="p-8 flex flex-col h-full">
+                <div class="mb-10 shrink-0">
+                    <a href="/seller/dashboard" class="flex items-center gap-3 group">
+                        <img src="{{ asset('images/logo-icon.png') }}" alt="LumBarong Logo" class="w-9 h-9 object-contain rounded-full shadow-xs group-hover:scale-105 transition-transform">
+                        <div>
+                            <span class="font-serif text-lg font-bold text-(--charcoal) tracking-tight">LUMBARONG</span>
+                            <div class="flex items-center gap-1.5 px-0.5 text-(--rust) font-bold tracking-widest text-[9px]">
+                                <svg class="w-2.5 h-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"></path></svg>
+                                SELLER HUB
+                            </div>
+                        </div>
                     </a>
-                    <div class="flex items-center gap-1.5 mt-2 px-1 text-(--rust) font-bold tracking-widest text-[10px]">
-                        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"></path></svg>
-                        SELLER SIDE
-                    </div>
                 </div>
 
                 <nav class="flex-1 space-y-10 overflow-y-auto no-scrollbar">
@@ -158,9 +166,12 @@
                 <div>
                     <!-- Header inside Drawer -->
                     <div class="flex items-center justify-between pb-6 border-b border-gray-100">
-                        <div>
-                            <span class="font-serif font-black tracking-widest text-lg uppercase text-black">LumBarong</span>
-                            <span class="block text-[8px] font-black tracking-widest uppercase text-[#C0422A] -mt-1">Seller Portal</span>
+                        <div class="flex items-center gap-2.5">
+                            <img src="{{ asset('images/logo-icon.png') }}" alt="LumBarong" class="w-8 h-8 object-contain rounded-full shadow-xs">
+                            <div>
+                                <span class="font-serif font-black tracking-wider text-base uppercase text-black">LumBarong</span>
+                                <span class="block text-[8px] font-black tracking-widest uppercase text-[#C0422A]">Seller Portal</span>
+                            </div>
                         </div>
                         <button @click="isMobileMenuOpen = false" class="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center text-gray-500 hover:bg-gray-200 transition-colors">
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
@@ -237,8 +248,11 @@
             <!-- Top Header -->
             <header class="sticky top-0 z-40 bg-white border-b border-(--border) h-16 lg:h-18 flex items-center shrink-0">
                 <div class="w-full flex items-center justify-between px-4 lg:px-10">
-                    <div class="flex items-center gap-3 lg:hidden">
-                        <a href="/seller/dashboard" class="font-serif text-base font-bold text-(--charcoal) tracking-tighter">LUMBARONG</a>
+                    <div class="flex items-center gap-2 lg:hidden">
+                        <a href="/seller/dashboard" class="flex items-center gap-2">
+                            <img src="{{ asset('images/logo-icon.png') }}" alt="LumBarong" class="w-7 h-7 object-contain rounded-full shadow-xs">
+                            <span class="font-serif text-base font-bold text-(--charcoal) tracking-tight">LUMBARONG</span>
+                        </a>
                     </div>
                     <div class="hidden lg:flex flex-1"></div>
                     <div class="flex items-center gap-2 lg:gap-4">

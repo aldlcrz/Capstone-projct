@@ -4,6 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Maintenance in Progress - LumBarong</title>
+    <!-- Favicon -->
+    <link rel="icon" type="image/x-icon" href="{{ asset('favicon.ico') }}">
+    <link rel="apple-touch-icon" sizes="180x180" href="{{ asset('images/apple-touch-icon.png') }}">
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -51,7 +54,7 @@
     <!-- Header / Logo -->
     <header class="relative z-10 w-full px-6 py-8 flex justify-center border-b border-white/5 backdrop-blur-sm bg-black/10">
         <div class="flex items-center gap-3">
-            <div class="w-9 h-9 bg-white text-black rounded-full flex items-center justify-center font-bold text-xl shadow-lg shadow-white/5 transition-transform hover:scale-105">L</div>
+            <img src="{{ asset('images/logo-icon.png') }}" alt="LumBarong Logo" class="w-10 h-10 object-contain rounded-full shadow-lg shadow-white/5 transition-transform hover:scale-105">
             <span class="text-xl font-bold tracking-widest uppercase text-white font-sans">LumBarong</span>
         </div>
     </header>
