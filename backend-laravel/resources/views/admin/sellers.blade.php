@@ -81,12 +81,14 @@
             <h3 class="text-sm font-black uppercase tracking-widest text-black">All Sellers</h3>
         </div>
         <div class="overflow-x-auto no-scrollbar">
-            <table class="w-full text-left min-w-137.5">
+            <table class="w-full text-left min-w-160">
             <thead>
                 <tr class="bg-gray-50/50 border-b border-gray-100">
-                    <th class="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-gray-700">Seller</th>
-                    <th class="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-gray-700 hidden md:table-cell">Products</th>
-                    <th class="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-gray-700 hidden md:table-cell">Orders</th>
+                    <th class="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-gray-700">Artisan / Seller</th>
+                    <th class="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-gray-700 hidden lg:table-cell">Shop Name</th>
+                    <th class="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-gray-700 text-center hidden md:table-cell">Products</th>
+                    <th class="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-gray-700 text-center hidden md:table-cell">Orders</th>
+                    <th class="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-gray-700 hidden sm:table-cell">Joined</th>
                     <th class="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-gray-700">Status</th>
                     <th class="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-gray-700 text-right">Actions</th>
                 </tr>
@@ -96,25 +98,31 @@
                 <tr class="hover:bg-gray-50/50 transition-all">
                     <td class="px-6 py-4">
                         <div class="flex items-center gap-3">
-                            <div class="w-9 h-9 rounded-xl bg-[#C0422A] text-white flex items-center justify-center font-black text-sm">
+                            <div class="w-9 h-9 rounded-xl bg-[#C0422A] text-white flex items-center justify-center font-black text-sm shrink-0">
                                 {{ strtoupper(substr($seller->name, 0, 1)) }}
                             </div>
-                            <div>
-                                <div class="text-sm font-bold text-black flex items-center gap-2">
+                            <div class="min-w-0">
+                                <div class="text-sm font-bold text-black flex items-center gap-2 truncate">
                                     {{ $seller->name }}
                                     @if($seller->isVerified)
-                                        <span class="text-green-500 text-[9px]">✓</span>
+                                        <span class="text-green-500 text-[10px] font-black" title="Verified">✓</span>
                                     @endif
                                 </div>
-                                <div class="text-[10px] text-gray-500 font-medium">{{ $seller->email }}</div>
+                                <div class="text-[10px] text-gray-500 font-medium truncate">{{ $seller->email }}</div>
                             </div>
                         </div>
                     </td>
-                    <td class="px-6 py-4 text-sm font-bold text-black hidden md:table-cell">{{ $seller->products_count ?? 0 }}</td>
-                    <td class="px-6 py-4 text-sm font-bold text-black hidden md:table-cell">{{ $seller->orders_count ?? 0 }}</td>
+                    <td class="px-6 py-4 text-xs font-semibold text-gray-700 hidden lg:table-cell">
+                        {{ $seller->shopName ?? '—' }}
+                    </td>
+                    <td class="px-6 py-4 text-sm font-bold text-black text-center hidden md:table-cell">{{ $seller->products_count ?? 0 }}</td>
+                    <td class="px-6 py-4 text-sm font-bold text-black text-center hidden md:table-cell">{{ $seller->orders_count ?? 0 }}</td>
+                    <td class="px-6 py-4 text-[11px] text-gray-500 font-medium hidden sm:table-cell">
+                        {{ $seller->createdAt ? $seller->createdAt->format('M d, Y') : '—' }}
+                    </td>
                     <td class="px-6 py-4">
                         @php $sc = ['active' => 'bg-green-50 text-green-700 border border-green-200', 'blocked' => 'bg-red-50 text-red-700 border border-red-200', 'frozen' => 'bg-amber-50 text-amber-700 border border-amber-200', 'pending_approval' => 'bg-blue-50 text-blue-700 border border-blue-200']; @endphp
-                        <span class="px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest {{ $sc[$seller->status] ?? 'bg-gray-50 text-gray-600 border border-gray-200' }}">
+                        <span class="px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest inline-block {{ $sc[$seller->status] ?? 'bg-gray-50 text-gray-600 border border-gray-200' }}">
                             {{ $seller->status === 'pending_approval' ? 'Pending' : $seller->status }}
                         </span>
                     </td>
@@ -148,7 +156,7 @@
                 </tr>
                 @empty
                 <tr>
-                    <td colspan="5" class="py-16 text-center text-sm text-gray-500 italic">No seller accounts found.</td>
+                    <td colspan="7" class="py-16 text-center text-sm text-gray-500 italic">No seller accounts found.</td>
                 </tr>
                 @endforelse
             </tbody>
