@@ -250,6 +250,13 @@ class WebAuthController extends Controller
         }
 
         $email = strtolower(trim($request->email));
+        $googleSignup = session('google_seller_signup');
+        $googleId = null;
+        $profilePhoto = null;
+        if ($googleSignup && strtolower(trim($googleSignup['email'] ?? '')) === $email) {
+            $googleId = $googleSignup['googleId'] ?? null;
+            $profilePhoto = $googleSignup['picture'] ?? null;
+        }
 
         $data = [
             'name'         => $request->name,
@@ -262,6 +269,8 @@ class WebAuthController extends Controller
             'role'         => 'seller',
             'status'       => 'active',
             'isVerified'   => false, // Requires Gmail verification & admin approval
+            'googleId'     => $googleId,
+            'profilePhoto' => $profilePhoto,
         ];
 
         if ($request->hasFile('residencyCertificate')) {
@@ -280,6 +289,7 @@ class WebAuthController extends Controller
         }
 
         $user = User::create($data);
+        session()->forget('google_seller_signup');
 
         // Generate verification code and send email
         $verification = \App\Services\EmailNotificationService::createVerificationCode($email, 'registration');
@@ -472,6 +482,10 @@ class WebAuthController extends Controller
                 return back()->withErrors(['email' => 'Your account has been rejected. Reason: ' . ($user->rejectionReason ?? 'Did not meet requirements')]);
             }
 
+            if ($user->role === 'seller' && $user->status === 'pending_approval') {
+                return back()->withErrors(['email' => 'Your artisan application is still awaiting admin approval. You will be notified once it is reviewed.']);
+            }
+
             if (!$user->isVerified) {
                 session(['verify_email' => $user->email]);
                 return redirect()->route('verify.email')->withErrors([
@@ -543,6 +557,57 @@ class WebAuthController extends Controller
             return redirect()->route('register')->with('success', 'Google account connected! Please choose your username and password below to finish creating your account.');
         } catch (\Exception $e) {
             \Log::error('Google Signup Error: ' . $e->getMessage());
+            return back()->withErrors(['email' => 'An error occurred during Google authentication. Please try again.']);
+        }
+    }
+
+    public function handleGoogleSellerSignup(Request $request)
+    {
+        try {
+            $credential = $request->credential;
+            $clientId = config('services.google.client_id');
+            if (empty($clientId)) {
+                return back()->withErrors(['email' => 'Google Sign-up is not configured on the server (Missing GOOGLE_CLIENT_ID). Please register with the form below.']);
+            }
+
+            $client = new \Google\Client(['client_id' => $clientId]);
+            $payload = $client->verifyIdToken($credential);
+
+            if (!$payload) {
+                return back()->withErrors(['email' => 'Google authentication failed. Please try again.']);
+            }
+
+            $email = strtolower(trim($payload['email'] ?? ''));
+            $googleId = $payload['sub'] ?? null;
+            $name = $payload['name'] ?? 'Artisan Seller';
+            $picture = $payload['picture'] ?? null;
+
+            if (empty($email)) {
+                return back()->withErrors(['email' => 'Unable to retrieve email from your Google account.']);
+            }
+
+            $user = User::where('email', $email)
+                ->orWhere('googleId', $googleId)
+                ->first();
+
+            // If account ALREADY exists, redirect to login
+            if ($user) {
+                return redirect()->route('login')->with('info', 'An account with this Google email already exists. Please log in with your credentials or Google sign-in.');
+            }
+
+            // Save Google profile to prefill the seller registration form
+            session([
+                'google_seller_signup' => [
+                    'email'    => $email,
+                    'name'     => $name,
+                    'googleId' => $googleId,
+                    'picture'  => $picture,
+                ]
+            ]);
+
+            return redirect()->route('seller.register')->with('success', 'Google account connected! Your name and email have been filled in. Please set your password and complete your artisan workshop requirements.');
+        } catch (\Exception $e) {
+            \Log::error('Google Seller Signup Error: ' . $e->getMessage());
             return back()->withErrors(['email' => 'An error occurred during Google authentication. Please try again.']);
         }
     }

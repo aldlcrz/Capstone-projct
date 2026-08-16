@@ -95,6 +95,46 @@
             <div class="step-indicator" :class="step === 2 ? 'step-active' : 'step-inactive'">2</div>
         </div>
 
+        @if (session('info'))
+            <div class="mb-6 p-4 rounded-2xl bg-amber-50 border border-amber-200 text-amber-900 text-xs flex items-start gap-2.5">
+                <span class="text-base shrink-0">ℹ️</span>
+                <p class="font-medium leading-relaxed">{{ session('info') }}</p>
+            </div>
+        @endif
+        @if (session('success'))
+            <div class="mb-6 p-4 rounded-2xl bg-emerald-50 border border-emerald-200 text-emerald-900 text-xs flex items-start gap-2.5">
+                <span class="text-base shrink-0">✓</span>
+                <p class="font-medium leading-relaxed">{{ session('success') }}</p>
+            </div>
+        @endif
+        @if (session('warning'))
+            <div class="mb-6 p-4 rounded-2xl bg-amber-50 border border-amber-200 text-amber-900 text-xs flex items-start gap-2.5">
+                <span class="text-base shrink-0">⚠️</span>
+                <p class="font-medium leading-relaxed">{{ session('warning') }}</p>
+            </div>
+        @endif
+
+        @php
+            $googleSeller = session('google_seller_signup');
+        @endphp
+
+        @if($googleSeller)
+            <div class="mb-6 p-4 rounded-2xl bg-blue-50 border border-blue-200 text-blue-900 text-xs flex items-center justify-between gap-3">
+                <div class="flex items-center gap-3">
+                    @if(!empty($googleSeller['picture']))
+                        <img src="{{ $googleSeller['picture'] }}" class="w-8 h-8 rounded-full border border-blue-200 shrink-0">
+                    @else
+                        <span class="text-lg">🇬</span>
+                    @endif
+                    <div class="min-w-0">
+                        <div class="font-bold text-[11px]">Connected with Google</div>
+                        <div class="text-[10px] text-blue-700 truncate">{{ $googleSeller['email'] }}</div>
+                    </div>
+                </div>
+                <span class="text-[9px] font-black uppercase tracking-wider bg-blue-200/60 text-blue-800 px-2 py-1 rounded-md shrink-0">Verified</span>
+            </div>
+        @endif
+
         <form action="{{ route('seller.register.submit') }}" method="POST" enctype="multipart/form-data">
             @csrf
             
@@ -106,7 +146,7 @@
                         <span class="absolute left-8 top-1/2 -translate-y-1/2 opacity-20">
                             <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" /></svg>
                         </span>
-                        <input type="text" name="name" value="{{ old('name') }}" required class="premium-input pl-16" placeholder="Your Full Name">
+                        <input type="text" name="name" value="{{ old('name', $googleSeller['name'] ?? '') }}" required class="premium-input pl-16" placeholder="Your Full Name">
                     </div>
                     @error('name')
                         <p class="text-xs font-bold text-red-500 px-5 mt-1">{{ $message }}</p>
@@ -119,7 +159,7 @@
                         <span class="absolute left-8 top-1/2 -translate-y-1/2 opacity-20">
                             <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002 2H5a2 2 0 00-2-2V7a2 2 0 002-2h14a2 2 0 002 2v10" /></svg>
                         </span>
-                        <input type="email" name="email" value="{{ old('email') }}" required class="premium-input pl-16" placeholder="email@example.com">
+                        <input type="email" name="email" value="{{ old('email', $googleSeller['email'] ?? '') }}" required class="premium-input pl-16" placeholder="email@example.com">
                     </div>
                     @error('email')
                         <p class="text-xs font-bold text-red-500 px-5 mt-1">{{ $message }}</p>
@@ -135,7 +175,7 @@
                         <input :type="show ? 'text' : 'password'" name="password" required class="premium-input pl-16 pr-16" placeholder="••••••••••••">
                         <button type="button" @click="show = !show" class="absolute right-8 top-1/2 -translate-y-1/2 opacity-40 hover:opacity-100">
                             <svg x-show="!show" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" /></svg>
-                            <svg x-show="show" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.878 9.878L5.136 5.136m13.727 13.727L13.875 18.825M21 12a10.025 10.025 0 01-1.12 4.5m-5.878-9.375l2.122-2.122m-8.484 8.484L5.136 5.136m13.727 13.727L21 12" /></svg>
+                            <svg x-show="show" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" x-cloak><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.878 9.878L5.136 5.136m13.727 13.727L13.875 18.825M21 12a10.025 10.025 0 01-1.12 4.5m-5.878-9.375l2.122-2.122m-8.484 8.484L5.136 5.136m13.727 13.727L21 12" /></svg>
                         </button>
                     </div>
                     @error('password')
@@ -161,11 +201,36 @@
                 </div>
 
                 <button type="button" @click="step = 2" class="w-full h-14 bg-[#3D2B1F] text-white rounded-full font-bold uppercase tracking-[0.2em] text-[11px] shadow-xl shadow-black/10 hover:bg-[#C0422A] transition-all flex items-center justify-center gap-3">
-                    Continue
+                    Continue to Requirements
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3" /></svg>
                 </button>
 
-
+                @if(config('services.google.client_id') && !$googleSeller)
+                    <div class="pt-2">
+                        <div class="flex items-center gap-4 mb-4">
+                            <div class="h-px flex-1 bg-[#E5DDD5]"></div>
+                            <span class="text-[9px] font-bold text-[#8C7B70] uppercase tracking-widest">or register with</span>
+                            <div class="h-px flex-1 bg-[#E5DDD5]"></div>
+                        </div>
+                        <div class="flex justify-center">
+                            <div id="g_id_onload"
+                                data-client_id="{{ config('services.google.client_id') }}"
+                                data-context="signup"
+                                data-ux_mode="popup"
+                                data-callback="handleGoogleSellerSignupResponse"
+                                data-auto_prompt="false">
+                            </div>
+                            <div class="g_id_signin"
+                                data-type="standard"
+                                data-shape="pill"
+                                data-theme="outline"
+                                data-text="signup_with"
+                                data-size="large"
+                                data-logo_alignment="left">
+                            </div>
+                        </div>
+                    </div>
+                @endif
             </div>
 
             <!-- STEP 2 -->
@@ -173,6 +238,14 @@
                 <div class="text-center mb-6">
                     <h2 class="text-xs font-bold uppercase tracking-widest text-gray-500 mb-1">Seller Verification</h2>
                     <p class="text-[10px] text-gray-400 italic">Please provide your details for account verification.</p>
+                </div>
+
+                <div class="space-y-1">
+                    <label class="text-[10px] font-bold uppercase tracking-widest px-5 block text-gray-400">Shop / Workshop Name (Optional)</label>
+                    <input type="text" name="shopName" value="{{ old('shopName') }}" class="premium-input px-8" placeholder="e.g. Juan's Traditional Embroidery">
+                    @error('shopName')
+                        <p class="text-xs font-bold text-red-500 px-5 mt-1">{{ $message }}</p>
+                    @enderror
                 </div>
 
                 <div class="space-y-1">
@@ -238,11 +311,37 @@
 
                 <div class="pt-4">
                     <button type="submit" class="w-full h-14 bg-[#C0422A] text-white rounded-full font-bold uppercase tracking-[0.2em] text-[11px] shadow-xl shadow-[#C0422A]/20 hover:scale-[1.02] transition-all">
-                        Sign Up
+                        Submit Application
                     </button>
                 </div>
             </div>
         </form>
+
+        @if(config('services.google.client_id'))
+            <script src="https://accounts.google.com/gsi/client" async defer></script>
+            <script>
+                function handleGoogleSellerSignupResponse(response) {
+                    const form = document.createElement('form');
+                    form.method = 'POST';
+                    form.action = '/auth/google/seller/signup';
+                    
+                    const csrfToken = document.createElement('input');
+                    csrfToken.type = 'hidden';
+                    csrfToken.name = '_token';
+                    csrfToken.value = '{{ csrf_token() }}';
+                    form.appendChild(csrfToken);
+
+                    const credentialInput = document.createElement('input');
+                    credentialInput.type = 'hidden';
+                    credentialInput.name = 'credential';
+                    credentialInput.value = response.credential;
+                    form.appendChild(credentialInput);
+
+                    document.body.appendChild(form);
+                    form.submit();
+                }
+            </script>
+        @endif
 
         <x-pages-modal />
 
