@@ -82,12 +82,16 @@
     <div class="flex flex-wrap gap-1.5 sm:gap-2 pb-1">
         @foreach(['ALL' => 'All', 'PENDING' => 'Pending', 'TO SHIP' => 'To Ship', 'TO RECEIVE' => 'To Receive', 'DELIVERED' => 'Delivered', 'COMPLETED' => 'Completed', 'CANCELLED' => 'Cancelled'] as $key => $label)
             @php
-                $isActive = request('tab', 'ALL') == $key;
+                $isActive = strtoupper(request('tab', 'ALL')) === $key;
+                $count = $counts[$key] ?? 0;
             @endphp
             <a href="/orders/my-orders?tab={{ $key }}"
                class="shrink-0 whitespace-nowrap px-3.5 sm:px-4 py-1.5 sm:py-2 rounded-full text-[9px] sm:text-[10px] font-black uppercase tracking-wider transition-all flex items-center gap-1.5 active:scale-95
                       {{ $isActive ? 'bg-black text-white shadow-md shadow-black/10' : 'bg-white text-gray-500 border border-gray-200 hover:border-gray-300' }}">
                 <span>{{ $label }}</span>
+                <span class="px-1.5 py-0.5 text-[8px] sm:text-[9px] rounded-full {{ $isActive ? 'bg-white/20 text-white' : 'bg-gray-100 text-gray-600' }}">
+                    {{ $count }}
+                </span>
             </a>
         @endforeach
     </div>
@@ -414,9 +418,9 @@
                             </div>
                         </div>
 
-                        {{-- Pending Packing Photo notice when seller has not yet uploaded --}}
+                        {{-- Packing Photo notice when seller has not yet uploaded (only when To Ship / Processing) --}}
                         <div class="bg-amber-50/80 border border-amber-200/80 rounded-2xl p-3.5 flex items-center justify-between gap-3"
-                             x-show="selectedOrder && !selectedOrder.packingProof && ['pending', 'processing', 'to ship', 'ready to ship', 'to_ship', 'ready_to_ship'].includes((selectedOrder.status || '').toLowerCase())">
+                             x-show="selectedOrder && !selectedOrder.packingProof && ['processing', 'to ship', 'ready to ship', 'to_ship', 'ready_to_ship'].includes((selectedOrder.status || '').toLowerCase())">
                             <div class="flex items-center gap-2.5">
                                 <span class="text-base">📦</span>
                                 <div>

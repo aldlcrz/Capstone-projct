@@ -502,11 +502,13 @@
             @endif
         </div>
 
-        {{-- ROW 3: Packing Proof & Courier Tracking (Only for active orders) --}}
-        @if(!$isCancelled)
-            @php
-                $hasCourierTracking = in_array(strtolower(str_replace('_', ' ', $order->status)), ['in transit', 'out for delivery', 'delivered', 'completed']) && !empty(trim($order->trackingNumber ?? ''));
-            @endphp
+        {{-- ROW 3: Packing Proof & Courier Tracking (Only for active orders after payment verification) --}}
+        @php
+            $isPendingWithoutProof = in_array($statusLower, ['pending', 'order placed', 'order_placed']) && empty($order->packingProof);
+            $hasCourierTracking = in_array(strtolower(str_replace('_', ' ', $order->status)), ['in transit', 'out for delivery', 'delivered', 'completed']) && !empty(trim($order->trackingNumber ?? ''));
+        @endphp
+
+        @if(!$isCancelled && !$isPendingWithoutProof)
 
             @if($hasCourierTracking)
                 {{-- In Transit / Active Tracking: Show Packing Proof (7 cols) + Courier Tracking (5 cols) side by side --}}

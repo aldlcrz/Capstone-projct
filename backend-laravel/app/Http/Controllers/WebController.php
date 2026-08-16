@@ -402,7 +402,20 @@ class WebController extends Controller
         }
 
         $orders = $query->get();
-        return view('orders.index', compact('orders'));
+
+        // Calculate counts for each customer tab
+        $allCustomerOrders = Order::where('customerId', Auth::id())->select('id', 'status')->get();
+        $counts = [
+            'ALL'        => $allCustomerOrders->count(),
+            'PENDING'    => $allCustomerOrders->filter(fn($o) => in_array(strtolower(trim($o->status ?? '')), ['pending', 'order placed', 'order_placed']))->count(),
+            'TO SHIP'    => $allCustomerOrders->filter(fn($o) => in_array(strtolower(trim(str_replace('_', ' ', $o->status ?? ''))), ['processing', 'to ship', 'ready to ship', 'shipped']))->count(),
+            'TO RECEIVE' => $allCustomerOrders->filter(fn($o) => in_array(strtolower(trim(str_replace('_', ' ', $o->status ?? ''))), ['in transit', 'to receive', 'out for delivery']))->count(),
+            'DELIVERED'  => $allCustomerOrders->filter(fn($o) => in_array(strtolower(trim($o->status ?? '')), ['delivered']))->count(),
+            'COMPLETED'  => $allCustomerOrders->filter(fn($o) => in_array(strtolower(trim($o->status ?? '')), ['completed']))->count(),
+            'CANCELLED'  => $allCustomerOrders->filter(fn($o) => in_array(strtolower(trim($o->status ?? '')), ['cancelled']))->count(),
+        ];
+
+        return view('orders.index', compact('orders', 'counts'));
     }
 
     /**
