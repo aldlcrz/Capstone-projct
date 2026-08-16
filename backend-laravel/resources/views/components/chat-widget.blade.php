@@ -239,7 +239,7 @@ document.addEventListener('alpine:init', () => {
     x-transition:leave="transition ease-in duration-200 transform"
     x-transition:leave-start="opacity-100 translate-y-0 scale-100"
     x-transition:leave-end="opacity-0 translate-y-12 scale-95"
-    class="fixed bottom-20 lg:bottom-22 right-3 sm:right-6 w-[calc(100vw-1.5rem)] sm:w-100 max-w-[calc(100vw-1.5rem)] h-137.5 max-h-[calc(100vh-7rem)] bg-white rounded-3xl shadow-2xl border border-gray-150 flex flex-col z-60 overflow-hidden"
+    class="fixed bottom-[8rem] lg:bottom-22 right-3 sm:right-6 w-[calc(100vw-1.5rem)] sm:w-100 max-w-[calc(100vw-1.5rem)] h-[calc(100dvh-9.5rem)] lg:h-137.5 max-h-[calc(100dvh-9.5rem)] lg:max-h-[calc(100vh-7rem)] bg-white rounded-3xl shadow-2xl border border-gray-150 flex flex-col z-60 overflow-hidden"
     style="display: none;"
     x-cloak
 >
@@ -349,6 +349,10 @@ document.addEventListener('alpine:init', () => {
                    x-model="aiInput"
                    @keyup.enter="sendAiMessage()"
                    placeholder="Ask about fabrics, fit, or wedding attire..."
+                   autocomplete="off"
+                   autocorrect="off"
+                   spellcheck="false"
+                   inputmode="text"
                    class="flex-1 bg-gray-50 border border-gray-200 rounded-xl px-4 py-2.5 text-xs outline-none focus:border-[#C0422A] focus:bg-white transition-all">
             <button @click="sendAiMessage()"
                     :disabled="!aiInput.trim() || aiLoading"
@@ -430,6 +434,10 @@ document.addEventListener('alpine:init', () => {
                     x-model="newMessage"
                     @keyup.enter="sendMessage()"
                     placeholder="Type your message to artisan..."
+                    autocomplete="off"
+                    autocorrect="off"
+                    spellcheck="false"
+                    inputmode="text"
                     class="flex-1 bg-gray-50 border border-gray-100 rounded-xl px-4 py-2.5 text-xs focus:outline-none focus:border-black/20"
                 >
                 <button

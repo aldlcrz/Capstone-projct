@@ -2,7 +2,7 @@
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}" class="overflow-x-clip">
 <head>
     <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover, interactive-widget=resizes-content">
     <meta name="csrf-token" content="{{ csrf_token() }}">
 
     <title>{{ config('app.name', 'LumBarong') }}</title>
@@ -449,7 +449,7 @@
     <x-chat-widget />
     <x-report-modal />
 
-    <div x-data="{}" class="fixed bottom-20 lg:bottom-6 right-3 lg:right-6 z-60">
+    <div x-data="{}" class="fixed bottom-[4.5rem] lg:bottom-6 right-3 lg:right-6 z-60">
         <button 
             @click="window.dispatchEvent(new CustomEvent('toggle-chat'))"
             class="w-12 h-12 bg-black text-white rounded-full flex items-center justify-center shadow-lg hover:bg-gray-800 hover:scale-105 transition-all cursor-pointer group"
