@@ -691,6 +691,22 @@ class AdminController extends Controller
         return redirect()->back()->with('success', 'Seller suspended.');
     }
 
+    public function unsuspendSeller(string $id)
+    {
+        $user = User::findOrFail($id);
+        $user->status          = 'active';
+        $user->violationReason = null;
+        $user->save();
+        return redirect()->back()->with('success', 'Seller account restored.');
+    }
+
+    public function deleteSeller(string $id)
+    {
+        $user = User::findOrFail($id);
+        $user->delete();
+        return redirect()->back()->with('success', 'Seller account permanently deleted.');
+    }
+
     public function products(Request $request)
     {
         $status = $request->input('status', 'pending');

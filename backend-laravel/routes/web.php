@@ -153,6 +153,8 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->group(function () {
     Route::get('/sellers', [AdminController::class, 'sellers'])->name('admin.sellers');
     Route::patch('/sellers/{id}/verify', [AdminController::class, 'verifySellerWeb'])->name('admin.sellers.verify');
     Route::patch('/sellers/{id}/suspend', [AdminController::class, 'suspendSeller'])->name('admin.sellers.suspend');
+    Route::patch('/sellers/{id}/unsuspend', [AdminController::class, 'unsuspendSeller'])->name('admin.sellers.unsuspend');
+    Route::delete('/sellers/{id}', [AdminController::class, 'deleteSeller'])->name('admin.sellers.delete');
     Route::get('/products', [AdminController::class, 'products'])->name('admin.products');
     Route::patch('/products/{id}/approve', [AdminController::class, 'approveProductWeb'])->name('admin.products.approve');
     Route::patch('/products/{id}/reject', [AdminController::class, 'rejectProductWeb'])->name('admin.products.reject');

@@ -6,11 +6,19 @@
     suspendSellerId: null,
     suspendSellerName: '',
     suspendReason: '',
+    deleteModal: false,
+    deleteSellerId: null,
+    deleteSellerName: '',
     openSuspend(seller) {
         this.suspendSellerId = seller.id;
         this.suspendSellerName = seller.name;
         this.suspendReason = '';
         this.suspendModal = true;
+    },
+    openDelete(seller) {
+        this.deleteSellerId = seller.id;
+        this.deleteSellerName = seller.name;
+        this.deleteModal = true;
     }
 }">
     <div>
@@ -59,6 +67,7 @@
                         <button type="submit" class="w-full sm:w-auto px-5 py-2 bg-green-600 text-white rounded-xl text-[9px] font-black uppercase tracking-widest hover:bg-green-700 transition-all cursor-pointer">Verify</button>
                     </form>
                     <button type="button" @click="openSuspend({{ json_encode($seller) }})" class="flex-1 sm:flex-initial px-5 py-2 bg-red-50 text-red-600 rounded-xl text-[9px] font-black uppercase tracking-widest hover:bg-red-500 hover:text-white transition-all cursor-pointer">Reject / Suspend</button>
+                    <button type="button" @click="openDelete({{ json_encode($seller) }})" class="flex-1 sm:flex-initial px-5 py-2 bg-gray-100 text-gray-600 rounded-xl text-[9px] font-black uppercase tracking-widest hover:bg-gray-800 hover:text-white transition-all cursor-pointer">Delete</button>
                 </div>
             </div>
             @endforeach
@@ -104,9 +113,9 @@
                     <td class="px-6 py-4 text-sm font-bold text-black hidden md:table-cell">{{ $seller->products_count ?? 0 }}</td>
                     <td class="px-6 py-4 text-sm font-bold text-black hidden md:table-cell">{{ $seller->orders_count ?? 0 }}</td>
                     <td class="px-6 py-4">
-                        @php $sc = ['active' => 'bg-green-50 text-green-700 border border-green-200', 'blocked' => 'bg-red-50 text-red-700 border border-red-200', 'frozen' => 'bg-amber-50 text-amber-700 border border-amber-200']; @endphp
+                        @php $sc = ['active' => 'bg-green-50 text-green-700 border border-green-200', 'blocked' => 'bg-red-50 text-red-700 border border-red-200', 'frozen' => 'bg-amber-50 text-amber-700 border border-amber-200', 'pending_approval' => 'bg-blue-50 text-blue-700 border border-blue-200']; @endphp
                         <span class="px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest {{ $sc[$seller->status] ?? 'bg-gray-50 text-gray-600 border border-gray-200' }}">
-                            {{ $seller->status }}
+                            {{ $seller->status === 'pending_approval' ? 'Pending' : $seller->status }}
                         </span>
                     </td>
                     <td class="px-6 py-4">
@@ -117,18 +126,21 @@
                                     {{ $seller->isVerified ? 'Revoke Verified' : 'Verify' }}
                                 </button>
                             </form>
-                            @if($seller->status === 'active')
+                            @if($seller->status === 'active' || $seller->status === 'pending_approval')
                                 <button type="button" @click="openSuspend({{ json_encode($seller) }})" class="px-4 py-2 bg-red-50 text-red-700 rounded-lg text-[9px] font-black uppercase tracking-widest hover:bg-red-500 hover:text-white transition-all cursor-pointer">
                                     Suspend
                                 </button>
                             @else
-                                <form action="/admin/sellers/{{ $seller->id }}/unsuspend" method="POST">
+                                <form action="{{ route('admin.sellers.unsuspend', $seller->id) }}" method="POST">
                                     @csrf @method('PATCH')
                                     <button type="submit" class="px-4 py-2 bg-green-50 text-green-700 rounded-lg text-[9px] font-black uppercase tracking-widest hover:bg-green-500 hover:text-white transition-all cursor-pointer">
                                         Restore
                                     </button>
                                 </form>
                             @endif
+                            <button type="button" @click="openDelete({{ json_encode($seller) }})" class="px-4 py-2 bg-gray-100 text-gray-600 rounded-lg text-[9px] font-black uppercase tracking-widest hover:bg-gray-800 hover:text-white transition-all cursor-pointer">
+                                Delete
+                            </button>
                         </div>
                     </td>
                 </tr>
@@ -162,6 +174,31 @@
                 <div class="flex gap-3 pt-2">
                     <button type="button" @click="suspendModal = false" class="flex-1 py-2.5 border border-gray-200 text-xs font-semibold text-gray-500 rounded-xl hover:bg-gray-50">Cancel</button>
                     <button type="submit" class="flex-1 py-2.5 bg-red-600 text-white text-xs font-bold uppercase tracking-wider rounded-xl hover:bg-red-700">Confirm Suspension</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    {{-- Delete Confirmation Modal --}}
+    <div x-show="deleteModal" class="fixed inset-0 z-50 flex items-center justify-center p-4" x-cloak>
+        <div class="absolute inset-0 bg-black/40 backdrop-blur-sm" @click="deleteModal = false"></div>
+        <div class="relative bg-white rounded-2xl shadow-2xl w-full max-w-md p-6 space-y-4">
+            <div class="w-12 h-12 rounded-2xl bg-red-100 flex items-center justify-center mx-auto">
+                <svg class="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                </svg>
+            </div>
+            <div class="text-center">
+                <h3 class="text-lg font-bold text-gray-900">Delete Seller Account</h3>
+                <p class="text-xs text-gray-500 leading-relaxed mt-2">
+                    You are about to permanently delete <strong x-text="deleteSellerName" class="text-red-600"></strong>'s account. This action <span class="font-bold text-red-600">cannot be undone</span>.
+                </p>
+            </div>
+            <form :action="'/admin/sellers/' + deleteSellerId" method="POST" class="space-y-4">
+                @csrf @method('DELETE')
+                <div class="flex gap-3 pt-2">
+                    <button type="button" @click="deleteModal = false" class="flex-1 py-2.5 border border-gray-200 text-xs font-semibold text-gray-500 rounded-xl hover:bg-gray-50">Cancel</button>
+                    <button type="submit" class="flex-1 py-2.5 bg-red-600 text-white text-xs font-bold uppercase tracking-wider rounded-xl hover:bg-red-700">Delete Permanently</button>
                 </div>
             </form>
         </div>
