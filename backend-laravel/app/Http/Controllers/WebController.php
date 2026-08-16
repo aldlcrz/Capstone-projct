@@ -377,8 +377,8 @@ class WebController extends Controller
         // Filter by status tab
         $tab = strtolower($request->input('tab', 'all'));
         $statusGroupMap = [
-            'pending'    => ['Pending', 'pending'],
-            'to ship'    => ['Pending', 'pending', 'Processing', 'processing', 'To Ship', 'to ship', 'to_ship', 'Ready to Ship', 'ready_to_ship', 'Shipped', 'shipped'],
+            'pending'    => ['Pending', 'pending', 'Order Placed', 'order placed', 'order_placed'],
+            'to ship'    => ['Processing', 'processing', 'To Ship', 'to ship', 'to_ship', 'Ready to Ship', 'ready_to_ship', 'Shipped', 'shipped'],
             'to receive' => ['In Transit', 'in_transit', 'To Receive', 'to receive', 'Out for Delivery', 'out_for_delivery'],
             'in transit' => ['In Transit', 'in_transit', 'Out for Delivery', 'out_for_delivery'],
             'delivered'  => ['Delivered', 'delivered'],
