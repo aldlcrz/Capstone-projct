@@ -71,6 +71,25 @@
             <p class="text-[11px] font-bold uppercase tracking-[0.3em] text-gray-400">Authentication Portal</p>
         </div>
 
+        @if (session('info'))
+            <div class="mb-6 p-4 rounded-2xl bg-amber-50 border border-amber-200 text-amber-900 text-xs flex items-start gap-2.5">
+                <span class="text-base shrink-0">ℹ️</span>
+                <p class="font-medium leading-relaxed">{{ session('info') }}</p>
+            </div>
+        @endif
+        @if (session('success'))
+            <div class="mb-6 p-4 rounded-2xl bg-emerald-50 border border-emerald-200 text-emerald-900 text-xs flex items-start gap-2.5">
+                <span class="text-base shrink-0">✓</span>
+                <p class="font-medium leading-relaxed">{{ session('success') }}</p>
+            </div>
+        @endif
+        @if (session('warning'))
+            <div class="mb-6 p-4 rounded-2xl bg-amber-50 border border-amber-200 text-amber-900 text-xs flex items-start gap-2.5">
+                <span class="text-base shrink-0">⚠️</span>
+                <p class="font-medium leading-relaxed">{{ session('warning') }}</p>
+            </div>
+        @endif
+
         <form action="/login" method="POST" class="space-y-6" id="login-form">
             @csrf
 
@@ -126,55 +145,59 @@
                 Log-In
             </button>
 
-            <div class="pt-4">
-                <div class="flex items-center gap-4 mb-6">
-                    <div class="h-px flex-1 bg-[#E5DDD5]"></div>
-                    <span class="text-[9px] font-bold text-[#8C7B70] uppercase tracking-widest">social gateway</span>
-                    <div class="h-px flex-1 bg-[#E5DDD5]"></div>
-                </div>
-                <div class="flex justify-center">
-                    <div id="g_id_onload"
-                        data-client_id="{{ config('services.google.client_id') }}"
-                        data-context="signin"
-                        data-ux_mode="popup"
-                        data-callback="handleCredentialResponse"
-                        data-auto_prompt="false">
+            @if(config('services.google.client_id'))
+                <div class="pt-4">
+                    <div class="flex items-center gap-4 mb-6">
+                        <div class="h-px flex-1 bg-[#E5DDD5]"></div>
+                        <span class="text-[9px] font-bold text-[#8C7B70] uppercase tracking-widest">social gateway</span>
+                        <div class="h-px flex-1 bg-[#E5DDD5]"></div>
                     </div>
-                    <div class="g_id_signin"
-                        data-type="standard"
-                        data-shape="pill"
-                        data-theme="outline"
-                        data-text="signin_with"
-                        data-size="large"
-                        data-logo_alignment="left">
+                    <div class="flex justify-center">
+                        <div id="g_id_onload"
+                            data-client_id="{{ config('services.google.client_id') }}"
+                            data-context="signin"
+                            data-ux_mode="popup"
+                            data-callback="handleCredentialResponse"
+                            data-auto_prompt="false">
+                        </div>
+                        <div class="g_id_signin"
+                            data-type="standard"
+                            data-shape="pill"
+                            data-theme="outline"
+                            data-text="signin_with"
+                            data-size="large"
+                            data-logo_alignment="left">
+                        </div>
                     </div>
                 </div>
-            </div>
+            @endif
         </form>
 
-        <script src="https://accounts.google.com/gsi/client" async defer></script>
-        <script>
-            function handleCredentialResponse(response) {
-                const form = document.createElement('form');
-                form.method = 'POST';
-                form.action = '/auth/google';
-                
-                const csrfToken = document.createElement('input');
-                csrfToken.type = 'hidden';
-                csrfToken.name = '_token';
-                csrfToken.value = '{{ csrf_token() }}';
-                form.appendChild(csrfToken);
+        @if(config('services.google.client_id'))
+            <script src="https://accounts.google.com/gsi/client" async defer></script>
+            <script>
+                function handleCredentialResponse(response) {
+                    const form = document.createElement('form');
+                    form.method = 'POST';
+                    form.action = '/auth/google';
+                    
+                    const csrfToken = document.createElement('input');
+                    csrfToken.type = 'hidden';
+                    csrfToken.name = '_token';
+                    csrfToken.value = '{{ csrf_token() }}';
+                    form.appendChild(csrfToken);
 
-                const credentialInput = document.createElement('input');
-                credentialInput.type = 'hidden';
-                credentialInput.name = 'credential';
-                credentialInput.value = response.credential;
-                form.appendChild(credentialInput);
+                    const credentialInput = document.createElement('input');
+                    credentialInput.type = 'hidden';
+                    credentialInput.name = 'credential';
+                    credentialInput.value = response.credential;
+                    form.appendChild(credentialInput);
 
-                document.body.appendChild(form);
-                form.submit();
-            }
-        </script>
+                    document.body.appendChild(form);
+                    form.submit();
+                }
+            </script>
+        @endif
 
         <div class="mt-10 text-center">
             <p class="text-[10px] font-bold uppercase tracking-widest text-gray-400">

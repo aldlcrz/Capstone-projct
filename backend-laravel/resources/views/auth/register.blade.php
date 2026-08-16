@@ -54,6 +54,25 @@
             <p class="text-[11px] font-bold uppercase tracking-[0.3em] text-gray-400">Join the Collective</p>
         </div>
 
+        @if (session('info'))
+            <div class="mb-6 p-4 rounded-2xl bg-amber-50 border border-amber-200 text-amber-900 text-xs flex items-start gap-2.5">
+                <span class="text-base shrink-0">ℹ️</span>
+                <p class="font-medium leading-relaxed">{{ session('info') }}</p>
+            </div>
+        @endif
+        @if (session('success'))
+            <div class="mb-6 p-4 rounded-2xl bg-emerald-50 border border-emerald-200 text-emerald-900 text-xs flex items-start gap-2.5">
+                <span class="text-base shrink-0">✓</span>
+                <p class="font-medium leading-relaxed">{{ session('success') }}</p>
+            </div>
+        @endif
+        @if (session('warning'))
+            <div class="mb-6 p-4 rounded-2xl bg-amber-50 border border-amber-200 text-amber-900 text-xs flex items-start gap-2.5">
+                <span class="text-base shrink-0">⚠️</span>
+                <p class="font-medium leading-relaxed">{{ session('warning') }}</p>
+            </div>
+        @endif
+
         <form action="/register" 
               method="POST" 
               class="space-y-4" 
@@ -105,7 +124,7 @@
                 <input 
                     type="text" 
                     name="username" 
-                    value="{{ old('username') }}"
+                    value="{{ old('username', session('google_signup.name') ? \Illuminate\Support\Str::slug(session('google_signup.name'), '') : '') }}"
                     required 
                     placeholder="Choose a username"
                     class="w-full h-12 bg-[#F9F6F2] rounded-full px-8 text-sm font-medium border-2 {{ $errors->has('username') ? 'border-red-400' : 'border-transparent' }} focus:border-[#C0422A] focus:bg-white outline-none transition-all"
@@ -121,7 +140,7 @@
                 <input 
                     type="email" 
                     name="email" 
-                    value="{{ old('email') }}"
+                    value="{{ old('email', session('google_signup.email')) }}"
                     required 
                     placeholder="example@gmail.com"
                     class="w-full h-12 bg-[#F9F6F2] rounded-full px-8 text-sm font-medium border-2 {{ $errors->has('email') ? 'border-red-400' : 'border-transparent' }} focus:border-[#C0422A] focus:bg-white outline-none transition-all"
@@ -216,7 +235,60 @@
             <button type="submit" class="w-full h-14 bg-[#3D2B1F] text-white rounded-full font-bold uppercase tracking-[0.2em] text-[10px] shadow-xl shadow-black/10 hover:bg-[#C0422A] transition-all mt-4">
                 Register
             </button>
+
+            @if(config('services.google.client_id'))
+                <div class="pt-2">
+                    <div class="flex items-center gap-4 mb-4">
+                        <div class="h-px flex-1 bg-[#E5DDD5]"></div>
+                        <span class="text-[9px] font-bold text-[#8C7B70] uppercase tracking-widest">or sign up with</span>
+                        <div class="h-px flex-1 bg-[#E5DDD5]"></div>
+                    </div>
+                    <div class="flex justify-center">
+                        <div id="g_id_onload"
+                            data-client_id="{{ config('services.google.client_id') }}"
+                            data-context="signup"
+                            data-ux_mode="popup"
+                            data-callback="handleGoogleSignupResponse"
+                            data-auto_prompt="false">
+                        </div>
+                        <div class="g_id_signin"
+                            data-type="standard"
+                            data-shape="pill"
+                            data-theme="outline"
+                            data-text="signup_with"
+                            data-size="large"
+                            data-logo_alignment="left">
+                        </div>
+                    </div>
+                </div>
+            @endif
         </form>
+
+        @if(config('services.google.client_id'))
+            <script src="https://accounts.google.com/gsi/client" async defer></script>
+            <script>
+                function handleGoogleSignupResponse(response) {
+                    const form = document.createElement('form');
+                    form.method = 'POST';
+                    form.action = '/auth/google/signup';
+                    
+                    const csrfToken = document.createElement('input');
+                    csrfToken.type = 'hidden';
+                    csrfToken.name = '_token';
+                    csrfToken.value = '{{ csrf_token() }}';
+                    form.appendChild(csrfToken);
+
+                    const credentialInput = document.createElement('input');
+                    credentialInput.type = 'hidden';
+                    credentialInput.name = 'credential';
+                    credentialInput.value = response.credential;
+                    form.appendChild(credentialInput);
+
+                    document.body.appendChild(form);
+                    form.submit();
+                }
+            </script>
+        @endif
 
         <x-pages-modal />
 

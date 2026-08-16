@@ -170,20 +170,32 @@ class WebAuthController extends Controller
             return back()->withErrors($validator)->withInput();
         }
 
+        $googleSignup = session('google_signup');
+        $googleId = null;
+        $profilePhoto = null;
+        if ($googleSignup && strtolower(trim($googleSignup['email'] ?? '')) === $email) {
+            $googleId = $googleSignup['googleId'] ?? null;
+            $profilePhoto = $googleSignup['picture'] ?? null;
+        }
+
         // Account is NOT created in DB until verification code is entered!
         session([
             'pending_registration' => [
-                'name'              => $username,
+                'name'              => $request->name ?: ($googleSignup['name'] ?? $username),
                 'username'          => $username,
                 'email'             => $email,
                 'password'          => Hash::make($request->password),
                 'role'              => 'customer',
                 'status'            => 'active',
                 'isVerified'        => true,
+                'googleId'          => $googleId,
+                'profilePhoto'      => $profilePhoto,
+                'hasPasswordSet'    => true,
                 'email_verified_at' => now(),
             ],
             'verify_email' => $email,
         ]);
+        session()->forget('google_signup');
 
         // Generate verification code and send email
         $verification = \App\Services\EmailNotificationService::createVerificationCode($email, 'registration');
@@ -393,39 +405,48 @@ class WebAuthController extends Controller
     {
         try {
             $credential = $request->credential;
-            $client = new \Google\Client(['client_id' => config('services.google.client_id')]);
+            $clientId = config('services.google.client_id');
+            if (empty($clientId)) {
+                return back()->withErrors(['email' => 'Google Login is not configured on the server (Missing GOOGLE_CLIENT_ID). Please log in with your email & password.']);
+            }
+
+            $client = new \Google\Client(['client_id' => $clientId]);
             $payload = $client->verifyIdToken($credential);
 
             if (!$payload) {
-                return back()->withErrors(['email' => 'Google authentication failed.']);
+                return back()->withErrors(['email' => 'Google authentication failed. Please try again.']);
             }
 
-            $email = strtolower($payload['email']);
-            $googleId = $payload['sub'];
-            $name = $payload['name'];
+            $email = strtolower(trim($payload['email'] ?? ''));
+            $googleId = $payload['sub'] ?? null;
+            $name = $payload['name'] ?? 'Customer';
             $picture = $payload['picture'] ?? null;
 
-            $user = User::where('googleId', $googleId)
-                ->orWhere('email', $email)
+            if (empty($email)) {
+                return back()->withErrors(['email' => 'Unable to retrieve email from your Google account.']);
+            }
+
+            $user = User::where('email', $email)
+                ->orWhere('googleId', $googleId)
                 ->first();
 
+            // If account is NOT in database, suggest sign-up and prefill their Google info
             if (!$user) {
-                $user = User::create([
-                    'name' => $name,
-                    'email' => $email,
-                    'password' => Hash::make(\Illuminate\Support\Str::random(32)),
-                    'role' => 'customer',
-                    'status' => 'active',
-                    'isVerified' => true,
-                    'googleId' => $googleId,
-                    'profilePhoto' => $picture,
-                    'hasPasswordSet' => false
+                session([
+                    'google_signup' => [
+                        'email'    => $email,
+                        'name'     => $name,
+                        'googleId' => $googleId,
+                        'picture'  => $picture,
+                    ]
                 ]);
-            } else {
-                if (!$user->googleId) {
-                    $user->googleId = $googleId;
-                    $user->save();
-                }
+                return redirect()->route('register')->with('info', 'No account found with this Google email. Please complete the form below and set a password to create your account.');
+            }
+
+            // If user exists, attach googleId if not yet set
+            if (!$user->googleId && $googleId) {
+                $user->googleId = $googleId;
+                $user->save();
             }
 
             if ($user->status === 'frozen') {
@@ -436,15 +457,82 @@ class WebAuthController extends Controller
                 return back()->withErrors(['email' => 'Your account has been blocked. Reason: ' . ($user->violationReason ?? 'Policy violation')]);
             }
 
+            if ($user->status === 'rejected') {
+                return back()->withErrors(['email' => 'Your account has been rejected. Reason: ' . ($user->rejectionReason ?? 'Did not meet requirements')]);
+            }
+
+            if (!$user->isVerified) {
+                session(['verify_email' => $user->email]);
+                return redirect()->route('verify.email')->withErrors([
+                    'code' => 'Please verify your Gmail address to activate your account.',
+                ]);
+            }
+
             Auth::login($user);
             $request->session()->regenerate();
+
+            if ($user->role === 'superadmin') return redirect()->route('superadmin.dashboard');
+            if ($user->role === 'admin') return redirect()->route('admin.dashboard');
+            if ($user->role === 'seller') return redirect()->route('seller.dashboard');
 
             $contextRedirect = $this->restorePendingContext($user, $request);
             if ($contextRedirect) return $contextRedirect;
 
             return redirect()->intended('/');
         } catch (\Exception $e) {
-            return back()->withErrors(['email' => 'An error occurred during Google authentication.']);
+            \Log::error('Google Login Error: ' . $e->getMessage());
+            return back()->withErrors(['email' => 'An error occurred during Google authentication. Please try again.']);
+        }
+    }
+
+    public function handleGoogleSignup(Request $request)
+    {
+        try {
+            $credential = $request->credential;
+            $clientId = config('services.google.client_id');
+            if (empty($clientId)) {
+                return back()->withErrors(['email' => 'Google Sign-up is not configured on the server (Missing GOOGLE_CLIENT_ID). Please register with the form below.']);
+            }
+
+            $client = new \Google\Client(['client_id' => $clientId]);
+            $payload = $client->verifyIdToken($credential);
+
+            if (!$payload) {
+                return back()->withErrors(['email' => 'Google authentication failed. Please try again.']);
+            }
+
+            $email = strtolower(trim($payload['email'] ?? ''));
+            $googleId = $payload['sub'] ?? null;
+            $name = $payload['name'] ?? 'Customer';
+            $picture = $payload['picture'] ?? null;
+
+            if (empty($email)) {
+                return back()->withErrors(['email' => 'Unable to retrieve email from your Google account.']);
+            }
+
+            $user = User::where('email', $email)
+                ->orWhere('googleId', $googleId)
+                ->first();
+
+            // If account ALREADY exists, tell them to log in
+            if ($user) {
+                return redirect()->route('login')->with('info', 'An account with this Google email already exists. Please log in with your credentials or Google sign-in.');
+            }
+
+            // Save Google profile to prefill the registration form
+            session([
+                'google_signup' => [
+                    'email'    => $email,
+                    'name'     => $name,
+                    'googleId' => $googleId,
+                    'picture'  => $picture,
+                ]
+            ]);
+
+            return redirect()->route('register')->with('success', 'Google account connected! Please choose your username and password below to finish creating your account.');
+        } catch (\Exception $e) {
+            \Log::error('Google Signup Error: ' . $e->getMessage());
+            return back()->withErrors(['email' => 'An error occurred during Google authentication. Please try again.']);
         }
     }
 

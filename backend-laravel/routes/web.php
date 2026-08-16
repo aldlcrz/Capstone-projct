@@ -62,6 +62,7 @@ Route::middleware('guest')->group(function () {
     Route::post('/login', [WebAuthController::class, 'login']);
     Route::post('/register', [WebAuthController::class, 'register']);
     Route::post('/auth/google', [WebAuthController::class, 'handleGoogleLogin'])->name('auth.google');
+    Route::post('/auth/google/signup', [WebAuthController::class, 'handleGoogleSignup'])->name('auth.google.signup');
 });
 
 Route::post('/submit-commission-payment', [WebAuthController::class, 'submitCommissionPayment'])->name('commission.submit-payment');
