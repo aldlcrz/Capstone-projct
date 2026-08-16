@@ -110,7 +110,7 @@
                        required 
                        pattern="[0-9]{6}" 
                        inputmode="numeric"
-                       placeholder="123456" 
+                       placeholder="" 
                        autofocus
                        class="w-full text-center text-3xl font-black tracking-[0.35em] px-4 py-3 bg-[#F9F6F2] border-2 {{ $errors->has('code') ? 'border-red-400' : 'border-transparent' }} focus:border-[#C0422A] focus:bg-white rounded-2xl outline-none transition-all">
                 @error('code')
