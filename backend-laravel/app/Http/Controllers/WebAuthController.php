@@ -191,7 +191,6 @@ class WebAuthController extends Controller
                 'googleId'          => $googleId,
                 'profilePhoto'      => $profilePhoto,
                 'hasPasswordSet'    => true,
-                'email_verified_at' => now(),
             ],
             'verify_email' => $email,
         ]);
@@ -325,7 +324,6 @@ class WebAuthController extends Controller
             $user = User::where('email', $email)->first();
             if ($user) {
                 $user->isVerified = true;
-                $user->email_verified_at = now();
                 $user->save();
             }
         }
