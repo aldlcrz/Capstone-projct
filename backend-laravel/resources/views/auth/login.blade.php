@@ -228,7 +228,7 @@
     </div>
     @endif
 
-    @if($errors->any())
+    @if($isFrozenErr)
     <div 
         x-data="{ show: true, activeTab: 'gcash' }"
         x-show="show"
@@ -242,7 +242,6 @@
         x-cloak
         @keydown.escape.window="show = false"
     >
-        @if($isFrozenErr)
         <!-- Account Frozen Payment Modal -->
         <div @click.away="show = false" class="w-full max-w-lg bg-white rounded-[2.5rem] p-6 lg:p-8 shadow-2xl border border-gray-100 text-center relative space-y-6 max-h-[90vh] overflow-y-auto no-scrollbar my-auto">
             <button @click="show = false" class="absolute top-5 right-5 text-gray-400 hover:text-gray-600 transition-colors">
@@ -338,60 +337,27 @@
             <!-- Submit Payment Proof Form -->
             <form action="{{ route('commission.submit-payment') }}" method="POST" enctype="multipart/form-data" class="bg-[#F9F6F2] border border-[#E5DDD5] rounded-2xl p-5 text-left space-y-4">
                 @csrf
-                <input type="hidden" name="email" value="{{ old('email') }}">
-
-                <div class="flex items-center justify-between border-b border-[#E5DDD5] pb-3">
-                    <h4 class="text-xs font-black text-[#3D2B1F] uppercase tracking-wider">Submit Payment Verification</h4>
-                    <span class="text-[10px] text-gray-400 font-bold uppercase">Required</span>
+                <div>
+                    <label class="text-[10px] font-bold text-gray-500 uppercase tracking-widest block mb-1">Your Email</label>
+                    <input type="email" name="email" value="{{ old('email') }}" required placeholder="your.email@gmail.com" class="w-full h-11 bg-white rounded-xl px-4 text-xs font-medium border border-gray-200 focus:border-[#C0422A] outline-none">
                 </div>
-
-                <div class="space-y-1.5">
-                    <label class="block text-[10px] font-bold text-gray-500 uppercase tracking-widest">Payment Method Used</label>
-                    <select name="payment_method" x-model="activeTab" class="w-full px-4 py-2.5 bg-white border border-[#E5DDD5] rounded-xl text-xs font-bold text-[#3D2B1F] outline-none">
-                        <option value="gcash">GCash</option>
-                        <option value="maya">Maya</option>
-                    </select>
+                <div>
+                    <label class="text-[10px] font-bold text-gray-500 uppercase tracking-widest block mb-1">Reference Number / Transaction ID *</label>
+                    <input type="text" name="reference_number" required placeholder="e.g. 100234859384" class="w-full h-11 bg-white rounded-xl px-4 text-xs font-medium border border-gray-200 focus:border-[#C0422A] outline-none">
                 </div>
-
-                <div class="space-y-1.5">
-                    <label class="block text-[10px] font-bold text-gray-500 uppercase tracking-widest">Reference / Transaction Number</label>
-                    <input type="text" name="reference_number" required placeholder="e.g. 100234567891"
-                           class="w-full px-4 py-2.5 bg-white border border-[#E5DDD5] rounded-xl text-xs font-bold text-[#3D2B1F] focus:outline-none focus:border-[#C0422A]">
+                <div>
+                    <label class="text-[10px] font-bold text-gray-500 uppercase tracking-widest block mb-1">Payment Proof (Screenshot) *</label>
+                    <input type="file" name="payment_proof" accept="image/*" required class="w-full text-xs text-gray-500 file:mr-3 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-[10px] file:font-bold file:uppercase file:tracking-widest file:bg-gray-100 file:text-gray-700 hover:file:bg-gray-200 cursor-pointer">
                 </div>
-
-                <div class="space-y-1.5">
-                    <label class="block text-[10px] font-bold text-gray-500 uppercase tracking-widest">Upload Screenshot Proof</label>
-                    <input type="file" name="proof_image" accept="image/*" required
-                           class="w-full text-xs text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-[#3D2B1F] file:text-white hover:file:bg-[#C0422A]">
+                <div>
+                    <label class="text-[10px] font-bold text-gray-500 uppercase tracking-widest block mb-1">Notes / Remarks (Optional)</label>
+                    <textarea name="notes" rows="2" placeholder="Any additional details..." class="w-full p-3 bg-white rounded-xl text-xs font-medium border border-gray-200 focus:border-[#C0422A] outline-none resize-none"></textarea>
                 </div>
-
-                <button type="submit" class="w-full py-3.5 bg-[#C0422A] text-white rounded-xl font-bold uppercase tracking-[0.2em] text-[10px] hover:bg-[#a83808] transition-all shadow-md mt-2">
-                    Submit Payment Proof →
+                <button type="submit" class="w-full py-3.5 bg-green-600 hover:bg-green-700 text-white rounded-xl font-bold uppercase tracking-wider text-[10px] transition-all shadow-md">
+                    Submit Payment Proof
                 </button>
             </form>
         </div>
-
-        @else
-        <!-- Standard Login Failed Modal -->
-        <div @click.away="show = false" class="w-full max-w-sm bg-white rounded-3xl p-6 shadow-2xl border border-gray-100 text-center relative space-y-4 my-auto">
-            <button @click="show = false" class="absolute top-4 right-4 text-gray-400 hover:text-gray-600 transition-colors">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
-            </button>
-
-            <div class="w-12 h-12 rounded-full bg-red-50 text-red-600 border border-red-100 flex items-center justify-center mx-auto shadow-sm">
-                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12"></path></svg>
-            </div>
-
-            <div>
-                <h3 class="text-sm font-black text-black uppercase tracking-wider">Login Failed</h3>
-                <p class="text-xs text-gray-500 font-medium mt-1 leading-relaxed">{{ $errMsg }}</p>
-            </div>
-
-            <button @click="show = false" class="w-full py-3 bg-[#3D2B1F] text-white rounded-full font-bold uppercase tracking-widest text-[10px] hover:bg-[#C0422A] transition-all">
-                Okay
-            </button>
-        </div>
-        @endif
     </div>
     @endif
 
