@@ -530,19 +530,19 @@
         </div>
     </div>
 
-    <!-- Place Order Confirmation Modal -->
-    <div x-show="showConfirmModal" class="fixed inset-0 z-110 flex items-center justify-center p-4" style="display: none;" x-cloak>
-        <div class="absolute inset-0 bg-black/60 backdrop-blur-sm" @click="showConfirmModal = false"></div>
-        <div @click.away="showConfirmModal = false" class="relative bg-white w-full max-w-lg rounded-3xl shadow-2xl p-6 sm:p-8 space-y-5 max-h-[90vh] overflow-y-auto custom-scrollbar" x-transition>
+    <!-- Step 1: Shop Policy Notice Modal (Shown when clicking Proceed to Payment) -->
+    <div x-show="showPolicyModal" class="fixed inset-0 z-110 flex items-center justify-center p-4" style="display: none;" x-cloak>
+        <div class="absolute inset-0 bg-black/60 backdrop-blur-sm" @click="showPolicyModal = false"></div>
+        <div @click.away="showPolicyModal = false" class="relative bg-white w-full max-w-lg rounded-3xl shadow-2xl p-6 sm:p-8 space-y-5 max-h-[90vh] overflow-y-auto custom-scrollbar" x-transition>
             <div class="text-center">
                 <div class="w-14 h-14 rounded-full bg-amber-50 flex items-center justify-center mx-auto mb-3 border border-amber-200/50">
                     <svg class="w-7 h-7 text-[#C0422A]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
                     </svg>
                 </div>
-                <h3 class="font-serif text-xl sm:text-2xl font-bold text-black mb-1.5">Confirm Your Purchase</h3>
+                <h3 class="font-serif text-xl sm:text-2xl font-bold text-black mb-1.5">Shop Policy Notice</h3>
                 <p class="text-xs text-gray-500 leading-relaxed max-w-md mx-auto">
-                    Please make sure your delivery address and payment reference receipt are accurate before placing this order.
+                    Please review and accept the shop’s cancellation and refund policies before proceeding to payment.
                 </p>
             </div>
 
@@ -603,14 +603,60 @@
 
             {{-- Modal Buttons --}}
             <div class="flex gap-3 pt-1">
+                <button type="button" @click="showPolicyModal = false"
+                    class="flex-1 py-3.5 rounded-xl border border-gray-200 text-[10px] font-bold uppercase tracking-widest text-gray-600 hover:bg-gray-50 transition-all cursor-pointer">
+                    Go Back
+                </button>
+                <button type="button" @click="proceedToPaymentStep()"
+                    :disabled="!policyAccepted"
+                    :class="!policyAccepted ? 'opacity-40 cursor-not-allowed bg-gray-400' : 'bg-[#C0422A] hover:bg-[#A33622] cursor-pointer shadow-md shadow-[#C0422A]/20 active:scale-95'"
+                    class="flex-1 py-3.5 rounded-xl text-white text-[10px] font-bold uppercase tracking-widest transition-all">
+                    Proceed to Payment
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Step 2: Place Order Confirmation Modal (Final check before submitting order) -->
+    <div x-show="showConfirmModal" class="fixed inset-0 z-110 flex items-center justify-center p-4" style="display: none;" x-cloak>
+        <div class="absolute inset-0 bg-black/60 backdrop-blur-sm" @click="showConfirmModal = false"></div>
+        <div @click.away="showConfirmModal = false" class="relative bg-white w-full max-w-lg rounded-3xl shadow-2xl p-6 sm:p-8 space-y-5 max-h-[90vh] overflow-y-auto custom-scrollbar" x-transition>
+            <div class="text-center">
+                <div class="w-14 h-14 rounded-full bg-emerald-50 flex items-center justify-center mx-auto mb-3 border border-emerald-200/50">
+                    <svg class="w-7 h-7 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                    </svg>
+                </div>
+                <h3 class="font-serif text-xl sm:text-2xl font-bold text-black mb-1.5">Confirm Your Order</h3>
+                <p class="text-xs text-gray-500 leading-relaxed max-w-md mx-auto">
+                    Please ensure that your delivery address and payment receipt details are accurate before placing your order.
+                </p>
+            </div>
+
+            {{-- Summary Card --}}
+            <div class="bg-gray-50/90 border border-gray-200/80 rounded-2xl p-4 text-left space-y-2 text-xs">
+                <div class="flex justify-between items-center text-gray-600">
+                    <span>Payment Method:</span>
+                    <span class="font-bold text-gray-900" x-text="paymentMethod"></span>
+                </div>
+                <div class="flex justify-between items-center text-gray-600">
+                    <span>Reference Number:</span>
+                    <span class="font-mono font-bold text-gray-900" x-text="paymentRef"></span>
+                </div>
+                <div class="flex justify-between items-center text-gray-600 pt-2 border-t border-gray-200">
+                    <span class="font-bold text-gray-900">Total Payment:</span>
+                    <span class="font-black text-[#C0422A] text-base">₱{{ number_format($subtotal + $shippingFee) }}</span>
+                </div>
+            </div>
+
+            {{-- Modal Buttons --}}
+            <div class="flex gap-3 pt-1">
                 <button type="button" @click="showConfirmModal = false"
                     class="flex-1 py-3.5 rounded-xl border border-gray-200 text-[10px] font-bold uppercase tracking-widest text-gray-600 hover:bg-gray-50 transition-all cursor-pointer">
                     Go Back
                 </button>
                 <button type="button" @click="confirmPlaceOrder()"
-                    :disabled="!policyAccepted"
-                    :class="!policyAccepted ? 'opacity-40 cursor-not-allowed bg-gray-400' : 'bg-[#C0422A] hover:bg-[#A33622] cursor-pointer shadow-md shadow-[#C0422A]/20 active:scale-95'"
-                    class="flex-1 py-3.5 rounded-xl text-white text-[10px] font-bold uppercase tracking-widest transition-all">
+                    class="flex-1 py-3.5 rounded-xl bg-[#C0422A] hover:bg-[#A33622] text-white text-[10px] font-bold uppercase tracking-widest cursor-pointer shadow-md shadow-[#C0422A]/20 active:scale-95 transition-all">
                     Yes, Place Order
                 </button>
             </div>
@@ -904,6 +950,7 @@ function checkoutApp(initialAddress, initialAddresses, defaultPaymentMethod) {
         address: initialAddress || {},
         addresses: initialAddresses || [],
         showAddressModal: false,
+        showPolicyModal: false,
         showConfirmModal: false,
         policyAccepted: false,
         showEditAddressModal: false,
@@ -1462,7 +1509,16 @@ function checkoutApp(initialAddress, initialAddresses, defaultPaymentMethod) {
                 document.querySelector('[data-address-section]')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
                 return;
             }
+            // Show the Shop Policy Notice Modal before proceeding to payment
+            this.showPolicyModal = true;
+        },
+        proceedToPaymentStep() {
+            if (!this.policyAccepted) {
+                return;
+            }
+            this.showPolicyModal = false;
             this.step = 2;
+            window.scrollTo({ top: 0, behavior: 'smooth' });
         },
         requestPlaceOrder() {
             if (!this.validateRef() || this.isRefDuplicate) {
@@ -1486,13 +1542,9 @@ function checkoutApp(initialAddress, initialAddresses, defaultPaymentMethod) {
             this.screenshotError = '';
             const form = document.getElementById('checkout-form');
             if (!form || !form.reportValidity()) return;
-            this.policyAccepted = false;
             this.showConfirmModal = true;
         },
         confirmPlaceOrder() {
-            if (!this.policyAccepted) {
-                return;
-            }
             if (!this.validateRef() || this.isRefDuplicate) {
                 this.showConfirmModal = false;
                 document.getElementById('paymentReferenceInput')?.focus();
