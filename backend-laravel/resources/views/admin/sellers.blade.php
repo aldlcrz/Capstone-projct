@@ -120,12 +120,14 @@
                     </td>
                     <td class="px-6 py-4">
                         <div class="flex items-center justify-end gap-2">
-                            <form action="/admin/sellers/{{ $seller->id }}/{{ $seller->isVerified ? 'unverify' : 'verify' }}" method="POST">
-                                @csrf @method('PATCH')
-                                <button type="submit" class="px-4 py-2 {{ $seller->isVerified ? 'bg-gray-50 text-gray-600 hover:bg-gray-200' : 'bg-green-50 text-green-700 hover:bg-green-500 hover:text-white' }} rounded-lg text-[9px] font-black uppercase tracking-widest transition-all cursor-pointer">
-                                    {{ $seller->isVerified ? 'Revoke Verified' : 'Verify' }}
-                                </button>
-                            </form>
+                            @if(!$seller->isVerified)
+                                <form action="/admin/sellers/{{ $seller->id }}/verify" method="POST">
+                                    @csrf @method('PATCH')
+                                    <button type="submit" class="px-4 py-2 bg-green-50 text-green-700 hover:bg-green-500 hover:text-white rounded-lg text-[9px] font-black uppercase tracking-widest transition-all cursor-pointer">
+                                        Verify
+                                    </button>
+                                </form>
+                            @endif
                             @if($seller->status === 'active' || $seller->status === 'pending_approval')
                                 <button type="button" @click="openSuspend({{ json_encode($seller) }})" class="px-4 py-2 bg-red-50 text-red-700 rounded-lg text-[9px] font-black uppercase tracking-widest hover:bg-red-500 hover:text-white transition-all cursor-pointer">
                                     Suspend
