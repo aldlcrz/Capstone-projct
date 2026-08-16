@@ -28,6 +28,14 @@
         .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
         /* Prevent Alpine.js x-cloak elements from flashing before initialization */
         [x-cloak] { display: none !important; }
+        /* Mobile chat widget: sit above bottom nav (64px) + toggle button */
+        @media (max-width: 1023px) {
+            .chat-widget-panel {
+                bottom: 8rem !important;
+                height: calc(100svh - 9.5rem) !important;
+                max-height: calc(100svh - 9.5rem) !important;
+            }
+        }
     </style>
 </head>
 <body class="antialiased text-gray-900 max-w-full relative">
