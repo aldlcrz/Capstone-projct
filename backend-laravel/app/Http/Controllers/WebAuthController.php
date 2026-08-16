@@ -71,6 +71,14 @@ class WebAuthController extends Controller
                 ])->onlyInput('email');
             }
 
+            // Seller whose email is verified but still awaiting admin approval
+            if ($user->role === 'seller' && $user->status === 'pending_approval') {
+                Auth::logout();
+                return back()->withErrors([
+                    'email' => 'Your artisan application is still awaiting admin approval. You will be notified once it is reviewed.',
+                ])->onlyInput('email');
+            }
+
             if (!$user->isVerified) {
                 Auth::logout();
                 session(['verify_email' => $user->email]);
@@ -323,7 +331,12 @@ class WebAuthController extends Controller
             // 2. Fallback to existing unverified user record (e.g. seller registration)
             $user = User::where('email', $email)->first();
             if ($user) {
-                $user->isVerified = true;
+                if ($user->role === 'seller') {
+                    // Seller email verified — keep isVerified=false until admin approves
+                    $user->status = 'pending_approval';
+                } else {
+                    $user->isVerified = true;
+                }
                 $user->save();
             }
         }

@@ -117,7 +117,7 @@ class AdminController extends Controller
     {
         return [
             'products'      => Product::where('status', 'pending')->count(),
-            'sellers'       => User::where('role', 'seller')->where('isVerified', false)->where('status', 'active')->count(),
+            'sellers'       => User::where('role', 'seller')->where('isVerified', false)->where('status', 'pending_approval')->count(),
             'banners'       => \App\Models\Banner::whereNotNull('userId')->where('status', 'pending')->count(),
             'reports'       => \App\Models\Report::where('status', 'Pending')->count(),
         ];
@@ -257,7 +257,7 @@ class AdminController extends Controller
     {
         $sellers = User::where('role', 'seller')
             ->where('isVerified', false)
-            ->where('status', 'active')
+            ->where('status', 'pending_approval')
             ->get();
         return response()->json($sellers);
     }
@@ -287,6 +287,7 @@ class AdminController extends Controller
         if (!$user) return response()->json(['message' => 'Seller not found'], 404);
 
         $user->isVerified = true;
+        $user->status     = 'active';
         $user->save();
 
         $this->sendNotification($user->id, 'Seller verification approved', 'Your artisan workshop is now verified and can access seller tools.', 'system', '/seller/dashboard', 'seller');
@@ -447,7 +448,7 @@ class AdminController extends Controller
         fputcsv($out, ['Average Order Value',  'PHP ' . number_format($aov, 2)]);
         fputcsv($out, ['Total Customers',      User::where('role', 'customer')->count()]);
         fputcsv($out, ['Verified Sellers',     User::where('role', 'seller')->where('isVerified', true)->count()]);
-        fputcsv($out, ['Pending Sellers',      User::where('role', 'seller')->where('isVerified', false)->where('status', 'active')->count()]);
+        fputcsv($out, ['Pending Sellers',      User::where('role', 'seller')->where('isVerified', false)->where('status', 'pending_approval')->count()]);
         fputcsv($out, ['Total Products',       Product::count()]);
         fputcsv($out, ['Approved Products',    Product::where('status', 'approved')->count()]);
         fputcsv($out, ['Pending Products',     Product::where('status', 'pending')->count()]);
@@ -662,10 +663,10 @@ class AdminController extends Controller
             ->withCount(['products', 'orders'])
             ->orderBy('createdAt', 'desc')
             ->paginate(20);
-        $pendingSellers = User::where('role', 'seller')->where('isVerified', false)->where('status', 'active')->get();
+        $pendingSellers = User::where('role', 'seller')->where('isVerified', false)->where('status', 'pending_approval')->get();
         $counts = [
             'verified'  => User::where('role', 'seller')->where('isVerified', true)->count(),
-            'pending'   => User::where('role', 'seller')->where('isVerified', false)->where('status', 'active')->count(),
+            'pending'   => User::where('role', 'seller')->where('isVerified', false)->where('status', 'pending_approval')->count(),
             'suspended' => User::where('role', 'seller')->where('status', 'blocked')->count(),
         ];
         return view('admin.sellers', compact('sellers', 'pendingSellers', 'counts'));
