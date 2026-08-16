@@ -502,161 +502,163 @@
             @endif
         </div>
 
-        {{-- ROW 3: Packing Proof & Courier Tracking --}}
-        @php
-            $hasCourierTracking = in_array(strtolower(str_replace('_', ' ', $order->status)), ['in transit', 'out for delivery', 'delivered', 'completed']) && !empty(trim($order->trackingNumber ?? ''));
-        @endphp
+        {{-- ROW 3: Packing Proof & Courier Tracking (Only for active orders) --}}
+        @if(!$isCancelled)
+            @php
+                $hasCourierTracking = in_array(strtolower(str_replace('_', ' ', $order->status)), ['in transit', 'out for delivery', 'delivered', 'completed']) && !empty(trim($order->trackingNumber ?? ''));
+            @endphp
 
-        @if($hasCourierTracking)
-            {{-- In Transit / Active Tracking: Show Packing Proof (7 cols) + Courier Tracking (5 cols) side by side --}}
-            <div class="grid grid-cols-1 lg:grid-cols-12 gap-4 sm:gap-5 items-stretch">
-                {{-- Packing Proof --}}
-                <div class="lg:col-span-7 flex flex-col">
-                    <div class="bg-white rounded-2xl p-4 sm:p-5 border border-[#EAE6DF] shadow-2xs space-y-3 h-full flex flex-col justify-between">
-                        <div>
-                            <div class="flex items-center justify-between pb-2 border-b border-gray-100">
-                                <div class="flex items-center gap-2">
-                                    <span class="text-base">📦</span>
-                                    <span class="text-[11px] font-bold uppercase tracking-wider text-gray-700">Artisan Packing Proof</span>
+            @if($hasCourierTracking)
+                {{-- In Transit / Active Tracking: Show Packing Proof (7 cols) + Courier Tracking (5 cols) side by side --}}
+                <div class="grid grid-cols-1 lg:grid-cols-12 gap-4 sm:gap-5 items-stretch">
+                    {{-- Packing Proof --}}
+                    <div class="lg:col-span-7 flex flex-col">
+                        <div class="bg-white rounded-2xl p-4 sm:p-5 border border-[#EAE6DF] shadow-2xs space-y-3 h-full flex flex-col justify-between">
+                            <div>
+                                <div class="flex items-center justify-between pb-2 border-b border-gray-100">
+                                    <div class="flex items-center gap-2">
+                                        <span class="text-base">📦</span>
+                                        <span class="text-[11px] font-bold uppercase tracking-wider text-gray-700">Artisan Packing Proof</span>
+                                    </div>
+                                    <span class="text-[10px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-md flex items-center gap-1">
+                                        <svg class="w-3 h-3 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/></svg>
+                                        Verified by Artisan
+                                    </span>
                                 </div>
-                                <span class="text-[10px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-md flex items-center gap-1">
-                                    <svg class="w-3 h-3 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/></svg>
-                                    Verified by Artisan
-                                </span>
+
+                                @if($order->packingProof)
+                                    <div class="mt-3 relative rounded-xl overflow-hidden border border-gray-200 bg-gray-50 cursor-pointer group flex items-center justify-center max-h-56"
+                                         @click="packingModalUrl = '{{ $order->packing_proof_url }}'; packingModal = true;">
+                                        <img src="{{ $order->packing_proof_url }}" class="w-full h-full max-h-56 object-cover group-hover:scale-105 transition-transform duration-300" alt="Packing proof photo">
+                                        <div class="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                                            <span class="px-3 py-1.5 bg-black/80 text-white rounded-lg text-xs font-bold backdrop-blur-xs flex items-center gap-1">
+                                                🔍 Click to zoom
+                                            </span>
+                                        </div>
+                                    </div>
+                                @else
+                                    <div class="p-4 bg-amber-50/70 border border-amber-200 rounded-xl mt-3 text-xs text-amber-800">
+                                        The artisan is preparing your package. A verified packing photo will appear here once ready.
+                                    </div>
+                                @endif
+                            </div>
+                        </div>
+                    </div>
+
+                    {{-- Courier Tracking --}}
+                    <div class="lg:col-span-5 flex flex-col">
+                        <div class="bg-white rounded-2xl p-4 sm:p-5 border border-[#EAE6DF] shadow-2xs space-y-3 text-xs h-full flex flex-col justify-between">
+                            <div>
+                                <div class="flex items-center justify-between pb-2 border-b border-gray-100">
+                                    <div class="flex items-center gap-1.5">
+                                        <span class="text-base">🚚</span>
+                                        <span class="text-[11px] font-bold uppercase tracking-wider text-gray-700">Courier Tracking</span>
+                                    </div>
+                                    <span class="text-[9px] font-bold text-purple-700 bg-purple-50 border border-purple-200 px-2 py-0.5 rounded-md uppercase tracking-wider">In Transit</span>
+                                </div>
+
+                                <div class="space-y-2.5 pt-1">
+                                    @if($order->courierName)
+                                        <div class="flex justify-between items-center text-xs">
+                                            <span class="text-gray-400 font-bold uppercase tracking-wider text-[9px]">Courier</span>
+                                            <span class="font-black text-gray-900">{{ $order->courierName }}</span>
+                                        </div>
+                                    @endif
+
+                                    @if($order->trackingNumber)
+                                        <div class="flex justify-between items-center bg-gray-50 p-2.5 rounded-xl border border-gray-150">
+                                            <div>
+                                                <span class="text-gray-400 font-bold text-[9px] uppercase tracking-wider block">Tracking Number</span>
+                                                <span class="font-mono text-[#C0420A] font-bold text-xs">{{ $order->trackingNumber }}</span>
+                                            </div>
+                                            <button type="button" 
+                                                    @click="copyText('{{ $order->trackingNumber }}', 'Tracking number copied!')"
+                                                    class="px-2.5 py-1.5 bg-white border border-gray-200 hover:border-[#C0420A] hover:text-[#C0420A] rounded-lg text-[10px] font-bold uppercase tracking-wider shadow-2xs flex items-center gap-1 transition-all active:scale-95 cursor-pointer"
+                                                    title="Copy tracking number">
+                                                <svg class="w-3.5 h-3.5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/>
+                                                </svg>
+                                                <span>Copy</span>
+                                            </button>
+                                        </div>
+                                    @endif
+                                </div>
                             </div>
 
-                            @if($order->packingProof)
-                                <div class="mt-3 relative rounded-xl overflow-hidden border border-gray-200 bg-gray-50 cursor-pointer group flex items-center justify-center max-h-56"
-                                     @click="packingModalUrl = '{{ $order->packing_proof_url }}'; packingModal = true;">
-                                    <img src="{{ $order->packing_proof_url }}" class="w-full h-full max-h-56 object-cover group-hover:scale-105 transition-transform duration-300" alt="Packing proof photo">
-                                    <div class="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                                        <span class="px-3 py-1.5 bg-black/80 text-white rounded-lg text-xs font-bold backdrop-blur-xs flex items-center gap-1">
-                                            🔍 Click to zoom
-                                        </span>
-                                    </div>
-                                </div>
-                            @else
-                                <div class="p-4 bg-amber-50/70 border border-amber-200 rounded-xl mt-3 text-xs text-amber-800">
-                                    The artisan is preparing your package. A verified packing photo will appear here once ready.
+                            @if($order->trackingLink)
+                                <div class="space-y-1 pt-2">
+                                    <a href="{{ $order->trackingLink }}" target="_blank" rel="noopener noreferrer" 
+                                       class="block text-center py-2.5 bg-black hover:bg-[#C0420A] text-white rounded-xl text-xs font-bold uppercase tracking-wider transition-all shadow-2xs cursor-pointer">
+                                        Track on {{ $order->courierName ?? 'Courier Site' }} ↗
+                                    </a>
+                                    <p class="text-[9px] text-gray-400 text-center">Click to open courier portal and paste your copied tracking number.</p>
                                 </div>
                             @endif
                         </div>
                     </div>
                 </div>
-
-                {{-- Courier Tracking --}}
-                <div class="lg:col-span-5 flex flex-col">
-                    <div class="bg-white rounded-2xl p-4 sm:p-5 border border-[#EAE6DF] shadow-2xs space-y-3 text-xs h-full flex flex-col justify-between">
-                        <div>
-                            <div class="flex items-center justify-between pb-2 border-b border-gray-100">
-                                <div class="flex items-center gap-1.5">
-                                    <span class="text-base">🚚</span>
-                                    <span class="text-[11px] font-bold uppercase tracking-wider text-gray-700">Courier Tracking</span>
-                                </div>
-                                <span class="text-[9px] font-bold text-purple-700 bg-purple-50 border border-purple-200 px-2 py-0.5 rounded-md uppercase tracking-wider">In Transit</span>
+            @else
+                {{-- Pending / To Ship / Shipped: Full-Width Clean Packing Proof Card --}}
+                <div class="w-full">
+                    <div class="bg-white rounded-2xl p-4 sm:p-5 border border-[#EAE6DF] shadow-2xs space-y-3">
+                        <div class="flex items-center justify-between pb-2 border-b border-gray-100">
+                            <div class="flex items-center gap-2">
+                                <span class="text-base">📦</span>
+                                <span class="text-[11px] font-bold uppercase tracking-wider text-gray-700">Artisan Packing Verification</span>
                             </div>
+                            @if($order->packingProof)
+                                <span class="text-[10px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-md flex items-center gap-1">
+                                    <svg class="w-3 h-3 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/></svg>
+                                    Verified by Artisan
+                                </span>
+                            @else
+                                <span class="text-[10px] font-bold text-amber-700 bg-amber-50 border border-amber-200 px-2 py-0.5 rounded-md">
+                                    Preparing Package
+                                </span>
+                            @endif
+                        </div>
 
-                            <div class="space-y-2.5 pt-1">
-                                @if($order->courierName)
-                                    <div class="flex justify-between items-center text-xs">
-                                        <span class="text-gray-400 font-bold uppercase tracking-wider text-[9px]">Courier</span>
-                                        <span class="font-black text-gray-900">{{ $order->courierName }}</span>
+                        @if($order->packingProof)
+                            <div class="grid grid-cols-1 sm:grid-cols-12 gap-4 items-center pt-1">
+                                {{-- Photo preview thumbnail --}}
+                                <div class="sm:col-span-5 md:col-span-4 relative rounded-xl overflow-hidden border border-gray-200 bg-gray-50 cursor-pointer group aspect-video max-h-48 flex items-center justify-center"
+                                     @click="packingModalUrl = '{{ $order->packing_proof_url }}'; packingModal = true;">
+                                    <img src="{{ $order->packing_proof_url }}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" alt="Packing proof">
+                                    <div class="absolute inset-0 bg-black/25 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                                        <span class="px-3 py-1 bg-black/80 text-white rounded-lg text-xs font-bold backdrop-blur-xs flex items-center gap-1">
+                                            🔍 Click to zoom
+                                        </span>
                                     </div>
-                                @endif
+                                </div>
 
-                                @if($order->trackingNumber)
-                                    <div class="flex justify-between items-center bg-gray-50 p-2.5 rounded-xl border border-gray-150">
-                                        <div>
-                                            <span class="text-gray-400 font-bold text-[9px] uppercase tracking-wider block">Tracking Number</span>
-                                            <span class="font-mono text-[#C0420A] font-bold text-xs">{{ $order->trackingNumber }}</span>
-                                        </div>
+                                {{-- Description & Assurance --}}
+                                <div class="sm:col-span-7 md:col-span-8 space-y-2">
+                                    <h4 class="text-xs sm:text-sm font-bold text-gray-900">Your parcel has been packed & inspected!</h4>
+                                    <p class="text-xs text-gray-600 leading-relaxed">
+                                        The artisan has inspected and packed your heritage item with care. Once dispatched to the courier, your live tracking details will appear automatically.
+                                    </p>
+                                    <div>
                                         <button type="button" 
-                                                @click="copyText('{{ $order->trackingNumber }}', 'Tracking number copied!')"
-                                                class="px-2.5 py-1.5 bg-white border border-gray-200 hover:border-[#C0420A] hover:text-[#C0420A] rounded-lg text-[10px] font-bold uppercase tracking-wider shadow-2xs flex items-center gap-1 transition-all active:scale-95 cursor-pointer"
-                                                title="Copy tracking number">
-                                            <svg class="w-3.5 h-3.5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/>
-                                            </svg>
-                                            <span>Copy</span>
+                                                @click="packingModalUrl = '{{ $order->packing_proof_url }}'; packingModal = true;"
+                                                class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-gray-100 hover:bg-gray-200 text-gray-800 rounded-lg text-xs font-bold transition-all cursor-pointer">
+                                            <svg class="w-3.5 h-3.5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+                                            <span>View Full-Size Photo Proof</span>
                                         </button>
                                     </div>
-                                @endif
+                                </div>
                             </div>
-                        </div>
-
-                        @if($order->trackingLink)
-                            <div class="space-y-1 pt-2">
-                                <a href="{{ $order->trackingLink }}" target="_blank" rel="noopener noreferrer" 
-                                   class="block text-center py-2.5 bg-black hover:bg-[#C0420A] text-white rounded-xl text-xs font-bold uppercase tracking-wider transition-all shadow-2xs cursor-pointer">
-                                    Track on {{ $order->courierName ?? 'Courier Site' }} ↗
-                                </a>
-                                <p class="text-[9px] text-gray-400 text-center">Click to open courier portal and paste your copied tracking number.</p>
-                            </div>
-                        @endif
-                    </div>
-                </div>
-            </div>
-        @else
-            {{-- Pending / To Ship / Shipped: Full-Width Clean Packing Proof Card --}}
-            <div class="w-full">
-                <div class="bg-white rounded-2xl p-4 sm:p-5 border border-[#EAE6DF] shadow-2xs space-y-3">
-                    <div class="flex items-center justify-between pb-2 border-b border-gray-100">
-                        <div class="flex items-center gap-2">
-                            <span class="text-base">📦</span>
-                            <span class="text-[11px] font-bold uppercase tracking-wider text-gray-700">Artisan Packing Verification</span>
-                        </div>
-                        @if($order->packingProof)
-                            <span class="text-[10px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-md flex items-center gap-1">
-                                <svg class="w-3 h-3 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/></svg>
-                                Verified by Artisan
-                            </span>
                         @else
-                            <span class="text-[10px] font-bold text-amber-700 bg-amber-50 border border-amber-200 px-2 py-0.5 rounded-md">
-                                Preparing Package
-                            </span>
+                            <div class="p-3.5 bg-gray-50 border border-gray-150 rounded-xl flex items-start gap-2.5 text-xs text-gray-600">
+                                <span class="text-base">⏳</span>
+                                <div>
+                                    <span class="font-bold text-gray-900 block">Artisan is preparing your package</span>
+                                    <span class="text-[11px] text-gray-500 mt-0.5 block">A verified photograph of your packed piece will be uploaded here by the artisan prior to courier dispatch.</span>
+                                </div>
+                            </div>
                         @endif
                     </div>
-
-                    @if($order->packingProof)
-                        <div class="grid grid-cols-1 sm:grid-cols-12 gap-4 items-center pt-1">
-                            {{-- Photo preview thumbnail --}}
-                            <div class="sm:col-span-5 md:col-span-4 relative rounded-xl overflow-hidden border border-gray-200 bg-gray-50 cursor-pointer group aspect-video max-h-48 flex items-center justify-center"
-                                 @click="packingModalUrl = '{{ $order->packing_proof_url }}'; packingModal = true;">
-                                <img src="{{ $order->packing_proof_url }}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" alt="Packing proof">
-                                <div class="absolute inset-0 bg-black/25 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                                    <span class="px-3 py-1 bg-black/80 text-white rounded-lg text-xs font-bold backdrop-blur-xs flex items-center gap-1">
-                                        🔍 Click to zoom
-                                    </span>
-                                </div>
-                            </div>
-
-                            {{-- Description & Assurance --}}
-                            <div class="sm:col-span-7 md:col-span-8 space-y-2">
-                                <h4 class="text-xs sm:text-sm font-bold text-gray-900">Your parcel has been packed & inspected!</h4>
-                                <p class="text-xs text-gray-600 leading-relaxed">
-                                    The artisan has inspected and packed your heritage item with care. Once dispatched to the courier, your live tracking details will appear automatically.
-                                </p>
-                                <div>
-                                    <button type="button" 
-                                            @click="packingModalUrl = '{{ $order->packing_proof_url }}'; packingModal = true;"
-                                            class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-gray-100 hover:bg-gray-200 text-gray-800 rounded-lg text-xs font-bold transition-all cursor-pointer">
-                                        <svg class="w-3.5 h-3.5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
-                                        <span>View Full-Size Photo Proof</span>
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-                    @else
-                        <div class="p-3.5 bg-gray-50 border border-gray-150 rounded-xl flex items-start gap-2.5 text-xs text-gray-600">
-                            <span class="text-base">⏳</span>
-                            <div>
-                                <span class="font-bold text-gray-900 block">Artisan is preparing your package</span>
-                                <span class="text-[11px] text-gray-500 mt-0.5 block">A verified photograph of your packed piece will be uploaded here by the artisan prior to courier dispatch.</span>
-                            </div>
-                        </div>
-                    @endif
                 </div>
-            </div>
+            @endif
         @endif
 
         {{-- ROW 4: Confirm Received Banner (when delivered) --}}
