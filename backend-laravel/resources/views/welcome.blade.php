@@ -57,7 +57,11 @@
             class="absolute inset-0 w-full h-full"
         >
             {{-- Background image --}}
-            <img src="{{ $banner->getImageUrl() }}" alt="{{ $banner->title }}" class="absolute inset-0 w-full h-full object-cover object-center">
+            <img src="{{ $banner->getImageUrl() }}" 
+                 alt="{{ $banner->title }}" 
+                 @if($i === 0) fetchpriority="high" loading="eager" @else loading="lazy" @endif
+                 decoding="async"
+                 class="absolute inset-0 w-full h-full object-cover object-center">
             {{-- Dark gradient overlay on left --}}
             <div class="absolute inset-0 bg-linear-to-r from-black/85 via-black/50 to-transparent"></div>
             {{-- Content --}}
@@ -265,7 +269,7 @@
                     @endphp
                     <a href="{{ $itemHref }}" class="group flex flex-col items-center gap-2 shrink-0 w-16 sm:w-20">
                         <div class="relative w-16 h-16 sm:w-20 sm:h-20 rounded-full overflow-hidden bg-gray-100 border-2 {{ $isCurrentSelected ? 'border-amber-600 ring-4 ring-amber-500/25 scale-105 shadow-md' : 'border-gray-200/80 group-hover:border-amber-600 shadow-xs group-hover:scale-105' }} transition-all">
-                            <img src="{{ $item['img'] }}" class="w-full h-full object-cover" alt="{{ $item['name'] }}">
+                            <img src="{{ $item['img'] }}" loading="lazy" decoding="async" class="w-full h-full object-cover" alt="{{ $item['name'] }}">
                         </div>
                         <span class="text-[11px] {{ $isCurrentSelected ? 'font-black text-amber-700' : 'font-medium text-gray-700 group-hover:text-black' }} leading-tight text-center line-clamp-2">{{ $item['name'] }}</span>
                     </a>
@@ -323,7 +327,7 @@
                                        @click="categoriesModalOpen = false"
                                        class="group flex flex-col items-center gap-2.5 hover:scale-105 transition-transform duration-200">
                                         <div class="w-18 h-18 sm:w-20 sm:h-20 rounded-full overflow-hidden bg-gray-100 border-2 border-gray-200 group-hover:border-amber-600 shadow-sm transition-all shrink-0">
-                                            <img src="{{ $item['img'] }}" class="w-full h-full object-cover" alt="{{ $item['name'] }}">
+                                            <img src="{{ $item['img'] }}" loading="lazy" decoding="async" class="w-full h-full object-cover" alt="{{ $item['name'] }}">
                                         </div>
                                         <span class="text-xs font-semibold text-gray-800 group-hover:text-amber-700 leading-tight line-clamp-2">{{ $item['name'] }}</span>
                                     </a>
@@ -343,7 +347,7 @@
             <div class="grid grid-cols-2 md:grid-cols-4 gap-5">
                 <!-- Best Sellers -->
                 <a href="/?sort=best_sellers#catalogue-section" class="ajax-filter-link group relative rounded-2xl overflow-hidden bg-gray-900 aspect-4/5 shadow-sm flex flex-col justify-end p-4">
-                    <img src="/uploads/categories/featured_best_sellers.png" class="absolute inset-0 w-full h-full object-cover opacity-85 group-hover:scale-105 transition-transform duration-500" alt="Best Sellers">
+                    <img src="/uploads/categories/featured_best_sellers.png" loading="lazy" decoding="async" class="absolute inset-0 w-full h-full object-cover opacity-85 group-hover:scale-105 transition-transform duration-500" alt="Best Sellers">
                     <div class="absolute inset-0 bg-linear-to-t from-black/85 via-black/20 to-transparent"></div>
                     <div class="relative z-10 text-white">
                         <h4 class="font-bold text-xs sm:text-sm">Best Sellers</h4>
@@ -353,7 +357,7 @@
 
                 <!-- Top Rated Shops -->
                 <button type="button" @click="topShopsModalOpen = true" class="group relative rounded-2xl overflow-hidden bg-gray-900 aspect-4/5 shadow-sm flex flex-col justify-end p-4 text-left cursor-pointer">
-                    <img src="/uploads/categories/wedding_groom.png" class="absolute inset-0 w-full h-full object-cover opacity-85 group-hover:scale-105 transition-transform duration-500" alt="Top Rated Shops">
+                    <img src="/uploads/categories/wedding_groom.png" loading="lazy" decoding="async" class="absolute inset-0 w-full h-full object-cover opacity-85 group-hover:scale-105 transition-transform duration-500" alt="Top Rated Shops">
                     <div class="absolute inset-0 bg-linear-to-t from-black/85 via-black/20 to-transparent"></div>
                     <div class="relative z-10 text-white">
                         <h4 class="font-bold text-xs sm:text-sm">Top Rated Shops</h4>
@@ -363,7 +367,7 @@
 
                 <!-- New Arrivals -->
                 <a href="/?sort=newest#catalogue-section" class="ajax-filter-link group relative rounded-2xl overflow-hidden bg-gray-900 aspect-4/5 shadow-sm flex flex-col justify-end p-4">
-                    <img src="/uploads/categories/jusi_classic.png" class="absolute inset-0 w-full h-full object-cover opacity-85 group-hover:scale-105 transition-transform duration-500" alt="New Arrivals">
+                    <img src="/uploads/categories/jusi_classic.png" loading="lazy" decoding="async" class="absolute inset-0 w-full h-full object-cover opacity-85 group-hover:scale-105 transition-transform duration-500" alt="New Arrivals">
                     <div class="absolute inset-0 bg-linear-to-t from-black/85 via-black/20 to-transparent"></div>
                     <div class="relative z-10 text-white">
                         <h4 class="font-bold text-xs sm:text-sm">New Arrivals</h4>
@@ -373,7 +377,7 @@
 
                 <!-- Lumban Special -->
                 <a href="/?sort=lumban_special#catalogue-section" class="ajax-filter-link group relative rounded-2xl overflow-hidden bg-gray-900 aspect-4/5 shadow-sm flex flex-col justify-end p-4">
-                    <img src="/uploads/categories/pina_formal.png" class="absolute inset-0 w-full h-full object-cover opacity-85 group-hover:scale-105 transition-transform duration-500" alt="Lumban Special">
+                    <img src="/uploads/categories/pina_formal.png" loading="lazy" decoding="async" class="absolute inset-0 w-full h-full object-cover opacity-85 group-hover:scale-105 transition-transform duration-500" alt="Lumban Special">
                     <div class="absolute inset-0 bg-linear-to-t from-black/85 via-black/20 to-transparent"></div>
                     <div class="relative z-10 text-white">
                         <span class="px-2 py-0.5 bg-[#C0420A] text-white text-[8px] font-black uppercase tracking-widest rounded-md mb-1 inline-block">Special Sale</span>
