@@ -21,9 +21,17 @@
         this.deleteModal = true;
     }
 }">
-    <div>
-        <div class="text-[10px] font-bold text-[#C0422A] uppercase tracking-[0.2em] mb-1">Artisan Registry</div>
-        <h1 class="font-serif text-3xl font-bold text-black">Seller <span class="text-[#C0420A] font-light italic">Management</span></h1>
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div>
+            <div class="text-[10px] font-bold text-[#C0422A] uppercase tracking-[0.2em] mb-1">Artisan Registry</div>
+            <h1 class="font-serif text-3xl font-bold text-black">Seller <span class="text-[#C0420A] font-light italic">Management</span></h1>
+        </div>
+        <div class="flex items-center gap-3">
+            <a href="{{ route('superadmin.sellers') }}" class="px-4 py-2.5 bg-[#3D2B1F] hover:bg-[#C0422A] text-white rounded-xl text-xs font-bold uppercase tracking-wider transition-all shadow-sm flex items-center gap-2">
+                <span>👑 Super Admin Governance</span>
+                <span>→</span>
+            </a>
+        </div>
     </div>
 
     {{-- Stats --}}
@@ -58,16 +66,16 @@
                     </div>
                     <div class="min-w-0">
                         <div class="text-sm font-bold text-black truncate">{{ $seller->name }}</div>
-                        <div class="text-[10px] text-gray-500 font-medium truncate">{{ $seller->email }}</div>
+                        <div class="text-[10px] text-gray-500 font-medium">{{ $seller->email }}</div>
                     </div>
                 </div>
-                <div class="flex gap-2 w-full sm:w-auto">
-                    <form action="/admin/sellers/{{ $seller->id }}/verify" method="POST" class="flex-1 sm:flex-initial">
+                <div class="flex items-center gap-2 shrink-0">
+                    <form action="/admin/sellers/{{ $seller->id }}/verify" method="POST">
                         @csrf @method('PATCH')
-                        <button type="submit" class="w-full sm:w-auto px-5 py-2 bg-green-600 text-white rounded-xl text-[9px] font-black uppercase tracking-widest hover:bg-green-700 transition-all cursor-pointer">Verify</button>
+                        <button type="submit" class="px-4 py-2 bg-green-600 text-white rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-green-700 transition-all cursor-pointer shadow-sm">
+                            Approve &amp; Verify
+                        </button>
                     </form>
-                    <button type="button" @click="openSuspend({{ json_encode($seller) }})" class="flex-1 sm:flex-initial px-5 py-2 bg-red-50 text-red-600 rounded-xl text-[9px] font-black uppercase tracking-widest hover:bg-red-500 hover:text-white transition-all cursor-pointer">Reject / Suspend</button>
-                    <button type="button" @click="openDelete({{ json_encode($seller) }})" class="flex-1 sm:flex-initial px-5 py-2 bg-gray-100 text-gray-600 rounded-xl text-[9px] font-black uppercase tracking-widest hover:bg-gray-800 hover:text-white transition-all cursor-pointer">Delete</button>
                 </div>
             </div>
             @endforeach
@@ -79,6 +87,10 @@
     <div class="bg-white rounded-3xl border border-gray-100 shadow-sm overflow-hidden">
         <div class="px-6 py-4 border-b border-gray-50 flex items-center justify-between">
             <h3 class="text-sm font-black uppercase tracking-widest text-black">All Sellers</h3>
+            <a href="{{ route('superadmin.sellers') }}" class="text-xs font-bold text-[#C0422A] hover:underline flex items-center gap-1">
+                <span>View Full Financial Oversight in Super Admin</span>
+                <span>→</span>
+            </a>
         </div>
         <div class="overflow-x-auto no-scrollbar">
             <table class="w-full text-left min-w-160">
@@ -113,7 +125,14 @@
                         </div>
                     </td>
                     <td class="px-6 py-4 text-xs font-semibold text-gray-700 hidden lg:table-cell">
-                        {{ $seller->shopName ?? '—' }}
+                        @if($seller->shopName)
+                            <a href="/shop/{{ urlencode($seller->shopName) }}" target="_blank" class="text-[#3D2B1F] hover:text-[#C0422A] hover:underline flex items-center gap-1 font-bold">
+                                <span>{{ $seller->shopName }}</span>
+                                <svg class="w-3 h-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg>
+                            </a>
+                        @else
+                            <span class="text-gray-400">—</span>
+                        @endif
                     </td>
                     <td class="px-6 py-4 text-sm font-bold text-black text-center hidden md:table-cell">{{ $seller->products_count ?? 0 }}</td>
                     <td class="px-6 py-4 text-sm font-bold text-black text-center hidden md:table-cell">{{ $seller->orders_count ?? 0 }}</td>
@@ -128,6 +147,11 @@
                     </td>
                     <td class="px-6 py-4">
                         <div class="flex items-center justify-center gap-2">
+                            <a href="{{ route('superadmin.sellers', ['search' => $seller->name]) }}" 
+                               title="View detailed sales & commission oversight in Super Admin"
+                               class="px-3 py-2 bg-gray-100 hover:bg-[#3D2B1F] hover:text-white text-[#3D2B1F] rounded-lg text-[9px] font-black uppercase tracking-wider transition-all">
+                                👑 Super Admin
+                            </a>
                             @if(!$seller->isVerified)
                                 <form action="/admin/sellers/{{ $seller->id }}/verify" method="POST">
                                     @csrf @method('PATCH')
