@@ -235,14 +235,12 @@
             <div class="bg-white rounded-3xl border border-gray-100 shadow-sm overflow-hidden divide-y divide-gray-50">
                 @foreach($sellerBanners as $banner)
                     <div class="p-6 flex flex-col md:flex-row md:items-center gap-6 hover:bg-gray-50/50 transition-all">
-                        {{-- Preview --}}
                         <div class="w-36 shrink-0">
                             <div class="w-36 aspect-16/9 rounded-xl overflow-hidden bg-gray-900 border border-gray-100 shadow-sm relative">
                                 <img src="{{ $banner->getImageUrl() }}" class="w-full h-full object-cover">
                             </div>
                         </div>
 
-                        {{-- Details --}}
                         <div class="flex-1 space-y-1">
                             <div class="flex items-center gap-2 flex-wrap">
                                 <span class="text-sm font-bold text-black">{{ $banner->title ?: 'Untitled Promotion' }}</span>
@@ -263,18 +261,8 @@
                                     {{ $banner->created_at->diffForHumans() }}
                                 </div>
                             @endif
-                            @if($banner->button_text_1)
-                                <div class="text-[9px] text-gray-500 pt-0.5">Btn 1: <span class="font-bold text-gray-700">{{ $banner->button_text_1 }}</span> → {{ $banner->button_url_1 }}</div>
-                            @endif
-                            @if($banner->button_text_2)
-                                <div class="text-[9px] text-gray-500">Btn 2: <span class="font-bold text-gray-700">{{ $banner->button_text_2 }}</span> → {{ $banner->button_url_2 }}</div>
-                            @endif
-                            @if($banner->rejection_reason)
-                                <div class="text-[9px] text-red-600 font-bold pt-1">Rejection Reason: {{ $banner->rejection_reason }}</div>
-                            @endif
                         </div>
 
-                        {{-- Actions --}}
                         <div class="flex items-center gap-2 shrink-0">
                             @if($banner->status === 'pending')
                                 <form action="{{ route('admin.banners.approve', $banner->id) }}" method="POST">
@@ -289,24 +277,7 @@
                                     class="px-4 py-2.5 bg-white border border-red-200 text-red-600 hover:bg-red-50 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all cursor-pointer">
                                     Reject
                                 </button>
-                            @elseif($banner->status === 'approved')
-                                <form action="{{ route('admin.banners.toggle', $banner->id) }}" method="POST">
-                                    @csrf @method('PATCH')
-                                    <button type="submit"
-                                        class="px-3 py-1.5 rounded-full text-[9px] font-black uppercase tracking-widest transition-all cursor-pointer {{ $banner->is_active ? 'bg-green-50 text-green-700 border border-green-200 hover:bg-green-100' : 'bg-gray-100 text-gray-600 border border-gray-200 hover:bg-gray-200' }}">
-                                        {{ $banner->is_active ? 'Live' : 'Hidden' }}
-                                    </button>
-                                </form>
                             @endif
-                            <form action="{{ route('admin.banners.destroy', $banner->id) }}" method="POST"
-                                onsubmit="return confirm('Delete this promotion request?')">
-                                @csrf @method('DELETE')
-                                <button type="submit" class="p-2 text-gray-400 hover:text-red-600 transition-colors cursor-pointer">
-                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
-                                    </svg>
-                                </button>
-                            </form>
                         </div>
                     </div>
                 @endforeach
@@ -314,339 +285,214 @@
         @endif
     </div>
 
-    {{-- ── PROMOTION FORM MODAL (Add & Edit with LIVE PREVIEW) ── --}}
-    <div x-show="showModal" class="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 bg-black/60 backdrop-blur-sm overflow-y-auto" x-cloak>
-        <div class="bg-white rounded-3xl w-full max-w-4xl shadow-2xl border border-gray-100 overflow-hidden flex flex-col my-auto max-h-[94vh]"
+    {{-- ── EXACT MODAL REDESIGN (MATCHING USER MOCKUP) ── --}}
+    <div x-show="showModal" class="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/80 backdrop-blur-md overflow-y-auto" x-cloak>
+        <div class="bg-[#141414] text-white rounded-3xl w-full max-w-[520px] shadow-2xl border border-[#272727] overflow-hidden flex flex-col my-auto"
             @click.away="showModal = false">
             
-            {{-- Modal Top Header --}}
-            <div class="px-6 py-4 border-b border-gray-100 flex items-center justify-between bg-gray-50/80 shrink-0">
-                <div class="flex items-center gap-2">
-                    <span class="w-2.5 h-2.5 rounded-full bg-[#C0422A]"></span>
-                    <h2 class="font-serif text-lg sm:text-xl font-bold text-gray-900" x-text="isEditing ? 'Edit Hero Promotion' : 'Add Hero Promotion'"></h2>
-                </div>
-                <button type="button" @click="showModal = false" class="text-gray-400 hover:text-black transition-colors p-1">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+            {{-- Modal Header --}}
+            <div class="px-6 pt-5 pb-3 flex items-center justify-between">
+                <h2 class="text-base font-semibold text-white" x-text="isEditing ? 'Edit hero promotion' : 'Add hero promotion'"></h2>
+                <button type="button" @click="showModal = false" class="text-gray-400 hover:text-white transition-colors p-1 cursor-pointer">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
                 </button>
             </div>
 
-            {{-- Modal Body (Scrollable) --}}
-            <div class="p-6 overflow-y-auto space-y-6">
-                
-                {{-- ── 1. LIVE PREVIEW CARD ── --}}
-                <div class="bg-gray-950 rounded-2xl p-4 border border-gray-800 shadow-inner">
-                    <div class="flex items-center justify-between mb-3">
-                        <div class="flex items-center gap-2">
-                            <span class="text-[10px] font-black uppercase tracking-[0.2em] text-amber-400">✨ Live Hero Preview</span>
-                            <span class="text-[9px] text-gray-400">(Real-time simulation)</span>
-                        </div>
-                        <div class="flex items-center bg-gray-900 rounded-lg p-0.5 border border-gray-800 text-[10px]">
-                            <button type="button" @click="previewMode = 'desktop'" 
-                                :class="previewMode === 'desktop' ? 'bg-[#C0422A] text-white font-bold' : 'text-gray-400 hover:text-white'"
-                                class="px-3 py-1 rounded-md transition-all cursor-pointer">
-                                🖥️ Desktop (3:1)
-                            </button>
-                            <button type="button" @click="previewMode = 'mobile'" 
-                                :class="previewMode === 'mobile' ? 'bg-[#C0422A] text-white font-bold' : 'text-gray-400 hover:text-white'"
-                                class="px-3 py-1 rounded-md transition-all cursor-pointer">
-                                📱 Mobile View
-                            </button>
-                        </div>
-                    </div>
+            {{-- Modal Form --}}
+            <form :action="isEditing ? '/admin/banners/' + form.id : '{{ route('admin.banners.store') }}'"
+                  method="POST"
+                  enctype="multipart/form-data"
+                  id="bannerForm"
+                  class="px-6 pb-6 space-y-4">
+                @csrf
+                <template x-if="isEditing">
+                    <input type="hidden" name="_method" value="PUT">
+                </template>
+                <input type="hidden" name="preset_image_url" :value="form.preset_image_url">
+                <input type="hidden" name="button_text_1" :value="form.button_text_1">
+                <input type="hidden" name="button_url_1" :value="form.button_url_1">
+                <input type="hidden" name="button_text_2" :value="form.button_text_2">
+                <input type="hidden" name="button_url_2" :value="form.button_url_2">
+                <input type="hidden" name="subtitle" :value="form.subtitle">
 
-                    {{-- Live Simulation Container --}}
-                    <div class="flex justify-center">
-                        <div :class="previewMode === 'desktop' ? 'w-full aspect-16/5 sm:aspect-16/4 min-h-[170px]' : 'w-72 aspect-4/5 sm:w-80'"
-                             class="relative rounded-2xl overflow-hidden bg-gray-900 border border-gray-800 shadow-lg transition-all duration-300 flex flex-col justify-center">
-                            
-                            {{-- Preview Image --}}
-                            <template x-if="imagePreviewUrl">
-                                <img :src="imagePreviewUrl" class="absolute inset-0 w-full h-full object-cover">
-                            </template>
-                            <template x-if="!imagePreviewUrl">
-                                <div class="absolute inset-0 w-full h-full bg-linear-to-r from-gray-900 via-gray-800 to-gray-900 flex items-center justify-center text-gray-600 text-xs font-mono">
-                                    [ Pick a product or upload image to preview ]
-                                </div>
-                            </template>
-
-                            {{-- Gradient Overlay --}}
-                            <div class="absolute inset-0 bg-linear-to-r from-black/90 via-black/55 to-transparent"></div>
-
-                            {{-- Preview Text Content --}}
-                            <div class="relative z-10 p-5 sm:p-8 flex flex-col justify-center h-full max-w-sm sm:max-w-md">
-                                <p x-show="form.subtitle" x-text="form.subtitle" class="text-[9px] sm:text-[10px] font-black uppercase tracking-[0.25em] text-amber-300 mb-1.5 line-clamp-1"></p>
-                                <h3 x-text="form.title || 'Promotion Headline'" class="text-base sm:text-2xl font-extrabold text-white leading-tight mb-3 line-clamp-2"></h3>
-                                
-                                <div class="flex flex-wrap items-center gap-2 mt-1">
-                                    <template x-if="form.button_text_1">
-                                        <span class="px-3 sm:px-4 py-1.5 bg-[#C0422A] text-white text-[9px] sm:text-[10px] font-black uppercase tracking-wider rounded-lg shadow-sm" x-text="form.button_text_1"></span>
-                                    </template>
-                                    <template x-if="form.button_text_2">
-                                        <span class="px-3 sm:px-4 py-1.5 bg-white/20 backdrop-blur-md text-white border border-white/40 text-[9px] sm:text-[10px] font-black uppercase tracking-wider rounded-lg" x-text="form.button_text_2"></span>
-                                    </template>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                {{-- ── 2. QUICK CREATION MODE SWITCHER ── --}}
-                <div x-show="!isEditing" class="p-1 bg-gray-100 rounded-2xl flex gap-1 border border-gray-200">
-                    <button type="button" @click="creationMode = 'product'"
-                        :class="creationMode === 'product' ? 'bg-white text-gray-900 font-extrabold shadow-xs' : 'text-gray-500 font-bold hover:text-gray-800'"
-                        class="flex-1 py-2.5 rounded-xl text-xs flex items-center justify-center gap-2 transition-all cursor-pointer">
-                        <span>🛍️ Feature an Existing Product & Shop</span>
-                        <span class="px-1.5 py-0.5 bg-amber-100 text-amber-800 text-[8px] font-black rounded-md uppercase">Fastest</span>
+                {{-- Mode Switcher (Pills) --}}
+                <div class="grid grid-cols-2 gap-2">
+                    <button type="button" @click="setMode('product')"
+                        :class="mode === 'product' ? 'bg-[#262626] text-white font-medium border border-[#383838]' : 'bg-[#181818] text-gray-400 hover:text-gray-200 border border-transparent'"
+                        class="py-2 px-4 rounded-xl text-xs flex items-center justify-center gap-2 transition-all cursor-pointer">
+                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/></svg>
+                        <span>Existing product</span>
                     </button>
-                    <button type="button" @click="creationMode = 'custom'"
-                        :class="creationMode === 'custom' ? 'bg-white text-gray-900 font-extrabold shadow-xs' : 'text-gray-500 font-bold hover:text-gray-800'"
-                        class="flex-1 py-2.5 rounded-xl text-xs flex items-center justify-center gap-2 transition-all cursor-pointer">
-                        <span>🎨 Custom Banner / Upload Image</span>
+                    <button type="button" @click="setMode('upload')"
+                        :class="mode === 'upload' ? 'bg-[#262626] text-white font-medium border border-[#383838]' : 'bg-[#181818] text-gray-400 hover:text-gray-200 border border-transparent'"
+                        class="py-2 px-4 rounded-xl text-xs flex items-center justify-center gap-2 transition-all cursor-pointer">
+                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/></svg>
+                        <span>Upload image</span>
                     </button>
                 </div>
 
-                {{-- ── 3. PROMOTION FORM ── --}}
-                <form :action="isEditing ? '/admin/banners/' + form.id : '{{ route('admin.banners.store') }}'"
-                      method="POST"
-                      enctype="multipart/form-data"
-                      id="bannerForm"
-                      class="space-y-5">
-                    @csrf
-                    <template x-if="isEditing">
-                        <input type="hidden" name="_method" value="PUT">
-                    </template>
-                    <input type="hidden" name="preset_image_url" :value="form.preset_image_url">
-
-                    {{-- QUICK PRODUCT SELECTOR BOX --}}
-                    <div x-show="creationMode === 'product' && !isEditing" class="p-5 bg-amber-50/50 border-2 border-dashed border-amber-200 rounded-2xl space-y-4">
-                        <div class="flex items-center justify-between">
-                            <span class="text-[10px] font-black uppercase tracking-wider text-amber-900 flex items-center gap-1.5">
-                                <span class="w-2 h-2 rounded-full bg-[#C0422A]"></span>
-                                Select Artisan Shop & Product
-                            </span>
-                            <span class="text-[9px] text-amber-800 font-medium">Auto-fills title, image, shop link, and buy link</span>
-                        </div>
-
-                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                            {{-- Pick Shop --}}
-                            <div>
-                                <label class="text-[9px] font-bold text-gray-700 uppercase tracking-wider block mb-1">1. Choose Artisan Shop</label>
-                                <select x-model="selectedShopId" @change="onShopSelected()" class="w-full px-3.5 py-2.5 bg-white border border-gray-200 rounded-xl text-xs text-gray-900 focus:ring-2 focus:ring-[#C0422A]/20">
-                                    <option value="">-- All Shops / Select Shop --</option>
+                {{-- ── 1. EXISTING PRODUCT MODE ── --}}
+                <div x-show="mode === 'product'" class="space-y-3">
+                    <div class="grid grid-cols-2 gap-3">
+                        <div>
+                            <label class="text-[11px] text-gray-400 block mb-1.5">Shop</label>
+                            <div class="relative">
+                                <select x-model="selectedShopId" @change="onShopSelected()"
+                                    class="w-full appearance-none bg-[#1A1A1A] border border-[#2B2B2B] text-white text-xs rounded-xl px-3.5 py-2.5 pr-8 focus:outline-none focus:border-gray-500 transition-colors cursor-pointer">
+                                    <option value="">Select Shop</option>
                                     <template x-for="s in sellers" :key="s.id">
-                                        <option :value="s.id" x-text="s.shop_name + ' (' + (s.products ? s.products.length : 0) + ' products)'"></option>
+                                        <option :value="s.id" x-text="s.shop_name"></option>
                                     </template>
                                 </select>
+                                <div class="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-gray-400">
+                                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+                                </div>
                             </div>
+                        </div>
 
-                            {{-- Pick Product --}}
-                            <div>
-                                <label class="text-[9px] font-bold text-gray-700 uppercase tracking-wider block mb-1">2. Choose Product to Feature</label>
-                                <select x-model="selectedProductId" @change="onProductSelected()" class="w-full px-3.5 py-2.5 bg-white border border-gray-200 rounded-xl text-xs text-gray-900 focus:ring-2 focus:ring-[#C0422A]/20">
-                                    <option value="">-- Select Product --</option>
+                        <div>
+                            <label class="text-[11px] text-gray-400 block mb-1.5">Product</label>
+                            <div class="relative">
+                                <select x-model="selectedProductId" @change="onProductSelected()"
+                                    class="w-full appearance-none bg-[#1A1A1A] border border-[#2B2B2B] text-white text-xs rounded-xl px-3.5 py-2.5 pr-8 focus:outline-none focus:border-gray-500 transition-colors cursor-pointer">
+                                    <option value="">Select Product</option>
                                     <template x-for="p in selectableProducts" :key="p.id">
-                                        <option :value="p.id" x-text="p.name + ' (₱' + Number(p.price).toLocaleString() + ')'"></option>
+                                        <option :value="p.id" x-text="p.name"></option>
                                     </template>
                                 </select>
-                            </div>
-                        </div>
-
-                        {{-- Quick Info Card when product selected --}}
-                        <div x-show="selectedProduct" class="p-3 bg-white rounded-xl border border-amber-200/80 flex items-center justify-between gap-3">
-                            <div class="flex items-center gap-3 min-w-0">
-                                <img :src="selectedProduct ? selectedProduct.image_url : ''" class="w-12 h-12 rounded-lg object-cover border border-gray-200 shrink-0">
-                                <div class="min-w-0">
-                                    <div class="text-xs font-bold text-gray-900 truncate" x-text="selectedProduct ? selectedProduct.name : ''"></div>
-                                    <div class="text-[10px] text-[#C0422A] font-bold" x-text="selectedProduct ? 'Shop: ' + selectedProduct.shop_name : ''"></div>
+                                <div class="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-gray-400">
+                                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
                                 </div>
                             </div>
-                            <span class="px-2.5 py-1 bg-green-50 text-green-700 border border-green-200 rounded-lg text-[9px] font-black uppercase shrink-0">
-                                ✓ Links Auto-Configured
-                            </span>
                         </div>
                     </div>
 
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
-                        
-                        {{-- Image Upload & Override --}}
-                        <div class="md:col-span-2 space-y-2">
-                            <div class="flex items-center justify-between">
-                                <label class="text-[10px] font-bold text-gray-700 uppercase tracking-widest block">
-                                    Promotion Banner Image <span x-show="!isEditing && !form.preset_image_url" class="text-red-500">*</span>
-                                </label>
-                                <span class="text-[9px] font-bold text-gray-400 uppercase tracking-wider">Recommended: 1200 × 400 px (3:1 ratio)</span>
-                            </div>
+                    <div class="flex items-center gap-1.5 text-[11px] text-gray-400 pt-0.5">
+                        <svg class="w-3.5 h-3.5 text-amber-400 shrink-0" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2l2.4 7.4H22l-6 4.6 2.3 7.4-6.3-4.6-6.3 4.6 2.3-7.4-6-4.6h7.6z"/></svg>
+                        <span>Headline, image, and both links fill in automatically.</span>
+                    </div>
+                </div>
 
-                            <div class="flex items-center gap-4 p-4 bg-gray-50 border border-gray-200 rounded-2xl">
-                                <div class="w-20 h-14 bg-gray-200 rounded-xl overflow-hidden shrink-0 border border-gray-300 flex items-center justify-center">
-                                    <template x-if="imagePreviewUrl">
-                                        <img :src="imagePreviewUrl" class="w-full h-full object-cover">
-                                    </template>
-                                    <template x-if="!imagePreviewUrl">
-                                        <svg class="w-6 h-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
-                                    </template>
-                                </div>
-                                <div class="flex-1 min-w-0">
-                                    <input type="file" name="image" @change="handleFileSelect($event)" :required="!isEditing && !form.preset_image_url"
-                                        accept="image/jpeg,image/png,image/jpg,image/webp,image/gif"
-                                        class="block w-full text-xs text-gray-700 file:mr-3 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-[10px] file:font-bold file:uppercase file:tracking-wider file:bg-[#3D2B1F] file:text-white hover:file:bg-[#C0422A] file:cursor-pointer cursor-pointer">
-                                    <div x-show="fileInfo.name" class="text-[10px] text-gray-500 mt-1.5 flex items-center gap-2">
-                                        <span class="truncate font-medium" x-text="fileInfo.name"></span>
-                                        <span class="text-gray-300">·</span>
-                                        <span x-text="fileInfo.size"></span>
-                                        <span x-show="fileInfo.dimensions" class="text-gray-300">·</span>
-                                        <span x-show="fileInfo.dimensions" class="text-[#C0422A] font-bold" x-text="fileInfo.dimensions"></span>
-                                    </div>
-                                    <div x-show="form.preset_image_url && !fileInfo.name" class="text-[10px] text-green-700 font-medium mt-1">
-                                        Using high-resolution product image. (You can upload a custom wide banner above to override).
-                                    </div>
-                                </div>
+                {{-- ── 2. UPLOAD IMAGE MODE ── --}}
+                <div x-show="mode === 'upload'" class="space-y-3" style="display:none;" x-cloak>
+                    <div>
+                        <label class="text-[11px] text-gray-400 block mb-1.5">Banner image</label>
+                        <label class="border border-dashed border-[#333] hover:border-gray-500 bg-[#171717] rounded-xl p-5 flex flex-col items-center justify-center gap-1.5 cursor-pointer transition-colors block text-center">
+                            <svg class="w-5 h-5 text-gray-400 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                            </svg>
+                            <div class="text-xs text-gray-400">
+                                1200 x 400px recommended · <span class="text-blue-400 hover:underline">Choose file</span>
                             </div>
+                            <input type="file" name="image" @change="handleFileSelect($event)" accept="image/*" class="hidden">
+                        </label>
+                        <div x-show="fileInfo.name" class="text-[10px] text-gray-400 mt-1 flex items-center gap-1.5">
+                            <span class="text-green-400">✓</span>
+                            <span x-text="fileInfo.name"></span>
+                            <span x-show="fileInfo.dimensions" x-text="'(' + fileInfo.dimensions + ')'"></span>
                         </div>
-
-                        {{-- Title / Main Text with Counter --}}
-                        <div>
-                            <div class="flex items-center justify-between mb-1.5">
-                                <label class="text-[10px] font-bold text-gray-700 uppercase tracking-widest">Main Headline / Product Title</label>
-                                <span class="text-[9px] font-mono" :class="form.title.length > 50 ? (form.title.length > 60 ? 'text-red-500 font-bold' : 'text-amber-500 font-bold') : 'text-gray-400'" x-text="form.title.length + ' / 60'"></span>
-                            </div>
-                            <input type="text" name="title" x-model="form.title" maxlength="60"
-                                placeholder="e.g. Handcrafted Piña Silk Barong"
-                                class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-[#C0422A]/20 transition-all">
-                        </div>
-
-                        {{-- Subtitle / Shop Badge with Counter --}}
-                        <div>
-                            <div class="flex items-center justify-between mb-1.5">
-                                <label class="text-[10px] font-bold text-gray-700 uppercase tracking-widest">Shop Name / Subtitle Badge</label>
-                                <span class="text-[9px] font-mono" :class="form.subtitle.length > 85 ? (form.subtitle.length > 100 ? 'text-red-500 font-bold' : 'text-amber-500 font-bold') : 'text-gray-400'" x-text="form.subtitle.length + ' / 100'"></span>
-                            </div>
-                            <input type="text" name="subtitle" x-model="form.subtitle" maxlength="100"
-                                placeholder="e.g. MACAPAGAL EMBROIDERY"
-                                class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-[#C0422A]/20 transition-all">
-                        </div>
-
-                        {{-- ── BUTTON 1: BUY / SHOP PRODUCT ── --}}
-                        <div class="p-4 bg-gray-50 border border-gray-200 rounded-2xl space-y-3">
-                            <div class="flex items-center justify-between">
-                                <span class="text-[10px] font-black uppercase tracking-wider text-gray-800 flex items-center gap-1.5">
-                                    <span class="w-2 h-2 rounded-full bg-[#C0422A]"></span>
-                                    Primary Button (Buy / View Product)
-                                </span>
-                            </div>
-                            
-                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                                <div>
-                                    <label class="text-[9px] font-bold text-gray-500 uppercase tracking-wider block mb-1">Button Label</label>
-                                    <input type="text" name="button_text_1" x-model="form.button_text_1" placeholder="e.g. Shop Now" maxlength="30"
-                                        class="w-full px-3 py-2 bg-white border border-gray-200 rounded-lg text-xs text-gray-900 focus:ring-2 focus:ring-[#C0422A]/20">
-                                </div>
-                                <div>
-                                    <label class="text-[9px] font-bold text-gray-500 uppercase tracking-wider block mb-1">Destination URL</label>
-                                    <input type="text" name="button_url_1" x-model="form.button_url_1" placeholder="e.g. /products/... or /#catalogue-section"
-                                        class="w-full px-3 py-2 bg-white border border-gray-200 rounded-lg text-xs text-gray-900 font-mono focus:ring-2 focus:ring-[#C0422A]/20">
-                                </div>
-                            </div>
-                        </div>
-
-                        {{-- ── BUTTON 2: VISIT SHOP ── --}}
-                        <div class="p-4 bg-gray-50 border border-gray-200 rounded-2xl space-y-3">
-                            <div class="flex items-center justify-between">
-                                <span class="text-[10px] font-black uppercase tracking-wider text-gray-800 flex items-center gap-1.5">
-                                    <span class="w-2 h-2 rounded-full bg-gray-400"></span>
-                                    Secondary Button (Visit Shop)
-                                </span>
-                            </div>
-                            
-                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                                <div>
-                                    <label class="text-[9px] font-bold text-gray-500 uppercase tracking-wider block mb-1">Button Label</label>
-                                    <input type="text" name="button_text_2" x-model="form.button_text_2" placeholder="e.g. Visit Shop" maxlength="30"
-                                        class="w-full px-3 py-2 bg-white border border-gray-200 rounded-lg text-xs text-gray-900 focus:ring-2 focus:ring-[#C0422A]/20">
-                                </div>
-                                <div>
-                                    <label class="text-[9px] font-bold text-gray-500 uppercase tracking-wider block mb-1">Destination URL</label>
-                                    <input type="text" name="button_url_2" x-model="form.button_url_2" placeholder="e.g. /shops/... or #"
-                                        class="w-full px-3 py-2 bg-white border border-gray-200 rounded-lg text-xs text-gray-900 font-mono focus:ring-2 focus:ring-[#C0422A]/20">
-                                </div>
-                            </div>
-                        </div>
-
-                        {{-- Display Order & Status (Simple) --}}
-                        <div>
-                            <label class="text-[10px] font-bold text-gray-700 uppercase tracking-widest block mb-1.5">Display Order Position</label>
-                            <input type="number" name="order_index" x-model="form.order_index" min="1" step="1"
-                                class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm text-gray-900 font-mono">
-                            <p class="text-[9px] text-gray-500 mt-1">1 = First banner in carousel. Automatically shifts others safely.</p>
-                        </div>
-
-                        <div class="flex items-center">
-                            <label class="flex items-center gap-2.5 p-3.5 bg-gray-50 border border-gray-200 rounded-xl cursor-pointer w-full mt-auto">
-                                <input type="checkbox" name="is_active" value="1" x-model="form.is_active" class="w-4 h-4 rounded border-gray-300 text-[#C0422A] focus:ring-[#C0422A]/20">
-                                <div>
-                                    <div class="text-xs font-bold text-gray-800 uppercase tracking-wider">Active Visibility</div>
-                                    <div class="text-[9px] text-gray-500">Enable this promotion to show when within schedule</div>
-                                </div>
-                            </label>
-                        </div>
-
-                        {{-- ── 4. COLLAPSIBLE ADVANCED & SCHEDULING ── --}}
-                        <div class="md:col-span-2 border border-gray-200 rounded-2xl overflow-hidden bg-white">
-                            <button type="button" @click="showAdvanced = !showAdvanced"
-                                class="w-full px-5 py-3.5 bg-gray-50 hover:bg-gray-100 flex items-center justify-between text-xs font-bold text-gray-800 uppercase tracking-wider transition-colors cursor-pointer">
-                                <span class="flex items-center gap-2">
-                                    <svg class="w-4 h-4 text-[#C0422A]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
-                                    Advanced Options & Scheduling
-                                </span>
-                                <svg class="w-4 h-4 text-gray-500 transform transition-transform duration-200" :class="showAdvanced ? 'rotate-180' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
-                            </button>
-
-                            <div x-show="showAdvanced" class="p-5 space-y-4 border-t border-gray-100 bg-white" style="display:none;" x-cloak>
-                                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                    <div>
-                                        <label class="text-[10px] font-bold text-gray-700 uppercase tracking-widest block mb-1">Start Date & Time (Optional)</label>
-                                        <input type="datetime-local" name="start_date" x-model="form.start_date"
-                                            class="w-full px-3.5 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-xs text-gray-800">
-                                        <p class="text-[9px] text-gray-400 mt-1">Leave empty to activate immediately.</p>
-                                    </div>
-                                    <div>
-                                        <label class="text-[10px] font-bold text-gray-700 uppercase tracking-widest block mb-1">End Date & Time (Optional)</label>
-                                        <input type="datetime-local" name="end_date" x-model="form.end_date"
-                                            class="w-full px-3.5 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-xs text-gray-800">
-                                        <p class="text-[9px] text-gray-400 mt-1">Leave empty to run continuously.</p>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
                     </div>
 
-                    {{-- Form Bottom Actions --}}
-                    <div class="flex items-center gap-3 pt-4 border-t border-gray-100">
-                        <button type="button" @click="showModal = false" class="flex-1 px-6 py-3 bg-gray-100 text-gray-700 rounded-xl text-[10px] font-bold uppercase tracking-widest hover:bg-gray-200 transition-all cursor-pointer">
-                            Cancel
-                        </button>
-                        <button type="submit" class="flex-1 px-6 py-3 bg-[#3D2B1F] text-white rounded-xl text-[10px] font-bold uppercase tracking-widest hover:bg-[#C0422A] shadow-md transition-all cursor-pointer">
-                            <span x-text="isEditing ? 'Save Promotion Changes' : 'Publish Hero Promotion'"></span>
-                        </button>
+                    <div class="grid grid-cols-2 gap-3">
+                        <div>
+                            <label class="text-[11px] text-gray-400 block mb-1.5">Headline</label>
+                            <input type="text" name="title" x-model="form.title" placeholder="Handcrafted piña silk barong"
+                                class="w-full bg-[#1A1A1A] border border-[#2B2B2B] text-white text-xs rounded-xl px-3.5 py-2.5 focus:outline-none focus:border-gray-500 transition-colors">
+                        </div>
+                        <div>
+                            <label class="text-[11px] text-gray-400 block mb-1.5">Shop link</label>
+                            <input type="text" x-model="form.button_url_2" placeholder="/shops/macapagal-embroidery"
+                                class="w-full bg-[#1A1A1A] border border-[#2B2B2B] text-white text-xs rounded-xl px-3.5 py-2.5 focus:outline-none focus:border-gray-500 transition-colors font-mono text-[11px]">
+                        </div>
                     </div>
-                </form>
-            </div>
+                </div>
+
+                {{-- ── 3. CLEAN LIVE PREVIEW CARD (MATCHING USER MOCKUP) ── --}}
+                <div class="relative w-full rounded-2xl overflow-hidden bg-[#0A0A0A] border border-[#222] min-h-[140px] p-5 flex flex-col justify-between shadow-inner">
+                    {{-- Background simulation --}}
+                    <template x-if="imagePreviewUrl">
+                        <img :src="imagePreviewUrl" class="absolute inset-0 w-full h-full object-cover opacity-60">
+                    </template>
+                    <div class="absolute inset-0 bg-gradient-to-r from-black/90 via-black/60 to-transparent"></div>
+
+                    {{-- Foreground content --}}
+                    <div class="relative z-10 space-y-0.5">
+                        <h4 class="text-sm font-bold text-white tracking-tight" x-text="form.title || 'Handcrafted piña silk barong'"></h4>
+                        <p class="text-[11px] text-gray-400 font-medium" x-text="form.subtitle || 'Macapagal Embroidery'"></p>
+                    </div>
+
+                    {{-- Action buttons simulation --}}
+                    <div class="relative z-10 flex items-center gap-2 pt-3">
+                        <div class="flex items-center gap-1.5 px-3 py-1.5 bg-[#1F1F1F] border border-[#333] text-white text-[10px] font-medium rounded-lg shadow-sm">
+                            <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
+                            <span>Shop now</span>
+                        </div>
+                        <div class="px-3 py-1.5 bg-transparent border border-[#333] text-gray-300 text-[10px] font-medium rounded-lg">
+                            <span>Visit shop</span>
+                        </div>
+                    </div>
+                </div>
+
+                {{-- ── 4. SCHEDULING EXPANDABLE ── --}}
+                <div x-show="showSchedule" class="p-3.5 bg-[#1A1A1A] border border-[#2B2B2B] rounded-xl space-y-2.5" style="display:none;" x-cloak>
+                    <div class="text-[10px] font-bold uppercase tracking-wider text-amber-400">Schedule Visibility</div>
+                    <div class="grid grid-cols-2 gap-2.5">
+                        <div>
+                            <label class="text-[10px] text-gray-400 block mb-1">Start Date</label>
+                            <input type="datetime-local" name="start_date" x-model="form.start_date"
+                                class="w-full bg-[#111] border border-[#333] text-white text-[11px] rounded-lg px-2.5 py-1.5">
+                        </div>
+                        <div>
+                            <label class="text-[10px] text-gray-400 block mb-1">End Date</label>
+                            <input type="datetime-local" name="end_date" x-model="form.end_date"
+                                class="w-full bg-[#111] border border-[#333] text-white text-[11px] rounded-lg px-2.5 py-1.5">
+                        </div>
+                    </div>
+                </div>
+
+                {{-- ── 5. BOTTOM CONTROLS & PUBLISH ── --}}
+                <div class="flex items-center justify-between pt-1">
+                    <label class="flex items-center gap-2 cursor-pointer text-xs text-gray-300 select-none">
+                        <input type="checkbox" name="is_active" value="1" x-model="form.is_active"
+                            class="w-4 h-4 rounded bg-[#1A1A1A] border-[#333] text-white focus:ring-0 cursor-pointer">
+                        <span>Active now</span>
+                    </label>
+
+                    <button type="button" @click="showSchedule = !showSchedule"
+                        class="flex items-center gap-1.5 px-3 py-1.5 bg-[#1A1A1A] hover:bg-[#242424] border border-[#2B2B2B] text-gray-300 text-xs rounded-xl transition-colors cursor-pointer">
+                        <svg class="w-3.5 h-3.5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                        <span x-text="showSchedule ? 'Hide schedule' : 'Schedule instead'"></span>
+                    </button>
+                </div>
+
+                {{-- Action Buttons --}}
+                <div class="grid grid-cols-2 gap-3 pt-2">
+                    <button type="button" @click="showModal = false"
+                        class="py-2.5 px-4 bg-[#1F1F1F] hover:bg-[#292929] border border-[#333] text-white text-xs font-semibold rounded-xl transition-colors cursor-pointer">
+                        Cancel
+                    </button>
+                    <button type="submit"
+                        class="py-2.5 px-4 bg-white hover:bg-gray-100 text-black text-xs font-bold rounded-xl transition-colors cursor-pointer shadow-md">
+                        <span x-text="isEditing ? 'Save Changes' : 'Publish'"></span>
+                    </button>
+                </div>
+
+            </form>
         </div>
     </div>
 
     {{-- Reject Modal --}}
-    <div x-show="showRejectModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm" x-cloak>
-        <div class="bg-white rounded-3xl w-full max-w-md p-6 shadow-2xl" @click.away="showRejectModal = false">
-            <h3 class="font-serif text-lg font-bold text-black mb-2">Reject Banner Request</h3>
-            <p class="text-xs text-gray-500 mb-4">Please provide a reason for rejecting "<span class="font-bold text-black" x-text="rejectBannerTitle"></span>".</p>
+    <div x-show="showRejectModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm" x-cloak>
+        <div class="bg-[#141414] text-white border border-[#272727] rounded-3xl w-full max-w-md p-6 shadow-2xl" @click.away="showRejectModal = false">
+            <h3 class="text-base font-bold text-white mb-2">Reject Banner Request</h3>
+            <p class="text-xs text-gray-400 mb-4">Please provide a reason for rejecting "<span class="text-white font-bold" x-text="rejectBannerTitle"></span>".</p>
             <form :action="rejectRoute" method="POST" class="space-y-4">
                 @csrf @method('PATCH')
                 <textarea name="rejection_reason" rows="3" required placeholder="e.g. Image resolution is too low..."
-                    class="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-xl text-xs text-gray-900 focus:outline-none focus:ring-2 focus:ring-red-500/20"></textarea>
+                    class="w-full px-3 py-2 bg-[#1A1A1A] border border-[#2B2B2B] rounded-xl text-xs text-white focus:outline-none"></textarea>
                 <div class="flex gap-2">
-                    <button type="button" @click="showRejectModal = false" class="flex-1 py-2.5 bg-gray-100 text-gray-700 rounded-xl text-[10px] font-bold uppercase tracking-widest">Cancel</button>
-                    <button type="submit" class="flex-1 py-2.5 bg-red-600 hover:bg-red-700 text-white rounded-xl text-[10px] font-bold uppercase tracking-widest">Confirm Rejection</button>
+                    <button type="button" @click="showRejectModal = false" class="flex-1 py-2 bg-[#1F1F1F] text-gray-300 rounded-xl text-xs font-semibold">Cancel</button>
+                    <button type="submit" class="flex-1 py-2 bg-red-600 hover:bg-red-700 text-white rounded-xl text-xs font-bold">Confirm Rejection</button>
                 </div>
             </form>
         </div>
@@ -660,14 +506,13 @@ function promotionManager(initialData) {
         tab: '{{ $pendingCount > 0 ? "requests" : "all" }}',
         showModal: false,
         showRejectModal: false,
-        showAdvanced: false,
+        showSchedule: false,
         isEditing: false,
-        creationMode: 'product', // 'product' or 'custom'
+        mode: 'product', // 'product' or 'upload'
         rejectRoute: '',
         rejectBannerTitle: '',
-        previewMode: 'desktop',
         imagePreviewUrl: '',
-        fileInfo: { name: '', size: '', dimensions: '' },
+        fileInfo: { name: '', dimensions: '' },
         
         categories: initialData.categories || [],
         sellers: initialData.sellers || [],
@@ -676,7 +521,6 @@ function promotionManager(initialData) {
 
         selectedShopId: '',
         selectedProductId: '',
-        selectedProduct: null,
 
         get selectableProducts() {
             if (!this.selectedShopId) {
@@ -692,9 +536,9 @@ function promotionManager(initialData) {
             id: '',
             title: '',
             subtitle: '',
-            button_text_1: 'Shop Now',
+            button_text_1: 'Shop now',
             button_url_1: '',
-            button_text_2: 'Visit Shop',
+            button_text_2: 'Visit shop',
             button_url_2: '',
             order_index: 1,
             is_active: true,
@@ -703,62 +547,66 @@ function promotionManager(initialData) {
             preset_image_url: ''
         },
 
+        setMode(newMode) {
+            this.mode = newMode;
+            if (newMode === 'upload' && !this.form.title) {
+                this.form.title = 'Handcrafted piña silk barong';
+                this.form.subtitle = 'Artisan Heritage Barong';
+                this.form.button_text_1 = 'Shop now';
+                this.form.button_url_1 = '/#catalogue-section';
+                this.form.button_text_2 = 'Visit shop';
+                this.form.button_url_2 = '/shops';
+            }
+        },
+
         onShopSelected() {
             this.selectedProductId = '';
-            this.selectedProduct = null;
             if (this.selectedShopId) {
                 var shop = this.sellers.find(s => s.id === this.selectedShopId);
                 if (shop) {
-                    this.form.subtitle = (shop.shop_name || shop.name).toUpperCase();
+                    this.form.subtitle = shop.shop_name;
                     this.form.button_url_2 = '/shops/' + shop.id;
+                    if (shop.products && shop.products.length > 0) {
+                        this.selectedProductId = shop.products[0].id;
+                        this.onProductSelected();
+                    }
                 }
             }
         },
 
         onProductSelected() {
-            if (!this.selectedProductId) {
-                this.selectedProduct = null;
-                return;
-            }
+            if (!this.selectedProductId) return;
             var product = this.allProducts.find(p => p.id === this.selectedProductId);
             if (!product) return;
 
-            this.selectedProduct = product;
             this.selectedShopId = product.seller_id;
-            
-            // Auto-fill Title, Subtitle, and Buttons
             this.form.title = product.name;
-            this.form.subtitle = product.shop_name ? product.shop_name.toUpperCase() : 'ARTISAN BARONG';
-            this.form.button_text_1 = 'Shop Now';
+            this.form.subtitle = product.shop_name || 'Artisan Barong';
+            this.form.button_text_1 = 'Shop now';
             this.form.button_url_1 = '/products/' + product.id;
-            this.form.button_text_2 = 'Visit Shop';
+            this.form.button_text_2 = 'Visit shop';
             this.form.button_url_2 = '/shops/' + product.seller_id;
             
-            // Auto-set high-res product image for hero preview
             if (product.image_url) {
                 this.imagePreviewUrl = product.image_url;
                 this.form.preset_image_url = product.image_url;
-                this.fileInfo = { name: '', size: '', dimensions: '' };
             }
         },
 
         openAddModal() {
             this.isEditing = false;
-            this.creationMode = 'product';
+            this.mode = 'product';
+            this.showSchedule = false;
             this.imagePreviewUrl = '';
-            this.fileInfo = { name: '', size: '', dimensions: '' };
-            this.showAdvanced = false;
-            this.selectedShopId = '';
-            this.selectedProductId = '';
-            this.selectedProduct = null;
+            this.fileInfo = { name: '', dimensions: '' };
 
             this.form = {
                 id: '',
                 title: '',
                 subtitle: '',
-                button_text_1: 'Shop Now',
+                button_text_1: 'Shop now',
                 button_url_1: '',
-                button_text_2: 'Visit Shop',
+                button_text_2: 'Visit shop',
                 button_url_2: '',
                 order_index: (this.bannersList.length + 1),
                 is_active: true,
@@ -767,15 +615,24 @@ function promotionManager(initialData) {
                 preset_image_url: ''
             };
 
+            // Pre-select first shop if available
+            if (this.sellers.length > 0) {
+                this.selectedShopId = this.sellers[0].id;
+                this.onShopSelected();
+            } else if (this.allProducts.length > 0) {
+                this.selectedProductId = this.allProducts[0].id;
+                this.onProductSelected();
+            }
+
             this.showModal = true;
         },
 
         openEditModal(banner) {
             this.isEditing = true;
-            this.creationMode = 'custom';
-            this.showAdvanced = (banner.start_date || banner.end_date);
+            this.mode = 'upload';
+            this.showSchedule = Boolean(banner.start_date || banner.end_date);
             this.imagePreviewUrl = banner.image_path ? (banner.image_path.startsWith('http') || banner.image_path.startsWith('/') ? banner.image_path : '/' + banner.image_path) : '';
-            this.fileInfo = { name: 'Current Image', size: '', dimensions: '' };
+            this.fileInfo = { name: 'Current Image', dimensions: '' };
             
             var formatDt = function(dtStr) {
                 if (!dtStr) return '';
@@ -788,9 +645,9 @@ function promotionManager(initialData) {
                 id: banner.id,
                 title: banner.title || '',
                 subtitle: banner.subtitle || '',
-                button_text_1: banner.button_text_1 || 'Shop Now',
+                button_text_1: banner.button_text_1 || 'Shop now',
                 button_url_1: banner.button_url_1 || '',
-                button_text_2: banner.button_text_2 || 'Visit Shop',
+                button_text_2: banner.button_text_2 || 'Visit shop',
                 button_url_2: banner.button_url_2 || '',
                 order_index: banner.order_index || 1,
                 is_active: Boolean(banner.is_active),
@@ -808,8 +665,6 @@ function promotionManager(initialData) {
 
             var self = this;
             self.fileInfo.name = file.name;
-            var sizeKb = Math.round(file.size / 1024);
-            self.fileInfo.size = sizeKb > 1024 ? (sizeKb / 1024).toFixed(1) + ' MB' : sizeKb + ' KB';
 
             var reader = new FileReader();
             reader.onload = function(e) {
@@ -817,7 +672,7 @@ function promotionManager(initialData) {
                 self.form.preset_image_url = '';
                 var img = new Image();
                 img.onload = function() {
-                    self.fileInfo.dimensions = img.width + ' × ' + img.height + ' px';
+                    self.fileInfo.dimensions = img.width + 'x' + img.height + 'px';
                 };
                 img.src = e.target.result;
             };
