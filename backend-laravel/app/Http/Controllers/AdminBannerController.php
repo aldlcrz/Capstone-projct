@@ -15,7 +15,13 @@ class AdminBannerController extends Controller
 {
     public function index()
     {
-        // All banners ordered by display order (for "All Promotions" tab)
+        // One-time cleanup for legacy placeholder subtitles
+        Banner::where('subtitle', 'like', '%macapagal%')->update(['subtitle' => 'LumBarong Shop']);
+
+        // Ensure order indexes are clean 1, 2, 3...
+        $this->normalizeOrderIndexes();
+
+        // All banners ordered by display order
         $banners = Banner::with('user')
             ->orderBy('order_index', 'asc')
             ->orderBy('created_at', 'desc')

@@ -36,6 +36,17 @@ class Banner extends Model
     ];
 
     /**
+     * Clean subtitle attribute to ensure no legacy placeholder text.
+     */
+    public function getSubtitleAttribute(?string $value): ?string
+    {
+        if ($value && stripos($value, 'macapagal') !== false) {
+            return 'LumBarong Shop';
+        }
+        return $value;
+    }
+
+    /**
      * Scope query to only include banners that are active and currently within their scheduled window.
      */
     public function scopeLive($query)
