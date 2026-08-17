@@ -8,6 +8,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Facades\Log;
 
 class WebAuthController extends Controller
 {
@@ -529,7 +530,7 @@ class WebAuthController extends Controller
 
             return redirect()->intended('/');
         } catch (\Exception $e) {
-            \Log::error('Google Login Error: ' . $e->getMessage());
+            Log::error('Google Login Error: ' . $e->getMessage());
             return back()->withErrors(['email' => 'An error occurred during Google authentication. Please try again.']);
         }
     }
@@ -580,7 +581,7 @@ class WebAuthController extends Controller
 
             return redirect()->route('register')->with('success', 'Google account connected! Please choose your username and password below to finish creating your account.');
         } catch (\Exception $e) {
-            \Log::error('Google Signup Error: ' . $e->getMessage());
+            Log::error('Google Signup Error: ' . $e->getMessage());
             return back()->withErrors(['email' => 'An error occurred during Google authentication. Please try again.']);
         }
     }
@@ -631,7 +632,7 @@ class WebAuthController extends Controller
 
             return redirect()->route('seller.register')->with('success', 'Google account connected! Your name and email have been filled in. Please set your password and complete your artisan workshop requirements.');
         } catch (\Exception $e) {
-            \Log::error('Google Seller Signup Error: ' . $e->getMessage());
+            Log::error('Google Seller Signup Error: ' . $e->getMessage());
             return back()->withErrors(['email' => 'An error occurred during Google authentication. Please try again.']);
         }
     }
