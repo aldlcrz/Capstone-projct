@@ -146,10 +146,32 @@ class AiService
             ];
         }
 
+        $specificId = null;
+        if (preg_match('/(?:order\s*#?|#\s*)([a-zA-Z0-9\-]{4,})/i', $message, $m)) {
+            $specificId = $m[1];
+        }
+
         try {
-            $orders = Order::where('customerId', $userId)->orderByDesc('createdAt')->take(3)->get();
+            $query = Order::where('customerId', $userId);
+
+            if ($specificId) {
+                $query->where('id', 'like', "%{$specificId}%");
+            }
+
+            $orders = $query->orderByDesc('createdAt')->take(3)->get();
             
             if ($orders->isEmpty()) {
+                if ($specificId) {
+                    return [
+                        'reply' => "📦 **Order Lookup:** No order matching `#" . strtoupper($specificId) . "` was found under your authenticated account.\n\nPlease verify your order ID in your [My Orders](/customer/orders) page or email **lumbarongsupport@gmail.com**.",
+                        'products' => [],
+                        'refinements' => [
+                            ['label' => '📦 View All My Orders', 'prompt' => 'Where is my order?'],
+                            ['label' => '⭐ Browse Best Sellers', 'prompt' => 'Show me your best selling Barongs']
+                        ]
+                    ];
+                }
+
                 return [
                     'reply' => "📦 **Order Status:** I checked your account, but there are no active orders placed under this profile yet.\n\nReady to find your authentic Lumban Barong? You can ask me for wedding, graduation, or fabric recommendations!",
                     'products' => [],
@@ -190,6 +212,17 @@ class AiService
                 ]
             ];
         } catch (\Throwable $e) {
+            if ($specificId) {
+                return [
+                    'reply' => "📦 **Order Lookup:** No order matching `#" . strtoupper($specificId) . "` was found under your authenticated account.\n\nPlease verify your order ID in your [My Orders](/customer/orders) page or email **lumbarongsupport@gmail.com**.",
+                    'products' => [],
+                    'refinements' => [
+                        ['label' => '📦 View All My Orders', 'prompt' => 'Where is my order?'],
+                        ['label' => '⭐ Browse Best Sellers', 'prompt' => 'Show me your best selling Barongs']
+                    ]
+                ];
+            }
+
             return [
                 'reply' => "📦 You can track all your orders and view seller packing proofs directly in your [My Orders](/customer/orders) portal.",
                 'products' => [],

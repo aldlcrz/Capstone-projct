@@ -167,5 +167,37 @@ class AiServiceTest extends TestCase
         $this->assertArrayHasKey('refinements', $res);
         $this->assertNotEmpty($res['refinements']);
     }
+
+    public function test_recommendation_engine_score_product_considers_7_factors()
+    {
+        $dummy = new \App\Models\Product();
+        $dummy->price = 3200;
+        $dummy->name = "Handmade Piña-Seda Wedding Barong Mandarin Collar";
+        $dummy->fabric_type = "Piña-Seda";
+        $dummy->collar_type = "Mandarin";
+        $dummy->stock = 5;
+        $dummy->views = 100;
+        $dummy->target_group = "Men";
+
+        $pref = [
+            'occasion' => 'wedding',
+            'max_budget' => 3500,
+            'fabric' => 'piña',
+            'collar' => 'mandarin',
+            'gender' => 'men'
+        ];
+
+        $scored = \App\Services\RecommendationEngine::scoreProduct($dummy, $pref);
+        $this->assertGreaterThanOrEqual(90, $scored['score']);
+        $this->assertNotEmpty($scored['reasons']);
+    }
+
+    public function test_mode3_order_support_with_unowned_specific_order_id()
+    {
+        $res = AiService::chatStylist('What is the status of order #test999999', [], [], 'mock-user-123');
+        $this->assertArrayHasKey('reply', $res);
+        $this->assertStringContainsString('Order Lookup', $res['reply']);
+        $this->assertStringContainsString('TEST999999', $res['reply']);
+    }
 }
 
