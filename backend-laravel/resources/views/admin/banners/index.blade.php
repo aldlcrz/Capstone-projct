@@ -367,29 +367,35 @@
                     </div>
                 </div>
 
-                {{-- ── 3. CLEAN LIVE PREVIEW CARD (MATCHING USER MOCKUP) ── --}}
-                <div class="relative w-full rounded-2xl overflow-hidden bg-[#0A0A0A] border border-[#222] min-h-36 p-5 flex flex-col justify-between shadow-inner">
+                {{-- ── 3. CLEAN LIVE PREVIEW CARD (MATCHING SHOP HERO DUAL-LAYER) ── --}}
+                <div class="relative w-full rounded-2xl overflow-hidden bg-[#0A0A0A] border border-[#222] min-h-36 p-5 flex items-center justify-between shadow-inner">
                     {{-- Background simulation --}}
                     <template x-if="imagePreviewUrl">
-                        <img :src="imagePreviewUrl" class="absolute inset-0 w-full h-full object-cover opacity-60">
+                        <img :src="imagePreviewUrl" class="absolute inset-0 w-full h-full object-cover blur-md opacity-25 scale-105">
                     </template>
-                    <div class="absolute inset-0 bg-linear-to-r from-black/90 via-black/60 to-transparent"></div>
+                    <div class="absolute inset-0 bg-linear-to-r from-black/90 via-black/60 to-black/30"></div>
 
-                    {{-- Foreground content --}}
-                    <div class="relative z-10 space-y-0.5">
-                        <h4 class="text-sm font-bold text-white tracking-tight" x-text="form.title || 'Handcrafted piña silk barong'"></h4>
-                        <p class="text-[11px] text-gray-400 font-medium" x-text="form.subtitle || 'LumBarong Shop'"></p>
+                    {{-- Foreground content on left --}}
+                    <div class="relative z-10 space-y-1 max-w-[62%]">
+                        <p class="text-[10px] text-amber-400 font-bold uppercase tracking-wider" x-text="form.subtitle || 'LumBarong Shop'"></p>
+                        <h4 class="text-sm sm:text-base font-bold text-white tracking-tight leading-tight" x-text="form.title || 'Handcrafted piña silk barong'"></h4>
+
+                        {{-- Action buttons simulation --}}
+                        <div class="flex items-center gap-2 pt-2">
+                            <div class="flex items-center gap-1.5 px-3 py-1.5 bg-[#C0422A] text-white text-[10px] font-bold rounded-lg shadow-sm">
+                                <span>Shop now</span>
+                            </div>
+                            <div class="px-3 py-1.5 bg-white/10 border border-white/20 text-gray-200 text-[10px] font-medium rounded-lg backdrop-blur-xs">
+                                <span>Visit shop</span>
+                            </div>
+                        </div>
                     </div>
 
-                    {{-- Action buttons simulation --}}
-                    <div class="relative z-10 flex items-center gap-2 pt-3">
-                        <div class="flex items-center gap-1.5 px-3 py-1.5 bg-[#1F1F1F] border border-[#333] text-white text-[10px] font-medium rounded-lg shadow-sm">
-                            <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
-                            <span>Shop now</span>
-                        </div>
-                        <div class="px-3 py-1.5 bg-transparent border border-[#333] text-gray-300 text-[10px] font-medium rounded-lg">
-                            <span>Visit shop</span>
-                        </div>
+                    {{-- Full uncropped product on right --}}
+                    <div class="relative z-10 w-24 h-24 sm:w-28 sm:h-28 flex items-center justify-end shrink-0">
+                        <template x-if="imagePreviewUrl">
+                            <img :src="imagePreviewUrl" class="max-h-full max-w-full object-contain rounded-lg drop-shadow-xl">
+                        </template>
                     </div>
                 </div>
 

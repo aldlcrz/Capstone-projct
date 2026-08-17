@@ -46,6 +46,11 @@
         class="relative rounded-2xl sm:rounded-3xl overflow-hidden shadow-sm bg-gray-900 min-h-55 sm:min-h-70 md:min-h-85 lg:aspect-16/4 lg:min-h-0"
     >
         @foreach($banners as $i => $banner)
+        @php
+            $isProductPromo = ($banner->button_url_1 && str_contains($banner->button_url_1, '/products/')) 
+                           || str_contains($banner->image_path, 'products/') 
+                           || str_contains($banner->image_path, 'uploads/products/');
+        @endphp
         <div
             x-show="active === {{ $i }}"
             x-transition:enter="transition ease-out duration-500"
@@ -56,28 +61,46 @@
             x-transition:leave-end="opacity-0"
             class="absolute inset-0 w-full h-full"
         >
-            {{-- Background image --}}
-            <img src="{{ $banner->getImageUrl() }}" 
-                 alt="{{ $banner->title }}" 
-                 @if($i === 0) fetchpriority="high" loading="eager" @else loading="lazy" @endif
-                 decoding="async"
-                 class="absolute inset-0 w-full h-full object-cover object-center">
-            {{-- Dark gradient overlay on left --}}
-            <div class="absolute inset-0 bg-linear-to-r from-black/85 via-black/50 to-transparent"></div>
-            {{-- Content --}}
-            <div class="relative z-10 flex flex-col justify-center h-full px-5 sm:px-12 py-6 sm:py-10 max-w-xs sm:max-w-lg">
+            @if($isProductPromo)
+                {{-- Luxury Product Showcase Presentation --}}
+                {{-- Atmospheric Blurred Background --}}
+                <img src="{{ $banner->getImageUrl() }}" 
+                     alt="{{ $banner->title }}" 
+                     @if($i === 0) fetchpriority="high" loading="eager" @else loading="lazy" @endif
+                     decoding="async"
+                     class="absolute inset-0 w-full h-full object-cover object-center scale-110 blur-xl opacity-35">
+                <div class="absolute inset-0 bg-linear-to-r from-black/95 via-black/75 sm:via-black/50 to-black/25"></div>
+
+                {{-- Full Uncropped Product Showcase on Right Side (Collar to Hem visible) --}}
+                <div class="absolute right-2 sm:right-8 md:right-14 inset-y-0 w-5/12 sm:w-1/2 flex items-center justify-end p-2 sm:p-4 pointer-events-none z-10">
+                    <img src="{{ $banner->getImageUrl() }}" 
+                         alt="{{ $banner->title }}" 
+                         class="max-h-full w-auto max-w-full object-contain rounded-xl drop-shadow-[0_15px_35px_rgba(0,0,0,0.75)]">
+                </div>
+            @else
+                {{-- Full Graphic / Custom Uploaded Banner Presentation --}}
+                <img src="{{ $banner->getImageUrl() }}" 
+                     alt="{{ $banner->title }}" 
+                     @if($i === 0) fetchpriority="high" loading="eager" @else loading="lazy" @endif
+                     decoding="async"
+                     class="absolute inset-0 w-full h-full object-cover object-center">
+                <div class="absolute inset-0 bg-linear-to-r from-black/85 via-black/50 to-transparent"></div>
+            @endif
+
+            {{-- Content on Left Side --}}
+            <div class="relative z-10 flex flex-col justify-center h-full px-5 sm:px-12 py-6 sm:py-10 max-w-[65%] sm:max-w-md lg:max-w-lg">
                 @if($banner->subtitle)
                     <p class="text-[9px] sm:text-[11px] font-black uppercase tracking-[0.25em] text-amber-300 drop-shadow-xs mb-1.5 sm:mb-2">{{ $banner->subtitle }}</p>
                 @endif
                 @if($banner->title)
-                    <h2 class="text-2xl sm:text-3xl lg:text-4xl font-black text-white leading-[1.15] tracking-tight mb-3 sm:mb-4 drop-shadow-md">{{ $banner->title }}</h2>
+                    <h2 class="text-xl sm:text-3xl lg:text-4xl font-black text-white leading-[1.15] tracking-tight mb-3 sm:mb-4 drop-shadow-md">{{ $banner->title }}</h2>
                 @endif
                 <div class="flex flex-wrap items-center gap-2.5 sm:gap-3.5 mt-1">
                     @if($banner->button_text_1)
                         @php $url1 = $banner->getResolvedButtonUrl1(); @endphp
                         <a href="{{ $url1 }}"
                            @if($url1 === '#catalogue-section') onclick="event.preventDefault(); document.getElementById('catalogue-section')?.scrollIntoView({ behavior: 'smooth' });" @endif
-                           class="inline-flex items-center justify-center px-5 py-2.5 sm:px-6 sm:py-3 bg-[#C0422A] hover:bg-[#a6351f] text-white text-[10px] sm:text-xs font-black uppercase tracking-wider rounded-xl transition-all shadow-lg hover:shadow-xl hover:scale-105 active:scale-95 cursor-pointer">
+                           class="inline-flex items-center justify-center px-4 py-2 sm:px-6 sm:py-3 bg-[#C0422A] hover:bg-[#a6351f] text-white text-[10px] sm:text-xs font-black uppercase tracking-wider rounded-xl transition-all shadow-lg hover:shadow-xl hover:scale-105 active:scale-95 cursor-pointer">
                             {{ $banner->button_text_1 }}
                         </a>
                     @endif
@@ -85,7 +108,7 @@
                         @php $url2 = $banner->getResolvedButtonUrl2(); @endphp
                         <a href="{{ $url2 }}"
                            @if($url2 === '#catalogue-section') onclick="event.preventDefault(); document.getElementById('catalogue-section')?.scrollIntoView({ behavior: 'smooth' });" @endif
-                           class="inline-flex items-center justify-center px-5 py-2.5 sm:px-6 sm:py-3 bg-white/20 hover:bg-white/30 text-white text-[10px] sm:text-xs font-black uppercase tracking-wider rounded-xl border border-white/40 backdrop-blur-md transition-all hover:scale-105 active:scale-95 cursor-pointer">
+                           class="inline-flex items-center justify-center px-4 py-2 sm:px-6 sm:py-3 bg-white/20 hover:bg-white/30 text-white text-[10px] sm:text-xs font-black uppercase tracking-wider rounded-xl border border-white/40 backdrop-blur-md transition-all hover:scale-105 active:scale-95 cursor-pointer">
                             {{ $banner->button_text_2 }}
                         </a>
                     @endif
