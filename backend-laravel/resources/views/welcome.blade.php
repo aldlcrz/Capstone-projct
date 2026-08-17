@@ -73,7 +73,7 @@
             timer: null,
             startTimer() {
                 if (this.total <= 1) return;
-                this.timer = setInterval(() => { this.next(); }, 5000);
+                this.timer = setInterval(() => { this.next(); }, 3000);
             },
             stopTimer() {
                 if (this.timer) clearInterval(this.timer);
