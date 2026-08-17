@@ -135,10 +135,37 @@ class AiServiceTest extends TestCase
         $res1 = AiService::chatStylist('hello');
         $this->assertArrayHasKey('reply', $res1);
         $this->assertStringContainsString('Mabuhay', $res1['reply']);
+        $this->assertEmpty($res1['products']); // Fashion Advisor mode (no unprompted products)
 
         $res2 = AiService::chatStylist('hi po!');
         $this->assertArrayHasKey('reply', $res2);
         $this->assertStringContainsString('Mabuhay', $res2['reply']);
+        $this->assertEmpty($res2['products']);
+    }
+
+    public function test_recommendation_engine_extract_preferences()
+    {
+        $pref = \App\Services\RecommendationEngine::extractPreferences('I need a wedding barong for groom under ₱4,500 with mandarin collar');
+        $this->assertEquals('wedding', $pref['occasion']);
+        $this->assertEquals('groom', $pref['role']);
+        $this->assertEquals(4500.0, $pref['max_budget']);
+        $this->assertEquals('mandarin', $pref['collar']);
+    }
+
+    public function test_mode3_order_support_unauthenticated()
+    {
+        $res = AiService::chatStylist('where is my order?');
+        $this->assertArrayHasKey('reply', $res);
+        $this->assertStringContainsString('Order Tracking', $res['reply']);
+        $this->assertStringContainsString('Sign In', $res['reply']);
+    }
+
+    public function test_mode2_shopping_recommendation_returns_refinements()
+    {
+        $res = AiService::chatStylist('Recommend a Barong for wedding under ₱3,500');
+        $this->assertArrayHasKey('reply', $res);
+        $this->assertArrayHasKey('refinements', $res);
+        $this->assertNotEmpty($res['refinements']);
     }
 }
 

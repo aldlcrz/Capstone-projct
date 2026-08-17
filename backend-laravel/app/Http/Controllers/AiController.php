@@ -19,7 +19,15 @@ class AiController extends Controller
         }
 
         $history = $request->input('history', []);
-        $response = AiService::chatStylist($message, is_array($history) ? $history : []);
+        $sessionContext = $request->input('session_context', []);
+        $userId = auth('web')->id() ?? auth('api')->id() ?? (string) ($request->user()?->id ?? '');
+
+        $response = AiService::chatStylist(
+            $message,
+            is_array($history) ? $history : [],
+            is_array($sessionContext) ? $sessionContext : [],
+            $userId ?: null
+        );
 
         return response()->json($response);
     }

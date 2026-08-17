@@ -25,14 +25,21 @@ document.addEventListener('alpine:init', () => {
         isLoggedIn: Boolean(_chatConfig.isLoggedIn),
         pollInterval: null,
 
-        // Smart Support State
+        // Smart Support State & Session Context Memory
         aiInput: '',
         aiLoading: false,
+        sessionContext: {},
         aiMessages: [
             {
                 role: 'assistant',
-                text: 'Mabuhay! I am your **Lumbarong Smart Assistant** from Lumban, Laguna. How may I assist you today? You can ask me for wedding recommendations, fabric comparisons (Piña vs. Jusi vs. Cocoon), or budget-friendly graduation Barongs.',
-                products: []
+                text: 'Mabuhay! I am your **Lumbarong Smart Assistant** from Lumban, Laguna. How may I assist you today? You can ask me for wedding recommendations, fabric comparisons (Piña vs. Jusi vs. Cocoon), or live tracking for your recent orders.',
+                products: [],
+                refinements: [
+                    { label: '🤵 Wedding Recommendations', prompt: 'Recommend a Barong for a wedding groom' },
+                    { label: '🧵 Fabric Guide', prompt: 'What is the difference between Piña and Jusi?' },
+                    { label: '🎓 Graduation under ₱3,500', prompt: 'Show graduation Barongs under ₱3,500' },
+                    { label: '📦 Track My Order', prompt: 'Where is my order?' }
+                ]
             }
         ],
 
@@ -75,7 +82,7 @@ document.addEventListener('alpine:init', () => {
             const query = (this.aiInput || '').trim();
             if (!query || this.aiLoading) return;
 
-            this.aiMessages.push({ role: 'user', text: query, products: [] });
+            this.aiMessages.push({ role: 'user', text: query, products: [], refinements: [] });
             this.aiInput = '';
             this.aiLoading = true;
             this.scrollAiToBottom();
@@ -87,7 +94,10 @@ document.addEventListener('alpine:init', () => {
                     'Accept': 'application/json',
                     'X-CSRF-TOKEN': this.csrfToken()
                 },
-                body: JSON.stringify({ message: query })
+                body: JSON.stringify({ 
+                    message: query,
+                    session_context: this.sessionContext
+                })
             })
             .then(async res => {
                 if (!res.ok) {
@@ -97,10 +107,14 @@ document.addEventListener('alpine:init', () => {
                 return res.json();
             })
             .then(data => {
+                if (data.session_context) {
+                    this.sessionContext = data.session_context;
+                }
                 this.aiMessages.push({
                     role: 'assistant',
                     text: data.reply || 'Here are our handcrafted Lumban Barong recommendations.',
-                    products: data.products || []
+                    products: data.products || [],
+                    refinements: data.refinements || []
                 });
                 this.scrollAiToBottom();
             })
@@ -108,8 +122,9 @@ document.addEventListener('alpine:init', () => {
                 console.error('Smart Assistance request failed:', err);
                 this.aiMessages.push({
                     role: 'assistant',
-                    text: 'I apologize, but I encountered a momentary connection glitch. Piña-Seda and Cocoon Barongs remain our top recommendation for formal events!',
-                    products: []
+                    text: 'I apologize, but I encountered a momentary connection glitch. Piña-Seda and Cocoon Barongs remain our top recommendation for formal events! You can also contact lumbarongsupport@gmail.com.',
+                    products: [],
+                    refinements: []
                 });
             })
             .finally(() => {
@@ -128,326 +143,350 @@ document.addEventListener('alpine:init', () => {
         // --- Artisan Chat Methods ---
         loadConversations() {
             if (!this.isLoggedIn) return;
-            fetch('/api/chat/conversations')
-                .then(res => res.json())
-                .then(data => { this.conversations = data; })
-                .catch(() => {});
-        },
-
-        startConversation(id, name) {
-            if (!this.isLoggedIn) {
-                window.dispatchEvent(new CustomEvent('open-auth-gate', { detail: { message: 'Please log in to chat with artisans.' } }));
-                return;
-            }
-            this.activeUser = { id, name };
-            this.activeTab = 'messages';
-            this.loadMessages();
-            this.startPolling();
-        },
-
-        loadMessages() {
-            if (!this.activeUser || !this.isLoggedIn) return;
-            fetch('/api/chat/conversation/' + this.activeUser.id)
-                .then(res => res.json())
-                .then(data => {
-                    this.messages = data;
-                    this.scrollToBottom();
-                })
-                .catch(() => {});
-        },
-
-        sendMessage() {
-            if (!this.newMessage.trim() || !this.activeUser) return;
-            const content = this.newMessage;
-            this.newMessage = '';
-
-            const tempId = Math.random().toString();
-            this.messages.push({
-                id: tempId,
-                senderId: this.currentUserId,
-                receiverId: this.activeUser.id,
-                content,
-                createdAt: new Date().toISOString()
-            });
-            this.scrollToBottom();
-
-            fetch('/api/chat/message', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': this.csrfToken()
-                },
-                body: JSON.stringify({ receiverId: this.activeUser.id, content })
+            fetch('/chat/conversations', {
+                headers: { 'Accept': 'application/json', 'X-CSRF-TOKEN': this.csrfToken() }
             })
             .then(res => res.json())
             .then(data => {
-                const idx = this.messages.findIndex(m => m.id === tempId);
-                if (idx !== -1) this.messages[idx] = data;
-                this.loadConversations();
+                this.conversations = data;
             })
-            .catch(() => {});
+            .catch(err => console.error('Error loading conversations:', err));
         },
 
-        startPolling() {
-            this.stopPolling();
-            this.pollInterval = setInterval(() => this.loadMessages(), 3000);
-        },
-
-        stopPolling() {
-            if (this.pollInterval) {
-                clearInterval(this.pollInterval);
-                this.pollInterval = null;
-            }
-        },
-
-        scrollToBottom() {
-            this.$nextTick(() => {
-                const el = this.$refs.msgBox;
-                if (el) el.scrollTop = el.scrollHeight;
-            });
+        startConversation(userId, userName) {
+            this.activeUser = { id: userId, name: userName };
+            this.activeTab = 'messages';
+            this.messages = [];
+            this.loadMessages();
+            if (this.pollInterval) clearInterval(this.pollInterval);
+            this.pollInterval = setInterval(() => this.loadMessages(true), 4000);
         },
 
         backToConversations() {
-            this.stopPolling();
             this.activeTab = 'conversations';
             this.activeUser = null;
+            if (this.pollInterval) clearInterval(this.pollInterval);
             this.loadConversations();
+        },
+
+        loadMessages(isPoll = false) {
+            if (!this.activeUser || !this.isLoggedIn) return;
+            fetch(`/chat/messages/${this.activeUser.id}`, {
+                headers: { 'Accept': 'application/json', 'X-CSRF-TOKEN': this.csrfToken() }
+            })
+            .then(res => res.json())
+            .then(data => {
+                this.messages = data;
+                if (!isPoll) {
+                    this.$nextTick(() => {
+                        const box = this.$refs.artisanMsgBox;
+                        if (box) box.scrollTop = box.scrollHeight;
+                    });
+                }
+            })
+            .catch(err => console.error('Error loading messages:', err));
+        },
+
+        sendMessage() {
+            const body = (this.newMessage || '').trim();
+            if (!body || !this.activeUser || !this.isLoggedIn) return;
+
+            const tempMsg = {
+                id: 'temp_' + Date.now(),
+                senderId: this.currentUserId,
+                receiverId: this.activeUser.id,
+                body: body,
+                createdAt: new Date().toISOString()
+            };
+            this.messages.push(tempMsg);
+            this.newMessage = '';
+            
+            this.$nextTick(() => {
+                const box = this.$refs.artisanMsgBox;
+                if (box) box.scrollTop = box.scrollHeight;
+            });
+
+            fetch('/chat/send', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json',
+                    'X-CSRF-TOKEN': this.csrfToken()
+                },
+                body: JSON.stringify({
+                    receiverId: this.activeUser.id,
+                    body: body
+                })
+            })
+            .then(res => res.json())
+            .then(savedMsg => {
+                const idx = this.messages.findIndex(m => m.id === tempMsg.id);
+                if (idx !== -1) {
+                    this.messages[idx] = savedMsg;
+                }
+            })
+            .catch(err => {
+                console.error('Failed to send message:', err);
+            });
         },
 
         closeChat() {
             this.isOpen = false;
-            this.stopPolling();
-        },
-
-        formatTime(dateStr) {
-            if (!dateStr) return '';
-            try {
-                return new Date(dateStr).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-            } catch { return ''; }
+            if (this.pollInterval) clearInterval(this.pollInterval);
         }
     }));
 });
 </script>
 
-<!-- Chat Widget Panel -->
-<div
-    x-data="chatWidget"
-    x-show="isOpen"
-    x-transition:enter="transition ease-out duration-300 transform"
-    x-transition:enter-start="opacity-0 translate-y-12 scale-95"
-    x-transition:enter-end="opacity-100 translate-y-0 scale-100"
-    x-transition:leave="transition ease-in duration-200 transform"
-    x-transition:leave-start="opacity-100 translate-y-0 scale-100"
-    x-transition:leave-end="opacity-0 translate-y-12 scale-95"
-    class="chat-widget-panel fixed bottom-20 lg:bottom-22 right-3 sm:right-6 w-[calc(100vw-1.5rem)] sm:w-100 max-w-[calc(100vw-1.5rem)] h-137.5 max-h-[calc(100vh-7rem)] bg-white rounded-3xl shadow-2xl border border-gray-150 flex flex-col z-60 overflow-hidden"
-    style="display: none;"
-    x-cloak
->
-    <!-- Header with Tab Switcher -->
-    <div class="px-5 py-3.5 bg-black text-white shrink-0 shadow-md">
-        <div class="flex items-center justify-between mb-3">
-            <div class="flex items-center gap-2.5">
-                <template x-if="mainMode === 'artisan' && activeTab === 'messages'">
-                    <button @click="backToConversations()" class="p-1 hover:bg-white/10 rounded-lg transition-colors cursor-pointer">
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
-                    </button>
-                </template>
-                <div>
-                    <h3 class="font-serif text-sm font-bold tracking-wide flex items-center gap-1.5">
-                        <span x-show="mainMode === 'ai'">Lumbarong Smart Assistance</span>
-                        <span x-show="mainMode === 'artisan'" x-text="activeTab === 'messages' && activeUser ? activeUser.name : 'Artisan Messages'"></span>
-                    </h3>
-                    <p class="text-[8px] font-bold text-gray-400 uppercase tracking-widest mt-0.5">
-                        <span x-show="mainMode === 'ai'">Heritage Fashion & Shopping Advisor</span>
-                        <span x-show="mainMode === 'artisan'">Direct Workshop Connection</span>
-                    </p>
-                </div>
-            </div>
-            <button @click="closeChat()" class="p-1.5 hover:bg-white/10 rounded-xl transition-colors cursor-pointer">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
-            </button>
-        </div>
+<div x-data="chatWidget" class="fixed bottom-6 right-6 z-50">
+    <!-- Floating Trigger Button -->
+    <button 
+        @click="isOpen = !isOpen; if(isOpen && mainMode === 'artisan' && isLoggedIn) { loadConversations(); }"
+        class="w-14 h-14 rounded-full bg-[#3D2B1F] text-white shadow-2xl flex items-center justify-center hover:bg-[#C0422A] hover:scale-105 transition-all duration-300 relative group cursor-pointer"
+        aria-label="Open LumBarong Support & Chat"
+    >
+        <span class="absolute -top-1 -right-1 w-3.5 h-3.5 bg-green-500 border-2 border-white rounded-full"></span>
+        <svg x-show="!isOpen" class="w-6 h-6 text-white transition-transform group-hover:scale-110" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"></path>
+        </svg>
+        <svg x-show="isOpen" x-cloak class="w-6 h-6 text-white transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+        </svg>
+    </button>
 
-        <!-- Mode Toggle Pills -->
-        <div class="flex bg-white/10 p-1 rounded-xl gap-1 text-[11px] font-bold">
-            <button type="button" 
-                    @click="mainMode = 'ai'"
-                    :class="mainMode === 'ai' ? 'bg-[#C0422A] text-white shadow-sm' : 'text-gray-300 hover:text-white'"
-                    class="flex-1 py-1.5 rounded-lg transition-all flex items-center justify-center gap-1.5 cursor-pointer">
-                <span>Smart Support</span>
-            </button>
-            <button type="button" 
-                    @click="mainMode = 'artisan'; if(isLoggedIn) { loadConversations(); } else { window.dispatchEvent(new CustomEvent('open-auth-gate', { detail: { message: 'Please log in to chat with artisans.' } })); }"
-                    :class="mainMode === 'artisan' ? 'bg-[#C0422A] text-white shadow-sm' : 'text-gray-300 hover:text-white'"
-                    class="flex-1 py-1.5 rounded-lg transition-all flex items-center justify-center gap-1.5 cursor-pointer">
-                <span>💬</span>
-                <span>Artisans</span>
-            </button>
-        </div>
-    </div>
-
-    <!-- ========================================== -->
-    <!-- SMART SUPPORT TAB -->
-    <!-- ========================================== -->
-    <div x-show="mainMode === 'ai'" class="flex-1 flex flex-col min-h-0 bg-[#FBF9F6]">
-        <!-- Quick Prompt Chips -->
-        <div class="px-4 py-2 bg-white border-b border-gray-100 flex items-center gap-1.5 overflow-x-auto no-scrollbar shrink-0">
-            <button @click="sendAiPrompt('Recommend a Barong for a groom/wedding')" class="whitespace-nowrap px-2.5 py-1 bg-amber-50 text-amber-900 hover:bg-amber-100 rounded-full text-[10px] font-bold border border-amber-200/60 transition-colors cursor-pointer">
-                🤵 Groom / Wedding
-            </button>
-            <button @click="sendAiPrompt('What is the difference between Piña and Jusi?')" class="whitespace-nowrap px-2.5 py-1 bg-amber-50 text-amber-900 hover:bg-amber-100 rounded-full text-[10px] font-bold border border-amber-200/60 transition-colors cursor-pointer">
-                🧵 Piña vs Jusi
-            </button>
-            <button @click="sendAiPrompt('Show graduation Barongs under ₱3,500')" class="whitespace-nowrap px-2.5 py-1 bg-amber-50 text-amber-900 hover:bg-amber-100 rounded-full text-[10px] font-bold border border-amber-200/60 transition-colors cursor-pointer">
-                🎓 Graduation under ₱3.5k
-            </button>
-            <button @click="sendAiPrompt('Recommend a Barong for Ninong / Sponsor')" class="whitespace-nowrap px-2.5 py-1 bg-amber-50 text-amber-900 hover:bg-amber-100 rounded-full text-[10px] font-bold border border-amber-200/60 transition-colors cursor-pointer">
-                👔 Ninong Attire
-            </button>
-        </div>
-
-        <!-- Chat Stream -->
-        <div x-ref="aiMsgBox" class="flex-1 overflow-y-auto no-scrollbar p-4 space-y-3.5">
-            <template x-for="(msg, idx) in aiMessages" :key="idx">
-                <div class="flex flex-col" :class="msg.role === 'user' ? 'items-end' : 'items-start'">
-                    <div class="max-w-[85%] px-4 py-3 rounded-2xl text-xs leading-relaxed"
-                         :class="msg.role === 'user' 
-                             ? 'bg-black text-white rounded-tr-none shadow-sm' 
-                             : 'bg-white text-gray-800 rounded-tl-none border border-gray-150 shadow-xs prose prose-xs'"
-                         x-html="msg.text.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>').replace(/\n/g, '<br>')">
-                    </div>
-
-                    <!-- Recommended Product Cards -->
-                    <template x-if="msg.products && msg.products.length > 0">
-                        <div class="w-full mt-2 grid grid-cols-1 gap-2">
-                            <template x-for="prod in msg.products" :key="prod.id">
-                                <a :href="prod.url" class="flex items-center gap-3 p-2 bg-white rounded-xl border border-gray-150 hover:border-[#C0422A] hover:shadow-md transition-all group">
-                                    <img :src="prod.image || '/uploads/products/default.jpg'" class="w-12 h-12 rounded-lg object-cover bg-gray-50 border border-gray-100">
-                                    <div class="flex-1 min-w-0">
-                                        <h4 class="text-xs font-bold text-gray-900 group-hover:text-[#C0422A] truncate" x-text="prod.name"></h4>
-                                        <p class="text-[9px] font-semibold text-gray-500 truncate" x-text="prod.fabric"></p>
-                                        <p class="text-xs font-black text-[#C0422A] mt-0.5">₱<span x-text="prod.price"></span></p>
-                                    </div>
-                                    <span class="text-[9px] font-bold text-[#C0422A] uppercase tracking-wider px-2 py-1 bg-red-50 rounded-lg group-hover:bg-[#C0422A] group-hover:text-white transition-colors shrink-0">View</span>
-                                </a>
-                            </template>
-                        </div>
+    <!-- Chat Window Container -->
+    <div 
+        x-show="isOpen" 
+        x-transition:enter="transition ease-out duration-300"
+        x-transition:enter-start="opacity-0 translate-y-6 scale-95"
+        x-transition:enter-end="opacity-100 translate-y-0 scale-100"
+        x-transition:leave="transition ease-in duration-200"
+        x-transition:leave-start="opacity-100 translate-y-0 scale-100"
+        x-transition:leave-end="opacity-0 translate-y-6 scale-95"
+        class="fixed bottom-24 right-6 w-96 max-w-[calc(100vw-3rem)] h-[580px] max-h-[calc(100vh-8rem)] bg-white rounded-3xl shadow-2xl border border-gray-100 flex flex-col overflow-hidden z-50"
+        x-cloak
+    >
+        <!-- Header -->
+        <div class="bg-[#3D2B1F] text-white p-4 shrink-0 flex flex-col gap-2.5">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center gap-2.5">
+                    <template x-if="mainMode === 'artisan' && activeTab === 'messages'">
+                        <button @click="backToConversations()" class="p-1 hover:bg-white/10 rounded-lg transition-colors cursor-pointer">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
+                        </button>
                     </template>
+                    <div>
+                        <h3 class="font-serif text-sm font-bold tracking-wide flex items-center gap-1.5">
+                            <span x-show="mainMode === 'ai'">LumBarong Smart Assistant</span>
+                            <span x-show="mainMode === 'artisan'" x-text="activeTab === 'messages' && activeUser ? activeUser.name : 'Artisan Messages'"></span>
+                        </h3>
+                        <p class="text-[8px] font-bold text-gray-400 uppercase tracking-widest mt-0.5">
+                            <span x-show="mainMode === 'ai'">Heritage Fashion &amp; Shopping Concierge</span>
+                            <span x-show="mainMode === 'artisan'">Direct Workshop Connection</span>
+                        </p>
+                    </div>
                 </div>
-            </template>
+                <button @click="closeChat()" class="p-1.5 hover:bg-white/10 rounded-xl transition-colors cursor-pointer">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                </button>
+            </div>
 
-            <!-- Loading indicator -->
-            <div x-show="aiLoading" class="flex items-center gap-2 text-xs text-gray-400 italic" x-cloak>
-                <span class="inline-block w-2 h-2 rounded-full bg-[#C0422A] animate-ping"></span>
-                <span>Smart support is preparing advice...</span>
+            <!-- Mode Toggle Pills -->
+            <div class="flex bg-white/10 p-1 rounded-xl gap-1 text-[11px] font-bold">
+                <button type="button" 
+                        @click="mainMode = 'ai'"
+                        :class="mainMode === 'ai' ? 'bg-[#C0422A] text-white shadow-sm' : 'text-gray-300 hover:text-white'"
+                        class="flex-1 py-1.5 rounded-lg transition-all flex items-center justify-center gap-1.5 cursor-pointer">
+                    <span>✨ Smart Assistant</span>
+                </button>
+                <button type="button" 
+                        @click="mainMode = 'artisan'; if(isLoggedIn) { loadConversations(); } else { window.dispatchEvent(new CustomEvent('open-auth-gate', { detail: { message: 'Please log in to chat with artisans.' } })); }"
+                        :class="mainMode === 'artisan' ? 'bg-[#C0422A] text-white shadow-sm' : 'text-gray-300 hover:text-white'"
+                        class="flex-1 py-1.5 rounded-lg transition-all flex items-center justify-center gap-1.5 cursor-pointer">
+                    <span>💬 Artisans</span>
+                </button>
             </div>
         </div>
 
-        <!-- Input Bar -->
-        <div class="p-3 bg-white border-t border-gray-100 flex items-center gap-2 shrink-0">
-            <input type="text"
-                   x-model="aiInput"
-                   @keyup.enter="sendAiMessage()"
-                   placeholder="Ask about fabrics, fit, or wedding attire..."
-                   autocomplete="off"
-                   autocorrect="off"
-                   spellcheck="false"
-                   inputmode="text"
-                   class="flex-1 bg-gray-50 border border-gray-200 rounded-xl px-4 py-2.5 text-xs outline-none focus:border-[#C0422A] focus:bg-white transition-all">
-            <button @click="sendAiMessage()"
-                    :disabled="!aiInput.trim() || aiLoading"
-                    class="w-9 h-9 bg-[#C0422A] hover:bg-[#a33708] disabled:opacity-50 text-white rounded-xl flex items-center justify-center transition-colors shrink-0 cursor-pointer">
-                <svg class="w-4 h-4 rotate-90" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9-7-9-7V19z"/></svg>
-            </button>
-        </div>
-    </div>
+        <!-- ========================================== -->
+        <!-- SMART ASSISTANT TAB (3-MODE RECOMMENDATIONS) -->
+        <!-- ========================================== -->
+        <div x-show="mainMode === 'ai'" class="flex-1 flex flex-col min-h-0 bg-[#FAF7F2]">
+            <!-- Quick Starter Prompt Chips -->
+            <div class="px-3.5 py-2 bg-white border-b border-[#EBE3D9] flex items-center gap-1.5 overflow-x-auto no-scrollbar shrink-0">
+                <button @click="sendAiPrompt('Recommend a Barong for a wedding groom')" class="whitespace-nowrap px-2.5 py-1 bg-[#F7F3EE] hover:bg-[#E5DDD5] text-[#3D2B1F] rounded-full text-[10px] font-bold border border-[#E5DDD5] transition-colors cursor-pointer">
+                    🤵 Wedding Groom
+                </button>
+                <button @click="sendAiPrompt('What is the difference between Piña and Jusi?')" class="whitespace-nowrap px-2.5 py-1 bg-[#F7F3EE] hover:bg-[#E5DDD5] text-[#3D2B1F] rounded-full text-[10px] font-bold border border-[#E5DDD5] transition-colors cursor-pointer">
+                    🧵 Piña vs Jusi
+                </button>
+                <button @click="sendAiPrompt('Show graduation Barongs under ₱3,500')" class="whitespace-nowrap px-2.5 py-1 bg-[#F7F3EE] hover:bg-[#E5DDD5] text-[#3D2B1F] rounded-full text-[10px] font-bold border border-[#E5DDD5] transition-colors cursor-pointer">
+                    🎓 Graduation under ₱3.5k
+                </button>
+                <button @click="sendAiPrompt('Where is my order?')" class="whitespace-nowrap px-2.5 py-1 bg-[#F7F3EE] hover:bg-[#E5DDD5] text-[#3D2B1F] rounded-full text-[10px] font-bold border border-[#E5DDD5] transition-colors cursor-pointer">
+                    📦 Track Order
+                </button>
+            </div>
 
-    <!-- ========================================== -->
-    <!-- ARTISAN CHAT TAB -->
-    <!-- ========================================== -->
-    <div x-show="mainMode === 'artisan'" class="flex-1 flex flex-col min-h-0 bg-white">
-        <!-- Conversations List -->
-        <div x-show="activeTab === 'conversations'" class="flex-1 overflow-y-auto no-scrollbar p-4 bg-gray-50/50">
-            <div class="space-y-2">
-                <template x-for="conv in conversations" :key="conv.otherUser.id">
-                    <div
-                        @click="startConversation(conv.otherUser.id, conv.otherUser.name)"
-                        class="flex items-center justify-between p-4 bg-white rounded-2xl border border-gray-100 hover:border-black/20 hover:shadow-md transition-all cursor-pointer"
-                    >
-                        <div class="flex items-center gap-3 min-w-0">
-                            <div class="w-10 h-10 rounded-xl bg-gray-100 flex items-center justify-center font-bold text-gray-600 shrink-0 uppercase border border-gray-200"
-                                 x-text="conv.otherUser.name.charAt(0)"></div>
-                            <div class="min-w-0">
-                                <div class="flex items-center gap-1.5">
-                                    <span class="text-xs font-bold text-black truncate" x-text="conv.otherUser.name"></span>
-                                    <template x-if="conv.otherUser.role === 'seller'">
-                                        <span class="px-1.5 py-0.5 bg-red-50 text-[#C0422A] text-[7px] font-black uppercase tracking-wider rounded border border-red-100 shrink-0">Seller</span>
-                                    </template>
-                                </div>
-                                <p class="text-[10px] text-gray-400 truncate leading-relaxed mt-0.5" x-text="conv.lastMessage"></p>
+            <!-- Chat Messages Stream -->
+            <div x-ref="aiMsgBox" class="flex-1 overflow-y-auto no-scrollbar p-3.5 space-y-4">
+                <template x-for="(msg, idx) in aiMessages" :key="idx">
+                    <div class="flex flex-col" :class="msg.role === 'user' ? 'items-end' : 'items-start'">
+                        <!-- Message Bubble -->
+                        <div class="max-w-[90%] px-4 py-3 rounded-2xl text-xs leading-relaxed"
+                             :class="msg.role === 'user' 
+                                 ? 'bg-[#3D2B1F] text-white rounded-tr-none shadow-sm' 
+                                 : 'bg-white text-gray-800 rounded-tl-none border border-[#E5DDD5] shadow-xs prose prose-xs'"
+                             x-html="msg.text.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>').replace(/\n/g, '<br>')">
+                        </div>
+
+                        <!-- Scored Recommendation Product Cards -->
+                        <template x-if="msg.products && msg.products.length > 0">
+                            <div class="w-full mt-2.5 space-y-2.5">
+                                <template x-for="prod in msg.products" :key="prod.id">
+                                    <div class="bg-white rounded-2xl border border-[#E5DDD5] p-3 shadow-xs hover:border-[#C0422A] hover:shadow-md transition-all">
+                                        <!-- Card Header with Tier Badge & Score -->
+                                        <div class="flex items-center justify-between gap-2 mb-2">
+                                            <span class="text-[9px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full"
+                                                  :class="prod.tier === 'best' ? 'bg-amber-100 text-amber-900 border border-amber-200' : (prod.tier === 'budget' ? 'bg-emerald-100 text-emerald-900 border border-emerald-200' : 'bg-blue-100 text-blue-900 border border-blue-200')"
+                                                  x-text="prod.badge"></span>
+                                            <span class="text-[10px] font-mono font-bold text-[#C0422A] bg-red-50 px-2 py-0.5 rounded-md"
+                                                  x-text="prod.score + '% Match'"></span>
+                                        </div>
+
+                                        <!-- Product Snapshot -->
+                                        <div class="flex items-center gap-3">
+                                            <img :src="prod.image || '/uploads/products/default.jpg'" 
+                                                 class="w-14 h-14 rounded-xl object-cover bg-gray-50 border border-gray-100 shrink-0">
+                                            <div class="flex-1 min-w-0">
+                                                <h4 class="text-xs font-bold text-[#3D2B1F] truncate" x-text="prod.name"></h4>
+                                                <p class="text-[10px] font-medium text-gray-500 truncate" x-text="prod.fabric"></p>
+                                                <p class="text-xs font-black text-[#C0422A] font-mono mt-0.5">₱<span x-text="prod.price"></span></p>
+                                            </div>
+                                            <a :href="prod.url" 
+                                               class="px-3 py-1.5 bg-[#3D2B1F] hover:bg-[#C0422A] text-white text-[10px] font-bold rounded-xl uppercase tracking-wider transition-colors shrink-0">
+                                                View
+                                            </a>
+                                        </div>
+
+                                        <!-- Why this matches checklist -->
+                                        <template x-if="prod.reasons && prod.reasons.length > 0">
+                                            <div class="mt-2.5 pt-2 border-t border-[#F0EAE1] space-y-1">
+                                                <div class="text-[8px] font-bold text-gray-400 uppercase tracking-widest">Why this match:</div>
+                                                <template x-for="(reason, rIdx) in prod.reasons" :key="rIdx">
+                                                    <div class="text-[10px] text-gray-600 font-medium flex items-start gap-1.5 leading-tight">
+                                                        <span class="text-emerald-600 font-bold">✓</span>
+                                                        <span x-text="reason.replace(/^✓\s*/, '')"></span>
+                                                    </div>
+                                                </template>
+                                            </div>
+                                        </template>
+                                    </div>
+                                </template>
                             </div>
-                        </div>
-                        <div class="text-right shrink-0 ml-2">
-                            <div class="text-[8px] font-bold text-gray-400" x-text="formatTime(conv.timestamp)"></div>
-                            <template x-if="conv.unreadCount > 0">
-                                <span class="inline-block min-w-4 h-4 px-1 bg-red-500 text-white text-[8px] font-bold rounded-full text-center mt-1"
-                                      x-text="conv.unreadCount"></span>
-                            </template>
-                        </div>
-                    </div>
-                </template>
-                <template x-if="conversations.length === 0">
-                    <div class="py-20 text-center">
-                        <svg class="w-12 h-12 text-gray-300 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/>
-                        </svg>
-                        <p class="text-xs text-gray-400 italic">No direct artisan messages yet.</p>
-                    </div>
-                </template>
-            </div>
-        </div>
+                        </template>
 
-        <!-- Messages View -->
-        <div x-show="activeTab === 'messages'" class="flex-1 flex flex-col min-h-0 bg-white">
-            <div x-ref="msgBox" class="flex-1 overflow-y-auto no-scrollbar p-5 space-y-3">
-                <template x-for="msg in messages" :key="msg.id">
-                    <div class="flex flex-col" :class="msg.senderId === currentUserId ? 'items-end' : 'items-start'">
-                        <div class="max-w-[75%] px-4 py-3 rounded-2xl text-xs leading-relaxed"
-                             :class="msg.senderId === currentUserId
-                                 ? 'bg-black text-white rounded-tr-none'
-                                 : 'bg-gray-100 text-gray-800 rounded-tl-none'"
-                             x-text="msg.content"></div>
-                        <span class="text-[8px] font-bold text-gray-400 mt-1" x-text="formatTime(msg.createdAt)"></span>
+                        <!-- Dynamic Refinement Chips -->
+                        <template x-if="msg.refinements && msg.refinements.length > 0">
+                            <div class="w-full mt-2 flex flex-wrap gap-1.5">
+                                <template x-for="(chip, cIdx) in msg.refinements" :key="cIdx">
+                                    <button type="button" 
+                                            @click="sendAiPrompt(chip.prompt)"
+                                            class="px-2.5 py-1 bg-white hover:bg-[#F7F3EE] text-[#3D2B1F] border border-[#E5DDD5] hover:border-[#C0422A] rounded-xl text-[10px] font-semibold transition-all cursor-pointer shadow-2xs">
+                                        <span x-text="chip.label"></span>
+                                    </button>
+                                </template>
+                            </div>
+                        </template>
                     </div>
                 </template>
-                <template x-if="messages.length === 0">
-                    <div class="py-16 text-center">
-                        <p class="text-xs text-gray-400 italic">Type a message to start conversing with this artisan.</p>
-                    </div>
-                </template>
+
+                <!-- Loading indicator -->
+                <div x-show="aiLoading" class="flex items-center gap-2 text-xs text-gray-400 italic p-2" x-cloak>
+                    <span class="inline-block w-2 h-2 rounded-full bg-[#C0422A] animate-ping"></span>
+                    <span>Smart Assistant is analyzing Lumban collections...</span>
+                </div>
             </div>
 
             <!-- Input Bar -->
-            <div class="p-3 border-t border-gray-100 flex items-center gap-2 bg-white shrink-0">
-                <input
-                    type="text"
-                    x-model="newMessage"
-                    @keyup.enter="sendMessage()"
-                    placeholder="Type your message to artisan..."
-                    autocomplete="off"
-                    autocorrect="off"
-                    spellcheck="false"
-                    inputmode="text"
-                    class="flex-1 bg-gray-50 border border-gray-100 rounded-xl px-4 py-2.5 text-xs focus:outline-none focus:border-black/20"
-                >
-                <button
-                    @click="sendMessage()"
-                    class="w-9 h-9 bg-black text-white rounded-xl flex items-center justify-center hover:bg-gray-800 transition-colors shrink-0 cursor-pointer"
-                >
-                    <svg class="w-4 h-4 rotate-90" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9-7-9-7V19z"/>
-                    </svg>
+            <div class="p-3 bg-white border-t border-[#EBE3D9] flex items-center gap-2 shrink-0">
+                <input type="text"
+                       x-model="aiInput"
+                       @keyup.enter="sendAiMessage()"
+                       placeholder="Ask about wedding barongs, budget, fabric, or order status..."
+                       autocomplete="off"
+                       autocorrect="off"
+                       spellcheck="false"
+                       inputmode="text"
+                       class="flex-1 bg-[#FAF7F2] border border-[#EBE3D9] text-[#3D2B1F] rounded-xl px-4 py-2.5 text-xs outline-none focus:border-[#C0422A] focus:bg-white transition-all">
+                <button @click="sendAiMessage()"
+                        :disabled="!aiInput.trim() || aiLoading"
+                        class="w-9 h-9 bg-[#3D2B1F] hover:bg-[#C0422A] disabled:opacity-50 text-white rounded-xl flex items-center justify-center transition-colors shrink-0 cursor-pointer">
+                    <svg class="w-4 h-4 rotate-90" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9-7-9-7V19z"/></svg>
                 </button>
+            </div>
+        </div>
+
+        <!-- ========================================== -->
+        <!-- ARTISAN CHAT TAB -->
+        <!-- ========================================== -->
+        <div x-show="mainMode === 'artisan'" class="flex-1 flex flex-col min-h-0 bg-white">
+            <!-- Conversations List -->
+            <div x-show="activeTab === 'conversations'" class="flex-1 overflow-y-auto no-scrollbar p-4 bg-gray-50/50">
+                <div class="space-y-2">
+                    <template x-for="conv in conversations" :key="conv.otherUser.id">
+                        <div
+                            @click="startConversation(conv.otherUser.id, conv.otherUser.name)"
+                            class="flex items-center justify-between p-4 bg-white rounded-2xl border border-gray-100 hover:border-black/20 hover:shadow-md transition-all cursor-pointer"
+                        >
+                            <div class="flex items-center gap-3 min-w-0">
+                                <div class="w-10 h-10 rounded-xl bg-gray-100 flex items-center justify-center font-bold text-gray-600 shrink-0 uppercase border border-gray-200"
+                                     x-text="conv.otherUser.name.charAt(0)"></div>
+                                <div class="min-w-0">
+                                    <div class="text-xs font-bold text-gray-900 truncate" x-text="conv.otherUser.name"></div>
+                                    <div class="text-[11px] text-gray-500 truncate" x-text="conv.lastMessage.body"></div>
+                                </div>
+                            </div>
+                            <div class="text-[9px] text-gray-400 font-medium shrink-0 ml-2" 
+                                 x-text="new Date(conv.lastMessage.createdAt).toLocaleDateString([], { month: 'short', day: 'numeric' })"></div>
+                        </div>
+                    </template>
+                    <div x-show="conversations.length === 0" class="text-center py-12 text-gray-400 text-xs italic">
+                        No conversations yet. Visit an artisan shop page to start chatting!
+                    </div>
+                </div>
+            </div>
+
+            <!-- Messages Stream -->
+            <div x-show="activeTab === 'messages'" class="flex-1 flex flex-col min-h-0">
+                <div x-ref="artisanMsgBox" class="flex-1 overflow-y-auto no-scrollbar p-4 space-y-3 bg-gray-50/30">
+                    <template x-for="msg in messages" :key="msg.id">
+                        <div class="flex flex-col" :class="msg.senderId === currentUserId ? 'items-end' : 'items-start'">
+                            <div class="max-w-[80%] px-4 py-2.5 rounded-2xl text-xs"
+                                 :class="msg.senderId === currentUserId 
+                                     ? 'bg-[#3D2B1F] text-white rounded-tr-none shadow-sm' 
+                                     : 'bg-white text-gray-800 rounded-tl-none border border-gray-100 shadow-xs'"
+                                 x-text="msg.body">
+                            </div>
+                            <span class="text-[8px] text-gray-400 mt-1 px-1" 
+                                  x-text="new Date(msg.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })"></span>
+                        </div>
+                    </template>
+                </div>
+
+                <!-- Message Input -->
+                <div class="p-3 bg-white border-t border-gray-100 flex items-center gap-2 shrink-0">
+                    <input type="text"
+                           x-model="newMessage"
+                           @keyup.enter="sendMessage()"
+                           placeholder="Message artisan..."
+                           class="flex-1 bg-gray-50 border border-gray-200 rounded-xl px-4 py-2.5 text-xs outline-none focus:border-[#3D2B1F] focus:bg-white transition-all">
+                    <button @click="sendMessage()"
+                            :disabled="!newMessage.trim()"
+                            class="w-9 h-9 bg-[#3D2B1F] hover:bg-[#C0422A] disabled:opacity-50 text-white rounded-xl flex items-center justify-center transition-colors shrink-0 cursor-pointer">
+                        <svg class="w-4 h-4 rotate-90" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9-7-9-7V19z"/></svg>
+                    </button>
+                </div>
             </div>
         </div>
     </div>
