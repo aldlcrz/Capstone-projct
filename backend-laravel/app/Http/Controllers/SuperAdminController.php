@@ -76,7 +76,11 @@ class SuperAdminController extends Controller
         $totalCollected = (float) CommissionRecord::where('status', 'paid')->sum('commissionAmount');
         $totalOutstanding = (float) CommissionRecord::where('status', 'unpaid')->sum('commissionAmount');
 
-        $customerCount   = User::where('role', 'buyer')->count();
+        $customerCount   = User::where(function($q) {
+            $q->whereIn('role', ['customer', 'buyer', 'user'])
+              ->orWhereNull('role');
+        })->whereNotIn('role', ['seller', 'admin', 'superadmin'])->count();
+
         $sellerCount     = User::where('role', 'seller')->count();
         $verifiedSellers = User::where('role', 'seller')->where('isVerified', true)->count();
         $frozenCount     = User::where('role', 'seller')->where('status', 'frozen')->count();
@@ -562,7 +566,10 @@ class SuperAdminController extends Controller
         $search = trim($request->input('search', ''));
         $status = $request->input('status', 'all');
 
-        $query = User::where('role', 'buyer');
+        $query = User::where(function($q) {
+            $q->whereIn('role', ['customer', 'buyer', 'user'])
+              ->orWhereNull('role');
+        })->whereNotIn('role', ['seller', 'admin', 'superadmin']);
 
         if ($search) {
             $query->where(function ($q) use ($search) {
@@ -605,7 +612,7 @@ class SuperAdminController extends Controller
 
     public function banCustomer(string $id)
     {
-        $customer = User::where('role', 'buyer')->findOrFail($id);
+        $customer = User::findOrFail($id);
         $customer->status = 'banned';
         $customer->save();
 
@@ -614,7 +621,7 @@ class SuperAdminController extends Controller
 
     public function unbanCustomer(string $id)
     {
-        $customer = User::where('role', 'buyer')->findOrFail($id);
+        $customer = User::findOrFail($id);
         $customer->status = 'active';
         $customer->save();
 
@@ -753,9 +760,21 @@ class SuperAdminController extends Controller
             }
         }
 
-        $logSize = File::exists($logPath) ? round(File::size($logPath) / 1024 / 1024, 2) . ' MB' : '0 MB';
+        $errorCount = 0;
+        $warningCount = 0;
+        $infoCount = 0;
 
-        return view('superadmin.error_logs', compact('entries', 'logSize'));
+        foreach ($entries as $e) {
+            if (in_array($e['level'], ['ERROR', 'CRITICAL', 'ALERT', 'EMERGENCY'])) {
+                $errorCount++;
+            } elseif ($e['level'] === 'WARNING') {
+                $warningCount++;
+            } else {
+                $infoCount++;
+            }
+        }
+
+        return view('superadmin.error_logs', compact('entries', 'logSize', 'errorCount', 'warningCount', 'infoCount'));
     }
 
     public function clearErrorLogs()

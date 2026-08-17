@@ -1,7 +1,7 @@
 @extends('layouts.superadmin')
 
 @section('content')
-<div class="space-y-8" x-data="{ expanded: null, filterLevel: 'all', search: '' }">
+<div class="space-y-8" x-data="errorLogManager()">
     <!-- Header -->
     <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
@@ -11,7 +11,7 @@
         </div>
 
         <div class="flex items-center gap-3">
-            <span class="text-xs text-gray-400 font-mono">Log File Size: <strong>{{ $logSize }}</strong></span>
+            <span class="text-xs text-gray-400 font-mono">Log Size: <strong>{{ $logSize }}</strong></span>
             <form action="{{ route('superadmin.error-logs.clear') }}" method="POST" onsubmit="return confirm('Are you sure you want to clear the system log file?');">
                 @csrf
                 <button type="submit" class="px-4 py-2.5 bg-red-50 hover:bg-red-100 text-red-600 border border-red-200 rounded-xl text-xs font-bold uppercase tracking-wider transition-all cursor-pointer shadow-xs">
@@ -32,17 +32,17 @@
             <button type="button" @click="filterLevel = 'ERROR'"
                 :class="filterLevel === 'ERROR' ? 'bg-red-600 text-white' : 'bg-red-50 text-red-700 hover:bg-red-100'"
                 class="px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-wider transition-all cursor-pointer">
-                Errors &amp; Exceptions
+                Errors &amp; Exceptions ({{ $errorCount }})
             </button>
             <button type="button" @click="filterLevel = 'WARNING'"
                 :class="filterLevel === 'WARNING' ? 'bg-amber-600 text-white' : 'bg-amber-50 text-amber-700 hover:bg-amber-100'"
                 class="px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-wider transition-all cursor-pointer">
-                Warnings
+                Warnings ({{ $warningCount }})
             </button>
             <button type="button" @click="filterLevel = 'INFO'"
                 :class="filterLevel === 'INFO' ? 'bg-blue-600 text-white' : 'bg-blue-50 text-blue-700 hover:bg-blue-100'"
                 class="px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-wider transition-all cursor-pointer">
-                Info &amp; Debug
+                Info &amp; Debug ({{ $infoCount }})
             </button>
         </div>
 
@@ -53,61 +53,91 @@
         </div>
     </div>
 
-    <!-- Logs List -->
+    <!-- Logs List Rendered via Alpine Component -->
     <div class="space-y-3">
-        @forelse($entries as $index => $entry)
-        <div x-show="(filterLevel === 'all' || '{{ $entry['level'] }}'.includes(filterLevel)) && (!search || '{{ strtolower(addslashes($entry['full_text'])) }}'.includes(search.toLowerCase()))"
-             class="bg-white border border-[#E5DDD5] rounded-2xl overflow-hidden shadow-xs transition-all">
-            
-            <div class="p-4 flex items-start justify-between gap-4 cursor-pointer hover:bg-[#FAF7F2]"
-                 @click="expanded === {{ $index }} ? expanded = null : expanded = {{ $index }}">
-                <div class="space-y-1 flex-1">
-                    <div class="flex items-center gap-2 flex-wrap">
-                        <span class="font-mono text-gray-400 text-[11px]">{{ $entry['timestamp'] }}</span>
-                        
-                        @if(in_array($entry['level'], ['ERROR', 'CRITICAL', 'ALERT', 'EMERGENCY']))
-                            <span class="px-2 py-0.5 bg-red-50 text-red-600 border border-red-200 rounded font-bold text-[9px] uppercase tracking-wider font-mono">
-                                {{ $entry['level'] }}
-                            </span>
-                        @elseif($entry['level'] === 'WARNING')
-                            <span class="px-2 py-0.5 bg-amber-50 text-amber-700 border border-amber-200 rounded font-bold text-[9px] uppercase tracking-wider font-mono">
-                                {{ $entry['level'] }}
-                            </span>
-                        @else
-                            <span class="px-2 py-0.5 bg-blue-50 text-blue-700 border border-blue-200 rounded font-bold text-[9px] uppercase tracking-wider font-mono">
-                                {{ $entry['level'] }}
-                            </span>
-                        @endif
+        <template x-for="(entry, index) in filteredEntries" :key="index">
+            <div class="bg-white border border-[#E5DDD5] rounded-2xl overflow-hidden shadow-xs transition-all">
+                <div class="p-4 flex items-start justify-between gap-4 cursor-pointer hover:bg-[#FAF7F2]"
+                     @click="expanded === index ? expanded = null : expanded = index">
+                    <div class="space-y-1 flex-1">
+                        <div class="flex items-center gap-2 flex-wrap">
+                            <span class="font-mono text-gray-400 text-[11px]" x-text="entry.timestamp"></span>
+                            
+                            <template x-if="['ERROR', 'CRITICAL', 'ALERT', 'EMERGENCY'].includes(entry.level)">
+                                <span class="px-2 py-0.5 bg-red-50 text-red-600 border border-red-200 rounded font-bold text-[9px] uppercase tracking-wider font-mono" x-text="entry.level"></span>
+                            </template>
 
-                        <span class="text-[10px] text-gray-400 font-mono">env: {{ $entry['environment'] }}</span>
+                            <template x-if="entry.level === 'WARNING'">
+                                <span class="px-2 py-0.5 bg-amber-50 text-amber-700 border border-amber-200 rounded font-bold text-[9px] uppercase tracking-wider font-mono" x-text="entry.level"></span>
+                            </template>
+
+                            <template x-if="!['ERROR', 'CRITICAL', 'ALERT', 'EMERGENCY', 'WARNING'].includes(entry.level)">
+                                <span class="px-2 py-0.5 bg-blue-50 text-blue-700 border border-blue-200 rounded font-bold text-[9px] uppercase tracking-wider font-mono" x-text="entry.level"></span>
+                            </template>
+
+                            <span class="text-[10px] text-gray-400 font-mono" x-text="'env: ' + entry.environment"></span>
+                        </div>
+
+                        <div class="text-xs font-bold text-[#3D2B1F] font-mono leading-relaxed break-all" x-text="entry.message"></div>
                     </div>
 
-                    <div class="text-xs font-bold text-[#3D2B1F] font-mono leading-relaxed break-all">
-                        {{ $entry['message'] }}
-                    </div>
+                    <button type="button" class="p-1 text-gray-400 hover:text-black">
+                        <svg class="w-4 h-4 transform transition-transform" :class="expanded === index ? 'rotate-180' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                        </svg>
+                    </button>
                 </div>
 
-                <button type="button" class="p-1 text-gray-400 hover:text-black">
-                    <svg class="w-4 h-4 transform transition-transform" :class="expanded === {{ $index }} ? 'rotate-180' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
-                    </svg>
-                </button>
+                {{-- Full Stack Trace --}}
+                <div x-show="expanded === index" x-collapse x-cloak class="p-4 bg-[#141414] text-gray-300 font-mono text-[11px] border-t border-gray-800 overflow-x-auto leading-relaxed max-h-96">
+                    <pre class="whitespace-pre-wrap" x-text="entry.full_text"></pre>
+                </div>
             </div>
+        </template>
 
-            {{-- Full Stack Trace Accordion --}}
-            <div x-show="expanded === {{ $index }}" x-collapse x-cloak class="p-4 bg-[#141414] text-gray-300 font-mono text-[11px] border-t border-gray-800 overflow-x-auto leading-relaxed max-h-96">
-                <pre class="whitespace-pre-wrap">{{ $entry['full_text'] }}</pre>
-            </div>
-        </div>
-        @empty
-        <div class="bg-white border border-[#E5DDD5] rounded-3xl p-12 text-center shadow-sm">
+        <div x-show="filteredEntries.length === 0" class="bg-white border border-[#E5DDD5] rounded-3xl p-12 text-center shadow-sm" x-cloak>
             <div class="w-12 h-12 bg-green-50 rounded-full flex items-center justify-center mx-auto mb-3 border border-green-100">
                 <span class="text-green-600 text-lg">✓</span>
             </div>
-            <h3 class="text-sm font-bold text-[#3D2B1F] uppercase tracking-widest mb-1">No System Errors Recorded</h3>
-            <p class="text-xs text-gray-500">The Laravel error log is currently clean and operating smoothly.</p>
+            <h3 class="text-sm font-bold text-[#3D2B1F] uppercase tracking-widest mb-1">No Entries Match Filter</h3>
+            <p class="text-xs text-gray-500">No error log records match your selected log level or search criteria.</p>
         </div>
-        @endforelse
     </div>
 </div>
+
+<script>
+function errorLogManager() {
+    return {
+        expanded: null,
+        filterLevel: 'all',
+        search: '',
+        entries: @json($entries),
+        get filteredEntries() {
+            var lvl = this.filterLevel;
+            var q = this.search.toLowerCase().trim();
+            return this.entries.filter(function(e) {
+                var levelMatch = false;
+                if (lvl === 'all') {
+                    levelMatch = true;
+                } else if (lvl === 'ERROR') {
+                    levelMatch = ['ERROR', 'CRITICAL', 'ALERT', 'EMERGENCY'].includes(e.level);
+                } else if (lvl === 'WARNING') {
+                    levelMatch = (e.level === 'WARNING');
+                } else if (lvl === 'INFO') {
+                    levelMatch = !['ERROR', 'CRITICAL', 'ALERT', 'EMERGENCY', 'WARNING'].includes(e.level);
+                }
+
+                var textMatch = true;
+                if (q) {
+                    textMatch = (e.message && e.message.toLowerCase().includes(q)) ||
+                                (e.full_text && e.full_text.toLowerCase().includes(q)) ||
+                                (e.timestamp && e.timestamp.includes(q));
+                }
+
+                return levelMatch && textMatch;
+            });
+        }
+    };
+}
+</script>
 @endsection
