@@ -16,26 +16,41 @@ class ChatController extends Controller
      */
     public function sendMessage(Request $request)
     {
-        $request->validate([
-            'receiverId' => 'required|exists:users,id',
-            'content' => 'required|string',
-        ]);
+        $content = trim((string) ($request->input('content') ?: $request->input('body') ?: $request->input('message') ?: ''));
+        if (!$content) {
+            return response()->json(['message' => 'Message content is required'], 422);
+        }
+
+        $receiverId = $request->input('receiverId');
+        if (!$receiverId || !User::where('id', $receiverId)->exists()) {
+            return response()->json(['message' => 'Valid receiver ID is required'], 422);
+        }
 
         $senderId = Auth::id();
+        if (!$senderId) {
+            return response()->json(['message' => 'Unauthorized'], 401);
+        }
         
         $message = Message::create([
             'senderId' => $senderId,
-            'receiverId' => $request->receiverId,
-            'content' => $request->input('content'),
+            'receiverId' => $receiverId,
+            'content' => $content,
             'read' => false,
         ]);
 
-        $populatedMessage = Message::with('sender:id,name,role,profilePhoto')->find($message->id);
+        $msg = Message::with('sender:id,name,role,profilePhoto')->find($message->id);
+        $res = $msg ? $msg->toArray() : [
+            'id' => $message->id,
+            'senderId' => $senderId,
+            'receiverId' => $receiverId,
+            'content' => $content,
+            'read' => false,
+        ];
+        $res['body'] = $content;
+        $res['createdAt'] = $msg?->createdAt ? $msg->createdAt->toISOString() : now()->toISOString();
+        $res['created_at'] = $res['createdAt'];
 
-        // REAL-TIME: In a pure PHP system, we might use Pusher or database polling.
-        // For now, we've fulfilled the "turn to PHP" part by porting the logic.
-
-        return response()->json($populatedMessage, 201);
+        return response()->json($res, 201);
     }
 
     /**
@@ -52,7 +67,14 @@ class ChatController extends Controller
             })
             ->orderBy('createdAt', 'asc')
             ->with(['sender:id,name,profilePhoto,role', 'receiver:id,name,profilePhoto,role'])
-            ->get();
+            ->get()
+            ->map(function ($m) {
+                $arr = $m->toArray();
+                $arr['body'] = $m->content;
+                $arr['createdAt'] = $m->createdAt ? $m->createdAt->toISOString() : null;
+                $arr['created_at'] = $arr['createdAt'];
+                return $arr;
+            });
 
         // Mark as read
         Message::where('senderId', $otherUserId)
@@ -98,20 +120,23 @@ class ChatController extends Controller
 
             $conversations[] = [
                 'otherUser' => [
-                    'id' => $otherUser->id,
-                    'name' => $otherUser->name,
-                    'profileImage' => $otherUser->profilePhoto,
-                    'role' => $otherUser->role,
+                    'id' => $otherUser->id ?? $otherId,
+                    'name' => $otherUser->name ?? 'Artisan',
+                    'profileImage' => $otherUser->profilePhoto ?? null,
+                    'role' => $otherUser->role ?? 'seller',
                 ],
-                'lastMessage' => $lastMessage->content,
-                'timestamp' => $lastMessage->createdAt,
+                'lastMessage' => [
+                    'body' => $lastMessage->content,
+                    'content' => $lastMessage->content,
+                ],
+                'timestamp' => $lastMessage->createdAt ? $lastMessage->createdAt->toISOString() : null,
                 'unreadCount' => $unreadCount
             ];
         }
 
         // Sort by timestamp desc
         usort($conversations, function ($a, $b) {
-            return strtotime($b['timestamp']) - strtotime($a['timestamp']);
+            return strtotime($b['timestamp'] ?? '') - strtotime($a['timestamp'] ?? '');
         });
 
         return response()->json($conversations);

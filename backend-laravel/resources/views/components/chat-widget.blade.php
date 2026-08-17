@@ -236,6 +236,28 @@
                 .catch(err => console.error('Failed to load messages:', err));
             },
 
+            formatMessageTime(iso) {
+                if (!iso) return '';
+                try {
+                    const d = new Date(iso);
+                    if (isNaN(d.getTime())) return '';
+                    return d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                } catch(e) {
+                    return '';
+                }
+            },
+
+            formatMessageDate(iso) {
+                if (!iso) return '';
+                try {
+                    const d = new Date(iso);
+                    if (isNaN(d.getTime())) return '';
+                    return d.toLocaleDateString([], { month: 'short', day: 'numeric' });
+                } catch(e) {
+                    return '';
+                }
+            },
+
             sendMessage() {
                 const body = (this.newMessage || '').trim();
                 if (!body || !this.activeUser || !this.isLoggedIn) return;
@@ -244,7 +266,9 @@
                     id: 'temp-' + Date.now(),
                     senderId: this.currentUserId,
                     receiverId: this.activeUser.id,
+                    content: body,
                     body: body,
+                    createdAt: new Date().toISOString(),
                     created_at: new Date().toISOString()
                 };
                 this.messages.push(tempMsg);
@@ -264,6 +288,7 @@
                     },
                     body: JSON.stringify({
                         receiverId: this.activeUser.id,
+                        content: body,
                         body: body
                     })
                 })
@@ -551,7 +576,7 @@
                                 </div>
                             </div>
                             <div class="text-[9px] text-gray-400 font-medium shrink-0 ml-2" 
-                                 x-text="new Date(conv.lastMessage.createdAt).toLocaleDateString([], { month: 'short', day: 'numeric' })"></div>
+                                 x-text="formatMessageDate(conv.timestamp || (conv.lastMessage && (conv.lastMessage.createdAt || conv.lastMessage.created_at)))"></div>
                         </div>
                     </template>
                     <div x-show="conversations.length === 0" class="text-center py-12 text-gray-400 text-xs italic">
@@ -562,17 +587,17 @@
 
             <!-- Messages Stream -->
             <div x-show="activeTab === 'messages'" class="flex-1 flex flex-col min-h-0">
-                <div x-ref="artisanMsgBox" class="flex-1 overflow-y-auto no-scrollbar p-4 space-y-3 bg-gray-50/30">
+                <div x-ref="artisanMsgBox" class="flex-1 overflow-y-auto no-scrollbar p-4 space-y-3 bg-[#FAF7F2]/50">
                     <template x-for="msg in messages" :key="msg.id">
-                        <div class="flex flex-col" :class="msg.senderId === currentUserId ? 'items-end' : 'items-start'">
-                            <div class="max-w-[80%] px-4 py-2.5 rounded-2xl text-xs"
-                                 :class="msg.senderId === currentUserId 
+                        <div class="flex flex-col" :class="String(msg.senderId) === String(currentUserId) ? 'items-end' : 'items-start'">
+                            <div class="max-w-[82%] px-4 py-2.5 rounded-2xl text-xs leading-relaxed"
+                                 :class="String(msg.senderId) === String(currentUserId) 
                                      ? 'bg-[#3D2B1F] text-white rounded-tr-none shadow-sm' 
-                                     : 'bg-white text-gray-800 rounded-tl-none border border-gray-100 shadow-xs'"
-                                 x-text="msg.body">
+                                     : 'bg-white text-gray-900 rounded-tl-none border border-gray-200 shadow-xs'"
+                                 x-text="msg.content || msg.body || ''">
                             </div>
-                            <span class="text-[8px] text-gray-400 mt-1 px-1" 
-                                  x-text="new Date(msg.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })"></span>
+                            <span class="text-[9px] text-gray-400 mt-1 px-1 font-medium" 
+                                  x-text="formatMessageTime(msg.createdAt || msg.created_at || msg.timestamp)"></span>
                         </div>
                     </template>
                 </div>
