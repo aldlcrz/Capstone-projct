@@ -58,11 +58,14 @@ class WebAuthController extends Controller
                 ])->onlyInput('email');
             }
 
-            if ($user->status === 'blocked') {
+            if ($user->status === 'blocked' || $user->status === 'banned') {
                 Auth::logout();
-                return back()->withErrors([
-                    'email' => 'Your account has been blocked. Reason: ' . ($user->violationReason ?? 'Policy violation'),
-                ])->onlyInput('email');
+                $reason = !empty($user->violationReason) ? $user->violationReason : 'Violation of community terms and policies';
+                return back()
+                    ->with('banned_reason', $reason)
+                    ->withErrors([
+                        'email' => "Your account has been suspended. Reason: {$reason}",
+                    ])->onlyInput('email');
             }
 
             if ($user->status === 'rejected') {

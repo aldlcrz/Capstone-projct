@@ -136,7 +136,27 @@
             <form :action="'/admin/users/' + banUserId + '/ban'" method="POST" class="space-y-4">
                 @csrf @method('PATCH')
                 <div>
-                    <label class="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-1 block">Explanation / Reason *</label>
+                    <label class="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-1.5 block">Quick Presets</label>
+                    <div class="flex flex-wrap gap-1.5 mb-3">
+                        <button type="button" @click="banReason = 'Violation of Terms of Service'"
+                            class="px-2.5 py-1 rounded-lg text-[10px] font-semibold bg-gray-100 hover:bg-gray-200 text-gray-700 transition-colors">
+                            Terms Violation
+                        </button>
+                        <button type="button" @click="banReason = 'Fraudulent transaction / payment dispute'"
+                            class="px-2.5 py-1 rounded-lg text-[10px] font-semibold bg-gray-100 hover:bg-gray-200 text-gray-700 transition-colors">
+                            Payment Fraud
+                        </button>
+                        <button type="button" @click="banReason = 'Abusive behavior towards sellers or staff'"
+                            class="px-2.5 py-1 rounded-lg text-[10px] font-semibold bg-gray-100 hover:bg-gray-200 text-gray-700 transition-colors">
+                            Abusive Behavior
+                        </button>
+                        <button type="button" @click="banReason = 'Suspicious or automated spam activity'"
+                            class="px-2.5 py-1 rounded-lg text-[10px] font-semibold bg-gray-100 hover:bg-gray-200 text-gray-700 transition-colors">
+                            Spam Activity
+                        </button>
+                    </div>
+
+                    <label class="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-1 block">Explanation / Reason (Shown to customer) *</label>
                     <textarea name="reason" x-model="banReason" required rows="3" placeholder="Specify why this account is being suspended..." class="w-full p-3 bg-gray-50 border border-gray-200 rounded-xl text-xs outline-none focus:border-red-500"></textarea>
                 </div>
                 <div class="flex gap-3 pt-2">

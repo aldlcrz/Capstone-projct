@@ -77,6 +77,25 @@
             <p class="text-[11px] font-bold uppercase tracking-[0.3em] text-gray-400">Authentication Portal</p>
         </div>
 
+        @if (session('banned_reason') || ($errors->has('email') && (str_contains(strtolower($errors->first('email')), 'suspended') || str_contains(strtolower($errors->first('email')), 'blocked'))))
+            <div class="mb-6 p-4 rounded-2xl bg-red-50 border border-red-200 text-red-950 text-xs shadow-xs space-y-2">
+                <div class="flex items-center gap-2 text-red-600 font-bold text-sm">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"/></svg>
+                    <span>Account Suspended</span>
+                </div>
+                <p class="text-gray-700 leading-relaxed font-medium">
+                    This account has been banned by Administration.
+                </p>
+                <div class="p-3 bg-white border border-red-200 rounded-xl text-red-900 font-mono text-[11px] font-semibold leading-relaxed">
+                    <span class="text-gray-500 font-sans block text-[9px] uppercase tracking-wider mb-0.5">Suspension Reason:</span>
+                    {{ session('banned_reason') ?? str_replace('Your account has been suspended. Reason: ', '', $errors->first('email')) }}
+                </div>
+                <p class="text-[10px] text-gray-500 pt-1">
+                    For inquiries or appeals, contact <a href="mailto:support@lumbarong.shop" class="text-[#C0422A] underline font-bold">support@lumbarong.shop</a>.
+                </p>
+            </div>
+        @endif
+
         @if (session('info'))
             <div class="mb-6 p-4 rounded-2xl bg-amber-50 border border-amber-200 text-amber-900 text-xs flex items-start gap-2.5">
                 <span class="text-base shrink-0">ℹ️</span>

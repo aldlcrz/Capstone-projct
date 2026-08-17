@@ -178,7 +178,27 @@
             <form :action="'/admin/sellers/' + suspendSellerId + '/suspend'" method="POST" class="space-y-4">
                 @csrf @method('PATCH')
                 <div>
-                    <label class="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-1 block">Explanation / Reason *</label>
+                    <label class="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-1.5 block">Quick Presets</label>
+                    <div class="flex flex-wrap gap-1.5 mb-3">
+                        <button type="button" @click="suspendReason = 'Policy violation / counterfeit or prohibited listings'"
+                            class="px-2.5 py-1 rounded-lg text-[10px] font-semibold bg-gray-100 hover:bg-gray-200 text-gray-700 transition-colors">
+                            Policy Violation
+                        </button>
+                        <button type="button" @click="suspendReason = 'Unfulfilled orders / excessive customer complaints'"
+                            class="px-2.5 py-1 rounded-lg text-[10px] font-semibold bg-gray-100 hover:bg-gray-200 text-gray-700 transition-colors">
+                            Unfulfilled Orders
+                        </button>
+                        <button type="button" @click="suspendReason = 'Fraudulent activity / payment issues'"
+                            class="px-2.5 py-1 rounded-lg text-[10px] font-semibold bg-gray-100 hover:bg-gray-200 text-gray-700 transition-colors">
+                            Fraud Activity
+                        </button>
+                        <button type="button" @click="suspendReason = 'Administrative review in progress'"
+                            class="px-2.5 py-1 rounded-lg text-[10px] font-semibold bg-gray-100 hover:bg-gray-200 text-gray-700 transition-colors">
+                            Admin Review
+                        </button>
+                    </div>
+
+                    <label class="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-1 block">Explanation / Reason (Shown to seller) *</label>
                     <textarea name="reason" x-model="suspendReason" required rows="3" placeholder="Provide the reason for account suspension..." class="w-full p-3 bg-gray-50 border border-gray-200 rounded-xl text-xs outline-none focus:border-red-500"></textarea>
                 </div>
                 <div class="flex gap-3 pt-2">

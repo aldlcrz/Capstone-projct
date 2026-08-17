@@ -1,7 +1,19 @@
 @extends('layouts.superadmin')
 
 @section('content')
-<div class="space-y-8">
+<div class="space-y-8" x-data="{
+    banModal: false,
+    banCustomerId: '',
+    banCustomerName: '',
+    banReason: '',
+    setPreset(r) { this.banReason = r; },
+    openBan(id, name) {
+        this.banCustomerId = id;
+        this.banCustomerName = name;
+        this.banReason = 'Violation of community terms and policies';
+        this.banModal = true;
+    }
+}">
     <!-- Header -->
     <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
@@ -105,12 +117,11 @@
                                     </button>
                                 </form>
                             @else
-                                <form action="{{ route('superadmin.customers.ban', $customer['id']) }}" method="POST" class="inline" onsubmit="return confirm('Are you sure you want to ban this customer account?');">
-                                    @csrf
-                                    <button type="submit" class="px-3.5 py-1.5 bg-red-50 text-red-600 hover:bg-red-100 border border-red-200 rounded-xl text-[10px] font-bold uppercase tracking-wider transition-all cursor-pointer shadow-xs">
-                                        Ban Account
-                                    </button>
-                                </form>
+                                <button type="button" 
+                                    @click="openBan('{{ $customer['id'] }}', '{{ addslashes($customer['name']) }}')"
+                                    class="px-3.5 py-1.5 bg-red-50 text-red-600 hover:bg-red-100 border border-red-200 rounded-xl text-[10px] font-bold uppercase tracking-wider transition-all cursor-pointer shadow-xs">
+                                    Ban Account
+                                </button>
                             @endif
                         </td>
                     </tr>
@@ -128,6 +139,71 @@
             {{ $customers->links() }}
         </div>
         @endif
+    </div>
+
+    <!-- ── Interactive Ban Account Modal ── -->
+    <div x-show="banModal" class="fixed inset-0 z-50 flex items-center justify-center p-4" x-cloak>
+        <div class="fixed inset-0 bg-black/60 backdrop-blur-xs transition-opacity" @click="banModal = false"></div>
+        
+        <div class="relative bg-white rounded-3xl border border-[#E5DDD5] shadow-2xl w-full max-w-lg p-6 sm:p-8 space-y-6 z-10">
+            <div class="flex items-start justify-between gap-4">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-2xl bg-red-50 text-red-600 border border-red-200 flex items-center justify-center font-bold text-lg shrink-0">
+                        🚫
+                    </div>
+                    <div>
+                        <h3 class="font-serif text-lg font-bold text-[#3D2B1F]">Suspend Customer Account</h3>
+                        <p class="text-xs text-gray-500 mt-0.5">Account: <strong class="text-gray-800 font-bold" x-text="banCustomerName"></strong></p>
+                    </div>
+                </div>
+                <button type="button" @click="banModal = false" class="text-gray-400 hover:text-gray-600 text-xl font-bold p-1">&times;</button>
+            </div>
+
+            <p class="text-xs text-gray-600 leading-relaxed bg-[#FAF7F2] p-3.5 rounded-2xl border border-[#EBE3D9]">
+                ⚠️ Banning this customer will prevent them from logging in, accessing their orders, or making purchases. <strong>The reason you provide below will be shown directly to them when they attempt to log in.</strong>
+            </p>
+
+            <form :action="'/superadmin/customers/' + banCustomerId + '/ban'" method="POST" class="space-y-4">
+                @csrf
+                <div>
+                    <label class="block text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-2">Quick Preset Reasons</label>
+                    <div class="flex flex-wrap gap-1.5 mb-3">
+                        <button type="button" @click="setPreset('Violation of Terms of Service')"
+                            class="px-2.5 py-1 rounded-lg text-[10px] font-semibold bg-[#F7F3EE] hover:bg-[#E5DDD5] text-gray-700 transition-colors">
+                            Violation of Terms
+                        </button>
+                        <button type="button" @click="setPreset('Fraudulent transaction / payment dispute')"
+                            class="px-2.5 py-1 rounded-lg text-[10px] font-semibold bg-[#F7F3EE] hover:bg-[#E5DDD5] text-gray-700 transition-colors">
+                            Fraud / Payment Dispute
+                        </button>
+                        <button type="button" @click="setPreset('Abusive behavior towards sellers or staff')"
+                            class="px-2.5 py-1 rounded-lg text-[10px] font-semibold bg-[#F7F3EE] hover:bg-[#E5DDD5] text-gray-700 transition-colors">
+                            Abusive Behavior
+                        </button>
+                        <button type="button" @click="setPreset('Suspicious or automated bot activity')"
+                            class="px-2.5 py-1 rounded-lg text-[10px] font-semibold bg-[#F7F3EE] hover:bg-[#E5DDD5] text-gray-700 transition-colors">
+                            Suspicious Activity
+                        </button>
+                    </div>
+
+                    <label class="block text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-1.5">Detailed Suspension Reason (Shown upon login) *</label>
+                    <textarea name="reason" x-model="banReason" required rows="3"
+                        placeholder="Explain why this account is being suspended..."
+                        class="w-full p-3.5 bg-[#FAF7F2] border border-[#EBE3D9] text-[#3D2B1F] text-xs rounded-2xl focus:outline-none focus:border-[#C0422A] transition-colors leading-relaxed"></textarea>
+                </div>
+
+                <div class="flex items-center gap-3 pt-2">
+                    <button type="button" @click="banModal = false"
+                        class="flex-1 py-3 bg-[#F7F3EE] hover:bg-[#E5DDD5] text-gray-700 rounded-xl text-xs font-bold uppercase tracking-wider transition-all cursor-pointer">
+                        Cancel
+                    </button>
+                    <button type="submit"
+                        class="flex-1 py-3 bg-red-600 hover:bg-red-700 text-white rounded-xl text-xs font-bold uppercase tracking-wider transition-all cursor-pointer shadow-sm">
+                        Confirm Ban Account
+                    </button>
+                </div>
+            </form>
+        </div>
     </div>
 </div>
 @endsection

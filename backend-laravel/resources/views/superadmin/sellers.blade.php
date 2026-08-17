@@ -1,7 +1,19 @@
 @extends('layouts.superadmin')
 
 @section('content')
-<div class="space-y-8">
+<div class="space-y-8" x-data="{
+    freezeModal: false,
+    freezeShopId: '',
+    freezeShopName: '',
+    freezeReason: '',
+    setPreset(r) { this.freezeReason = r; },
+    openFreeze(id, name) {
+        this.freezeShopId = id;
+        this.freezeShopName = name;
+        this.freezeReason = 'Unpaid commission fee past the 7th grace period';
+        this.freezeModal = true;
+    }
+}">
     <!-- Header -->
     <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
@@ -120,32 +132,30 @@
                                 @if($seller['status'] === 'frozen')
                                     <form action="{{ route('superadmin.shops.unfreeze', $seller['id']) }}" method="POST">
                                         @csrf @method('PATCH')
-                                        <button type="submit" class="px-3 py-1.5 bg-green-600 hover:bg-green-700 text-white rounded-lg text-[10px] font-bold uppercase tracking-wider transition-all cursor-pointer">
+                                        <button type="submit" class="px-3 py-1.5 bg-green-600 hover:bg-green-700 text-white rounded-xl text-[10px] font-bold uppercase tracking-wider transition-all cursor-pointer shadow-xs">
                                             Unfreeze
                                         </button>
                                     </form>
                                 @else
-                                    <form action="{{ route('superadmin.shops.freeze', $seller['id']) }}" method="POST">
-                                        @csrf @method('PATCH')
-                                        <input type="hidden" name="reason" value="Administrative review by Super Admin">
-                                        <button type="submit" class="px-3 py-1.5 bg-blue-50 text-blue-700 hover:bg-blue-100 border border-blue-200 rounded-lg text-[10px] font-bold uppercase tracking-wider transition-all cursor-pointer">
-                                            Freeze
-                                        </button>
-                                    </form>
+                                    <button type="button" 
+                                        @click="openFreeze('{{ $seller['id'] }}', '{{ addslashes($seller['shop_name']) }}')"
+                                        class="px-3 py-1.5 bg-blue-50 text-blue-700 hover:bg-blue-100 border border-blue-200 rounded-xl text-[10px] font-bold uppercase tracking-wider transition-all cursor-pointer shadow-xs">
+                                        Freeze
+                                    </button>
                                 @endif
 
                                 {{-- Verification Toggle --}}
                                 @if($seller['is_verified'])
                                     <form action="{{ route('superadmin.sellers.unverify', $seller['id']) }}" method="POST">
                                         @csrf @method('PATCH')
-                                        <button type="submit" class="px-3 py-1.5 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg text-[10px] font-bold uppercase tracking-wider transition-all cursor-pointer" title="Remove Verified Badge">
+                                        <button type="submit" class="px-3 py-1.5 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-xl text-[10px] font-bold uppercase tracking-wider transition-all cursor-pointer" title="Remove Verified Badge">
                                             Unverify
                                         </button>
                                     </form>
                                 @else
                                     <form action="{{ route('superadmin.sellers.verify', $seller['id']) }}" method="POST">
                                         @csrf @method('PATCH')
-                                        <button type="submit" class="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-[10px] font-bold uppercase tracking-wider transition-all cursor-pointer" title="Grant Verified Badge">
+                                        <button type="submit" class="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-[10px] font-bold uppercase tracking-wider transition-all cursor-pointer" title="Grant Verified Badge">
                                             Verify
                                         </button>
                                     </form>
@@ -167,6 +177,71 @@
             {{ $sellers->links() }}
         </div>
         @endif
+    </div>
+
+    <!-- ── Interactive Freeze Shop Modal ── -->
+    <div x-show="freezeModal" class="fixed inset-0 z-50 flex items-center justify-center p-4" x-cloak>
+        <div class="fixed inset-0 bg-black/60 backdrop-blur-xs transition-opacity" @click="freezeModal = false"></div>
+        
+        <div class="relative bg-white rounded-3xl border border-[#E5DDD5] shadow-2xl w-full max-w-lg p-6 sm:p-8 space-y-6 z-10">
+            <div class="flex items-start justify-between gap-4">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-2xl bg-blue-50 text-blue-600 border border-blue-200 flex items-center justify-center font-bold text-lg shrink-0">
+                        ❄️
+                    </div>
+                    <div>
+                        <h3 class="font-serif text-lg font-bold text-[#3D2B1F]">Freeze Artisan Shop</h3>
+                        <p class="text-xs text-gray-500 mt-0.5">Shop: <strong class="text-gray-800 font-bold" x-text="freezeShopName"></strong></p>
+                    </div>
+                </div>
+                <button type="button" @click="freezeModal = false" class="text-gray-400 hover:text-gray-600 text-xl font-bold p-1">&times;</button>
+            </div>
+
+            <p class="text-xs text-gray-600 leading-relaxed bg-[#FAF7F2] p-3.5 rounded-2xl border border-[#EBE3D9]">
+                Freezing this shop will prevent the seller from receiving new orders and hide their products from the marketplace until unresolved commission fees or disputes are settled. <strong>The reason below will be displayed when they attempt to log in.</strong>
+            </p>
+
+            <form :action="'/superadmin/shops/' + freezeShopId + '/freeze'" method="POST" class="space-y-4">
+                @csrf @method('PATCH')
+                <div>
+                    <label class="block text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-2">Quick Presets</label>
+                    <div class="flex flex-wrap gap-1.5 mb-3">
+                        <button type="button" @click="setPreset('Unpaid platform commission fee past due date')"
+                            class="px-2.5 py-1 rounded-lg text-[10px] font-semibold bg-[#F7F3EE] hover:bg-[#E5DDD5] text-gray-700 transition-colors">
+                            Unpaid Commission
+                        </button>
+                        <button type="button" @click="setPreset('Policy violation / counterfeit or prohibited listings')"
+                            class="px-2.5 py-1 rounded-lg text-[10px] font-semibold bg-[#F7F3EE] hover:bg-[#E5DDD5] text-gray-700 transition-colors">
+                            Policy Violation
+                        </button>
+                        <button type="button" @click="setPreset('High dispute rate / unfulfilled customer orders')"
+                            class="px-2.5 py-1 rounded-lg text-[10px] font-semibold bg-[#F7F3EE] hover:bg-[#E5DDD5] text-gray-700 transition-colors">
+                            Unfulfilled Orders
+                        </button>
+                        <button type="button" @click="setPreset('Administrative investigation in progress')"
+                            class="px-2.5 py-1 rounded-lg text-[10px] font-semibold bg-[#F7F3EE] hover:bg-[#E5DDD5] text-gray-700 transition-colors">
+                            Admin Investigation
+                        </button>
+                    </div>
+
+                    <label class="block text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-1.5">Reason for Freeze *</label>
+                    <textarea name="reason" x-model="freezeReason" required rows="3"
+                        placeholder="Explain why this artisan shop is being frozen..."
+                        class="w-full p-3.5 bg-[#FAF7F2] border border-[#EBE3D9] text-[#3D2B1F] text-xs rounded-2xl focus:outline-none focus:border-[#C0422A] transition-colors leading-relaxed"></textarea>
+                </div>
+
+                <div class="flex items-center gap-3 pt-2">
+                    <button type="button" @click="freezeModal = false"
+                        class="flex-1 py-3 bg-[#F7F3EE] hover:bg-[#E5DDD5] text-gray-700 rounded-xl text-xs font-bold uppercase tracking-wider transition-all cursor-pointer">
+                        Cancel
+                    </button>
+                    <button type="submit"
+                        class="flex-1 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold uppercase tracking-wider transition-all cursor-pointer shadow-sm">
+                        Confirm Freeze
+                    </button>
+                </div>
+            </form>
+        </div>
     </div>
 </div>
 @endsection
