@@ -432,8 +432,8 @@
                     <div>
                         <h4 class="text-[10px] font-bold uppercase tracking-[0.2em] text-black mb-6">Shop</h4>
                         <ul class="space-y-3">
-                            <li><a href="/" class="text-sm text-gray-500 hover:text-black transition-colors">All Products</a></li>
-                            <li><a href="/" class="text-sm text-gray-500 hover:text-black transition-colors">New Arrivals</a></li>
+                            <li><a href="/#catalogue-section" class="text-sm text-gray-500 hover:text-black transition-colors">All Products</a></li>
+                            <li><a href="/?sort=newest#catalogue-section" class="text-sm text-gray-500 hover:text-black transition-colors">New Arrivals</a></li>
                         </ul>
                     </div>
                     <div>

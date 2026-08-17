@@ -1129,8 +1129,8 @@
                 </div>
                 <h2 class="font-serif text-2xl font-bold text-black">Recommended Products</h2>
             </div>
-            <a href="/" class="text-[10px] font-bold text-gray-400 uppercase tracking-widest hover:text-[#C0422A] transition-colors">
-                View all
+            <a href="/#catalogue-section" class="text-[10px] font-bold text-gray-400 uppercase tracking-widest hover:text-[#C0422A] transition-colors">
+                View all →
             </a>
         </div>
 
