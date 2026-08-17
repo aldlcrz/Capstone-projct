@@ -7,260 +7,297 @@
 </script>
 
 <script>
-document.addEventListener('alpine:init', () => {
-    const _chatConfig = JSON.parse(document.getElementById('chat-widget-config')?.textContent || '{}');
-    if (_chatConfig.openChat) {
-        window._autoOpenChat = _chatConfig.openChat;
-    }
+(function() {
+    function registerChatWidget() {
+        if (window._chatWidgetRegistered) return;
+        window._chatWidgetRegistered = true;
 
-    Alpine.data('chatWidget', () => ({
-        isOpen: false,
-        mainMode: 'ai', // 'ai' or 'artisan'
-        activeTab: 'conversations',
-        conversations: [],
-        messages: [],
-        activeUser: null,
-        newMessage: '',
-        currentUserId: _chatConfig.currentUserId || '',
-        isLoggedIn: Boolean(_chatConfig.isLoggedIn),
-        pollInterval: null,
+        const _chatConfig = JSON.parse(document.getElementById('chat-widget-config')?.textContent || '{}');
+        if (_chatConfig.openChat) {
+            window._autoOpenChat = _chatConfig.openChat;
+        }
 
-        // Smart Support State & Session Context Memory
-        aiInput: '',
-        aiLoading: false,
-        sessionContext: {},
-        aiMessages: [
-            {
-                role: 'assistant',
-                text: 'Mabuhay! I am your **Lumbarong Smart Assistant** from Lumban, Laguna. How may I assist you today? You can ask me for wedding recommendations, fabric comparisons (Piña vs. Jusi vs. Cocoon), or live tracking for your recent orders.',
-                products: [],
-                refinements: [
-                    { label: '🤵 Wedding Recommendations', prompt: 'Recommend a Barong for a wedding groom' },
-                    { label: '🧵 Fabric Guide', prompt: 'What is the difference between Piña and Jusi?' },
-                    { label: '🎓 Graduation under ₱3,500', prompt: 'Show graduation Barongs under ₱3,500' },
-                    { label: '📦 Track My Order', prompt: 'Where is my order?' }
-                ]
-            }
-        ],
+        const factory = () => ({
+            isOpen: false,
+            mainMode: 'ai', // 'ai' or 'artisan'
+            activeTab: 'conversations',
+            conversations: [],
+            messages: [],
+            activeUser: null,
+            newMessage: '',
+            currentUserId: _chatConfig.currentUserId || '',
+            isLoggedIn: Boolean(_chatConfig.isLoggedIn),
+            pollInterval: null,
 
-        init() {
-            window.addEventListener('toggle-chat', () => {
+            // Smart Support State & Session Context Memory
+            aiInput: '',
+            aiLoading: false,
+            sessionContext: {},
+            aiMessages: [
+                {
+                    role: 'assistant',
+                    text: 'Mabuhay! I am your **Lumbarong Smart Assistant** from Lumban, Laguna. How may I assist you today? You can ask me for wedding recommendations, fabric comparisons (Piña vs. Jusi vs. Cocoon), or live tracking for your recent orders.',
+                    products: [],
+                    refinements: [
+                        { label: '🤵 Wedding Recommendations', prompt: 'Recommend a Barong for a wedding groom' },
+                        { label: '🧵 Fabric Guide', prompt: 'What is the difference between Piña and Jusi?' },
+                        { label: '🎓 Graduation under ₱3,500', prompt: 'Show graduation Barongs under ₱3,500' },
+                        { label: '📦 Track My Order', prompt: 'Where is my order?' }
+                    ]
+                }
+            ],
+
+            init() {
+                window.addEventListener('toggle-chat', () => {
+                    this.toggleChat();
+                });
+
+                window.addEventListener('open-chat', (e) => {
+                    this.isOpen = true;
+                    this.mainMode = 'artisan';
+                    this.startConversation(e.detail.sellerId, e.detail.sellerName);
+                });
+
+                if (window._autoOpenChat && window._autoOpenChat.sellerId) {
+                    const autoData = window._autoOpenChat;
+                    delete window._autoOpenChat;
+                    setTimeout(() => {
+                        this.isOpen = true;
+                        this.mainMode = 'artisan';
+                        this.startConversation(autoData.sellerId, autoData.sellerName || 'Artisan');
+                    }, 300);
+                }
+            },
+
+            toggleChat() {
                 this.isOpen = !this.isOpen;
                 if (this.isOpen && this.mainMode === 'artisan' && this.isLoggedIn) {
                     this.loadConversations();
                 }
-            });
+            },
 
-            window.addEventListener('open-chat', (e) => {
-                this.isOpen = true;
-                this.mainMode = 'artisan';
-                this.startConversation(e.detail.sellerId, e.detail.sellerName);
-            });
+            csrfToken() {
+                return document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
+            },
 
-            if (window._autoOpenChat && window._autoOpenChat.sellerId) {
-                const autoData = window._autoOpenChat;
-                delete window._autoOpenChat;
-                setTimeout(() => {
-                    this.isOpen = true;
-                    this.mainMode = 'artisan';
-                    this.startConversation(autoData.sellerId, autoData.sellerName || 'Artisan');
-                }, 300);
-            }
-        },
+            // --- AI Stylist Methods ---
+            sendAiPrompt(promptText) {
+                this.aiInput = promptText;
+                this.sendAiMessage();
+            },
 
-        csrfToken() {
-            return document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
-        },
+            sendAiMessage() {
+                const query = (this.aiInput || '').trim();
+                if (!query || this.aiLoading) return;
 
-        // --- AI Stylist Methods ---
-        sendAiPrompt(promptText) {
-            this.aiInput = promptText;
-            this.sendAiMessage();
-        },
+                this.aiMessages.push({ role: 'user', text: query, products: [], refinements: [] });
+                this.aiInput = '';
+                this.aiLoading = true;
+                this.scrollAiToBottom();
 
-        sendAiMessage() {
-            const query = (this.aiInput || '').trim();
-            if (!query || this.aiLoading) return;
-
-            this.aiMessages.push({ role: 'user', text: query, products: [], refinements: [] });
-            this.aiInput = '';
-            this.aiLoading = true;
-            this.scrollAiToBottom();
-
-            fetch('/ai/stylist/chat', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Accept': 'application/json',
-                    'X-CSRF-TOKEN': this.csrfToken()
-                },
-                body: JSON.stringify({ 
-                    message: query,
-                    session_context: this.sessionContext
+                fetch('/ai/stylist/chat', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json',
+                        'X-CSRF-TOKEN': this.csrfToken()
+                    },
+                    body: JSON.stringify({ 
+                        message: query,
+                        session_context: this.sessionContext
+                    })
                 })
-            })
-            .then(async res => {
-                if (!res.ok) {
-                    const errText = await res.text();
-                    throw new Error(`HTTP ${res.status}: ${errText}`);
-                }
-                return res.json();
-            })
-            .then(data => {
-                if (data.session_context) {
-                    this.sessionContext = data.session_context;
-                }
-                this.aiMessages.push({
-                    role: 'assistant',
-                    text: data.reply || 'Here are our handcrafted Lumban Barong recommendations.',
-                    products: data.products || [],
-                    refinements: data.refinements || []
-                });
-                this.scrollAiToBottom();
-            })
-            .catch((err) => {
-                console.error('Smart Assistance request failed:', err);
-                this.aiMessages.push({
-                    role: 'assistant',
-                    text: 'I apologize, but I encountered a momentary connection glitch. Piña-Seda and Cocoon Barongs remain our top recommendation for formal events! You can also contact lumbarongsupport@gmail.com.',
-                    products: [],
-                    refinements: []
-                });
-            })
-            .finally(() => {
-                this.aiLoading = false;
-                this.scrollAiToBottom();
-            });
-        },
-
-        scrollAiToBottom() {
-            this.$nextTick(() => {
-                const el = this.$refs.aiMsgBox;
-                if (el) el.scrollTop = el.scrollHeight;
-            });
-        },
-
-        // --- Artisan Chat Methods ---
-        loadConversations() {
-            if (!this.isLoggedIn) return;
-            fetch('/chat/conversations', {
-                headers: { 'Accept': 'application/json', 'X-CSRF-TOKEN': this.csrfToken() }
-            })
-            .then(res => res.json())
-            .then(data => {
-                this.conversations = data;
-            })
-            .catch(err => console.error('Error loading conversations:', err));
-        },
-
-        startConversation(userId, userName) {
-            this.activeUser = { id: userId, name: userName };
-            this.activeTab = 'messages';
-            this.messages = [];
-            this.loadMessages();
-            if (this.pollInterval) clearInterval(this.pollInterval);
-            this.pollInterval = setInterval(() => this.loadMessages(true), 4000);
-        },
-
-        backToConversations() {
-            this.activeTab = 'conversations';
-            this.activeUser = null;
-            if (this.pollInterval) clearInterval(this.pollInterval);
-            this.loadConversations();
-        },
-
-        loadMessages(isPoll = false) {
-            if (!this.activeUser || !this.isLoggedIn) return;
-            fetch(`/chat/messages/${this.activeUser.id}`, {
-                headers: { 'Accept': 'application/json', 'X-CSRF-TOKEN': this.csrfToken() }
-            })
-            .then(res => res.json())
-            .then(data => {
-                this.messages = data;
-                if (!isPoll) {
-                    this.$nextTick(() => {
-                        const box = this.$refs.artisanMsgBox;
-                        if (box) box.scrollTop = box.scrollHeight;
+                .then(res => res.json())
+                .then(data => {
+                    this.aiLoading = false;
+                    if (data.session_context) {
+                        this.sessionContext = data.session_context;
+                    }
+                    this.aiMessages.push({
+                        role: 'assistant',
+                        text: data.reply || 'Here are my top recommendations for you:',
+                        products: data.products || [],
+                        refinements: data.refinements || []
                     });
-                }
-            })
-            .catch(err => console.error('Error loading messages:', err));
-        },
-
-        sendMessage() {
-            const body = (this.newMessage || '').trim();
-            if (!body || !this.activeUser || !this.isLoggedIn) return;
-
-            const tempMsg = {
-                id: 'temp_' + Date.now(),
-                senderId: this.currentUserId,
-                receiverId: this.activeUser.id,
-                body: body,
-                createdAt: new Date().toISOString()
-            };
-            this.messages.push(tempMsg);
-            this.newMessage = '';
-            
-            this.$nextTick(() => {
-                const box = this.$refs.artisanMsgBox;
-                if (box) box.scrollTop = box.scrollHeight;
-            });
-
-            fetch('/chat/send', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Accept': 'application/json',
-                    'X-CSRF-TOKEN': this.csrfToken()
-                },
-                body: JSON.stringify({
-                    receiverId: this.activeUser.id,
-                    body: body
+                    this.scrollAiToBottom();
                 })
-            })
-            .then(res => res.json())
-            .then(savedMsg => {
-                const idx = this.messages.findIndex(m => m.id === tempMsg.id);
-                if (idx !== -1) {
-                    this.messages[idx] = savedMsg;
+                .catch(err => {
+                    this.aiLoading = false;
+                    this.aiMessages.push({
+                        role: 'assistant',
+                        text: 'Mabuhay! I am having trouble connecting to the network right now. Please try again shortly or connect directly with our workshop artisans in the tab above.',
+                        products: [],
+                        refinements: []
+                    });
+                    this.scrollAiToBottom();
+                });
+            },
+
+            scrollAiToBottom() {
+                this.$nextTick(() => {
+                    const box = this.$refs.aiMsgBox;
+                    if (box) box.scrollTop = box.scrollHeight;
+                });
+            },
+
+            // --- Artisan Peer-to-Peer Chat Methods ---
+            loadConversations() {
+                if (!this.isLoggedIn) return;
+                fetch('/chat/conversations', {
+                    headers: {
+                        'Accept': 'application/json',
+                        'X-CSRF-TOKEN': this.csrfToken()
+                    }
+                })
+                .then(res => res.json())
+                .then(data => {
+                    this.conversations = data;
+                })
+                .catch(err => console.error('Failed to load conversations:', err));
+            },
+
+            startConversation(sellerId, sellerName) {
+                if (!this.isLoggedIn) {
+                    window.location.href = '/login';
+                    return;
                 }
-            })
-            .catch(err => {
-                console.error('Failed to send message:', err);
-            });
-        },
+                this.activeUser = {
+                    id: sellerId,
+                    name: sellerName
+                };
+                this.activeTab = 'messages';
+                this.loadMessages();
 
-        closeChat() {
-            this.isOpen = false;
-            if (this.pollInterval) clearInterval(this.pollInterval);
-        },
+                if (this.pollInterval) clearInterval(this.pollInterval);
+                this.pollInterval = setInterval(() => {
+                    if (this.isOpen && this.mainMode === 'artisan' && this.activeTab === 'messages' && this.activeUser) {
+                        this.loadMessages(true);
+                    }
+                }, 4000);
+            },
 
-        toggleChat() {
-            this.isOpen = !this.isOpen;
-            if (this.isOpen && this.mainMode === 'artisan' && this.isLoggedIn) {
+            selectUser(user) {
+                this.activeUser = user;
+                this.activeTab = 'messages';
+                this.loadMessages();
+
+                if (this.pollInterval) clearInterval(this.pollInterval);
+                this.pollInterval = setInterval(() => {
+                    if (this.isOpen && this.mainMode === 'artisan' && this.activeTab === 'messages' && this.activeUser) {
+                        this.loadMessages(true);
+                    }
+                }, 4000);
+            },
+
+            backToConversations() {
+                this.activeTab = 'conversations';
+                this.activeUser = null;
+                if (this.pollInterval) clearInterval(this.pollInterval);
                 this.loadConversations();
+            },
+
+            loadMessages(isPolling = false) {
+                if (!this.activeUser || !this.isLoggedIn) return;
+
+                fetch('/chat/messages/' + this.activeUser.id, {
+                    headers: {
+                        'Accept': 'application/json',
+                        'X-CSRF-TOKEN': this.csrfToken()
+                    }
+                })
+                .then(res => res.json())
+                .then(data => {
+                    this.messages = data;
+                    if (!isPolling) {
+                        this.$nextTick(() => {
+                            const box = this.$refs.artisanMsgBox;
+                            if (box) box.scrollTop = box.scrollHeight;
+                        });
+                    }
+                })
+                .catch(err => console.error('Failed to load messages:', err));
+            },
+
+            sendMessage() {
+                const body = (this.newMessage || '').trim();
+                if (!body || !this.activeUser || !this.isLoggedIn) return;
+
+                const tempMsg = {
+                    id: 'temp-' + Date.now(),
+                    senderId: this.currentUserId,
+                    receiverId: this.activeUser.id,
+                    body: body,
+                    created_at: new Date().toISOString()
+                };
+                this.messages.push(tempMsg);
+                this.newMessage = '';
+                
+                this.$nextTick(() => {
+                    const box = this.$refs.artisanMsgBox;
+                    if (box) box.scrollTop = box.scrollHeight;
+                });
+
+                fetch('/chat/send', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json',
+                        'X-CSRF-TOKEN': this.csrfToken()
+                    },
+                    body: JSON.stringify({
+                        receiverId: this.activeUser.id,
+                        body: body
+                    })
+                })
+                .then(res => res.json())
+                .then(savedMsg => {
+                    const idx = this.messages.findIndex(m => m.id === tempMsg.id);
+                    if (idx !== -1) {
+                        this.messages[idx] = savedMsg;
+                    }
+                })
+                .catch(err => {
+                    console.error('Failed to send message:', err);
+                });
+            },
+
+            closeChat() {
+                this.isOpen = false;
+                if (this.pollInterval) clearInterval(this.pollInterval);
             }
+        });
+
+        if (window.Alpine) {
+            window.Alpine.data('chatWidget', factory);
+        } else {
+            document.addEventListener('alpine:init', () => {
+                window.Alpine.data('chatWidget', factory);
+            });
         }
-    }));
-});
+    }
+
+    registerChatWidget();
+    document.addEventListener('DOMContentLoaded', registerChatWidget);
+})();
 </script>
 
-<div x-data="chatWidget" class="fixed bottom-6 right-4 sm:right-6 z-[9999] pointer-events-auto">
+<div x-data="chatWidget" style="position: fixed; bottom: 24px; right: 24px; z-index: 99999;">
     <!-- Floating Trigger Button -->
     <button 
         type="button"
         @click="toggleChat()"
-        class="w-14 h-14 rounded-full bg-[#1F1F1F] hover:bg-[#C0422A] text-white shadow-2xl flex items-center justify-center hover:scale-105 active:scale-95 transition-all duration-300 relative group cursor-pointer border-2 border-white/20"
+        style="width: 56px; height: 56px; background-color: #1F1F1F; box-shadow: 0 10px 25px rgba(0,0,0,0.35); border: 2px solid rgba(255,255,255,0.25);"
+        class="rounded-full text-white flex items-center justify-center hover:scale-105 active:scale-95 transition-all duration-300 relative group cursor-pointer"
         aria-label="Open LumBarong Support & Chat"
     >
         <span class="absolute -top-1 -right-1 flex h-3.5 w-3.5">
             <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#C0422A] opacity-75"></span>
             <span class="relative inline-flex rounded-full h-3.5 w-3.5 bg-[#C0422A]"></span>
         </span>
-        <svg x-show="!isOpen" class="w-6 h-6 text-white transition-transform group-hover:scale-110" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <svg x-show="!isOpen" style="width: 24px; height: 24px;" class="text-white transition-transform group-hover:scale-110" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"></path>
         </svg>
-        <svg x-show="isOpen" x-cloak class="w-6 h-6 text-white transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <svg x-show="isOpen" x-cloak style="width: 24px; height: 24px;" class="text-white transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12"></path>
         </svg>
     </button>
