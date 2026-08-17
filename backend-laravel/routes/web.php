@@ -243,6 +243,23 @@ Route::middleware(['auth', 'superadmin'])->prefix('superadmin')->group(function 
     Route::patch('/commissions/{sellerId}/mark-paid', [SuperAdminController::class, 'markPaid'])->name('superadmin.commissions.mark-paid');
     Route::patch('/shops/{id}/freeze',   [SuperAdminController::class, 'freezeShop'])->name('superadmin.shops.freeze');
     Route::patch('/shops/{id}/unfreeze', [SuperAdminController::class, 'unfreezeShop'])->name('superadmin.shops.unfreeze');
+
+    // Customer & Seller Management
+    Route::get('/sellers', [SuperAdminController::class, 'sellers'])->name('superadmin.sellers');
+    Route::patch('/sellers/{id}/verify', [SuperAdminController::class, 'verifySeller'])->name('superadmin.sellers.verify');
+    Route::patch('/sellers/{id}/unverify', [SuperAdminController::class, 'unverifySeller'])->name('superadmin.sellers.unverify');
+    Route::get('/customers', [SuperAdminController::class, 'customers'])->name('superadmin.customers');
+    Route::patch('/customers/{id}/ban', [SuperAdminController::class, 'banCustomer'])->name('superadmin.customers.ban');
+    Route::patch('/customers/{id}/unban', [SuperAdminController::class, 'unbanCustomer'])->name('superadmin.customers.unban');
+
+    // Developer & System Tools
+    Route::get('/maintenance', [SuperAdminController::class, 'maintenance'])->name('superadmin.maintenance');
+    Route::post('/maintenance/toggle', [SuperAdminController::class, 'toggleMaintenance'])->name('superadmin.maintenance.toggle');
+    Route::post('/maintenance/clear-cache', [SuperAdminController::class, 'clearCache'])->name('superadmin.maintenance.clear-cache');
+    Route::get('/audit-logs', [SuperAdminController::class, 'auditLogs'])->name('superadmin.audit-logs');
+    Route::get('/error-logs', [SuperAdminController::class, 'errorLogs'])->name('superadmin.error-logs');
+    Route::post('/error-logs/clear', [SuperAdminController::class, 'clearErrorLogs'])->name('superadmin.error-logs.clear');
+    Route::get('/platform', [SuperAdminController::class, 'platform'])->name('superadmin.platform');
 });
 
 // ─── Storage & Upload Fallback Routes ──────────────────────────────────────────
