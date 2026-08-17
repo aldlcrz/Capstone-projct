@@ -130,10 +130,10 @@
                     {{-- User card --}}
                     <div class="flex items-center gap-3 px-2">
                         <div class="w-10 h-10 rounded-xl bg-(--charcoal) text-white flex items-center justify-center font-bold">
-                            {{ strtoupper(substr(Auth::user()->name === 'Super Admin' ? 'LumBarong Admin' : Auth::user()->name, 0, 1)) }}
+                            {{ strtoupper(substr(in_array(Auth::user()->name, ['Super Admin', 'LumBarong Admin']) ? 'LumBarong' : Auth::user()->name, 0, 1)) }}
                         </div>
                         <div>
-                            <div class="text-sm font-bold">{{ Auth::user()->name === 'Super Admin' ? 'LumBarong Admin' : Auth::user()->name }}</div>
+                            <div class="text-sm font-bold">{{ in_array(Auth::user()->name, ['Super Admin', 'LumBarong Admin']) ? 'LumBarong' : Auth::user()->name }}</div>
                             <div class="text-[10px] text-(--muted) font-bold uppercase tracking-widest leading-none">Administrator</div>
                         </div>
                     </div>
@@ -236,7 +236,7 @@
                         <button @click="profileOpen = !profileOpen" class="flex items-center gap-3 hover:opacity-80 transition-all cursor-pointer focus:outline-none" title="Admin Profile & Settings">
                             <div class="text-right hidden sm:block">
                                 <div class="text-sm font-bold text-gray-900 flex items-center gap-1.5 justify-end">
-                                    {{ Auth::user()->name === 'Super Admin' ? 'LumBarong Admin' : Auth::user()->name }}
+                                    {{ in_array(Auth::user()->name, ['Super Admin', 'LumBarong Admin']) ? 'LumBarong' : Auth::user()->name }}
                                     <span class="text-xs text-[#C0420A]" title="System Administrator">🛡️</span>
                                 </div>
                                 <div class="text-[10px] font-bold uppercase tracking-widest text-[#C0420A]">
@@ -247,7 +247,7 @@
                                 @if(Auth::user()->profilePhoto)
                                     <img src="{{ str_starts_with(Auth::user()->profilePhoto, 'http') || str_starts_with(Auth::user()->profilePhoto, '/') ? Auth::user()->profilePhoto : asset('storage/' . Auth::user()->profilePhoto) }}" class="w-full h-full object-cover" onerror="this.style.display='none'">
                                 @else
-                                    {{ strtoupper(substr(Auth::user()->name === 'Super Admin' ? 'LumBarong Admin' : Auth::user()->name, 0, 1)) }}
+                                    {{ strtoupper(substr(in_array(Auth::user()->name, ['Super Admin', 'LumBarong Admin']) ? 'LumBarong' : Auth::user()->name, 0, 1)) }}
                                 @endif
                             </div>
                             <svg class="w-4 h-4 text-gray-400 hidden sm:block transition-transform duration-200" :class="{ 'rotate-180': profileOpen }" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -270,10 +270,10 @@
                             <!-- Header / Admin Info -->
                             <div class="px-4 py-3.5 bg-gray-50 border-b border-gray-100 flex items-center gap-3">
                                 <div class="w-9 h-9 rounded-xl bg-black text-white flex items-center justify-center font-bold text-xs shrink-0">
-                                    {{ strtoupper(substr(Auth::user()->name === 'Super Admin' ? 'LumBarong Admin' : Auth::user()->name, 0, 1)) }}
+                                    {{ strtoupper(substr(in_array(Auth::user()->name, ['Super Admin', 'LumBarong Admin']) ? 'LumBarong' : Auth::user()->name, 0, 1)) }}
                                 </div>
                                 <div class="min-w-0">
-                                    <div class="text-xs font-bold text-gray-900 truncate">{{ Auth::user()->name === 'Super Admin' ? 'LumBarong Admin' : Auth::user()->name }}</div>
+                                    <div class="text-xs font-bold text-gray-900 truncate">{{ in_array(Auth::user()->name, ['Super Admin', 'LumBarong Admin']) ? 'LumBarong' : Auth::user()->name }}</div>
                                     <div class="text-[10px] text-gray-400 truncate">{{ Auth::user()->email }}</div>
                                 </div>
                             </div>
@@ -434,7 +434,7 @@
                          x-cloak>
                         
                         <div class="px-4 py-3 bg-gray-50 border-b border-gray-100">
-                            <div class="text-xs font-bold text-gray-900 truncate">{{ Auth::user()->name === 'Super Admin' ? 'LumBarong Admin' : Auth::user()->name }}</div>
+                            <div class="text-xs font-bold text-gray-900 truncate">{{ in_array(Auth::user()->name, ['Super Admin', 'LumBarong Admin']) ? 'LumBarong' : Auth::user()->name }}</div>
                             <div class="text-[9px] font-bold text-[#C0420A] uppercase tracking-wider">System Administrator</div>
                         </div>
 
