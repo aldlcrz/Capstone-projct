@@ -367,6 +367,17 @@
                         </div>
                     </div>
 
+                    {{-- Headline Input Bar (Auto-fills with product name, editable by admin) --}}
+                    <div>
+                        <div class="flex items-center justify-between mb-1.5">
+                            <label class="text-[11px] text-gray-400 block">Headline</label>
+                            <span class="text-[9px] text-gray-500 font-mono" x-show="form.title" x-text="form.title.length + ' / 60'"></span>
+                        </div>
+                        <input type="text" name="title" x-model="form.title" maxlength="60"
+                            placeholder="Handcrafted piña silk barong"
+                            class="w-full bg-[#1A1A1A] border border-[#2B2B2B] text-white text-xs rounded-xl px-3.5 py-2.5 focus:outline-none focus:border-gray-500 transition-colors">
+                    </div>
+
                     <div class="flex items-center gap-1.5 text-[11px] text-gray-400 pt-0.5">
                         <svg class="w-3.5 h-3.5 text-amber-400 shrink-0" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2l2.4 7.4H22l-6 4.6 2.3 7.4-6.3-4.6-6.3 4.6 2.3-7.4-6-4.6h7.6z"/></svg>
                         <span>Headline, image, and both links fill in automatically.</span>
