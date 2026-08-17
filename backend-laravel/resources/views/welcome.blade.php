@@ -31,97 +31,130 @@
 </script>
 <div class="space-y-8" x-data="{ categoriesModalOpen: false, topShopsModalOpen: false }">
 
-    {{-- ====== Hero Banner Carousel ====== --}}
+    {{-- ====== Hero Banner Coverflow Product Carousel ====== --}}
     @if(isset($banners) && $banners->isNotEmpty())
+    @php
+        $bannerData = $banners->map(function($b) {
+            return [
+                'id'            => (string)$b->id,
+                'title'         => $b->title ?: 'Artisan Barong',
+                'subtitle'      => $b->subtitle ?: 'LumBarong Shop',
+                'image_url'     => $b->getImageUrl(),
+                'button_text_1' => $b->button_text_1 ?: 'Shop now',
+                'button_url_1'  => $b->getResolvedButtonUrl1(),
+                'button_text_2' => $b->button_text_2 ?: 'Visit shop',
+                'button_url_2'  => $b->getResolvedButtonUrl2(),
+            ];
+        })->values();
+    @endphp
     <div
         x-data="{
+            items: {{ Js::from($bannerData) }},
             active: 0,
-            total: {{ $banners->count() }},
-            autoSlide() {
+            get total() { return this.items.length; },
+            get current() { return this.items[this.active] || this.items[0]; },
+            getItemPos(idx) {
+                if (this.total === 1) return 'center';
+                var diff = (idx - this.active + this.total) % this.total;
+                if (diff === 0) return 'center';
+                if (diff === 1 || (this.total === 2 && diff === 1)) return 'right';
+                if (diff === this.total - 1) return 'left';
+                return 'hidden';
+            },
+            prev() {
+                this.active = (this.active - 1 + this.total) % this.total;
+            },
+            next() {
+                this.active = (this.active + 1) % this.total;
+            },
+            goTo(i) {
+                this.active = i;
+            },
+            timer: null,
+            startTimer() {
                 if (this.total <= 1) return;
-                setInterval(() => { this.active = (this.active + 1) % this.total; }, 5000);
+                this.timer = setInterval(() => { this.next(); }, 5000);
+            },
+            stopTimer() {
+                if (this.timer) clearInterval(this.timer);
             }
         }"
-        x-init="autoSlide()"
-        class="relative rounded-2xl sm:rounded-3xl overflow-hidden shadow-sm bg-gray-900 min-h-55 sm:min-h-70 md:min-h-85 lg:aspect-16/4 lg:min-h-0"
+        x-init="startTimer()"
+        @mouseenter="stopTimer()"
+        @mouseleave="startTimer()"
+        class="relative rounded-2xl sm:rounded-3xl overflow-hidden shadow-2xl bg-[#090807] min-h-[360px] sm:min-h-[420px] md:min-h-[460px] lg:aspect-16/5 lg:min-h-0 flex flex-col justify-between select-none"
     >
-        @foreach($banners as $i => $banner)
-        <div
-            x-show="active === {{ $i }}"
-            x-transition:enter="transition ease-out duration-500"
-            x-transition:enter-start="opacity-0 scale-[1.02]"
-            x-transition:enter-end="opacity-100 scale-100"
-            x-transition:leave="transition ease-in duration-300"
-            x-transition:leave-start="opacity-100"
-            x-transition:leave-end="opacity-0"
-            class="absolute inset-0 w-full h-full bg-[#0D0D0D] flex items-center justify-center"
-        >
-            {{-- Dark Atmosphere Studio Backdrop --}}
-            <div class="absolute inset-0 bg-[#0A0A0A]"></div>
-            <div class="absolute inset-0 bg-radial from-[#1F1B16]/50 via-[#0D0D0D] to-[#050505]"></div>
+        {{-- Luxury Studio Atmosphere Backdrop --}}
+        <div class="absolute inset-0 bg-[#0A0A0A]"></div>
+        <div class="absolute inset-0 bg-radial from-[#221B14]/60 via-[#0D0C0B] to-[#040404]"></div>
+        <div class="absolute inset-0 bg-linear-to-b from-black/40 via-transparent to-black/90 pointer-events-none"></div>
 
-            {{-- Full Picture Centered in the Middle (100% visible, uncropped, any ratio) --}}
-            <div class="absolute inset-0 flex items-center justify-center p-1 sm:p-3 pointer-events-none z-10">
-                <img src="{{ $banner->getImageUrl() }}" 
-                     alt="{{ $banner->title }}" 
-                     @if($i === 0) fetchpriority="high" loading="eager" @else loading="lazy" @endif
-                     decoding="async"
-                     class="max-h-full max-w-full w-auto h-auto object-contain drop-shadow-[0_10px_30px_rgba(0,0,0,0.85)]">
-            </div>
+        {{-- 3D Product Carousel Stage --}}
+        <div class="relative w-full h-[62%] sm:h-[65%] mt-3 sm:mt-5 flex items-center justify-center overflow-hidden">
+            {{-- Center Spotlight Glow --}}
+            <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-48 h-48 sm:w-80 sm:h-80 bg-amber-500/15 rounded-full blur-3xl pointer-events-none z-0"></div>
 
-            {{-- Left Gradient Overlay for Crystal Clear Text Readability --}}
-            <div class="absolute inset-0 bg-linear-to-r from-black/90 via-black/50 sm:via-black/35 to-transparent z-15 pointer-events-none"></div>
-
-            {{-- Content on Left Side --}}
-            <div class="relative z-20 flex flex-col justify-center h-full px-5 sm:px-12 py-6 sm:py-10 max-w-[60%] sm:max-w-md lg:max-w-lg">
-                @if($banner->subtitle)
-                    <p class="text-[9px] sm:text-[11px] font-black uppercase tracking-[0.25em] text-amber-300 drop-shadow-md mb-1.5 sm:mb-2">{{ $banner->subtitle }}</p>
-                @endif
-                @if($banner->title)
-                    <h2 class="text-xl sm:text-3xl lg:text-4xl font-black text-white leading-[1.15] tracking-tight mb-3 sm:mb-4 drop-shadow-[0_2px_8px_rgba(0,0,0,0.9)]">{{ $banner->title }}</h2>
-                @endif
-                <div class="flex flex-wrap items-center gap-2.5 sm:gap-3.5 mt-1">
-                    @if($banner->button_text_1)
-                        @php $url1 = $banner->getResolvedButtonUrl1(); @endphp
-                        <a href="{{ $url1 }}"
-                           @if($url1 === '#catalogue-section') onclick="event.preventDefault(); document.getElementById('catalogue-section')?.scrollIntoView({ behavior: 'smooth' });" @endif
-                           class="inline-flex items-center justify-center px-4 py-2 sm:px-6 sm:py-3 bg-[#C0422A] hover:bg-[#a6351f] text-white text-[10px] sm:text-xs font-black uppercase tracking-wider rounded-xl transition-all shadow-lg hover:shadow-xl hover:scale-105 active:scale-95 cursor-pointer">
-                            {{ $banner->button_text_1 }}
-                        </a>
-                    @endif
-                    @if($banner->button_text_2)
-                        @php $url2 = $banner->getResolvedButtonUrl2(); @endphp
-                        <a href="{{ $url2 }}"
-                           @if($url2 === '#catalogue-section') onclick="event.preventDefault(); document.getElementById('catalogue-section')?.scrollIntoView({ behavior: 'smooth' });" @endif
-                           class="inline-flex items-center justify-center px-4 py-2 sm:px-6 sm:py-3 bg-black/40 hover:bg-black/60 text-white text-[10px] sm:text-xs font-black uppercase tracking-wider rounded-xl border border-white/30 backdrop-blur-md transition-all hover:scale-105 active:scale-95 cursor-pointer shadow-md">
-                            {{ $banner->button_text_2 }}
-                        </a>
-                    @endif
+            <template x-for="(item, idx) in items" :key="item.id">
+                <div
+                    @click="if(getItemPos(idx) !== 'center') goTo(idx)"
+                    :class="{
+                        'left-1/2 -translate-x-1/2 scale-100 z-20 opacity-100 cursor-default': getItemPos(idx) === 'center',
+                        'left-[18%] sm:left-[22%] md:left-[25%] -translate-x-1/2 scale-75 z-10 opacity-35 hover:opacity-75 cursor-pointer': getItemPos(idx) === 'left',
+                        'left-[82%] sm:left-[78%] md:left-[75%] -translate-x-1/2 scale-75 z-10 opacity-35 hover:opacity-75 cursor-pointer': getItemPos(idx) === 'right',
+                        'left-1/2 -translate-x-1/2 scale-50 z-0 opacity-0 pointer-events-none': getItemPos(idx) === 'hidden'
+                    }"
+                    class="absolute top-0 bottom-0 flex items-center justify-center transition-all duration-500 ease-out transform"
+                >
+                    <img :src="item.image_url" 
+                         :alt="item.title"
+                         class="max-h-full w-auto max-w-[260px] sm:max-w-[340px] md:max-w-[400px] object-contain rounded-2xl drop-shadow-[0_12px_28px_rgba(0,0,0,0.9)] filter contrast-[1.03]">
                 </div>
+            </template>
+        </div>
+
+        {{-- Centered Dynamic Product Information & Action Buttons --}}
+        <div class="relative z-30 flex flex-col items-center justify-center text-center px-4 pb-4 sm:pb-6 pt-1 space-y-1.5 sm:space-y-2">
+            <p class="text-[10px] sm:text-xs font-black uppercase tracking-[0.25em] text-amber-300 drop-shadow-md" x-text="current.subtitle"></p>
+            <h2 class="text-lg sm:text-2xl lg:text-3xl font-black text-white leading-tight tracking-tight drop-shadow-[0_2px_10px_rgba(0,0,0,0.95)] max-w-xl mx-auto truncate px-2" x-text="current.title"></h2>
+
+            <div class="flex items-center justify-center gap-2.5 sm:gap-3.5 pt-1">
+                {{-- Dynamic Shop Now button matching centered product --}}
+                <a :href="current.button_url_1"
+                   @click="if(current.button_url_1 === '#catalogue-section') { $event.preventDefault(); document.getElementById('catalogue-section')?.scrollIntoView({ behavior: 'smooth' }); }"
+                   class="inline-flex items-center justify-center px-5 py-2 sm:px-7 sm:py-2.5 bg-[#C0422A] hover:bg-[#a6351f] text-white text-[11px] sm:text-xs font-black uppercase tracking-wider rounded-xl transition-all shadow-lg hover:shadow-xl hover:scale-105 active:scale-95 cursor-pointer">
+                    <span x-text="current.button_text_1 || 'Shop now'"></span>
+                </a>
+
+                {{-- Dynamic Visit Shop button matching centered product --}}
+                <a :href="current.button_url_2"
+                   @click="if(current.button_url_2 === '#catalogue-section') { $event.preventDefault(); document.getElementById('catalogue-section')?.scrollIntoView({ behavior: 'smooth' }); }"
+                   class="inline-flex items-center justify-center px-5 py-2 sm:px-7 sm:py-2.5 bg-black/60 hover:bg-black/80 text-white text-[11px] sm:text-xs font-black uppercase tracking-wider rounded-xl border border-white/30 backdrop-blur-md transition-all hover:scale-105 active:scale-95 cursor-pointer shadow-md">
+                    <span x-text="current.button_text_2 || 'Visit shop'"></span>
+                </a>
+            </div>
+
+            {{-- Dot Indicators --}}
+            <div class="flex items-center gap-1.5 pt-2" x-show="total > 1">
+                <template x-for="(dot, dIdx) in items" :key="'dot-' + dot.id">
+                    <button type="button"
+                            @click="goTo(dIdx)"
+                            :class="active === dIdx ? 'w-6 bg-amber-400' : 'w-2 bg-white/40 hover:bg-white/70'"
+                            class="h-1.5 rounded-full transition-all duration-300 cursor-pointer"></button>
+                </template>
             </div>
         </div>
-        @endforeach
 
-        {{-- Dot navigation (only when multiple banners) --}}
-        @if($banners->count() > 1)
-        <div class="absolute bottom-2.5 sm:bottom-3 left-1/2 -translate-x-1/2 flex gap-1.5 z-20">
-            @foreach($banners as $i => $banner)
-            <button
-                type="button"
-                @click="active = {{ $i }}"
-                :class="active === {{ $i }} ? 'w-5 bg-white' : 'w-2 bg-white/50 hover:bg-white/80'"
-                class="h-1.5 sm:h-2 rounded-full transition-all duration-300 cursor-pointer"
-            ></button>
-            @endforeach
-        </div>
-        {{-- Prev / Next arrows (visible on hover) --}}
-        <button type="button" @click="active = (active - 1 + total) % total" class="absolute left-2 sm:left-3 top-1/2 -translate-y-1/2 z-20 w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-black/40 hover:bg-black/60 text-white flex items-center justify-center transition-all cursor-pointer">
-            <svg class="w-3.5 h-3.5 sm:w-4 sm:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 19l-7-7 7-7"/></svg>
-        </button>
-        <button type="button" @click="active = (active + 1) % total" class="absolute right-2 sm:right-3 top-1/2 -translate-y-1/2 z-20 w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-black/40 hover:bg-black/60 text-white flex items-center justify-center transition-all cursor-pointer">
-            <svg class="w-3.5 h-3.5 sm:w-4 sm:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5l7 7-7 7"/></svg>
-        </button>
-        @endif
+        {{-- Left & Right Navigation Chevrons --}}
+        <template x-if="total > 1">
+            <div>
+                <button type="button" @click="prev()" aria-label="Previous product" class="absolute left-3 sm:left-5 top-1/2 -translate-y-1/2 z-30 w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-black/60 hover:bg-black/90 text-white border border-white/20 flex items-center justify-center transition-all hover:scale-110 active:scale-95 cursor-pointer shadow-xl backdrop-blur-xs">
+                    <svg class="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 19l-7-7 7-7"/></svg>
+                </button>
+                <button type="button" @click="next()" aria-label="Next product" class="absolute right-3 sm:right-5 top-1/2 -translate-y-1/2 z-30 w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-black/60 hover:bg-black/90 text-white border border-white/20 flex items-center justify-center transition-all hover:scale-110 active:scale-95 cursor-pointer shadow-xl backdrop-blur-xs">
+                    <svg class="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5l7 7-7 7"/></svg>
+                </button>
+            </div>
+        </template>
     </div>
     @endif
 
