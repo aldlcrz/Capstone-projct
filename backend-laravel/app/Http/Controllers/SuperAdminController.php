@@ -248,7 +248,7 @@ class SuperAdminController extends Controller
 
         if ($request->hasFile('gcash_qr')) {
             $file = $request->file('gcash_qr');
-            $filename = time() . '_superadmin_gcash_' . \Illuminate\Support\Str::random(8) . '.' . $file->getClientOriginalExtension();
+            $filename = time() . '_superadmin_gcash_' . Str::random(8) . '.' . $file->getClientOriginalExtension();
             $file->move(public_path('uploads/qrcodes'), $filename);
             SystemSetting::updateOrCreate(['key' => 'superadmin_gcash_qr'], ['value' => '/uploads/qrcodes/' . $filename]);
         }
@@ -259,7 +259,7 @@ class SuperAdminController extends Controller
 
         if ($request->hasFile('maya_qr')) {
             $file = $request->file('maya_qr');
-            $filename = time() . '_superadmin_maya_' . \Illuminate\Support\Str::random(8) . '.' . $file->getClientOriginalExtension();
+            $filename = time() . '_superadmin_maya_' . Str::random(8) . '.' . $file->getClientOriginalExtension();
             $file->move(public_path('uploads/qrcodes'), $filename);
             SystemSetting::updateOrCreate(['key' => 'superadmin_maya_qr'], ['value' => '/uploads/qrcodes/' . $filename]);
         }
