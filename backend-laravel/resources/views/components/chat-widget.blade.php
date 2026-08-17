@@ -233,24 +233,35 @@ document.addEventListener('alpine:init', () => {
         closeChat() {
             this.isOpen = false;
             if (this.pollInterval) clearInterval(this.pollInterval);
+        },
+
+        toggleChat() {
+            this.isOpen = !this.isOpen;
+            if (this.isOpen && this.mainMode === 'artisan' && this.isLoggedIn) {
+                this.loadConversations();
+            }
         }
     }));
 });
 </script>
 
-<div x-data="chatWidget" class="fixed bottom-6 right-6 z-50">
+<div x-data="chatWidget" class="fixed bottom-6 right-4 sm:right-6 z-[9999] pointer-events-auto">
     <!-- Floating Trigger Button -->
     <button 
-        @click="isOpen = !isOpen; if(isOpen && mainMode === 'artisan' && isLoggedIn) { loadConversations(); }"
-        class="w-14 h-14 rounded-full bg-[#3D2B1F] text-white shadow-2xl flex items-center justify-center hover:bg-[#C0422A] hover:scale-105 transition-all duration-300 relative group cursor-pointer"
+        type="button"
+        @click="toggleChat()"
+        class="w-14 h-14 rounded-full bg-[#1F1F1F] hover:bg-[#C0422A] text-white shadow-2xl flex items-center justify-center hover:scale-105 active:scale-95 transition-all duration-300 relative group cursor-pointer border-2 border-white/20"
         aria-label="Open LumBarong Support & Chat"
     >
-        <span class="absolute -top-1 -right-1 w-3.5 h-3.5 bg-green-500 border-2 border-white rounded-full"></span>
+        <span class="absolute -top-1 -right-1 flex h-3.5 w-3.5">
+            <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#C0422A] opacity-75"></span>
+            <span class="relative inline-flex rounded-full h-3.5 w-3.5 bg-[#C0422A]"></span>
+        </span>
         <svg x-show="!isOpen" class="w-6 h-6 text-white transition-transform group-hover:scale-110" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"></path>
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"></path>
         </svg>
         <svg x-show="isOpen" x-cloak class="w-6 h-6 text-white transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12"></path>
         </svg>
     </button>
 
@@ -263,7 +274,7 @@ document.addEventListener('alpine:init', () => {
         x-transition:leave="transition ease-in duration-200"
         x-transition:leave-start="opacity-100 translate-y-0 scale-100"
         x-transition:leave-end="opacity-0 translate-y-6 scale-95"
-        class="fixed bottom-24 right-6 w-96 max-w-[calc(100vw-3rem)] h-145 max-h-[calc(100vh-8rem)] bg-white rounded-3xl shadow-2xl border border-gray-100 flex flex-col overflow-hidden z-50"
+        class="fixed bottom-22 right-3 sm:right-6 w-96 max-w-[calc(100vw-1.5rem)] h-[580px] max-h-[calc(100vh-7rem)] bg-white rounded-3xl shadow-2xl border border-gray-100 flex flex-col overflow-hidden z-[9999]"
         x-cloak
     >
         <!-- Header -->

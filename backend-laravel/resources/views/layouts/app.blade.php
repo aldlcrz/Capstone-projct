@@ -455,24 +455,8 @@
     <x-auth-gate-modal />
     @if(!request()->is('checkout*'))
     <x-chat-widget />
-    <x-report-modal />
-
-    <div x-data="{}" class="fixed bottom-20 lg:bottom-6 right-3 lg:right-6 z-60">
-        <button 
-            @click="window.dispatchEvent(new CustomEvent('toggle-chat'))"
-            class="w-12 h-12 bg-black text-white rounded-full flex items-center justify-center shadow-lg hover:bg-gray-800 hover:scale-105 transition-all cursor-pointer group"
-            title="Lumbarong Smart Assistance & Messages"
-        >
-            <span class="absolute -top-1 -right-1 flex h-3 w-3">
-                <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#C0422A] opacity-75"></span>
-                <span class="relative inline-flex rounded-full h-3 w-3 bg-[#C0422A]"></span>
-            </span>
-            <svg class="w-6 h-6 group-hover:scale-110 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"></path></svg>
-        </button>
-    </div>
-    @else
-    <x-report-modal />
     @endif
+    <x-report-modal />
 
     <!-- Global dynamic toast component -->
     <div 
