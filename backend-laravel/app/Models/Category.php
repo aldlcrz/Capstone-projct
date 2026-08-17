@@ -29,12 +29,44 @@ class Category extends Model
      */
     public function getImageUrl(): string
     {
-        if (!empty($this->image)) {
+        if (!empty($this->image) && $this->image !== '/uploads/categories/pina_formal.png') {
             if (str_starts_with($this->image, 'http') || str_starts_with($this->image, '/uploads/')) {
                 return $this->image;
             }
             return '/' . ltrim($this->image, '/');
         }
+
+        // Intelligently map categories to distinct curated images based on name keywords
+        $name = strtolower(trim($this->name ?? ''));
+
+        if (str_contains($name, 'access') || str_contains($name, 'heritage') || str_contains($name, 'jewelry') || str_contains($name, 'bag')) {
+            return '/uploads/categories/accessories.png';
+        }
+        if (str_contains($name, 'casual') || str_contains($name, 'polo') || str_contains($name, 'semi-formal') || str_contains($name, 'modern')) {
+            return '/uploads/categories/polo_casual.png';
+        }
+        if (str_contains($name, 'filipiniana') || str_contains($name, 'terno') || str_contains($name, 'dress') || str_contains($name, 'gown')) {
+            return '/uploads/categories/women_filipiniana.png';
+        }
+        if (str_contains($name, 'lady') || str_contains($name, 'blouse') || str_contains($name, 'women')) {
+            return '/uploads/categories/women_lady_barong.png';
+        }
+        if (str_contains($name, 'kid') || str_contains($name, 'boy')) {
+            return '/uploads/categories/kids_boys.png';
+        }
+        if (str_contains($name, 'girl')) {
+            return '/uploads/categories/kids_girls.png';
+        }
+        if (str_contains($name, 'wedding') || str_contains($name, 'occasion') || str_contains($name, 'special') || str_contains($name, 'groom')) {
+            return '/uploads/categories/wedding_groom.png';
+        }
+        if (str_contains($name, 'lumban') || str_contains($name, 'traditional') || str_contains($name, 'jusi') || str_contains($name, 'classic')) {
+            return '/uploads/categories/jusi_classic.png';
+        }
+        if (str_contains($name, 'camisa') || str_contains($name, 'undershirt')) {
+            return '/uploads/categories/camisa_undershirt.png';
+        }
+
         return '/uploads/categories/pina_formal.png';
     }
 

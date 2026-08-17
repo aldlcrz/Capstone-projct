@@ -15,6 +15,16 @@ class AdminCategoryController extends Controller
         $categories = Category::withCount('products')
             ->orderBy('name', 'asc')
             ->get();
+
+        // Auto-heal categories that have generic placeholder images
+        foreach ($categories as $cat) {
+            if (empty($cat->image) || $cat->image === '/uploads/categories/pina_formal.png') {
+                $matched = $cat->getImageUrl();
+                if ($matched !== $cat->image) {
+                    $cat->update(['image' => $matched]);
+                }
+            }
+        }
             
         return view('admin.categories.index', compact('categories'));
     }
@@ -145,56 +155,67 @@ class AdminCategoryController extends Controller
                 'name' => 'Wedding Barong',
                 'description' => 'Formal hand-embroidered wedding barongs for grooms and entourage',
                 'target_group' => ['Men'],
+                'image' => '/uploads/categories/wedding_groom.png',
             ],
             [
                 'name' => 'Piña Formal Barong',
                 'description' => 'Fine handwoven Piña silk formal barongs',
                 'target_group' => ['Men'],
+                'image' => '/uploads/categories/pina_formal.png',
             ],
             [
                 'name' => 'Jusi Classic Barong',
                 'description' => 'Classic Jusi embroidered barongs for events and office wear',
                 'target_group' => ['Men'],
+                'image' => '/uploads/categories/jusi_classic.png',
             ],
             [
                 'name' => 'Polo Barong',
                 'description' => 'Short-sleeve casual and modern polo barongs',
                 'target_group' => ['Men'],
+                'image' => '/uploads/categories/polo_casual.png',
             ],
             [
                 'name' => 'Camisa de Chino',
                 'description' => 'Traditional inner undershirts for Barong Tagalog',
                 'target_group' => ['Men'],
+                'image' => '/uploads/categories/camisa_undershirt.png',
             ],
             [
                 'name' => 'Filipiniana Gown',
                 'description' => 'Elegant hand-embroidered Filipiniana gowns and Maria Clara attire',
                 'target_group' => ['Women'],
+                'image' => '/uploads/categories/women_filipiniana.png',
             ],
             [
                 'name' => 'Modern Terno Top',
                 'description' => 'Stylish modern butterfly sleeve terno tops',
                 'target_group' => ['Women'],
+                'image' => '/uploads/categories/women_terno.png',
             ],
             [
                 'name' => 'Lady Barong',
                 'description' => 'Tailored lady barong blouses for women',
                 'target_group' => ['Women'],
+                'image' => '/uploads/categories/women_lady_barong.png',
             ],
             [
                 'name' => 'Boys\' Barong',
                 'description' => 'Miniature traditional barong tagalog for boys',
                 'target_group' => ['Kids'],
+                'image' => '/uploads/categories/kids_boys.png',
             ],
             [
                 'name' => 'Girls\' Filipiniana',
                 'description' => 'Traditional and modern Filipiniana dresses for girls',
                 'target_group' => ['Kids'],
+                'image' => '/uploads/categories/kids_girls.png',
             ],
             [
                 'name' => 'Accessories',
                 'description' => 'Cufflinks, pins, and heritage Filipiniana accessories',
                 'target_group' => [],
+                'image' => '/uploads/categories/accessories.png',
             ],
         ];
 
@@ -206,17 +227,28 @@ class AdminCategoryController extends Controller
         $added = 0;
 
         foreach ($defaults as $cat) {
-            if (!Category::where('name', $cat['name'])->exists()) {
+            $existing = Category::where('name', $cat['name'])->first();
+            if (!$existing) {
                 Category::create([
                     'id' => (string) Str::uuid(),
                     'name' => $cat['name'],
                     'description' => $cat['description'],
                     'target_group' => $cat['target_group'],
+                    'image' => $cat['image'],
                 ]);
                 $added++;
+            } else if (empty($existing->image) || $existing->image === '/uploads/categories/pina_formal.png') {
+                $existing->update(['image' => $cat['image']]);
             }
         }
 
-        return redirect()->back()->with('success', "Initialized {$added} default shop categories.");
+        // Also sync any other legacy categories with matching keyword images
+        foreach (Category::all() as $category) {
+            if (empty($category->image) || $category->image === '/uploads/categories/pina_formal.png') {
+                $category->update(['image' => $category->getImageUrl()]);
+            }
+        }
+
+        return redirect()->back()->with('success', "Updated and synchronized default category images.");
     }
 }
