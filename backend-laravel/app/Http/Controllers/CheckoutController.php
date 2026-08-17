@@ -23,16 +23,14 @@ class CheckoutController extends Controller
         // Handle direct buy from product page
         if ($request->has('productId')) {
             $product = Product::findOrFail($request->productId);
-            // Safe image resolution: JSON decode if necessary
-            $images = is_string($product->image) ? json_decode((string) $product->image, true) : (is_array($product->image) ? $product->image : [$product->image]);
-            $image = (is_array($images) && count($images) > 0) ? $images[0] : null;
+            $image = $product->getImageUrl();
 
             $directItem = [
                 'id' => $product->id,
                 'name' => $product->name,
                 'price' => $product->sale_price,
                 'image' => $image,
-                'quantity' => $request->input('quantity', 1),
+                'quantity' => (int) $request->input('quantity', 1),
                 'size' => $request->input('size'),
                 'variation' => VariationFormatter::label($request->input('variation'), $product->image)
                     ?? $request->input('variation'),
@@ -58,6 +56,19 @@ class CheckoutController extends Controller
             $cart = session()->get('cart', []);
             if (empty($cart)) return redirect('/cart');
         }
+
+        // Live synchronisation of product image, name, and pricing
+        foreach ($cart as &$item) {
+            if (!empty($item['id'])) {
+                $p = Product::find($item['id']);
+                if ($p) {
+                    $item['image'] = $p->getImageUrl();
+                    $item['name'] = $p->name;
+                    $item['price'] = $p->sale_price;
+                }
+            }
+        }
+        unset($item);
 
         $addresses = Auth::user()->addresses ?? [];
         $subtotal = 0;

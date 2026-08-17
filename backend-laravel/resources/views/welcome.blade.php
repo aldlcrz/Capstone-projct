@@ -303,9 +303,9 @@
                         $isCurrentSelected = $isAll
                             ? !$selectedCatParam && !request('search') && !request('sort')
                             : ($selectedCatParam && (strtolower($item['cat']) === strtolower($selectedCatParam) || strtolower($item['name']) === strtolower($selectedCatParam)));
-                        $itemHref = $isAll ? '/' : '/?category=' . urlencode($item['cat']);
+                        $itemHref = $isAll ? '/#catalogue-section' : '/?category=' . urlencode($item['cat']) . '#catalogue-section';
                     @endphp
-                    <a href="{{ $itemHref }}" class="group flex flex-col items-center gap-2 shrink-0 w-16 sm:w-20">
+                    <a href="{{ $itemHref }}" class="ajax-filter-link group flex flex-col items-center gap-2 shrink-0 w-16 sm:w-20">
                         <div class="relative w-16 h-16 sm:w-20 sm:h-20 rounded-full overflow-hidden bg-gray-100 border-2 {{ $isCurrentSelected ? 'border-amber-600 ring-4 ring-amber-500/25 scale-105 shadow-md' : 'border-gray-200/80 group-hover:border-amber-600 shadow-xs group-hover:scale-105' }} transition-all">
                             <img src="{{ $item['img'] }}" loading="lazy" decoding="async" class="w-full h-full object-cover" alt="{{ $item['name'] }}">
                         </div>
@@ -361,9 +361,9 @@
                         <div class="overflow-y-auto no-scrollbar pr-1 grow">
                             <div class="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-6 sm:gap-8 text-center py-2">
                                 @foreach($allCatItems as $item)
-                                    <a href="/?category={{ urlencode($item['cat']) }}" 
+                                    <a href="/?category={{ urlencode($item['cat']) }}#catalogue-section" 
                                        @click="categoriesModalOpen = false"
-                                       class="group flex flex-col items-center gap-2.5 hover:scale-105 transition-transform duration-200">
+                                       class="ajax-filter-link group flex flex-col items-center gap-2.5 hover:scale-105 transition-transform duration-200">
                                         <div class="w-18 h-18 sm:w-20 sm:h-20 rounded-full overflow-hidden bg-gray-100 border-2 border-gray-200 group-hover:border-amber-600 shadow-sm transition-all shrink-0">
                                             <img src="{{ $item['img'] }}" loading="lazy" decoding="async" class="w-full h-full object-cover" alt="{{ $item['name'] }}">
                                         </div>
@@ -869,6 +869,14 @@
 
     // Instant AJAX filtering for categories, demographics, and search without full page refresh
     document.addEventListener('DOMContentLoaded', function() {
+        function scrollToCatalogue() {
+            const section = document.getElementById('catalogue-section');
+            if (section) {
+                const topOffset = section.getBoundingClientRect().top + window.pageYOffset - 80;
+                window.scrollTo({ top: topOffset, behavior: 'smooth' });
+            }
+        }
+
         function loadCatalogue(url, push = true) {
             const section = document.getElementById('catalogue-section');
             if (!section) {
@@ -888,6 +896,7 @@
                     if (newSection && section) {
                         section.innerHTML = newSection.innerHTML;
                         if (push) history.pushState(null, '', url);
+                        scrollToCatalogue();
                     }
                 })
                 .catch(() => {
@@ -906,6 +915,11 @@
                 loadCatalogue(link.href);
             }
         });
+
+        // Auto scroll if page loaded with category filter or hash
+        if (window.location.search.includes('category=') || window.location.search.includes('sort=') || window.location.search.includes('search=') || window.location.hash === '#catalogue-section') {
+            setTimeout(scrollToCatalogue, 150);
+        }
 
         let searchDebounceTimer = null;
         document.addEventListener('input', function(e) {

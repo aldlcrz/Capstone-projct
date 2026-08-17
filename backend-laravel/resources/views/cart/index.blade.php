@@ -128,18 +128,21 @@
                             @foreach($shopItems as $cartKey => $item)
                                 @php
                                     $itemKey = (string) $cartKey;
-                                    $img = $item['image'] ?? '';
-                                    $imgSrc = asset('uploads/products/default.jpg');
-                                    if ($img) {
-                                        $cleanImg = ltrim($img, '/');
+                                    $itemProduct = !empty($item['id']) ? \App\Models\Product::find($item['id']) : null;
+                                    $imgSrc = $itemProduct ? $itemProduct->getImageUrl() : asset('uploads/products/default.jpg');
+                                    if ($imgSrc === asset('uploads/products/default.jpg') && !empty($item['image'])) {
+                                        $img = $item['image'];
                                         if (str_starts_with($img, 'http') || str_starts_with($img, '/')) {
                                             $imgSrc = $img;
-                                        } elseif (file_exists(storage_path('app/public/' . $cleanImg))) {
-                                            $imgSrc = asset('storage/' . $cleanImg);
-                                        } elseif (file_exists(public_path('uploads/' . $cleanImg))) {
-                                            $imgSrc = asset('uploads/' . $cleanImg);
-                                        } elseif (file_exists(public_path('uploads/products/' . $cleanImg))) {
-                                            $imgSrc = asset('uploads/products/' . $cleanImg);
+                                        } else {
+                                            $cleanImg = ltrim($img, '/');
+                                            if (file_exists(public_path('uploads/' . $cleanImg))) {
+                                                $imgSrc = asset('uploads/' . $cleanImg);
+                                            } elseif (file_exists(public_path('uploads/products/' . $cleanImg))) {
+                                                $imgSrc = asset('uploads/products/' . $cleanImg);
+                                            } elseif (file_exists(storage_path('app/public/' . $cleanImg))) {
+                                                $imgSrc = asset('storage/' . $cleanImg);
+                                            }
                                         }
                                     }
                                 @endphp
