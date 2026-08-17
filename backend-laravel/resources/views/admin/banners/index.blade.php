@@ -443,9 +443,28 @@ function promotionManager(initialData) {
                 return this.allProducts;
             }
             var self = this;
-            return this.allProducts.filter(function(p) {
+            var filtered = this.allProducts.filter(function(p) {
                 return String(p.seller_id) === String(self.selectedShopId);
             });
+
+            if (filtered.length === 0) {
+                var shop = this.sellers.find(function(s) {
+                    return String(s.id) === String(self.selectedShopId);
+                });
+                if (shop && shop.products && shop.products.length > 0) {
+                    return shop.products.map(function(p) {
+                        return {
+                            id: String(p.id),
+                            name: p.name,
+                            price: p.price,
+                            image_url: p.image_url,
+                            seller_id: String(self.selectedShopId),
+                            shop_name: shop.shop_name || shop.name || 'Artisan Shop'
+                        };
+                    });
+                }
+            }
+            return filtered;
         },
 
         form: {
@@ -482,22 +501,35 @@ function promotionManager(initialData) {
                 if (shop) {
                     this.form.subtitle = shop.shop_name || shop.name || 'LumBarong Shop';
                     this.form.button_url_2 = '/shops/' + shop.id;
-                    if (shop.products && shop.products.length > 0) {
-                        this.selectedProductId = shop.products[0].id;
-                        this.onProductSelected();
-                    }
+                }
+                
+                var prods = this.selectableProducts;
+                if (prods && prods.length > 0) {
+                    this.selectedProductId = prods[0].id;
+                    this.onProductSelected();
+                } else {
+                    this.form.title = '';
+                    this.imagePreviewUrl = '';
+                    this.form.preset_image_url = '';
                 }
             } else {
                 this.form.subtitle = 'LumBarong Shop';
+                this.form.button_url_2 = '/shops';
             }
         },
 
         onProductSelected() {
             if (!this.selectedProductId) return;
             var product = this.allProducts.find(p => String(p.id) === String(this.selectedProductId));
+            if (!product) {
+                product = this.selectableProducts.find(p => String(p.id) === String(this.selectedProductId));
+            }
             if (!product) return;
 
-            this.selectedShopId = product.seller_id;
+            if (product.seller_id && (!this.selectedShopId || String(this.selectedShopId) !== String(product.seller_id))) {
+                this.selectedShopId = product.seller_id;
+            }
+
             this.form.title = product.name;
             this.form.subtitle = product.shop_name || 'LumBarong Shop';
             this.form.button_text_1 = 'Shop now';
@@ -533,7 +565,7 @@ function promotionManager(initialData) {
                 preset_image_url: ''
             };
 
-            // Pre-select first shop if available
+            // Pre-select first shop and its first product if available
             if (this.sellers.length > 0) {
                 this.selectedShopId = this.sellers[0].id;
                 this.onShopSelected();
@@ -575,7 +607,7 @@ function promotionManager(initialData) {
                 is_active: Boolean(banner.is_active),
                 start_date: formatDt(banner.start_date),
                 end_date: formatDt(banner.end_date),
-                preset_image_url: ''
+                preset_image_url: banner.image_path || ''
             };
 
             // Match shop & product if linked
@@ -591,7 +623,7 @@ function promotionManager(initialData) {
                     this.mode = 'product';
                     this.form.subtitle = prod.shop_name || cleanSubtitle;
                 } else {
-                    this.mode = 'upload';
+                    this.mode = 'product';
                 }
             } else if (banner.button_url_2 && banner.button_url_2.includes('/shops/')) {
                 var shopId = banner.button_url_2.replace('/shops/', '').split('?')[0];
@@ -600,9 +632,9 @@ function promotionManager(initialData) {
                     this.selectedShopId = shop.id;
                     this.form.subtitle = shop.shop_name || cleanSubtitle;
                 }
-                this.mode = 'upload';
+                this.mode = 'product';
             } else {
-                this.mode = 'upload';
+                this.mode = banner.image_path ? 'upload' : 'product';
             }
 
             this.showModal = true;

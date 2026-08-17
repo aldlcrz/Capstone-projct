@@ -40,7 +40,11 @@ class AdminBannerController extends Controller
         $categories = Category::select('id', 'name')->orderBy('name')->get();
         
         $sellers = User::where('role', 'seller')
-            ->where('isVerified', true)
+            ->where(function($q) {
+                $q->where('isVerified', true)
+                  ->orWhere('status', 'active')
+                  ->orWhereNull('status');
+            })
             ->with(['products' => function($q) {
                 $q->where('status', 'approved')->select('id', 'name', 'image', 'sellerId', 'price');
             }])
@@ -58,6 +62,7 @@ class AdminBannerController extends Controller
                             'name'      => $p->name,
                             'price'     => (float)$p->price,
                             'image_url' => $p->getImageUrl(),
+                            'seller_id' => (string)$p->sellerId,
                         ];
                     }),
                 ];
