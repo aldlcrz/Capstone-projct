@@ -82,9 +82,21 @@ class WebAuthController extends Controller
             if (!$user->isVerified) {
                 Auth::logout();
                 session(['verify_email' => $user->email]);
-                return redirect()->route('verify.email')->withErrors([
-                    'code' => 'Please verify your Gmail address to activate your account.',
-                ]);
+
+                $existing = \App\Models\EmailVerification::where('email', $user->email)->where('type', 'registration')->first();
+                $shouldSend = true;
+                if ($existing && $existing->last_sent_at && $existing->last_sent_at->diffInSeconds(now()) < 60) {
+                    $shouldSend = false;
+                }
+
+                if ($shouldSend) {
+                    $verification = \App\Services\EmailNotificationService::createVerificationCode($user->email, 'registration');
+                    $mailable = new \App\Mail\VerificationCodeMail($user->name, $verification->code);
+                    \App\Services\EmailNotificationService::sendNotification($user->email, $mailable, 'email_verification', $user->id, 'User', $user->id);
+                    return redirect()->route('verify.email')->with('success', 'A 6-digit verification code has been sent to your Gmail. Please enter it below to activate your account.');
+                }
+
+                return redirect()->route('verify.email')->with('info', 'A verification code was recently sent to your Gmail address. Please check your inbox or spam folder.');
             }
 
             $request->session()->regenerate();
@@ -488,9 +500,21 @@ class WebAuthController extends Controller
 
             if (!$user->isVerified) {
                 session(['verify_email' => $user->email]);
-                return redirect()->route('verify.email')->withErrors([
-                    'code' => 'Please verify your Gmail address to activate your account.',
-                ]);
+
+                $existing = \App\Models\EmailVerification::where('email', $user->email)->where('type', 'registration')->first();
+                $shouldSend = true;
+                if ($existing && $existing->last_sent_at && $existing->last_sent_at->diffInSeconds(now()) < 60) {
+                    $shouldSend = false;
+                }
+
+                if ($shouldSend) {
+                    $verification = \App\Services\EmailNotificationService::createVerificationCode($user->email, 'registration');
+                    $mailable = new \App\Mail\VerificationCodeMail($user->name, $verification->code);
+                    \App\Services\EmailNotificationService::sendNotification($user->email, $mailable, 'email_verification', $user->id, 'User', $user->id);
+                    return redirect()->route('verify.email')->with('success', 'A 6-digit verification code has been sent to your Gmail. Please enter it below to activate your account.');
+                }
+
+                return redirect()->route('verify.email')->with('info', 'A verification code was recently sent to your Gmail address. Please check your inbox or spam folder.');
             }
 
             Auth::login($user);
