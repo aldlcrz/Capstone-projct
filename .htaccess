@@ -1,3 +1,7 @@
+<IfModule LiteSpeed>
+    CacheLookup Off
+</IfModule>
+
 <IfModule mod_rewrite.c>
     RewriteEngine On
     RewriteRule ^$ backend-laravel/public/ [L]

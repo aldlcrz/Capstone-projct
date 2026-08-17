@@ -3,6 +3,11 @@
         Options -MultiViews -Indexes +FollowSymLinks
     </IfModule>
 
+    # Disable LiteSpeed Server Cache for dynamic Laravel pages
+    <IfModule LiteSpeed>
+        CacheLookup Off
+    </IfModule>
+
     RewriteEngine On
 
     # Handle Authorization Header
