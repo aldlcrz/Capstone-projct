@@ -404,15 +404,20 @@
                         </div>
                     </div>
 
-                    <div class="grid grid-cols-2 gap-3">
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
                         <div>
                             <label class="text-[11px] text-gray-400 block mb-1.5">Headline</label>
                             <input type="text" name="title" x-model="form.title" placeholder="Handcrafted piña silk barong"
                                 class="w-full bg-[#1A1A1A] border border-[#2B2B2B] text-white text-xs rounded-xl px-3.5 py-2.5 focus:outline-none focus:border-gray-500 transition-colors">
                         </div>
                         <div>
+                            <label class="text-[11px] text-gray-400 block mb-1.5">Shop / Subtitle</label>
+                            <input type="text" x-model="form.subtitle" placeholder="LumBarong Shop"
+                                class="w-full bg-[#1A1A1A] border border-[#2B2B2B] text-white text-xs rounded-xl px-3.5 py-2.5 focus:outline-none focus:border-gray-500 transition-colors">
+                        </div>
+                        <div>
                             <label class="text-[11px] text-gray-400 block mb-1.5">Shop link</label>
-                            <input type="text" x-model="form.button_url_2" placeholder="/shops/macapagal-embroidery"
+                            <input type="text" x-model="form.button_url_2" placeholder="/shops"
                                 class="w-full bg-[#1A1A1A] border border-[#2B2B2B] text-white text-xs rounded-xl px-3.5 py-2.5 focus:outline-none focus:border-gray-500 transition-colors font-mono text-[11px]">
                         </div>
                     </div>
@@ -653,10 +658,15 @@ function promotionManager(initialData) {
                 return d.toISOString().slice(0, 16);
             };
 
+            var cleanSubtitle = banner.subtitle || '';
+            if (!cleanSubtitle || cleanSubtitle.toLowerCase().includes('macapagal')) {
+                cleanSubtitle = 'LumBarong Shop';
+            }
+
             this.form = {
                 id: banner.id,
                 title: banner.title || '',
-                subtitle: banner.subtitle || 'LumBarong Shop',
+                subtitle: cleanSubtitle,
                 button_text_1: banner.button_text_1 || 'Shop now',
                 button_url_1: banner.button_url_1 || '',
                 button_text_2: banner.button_text_2 || 'Visit shop',
@@ -679,7 +689,7 @@ function promotionManager(initialData) {
                     this.selectedProductId = prod.id;
                     this.selectedShopId = prod.seller_id;
                     this.mode = 'product';
-                    this.form.subtitle = prod.shop_name || banner.subtitle || 'LumBarong Shop';
+                    this.form.subtitle = prod.shop_name || cleanSubtitle;
                 } else {
                     this.mode = 'upload';
                 }
@@ -688,7 +698,7 @@ function promotionManager(initialData) {
                 var shop = this.sellers.find(s => String(s.id) === String(shopId));
                 if (shop) {
                     this.selectedShopId = shop.id;
-                    this.form.subtitle = shop.shop_name || banner.subtitle || 'LumBarong Shop';
+                    this.form.subtitle = shop.shop_name || cleanSubtitle;
                 }
                 this.mode = 'upload';
             } else {
