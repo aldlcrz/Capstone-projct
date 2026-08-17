@@ -4,7 +4,7 @@
 <div class="space-y-8" x-data="promotionManager({
     categories: {{ Js::from($categories) }},
     sellers: {{ Js::from($sellers) }},
-    featuredProducts: {{ Js::from($featuredProducts) }},
+    allProducts: {{ Js::from($allProducts) }},
     banners: {{ Js::from($banners) }}
 })">
 
@@ -13,7 +13,7 @@
         <div>
             <div class="text-[10px] font-bold text-[#C0422A] uppercase tracking-[0.2em] mb-1">Content Management</div>
             <h1 class="font-serif text-2xl sm:text-3xl font-bold text-black">Homepage <span class="text-[#C0420A] font-light italic">Promotions</span></h1>
-            <p class="text-xs text-gray-500 mt-1">Manage, preview, schedule, and organize top hero banners shown on the public marketplace.</p>
+            <p class="text-xs text-gray-500 mt-1">Feature artisan products, shops, and seasonal hero campaigns on the marketplace homepage.</p>
         </div>
         <div class="flex items-center gap-2.5">
             <button @click="openAddModal()"
@@ -53,9 +53,9 @@
                     </svg>
                 </div>
                 <h3 class="text-sm font-bold text-black uppercase tracking-widest mb-1">No Promotions Created</h3>
-                <p class="text-xs text-gray-500 max-w-sm mx-auto mb-6">Create promotional hero banners with instant live preview and scheduling.</p>
+                <p class="text-xs text-gray-500 max-w-sm mx-auto mb-6">Quickly feature products from shops or upload custom banner campaigns.</p>
                 <button @click="openAddModal()" class="px-6 py-2.5 bg-[#3D2B1F] text-white rounded-xl text-xs font-bold uppercase tracking-widest hover:bg-[#C0422A] transition-all cursor-pointer">
-                    Create First Promotion
+                    Feature First Product / Promotion
                 </button>
             </div>
         @else
@@ -63,7 +63,7 @@
                 <div class="p-4 bg-amber-50/40 border-b border-amber-100/60 flex items-center justify-between text-xs text-amber-900">
                     <div class="flex items-center gap-2">
                         <svg class="w-4 h-4 text-[#C0422A]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-                        <span><strong>Display Order:</strong> Promotions with order <strong>#1</strong> appear first on the homepage hero carousel. Use arrow buttons to reorder.</span>
+                        <span><strong>Hero Carousel Order:</strong> Order <strong>#1</strong> appears first on the homepage. Use arrow buttons to reorder.</span>
                     </div>
                 </div>
 
@@ -316,14 +316,14 @@
 
     {{-- ── PROMOTION FORM MODAL (Add & Edit with LIVE PREVIEW) ── --}}
     <div x-show="showModal" class="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 bg-black/60 backdrop-blur-sm overflow-y-auto" x-cloak>
-        <div class="bg-white rounded-3xl w-full max-w-4xl shadow-2xl border border-gray-100 overflow-hidden flex flex-col my-auto max-h-[92vh]"
+        <div class="bg-white rounded-3xl w-full max-w-4xl shadow-2xl border border-gray-100 overflow-hidden flex flex-col my-auto max-h-[94vh]"
             @click.away="showModal = false">
             
             {{-- Modal Top Header --}}
-            <div class="px-6 py-4 border-b border-gray-100 flex items-center justify-between bg-gray-50/70 shrink-0">
+            <div class="px-6 py-4 border-b border-gray-100 flex items-center justify-between bg-gray-50/80 shrink-0">
                 <div class="flex items-center gap-2">
                     <span class="w-2.5 h-2.5 rounded-full bg-[#C0422A]"></span>
-                    <h2 class="font-serif text-lg sm:text-xl font-bold text-gray-900" x-text="isEditing ? 'Edit Hero Promotion' : 'Add New Hero Promotion'"></h2>
+                    <h2 class="font-serif text-lg sm:text-xl font-bold text-gray-900" x-text="isEditing ? 'Edit Hero Promotion' : 'Add Hero Promotion'"></h2>
                 </div>
                 <button type="button" @click="showModal = false" class="text-gray-400 hover:text-black transition-colors p-1">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
@@ -338,7 +338,7 @@
                     <div class="flex items-center justify-between mb-3">
                         <div class="flex items-center gap-2">
                             <span class="text-[10px] font-black uppercase tracking-[0.2em] text-amber-400">✨ Live Hero Preview</span>
-                            <span class="text-[9px] text-gray-400">(Updates in real-time)</span>
+                            <span class="text-[9px] text-gray-400">(Real-time simulation)</span>
                         </div>
                         <div class="flex items-center bg-gray-900 rounded-lg p-0.5 border border-gray-800 text-[10px]">
                             <button type="button" @click="previewMode = 'desktop'" 
@@ -361,11 +361,11 @@
                             
                             {{-- Preview Image --}}
                             <template x-if="imagePreviewUrl">
-                                <img :src="imagePreviewUrl" class="absolute inset-0 w-full h-full object-cover" :style="'object-position: ' + form.image_position">
+                                <img :src="imagePreviewUrl" class="absolute inset-0 w-full h-full object-cover">
                             </template>
                             <template x-if="!imagePreviewUrl">
                                 <div class="absolute inset-0 w-full h-full bg-linear-to-r from-gray-900 via-gray-800 to-gray-900 flex items-center justify-center text-gray-600 text-xs font-mono">
-                                    [ Select an image to preview ]
+                                    [ Pick a product or upload image to preview ]
                                 </div>
                             </template>
 
@@ -375,14 +375,14 @@
                             {{-- Preview Text Content --}}
                             <div class="relative z-10 p-5 sm:p-8 flex flex-col justify-center h-full max-w-sm sm:max-w-md">
                                 <p x-show="form.subtitle" x-text="form.subtitle" class="text-[9px] sm:text-[10px] font-black uppercase tracking-[0.25em] text-amber-300 mb-1.5 line-clamp-1"></p>
-                                <h3 x-text="form.title || 'Your Promotion Headline'" class="text-base sm:text-2xl font-extrabold text-white leading-tight mb-3 line-clamp-2"></h3>
+                                <h3 x-text="form.title || 'Promotion Headline'" class="text-base sm:text-2xl font-extrabold text-white leading-tight mb-3 line-clamp-2"></h3>
                                 
                                 <div class="flex flex-wrap items-center gap-2 mt-1">
                                     <template x-if="form.button_text_1">
-                                        <span class="px-3 sm:px-4 py-1.5 bg-[#C0422A] text-white text-[9px] sm:text-[10px] font-bold uppercase tracking-wider rounded-lg shadow-sm" x-text="form.button_text_1"></span>
+                                        <span class="px-3 sm:px-4 py-1.5 bg-[#C0422A] text-white text-[9px] sm:text-[10px] font-black uppercase tracking-wider rounded-lg shadow-sm" x-text="form.button_text_1"></span>
                                     </template>
                                     <template x-if="form.button_text_2">
-                                        <span class="px-3 sm:px-4 py-1.5 bg-white/20 hover:bg-white/30 backdrop-blur-md text-white border border-white/30 text-[9px] sm:text-[10px] font-bold uppercase tracking-wider rounded-lg" x-text="form.button_text_2"></span>
+                                        <span class="px-3 sm:px-4 py-1.5 bg-white/20 backdrop-blur-md text-white border border-white/40 text-[9px] sm:text-[10px] font-black uppercase tracking-wider rounded-lg" x-text="form.button_text_2"></span>
                                     </template>
                                 </div>
                             </div>
@@ -390,7 +390,22 @@
                     </div>
                 </div>
 
-                {{-- ── 2. PROMOTION FORM ── --}}
+                {{-- ── 2. QUICK CREATION MODE SWITCHER ── --}}
+                <div x-show="!isEditing" class="p-1 bg-gray-100 rounded-2xl flex gap-1 border border-gray-200">
+                    <button type="button" @click="creationMode = 'product'"
+                        :class="creationMode === 'product' ? 'bg-white text-gray-900 font-extrabold shadow-xs' : 'text-gray-500 font-bold hover:text-gray-800'"
+                        class="flex-1 py-2.5 rounded-xl text-xs flex items-center justify-center gap-2 transition-all cursor-pointer">
+                        <span>🛍️ Feature an Existing Product & Shop</span>
+                        <span class="px-1.5 py-0.5 bg-amber-100 text-amber-800 text-[8px] font-black rounded-md uppercase">Fastest</span>
+                    </button>
+                    <button type="button" @click="creationMode = 'custom'"
+                        :class="creationMode === 'custom' ? 'bg-white text-gray-900 font-extrabold shadow-xs' : 'text-gray-500 font-bold hover:text-gray-800'"
+                        class="flex-1 py-2.5 rounded-xl text-xs flex items-center justify-center gap-2 transition-all cursor-pointer">
+                        <span>🎨 Custom Banner / Upload Image</span>
+                    </button>
+                </div>
+
+                {{-- ── 3. PROMOTION FORM ── --}}
                 <form :action="isEditing ? '/admin/banners/' + form.id : '{{ route('admin.banners.store') }}'"
                       method="POST"
                       enctype="multipart/form-data"
@@ -400,14 +415,64 @@
                     <template x-if="isEditing">
                         <input type="hidden" name="_method" value="PUT">
                     </template>
+                    <input type="hidden" name="preset_image_url" :value="form.preset_image_url">
+
+                    {{-- QUICK PRODUCT SELECTOR BOX --}}
+                    <div x-show="creationMode === 'product' && !isEditing" class="p-5 bg-amber-50/50 border-2 border-dashed border-amber-200 rounded-2xl space-y-4">
+                        <div class="flex items-center justify-between">
+                            <span class="text-[10px] font-black uppercase tracking-wider text-amber-900 flex items-center gap-1.5">
+                                <span class="w-2 h-2 rounded-full bg-[#C0422A]"></span>
+                                Select Artisan Shop & Product
+                            </span>
+                            <span class="text-[9px] text-amber-800 font-medium">Auto-fills title, image, shop link, and buy link</span>
+                        </div>
+
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                            {{-- Pick Shop --}}
+                            <div>
+                                <label class="text-[9px] font-bold text-gray-700 uppercase tracking-wider block mb-1">1. Choose Artisan Shop</label>
+                                <select x-model="selectedShopId" @change="onShopSelected()" class="w-full px-3.5 py-2.5 bg-white border border-gray-200 rounded-xl text-xs text-gray-900 focus:ring-2 focus:ring-[#C0422A]/20">
+                                    <option value="">-- All Shops / Select Shop --</option>
+                                    <template x-for="s in sellers" :key="s.id">
+                                        <option :value="s.id" x-text="s.shop_name + ' (' + (s.products ? s.products.length : 0) + ' products)'"></option>
+                                    </template>
+                                </select>
+                            </div>
+
+                            {{-- Pick Product --}}
+                            <div>
+                                <label class="text-[9px] font-bold text-gray-700 uppercase tracking-wider block mb-1">2. Choose Product to Feature</label>
+                                <select x-model="selectedProductId" @change="onProductSelected()" class="w-full px-3.5 py-2.5 bg-white border border-gray-200 rounded-xl text-xs text-gray-900 focus:ring-2 focus:ring-[#C0422A]/20">
+                                    <option value="">-- Select Product --</option>
+                                    <template x-for="p in selectableProducts" :key="p.id">
+                                        <option :value="p.id" x-text="p.name + ' (₱' + Number(p.price).toLocaleString() + ')'"></option>
+                                    </template>
+                                </select>
+                            </div>
+                        </div>
+
+                        {{-- Quick Info Card when product selected --}}
+                        <div x-show="selectedProduct" class="p-3 bg-white rounded-xl border border-amber-200/80 flex items-center justify-between gap-3">
+                            <div class="flex items-center gap-3 min-w-0">
+                                <img :src="selectedProduct ? selectedProduct.image_url : ''" class="w-12 h-12 rounded-lg object-cover border border-gray-200 shrink-0">
+                                <div class="min-w-0">
+                                    <div class="text-xs font-bold text-gray-900 truncate" x-text="selectedProduct ? selectedProduct.name : ''"></div>
+                                    <div class="text-[10px] text-[#C0422A] font-bold" x-text="selectedProduct ? 'Shop: ' + selectedProduct.shop_name : ''"></div>
+                                </div>
+                            </div>
+                            <span class="px-2.5 py-1 bg-green-50 text-green-700 border border-green-200 rounded-lg text-[9px] font-black uppercase shrink-0">
+                                ✓ Links Auto-Configured
+                            </span>
+                        </div>
+                    </div>
 
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
                         
-                        {{-- Image Upload & Guide --}}
+                        {{-- Image Upload & Override --}}
                         <div class="md:col-span-2 space-y-2">
                             <div class="flex items-center justify-between">
                                 <label class="text-[10px] font-bold text-gray-700 uppercase tracking-widest block">
-                                    Promotion Image <span x-show="!isEditing" class="text-red-500">*</span>
+                                    Promotion Banner Image <span x-show="!isEditing && !form.preset_image_url" class="text-red-500">*</span>
                                 </label>
                                 <span class="text-[9px] font-bold text-gray-400 uppercase tracking-wider">Recommended: 1200 × 400 px (3:1 ratio)</span>
                             </div>
@@ -422,7 +487,7 @@
                                     </template>
                                 </div>
                                 <div class="flex-1 min-w-0">
-                                    <input type="file" name="image" @change="handleFileSelect($event)" :required="!isEditing"
+                                    <input type="file" name="image" @change="handleFileSelect($event)" :required="!isEditing && !form.preset_image_url"
                                         accept="image/jpeg,image/png,image/jpg,image/webp,image/gif"
                                         class="block w-full text-xs text-gray-700 file:mr-3 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-[10px] file:font-bold file:uppercase file:tracking-wider file:bg-[#3D2B1F] file:text-white hover:file:bg-[#C0422A] file:cursor-pointer cursor-pointer">
                                     <div x-show="fileInfo.name" class="text-[10px] text-gray-500 mt-1.5 flex items-center gap-2">
@@ -432,6 +497,9 @@
                                         <span x-show="fileInfo.dimensions" class="text-gray-300">·</span>
                                         <span x-show="fileInfo.dimensions" class="text-[#C0422A] font-bold" x-text="fileInfo.dimensions"></span>
                                     </div>
+                                    <div x-show="form.preset_image_url && !fileInfo.name" class="text-[10px] text-green-700 font-medium mt-1">
+                                        Using high-resolution product image. (You can upload a custom wide banner above to override).
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -439,31 +507,31 @@
                         {{-- Title / Main Text with Counter --}}
                         <div>
                             <div class="flex items-center justify-between mb-1.5">
-                                <label class="text-[10px] font-bold text-gray-700 uppercase tracking-widest">Title / Main Headline</label>
+                                <label class="text-[10px] font-bold text-gray-700 uppercase tracking-widest">Main Headline / Product Title</label>
                                 <span class="text-[9px] font-mono" :class="form.title.length > 50 ? (form.title.length > 60 ? 'text-red-500 font-bold' : 'text-amber-500 font-bold') : 'text-gray-400'" x-text="form.title.length + ' / 60'"></span>
                             </div>
                             <input type="text" name="title" x-model="form.title" maxlength="60"
-                                placeholder="e.g. Traditional Piña Silk Barong"
+                                placeholder="e.g. Handcrafted Piña Silk Barong"
                                 class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-[#C0422A]/20 transition-all">
                         </div>
 
-                        {{-- Subtitle / Brand Badge with Counter --}}
+                        {{-- Subtitle / Shop Badge with Counter --}}
                         <div>
                             <div class="flex items-center justify-between mb-1.5">
-                                <label class="text-[10px] font-bold text-gray-700 uppercase tracking-widest">Subtitle / Brand Badge</label>
+                                <label class="text-[10px] font-bold text-gray-700 uppercase tracking-widest">Shop Name / Subtitle Badge</label>
                                 <span class="text-[9px] font-mono" :class="form.subtitle.length > 85 ? (form.subtitle.length > 100 ? 'text-red-500 font-bold' : 'text-amber-500 font-bold') : 'text-gray-400'" x-text="form.subtitle.length + ' / 100'"></span>
                             </div>
                             <input type="text" name="subtitle" x-model="form.subtitle" maxlength="100"
-                                placeholder="e.g. LUMBAN HERITAGE COLLECTION"
+                                placeholder="e.g. MACAPAGAL EMBROIDERY"
                                 class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-[#C0422A]/20 transition-all">
                         </div>
 
-                        {{-- ── PRIMARY ACTION BUTTON BUILDER ── --}}
+                        {{-- ── BUTTON 1: BUY / SHOP PRODUCT ── --}}
                         <div class="p-4 bg-gray-50 border border-gray-200 rounded-2xl space-y-3">
                             <div class="flex items-center justify-between">
                                 <span class="text-[10px] font-black uppercase tracking-wider text-gray-800 flex items-center gap-1.5">
                                     <span class="w-2 h-2 rounded-full bg-[#C0422A]"></span>
-                                    Primary Button (Main Action)
+                                    Primary Button (Buy / View Product)
                                 </span>
                             </div>
                             
@@ -471,71 +539,22 @@
                                 <div>
                                     <label class="text-[9px] font-bold text-gray-500 uppercase tracking-wider block mb-1">Button Label</label>
                                     <input type="text" name="button_text_1" x-model="form.button_text_1" placeholder="e.g. Shop Now" maxlength="30"
-                                        class="w-full px-3 py-2 bg-white border border-gray-200 rounded-lg text-xs text-gray-900 focus:outline-none focus:ring-2 focus:ring-[#C0422A]/20">
+                                        class="w-full px-3 py-2 bg-white border border-gray-200 rounded-lg text-xs text-gray-900 focus:ring-2 focus:ring-[#C0422A]/20">
                                 </div>
                                 <div>
-                                    <label class="text-[9px] font-bold text-gray-500 uppercase tracking-wider block mb-1">Destination Type</label>
-                                    <select x-model="btn1Type" @change="handleBtn1TypeChange()" class="w-full px-3 py-2 bg-white border border-gray-200 rounded-lg text-xs text-gray-900 focus:outline-none focus:ring-2 focus:ring-[#C0422A]/20">
-                                        <option value="category">Category</option>
-                                        <option value="product">Product</option>
-                                        <option value="seller">Seller / Shop</option>
-                                        <option value="custom">Custom URL</option>
-                                    </select>
+                                    <label class="text-[9px] font-bold text-gray-500 uppercase tracking-wider block mb-1">Destination URL</label>
+                                    <input type="text" name="button_url_1" x-model="form.button_url_1" placeholder="e.g. /products/... or /#catalogue-section"
+                                        class="w-full px-3 py-2 bg-white border border-gray-200 rounded-lg text-xs text-gray-900 font-mono focus:ring-2 focus:ring-[#C0422A]/20">
                                 </div>
-                            </div>
-
-                            {{-- Dynamic Destination Picker --}}
-                            <div>
-                                <label class="text-[9px] font-bold text-gray-500 uppercase tracking-wider block mb-1">Target Destination</label>
-                                
-                                {{-- Category Pick --}}
-                                <div x-show="btn1Type === 'category'">
-                                    <select x-model="btn1Category" @change="form.button_url_1 = '/?category=' + btn1Category + '#catalogue-section'"
-                                        class="w-full px-3 py-2 bg-white border border-gray-200 rounded-lg text-xs text-gray-900">
-                                        <option value="">-- Choose Category --</option>
-                                        <template x-for="cat in categories" :key="cat.id">
-                                            <option :value="cat.id" x-text="cat.name"></option>
-                                        </template>
-                                    </select>
-                                </div>
-
-                                {{-- Product Pick (Searchable) --}}
-                                <div x-show="btn1Type === 'product'" class="space-y-1.5">
-                                    <input type="text" x-model="btn1ProductSearch" @input.debounce.300ms="searchProducts(1)" placeholder="Type product name to search..."
-                                        class="w-full px-3 py-2 bg-white border border-gray-200 rounded-lg text-xs text-gray-900">
-                                    <select x-model="form.button_url_1" class="w-full px-3 py-2 bg-white border border-gray-200 rounded-lg text-xs text-gray-900" size="3">
-                                        <template x-for="p in btn1ProductList" :key="p.id">
-                                            <option :value="'/products/' + p.id" x-text="p.title"></option>
-                                        </template>
-                                    </select>
-                                </div>
-
-                                {{-- Seller Pick --}}
-                                <div x-show="btn1Type === 'seller'">
-                                    <select x-model="form.button_url_1" class="w-full px-3 py-2 bg-white border border-gray-200 rounded-lg text-xs text-gray-900">
-                                        <option value="">-- Choose Seller Shop --</option>
-                                        <template x-for="s in sellers" :key="s.id">
-                                            <option :value="'/shops/' + s.id" x-text="s.shopName || s.name"></option>
-                                        </template>
-                                    </select>
-                                </div>
-
-                                {{-- Custom URL --}}
-                                <div x-show="btn1Type === 'custom'">
-                                    <input type="text" name="button_url_1" x-model="form.button_url_1" placeholder="e.g. /#catalogue-section or https://..."
-                                        class="w-full px-3 py-2 bg-white border border-gray-200 rounded-lg text-xs text-gray-900 font-mono">
-                                </div>
-                                <input type="hidden" name="button_url_1" :value="form.button_url_1" x-show="btn1Type !== 'custom'">
-                                <div class="text-[9px] text-gray-400 font-mono truncate mt-1">Generated: <span x-text="form.button_url_1 || '(None)'"></span></div>
                             </div>
                         </div>
 
-                        {{-- ── SECONDARY ACTION BUTTON BUILDER ── --}}
+                        {{-- ── BUTTON 2: VISIT SHOP ── --}}
                         <div class="p-4 bg-gray-50 border border-gray-200 rounded-2xl space-y-3">
                             <div class="flex items-center justify-between">
                                 <span class="text-[10px] font-black uppercase tracking-wider text-gray-800 flex items-center gap-1.5">
                                     <span class="w-2 h-2 rounded-full bg-gray-400"></span>
-                                    Secondary Button (Optional)
+                                    Secondary Button (Visit Shop)
                                 </span>
                             </div>
                             
@@ -543,62 +562,13 @@
                                 <div>
                                     <label class="text-[9px] font-bold text-gray-500 uppercase tracking-wider block mb-1">Button Label</label>
                                     <input type="text" name="button_text_2" x-model="form.button_text_2" placeholder="e.g. Visit Shop" maxlength="30"
-                                        class="w-full px-3 py-2 bg-white border border-gray-200 rounded-lg text-xs text-gray-900 focus:outline-none focus:ring-2 focus:ring-[#C0422A]/20">
+                                        class="w-full px-3 py-2 bg-white border border-gray-200 rounded-lg text-xs text-gray-900 focus:ring-2 focus:ring-[#C0422A]/20">
                                 </div>
                                 <div>
-                                    <label class="text-[9px] font-bold text-gray-500 uppercase tracking-wider block mb-1">Destination Type</label>
-                                    <select x-model="btn2Type" @change="handleBtn2TypeChange()" class="w-full px-3 py-2 bg-white border border-gray-200 rounded-lg text-xs text-gray-900 focus:outline-none focus:ring-2 focus:ring-[#C0422A]/20">
-                                        <option value="seller">Seller / Shop</option>
-                                        <option value="category">Category</option>
-                                        <option value="product">Product</option>
-                                        <option value="custom">Custom URL</option>
-                                    </select>
+                                    <label class="text-[9px] font-bold text-gray-500 uppercase tracking-wider block mb-1">Destination URL</label>
+                                    <input type="text" name="button_url_2" x-model="form.button_url_2" placeholder="e.g. /shops/... or #"
+                                        class="w-full px-3 py-2 bg-white border border-gray-200 rounded-lg text-xs text-gray-900 font-mono focus:ring-2 focus:ring-[#C0422A]/20">
                                 </div>
-                            </div>
-
-                            {{-- Dynamic Destination Picker --}}
-                            <div>
-                                <label class="text-[9px] font-bold text-gray-500 uppercase tracking-wider block mb-1">Target Destination</label>
-                                
-                                {{-- Seller Pick --}}
-                                <div x-show="btn2Type === 'seller'">
-                                    <select x-model="form.button_url_2" class="w-full px-3 py-2 bg-white border border-gray-200 rounded-lg text-xs text-gray-900">
-                                        <option value="">-- Choose Seller Shop --</option>
-                                        <template x-for="s in sellers" :key="s.id">
-                                            <option :value="'/shops/' + s.id" x-text="s.shopName || s.name"></option>
-                                        </template>
-                                    </select>
-                                </div>
-
-                                {{-- Category Pick --}}
-                                <div x-show="btn2Type === 'category'">
-                                    <select x-model="btn2Category" @change="form.button_url_2 = '/?category=' + btn2Category + '#catalogue-section'"
-                                        class="w-full px-3 py-2 bg-white border border-gray-200 rounded-lg text-xs text-gray-900">
-                                        <option value="">-- Choose Category --</option>
-                                        <template x-for="cat in categories" :key="cat.id">
-                                            <option :value="cat.id" x-text="cat.name"></option>
-                                        </template>
-                                    </select>
-                                </div>
-
-                                {{-- Product Pick --}}
-                                <div x-show="btn2Type === 'product'" class="space-y-1.5">
-                                    <input type="text" x-model="btn2ProductSearch" @input.debounce.300ms="searchProducts(2)" placeholder="Type product name to search..."
-                                        class="w-full px-3 py-2 bg-white border border-gray-200 rounded-lg text-xs text-gray-900">
-                                    <select x-model="form.button_url_2" class="w-full px-3 py-2 bg-white border border-gray-200 rounded-lg text-xs text-gray-900" size="3">
-                                        <template x-for="p in btn2ProductList" :key="p.id">
-                                            <option :value="'/products/' + p.id" x-text="p.title"></option>
-                                        </template>
-                                    </select>
-                                </div>
-
-                                {{-- Custom URL --}}
-                                <div x-show="btn2Type === 'custom'">
-                                    <input type="text" name="button_url_2" x-model="form.button_url_2" placeholder="e.g. /shops/... or https://..."
-                                        class="w-full px-3 py-2 bg-white border border-gray-200 rounded-lg text-xs text-gray-900 font-mono">
-                                </div>
-                                <input type="hidden" name="button_url_2" :value="form.button_url_2" x-show="btn2Type !== 'custom'">
-                                <div class="text-[9px] text-gray-400 font-mono truncate mt-1">Generated: <span x-text="form.button_url_2 || '(None)'"></span></div>
                             </div>
                         </div>
 
@@ -620,7 +590,7 @@
                             </label>
                         </div>
 
-                        {{-- ── 3. COLLAPSIBLE ADVANCED & SCHEDULING ── --}}
+                        {{-- ── 4. COLLAPSIBLE ADVANCED & SCHEDULING ── --}}
                         <div class="md:col-span-2 border border-gray-200 rounded-2xl overflow-hidden bg-white">
                             <button type="button" @click="showAdvanced = !showAdvanced"
                                 class="w-full px-5 py-3.5 bg-gray-50 hover:bg-gray-100 flex items-center justify-between text-xs font-bold text-gray-800 uppercase tracking-wider transition-colors cursor-pointer">
@@ -644,21 +614,6 @@
                                         <input type="datetime-local" name="end_date" x-model="form.end_date"
                                             class="w-full px-3.5 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-xs text-gray-800">
                                         <p class="text-[9px] text-gray-400 mt-1">Leave empty to run continuously.</p>
-                                    </div>
-                                </div>
-
-                                <div>
-                                    <label class="text-[10px] font-bold text-gray-700 uppercase tracking-widest block mb-1">Image Vertical Alignment</label>
-                                    <div class="flex items-center gap-3">
-                                        <label class="flex items-center gap-1.5 text-xs text-gray-700 cursor-pointer">
-                                            <input type="radio" x-model="form.image_position" value="center" class="text-[#C0422A] focus:ring-[#C0422A]"> Center (Default)
-                                        </label>
-                                        <label class="flex items-center gap-1.5 text-xs text-gray-700 cursor-pointer">
-                                            <input type="radio" x-model="form.image_position" value="top" class="text-[#C0422A] focus:ring-[#C0422A]"> Top
-                                        </label>
-                                        <label class="flex items-center gap-1.5 text-xs text-gray-700 cursor-pointer">
-                                            <input type="radio" x-model="form.image_position" value="bottom" class="text-[#C0422A] focus:ring-[#C0422A]"> Bottom
-                                        </label>
                                     </div>
                                 </div>
                             </div>
@@ -707,6 +662,7 @@ function promotionManager(initialData) {
         showRejectModal: false,
         showAdvanced: false,
         isEditing: false,
+        creationMode: 'product', // 'product' or 'custom'
         rejectRoute: '',
         rejectBannerTitle: '',
         previewMode: 'desktop',
@@ -715,18 +671,22 @@ function promotionManager(initialData) {
         
         categories: initialData.categories || [],
         sellers: initialData.sellers || [],
-        featuredProducts: initialData.featuredProducts || [],
+        allProducts: initialData.allProducts || [],
         bannersList: initialData.banners || [],
 
-        btn1Type: 'category',
-        btn1Category: '',
-        btn1ProductSearch: '',
-        btn1ProductList: initialData.featuredProducts || [],
+        selectedShopId: '',
+        selectedProductId: '',
+        selectedProduct: null,
 
-        btn2Type: 'seller',
-        btn2Category: '',
-        btn2ProductSearch: '',
-        btn2ProductList: initialData.featuredProducts || [],
+        get selectableProducts() {
+            if (!this.selectedShopId) {
+                return this.allProducts;
+            }
+            var self = this;
+            return this.allProducts.filter(function(p) {
+                return p.seller_id === self.selectedShopId;
+            });
+        },
 
         form: {
             id: '',
@@ -734,49 +694,89 @@ function promotionManager(initialData) {
             subtitle: '',
             button_text_1: 'Shop Now',
             button_url_1: '',
-            button_text_2: '',
+            button_text_2: 'Visit Shop',
             button_url_2: '',
             order_index: 1,
             is_active: true,
             start_date: '',
             end_date: '',
-            image_position: 'center'
+            preset_image_url: ''
+        },
+
+        onShopSelected() {
+            this.selectedProductId = '';
+            this.selectedProduct = null;
+            if (this.selectedShopId) {
+                var shop = this.sellers.find(s => s.id === this.selectedShopId);
+                if (shop) {
+                    this.form.subtitle = (shop.shop_name || shop.name).toUpperCase();
+                    this.form.button_url_2 = '/shops/' + shop.id;
+                }
+            }
+        },
+
+        onProductSelected() {
+            if (!this.selectedProductId) {
+                this.selectedProduct = null;
+                return;
+            }
+            var product = this.allProducts.find(p => p.id === this.selectedProductId);
+            if (!product) return;
+
+            this.selectedProduct = product;
+            this.selectedShopId = product.seller_id;
+            
+            // Auto-fill Title, Subtitle, and Buttons
+            this.form.title = product.name;
+            this.form.subtitle = product.shop_name ? product.shop_name.toUpperCase() : 'ARTISAN BARONG';
+            this.form.button_text_1 = 'Shop Now';
+            this.form.button_url_1 = '/products/' + product.id;
+            this.form.button_text_2 = 'Visit Shop';
+            this.form.button_url_2 = '/shops/' + product.seller_id;
+            
+            // Auto-set high-res product image for hero preview
+            if (product.image_url) {
+                this.imagePreviewUrl = product.image_url;
+                this.form.preset_image_url = product.image_url;
+                this.fileInfo = { name: '', size: '', dimensions: '' };
+            }
         },
 
         openAddModal() {
             this.isEditing = false;
+            this.creationMode = 'product';
             this.imagePreviewUrl = '';
             this.fileInfo = { name: '', size: '', dimensions: '' };
             this.showAdvanced = false;
+            this.selectedShopId = '';
+            this.selectedProductId = '';
+            this.selectedProduct = null;
+
             this.form = {
                 id: '',
                 title: '',
                 subtitle: '',
                 button_text_1: 'Shop Now',
-                button_url_1: '/#catalogue-section',
-                button_text_2: '',
+                button_url_1: '',
+                button_text_2: 'Visit Shop',
                 button_url_2: '',
                 order_index: (this.bannersList.length + 1),
                 is_active: true,
                 start_date: '',
                 end_date: '',
-                image_position: 'center'
+                preset_image_url: ''
             };
-            this.btn1Type = 'category';
-            this.btn1Category = this.categories.length ? this.categories[0].id : '';
-            if (this.btn1Category) {
-                this.form.button_url_1 = '/?category=' + this.btn1Category + '#catalogue-section';
-            }
+
             this.showModal = true;
         },
 
         openEditModal(banner) {
             this.isEditing = true;
+            this.creationMode = 'custom';
             this.showAdvanced = (banner.start_date || banner.end_date);
             this.imagePreviewUrl = banner.image_path ? (banner.image_path.startsWith('http') || banner.image_path.startsWith('/') ? banner.image_path : '/' + banner.image_path) : '';
             this.fileInfo = { name: 'Current Image', size: '', dimensions: '' };
             
-            // Format dates for datetime-local (YYYY-MM-DDTHH:MM)
             var formatDt = function(dtStr) {
                 if (!dtStr) return '';
                 var d = new Date(dtStr);
@@ -788,39 +788,16 @@ function promotionManager(initialData) {
                 id: banner.id,
                 title: banner.title || '',
                 subtitle: banner.subtitle || '',
-                button_text_1: banner.button_text_1 || '',
+                button_text_1: banner.button_text_1 || 'Shop Now',
                 button_url_1: banner.button_url_1 || '',
-                button_text_2: banner.button_text_2 || '',
+                button_text_2: banner.button_text_2 || 'Visit Shop',
                 button_url_2: banner.button_url_2 || '',
                 order_index: banner.order_index || 1,
                 is_active: Boolean(banner.is_active),
                 start_date: formatDt(banner.start_date),
                 end_date: formatDt(banner.end_date),
-                image_position: 'center'
+                preset_image_url: ''
             };
-
-            // Detect destination types from URLs
-            if (this.form.button_url_1.includes('category=')) {
-                this.btn1Type = 'category';
-                var match = this.form.button_url_1.match(/category=([^&#]+)/);
-                if (match) this.btn1Category = match[1];
-            } else if (this.form.button_url_1.startsWith('/products/')) {
-                this.btn1Type = 'product';
-            } else if (this.form.button_url_1.startsWith('/shops/')) {
-                this.btn1Type = 'seller';
-            } else {
-                this.btn1Type = 'custom';
-            }
-
-            if (this.form.button_url_2.startsWith('/shops/')) {
-                this.btn2Type = 'seller';
-            } else if (this.form.button_url_2.includes('category=')) {
-                this.btn2Type = 'category';
-            } else if (this.form.button_url_2.startsWith('/products/')) {
-                this.btn2Type = 'product';
-            } else {
-                this.btn2Type = 'custom';
-            }
 
             this.showModal = true;
         },
@@ -837,6 +814,7 @@ function promotionManager(initialData) {
             var reader = new FileReader();
             reader.onload = function(e) {
                 self.imagePreviewUrl = e.target.result;
+                self.form.preset_image_url = '';
                 var img = new Image();
                 img.onload = function() {
                     self.fileInfo.dimensions = img.width + ' × ' + img.height + ' px';
@@ -844,57 +822,6 @@ function promotionManager(initialData) {
                 img.src = e.target.result;
             };
             reader.readAsDataURL(file);
-        },
-
-        handleBtn1TypeChange() {
-            if (this.btn1Type === 'category') {
-                if (this.btn1Category) {
-                    this.form.button_url_1 = '/?category=' + this.btn1Category + '#catalogue-section';
-                }
-            } else if (this.btn1Type === 'product') {
-                this.btn1ProductList = this.featuredProducts;
-                if (this.btn1ProductList.length) {
-                    this.form.button_url_1 = '/products/' + this.btn1ProductList[0].id;
-                }
-            } else if (this.btn1Type === 'seller') {
-                if (this.sellers.length) {
-                    this.form.button_url_1 = '/shops/' + this.sellers[0].id;
-                }
-            }
-        },
-
-        handleBtn2TypeChange() {
-            if (this.btn2Type === 'seller') {
-                if (this.sellers.length) {
-                    this.form.button_url_2 = '/shops/' + this.sellers[0].id;
-                }
-            } else if (this.btn2Type === 'category') {
-                if (this.btn2Category) {
-                    this.form.button_url_2 = '/?category=' + this.btn2Category + '#catalogue-section';
-                }
-            } else if (this.btn2Type === 'product') {
-                this.btn2ProductList = this.featuredProducts;
-                if (this.btn2ProductList.length) {
-                    this.form.button_url_2 = '/products/' + this.btn2ProductList[0].id;
-                }
-            }
-        },
-
-        searchProducts(btnNum) {
-            var q = btnNum === 1 ? this.btn1ProductSearch : this.btn2ProductSearch;
-            var self = this;
-            fetch('/admin/banners/search-destinations?type=product&q=' + encodeURIComponent(q))
-                .then(function(res) { return res.json(); })
-                .then(function(data) {
-                    if (btnNum === 1) {
-                        self.btn1ProductList = data;
-                        if (data.length) self.form.button_url_1 = data[0].url;
-                    } else {
-                        self.btn2ProductList = data;
-                        if (data.length) self.form.button_url_2 = data[0].url;
-                    }
-                })
-                .catch(function(e) { console.error('Search error', e); });
         },
 
         moveBanner(index, direction) {

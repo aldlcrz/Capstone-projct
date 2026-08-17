@@ -32,16 +32,46 @@ class AdminBannerController extends Controller
 
         // Data for Dynamic Action Destination Pickers
         $categories = Category::select('id', 'name')->orderBy('name')->get();
+        
         $sellers = User::where('role', 'seller')
             ->where('isVerified', true)
+            ->with(['products' => function($q) {
+                $q->where('status', 'approved')->select('id', 'name', 'image', 'sellerId', 'price');
+            }])
             ->select('id', 'name', 'shopName')
             ->orderBy('shopName')
-            ->get();
-        $featuredProducts = Product::where('status', 'approved')
-            ->select('id', 'name')
+            ->get()
+            ->map(function ($s) {
+                return [
+                    'id'        => (string)$s->id,
+                    'name'      => $s->name,
+                    'shop_name' => $s->shopName ?: $s->name,
+                    'products'  => $s->products->map(function ($p) {
+                        return [
+                            'id'        => (string)$p->id,
+                            'name'      => $p->name,
+                            'price'     => (float)$p->price,
+                            'image_url' => $p->getImageUrl(),
+                        ];
+                    }),
+                ];
+            });
+
+        $allProducts = Product::where('status', 'approved')
+            ->with('seller:id,name,shopName')
+            ->select('id', 'name', 'image', 'sellerId', 'price')
             ->orderBy('name')
-            ->limit(30)
-            ->get();
+            ->get()
+            ->map(function ($p) {
+                return [
+                    'id'        => (string)$p->id,
+                    'name'      => $p->name,
+                    'price'     => (float)$p->price,
+                    'image_url' => $p->getImageUrl(),
+                    'seller_id' => (string)$p->sellerId,
+                    'shop_name' => $p->seller?->shopName ?: $p->seller?->name ?: 'Artisan Shop',
+                ];
+            });
 
         return view('admin.banners.index', compact(
             'banners',
@@ -49,7 +79,7 @@ class AdminBannerController extends Controller
             'pendingCount',
             'categories',
             'sellers',
-            'featuredProducts'
+            'allProducts'
         ));
     }
 
@@ -121,17 +151,18 @@ class AdminBannerController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'image'         => 'required|image|mimes:jpeg,png,jpg,gif,webp|max:5120',
-            'title'         => 'nullable|string|max:60',
-            'subtitle'      => 'nullable|string|max:100',
-            'button_text_1' => 'nullable|string|max:50',
-            'button_url_1'  => 'nullable|string|max:255',
-            'button_text_2' => 'nullable|string|max:50',
-            'button_url_2'  => 'nullable|string|max:255',
-            'order_index'   => 'nullable|integer|min:1',
-            'start_date'    => 'nullable|date',
-            'end_date'      => 'nullable|date|after_or_equal:start_date',
-            'is_active'     => 'nullable|boolean',
+            'image'            => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:5120',
+            'preset_image_url' => 'nullable|string',
+            'title'            => 'nullable|string|max:60',
+            'subtitle'         => 'nullable|string|max:100',
+            'button_text_1'    => 'nullable|string|max:50',
+            'button_url_1'     => 'nullable|string|max:255',
+            'button_text_2'    => 'nullable|string|max:50',
+            'button_url_2'     => 'nullable|string|max:255',
+            'order_index'      => 'nullable|integer|min:1',
+            'start_date'       => 'nullable|date',
+            'end_date'         => 'nullable|date|after_or_equal:start_date',
+            'is_active'        => 'nullable|boolean',
         ]);
 
         $imagePath = '';
@@ -147,6 +178,12 @@ class AdminBannerController extends Controller
 
             $file->move($destinationPath, $filename);
             $imagePath = 'uploads/banners/' . $filename;
+        } elseif ($request->filled('preset_image_url')) {
+            $imagePath = $request->preset_image_url;
+        }
+
+        if (!$imagePath) {
+            return redirect()->back()->withErrors(['image' => 'Please upload a promotion image or select a product to use its image.']);
         }
 
         // Determine 1-based order index safely
