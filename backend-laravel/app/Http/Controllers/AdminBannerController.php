@@ -58,11 +58,12 @@ class AdminBannerController extends Controller
                     'shop_name' => $s->shopName ?: $s->name,
                     'products'  => $s->products->map(function (Product $p) {
                         return [
-                            'id'        => (string)$p->id,
-                            'name'      => $p->name,
-                            'price'     => (float)$p->price,
-                            'image_url' => $p->getImageUrl(),
-                            'seller_id' => (string)$p->sellerId,
+                            'id'         => (string)$p->id,
+                            'name'       => $p->name,
+                            'price'      => (float)$p->price,
+                            'image_url'  => $p->getImageUrl(),
+                            'all_images' => $p->getAllImageUrls(),
+                            'seller_id'  => (string)$p->sellerId,
                         ];
                     }),
                 ];
@@ -75,12 +76,13 @@ class AdminBannerController extends Controller
             ->get()
             ->map(function (Product $p) {
                 return [
-                    'id'        => (string)$p->id,
-                    'name'      => $p->name,
-                    'price'     => (float)$p->price,
-                    'image_url' => $p->getImageUrl(),
-                    'seller_id' => (string)$p->sellerId,
-                    'shop_name' => $p->seller?->shopName ?: $p->seller?->name ?: 'Artisan Shop',
+                    'id'         => (string)$p->id,
+                    'name'       => $p->name,
+                    'price'      => (float)$p->price,
+                    'image_url'  => $p->getImageUrl(),
+                    'all_images' => $p->getAllImageUrls(),
+                    'seller_id'  => (string)$p->sellerId,
+                    'shop_name'  => $p->seller?->shopName ?: $p->seller?->name ?: 'Artisan Shop',
                 ];
             });
 
@@ -230,17 +232,18 @@ class AdminBannerController extends Controller
         $banner = Banner::findOrFail($id);
 
         $request->validate([
-            'image'         => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:5120',
-            'title'         => 'nullable|string|max:60',
-            'subtitle'      => 'nullable|string|max:100',
-            'button_text_1' => 'nullable|string|max:50',
-            'button_url_1'  => 'nullable|string|max:255',
-            'button_text_2' => 'nullable|string|max:50',
-            'button_url_2'  => 'nullable|string|max:255',
-            'order_index'   => 'nullable|integer|min:1',
-            'start_date'    => 'nullable|date',
-            'end_date'      => 'nullable|date|after_or_equal:start_date',
-            'is_active'     => 'nullable|boolean',
+            'image'            => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:5120',
+            'preset_image_url' => 'nullable|string',
+            'title'            => 'nullable|string|max:60',
+            'subtitle'         => 'nullable|string|max:100',
+            'button_text_1'    => 'nullable|string|max:50',
+            'button_url_1'     => 'nullable|string|max:255',
+            'button_text_2'    => 'nullable|string|max:50',
+            'button_url_2'     => 'nullable|string|max:255',
+            'order_index'      => 'nullable|integer|min:1',
+            'start_date'       => 'nullable|date',
+            'end_date'         => 'nullable|date|after_or_equal:start_date',
+            'is_active'        => 'nullable|boolean',
         ]);
 
         $targetOrder = (int) ($request->order_index ?: $banner->order_index);
@@ -262,8 +265,8 @@ class AdminBannerController extends Controller
         ];
 
         if ($request->hasFile('image')) {
-            // Delete old image if not default
-            if ($banner->image_path && !str_contains($banner->image_path, 'default')) {
+            // Delete old uploaded image if not default
+            if ($banner->image_path && str_starts_with($banner->image_path, 'uploads/banners/')) {
                 $oldPath = public_path($banner->image_path);
                 if (File::exists($oldPath)) {
                     File::delete($oldPath);
@@ -282,6 +285,8 @@ class AdminBannerController extends Controller
 
             $file->move($destinationPath, $filename);
             $data['image_path'] = 'uploads/banners/' . $filename;
+        } elseif ($request->filled('preset_image_url')) {
+            $data['image_path'] = $request->preset_image_url;
         }
 
         $banner->update($data);

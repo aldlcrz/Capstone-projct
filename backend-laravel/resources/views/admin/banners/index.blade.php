@@ -285,6 +285,31 @@
                         </div>
                     </div>
 
+                    {{-- Variant / Image Selector if product has multiple photos/variants --}}
+                    <template x-if="currentProductVariants.length > 1">
+                        <div class="p-3 bg-[#181818] border border-[#2B2B2B] rounded-2xl space-y-2">
+                            <div class="flex items-center justify-between">
+                                <label class="text-[10px] font-bold text-amber-400 uppercase tracking-wider flex items-center gap-1.5">
+                                    <span>🎨 Choose Product Variant / Photo:</span>
+                                </label>
+                                <span class="text-[9px] text-gray-400 font-mono" x-text="currentProductVariants.length + ' variants'"></span>
+                            </div>
+                            <div class="flex items-center gap-2 overflow-x-auto no-scrollbar py-1">
+                                <template x-for="(imgUrl, vIdx) in currentProductVariants" :key="vIdx">
+                                    <button type="button" 
+                                            @click="selectVariantImage(imgUrl)"
+                                            :class="imagePreviewUrl === imgUrl ? 'border-amber-500 ring-2 ring-amber-500/40 scale-105' : 'border-[#333] hover:border-gray-400 opacity-70 hover:opacity-100'"
+                                            class="relative w-13 h-13 rounded-xl overflow-hidden border bg-[#0D0D0D] shrink-0 transition-all cursor-pointer group">
+                                        <img :src="imgUrl" class="w-full h-full object-cover">
+                                        <div x-show="imagePreviewUrl === imgUrl" class="absolute top-1 right-1 w-3.5 h-3.5 bg-amber-500 rounded-full flex items-center justify-center text-[8px] font-black text-black shadow-xs">
+                                            ✓
+                                        </div>
+                                    </button>
+                                </template>
+                            </div>
+                        </div>
+                    </template>
+
                     {{-- Headline Input Bar (Auto-fills with product name, editable by admin) --}}
                     <div>
                         <div class="flex items-center justify-between mb-1.5">
@@ -467,6 +492,24 @@ function promotionManager(initialData) {
             return filtered;
         },
 
+        get currentProduct() {
+            if (!this.selectedProductId) return null;
+            var self = this;
+            return this.allProducts.find(function(p) { return String(p.id) === String(self.selectedProductId); })
+                || this.selectableProducts.find(function(p) { return String(p.id) === String(self.selectedProductId); });
+        },
+
+        get currentProductVariants() {
+            var prod = this.currentProduct;
+            if (!prod) return [];
+            return (prod.all_images && prod.all_images.length > 0) ? prod.all_images : (prod.image_url ? [prod.image_url] : []);
+        },
+
+        selectVariantImage(imgUrl) {
+            this.imagePreviewUrl = imgUrl;
+            this.form.preset_image_url = imgUrl;
+        },
+
         form: {
             id: '',
             title: '',
@@ -520,10 +563,7 @@ function promotionManager(initialData) {
 
         onProductSelected() {
             if (!this.selectedProductId) return;
-            var product = this.allProducts.find(p => String(p.id) === String(this.selectedProductId));
-            if (!product) {
-                product = this.selectableProducts.find(p => String(p.id) === String(this.selectedProductId));
-            }
+            var product = this.currentProduct;
             if (!product) return;
 
             if (product.seller_id && (!this.selectedShopId || String(this.selectedShopId) !== String(product.seller_id))) {
@@ -537,9 +577,10 @@ function promotionManager(initialData) {
             this.form.button_text_2 = 'Visit shop';
             this.form.button_url_2 = '/shops/' + product.seller_id;
             
-            if (product.image_url) {
-                this.imagePreviewUrl = product.image_url;
-                this.form.preset_image_url = product.image_url;
+            var defaultImg = (product.all_images && product.all_images.length > 0) ? product.all_images[0] : (product.image_url || '');
+            if (defaultImg) {
+                this.imagePreviewUrl = defaultImg;
+                this.form.preset_image_url = defaultImg;
             }
         },
 
@@ -580,7 +621,8 @@ function promotionManager(initialData) {
         openEditModal(banner) {
             this.isEditing = true;
             this.showSchedule = Boolean(banner.start_date || banner.end_date);
-            this.imagePreviewUrl = banner.image_path ? (banner.image_path.startsWith('http') || banner.image_path.startsWith('/') ? banner.image_path : '/' + banner.image_path) : '';
+            var initialImg = banner.image_path ? (banner.image_path.startsWith('http') || banner.image_path.startsWith('/') ? banner.image_path : '/' + banner.image_path) : '';
+            this.imagePreviewUrl = initialImg;
             this.fileInfo = { name: 'Current Image', dimensions: '' };
             
             var formatDt = function(dtStr) {
@@ -607,7 +649,7 @@ function promotionManager(initialData) {
                 is_active: Boolean(banner.is_active),
                 start_date: formatDt(banner.start_date),
                 end_date: formatDt(banner.end_date),
-                preset_image_url: banner.image_path || ''
+                preset_image_url: initialImg
             };
 
             // Match shop & product if linked

@@ -259,6 +259,38 @@ class Product extends Model
     }
 
     /**
+     * Get all resolved URLs for all product variant images.
+     */
+    public function getAllImageUrls(): array
+    {
+        $raw = $this->getAttributes()['image'] ?? $this->image;
+        if (is_string($raw)) {
+            $decoded = json_decode($raw, true);
+            $images = is_array($decoded) ? $decoded : [$raw];
+        } elseif (is_array($raw)) {
+            $images = $raw;
+        } else {
+            $images = [];
+        }
+
+        $urls = [];
+        foreach ($images as $img) {
+            if ($img && $img !== 'Array' && $img !== '[]' && $img !== '[') {
+                $url = $this->getImageUrl($img);
+                if ($url && !in_array($url, $urls)) {
+                    $urls[] = $url;
+                }
+            }
+        }
+
+        if (empty($urls)) {
+            $urls[] = $this->getImageUrl();
+        }
+
+        return $urls;
+    }
+
+    /**
      * Get the resolved URL for the seller's custom size guide image.
      */
     public function getSizeGuideUrl(): ?string
