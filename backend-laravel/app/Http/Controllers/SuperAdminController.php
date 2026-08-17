@@ -774,6 +774,8 @@ class SuperAdminController extends Controller
             }
         }
 
+        $logSize = File::exists($logPath) ? round(File::size($logPath) / 1024 / 1024, 2) . ' MB' : '0 MB';
+
         return view('superadmin.error_logs', compact('entries', 'logSize', 'errorCount', 'warningCount', 'infoCount'));
     }
 
