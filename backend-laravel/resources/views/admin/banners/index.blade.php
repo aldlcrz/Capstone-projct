@@ -287,21 +287,22 @@
 
                     {{-- Variant / Image Selector if product has multiple photos/variants --}}
                     <template x-if="currentProductVariants.length > 1">
-                        <div class="p-3 bg-[#181818] border border-[#2B2B2B] rounded-2xl space-y-2">
+                        <div class="p-2.5 bg-[#171717] border border-[#2B2B2B] rounded-xl space-y-1.5">
                             <div class="flex items-center justify-between">
                                 <label class="text-[10px] font-bold text-amber-400 uppercase tracking-wider flex items-center gap-1.5">
-                                    <span>🎨 Choose Product Variant / Photo:</span>
+                                    <span>🎨 Select Photo / Variant:</span>
                                 </label>
                                 <span class="text-[9px] text-gray-400 font-mono" x-text="currentProductVariants.length + ' variants'"></span>
                             </div>
-                            <div class="flex items-center gap-2 overflow-x-auto no-scrollbar py-1">
+                            <div class="flex items-center gap-2 overflow-x-auto no-scrollbar py-0.5">
                                 <template x-for="(imgUrl, vIdx) in currentProductVariants" :key="vIdx">
                                     <button type="button" 
                                             @click="selectVariantImage(imgUrl)"
-                                            :class="imagePreviewUrl === imgUrl ? 'border-amber-500 ring-2 ring-amber-500/40 scale-105' : 'border-[#333] hover:border-gray-400 opacity-70 hover:opacity-100'"
-                                            class="relative w-13 h-13 rounded-xl overflow-hidden border bg-[#0D0D0D] shrink-0 transition-all cursor-pointer group">
-                                        <img :src="imgUrl" class="w-full h-full object-cover">
-                                        <div x-show="imagePreviewUrl === imgUrl" class="absolute top-1 right-1 w-3.5 h-3.5 bg-amber-500 rounded-full flex items-center justify-center text-[8px] font-black text-black shadow-xs">
+                                            :class="imagePreviewUrl === imgUrl ? 'border-amber-500 ring-2 ring-amber-500/40 opacity-100' : 'border-[#333] hover:border-gray-400 opacity-60 hover:opacity-100'"
+                                            style="width: 50px; height: 50px; min-width: 50px; min-height: 50px;"
+                                            class="relative rounded-lg overflow-hidden border bg-[#0D0D0D] shrink-0 transition-all cursor-pointer">
+                                        <img :src="imgUrl" style="width: 100%; height: 100%; object-fit: cover;" class="block">
+                                        <div x-show="imagePreviewUrl === imgUrl" class="absolute top-0.5 right-0.5 w-3.5 h-3.5 bg-amber-500 rounded-full flex items-center justify-center text-[8px] font-black text-black shadow-xs">
                                             ✓
                                         </div>
                                     </button>
