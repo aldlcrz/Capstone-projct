@@ -444,7 +444,6 @@
                     <!-- Visit Shop Button (visible when chatting with artisan) -->
                     <template x-if="mainMode === 'artisan' && activeTab === 'messages' && activeUser && activeUser.id">
                         <a :href="'/shops/' + activeUser.id"
-                           target="_blank"
                            title="Visit Artisan Shop"
                            class="inline-flex items-center gap-1 px-2.5 py-1 bg-[#C0422A] hover:bg-[#A33520] text-white text-[10px] font-extrabold uppercase tracking-wider rounded-lg transition-all shadow-xs border border-white/20">
                             <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
