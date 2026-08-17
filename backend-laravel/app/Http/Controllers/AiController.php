@@ -13,16 +13,16 @@ class AiController extends Controller
      */
     public function chatStylist(Request $request)
     {
-        $message = trim($request->input('message', ''));
-        if (!$message) {
-            return response()->json(['message' => 'Message cannot be empty'], 400);
-        }
-
-        $history = $request->input('history', []);
-        $sessionContext = $request->input('session_context', []);
-        $userId = auth('web')->id() ?? auth('api')->id() ?? (string) ($request->user()?->id ?? '');
-
         try {
+            $message = trim($request->input('message', ''));
+            if (!$message) {
+                return response()->json(['message' => 'Message cannot be empty'], 400);
+            }
+
+            $history = $request->input('history', []);
+            $sessionContext = $request->input('session_context', []);
+            $userId = auth()->id() ?? (string) ($request->user()?->id ?? '');
+
             $response = AiService::chatStylist(
                 $message,
                 is_array($history) ? $history : [],
@@ -33,8 +33,10 @@ class AiController extends Controller
             return response()->json($response);
         } catch (\Throwable $e) {
             \Illuminate\Support\Facades\Log::error('AiController chatStylist error: ' . $e->getMessage());
+            $msg = (string) $request->input('message', '');
+            $sessionContext = $request->input('session_context', []);
             return response()->json([
-                'reply' => AiService::heuristicStylistReply(strtolower($message)),
+                'reply' => AiService::heuristicStylistReply(strtolower($msg)),
                 'products' => [],
                 'refinements' => [
                     ['label' => '🛍️ View Best Sellers', 'prompt' => 'Show me your best selling Barong Tagalog'],
