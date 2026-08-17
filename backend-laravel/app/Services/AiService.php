@@ -28,7 +28,7 @@ class AiService
             return null; // Triggers built-in heuristic AI engine
         }
 
-        $models = ['gemini-1.5-flash', 'gemini-2.0-flash', 'gemini-1.5-pro'];
+        $models = ['gemini-3.6-flash', 'gemini-3.5-flash', 'gemini-flash-latest', 'gemini-2.5-flash', 'gemini-1.5-flash'];
 
         // Build multi-turn contents array
         $contents = [];
