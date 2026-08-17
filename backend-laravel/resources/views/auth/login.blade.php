@@ -91,7 +91,7 @@
                     {{ session('banned_reason') ?? str_replace('Your account has been suspended. Reason: ', '', $errors->first('email')) }}
                 </div>
                 <p class="text-[10px] text-gray-500 pt-1">
-                    For inquiries or appeals, contact <a href="mailto:support@lumbarong.shop" class="text-[#C0422A] underline font-bold">support@lumbarong.shop</a>.
+                    For inquiries or appeals, contact <a href="mailto:lumbarongsupport@gmail.com" class="text-[#C0422A] underline font-bold">lumbarongsupport@gmail.com</a>.
                 </p>
             </div>
         @endif
@@ -130,7 +130,9 @@
                     class="w-full h-14 bg-[#F9F6F2] rounded-full px-8 text-sm font-medium border-2 {{ $errors->has('email') ? 'border-red-400' : 'border-transparent' }} focus:border-[#C0422A] focus:bg-white outline-none transition-all"
                 >
                 @error('email')
-                    <p class="text-xs font-bold text-red-500 px-5 mt-1">{{ $message }}</p>
+                    @if (!str_contains(strtolower($message), 'suspended') && !str_contains(strtolower($message), 'blocked'))
+                        <p class="text-xs font-bold text-red-500 px-5 mt-1">{{ $message }}</p>
+                    @endif
                 @enderror
             </div>
 
