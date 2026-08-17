@@ -22,14 +22,28 @@ class AiController extends Controller
         $sessionContext = $request->input('session_context', []);
         $userId = auth('web')->id() ?? auth('api')->id() ?? (string) ($request->user()?->id ?? '');
 
-        $response = AiService::chatStylist(
-            $message,
-            is_array($history) ? $history : [],
-            is_array($sessionContext) ? $sessionContext : [],
-            $userId ?: null
-        );
+        try {
+            $response = AiService::chatStylist(
+                $message,
+                is_array($history) ? $history : [],
+                is_array($sessionContext) ? $sessionContext : [],
+                $userId ?: null
+            );
 
-        return response()->json($response);
+            return response()->json($response);
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::error('AiController chatStylist error: ' . $e->getMessage());
+            return response()->json([
+                'reply' => AiService::heuristicStylistReply(strtolower($message)),
+                'products' => [],
+                'refinements' => [
+                    ['label' => '🛍️ View Best Sellers', 'prompt' => 'Show me your best selling Barong Tagalog'],
+                    ['label' => '🤵 Wedding Barongs', 'prompt' => 'Recommend a Barong for a wedding'],
+                    ['label' => '🧵 Fabric Guide', 'prompt' => 'What is the difference between Piña and Jusi?']
+                ],
+                'session_context' => is_array($sessionContext) ? $sessionContext : []
+            ]);
+        }
     }
 
     /**

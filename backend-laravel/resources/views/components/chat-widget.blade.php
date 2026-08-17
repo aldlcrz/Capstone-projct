@@ -107,15 +107,22 @@
                         session_context: this.sessionContext
                     })
                 })
-                .then(res => res.json())
+                .then(async res => {
+                    const data = await res.json();
+                    if (!res.ok) {
+                        throw new Error(data.message || 'Server error ' + res.status);
+                    }
+                    return data;
+                })
                 .then(data => {
                     this.aiLoading = false;
                     if (data.session_context) {
                         this.sessionContext = data.session_context;
                     }
+                    const textReply = data.reply || data.message || "Mabuhay! I am your LumBarong Smart Assistant. How may I help you today?";
                     this.aiMessages.push({
                         role: 'assistant',
-                        text: data.reply || 'Here are my top recommendations for you:',
+                        text: textReply,
                         products: data.products || [],
                         refinements: data.refinements || []
                     });
@@ -123,11 +130,16 @@
                 })
                 .catch(err => {
                     this.aiLoading = false;
+                    console.error('Smart Assistant error:', err);
                     this.aiMessages.push({
                         role: 'assistant',
-                        text: 'Mabuhay! I am having trouble connecting to the network right now. Please try again shortly or connect directly with our workshop artisans in the tab above.',
+                        text: 'Mabuhay! Hello and welcome to **LumBarong Smart Assistance**. I am your heritage styling advisor and shopping concierge from Lumban, Laguna.\n\nHow may I help you today? You can ask me about:\n• **Best Sellers** & Top recommended Barongs\n• **Fabric Guide** (Piña vs. Jusi vs. Cocoon vs. Organza)\n• **Event Styling** (Weddings, Grooms, Ninongs, Graduations)\n• **Care & Maintenance** (How to wash, iron, and store)',
                         products: [],
-                        refinements: []
+                        refinements: [
+                            { label: '🤵 Wedding Recommendations', prompt: 'Recommend a Barong for a wedding groom' },
+                            { label: '🧵 Fabric Guide', prompt: 'What is the difference between Piña and Jusi?' },
+                            { label: '⭐ Best Sellers', prompt: 'Show me your best selling Barongs' }
+                        ]
                     });
                     this.scrollAiToBottom();
                 });
