@@ -154,7 +154,7 @@ class Category extends Model
     /**
      * Get the clean category name handling special characters like ñ.
      */
-    public function getNameAttribute($value): string
+    public function getNameAttribute(?string $value): string
     {
         return str_replace(['Pi??a', 'Pi?a'], 'Piña', $value ?? '');
     }

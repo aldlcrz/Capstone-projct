@@ -9,7 +9,7 @@
         redirectPath = $event.detail.redirectPath || window.location.pathname + window.location.search;
     "
     x-show="isOpen" 
-    class="fixed inset-0 z-[1000] flex items-center justify-center p-4" 
+    class="fixed inset-0 z-1000 flex items-center justify-center p-4" 
     style="display: none;"
     x-transition:enter="transition ease-out duration-300"
     x-transition:enter-start="opacity-0 scale-95"
