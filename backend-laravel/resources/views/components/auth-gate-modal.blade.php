@@ -29,10 +29,8 @@
             </svg>
         </button>
 
-        <div class="w-16 h-16 bg-red-50 rounded-2xl flex items-center justify-center mx-auto mb-6 text-[#C0420A]">
-            <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m0 0v2m0-2h2m-2 0H10m4-6a4 4 0 11-8 0 4 4 0 018 0z"></path>
-            </svg>
+        <div class="w-16 h-16 bg-[#C0420A]/10 rounded-2xl flex items-center justify-center mx-auto mb-6 p-2.5 shadow-sm border border-[#C0420A]/20">
+            <img src="{{ asset('images/logo-icon.png') }}" alt="LumBarong Logo" class="w-full h-full object-contain drop-shadow-sm">
         </div>
 
         <h2 class="font-serif text-2xl font-bold text-black mb-3">Authentication Required</h2>
