@@ -48,8 +48,11 @@ class Banner extends Model
 
     /**
      * Scope query to only include banners that are active and currently within their scheduled window.
+     *
+     * @param \Illuminate\Database\Eloquent\Builder $query
+     * @return \Illuminate\Database\Eloquent\Builder
      */
-    public function scopeLive($query)
+    public function scopeLive(\Illuminate\Database\Eloquent\Builder $query): \Illuminate\Database\Eloquent\Builder
     {
         $now = now();
         return $query->where('is_active', true)

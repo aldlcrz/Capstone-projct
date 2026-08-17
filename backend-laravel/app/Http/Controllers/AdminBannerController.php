@@ -47,12 +47,12 @@ class AdminBannerController extends Controller
             ->select('id', 'name', 'shopName')
             ->orderBy('shopName')
             ->get()
-            ->map(function ($s) {
+            ->map(function (User $s) {
                 return [
                     'id'        => (string)$s->id,
                     'name'      => $s->name,
                     'shop_name' => $s->shopName ?: $s->name,
-                    'products'  => $s->products->map(function ($p) {
+                    'products'  => $s->products->map(function (Product $p) {
                         return [
                             'id'        => (string)$p->id,
                             'name'      => $p->name,
@@ -68,7 +68,7 @@ class AdminBannerController extends Controller
             ->select('id', 'name', 'image', 'sellerId', 'price')
             ->orderBy('name')
             ->get()
-            ->map(function ($p) {
+            ->map(function (Product $p) {
                 return [
                     'id'        => (string)$p->id,
                     'name'      => $p->name,
@@ -91,8 +91,8 @@ class AdminBannerController extends Controller
 
     public function searchDestinations(Request $request)
     {
-        $type = $request->get('type', 'product');
-        $q = trim($request->get('q', ''));
+        $type = $request->input('type', 'product');
+        $q = trim($request->input('q', ''));
 
         if ($type === 'product') {
             $results = Product::where('status', 'approved')
@@ -102,7 +102,7 @@ class AdminBannerController extends Controller
                 ->select('id', 'name')
                 ->limit(25)
                 ->get()
-                ->map(function ($p) {
+                ->map(function (Product $p) {
                     return [
                         'id'    => (string)$p->id,
                         'title' => $p->name,

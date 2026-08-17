@@ -94,7 +94,7 @@
 
                                     {{-- Preview Image --}}
                                     <td class="px-5 py-4">
-                                        <div class="w-36 aspect-16/9 rounded-xl overflow-hidden bg-gray-900 border border-gray-100 shadow-xs relative">
+                                        <div class="w-36 aspect-video rounded-xl overflow-hidden bg-gray-900 border border-gray-100 shadow-xs relative">
                                             <img src="{{ $banner->getImageUrl() }}" class="w-full h-full object-cover" alt="Banner">
                                             <div class="absolute inset-0 bg-linear-to-r from-black/60 to-transparent"></div>
                                         </div>
@@ -205,7 +205,7 @@
 
     {{-- ── EXACT MODAL REDESIGN (MATCHING USER MOCKUP) ── --}}
     <div x-show="showModal" class="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/80 backdrop-blur-md overflow-y-auto" x-cloak>
-        <div class="bg-[#141414] text-white rounded-3xl w-full max-w-[520px] shadow-2xl border border-[#272727] overflow-hidden flex flex-col my-auto"
+        <div class="bg-[#141414] text-white rounded-3xl w-full max-w-lg shadow-2xl border border-[#272727] overflow-hidden flex flex-col my-auto"
             @click.away="showModal = false">
             
             {{-- Modal Header --}}
@@ -306,7 +306,7 @@
                 <div x-show="mode === 'upload'" class="space-y-3" style="display:none;" x-cloak>
                     <div>
                         <label class="text-[11px] text-gray-400 block mb-1.5">Banner image</label>
-                        <label class="border border-dashed border-[#333] hover:border-gray-500 bg-[#171717] rounded-xl p-5 flex flex-col items-center justify-center gap-1.5 cursor-pointer transition-colors block text-center">
+                        <label class="border border-dashed border-[#333] hover:border-gray-500 bg-[#171717] rounded-xl p-5 flex flex-col items-center justify-center gap-1.5 cursor-pointer transition-colors text-center">
                             <svg class="w-5 h-5 text-gray-400 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/>
                             </svg>
@@ -342,12 +342,12 @@
                 </div>
 
                 {{-- ── 3. CLEAN LIVE PREVIEW CARD (MATCHING USER MOCKUP) ── --}}
-                <div class="relative w-full rounded-2xl overflow-hidden bg-[#0A0A0A] border border-[#222] min-h-[140px] p-5 flex flex-col justify-between shadow-inner">
+                <div class="relative w-full rounded-2xl overflow-hidden bg-[#0A0A0A] border border-[#222] min-h-36 p-5 flex flex-col justify-between shadow-inner">
                     {{-- Background simulation --}}
                     <template x-if="imagePreviewUrl">
                         <img :src="imagePreviewUrl" class="absolute inset-0 w-full h-full object-cover opacity-60">
                     </template>
-                    <div class="absolute inset-0 bg-gradient-to-r from-black/90 via-black/60 to-transparent"></div>
+                    <div class="absolute inset-0 bg-linear-to-r from-black/90 via-black/60 to-transparent"></div>
 
                     {{-- Foreground content --}}
                     <div class="relative z-10 space-y-0.5">
