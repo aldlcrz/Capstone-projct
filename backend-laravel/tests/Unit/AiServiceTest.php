@@ -171,7 +171,7 @@ class AiServiceTest extends TestCase
     public function test_recommendation_engine_score_product_considers_7_factors()
     {
         $dummy = new \App\Models\Product();
-        $dummy->price = 3200;
+        $dummy->price = '3200.00';
         $dummy->name = "Handmade Piña-Seda Wedding Barong Mandarin Collar";
         $dummy->fabric_type = "Piña-Seda";
         $dummy->collar_type = "Mandarin";

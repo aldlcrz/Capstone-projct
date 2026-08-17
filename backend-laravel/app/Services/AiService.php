@@ -741,7 +741,7 @@ STRICT SECURITY PROHIBITIONS & BOUNDARIES:
         }
 
         try {
-            $exists = \App\Models\Order::where('paymentReference', $clean)->exists();
+            $exists = Order::where('paymentReference', $clean)->exists();
             if ($exists) {
                 return [
                     'is_duplicate' => true,

@@ -263,7 +263,7 @@ document.addEventListener('alpine:init', () => {
         x-transition:leave="transition ease-in duration-200"
         x-transition:leave-start="opacity-100 translate-y-0 scale-100"
         x-transition:leave-end="opacity-0 translate-y-6 scale-95"
-        class="fixed bottom-24 right-6 w-96 max-w-[calc(100vw-3rem)] h-[580px] max-h-[calc(100vh-8rem)] bg-white rounded-3xl shadow-2xl border border-gray-100 flex flex-col overflow-hidden z-50"
+        class="fixed bottom-24 right-6 w-96 max-w-[calc(100vw-3rem)] h-145 max-h-[calc(100vh-8rem)] bg-white rounded-3xl shadow-2xl border border-gray-100 flex flex-col overflow-hidden z-50"
         x-cloak
     >
         <!-- Header -->
