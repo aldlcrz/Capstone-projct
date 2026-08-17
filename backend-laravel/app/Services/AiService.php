@@ -130,6 +130,49 @@ class AiService
         return self::isSensitiveInfoQuery($message);
     }
 
+    /**
+     * Check if the user's message explicitly asks to view, find, recommend, or buy products.
+     */
+    public static function isProductRequest(string $message): bool
+    {
+        $lower = strtolower(trim($message));
+
+        // Question types that are purely educational/guides and do NOT ask to show products
+        $pureGuides = [
+            '/\b(how\s+to\s+wash|how\s+to\s+clean|how\s+to\s+iron|how\s+to\s+care|paano\s+labahan|paano\s+plantsahin|washing|ironing|cleaning|stain)\b/i',
+            '/\b(what\s+is|difference\s+between|define|meaning\s+of|history|about\s+lumban|origin\s+of)\b/i',
+            '/\b(how\s+to\s+track|return\s+policy|refund|payment\s+method|gcash|maya|cod|shipping\s+fee|delivery\s+time|contact\s+support|email)\b/i',
+            '/\b(size\s+chart|how\s+to\s+measure|measurement\s+guide|paano\s+sukatin)\b/i',
+        ];
+
+        foreach ($pureGuides as $pattern) {
+            if (preg_match($pattern, $lower) && !preg_match('/\b(show|recommend|suggest|patingin|bestseller|best\s*seller|buy|shop|available\s+products?)\b/i', $lower)) {
+                return false;
+            }
+        }
+
+        // Pure greetings
+        if (preg_match('/^(hi|hello|hey|heyy|mabuhay|good\s*(morning|afternoon|evening|day)|kumusta|kamusta|sup|yo|help|start)[.!?\s]*$/i', $lower)) {
+            return false;
+        }
+
+        // Shopping & Product Recommendation Intents
+        $shoppingIntents = [
+            '/\b(show|recommend|suggest|browse|view|find|search|look\s+for|shop|buy|order|purchase)\b/i',
+            '/\b(bestseller|best\s*seller|top\s*seller|popular\s+barong|catalog|collection|available\s+products?|items?|models?)\b/i',
+            '/\b(price|magkano|how\s+much|cost|budget|under\s+\d+|patingin|sample|list\s+of\s+barong|meron\s+ba|anong\s+tinda)\b/i',
+            '/\b(barong\s+for\s+(wedding|groom|ninong|graduation|event)|filipiniana\s+dress|terno\s+dress|lady\s+barong)\b/i',
+        ];
+
+        foreach ($shoppingIntents as $intent) {
+            if (preg_match($intent, $lower)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
     public static function chatStylist(string $userMessage, array $conversationHistory = []): array
     {
         $trimmedMessage = trim($userMessage);
@@ -144,7 +187,6 @@ class AiService
         }
 
         // 2. STRICT SENSITIVE INFORMATION & SYSTEM SECURITY GUARDRAIL
-        // Blocks any attempt to access or share databases, passwords, financial info, OTPs, or backend credentials.
         if (self::isSensitiveInfoQuery($userMessage)) {
             return [
                 'reply' => "🛡️ **Security Notice:** For your privacy and security, LumBarong Smart Assistance does not handle, request, or disclose sensitive personal, financial, authentication, or internal system information (such as passwords, credit card numbers, OTPs, PINs, or internal databases).\n\nI do not have access to internal databases, user records, or credentials. If you need assistance regarding your account or order status, please visit your **My Orders** page or contact customer support directly.",
@@ -152,43 +194,52 @@ class AiService
             ];
         }
         
-        // Search matching live products in the store
+        // 3. Search matching live products in the store ONLY IF explicitly requested by the user
         $matchedProducts = collect();
-        try {
-            $matchedProducts = Product::where('status', 'approved')
-                ->where(function ($q) use ($lower) {
+        if (self::isProductRequest($userMessage)) {
+            try {
+                $query = Product::where('status', 'approved');
+                $hasFilter = false;
+
+                $query->where(function ($q) use ($lower, &$hasFilter) {
                     if (str_contains($lower, 'piña') || str_contains($lower, 'pina')) {
                         $q->orWhere('name', 'like', '%piña%')->orWhere('description', 'like', '%piña%');
+                        $hasFilter = true;
                     }
                     if (str_contains($lower, 'jusi')) {
                         $q->orWhere('name', 'like', '%jusi%')->orWhere('description', 'like', '%jusi%');
+                        $hasFilter = true;
                     }
                     if (str_contains($lower, 'organza')) {
                         $q->orWhere('name', 'like', '%organza%')->orWhere('description', 'like', '%organza%');
+                        $hasFilter = true;
                     }
                     if (str_contains($lower, 'cocoon')) {
                         $q->orWhere('name', 'like', '%cocoon%')->orWhere('description', 'like', '%cocoon%');
+                        $hasFilter = true;
                     }
                     if (str_contains($lower, 'wedding') || str_contains($lower, 'groom') || str_contains($lower, 'kasal')) {
                         $q->orWhere('name', 'like', '%wedding%')->orWhere('name', 'like', '%groom%');
+                        $hasFilter = true;
                     }
                     if (str_contains($lower, 'filipiniana') || str_contains($lower, 'dress') || str_contains($lower, 'terno')) {
                         $q->orWhere('name', 'like', '%filipiniana%')->orWhere('name', 'like', '%terno%');
+                        $hasFilter = true;
                     }
-                    if (str_contains($lower, 'best seller') || str_contains($lower, 'bestseller') || str_contains($lower, 'popular')) {
-                        $q->orWhere('views', '>', 0);
+                    if (str_contains($lower, 'polo') || str_contains($lower, 'casual')) {
+                        $q->orWhere('name', 'like', '%polo%')->orWhere('name', 'like', '%casual%');
+                        $hasFilter = true;
                     }
-                })
-                ->orderByDesc('views')
-                ->take(3)
-                ->get(['id', 'name', 'price', 'image', 'fabric_type', 'description']);
+                });
 
-            if ($matchedProducts->isEmpty()) {
-                $matchedProducts = Product::where('status', 'approved')->orderByDesc('views')->take(3)->get(['id', 'name', 'price', 'image', 'fabric_type', 'description']);
+                if ($hasFilter) {
+                    $matchedProducts = $query->orderByDesc('views')->take(3)->get(['id', 'name', 'price', 'image', 'fabric_type', 'description']);
+                } else {
+                    $matchedProducts = Product::where('status', 'approved')->orderByDesc('views')->take(3)->get(['id', 'name', 'price', 'image', 'fabric_type', 'description']);
+                }
+            } catch (\Throwable $e) {
+                $matchedProducts = collect();
             }
-        } catch (\Throwable $e) {
-            // Graceful fallback if database table not present in tests
-            $matchedProducts = collect();
         }
 
         // Try Gemini AI first with strict system prompt
