@@ -160,18 +160,27 @@
 
             // --- Artisan Peer-to-Peer Chat Methods ---
             loadConversations() {
-                if (!this.isLoggedIn) return;
+                if (!this.isLoggedIn) {
+                    this.conversations = [];
+                    return;
+                }
                 fetch('/chat/conversations', {
                     headers: {
                         'Accept': 'application/json',
                         'X-CSRF-TOKEN': this.csrfToken()
                     }
                 })
-                .then(res => res.json())
-                .then(data => {
-                    this.conversations = data;
+                .then(res => {
+                    if (!res.ok) throw new Error('Status ' + res.status);
+                    return res.json();
                 })
-                .catch(err => console.error('Failed to load conversations:', err));
+                .then(data => {
+                    this.conversations = Array.isArray(data) ? data : [];
+                })
+                .catch(err => {
+                    console.error('Failed to load conversations:', err);
+                    this.conversations = [];
+                });
             },
 
             startConversation(sellerId, sellerName) {
@@ -181,9 +190,10 @@
                 }
                 this.activeUser = {
                     id: sellerId,
-                    name: sellerName
+                    name: sellerName || 'Artisan'
                 };
                 this.activeTab = 'messages';
+                if (!Array.isArray(this.messages)) this.messages = [];
                 this.loadMessages();
 
                 if (this.pollInterval) clearInterval(this.pollInterval);
@@ -197,6 +207,7 @@
             selectUser(user) {
                 this.activeUser = user;
                 this.activeTab = 'messages';
+                if (!Array.isArray(this.messages)) this.messages = [];
                 this.loadMessages();
 
                 if (this.pollInterval) clearInterval(this.pollInterval);
@@ -215,7 +226,10 @@
             },
 
             loadMessages(isPolling = false) {
-                if (!this.activeUser || !this.isLoggedIn) return;
+                if (!this.activeUser || !this.isLoggedIn) {
+                    this.messages = [];
+                    return;
+                }
 
                 fetch('/chat/messages/' + this.activeUser.id, {
                     headers: {
@@ -223,9 +237,12 @@
                         'X-CSRF-TOKEN': this.csrfToken()
                     }
                 })
-                .then(res => res.json())
+                .then(res => {
+                    if (!res.ok) throw new Error('Status ' + res.status);
+                    return res.json();
+                })
                 .then(data => {
-                    this.messages = data;
+                    this.messages = Array.isArray(data) ? data : [];
                     if (!isPolling) {
                         this.$nextTick(() => {
                             const box = this.$refs.artisanMsgBox;
@@ -233,7 +250,10 @@
                         });
                     }
                 })
-                .catch(err => console.error('Failed to load messages:', err));
+                .catch(err => {
+                    console.error('Failed to load messages:', err);
+                    if (!Array.isArray(this.messages)) this.messages = [];
+                });
             },
 
             formatMessageTime(iso) {
@@ -261,6 +281,10 @@
             sendMessage() {
                 const body = (this.newMessage || '').trim();
                 if (!body || !this.activeUser || !this.isLoggedIn) return;
+
+                if (!Array.isArray(this.messages)) {
+                    this.messages = [];
+                }
 
                 const tempMsg = {
                     id: 'temp-' + Date.now(),
@@ -294,8 +318,9 @@
                 })
                 .then(res => res.json())
                 .then(savedMsg => {
+                    if (!Array.isArray(this.messages)) this.messages = [];
                     const idx = this.messages.findIndex(m => m.id === tempMsg.id);
-                    if (idx !== -1) {
+                    if (idx !== -1 && savedMsg && savedMsg.id) {
                         this.messages[idx] = savedMsg;
                     }
                 })
@@ -562,24 +587,26 @@
             <!-- Conversations List -->
             <div x-show="activeTab === 'conversations'" class="flex-1 overflow-y-auto no-scrollbar p-4 bg-gray-50/50">
                 <div class="space-y-2">
-                    <template x-for="conv in conversations" :key="conv.otherUser.id">
-                        <div
-                            @click="startConversation(conv.otherUser.id, conv.otherUser.name)"
-                            class="flex items-center justify-between p-4 bg-white rounded-2xl border border-gray-100 hover:border-black/20 hover:shadow-md transition-all cursor-pointer"
-                        >
-                            <div class="flex items-center gap-3 min-w-0">
-                                <div class="w-10 h-10 rounded-xl bg-gray-100 flex items-center justify-center font-bold text-gray-600 shrink-0 uppercase border border-gray-200"
-                                     x-text="conv.otherUser.name.charAt(0)"></div>
-                                <div class="min-w-0">
-                                    <div class="text-xs font-bold text-gray-900 truncate" x-text="conv.otherUser.name"></div>
-                                    <div class="text-[11px] text-gray-500 truncate" x-text="conv.lastMessage.body"></div>
+                    <template x-for="(conv, cIdx) in (Array.isArray(conversations) ? conversations : [])" :key="conv && conv.otherUser && conv.otherUser.id ? conv.otherUser.id : cIdx">
+                        <template x-if="conv && conv.otherUser">
+                            <div
+                                @click="startConversation(conv.otherUser.id, conv.otherUser.name || 'Artisan')"
+                                class="flex items-center justify-between p-4 bg-white rounded-2xl border border-gray-100 hover:border-black/20 hover:shadow-md transition-all cursor-pointer"
+                            >
+                                <div class="flex items-center gap-3 min-w-0">
+                                    <div class="w-10 h-10 rounded-xl bg-gray-100 flex items-center justify-center font-bold text-gray-600 shrink-0 uppercase border border-gray-200"
+                                         x-text="(conv.otherUser.name || 'A').charAt(0)"></div>
+                                    <div class="min-w-0">
+                                        <div class="text-xs font-bold text-gray-900 truncate" x-text="conv.otherUser.name || 'Artisan'"></div>
+                                        <div class="text-[11px] text-gray-500 truncate" x-text="conv.lastMessage ? (conv.lastMessage.body || conv.lastMessage.content || conv.lastMessage || '') : ''"></div>
+                                    </div>
                                 </div>
+                                <div class="text-[9px] text-gray-400 font-medium shrink-0 ml-2" 
+                                     x-text="formatMessageDate(conv.timestamp || (conv.lastMessage && (conv.lastMessage.createdAt || conv.lastMessage.created_at)))"></div>
                             </div>
-                            <div class="text-[9px] text-gray-400 font-medium shrink-0 ml-2" 
-                                 x-text="formatMessageDate(conv.timestamp || (conv.lastMessage && (conv.lastMessage.createdAt || conv.lastMessage.created_at)))"></div>
-                        </div>
+                        </template>
                     </template>
-                    <div x-show="conversations.length === 0" class="text-center py-12 text-gray-400 text-xs italic">
+                    <div x-show="!conversations || conversations.length === 0" class="text-center py-12 text-gray-400 text-xs italic">
                         No conversations yet. Visit an artisan shop page to start chatting!
                     </div>
                 </div>
@@ -588,7 +615,7 @@
             <!-- Messages Stream -->
             <div x-show="activeTab === 'messages'" class="flex-1 flex flex-col min-h-0">
                 <div x-ref="artisanMsgBox" class="flex-1 overflow-y-auto no-scrollbar p-4 space-y-3 bg-[#FAF7F2]/50">
-                    <template x-for="msg in messages" :key="msg.id">
+                    <template x-for="(msg, mIdx) in (Array.isArray(messages) ? messages : [])" :key="msg.id || mIdx">
                         <div class="flex flex-col" :class="String(msg.senderId) === String(currentUserId) ? 'items-end' : 'items-start'">
                             <div class="max-w-[82%] px-4 py-2.5 rounded-2xl text-xs leading-relaxed"
                                  :class="String(msg.senderId) === String(currentUserId) 

@@ -96,8 +96,8 @@ class UserController extends Controller
     public function getSellerInfo($id)
     {
         $seller = User::find($id);
-        
-        if (!$seller || $seller->role !== 'seller') {
+
+        if (!$seller) {
             return response()->json(['message' => 'Seller not found'], 404);
         }
 
@@ -110,22 +110,23 @@ class UserController extends Controller
             ->where('products.sellerId', $id)
             ->count();
 
-        $joined = $seller->createdAt ? $seller->createdAt->diffForHumans() : "Unknown";
+        $joined = $seller->createdAt ? $seller->createdAt->diffForHumans() : ($seller->created_at ? $seller->created_at->diffForHumans() : "Lumban Artisan");
 
         return response()->json([
             'id' => $seller->id,
+            'name' => $seller->name,
             'shopName' => $seller->shopName ?: $seller->name,
-            'shopDescription' => $seller->shopDescription,
+            'shopDescription' => $seller->shopDescription ?: '',
             'location' => $seller->shopCity ? "{$seller->shopCity}, {$seller->shopProvince}" : "Lumban, Laguna",
-            'rating' => number_format($avgRating, 1),
+            'rating' => number_format((float)$avgRating, 1),
             'reviewCount' => $reviewCount,
             'productCount' => $productCount,
             'joined' => $joined,
             'isVerified' => (bool)$seller->isVerified,
-            'profilePhoto' => $seller->profile_photo_url,
-            'isPremium' => (bool)$seller->isPremiumActive(),
-            'cancellation_policy' => $seller->getCancellationPolicy(),
-            'refund_policy' => $seller->getRefundPolicy(),
+            'profilePhoto' => $seller->profilePhoto ?? $seller->profile_photo_url ?? null,
+            'isPremium' => method_exists($seller, 'isPremiumActive') ? (bool)$seller->isPremiumActive() : false,
+            'cancellation_policy' => method_exists($seller, 'getCancellationPolicy') ? $seller->getCancellationPolicy() : '',
+            'refund_policy' => method_exists($seller, 'getRefundPolicy') ? $seller->getRefundPolicy() : '',
         ]);
     }
 

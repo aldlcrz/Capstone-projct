@@ -123,9 +123,18 @@ Route::middleware('auth')->group(function () {
     Route::delete('/api/addresses/{id}', [AddressController::class, 'destroy']);
     Route::patch('/api/addresses/{id}/set-default', [AddressController::class, 'setDefault']);
 
-    // Chat
+    // Chat (Web & API routes for chat-widget and artisan messaging)
+    Route::get('/chat/conversations', [ChatController::class, 'getConversations']);
+    Route::get('/chat/conversation/{otherUserId}', [ChatController::class, 'getConversation']);
+    Route::get('/chat/messages/{otherUserId}', [ChatController::class, 'getConversation']);
+    Route::post('/chat/send', [ChatController::class, 'sendMessage']);
+    Route::post('/chat/message', [ChatController::class, 'sendMessage']);
+    Route::delete('/chat/conversation/{otherUserId}', [ChatController::class, 'destroy']);
+
     Route::get('/api/chat/conversations', [ChatController::class, 'getConversations']);
     Route::get('/api/chat/conversation/{otherUserId}', [ChatController::class, 'getConversation']);
+    Route::get('/api/chat/messages/{otherUserId}', [ChatController::class, 'getConversation']);
+    Route::post('/api/chat/send', [ChatController::class, 'sendMessage']);
     Route::post('/api/chat/message', [ChatController::class, 'sendMessage']);
     Route::delete('/api/chat/conversation/{otherUserId}', [ChatController::class, 'destroy']);
 
