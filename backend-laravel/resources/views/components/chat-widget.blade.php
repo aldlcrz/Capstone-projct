@@ -311,7 +311,8 @@
         x-transition:leave="transition ease-in duration-200"
         x-transition:leave-start="opacity-100 translate-y-0 scale-100"
         x-transition:leave-end="opacity-0 translate-y-6 scale-95"
-        class="fixed bottom-22 right-3 sm:right-6 w-96 max-w-[calc(100vw-1.5rem)] h-[580px] max-h-[calc(100vh-7rem)] bg-white rounded-3xl shadow-2xl border border-gray-100 flex flex-col overflow-hidden z-[9999]"
+        style="position: fixed; bottom: 90px; right: 24px; width: 380px; max-width: calc(100vw - 32px); height: 560px; max-height: calc(100vh - 110px); z-index: 99999; box-shadow: 0 20px 40px rgba(0,0,0,0.25);"
+        class="bg-white rounded-3xl border border-gray-200 flex flex-col overflow-hidden"
         x-cloak
     >
         <!-- Header -->
