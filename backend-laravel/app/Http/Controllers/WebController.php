@@ -101,7 +101,7 @@ class WebController extends Controller
         }
 
         $products = $query->paginate(15);
-        $categories = Category::all();
+        $categories = Category::withCount('products')->get();
         $banners = Banner::live()
             ->orderBy('order_index', 'asc')
             ->orderBy('created_at', 'desc')

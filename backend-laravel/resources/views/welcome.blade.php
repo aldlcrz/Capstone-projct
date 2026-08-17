@@ -209,14 +209,20 @@
 
                 if (isset($categories) && $categories->isNotEmpty()) {
                     foreach ($categories as $dbCat) {
+                        $dbName = trim($dbCat->name ?? '');
+                        if (empty($dbName)) continue;
+
                         $exists = false;
                         foreach ($allCatItems as $item) {
-                            if (strtolower($item['name']) == strtolower($dbCat->name) || strtolower($item['cat']) == strtolower($dbCat->name)) {
+                            if (strtolower($item['name']) === strtolower($dbName) || strtolower($item['cat']) === strtolower($dbName)) {
                                 $exists = true;
                                 break;
                             }
                         }
-                        if (!$exists) {
+
+                        $pCount = $dbCat->products_count ?? (method_exists($dbCat, 'products') ? $dbCat->products()->count() : 0);
+
+                        if (!$exists && $pCount > 0) {
                             $targetGroupStr = 'Other';
                             if (is_array($dbCat->target_group) && count($dbCat->target_group) > 0) {
                                 $targetGroupStr = implode(', ', $dbCat->target_group);
