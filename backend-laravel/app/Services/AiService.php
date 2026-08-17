@@ -428,21 +428,57 @@ STRICT SECURITY PROHIBITIONS & BOUNDARIES:
         $cleaned = trim(preg_replace('/[^\p{L}\p{N}\s]/u', '', $lower));
 
         // 1. GREETINGS & CASUAL HELLO (English, Tagalog, Polite variations)
-        if (preg_match('/\b(hi|hello|hey|heyy|mabuhay|good\s*morning|good\s*afternoon|good\s*evening|good\s*day|kumusta|kamusta|sup|yo|start|help|musta|oy|uy)\b/i', $cleaned)) {
-            // If it also specifies a specific topic, prioritize that topic below; otherwise return warm welcome
-            if (!str_contains($lower, 'wedding') && !str_contains($lower, 'groom') && !str_contains($lower, 'fabric') && !str_contains($lower, 'piña') && !str_contains($lower, 'pina') && !str_contains($lower, 'jusi') && !str_contains($lower, 'cocoon') && !str_contains($lower, 'organza') && !str_contains($lower, 'best seller') && !str_contains($lower, 'bestseller') && !str_contains($lower, 'size') && !str_contains($lower, 'wash') && !str_contains($lower, 'iron') && !str_contains($lower, 'price') && !str_contains($lower, 'cost')) {
-                return "Mabuhay! Hello and welcome to **LumBarong Smart Assistance**. I am your heritage styling advisor and shopping concierge from Lumban, Laguna.\n\n"
-                    . "How may I help you today? You can ask me about:\n"
-                    . "• **Best Sellers** & Top recommended Barongs\n"
-                    . "• **Fabric Guide** (Piña vs. Jusi vs. Cocoon vs. Organza)\n"
-                    . "• **Event Styling** (Weddings, Grooms, Ninongs, Graduations)\n"
-                    . "• **Care & Maintenance** (How to wash, iron, and store)\n"
-                    . "• **Sizing & Measurements** for the perfect fit\n"
-                    . "• **Order & Shipping Process** in LumBarong";
-            }
+        if (preg_match('/^(hi|hello|hey|heyy|mabuhay|good\s*morning|good\s*afternoon|good\s*evening|good\s*day|kumusta|kamusta|sup|yo|start|help|musta|oy|uy)[.!?\s]*$/i', $cleaned)) {
+            return "Mabuhay! Hello and welcome to **LumBarong Smart Assistance**. I am your heritage styling advisor and shopping concierge from Lumban, Laguna.\n\n"
+                . "How may I help you today? You can ask me about:\n"
+                . "• **Best Sellers** & Top recommended Barongs\n"
+                . "• **Fabric Guide** (Piña vs. Jusi vs. Cocoon vs. Organza)\n"
+                . "• **Event Styling** (Weddings, Grooms, Ninongs, Graduations)\n"
+                . "• **Care & Maintenance** (How to wash, iron, and store)\n"
+                . "• **Sizing & Measurements** for the perfect fit\n"
+                . "• **Shop Locations & Order Shipping** in LumBarong";
         }
 
-        // 2. BEST SELLERS & MOST POPULAR
+        // 2. SHOP LOCATION, PHYSICAL STORE & ADDRESS
+        if (preg_match('/\b(where\s+(is|are)\s+(your|the)?\s*(shop|store|boutique|workshop|office|location|artisans?)|location|located|address|physical\s+store|saan\s+(ang\s+)?(shop|tinda|tindahan|pwesto))\b/i', $lower)) {
+            return "📍 **Our Heritage Workshop Location:**\n\n"
+                . "LumBarong's master artisans and embroidery workshops are proudly based in **Lumban, Laguna, Philippines** — renowned worldwide as the *Embroidery Capital of the Philippines*.\n\n"
+                . "• **Direct Artisan Workshops**: Every piece is tailored and hand-embroidered right here in Lumban by our certified master artisans.\n"
+                . "• **Nationwide & International Delivery**: We ship door-to-door across the Philippines with express courier partners and full parcel tracking.\n"
+                . "• **Artisan Directory**: You can explore individual artisan shops in our [Shops Hub](/shops) or chat directly with shop owners in the **💬 Artisans** tab above!";
+        }
+
+        // 3. LOWEST PRICE & BUDGET-FRIENDLY OPTIONS
+        if (preg_match('/\b(lowest\s+price|cheapest|pinakamura|least\s+expensive|budget\s+friendly|pinaka\s+mura)\b/i', $lower)) {
+            return "🏷️ **Lowest Price & Budget-Friendly Barong Tagalog:**\n\n"
+                . "Our most accessible, high-quality handcrafted Barongs start at:\n\n"
+                . "1. **Organza / Monoray Barongs** — **₱1,500 to ₱3,200**\n"
+                . "   • Lightweight, crisp translucent weave, wrinkle-resistant.\n"
+                . "   • Best for school graduations, oathtakings, and budget-conscious events.\n\n"
+                . "2. **Jusi Silk Machine-Embroidered** — **₱3,500 to ₱5,500**\n"
+                . "   • Traditional semi-sheen formal Barong for wedding guests & sponsors.\n\n"
+                . "3. **Cocoon Silk** — **₱6,000 to ₱9,500** (Opaque luxury)\n"
+                . "4. **Pure Piña-Seda** — **₱9,500+** (Heirloom groom wear)\n\n"
+                . "💡 *Tip*: You can click the **🎓 Graduation under ₱3,500** chip above to view available pieces in this budget range!";
+        }
+
+        // 4. CONTACT & CUSTOMER SERVICE
+        if (preg_match('/\b(contact|email|phone|cellphone|number|hotline|support|help\s+desk|customer\s+service|kausap|tawag)\b/i', $lower)) {
+            return "📞 **LumBarong Customer Support & Contact Channels:**\n\n"
+                . "• **Official Support Email**: **lumbarongsupport@gmail.com**\n"
+                . "• **Direct Artisan Chat**: Click the **💬 Artisans** tab at the top of this chat box to message individual Lumban workshops directly.\n"
+                . "• **Order Concerns**: View live courier tracking and packing proofs under your [My Orders](/customer/orders) portal.";
+        }
+
+        // 5. RETURNS, REFUNDS & EXCHANGES
+        if (preg_match('/\b(return|refund|exchange|palit|bawi|warranty|policy|reklamo)\b/i', $lower)) {
+            return "🔄 **Returns, Exchanges & Quality Guarantee:**\n\n"
+                . "• **Authenticity Guarantee**: 100% genuine Lumban hand-embroidery craftsmanship.\n"
+                . "• **Tailoring & Size Exchanges**: If your order has size discrepancies or tailoring defects, you can submit a return request within **7 days** of delivery via your [My Orders](/customer/orders) page.\n"
+                . "• **Artisan Support**: You can also email **lumbarongsupport@gmail.com** with photos of the garment for fast resolution.";
+        }
+
+        // 6. BEST SELLERS & MOST POPULAR
         if (str_contains($lower, 'best seller') || str_contains($lower, 'bestseller') || str_contains($lower, 'popular') || str_contains($lower, 'top seller') || str_contains($lower, 'most bought') || str_contains($lower, 'recommendation')) {
             return "⭐ **Our Top Best Sellers & Customer Favorites:**\n\n"
                 . "1. **Piña-Seda Classic Pechera Barong** — Our #1 choice for grooms and formal occasions, featuring intricate *Calado* openwork hand-embroidery along the chest.\n"
@@ -452,7 +488,7 @@ STRICT SECURITY PROHIBITIONS & BOUNDARIES:
                 . "Let me know your preferred occasion or budget and I'll match the best piece for you!";
         }
 
-        // 3. WEDDING & GROOM ATTIRE
+        // 7. WEDDING & GROOM ATTIRE
         if (str_contains($lower, 'wedding') || str_contains($lower, 'groom') || str_contains($lower, 'kasal') || str_contains($lower, 'bride')) {
             return "🤵 **Wedding & Groom Styling Guide:**\n\n"
                 . "For the **Groom**, the gold standard is an authentic **Piña-Seda** (Pineapple-Silk) or **Cocoon Silk Barong** handcrafted in Lumban, Laguna. Key recommendations:\n"
@@ -462,7 +498,7 @@ STRICT SECURITY PROHIBITIONS & BOUNDARIES:
                 . "• **Trousers**: Pure black tailored wool or wool-blend slacks with polished black leather shoes.";
         }
 
-        // 4. NINONG / PRINCIPAL SPONSOR / GUESTS / ENTOURAGE
+        // 8. NINONG / PRINCIPAL SPONSOR / GUESTS / ENTOURAGE
         if (str_contains($lower, 'ninong') || str_contains($lower, 'sponsor') || str_contains($lower, 'groomsmen') || str_contains($lower, 'entourage') || str_contains($lower, 'guest')) {
             return "👔 **Ninong & Wedding Entourage Guide:**\n\n"
                 . "For **Principal Sponsors (Ninong)** and formal guests, a **Jusi** or **High-grade Organza Barong** strikes the ideal balance of dignity, breathability, and formality.\n\n"
@@ -471,7 +507,7 @@ STRICT SECURITY PROHIBITIONS & BOUNDARIES:
                 . "• **Fit**: Traditional comfort fit allows easy movement throughout long church and reception ceremonies.";
         }
 
-        // 5. GRADUATION & BUDGET PIECES
+        // 9. GRADUATION & BUDGET PIECES
         if (str_contains($lower, 'graduation') || str_contains($lower, 'student') || str_contains($lower, 'college') || str_contains($lower, 'diploma') || str_contains($lower, 'graduate')) {
             return "🎓 **Graduation & Ceremony Attire:**\n\n"
                 . "For graduations, moving-up ceremonies, and academic functions:\n"
@@ -480,7 +516,7 @@ STRICT SECURITY PROHIBITIONS & BOUNDARIES:
                 . "• Pair with dark slacks and an undershirt for a distinguished academic stage appearance.";
         }
 
-        // 6. FABRIC COMPARISON & GUIDE
+        // 10. FABRIC COMPARISON & GUIDE
         if (str_contains($lower, 'difference') || str_contains($lower, 'piña vs') || str_contains($lower, 'pina vs') || str_contains($lower, 'fabric') || str_contains($lower, 'tela') || str_contains($lower, 'material') || str_contains($lower, 'piña') || str_contains($lower, 'jusi') || str_contains($lower, 'cocoon') || str_contains($lower, 'organza')) {
             return "🧵 **Philippine Heritage Fabric Guide:**\n\n"
                 . "• **Piña (Pineapple Fiber)**: The queen of Philippine textiles. Hand-scraped from Spanish Red pineapple leaves. Ultra-delicate, naturally ivory, and an heirloom investment.\n"
@@ -490,7 +526,7 @@ STRICT SECURITY PROHIBITIONS & BOUNDARIES:
                 . "• **Organza / Monoray**: Synthetic sheer fabric. Lightweight, durable, and budget-friendly.";
         }
 
-        // 7. BARONG CARE, WASHING & IRONING
+        // 11. BARONG CARE, WASHING & IRONING
         if (str_contains($lower, 'wash') || str_contains($lower, 'clean') || str_contains($lower, 'care') || str_contains($lower, 'iron') || str_contains($lower, 'press') || str_contains($lower, 'maintain') || str_contains($lower, 'laba') || str_contains($lower, 'stain')) {
             return "🧺 **How to Care for Your Handcrafted Barong:**\n\n"
                 . "1. **Washing**: Hand-wash only in cold/lukewarm water with gentle baby shampoo or mild detergent. **Never wring, twist, or machine wash.**\n"
@@ -499,7 +535,7 @@ STRICT SECURITY PROHIBITIONS & BOUNDARIES:
                 . "4. **Storage**: Store in a breathable cotton garment bag (avoid airtight plastic) on a wide wooden hanger.";
         }
 
-        // 8. SIZING & MEASUREMENTS
+        // 12. SIZING & MEASUREMENTS
         if (str_contains($lower, 'size') || str_contains($lower, 'sizing') || str_contains($lower, 'fit') || str_contains($lower, 'measure') || str_contains($lower, 'measurement') || str_contains($lower, 'chest') || str_contains($lower, 'shoulder')) {
             return "📏 **Barong Sizing & Fit Advice:**\n\n"
                 . "Barongs do not stretch, so picking the proper allowance is essential for comfort:\n"
@@ -511,7 +547,7 @@ STRICT SECURITY PROHIBITIONS & BOUNDARIES:
                 . "💡 *Pro-Tip*: Measure your actual chest circumference and add **3 to 4 inches of ease** for a comfortable traditional fit!";
         }
 
-        // 9. LUMBAN HERITAGE & CALADO EMBROIDERY
+        // 13. LUMBAN HERITAGE & CALADO EMBROIDERY
         if (str_contains($lower, 'lumban') || str_contains($lower, 'laguna') || str_contains($lower, 'heritage') || str_contains($lower, 'calado') || str_contains($lower, 'embroidery') || str_contains($lower, 'burda') || str_contains($lower, 'artisan') || str_contains($lower, 'origin')) {
             return "🏛️ **Lumban, Laguna — The Embroidery Capital:**\n\n"
                 . "Lumban is renowned worldwide for its centuries-old embroidery tradition. Our master artisans specialize in:\n"
@@ -520,7 +556,7 @@ STRICT SECURITY PROHIBITIONS & BOUNDARIES:
                 . "• Every Barong purchased directly supports local artisan families and preserves this Philippine cultural heritage.";
         }
 
-        // 10. PAYMENTS, GCASH & MAYA
+        // 14. PAYMENTS, GCASH & MAYA
         if (str_contains($lower, 'payment') || str_contains($lower, 'gcash') || str_contains($lower, 'maya') || str_contains($lower, 'pay') || str_contains($lower, 'bayad') || str_contains($lower, 'reference')) {
             return "💳 **Payment Methods on LumBarong:**\n\n"
                 . "We accept **GCash** and **Maya** mobile payments with instant verification:\n"
@@ -529,7 +565,7 @@ STRICT SECURITY PROHIBITIONS & BOUNDARIES:
                 . "• Our system verifies unique references to prevent duplication and ensure your order is immediately processed by the artisan.";
         }
 
-        // 11. SHIPPING & ORDER TRACKING
+        // 15. SHIPPING & ORDER TRACKING
         if (str_contains($lower, 'ship') || str_contains($lower, 'shipping') || str_contains($lower, 'delivery') || str_contains($lower, 'track') || str_contains($lower, 'tracking') || str_contains($lower, 'deliver') || str_contains($lower, 'kailan')) {
             return "📦 **Shipment Tracking & Delivery Steps:**\n\n"
                 . "Once your order is confirmed, you can track live updates in 5 easy steps:\n"
@@ -540,7 +576,7 @@ STRICT SECURITY PROHIBITIONS & BOUNDARIES:
                 . "5. **Delivered**: Inspect your items and click **Confirm Received** to leave a verified review!";
         }
 
-        // 12. FILIPINIANA & WOMEN'S ATTIRE
+        // 16. FILIPINIANA & WOMEN'S ATTIRE
         if (str_contains($lower, 'filipiniana') || str_contains($lower, 'terno') || str_contains($lower, 'bolero') || str_contains($lower, 'alampay') || str_contains($lower, 'maria clara') || str_contains($lower, 'women') || str_contains($lower, 'dress')) {
             return "👗 **Filipiniana & Women's Heritage Wear:**\n\n"
                 . "We showcase exquisite handcrafted pieces for women:\n"
@@ -549,7 +585,7 @@ STRICT SECURITY PROHIBITIONS & BOUNDARIES:
                 . "• **Alampay / Pañuelo**: Triangular hand-embroidered shoulder shawls crafted with intricate *Calado* motifs.";
         }
 
-        // 13. BUDGET & PRICE RANGES
+        // 17. BUDGET & PRICE RANGES
         if (str_contains($lower, 'price') || str_contains($lower, 'cost') || str_contains($lower, 'budget') || str_contains($lower, 'cheap') || str_contains($lower, 'affordable') || str_contains($lower, 'mura') || str_contains($lower, 'magkano')) {
             return "💰 **Price Ranges & Budget Guide:**\n\n"
                 . "• **Organza / Monoray Barongs**: ₱1,500 – ₱3,500 (Great for graduations, school events, and budget ceremonies)\n"
@@ -559,15 +595,16 @@ STRICT SECURITY PROHIBITIONS & BOUNDARIES:
                 . "Tell me your target price range and I'll find the best options in stock!";
         }
 
-        // 14. DEFAULT CONTEXTUAL ASSISTANCE
+        // 18. DEFAULT CONTEXTUAL ASSISTANCE
         return "Mabuhay! I am your **LumBarong Smart Assistant**.\n\n"
             . "I can help answer your questions on:\n"
             . "• **Best Sellers & Product Recommendations**\n"
             . "• **Fabric Comparison** (Piña vs. Jusi vs. Cocoon vs. Organza)\n"
             . "• **Event Attire** for Grooms, Ninongs, Guests, or Graduations\n"
             . "• **Care & Cleaning Instructions** for delicate Barongs\n"
-            . "• **Sizing Guidance & Fit Advice**\n\n"
-            . "What event or fabric would you like to know more about?";
+            . "• **Sizing Guidance & Fit Advice**\n"
+            . "• **Our Workshop Location in Lumban, Laguna**\n\n"
+            . "What event, price range, or fabric would you like to know more about?";
     }
 
     // ==========================================

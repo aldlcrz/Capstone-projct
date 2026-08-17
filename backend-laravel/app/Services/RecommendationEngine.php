@@ -263,14 +263,17 @@ class RecommendationEngine
                           ->orWhere('name', 'like', '%terno%')
                           ->orWhere('name', 'like', '%dress%')
                           ->orWhere('name', 'like', '%lady%')
-                          ->orWhere('target_group', 'like', '%Women%');
+                          ->orWhere('description', 'like', '%women%')
+                          ->orWhere('description', 'like', '%filipiniana%');
                     });
                 } elseif ($pref['gender'] === 'kids') {
                     $query->where(function ($q) {
                         $q->where('name', 'like', '%kid%')
                           ->orWhere('name', 'like', '%boy%')
                           ->orWhere('name', 'like', '%girl%')
-                          ->orWhere('target_group', 'like', '%Kid%');
+                          ->orWhere('name', 'like', '%bata%')
+                          ->orWhere('description', 'like', '%kid%')
+                          ->orWhere('description', 'like', '%child%');
                     });
                 } elseif ($pref['gender'] === 'men') {
                     $query->where(function ($q) {
@@ -293,7 +296,6 @@ class RecommendationEngine
                 $fabricQuery = clone $query;
                 $fabricQuery->where(function ($q) use ($fabricKeyword) {
                     $q->where('name', 'like', "%{$fabricKeyword}%")
-                      ->orWhere('fabric_type', 'like', "%{$fabricKeyword}%")
                       ->orWhere('description', 'like', "%{$fabricKeyword}%");
                 });
 
@@ -303,14 +305,19 @@ class RecommendationEngine
                 }
             }
 
-            $products = $query->get();
+            $products = $query->take(15)->get();
 
             // Fallback if strict filter yields 0 in test or sparse database
             if ($products->isEmpty()) {
                 $products = Product::where('status', 'approved')->take(10)->get();
             }
         } catch (\Throwable $e) {
-            $products = collect();
+            \Illuminate\Support\Facades\Log::warning("RecommendationEngine query error: " . $e->getMessage());
+            try {
+                $products = Product::take(10)->get();
+            } catch (\Throwable $ex) {
+                $products = collect();
+            }
         }
 
         if ($products->isEmpty()) {
