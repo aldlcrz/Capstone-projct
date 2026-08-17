@@ -421,27 +421,43 @@
     >
         <!-- Header -->
         <div class="bg-[#3D2B1F] text-white p-4 shrink-0 flex flex-col gap-2.5">
-            <div class="flex items-center justify-between">
-                <div class="flex items-center gap-2.5">
+            <div class="flex items-center justify-between gap-2">
+                <div class="flex items-center gap-2.5 min-w-0">
                     <template x-if="mainMode === 'artisan' && activeTab === 'messages'">
-                        <button @click="backToConversations()" class="p-1 hover:bg-white/10 rounded-lg transition-colors cursor-pointer">
+                        <button @click="backToConversations()" class="p-1 hover:bg-white/10 rounded-lg transition-colors cursor-pointer shrink-0" title="Back to conversations">
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
                         </button>
                     </template>
-                    <div>
-                        <h3 class="font-serif text-sm font-bold tracking-wide flex items-center gap-1.5">
+                    <div class="min-w-0">
+                        <h3 class="font-serif text-sm font-bold tracking-wide flex items-center gap-1.5 truncate">
                             <span x-show="mainMode === 'ai'">LumBarong Smart Assistant</span>
-                            <span x-show="mainMode === 'artisan'" x-text="activeTab === 'messages' && activeUser ? activeUser.name : 'Artisan Messages'"></span>
+                            <span x-show="mainMode === 'artisan'" x-text="activeTab === 'messages' && activeUser ? activeUser.name : 'Artisan Messages'" class="truncate"></span>
                         </h3>
-                        <p class="text-[8px] font-bold text-gray-400 uppercase tracking-widest mt-0.5">
+                        <p class="text-[8px] font-bold text-gray-400 uppercase tracking-widest mt-0.5 truncate">
                             <span x-show="mainMode === 'ai'">Heritage Fashion &amp; Shopping Concierge</span>
                             <span x-show="mainMode === 'artisan'">Direct Workshop Connection</span>
                         </p>
                     </div>
                 </div>
-                <button @click="closeChat()" class="p-1.5 hover:bg-white/10 rounded-xl transition-colors cursor-pointer">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
-                </button>
+
+                <div class="flex items-center gap-1.5 shrink-0">
+                    <!-- Visit Shop Button (visible when chatting with artisan) -->
+                    <template x-if="mainMode === 'artisan' && activeTab === 'messages' && activeUser && activeUser.id">
+                        <a :href="'/shops/' + activeUser.id"
+                           target="_blank"
+                           title="Visit Artisan Shop"
+                           class="inline-flex items-center gap-1 px-2.5 py-1 bg-[#C0422A] hover:bg-[#A33520] text-white text-[10px] font-extrabold uppercase tracking-wider rounded-lg transition-all shadow-xs border border-white/20">
+                            <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/>
+                            </svg>
+                            <span>Visit Shop</span>
+                        </a>
+                    </template>
+
+                    <button @click="closeChat()" class="p-1.5 hover:bg-white/10 rounded-xl transition-colors cursor-pointer text-gray-300 hover:text-white" title="Close">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                    </button>
+                </div>
             </div>
 
             <!-- Mode Toggle Pills -->
