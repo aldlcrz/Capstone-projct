@@ -249,8 +249,8 @@ Route::middleware(['auth', 'superadmin'])->prefix('superadmin')->group(function 
     Route::patch('/sellers/{id}/verify', [SuperAdminController::class, 'verifySeller'])->name('superadmin.sellers.verify');
     Route::patch('/sellers/{id}/unverify', [SuperAdminController::class, 'unverifySeller'])->name('superadmin.sellers.unverify');
     Route::get('/customers', [SuperAdminController::class, 'customers'])->name('superadmin.customers');
-    Route::patch('/customers/{id}/ban', [SuperAdminController::class, 'banCustomer'])->name('superadmin.customers.ban');
-    Route::patch('/customers/{id}/unban', [SuperAdminController::class, 'unbanCustomer'])->name('superadmin.customers.unban');
+    Route::match(['post', 'patch'], '/customers/{id}/ban', [SuperAdminController::class, 'banCustomer'])->name('superadmin.customers.ban');
+    Route::match(['post', 'patch'], '/customers/{id}/unban', [SuperAdminController::class, 'unbanCustomer'])->name('superadmin.customers.unban');
 
     // Developer & System Tools
     Route::get('/maintenance', [SuperAdminController::class, 'maintenance'])->name('superadmin.maintenance');

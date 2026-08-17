@@ -584,7 +584,7 @@ class SuperAdminController extends Controller
                 $q->whereNull('status')->orWhere('status', 'active');
             });
         } elseif ($status === 'banned') {
-            $query->where('status', 'banned');
+            $query->whereIn('status', ['banned', 'blocked']);
         }
 
         $customers = $query->orderByDesc('createdAt')
@@ -600,7 +600,7 @@ class SuperAdminController extends Controller
                     'name'         => $user->name,
                     'email'        => $user->email,
                     'phone'        => $user->phone ?: '—',
-                    'status'       => $user->status ?? 'active',
+                    'status'       => in_array($user->status, ['banned', 'blocked']) ? 'banned' : ($user->status ?? 'active'),
                     'orders_count' => $ordersCount,
                     'total_spent'  => $totalSpent,
                     'created_at'   => $user->createdAt,
@@ -610,22 +610,24 @@ class SuperAdminController extends Controller
         return view('superadmin.customers', compact('customers', 'search', 'status'));
     }
 
-    public function banCustomer(string $id)
+    public function banCustomer(Request $request, string $id)
     {
         $customer = User::findOrFail($id);
-        $customer->status = 'banned';
+        $customer->status = 'blocked';
+        $customer->violationReason = $request->input('reason', 'Administrative action by Super Admin');
         $customer->save();
 
-        return back()->with('success', "Customer account '{$customer->name}' has been banned.");
+        return redirect()->route('superadmin.customers')->with('success', "Customer account '{$customer->name}' has been banned.");
     }
 
     public function unbanCustomer(string $id)
     {
         $customer = User::findOrFail($id);
         $customer->status = 'active';
+        $customer->violationReason = null;
         $customer->save();
 
-        return back()->with('success', "Customer account '{$customer->name}' has been unbanned.");
+        return redirect()->route('superadmin.customers')->with('success', "Customer account '{$customer->name}' has been unbanned.");
     }
 
     // ─── Maintenance Mode & 1-Click Cache Utility ─────────────────────────────

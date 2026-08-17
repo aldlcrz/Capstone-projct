@@ -99,16 +99,16 @@
                         <td class="px-6 py-4 text-right">
                             @if($customer['status'] === 'banned')
                                 <form action="{{ route('superadmin.customers.unban', $customer['id']) }}" method="POST" class="inline">
-                                    @csrf @method('PATCH')
-                                    <button type="submit" class="px-3 py-1.5 bg-green-600 hover:bg-green-700 text-white rounded-lg text-[10px] font-bold uppercase tracking-wider transition-all cursor-pointer">
-                                        Unban
+                                    @csrf
+                                    <button type="submit" class="px-3.5 py-1.5 bg-green-600 hover:bg-green-700 text-white rounded-xl text-[10px] font-bold uppercase tracking-wider transition-all cursor-pointer shadow-xs">
+                                        Unban Account
                                     </button>
                                 </form>
                             @else
-                                <form action="{{ route('superadmin.customers.ban', $customer['id']) }}" method="POST" class="inline">
-                                    @csrf @method('PATCH')
-                                    <button type="submit" class="px-3 py-1.5 bg-red-50 text-red-600 hover:bg-red-100 border border-red-200 rounded-lg text-[10px] font-bold uppercase tracking-wider transition-all cursor-pointer">
-                                        Ban
+                                <form action="{{ route('superadmin.customers.ban', $customer['id']) }}" method="POST" class="inline" onsubmit="return confirm('Are you sure you want to ban this customer account?');">
+                                    @csrf
+                                    <button type="submit" class="px-3.5 py-1.5 bg-red-50 text-red-600 hover:bg-red-100 border border-red-200 rounded-xl text-[10px] font-bold uppercase tracking-wider transition-all cursor-pointer shadow-xs">
+                                        Ban Account
                                     </button>
                                 </form>
                             @endif
