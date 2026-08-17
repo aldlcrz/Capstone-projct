@@ -104,6 +104,7 @@
                 <input 
                     type="email" 
                     name="email" 
+                    id="login-email"
                     value="{{ old('email') }}"
                     required 
                     placeholder="Enter your email address"
@@ -117,7 +118,7 @@
             <div class="space-y-2" x-data="{ show: false }">
                 <div class="flex justify-between items-center px-5">
                     <label class="text-[10px] font-bold uppercase tracking-widest text-gray-500">Password</label>
-                    <a href="/forgot-password" class="text-[10px] font-bold uppercase tracking-widest text-[#C0422A]">Forgot?</a>
+                    <button type="button" onclick="handleForgotPassword(event)" class="text-[10px] font-bold uppercase tracking-widest text-[#C0422A] hover:underline cursor-pointer">Forgot?</button>
                 </div>
                 <div class="relative">
                     <input 
@@ -427,12 +428,36 @@
         } catch(e) {}
     });
 
-    // Auto-reload on Back/Forward navigation from bfcache to get fresh CSRF token
-    window.addEventListener('pageshow', function(event) {
-        if (event.persisted || (window.performance && window.performance.navigation && window.performance.navigation.type === 2)) {
-            window.location.reload();
+    // Auto-submit Forgot Password using the typed email
+    function handleForgotPassword(e) {
+        if (e) e.preventDefault();
+        const emailInput = document.getElementById('login-email');
+        const email = emailInput ? emailInput.value.trim() : '';
+
+        if (!email) {
+            window.location.href = '/forgot-password';
+            return;
         }
-    });
+
+        const form = document.createElement('form');
+        form.method = 'POST';
+        form.action = '{{ route("password.email") }}';
+
+        const csrfToken = document.createElement('input');
+        csrfToken.type = 'hidden';
+        csrfToken.name = '_token';
+        csrfToken.value = '{{ csrf_token() }}';
+        form.appendChild(csrfToken);
+
+        const emailField = document.createElement('input');
+        emailField.type = 'hidden';
+        emailField.name = 'email';
+        emailField.value = email;
+        form.appendChild(emailField);
+
+        document.body.appendChild(form);
+        form.submit();
+    }
 </script>
 </body>
 </html>

@@ -73,6 +73,7 @@
                 <input 
                     type="email" 
                     name="email" 
+                    value="{{ old('email', request('email')) }}"
                     required 
                     placeholder="example@gmail.com"
                     class="w-full h-14 bg-[#F9F6F2] rounded-full px-8 text-sm font-medium border-2 border-transparent focus:border-[#C0422A] focus:bg-white outline-none transition-all"
