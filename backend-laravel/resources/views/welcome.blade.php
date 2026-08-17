@@ -65,19 +65,19 @@
             {{-- Dark gradient overlay on left --}}
             <div class="absolute inset-0 bg-linear-to-r from-black/85 via-black/50 to-transparent"></div>
             {{-- Content --}}
-            <div class="relative z-10 flex flex-col justify-center h-full px-5 sm:px-10 py-6 sm:py-10 max-w-xs sm:max-w-md">
+            <div class="relative z-10 flex flex-col justify-center h-full px-5 sm:px-12 py-6 sm:py-10 max-w-xs sm:max-w-lg">
                 @if($banner->subtitle)
-                    <p class="text-[10px] sm:text-xs font-bold uppercase tracking-widest text-amber-400 mb-1 sm:mb-2">{{ $banner->subtitle }}</p>
+                    <p class="text-[9px] sm:text-[11px] font-black uppercase tracking-[0.25em] text-amber-300 drop-shadow-xs mb-1.5 sm:mb-2">{{ $banner->subtitle }}</p>
                 @endif
                 @if($banner->title)
-                    <h2 class="text-xl sm:text-3xl lg:text-4xl font-extrabold text-white leading-tight mb-2.5 sm:mb-3">{{ $banner->title }}</h2>
+                    <h2 class="text-2xl sm:text-3xl lg:text-4xl font-black text-white leading-[1.15] tracking-tight mb-3 sm:mb-4 drop-shadow-md">{{ $banner->title }}</h2>
                 @endif
-                <div class="flex flex-wrap items-center gap-2 sm:gap-3 mt-1 sm:mt-2">
+                <div class="flex flex-wrap items-center gap-2.5 sm:gap-3.5 mt-1">
                     @if($banner->button_text_1)
                         @php $url1 = $banner->getResolvedButtonUrl1(); @endphp
                         <a href="{{ $url1 }}"
                            @if($url1 === '#catalogue-section') onclick="event.preventDefault(); document.getElementById('catalogue-section')?.scrollIntoView({ behavior: 'smooth' });" @endif
-                           class="inline-flex items-center justify-center px-4 py-2 sm:px-5 sm:py-2.5 bg-amber-600 hover:bg-amber-700 text-white text-xs sm:text-sm font-bold rounded-xl transition-all shadow-md hover:shadow-lg hover:scale-105 active:scale-95 cursor-pointer">
+                           class="inline-flex items-center justify-center px-5 py-2.5 sm:px-6 sm:py-3 bg-[#C0422A] hover:bg-[#a6351f] text-white text-[10px] sm:text-xs font-black uppercase tracking-wider rounded-xl transition-all shadow-lg hover:shadow-xl hover:scale-105 active:scale-95 cursor-pointer">
                             {{ $banner->button_text_1 }}
                         </a>
                     @endif
@@ -85,7 +85,7 @@
                         @php $url2 = $banner->getResolvedButtonUrl2(); @endphp
                         <a href="{{ $url2 }}"
                            @if($url2 === '#catalogue-section') onclick="event.preventDefault(); document.getElementById('catalogue-section')?.scrollIntoView({ behavior: 'smooth' });" @endif
-                           class="inline-flex items-center justify-center px-4 py-2 sm:px-5 sm:py-2.5 bg-white/15 hover:bg-white/25 text-white text-xs sm:text-sm font-semibold rounded-xl border border-white/30 backdrop-blur-sm transition-all active:scale-95 cursor-pointer">
+                           class="inline-flex items-center justify-center px-5 py-2.5 sm:px-6 sm:py-3 bg-white/20 hover:bg-white/30 text-white text-[10px] sm:text-xs font-black uppercase tracking-wider rounded-xl border border-white/40 backdrop-blur-md transition-all hover:scale-105 active:scale-95 cursor-pointer">
                             {{ $banner->button_text_2 }}
                         </a>
                     @endif

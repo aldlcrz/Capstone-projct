@@ -102,7 +102,7 @@ class WebController extends Controller
 
         $products = $query->paginate(15);
         $categories = Category::all();
-        $banners = Banner::where('is_active', true)
+        $banners = Banner::live()
             ->orderBy('order_index', 'asc')
             ->orderBy('created_at', 'desc')
             ->get();

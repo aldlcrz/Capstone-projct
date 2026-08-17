@@ -3,14 +3,19 @@
 namespace App\Http\Controllers;
 
 use App\Models\Banner;
+use App\Models\Category;
+use App\Models\Notification;
+use App\Models\Product;
+use App\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\File;
 
 class AdminBannerController extends Controller
 {
     public function index()
     {
-        // All banners (for "All Banners" tab)
+        // All banners ordered by display order (for "All Promotions" tab)
         $banners = Banner::with('user')
             ->orderBy('order_index', 'asc')
             ->orderBy('created_at', 'desc')
@@ -25,51 +30,151 @@ class AdminBannerController extends Controller
 
         $pendingCount = Banner::whereNotNull('userId')->where('status', 'pending')->count();
 
-        return view('admin.banners.index', compact('banners', 'sellerBanners', 'pendingCount'));
+        // Data for Dynamic Action Destination Pickers
+        $categories = Category::select('id', 'name')->orderBy('name')->get();
+        $sellers = User::where('role', 'seller')
+            ->where('isVerified', true)
+            ->select('id', 'name', 'shopName')
+            ->orderBy('shopName')
+            ->get();
+        $featuredProducts = Product::where('status', 'approved')
+            ->select('id', 'name')
+            ->orderBy('name')
+            ->limit(30)
+            ->get();
+
+        return view('admin.banners.index', compact(
+            'banners',
+            'sellerBanners',
+            'pendingCount',
+            'categories',
+            'sellers',
+            'featuredProducts'
+        ));
+    }
+
+    public function searchDestinations(Request $request)
+    {
+        $type = $request->get('type', 'product');
+        $q = trim($request->get('q', ''));
+
+        if ($type === 'product') {
+            $results = Product::where('status', 'approved')
+                ->when($q, function ($query) use ($q) {
+                    $query->where('name', 'like', "%{$q}%");
+                })
+                ->select('id', 'name')
+                ->limit(25)
+                ->get()
+                ->map(function ($p) {
+                    return [
+                        'id'    => (string)$p->id,
+                        'title' => $p->name,
+                        'url'   => '/products/' . $p->id,
+                    ];
+                });
+            return response()->json($results);
+        }
+
+        if ($type === 'seller') {
+            $results = User::where('role', 'seller')
+                ->where('isVerified', true)
+                ->when($q, function ($query) use ($q) {
+                    $query->where(function ($sq) use ($q) {
+                        $sq->where('shopName', 'like', "%{$q}%")
+                           ->orWhere('name', 'like', "%{$q}%");
+                    });
+                })
+                ->select('id', 'name', 'shopName')
+                ->limit(25)
+                ->get()
+                ->map(function ($s) {
+                    $label = $s->shopName ?: $s->name;
+                    return [
+                        'id'    => (string)$s->id,
+                        'title' => $label,
+                        'url'   => '/shops/' . $s->id,
+                    ];
+                });
+            return response()->json($results);
+        }
+
+        if ($type === 'category') {
+            $results = Category::when($q, function ($query) use ($q) {
+                    $query->where('name', 'like', "%{$q}%");
+                })
+                ->select('id', 'name')
+                ->get()
+                ->map(function ($c) {
+                    return [
+                        'id'    => (string)$c->id,
+                        'title' => $c->name,
+                        'url'   => '/?category=' . $c->id . '#catalogue-section',
+                    ];
+                });
+            return response()->json($results);
+        }
+
+        return response()->json([]);
     }
 
     public function store(Request $request)
     {
         $request->validate([
-            'image' => 'required|image|mimes:jpeg,png,jpg,gif,webp|max:5120',
-            'title' => 'nullable|string|max:255',
-            'subtitle' => 'nullable|string|max:1000',
+            'image'         => 'required|image|mimes:jpeg,png,jpg,gif,webp|max:5120',
+            'title'         => 'nullable|string|max:60',
+            'subtitle'      => 'nullable|string|max:100',
             'button_text_1' => 'nullable|string|max:50',
-            'button_url_1' => 'nullable|string|max:255',
+            'button_url_1'  => 'nullable|string|max:255',
             'button_text_2' => 'nullable|string|max:50',
-            'button_url_2' => 'nullable|string|max:255',
-            'order_index' => 'nullable|integer',
-            'is_active' => 'nullable|boolean',
+            'button_url_2'  => 'nullable|string|max:255',
+            'order_index'   => 'nullable|integer|min:1',
+            'start_date'    => 'nullable|date',
+            'end_date'      => 'nullable|date|after_or_equal:start_date',
+            'is_active'     => 'nullable|boolean',
         ]);
 
         $imagePath = '';
         if ($request->hasFile('image')) {
             $file = $request->file('image');
             $filename = time() . '_' . uniqid() . '.' . $file->getClientOriginalExtension();
-            
+
             // Ensure folder exists
             $destinationPath = public_path('uploads/banners');
             if (!File::isDirectory($destinationPath)) {
                 File::makeDirectory($destinationPath, 0755, true, true);
             }
-            
+
             $file->move($destinationPath, $filename);
             $imagePath = 'uploads/banners/' . $filename;
         }
 
+        // Determine 1-based order index safely
+        $targetOrder = (int) ($request->order_index ?: (Banner::max('order_index') + 1));
+        if ($targetOrder < 1) {
+            $targetOrder = 1;
+        }
+
+        // Shift existing banners to prevent duplicates
+        Banner::where('order_index', '>=', $targetOrder)->increment('order_index');
+
         Banner::create([
-            'image_path' => $imagePath,
-            'title' => $request->title,
-            'subtitle' => $request->subtitle,
+            'image_path'    => $imagePath,
+            'title'         => $request->title,
+            'subtitle'      => $request->subtitle,
             'button_text_1' => $request->button_text_1,
-            'button_url_1' => $request->button_url_1,
+            'button_url_1'  => $request->button_url_1,
             'button_text_2' => $request->button_text_2,
-            'button_url_2' => $request->button_url_2,
-            'order_index' => $request->order_index ?? 0,
-            'is_active' => $request->has('is_active') ? (bool)$request->is_active : true,
+            'button_url_2'  => $request->button_url_2,
+            'order_index'   => $targetOrder,
+            'start_date'    => $request->start_date ? date('Y-m-d H:i:s', strtotime($request->start_date)) : null,
+            'end_date'      => $request->end_date ? date('Y-m-d H:i:s', strtotime($request->end_date)) : null,
+            'is_active'     => $request->has('is_active') ? (bool)$request->is_active : true,
         ]);
 
-        return redirect()->back()->with('success', 'Banner created successfully.');
+        $this->normalizeOrderIndexes();
+
+        return redirect()->back()->with('success', 'Hero Promotion created successfully.');
     }
 
     public function update(Request $request, string $id)
@@ -77,31 +182,40 @@ class AdminBannerController extends Controller
         $banner = Banner::findOrFail($id);
 
         $request->validate([
-            'image' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:5120',
-            'title' => 'nullable|string|max:255',
-            'subtitle' => 'nullable|string|max:1000',
+            'image'         => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:5120',
+            'title'         => 'nullable|string|max:60',
+            'subtitle'      => 'nullable|string|max:100',
             'button_text_1' => 'nullable|string|max:50',
-            'button_url_1' => 'nullable|string|max:255',
+            'button_url_1'  => 'nullable|string|max:255',
             'button_text_2' => 'nullable|string|max:50',
-            'button_url_2' => 'nullable|string|max:255',
-            'order_index' => 'nullable|integer',
-            'is_active' => 'nullable|boolean',
+            'button_url_2'  => 'nullable|string|max:255',
+            'order_index'   => 'nullable|integer|min:1',
+            'start_date'    => 'nullable|date',
+            'end_date'      => 'nullable|date|after_or_equal:start_date',
+            'is_active'     => 'nullable|boolean',
         ]);
 
+        $targetOrder = (int) ($request->order_index ?: $banner->order_index);
+        if ($targetOrder < 1) {
+            $targetOrder = 1;
+        }
+
         $data = [
-            'title' => $request->title,
-            'subtitle' => $request->subtitle,
+            'title'         => $request->title,
+            'subtitle'      => $request->subtitle,
             'button_text_1' => $request->button_text_1,
-            'button_url_1' => $request->button_url_1,
+            'button_url_1'  => $request->button_url_1,
             'button_text_2' => $request->button_text_2,
-            'button_url_2' => $request->button_url_2,
-            'order_index' => $request->order_index ?? 0,
-            'is_active' => $request->has('is_active') ? (bool)$request->is_active : false,
+            'button_url_2'  => $request->button_url_2,
+            'order_index'   => $targetOrder,
+            'start_date'    => $request->start_date ? date('Y-m-d H:i:s', strtotime($request->start_date)) : null,
+            'end_date'      => $request->end_date ? date('Y-m-d H:i:s', strtotime($request->end_date)) : null,
+            'is_active'     => $request->has('is_active') ? (bool)$request->is_active : false,
         ];
 
         if ($request->hasFile('image')) {
-            // Delete old image
-            if ($banner->image_path) {
+            // Delete old image if not default
+            if ($banner->image_path && !str_contains($banner->image_path, 'default')) {
                 $oldPath = public_path($banner->image_path);
                 if (File::exists($oldPath)) {
                     File::delete($oldPath);
@@ -111,20 +225,40 @@ class AdminBannerController extends Controller
             // Upload new image
             $file = $request->file('image');
             $filename = time() . '_' . uniqid() . '.' . $file->getClientOriginalExtension();
-            
+
             // Ensure folder exists
             $destinationPath = public_path('uploads/banners');
             if (!File::isDirectory($destinationPath)) {
                 File::makeDirectory($destinationPath, 0755, true, true);
             }
-            
+
             $file->move($destinationPath, $filename);
             $data['image_path'] = 'uploads/banners/' . $filename;
         }
 
         $banner->update($data);
+        $this->normalizeOrderIndexes();
 
-        return redirect()->back()->with('success', 'Banner updated successfully.');
+        return redirect()->back()->with('success', 'Hero Promotion updated successfully.');
+    }
+
+    public function reorder(Request $request)
+    {
+        $request->validate([
+            'ordered_ids'   => 'required|array',
+            'ordered_ids.*' => 'exists:banners,id',
+        ]);
+
+        DB::transaction(function () use ($request) {
+            foreach ($request->ordered_ids as $index => $id) {
+                Banner::where('id', $id)->update(['order_index' => $index + 1]);
+            }
+        });
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Promotions display order updated successfully.',
+        ]);
     }
 
     public function destroy(string $id)
@@ -132,7 +266,7 @@ class AdminBannerController extends Controller
         $banner = Banner::findOrFail($id);
 
         // Delete image file
-        if ($banner->image_path) {
+        if ($banner->image_path && !str_contains($banner->image_path, 'default')) {
             $filePath = public_path($banner->image_path);
             if (File::exists($filePath)) {
                 File::delete($filePath);
@@ -140,8 +274,9 @@ class AdminBannerController extends Controller
         }
 
         $banner->delete();
+        $this->normalizeOrderIndexes();
 
-        return redirect()->back()->with('success', 'Banner deleted successfully.');
+        return redirect()->back()->with('success', 'Promotion deleted successfully.');
     }
 
     public function toggleActive(string $id)
@@ -150,26 +285,26 @@ class AdminBannerController extends Controller
         $banner->is_active = !$banner->is_active;
         $banner->save();
 
-        return redirect()->back()->with('success', 'Banner visibility updated.');
+        return redirect()->back()->with('success', 'Promotion visibility updated.');
     }
 
     public function approve(string $id)
     {
         $banner = Banner::findOrFail($id);
         $banner->update([
-            'status' => 'approved',
-            'is_active' => true,
-            'rejection_reason' => null
+            'status'           => 'approved',
+            'is_active'        => true,
+            'rejection_reason' => null,
         ]);
 
         if ($banner->userId) {
-            \App\Models\Notification::create([
-                'userId' => $banner->userId,
-                'title' => 'Hero Banner Approved',
-                'message' => 'Your requested hero banner "' . ($banner->title ?: 'Untitled') . '" has been approved and is now live on the homepage!',
+            Notification::create([
+                'userId'     => $banner->userId,
+                'title'      => 'Hero Banner Approved',
+                'message'    => 'Your requested hero banner "' . ($banner->title ?: 'Untitled') . '" has been approved and is now live on the homepage!',
                 'targetRole' => 'seller',
-                'isRead' => false,
-                'link' => '/seller/banners',
+                'isRead'     => false,
+                'link'       => '/seller/banners',
             ]);
         }
 
@@ -184,22 +319,39 @@ class AdminBannerController extends Controller
 
         $banner = Banner::findOrFail($id);
         $banner->update([
-            'status' => 'rejected',
-            'is_active' => false,
+            'status'           => 'rejected',
+            'is_active'        => false,
             'rejection_reason' => $request->rejection_reason,
         ]);
 
         if ($banner->userId) {
-            \App\Models\Notification::create([
-                'userId' => $banner->userId,
-                'title' => 'Hero Banner Rejected',
-                'message' => 'Your requested hero banner "' . ($banner->title ?: 'Untitled') . '" was rejected. Reason: ' . $request->rejection_reason,
+            Notification::create([
+                'userId'     => $banner->userId,
+                'title'      => 'Hero Banner Rejected',
+                'message'    => 'Your requested hero banner "' . ($banner->title ?: 'Untitled') . '" was rejected. Reason: ' . $request->rejection_reason,
                 'targetRole' => 'seller',
-                'isRead' => false,
-                'link' => '/seller/banners',
+                'isRead'     => false,
+                'link'       => '/seller/banners',
             ]);
         }
 
         return redirect()->back()->with('success', 'Banner request rejected.');
+    }
+
+    /**
+     * Atomically compacts display order indices so they run 1, 2, 3, ... without gaps.
+     */
+    private function normalizeOrderIndexes(): void
+    {
+        $banners = Banner::orderBy('order_index', 'asc')
+            ->orderBy('created_at', 'desc')
+            ->get();
+
+        foreach ($banners as $index => $banner) {
+            $properIndex = $index + 1;
+            if ($banner->order_index !== $properIndex) {
+                $banner->update(['order_index' => $properIndex]);
+            }
+        }
     }
 }

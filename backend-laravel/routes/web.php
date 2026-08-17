@@ -171,6 +171,8 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->group(function () {
 
     // Hero Banners
     Route::get('/banners', [AdminBannerController::class, 'index'])->name('admin.banners.index');
+    Route::get('/banners/search-destinations', [AdminBannerController::class, 'searchDestinations'])->name('admin.banners.search-destinations');
+    Route::post('/banners/reorder', [AdminBannerController::class, 'reorder'])->name('admin.banners.reorder');
     Route::post('/banners', [AdminBannerController::class, 'store'])->name('admin.banners.store');
     Route::put('/banners/{id}', [AdminBannerController::class, 'update'])->name('admin.banners.update');
     Route::delete('/banners/{id}', [AdminBannerController::class, 'destroy'])->name('admin.banners.destroy');
