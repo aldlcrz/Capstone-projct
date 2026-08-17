@@ -429,7 +429,7 @@
                     {{-- Foreground content --}}
                     <div class="relative z-10 space-y-0.5">
                         <h4 class="text-sm font-bold text-white tracking-tight" x-text="form.title || 'Handcrafted piña silk barong'"></h4>
-                        <p class="text-[11px] text-gray-400 font-medium" x-text="form.subtitle || 'Macapagal Embroidery'"></p>
+                        <p class="text-[11px] text-gray-400 font-medium" x-text="form.subtitle || 'LumBarong Shop'"></p>
                     </div>
 
                     {{-- Action buttons simulation --}}
@@ -539,14 +539,14 @@ function promotionManager(initialData) {
             }
             var self = this;
             return this.allProducts.filter(function(p) {
-                return p.seller_id === self.selectedShopId;
+                return String(p.seller_id) === String(self.selectedShopId);
             });
         },
 
         form: {
             id: '',
             title: '',
-            subtitle: '',
+            subtitle: 'LumBarong Shop',
             button_text_1: 'Shop now',
             button_url_1: '',
             button_text_2: 'Visit shop',
@@ -562,7 +562,7 @@ function promotionManager(initialData) {
             this.mode = newMode;
             if (newMode === 'upload' && !this.form.title) {
                 this.form.title = 'Handcrafted piña silk barong';
-                this.form.subtitle = 'Artisan Heritage Barong';
+                this.form.subtitle = 'LumBarong Shop';
                 this.form.button_text_1 = 'Shop now';
                 this.form.button_url_1 = '/#catalogue-section';
                 this.form.button_text_2 = 'Visit shop';
@@ -573,26 +573,28 @@ function promotionManager(initialData) {
         onShopSelected() {
             this.selectedProductId = '';
             if (this.selectedShopId) {
-                var shop = this.sellers.find(s => s.id === this.selectedShopId);
+                var shop = this.sellers.find(s => String(s.id) === String(this.selectedShopId));
                 if (shop) {
-                    this.form.subtitle = shop.shop_name;
+                    this.form.subtitle = shop.shop_name || shop.name || 'LumBarong Shop';
                     this.form.button_url_2 = '/shops/' + shop.id;
                     if (shop.products && shop.products.length > 0) {
                         this.selectedProductId = shop.products[0].id;
                         this.onProductSelected();
                     }
                 }
+            } else {
+                this.form.subtitle = 'LumBarong Shop';
             }
         },
 
         onProductSelected() {
             if (!this.selectedProductId) return;
-            var product = this.allProducts.find(p => p.id === this.selectedProductId);
+            var product = this.allProducts.find(p => String(p.id) === String(this.selectedProductId));
             if (!product) return;
 
             this.selectedShopId = product.seller_id;
             this.form.title = product.name;
-            this.form.subtitle = product.shop_name || 'Artisan Barong';
+            this.form.subtitle = product.shop_name || 'LumBarong Shop';
             this.form.button_text_1 = 'Shop now';
             this.form.button_url_1 = '/products/' + product.id;
             this.form.button_text_2 = 'Visit shop';
@@ -614,7 +616,7 @@ function promotionManager(initialData) {
             this.form = {
                 id: '',
                 title: '',
-                subtitle: '',
+                subtitle: 'LumBarong Shop',
                 button_text_1: 'Shop now',
                 button_url_1: '',
                 button_text_2: 'Visit shop',
@@ -640,7 +642,6 @@ function promotionManager(initialData) {
 
         openEditModal(banner) {
             this.isEditing = true;
-            this.mode = 'upload';
             this.showSchedule = Boolean(banner.start_date || banner.end_date);
             this.imagePreviewUrl = banner.image_path ? (banner.image_path.startsWith('http') || banner.image_path.startsWith('/') ? banner.image_path : '/' + banner.image_path) : '';
             this.fileInfo = { name: 'Current Image', dimensions: '' };
@@ -655,7 +656,7 @@ function promotionManager(initialData) {
             this.form = {
                 id: banner.id,
                 title: banner.title || '',
-                subtitle: banner.subtitle || '',
+                subtitle: banner.subtitle || 'LumBarong Shop',
                 button_text_1: banner.button_text_1 || 'Shop now',
                 button_url_1: banner.button_url_1 || '',
                 button_text_2: banner.button_text_2 || 'Visit shop',
@@ -666,6 +667,33 @@ function promotionManager(initialData) {
                 end_date: formatDt(banner.end_date),
                 preset_image_url: ''
             };
+
+            // Match shop & product if linked
+            this.selectedProductId = '';
+            this.selectedShopId = '';
+
+            if (banner.button_url_1 && banner.button_url_1.includes('/products/')) {
+                var prodId = banner.button_url_1.replace('/products/', '').split('?')[0];
+                var prod = this.allProducts.find(p => String(p.id) === String(prodId));
+                if (prod) {
+                    this.selectedProductId = prod.id;
+                    this.selectedShopId = prod.seller_id;
+                    this.mode = 'product';
+                    this.form.subtitle = prod.shop_name || banner.subtitle || 'LumBarong Shop';
+                } else {
+                    this.mode = 'upload';
+                }
+            } else if (banner.button_url_2 && banner.button_url_2.includes('/shops/')) {
+                var shopId = banner.button_url_2.replace('/shops/', '').split('?')[0];
+                var shop = this.sellers.find(s => String(s.id) === String(shopId));
+                if (shop) {
+                    this.selectedShopId = shop.id;
+                    this.form.subtitle = shop.shop_name || banner.subtitle || 'LumBarong Shop';
+                }
+                this.mode = 'upload';
+            } else {
+                this.mode = 'upload';
+            }
 
             this.showModal = true;
         },
