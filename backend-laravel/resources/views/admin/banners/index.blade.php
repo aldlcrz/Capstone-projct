@@ -367,34 +367,36 @@
                     </div>
                 </div>
 
-                {{-- ── 3. CLEAN LIVE PREVIEW CARD (MATCHING SHOP HERO STUDIO LAYOUT) ── --}}
-                <div class="relative w-full rounded-2xl overflow-hidden bg-[#0F0E0D] border border-[#222] min-h-36 p-5 flex items-center justify-between shadow-inner">
-                    {{-- Studio lighting backdrop --}}
-                    <div class="absolute inset-0 bg-radial from-[#25201A]/60 via-[#121110] to-[#080706]"></div>
-                    <div class="absolute inset-0 bg-linear-to-r from-black/95 via-black/50 to-black/70"></div>
+                {{-- ── 3. CLEAN LIVE PREVIEW CARD (MATCHING SHOP HERO CENTERED LAYOUT) ── --}}
+                <div class="relative w-full rounded-2xl overflow-hidden bg-[#0D0D0D] border border-[#222] min-h-36 p-5 flex items-center justify-between shadow-inner">
+                    {{-- Studio backdrop --}}
+                    <div class="absolute inset-0 bg-[#0A0A0A]"></div>
+                    <div class="absolute inset-0 bg-radial from-[#1F1B16]/50 via-[#0D0D0D] to-[#050505]"></div>
+
+                    {{-- Centered full picture preview (100% visible, uncropped) --}}
+                    <div class="absolute inset-0 flex items-center justify-center p-2 pointer-events-none z-10">
+                        <template x-if="imagePreviewUrl">
+                            <img :src="imagePreviewUrl" class="max-h-full max-w-full w-auto h-auto object-contain rounded-lg drop-shadow-xl">
+                        </template>
+                    </div>
+
+                    {{-- Left gradient overlay --}}
+                    <div class="absolute inset-0 bg-linear-to-r from-black/90 via-black/40 to-transparent z-15 pointer-events-none"></div>
 
                     {{-- Foreground content on left --}}
                     <div class="relative z-20 space-y-1 max-w-[55%]">
-                        <p class="text-[10px] text-amber-400 font-bold uppercase tracking-wider" x-text="form.subtitle || 'LumBarong Shop'"></p>
-                        <h4 class="text-sm sm:text-base font-bold text-white tracking-tight leading-tight" x-text="form.title || 'Handcrafted piña silk barong'"></h4>
+                        <p class="text-[10px] text-amber-400 font-bold uppercase tracking-wider drop-shadow-xs" x-text="form.subtitle || 'LumBarong Shop'"></p>
+                        <h4 class="text-sm sm:text-base font-bold text-white tracking-tight leading-tight drop-shadow-md" x-text="form.title || 'Handcrafted piña silk barong'"></h4>
 
                         {{-- Action buttons simulation --}}
                         <div class="flex items-center gap-2 pt-2">
                             <div class="flex items-center gap-1.5 px-2.5 py-1.5 bg-[#C0422A] text-white text-[10px] font-bold rounded-lg shadow-sm">
                                 <span>Shop now</span>
                             </div>
-                            <div class="px-2.5 py-1.5 bg-white/10 border border-white/20 text-gray-200 text-[10px] font-medium rounded-lg backdrop-blur-xs">
+                            <div class="px-2.5 py-1.5 bg-black/40 border border-white/20 text-gray-200 text-[10px] font-medium rounded-lg backdrop-blur-xs">
                                 <span>Visit shop</span>
                             </div>
                         </div>
-                    </div>
-
-                    {{-- Centered / Middle uncropped product on right/center --}}
-                    <div class="relative z-20 w-28 h-28 flex items-center justify-center shrink-0 pr-2">
-                        <div class="absolute w-20 h-20 bg-amber-500/10 rounded-full blur-xl pointer-events-none"></div>
-                        <template x-if="imagePreviewUrl">
-                            <img :src="imagePreviewUrl" class="max-h-full max-w-full object-contain rounded-xl drop-shadow-xl">
-                        </template>
                     </div>
                 </div>
 

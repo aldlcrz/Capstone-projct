@@ -46,11 +46,6 @@
         class="relative rounded-2xl sm:rounded-3xl overflow-hidden shadow-sm bg-gray-900 min-h-55 sm:min-h-70 md:min-h-85 lg:aspect-16/4 lg:min-h-0"
     >
         @foreach($banners as $i => $banner)
-        @php
-            $isProductPromo = ($banner->button_url_1 && str_contains($banner->button_url_1, '/products/')) 
-                           || str_contains($banner->image_path, 'products/') 
-                           || str_contains($banner->image_path, 'uploads/products/');
-        @endphp
         <div
             x-show="active === {{ $i }}"
             x-transition:enter="transition ease-out duration-500"
@@ -59,40 +54,31 @@
             x-transition:leave="transition ease-in duration-300"
             x-transition:leave-start="opacity-100"
             x-transition:leave-end="opacity-0"
-            class="absolute inset-0 w-full h-full bg-[#0F0E0D]"
+            class="absolute inset-0 w-full h-full bg-[#0D0D0D] flex items-center justify-center"
         >
-            @if($isProductPromo)
-                {{-- Luxury Studio Atmosphere Backdrop (No duplicate product zoom clashes) --}}
-                <div class="absolute inset-0 bg-radial from-[#2A241C]/50 via-[#121110] to-[#080706]"></div>
-                <div class="absolute inset-0 bg-linear-to-r from-black/95 via-black/50 to-black/70"></div>
+            {{-- Dark Atmosphere Studio Backdrop --}}
+            <div class="absolute inset-0 bg-[#0A0A0A]"></div>
+            <div class="absolute inset-0 bg-radial from-[#1F1B16]/50 via-[#0D0D0D] to-[#050505]"></div>
 
-                {{-- Centered / Middle-Right Product Spotlight Showcase --}}
-                <div class="absolute inset-y-0 left-1/3 sm:left-5/12 right-3 sm:right-10 flex items-center justify-center p-2 sm:p-5 pointer-events-none z-10">
-                    <div class="relative max-h-full h-full w-full flex items-center justify-center">
-                        {{-- Subtle Amber Ambient Glow behind the Barong --}}
-                        <div class="absolute w-36 h-36 sm:w-60 sm:h-60 bg-amber-500/10 rounded-full blur-3xl pointer-events-none"></div>
-                        <img src="{{ $banner->getImageUrl() }}" 
-                             alt="{{ $banner->title }}" 
-                             class="max-h-full w-auto max-w-full object-contain rounded-2xl drop-shadow-[0_15px_30px_rgba(0,0,0,0.85)] filter contrast-[1.02]">
-                    </div>
-                </div>
-            @else
-                {{-- Full Graphic / Custom Uploaded Banner Presentation --}}
+            {{-- Full Picture Centered in the Middle (100% visible, uncropped, any ratio) --}}
+            <div class="absolute inset-0 flex items-center justify-center p-1 sm:p-3 pointer-events-none z-10">
                 <img src="{{ $banner->getImageUrl() }}" 
                      alt="{{ $banner->title }}" 
                      @if($i === 0) fetchpriority="high" loading="eager" @else loading="lazy" @endif
                      decoding="async"
-                     class="absolute inset-0 w-full h-full object-cover object-center">
-                <div class="absolute inset-0 bg-linear-to-r from-black/85 via-black/50 to-transparent"></div>
-            @endif
+                     class="max-h-full max-w-full w-auto h-auto object-contain drop-shadow-[0_10px_30px_rgba(0,0,0,0.85)]">
+            </div>
+
+            {{-- Left Gradient Overlay for Crystal Clear Text Readability --}}
+            <div class="absolute inset-0 bg-linear-to-r from-black/90 via-black/50 sm:via-black/35 to-transparent z-15 pointer-events-none"></div>
 
             {{-- Content on Left Side --}}
-            <div class="relative z-20 flex flex-col justify-center h-full px-5 sm:px-12 py-6 sm:py-10 max-w-[58%] sm:max-w-md lg:max-w-lg">
+            <div class="relative z-20 flex flex-col justify-center h-full px-5 sm:px-12 py-6 sm:py-10 max-w-[60%] sm:max-w-md lg:max-w-lg">
                 @if($banner->subtitle)
-                    <p class="text-[9px] sm:text-[11px] font-black uppercase tracking-[0.25em] text-amber-300 drop-shadow-xs mb-1.5 sm:mb-2">{{ $banner->subtitle }}</p>
+                    <p class="text-[9px] sm:text-[11px] font-black uppercase tracking-[0.25em] text-amber-300 drop-shadow-md mb-1.5 sm:mb-2">{{ $banner->subtitle }}</p>
                 @endif
                 @if($banner->title)
-                    <h2 class="text-xl sm:text-3xl lg:text-4xl font-black text-white leading-[1.15] tracking-tight mb-3 sm:mb-4 drop-shadow-md">{{ $banner->title }}</h2>
+                    <h2 class="text-xl sm:text-3xl lg:text-4xl font-black text-white leading-[1.15] tracking-tight mb-3 sm:mb-4 drop-shadow-[0_2px_8px_rgba(0,0,0,0.9)]">{{ $banner->title }}</h2>
                 @endif
                 <div class="flex flex-wrap items-center gap-2.5 sm:gap-3.5 mt-1">
                     @if($banner->button_text_1)
@@ -107,7 +93,7 @@
                         @php $url2 = $banner->getResolvedButtonUrl2(); @endphp
                         <a href="{{ $url2 }}"
                            @if($url2 === '#catalogue-section') onclick="event.preventDefault(); document.getElementById('catalogue-section')?.scrollIntoView({ behavior: 'smooth' });" @endif
-                           class="inline-flex items-center justify-center px-4 py-2 sm:px-6 sm:py-3 bg-white/15 hover:bg-white/25 text-white text-[10px] sm:text-xs font-black uppercase tracking-wider rounded-xl border border-white/30 backdrop-blur-md transition-all hover:scale-105 active:scale-95 cursor-pointer">
+                           class="inline-flex items-center justify-center px-4 py-2 sm:px-6 sm:py-3 bg-black/40 hover:bg-black/60 text-white text-[10px] sm:text-xs font-black uppercase tracking-wider rounded-xl border border-white/30 backdrop-blur-md transition-all hover:scale-105 active:scale-95 cursor-pointer shadow-md">
                             {{ $banner->button_text_2 }}
                         </a>
                     @endif
