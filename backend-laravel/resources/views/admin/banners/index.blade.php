@@ -26,25 +26,8 @@
         </div>
     </div>
 
-    {{-- Tabs --}}
-    <div class="flex gap-2 border-b border-gray-100 pb-1">
-        <button @click="tab = 'all'"
-            :class="tab === 'all' ? 'border-b-2 border-black text-black font-black' : 'text-gray-500 font-bold hover:text-gray-700'"
-            class="px-4 py-2 text-[10px] uppercase tracking-widest transition-all cursor-pointer">
-            All Promotions ({{ $banners->count() }})
-        </button>
-        <button @click="tab = 'requests'"
-            :class="tab === 'requests' ? 'border-b-2 border-black text-black font-black' : 'text-gray-500 font-bold hover:text-gray-700'"
-            class="px-4 py-2 text-[10px] uppercase tracking-widest transition-all flex items-center gap-2 cursor-pointer">
-            Seller Requests
-            @if($pendingCount > 0)
-                <span class="px-2 py-0.5 bg-amber-500 text-white text-[8px] font-black rounded-full animate-pulse">{{ $pendingCount }}</span>
-            @endif
-        </button>
-    </div>
-
-    {{-- ── ALL PROMOTIONS TAB ── --}}
-    <div x-show="tab === 'all'" class="space-y-4">
+    {{-- ── ALL PROMOTIONS ── --}}
+    <div class="space-y-4">
         @if($banners->isEmpty())
             <div class="bg-white rounded-3xl border border-gray-100 p-16 text-center shadow-sm">
                 <div class="w-16 h-16 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-4 border border-gray-100">
@@ -216,71 +199,6 @@
                         </tbody>
                     </table>
                 </div>
-            </div>
-        @endif
-    </div>
-
-    {{-- ── SELLER REQUESTS TAB ── --}}
-    <div x-show="tab === 'requests'" class="space-y-4" style="display:none;" x-cloak>
-        @if($sellerBanners->isEmpty())
-            <div class="bg-white rounded-3xl border border-gray-100 p-12 text-center shadow-sm">
-                <div class="w-14 h-14 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-4 border border-gray-100">
-                    <svg class="w-7 h-7 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                    </svg>
-                </div>
-                <p class="text-xs font-bold text-gray-500 uppercase tracking-widest">No seller promotion requests yet</p>
-            </div>
-        @else
-            <div class="bg-white rounded-3xl border border-gray-100 shadow-sm overflow-hidden divide-y divide-gray-50">
-                @foreach($sellerBanners as $banner)
-                    <div class="p-6 flex flex-col md:flex-row md:items-center gap-6 hover:bg-gray-50/50 transition-all">
-                        <div class="w-36 shrink-0">
-                            <div class="w-36 aspect-16/9 rounded-xl overflow-hidden bg-gray-900 border border-gray-100 shadow-sm relative">
-                                <img src="{{ $banner->getImageUrl() }}" class="w-full h-full object-cover">
-                            </div>
-                        </div>
-
-                        <div class="flex-1 space-y-1">
-                            <div class="flex items-center gap-2 flex-wrap">
-                                <span class="text-sm font-bold text-black">{{ $banner->title ?: 'Untitled Promotion' }}</span>
-                                @if($banner->status === 'pending')
-                                    <span class="px-2 py-0.5 bg-amber-50 border border-amber-200 text-amber-700 text-[8px] font-black rounded-full uppercase tracking-wider">Pending</span>
-                                @elseif($banner->status === 'approved')
-                                    <span class="px-2 py-0.5 bg-green-50 border border-green-200 text-green-700 text-[8px] font-black rounded-full uppercase tracking-wider">Approved</span>
-                                @else
-                                    <span class="px-2 py-0.5 bg-red-50 border border-red-200 text-red-700 text-[8px] font-black rounded-full uppercase tracking-wider">Rejected</span>
-                                @endif
-                            </div>
-                            <p class="text-[10px] text-gray-600 max-w-md leading-relaxed">{{ Str::limit($banner->subtitle, 100) }}</p>
-                            @if($banner->user)
-                                <div class="flex items-center gap-1.5 text-[9px] text-gray-500 font-bold uppercase tracking-wider pt-1">
-                                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
-                                    {{ $banner->user->shopName ?: $banner->user->name }}
-                                    <span class="text-gray-300">·</span>
-                                    {{ $banner->created_at->diffForHumans() }}
-                                </div>
-                            @endif
-                        </div>
-
-                        <div class="flex items-center gap-2 shrink-0">
-                            @if($banner->status === 'pending')
-                                <form action="{{ route('admin.banners.approve', $banner->id) }}" method="POST">
-                                    @csrf @method('PATCH')
-                                    <button type="submit"
-                                        class="px-4 py-2.5 bg-black hover:bg-green-600 text-white rounded-xl text-[9px] font-black uppercase tracking-widest transition-all cursor-pointer">
-                                        Approve
-                                    </button>
-                                </form>
-                                <button type="button"
-                                    @click="rejectRoute = '{{ route('admin.banners.reject', $banner->id) }}'; rejectBannerTitle = '{{ addslashes($banner->title ?: 'Untitled') }}'; showRejectModal = true"
-                                    class="px-4 py-2.5 bg-white border border-red-200 text-red-600 hover:bg-red-50 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all cursor-pointer">
-                                    Reject
-                                </button>
-                            @endif
-                        </div>
-                    </div>
-                @endforeach
             </div>
         @endif
     </div>
@@ -494,24 +412,6 @@
                 </div>
 
             </form>
-        </div>
-    </div>
-
-    {{-- Reject Modal --}}
-    <div x-show="showRejectModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm" x-cloak>
-        <div class="bg-[#141414] text-white border border-[#272727] rounded-3xl w-full max-w-md p-6 shadow-2xl" @click.away="showRejectModal = false">
-            <h3 class="text-base font-bold text-white mb-2">Reject Banner Request</h3>
-            <p class="text-xs text-gray-400 mb-4">Please provide a reason for rejecting "<span class="text-white font-bold" x-text="rejectBannerTitle"></span>".</p>
-            <form :action="rejectRoute" method="POST" class="space-y-4">
-                @csrf @method('PATCH')
-                <textarea name="rejection_reason" rows="3" required placeholder="e.g. Image resolution is too low..."
-                    class="w-full px-3 py-2 bg-[#1A1A1A] border border-[#2B2B2B] rounded-xl text-xs text-white focus:outline-none"></textarea>
-                <div class="flex gap-2">
-                    <button type="button" @click="showRejectModal = false" class="flex-1 py-2 bg-[#1F1F1F] text-gray-300 rounded-xl text-xs font-semibold">Cancel</button>
-                    <button type="submit" class="flex-1 py-2 bg-red-600 hover:bg-red-700 text-white rounded-xl text-xs font-bold">Confirm Rejection</button>
-                </div>
-            </form>
-        </div>
     </div>
 
 </div>
