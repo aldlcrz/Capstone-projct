@@ -59,23 +59,22 @@
             x-transition:leave="transition ease-in duration-300"
             x-transition:leave-start="opacity-100"
             x-transition:leave-end="opacity-0"
-            class="absolute inset-0 w-full h-full"
+            class="absolute inset-0 w-full h-full bg-[#0F0E0D]"
         >
             @if($isProductPromo)
-                {{-- Luxury Product Showcase Presentation --}}
-                {{-- Atmospheric Blurred Background --}}
-                <img src="{{ $banner->getImageUrl() }}" 
-                     alt="{{ $banner->title }}" 
-                     @if($i === 0) fetchpriority="high" loading="eager" @else loading="lazy" @endif
-                     decoding="async"
-                     class="absolute inset-0 w-full h-full object-cover object-center scale-110 blur-xl opacity-35">
-                <div class="absolute inset-0 bg-linear-to-r from-black/95 via-black/75 sm:via-black/50 to-black/25"></div>
+                {{-- Luxury Studio Atmosphere Backdrop (No duplicate product zoom clashes) --}}
+                <div class="absolute inset-0 bg-radial from-[#2A241C]/50 via-[#121110] to-[#080706]"></div>
+                <div class="absolute inset-0 bg-linear-to-r from-black/95 via-black/50 to-black/70"></div>
 
-                {{-- Full Uncropped Product Showcase on Right Side (Collar to Hem visible) --}}
-                <div class="absolute right-2 sm:right-8 md:right-14 inset-y-0 w-5/12 sm:w-1/2 flex items-center justify-end p-2 sm:p-4 pointer-events-none z-10">
-                    <img src="{{ $banner->getImageUrl() }}" 
-                         alt="{{ $banner->title }}" 
-                         class="max-h-full w-auto max-w-full object-contain rounded-xl drop-shadow-[0_15px_35px_rgba(0,0,0,0.75)]">
+                {{-- Centered / Middle-Right Product Spotlight Showcase --}}
+                <div class="absolute inset-y-0 left-1/3 sm:left-5/12 right-3 sm:right-10 flex items-center justify-center p-2 sm:p-5 pointer-events-none z-10">
+                    <div class="relative max-h-full h-full w-full flex items-center justify-center">
+                        {{-- Subtle Amber Ambient Glow behind the Barong --}}
+                        <div class="absolute w-36 h-36 sm:w-60 sm:h-60 bg-amber-500/10 rounded-full blur-3xl pointer-events-none"></div>
+                        <img src="{{ $banner->getImageUrl() }}" 
+                             alt="{{ $banner->title }}" 
+                             class="max-h-full w-auto max-w-full object-contain rounded-2xl drop-shadow-[0_15px_30px_rgba(0,0,0,0.85)] filter contrast-[1.02]">
+                    </div>
                 </div>
             @else
                 {{-- Full Graphic / Custom Uploaded Banner Presentation --}}
@@ -88,7 +87,7 @@
             @endif
 
             {{-- Content on Left Side --}}
-            <div class="relative z-10 flex flex-col justify-center h-full px-5 sm:px-12 py-6 sm:py-10 max-w-[65%] sm:max-w-md lg:max-w-lg">
+            <div class="relative z-20 flex flex-col justify-center h-full px-5 sm:px-12 py-6 sm:py-10 max-w-[58%] sm:max-w-md lg:max-w-lg">
                 @if($banner->subtitle)
                     <p class="text-[9px] sm:text-[11px] font-black uppercase tracking-[0.25em] text-amber-300 drop-shadow-xs mb-1.5 sm:mb-2">{{ $banner->subtitle }}</p>
                 @endif
@@ -108,7 +107,7 @@
                         @php $url2 = $banner->getResolvedButtonUrl2(); @endphp
                         <a href="{{ $url2 }}"
                            @if($url2 === '#catalogue-section') onclick="event.preventDefault(); document.getElementById('catalogue-section')?.scrollIntoView({ behavior: 'smooth' });" @endif
-                           class="inline-flex items-center justify-center px-4 py-2 sm:px-6 sm:py-3 bg-white/20 hover:bg-white/30 text-white text-[10px] sm:text-xs font-black uppercase tracking-wider rounded-xl border border-white/40 backdrop-blur-md transition-all hover:scale-105 active:scale-95 cursor-pointer">
+                           class="inline-flex items-center justify-center px-4 py-2 sm:px-6 sm:py-3 bg-white/15 hover:bg-white/25 text-white text-[10px] sm:text-xs font-black uppercase tracking-wider rounded-xl border border-white/30 backdrop-blur-md transition-all hover:scale-105 active:scale-95 cursor-pointer">
                             {{ $banner->button_text_2 }}
                         </a>
                     @endif

@@ -367,34 +367,33 @@
                     </div>
                 </div>
 
-                {{-- ── 3. CLEAN LIVE PREVIEW CARD (MATCHING SHOP HERO DUAL-LAYER) ── --}}
-                <div class="relative w-full rounded-2xl overflow-hidden bg-[#0A0A0A] border border-[#222] min-h-36 p-5 flex items-center justify-between shadow-inner">
-                    {{-- Background simulation --}}
-                    <template x-if="imagePreviewUrl">
-                        <img :src="imagePreviewUrl" class="absolute inset-0 w-full h-full object-cover blur-md opacity-25 scale-105">
-                    </template>
-                    <div class="absolute inset-0 bg-linear-to-r from-black/90 via-black/60 to-black/30"></div>
+                {{-- ── 3. CLEAN LIVE PREVIEW CARD (MATCHING SHOP HERO STUDIO LAYOUT) ── --}}
+                <div class="relative w-full rounded-2xl overflow-hidden bg-[#0F0E0D] border border-[#222] min-h-36 p-5 flex items-center justify-between shadow-inner">
+                    {{-- Studio lighting backdrop --}}
+                    <div class="absolute inset-0 bg-radial from-[#25201A]/60 via-[#121110] to-[#080706]"></div>
+                    <div class="absolute inset-0 bg-linear-to-r from-black/95 via-black/50 to-black/70"></div>
 
                     {{-- Foreground content on left --}}
-                    <div class="relative z-10 space-y-1 max-w-[62%]">
+                    <div class="relative z-20 space-y-1 max-w-[55%]">
                         <p class="text-[10px] text-amber-400 font-bold uppercase tracking-wider" x-text="form.subtitle || 'LumBarong Shop'"></p>
                         <h4 class="text-sm sm:text-base font-bold text-white tracking-tight leading-tight" x-text="form.title || 'Handcrafted piña silk barong'"></h4>
 
                         {{-- Action buttons simulation --}}
                         <div class="flex items-center gap-2 pt-2">
-                            <div class="flex items-center gap-1.5 px-3 py-1.5 bg-[#C0422A] text-white text-[10px] font-bold rounded-lg shadow-sm">
+                            <div class="flex items-center gap-1.5 px-2.5 py-1.5 bg-[#C0422A] text-white text-[10px] font-bold rounded-lg shadow-sm">
                                 <span>Shop now</span>
                             </div>
-                            <div class="px-3 py-1.5 bg-white/10 border border-white/20 text-gray-200 text-[10px] font-medium rounded-lg backdrop-blur-xs">
+                            <div class="px-2.5 py-1.5 bg-white/10 border border-white/20 text-gray-200 text-[10px] font-medium rounded-lg backdrop-blur-xs">
                                 <span>Visit shop</span>
                             </div>
                         </div>
                     </div>
 
-                    {{-- Full uncropped product on right --}}
-                    <div class="relative z-10 w-24 h-24 sm:w-28 sm:h-28 flex items-center justify-end shrink-0">
+                    {{-- Centered / Middle uncropped product on right/center --}}
+                    <div class="relative z-20 w-28 h-28 flex items-center justify-center shrink-0 pr-2">
+                        <div class="absolute w-20 h-20 bg-amber-500/10 rounded-full blur-xl pointer-events-none"></div>
                         <template x-if="imagePreviewUrl">
-                            <img :src="imagePreviewUrl" class="max-h-full max-w-full object-contain rounded-lg drop-shadow-xl">
+                            <img :src="imagePreviewUrl" class="max-h-full max-w-full object-contain rounded-xl drop-shadow-xl">
                         </template>
                     </div>
                 </div>
