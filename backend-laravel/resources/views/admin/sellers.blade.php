@@ -9,15 +9,15 @@
     deleteModal: false,
     deleteSellerId: null,
     deleteSellerName: '',
-    openSuspend(seller) {
-        this.suspendSellerId = seller.id;
-        this.suspendSellerName = seller.name;
-        this.suspendReason = '';
+    openSuspend(id, name) {
+        this.suspendSellerId = id;
+        this.suspendSellerName = name;
+        this.suspendReason = 'Violation of platform seller policies';
         this.suspendModal = true;
     },
-    openDelete(seller) {
-        this.deleteSellerId = seller.id;
-        this.deleteSellerName = seller.name;
+    openDelete(id, name) {
+        this.deleteSellerId = id;
+        this.deleteSellerName = name;
         this.deleteModal = true;
     }
 }">
@@ -25,12 +25,6 @@
         <div>
             <div class="text-[10px] font-bold text-[#C0422A] uppercase tracking-[0.2em] mb-1">Artisan Registry</div>
             <h1 class="font-serif text-3xl font-bold text-black">Seller <span class="text-[#C0420A] font-light italic">Management</span></h1>
-        </div>
-        <div class="flex items-center gap-3">
-            <a href="{{ route('superadmin.sellers') }}" class="px-4 py-2.5 bg-[#3D2B1F] hover:bg-[#C0422A] text-white rounded-xl text-xs font-bold uppercase tracking-wider transition-all shadow-sm flex items-center gap-2">
-                <span>👑 Super Admin Governance</span>
-                <span>→</span>
-            </a>
         </div>
     </div>
 
@@ -76,6 +70,9 @@
                             Approve &amp; Verify
                         </button>
                     </form>
+                    <button type="button" @click="openSuspend('{{ $seller->id }}', '{{ addslashes($seller->name) }}')" class="px-4 py-2 bg-red-50 text-red-700 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-red-500 hover:text-white transition-all cursor-pointer">
+                        Reject / Suspend
+                    </button>
                 </div>
             </div>
             @endforeach
@@ -87,10 +84,6 @@
     <div class="bg-white rounded-3xl border border-gray-100 shadow-sm overflow-hidden">
         <div class="px-6 py-4 border-b border-gray-50 flex items-center justify-between">
             <h3 class="text-sm font-black uppercase tracking-widest text-black">All Sellers</h3>
-            <a href="{{ route('superadmin.sellers') }}" class="text-xs font-bold text-[#C0422A] hover:underline flex items-center gap-1">
-                <span>View Full Financial Oversight in Super Admin</span>
-                <span>→</span>
-            </a>
         </div>
         <div class="overflow-x-auto no-scrollbar">
             <table class="w-full text-left min-w-160">
@@ -147,11 +140,6 @@
                     </td>
                     <td class="px-6 py-4">
                         <div class="flex items-center justify-center gap-2">
-                            <a href="{{ route('superadmin.sellers', ['search' => $seller->name]) }}" 
-                               title="View detailed sales & commission oversight in Super Admin"
-                               class="px-3 py-2 bg-gray-100 hover:bg-[#3D2B1F] hover:text-white text-[#3D2B1F] rounded-lg text-[9px] font-black uppercase tracking-wider transition-all">
-                                👑 Super Admin
-                            </a>
                             @if(!$seller->isVerified)
                                 <form action="/admin/sellers/{{ $seller->id }}/verify" method="POST">
                                     @csrf @method('PATCH')
@@ -161,7 +149,7 @@
                                 </form>
                             @endif
                             @if($seller->status === 'active' || $seller->status === 'pending_approval')
-                                <button type="button" @click="openSuspend({{ json_encode($seller) }})" class="px-4 py-2 bg-red-50 text-red-700 rounded-lg text-[9px] font-black uppercase tracking-widest hover:bg-red-500 hover:text-white transition-all cursor-pointer">
+                                <button type="button" @click="openSuspend('{{ $seller->id }}', '{{ addslashes($seller->name) }}')" class="px-4 py-2 bg-red-50 text-red-700 rounded-lg text-[9px] font-black uppercase tracking-widest hover:bg-red-500 hover:text-white transition-all cursor-pointer">
                                     Suspend
                                 </button>
                             @else
@@ -172,7 +160,7 @@
                                     </button>
                                 </form>
                             @endif
-                            <button type="button" @click="openDelete({{ json_encode($seller) }})" class="px-4 py-2 bg-gray-100 text-gray-600 rounded-lg text-[9px] font-black uppercase tracking-widest hover:bg-gray-800 hover:text-white transition-all cursor-pointer">
+                            <button type="button" @click="openDelete('{{ $seller->id }}', '{{ addslashes($seller->name) }}')" class="px-4 py-2 bg-gray-100 text-gray-600 rounded-lg text-[9px] font-black uppercase tracking-widest hover:bg-gray-800 hover:text-white transition-all cursor-pointer">
                                 Delete
                             </button>
                         </div>
@@ -194,7 +182,7 @@
     {{-- Suspend Confirmation Modal --}}
     <div x-show="suspendModal" class="fixed inset-0 z-50 flex items-center justify-center p-4" x-cloak>
         <div class="absolute inset-0 bg-black/40 backdrop-blur-sm" @click="suspendModal = false"></div>
-        <div class="relative bg-white rounded-2xl shadow-2xl w-full max-w-md p-6 space-y-4">
+        <div class="relative bg-white rounded-2xl shadow-2xl w-full max-w-md p-6 space-y-4 z-10">
             <h3 class="text-lg font-bold text-gray-900">Suspend Seller Account</h3>
             <p class="text-xs text-gray-500 leading-relaxed">
                 Are you sure you want to suspend seller <strong x-text="suspendSellerName" class="text-black"></strong>? Please enter an explanation or reason for suspending this seller.
@@ -222,12 +210,12 @@
                         </button>
                     </div>
 
-                    <label class="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-1 block">Explanation / Reason (Shown to seller) *</label>
+                    <label class="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-1 block">Explanation / Reason (Shown to seller upon login) *</label>
                     <textarea name="reason" x-model="suspendReason" required rows="3" placeholder="Provide the reason for account suspension..." class="w-full p-3 bg-gray-50 border border-gray-200 rounded-xl text-xs outline-none focus:border-red-500"></textarea>
                 </div>
                 <div class="flex gap-3 pt-2">
-                    <button type="button" @click="suspendModal = false" class="flex-1 py-2.5 border border-gray-200 text-xs font-semibold text-gray-500 rounded-xl hover:bg-gray-50">Cancel</button>
-                    <button type="submit" class="flex-1 py-2.5 bg-red-600 text-white text-xs font-bold uppercase tracking-wider rounded-xl hover:bg-red-700">Confirm Suspension</button>
+                    <button type="button" @click="suspendModal = false" class="flex-1 py-2.5 border border-gray-200 text-xs font-semibold text-gray-500 rounded-xl hover:bg-gray-50 cursor-pointer">Cancel</button>
+                    <button type="submit" class="flex-1 py-2.5 bg-red-600 text-white text-xs font-bold uppercase tracking-wider rounded-xl hover:bg-red-700 cursor-pointer shadow-sm">Confirm Suspension</button>
                 </div>
             </form>
         </div>
@@ -236,7 +224,7 @@
     {{-- Delete Confirmation Modal --}}
     <div x-show="deleteModal" class="fixed inset-0 z-50 flex items-center justify-center p-4" x-cloak>
         <div class="absolute inset-0 bg-black/40 backdrop-blur-sm" @click="deleteModal = false"></div>
-        <div class="relative bg-white rounded-2xl shadow-2xl w-full max-w-md p-6 space-y-4">
+        <div class="relative bg-white rounded-2xl shadow-2xl w-full max-w-md p-6 space-y-4 z-10">
             <div class="w-12 h-12 rounded-2xl bg-red-100 flex items-center justify-center mx-auto">
                 <svg class="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
@@ -245,14 +233,14 @@
             <div class="text-center">
                 <h3 class="text-lg font-bold text-gray-900">Delete Seller Account</h3>
                 <p class="text-xs text-gray-500 leading-relaxed mt-2">
-                    You are about to permanently delete <strong x-text="deleteSellerName" class="text-red-600"></strong>'s account. This action <span class="font-bold text-red-600">cannot be undone</span>.
+                    Are you sure you want to permanently delete <strong x-text="deleteSellerName" class="text-red-600"></strong>'s account? This action <span class="font-bold text-red-600">cannot be undone</span>.
                 </p>
             </div>
             <form :action="'/admin/sellers/' + deleteSellerId" method="POST" class="space-y-4">
                 @csrf @method('DELETE')
                 <div class="flex gap-3 pt-2">
-                    <button type="button" @click="deleteModal = false" class="flex-1 py-2.5 border border-gray-200 text-xs font-semibold text-gray-500 rounded-xl hover:bg-gray-50">Cancel</button>
-                    <button type="submit" class="flex-1 py-2.5 bg-red-600 text-white text-xs font-bold uppercase tracking-wider rounded-xl hover:bg-red-700">Delete Permanently</button>
+                    <button type="button" @click="deleteModal = false" class="flex-1 py-2.5 border border-gray-200 text-xs font-semibold text-gray-500 rounded-xl hover:bg-gray-50 cursor-pointer">Cancel</button>
+                    <button type="submit" class="flex-1 py-2.5 bg-red-600 text-white text-xs font-bold uppercase tracking-wider rounded-xl hover:bg-red-700 cursor-pointer shadow-sm">Delete Permanently</button>
                 </div>
             </form>
         </div>
