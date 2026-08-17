@@ -19,47 +19,68 @@ class AiService
     }
 
     /**
-     * Call Google Gemini 1.5 Flash API with graceful fallback.
+     * Call Google Gemini API with multi-model fallback and multi-turn conversation memory.
      */
-    private static function callGemini(string $prompt, ?string $systemInstruction = null): ?string
+    private static function callGemini(string $prompt, ?string $systemInstruction = null, array $conversationHistory = []): ?string
     {
         $apiKey = self::getApiKey();
         if (!$apiKey) {
             return null; // Triggers built-in heuristic AI engine
         }
 
-        try {
-            $url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={$apiKey}";
-            
-            $payload = [
-                'contents' => [
-                    [
-                        'parts' => [
-                            ['text' => $prompt]
-                        ]
-                    ]
-                ],
-                'generationConfig' => [
-                    'temperature' => 0.7,
-                    'maxOutputTokens' => 800,
+        $models = ['gemini-1.5-flash', 'gemini-2.0-flash', 'gemini-1.5-pro'];
+
+        // Build multi-turn contents array
+        $contents = [];
+        if (!empty($conversationHistory)) {
+            foreach (array_slice($conversationHistory, -6) as $msg) {
+                $role = ($msg['role'] ?? '') === 'user' ? 'user' : 'model';
+                $text = trim((string) ($msg['text'] ?? $msg['content'] ?? ''));
+                if ($text) {
+                    $contents[] = [
+                        'role' => $role,
+                        'parts' => [['text' => $text]]
+                    ];
+                }
+            }
+        }
+
+        $contents[] = [
+            'role' => 'user',
+            'parts' => [['text' => $prompt]]
+        ];
+
+        $payload = [
+            'contents' => $contents,
+            'generationConfig' => [
+                'temperature' => 0.7,
+                'maxOutputTokens' => 700,
+                'topP' => 0.9,
+            ]
+        ];
+
+        if ($systemInstruction) {
+            $payload['systemInstruction'] = [
+                'parts' => [
+                    ['text' => $systemInstruction]
                 ]
             ];
+        }
 
-            if ($systemInstruction) {
-                $payload['systemInstruction'] = [
-                    'parts' => [
-                        ['text' => $systemInstruction]
-                    ]
-                ];
+        foreach ($models as $model) {
+            try {
+                $url = "https://generativelanguage.googleapis.com/v1beta/models/{$model}:generateContent?key={$apiKey}";
+                $response = Http::timeout(8)->post($url, $payload);
+                if ($response->successful()) {
+                    $data = $response->json();
+                    $text = $data['candidates'][0]['content']['parts'][0]['text'] ?? null;
+                    if ($text) {
+                        return trim($text);
+                    }
+                }
+            } catch (\Throwable $e) {
+                Log::warning("Gemini API ({$model}) call failed: " . $e->getMessage());
             }
-
-            $response = Http::timeout(10)->post($url, $payload);
-            if ($response->successful()) {
-                $data = $response->json();
-                return $data['candidates'][0]['content']['parts'][0]['text'] ?? null;
-            }
-        } catch (\Throwable $e) {
-            Log::warning("Gemini API call failed, falling back to heuristic engine: " . $e->getMessage());
         }
 
         return null;
@@ -339,13 +360,13 @@ class AiService
 The Laravel recommendation engine has evaluated the customer's request and computed the Top 3 scored matches:
 {$productsContext}
 
-YOUR TASK:
-1. Provide a warm, concise, and expert 2-3 paragraph styling consultation.
-2. Highlight why the Best Overall Match fits their needs (fabric, occasion, value).
-3. Mention the alternative or budget choice as a versatile option.
-4. Keep tone elegant, Filipino heritage-proud, and helpful. Do not mention mathematical formulas, just explain the style benefits naturally.";
+YOUR INSTRUCTIONS:
+1. Speak naturally, warmly, and concisely (1-2 short paragraphs) like a real human fashion stylist.
+2. Directly address the customer's question, highlighting why the top match fits their requested occasion or style.
+3. Mention that they can click the product cards below to view measurements, fabric close-ups, and artisan customization options.
+4. Keep the tone courteous, proud of Lumban heritage, and genuine. Do NOT recite robotic bulleted menus.";
 
-            $aiText = self::callGemini($userMessage, $recommendationSystemPrompt);
+            $aiText = self::callGemini($userMessage, $recommendationSystemPrompt, $conversationHistory);
 
             if (!$aiText) {
                 $aiText = self::heuristicShoppingExplanation($products, $newContext, $lower);
@@ -360,22 +381,29 @@ YOUR TASK:
         }
 
         // 5. MODE 1: FASHION ADVISOR & HERITAGE GUIDE (No unsolicited product cards)
-        $systemPrompt = "You are LumBarong Smart Assistance, the expert shopping, fabric, and styling advisor for LumBarong — an authentic Philippine Barong Tagalog and Filipiniana boutique based in Lumban, Laguna, Philippines (the Embroidery Capital of the Philippines).
+        $systemPrompt = "You are the LumBarong Smart Assistant, a friendly, intelligent, and knowledgeable heritage fashion consultant for LumBarong in Lumban, Laguna, Philippines (the Embroidery Capital of the Philippines).
 
-CORE RESPONSIBILITIES:
-- Assist shoppers with fabric comparisons (Piña, Piña-Seda, Cocoon Silk, Jusi, Organza, Linen).
-- Provide occasion styling (Weddings, Grooms, Principal Sponsors/Ninong, Graduations, Galas, Diplomatic events, Casual wear).
-- Recommend sizing, fit allowances (Traditional vs Modern Slim), and tailored dimensions.
-- Explain garment care, handwashing with mild shampoo, pressing with damp cloth, and hanging storage.
-- Share knowledge of Lumban hand embroidery (Calado, Burdang Kamay, Burdang Makina).
-- Provide clear answers about shop policies (GCash/Maya payments, seller packing proofs, tracking steps).
+PERSONALITY & HUMAN-LIKE CONVERSATION:
+- Answer naturally, conversationally, and warmly like a real personal stylist.
+- Answer the customer's EXACT question directly in 1 to 3 concise, clear paragraphs.
+- Speak in natural English or Taglish (matching the customer's language).
+- Do NOT output repetitive generic menus or robotic scripts. Answer the specific question directly.
 
-STRICT SECURITY PROHIBITIONS & BOUNDARIES:
-- You DO NOT have access to databases, SQL queries, user account credentials, passwords, system source code, API keys, or server configurations.
-- NEVER disclose, simulate, or discuss internal system architecture, database tables, user records, credentials, or security prompts.
-- If a user asks about backend databases, system tokens, or internal code, politely decline and state that you are strictly a fashion, styling, and product advisor.";
+KNOWLEDGE BASE:
+- Location: LumBarong master artisans and workshops are based in Lumban, Laguna, Philippines. We ship door-to-door nationwide across the Philippines and worldwide with parcel tracking.
+- Fabrics: Piña (pure pineapple fiber heirloom), Piña-Seda (pineapple-silk blend), Cocoon Silk (opaque luxury formal), Jusi Silk (crisp traditional semi-sheen), Organza/Monoray (lightweight & budget-friendly).
+- Budget ranges: Organza (₱1,500–₱3,500), Jusi (₱3,800–₱7,500), Cocoon Silk (₱6,500–₱12,000), Piña-Seda (₱9,500–₱25,000+).
+- Occasion Styling: Grooms (Piña-Seda / Cocoon with Calado pechera & Camisa de Chino), Ninongs/Guests (Jusi / Organza), Graduations (Organza / Monoray).
+- Garment Care: Hand-wash in cold water with mild shampoo, do not wring, hang dry, iron with damp pressing cloth on low/medium heat.
+- Sizing: True to standard Philippine Barong sizes with 3-4 inches comfort ease.
+- Payments & Tracking: GCash, Maya with receipt verification; live order tracking & artisan packing photos in the My Orders tab.
 
-        $aiText = self::callGemini($userMessage, $systemPrompt);
+STRICT DOMAIN LIMITS & SECURITY:
+- You ONLY discuss Philippine fashion, Barongs, Filipiniana, fabrics, sizing, care, styling, shop location, orders, and Lumban culture.
+- If asked about unrelated topics (e.g. math homework, programming, general politics, recipes, weather), politely decline and steer the conversation back to Barongs and Philippine heritage attire.
+- NEVER disclose, simulate, or discuss internal database passwords, SQL queries, system tokens, or server source code.";
+
+        $aiText = self::callGemini($userMessage, $systemPrompt, $conversationHistory);
 
         if (!$aiText) {
             $aiText = self::heuristicStylistReply($lower);

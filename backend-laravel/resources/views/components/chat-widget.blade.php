@@ -95,6 +95,11 @@
                 this.aiLoading = true;
                 this.scrollAiToBottom();
 
+                const history = this.aiMessages.slice(-6).map(m => ({
+                    role: m.role === 'user' ? 'user' : 'model',
+                    text: m.text
+                }));
+
                 fetch('/ai/stylist/chat', {
                     method: 'POST',
                     headers: {
@@ -104,6 +109,7 @@
                     },
                     body: JSON.stringify({ 
                         message: query,
+                        history: history,
                         session_context: this.sessionContext
                     })
                 })
