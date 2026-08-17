@@ -299,7 +299,44 @@
 })();
 </script>
 
-<div x-data="chatWidget" style="position: fixed; bottom: 24px; right: 24px; z-index: 99999;">
+<style>
+.lumbarong-chat-wrapper {
+    position: fixed;
+    right: 24px;
+    bottom: 24px;
+    z-index: 99999;
+}
+.lumbarong-chat-window {
+    position: fixed;
+    right: 24px;
+    bottom: 90px;
+    width: 380px;
+    max-width: calc(100vw - 32px);
+    height: 560px;
+    max-height: calc(100vh - 110px);
+    z-index: 99999;
+    box-shadow: 0 20px 40px rgba(0,0,0,0.25);
+}
+
+/* Mobile Screens: Position floating button cleanly above the bottom navigation bar */
+@media (max-width: 1023px) {
+    .lumbarong-chat-wrapper {
+        bottom: calc(82px + env(safe-area-inset-bottom, 0px)) !important;
+        right: 16px !important;
+    }
+    .lumbarong-chat-window {
+        bottom: calc(148px + env(safe-area-inset-bottom, 0px)) !important;
+        right: 12px !important;
+        left: 12px !important;
+        width: auto !important;
+        max-width: none !important;
+        height: calc(100dvh - 170px) !important;
+        max-height: 560px !important;
+    }
+}
+</style>
+
+<div x-data="chatWidget" class="lumbarong-chat-wrapper">
     <!-- Floating Trigger Button -->
     <button 
         type="button"
@@ -329,8 +366,7 @@
         x-transition:leave="transition ease-in duration-200"
         x-transition:leave-start="opacity-100 translate-y-0 scale-100"
         x-transition:leave-end="opacity-0 translate-y-6 scale-95"
-        style="position: fixed; bottom: 90px; right: 24px; width: 380px; max-width: calc(100vw - 32px); height: 560px; max-height: calc(100vh - 110px); z-index: 99999; box-shadow: 0 20px 40px rgba(0,0,0,0.25);"
-        class="bg-white rounded-3xl border border-gray-200 flex flex-col overflow-hidden"
+        class="lumbarong-chat-window bg-white rounded-3xl border border-gray-200 flex flex-col overflow-hidden"
         x-cloak
     >
         <!-- Header -->
