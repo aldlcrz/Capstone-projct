@@ -525,14 +525,14 @@
                         <span class="text-xs text-amber-800/90">Displaying highest selling authentic Barong Tagalog & Filipiniana pieces</span>
                     </div>
                 </div>
-                <a href="/" class="text-xs font-bold text-amber-900 hover:underline shrink-0">Show All</a>
+                <a href="/#catalogue-section" class="ajax-filter-link text-xs font-bold text-amber-900 hover:underline shrink-0">Show All</a>
             </div>
         @endif
 
         @if(request('search'))
             <div class="text-xs text-gray-500 font-medium flex items-center gap-2 bg-gray-50 p-3 rounded-xl border border-gray-100">
                 <span>Results for <strong class="text-black">"{{ request('search') }}"</strong></span>
-                <a href="{{ request('category') ? '/?category='.request('category') : '/' }}" class="text-[#C0422A] font-bold hover:underline ml-auto">Clear Search</a>
+                <a href="{{ request('category') ? '/?category='.request('category').'#catalogue-section' : '/#catalogue-section' }}" class="ajax-filter-link text-[#C0422A] font-bold hover:underline ml-auto">Clear Search</a>
             </div>
         @endif
 
@@ -630,7 +630,7 @@
             </div>
             <h3 class="text-sm font-bold text-black uppercase tracking-widest mb-1">No Products Found</h3>
             <p class="text-xs text-gray-400 mb-6">Try a different search term or browse all collections.</p>
-            <a href="/" class="px-6 py-2.5 bg-black text-white text-xs font-bold uppercase tracking-widest rounded-full hover:bg-gray-800 transition-all">View All Products</a>
+            <a href="/#catalogue-section" class="ajax-filter-link px-6 py-2.5 bg-black hover:bg-[#C0422A] text-white text-xs font-bold uppercase tracking-widest rounded-full transition-all shadow-md inline-block">View All Products</a>
         </div>
     @endif
 
@@ -887,7 +887,9 @@
             section.style.opacity = '0.4';
             section.style.pointerEvents = 'none';
 
-            fetch(url, { headers: { 'X-Requested-With': 'XMLHttpRequest' } })
+            const fetchUrl = url.split('#')[0] || '/';
+
+            fetch(fetchUrl, { headers: { 'X-Requested-With': 'XMLHttpRequest' } })
                 .then(res => res.text())
                 .then(html => {
                     const parser = new DOMParser();
@@ -897,6 +899,8 @@
                         section.innerHTML = newSection.innerHTML;
                         if (push) history.pushState(null, '', url);
                         scrollToCatalogue();
+                    } else {
+                        window.location.href = url;
                     }
                 })
                 .catch(() => {
