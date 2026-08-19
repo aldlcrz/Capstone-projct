@@ -11,7 +11,12 @@ class ProductManagementController extends Controller
 {
     public function index()
     {
-        $products = Product::where('sellerId', Auth::id())->orderBy('createdAt', 'desc')->get();
+        $products = Product::where('sellerId', Auth::id())
+            ->with(['reviews.customer:id,name,profilePhoto'])
+            ->withCount('reviews')
+            ->withAvg('reviews', 'rating')
+            ->orderBy('createdAt', 'desc')
+            ->get();
         return view('seller.products.index', compact('products'));
     }
 

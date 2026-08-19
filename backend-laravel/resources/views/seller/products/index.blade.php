@@ -5,6 +5,8 @@
     search: '',
     activeTab: 'all',
     showSizeGuideModal: false,
+    showReviewsModal: false,
+    selectedProduct: null,
     activeSGTab: 'Men',
     sizeGuides: {{ Js::from(Auth::user()->size_guides ?? []) }},
     matches(productName, productDesc, productStatus) {
@@ -12,6 +14,10 @@
         const matchesSearch = !query || productName.toLowerCase().includes(query) || productDesc.toLowerCase().includes(query);
         const matchesTab = this.activeTab === 'all' || productStatus.toLowerCase() === this.activeTab.toLowerCase();
         return matchesSearch && matchesTab;
+    },
+    openReviewsModal(product) {
+        this.selectedProduct = product;
+        this.showReviewsModal = true;
     }
 }">
     {{-- Header --}}
@@ -219,6 +225,20 @@
                         <div class="flex-1">
                             <h3 class="text-xs sm:text-sm font-bold text-black line-clamp-1 uppercase tracking-tight">{{ $product->name }}</h3>
                             <p class="text-[9px] sm:text-[10px] text-gray-400 mt-0.5 sm:mt-1 line-clamp-2 leading-relaxed">{{ $product->description }}</p>
+                            
+                            {{-- Product Rating & Reviews summary --}}
+                            <div class="flex items-center justify-between gap-2 mt-2 pt-2 border-t border-gray-100">
+                                <div class="flex items-center gap-1.5">
+                                    <span class="text-amber-400 text-xs font-black">★</span>
+                                    <span class="text-[11px] font-black text-black">{{ $product->reviews_avg_rating ? number_format($product->reviews_avg_rating, 1) : '0.0' }}</span>
+                                    <span class="text-[9px] text-gray-400 font-bold">({{ $product->reviews_count }} {{ Str::plural('review', $product->reviews_count) }})</span>
+                                </div>
+                                @if($product->reviews_count > 0)
+                                    <button type="button" @click="openReviewsModal(@js($product))" class="text-[9px] font-black uppercase tracking-wider text-[#C0422A] hover:underline cursor-pointer">
+                                        View Reviews →
+                                    </button>
+                                @endif
+                            </div>
                         </div>
                         
                         <div class="flex items-center justify-between pt-2.5 sm:pt-4 border-t border-gray-50">
@@ -344,6 +364,86 @@
                         </div>
                     </div>
                 </div>
+            </div>
+    {{-- CUSTOMER REVIEWS MODAL --}}
+    <div x-show="showReviewsModal" 
+         x-transition:enter="transition ease-out duration-300"
+         x-transition:enter-start="opacity-0"
+         x-transition:enter-end="opacity-100"
+         x-transition:leave="transition ease-in duration-200"
+         x-transition:leave-start="opacity-100"
+         x-transition:leave-end="opacity-0"
+         class="fixed inset-0 z-50 overflow-y-auto bg-black/60 backdrop-blur-xs flex items-center justify-center p-4 sm:p-6"
+         style="display: none;">
+        
+        <div @click.away="showReviewsModal = false" 
+             x-show="showReviewsModal"
+             x-transition:enter="transition ease-out duration-300 transform"
+             x-transition:enter-start="opacity-0 scale-95 translate-y-4"
+             x-transition:enter-end="opacity-100 scale-100 translate-y-0"
+             class="bg-white rounded-3xl max-w-xl w-full p-6 sm:p-8 space-y-6 shadow-2xl border border-gray-100 max-h-[85vh] flex flex-col">
+            
+            {{-- Modal Header --}}
+            <div class="flex items-center justify-between pb-4 border-b border-gray-100 shrink-0">
+                <div>
+                    <div class="text-[9px] font-black uppercase tracking-widest text-[#C0420A]">Customer Feedback</div>
+                    <h3 class="font-serif text-lg font-bold text-black uppercase" x-text="selectedProduct ? selectedProduct.name : 'Product Reviews'"></h3>
+                    <p class="text-xs text-gray-500 mt-0.5" x-text="selectedProduct && selectedProduct.reviews ? (selectedProduct.reviews.length + ' customer review(s)') : '0 reviews'"></p>
+                </div>
+                <button @click="showReviewsModal = false" class="w-8 h-8 rounded-full bg-gray-100 hover:bg-gray-200 text-gray-500 hover:text-black flex items-center justify-center transition-colors">
+                    ✕
+                </button>
+            </div>
+
+            {{-- Reviews List --}}
+            <div class="flex-1 overflow-y-auto space-y-3 pr-1">
+                <template x-if="!selectedProduct || !selectedProduct.reviews || selectedProduct.reviews.length === 0">
+                    <div class="py-12 text-center text-gray-400">
+                        <div class="text-3xl mb-2">⭐</div>
+                        <p class="text-xs italic">No customer reviews yet for this product.</p>
+                    </div>
+                </template>
+
+                <template x-for="rev in (selectedProduct?.reviews || [])" :key="rev.id">
+                    <div class="bg-gray-50/80 p-4 rounded-2xl border border-gray-100 space-y-2">
+                        <div class="flex items-center justify-between flex-wrap gap-2">
+                            <div class="flex items-center gap-2.5">
+                                <div class="w-7 h-7 rounded-full bg-[#C0420A]/10 text-[#C0420A] font-black text-xs flex items-center justify-center uppercase">
+                                    <span x-text="rev.customer ? rev.customer.name.charAt(0) : 'C'"></span>
+                                </div>
+                                <div>
+                                    <div class="text-xs font-bold text-black" x-text="rev.customer ? rev.customer.name : 'Verified Buyer'"></div>
+                                    <div class="flex items-center text-amber-400 text-xs">
+                                        <template x-for="star in 5" :key="star">
+                                            <span :class="star <= rev.rating ? 'text-amber-400' : 'text-gray-300'">★</span>
+                                        </template>
+                                    </div>
+                                </div>
+                            </div>
+                            <span class="text-[9px] font-medium text-gray-400" x-text="rev.createdAt ? new Date(rev.createdAt).toLocaleDateString('en-PH', {month:'short', day:'numeric', year:'numeric'}) : ''"></span>
+                        </div>
+
+                        <p class="text-xs text-gray-700 font-medium leading-relaxed" x-text="rev.comment || 'No written comment provided.'"></p>
+
+                        {{-- Images if any --}}
+                        <template x-if="rev.images">
+                            <div class="flex flex-wrap gap-2 pt-1">
+                                <template x-for="(img, idx) in (typeof rev.images === 'string' ? JSON.parse(rev.images || '[]') : (rev.images || []))" :key="idx">
+                                    <a :href="img.startsWith('http') || img.startsWith('/') ? img : '/storage/' + img" target="_blank" class="w-14 h-14 rounded-xl overflow-hidden border border-gray-200 shrink-0 shadow-xs hover:opacity-80 transition-opacity">
+                                        <img :src="img.startsWith('http') || img.startsWith('/') ? img : '/storage/' + img" class="w-full h-full object-cover">
+                                    </a>
+                                </template>
+                            </div>
+                        </template>
+                    </div>
+                </template>
+            </div>
+
+            {{-- Close Button --}}
+            <div class="pt-2 border-t border-gray-100 shrink-0">
+                <button type="button" @click="showReviewsModal = false" class="w-full py-3 bg-black text-white text-xs font-bold uppercase tracking-widest rounded-xl hover:bg-[#C0420A] transition-all">
+                    Close
+                </button>
             </div>
         </div>
     </div>

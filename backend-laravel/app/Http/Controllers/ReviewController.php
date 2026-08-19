@@ -126,10 +126,10 @@ class ReviewController extends Controller
             if ($product && $product->sellerId) {
                 Notification::create([
                     'userId' => $product->sellerId,
-                    'title' => '⭐ New Product Review',
-                    'message' => "A customer left a {$request->rating}-star review for \"{$product->name}\".",
+                    'title' => '⭐ New Product Review (' . $request->rating . ' Stars)',
+                    'message' => "A customer reviewed \"{$product->name}\": \"" . \Illuminate\Support\Str::limit($request->comment ?? 'New review received', 60) . "\"",
                     'type' => 'review',
-                    'link' => '/seller/products',
+                    'link' => "/seller/orders?order_id={$order->id}",
                     'targetRole' => 'seller',
                     'isRead' => false
                 ]);

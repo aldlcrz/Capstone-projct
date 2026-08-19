@@ -307,7 +307,7 @@
                                             <div class="space-y-0.5">
                                                 <div class="text-[11px] font-bold text-black text-left">{{ $notif->title }}</div>
                                                 <div class="text-[10px] text-gray-500 text-left leading-relaxed">{{ Str::limit($notif->message, 80) }}</div>
-                                                <div class="text-[8px] text-gray-400 text-left">{{ $notif->createdAt->diffForHumans() }}</div>
+                                                <div class="text-[8px] text-gray-400 text-left">{{ $notif->createdAt ? \Carbon\Carbon::parse($notif->createdAt)->diffForHumans() : '' }}</div>
                                             </div>
                                         </a>
                                     @empty
