@@ -101,7 +101,7 @@ class RecommendationEngine
      * - Popularity & Reviews: 10%
      * - Stock & Tailoring Readiness: 10%
      */
-    public static function scoreProduct(Product $product, array $pref): array
+    public static function scoreProduct(Product|object $product, array $pref): array
     {
         $score = 0;
         $reasons = [];

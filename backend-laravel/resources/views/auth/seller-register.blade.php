@@ -194,7 +194,7 @@
                         <span class="absolute left-8 top-1/2 -translate-y-1/2 opacity-20">
                             <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" /></svg>
                         </span>
-                        <input type="text" name="name" x-model="name" @input="delete errors.name" required class="premium-input pl-16" :class="errors.name ? '!border-red-400' : ''" placeholder="Your Full Name">
+                        <input type="text" name="name" x-model="name" @input="delete errors.name" required class="premium-input pl-16" :class="errors.name ? 'border-red-400!' : ''" placeholder="Your Full Name">
                     </div>
                     <p x-show="errors.name" x-text="errors.name" class="text-xs font-bold text-red-500 px-5 mt-1" x-cloak></p>
                     @error('name')
@@ -208,7 +208,7 @@
                         <span class="absolute left-8 top-1/2 -translate-y-1/2 opacity-20">
                             <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002 2H5a2 2 0 00-2-2V7a2 2 0 002-2h14a2 2 0 002 2v10" /></svg>
                         </span>
-                        <input type="email" name="email" x-model="email" @input="delete errors.email" required class="premium-input pl-16" :class="errors.email ? '!border-red-400' : ''" placeholder="email@example.com">
+                        <input type="email" name="email" x-model="email" @input="delete errors.email" required class="premium-input pl-16" :class="errors.email ? 'border-red-400!' : ''" placeholder="email@example.com">
                     </div>
                     <p x-show="errors.email" x-text="errors.email" class="text-xs font-bold text-red-500 px-5 mt-1" x-cloak></p>
                     @error('email')
@@ -222,7 +222,7 @@
                         <span class="absolute left-8 top-1/2 -translate-y-1/2 opacity-20">
                             <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" /></svg>
                         </span>
-                        <input :type="showPass ? 'text' : 'password'" name="password" x-model="password" @input="delete errors.password; delete errors.password_confirmation" required class="premium-input pl-16 pr-16" :class="errors.password ? '!border-red-400' : ''" placeholder="••••••••••••">
+                        <input :type="showPass ? 'text' : 'password'" name="password" x-model="password" @input="delete errors.password; delete errors.password_confirmation" required class="premium-input pl-16 pr-16" :class="errors.password ? 'border-red-400!' : ''" placeholder="••••••••••••">
                         <button type="button" @click="showPass = !showPass" class="absolute right-8 top-1/2 -translate-y-1/2 opacity-40 hover:opacity-100">
                             <svg x-show="!showPass" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" /></svg>
                             <svg x-show="showPass" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" x-cloak><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.878 9.878L5.136 5.136m13.727 13.727L13.875 18.825M21 12a10.025 10.025 0 01-1.12 4.5m-5.878-9.375l2.122-2.122m-8.484 8.484L5.136 5.136m13.727 13.727L21 12" /></svg>
@@ -240,7 +240,7 @@
                         <span class="absolute left-8 top-1/2 -translate-y-1/2 opacity-20">
                             <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" /></svg>
                         </span>
-                        <input :type="showConfirm ? 'text' : 'password'" name="password_confirmation" x-model="password_confirmation" @input="delete errors.password_confirmation" required class="premium-input pl-16 pr-16" :class="errors.password_confirmation ? '!border-red-400' : ''" placeholder="••••••••••••">
+                        <input :type="showConfirm ? 'text' : 'password'" name="password_confirmation" x-model="password_confirmation" @input="delete errors.password_confirmation" required class="premium-input pl-16 pr-16" :class="errors.password_confirmation ? 'border-red-400!' : ''" placeholder="••••••••••••">
                         <button type="button" @click="showConfirm = !showConfirm" class="absolute right-8 top-1/2 -translate-y-1/2 opacity-40 hover:opacity-100">
                             <svg x-show="!showConfirm" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" /></svg>
                             <svg x-show="showConfirm" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" x-cloak><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.878 9.878L5.136 5.136m13.727 13.727L13.875 18.825M21 12a10.025 10.025 0 01-1.12 4.5m-5.878-9.375l2.122-2.122m-8.484 8.484L5.136 5.136m13.727 13.727L21 12" /></svg>

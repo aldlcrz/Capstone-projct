@@ -515,7 +515,7 @@
     </div>
 
     {{-- Document Lightbox Preview Modal --}}
-    <div x-show="previewModal" class="fixed inset-0 z-[70] flex items-center justify-center p-4 sm:p-6" style="z-index: 70;" x-cloak>
+    <div x-show="previewModal" class="fixed inset-0 z-70 flex items-center justify-center p-4 sm:p-6" style="z-index: 70;" x-cloak>
         <div class="absolute inset-0 bg-black/85 backdrop-blur-md" @click="previewModal = false"></div>
         <div class="relative bg-white rounded-3xl shadow-2xl w-full max-w-4xl overflow-hidden z-10 border border-gray-200 flex flex-col max-h-[92vh]">
             <div class="px-6 py-4 border-b border-gray-100 flex items-center justify-between bg-white">
