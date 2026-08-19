@@ -633,57 +633,76 @@ class AdminController extends Controller
 
     public function banUser(Request $request, string $id)
     {
-        $user = User::findOrFail($id);
-        $reason = $request->input('reason', 'Violation of community guidelines');
-
-        $user->status = 'blocked';
-        $user->violationReason = $reason;
-        $user->remember_token = null;
-        $user->save();
-
-        // Invalidate active web and API sessions immediately
         try {
-            if (\Illuminate\Support\Facades\Schema::hasTable('sessions')) {
-                DB::table('sessions')->where('user_id', $user->id)->delete();
+            $user = User::findOrFail($id);
+            $reason = $request->input('reason', 'Violation of community guidelines');
+
+            $user->status = 'blocked';
+            $user->violationReason = $reason;
+            $user->setRememberToken(null);
+            $user->save();
+
+            // Invalidate active web and API sessions immediately
+            try {
+                if (\Illuminate\Support\Facades\Schema::hasTable('sessions')) {
+                    DB::table('sessions')->where('user_id', $user->id)->delete();
+                }
+                if (method_exists($user, 'tokens')) {
+                    $user->tokens()->delete();
+                }
+            } catch (\Throwable $e) {
+                Log::warning('Session deletion error on banUser: ' . $e->getMessage());
             }
-            if (method_exists($user, 'tokens')) {
-                $user->tokens()->delete();
+
+            try {
+                $this->sendNotification(
+                    $user->id,
+                    'Account Suspended',
+                    "Your account has been suspended by an administrator. Reason: {$reason}",
+                    'system',
+                    null,
+                    'customer'
+                );
+            } catch (\Throwable $e) {
+                Log::warning('Notification error on banUser: ' . $e->getMessage());
             }
+
+            return redirect()->route('admin.users')->with('success', 'User account banned successfully.');
         } catch (\Throwable $e) {
-            Log::warning('Session deletion error on banUser: ' . $e->getMessage());
+            Log::error('banUser fatal error: ' . $e->getMessage());
+            return redirect()->route('admin.users')->with('error', 'Error banning account: ' . $e->getMessage());
         }
-
-        $this->sendNotification(
-            $user->id,
-            'Account Suspended',
-            "Your account has been suspended by an administrator. Reason: {$reason}",
-            'system',
-            null,
-            'customer'
-        );
-
-        return redirect()->route('admin.users')->with('success', 'User account banned successfully.');
     }
 
     public function unbanUser(string $id)
     {
-        $user = User::findOrFail($id);
-        $user->status = 'active';
-        $user->violationReason = null;
-        $user->save();
-        return redirect()->route('admin.users')->with('success', 'User restored.');
+        try {
+            $user = User::findOrFail($id);
+            $user->status = 'active';
+            $user->violationReason = null;
+            $user->save();
+            return redirect()->route('admin.users')->with('success', 'User restored.');
+        } catch (\Throwable $e) {
+            Log::error('unbanUser fatal error: ' . $e->getMessage());
+            return redirect()->route('admin.users')->with('error', 'Error restoring account: ' . $e->getMessage());
+        }
     }
 
     public function deleteUser(string $id)
     {
-        $user = User::findOrFail($id);
         try {
-            if (\Illuminate\Support\Facades\Schema::hasTable('sessions')) {
-                DB::table('sessions')->where('user_id', $user->id)->delete();
-            }
-        } catch (\Throwable $e) {}
-        $user->delete();
-        return redirect()->route('admin.users')->with('success', 'User deleted.');
+            $user = User::findOrFail($id);
+            try {
+                if (\Illuminate\Support\Facades\Schema::hasTable('sessions')) {
+                    DB::table('sessions')->where('user_id', $user->id)->delete();
+                }
+            } catch (\Throwable $e) {}
+            $user->delete();
+            return redirect()->route('admin.users')->with('success', 'User deleted.');
+        } catch (\Throwable $e) {
+            Log::error('deleteUser fatal error: ' . $e->getMessage());
+            return redirect()->route('admin.users')->with('error', 'Error deleting user: ' . $e->getMessage());
+        }
     }
 
     public function sellers(Request $request)
@@ -703,55 +722,72 @@ class AdminController extends Controller
 
     public function verifySellerWeb(string $id)
     {
-        $user = User::findOrFail($id);
-        $user->isVerified = true;
-        $user->status     = 'active';
-        $user->save();
-        $this->sendNotification($user->id, 'Seller Verified', 'Your artisan workshop is now verified!', 'system', '/seller/dashboard', 'seller');
-        return redirect()->route('admin.sellers')->with('success', 'Seller verified.');
+        try {
+            $user = User::findOrFail($id);
+            $user->isVerified = true;
+            $user->status     = 'active';
+            $user->save();
+            $this->sendNotification($user->id, 'Seller Verified', 'Your artisan workshop is now verified!', 'system', '/seller/dashboard', 'seller');
+            return redirect()->route('admin.sellers')->with('success', 'Seller verified.');
+        } catch (\Throwable $e) {
+            return redirect()->route('admin.sellers')->with('error', 'Error verifying seller: ' . $e->getMessage());
+        }
     }
 
     public function unverifySellerWeb(string $id)
     {
-        $user = User::findOrFail($id);
-        $user->isVerified = false;
-        $user->status     = 'pending_approval';
-        $user->save();
-        $this->sendNotification($user->id, 'Verification Revoked', 'Your artisan workshop verification has been revoked by an administrator.', 'system', '/profile', 'seller');
-        return redirect()->route('admin.sellers')->with('success', 'Seller verification revoked. Account moved back to Pending.');
+        try {
+            $user = User::findOrFail($id);
+            $user->isVerified = false;
+            $user->status     = 'pending_approval';
+            $user->save();
+            $this->sendNotification($user->id, 'Verification Revoked', 'Your artisan workshop verification has been revoked by an administrator.', 'system', '/profile', 'seller');
+            return redirect()->route('admin.sellers')->with('success', 'Seller verification revoked. Account moved back to Pending.');
+        } catch (\Throwable $e) {
+            return redirect()->route('admin.sellers')->with('error', 'Error revoking verification: ' . $e->getMessage());
+        }
     }
 
     public function suspendSeller(Request $request, string $id)
     {
-        $user = User::findOrFail($id);
-        $reason = $request->reason ?? 'Suspended by admin.';
-        $user->status          = 'blocked';
-        $user->violationReason = $reason;
-        $user->remember_token = null;
-        $user->save();
-
-        // Invalidate active web and API sessions immediately
         try {
-            if (\Illuminate\Support\Facades\Schema::hasTable('sessions')) {
-                DB::table('sessions')->where('user_id', $user->id)->delete();
-            }
-            if (method_exists($user, 'tokens')) {
-                $user->tokens()->delete();
-            }
-        } catch (\Throwable $e) {
-            Log::warning('Session deletion error on suspendSeller: ' . $e->getMessage());
-        }
+            $user = User::findOrFail($id);
+            $reason = $request->reason ?? 'Suspended by admin.';
+            $user->status          = 'blocked';
+            $user->violationReason = $reason;
+            $user->setRememberToken(null);
+            $user->save();
 
-        return redirect()->route('admin.sellers')->with('success', 'Seller suspended.');
+            // Invalidate active web and API sessions immediately
+            try {
+                if (\Illuminate\Support\Facades\Schema::hasTable('sessions')) {
+                    DB::table('sessions')->where('user_id', $user->id)->delete();
+                }
+                if (method_exists($user, 'tokens')) {
+                    $user->tokens()->delete();
+                }
+            } catch (\Throwable $e) {
+                Log::warning('Session deletion error on suspendSeller: ' . $e->getMessage());
+            }
+
+            return redirect()->route('admin.sellers')->with('success', 'Seller suspended.');
+        } catch (\Throwable $e) {
+            Log::error('suspendSeller fatal error: ' . $e->getMessage());
+            return redirect()->route('admin.sellers')->with('error', 'Error suspending seller: ' . $e->getMessage());
+        }
     }
 
     public function unsuspendSeller(string $id)
     {
-        $user = User::findOrFail($id);
-        $user->status          = 'active';
-        $user->violationReason = null;
-        $user->save();
-        return redirect()->route('admin.sellers')->with('success', 'Seller account restored.');
+        try {
+            $user = User::findOrFail($id);
+            $user->status          = 'active';
+            $user->violationReason = null;
+            $user->save();
+            return redirect()->route('admin.sellers')->with('success', 'Seller account restored.');
+        } catch (\Throwable $e) {
+            return redirect()->route('admin.sellers')->with('error', 'Error restoring seller: ' . $e->getMessage());
+        }
     }
 
     public function deleteSeller(string $id)
