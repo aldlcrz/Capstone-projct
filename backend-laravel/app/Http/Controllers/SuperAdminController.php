@@ -662,21 +662,16 @@ class SuperAdminController extends Controller
 
         SystemSetting::updateOrCreate(['key' => 'maintenance_message'], ['value' => $message]);
 
+        // Always ensure framework native down file is removed so admins are never locked out
+        try {
+            Artisan::call('up');
+        } catch (\Exception $e) {}
+
         if ($enable === '1') {
             SystemSetting::updateOrCreate(['key' => 'maintenance_mode'], ['value' => '1']);
-            try {
-                Artisan::call('down', ['--render' => 'errors.503', '--secret' => 'lumbarong-superadmin']);
-            } catch (\Exception $e) {
-                Log::warning('Artisan down error: ' . $e->getMessage());
-            }
             return back()->with('success', 'Maintenance mode has been ENABLED across the platform.');
         } else {
             SystemSetting::updateOrCreate(['key' => 'maintenance_mode'], ['value' => '0']);
-            try {
-                Artisan::call('up');
-            } catch (\Exception $e) {
-                Log::warning('Artisan up error: ' . $e->getMessage());
-            }
             return back()->with('success', 'Maintenance mode has been DISABLED. Platform is live.');
         }
     }

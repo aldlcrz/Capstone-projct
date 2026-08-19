@@ -30,6 +30,8 @@ class CheckMaintenance
             'up',
             'admin*',
             'api/v1/admin*',
+            'superadmin*',
+            'api/v1/superadmin*',
             'login*',
             'logout*',
             'api/v1/auth*',
@@ -41,8 +43,8 @@ class CheckMaintenance
             }
         }
 
-        // 2. Always let logged-in admins through
-        if (\Illuminate\Support\Facades\Auth::check() && \Illuminate\Support\Facades\Auth::user()->role === 'admin') {
+        // 2. Always let logged-in admins and superadmins through
+        if (\Illuminate\Support\Facades\Auth::check() && in_array(\Illuminate\Support\Facades\Auth::user()->role, ['admin', 'superadmin'])) {
             return $next($request);
         }
 

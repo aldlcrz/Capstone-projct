@@ -92,23 +92,16 @@ class AdminSettingsController extends Controller
         // Always persist the message
         SystemSetting::updateOrCreate(['key' => 'maintenance_message'], ['value' => $message]);
 
+        // Always ensure framework native down file is removed so admins are never locked out
+        try {
+            Artisan::call('up');
+        } catch (\Exception $e) {}
+
         if ($enable === '1') {
-            // Mark active in DB first (reliable fallback regardless of artisan)
             SystemSetting::updateOrCreate(['key' => 'maintenance_mode'], ['value' => '1']);
-            try {
-                Artisan::call('down', ['--render' => 'errors.503', '--secret' => 'lumbarong-admin']);
-            } catch (\Exception $e) {
-                // artisan down failed — DB flag is already set, that's our fallback
-            }
             return redirect()->route('admin.maintenance')->with('success', 'Maintenance mode is now ACTIVE. Regular users will see the maintenance page.');
         } else {
-            // Clear DB flag first
             SystemSetting::updateOrCreate(['key' => 'maintenance_mode'], ['value' => '0']);
-            try {
-                Artisan::call('up');
-            } catch (\Exception $e) {
-                // ignore — DB flag is cleared so admin panel shows Online
-            }
             return redirect()->route('admin.maintenance')->with('success', 'Site is back ONLINE. All users can access the platform normally.');
         }
     }

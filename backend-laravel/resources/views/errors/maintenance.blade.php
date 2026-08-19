@@ -93,14 +93,9 @@
     </main>
 
     <!-- Footer -->
-    <footer class="relative z-10 w-full px-6 py-8 border-t border-white/5 text-center flex flex-col sm:flex-row items-center justify-between gap-4 max-w-360 mx-auto text-xs text-gray-500 font-medium bg-black/10">
+    <footer class="relative z-10 w-full px-6 py-8 border-t border-white/5 text-center flex flex-col sm:flex-row items-center justify-center gap-4 max-w-360 mx-auto text-xs text-gray-500 font-medium bg-black/10">
         <div>
-            LumBarong &copy; 2026. Handcrafted Heritage & Artistry.
-        </div>
-        <div class="flex items-center gap-6">
-            <a href="/login" class="hover:text-white transition-colors duration-200 underline decoration-white/20 underline-offset-4 hover:decoration-white font-semibold">
-                System Administration Login &rarr;
-            </a>
+            LumBarong &copy; 2026. Handcrafted Heritage &amp; Artistry. All rights reserved.
         </div>
     </footer>
 
