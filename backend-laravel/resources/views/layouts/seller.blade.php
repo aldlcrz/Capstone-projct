@@ -510,7 +510,7 @@
                 <p class="text-xs text-gray-600 font-medium mt-0.5 line-clamp-2 leading-relaxed" x-text="popupNotif?.message"></p>
                 <div class="mt-2.5 flex items-center justify-between">
                     <span class="text-[9px] font-bold text-gray-400 uppercase tracking-wider">Just now</span>
-                    <a :href="'/notifications/' + (popupNotif?.id) + '/read-and-redirect'" class="px-3 py-1 bg-[#C0422A] hover:bg-[#a63721] text-white text-[10px] font-bold rounded-lg transition-all shadow-xs inline-flex items-center gap-1">
+                    <a :href="'/notifications/' + (popupNotif?.id) + '/read'" class="px-3 py-1 bg-[#C0422A] hover:bg-[#a63721] text-white text-[10px] font-bold rounded-lg transition-all shadow-xs inline-flex items-center gap-1">
                         <span>View</span>
                         <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
                     </a>

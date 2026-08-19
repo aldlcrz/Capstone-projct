@@ -116,6 +116,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/wishlist', [WishlistController::class, 'index'])->name('wishlist.index');
     Route::post('/wishlist/toggle', [WishlistController::class, 'toggle'])->name('wishlist.toggle');
     Route::get('/notifications/{id}/read', [NotificationController::class, 'readAndRedirect'])->name('notifications.read-and-redirect');
+    Route::get('/notifications/{id}/read-and-redirect', [NotificationController::class, 'readAndRedirect']);
 
     Route::match(['get', 'post'], '/logout', [WebAuthController::class, 'logout'])->name('logout');
 

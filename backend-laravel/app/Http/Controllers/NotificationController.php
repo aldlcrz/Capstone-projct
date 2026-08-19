@@ -96,8 +96,9 @@ class NotificationController extends Controller
             $notification->isRead = true;
             $notification->save();
 
-            if ($notification->link) {
-                return redirect($notification->link);
+            $targetUrl = $notification->link ?: ($notification->redirectUrl ?: null);
+            if ($targetUrl) {
+                return redirect($targetUrl);
             }
         }
 
