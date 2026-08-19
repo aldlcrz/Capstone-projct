@@ -393,9 +393,10 @@
          x-transition:leave-start="opacity-100"
          x-transition:leave-end="opacity-0"
          class="fixed inset-0 z-50 overflow-y-auto bg-black/60 backdrop-blur-xs flex items-center justify-center p-4 sm:p-6"
-         style="display: none;">
+         style="display: none;"
+         @keydown.escape.window="if (!lightboxImage) showReviewsModal = false">
         
-        <div @click.away="showReviewsModal = false" 
+        <div @click.away="if (!lightboxImage) showReviewsModal = false" 
              x-show="showReviewsModal"
              x-transition:enter="transition ease-out duration-300 transform"
              x-transition:enter-start="opacity-0 scale-95 translate-y-4"
