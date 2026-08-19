@@ -156,10 +156,10 @@
     @endif
 
         {{-- ====== Shop by Category ====== --}}
-        <div>
+        <div id="shop-by-category-section" x-on:open-all-categories.window="categoriesModalOpen = true">
             <div class="flex items-center gap-3 mb-4">
                 <h3 class="text-base sm:text-lg font-extrabold text-gray-900">Shop by Category</h3>
-                <button type="button" @click="categoriesModalOpen = true" class="text-xs font-semibold text-amber-700 hover:text-amber-900 hover:underline cursor-pointer">
+                <button type="button" @click="categoriesModalOpen = true" onclick="window.dispatchEvent(new CustomEvent('open-all-categories'))" class="text-xs font-semibold text-[#C0422A] hover:text-amber-900 hover:underline cursor-pointer">
                     View all
                 </button>
             </div>
@@ -242,6 +242,8 @@
 
                 // Saved categories logic applies ONLY for logged-in accounts
                 $selectedCatParam = request('category');
+                $activeCatObj = isset($categories) && $selectedCatParam ? $categories->first(fn($c) => (string)$c->id === (string)$selectedCatParam || strtolower(trim($c->name)) === strtolower(trim($selectedCatParam))) : null;
+                $selectedCatName = $activeCatObj ? $activeCatObj->name : $selectedCatParam;
                 $savedCategories = auth()->check() ? session('saved_categories', []) : [];
 
                 if (auth()->check()) {
@@ -307,22 +309,35 @@
                     @php
                         $isAll = $item['cat'] === '__all__';
                         $isCurrentSelected = $isAll
-                            ? !$selectedCatParam && !request('search') && !request('sort')
-                            : ($selectedCatParam && (strtolower($item['cat']) === strtolower($selectedCatParam) || strtolower($item['name']) === strtolower($selectedCatParam)));
+                            ? (!$selectedCatParam || $selectedCatParam === '__all__') && !request('search') && !request('sort')
+                            : ($selectedCatParam && (
+                                strtolower(trim($item['cat'])) === strtolower(trim($selectedCatParam)) ||
+                                strtolower(trim($item['name'])) === strtolower(trim($selectedCatParam)) ||
+                                ($selectedCatName && (
+                                    strtolower(trim($item['cat'])) === strtolower(trim($selectedCatName)) ||
+                                    strtolower(trim($item['name'])) === strtolower(trim($selectedCatName))
+                                ))
+                            ));
                         $itemHref = $isAll ? '/#catalogue-section' : '/?category=' . urlencode($item['cat']) . '#catalogue-section';
                     @endphp
-                    <a href="{{ $itemHref }}" class="ajax-filter-link group flex flex-col items-center gap-2 shrink-0 w-16 sm:w-20">
-                        <div class="relative w-16 h-16 sm:w-20 sm:h-20 rounded-full overflow-hidden bg-gray-100 border-2 {{ $isCurrentSelected ? 'border-amber-600 ring-4 ring-amber-500/25 scale-105 shadow-md' : 'border-gray-200/80 group-hover:border-amber-600 shadow-xs group-hover:scale-105' }} transition-all">
+                    <a href="{{ $itemHref }}" data-category="{{ $item['cat'] }}" class="category-pill-btn ajax-filter-link group flex flex-col items-center gap-2 shrink-0 w-16 sm:w-20 cursor-pointer">
+                        <div class="category-img-box relative w-16 h-16 sm:w-20 sm:h-20 rounded-full overflow-hidden bg-gray-100 border-2 {{ $isCurrentSelected ? 'border-[#C0422A] ring-4 ring-[#C0422A]/25 scale-105 shadow-md' : 'border-gray-200/80 group-hover:border-[#C0422A] shadow-xs group-hover:scale-105' }} transition-all">
                             <img src="{{ $item['img'] }}" loading="lazy" decoding="async" class="w-full h-full object-cover" alt="{{ $item['name'] }}">
+                            <div class="category-active-badge {{ $isCurrentSelected ? '' : 'hidden' }}">
+                                <div class="absolute inset-0 bg-[#C0422A]/10 pointer-events-none"></div>
+                                <span class="absolute top-1 right-1 w-4 h-4 sm:w-4.5 sm:h-4.5 bg-[#C0422A] text-white rounded-full flex items-center justify-center shadow-md ring-2 ring-white">
+                                    <svg class="w-2.5 h-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/></svg>
+                                </span>
+                            </div>
                         </div>
-                        <span class="text-[11px] {{ $isCurrentSelected ? 'font-black text-amber-700' : 'font-medium text-gray-700 group-hover:text-black' }} leading-tight text-center line-clamp-2">{{ $item['name'] }}</span>
+                        <span class="category-name-label text-[11px] {{ $isCurrentSelected ? 'font-black text-[#C0422A]' : 'font-medium text-gray-700 group-hover:text-black' }} leading-tight text-center line-clamp-2">{{ $item['name'] }}</span>
                     </a>
                 @endforeach
-                <button type="button" @click="categoriesModalOpen = true" class="group flex flex-col items-center gap-2 shrink-0 w-16 sm:w-20 cursor-pointer">
-                    <div class="w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-gray-100 border-2 border-dashed border-gray-300 group-hover:border-amber-600 flex items-center justify-center text-gray-500 group-hover:text-amber-700 transition-all shadow-2xs group-hover:scale-105">
+                <button type="button" @click="categoriesModalOpen = true" onclick="window.dispatchEvent(new CustomEvent('open-all-categories'))" class="group flex flex-col items-center gap-2 shrink-0 w-16 sm:w-20 cursor-pointer">
+                    <div class="w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-gray-100 border-2 border-dashed border-gray-300 group-hover:border-[#C0422A] flex items-center justify-center text-gray-500 group-hover:text-[#C0422A] transition-all shadow-2xs group-hover:scale-105">
                         <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 12h.01M12 12h.01M19 12h.01M6 12a1 1 0 11-2 0 1 1 0 012 0zm7 0a1 1 0 11-2 0 1 1 0 012 0zm7 0a1 1 0 11-2 0 1 1 0 012 0z"/></svg>
                     </div>
-                    <span class="text-[11px] font-bold text-gray-600 group-hover:text-amber-700 leading-tight text-center">More...</span>
+                    <span class="text-[11px] font-bold text-gray-600 group-hover:text-[#C0422A] leading-tight text-center">More...</span>
                 </button>
             </div>
 
@@ -364,16 +379,33 @@
                         </div>
 
                         <!-- Modal Body (Scrollable Grid of Circular Mini Pictures + Labels) -->
-                        <div class="overflow-y-auto no-scrollbar pr-1 grow">
+                        <div class="overflow-y-auto no-scrollbar pr-1 grow" id="all-categories-modal-grid">
                             <div class="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-6 sm:gap-8 text-center py-2">
                                 @foreach($allCatItems as $item)
+                                    @php
+                                        $isModalSelected = $selectedCatParam && (
+                                            strtolower(trim($item['cat'])) === strtolower(trim($selectedCatParam)) ||
+                                            strtolower(trim($item['name'])) === strtolower(trim($selectedCatParam)) ||
+                                            ($selectedCatName && (
+                                                strtolower(trim($item['cat'])) === strtolower(trim($selectedCatName)) ||
+                                                strtolower(trim($item['name'])) === strtolower(trim($selectedCatName))
+                                            ))
+                                        );
+                                    @endphp
                                     <a href="/?category={{ urlencode($item['cat']) }}#catalogue-section" 
+                                       data-category="{{ $item['cat'] }}"
                                        @click="categoriesModalOpen = false"
-                                       class="ajax-filter-link group flex flex-col items-center gap-2.5 hover:scale-105 transition-transform duration-200">
-                                        <div class="w-18 h-18 sm:w-20 sm:h-20 rounded-full overflow-hidden bg-gray-100 border-2 border-gray-200 group-hover:border-amber-600 shadow-sm transition-all shrink-0">
+                                       class="category-pill-btn ajax-filter-link group flex flex-col items-center gap-2.5 hover:scale-105 transition-transform duration-200 cursor-pointer">
+                                        <div class="category-img-box relative w-18 h-18 sm:w-20 sm:h-20 rounded-full overflow-hidden bg-gray-100 border-2 {{ $isModalSelected ? 'border-[#C0422A] ring-4 ring-[#C0422A]/25 scale-105 shadow-md' : 'border-gray-200 group-hover:border-[#C0422A] shadow-sm' }} transition-all shrink-0">
                                             <img src="{{ $item['img'] }}" loading="lazy" decoding="async" class="w-full h-full object-cover" alt="{{ $item['name'] }}">
+                                            <div class="category-active-badge {{ $isModalSelected ? '' : 'hidden' }}">
+                                                <div class="absolute inset-0 bg-[#C0422A]/10 pointer-events-none"></div>
+                                                <span class="absolute top-1 right-1 w-4.5 h-4.5 bg-[#C0422A] text-white rounded-full flex items-center justify-center shadow-md ring-2 ring-white">
+                                                    <svg class="w-2.5 h-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/></svg>
+                                                </span>
+                                            </div>
                                         </div>
-                                        <span class="text-xs font-semibold text-gray-800 group-hover:text-amber-700 leading-tight line-clamp-2">{{ $item['name'] }}</span>
+                                        <span class="category-name-label text-xs {{ $isModalSelected ? 'font-black text-[#C0422A]' : 'font-semibold text-gray-800 group-hover:text-[#C0422A]' }} leading-tight line-clamp-2">{{ $item['name'] }}</span>
                                     </a>
                                 @endforeach
                             </div>
@@ -875,6 +907,49 @@
 
     // Instant AJAX filtering for categories, demographics, and search without full page refresh
     document.addEventListener('DOMContentLoaded', function() {
+        function updateCategoryHighlight(targetCat) {
+            const normalizedTarget = (targetCat || '__all__').toLowerCase().trim();
+
+            document.querySelectorAll('.category-pill-btn').forEach(btn => {
+                const cat = (btn.getAttribute('data-category') || '__all__').toLowerCase().trim();
+                const imgBox = btn.querySelector('.category-img-box');
+                const badge = btn.querySelector('.category-active-badge');
+                const label = btn.querySelector('.category-name-label');
+
+                const isMatch = (normalizedTarget === '__all__' || normalizedTarget === '')
+                    ? (cat === '__all__' || cat === '')
+                    : (cat === normalizedTarget);
+
+                if (imgBox) {
+                    if (isMatch) {
+                        imgBox.classList.remove('border-gray-200/80', 'border-gray-200', 'shadow-xs', 'shadow-sm');
+                        imgBox.classList.add('border-[#C0422A]', 'ring-4', 'ring-[#C0422A]/25', 'scale-105', 'shadow-md');
+                    } else {
+                        imgBox.classList.remove('border-[#C0422A]', 'ring-4', 'ring-[#C0422A]/25', 'scale-105', 'shadow-md');
+                        imgBox.classList.add('border-gray-200/80', 'shadow-xs');
+                    }
+                }
+
+                if (badge) {
+                    if (isMatch) {
+                        badge.classList.remove('hidden');
+                    } else {
+                        badge.classList.add('hidden');
+                    }
+                }
+
+                if (label) {
+                    if (isMatch) {
+                        label.classList.remove('font-medium', 'font-semibold', 'text-gray-700', 'text-gray-800');
+                        label.classList.add('font-black', 'text-[#C0422A]');
+                    } else {
+                        label.classList.remove('font-black', 'text-[#C0422A]');
+                        label.classList.add('font-medium', 'text-gray-700');
+                    }
+                }
+            });
+        }
+
         function scrollToCatalogue() {
             const section = document.getElementById('catalogue-section');
             if (section) {
@@ -890,6 +965,13 @@
                 return;
             }
 
+            // Sync category highlight immediately from requested URL
+            try {
+                const parsedUrl = new URL(url, window.location.origin);
+                const urlCat = parsedUrl.searchParams.get('category');
+                updateCategoryHighlight(urlCat);
+            } catch(e) {}
+
             section.style.opacity = '0.4';
             section.style.pointerEvents = 'none';
 
@@ -903,6 +985,28 @@
                     const newSection = doc.getElementById('catalogue-section');
                     if (newSection && section) {
                         section.innerHTML = newSection.innerHTML;
+
+                        // Update Shop by Category row highlighting
+                        const newCatBar = doc.getElementById('shop-by-category-section');
+                        const currentCatBar = document.getElementById('shop-by-category-section');
+                        if (newCatBar && currentCatBar) {
+                            currentCatBar.innerHTML = newCatBar.innerHTML;
+                        }
+
+                        // Update All Categories Modal grid highlighting
+                        const newModalGrid = doc.getElementById('all-categories-modal-grid');
+                        const currentModalGrid = document.getElementById('all-categories-modal-grid');
+                        if (newModalGrid && currentModalGrid) {
+                            currentModalGrid.innerHTML = newModalGrid.innerHTML;
+                        }
+
+                        // Re-sync highlight classes after DOM update
+                        try {
+                            const parsedUrl = new URL(url, window.location.origin);
+                            const urlCat = parsedUrl.searchParams.get('category');
+                            updateCategoryHighlight(urlCat);
+                        } catch(e) {}
+
                         if (push) history.pushState(null, '', url);
                         scrollToCatalogue();
                     } else {
@@ -922,9 +1026,25 @@
             const link = e.target.closest('.ajax-filter-link, .pagination a');
             if (link && link.href) {
                 e.preventDefault();
+
+                // If clicking a category button, instantly highlight it on the UI immediately
+                const catBtn = link.closest('.category-pill-btn') || (link.classList.contains('category-pill-btn') ? link : null);
+                if (catBtn) {
+                    const catVal = catBtn.getAttribute('data-category');
+                    updateCategoryHighlight(catVal);
+                } else if (link.href.includes('#catalogue-section') && !link.href.includes('category=')) {
+                    updateCategoryHighlight('__all__');
+                }
+
                 loadCatalogue(link.href);
             }
         });
+
+        // Ensure category highlight is synchronized on page load and popstate
+        try {
+            const initialCat = new URL(window.location.href).searchParams.get('category');
+            updateCategoryHighlight(initialCat);
+        } catch(e) {}
 
         // Auto scroll if page loaded with category filter or hash
         if (window.location.search.includes('category=') || window.location.search.includes('sort=') || window.location.search.includes('search=') || window.location.hash === '#catalogue-section') {
