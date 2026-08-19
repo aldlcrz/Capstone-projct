@@ -615,7 +615,16 @@ class SuperAdminController extends Controller
         $customer = User::findOrFail($id);
         $customer->status = 'blocked';
         $customer->violationReason = $request->input('reason', 'Administrative action by Super Admin');
+        $customer->remember_token = null;
         $customer->save();
+
+        // Invalidate active web and API sessions immediately
+        try {
+            DB::table('sessions')->where('user_id', $customer->id)->delete();
+            if (method_exists($customer, 'tokens')) {
+                $customer->tokens()->delete();
+            }
+        } catch (\Throwable $e) {}
 
         return redirect()->route('superadmin.customers')->with('success', "Customer account '{$customer->name}' has been banned.");
     }

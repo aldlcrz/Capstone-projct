@@ -361,7 +361,16 @@ class AdminController extends Controller
         $reason = $request->input('reason', 'Account terminated by administrator.');
         $user->status = 'blocked';
         $user->violationReason = $reason;
+        $user->remember_token = null;
         $user->save();
+
+        // Invalidate active web and API sessions immediately
+        try {
+            DB::table('sessions')->where('user_id', $user->id)->delete();
+            if (method_exists($user, 'tokens')) {
+                $user->tokens()->delete();
+            }
+        } catch (\Throwable $e) {}
 
         return response()->json(['message' => 'User blocked successfully']);
     }
@@ -629,7 +638,16 @@ class AdminController extends Controller
 
         $user->status = 'blocked';
         $user->violationReason = $reason;
+        $user->remember_token = null;
         $user->save();
+
+        // Invalidate active web and API sessions immediately
+        try {
+            DB::table('sessions')->where('user_id', $user->id)->delete();
+            if (method_exists($user, 'tokens')) {
+                $user->tokens()->delete();
+            }
+        } catch (\Throwable $e) {}
 
         $this->sendNotification(
             $user->id,
@@ -647,13 +665,18 @@ class AdminController extends Controller
     {
         $user = User::findOrFail($id);
         $user->status = 'active';
+        $user->violationReason = null;
         $user->save();
         return redirect()->back()->with('success', 'User restored.');
     }
 
     public function deleteUser(string $id)
     {
-        User::findOrFail($id)->delete();
+        $user = User::findOrFail($id);
+        try {
+            DB::table('sessions')->where('user_id', $user->id)->delete();
+        } catch (\Throwable $e) {}
+        $user->delete();
         return redirect()->back()->with('success', 'User deleted.');
     }
 
@@ -695,9 +718,20 @@ class AdminController extends Controller
     public function suspendSeller(Request $request, string $id)
     {
         $user = User::findOrFail($id);
+        $reason = $request->reason ?? 'Suspended by admin.';
         $user->status          = 'blocked';
-        $user->violationReason = $request->reason ?? 'Suspended by admin.';
+        $user->violationReason = $reason;
+        $user->remember_token = null;
         $user->save();
+
+        // Invalidate active web and API sessions immediately
+        try {
+            DB::table('sessions')->where('user_id', $user->id)->delete();
+            if (method_exists($user, 'tokens')) {
+                $user->tokens()->delete();
+            }
+        } catch (\Throwable $e) {}
+
         return redirect()->back()->with('success', 'Seller suspended.');
     }
 
