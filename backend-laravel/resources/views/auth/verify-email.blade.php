@@ -148,8 +148,15 @@
     </div>
 
 <script>
+    function safeGetStorage(key) {
+        try { return localStorage.getItem(key); } catch(e) { return null; }
+    }
+    function safeSetStorage(key, val) {
+        try { localStorage.setItem(key, val); } catch(e) {}
+    }
+
     (function() {
-        const saved = localStorage.getItem('lumbarong_theme');
+        const saved = safeGetStorage('lumbarong_theme');
         if (saved === 'dark') {
             document.body.classList.add('dark');
             document.getElementById('icon-sun')?.classList.remove('hidden');
@@ -165,11 +172,11 @@
         if (isDark) {
             sun?.classList.remove('hidden');
             moon?.classList.add('hidden');
-            localStorage.setItem('lumbarong_theme', 'dark');
+            safeSetStorage('lumbarong_theme', 'dark');
         } else {
             sun?.classList.add('hidden');
             moon?.classList.remove('hidden');
-            localStorage.setItem('lumbarong_theme', 'light');
+            safeSetStorage('lumbarong_theme', 'light');
         }
     }
 </script>

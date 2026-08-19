@@ -197,6 +197,17 @@
                             data-logo_alignment="left">
                         </div>
                     </div>
+
+                    <!-- In-App Browser Notice (Messenger / Facebook / Instagram) -->
+                    <div id="in-app-browser-notice" class="hidden mt-4 p-3.5 bg-amber-50/90 border border-amber-200/80 rounded-2xl text-[11px] text-amber-900 leading-snug text-left shadow-2xs">
+                        <div class="flex items-start gap-2.5">
+                            <span class="text-sm shrink-0">ℹ️</span>
+                            <div>
+                                <span class="font-bold block mb-0.5 text-amber-950">Using Messenger / In-App Browser?</span>
+                                <span>Google blocks sign-in inside in-app webviews. You can log in using your email & password above, or tap <strong class="font-bold">⋮</strong> / <strong class="font-bold">⋯</strong> and choose <strong class="font-bold">Open in Chrome / Safari</strong>.</span>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             @endif
         </form>
@@ -205,24 +216,28 @@
             <script src="https://accounts.google.com/gsi/client" async defer></script>
             <script>
                 function handleCredentialResponse(response) {
-                    const form = document.createElement('form');
-                    form.method = 'POST';
-                    form.action = '/auth/google';
-                    
-                    const csrfToken = document.createElement('input');
-                    csrfToken.type = 'hidden';
-                    csrfToken.name = '_token';
-                    csrfToken.value = '{{ csrf_token() }}';
-                    form.appendChild(csrfToken);
+                    try {
+                        const form = document.createElement('form');
+                        form.method = 'POST';
+                        form.action = '/auth/google';
+                        
+                        const csrfToken = document.createElement('input');
+                        csrfToken.type = 'hidden';
+                        csrfToken.name = '_token';
+                        csrfToken.value = '{{ csrf_token() }}';
+                        form.appendChild(csrfToken);
 
-                    const credentialInput = document.createElement('input');
-                    credentialInput.type = 'hidden';
-                    credentialInput.name = 'credential';
-                    credentialInput.value = response.credential;
-                    form.appendChild(credentialInput);
+                        const credentialInput = document.createElement('input');
+                        credentialInput.type = 'hidden';
+                        credentialInput.name = 'credential';
+                        credentialInput.value = response.credential;
+                        form.appendChild(credentialInput);
 
-                    document.body.appendChild(form);
-                    form.submit();
+                        document.body.appendChild(form);
+                        form.submit();
+                    } catch(err) {
+                        console.error('Google auth submission error:', err);
+                    }
                 }
             </script>
         @endif
@@ -233,7 +248,6 @@
                 <a href="/register" class="text-[#C0422A] ml-1 font-black hover:underline">Sign Up</a>
             </p>
         </div>
-    </div>
     </div>
 
     <!-- ==================== ACCOUNT FROZEN / LOGIN ERROR MODALS ==================== -->
@@ -390,13 +404,34 @@
     @endif
 
 <script>
-    // Dark mode toggle - persists preference in localStorage
+    // In-App Browser Detection (Messenger / Facebook / Instagram / Line / etc.)
     (function() {
-        const saved = localStorage.getItem('lumbarong_theme');
+        try {
+            const isIAB = /FBAN|FBAV|FB_IAB|FBSS|Instagram|Line|Twitter|MicroMessenger|Snapchat/i.test(navigator.userAgent || '');
+            if (isIAB) {
+                const notice = document.getElementById('in-app-browser-notice');
+                if (notice) notice.classList.remove('hidden');
+            }
+        } catch(e) {}
+    })();
+
+    // Safe localStorage helpers to prevent DOMException / SecurityError crashes in restricted webviews
+    function safeGetStorage(key) {
+        try { return localStorage.getItem(key); } catch(e) { return null; }
+    }
+    function safeSetStorage(key, val) {
+        try { localStorage.setItem(key, val); } catch(e) {}
+    }
+
+    // Dark mode toggle - persists preference safely
+    (function() {
+        const saved = safeGetStorage('lumbarong_theme');
         if (saved === 'dark') {
             document.body.classList.add('dark');
-            document.getElementById('icon-sun').classList.remove('hidden');
-            document.getElementById('icon-moon').classList.add('hidden');
+            const sun = document.getElementById('icon-sun');
+            const moon = document.getElementById('icon-moon');
+            if (sun) sun.classList.remove('hidden');
+            if (moon) moon.classList.add('hidden');
         }
     })();
 
@@ -407,13 +442,13 @@
         const moon = document.getElementById('icon-moon');
 
         if (isDark) {
-            sun.classList.remove('hidden');
-            moon.classList.add('hidden');
-            localStorage.setItem('lumbarong_theme', 'dark');
+            if (sun) sun.classList.remove('hidden');
+            if (moon) moon.classList.add('hidden');
+            safeSetStorage('lumbarong_theme', 'dark');
         } else {
-            sun.classList.add('hidden');
-            moon.classList.remove('hidden');
-            localStorage.setItem('lumbarong_theme', 'light');
+            if (sun) sun.classList.add('hidden');
+            if (moon) moon.classList.remove('hidden');
+            safeSetStorage('lumbarong_theme', 'light');
         }
     }
 

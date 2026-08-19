@@ -171,16 +171,18 @@ function productDetail(config) {
             setTimeout(() => this.addedToCart = false, 2000);
             
             // Logic for adding to cart (localStorage or API)
-            const cart = JSON.parse(localStorage.getItem('cart') || '[]');
-            cart.push({
-                id: this.product.id,
-                name: this.product.name,
-                price: this.product.price,
-                size: this.selectedSize,
-                qty: this.quantity,
-                image: this.galleryImages[0].url
-            });
-            localStorage.setItem('cart', JSON.stringify(cart));
+            try {
+                const cart = JSON.parse(localStorage.getItem('cart') || '[]');
+                cart.push({
+                    id: this.product.id,
+                    name: this.product.name,
+                    price: this.product.price,
+                    size: this.selectedSize,
+                    qty: this.quantity,
+                    image: this.galleryImages[0].url
+                });
+                localStorage.setItem('cart', JSON.stringify(cart));
+            } catch(e) {}
             window.dispatchEvent(new CustomEvent('cart-updated'));
         },
         buyNow() {
