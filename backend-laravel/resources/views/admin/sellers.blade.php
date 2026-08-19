@@ -478,22 +478,30 @@
     </div>
 
     {{-- Document Lightbox Preview Modal --}}
-    <div x-show="previewModal" class="fixed inset-0 z-60 flex items-center justify-center p-4 sm:p-6" x-cloak>
-        <div class="absolute inset-0 bg-black/80 backdrop-blur-md" @click="previewModal = false"></div>
-        <div class="relative bg-white rounded-3xl shadow-2xl w-full max-w-3xl overflow-hidden z-10 border border-gray-200 flex flex-col max-h-[90vh]">
+    <div x-show="previewModal" class="fixed inset-0 z-[70] flex items-center justify-center p-4 sm:p-6" style="z-index: 70;" x-cloak>
+        <div class="absolute inset-0 bg-black/85 backdrop-blur-md" @click="previewModal = false"></div>
+        <div class="relative bg-white rounded-3xl shadow-2xl w-full max-w-4xl overflow-hidden z-10 border border-gray-200 flex flex-col max-h-[92vh]">
             <div class="px-6 py-4 border-b border-gray-100 flex items-center justify-between bg-white">
                 <div class="font-bold text-sm text-gray-900 truncate" x-text="previewTitle"></div>
                 <div class="flex items-center gap-2">
                     <a :href="previewUrl" target="_blank" download class="px-3 py-1.5 bg-gray-100 hover:bg-gray-200 text-gray-700 text-xs font-bold rounded-lg transition-all">
                         Download Original
                     </a>
+                    <a :href="previewUrl" target="_blank" class="px-3 py-1.5 bg-[#3D2B1F] hover:bg-[#C0422A] text-white text-xs font-bold rounded-lg transition-all">
+                        Open in New Tab ↗
+                    </a>
                     <button type="button" @click="previewModal = false" class="w-8 h-8 rounded-full bg-gray-100 hover:bg-gray-200 text-gray-500 flex items-center justify-center cursor-pointer">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
                     </button>
                 </div>
             </div>
-            <div class="p-4 bg-gray-900 flex items-center justify-center flex-1 overflow-auto">
-                <img :src="previewUrl" class="max-w-full max-h-[75vh] object-contain rounded-lg shadow-2xl">
+            <div class="p-4 bg-gray-900 flex items-center justify-center flex-1 overflow-auto min-h-[50vh]">
+                <template x-if="previewUrl && previewUrl.toLowerCase().endsWith('.pdf')">
+                    <iframe :src="previewUrl" class="w-full h-[75vh] rounded-lg bg-white"></iframe>
+                </template>
+                <template x-if="!previewUrl || !previewUrl.toLowerCase().endsWith('.pdf')">
+                    <img :src="previewUrl" class="max-w-full max-h-[75vh] object-contain rounded-lg shadow-2xl">
+                </template>
             </div>
         </div>
     </div>
