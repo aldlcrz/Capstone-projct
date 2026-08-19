@@ -7,6 +7,7 @@
     showSizeGuideModal: false,
     showReviewsModal: false,
     selectedProduct: null,
+    lightboxImage: null,
     productsData: {{ Js::from($products) }},
     activeSGTab: 'Men',
     sizeGuides: {{ Js::from(Auth::user()->size_guides ?? []) }},
@@ -447,9 +448,9 @@
                         <template x-if="rev.images">
                             <div class="flex flex-wrap gap-2 pt-1">
                                 <template x-for="(img, idx) in (typeof rev.images === 'string' ? JSON.parse(rev.images || '[]') : (rev.images || []))" :key="idx">
-                                    <a :href="img.startsWith('http') || img.startsWith('/') ? img : '/storage/' + img" target="_blank" class="w-14 h-14 rounded-xl overflow-hidden border border-gray-200 shrink-0 shadow-xs hover:opacity-80 transition-opacity">
+                                    <button type="button" @click="lightboxImage = (img.startsWith('http') || img.startsWith('/') ? img : '/storage/' + img)" class="w-14 h-14 rounded-xl overflow-hidden border border-gray-200 shrink-0 shadow-xs hover:opacity-80 transition-transform hover:scale-105 cursor-pointer">
                                         <img :src="img.startsWith('http') || img.startsWith('/') ? img : '/storage/' + img" class="w-full h-full object-cover">
-                                    </a>
+                                    </button>
                                 </template>
                             </div>
                         </template>
@@ -459,10 +460,34 @@
 
             {{-- Close Button --}}
             <div class="pt-2 border-t border-gray-100 shrink-0">
-                <button type="button" @click="showReviewsModal = false" class="w-full py-3 bg-black text-white text-xs font-bold uppercase tracking-widest rounded-xl hover:bg-[#C0420A] transition-all">
+                <button type="button" @click="showReviewsModal = false" class="w-full py-3 bg-black text-white text-xs font-bold uppercase tracking-widest rounded-xl hover:bg-[#C0420A] transition-all cursor-pointer">
                     Close
                 </button>
             </div>
+        </div>
+    </div>
+
+    {{-- LIGHTBOX IMAGE PREVIEW MODAL --}}
+    <div x-show="lightboxImage" 
+         x-transition:enter="transition ease-out duration-200"
+         x-transition:enter-start="opacity-0"
+         x-transition:enter-end="opacity-100"
+         x-transition:leave="transition ease-in duration-150"
+         x-transition:leave-start="opacity-100"
+         x-transition:leave-end="opacity-0"
+         class="fixed inset-0 z-9999 bg-black/90 backdrop-blur-md flex flex-col items-center justify-center p-4 sm:p-6"
+         style="display: none;"
+         @keydown.escape.window="lightboxImage = null">
+        
+        <div class="w-full max-w-4xl flex justify-end pb-3">
+            <button type="button" @click="lightboxImage = null" class="px-4 py-2 bg-white/20 hover:bg-white/30 text-white rounded-full text-xs font-bold uppercase tracking-wider flex items-center gap-1.5 transition-all shadow-lg cursor-pointer">
+                <span>Close</span>
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+            </button>
+        </div>
+
+        <div @click.away="lightboxImage = null" class="relative max-h-[85vh] max-w-full flex items-center justify-center">
+            <img :src="lightboxImage" class="max-h-[80vh] max-w-full rounded-2xl shadow-2xl object-contain border border-white/10">
         </div>
     </div>
 </div>
