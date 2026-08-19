@@ -100,8 +100,12 @@ class RecommendationEngine
      * - Collar & Style Match: 10%
      * - Popularity & Reviews: 10%
      * - Stock & Tailoring Readiness: 10%
+     *
+     * @param Product|object $product
+     * @param array $pref
+     * @return array
      */
-    public static function scoreProduct(Product|object $product, array $pref): array
+    public static function scoreProduct(object $product, array $pref): array
     {
         $score = 0;
         $reasons = [];
