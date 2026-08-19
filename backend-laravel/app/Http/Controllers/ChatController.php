@@ -68,7 +68,7 @@ class ChatController extends Controller
             ->orderBy('createdAt', 'asc')
             ->with(['sender:id,name,profilePhoto,role', 'receiver:id,name,profilePhoto,role'])
             ->get()
-            ->map(function ($m) {
+            ->map(function (\App\Models\Message $m) {
                 $arr = $m->toArray();
                 $arr['body'] = $m->content;
                 $arr['createdAt'] = $m->createdAt ? $m->createdAt->toISOString() : null;
@@ -122,7 +122,7 @@ class ChatController extends Controller
                 'otherUser' => [
                     'id' => $otherUser->id ?? $otherId,
                     'name' => $otherUser->name ?? 'Artisan',
-                    'profileImage' => $otherUser->profilePhoto ?? null,
+                    'profileImage' => $otherUser ? ($otherUser->profile_photo_url ?? ($otherUser->profilePhoto ? (str_starts_with($otherUser->profilePhoto, 'http') || str_starts_with($otherUser->profilePhoto, '/') ? $otherUser->profilePhoto : asset('storage/' . $otherUser->profilePhoto)) : null)) : null,
                     'role' => $otherUser->role ?? 'seller',
                 ],
                 'lastMessage' => [

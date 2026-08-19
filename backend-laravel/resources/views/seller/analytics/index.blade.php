@@ -5,11 +5,8 @@
     {{-- Header & Date Filter Toolbar --}}
     <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-            <div class="flex items-center gap-2 mb-1">
+            <div class="mb-1">
                 <span class="text-[10px] font-bold text-[#C0422A] uppercase tracking-[0.2em]">Deep Shop Insights</span>
-                <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 bg-emerald-50 border border-emerald-100 rounded-full text-[9px] font-black uppercase text-emerald-700 tracking-wider">
-                    <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span> Live Real-Time
-                </span>
             </div>
             <h1 class="font-serif text-2xl sm:text-3xl font-bold text-black uppercase">Seller <span class="text-[#C0422A] italic lowercase">analytics</span></h1>
         </div>
@@ -138,7 +135,7 @@
                                     : 4; 
                             @endphp
                             <div class="w-full max-w-12 bg-gray-100 rounded-t-xl relative overflow-hidden h-32">
-                                <div class="absolute inset-x-0 bottom-0 bg-[#C0422A] rounded-t-xl transition-all duration-500" style="height: {{ $heightPct }}%;"></div>
+                                <div class="absolute inset-x-0 bottom-0 bg-[#C0422A] rounded-t-xl transition-all duration-500" :style="'height: {{ $heightPct }}%'"></div>
                             </div>
                             <div class="text-center">
                                 <div class="text-[9px] font-black text-gray-400 uppercase">{{ $pt['label'] }}</div>

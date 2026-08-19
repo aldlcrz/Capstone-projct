@@ -187,8 +187,8 @@ class OrderController extends Controller
                     }
                 }
 
-                $this->sendNotification($customerId, 'Order placed', 'Your order has been placed successfully and is awaiting confirmation.', 'order', '/orders', 'customer');
-                $this->sendNotification($sellerId, 'New order received', 'A customer has placed a new order in your shop.', 'order', '/seller/orders', 'seller');
+                $this->sendNotification($customerId, 'Order placed', 'Your order has been placed successfully and is awaiting confirmation.', 'order', "/orders/{$order->id}", 'customer');
+                $this->sendNotification($sellerId, 'New order received', "A customer placed a new order (#LB-" . strtoupper(substr($order->id, -8)) . ") in your shop.", 'order', "/seller/orders?order_id={$order->id}", 'seller');
 
                 // Gmail Notifications
                 $customerUser = User::find($customerId);
@@ -786,7 +786,7 @@ class OrderController extends Controller
                     'Order Cancelled by Customer',
                     "Order #" . substr($order->id, 0, 8) . " was cancelled by the buyer. Reason: {$reason}. Inventory has been restored.",
                     'order',
-                    '/seller/orders',
+                    "/seller/orders?order_id={$order->id}",
                     'seller'
                 );
 

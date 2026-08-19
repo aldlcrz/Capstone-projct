@@ -97,6 +97,20 @@ function sellerOrdersManager(initialOrders) {
         receiptUrl: '',
         detailsModal: false,
         detailsOrder: null,
+
+        init() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const orderId = urlParams.get('order_id') || urlParams.get('orderId') || urlParams.get('order');
+            if (orderId) {
+                const target = this.orders.find(o => String(o.id) === String(orderId) || String(o.id).toLowerCase().endsWith(String(orderId).toLowerCase()));
+                if (target) {
+                    this.openDetails(target);
+                } else {
+                    this.searchTerm = orderId;
+                }
+            }
+        },
+
         courierName: '',
         trackingNumber: '',
         trackingLink: '',
@@ -725,6 +739,12 @@ function sellerOrdersManager(initialOrders) {
                             <span class="px-2.5 py-0.5 rounded-full border text-[8px] sm:text-[9px] font-black uppercase tracking-wider shrink-0"
                                   :class="statusColor(order.status)"
                                   x-text="normalizeStatus(order.status) === 'to ship' ? 'To Ship' : order.status"></span>
+                            <template x-if="order.reviews && order.reviews.length > 0">
+                                <span class="px-2 py-0.5 rounded-full bg-amber-50 text-amber-800 border border-amber-200 text-[8px] sm:text-[9px] font-black uppercase tracking-wider flex items-center gap-1 shrink-0">
+                                    <span class="text-amber-500 font-black">★</span>
+                                    <span x-text="Number(order.reviews[0].rating).toFixed(1) + ' Rated'"></span>
+                                </span>
+                            </template>
                         </div>
                         <p class="text-[10px] sm:text-[11px] text-gray-400 truncate font-medium mt-0.5">
                             <span class="font-bold text-gray-600" x-text="order.customer?.name || 'Customer'"></span>
@@ -934,6 +954,49 @@ function sellerOrdersManager(initialOrders) {
                                                 <span class="text-[9px] text-gray-400 block" x-text="'Updated by ' + (hist.userRole || 'system')"></span>
                                             </div>
                                             <div class="text-right text-[10px] font-medium text-gray-500" x-text="hist.createdAt ? new Date(hist.createdAt).toLocaleString('en-PH', {month:'short', day:'numeric', hour:'numeric', minute:'2-digit'}) : ''"></div>
+                                        </div>
+                                    </template>
+                                </div>
+                            </div>
+                        </template>
+
+                        {{-- Customer Rating & Feedback Card --}}
+                        <template x-if="detailsOrder.reviews && detailsOrder.reviews.length > 0">
+                            <div class="bg-amber-50/60 p-4 rounded-2xl border border-amber-200/80 space-y-3">
+                                <div class="flex items-center justify-between">
+                                    <div class="text-[9px] font-black uppercase tracking-widest text-amber-900 flex items-center gap-1.5">
+                                        <span>⭐ Customer Rating & Feedback</span>
+                                    </div>
+                                    <span class="text-[9px] font-bold text-amber-800" x-text="detailsOrder.reviews.length + ' Review(s)'"></span>
+                                </div>
+                                
+                                <div class="space-y-2.5">
+                                    <template x-for="rev in detailsOrder.reviews" :key="rev.id">
+                                        <div class="bg-white p-3.5 rounded-xl border border-amber-100 shadow-xs space-y-2">
+                                            <div class="flex items-center justify-between flex-wrap gap-2">
+                                                <div class="flex items-center gap-2">
+                                                    <div class="flex items-center text-amber-400 text-sm">
+                                                        <template x-for="star in 5" :key="star">
+                                                            <span :class="star <= rev.rating ? 'text-amber-400' : 'text-gray-200'">★</span>
+                                                        </template>
+                                                    </div>
+                                                    <span class="text-xs font-black text-black" x-text="rev.rating + '.0'"></span>
+                                                </div>
+                                                <span class="text-[9px] font-medium text-gray-400" x-text="rev.createdAt ? new Date(rev.createdAt).toLocaleDateString('en-PH', {month:'short', day:'numeric', year:'numeric'}) : ''"></span>
+                                            </div>
+
+                                            <p class="text-xs text-gray-700 font-medium leading-relaxed" x-text="rev.comment || 'No written comment provided.'"></p>
+
+                                            {{-- Review Images if any --}}
+                                            <template x-if="rev.images">
+                                                <div class="flex flex-wrap gap-2 pt-1">
+                                                    <template x-for="(img, idx) in (typeof rev.images === 'string' ? JSON.parse(rev.images || '[]') : (rev.images || []))" :key="idx">
+                                                        <a :href="img.startsWith('http') || img.startsWith('/') ? img : '/storage/' + img" target="_blank" class="w-12 h-12 rounded-lg overflow-hidden border border-gray-200 shrink-0 shadow-xs hover:opacity-80 transition-opacity">
+                                                            <img :src="img.startsWith('http') || img.startsWith('/') ? img : '/storage/' + img" class="w-full h-full object-cover">
+                                                        </a>
+                                                    </template>
+                                                </div>
+                                            </template>
                                         </div>
                                     </template>
                                 </div>

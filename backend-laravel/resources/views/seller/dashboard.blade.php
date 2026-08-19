@@ -213,8 +213,8 @@
                             <div class="flex-1 flex flex-col items-center gap-2">
                                 <div class="w-full flex items-end justify-center h-28">
                                     @php $barHeightPct = $maxChartRevenue > 0 ? max(8, ($day['revenue'] / $maxChartRevenue) * 100) : 8; @endphp
-                                    <div class="w-full max-w-10 bg-[#C0422A]/10 rounded-t-lg relative group js-bar-height" data-bar-height="{{ $barHeightPct }}">
-                                        <div class="absolute inset-x-0 bottom-0 bg-[#C0422A] rounded-t-lg transition-all" style="height:100%"></div>
+                                    <div class="h-full w-full max-w-10 bg-[#C0422A]/10 rounded-t-lg relative group flex items-end justify-center">
+                                        <div class="w-full bg-[#C0422A] rounded-t-lg transition-all duration-300 group-hover:bg-[#a63721]" :style="'height: {{ $barHeightPct }}%'"></div>
                                     </div>
                                 </div>
                                 <div class="text-center">
@@ -341,15 +341,4 @@
     </div>
 </div>
 
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-    document.querySelectorAll('.js-bar-height').forEach(function(el) {
-        const pct = el.getAttribute('data-bar-height');
-        const bar = el.querySelector('div');
-        if (bar && pct) {
-            bar.style.height = pct + '%';
-        }
-    });
-});
-</script>
 @endsection

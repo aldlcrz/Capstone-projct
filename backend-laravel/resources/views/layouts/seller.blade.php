@@ -86,6 +86,7 @@
                                         ['label' => 'Dashboard', 'path' => 'seller/dashboard', 'badge' => 0, 'icon' => '<path d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path>'],
                                         ['label' => 'Analytics', 'path' => 'seller/analytics', 'badge' => 0, 'icon' => '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>'],
                                         ['label' => 'Products', 'path' => 'seller/products', 'badge' => $attentionProductsCount, 'icon' => '<path d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 11m8 4V4"></path>'],
+                                        ['label' => 'Customers', 'path' => 'seller/customers', 'badge' => 0, 'icon' => '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path>'],
                                         ['label' => 'Messages', 'path' => 'seller/messages', 'badge' => $unreadMsgCount, 'icon' => '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"></path>'],
                                         ['label' => 'Pay Commission', 'path' => 'seller/commission', 'badge' => 0, 'icon' => '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"></path>'],
                                         ['label' => 'Shop Policies', 'path' => 'seller/policies', 'badge' => 0, 'icon' => '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>'],
@@ -202,6 +203,7 @@
                                 ['label' => 'Dashboard', 'path' => 'seller/dashboard', 'badge' => 0, 'icon' => '<path d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path>'],
                                 ['label' => 'Analytics', 'path' => 'seller/analytics', 'badge' => 0, 'icon' => '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>'],
                                 ['label' => 'Products', 'path' => 'seller/products', 'badge' => $attentionProductsCount, 'icon' => '<path d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 11m8 4V4"></path>'],
+                                ['label' => 'Customers', 'path' => 'seller/customers', 'badge' => 0, 'icon' => '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path>'],
                                 ['label' => 'Orders', 'path' => 'seller/orders', 'badge' => $pendingOrdersCount, 'icon' => '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"></path>'],
                                 ['label' => 'Messages', 'path' => 'seller/messages', 'badge' => $unreadMsgCount, 'icon' => '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"></path>'],
                                 ['label' => 'Pay Commission', 'path' => 'seller/commission', 'badge' => 0, 'icon' => '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"></path>'],
@@ -300,7 +302,7 @@
                                 </div>
                                 <div class="max-h-96 overflow-y-auto no-scrollbar">
                                     @forelse($recentNotifications as $notif)
-                                        <a href="{{ $notif->link ?? '#' }}" class="flex items-start gap-3 p-4 hover:bg-gray-50 transition-all border-b border-gray-50 last:border-0">
+                                        <a href="{{ route('notifications.read-and-redirect', $notif->id) }}" class="flex items-start gap-3 p-4 hover:bg-gray-50 transition-all border-b border-gray-50 last:border-0">
                                             <div class="w-2 h-2 mt-1.5 rounded-full {{ $notif->isRead ? 'bg-gray-200' : 'bg-red-500' }} shrink-0"></div>
                                             <div class="space-y-0.5">
                                                 <div class="text-[11px] font-bold text-black text-left">{{ $notif->title }}</div>
@@ -445,6 +447,78 @@
         </div>
     </div>
     
+    {{-- Live Seller Notification Popup Toast --}}
+    <div 
+        x-data="{
+            popupNotif: null,
+            dismissedIds: JSON.parse(sessionStorage.getItem('seen_seller_notif_ids') || '[]'),
+            checkNotifications() {
+                fetch('/api/notifications?role=seller')
+                    .then(r => r.json())
+                    .then(data => {
+                        if (Array.isArray(data)) {
+                            const unread = data.filter(n => !n.isRead && !this.dismissedIds.includes(n.id));
+                            if (unread.length > 0) {
+                                const latest = unread[0];
+                                if (!this.popupNotif || this.popupNotif.id !== latest.id) {
+                                    this.popupNotif = latest;
+                                    setTimeout(() => { 
+                                        if (this.popupNotif && this.popupNotif.id === latest.id) {
+                                            this.dismiss(); 
+                                        }
+                                    }, 8000);
+                                }
+                            }
+                        }
+                    })
+                    .catch(() => {});
+            },
+            dismiss() {
+                if (this.popupNotif) {
+                    this.dismissedIds.push(this.popupNotif.id);
+                    sessionStorage.setItem('seen_seller_notif_ids', JSON.stringify(this.dismissedIds));
+                    this.popupNotif = null;
+                }
+            },
+            init() {
+                this.checkNotifications();
+                setInterval(() => this.checkNotifications(), 12000);
+            }
+        }"
+        x-show="popupNotif"
+        x-cloak
+        x-transition:enter="transition ease-out duration-300 transform"
+        x-transition:enter-start="opacity-0 translate-y-4 sm:translate-y-0 sm:translate-x-4"
+        x-transition:enter-end="opacity-100 translate-y-0 sm:translate-x-0"
+        x-transition:leave="transition ease-in duration-200 transform"
+        x-transition:leave-start="opacity-100 translate-y-0 sm:translate-x-0"
+        x-transition:leave-end="opacity-0 translate-y-4 sm:translate-y-0 sm:translate-x-4"
+        class="fixed bottom-20 right-4 sm:bottom-6 sm:right-6 z-9999 max-w-sm w-[calc(100%-2rem)] bg-white/95 backdrop-blur-md rounded-2xl shadow-2xl border border-gray-100 p-4"
+        style="display: none;"
+    >
+        <div class="flex items-start gap-3">
+            <div class="w-9 h-9 rounded-xl bg-[#C0422A]/10 text-[#C0422A] flex items-center justify-center shrink-0">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"></path></svg>
+            </div>
+            <div class="flex-1 min-w-0">
+                <div class="flex items-center justify-between gap-1">
+                    <h4 class="text-xs font-black text-black truncate uppercase" x-text="popupNotif?.title || 'Notification'"></h4>
+                    <button @click="dismiss()" class="text-gray-400 hover:text-black transition-colors shrink-0">
+                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                    </button>
+                </div>
+                <p class="text-xs text-gray-600 font-medium mt-0.5 line-clamp-2 leading-relaxed" x-text="popupNotif?.message"></p>
+                <div class="mt-2.5 flex items-center justify-between">
+                    <span class="text-[9px] font-bold text-gray-400 uppercase tracking-wider">Just now</span>
+                    <a :href="'/notifications/' + (popupNotif?.id) + '/read-and-redirect'" class="px-3 py-1 bg-[#C0422A] hover:bg-[#a63721] text-white text-[10px] font-bold rounded-lg transition-all shadow-xs inline-flex items-center gap-1">
+                        <span>View</span>
+                        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <x-confirmation-modal />
     <x-modal-scroll-lock />
     @stack('scripts')

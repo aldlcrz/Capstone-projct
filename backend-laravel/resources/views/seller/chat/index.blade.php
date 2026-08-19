@@ -170,11 +170,15 @@ document.addEventListener('alpine:init', () => {
                     @click="selectUser(conv.otherUser)"
                 >
                     <div class="flex items-center gap-3 min-w-0">
-                        <div class="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-gray-100 flex items-center justify-center font-bold text-gray-600 shrink-0 uppercase border border-gray-200 text-xs sm:text-sm"
-                             x-text="conv.otherUser.name.charAt(0)"></div>
+                        <div class="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-gray-100 flex items-center justify-center font-bold text-gray-600 shrink-0 uppercase border border-gray-200 text-xs sm:text-sm overflow-hidden">
+                            <template x-if="conv.otherUser && conv.otherUser.profileImage">
+                                <img :src="conv.otherUser.profileImage" class="w-full h-full object-cover" @error="$el.style.display='none'">
+                            </template>
+                            <span x-show="!conv.otherUser || !conv.otherUser.profileImage" x-text="((conv.otherUser && conv.otherUser.name) || 'C').charAt(0)"></span>
+                        </div>
                         <div class="min-w-0">
-                            <div class="text-xs font-bold text-black truncate" x-text="conv.otherUser.name"></div>
-                            <p class="text-[10px] text-gray-400 truncate leading-relaxed mt-0.5" x-text="conv.lastMessage"></p>
+                            <div class="text-xs font-bold text-black truncate" x-text="conv.otherUser && conv.otherUser.name ? conv.otherUser.name : 'Customer'"></div>
+                            <p class="text-[10px] text-gray-400 truncate leading-relaxed mt-0.5" x-text="typeof conv.lastMessage === 'object' ? (conv.lastMessage.content || conv.lastMessage.body || '') : (conv.lastMessage || '')"></p>
                         </div>
                     </div>
                     <div class="text-right shrink-0 ml-2 flex flex-col items-end gap-1.5">
@@ -214,13 +218,20 @@ document.addEventListener('alpine:init', () => {
             <div class="flex flex-col h-full min-h-0">
                 <!-- Thread Header -->
                 <div class="px-4 sm:px-8 py-3.5 sm:py-4 border-b border-gray-100 flex items-center justify-between shrink-0 bg-white">
-                    <div>
-                        <button @click="activeUser = null" class="md:hidden flex items-center gap-1 text-[10px] font-bold text-[#C0422A] uppercase tracking-wider mb-1">
-                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path></svg>
-                            Back to Inbox
+                    <div class="flex items-center gap-3">
+                        <button @click="activeUser = null" class="md:hidden flex items-center justify-center w-8 h-8 rounded-lg bg-gray-100 text-gray-600 hover:text-black shrink-0">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path></svg>
                         </button>
-                        <h3 class="font-serif text-sm font-bold text-black" x-text="activeUser.name"></h3>
-                        <p class="text-[9px] font-bold text-gray-400 uppercase tracking-widest mt-0.5">Customer Chat Thread</p>
+                        <div class="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-gray-100 flex items-center justify-center font-bold text-gray-600 shrink-0 uppercase border border-gray-200 text-xs sm:text-sm overflow-hidden">
+                            <template x-if="activeUser && activeUser.profileImage">
+                                <img :src="activeUser.profileImage" class="w-full h-full object-cover" @error="$el.style.display='none'">
+                            </template>
+                            <span x-show="!activeUser || !activeUser.profileImage" x-text="((activeUser && activeUser.name) || 'C').charAt(0)"></span>
+                        </div>
+                        <div>
+                            <h3 class="font-serif text-sm font-bold text-black" x-text="activeUser.name"></h3>
+                            <p class="text-[9px] font-bold text-gray-400 uppercase tracking-widest mt-0.5">Customer Chat Thread</p>
+                        </div>
                     </div>
                 </div>
 

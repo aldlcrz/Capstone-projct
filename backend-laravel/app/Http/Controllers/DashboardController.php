@@ -611,7 +611,7 @@ class DashboardController extends Controller
     {
         $sellerId = $request->user()->id;
         $query = Order::where('sellerId', $sellerId)
-            ->with(['customer:id,name,email,mobileNumber', 'items.product']);
+            ->with(['customer:id,name,email,mobileNumber', 'items.product', 'reviews.customer:id,name,profilePhoto']);
 
         $status = strtolower($request->input('status', 'all'));
         if ($status && $status !== 'all') {
