@@ -108,6 +108,9 @@ Route::middleware('auth')->group(function () {
     // Notifications
     Route::get('/notifications', [WebController::class, 'notifications'])->name('notifications.index');
     Route::post('/notifications/read-all', [WebController::class, 'readAllNotifications'])->name('notifications.read-all');
+    Route::get('/api/notifications', [NotificationController::class, 'getMyNotifications']);
+    Route::post('/api/notifications/read-all', [NotificationController::class, 'markAllRead']);
+    Route::get('/api/notifications/unread-count', [NotificationController::class, 'getUnreadCount']);
 
     // Wishlist
     Route::get('/wishlist', [WishlistController::class, 'index'])->name('wishlist.index');

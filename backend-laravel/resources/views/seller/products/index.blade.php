@@ -380,6 +380,9 @@
                     </div>
                 </div>
             </div>
+        </div>
+    </div>
+
     {{-- CUSTOMER REVIEWS MODAL --}}
     <div x-show="showReviewsModal" 
          x-transition:enter="transition ease-out duration-300"
