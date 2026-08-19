@@ -25,10 +25,13 @@ class CheckAccountStatus
                     ? $user->violationReason
                     : 'Your account has been suspended by an administrator for policy violations.';
 
-                // Force logout and destroy active session
-                Auth::logout();
-                $request->session()->invalidate();
-                $request->session()->regenerateToken();
+                // Force logout and destroy active session safely
+                Auth::guard('web')->logout();
+
+                if ($request->hasSession()) {
+                    $request->session()->invalidate();
+                    $request->session()->regenerateToken();
+                }
 
                 if ($request->expectsJson() || $request->is('api/*')) {
                     return response()->json([
@@ -39,11 +42,15 @@ class CheckAccountStatus
                     ], 403);
                 }
 
-                return redirect()->route('login')
-                    ->with('banned_reason', $reason)
-                    ->withErrors([
-                        'email' => "Your account has been suspended. Reason: {$reason}",
-                    ]);
+                if ($request->hasSession()) {
+                    return redirect()->route('login')
+                        ->with('banned_reason', $reason)
+                        ->withErrors([
+                            'email' => "Your account has been suspended. Reason: {$reason}",
+                        ]);
+                }
+
+                return redirect()->route('login');
             }
         }
 

@@ -157,18 +157,22 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->group(function () {
     Route::get('/dashboard', [AdminController::class, 'dashboard'])->name('admin.dashboard');
     Route::get('/export-global-report', [AdminController::class, 'exportGlobalReport'])->name('admin.export');
     Route::get('/users', [AdminController::class, 'users'])->name('admin.users');
-    Route::patch('/users/{id}/ban', [AdminController::class, 'banUser'])->name('admin.users.ban');
-    Route::patch('/users/{id}/unban', [AdminController::class, 'unbanUser'])->name('admin.users.unban');
+    Route::match(['post', 'patch'], '/users/{id}/ban', [AdminController::class, 'banUser'])->name('admin.users.ban');
+    Route::get('/users/{id}/ban', function() { return redirect()->route('admin.users'); });
+    Route::match(['post', 'patch'], '/users/{id}/unban', [AdminController::class, 'unbanUser'])->name('admin.users.unban');
+    Route::get('/users/{id}/unban', function() { return redirect()->route('admin.users'); });
     Route::delete('/users/{id}', [AdminController::class, 'deleteUser'])->name('admin.users.delete');
     Route::get('/sellers', [AdminController::class, 'sellers'])->name('admin.sellers');
-    Route::patch('/sellers/{id}/verify', [AdminController::class, 'verifySellerWeb'])->name('admin.sellers.verify');
-    Route::patch('/sellers/{id}/unverify', [AdminController::class, 'unverifySellerWeb'])->name('admin.sellers.unverify');
-    Route::patch('/sellers/{id}/suspend', [AdminController::class, 'suspendSeller'])->name('admin.sellers.suspend');
-    Route::patch('/sellers/{id}/unsuspend', [AdminController::class, 'unsuspendSeller'])->name('admin.sellers.unsuspend');
+    Route::match(['post', 'patch'], '/sellers/{id}/verify', [AdminController::class, 'verifySellerWeb'])->name('admin.sellers.verify');
+    Route::match(['post', 'patch'], '/sellers/{id}/unverify', [AdminController::class, 'unverifySellerWeb'])->name('admin.sellers.unverify');
+    Route::match(['post', 'patch'], '/sellers/{id}/suspend', [AdminController::class, 'suspendSeller'])->name('admin.sellers.suspend');
+    Route::get('/sellers/{id}/suspend', function() { return redirect()->route('admin.sellers'); });
+    Route::match(['post', 'patch'], '/sellers/{id}/unsuspend', [AdminController::class, 'unsuspendSeller'])->name('admin.sellers.unsuspend');
+    Route::get('/sellers/{id}/unsuspend', function() { return redirect()->route('admin.sellers'); });
     Route::delete('/sellers/{id}', [AdminController::class, 'deleteSeller'])->name('admin.sellers.delete');
     Route::get('/products', [AdminController::class, 'products'])->name('admin.products');
-    Route::patch('/products/{id}/approve', [AdminController::class, 'approveProductWeb'])->name('admin.products.approve');
-    Route::patch('/products/{id}/reject', [AdminController::class, 'rejectProductWeb'])->name('admin.products.reject');
+    Route::match(['post', 'patch'], '/products/{id}/approve', [AdminController::class, 'approveProductWeb'])->name('admin.products.approve');
+    Route::match(['post', 'patch'], '/products/{id}/reject', [AdminController::class, 'rejectProductWeb'])->name('admin.products.reject');
 
     // Categories
     Route::get('/categories', [AdminCategoryController::class, 'index'])->name('admin.categories.index');

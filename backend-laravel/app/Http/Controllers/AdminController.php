@@ -643,11 +643,15 @@ class AdminController extends Controller
 
         // Invalidate active web and API sessions immediately
         try {
-            DB::table('sessions')->where('user_id', $user->id)->delete();
+            if (\Illuminate\Support\Facades\Schema::hasTable('sessions')) {
+                DB::table('sessions')->where('user_id', $user->id)->delete();
+            }
             if (method_exists($user, 'tokens')) {
                 $user->tokens()->delete();
             }
-        } catch (\Throwable $e) {}
+        } catch (\Throwable $e) {
+            Log::warning('Session deletion error on banUser: ' . $e->getMessage());
+        }
 
         $this->sendNotification(
             $user->id,
@@ -658,7 +662,7 @@ class AdminController extends Controller
             'customer'
         );
 
-        return redirect()->back()->with('success', 'User account banned successfully.');
+        return redirect()->route('admin.users')->with('success', 'User account banned successfully.');
     }
 
     public function unbanUser(string $id)
@@ -667,17 +671,19 @@ class AdminController extends Controller
         $user->status = 'active';
         $user->violationReason = null;
         $user->save();
-        return redirect()->back()->with('success', 'User restored.');
+        return redirect()->route('admin.users')->with('success', 'User restored.');
     }
 
     public function deleteUser(string $id)
     {
         $user = User::findOrFail($id);
         try {
-            DB::table('sessions')->where('user_id', $user->id)->delete();
+            if (\Illuminate\Support\Facades\Schema::hasTable('sessions')) {
+                DB::table('sessions')->where('user_id', $user->id)->delete();
+            }
         } catch (\Throwable $e) {}
         $user->delete();
-        return redirect()->back()->with('success', 'User deleted.');
+        return redirect()->route('admin.users')->with('success', 'User deleted.');
     }
 
     public function sellers(Request $request)
@@ -702,7 +708,7 @@ class AdminController extends Controller
         $user->status     = 'active';
         $user->save();
         $this->sendNotification($user->id, 'Seller Verified', 'Your artisan workshop is now verified!', 'system', '/seller/dashboard', 'seller');
-        return redirect()->back()->with('success', 'Seller verified.');
+        return redirect()->route('admin.sellers')->with('success', 'Seller verified.');
     }
 
     public function unverifySellerWeb(string $id)
@@ -712,7 +718,7 @@ class AdminController extends Controller
         $user->status     = 'pending_approval';
         $user->save();
         $this->sendNotification($user->id, 'Verification Revoked', 'Your artisan workshop verification has been revoked by an administrator.', 'system', '/profile', 'seller');
-        return redirect()->back()->with('success', 'Seller verification revoked. Account moved back to Pending.');
+        return redirect()->route('admin.sellers')->with('success', 'Seller verification revoked. Account moved back to Pending.');
     }
 
     public function suspendSeller(Request $request, string $id)
@@ -726,13 +732,17 @@ class AdminController extends Controller
 
         // Invalidate active web and API sessions immediately
         try {
-            DB::table('sessions')->where('user_id', $user->id)->delete();
+            if (\Illuminate\Support\Facades\Schema::hasTable('sessions')) {
+                DB::table('sessions')->where('user_id', $user->id)->delete();
+            }
             if (method_exists($user, 'tokens')) {
                 $user->tokens()->delete();
             }
-        } catch (\Throwable $e) {}
+        } catch (\Throwable $e) {
+            Log::warning('Session deletion error on suspendSeller: ' . $e->getMessage());
+        }
 
-        return redirect()->back()->with('success', 'Seller suspended.');
+        return redirect()->route('admin.sellers')->with('success', 'Seller suspended.');
     }
 
     public function unsuspendSeller(string $id)
@@ -741,7 +751,7 @@ class AdminController extends Controller
         $user->status          = 'active';
         $user->violationReason = null;
         $user->save();
-        return redirect()->back()->with('success', 'Seller account restored.');
+        return redirect()->route('admin.sellers')->with('success', 'Seller account restored.');
     }
 
     public function deleteSeller(string $id)
