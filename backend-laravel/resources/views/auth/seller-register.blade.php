@@ -71,7 +71,49 @@
     <div class="absolute bottom-0 left-0 w-95 h-95 rounded-full translate-y-1/2 -translate-x-1/3 blur-3xl opacity-[0.12] pointer-events-none bg-[#D4B896]"></div>
 
     <div class="w-full max-w-xl bg-white rounded-[3rem] border border-[#E5DDD5] p-8 md:p-12 shadow-[0_20px_60px_rgba(60,40,20,0.08)] relative z-10 max-h-[95vh] overflow-y-auto no-scrollbar" 
-         x-data="{ step: {{ $errors->has('mobileNumber') || $errors->has('residencyCertificate') || $errors->has('businessPermit') || $errors->has('birDocument') || $errors->has('terms_consent') ? 2 : 1 }} }" x-cloak>
+         x-data="{
+             step: {{ $errors->has('mobileNumber') || $errors->has('residencyCertificate') || $errors->has('businessPermit') || $errors->has('birDocument') || $errors->has('terms_consent') ? 2 : 1 }},
+             name: '{{ old('name', $googleSeller['name'] ?? '') }}',
+             email: '{{ old('email', $googleSeller['email'] ?? '') }}',
+             password: '',
+             password_confirmation: '',
+             showPass: false,
+             showConfirm: false,
+             errors: {},
+             validateStep1() {
+                 this.errors = {};
+                 const nameVal = (this.name || '').trim();
+                 const emailVal = (this.email || '').trim();
+                 const passVal = this.password || '';
+                 const passConfVal = this.password_confirmation || '';
+
+                 if (!nameVal) {
+                     this.errors.name = 'Full Name is required to proceed.';
+                 }
+
+                 if (!emailVal) {
+                     this.errors.email = 'Email address is required.';
+                 } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailVal)) {
+                     this.errors.email = 'Please enter a valid email address.';
+                 }
+
+                 if (!passVal) {
+                     this.errors.password = 'Platform password is required.';
+                 } else if (passVal.length < 6) {
+                     this.errors.password = 'Password must be at least 6 characters.';
+                 }
+
+                 if (!passConfVal) {
+                     this.errors.password_confirmation = 'Please confirm your password.';
+                 } else if (passVal !== passConfVal) {
+                     this.errors.password_confirmation = 'Passwords do not match.';
+                 }
+
+                 if (Object.keys(this.errors).length === 0) {
+                     this.step = 2;
+                 }
+             }
+         }" x-cloak>
         
         <!-- Header -->
         <div class="relative mb-10 text-center">
@@ -152,8 +194,9 @@
                         <span class="absolute left-8 top-1/2 -translate-y-1/2 opacity-20">
                             <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" /></svg>
                         </span>
-                        <input type="text" name="name" value="{{ old('name', $googleSeller['name'] ?? '') }}" required class="premium-input pl-16" placeholder="Your Full Name">
+                        <input type="text" name="name" x-model="name" @input="delete errors.name" required class="premium-input pl-16" :class="errors.name ? '!border-red-400' : ''" placeholder="Your Full Name">
                     </div>
+                    <p x-show="errors.name" x-text="errors.name" class="text-xs font-bold text-red-500 px-5 mt-1" x-cloak></p>
                     @error('name')
                         <p class="text-xs font-bold text-red-500 px-5 mt-1">{{ $message }}</p>
                     @enderror
@@ -165,8 +208,9 @@
                         <span class="absolute left-8 top-1/2 -translate-y-1/2 opacity-20">
                             <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002 2H5a2 2 0 00-2-2V7a2 2 0 002-2h14a2 2 0 002 2v10" /></svg>
                         </span>
-                        <input type="email" name="email" value="{{ old('email', $googleSeller['email'] ?? '') }}" required class="premium-input pl-16" placeholder="email@example.com">
+                        <input type="email" name="email" x-model="email" @input="delete errors.email" required class="premium-input pl-16" :class="errors.email ? '!border-red-400' : ''" placeholder="email@example.com">
                     </div>
+                    <p x-show="errors.email" x-text="errors.email" class="text-xs font-bold text-red-500 px-5 mt-1" x-cloak></p>
                     @error('email')
                         <p class="text-xs font-bold text-red-500 px-5 mt-1">{{ $message }}</p>
                     @enderror
@@ -174,16 +218,17 @@
 
                 <div class="space-y-1">
                     <label class="text-[10px] font-bold uppercase tracking-widest px-5 block text-gray-400">Platform Password</label>
-                    <div class="relative" x-data="{ show: false }">
+                    <div class="relative">
                         <span class="absolute left-8 top-1/2 -translate-y-1/2 opacity-20">
                             <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" /></svg>
                         </span>
-                        <input :type="show ? 'text' : 'password'" name="password" required class="premium-input pl-16 pr-16" placeholder="••••••••••••">
-                        <button type="button" @click="show = !show" class="absolute right-8 top-1/2 -translate-y-1/2 opacity-40 hover:opacity-100">
-                            <svg x-show="!show" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" /></svg>
-                            <svg x-show="show" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" x-cloak><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.878 9.878L5.136 5.136m13.727 13.727L13.875 18.825M21 12a10.025 10.025 0 01-1.12 4.5m-5.878-9.375l2.122-2.122m-8.484 8.484L5.136 5.136m13.727 13.727L21 12" /></svg>
+                        <input :type="showPass ? 'text' : 'password'" name="password" x-model="password" @input="delete errors.password; delete errors.password_confirmation" required class="premium-input pl-16 pr-16" :class="errors.password ? '!border-red-400' : ''" placeholder="••••••••••••">
+                        <button type="button" @click="showPass = !showPass" class="absolute right-8 top-1/2 -translate-y-1/2 opacity-40 hover:opacity-100">
+                            <svg x-show="!showPass" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" /></svg>
+                            <svg x-show="showPass" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" x-cloak><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.878 9.878L5.136 5.136m13.727 13.727L13.875 18.825M21 12a10.025 10.025 0 01-1.12 4.5m-5.878-9.375l2.122-2.122m-8.484 8.484L5.136 5.136m13.727 13.727L21 12" /></svg>
                         </button>
                     </div>
+                    <p x-show="errors.password" x-text="errors.password" class="text-xs font-bold text-red-500 px-5 mt-1" x-cloak></p>
                     @error('password')
                         <p class="text-xs font-bold text-red-500 px-5 mt-1">{{ $message }}</p>
                     @enderror
@@ -191,22 +236,23 @@
 
                 <div class="space-y-1">
                     <label class="text-[10px] font-bold uppercase tracking-widest px-5 block text-gray-400">Confirm Password</label>
-                    <div class="relative" x-data="{ show: false }">
+                    <div class="relative">
                         <span class="absolute left-8 top-1/2 -translate-y-1/2 opacity-20">
                             <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" /></svg>
                         </span>
-                        <input :type="show ? 'text' : 'password'" name="password_confirmation" required class="premium-input pl-16 pr-16" placeholder="••••••••••••">
-                        <button type="button" @click="show = !show" class="absolute right-8 top-1/2 -translate-y-1/2 opacity-40 hover:opacity-100">
-                            <svg x-show="!show" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" /></svg>
-                            <svg x-show="show" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" x-cloak><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.878 9.878L5.136 5.136m13.727 13.727L13.875 18.825M21 12a10.025 10.025 0 01-1.12 4.5m-5.878-9.375l2.122-2.122m-8.484 8.484L5.136 5.136m13.727 13.727L21 12" /></svg>
+                        <input :type="showConfirm ? 'text' : 'password'" name="password_confirmation" x-model="password_confirmation" @input="delete errors.password_confirmation" required class="premium-input pl-16 pr-16" :class="errors.password_confirmation ? '!border-red-400' : ''" placeholder="••••••••••••">
+                        <button type="button" @click="showConfirm = !showConfirm" class="absolute right-8 top-1/2 -translate-y-1/2 opacity-40 hover:opacity-100">
+                            <svg x-show="!showConfirm" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" /></svg>
+                            <svg x-show="showConfirm" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" x-cloak><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.878 9.878L5.136 5.136m13.727 13.727L13.875 18.825M21 12a10.025 10.025 0 01-1.12 4.5m-5.878-9.375l2.122-2.122m-8.484 8.484L5.136 5.136m13.727 13.727L21 12" /></svg>
                         </button>
                     </div>
+                    <p x-show="errors.password_confirmation" x-text="errors.password_confirmation" class="text-xs font-bold text-red-500 px-5 mt-1" x-cloak></p>
                     @error('password_confirmation')
                         <p class="text-xs font-bold text-red-500 px-5 mt-1">{{ $message }}</p>
                     @enderror
                 </div>
 
-                <button type="button" @click="step = 2" class="w-full h-14 bg-[#3D2B1F] text-white rounded-full font-bold uppercase tracking-[0.2em] text-[11px] shadow-xl shadow-black/10 hover:bg-[#C0422A] transition-all flex items-center justify-center gap-3">
+                <button type="button" @click="validateStep1()" class="w-full h-14 bg-[#3D2B1F] text-white rounded-full font-bold uppercase tracking-[0.2em] text-[11px] shadow-xl shadow-black/10 hover:bg-[#C0422A] transition-all flex items-center justify-center gap-3 cursor-pointer">
                     Continue to Requirements
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3" /></svg>
                 </button>
