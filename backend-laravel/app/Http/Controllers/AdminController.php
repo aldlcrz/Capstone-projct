@@ -627,7 +627,13 @@ class AdminController extends Controller
         }
 
         $users = $query->orderBy('createdAt', 'desc')->paginate(20);
-        return view('admin.users', compact('users'));
+        $counts = [
+            'all'     => User::where('role', 'customer')->count(),
+            'active'  => User::where('role', 'customer')->where('status', 'active')->count(),
+            'blocked' => User::where('role', 'customer')->where('status', 'blocked')->count(),
+            'frozen'  => User::where('role', 'customer')->where('status', 'frozen')->count(),
+        ];
+        return view('admin.users', compact('users', 'counts'));
     }
 
     public function banUser(Request $request, string $id)
@@ -705,12 +711,29 @@ class AdminController extends Controller
 
     public function sellers(Request $request)
     {
-        $sellers = User::where('role', 'seller')
-            ->withCount(['products', 'orders'])
-            ->orderBy('createdAt', 'desc')
-            ->paginate(20);
+        $query = User::where('role', 'seller')
+            ->withCount(['products', 'orders']);
+
+        if ($request->search) {
+            $query->where(function($q) use ($request) {
+                $q->where('name', 'like', '%'.$request->search.'%')
+                  ->orWhere('email', 'like', '%'.$request->search.'%')
+                  ->orWhere('shopName', 'like', '%'.$request->search.'%');
+            });
+        }
+
+        if ($request->filter === 'verified') {
+            $query->where('isVerified', true)->where('status', '!=', 'blocked');
+        } elseif ($request->filter === 'pending') {
+            $query->where('isVerified', false)->where('status', '!=', 'blocked');
+        } elseif ($request->filter === 'suspended') {
+            $query->where('status', 'blocked');
+        }
+
+        $sellers = $query->orderBy('createdAt', 'desc')->paginate(20);
         $pendingSellers = User::where('role', 'seller')->where('isVerified', false)->where('status', '!=', 'blocked')->get();
         $counts = [
+            'all'       => User::where('role', 'seller')->count(),
             'verified'  => User::where('role', 'seller')->where('isVerified', true)->where('status', '!=', 'blocked')->count(),
             'pending'   => User::where('role', 'seller')->where('isVerified', false)->where('status', '!=', 'blocked')->count(),
             'suspended' => User::where('role', 'seller')->where('status', 'blocked')->count(),

@@ -58,29 +58,57 @@
         </div>
     </div>
 
-    {{-- Stats (Compact) --}}
-    <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
-        <div class="bg-white rounded-xl border border-gray-100 p-3 shadow-xs flex items-center gap-3">
-            <div class="w-8 h-8 rounded-lg bg-green-50 text-green-600 flex items-center justify-center font-black text-xs shrink-0">✓</div>
-            <div>
-                <div class="text-base font-black text-black leading-none mb-0.5">{{ $counts['verified'] }}</div>
-                <div class="text-[9px] font-bold text-gray-500 uppercase tracking-wider">Verified</div>
-            </div>
+    @php
+        $currentFilter = request('filter');
+    @endphp
+
+    {{-- Filter Pills & Search Bar --}}
+    <div class="flex flex-col md:flex-row md:items-center justify-between gap-3 pt-1">
+        {{-- Pill Filters --}}
+        <div class="flex items-center gap-2 overflow-x-auto no-scrollbar pb-1">
+            {{-- ALL --}}
+            <a href="{{ request()->fullUrlWithQuery(['filter' => null, 'page' => 1]) }}"
+               class="inline-flex items-center gap-2 px-4 py-2 rounded-full text-[10px] sm:text-[11px] font-black uppercase tracking-wider transition-all {{ empty($currentFilter) ? 'bg-black text-white shadow-sm' : 'bg-white text-gray-700 border border-gray-200 hover:bg-gray-50' }}">
+                <span>ALL</span>
+                <span class="px-2 py-0.5 rounded-full text-[9px] font-black {{ empty($currentFilter) ? 'bg-white/20 text-white' : 'bg-gray-100 text-gray-600' }}">{{ $counts['all'] }}</span>
+            </a>
+
+            {{-- VERIFIED --}}
+            <a href="{{ request()->fullUrlWithQuery(['filter' => 'verified', 'page' => 1]) }}"
+               class="inline-flex items-center gap-2 px-4 py-2 rounded-full text-[10px] sm:text-[11px] font-black uppercase tracking-wider transition-all {{ $currentFilter === 'verified' ? 'bg-black text-white shadow-sm' : 'bg-white text-gray-700 border border-gray-200 hover:bg-gray-50' }}">
+                <span>VERIFIED</span>
+                <span class="px-2 py-0.5 rounded-full text-[9px] font-black {{ $currentFilter === 'verified' ? 'bg-white/20 text-white' : 'bg-gray-100 text-gray-600' }}">{{ $counts['verified'] }}</span>
+            </a>
+
+            {{-- PENDING --}}
+            <a href="{{ request()->fullUrlWithQuery(['filter' => 'pending', 'page' => 1]) }}"
+               class="inline-flex items-center gap-2 px-4 py-2 rounded-full text-[10px] sm:text-[11px] font-black uppercase tracking-wider transition-all {{ $currentFilter === 'pending' ? 'bg-black text-white shadow-sm' : 'bg-white text-gray-700 border border-gray-200 hover:bg-gray-50' }}">
+                <span>PENDING</span>
+                <span class="px-2 py-0.5 rounded-full text-[9px] font-black {{ $currentFilter === 'pending' ? 'bg-white/20 text-white' : 'bg-gray-100 text-gray-600' }}">{{ $counts['pending'] }}</span>
+            </a>
+
+            {{-- SUSPENDED --}}
+            <a href="{{ request()->fullUrlWithQuery(['filter' => 'suspended', 'page' => 1]) }}"
+               class="inline-flex items-center gap-2 px-4 py-2 rounded-full text-[10px] sm:text-[11px] font-black uppercase tracking-wider transition-all {{ $currentFilter === 'suspended' ? 'bg-black text-white shadow-sm' : 'bg-white text-gray-700 border border-gray-200 hover:bg-gray-50' }}">
+                <span>SUSPENDED</span>
+                <span class="px-2 py-0.5 rounded-full text-[9px] font-black {{ $currentFilter === 'suspended' ? 'bg-white/20 text-white' : 'bg-gray-100 text-gray-600' }}">{{ $counts['suspended'] }}</span>
+            </a>
         </div>
-        <div class="bg-white rounded-xl border border-gray-100 p-3 shadow-xs flex items-center gap-3">
-            <div class="w-8 h-8 rounded-lg bg-amber-50 text-amber-600 flex items-center justify-center font-black text-xs shrink-0">⏳</div>
-            <div>
-                <div class="text-base font-black text-black leading-none mb-0.5">{{ $counts['pending'] }}</div>
-                <div class="text-[9px] font-bold text-gray-500 uppercase tracking-wider">Pending</div>
+
+        {{-- Search Input --}}
+        <form method="GET" class="flex items-center gap-2">
+            @if(request('filter'))
+                <input type="hidden" name="filter" value="{{ request('filter') }}">
+            @endif
+            <div class="relative w-full sm:w-64">
+                <input type="text" name="search" value="{{ request('search') }}" placeholder="Search sellers, shops..." 
+                       class="w-full pl-9 pr-4 py-2 bg-white border border-gray-200 rounded-full text-xs text-gray-800 placeholder:text-gray-400 focus:outline-none focus:border-[#C0422A]">
+                <svg class="w-4 h-4 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
             </div>
-        </div>
-        <div class="bg-white rounded-xl border border-gray-100 p-3 shadow-xs flex items-center gap-3">
-            <div class="w-8 h-8 rounded-lg bg-red-50 text-red-600 flex items-center justify-center font-black text-xs shrink-0">✕</div>
-            <div>
-                <div class="text-base font-black text-black leading-none mb-0.5">{{ $counts['suspended'] }}</div>
-                <div class="text-[9px] font-bold text-gray-500 uppercase tracking-wider">Suspended</div>
-            </div>
-        </div>
+            @if(request('search'))
+                <a href="{{ request()->fullUrlWithQuery(['search' => null, 'page' => 1]) }}" class="px-3 py-2 bg-gray-100 hover:bg-gray-200 text-gray-600 rounded-full text-[10px] font-bold">Clear</a>
+            @endif
+        </form>
     </div>
 
     {{-- Pending Verification (Compact Pill Row Style) --}}
