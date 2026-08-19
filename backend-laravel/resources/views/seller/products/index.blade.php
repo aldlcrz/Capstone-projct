@@ -7,6 +7,7 @@
     showSizeGuideModal: false,
     showReviewsModal: false,
     selectedProduct: null,
+    productsData: {{ Js::from($products) }},
     activeSGTab: 'Men',
     sizeGuides: {{ Js::from(Auth::user()->size_guides ?? []) }},
     matches(productName, productDesc, productStatus) {
@@ -15,8 +16,8 @@
         const matchesTab = this.activeTab === 'all' || productStatus.toLowerCase() === this.activeTab.toLowerCase();
         return matchesSearch && matchesTab;
     },
-    openReviewsModal(product) {
-        this.selectedProduct = product;
+    openReviewsModal(productId) {
+        this.selectedProduct = this.productsData.find(p => String(p.id) === String(productId)) || null;
         this.showReviewsModal = true;
     }
 }">
@@ -135,6 +136,20 @@
                             <div class="flex-1">
                                 <h3 class="text-xs sm:text-sm font-bold text-black line-clamp-1 uppercase tracking-tight">{{ $product->name }}</h3>
                                 <p class="text-[9px] sm:text-[10px] text-gray-400 mt-0.5 sm:mt-1 line-clamp-2 leading-relaxed">{{ $product->description }}</p>
+                                
+                                {{-- Product Rating & Reviews summary --}}
+                                <div class="flex items-center justify-between gap-2 mt-2 pt-2 border-t border-gray-100">
+                                    <div class="flex items-center gap-1.5">
+                                        <span class="text-amber-400 text-xs font-black">★</span>
+                                        <span class="text-[11px] font-black text-black">{{ $product->reviews_avg_rating ? number_format($product->reviews_avg_rating, 1) : '0.0' }}</span>
+                                        <span class="text-[9px] text-gray-400 font-bold">({{ $product->reviews_count }} {{ Str::plural('review', $product->reviews_count) }})</span>
+                                    </div>
+                                    @if($product->reviews_count > 0)
+                                        <button type="button" @click="openReviewsModal('{{ $product->id }}')" class="text-[9px] font-black uppercase tracking-wider text-[#C0422A] hover:underline cursor-pointer">
+                                            View Reviews →
+                                        </button>
+                                    @endif
+                                </div>
                             </div>
                             
                             <div class="flex items-center justify-between pt-2.5 sm:pt-4 border-t border-gray-50">
@@ -234,7 +249,7 @@
                                     <span class="text-[9px] text-gray-400 font-bold">({{ $product->reviews_count }} {{ Str::plural('review', $product->reviews_count) }})</span>
                                 </div>
                                 @if($product->reviews_count > 0)
-                                    <button type="button" @click="openReviewsModal(@js($product))" class="text-[9px] font-black uppercase tracking-wider text-[#C0422A] hover:underline cursor-pointer">
+                                    <button type="button" @click="openReviewsModal('{{ $product->id }}')" class="text-[9px] font-black uppercase tracking-wider text-[#C0422A] hover:underline cursor-pointer">
                                         View Reviews →
                                     </button>
                                 @endif
