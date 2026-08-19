@@ -133,14 +133,19 @@
                         {{ $seller->createdAt ? $seller->createdAt->format('M d, Y') : '—' }}
                     </td>
                     <td class="px-6 py-4 text-center">
-                        @php $sc = ['active' => 'bg-green-50 text-green-700 border border-green-200', 'blocked' => 'bg-red-50 text-red-700 border border-red-200', 'frozen' => 'bg-amber-50 text-amber-700 border border-amber-200', 'pending_approval' => 'bg-blue-50 text-blue-700 border border-blue-200']; @endphp
-                        <span class="px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest inline-block {{ $sc[$seller->status] ?? 'bg-gray-50 text-gray-600 border border-gray-200' }}">
-                            {{ $seller->status === 'pending_approval' ? 'Pending' : $seller->status }}
-                        </span>
+                        @if($seller->status === 'blocked')
+                            <span class="px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest inline-block bg-red-50 text-red-700 border border-red-200">Suspended</span>
+                        @elseif($seller->status === 'frozen')
+                            <span class="px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest inline-block bg-amber-50 text-amber-700 border border-amber-200">Frozen</span>
+                        @elseif(!$seller->isVerified)
+                            <span class="px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest inline-block bg-blue-50 text-blue-700 border border-blue-200">Pending</span>
+                        @else
+                            <span class="px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest inline-block bg-green-50 text-green-700 border border-green-200">Active</span>
+                        @endif
                     </td>
                     <td class="px-6 py-4">
                         <div class="flex items-center justify-center gap-2">
-                            @if(!$seller->isVerified)
+                            @if(!$seller->isVerified && $seller->status !== 'blocked')
                                 <form action="/admin/sellers/{{ $seller->id }}/verify" method="POST">
                                     @csrf @method('PATCH')
                                     <button type="submit" class="px-4 py-2 bg-green-50 text-green-700 hover:bg-green-500 hover:text-white rounded-lg text-[9px] font-black uppercase tracking-widest transition-all cursor-pointer">
@@ -148,7 +153,7 @@
                                     </button>
                                 </form>
                             @endif
-                            @if($seller->status === 'active' || $seller->status === 'pending_approval')
+                            @if($seller->status !== 'blocked')
                                 <button type="button" @click="openSuspend('{{ $seller->id }}', '{{ addslashes($seller->name) }}')" class="px-4 py-2 bg-red-50 text-red-700 rounded-lg text-[9px] font-black uppercase tracking-widest hover:bg-red-500 hover:text-white transition-all cursor-pointer">
                                     Suspend
                                 </button>
