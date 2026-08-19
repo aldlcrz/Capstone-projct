@@ -1,73 +1,7 @@
 @extends('layouts.seller')
 
 @section('content')
-<div class="space-y-8" x-data="{
-    search: '',
-    activeTab: 'all',
-    showSizeGuideModal: false,
-    showReviewsModal: false,
-    selectedProduct: null,
-    lightboxImage: null,
-    productsData: {{ Js::from($products) }},
-    replyingToRevId: null,
-    replyText: '',
-    isSubmittingReply: false,
-    activeSGTab: 'Men',
-    sizeGuides: {{ Js::from(Auth::user()->size_guides ?? []) }},
-    matches(productName, productDesc, productStatus) {
-        const query = this.search.toLowerCase().trim();
-        const matchesSearch = !query || productName.toLowerCase().includes(query) || productDesc.toLowerCase().includes(query);
-        const matchesTab = this.activeTab === 'all' || productStatus.toLowerCase() === this.activeTab.toLowerCase();
-        return matchesSearch && matchesTab;
-    },
-    openReviewsModal(productId) {
-        this.selectedProduct = this.productsData.find(p => String(p.id) === String(productId)) || null;
-        this.replyingToRevId = null;
-        this.replyText = '';
-        this.showReviewsModal = true;
-    },
-    startReply(rev) {
-        this.replyingToRevId = rev.id;
-        this.replyText = rev.seller_reply || '';
-    },
-    cancelReply() {
-        this.replyingToRevId = null;
-        this.replyText = '';
-    },
-    async submitReply(revId) {
-        if (!this.replyText.trim() || this.isSubmittingReply) return;
-        this.isSubmittingReply = true;
-        try {
-            const token = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
-            const res = await fetch(`/seller/reviews/${revId}/reply`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': token,
-                    'Accept': 'application/json'
-                },
-                body: JSON.stringify({ reply: this.replyText })
-            });
-            const data = await res.json();
-            if (res.ok) {
-                if (this.selectedProduct && this.selectedProduct.reviews) {
-                    const targetRev = this.selectedProduct.reviews.find(r => r.id === revId);
-                    if (targetRev) {
-                        targetRev.seller_reply = data.seller_reply;
-                        targetRev.seller_reply_at = data.seller_reply_at;
-                    }
-                }
-                this.cancelReply();
-            } else {
-                alert(data.message || 'Failed to submit response.');
-            }
-        } catch(e) {
-            alert('An error occurred while submitting your reply. Please try again.');
-        } finally {
-            this.isSubmittingReply = false;
-        }
-    }
-}">
+<div class="space-y-8" x-data="sellerProducts()">
     {{-- Header --}}
     <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
@@ -596,3 +530,77 @@
     </div>
 </div>
 @endsection
+
+@push('scripts')
+<script>
+function sellerProducts() {
+    return {
+        search: '',
+        activeTab: 'all',
+        showSizeGuideModal: false,
+        showReviewsModal: false,
+        selectedProduct: null,
+        lightboxImage: null,
+        productsData: {!! json_encode($products) !!},
+        replyingToRevId: null,
+        replyText: '',
+        isSubmittingReply: false,
+        activeSGTab: 'Men',
+        sizeGuides: {!! json_encode(Auth::user()->size_guides ?? (object)[]) !!},
+        matches(productName, productDesc, productStatus) {
+            const query = (this.search || '').toLowerCase().trim();
+            const matchesSearch = !query || (productName || '').toLowerCase().includes(query) || (productDesc || '').toLowerCase().includes(query);
+            const matchesTab = this.activeTab === 'all' || (productStatus || '').toLowerCase() === this.activeTab.toLowerCase();
+            return matchesSearch && matchesTab;
+        },
+        openReviewsModal(productId) {
+            this.selectedProduct = (this.productsData || []).find(p => String(p.id) === String(productId)) || null;
+            this.replyingToRevId = null;
+            this.replyText = '';
+            this.showReviewsModal = true;
+        },
+        startReply(rev) {
+            this.replyingToRevId = rev.id;
+            this.replyText = rev.seller_reply || '';
+        },
+        cancelReply() {
+            this.replyingToRevId = null;
+            this.replyText = '';
+        },
+        async submitReply(revId) {
+            if (!this.replyText.trim() || this.isSubmittingReply) return;
+            this.isSubmittingReply = true;
+            try {
+                const token = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
+                const res = await fetch(`/seller/reviews/${revId}/reply`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': token,
+                        'Accept': 'application/json'
+                    },
+                    body: JSON.stringify({ reply: this.replyText })
+                });
+                const data = await res.json();
+                if (res.ok) {
+                    if (this.selectedProduct && this.selectedProduct.reviews) {
+                        const targetRev = this.selectedProduct.reviews.find(r => String(r.id) === String(revId));
+                        if (targetRev) {
+                            targetRev.seller_reply = data.seller_reply;
+                            targetRev.seller_reply_at = data.seller_reply_at;
+                        }
+                    }
+                    this.cancelReply();
+                } else {
+                    alert(data.message || 'Failed to submit response.');
+                }
+            } catch(e) {
+                alert('An error occurred while submitting your reply. Please try again.');
+            } finally {
+                this.isSubmittingReply = false;
+            }
+        }
+    };
+}
+</script>
+@endpush
