@@ -172,7 +172,7 @@ document.addEventListener('alpine:init', () => {
                     <div class="flex items-center gap-3 min-w-0">
                         <div class="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-gray-100 flex items-center justify-center font-bold text-gray-600 shrink-0 uppercase border border-gray-200 text-xs sm:text-sm overflow-hidden">
                             <template x-if="conv.otherUser && conv.otherUser.profileImage">
-                                <img :src="conv.otherUser.profileImage" class="w-full h-full object-cover" @error="$el.style.display='none'">
+                                <img :src="conv.otherUser.profileImage" class="w-full h-full object-cover" x-on:error="$el.style.display='none'">
                             </template>
                             <span x-show="!conv.otherUser || !conv.otherUser.profileImage" x-text="((conv.otherUser && conv.otherUser.name) || 'C').charAt(0)"></span>
                         </div>
@@ -224,7 +224,7 @@ document.addEventListener('alpine:init', () => {
                         </button>
                         <div class="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-gray-100 flex items-center justify-center font-bold text-gray-600 shrink-0 uppercase border border-gray-200 text-xs sm:text-sm overflow-hidden">
                             <template x-if="activeUser && activeUser.profileImage">
-                                <img :src="activeUser.profileImage" class="w-full h-full object-cover" @error="$el.style.display='none'">
+                                <img :src="activeUser.profileImage" class="w-full h-full object-cover" x-on:error="$el.style.display='none'">
                             </template>
                             <span x-show="!activeUser || !activeUser.profileImage" x-text="((activeUser && activeUser.name) || 'C').charAt(0)"></span>
                         </div>
