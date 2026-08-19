@@ -529,6 +529,13 @@
         </div>
     </div>
 </div>
+
+<script id="seller-products-data" type="application/json">
+    @json($products)
+</script>
+<script id="seller-sizeguides-data" type="application/json">
+    @json(Auth::user()->size_guides ?? [])
+</script>
 @endsection
 
 @push('scripts')
@@ -541,12 +548,12 @@ function sellerProducts() {
         showReviewsModal: false,
         selectedProduct: null,
         lightboxImage: null,
-        productsData: {!! json_encode($products) !!},
+        productsData: JSON.parse(document.getElementById('seller-products-data')?.textContent || '[]'),
         replyingToRevId: null,
         replyText: '',
         isSubmittingReply: false,
         activeSGTab: 'Men',
-        sizeGuides: {!! json_encode(Auth::user()->size_guides ?? (object)[]) !!},
+        sizeGuides: JSON.parse(document.getElementById('seller-sizeguides-data')?.textContent || '[]'),
         matches(productName, productDesc, productStatus) {
             const query = (this.search || '').toLowerCase().trim();
             const matchesSearch = !query || (productName || '').toLowerCase().includes(query) || (productDesc || '').toLowerCase().includes(query);
