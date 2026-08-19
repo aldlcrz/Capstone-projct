@@ -95,7 +95,7 @@
 
         <form action="{{ route('verify.email.submit') }}" method="POST" class="space-y-4">
             @csrf
-            <input type="hidden" name="email" :value="email">
+            <input type="hidden" name="email" value="{{ session('verify_email', $email ?? '') }}" :value="email">
 
             <!-- Fallback email input if empty -->
             <div x-show="!email" class="space-y-1" x-cloak>

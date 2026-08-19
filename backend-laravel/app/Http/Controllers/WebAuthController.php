@@ -335,57 +335,65 @@ class WebAuthController extends Controller
 
     public function verifyEmail(Request $request)
     {
-        $request->validate([
-            'email' => 'required|email',
-            'code'  => 'required|string|size:6',
-        ]);
+        try {
+            $email = strtolower(trim($request->email ?? session('verify_email', '')));
+            if (!$email) {
+                return back()->withErrors(['email' => 'Please enter your registered Gmail address.']);
+            }
 
-        $email = strtolower(trim($request->email));
-        $isValid = \App\Services\EmailNotificationService::verifyCode($email, $request->code, 'registration');
+            $request->validate([
+                'code' => 'required|string|size:6',
+            ]);
 
-        if (!$isValid) {
-            return back()->withErrors(['code' => 'Invalid or expired verification code. Please request a new code if expired.']);
-        }
+            $isValid = \App\Services\EmailNotificationService::verifyCode($email, $request->code, 'registration');
 
-        // 1. Create account from session if pending registration exists
-        $pending = session('pending_registration');
-        $user = null;
-        if ($pending && isset($pending['email']) && strtolower($pending['email']) === $email) {
-            $user = User::create($pending);
-            session()->forget('pending_registration');
-        } else {
-            // 2. Fallback to existing unverified user record (e.g. seller registration)
-            $user = User::where('email', $email)->first();
-            if ($user) {
-                if ($user->role === 'seller') {
-                    // Seller email verified — keep isVerified=false until admin approves
-                    $user->status = 'pending_approval';
-                    $user->save();
+            if (!$isValid) {
+                return back()->withErrors(['code' => 'Invalid or expired verification code. Please request a new code if expired.']);
+            }
 
-                    \App\Services\EmailNotificationService::consumeCode($email, 'registration');
-                    Auth::logout();
-                    session()->forget('verify_email');
-                    session()->forget('pending_registration');
+            // 1. Create account from session if pending registration exists
+            $pending = session('pending_registration');
+            $user = null;
+            if ($pending && isset($pending['email']) && strtolower($pending['email']) === $email) {
+                $user = User::create($pending);
+                session()->forget('pending_registration');
+            } else {
+                // 2. Fallback to existing unverified user record (e.g. seller registration)
+                $user = User::where('email', $email)->first();
+                if ($user) {
+                    if ($user->role === 'seller') {
+                        // Seller email verified — keep isVerified=false until admin approves
+                        $user->status = 'pending_approval';
+                        $user->save();
 
-                    return redirect()->route('login')->with('info', 'Your email address has been verified! Your artisan application is now submitted and is awaiting admin approval.');
-                } else {
-                    $user->isVerified = true;
-                    $user->save();
+                        \App\Services\EmailNotificationService::consumeCode($email, 'registration');
+                        Auth::logout();
+                        session()->forget('verify_email');
+                        session()->forget('pending_registration');
+
+                        return redirect()->route('login')->with('info', 'Your email address has been verified! Your artisan application is now submitted and is awaiting admin approval.');
+                    } else {
+                        $user->isVerified = true;
+                        $user->save();
+                    }
                 }
             }
+
+            if ($user) {
+                \App\Services\EmailNotificationService::consumeCode($email, 'registration');
+                Auth::login($user);
+
+                $contextRedirect = $this->restorePendingContext($user, $request);
+                if ($contextRedirect) return $contextRedirect;
+
+                return redirect('/')->with('success', 'Your Gmail address has been verified and your account is now created!');
+            }
+
+            return redirect()->route('register')->with('error', 'Registration session expired. Please register again.');
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::error('verifyEmail fatal error: ' . $e->getMessage() . ' at ' . $e->getFile() . ':' . $e->getLine());
+            return back()->withErrors(['code' => 'Verification error: ' . $e->getMessage()]);
         }
-
-        if ($user) {
-            \App\Services\EmailNotificationService::consumeCode($email, 'registration');
-            Auth::login($user);
-
-            $contextRedirect = $this->restorePendingContext($user, $request);
-            if ($contextRedirect) return $contextRedirect;
-
-            return redirect('/')->with('success', 'Your Gmail address has been verified and your account is now created!');
-        }
-
-        return redirect()->route('register')->with('error', 'Registration session expired. Please register again.');
     }
 
     public function resendVerificationCode(Request $request)
