@@ -360,10 +360,18 @@ class WebAuthController extends Controller
                 if ($user->role === 'seller') {
                     // Seller email verified — keep isVerified=false until admin approves
                     $user->status = 'pending_approval';
+                    $user->save();
+
+                    \App\Services\EmailNotificationService::consumeCode($email, 'registration');
+                    Auth::logout();
+                    session()->forget('verify_email');
+                    session()->forget('pending_registration');
+
+                    return redirect()->route('login')->with('info', 'Your email address has been verified! Your artisan application is now submitted and is awaiting admin approval.');
                 } else {
                     $user->isVerified = true;
+                    $user->save();
                 }
-                $user->save();
             }
         }
 
