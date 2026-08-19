@@ -361,7 +361,6 @@ class AdminController extends Controller
         $reason = $request->input('reason', 'Account terminated by administrator.');
         $user->status = 'blocked';
         $user->violationReason = $reason;
-        $user->remember_token = null;
         $user->save();
 
         // Invalidate active web and API sessions immediately
@@ -639,7 +638,6 @@ class AdminController extends Controller
 
             $user->status = 'blocked';
             $user->violationReason = $reason;
-            $user->setRememberToken(null);
             $user->save();
 
             // Invalidate active web and API sessions immediately
@@ -755,7 +753,6 @@ class AdminController extends Controller
             $reason = $request->reason ?? 'Suspended by admin.';
             $user->status          = 'blocked';
             $user->violationReason = $reason;
-            $user->setRememberToken(null);
             $user->save();
 
             // Invalidate active web and API sessions immediately
