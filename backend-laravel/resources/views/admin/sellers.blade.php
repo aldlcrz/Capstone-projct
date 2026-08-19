@@ -58,30 +58,39 @@
         </div>
     </div>
 
-    {{-- Stats --}}
-    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <div class="bg-white rounded-2xl border border-gray-100 p-5 shadow-sm flex items-center gap-4">
-            <div class="w-10 h-10 rounded-xl bg-green-50 text-green-600 flex items-center justify-center font-black text-lg">✓</div>
-            <div><div class="text-xl font-black text-black">{{ $counts['verified'] }}</div><div class="text-[10px] font-bold text-gray-500 uppercase tracking-widest">Verified</div></div>
+    {{-- Stats (Compact) --}}
+    <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+        <div class="bg-white rounded-xl border border-gray-100 p-3 shadow-xs flex items-center gap-3">
+            <div class="w-8 h-8 rounded-lg bg-green-50 text-green-600 flex items-center justify-center font-black text-xs shrink-0">✓</div>
+            <div>
+                <div class="text-base font-black text-black leading-none mb-0.5">{{ $counts['verified'] }}</div>
+                <div class="text-[9px] font-bold text-gray-500 uppercase tracking-wider">Verified</div>
+            </div>
         </div>
-        <div class="bg-white rounded-2xl border border-gray-100 p-5 shadow-sm flex items-center gap-4">
-            <div class="w-10 h-10 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center font-black text-lg">⏳</div>
-            <div><div class="text-xl font-black text-black">{{ $counts['pending'] }}</div><div class="text-[10px] font-bold text-gray-500 uppercase tracking-widest">Pending</div></div>
+        <div class="bg-white rounded-xl border border-gray-100 p-3 shadow-xs flex items-center gap-3">
+            <div class="w-8 h-8 rounded-lg bg-amber-50 text-amber-600 flex items-center justify-center font-black text-xs shrink-0">⏳</div>
+            <div>
+                <div class="text-base font-black text-black leading-none mb-0.5">{{ $counts['pending'] }}</div>
+                <div class="text-[9px] font-bold text-gray-500 uppercase tracking-wider">Pending</div>
+            </div>
         </div>
-        <div class="bg-white rounded-2xl border border-gray-100 p-5 shadow-sm flex items-center gap-4">
-            <div class="w-10 h-10 rounded-xl bg-red-50 text-red-600 flex items-center justify-center font-black text-lg">✕</div>
-            <div><div class="text-xl font-black text-black">{{ $counts['suspended'] }}</div><div class="text-[10px] font-bold text-gray-500 uppercase tracking-widest">Suspended</div></div>
+        <div class="bg-white rounded-xl border border-gray-100 p-3 shadow-xs flex items-center gap-3">
+            <div class="w-8 h-8 rounded-lg bg-red-50 text-red-600 flex items-center justify-center font-black text-xs shrink-0">✕</div>
+            <div>
+                <div class="text-base font-black text-black leading-none mb-0.5">{{ $counts['suspended'] }}</div>
+                <div class="text-[9px] font-bold text-gray-500 uppercase tracking-wider">Suspended</div>
+            </div>
         </div>
     </div>
 
-    {{-- Pending Verification (Pill Row Style) --}}
+    {{-- Pending Verification (Compact Pill Row Style) --}}
     @if($pendingSellers->count() > 0)
-    <div class="bg-amber-50 border border-amber-100 rounded-3xl p-4 sm:p-6 space-y-4">
-        <h3 class="text-xs sm:text-sm font-black uppercase tracking-widest text-amber-800 flex items-center gap-2">
+    <div class="bg-amber-50/70 border border-amber-200/80 rounded-2xl p-3.5 sm:p-4 space-y-2.5">
+        <h3 class="text-[11px] font-black uppercase tracking-widest text-amber-900 flex items-center gap-2">
             <span class="w-2 h-2 rounded-full bg-amber-500 animate-pulse"></span>
             Awaiting Verification ({{ $pendingSellers->count() }})
         </h3>
-        <div class="space-y-3">
+        <div class="space-y-2">
             @foreach($pendingSellers as $seller)
             @php
                 $pData = [
@@ -102,22 +111,22 @@
                     'orders_count' => $seller->orders_count ?? 0,
                 ];
             @endphp
-            <div class="bg-white rounded-2xl p-4 sm:p-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shadow-sm hover:shadow-md transition-shadow">
-                <div class="flex items-center gap-3 min-w-0">
-                    <div class="w-10 h-10 rounded-xl bg-amber-100 text-amber-800 flex items-center justify-center font-black shrink-0">
+            <div class="bg-white rounded-xl p-2.5 sm:p-3 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2.5 shadow-xs hover:shadow-sm transition-all border border-amber-100">
+                <div class="flex items-center gap-2.5 min-w-0">
+                    <div class="w-8 h-8 rounded-lg bg-amber-100 text-amber-800 flex items-center justify-center font-black text-xs shrink-0">
                         {{ strtoupper(substr($seller->name, 0, 1)) }}
                     </div>
                     <div class="min-w-0">
-                        <div class="text-sm font-bold text-black truncate">{{ $seller->name }}</div>
+                        <div class="text-xs font-bold text-black truncate">{{ $seller->name }}</div>
                         <div class="text-[10px] text-gray-500 font-medium truncate">{{ $seller->email }} • <span class="text-[#C0422A] font-semibold">{{ $seller->shopName ?? 'Workshop' }}</span></div>
                     </div>
                 </div>
-                <div class="flex items-center gap-2 shrink-0">
-                    <button type="button" @click="openReview({{ json_encode($pData) }})" class="px-4 py-2 bg-green-600 text-white rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-green-700 transition-all cursor-pointer shadow-sm flex items-center gap-1.5">
-                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                <div class="flex items-center gap-1.5 shrink-0">
+                    <button type="button" @click="openReview({{ json_encode($pData) }})" class="px-3 py-1.5 bg-green-600 text-white rounded-lg text-[9px] font-black uppercase tracking-widest hover:bg-green-700 transition-all cursor-pointer shadow-xs flex items-center gap-1">
+                        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
                         Approve &amp; Verify
                     </button>
-                    <button type="button" @click="openSuspend('{{ $seller->id }}', '{{ addslashes($seller->name) }}')" class="px-4 py-2 bg-red-50 text-red-700 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-red-500 hover:text-white transition-all cursor-pointer">
+                    <button type="button" @click="openSuspend('{{ $seller->id }}', '{{ addslashes($seller->name) }}')" class="px-2.5 py-1.5 bg-red-50 text-red-700 rounded-lg text-[9px] font-black uppercase tracking-widest hover:bg-red-500 hover:text-white transition-all cursor-pointer">
                         Reject / Suspend
                     </button>
                 </div>
