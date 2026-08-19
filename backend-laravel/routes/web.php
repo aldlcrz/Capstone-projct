@@ -240,6 +240,9 @@ Route::middleware(['auth', 'seller'])->prefix('seller')->group(function () {
     Route::post('/size-guides', [ProductManagementController::class, 'updateSizeGuides'])->name('seller.sizeguides.update');
     Route::delete('/size-guides/{targetGroup}', [ProductManagementController::class, 'deleteSizeGuide'])->name('seller.sizeguides.delete');
 
+    // Seller Reviews Reply
+    Route::post('/reviews/{id}/reply', [ReviewController::class, 'sellerReply'])->name('seller.reviews.reply');
+
     // Seller Notifications
     Route::get('/notifications', [DashboardController::class, 'notifications'])->name('seller.notifications.index');
     Route::post('/notifications/read-all', [DashboardController::class, 'readAllNotifications'])->name('seller.notifications.read-all');

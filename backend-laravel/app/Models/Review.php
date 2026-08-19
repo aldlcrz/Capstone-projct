@@ -23,9 +23,25 @@ class Review extends Model
         'orderItemId',
         'rating',
         'comment',
+        'seller_reply',
+        'seller_reply_at',
         'images',
         'video',
     ];
+
+    /**
+     * The attributes that should be cast.
+     *
+     * @var array<string, string>
+     */
+    protected function casts(): array
+    {
+        return [
+            'seller_reply_at' => 'datetime',
+            'createdAt' => 'datetime',
+            'updatedAt' => 'datetime',
+        ];
+    }
 
     /**
      * The primary key type.

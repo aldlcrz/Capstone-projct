@@ -668,7 +668,10 @@
                     'id' => $rev->id,
                     'rating' => (int)$rev->rating,
                     'comment' => $rev->comment,
-                    'date' => $rev->createdAt ? $rev->createdAt->format('F d, Y') : '',
+                    'seller_reply' => $rev->seller_reply,
+                    'seller_reply_date' => $rev->seller_reply_at ? ($rev->seller_reply_at instanceof \Carbon\Carbon ? $rev->seller_reply_at->format('M d, Y') : \Carbon\Carbon::parse($rev->seller_reply_at)->format('M d, Y')) : null,
+                    'seller_name' => $product->seller->name ?? 'Artisan Store',
+                    'date' => $rev->createdAt ? ($rev->createdAt instanceof \Carbon\Carbon ? $rev->createdAt->format('F d, Y') : \Carbon\Carbon::parse($rev->createdAt)->format('F d, Y')) : '',
                     'customerName' => $customerName,
                     'initial' => $initial,
                     'customerPhoto' => $photo,
@@ -866,6 +869,22 @@
                                     @endif
                                 </div>
                             @endif
+
+                            {{-- Seller Response (Shopee/Lazada Style) --}}
+                            @if(!empty($review->seller_reply))
+                                <div class="mt-3 p-3.5 sm:p-4 bg-[#FAF9F5] rounded-2xl border-l-4 border-[#C0420A] space-y-1.5 shadow-2xs">
+                                    <div class="flex items-center justify-between gap-2">
+                                        <span class="text-[10px] font-black uppercase tracking-wider text-[#C0420A] flex items-center gap-1.5">
+                                            <span>💬 Seller's Response</span>
+                                            <span class="text-gray-400 font-medium">• {{ $product->seller->name ?? 'Artisan Store' }}</span>
+                                        </span>
+                                        @if($review->seller_reply_at)
+                                            <span class="text-[9px] text-gray-400 font-medium">{{ \Carbon\Carbon::parse($review->seller_reply_at)->diffForHumans() }}</span>
+                                        @endif
+                                    </div>
+                                    <p class="text-xs text-gray-700 leading-relaxed font-normal">{{ $review->seller_reply }}</p>
+                                </div>
+                            @endif
                         </div>
                     @endforeach
                 </div>
@@ -1039,6 +1058,20 @@
                                         </button>
                                     </template>
                                 </div>
+
+                                {{-- Seller Response (Shopee/Lazada Style) --}}
+                                <template x-if="review.seller_reply">
+                                    <div class="mt-3 p-3.5 bg-[#FAF9F5] rounded-2xl border-l-4 border-[#C0420A] space-y-1 shadow-2xs">
+                                        <div class="flex items-center justify-between gap-2">
+                                            <span class="text-[10px] font-black uppercase tracking-wider text-[#C0420A] flex items-center gap-1.5">
+                                                <span>💬 Seller's Response</span>
+                                                <span class="text-gray-400 font-normal" x-text="'• ' + (review.seller_name || 'Artisan Store')"></span>
+                                            </span>
+                                            <span class="text-[9px] text-gray-400 font-medium" x-text="review.seller_reply_date || ''"></span>
+                                        </div>
+                                        <p class="text-xs text-gray-700 leading-relaxed font-normal" x-text="review.seller_reply"></p>
+                                    </div>
+                                </template>
                             </div>
                         </template>
                     </div>

@@ -9,6 +9,9 @@
     selectedProduct: null,
     lightboxImage: null,
     productsData: {{ Js::from($products) }},
+    replyingToRevId: null,
+    replyText: '',
+    isSubmittingReply: false,
     activeSGTab: 'Men',
     sizeGuides: {{ Js::from(Auth::user()->size_guides ?? []) }},
     matches(productName, productDesc, productStatus) {
@@ -19,7 +22,50 @@
     },
     openReviewsModal(productId) {
         this.selectedProduct = this.productsData.find(p => String(p.id) === String(productId)) || null;
+        this.replyingToRevId = null;
+        this.replyText = '';
         this.showReviewsModal = true;
+    },
+    startReply(rev) {
+        this.replyingToRevId = rev.id;
+        this.replyText = rev.seller_reply || '';
+    },
+    cancelReply() {
+        this.replyingToRevId = null;
+        this.replyText = '';
+    },
+    async submitReply(revId) {
+        if (!this.replyText.trim() || this.isSubmittingReply) return;
+        this.isSubmittingReply = true;
+        try {
+            const token = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
+            const res = await fetch(`/seller/reviews/${revId}/reply`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': token,
+                    'Accept': 'application/json'
+                },
+                body: JSON.stringify({ reply: this.replyText })
+            });
+            const data = await res.json();
+            if (res.ok) {
+                if (this.selectedProduct && this.selectedProduct.reviews) {
+                    const targetRev = this.selectedProduct.reviews.find(r => r.id === revId);
+                    if (targetRev) {
+                        targetRev.seller_reply = data.seller_reply;
+                        targetRev.seller_reply_at = data.seller_reply_at;
+                    }
+                }
+                this.cancelReply();
+            } else {
+                alert(data.message || 'Failed to submit response.');
+            }
+        } catch(e) {
+            alert('An error occurred while submitting your reply. Please try again.');
+        } finally {
+            this.isSubmittingReply = false;
+        }
     }
 }">
     {{-- Header --}}
@@ -455,6 +501,63 @@
                                 </template>
                             </div>
                         </template>
+
+                        {{-- Seller Response / Reply Section (Shopee & Lazada Style) --}}
+                        <div class="mt-3 pt-2.5 border-t border-gray-200/70">
+                            {{-- Existing Seller Response Display --}}
+                            <template x-if="rev.seller_reply && replyingToRevId !== rev.id">
+                                <div class="bg-white p-3 sm:p-3.5 rounded-xl border-l-4 border-[#C0420A] space-y-1.5 shadow-2xs">
+                                    <div class="flex items-center justify-between gap-2">
+                                        <span class="text-[10px] font-black uppercase tracking-wider text-[#C0420A] flex items-center gap-1.5">
+                                            <span>💬 Seller's Response</span>
+                                            <span class="text-gray-400 font-medium" x-text="rev.seller_reply_at ? '• ' + new Date(rev.seller_reply_at).toLocaleDateString('en-PH', {month:'short', day:'numeric', year:'numeric'}) : ''"></span>
+                                        </span>
+                                        <button type="button" @click="startReply(rev)" class="text-[9px] font-bold text-gray-400 hover:text-[#C0420A] uppercase tracking-wider hover:underline cursor-pointer">
+                                            Edit Response
+                                        </button>
+                                    </div>
+                                    <p class="text-xs text-gray-700 leading-relaxed font-normal" x-text="rev.seller_reply"></p>
+                                </div>
+                            </template>
+
+                            {{-- Reply Button (when no response written yet) --}}
+                            <template x-if="!rev.seller_reply && replyingToRevId !== rev.id">
+                                <div class="flex justify-end">
+                                    <button type="button" @click="startReply(rev)" class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white hover:bg-orange-50 text-[#C0420A] border border-orange-200 rounded-lg text-[10px] font-black uppercase tracking-wider transition-all shadow-2xs hover:shadow-xs cursor-pointer">
+                                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6"/></svg>
+                                        <span>Reply to Buyer</span>
+                                    </button>
+                                </div>
+                            </template>
+
+                            {{-- Inline Reply Editor Box --}}
+                            <template x-if="replyingToRevId === rev.id">
+                                <div class="bg-white p-3.5 rounded-2xl border border-orange-200 shadow-sm space-y-2.5">
+                                    <div class="flex items-center justify-between">
+                                        <span class="text-[10px] font-black uppercase tracking-wider text-[#C0420A] flex items-center gap-1">
+                                            <span>💬</span>
+                                            <span x-text="rev.seller_reply ? 'Edit Your Response' : 'Reply to ' + (rev.customer ? rev.customer.name : 'Customer')"></span>
+                                        </span>
+                                        <span class="text-[9px] font-medium text-gray-400" x-text="(1000 - replyText.length) + ' chars left'"></span>
+                                    </div>
+                                    <textarea 
+                                        x-model="replyText" 
+                                        rows="3" 
+                                        maxlength="1000" 
+                                        placeholder="Write a polite, professional response to this buyer (e.g. Thank you for your review! We are delighted that you love the craftsmanship and embroidery!)..."
+                                        class="w-full text-xs p-2.5 rounded-xl border border-gray-200 focus:border-[#C0420A] focus:ring-1 focus:ring-[#C0420A] outline-hidden leading-relaxed resize-none"
+                                    ></textarea>
+                                    <div class="flex items-center justify-end gap-2">
+                                        <button type="button" @click="cancelReply()" :disabled="isSubmittingReply" class="px-3 py-1.5 bg-gray-100 hover:bg-gray-200 text-gray-700 text-[10px] font-bold uppercase tracking-wider rounded-lg transition-colors cursor-pointer">
+                                            Cancel
+                                        </button>
+                                        <button type="button" @click="submitReply(rev.id)" :disabled="isSubmittingReply || !replyText.trim()" class="px-4 py-1.5 bg-[#C0420A] hover:bg-[#a63721] disabled:opacity-50 text-white text-[10px] font-black uppercase tracking-wider rounded-lg transition-all shadow-xs flex items-center gap-1.5 cursor-pointer">
+                                            <span x-text="isSubmittingReply ? 'Posting...' : 'Submit Response'"></span>
+                                        </button>
+                                    </div>
+                                </div>
+                            </template>
+                        </div>
                     </div>
                 </template>
             </div>

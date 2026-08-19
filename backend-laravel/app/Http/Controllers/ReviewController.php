@@ -189,6 +189,48 @@ class ReviewController extends Controller
     }
 
     /**
+     * Seller reply to a customer review.
+     */
+    public function sellerReply(Request $request, string $id)
+    {
+        $request->validate([
+            'reply' => 'required|string|max:1000',
+        ]);
+
+        $sellerId = Auth::id();
+        $review = Review::with(['product', 'customer'])->findOrFail($id);
+
+        // Verify seller ownership of the product
+        if (!$review->product || $review->product->sellerId !== $sellerId) {
+            return response()->json(['message' => 'Unauthorized to reply to this review.'], 403);
+        }
+
+        $review->seller_reply = trim($request->reply);
+        $review->seller_reply_at = now();
+        $review->save();
+
+        // Notify customer that seller replied to their review
+        if ($review->customerId) {
+            Notification::create([
+                'userId' => $review->customerId,
+                'title' => 'Seller Replied to Your Review',
+                'message' => (Auth::user()->name ?? 'The seller') . ' replied to your review on ' . ($review->product->name ?? 'a product') . ': "' . \Illuminate\Support\Str::limit($request->reply, 80) . '"',
+                'type' => 'review_reply',
+                'targetRole' => 'customer',
+                'redirectUrl' => '/products/' . $review->productId . '#reviews',
+                'isRead' => false,
+            ]);
+        }
+
+        return response()->json([
+            'message' => 'Response posted successfully!',
+            'seller_reply' => $review->seller_reply,
+            'seller_reply_at' => $review->seller_reply_at ? $review->seller_reply_at->toISOString() : now()->toISOString(),
+            'review' => $review,
+        ]);
+    }
+
+    /**
      * Helper to return appropriate error response based on request type.
      */
     private function errorResponse(Request $request, string $message, int $code = 400)
