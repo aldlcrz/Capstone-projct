@@ -66,7 +66,7 @@
         </div>
         <div class="bg-white rounded-2xl border border-gray-100 p-5 shadow-sm flex items-center gap-4">
             <div class="w-10 h-10 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center font-black text-lg">⏳</div>
-            <div><div class="text-xl font-black text-black">{{ $counts['pending'] }}</div><div class="text-[10px] font-bold text-gray-500 uppercase tracking-widest">Pending Verification</div></div>
+            <div><div class="text-xl font-black text-black">{{ $counts['pending'] }}</div><div class="text-[10px] font-bold text-gray-500 uppercase tracking-widest">Pending</div></div>
         </div>
         <div class="bg-white rounded-2xl border border-gray-100 p-5 shadow-sm flex items-center gap-4">
             <div class="w-10 h-10 rounded-xl bg-red-50 text-red-600 flex items-center justify-center font-black text-lg">✕</div>
@@ -74,20 +74,14 @@
         </div>
     </div>
 
-    {{-- Pending Verification Queue --}}
+    {{-- Pending Verification (Pill Row Style) --}}
     @if($pendingSellers->count() > 0)
-    <div class="bg-amber-50/70 border border-amber-200 rounded-3xl p-5 sm:p-7 space-y-4 shadow-sm">
-        <div class="flex items-center justify-between">
-            <h3 class="text-xs sm:text-sm font-black uppercase tracking-widest text-amber-900 flex items-center gap-2.5">
-                <span class="w-2.5 h-2.5 rounded-full bg-amber-500 animate-pulse"></span>
-                Awaiting Verification &amp; Document Review ({{ $pendingSellers->count() }})
-            </h3>
-            <span class="text-[10px] font-bold uppercase tracking-wider text-amber-700 bg-amber-100/80 px-2.5 py-1 rounded-lg">Action Required</span>
-        </div>
-        <p class="text-xs text-amber-800/80 leading-relaxed">
-            Please inspect the applicant's credentials, residency certificate, and business permits prior to approving the account for operational trade.
-        </p>
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 pt-1">
+    <div class="bg-amber-50 border border-amber-100 rounded-3xl p-4 sm:p-6 space-y-4">
+        <h3 class="text-xs sm:text-sm font-black uppercase tracking-widest text-amber-800 flex items-center gap-2">
+            <span class="w-2 h-2 rounded-full bg-amber-500 animate-pulse"></span>
+            Awaiting Verification ({{ $pendingSellers->count() }})
+        </h3>
+        <div class="space-y-3">
             @foreach($pendingSellers as $seller)
             @php
                 $pData = [
@@ -108,44 +102,24 @@
                     'orders_count' => $seller->orders_count ?? 0,
                 ];
             @endphp
-            <div class="bg-white rounded-2xl p-5 border border-amber-200/80 flex flex-col justify-between gap-4 shadow-sm hover:shadow-md transition-shadow">
-                <div class="flex items-start justify-between gap-3">
-                    <div class="flex items-center gap-3 min-w-0">
-                        <div class="w-12 h-12 rounded-2xl bg-amber-100 text-amber-800 flex items-center justify-center font-black text-base shrink-0 shadow-xs">
-                            {{ strtoupper(substr($seller->name, 0, 1)) }}
-                        </div>
-                        <div class="min-w-0">
-                            <div class="text-sm font-bold text-black truncate">{{ $seller->name }}</div>
-                            <div class="text-xs font-semibold text-[#C0422A] truncate">{{ $seller->shopName ?? "Workshop" }}</div>
-                            <div class="text-[10px] text-gray-500 font-medium truncate">{{ $seller->email }} • {{ $seller->mobileNumber ?? 'No Phone' }}</div>
-                        </div>
+            <div class="bg-white rounded-2xl p-4 sm:p-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shadow-sm hover:shadow-md transition-shadow">
+                <div class="flex items-center gap-3 min-w-0">
+                    <div class="w-10 h-10 rounded-xl bg-amber-100 text-amber-800 flex items-center justify-center font-black shrink-0">
+                        {{ strtoupper(substr($seller->name, 0, 1)) }}
                     </div>
-                    <span class="px-2.5 py-1 rounded-full text-[9px] font-black uppercase tracking-wider bg-blue-50 text-blue-700 border border-blue-200 shrink-0">
-                        Pending
-                    </span>
+                    <div class="min-w-0">
+                        <div class="text-sm font-bold text-black truncate">{{ $seller->name }}</div>
+                        <div class="text-[10px] text-gray-500 font-medium truncate">{{ $seller->email }} • <span class="text-[#C0422A] font-semibold">{{ $seller->shopName ?? 'Workshop' }}</span></div>
+                    </div>
                 </div>
-
-                {{-- Document Indicators --}}
-                <div class="flex items-center gap-2 text-[10px] text-gray-500 bg-gray-50 p-2.5 rounded-xl border border-gray-100">
-                    <span class="font-bold text-gray-700">Documents:</span>
-                    <span class="{{ $seller->residencyCertificate ? 'text-green-600 font-bold' : 'text-gray-400' }}">Residency {{ $seller->residencyCertificate ? '✓' : '✗' }}</span>
-                    <span>•</span>
-                    <span class="{{ $seller->businessPermit ? 'text-green-600 font-bold' : 'text-gray-400' }}">Permit {{ $seller->businessPermit ? '✓' : '✗' }}</span>
-                    <span>•</span>
-                    <span class="{{ $seller->birDocument ? 'text-green-600 font-bold' : 'text-gray-400' }}">BIR {{ $seller->birDocument ? '✓' : '✗' }}</span>
-                </div>
-
-                <div class="flex items-center gap-2 pt-1">
-                    <button type="button" @click="openReview({{ json_encode($pData) }})" class="flex-1 py-2.5 bg-[#3D2B1F] text-white rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-[#C0422A] transition-all flex items-center justify-center gap-2 cursor-pointer shadow-sm">
-                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
-                        Review Documents
+                <div class="flex items-center gap-2 shrink-0">
+                    <button type="button" @click="openReview({{ json_encode($pData) }})" class="px-4 py-2 bg-green-600 text-white rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-green-700 transition-all cursor-pointer shadow-sm flex items-center gap-1.5">
+                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                        Approve &amp; Verify
                     </button>
-                    <form action="/admin/sellers/{{ $seller->id }}/verify" method="POST">
-                        @csrf @method('PATCH')
-                        <button type="submit" onclick="return confirm('Confirm approve & verify seller {{ addslashes($seller->name) }}?')" class="px-4 py-2.5 bg-green-600 text-white rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-green-700 transition-all cursor-pointer shadow-sm" title="Quick Approve">
-                            Approve
-                        </button>
-                    </form>
+                    <button type="button" @click="openSuspend('{{ $seller->id }}', '{{ addslashes($seller->name) }}')" class="px-4 py-2 bg-red-50 text-red-700 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-red-500 hover:text-white transition-all cursor-pointer">
+                        Reject / Suspend
+                    </button>
                 </div>
             </div>
             @endforeach
@@ -156,7 +130,7 @@
     {{-- All Sellers Table --}}
     <div class="bg-white rounded-3xl border border-gray-100 shadow-sm overflow-hidden">
         <div class="px-6 py-4 border-b border-gray-50 flex items-center justify-between">
-            <h3 class="text-sm font-black uppercase tracking-widest text-black">All Registered Artisans &amp; Sellers</h3>
+            <h3 class="text-sm font-black uppercase tracking-widest text-black">All Sellers</h3>
         </div>
         <div class="overflow-x-auto no-scrollbar">
             <table class="w-full text-left min-w-160">
@@ -237,27 +211,25 @@
                     </td>
                     <td class="px-6 py-4">
                         <div class="flex items-center justify-center gap-2">
-                            {{-- View Application & Docs Button --}}
-                            <button type="button" @click="openReview({{ json_encode($sData) }})" class="px-3 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg text-[9px] font-black uppercase tracking-widest transition-all cursor-pointer" title="View Application & Documents">
-                                Review Docs
-                            </button>
-
+                            {{-- Verify button opens Document Inspection Modal --}}
                             @if(!$seller->isVerified && $seller->status !== 'blocked')
-                                <form action="/admin/sellers/{{ $seller->id }}/verify" method="POST">
-                                    @csrf @method('PATCH')
-                                    <button type="submit" class="px-3 py-2 bg-green-50 text-green-700 hover:bg-green-500 hover:text-white rounded-lg text-[9px] font-black uppercase tracking-widest transition-all cursor-pointer">
-                                        Verify
-                                    </button>
-                                </form>
+                                <button type="button" @click="openReview({{ json_encode($sData) }})" class="px-4 py-2 bg-green-50 text-green-700 hover:bg-green-500 hover:text-white rounded-lg text-[9px] font-black uppercase tracking-widest transition-all cursor-pointer shadow-xs">
+                                    Verify
+                                </button>
+                            @else
+                                <button type="button" @click="openReview({{ json_encode($sData) }})" class="px-3 py-2 bg-gray-50 text-gray-600 hover:bg-gray-200 rounded-lg text-[9px] font-black uppercase tracking-widest transition-all cursor-pointer" title="View Application & Documents">
+                                    Docs
+                                </button>
                             @endif
+
                             @if($seller->status !== 'blocked')
-                                <button type="button" @click="openSuspend('{{ $seller->id }}', '{{ addslashes($seller->name) }}')" class="px-3 py-2 bg-red-50 text-red-700 rounded-lg text-[9px] font-black uppercase tracking-widest hover:bg-red-500 hover:text-white transition-all cursor-pointer">
+                                <button type="button" @click="openSuspend('{{ $seller->id }}', '{{ addslashes($seller->name) }}')" class="px-4 py-2 bg-red-50 text-red-700 rounded-lg text-[9px] font-black uppercase tracking-widest hover:bg-red-500 hover:text-white transition-all cursor-pointer">
                                     Suspend
                                 </button>
                             @else
                                 <form action="{{ route('admin.sellers.unsuspend', $seller->id) }}" method="POST">
                                     @csrf @method('PATCH')
-                                    <button type="submit" class="px-3 py-2 bg-green-50 text-green-700 rounded-lg text-[9px] font-black uppercase tracking-widest hover:bg-green-500 hover:text-white transition-all cursor-pointer">
+                                    <button type="submit" class="px-4 py-2 bg-green-50 text-green-700 rounded-lg text-[9px] font-black uppercase tracking-widest hover:bg-green-500 hover:text-white transition-all cursor-pointer">
                                         Restore
                                     </button>
                                 </form>
@@ -281,7 +253,7 @@
         </div>
     </div>
 
-    {{-- Review Application & Documents Modal --}}
+    {{-- Review Application & Documents Modal (Shown upon clicking Verify / Approve & Verify) --}}
     <div x-show="reviewModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6" x-cloak>
         <div class="absolute inset-0 bg-black/60 backdrop-blur-sm" @click="reviewModal = false"></div>
         <div class="relative bg-white rounded-3xl shadow-2xl w-full max-w-4xl max-h-[92vh] overflow-y-auto no-scrollbar z-10 border border-gray-100 flex flex-col">
@@ -298,7 +270,7 @@
                             <span x-show="selectedSeller.isVerified" class="text-green-600 text-xs font-bold bg-green-50 px-2 py-0.5 rounded-md border border-green-200">Verified</span>
                             <span x-show="!selectedSeller.isVerified" class="text-blue-600 text-xs font-bold bg-blue-50 px-2 py-0.5 rounded-md border border-blue-200">Pending Review</span>
                         </h3>
-                        <p class="text-xs text-gray-500">Artisan Application &amp; Regulatory Credentials</p>
+                        <p class="text-xs text-gray-500">Inspect credentials &amp; requirements before verification</p>
                     </div>
                 </div>
                 <button type="button" @click="reviewModal = false" class="w-9 h-9 rounded-full bg-gray-100 hover:bg-gray-200 text-gray-500 hover:text-black flex items-center justify-center transition-all cursor-pointer">
