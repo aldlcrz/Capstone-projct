@@ -47,7 +47,7 @@ class ChatController extends Controller
             'read' => false,
         ];
         $res['body'] = $content;
-        $res['createdAt'] = $msg?->createdAt ? $msg->createdAt->toISOString() : now()->toISOString();
+        $res['createdAt'] = $msg?->createdAt ? ($msg->createdAt instanceof \Carbon\Carbon ? $msg->createdAt->toISOString() : \Carbon\Carbon::parse($msg->createdAt)->toISOString()) : now()->toISOString();
         $res['created_at'] = $res['createdAt'];
 
         return response()->json($res, 201);
@@ -71,7 +71,7 @@ class ChatController extends Controller
             ->map(function (\App\Models\Message $m) {
                 $arr = $m->toArray();
                 $arr['body'] = $m->content;
-                $arr['createdAt'] = $m->createdAt ? $m->createdAt->toISOString() : null;
+                $arr['createdAt'] = $m->createdAt ? ($m->createdAt instanceof \Carbon\Carbon ? $m->createdAt->toISOString() : \Carbon\Carbon::parse($m->createdAt)->toISOString()) : null;
                 $arr['created_at'] = $arr['createdAt'];
                 return $arr;
             });
@@ -129,7 +129,7 @@ class ChatController extends Controller
                     'body' => $lastMessage->content,
                     'content' => $lastMessage->content,
                 ],
-                'timestamp' => $lastMessage->createdAt ? $lastMessage->createdAt->toISOString() : null,
+                'timestamp' => $lastMessage->createdAt ? ($lastMessage->createdAt instanceof \Carbon\Carbon ? $lastMessage->createdAt->toISOString() : \Carbon\Carbon::parse($lastMessage->createdAt)->toISOString()) : null,
                 'unreadCount' => $unreadCount
             ];
         }

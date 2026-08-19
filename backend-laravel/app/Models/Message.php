@@ -73,6 +73,8 @@ class Message extends Model
     {
         return [
             'read' => 'boolean',
+            'createdAt' => 'datetime',
+            'updatedAt' => 'datetime',
         ];
     }
 
