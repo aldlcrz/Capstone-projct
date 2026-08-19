@@ -394,10 +394,10 @@
          x-transition:leave-end="opacity-0"
          class="fixed inset-0 z-50 overflow-y-auto bg-black/60 backdrop-blur-xs flex items-center justify-center p-4 sm:p-6"
          style="display: none;"
-         @keydown.escape.window="if (!lightboxImage) showReviewsModal = false">
+         @click.self="showReviewsModal = false"
+         @keydown.escape.window="if (lightboxImage) { lightboxImage = null; } else if (showReviewsModal) { showReviewsModal = false; }">
         
-        <div @click.away="if (!lightboxImage) showReviewsModal = false" 
-             x-show="showReviewsModal"
+        <div x-show="showReviewsModal"
              x-transition:enter="transition ease-out duration-300 transform"
              x-transition:enter-start="opacity-0 scale-95 translate-y-4"
              x-transition:enter-end="opacity-100 scale-100 translate-y-0"
@@ -478,7 +478,7 @@
          x-transition:leave-end="opacity-0"
          class="fixed inset-0 z-9999 bg-black/90 backdrop-blur-md flex flex-col items-center justify-center p-4 sm:p-6"
          style="display: none;"
-         @keydown.escape.window="lightboxImage = null">
+         @click.self="lightboxImage = null">
         
         <div class="w-full max-w-4xl flex justify-end pb-3">
             <button type="button" @click="lightboxImage = null" class="px-4 py-2 bg-white/20 hover:bg-white/30 text-white rounded-full text-xs font-bold uppercase tracking-wider flex items-center gap-1.5 transition-all shadow-lg cursor-pointer">
@@ -487,8 +487,8 @@
             </button>
         </div>
 
-        <div @click.away="lightboxImage = null" class="relative max-h-[85vh] max-w-full flex items-center justify-center">
-            <img :src="lightboxImage" class="max-h-[80vh] max-w-full rounded-2xl shadow-2xl object-contain border border-white/10">
+        <div class="relative max-h-[85vh] max-w-full flex items-center justify-center pointer-events-none">
+            <img :src="lightboxImage" class="max-h-[80vh] max-w-full rounded-2xl shadow-2xl object-contain border border-white/10 pointer-events-auto">
         </div>
     </div>
 </div>
