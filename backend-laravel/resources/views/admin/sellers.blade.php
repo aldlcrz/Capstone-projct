@@ -54,9 +54,16 @@
         this.suspendReason = 'Violation of platform seller policies';
         this.suspendModal = true;
     },
+    deleteModal: false,
+    deleteSellerId: null,
+    deleteSellerName: '',
+    deleteReason: '',
+    deleteConfirmChecked: false,
     openDelete(id, name) {
         this.deleteSellerId = id;
         this.deleteSellerName = name;
+        this.deleteReason = '';
+        this.deleteConfirmChecked = false;
         this.deleteModal = true;
     },
     async openShopPreview(sellerId, fallbackShopName) {
@@ -685,24 +692,68 @@
 
     {{-- Delete Confirmation Modal --}}
     <div x-show="deleteModal" class="fixed inset-0 z-50 flex items-center justify-center p-4" x-cloak>
-        <div class="absolute inset-0 bg-black/40 backdrop-blur-sm" @click="deleteModal = false"></div>
-        <div class="relative bg-white rounded-2xl shadow-2xl w-full max-w-md p-6 space-y-4 z-10">
-            <div class="w-12 h-12 rounded-2xl bg-red-100 flex items-center justify-center mx-auto">
-                <svg class="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
-                </svg>
+        <div class="absolute inset-0 bg-black/50 backdrop-blur-sm" @click="deleteModal = false"></div>
+        <div class="relative bg-white rounded-3xl shadow-2xl w-full max-w-lg p-6 sm:p-7 space-y-5 z-10 border border-gray-100">
+            <div class="flex items-start gap-3.5">
+                <div class="w-11 h-11 rounded-2xl bg-red-100 flex items-center justify-center shrink-0">
+                    <svg class="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                    </svg>
+                </div>
+                <div class="min-w-0">
+                    <h3 class="text-base sm:text-lg font-bold text-gray-900 leading-tight">Delete Seller Account</h3>
+                    <p class="text-xs text-gray-500 mt-1">
+                        Permanently purge <strong x-text="deleteSellerName" class="text-black"></strong> and all associated artisan workshop records.
+                    </p>
+                </div>
             </div>
-            <div class="text-center">
-                <h3 class="text-lg font-bold text-gray-900">Delete Seller Account</h3>
-                <p class="text-xs text-gray-500 leading-relaxed mt-2">
-                    Are you sure you want to permanently delete <strong x-text="deleteSellerName" class="text-red-600"></strong>'s account? This action <span class="font-bold text-red-600">cannot be undone</span>.
-                </p>
+
+            <div class="p-3 bg-red-50/80 border border-red-200 rounded-2xl text-[11px] text-red-800 leading-relaxed font-medium">
+                ⚠️ <strong>Critical Warning:</strong> This action is permanent and irreversible. Active sessions, seller listings, and profile records will be completely removed from the registry.
             </div>
+
             <form :action="'/admin/sellers/' + deleteSellerId" method="POST" class="space-y-4">
                 @csrf @method('DELETE')
+                
+                <div>
+                    <label class="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-1.5 block">Quick Reason Presets</label>
+                    <div class="flex flex-wrap gap-1.5 mb-2.5">
+                        <button type="button" @click="deleteReason = 'Severe violation of platform terms and fraudulent activity'"
+                            class="px-2.5 py-1 rounded-lg text-[10px] font-semibold bg-gray-100 hover:bg-gray-200 text-gray-700 transition-colors">
+                            Policy Violation
+                        </button>
+                        <button type="button" @click="deleteReason = 'Requested by artisan / shop owner account deletion'"
+                            class="px-2.5 py-1 rounded-lg text-[10px] font-semibold bg-gray-100 hover:bg-gray-200 text-gray-700 transition-colors">
+                            Artisan Request
+                        </button>
+                        <button type="button" @click="deleteReason = 'Inactive or abandoned registration account cleanup'"
+                            class="px-2.5 py-1 rounded-lg text-[10px] font-semibold bg-gray-100 hover:bg-gray-200 text-gray-700 transition-colors">
+                            Abandoned Account
+                        </button>
+                        <button type="button" @click="deleteReason = 'Unresponsive or counterfeit application submissions'"
+                            class="px-2.5 py-1 rounded-lg text-[10px] font-semibold bg-gray-100 hover:bg-gray-200 text-gray-700 transition-colors">
+                            Counterfeit / Spam
+                        </button>
+                    </div>
+
+                    <label class="text-[10px] font-bold text-gray-600 uppercase tracking-widest mb-1 block">Reason for Permanent Deletion *</label>
+                    <textarea name="reason" x-model="deleteReason" required rows="2.5" placeholder="Specify reason for deletion for platform audit logs..." class="w-full p-3 bg-gray-50 border border-gray-200 rounded-xl text-xs outline-none focus:border-red-500 font-medium"></textarea>
+                </div>
+
+                <label class="flex items-start gap-2.5 cursor-pointer select-none pt-1">
+                    <input type="checkbox" x-model="deleteConfirmChecked" class="mt-0.5 rounded border-gray-300 text-red-600 focus:ring-red-500 w-4 h-4 cursor-pointer">
+                    <span class="text-[11px] text-gray-600 font-medium leading-snug">
+                        I confirm that I want to permanently delete this seller account and understand that this action cannot be undone.
+                    </span>
+                </label>
+
                 <div class="flex gap-3 pt-2">
-                    <button type="button" @click="deleteModal = false" class="flex-1 py-2.5 border border-gray-200 text-xs font-semibold text-gray-500 rounded-xl hover:bg-gray-50 cursor-pointer">Cancel</button>
-                    <button type="submit" class="flex-1 py-2.5 bg-red-600 text-white text-xs font-bold uppercase tracking-wider rounded-xl hover:bg-red-700 cursor-pointer shadow-sm">Delete Permanently</button>
+                    <button type="button" @click="deleteModal = false" class="flex-1 py-2.5 border border-gray-200 text-xs font-bold text-gray-600 rounded-xl hover:bg-gray-50 transition-all cursor-pointer">
+                        Cancel
+                    </button>
+                    <button type="submit" :disabled="!deleteConfirmChecked || !deleteReason.trim()" class="flex-1 py-2.5 bg-red-600 hover:bg-red-700 disabled:opacity-40 disabled:cursor-not-allowed text-white text-xs font-bold uppercase tracking-wider rounded-xl transition-all shadow-sm cursor-pointer">
+                        Confirm &amp; Delete
+                    </button>
                 </div>
             </form>
         </div>

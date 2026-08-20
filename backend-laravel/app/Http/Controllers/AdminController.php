@@ -778,10 +778,24 @@ class AdminController extends Controller
     {
         try {
             $user = User::findOrFail($id);
-            $reason = $request->reason ?? 'Suspended by admin.';
+            $reason = $request->input('reason', 'Violation of platform seller policies');
             $user->status          = 'blocked';
             $user->violationReason = $reason;
             $user->save();
+
+            // In-app notification to seller
+            try {
+                $this->sendNotification(
+                    $user->id,
+                    'Account Suspended',
+                    "Your artisan workshop has been suspended. Reason: {$reason}",
+                    'system',
+                    null,
+                    'seller'
+                );
+            } catch (\Throwable $e) {
+                Log::warning('Notification error on suspendSeller: ' . $e->getMessage());
+            }
 
             // Invalidate active web and API sessions immediately
             try {
@@ -795,7 +809,7 @@ class AdminController extends Controller
                 Log::warning('Session deletion error on suspendSeller: ' . $e->getMessage());
             }
 
-            return redirect()->route('admin.sellers')->with('success', 'Seller suspended.');
+            return redirect()->route('admin.sellers')->with('success', 'Seller account suspended successfully.');
         } catch (\Throwable $e) {
             Log::error('suspendSeller fatal error: ' . $e->getMessage());
             return redirect()->route('admin.sellers')->with('error', 'Error suspending seller: ' . $e->getMessage());
@@ -809,17 +823,54 @@ class AdminController extends Controller
             $user->status          = 'active';
             $user->violationReason = null;
             $user->save();
+
+            try {
+                $this->sendNotification(
+                    $user->id,
+                    'Account Restored',
+                    'Your artisan workshop account has been restored to active status.',
+                    'system',
+                    '/seller/dashboard',
+                    'seller'
+                );
+            } catch (\Throwable $e) {
+                Log::warning('Notification error on unsuspendSeller: ' . $e->getMessage());
+            }
+
             return redirect()->route('admin.sellers')->with('success', 'Seller account restored.');
         } catch (\Throwable $e) {
             return redirect()->route('admin.sellers')->with('error', 'Error restoring seller: ' . $e->getMessage());
         }
     }
 
-    public function deleteSeller(string $id)
+    public function deleteSeller(Request $request, string $id)
     {
-        $user = User::findOrFail($id);
-        $user->delete();
-        return redirect()->back()->with('success', 'Seller account permanently deleted.');
+        try {
+            $user = User::findOrFail($id);
+            $reason = $request->input('reason', 'Administrative deletion');
+            $sellerName = $user->name;
+            $sellerEmail = $user->email;
+
+            // Invalidate active web and API sessions immediately
+            try {
+                if (\Illuminate\Support\Facades\Schema::hasTable('sessions')) {
+                    DB::table('sessions')->where('user_id', $user->id)->delete();
+                }
+                if (method_exists($user, 'tokens')) {
+                    $user->tokens()->delete();
+                }
+            } catch (\Throwable $e) {
+                Log::warning('Session deletion error on deleteSeller: ' . $e->getMessage());
+            }
+
+            Log::info("Seller [{$user->id} - {$sellerName} ({$sellerEmail})] permanently deleted by admin. Reason: {$reason}");
+
+            $user->delete();
+            return redirect()->route('admin.sellers')->with('success', "Seller {$sellerName} permanently deleted.");
+        } catch (\Throwable $e) {
+            Log::error('deleteSeller fatal error: ' . $e->getMessage());
+            return redirect()->route('admin.sellers')->with('error', 'Error deleting seller: ' . $e->getMessage());
+        }
     }
 
     public function products(Request $request)
