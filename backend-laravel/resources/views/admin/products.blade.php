@@ -70,9 +70,6 @@
                 Product <span class="text-[#C0420A] font-light italic">Moderation &amp; Catalog</span>
             </h1>
         </div>
-        <div class="flex items-center gap-2 text-xs font-bold text-gray-600">
-            Total Listings: <span class="text-black text-base sm:text-lg font-black">{{ $counts['all'] }}</span>
-        </div>
     </div>
 
     @php
@@ -83,11 +80,18 @@
     <div class="flex flex-col md:flex-row md:items-center justify-between gap-3 pt-1">
         {{-- Pill Filters --}}
         <div class="flex items-center gap-2 overflow-x-auto no-scrollbar pb-1">
+            {{-- ALL --}}
+            <a href="{{ request()->fullUrlWithQuery(['status' => null, 'page' => 1]) }}"
+               class="inline-flex items-center gap-2 px-4 py-2 rounded-full text-[10px] sm:text-[11px] font-black uppercase tracking-wider transition-all {{ empty($currentStatus) || $currentStatus === 'all' ? 'bg-black text-white shadow-sm' : 'bg-white text-gray-700 border border-gray-200 hover:bg-gray-50' }}">
+                <span>ALL</span>
+                <span class="px-2 py-0.5 rounded-full text-[9px] font-black {{ empty($currentStatus) || $currentStatus === 'all' ? 'bg-white/20 text-white' : 'bg-gray-100 text-gray-600' }}">{{ $counts['all'] }}</span>
+            </a>
+
             {{-- PENDING --}}
             <a href="{{ request()->fullUrlWithQuery(['status' => 'pending', 'page' => 1]) }}"
-               class="inline-flex items-center gap-2 px-4 py-2 rounded-full text-[10px] sm:text-[11px] font-black uppercase tracking-wider transition-all {{ $currentStatus === 'pending' || empty($currentStatus) ? 'bg-black text-white shadow-sm' : 'bg-white text-gray-700 border border-gray-200 hover:bg-gray-50' }}">
+               class="inline-flex items-center gap-2 px-4 py-2 rounded-full text-[10px] sm:text-[11px] font-black uppercase tracking-wider transition-all {{ $currentStatus === 'pending' ? 'bg-black text-white shadow-sm' : 'bg-white text-gray-700 border border-gray-200 hover:bg-gray-50' }}">
                 <span>PENDING</span>
-                <span class="px-2 py-0.5 rounded-full text-[9px] font-black {{ $currentStatus === 'pending' || empty($currentStatus) ? 'bg-white/20 text-white' : 'bg-gray-100 text-gray-600' }}">{{ $counts['pending'] }}</span>
+                <span class="px-2 py-0.5 rounded-full text-[9px] font-black {{ $currentStatus === 'pending' ? 'bg-white/20 text-white' : 'bg-gray-100 text-gray-600' }}">{{ $counts['pending'] }}</span>
             </a>
 
             {{-- APPROVED --}}
@@ -102,13 +106,6 @@
                class="inline-flex items-center gap-2 px-4 py-2 rounded-full text-[10px] sm:text-[11px] font-black uppercase tracking-wider transition-all {{ $currentStatus === 'rejected' ? 'bg-black text-white shadow-sm' : 'bg-white text-gray-700 border border-gray-200 hover:bg-gray-50' }}">
                 <span>REJECTED</span>
                 <span class="px-2 py-0.5 rounded-full text-[9px] font-black {{ $currentStatus === 'rejected' ? 'bg-white/20 text-white' : 'bg-gray-100 text-gray-600' }}">{{ $counts['rejected'] }}</span>
-            </a>
-
-            {{-- ALL --}}
-            <a href="{{ request()->fullUrlWithQuery(['status' => 'all', 'page' => 1]) }}"
-               class="inline-flex items-center gap-2 px-4 py-2 rounded-full text-[10px] sm:text-[11px] font-black uppercase tracking-wider transition-all {{ $currentStatus === 'all' ? 'bg-black text-white shadow-sm' : 'bg-white text-gray-700 border border-gray-200 hover:bg-gray-50' }}">
-                <span>ALL</span>
-                <span class="px-2 py-0.5 rounded-full text-[9px] font-black {{ $currentStatus === 'all' ? 'bg-white/20 text-white' : 'bg-gray-100 text-gray-600' }}">{{ $counts['all'] }}</span>
             </a>
         </div>
 

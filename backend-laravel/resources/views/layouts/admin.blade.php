@@ -323,51 +323,83 @@
             <!-- Page Content -->
             <main class="flex-1 overflow-y-auto p-4 lg:p-10 pb-24">
                 <div class="max-w-300 mx-auto">
-                    {{-- Flash Messages (Floating Toasts) --}}
-                    @if(session('success') || session('error'))
+                    {{-- Admin Floating Toast Notifications --}}
                     <div 
                         x-data="{ 
-                            show: true, 
-                            init() { 
-                                setTimeout(() => this.show = false, 2500) 
-                            } 
+                            toasts: [],
+                            init() {
+                                @if(session('success'))
+                                    this.addToast('{{ addslashes(session('success')) }}', 'success');
+                                @endif
+                                @if(session('error'))
+                                    this.addToast('{{ addslashes(session('error')) }}', 'error');
+                                @endif
+                                @if(session('warning'))
+                                    this.addToast('{{ addslashes(session('warning')) }}', 'warning');
+                                @endif
+                                @if(session('info'))
+                                    this.addToast('{{ addslashes(session('info')) }}', 'info');
+                                @endif
+                            },
+                            addToast(message, type = 'success') {
+                                const id = Date.now() + Math.random();
+                                this.toasts.push({ id, message, type, show: true });
+                                setTimeout(() => this.removeToast(id), 4500);
+                            },
+                            removeToast(id) {
+                                const t = this.toasts.find(x => x.id === id);
+                                if (t) t.show = false;
+                                setTimeout(() => {
+                                    this.toasts = this.toasts.filter(x => x.id !== id);
+                                }, 300);
+                            }
                         }"
-                        x-show="show"
-                        x-transition:enter="transition ease-out duration-300 transform"
-                        x-transition:enter-start="opacity-0 -translate-y-4 -translate-x-1/2"
-                        x-transition:enter-end="opacity-100 translate-y-0 -translate-x-1/2"
-                        x-transition:leave="transition ease-in duration-200 transform"
-                        x-transition:leave-start="opacity-100 translate-y-0 -translate-x-1/2"
-                        x-transition:leave-end="opacity-0 -translate-y-4 -translate-x-1/2"
-                        class="fixed top-6 left-1/2 -translate-x-1/2 z-9999 w-[calc(100%-2rem)] max-w-sm bg-white/95 backdrop-blur-md rounded-2xl shadow-2xl border border-gray-100 p-4 flex items-start gap-3.5"
-                        style="display: none;"
-                        x-cloak
+                        @admin-toast.window="addToast($event.detail.message, $event.detail.type || 'success')"
+                        class="fixed top-5 right-4 sm:right-8 z-9999 flex flex-col gap-2.5 max-w-sm w-[calc(100%-2rem)] pointer-events-none"
                     >
-                        @if(session('success'))
-                            <div class="w-8 h-8 rounded-full bg-green-50 flex items-center justify-center text-green-600 shrink-0 shadow-sm border border-green-100">
-                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"></path></svg>
-                            </div>
-                            <div class="grow pt-0.5">
-                                <h4 class="text-xs font-black text-black uppercase tracking-wider">Success</h4>
-                                <p class="text-xs text-gray-500 font-medium mt-0.5 leading-relaxed">{{ session('success') }}</p>
-                            </div>
-                        @endif
+                        <template x-for="toast in toasts" :key="toast.id">
+                            <div 
+                                x-show="toast.show"
+                                x-transition:enter="transition ease-out duration-300 transform"
+                                x-transition:enter-start="opacity-0 translate-y-2 scale-95"
+                                x-transition:enter-end="opacity-100 translate-y-0 scale-100"
+                                x-transition:leave="transition ease-in duration-200 transform"
+                                x-transition:leave-start="opacity-100 translate-y-0 scale-100"
+                                x-transition:leave-end="opacity-0 translate-y-2 scale-95"
+                                class="pointer-events-auto bg-white/95 backdrop-blur-md rounded-2xl shadow-2xl border border-gray-100 p-4 flex items-start gap-3.5 relative overflow-hidden"
+                            >
+                                <template x-if="toast.type === 'success'">
+                                    <div class="w-8 h-8 rounded-xl bg-emerald-50 flex items-center justify-center text-emerald-600 shrink-0 shadow-sm border border-emerald-100">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"></path></svg>
+                                    </div>
+                                </template>
+                                <template x-if="toast.type === 'error'">
+                                    <div class="w-8 h-8 rounded-xl bg-rose-50 flex items-center justify-center text-rose-600 shrink-0 shadow-sm border border-rose-100">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12"></path></svg>
+                                    </div>
+                                </template>
+                                <template x-if="toast.type === 'warning'">
+                                    <div class="w-8 h-8 rounded-xl bg-amber-50 flex items-center justify-center text-amber-600 shrink-0 shadow-sm border border-amber-100">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
+                                    </div>
+                                </template>
+                                <template x-if="toast.type === 'info'">
+                                    <div class="w-8 h-8 rounded-xl bg-blue-50 flex items-center justify-center text-blue-600 shrink-0 shadow-sm border border-blue-100">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                                    </div>
+                                </template>
 
-                        @if(session('error'))
-                            <div class="w-8 h-8 rounded-full bg-red-50 flex items-center justify-center text-red-600 shrink-0 shadow-sm border border-red-100">
-                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12"></path></svg>
-                            </div>
-                            <div class="grow pt-0.5">
-                                <h4 class="text-xs font-black text-black uppercase tracking-wider">Error</h4>
-                                <p class="text-xs text-gray-500 font-medium mt-0.5 leading-relaxed">{{ session('error') }}</p>
-                            </div>
-                        @endif
+                                <div class="grow pt-0.5">
+                                    <h4 class="text-[11px] font-black text-black uppercase tracking-wider" x-text="toast.type === 'success' ? 'Success' : (toast.type === 'error' ? 'Error' : (toast.type === 'warning' ? 'Notice' : 'Info'))"></h4>
+                                    <p class="text-xs text-gray-600 font-medium mt-0.5 leading-relaxed" x-text="toast.message"></p>
+                                </div>
 
-                        <button @click="show = false" class="text-gray-300 hover:text-gray-500 transition-colors shrink-0">
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
-                        </button>
+                                <button type="button" @click="removeToast(toast.id)" class="text-gray-300 hover:text-gray-500 transition-colors shrink-0 cursor-pointer">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                                </button>
+                            </div>
+                        </template>
                     </div>
-                    @endif
                     @yield('content')
                 </div>
             </main>

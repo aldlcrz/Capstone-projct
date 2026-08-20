@@ -155,7 +155,14 @@
     <div class="flex flex-col md:flex-row md:items-center justify-between gap-3 pt-1">
         {{-- Pill Filters --}}
         <div class="flex items-center gap-2 overflow-x-auto no-scrollbar pb-1">
-            {{-- APPROVED / VERIFIED (Default View) --}}
+            {{-- ALL --}}
+            <a href="{{ request()->fullUrlWithQuery(['filter' => 'all', 'page' => 1]) }}"
+               class="inline-flex items-center gap-2 px-4 py-2 rounded-full text-[10px] sm:text-[11px] font-black uppercase tracking-wider transition-all {{ $currentFilter === 'all' ? 'bg-black text-white shadow-sm' : 'bg-white text-gray-700 border border-gray-200 hover:bg-gray-50' }}">
+                <span>ALL</span>
+                <span class="px-2 py-0.5 rounded-full text-[9px] font-black {{ $currentFilter === 'all' ? 'bg-white/20 text-white' : 'bg-gray-100 text-gray-600' }}">{{ $counts['all'] }}</span>
+            </a>
+
+            {{-- APPROVED / VERIFIED --}}
             <a href="{{ request()->fullUrlWithQuery(['filter' => null, 'page' => 1]) }}"
                class="inline-flex items-center gap-2 px-4 py-2 rounded-full text-[10px] sm:text-[11px] font-black uppercase tracking-wider transition-all {{ (empty($currentFilter) || $currentFilter === 'verified') ? 'bg-black text-white shadow-sm' : 'bg-white text-gray-700 border border-gray-200 hover:bg-gray-50' }}">
                 <span>APPROVED</span>
@@ -174,13 +181,6 @@
                class="inline-flex items-center gap-2 px-4 py-2 rounded-full text-[10px] sm:text-[11px] font-black uppercase tracking-wider transition-all {{ $currentFilter === 'suspended' ? 'bg-black text-white shadow-sm' : 'bg-white text-gray-700 border border-gray-200 hover:bg-gray-50' }}">
                 <span>SUSPENDED</span>
                 <span class="px-2 py-0.5 rounded-full text-[9px] font-black {{ $currentFilter === 'suspended' ? 'bg-white/20 text-white' : 'bg-gray-100 text-gray-600' }}">{{ $counts['suspended'] }}</span>
-            </a>
-
-            {{-- ALL --}}
-            <a href="{{ request()->fullUrlWithQuery(['filter' => 'all', 'page' => 1]) }}"
-               class="inline-flex items-center gap-2 px-4 py-2 rounded-full text-[10px] sm:text-[11px] font-black uppercase tracking-wider transition-all {{ $currentFilter === 'all' ? 'bg-black text-white shadow-sm' : 'bg-white text-gray-700 border border-gray-200 hover:bg-gray-50' }}">
-                <span>ALL</span>
-                <span class="px-2 py-0.5 rounded-full text-[9px] font-black {{ $currentFilter === 'all' ? 'bg-white/20 text-white' : 'bg-gray-100 text-gray-600' }}">{{ $counts['all'] }}</span>
             </a>
         </div>
 
