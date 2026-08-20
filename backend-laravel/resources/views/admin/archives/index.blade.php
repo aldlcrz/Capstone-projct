@@ -273,9 +273,19 @@
                     <div class="p-3 bg-red-50 text-red-900 rounded-xl font-medium" x-text="inspectRecord?.reason || 'None specified'"></div>
                 </div>
 
+                {{-- Clean Formatted Snapshot Details (No raw JSON block) --}}
                 <div>
-                    <span class="font-bold text-gray-500 uppercase tracking-widest text-[9px] block mb-1">Archived Metadata Payload</span>
-                    <pre class="p-3 bg-stone-900 text-emerald-400 rounded-2xl overflow-x-auto text-[11px] font-mono leading-relaxed max-h-64" x-text="JSON.stringify(inspectRecord?.metadata, null, 2)"></pre>
+                    <span class="font-bold text-gray-500 uppercase tracking-widest text-[9px] block mb-2">Original Snapshot Details</span>
+                    <div class="bg-stone-50 border border-stone-200 rounded-2xl p-4 space-y-2">
+                        <template x-for="(value, key) in (inspectRecord?.metadata || {})" :key="key">
+                            <template x-if="value !== null && value !== '' && key !== 'password' && key !== 'remember_token' && typeof value !== 'object'">
+                                <div class="flex items-center justify-between py-1.5 border-b border-stone-200/60 last:border-0 text-xs">
+                                    <span class="font-bold text-gray-500 capitalize" x-text="key.replace(/([A-Z])/g, ' $1').replace(/_/g, ' ')"></span>
+                                    <span class="font-semibold text-gray-900 text-right max-w-xs truncate" x-text="value"></span>
+                                </div>
+                            </template>
+                        </template>
+                    </div>
                 </div>
             </div>
 
