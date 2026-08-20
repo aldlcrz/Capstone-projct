@@ -62,67 +62,64 @@
     }
 }">
 
-    {{-- Page Header --}}
-    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+    {{-- Page Header & Search Bar --}}
+    <div class="space-y-3.5">
         <div>
             <div class="text-[10px] font-bold text-[#C0422A] uppercase tracking-[0.2em] mb-1">Product Control</div>
             <h1 class="font-serif text-2xl sm:text-3xl font-bold text-black">
                 Product <span class="text-[#C0420A] font-light italic">Moderation &amp; Catalog</span>
             </h1>
         </div>
-    </div>
 
-    @php
-        $currentStatus = request('status', 'pending');
-    @endphp
-
-    {{-- Filter Pills & Search Bar Grouped Together --}}
-    <div class="flex flex-wrap items-center gap-3 pt-1">
-        {{-- Pill Filters --}}
-        <div class="flex items-center gap-2 overflow-x-auto no-scrollbar pb-0.5">
-            {{-- ALL --}}
-            <a href="{{ request()->fullUrlWithQuery(['status' => null, 'page' => 1]) }}"
-               class="inline-flex items-center gap-2 px-4 py-2 rounded-full text-[10px] sm:text-[11px] font-black uppercase tracking-wider transition-all {{ empty($currentStatus) || $currentStatus === 'all' ? 'bg-black text-white shadow-sm' : 'bg-white text-gray-700 border border-gray-200 hover:bg-gray-50' }}">
-                <span>ALL</span>
-                <span class="px-2 py-0.5 rounded-full text-[9px] font-black {{ empty($currentStatus) || $currentStatus === 'all' ? 'bg-white/20 text-white' : 'bg-gray-100 text-gray-600' }}">{{ $counts['all'] }}</span>
-            </a>
-
-            {{-- PENDING --}}
-            <a href="{{ request()->fullUrlWithQuery(['status' => 'pending', 'page' => 1]) }}"
-               class="inline-flex items-center gap-2 px-4 py-2 rounded-full text-[10px] sm:text-[11px] font-black uppercase tracking-wider transition-all {{ $currentStatus === 'pending' ? 'bg-black text-white shadow-sm' : 'bg-white text-gray-700 border border-gray-200 hover:bg-gray-50' }}">
-                <span>PENDING</span>
-                <span class="px-2 py-0.5 rounded-full text-[9px] font-black {{ $currentStatus === 'pending' ? 'bg-white/20 text-white' : 'bg-gray-100 text-gray-600' }}">{{ $counts['pending'] }}</span>
-            </a>
-
-            {{-- APPROVED --}}
-            <a href="{{ request()->fullUrlWithQuery(['status' => 'approved', 'page' => 1]) }}"
-               class="inline-flex items-center gap-2 px-4 py-2 rounded-full text-[10px] sm:text-[11px] font-black uppercase tracking-wider transition-all {{ $currentStatus === 'approved' ? 'bg-black text-white shadow-sm' : 'bg-white text-gray-700 border border-gray-200 hover:bg-gray-50' }}">
-                <span>APPROVED</span>
-                <span class="px-2 py-0.5 rounded-full text-[9px] font-black {{ $currentStatus === 'approved' ? 'bg-white/20 text-white' : 'bg-gray-100 text-gray-600' }}">{{ $counts['approved'] }}</span>
-            </a>
-
-            {{-- REJECTED --}}
-            <a href="{{ request()->fullUrlWithQuery(['status' => 'rejected', 'page' => 1]) }}"
-               class="inline-flex items-center gap-2 px-4 py-2 rounded-full text-[10px] sm:text-[11px] font-black uppercase tracking-wider transition-all {{ $currentStatus === 'rejected' ? 'bg-black text-white shadow-sm' : 'bg-white text-gray-700 border border-gray-200 hover:bg-gray-50' }}">
-                <span>REJECTED</span>
-                <span class="px-2 py-0.5 rounded-full text-[9px] font-black {{ $currentStatus === 'rejected' ? 'bg-white/20 text-white' : 'bg-gray-100 text-gray-600' }}">{{ $counts['rejected'] }}</span>
-            </a>
-        </div>
-
-        {{-- Search Input (Right next to pills) --}}
-        <form method="GET" class="flex items-center gap-2">
+        {{-- Search Input (Below title) --}}
+        <form method="GET" class="flex items-center gap-2 max-w-sm sm:max-w-md">
             @if(request('status'))
                 <input type="hidden" name="status" value="{{ request('status') }}">
             @endif
-            <div class="relative w-56 sm:w-64">
-                <input type="text" name="search" value="{{ request('search') }}" placeholder="Search products, artisans..." 
-                       class="w-full pl-9 pr-4 py-2 bg-white border border-gray-200 rounded-full text-xs text-gray-800 placeholder:text-gray-400 focus:outline-none focus:border-[#C0422A]">
+            <div class="relative w-full">
+                <input type="text" name="search" value="{{ request('search') }}" placeholder="Search products, descriptions, artisans..." 
+                       class="w-full pl-9 pr-4 py-2.5 bg-white border border-gray-200 rounded-full text-xs text-gray-800 placeholder:text-gray-400 focus:outline-none focus:border-[#C0422A] shadow-xs">
                 <svg class="w-4 h-4 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
             </div>
             @if(request('search'))
                 <a href="{{ request()->fullUrlWithQuery(['search' => null, 'page' => 1]) }}" class="px-3 py-2 bg-gray-100 hover:bg-gray-200 text-gray-600 rounded-full text-[10px] font-bold">Clear</a>
             @endif
         </form>
+    </div>
+
+    @php
+        $currentStatus = request('status', 'pending');
+    @endphp
+
+    {{-- Filter Pills --}}
+    <div class="flex items-center gap-2 overflow-x-auto no-scrollbar pt-1">
+        {{-- ALL --}}
+        <a href="{{ request()->fullUrlWithQuery(['status' => null, 'page' => 1]) }}"
+           class="inline-flex items-center gap-2 px-4 py-2 rounded-full text-[10px] sm:text-[11px] font-black uppercase tracking-wider transition-all {{ empty($currentStatus) || $currentStatus === 'all' ? 'bg-black text-white shadow-sm' : 'bg-white text-gray-700 border border-gray-200 hover:bg-gray-50' }}">
+            <span>ALL</span>
+            <span class="px-2 py-0.5 rounded-full text-[9px] font-black {{ empty($currentStatus) || $currentStatus === 'all' ? 'bg-white/20 text-white' : 'bg-gray-100 text-gray-600' }}">{{ $counts['all'] }}</span>
+        </a>
+
+        {{-- PENDING --}}
+        <a href="{{ request()->fullUrlWithQuery(['status' => 'pending', 'page' => 1]) }}"
+           class="inline-flex items-center gap-2 px-4 py-2 rounded-full text-[10px] sm:text-[11px] font-black uppercase tracking-wider transition-all {{ $currentStatus === 'pending' ? 'bg-black text-white shadow-sm' : 'bg-white text-gray-700 border border-gray-200 hover:bg-gray-50' }}">
+            <span>PENDING</span>
+            <span class="px-2 py-0.5 rounded-full text-[9px] font-black {{ $currentStatus === 'pending' ? 'bg-white/20 text-white' : 'bg-gray-100 text-gray-600' }}">{{ $counts['pending'] }}</span>
+        </a>
+
+        {{-- APPROVED --}}
+        <a href="{{ request()->fullUrlWithQuery(['status' => 'approved', 'page' => 1]) }}"
+           class="inline-flex items-center gap-2 px-4 py-2 rounded-full text-[10px] sm:text-[11px] font-black uppercase tracking-wider transition-all {{ $currentStatus === 'approved' ? 'bg-black text-white shadow-sm' : 'bg-white text-gray-700 border border-gray-200 hover:bg-gray-50' }}">
+            <span>APPROVED</span>
+            <span class="px-2 py-0.5 rounded-full text-[9px] font-black {{ $currentStatus === 'approved' ? 'bg-white/20 text-white' : 'bg-gray-100 text-gray-600' }}">{{ $counts['approved'] }}</span>
+        </a>
+
+        {{-- REJECTED --}}
+        <a href="{{ request()->fullUrlWithQuery(['status' => 'rejected', 'page' => 1]) }}"
+           class="inline-flex items-center gap-2 px-4 py-2 rounded-full text-[10px] sm:text-[11px] font-black uppercase tracking-wider transition-all {{ $currentStatus === 'rejected' ? 'bg-black text-white shadow-sm' : 'bg-white text-gray-700 border border-gray-200 hover:bg-gray-50' }}">
+            <span>REJECTED</span>
+            <span class="px-2 py-0.5 rounded-full text-[9px] font-black {{ $currentStatus === 'rejected' ? 'bg-white/20 text-white' : 'bg-gray-100 text-gray-600' }}">{{ $counts['rejected'] }}</span>
+        </a>
     </div>
 
     {{-- Product Grid --}}

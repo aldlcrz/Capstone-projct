@@ -25,69 +25,64 @@
         this.deleteModal = true;
     }
 }">
-    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+    {{-- Page Header & Search Bar --}}
+    <div class="space-y-3.5">
         <div>
             <div class="text-[10px] font-bold text-[#C0422A] uppercase tracking-[0.2em] mb-1">User Registry</div>
             <h1 class="font-serif text-2xl sm:text-3xl font-bold text-black">
                 Customer <span class="text-[#C0420A] font-light italic">Management</span>
             </h1>
         </div>
-        <div class="flex items-center gap-2 text-xs font-bold text-gray-600">
-            Total Customers: <span class="text-black text-base sm:text-lg font-black">{{ $users->total() }}</span>
-        </div>
-    </div>
 
-    @php
-        $currentStatus = request('status');
-    @endphp
-
-    {{-- Filter Pills & Search Bar --}}
-    <div class="flex flex-col md:flex-row md:items-center justify-between gap-3 pt-1">
-        {{-- Pill Filters --}}
-        <div class="flex items-center gap-2 overflow-x-auto no-scrollbar pb-1">
-            {{-- ALL --}}
-            <a href="{{ request()->fullUrlWithQuery(['status' => null, 'page' => 1]) }}"
-               class="inline-flex items-center gap-2 px-4 py-2 rounded-full text-[10px] sm:text-[11px] font-black uppercase tracking-wider transition-all {{ empty($currentStatus) ? 'bg-black text-white shadow-sm' : 'bg-white text-gray-700 border border-gray-200 hover:bg-gray-50' }}">
-                <span>ALL</span>
-                <span class="px-2 py-0.5 rounded-full text-[9px] font-black {{ empty($currentStatus) ? 'bg-white/20 text-white' : 'bg-gray-100 text-gray-600' }}">{{ $counts['all'] ?? $users->total() }}</span>
-            </a>
-
-            {{-- ACTIVE --}}
-            <a href="{{ request()->fullUrlWithQuery(['status' => 'active', 'page' => 1]) }}"
-               class="inline-flex items-center gap-2 px-4 py-2 rounded-full text-[10px] sm:text-[11px] font-black uppercase tracking-wider transition-all {{ $currentStatus === 'active' ? 'bg-black text-white shadow-sm' : 'bg-white text-gray-700 border border-gray-200 hover:bg-gray-50' }}">
-                <span>ACTIVE</span>
-                <span class="px-2 py-0.5 rounded-full text-[9px] font-black {{ $currentStatus === 'active' ? 'bg-white/20 text-white' : 'bg-gray-100 text-gray-600' }}">{{ $counts['active'] ?? 0 }}</span>
-            </a>
-
-            {{-- BLOCKED / BANNED --}}
-            <a href="{{ request()->fullUrlWithQuery(['status' => 'blocked', 'page' => 1]) }}"
-               class="inline-flex items-center gap-2 px-4 py-2 rounded-full text-[10px] sm:text-[11px] font-black uppercase tracking-wider transition-all {{ $currentStatus === 'blocked' ? 'bg-black text-white shadow-sm' : 'bg-white text-gray-700 border border-gray-200 hover:bg-gray-50' }}">
-                <span>BLOCKED</span>
-                <span class="px-2 py-0.5 rounded-full text-[9px] font-black {{ $currentStatus === 'blocked' ? 'bg-white/20 text-white' : 'bg-gray-100 text-gray-600' }}">{{ $counts['blocked'] ?? 0 }}</span>
-            </a>
-
-            {{-- FROZEN --}}
-            <a href="{{ request()->fullUrlWithQuery(['status' => 'frozen', 'page' => 1]) }}"
-               class="inline-flex items-center gap-2 px-4 py-2 rounded-full text-[10px] sm:text-[11px] font-black uppercase tracking-wider transition-all {{ $currentStatus === 'frozen' ? 'bg-black text-white shadow-sm' : 'bg-white text-gray-700 border border-gray-200 hover:bg-gray-50' }}">
-                <span>FROZEN</span>
-                <span class="px-2 py-0.5 rounded-full text-[9px] font-black {{ $currentStatus === 'frozen' ? 'bg-white/20 text-white' : 'bg-gray-100 text-gray-600' }}">{{ $counts['frozen'] ?? 0 }}</span>
-            </a>
-        </div>
-
-        {{-- Search Input --}}
-        <form method="GET" class="flex items-center gap-2">
+        {{-- Search Input (Below title) --}}
+        <form method="GET" class="flex items-center gap-2 max-w-sm sm:max-w-md">
             @if(request('status'))
                 <input type="hidden" name="status" value="{{ request('status') }}">
             @endif
-            <div class="relative w-full sm:w-64">
-                <input type="text" name="search" value="{{ request('search') }}" placeholder="Search customers..." 
-                       class="w-full pl-9 pr-4 py-2 bg-white border border-gray-200 rounded-full text-xs text-gray-800 placeholder:text-gray-400 focus:outline-none focus:border-[#C0422A]">
+            <div class="relative w-full">
+                <input type="text" name="search" value="{{ request('search') }}" placeholder="Search customers by name, email..." 
+                       class="w-full pl-9 pr-4 py-2.5 bg-white border border-gray-200 rounded-full text-xs text-gray-800 placeholder:text-gray-400 focus:outline-none focus:border-[#C0422A] shadow-xs">
                 <svg class="w-4 h-4 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
             </div>
             @if(request('search'))
                 <a href="{{ request()->fullUrlWithQuery(['search' => null, 'page' => 1]) }}" class="px-3 py-2 bg-gray-100 hover:bg-gray-200 text-gray-600 rounded-full text-[10px] font-bold">Clear</a>
             @endif
         </form>
+    </div>
+
+    @php
+        $currentStatus = request('status');
+    @endphp
+
+    {{-- Filter Pills --}}
+    <div class="flex items-center gap-2 overflow-x-auto no-scrollbar pt-1">
+        {{-- ALL --}}
+        <a href="{{ request()->fullUrlWithQuery(['status' => null, 'page' => 1]) }}"
+           class="inline-flex items-center gap-2 px-4 py-2 rounded-full text-[10px] sm:text-[11px] font-black uppercase tracking-wider transition-all {{ empty($currentStatus) ? 'bg-black text-white shadow-sm' : 'bg-white text-gray-700 border border-gray-200 hover:bg-gray-50' }}">
+            <span>ALL</span>
+            <span class="px-2 py-0.5 rounded-full text-[9px] font-black {{ empty($currentStatus) ? 'bg-white/20 text-white' : 'bg-gray-100 text-gray-600' }}">{{ $counts['all'] ?? $users->total() }}</span>
+        </a>
+
+        {{-- ACTIVE --}}
+        <a href="{{ request()->fullUrlWithQuery(['status' => 'active', 'page' => 1]) }}"
+           class="inline-flex items-center gap-2 px-4 py-2 rounded-full text-[10px] sm:text-[11px] font-black uppercase tracking-wider transition-all {{ $currentStatus === 'active' ? 'bg-black text-white shadow-sm' : 'bg-white text-gray-700 border border-gray-200 hover:bg-gray-50' }}">
+            <span>ACTIVE</span>
+            <span class="px-2 py-0.5 rounded-full text-[9px] font-black {{ $currentStatus === 'active' ? 'bg-white/20 text-white' : 'bg-gray-100 text-gray-600' }}">{{ $counts['active'] ?? 0 }}</span>
+        </a>
+
+        {{-- BLOCKED / BANNED --}}
+        <a href="{{ request()->fullUrlWithQuery(['status' => 'blocked', 'page' => 1]) }}"
+           class="inline-flex items-center gap-2 px-4 py-2 rounded-full text-[10px] sm:text-[11px] font-black uppercase tracking-wider transition-all {{ $currentStatus === 'blocked' ? 'bg-black text-white shadow-sm' : 'bg-white text-gray-700 border border-gray-200 hover:bg-gray-50' }}">
+            <span>BLOCKED</span>
+            <span class="px-2 py-0.5 rounded-full text-[9px] font-black {{ $currentStatus === 'blocked' ? 'bg-white/20 text-white' : 'bg-gray-100 text-gray-600' }}">{{ $counts['blocked'] ?? 0 }}</span>
+        </a>
+
+        {{-- FROZEN --}}
+        <a href="{{ request()->fullUrlWithQuery(['status' => 'frozen', 'page' => 1]) }}"
+           class="inline-flex items-center gap-2 px-4 py-2 rounded-full text-[10px] sm:text-[11px] font-black uppercase tracking-wider transition-all {{ $currentStatus === 'frozen' ? 'bg-black text-white shadow-sm' : 'bg-white text-gray-700 border border-gray-200 hover:bg-gray-50' }}">
+            <span>FROZEN</span>
+            <span class="px-2 py-0.5 rounded-full text-[9px] font-black {{ $currentStatus === 'frozen' ? 'bg-white/20 text-white' : 'bg-gray-100 text-gray-600' }}">{{ $counts['frozen'] ?? 0 }}</span>
+        </a>
     </div>
 
     {{-- Table --}}
