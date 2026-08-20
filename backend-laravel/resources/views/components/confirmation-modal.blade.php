@@ -31,7 +31,7 @@
     <div @click="isOpen = false" class="absolute inset-0 bg-black/60 backdrop-blur-sm"></div>
     
     <!-- Modal Container -->
-    <div class="bg-white w-full max-w-sm rounded-3xl shadow-xl relative z-10 overflow-hidden border border-gray-100">
+    <div class="bg-white w-full max-w-sm rounded-3xl shadow-none relative z-10 overflow-hidden border border-gray-200">
         <div class="p-6 sm:p-8 text-center flex flex-col items-center">
             
             <!-- Icon Container -->
