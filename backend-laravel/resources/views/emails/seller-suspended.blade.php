@@ -12,9 +12,9 @@
 </div>
 
 <p>While your account is suspended, your product listings are hidden from the marketplace catalog, and access to seller tools is temporarily paused.</p>
-<p>If you believe this was done in error or would like to submit an appeal with additional verification documents, please contact our support team.</p>
+<p>If you believe this was done in error or would like to submit an appeal with additional verification documents, please email our support team directly at <a href="mailto:lumbarongsupport@gmail.com" style="color: #c0420a; font-weight: bold; text-decoration: underline;">lumbarongsupport@gmail.com</a>.</p>
 
 <div class="button-wrapper">
-    <a href="{{ url('/contact') }}" class="btn-primary">Contact Artisan Support</a>
+    <a href="mailto:lumbarongsupport@gmail.com?subject=Artisan%20Account%20Appeal%20-%20{{ urlencode($shopName) }}" class="btn-primary">Email Support (lumbarongsupport@gmail.com)</a>
 </div>
 @endsection

@@ -11,9 +11,9 @@
     <p style="margin: 0; color: #3f3f46; font-weight: 600; font-size: 14px;">{{ $reason }}</p>
 </div>
 
-<p>All active listings and shop profile data have been purged from the platform registry. If you have questions regarding this deletion, you may reach out to our platform team.</p>
+<p>All active listings and shop profile data have been purged from the platform registry. If you have questions regarding this deletion, please email our support desk at <a href="mailto:lumbarongsupport@gmail.com" style="color: #c0420a; font-weight: bold; text-decoration: underline;">lumbarongsupport@gmail.com</a>.</p>
 
 <div class="button-wrapper">
-    <a href="{{ url('/contact') }}" class="btn-primary">Contact Platform Support</a>
+    <a href="mailto:lumbarongsupport@gmail.com?subject=Artisan%20Account%20Inquiry%20-%20{{ urlencode($shopName) }}" class="btn-primary">Email Support (lumbarongsupport@gmail.com)</a>
 </div>
 @endsection

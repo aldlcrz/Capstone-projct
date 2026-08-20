@@ -11,5 +11,5 @@
     <a href="{{ url('/seller/dashboard') }}" class="btn-primary">Go to Seller Dashboard</a>
 </div>
 
-<p style="font-size: 12px; color: #71717a; margin-top: 24px;">If you have any questions or need assistance setting up your products, feel free to reply directly or contact our artisan support desk.</p>
+<p style="font-size: 12px; color: #71717a; margin-top: 24px;">If you have any questions or need assistance setting up your products, feel free to email our artisan support team at <a href="mailto:lumbarongsupport@gmail.com" style="color: #c0420a; font-weight: bold; text-decoration: underline;">lumbarongsupport@gmail.com</a>.</p>
 @endsection
