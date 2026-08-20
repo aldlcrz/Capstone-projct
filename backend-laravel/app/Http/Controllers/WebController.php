@@ -306,7 +306,13 @@ class WebController extends Controller
      */
     public function sellerShop(string $id)
     {
-        $seller = User::where('id', $id)->where('role', 'seller')->firstOrFail();
+        $seller = User::where('role', 'seller')
+            ->where(function($q) use ($id) {
+                $q->where('id', $id)
+                  ->orWhere('shopName', $id)
+                  ->orWhere('shopName', urldecode($id));
+            })
+            ->firstOrFail();
 
         return view('shops.show', ['id' => $seller->id]);
     }

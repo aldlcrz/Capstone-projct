@@ -33,6 +33,7 @@ use Illuminate\Support\Facades\Route;
 Route::get('/', [WebController::class, 'index'])->name('home');
 Route::get('/products/{id}', [WebController::class, 'productDetails'])->name('products.show');
 Route::get('/shops/{id}', [WebController::class, 'sellerShop'])->name('shops.show');
+Route::get('/shop/{id}', [WebController::class, 'sellerShop'])->name('shop.show');
 
 // Public Pages
 Route::get('/about', function() { return view('pages.about'); })->name('about');
