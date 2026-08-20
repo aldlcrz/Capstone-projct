@@ -178,6 +178,7 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->group(function () {
     Route::get('/products', [AdminController::class, 'products'])->name('admin.products');
     Route::match(['post', 'patch'], '/products/{id}/approve', [AdminController::class, 'approveProductWeb'])->name('admin.products.approve');
     Route::match(['post', 'patch'], '/products/{id}/reject', [AdminController::class, 'rejectProductWeb'])->name('admin.products.reject');
+    Route::delete('/products/{id}', [AdminController::class, 'deleteProductWeb'])->name('admin.products.delete');
 
     // Categories
     Route::get('/categories', [AdminCategoryController::class, 'index'])->name('admin.categories.index');

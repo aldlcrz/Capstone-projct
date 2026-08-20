@@ -1014,17 +1014,32 @@ class AdminController extends Controller
     public function products(Request $request)
     {
         $status = $request->input('status', 'pending');
-        $query  = Product::with('seller:id,name,email')->orderBy('createdAt', 'desc');
+        $search = trim($request->input('search', ''));
+        $query  = Product::with(['seller:id,name,email,shopName', 'category:id,name'])->orderBy('createdAt', 'desc');
+        
+        if ($search) {
+            $query->where(function($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%")
+                  ->orWhere('description', 'like', "%{$search}%")
+                  ->orWhereHas('seller', function($sq) use ($search) {
+                      $sq->where('name', 'like', "%{$search}%")
+                        ->orWhere('shopName', 'like', "%{$search}%");
+                  });
+            });
+        }
+
         if ($status && $status !== 'all') {
             $query->where('status', $status);
         }
+
         $products = $query->paginate(12);
         $counts = [
             'pending'  => Product::where('status', 'pending')->count(),
             'approved' => Product::where('status', 'approved')->count(),
             'rejected' => Product::where('status', 'rejected')->count(),
+            'all'      => Product::count(),
         ];
-        return view('admin.products', compact('products', 'counts'));
+        return view('admin.products', compact('products', 'counts', 'status', 'search'));
     }
 
     public function approveProductWeb(string $id)
@@ -1074,7 +1089,7 @@ class AdminController extends Controller
     {
         $product = Product::with('seller')->findOrFail($id);
         $product->status          = 'rejected';
-        $product->rejectionReason = $request->reason ?? 'Rejected by admin.';
+        $product->rejectionReason = $request->input('reason', 'Rejected by admin.');
         $product->save();
 
         $this->sendNotification($product->sellerId, 'Product Rejected', "Your product \"{$product->name}\" was rejected. Reason: {$product->rejectionReason}", 'product_rejected', '/seller/products', 'seller');
@@ -1085,7 +1100,58 @@ class AdminController extends Controller
             \App\Services\EmailNotificationService::sendNotification($product->seller->email, $mailable, 'product_rejected', $product->sellerId, 'Product', $product->id);
         }
 
-        return redirect()->back()->with('success', 'Product rejected.');
+        return redirect()->back()->with('success', 'Product rejected and email notification sent to seller.');
+    }
+
+    public function deleteProductWeb(Request $request, string $id)
+    {
+        try {
+            $product = Product::with('seller')->findOrFail($id);
+            $reason = $request->input('reason', 'Administrative deletion');
+            $productName = $product->name;
+            $seller = $product->seller;
+
+            // In-app notification to seller
+            try {
+                if ($product->sellerId) {
+                    $this->sendNotification(
+                        $product->sellerId,
+                        'Product Listing Removed',
+                        "Your product \"{$productName}\" was permanently removed by an administrator. Reason: {$reason}",
+                        'product_deleted',
+                        '/seller/products',
+                        'seller'
+                    );
+                }
+            } catch (\Throwable $ne) {
+                Log::warning('Notification error on deleteProductWeb: ' . $ne->getMessage());
+            }
+
+            // Gmail/Email to Seller
+            if ($seller && $seller->email) {
+                try {
+                    $mailable = new \App\Mail\ProductDeletedMail($seller->name, $productName, $reason);
+                    \App\Services\EmailNotificationService::sendNotification(
+                        $seller->email,
+                        $mailable,
+                        'product_deleted',
+                        $seller->id,
+                        'Product',
+                        $product->id
+                    );
+                } catch (\Throwable $me) {
+                    Log::warning('Email sending failed on deleteProductWeb: ' . $me->getMessage());
+                }
+            }
+
+            Log::info("Product [{$product->id} - {$productName}] deleted by admin. Reason: {$reason}");
+            $product->delete();
+
+            return redirect()->back()->with('success', "Product '{$productName}' deleted successfully and notification sent.");
+        } catch (\Throwable $e) {
+            Log::error('deleteProductWeb fatal error: ' . $e->getMessage());
+            return redirect()->back()->with('error', 'Error deleting product: ' . $e->getMessage());
+        }
     }
 
     public function emailLogs()
