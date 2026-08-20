@@ -76,10 +76,10 @@
         $currentStatus = request('status', 'pending');
     @endphp
 
-    {{-- Filter Pills & Search Bar --}}
-    <div class="flex flex-col md:flex-row md:items-center justify-between gap-3 pt-1">
+    {{-- Filter Pills & Search Bar Grouped Together --}}
+    <div class="flex flex-wrap items-center gap-3 pt-1">
         {{-- Pill Filters --}}
-        <div class="flex items-center gap-2 overflow-x-auto no-scrollbar pb-1">
+        <div class="flex items-center gap-2 overflow-x-auto no-scrollbar pb-0.5">
             {{-- ALL --}}
             <a href="{{ request()->fullUrlWithQuery(['status' => null, 'page' => 1]) }}"
                class="inline-flex items-center gap-2 px-4 py-2 rounded-full text-[10px] sm:text-[11px] font-black uppercase tracking-wider transition-all {{ empty($currentStatus) || $currentStatus === 'all' ? 'bg-black text-white shadow-sm' : 'bg-white text-gray-700 border border-gray-200 hover:bg-gray-50' }}">
@@ -109,13 +109,13 @@
             </a>
         </div>
 
-        {{-- Search Input --}}
+        {{-- Search Input (Right next to pills) --}}
         <form method="GET" class="flex items-center gap-2">
             @if(request('status'))
                 <input type="hidden" name="status" value="{{ request('status') }}">
             @endif
-            <div class="relative w-full sm:w-64">
-                <input type="text" name="search" value="{{ request('search') }}" placeholder="Search products or artisans..." 
+            <div class="relative w-56 sm:w-64">
+                <input type="text" name="search" value="{{ request('search') }}" placeholder="Search products, artisans..." 
                        class="w-full pl-9 pr-4 py-2 bg-white border border-gray-200 rounded-full text-xs text-gray-800 placeholder:text-gray-400 focus:outline-none focus:border-[#C0422A]">
                 <svg class="w-4 h-4 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
             </div>
