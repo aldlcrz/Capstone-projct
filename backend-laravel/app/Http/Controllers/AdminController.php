@@ -753,8 +753,27 @@ class AdminController extends Controller
             $user->isVerified = true;
             $user->status     = 'active';
             $user->save();
+            
             $this->sendNotification($user->id, 'Seller Verified', 'Your artisan workshop is now verified!', 'system', '/seller/dashboard', 'seller');
-            return redirect()->route('admin.sellers')->with('success', 'Seller verified.');
+
+            // Send Gmail/Email Notification to Seller
+            if ($user->email) {
+                try {
+                    $mailable = new \App\Mail\SellerApprovedMail($user->name, $user->shopName);
+                    \App\Services\EmailNotificationService::sendNotification(
+                        $user->email,
+                        $mailable,
+                        'seller_approved',
+                        $user->id,
+                        'User',
+                        $user->id
+                    );
+                } catch (\Throwable $me) {
+                    Log::warning('Email sending failed for seller approval: ' . $me->getMessage());
+                }
+            }
+
+            return redirect()->route('admin.sellers')->with('success', 'Seller verified and email notification sent.');
         } catch (\Throwable $e) {
             return redirect()->route('admin.sellers')->with('error', 'Error verifying seller: ' . $e->getMessage());
         }
@@ -797,6 +816,23 @@ class AdminController extends Controller
                 Log::warning('Notification error on suspendSeller: ' . $e->getMessage());
             }
 
+            // Send Gmail/Email Notification to Seller
+            if ($user->email) {
+                try {
+                    $mailable = new \App\Mail\SellerSuspendedMail($user->name, $user->shopName, $reason);
+                    \App\Services\EmailNotificationService::sendNotification(
+                        $user->email,
+                        $mailable,
+                        'seller_suspended',
+                        $user->id,
+                        'User',
+                        $user->id
+                    );
+                } catch (\Throwable $me) {
+                    Log::warning('Email sending failed for seller suspension: ' . $me->getMessage());
+                }
+            }
+
             // Invalidate active web and API sessions immediately
             try {
                 if (\Illuminate\Support\Facades\Schema::hasTable('sessions')) {
@@ -809,7 +845,7 @@ class AdminController extends Controller
                 Log::warning('Session deletion error on suspendSeller: ' . $e->getMessage());
             }
 
-            return redirect()->route('admin.sellers')->with('success', 'Seller account suspended successfully.');
+            return redirect()->route('admin.sellers')->with('success', 'Seller account suspended successfully and notification sent.');
         } catch (\Throwable $e) {
             Log::error('suspendSeller fatal error: ' . $e->getMessage());
             return redirect()->route('admin.sellers')->with('error', 'Error suspending seller: ' . $e->getMessage());
@@ -837,7 +873,24 @@ class AdminController extends Controller
                 Log::warning('Notification error on unsuspendSeller: ' . $e->getMessage());
             }
 
-            return redirect()->route('admin.sellers')->with('success', 'Seller account restored.');
+            // Send Gmail/Email Notification to Seller
+            if ($user->email) {
+                try {
+                    $mailable = new \App\Mail\SellerRestoredMail($user->name, $user->shopName);
+                    \App\Services\EmailNotificationService::sendNotification(
+                        $user->email,
+                        $mailable,
+                        'seller_restored',
+                        $user->id,
+                        'User',
+                        $user->id
+                    );
+                } catch (\Throwable $me) {
+                    Log::warning('Email sending failed for seller restore: ' . $me->getMessage());
+                }
+            }
+
+            return redirect()->route('admin.sellers')->with('success', 'Seller account restored and notification sent.');
         } catch (\Throwable $e) {
             return redirect()->route('admin.sellers')->with('error', 'Error restoring seller: ' . $e->getMessage());
         }
@@ -850,11 +903,30 @@ class AdminController extends Controller
             $reason = $request->input('reason', 'Administrative deletion');
             $sellerName = $user->name;
             $sellerEmail = $user->email;
+            $shopName = $user->shopName;
+            $sellerId = $user->id;
+
+            // Send Gmail/Email Notification to Seller before deletion
+            if ($sellerEmail) {
+                try {
+                    $mailable = new \App\Mail\SellerDeletedMail($sellerName, $shopName, $reason);
+                    \App\Services\EmailNotificationService::sendNotification(
+                        $sellerEmail,
+                        $mailable,
+                        'seller_deleted',
+                        $sellerId,
+                        'User',
+                        $sellerId
+                    );
+                } catch (\Throwable $me) {
+                    Log::warning('Email sending failed for seller deletion: ' . $me->getMessage());
+                }
+            }
 
             // Invalidate active web and API sessions immediately
             try {
                 if (\Illuminate\Support\Facades\Schema::hasTable('sessions')) {
-                    DB::table('sessions')->where('user_id', $user->id)->delete();
+                    DB::table('sessions')->where('user_id', $sellerId)->delete();
                 }
                 if (method_exists($user, 'tokens')) {
                     $user->tokens()->delete();
@@ -863,10 +935,10 @@ class AdminController extends Controller
                 Log::warning('Session deletion error on deleteSeller: ' . $e->getMessage());
             }
 
-            Log::info("Seller [{$user->id} - {$sellerName} ({$sellerEmail})] permanently deleted by admin. Reason: {$reason}");
+            Log::info("Seller [{$sellerId} - {$sellerName} ({$sellerEmail})] permanently deleted by admin. Reason: {$reason}");
 
             $user->delete();
-            return redirect()->route('admin.sellers')->with('success', "Seller {$sellerName} permanently deleted.");
+            return redirect()->route('admin.sellers')->with('success', "Seller {$sellerName} permanently deleted and notification sent.");
         } catch (\Throwable $e) {
             Log::error('deleteSeller fatal error: ' . $e->getMessage());
             return redirect()->route('admin.sellers')->with('error', 'Error deleting seller: ' . $e->getMessage());
