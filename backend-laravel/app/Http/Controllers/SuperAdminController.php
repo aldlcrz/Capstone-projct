@@ -613,9 +613,27 @@ class SuperAdminController extends Controller
     public function banCustomer(Request $request, string $id)
     {
         $customer = User::findOrFail($id);
+        $reason = $request->input('reason', 'Administrative action by Super Admin');
         $customer->status = 'blocked';
-        $customer->violationReason = $request->input('reason', 'Administrative action by Super Admin');
+        $customer->violationReason = $reason;
         $customer->save();
+
+        // Gmail / Email notification
+        if ($customer->email) {
+            try {
+                $mailable = new \App\Mail\CustomerBannedMail($customer->name, $reason);
+                \App\Services\EmailNotificationService::sendNotification(
+                    $customer->email,
+                    $mailable,
+                    'customer_banned',
+                    $customer->id,
+                    'User',
+                    $customer->id
+                );
+            } catch (\Throwable $me) {
+                Log::warning('Email sending failed on banCustomer: ' . $me->getMessage());
+            }
+        }
 
         // Invalidate active web and API sessions immediately
         try {
@@ -627,7 +645,7 @@ class SuperAdminController extends Controller
             }
         } catch (\Throwable $e) {}
 
-        return redirect()->route('superadmin.customers')->with('success', "Customer account '{$customer->name}' has been banned.");
+        return redirect()->route('superadmin.customers')->with('success', "Customer account '{$customer->name}' has been banned and notification sent.");
     }
 
     public function unbanCustomer(string $id)
@@ -637,7 +655,24 @@ class SuperAdminController extends Controller
         $customer->violationReason = null;
         $customer->save();
 
-        return redirect()->route('superadmin.customers')->with('success', "Customer account '{$customer->name}' has been unbanned.");
+        // Gmail / Email notification
+        if ($customer->email) {
+            try {
+                $mailable = new \App\Mail\CustomerRestoredMail($customer->name);
+                \App\Services\EmailNotificationService::sendNotification(
+                    $customer->email,
+                    $mailable,
+                    'customer_restored',
+                    $customer->id,
+                    'User',
+                    $customer->id
+                );
+            } catch (\Throwable $me) {
+                Log::warning('Email sending failed on unbanCustomer: ' . $me->getMessage());
+            }
+        }
+
+        return redirect()->route('superadmin.customers')->with('success', "Customer account '{$customer->name}' has been unbanned and notification sent.");
     }
 
     // ─── Maintenance Mode & 1-Click Cache Utility ─────────────────────────────

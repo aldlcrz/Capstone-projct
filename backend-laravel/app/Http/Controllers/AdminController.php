@@ -646,18 +646,7 @@ class AdminController extends Controller
             $user->violationReason = $reason;
             $user->save();
 
-            // Invalidate active web and API sessions immediately
-            try {
-                if (\Illuminate\Support\Facades\Schema::hasTable('sessions')) {
-                    DB::table('sessions')->where('user_id', $user->id)->delete();
-                }
-                if (method_exists($user, 'tokens')) {
-                    $user->tokens()->delete();
-                }
-            } catch (\Throwable $e) {
-                Log::warning('Session deletion error on banUser: ' . $e->getMessage());
-            }
-
+            // In-app notification
             try {
                 $this->sendNotification(
                     $user->id,
@@ -671,7 +660,36 @@ class AdminController extends Controller
                 Log::warning('Notification error on banUser: ' . $e->getMessage());
             }
 
-            return redirect()->route('admin.users')->with('success', 'User account banned successfully.');
+            // Gmail / Email notification
+            if ($user->email) {
+                try {
+                    $mailable = new \App\Mail\CustomerBannedMail($user->name, $reason);
+                    \App\Services\EmailNotificationService::sendNotification(
+                        $user->email,
+                        $mailable,
+                        'customer_banned',
+                        $user->id,
+                        'User',
+                        $user->id
+                    );
+                } catch (\Throwable $me) {
+                    Log::warning('Email sending failed on banUser: ' . $me->getMessage());
+                }
+            }
+
+            // Invalidate active web and API sessions immediately
+            try {
+                if (\Illuminate\Support\Facades\Schema::hasTable('sessions')) {
+                    DB::table('sessions')->where('user_id', $user->id)->delete();
+                }
+                if (method_exists($user, 'tokens')) {
+                    $user->tokens()->delete();
+                }
+            } catch (\Throwable $e) {
+                Log::warning('Session deletion error on banUser: ' . $e->getMessage());
+            }
+
+            return redirect()->route('admin.users')->with('success', 'Customer account banned and email notification sent.');
         } catch (\Throwable $e) {
             Log::error('banUser fatal error: ' . $e->getMessage());
             return redirect()->route('admin.users')->with('error', 'Error banning account: ' . $e->getMessage());
@@ -685,24 +703,72 @@ class AdminController extends Controller
             $user->status = 'active';
             $user->violationReason = null;
             $user->save();
-            return redirect()->route('admin.users')->with('success', 'User restored.');
+
+            // Gmail / Email notification
+            if ($user->email) {
+                try {
+                    $mailable = new \App\Mail\CustomerRestoredMail($user->name);
+                    \App\Services\EmailNotificationService::sendNotification(
+                        $user->email,
+                        $mailable,
+                        'customer_restored',
+                        $user->id,
+                        'User',
+                        $user->id
+                    );
+                } catch (\Throwable $me) {
+                    Log::warning('Email sending failed on unbanUser: ' . $me->getMessage());
+                }
+            }
+
+            return redirect()->route('admin.users')->with('success', 'Customer account restored and notification sent.');
         } catch (\Throwable $e) {
             Log::error('unbanUser fatal error: ' . $e->getMessage());
             return redirect()->route('admin.users')->with('error', 'Error restoring account: ' . $e->getMessage());
         }
     }
 
-    public function deleteUser(string $id)
+    public function deleteUser(Request $request, string $id)
     {
         try {
             $user = User::findOrFail($id);
+            $reason = $request->input('reason', 'Administrative deletion');
+            $customerName = $user->name;
+            $customerEmail = $user->email;
+            $customerId = $user->id;
+
+            // Gmail / Email notification before deletion
+            if ($customerEmail) {
+                try {
+                    $mailable = new \App\Mail\CustomerDeletedMail($customerName, $reason);
+                    \App\Services\EmailNotificationService::sendNotification(
+                        $customerEmail,
+                        $mailable,
+                        'customer_deleted',
+                        $customerId,
+                        'User',
+                        $customerId
+                    );
+                } catch (\Throwable $me) {
+                    Log::warning('Email sending failed on deleteUser: ' . $me->getMessage());
+                }
+            }
+
             try {
                 if (\Illuminate\Support\Facades\Schema::hasTable('sessions')) {
-                    DB::table('sessions')->where('user_id', $user->id)->delete();
+                    DB::table('sessions')->where('user_id', $customerId)->delete();
                 }
-            } catch (\Throwable $e) {}
+                if (method_exists($user, 'tokens')) {
+                    $user->tokens()->delete();
+                }
+            } catch (\Throwable $e) {
+                Log::warning('Session deletion error on deleteUser: ' . $e->getMessage());
+            }
+
+            Log::info("Customer [{$customerId} - {$customerName} ({$customerEmail})] permanently deleted by admin. Reason: {$reason}");
+
             $user->delete();
-            return redirect()->route('admin.users')->with('success', 'User deleted.');
+            return redirect()->route('admin.users')->with('success', "Customer {$customerName} permanently deleted and notification sent.");
         } catch (\Throwable $e) {
             Log::error('deleteUser fatal error: ' . $e->getMessage());
             return redirect()->route('admin.users')->with('error', 'Error deleting user: ' . $e->getMessage());
