@@ -130,19 +130,25 @@ class AdminCategoryController extends Controller
         return redirect()->back()->with('success', 'Category updated successfully.');
     }
 
-    public function destroy(string $id)
+    public function destroy(Request $request, string $id)
     {
         $category = Category::findOrFail($id);
 
         // Check if category has products
-        // Note: Category model has products relationship
         if ($category->products()->count() > 0) {
             return redirect()->back()->with('error', 'Cannot delete category with active products.');
         }
 
+        // Archive before deleting
+        try {
+            \App\Models\ArchivedRecord::archive('category', $category, $request->input('reason', 'Administrative deletion'));
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::warning('Archive error on category destroy: ' . $e->getMessage());
+        }
+
         $category->delete();
 
-        return redirect()->back()->with('success', 'Category deleted successfully.');
+        return redirect()->back()->with('success', 'Category deleted and archived successfully.');
     }
 
     /**

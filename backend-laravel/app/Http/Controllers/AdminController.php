@@ -765,10 +765,17 @@ class AdminController extends Controller
                 Log::warning('Session deletion error on deleteUser: ' . $e->getMessage());
             }
 
+            // Archive customer before permanent deletion
+            try {
+                \App\Models\ArchivedRecord::archive('customer', $user, $reason);
+            } catch (\Throwable $ae) {
+                Log::warning('Archive error on deleteUser: ' . $ae->getMessage());
+            }
+
             Log::info("Customer [{$customerId} - {$customerName} ({$customerEmail})] permanently deleted by admin. Reason: {$reason}");
 
             $user->delete();
-            return redirect()->route('admin.users')->with('success', "Customer {$customerName} permanently deleted and notification sent.");
+            return redirect()->route('admin.users')->with('success', "Customer {$customerName} permanently deleted, archived, and notification sent.");
         } catch (\Throwable $e) {
             Log::error('deleteUser fatal error: ' . $e->getMessage());
             return redirect()->route('admin.users')->with('error', 'Error deleting user: ' . $e->getMessage());
@@ -1001,10 +1008,17 @@ class AdminController extends Controller
                 Log::warning('Session deletion error on deleteSeller: ' . $e->getMessage());
             }
 
+            // Archive seller before permanent deletion
+            try {
+                \App\Models\ArchivedRecord::archive('seller', $user, $reason);
+            } catch (\Throwable $ae) {
+                Log::warning('Archive error on deleteSeller: ' . $ae->getMessage());
+            }
+
             Log::info("Seller [{$sellerId} - {$sellerName} ({$sellerEmail})] permanently deleted by admin. Reason: {$reason}");
 
             $user->delete();
-            return redirect()->route('admin.sellers')->with('success', "Seller {$sellerName} permanently deleted and notification sent.");
+            return redirect()->route('admin.sellers')->with('success', "Seller {$sellerName} permanently deleted, archived, and notification sent.");
         } catch (\Throwable $e) {
             Log::error('deleteSeller fatal error: ' . $e->getMessage());
             return redirect()->route('admin.sellers')->with('error', 'Error deleting seller: ' . $e->getMessage());
@@ -1144,13 +1158,137 @@ class AdminController extends Controller
                 }
             }
 
+            // Archive record before permanent deletion
+            try {
+                \App\Models\ArchivedRecord::archive('product', $product, $reason);
+            } catch (\Throwable $ae) {
+                Log::warning('Archive error on deleteProductWeb: ' . $ae->getMessage());
+            }
+
             Log::info("Product [{$product->id} - {$productName}] deleted by admin. Reason: {$reason}");
             $product->delete();
 
-            return redirect()->back()->with('success', "Product '{$productName}' deleted successfully and notification sent.");
+            return redirect()->back()->with('success', "Product '{$productName}' deleted, archived, and notification sent.");
         } catch (\Throwable $e) {
             Log::error('deleteProductWeb fatal error: ' . $e->getMessage());
             return redirect()->back()->with('error', 'Error deleting product: ' . $e->getMessage());
+        }
+    }
+
+    public function archives(Request $request)
+    {
+        $type   = $request->input('type', 'all');
+        $search = trim($request->input('search', ''));
+
+        $query = \App\Models\ArchivedRecord::orderBy('created_at', 'desc');
+
+        if ($type && $type !== 'all') {
+            $query->where('item_type', $type);
+        }
+
+        if ($search) {
+            $query->where(function($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%")
+                  ->orWhere('identifier', 'like', "%{$search}%")
+                  ->orWhere('reason', 'like', "%{$search}%")
+                  ->orWhere('archived_by', 'like', "%{$search}%");
+            });
+        }
+
+        $archives = $query->paginate(15);
+
+        $counts = [
+            'all'      => \App\Models\ArchivedRecord::count(),
+            'product'  => \App\Models\ArchivedRecord::where('item_type', 'product')->count(),
+            'category' => \App\Models\ArchivedRecord::where('item_type', 'category')->count(),
+            'customer' => \App\Models\ArchivedRecord::where('item_type', 'customer')->count(),
+            'seller'   => \App\Models\ArchivedRecord::where('item_type', 'seller')->count(),
+        ];
+
+        return view('admin.archives.index', compact('archives', 'counts', 'type', 'search'));
+    }
+
+    public function restoreArchive(string $id)
+    {
+        try {
+            $record = \App\Models\ArchivedRecord::findOrFail($id);
+            $type = $record->item_type;
+            $meta = $record->metadata ?? [];
+
+            if ($type === 'product') {
+                if (!empty($record->item_id) && Product::find($record->item_id)) {
+                    return redirect()->back()->with('error', 'A product with this ID is already active in the catalog.');
+                }
+                Product::create([
+                    'id'                  => $record->item_id ?: (string) \Illuminate\Support\Str::uuid(),
+                    'name'                => $meta['name'] ?? $record->name,
+                    'description'         => $meta['description'] ?? null,
+                    'price'               => $meta['price'] ?? 0,
+                    'costPerPiece'        => $meta['costPerPiece'] ?? 0,
+                    'stock'               => $meta['stock'] ?? 0,
+                    'sizes'               => $meta['sizes'] ?? null,
+                    'categories'          => $meta['categories'] ?? null,
+                    'image'               => $meta['image'] ?? null,
+                    'sellerId'            => $meta['sellerId'] ?? null,
+                    'status'              => 'pending',
+                    'sku'                 => $meta['sku'] ?? null,
+                    'fabric_type'         => $meta['fabric_type'] ?? null,
+                    'collar_type'         => $meta['collar_type'] ?? null,
+                    'artisan_region'      => $meta['artisan_region'] ?? null,
+                    'CategoryId'          => $meta['CategoryId'] ?? null,
+                    'target_group'        => $meta['target_group'] ?? null,
+                    'size_stocks'         => $meta['size_stocks'] ?? null,
+                    'is_on_sale'          => $meta['is_on_sale'] ?? false,
+                    'discount_percentage' => $meta['discount_percentage'] ?? 0,
+                ]);
+            } elseif ($type === 'category') {
+                $catName = $meta['name'] ?? $record->name;
+                if (\App\Models\Category::whereRaw('LOWER(TRIM(name)) = ?', [strtolower(trim($catName))])->exists()) {
+                    return redirect()->back()->with('error', 'A category with this name already exists.');
+                }
+                \App\Models\Category::create([
+                    'id'           => $record->item_id ?: (string) \Illuminate\Support\Str::uuid(),
+                    'name'         => $catName,
+                    'description'  => $meta['description'] ?? null,
+                    'target_group' => $meta['target_group'] ?? [],
+                    'image'        => $meta['image'] ?? '/uploads/categories/pina_formal.png',
+                ]);
+            } elseif ($type === 'customer' || $type === 'seller') {
+                $email = $meta['email'] ?? $record->identifier;
+                if ($email && User::where('email', $email)->exists()) {
+                    return redirect()->back()->with('error', "A user with email {$email} already exists in the system.");
+                }
+                User::create([
+                    'id'           => $record->item_id ?: (string) \Illuminate\Support\Str::uuid(),
+                    'name'         => $meta['name'] ?? $record->name,
+                    'email'        => $email,
+                    'password'     => $meta['password'] ?? bcrypt(\Illuminate\Support\Str::random(16)),
+                    'role'         => $type === 'seller' ? 'seller' : 'customer',
+                    'status'       => 'active',
+                    'shopName'     => $meta['shopName'] ?? null,
+                    'mobileNumber' => $meta['mobileNumber'] ?? null,
+                    'isVerified'   => $meta['isVerified'] ?? ($type === 'seller' ? false : true),
+                    'profilePhoto' => $meta['profilePhoto'] ?? null,
+                ]);
+            }
+
+            $record->delete();
+            return redirect()->back()->with('success', "Archived {$type} '{$record->name}' restored successfully.");
+        } catch (\Throwable $e) {
+            Log::error('restoreArchive error: ' . $e->getMessage());
+            return redirect()->back()->with('error', 'Error restoring record: ' . $e->getMessage());
+        }
+    }
+
+    public function purgeArchive(string $id)
+    {
+        try {
+            $record = \App\Models\ArchivedRecord::findOrFail($id);
+            $name = $record->name;
+            $record->delete();
+            return redirect()->back()->with('success', "Archived record '{$name}' permanently purged.");
+        } catch (\Throwable $e) {
+            return redirect()->back()->with('error', 'Error purging record: ' . $e->getMessage());
         }
     }
 

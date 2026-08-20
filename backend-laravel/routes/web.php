@@ -204,6 +204,11 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->group(function () {
     Route::patch('/reports/{id}/resolve', [AdminController::class, 'resolveReport'])->name('admin.reports.resolve');
     Route::delete('/reports/{id}', [AdminController::class, 'deleteReport'])->name('admin.reports.delete');
 
+    // Archive Hub
+    Route::get('/archives', [AdminController::class, 'archives'])->name('admin.archives');
+    Route::post('/archives/{id}/restore', [AdminController::class, 'restoreArchive'])->name('admin.archives.restore');
+    Route::delete('/archives/{id}', [AdminController::class, 'purgeArchive'])->name('admin.archives.purge');
+
     // Admin Notifications
     Route::get('/notifications', [AdminController::class, 'notifications'])->name('admin.notifications.index');
     Route::post('/notifications/read-all', [AdminController::class, 'readAllNotifications'])->name('admin.notifications.read-all');
