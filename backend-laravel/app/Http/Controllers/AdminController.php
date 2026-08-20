@@ -722,12 +722,17 @@ class AdminController extends Controller
             });
         }
 
-        if ($request->filter === 'verified') {
-            $query->where('isVerified', true)->where('status', '!=', 'blocked');
-        } elseif ($request->filter === 'pending') {
+        $filter = $request->filter;
+
+        if ($filter === 'pending') {
             $query->where('isVerified', false)->where('status', '!=', 'blocked');
-        } elseif ($request->filter === 'suspended') {
+        } elseif ($filter === 'suspended') {
             $query->where('status', 'blocked');
+        } elseif ($filter === 'all') {
+            // all sellers
+        } else {
+            // Default view (Approved Sellers): strictly only verified/approved sellers
+            $query->where('isVerified', true)->where('status', '!=', 'blocked');
         }
 
         $sellers = $query->orderBy('createdAt', 'desc')->paginate(20);

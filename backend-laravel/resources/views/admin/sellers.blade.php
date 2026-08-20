@@ -148,18 +148,11 @@
     <div class="flex flex-col md:flex-row md:items-center justify-between gap-3 pt-1">
         {{-- Pill Filters --}}
         <div class="flex items-center gap-2 overflow-x-auto no-scrollbar pb-1">
-            {{-- ALL --}}
+            {{-- APPROVED / VERIFIED (Default View) --}}
             <a href="{{ request()->fullUrlWithQuery(['filter' => null, 'page' => 1]) }}"
-               class="inline-flex items-center gap-2 px-4 py-2 rounded-full text-[10px] sm:text-[11px] font-black uppercase tracking-wider transition-all {{ empty($currentFilter) ? 'bg-black text-white shadow-sm' : 'bg-white text-gray-700 border border-gray-200 hover:bg-gray-50' }}">
-                <span>ALL</span>
-                <span class="px-2 py-0.5 rounded-full text-[9px] font-black {{ empty($currentFilter) ? 'bg-white/20 text-white' : 'bg-gray-100 text-gray-600' }}">{{ $counts['all'] }}</span>
-            </a>
-
-            {{-- VERIFIED --}}
-            <a href="{{ request()->fullUrlWithQuery(['filter' => 'verified', 'page' => 1]) }}"
-               class="inline-flex items-center gap-2 px-4 py-2 rounded-full text-[10px] sm:text-[11px] font-black uppercase tracking-wider transition-all {{ $currentFilter === 'verified' ? 'bg-black text-white shadow-sm' : 'bg-white text-gray-700 border border-gray-200 hover:bg-gray-50' }}">
-                <span>VERIFIED</span>
-                <span class="px-2 py-0.5 rounded-full text-[9px] font-black {{ $currentFilter === 'verified' ? 'bg-white/20 text-white' : 'bg-gray-100 text-gray-600' }}">{{ $counts['verified'] }}</span>
+               class="inline-flex items-center gap-2 px-4 py-2 rounded-full text-[10px] sm:text-[11px] font-black uppercase tracking-wider transition-all {{ (empty($currentFilter) || $currentFilter === 'verified') ? 'bg-black text-white shadow-sm' : 'bg-white text-gray-700 border border-gray-200 hover:bg-gray-50' }}">
+                <span>APPROVED</span>
+                <span class="px-2 py-0.5 rounded-full text-[9px] font-black {{ (empty($currentFilter) || $currentFilter === 'verified') ? 'bg-white/20 text-white' : 'bg-gray-100 text-gray-600' }}">{{ $counts['verified'] }}</span>
             </a>
 
             {{-- PENDING --}}
@@ -174,6 +167,13 @@
                class="inline-flex items-center gap-2 px-4 py-2 rounded-full text-[10px] sm:text-[11px] font-black uppercase tracking-wider transition-all {{ $currentFilter === 'suspended' ? 'bg-black text-white shadow-sm' : 'bg-white text-gray-700 border border-gray-200 hover:bg-gray-50' }}">
                 <span>SUSPENDED</span>
                 <span class="px-2 py-0.5 rounded-full text-[9px] font-black {{ $currentFilter === 'suspended' ? 'bg-white/20 text-white' : 'bg-gray-100 text-gray-600' }}">{{ $counts['suspended'] }}</span>
+            </a>
+
+            {{-- ALL --}}
+            <a href="{{ request()->fullUrlWithQuery(['filter' => 'all', 'page' => 1]) }}"
+               class="inline-flex items-center gap-2 px-4 py-2 rounded-full text-[10px] sm:text-[11px] font-black uppercase tracking-wider transition-all {{ $currentFilter === 'all' ? 'bg-black text-white shadow-sm' : 'bg-white text-gray-700 border border-gray-200 hover:bg-gray-50' }}">
+                <span>ALL</span>
+                <span class="px-2 py-0.5 rounded-full text-[9px] font-black {{ $currentFilter === 'all' ? 'bg-white/20 text-white' : 'bg-gray-100 text-gray-600' }}">{{ $counts['all'] }}</span>
             </a>
         </div>
 
@@ -246,10 +246,20 @@
     </div>
     @endif
 
-    {{-- All Sellers Table --}}
+    {{-- Sellers Table --}}
     <div class="bg-white rounded-3xl border border-gray-100 shadow-sm overflow-hidden">
         <div class="px-6 py-4 border-b border-gray-50 flex items-center justify-between">
-            <h3 class="text-sm font-black uppercase tracking-widest text-black">All Sellers</h3>
+            <h3 class="text-sm font-black uppercase tracking-widest text-black">
+                @if($currentFilter === 'pending')
+                    Pending Sellers (Awaiting Verification)
+                @elseif($currentFilter === 'suspended')
+                    Suspended Sellers
+                @elseif($currentFilter === 'all')
+                    All Sellers Registry
+                @else
+                    Approved Sellers
+                @endif
+            </h3>
         </div>
         <div class="overflow-x-auto no-scrollbar">
             <table class="w-full text-left min-w-160">

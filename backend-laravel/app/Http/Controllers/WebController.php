@@ -134,7 +134,8 @@ class WebController extends Controller
 
         try {
             $dbSellers = User::where('role', 'seller')
-                ->orWhereHas('products')
+                ->where('isVerified', true)
+                ->where('status', '!=', 'blocked')
                 ->get();
 
             foreach ($dbSellers as $seller) {
