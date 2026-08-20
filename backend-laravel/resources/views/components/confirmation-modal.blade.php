@@ -31,7 +31,7 @@
     <div @click="isOpen = false" class="absolute inset-0 bg-black/60 backdrop-blur-sm"></div>
     
     <!-- Modal Container -->
-    <div class="bg-white w-full max-w-sm rounded-3xl shadow-2xl relative z-10 overflow-hidden border border-gray-100">
+    <div class="bg-white w-full max-w-sm rounded-3xl shadow-xl relative z-10 overflow-hidden border border-gray-100">
         <div class="p-6 sm:p-8 text-center flex flex-col items-center">
             
             <!-- Icon Container -->
@@ -39,7 +39,7 @@
                 'bg-red-50 border-red-100 text-red-600': type === 'danger',
                 'bg-amber-50 border-amber-100 text-amber-600': type === 'warning',
                 'bg-orange-50 border-orange-100 text-[#C0420A]': type === 'info'
-            }" class="w-16 h-16 rounded-2xl border flex items-center justify-center mb-5 shadow-sm">
+            }" class="w-16 h-16 rounded-2xl border flex items-center justify-center mb-5">
                 <template x-if="type === 'danger'">
                     <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path>
@@ -68,7 +68,7 @@
                 <button 
                     type="button"
                     @click="isOpen = false" 
-                    class="flex-1 py-3 px-4 text-xs font-bold text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-xl transition-all"
+                    class="flex-1 py-3 px-4 text-xs font-bold text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-xl transition-all cursor-pointer"
                 >
                     <span x-text="cancelText"></span>
                 </button>
@@ -77,22 +77,15 @@
                     type="button"
                     @click="if(onConfirm) onConfirm(); isOpen = false" 
                     :class="{
-                        'bg-red-600 hover:bg-red-700 text-white shadow-red-200': type === 'danger',
-                        'bg-amber-600 hover:bg-amber-700 text-white shadow-amber-200': type === 'warning',
-                        'bg-[#C0420A] hover:bg-[#a53808] text-white shadow-orange-200': type === 'info'
+                        'bg-red-600 hover:bg-red-700 text-white': type === 'danger',
+                        'bg-amber-600 hover:bg-amber-700 text-white': type === 'warning',
+                        'bg-[#C0420A] hover:bg-[#a53808] text-white': type === 'info'
                     }" 
-                    class="flex-1 py-3 px-4 text-xs font-bold text-white rounded-xl transition-all shadow-md hover:shadow-lg active:scale-95"
+                    class="flex-1 py-3 px-4 text-xs font-bold text-white rounded-xl transition-all active:scale-95 cursor-pointer shadow-none border-0"
                 >
                     <span x-text="confirmText"></span>
                 </button>
             </div>
         </div>
-        
-        <!-- Bottom Accent Bar -->
-        <div :class="{
-            'bg-red-500': type === 'danger',
-            'bg-amber-500': type === 'warning',
-            'bg-[#C0420A]': type === 'info'
-        }" class="h-1.5 w-full"></div>
     </div>
 </div>
