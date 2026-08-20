@@ -143,7 +143,7 @@
                                     type: 'danger', 
                                     onConfirm: () => $refs.logoutForm.submit() 
                                 })" 
-                                class="flex items-center gap-3 w-full px-4 py-3.5 bg-red-50 text-red-600 rounded-xl hover:bg-red-100 transition-all font-bold text-xs tracking-widest uppercase">
+                                class="flex items-center gap-3 w-full px-4 py-3.5 bg-red-50 text-red-600 rounded-xl hover:bg-red-100 transition-all font-bold text-xs tracking-widest uppercase shadow-none border-0 cursor-pointer">
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path></svg>
                             Logout
                         </button>
@@ -310,7 +310,7 @@
                                                 type: 'danger',
                                                 onConfirm: () => $refs.dropdownLogoutForm.submit()
                                             })"
-                                            class="flex items-center justify-center gap-2 w-full py-2 bg-red-50 text-red-600 rounded-xl hover:bg-red-100 transition-all font-bold text-[10px] tracking-widest uppercase cursor-pointer">
+                                            class="flex items-center justify-center gap-2 w-full py-2 bg-red-50 text-red-600 rounded-xl hover:bg-red-100 transition-all font-bold text-[10px] tracking-widest uppercase cursor-pointer shadow-none border-0">
                                         <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path></svg>
                                         Logout
                                     </button>
@@ -504,7 +504,7 @@
                                             type: 'danger',
                                             onConfirm: () => $refs.mobileBottomLogoutForm.submit()
                                         })"
-                                        class="flex items-center justify-center gap-2 w-full py-2 bg-red-50 text-red-600 rounded-xl font-bold text-[10px] tracking-widest uppercase cursor-pointer">
+                                        class="flex items-center justify-center gap-2 w-full py-2 bg-red-50 text-red-600 rounded-xl font-bold text-[10px] tracking-widest uppercase cursor-pointer shadow-none border-0 hover:bg-red-100 transition-all">
                                     <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path></svg>
                                     Logout
                                 </button>
