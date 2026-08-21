@@ -599,30 +599,30 @@
         </div>
     </div>
 
-    {{-- ─── Shopee-Style Inspection & Hover-Zoom Modal ─── --}}
+    {{-- ─── Simple Standalone Hover-Zoom Modal ─── --}}
     <div 
         x-show="showZoomModal" 
         x-cloak
         style="display: none; z-index: 99999;"
-        class="fixed inset-0 flex items-center justify-center p-3 sm:p-6 bg-black/60 backdrop-blur-xs select-none"
+        class="fixed inset-0 flex items-center justify-center p-3 sm:p-6 bg-black/65 backdrop-blur-xs select-none"
         @keydown.window.escape="closeZoomModal()"
         @click.self="closeZoomModal()"
     >
-        <div class="relative w-full max-w-4xl bg-white rounded-2xl shadow-2xl overflow-hidden flex flex-col md:flex-row border border-gray-200">
+        <div class="relative w-full max-w-2xl bg-white rounded-2xl shadow-2xl overflow-hidden border border-gray-200 flex flex-col">
             
             <!-- Close Button (Top Right of Modal) -->
             <button 
                 type="button" 
                 @click="closeZoomModal()"
-                class="absolute top-3 right-3 z-30 w-8 h-8 rounded-full bg-gray-100 hover:bg-gray-200 text-gray-700 flex items-center justify-center transition-colors cursor-pointer"
+                class="absolute top-3 right-3 z-30 w-8 h-8 rounded-full bg-white/90 hover:bg-white text-gray-800 shadow-md flex items-center justify-center transition-all cursor-pointer border border-gray-200"
                 title="Close (Esc)"
             >
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
             </button>
 
-            <!-- Left Side: Large Zoom Viewer -->
+            <!-- Large Zoom Viewer -->
             <div 
-                class="relative flex-1 aspect-square sm:aspect-4/5 bg-gray-50 overflow-hidden cursor-crosshair min-h-[340px] sm:min-h-[440px]"
+                class="relative w-full aspect-square sm:aspect-4/5 bg-gray-50 overflow-hidden cursor-crosshair min-h-[350px] sm:min-h-[460px]"
                 @mousemove="handleModalMouseMove($event)"
                 @mouseleave="handleModalMouseLeave()"
                 @touchstart="handleModalTouch($event)"
@@ -651,32 +651,19 @@
                 </div>
             </div>
 
-            <!-- Right Side: Product Title & Variation Thumbnails Grid -->
-            <div class="w-full md:w-72 sm:w-80 p-5 sm:p-6 flex flex-col justify-start bg-white border-t md:border-t-0 md:border-l border-gray-100">
-                <!-- Title -->
-                <h3 class="text-sm sm:text-base font-extrabold text-gray-900 leading-snug mb-4 pr-6">
-                    {{ $product->name }}
-                </h3>
-
-                <!-- Thumbnails Label -->
-                <div class="text-[11px] font-bold uppercase tracking-wider text-gray-400 mb-3 flex items-center justify-between">
-                    <span>Product Angles</span>
-                    <span class="text-gray-900 font-extrabold" x-text="(activeImage + 1) + ' of ' + variations.length"></span>
-                </div>
-
-                <!-- 2-3 Column Thumbnail Grid -->
-                <div class="grid grid-cols-4 md:grid-cols-3 gap-2.5 overflow-y-auto max-h-72 no-scrollbar p-0.5">
-                    <template x-for="(variation, index) in variations" :key="index">
-                        <div 
-                            @mouseenter="activeImage = index; selectedVariation = index"
-                            @click="activeImage = index; selectedVariation = index"
-                            class="aspect-square rounded-lg overflow-hidden border-2 transition-all cursor-pointer bg-gray-50"
-                            :class="activeImage === index ? 'border-[#C0420A] ring-2 ring-[#C0420A]/20 scale-98' : 'border-gray-200 hover:border-gray-400 opacity-70 hover:opacity-100'"
-                        >
-                            <img :src="imageUrl(variation.url)" class="w-full h-full object-cover">
-                        </div>
-                    </template>
-                </div>
+            <!-- Bottom Thumbnails Strip (if multiple photos) -->
+            <div class="p-3 bg-white border-t border-gray-100 flex items-center justify-center gap-2 overflow-x-auto no-scrollbar" x-show="variations && variations.length > 1">
+                <template x-for="(variation, index) in variations" :key="index">
+                    <button 
+                        type="button"
+                        @click="activeImage = index; selectedVariation = index"
+                        @mouseenter="activeImage = index; selectedVariation = index"
+                        class="w-12 h-14 rounded-lg overflow-hidden border-2 transition-all cursor-pointer shrink-0"
+                        :class="activeImage === index ? 'border-[#C0420A] scale-105 shadow-sm' : 'border-gray-200 opacity-60 hover:opacity-100'"
+                    >
+                        <img :src="imageUrl(variation.url)" class="w-full h-full object-cover">
+                    </button>
+                </template>
             </div>
         </div>
     </div>
