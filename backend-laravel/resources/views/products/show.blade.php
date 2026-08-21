@@ -68,209 +68,48 @@
             selectedVariation: 0,
             showSizeGuide: false,
             
-            // ─── Luxury Darkroom Inspection State ───
-            showLightbox: false,
-            lightboxScale: 1,
-            panX: 0,
-            panY: 0,
-            isDragging: false,
-            dragStartX: 0,
-            dragStartY: 0,
-            initialPanX: 0,
-            initialPanY: 0,
-            touchStartDist: 0,
-            touchStartScale: 1,
-            touchStartX: 0,
-            touchStartY: 0,
-            lastTapTime: 0,
+            // ─── Shopee-Style Hover Zoom Inspection State ───
+            showZoomModal: false,
+            zoomOriginX: 50,
+            zoomOriginY: 50,
+            isZoomed: false,
 
-            openLightbox(idx) {
+            openZoomModal(idx) {
                 if (idx !== undefined) {
                     this.activeImage = idx;
                     this.selectedVariation = idx;
                 }
-                this.resetZoom();
-                this.showLightbox = true;
+                this.isZoomed = false;
+                this.zoomOriginX = 50;
+                this.zoomOriginY = 50;
+                this.showZoomModal = true;
                 document.body.style.overflow = 'hidden';
             },
-            closeLightbox() {
-                this.showLightbox = false;
-                this.resetZoom();
+            closeZoomModal() {
+                this.showZoomModal = false;
+                this.isZoomed = false;
                 document.body.style.overflow = '';
             },
-            resetZoom() {
-                this.lightboxScale = 1;
-                this.panX = 0;
-                this.panY = 0;
-                this.isDragging = false;
-            },
-            setZoom(newScale, targetX, targetY) {
-                const clampedScale = Math.min(Math.max(Number(newScale), 1), 5);
-                if (clampedScale <= 1.02) {
-                    this.resetZoom();
-                    return;
-                }
-                
-                if (targetX !== undefined && targetY !== undefined) {
-                    const factor = clampedScale / this.lightboxScale;
-                    this.panX = (this.panX - targetX) * factor + targetX;
-                    this.panY = (this.panY - targetY) * factor + targetY;
-                }
-                
-                this.lightboxScale = Number(clampedScale.toFixed(2));
-                this.clampPan();
-            },
-            zoomIn() {
-                this.setZoom(this.lightboxScale + 0.5);
-            },
-            zoomOut() {
-                this.setZoom(this.lightboxScale - 0.5);
-            },
-            clampPan() {
-                if (this.lightboxScale <= 1.05) {
-                    this.panX = 0;
-                    this.panY = 0;
-                    return;
-                }
-                const maxPanX = (window.innerWidth * (this.lightboxScale - 1)) / 1.6;
-                const maxPanY = (window.innerHeight * (this.lightboxScale - 1)) / 1.6;
-                this.panX = Math.min(Math.max(this.panX, -maxPanX), maxPanX);
-                this.panY = Math.min(Math.max(this.panY, -maxPanY), maxPanY);
-            },
-            prevImage() {
-                if (!this.variations || this.variations.length <= 1) return;
-                this.activeImage = (this.activeImage - 1 + this.variations.length) % this.variations.length;
-                this.selectedVariation = this.activeImage;
-                this.resetZoom();
-            },
-            nextImage() {
-                if (!this.variations || this.variations.length <= 1) return;
-                this.activeImage = (this.activeImage + 1) % this.variations.length;
-                this.selectedVariation = this.activeImage;
-                this.resetZoom();
-            },
-            
-            // ─── Mouse & Keyboard Event Handlers ───
-            handleWheel(e) {
-                e.preventDefault();
+            handleModalMouseMove(e) {
                 const rect = e.currentTarget.getBoundingClientRect();
-                const mouseX = e.clientX - (rect.left + rect.width / 2);
-                const mouseY = e.clientY - (rect.top + rect.height / 2);
-                const delta = e.deltaY < 0 ? 0.35 : -0.35;
-                this.setZoom(this.lightboxScale + delta, mouseX, mouseY);
+                const x = ((e.clientX - rect.left) / rect.width) * 100;
+                const y = ((e.clientY - rect.top) / rect.height) * 100;
+                this.zoomOriginX = Math.min(Math.max(x, 0), 100).toFixed(2);
+                this.zoomOriginY = Math.min(Math.max(y, 0), 100).toFixed(2);
+                this.isZoomed = true;
             },
-            handleMouseDown(e) {
-                if (this.lightboxScale <= 1.05) return;
-                this.isDragging = true;
-                this.dragStartX = e.clientX;
-                this.dragStartY = e.clientY;
-                this.initialPanX = this.panX;
-                this.initialPanY = this.panY;
+            handleModalMouseLeave() {
+                this.isZoomed = false;
             },
-            handleMouseMove(e) {
-                if (!this.isDragging || this.lightboxScale <= 1.05) return;
-                const dx = e.clientX - this.dragStartX;
-                const dy = e.clientY - this.dragStartY;
-                this.panX = this.initialPanX + dx;
-                this.panY = this.initialPanY + dy;
-                this.clampPan();
-            },
-            handleMouseUp() {
-                this.isDragging = false;
-            },
-            handleDoubleClick(e) {
-                if (this.lightboxScale > 1.2) {
-                    this.resetZoom();
-                } else {
+            handleModalTouch(e) {
+                if (e.touches && e.touches.length > 0) {
                     const rect = e.currentTarget.getBoundingClientRect();
-                    const targetX = e.clientX - (rect.left + rect.width / 2);
-                    const targetY = e.clientY - (rect.top + rect.height / 2);
-                    this.setZoom(2.5, targetX, targetY);
-                }
-            },
-            
-            // ─── Touch / Mobile Event Handlers ───
-            handleTouchStart(e) {
-                if (e.touches.length === 2) {
-                    this.touchStartDist = Math.hypot(
-                        e.touches[0].clientX - e.touches[1].clientX,
-                        e.touches[0].clientY - e.touches[1].clientY
-                    );
-                    this.touchStartScale = this.lightboxScale;
-                } else if (e.touches.length === 1) {
-                    const now = Date.now();
                     const touch = e.touches[0];
-                    if (now - this.lastTapTime < 300) {
-                        e.preventDefault();
-                        if (this.lightboxScale > 1.2) {
-                            this.resetZoom();
-                        } else {
-                            const rect = e.currentTarget.getBoundingClientRect();
-                            const targetX = touch.clientX - (rect.left + rect.width / 2);
-                            const targetY = touch.clientY - (rect.top + rect.height / 2);
-                            this.setZoom(2.5, targetX, targetY);
-                        }
-                    } else {
-                        this.touchStartX = touch.clientX;
-                        this.touchStartY = touch.clientY;
-                        this.initialPanX = this.panX;
-                        this.initialPanY = this.panY;
-                    }
-                    this.lastTapTime = now;
-                }
-            },
-            handleTouchMove(e) {
-                if (e.touches.length === 2 && this.touchStartDist > 0) {
-                    e.preventDefault();
-                    const dist = Math.hypot(
-                        e.touches[0].clientX - e.touches[1].clientX,
-                        e.touches[0].clientY - e.touches[1].clientY
-                    );
-                    const factor = dist / this.touchStartDist;
-                    this.setZoom(this.touchStartScale * factor);
-                } else if (e.touches.length === 1) {
-                    const touch = e.touches[0];
-                    const dx = touch.clientX - this.touchStartX;
-                    const dy = touch.clientY - this.touchStartY;
-                    
-                    if (this.lightboxScale > 1.05) {
-                        e.preventDefault();
-                        this.panX = this.initialPanX + dx;
-                        this.panY = this.initialPanY + dy;
-                        this.clampPan();
-                    }
-                }
-            },
-            handleTouchEnd(e) {
-                if (e.touches.length === 0 && this.lightboxScale <= 1.05 && this.touchStartX) {
-                    const touch = e.changedTouches[0];
-                    const dx = touch.clientX - this.touchStartX;
-                    const dy = touch.clientY - this.touchStartY;
-                    if (Math.abs(dx) > 60 && Math.abs(dy) < 50) {
-                        if (dx > 0) {
-                            this.prevImage();
-                        } else {
-                            this.nextImage();
-                        }
-                    }
-                    this.touchStartX = 0;
-                }
-                this.touchStartDist = 0;
-            },
-            handleKeydown(e) {
-                if (!this.showLightbox) return;
-                if (e.key === 'Escape') {
-                    this.closeLightbox();
-                } else if (e.key === 'r' || e.key === 'R' || e.key === '0') {
-                    this.resetZoom();
-                } else if (e.key === '+' || e.key === '=') {
-                    this.zoomIn();
-                } else if (e.key === '-' || e.key === '_') {
-                    this.zoomOut();
-                } else if (e.key === 'ArrowLeft' && this.lightboxScale <= 1.05) {
-                    this.prevImage();
-                } else if (e.key === 'ArrowRight' && this.lightboxScale <= 1.05) {
-                    this.nextImage();
+                    const x = ((touch.clientX - rect.left) / rect.width) * 100;
+                    const y = ((touch.clientY - rect.top) / rect.height) * 100;
+                    this.zoomOriginX = Math.min(Math.max(x, 0), 100).toFixed(2);
+                    this.zoomOriginY = Math.min(Math.max(y, 0), 100).toFixed(2);
+                    this.isZoomed = true;
                 }
             },
             selectedColorName: 'Off-White',
@@ -450,8 +289,8 @@
                 <!-- Main Image Display Box with Direct Click-to-Zoom Inspection -->
                 <div 
                     class="flex-1 min-w-0 w-full relative aspect-4/5 bg-gray-50 rounded-2xl overflow-hidden border border-gray-100 shadow-xs group select-none cursor-zoom-in"
-                    @click="openLightbox(activeImage)"
-                    title="Click to zoom in and inspect details"
+                    @click="openZoomModal(activeImage)"
+                    title="Click to inspect and zoom"
                 >
                     <!-- Main Image Display -->
                     <template x-for="(variation, index) in variations" :key="index">
@@ -760,148 +599,84 @@
         </div>
     </div>
 
-    {{-- ─── Luxury Darkroom Fabric & Embroidery Inspection Engine ─── --}}
+    {{-- ─── Shopee-Style Inspection & Hover-Zoom Modal ─── --}}
     <div 
-        x-show="showLightbox" 
+        x-show="showZoomModal" 
         x-cloak
-        style="display: none; background-color: #09090b; z-index: 99999;"
-        class="fixed inset-0 flex flex-col justify-between p-3 sm:p-5 select-none overflow-hidden"
+        style="display: none; z-index: 99999;"
+        class="fixed inset-0 flex items-center justify-center p-3 sm:p-6 bg-black/60 backdrop-blur-xs select-none"
+        @keydown.window.escape="closeZoomModal()"
+        @click.self="closeZoomModal()"
     >
-        <!-- Top Toolbar Header -->
-        <div class="w-full flex items-center justify-between gap-3 z-30 shrink-0 px-4 py-2.5 bg-neutral-900/90 border border-white/15 rounded-2xl shadow-2xl backdrop-blur-xl">
-            <div class="flex items-center gap-2.5 min-w-0">
-                <span class="text-xs sm:text-sm font-black text-white tracking-tight truncate max-w-[150px] sm:max-w-md">{{ $product->name }}</span>
-                <span class="text-[10px] font-black px-2.5 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/30 shrink-0" x-text="'Angle ' + (activeImage + 1) + ' of ' + variations.length"></span>
-                <span class="hidden md:inline-flex text-[11px] text-gray-400 font-medium ml-2">
-                    💡 Scroll or double-click to zoom • Drag to pan fabric
-                </span>
-            </div>
-
-            <!-- Header Quick Actions -->
-            <div class="flex items-center gap-2 shrink-0">
-                <button 
-                    type="button" 
-                    @click="closeLightbox()" 
-                    class="h-8 sm:h-9 px-3 rounded-xl bg-red-600/90 hover:bg-red-600 active:scale-95 text-white flex items-center gap-1.5 transition-all cursor-pointer shadow-md text-xs font-bold" 
-                    title="Close Inspector (Esc)"
-                >
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
-                    <span class="hidden sm:inline">Close (Esc)</span>
-                </button>
-            </div>
-        </div>
-
-        <!-- Center Image Viewport (Wheel, Drag & Touch Canvas) -->
-        <div 
-            class="relative flex-1 w-full h-full flex items-center justify-center overflow-hidden my-2"
-            @wheel.prevent="handleWheel($event)"
-            @mousedown="handleMouseDown($event)"
-            @mousemove.window="handleMouseMove($event)"
-            @mouseup.window="handleMouseUp()"
-            @dblclick="handleDoubleClick($event)"
-            @touchstart="handleTouchStart($event)"
-            @touchmove="handleTouchMove($event)"
-            @touchend="handleTouchEnd($event)"
-        >
-            <!-- Left Arrow (visible when at overview zoom) -->
+        <div class="relative w-full max-w-4xl bg-white rounded-2xl shadow-2xl overflow-hidden flex flex-col md:flex-row border border-gray-200">
+            
+            <!-- Close Button (Top Right of Modal) -->
             <button 
                 type="button" 
-                @click="prevImage()" 
-                x-show="variations.length > 1 && lightboxScale <= 1.05" 
-                class="absolute left-2 sm:left-4 z-20 w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-neutral-900/80 hover:bg-neutral-800 active:bg-neutral-700 text-white flex items-center justify-center border border-white/20 transition-all cursor-pointer shadow-2xl"
-                title="Previous photo (←)"
+                @click="closeZoomModal()"
+                class="absolute top-3 right-3 z-30 w-8 h-8 rounded-full bg-gray-100 hover:bg-gray-200 text-gray-700 flex items-center justify-center transition-colors cursor-pointer"
+                title="Close (Esc)"
             >
-                <svg class="w-5 h-5 sm:w-6 sm:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 19l-7-7 7-7"/></svg>
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
             </button>
 
-            <!-- Zoomable & Pannable High-Res Image Container -->
+            <!-- Left Side: Large Zoom Viewer -->
             <div 
-                class="w-full h-full flex items-center justify-center pointer-events-none select-none"
+                class="relative flex-1 aspect-square sm:aspect-4/5 bg-gray-50 overflow-hidden cursor-crosshair min-h-[340px] sm:min-h-[440px]"
+                @mousemove="handleModalMouseMove($event)"
+                @mouseleave="handleModalMouseLeave()"
+                @touchstart="handleModalTouch($event)"
+                @touchmove.prevent="handleModalTouch($event)"
+                @touchend="handleModalMouseLeave()"
             >
                 <template x-for="(variation, index) in variations" :key="index">
                     <img 
                         x-show="activeImage === index"
                         :src="imageUrl(variation.url)"
                         onerror="this.src='/uploads/products/default.jpg'"
-                        class="max-h-[70vh] sm:max-h-[76vh] max-w-full rounded-2xl object-contain pointer-events-auto select-none will-change-transform shadow-2xl"
-                        :class="isDragging ? 'transition-none' : 'transition-transform duration-150 ease-out'"
-                        :style="{ 
-                            transform: 'translate3d(' + panX + 'px, ' + panY + 'px, 0) scale3d(' + lightboxScale + ', ' + lightboxScale + ', 1)',
-                            cursor: lightboxScale > 1.05 ? (isDragging ? 'grabbing' : 'grab') : 'zoom-in'
-                        }"
+                        class="w-full h-full object-contain pointer-events-none transition-transform duration-75 ease-out"
+                        :class="isZoomed ? 'scale-[2.4]' : 'scale-100'"
+                        :style="isZoomed ? { transformOrigin: `${zoomOriginX}% ${zoomOriginY}%` } : {}"
                         alt="{{ $product->name }}"
                     >
                 </template>
-            </div>
 
-            <!-- Right Arrow (visible when at overview zoom) -->
-            <button 
-                type="button" 
-                @click="nextImage()" 
-                x-show="variations.length > 1 && lightboxScale <= 1.05" 
-                class="absolute right-2 sm:right-4 z-20 w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-neutral-900/80 hover:bg-neutral-800 active:bg-neutral-700 text-white flex items-center justify-center border border-white/20 transition-all cursor-pointer shadow-2xl"
-                title="Next photo (→)"
-            >
-                <svg class="w-5 h-5 sm:w-6 sm:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5l7 7-7 7"/></svg>
-            </button>
-        </div>
-
-        <!-- Bottom Controls HUD & Thumbnail Strip -->
-        <div class="w-full flex flex-col items-center gap-2 z-30 shrink-0">
-            <!-- Floating Zoom HUD Controls -->
-            <div class="flex items-center gap-2 px-3 py-1.5 bg-neutral-900/90 border border-white/15 rounded-2xl shadow-2xl backdrop-blur-xl">
-                <!-- Zoom Out Button -->
-                <button 
-                    type="button" 
-                    @click="zoomOut()" 
-                    :disabled="lightboxScale <= 1"
-                    class="w-8 h-8 rounded-xl bg-white/10 hover:bg-white/20 active:bg-white/30 disabled:opacity-30 disabled:cursor-not-allowed text-white flex items-center justify-center transition-all cursor-pointer border border-white/10" 
-                    title="Zoom Out (-)"
+                <!-- Subtle Hover Zoom Helper -->
+                <div 
+                    x-show="!isZoomed" 
+                    class="absolute bottom-3 left-3 px-2.5 py-1 rounded-md bg-black/60 text-white text-[11px] font-medium pointer-events-none flex items-center gap-1.5"
                 >
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M20 12H4"/></svg>
-                </button>
-                
-                <!-- Zoom Percentage Indicator -->
-                <div class="px-2.5 py-1 bg-black/60 rounded-xl border border-white/10 flex items-center gap-1 min-w-[70px] justify-center">
-                    <span class="text-xs font-mono font-black text-white" x-text="Math.round(lightboxScale * 100) + '%'"></span>
+                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m0-3h3m-3 0H7"/></svg>
+                    <span>Move mouse to zoom</span>
                 </div>
-                
-                <!-- Zoom In Button -->
-                <button 
-                    type="button" 
-                    @click="zoomIn()" 
-                    :disabled="lightboxScale >= 5"
-                    class="w-8 h-8 rounded-xl bg-white/10 hover:bg-white/20 active:bg-white/30 disabled:opacity-30 disabled:cursor-not-allowed text-white flex items-center justify-center transition-all cursor-pointer border border-white/10" 
-                    title="Zoom In (+)"
-                >
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/></svg>
-                </button>
-                
-                <!-- Reset Button -->
-                <button 
-                    type="button" 
-                    @click="resetZoom()" 
-                    :disabled="lightboxScale === 1 && panX === 0 && panY === 0"
-                    class="px-2.5 py-1 rounded-xl bg-white/10 hover:bg-white/20 disabled:opacity-30 disabled:cursor-not-allowed text-white text-[11px] font-bold uppercase tracking-wider transition-all cursor-pointer border border-white/10 flex items-center gap-1"
-                    title="Reset to 100% (R)"
-                >
-                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
-                    <span>Reset</span>
-                </button>
             </div>
 
-            <!-- Bottom Thumbnails Strip -->
-            <div class="flex items-center justify-center gap-2 overflow-x-auto no-scrollbar py-1" x-show="variations.length > 1">
-                <template x-for="(variation, index) in variations" :key="index">
-                    <button 
-                        type="button"
-                        @click="activeImage = index; selectedVariation = index; resetZoom();"
-                        class="w-10 h-13 sm:w-12 sm:h-15 rounded-xl overflow-hidden border-2 transition-all cursor-pointer shrink-0 bg-neutral-900 shadow-md"
-                        :class="activeImage === index ? 'border-[#C0420A] scale-105 opacity-100 ring-2 ring-[#C0420A]' : 'border-white/20 opacity-50 hover:opacity-100'"
-                    >
-                        <img :src="imageUrl(variation.url)" class="w-full h-full object-cover">
-                    </button>
-                </template>
+            <!-- Right Side: Product Title & Variation Thumbnails Grid -->
+            <div class="w-full md:w-72 sm:w-80 p-5 sm:p-6 flex flex-col justify-start bg-white border-t md:border-t-0 md:border-l border-gray-100">
+                <!-- Title -->
+                <h3 class="text-sm sm:text-base font-extrabold text-gray-900 leading-snug mb-4 pr-6">
+                    {{ $product->name }}
+                </h3>
+
+                <!-- Thumbnails Label -->
+                <div class="text-[11px] font-bold uppercase tracking-wider text-gray-400 mb-3 flex items-center justify-between">
+                    <span>Product Angles</span>
+                    <span class="text-gray-900 font-extrabold" x-text="(activeImage + 1) + ' of ' + variations.length"></span>
+                </div>
+
+                <!-- 2-3 Column Thumbnail Grid -->
+                <div class="grid grid-cols-4 md:grid-cols-3 gap-2.5 overflow-y-auto max-h-72 no-scrollbar p-0.5">
+                    <template x-for="(variation, index) in variations" :key="index">
+                        <div 
+                            @mouseenter="activeImage = index; selectedVariation = index"
+                            @click="activeImage = index; selectedVariation = index"
+                            class="aspect-square rounded-lg overflow-hidden border-2 transition-all cursor-pointer bg-gray-50"
+                            :class="activeImage === index ? 'border-[#C0420A] ring-2 ring-[#C0420A]/20 scale-98' : 'border-gray-200 hover:border-gray-400 opacity-70 hover:opacity-100'"
+                        >
+                            <img :src="imageUrl(variation.url)" class="w-full h-full object-cover">
+                        </div>
+                    </template>
+                </div>
             </div>
         </div>
     </div>
