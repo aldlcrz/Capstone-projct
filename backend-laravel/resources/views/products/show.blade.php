@@ -608,13 +608,13 @@
         @keydown.window.escape="closeZoomModal()"
         @click.self="closeZoomModal()"
     >
-        <div class="relative w-full max-w-2xl bg-white rounded-2xl shadow-2xl overflow-hidden border border-gray-200 flex flex-col">
+        <div class="relative w-full max-w-2xl bg-black rounded-2xl shadow-2xl overflow-hidden border border-neutral-800 flex flex-col" style="background-color: #000000;">
             
             <!-- Close Button (Top Right of Modal) -->
             <button 
                 type="button" 
                 @click="closeZoomModal()"
-                class="absolute top-3 right-3 z-30 w-8 h-8 rounded-full bg-white/90 hover:bg-white text-gray-800 shadow-md flex items-center justify-center transition-all cursor-pointer border border-gray-200"
+                class="absolute top-3 right-3 z-30 w-8 h-8 rounded-full bg-black/70 hover:bg-black text-white shadow-lg flex items-center justify-center transition-all cursor-pointer border border-white/20"
                 title="Close (Esc)"
             >
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
@@ -622,7 +622,8 @@
 
             <!-- Large Zoom Viewer -->
             <div 
-                class="relative w-full aspect-square sm:aspect-4/5 bg-white overflow-hidden cursor-crosshair min-h-[350px] sm:min-h-[460px]"
+                class="relative w-full aspect-square sm:aspect-4/5 bg-black overflow-hidden cursor-crosshair min-h-[350px] sm:min-h-[460px]"
+                style="background-color: #000000;"
                 @mousemove="handleModalMouseMove($event)"
                 @mouseleave="handleModalMouseLeave()"
                 @touchstart="handleModalTouch($event)"
@@ -644,21 +645,25 @@
                 <!-- Subtle Hover Zoom Helper -->
                 <div 
                     x-show="!isZoomed" 
-                    class="absolute bottom-3 left-3 px-2.5 py-1 rounded-md bg-black/60 text-white text-[11px] font-medium pointer-events-none flex items-center gap-1.5"
+                    class="absolute bottom-3 left-3 px-2.5 py-1 rounded-md bg-black/75 text-white text-[11px] font-medium pointer-events-none flex items-center gap-1.5 border border-white/10"
                 >
                     <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m0-3h3m-3 0H7"/></svg>
                     <span>Move mouse to zoom</span>
                 </div>
             </div>
 
-            <!-- Bottom Thumbnails Strip (Black Footer) -->
-            <div class="p-3 bg-neutral-950 border-t border-neutral-800 flex items-center justify-center gap-2 overflow-x-auto no-scrollbar" x-show="variations && variations.length > 1">
+            <!-- Bottom Thumbnails Strip (Solid Black Footer) -->
+            <div 
+                class="p-3.5 bg-black border-t border-neutral-800 flex items-center justify-center gap-2 overflow-x-auto no-scrollbar" 
+                style="background-color: #000000 !important; background: #000000 !important;" 
+                x-show="variations && variations.length > 1"
+            >
                 <template x-for="(variation, index) in variations" :key="index">
                     <button 
                         type="button"
                         @click="activeImage = index; selectedVariation = index"
                         class="w-12 h-14 rounded-lg overflow-hidden border-2 transition-all cursor-pointer shrink-0 bg-neutral-900 shadow-md"
-                        :class="activeImage === index ? 'border-[#C0420A] ring-2 ring-[#C0420A] scale-105' : 'border-neutral-700 opacity-50 hover:opacity-100'"
+                        :class="activeImage === index ? 'border-[#C0420A] ring-2 ring-[#C0420A] scale-105' : 'border-neutral-700 opacity-60 hover:opacity-100'"
                     >
                         <img :src="imageUrl(variation.url)" class="w-full h-full object-cover">
                     </button>
