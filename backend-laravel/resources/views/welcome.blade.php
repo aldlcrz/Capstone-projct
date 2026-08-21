@@ -671,10 +671,6 @@
             <a href="/#catalogue-section" class="ajax-filter-link px-6 py-2.5 bg-black hover:bg-[#C0422A] text-white text-xs font-bold uppercase tracking-widest rounded-full transition-all shadow-md inline-block">View All Products</a>
         </div>
     @endif
-
-    <div class="mt-4">
-        {{ $products->links() }}
-    </div>
     </div>{{-- End #catalogue-section --}}
 
     {{-- ====== Quick Add to Cart Modal ====== --}}

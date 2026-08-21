@@ -100,7 +100,7 @@ class WebController extends Controller
             $query->orderBy('createdAt', 'desc');
         }
 
-        $products = $query->paginate(15);
+        $products = $query->paginate(100);
         $categories = Category::withCount('products')->get();
         $banners = Banner::live()
             ->orderBy('order_index', 'asc')
