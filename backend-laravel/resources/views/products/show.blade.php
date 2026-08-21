@@ -657,9 +657,8 @@
                     <button 
                         type="button"
                         @click="activeImage = index; selectedVariation = index"
-                        @mouseenter="activeImage = index; selectedVariation = index"
                         class="w-12 h-14 rounded-lg overflow-hidden border-2 transition-all cursor-pointer shrink-0"
-                        :class="activeImage === index ? 'border-[#C0420A] scale-105 shadow-sm' : 'border-gray-200 opacity-60 hover:opacity-100'"
+                        :class="activeImage === index ? 'border-[#C0420A] ring-2 ring-[#C0420A]/20 scale-102 shadow-sm' : 'border-gray-200 opacity-60 hover:opacity-100'"
                     >
                         <img :src="imageUrl(variation.url)" class="w-full h-full object-cover">
                     </button>
