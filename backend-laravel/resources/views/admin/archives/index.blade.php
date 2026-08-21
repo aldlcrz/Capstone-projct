@@ -142,7 +142,7 @@
     @else
         <div class="bg-white rounded-3xl border border-gray-100 shadow-sm overflow-hidden">
             <div class="overflow-x-auto no-scrollbar">
-                <table class="w-full text-left border-collapse min-w-[700px]">
+                <table class="w-full text-left border-collapse min-w-175">
                     <thead>
                         <tr class="bg-gray-50/50 border-b border-gray-100">
                             <th class="px-6 py-4 text-[10px] font-black text-gray-700 uppercase tracking-widest">Type</th>

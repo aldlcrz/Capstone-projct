@@ -622,7 +622,7 @@
 
             <!-- Large Zoom Viewer -->
             <div 
-                class="relative w-full aspect-square sm:aspect-4/5 bg-black overflow-hidden cursor-crosshair min-h-[350px] sm:min-h-[460px]"
+                class="relative w-full aspect-square sm:aspect-4/5 bg-black overflow-hidden cursor-crosshair min-h-87.5 sm:min-h-115"
                 style="background-color: #000000;"
                 @mousemove="handleModalMouseMove($event)"
                 @mouseleave="handleModalMouseLeave()"
