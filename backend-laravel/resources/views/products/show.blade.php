@@ -241,7 +241,7 @@
                     </template>
                 </div>
 
-                <!-- Main Image Display Box with 360 Badge -->
+                <!-- Main Image Display Box with Click-to-Zoom -->
                 <div 
                     class="flex-1 min-w-0 w-full relative aspect-4/5 bg-gray-50 rounded-2xl overflow-hidden border border-gray-100 shadow-xs group select-none"
                     :class="isZoomed ? 'cursor-zoom-out' : 'cursor-zoom-in'"
@@ -280,20 +280,20 @@
                             :src="imageUrl(variation.url)"
                             onerror="this.src='/uploads/products/default.jpg'"
                             class="w-full h-full object-cover object-top"
-                            :class="isZoomed ? 'scale-[2.2] transition-transform duration-100 ease-out' : 'scale-100 transition-transform duration-300 ease-out'"
+                            :class="isZoomed ? 'scale-[2.4] transition-transform duration-100 ease-out' : 'scale-100 transition-transform duration-300 ease-out'"
                             :style="isZoomed ? { transformOrigin: `${originX}% ${originY}%` } : {}"
                             alt="{{ $product->name }}"
                         >
                     </template>
 
-                    <!-- 360 Degree Interactive Badge (Bottom Right) -->
-                    <div class="absolute bottom-4 right-4 z-10 w-11 h-11 rounded-full bg-white/90 backdrop-blur-md border border-gray-200 shadow-md flex items-center justify-center cursor-pointer hover:scale-110 transition-transform" title="360° Interactive View">
-                        <div class="flex flex-col items-center justify-center leading-none text-gray-900">
-                            <span class="text-[9px] font-black tracking-tighter">360°</span>
-                            <svg class="w-3.5 h-3.5 text-gray-800 -mt-0.5" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
-                                <path d="M4 12a8 8 0 0114.93-3M20 12a8 8 0 01-14.93 3"/><path d="M4 12l3-3M4 12l3 3M20 12l-3-3M20 12l-3 3"/>
-                            </svg>
-                        </div>
+                    <!-- Zoom Helper Hint (Bottom Right) -->
+                    <div class="absolute bottom-3.5 right-3.5 z-10 w-9 h-9 rounded-full bg-white/90 backdrop-blur-md border border-gray-200 shadow-sm flex items-center justify-center text-gray-700 pointer-events-none opacity-80 group-hover:opacity-100 transition-opacity" :title="isZoomed ? 'Click to zoom out' : 'Click to zoom in'">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" x-show="!isZoomed">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m0-3h3m-3 0H7"/>
+                        </svg>
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" x-show="isZoomed" style="display: none;">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM13 10H7"/>
+                        </svg>
                     </div>
                 </div>
             </div>
