@@ -651,14 +651,14 @@
                 </div>
             </div>
 
-            <!-- Bottom Thumbnails Strip (if multiple photos) -->
-            <div class="p-3 bg-white border-t border-gray-100 flex items-center justify-center gap-2 overflow-x-auto no-scrollbar" x-show="variations && variations.length > 1">
+            <!-- Bottom Thumbnails Strip (Black Footer) -->
+            <div class="p-3 bg-neutral-950 border-t border-neutral-800 flex items-center justify-center gap-2 overflow-x-auto no-scrollbar" x-show="variations && variations.length > 1">
                 <template x-for="(variation, index) in variations" :key="index">
                     <button 
                         type="button"
                         @click="activeImage = index; selectedVariation = index"
-                        class="w-12 h-14 rounded-lg overflow-hidden border-2 transition-all cursor-pointer shrink-0"
-                        :class="activeImage === index ? 'border-[#C0420A] ring-2 ring-[#C0420A]/20 scale-102 shadow-sm' : 'border-gray-200 opacity-60 hover:opacity-100'"
+                        class="w-12 h-14 rounded-lg overflow-hidden border-2 transition-all cursor-pointer shrink-0 bg-neutral-900 shadow-md"
+                        :class="activeImage === index ? 'border-[#C0420A] ring-2 ring-[#C0420A] scale-105' : 'border-neutral-700 opacity-50 hover:opacity-100'"
                     >
                         <img :src="imageUrl(variation.url)" class="w-full h-full object-cover">
                     </button>
