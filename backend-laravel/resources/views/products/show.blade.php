@@ -67,6 +67,41 @@
             variations: variations || [],
             selectedVariation: 0,
             showSizeGuide: false,
+            showLightbox: false,
+            lightboxScale: 1,
+            openLightbox(idx) {
+                if (idx !== undefined) {
+                    this.activeImage = idx;
+                    this.selectedVariation = idx;
+                }
+                this.lightboxScale = 1;
+                this.showLightbox = true;
+            },
+            closeLightbox() {
+                this.showLightbox = false;
+                this.lightboxScale = 1;
+            },
+            zoomIn() {
+                if (this.lightboxScale < 3.5) this.lightboxScale = Number((this.lightboxScale + 0.5).toFixed(1));
+            },
+            zoomOut() {
+                if (this.lightboxScale > 1) this.lightboxScale = Number((this.lightboxScale - 0.5).toFixed(1));
+            },
+            resetZoom() {
+                this.lightboxScale = 1;
+            },
+            prevImage() {
+                if (!this.variations || this.variations.length <= 1) return;
+                this.activeImage = (this.activeImage - 1 + this.variations.length) % this.variations.length;
+                this.selectedVariation = this.activeImage;
+                this.lightboxScale = 1;
+            },
+            nextImage() {
+                if (!this.variations || this.variations.length <= 1) return;
+                this.activeImage = (this.activeImage + 1) % this.variations.length;
+                this.selectedVariation = this.activeImage;
+                this.lightboxScale = 1;
+            },
             selectedColorName: 'Off-White',
             isWishlisted: isWishlistedInitial,
             colorSwatches: [
@@ -241,37 +276,11 @@
                     </template>
                 </div>
 
-                <!-- Main Image Display Box with Click-to-Zoom -->
+                <!-- Main Image Display Box with Direct Click-to-Zoom Inspection -->
                 <div 
-                    class="flex-1 min-w-0 w-full relative aspect-4/5 bg-gray-50 rounded-2xl overflow-hidden border border-gray-100 shadow-xs group select-none"
-                    :class="isZoomed ? 'cursor-zoom-out' : 'cursor-zoom-in'"
-                    x-data="{
-                        isZoomed: false,
-                        originX: 50,
-                        originY: 50,
-                        toggleZoom(e) {
-                            const rect = e.currentTarget.getBoundingClientRect();
-                            const x = ((e.clientX - rect.left) / rect.width) * 100;
-                            const y = ((e.clientY - rect.top) / rect.height) * 100;
-                            this.originX = x.toFixed(2);
-                            this.originY = y.toFixed(2);
-                            this.isZoomed = !this.isZoomed;
-                        },
-                        handleMouseMove(e) {
-                            if (!this.isZoomed) return;
-                            const rect = e.currentTarget.getBoundingClientRect();
-                            const x = ((e.clientX - rect.left) / rect.width) * 100;
-                            const y = ((e.clientY - rect.top) / rect.height) * 100;
-                            this.originX = x.toFixed(2);
-                            this.originY = y.toFixed(2);
-                        },
-                        handleMouseLeave() {
-                            this.isZoomed = false;
-                        }
-                    }"
-                    @click="toggleZoom($event)"
-                    @mousemove="handleMouseMove($event)"
-                    @mouseleave="handleMouseLeave()"
+                    class="flex-1 min-w-0 w-full relative aspect-4/5 bg-gray-50 rounded-2xl overflow-hidden border border-gray-100 shadow-xs group select-none cursor-zoom-in"
+                    @click="openLightbox(activeImage)"
+                    title="Click to zoom in and inspect details"
                 >
                     <!-- Main Image Display -->
                     <template x-for="(variation, index) in variations" :key="index">
@@ -279,21 +288,17 @@
                             x-show="activeImage === index"
                             :src="imageUrl(variation.url)"
                             onerror="this.src='/uploads/products/default.jpg'"
-                            class="w-full h-full object-cover object-top"
-                            :class="isZoomed ? 'scale-[2.4] transition-transform duration-100 ease-out' : 'scale-100 transition-transform duration-300 ease-out'"
-                            :style="isZoomed ? { transformOrigin: `${originX}% ${originY}%` } : {}"
+                            class="w-full h-full object-cover object-top group-hover:scale-105 transition-transform duration-300 ease-out"
                             alt="{{ $product->name }}"
                         >
                     </template>
 
-                    <!-- Zoom Helper Hint (Bottom Right) -->
-                    <div class="absolute bottom-3.5 right-3.5 z-10 w-9 h-9 rounded-full bg-white/90 backdrop-blur-md border border-gray-200 shadow-sm flex items-center justify-center text-gray-700 pointer-events-none opacity-80 group-hover:opacity-100 transition-opacity" :title="isZoomed ? 'Click to zoom out' : 'Click to zoom in'">
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" x-show="!isZoomed">
+                    <!-- Zoom Helper Hint Badge (Bottom Right) -->
+                    <div class="absolute bottom-3.5 right-3.5 z-10 px-3 py-1.5 rounded-full bg-white/90 backdrop-blur-md border border-gray-200 shadow-sm flex items-center gap-1.5 text-gray-700 pointer-events-none opacity-85 group-hover:opacity-100 transition-opacity">
+                        <svg class="w-3.5 h-3.5 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m0-3h3m-3 0H7"/>
                         </svg>
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" x-show="isZoomed" style="display: none;">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM13 10H7"/>
-                        </svg>
+                        <span class="text-[10px] font-bold tracking-tight">Click to Zoom</span>
                     </div>
                 </div>
             </div>
@@ -581,6 +586,91 @@
                     <div class="font-extrabold text-gray-900">{{ $shipsFrom }}</div>
                 </div>
             </div>
+        </div>
+    </div>
+
+    {{-- ─── High-Definition Product Image Inspection Lightbox ─── --}}
+    <div 
+        x-show="showLightbox" 
+        x-cloak
+        style="display: none;"
+        class="fixed inset-0 z-9999 bg-black/95 backdrop-blur-md flex flex-col justify-between p-4 sm:p-6 select-none"
+        @keydown.window.escape="closeLightbox()"
+    >
+        <!-- Top Toolbar -->
+        <div class="w-full flex items-center justify-between z-20 shrink-0">
+            <div class="flex items-center gap-2 text-white">
+                <span class="text-xs sm:text-sm font-bold truncate max-w-xs sm:max-w-md">{{ $product->name }}</span>
+                <span class="text-[10px] text-gray-400 font-medium" x-text="'(' + (activeImage + 1) + ' of ' + variations.length + ')'"></span>
+            </div>
+
+            <!-- Zoom & Close Controls -->
+            <div class="flex items-center gap-2">
+                <button type="button" @click="zoomOut()" class="w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-white/10 hover:bg-white/20 text-white flex items-center justify-center transition-all cursor-pointer" title="Zoom Out (-)">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 12H4"/></svg>
+                </button>
+                <span class="text-xs font-bold text-white px-2 min-w-12 text-center" x-text="Math.round(lightboxScale * 100) + '%'"></span>
+                <button type="button" @click="zoomIn()" class="w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-white/10 hover:bg-white/20 text-white flex items-center justify-center transition-all cursor-pointer" title="Zoom In (+)">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+                </button>
+                <button type="button" @click="resetZoom()" class="px-3 py-2 rounded-full bg-white/10 hover:bg-white/20 text-white text-[10px] font-bold uppercase tracking-wider transition-all cursor-pointer">
+                    Reset
+                </button>
+                <button type="button" @click="closeLightbox()" class="w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-red-600/80 hover:bg-red-600 text-white flex items-center justify-center transition-all cursor-pointer ml-2" title="Close (Esc)">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                </button>
+            </div>
+        </div>
+
+        <!-- Center Image Viewport -->
+        <div class="relative flex-1 w-full h-full flex items-center justify-center overflow-hidden my-4">
+            <!-- Left Arrow -->
+            <button 
+                type="button" 
+                @click="prevImage()" 
+                x-show="variations.length > 1" 
+                class="absolute left-2 sm:left-4 z-20 w-11 h-11 rounded-full bg-white/15 hover:bg-white/30 text-white flex items-center justify-center backdrop-blur-md transition-all cursor-pointer"
+            >
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 19l-7-7 7-7"/></svg>
+            </button>
+
+            <!-- Zoomable Image -->
+            <div class="w-full h-full flex items-center justify-center overflow-auto no-scrollbar cursor-grab active:cursor-grabbing">
+                <template x-for="(variation, index) in variations" :key="index">
+                    <img 
+                        x-show="activeImage === index"
+                        :src="imageUrl(variation.url)"
+                        onerror="this.src='/uploads/products/default.jpg'"
+                        class="max-h-[78vh] max-w-full rounded-xl object-contain transition-transform duration-200 ease-out"
+                        :style="{ transform: 'scale(' + lightboxScale + ')' }"
+                        @click="lightboxScale === 1 ? zoomIn() : resetZoom()"
+                    >
+                </template>
+            </div>
+
+            <!-- Right Arrow -->
+            <button 
+                type="button" 
+                @click="nextImage()" 
+                x-show="variations.length > 1" 
+                class="absolute right-2 sm:right-4 z-20 w-11 h-11 rounded-full bg-white/15 hover:bg-white/30 text-white flex items-center justify-center backdrop-blur-md transition-all cursor-pointer"
+            >
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5l7 7-7 7"/></svg>
+            </button>
+        </div>
+
+        <!-- Bottom Thumbnails Strip -->
+        <div class="w-full flex items-center justify-center gap-2 overflow-x-auto no-scrollbar py-2 z-20 shrink-0" x-show="variations.length > 1">
+            <template x-for="(variation, index) in variations" :key="index">
+                <button 
+                    type="button"
+                    @click="activeImage = index; selectedVariation = index; lightboxScale = 1;"
+                    class="w-12 h-16 rounded-lg overflow-hidden border-2 transition-all cursor-pointer shrink-0"
+                    :class="activeImage === index ? 'border-[#C0420A] scale-105 opacity-100' : 'border-white/20 opacity-50 hover:opacity-100'"
+                >
+                    <img :src="imageUrl(variation.url)" class="w-full h-full object-cover">
+                </button>
+            </template>
         </div>
     </div>
 
