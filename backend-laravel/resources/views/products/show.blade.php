@@ -298,7 +298,7 @@
                             x-show="activeImage === index"
                             :src="imageUrl(variation.url)"
                             onerror="this.src='/uploads/products/default.jpg'"
-                            class="w-full h-full object-cover object-top group-hover:scale-105 transition-transform duration-300 ease-out"
+                            class="w-full h-full object-contain group-hover:scale-105 transition-transform duration-300 ease-out p-1"
                             alt="{{ $product->name }}"
                         >
                     </template>
@@ -635,7 +635,7 @@
                         x-show="activeImage === index"
                         :src="imageUrl(variation.url)"
                         onerror="this.src='/uploads/products/default.jpg'"
-                        class="w-full h-full object-cover pointer-events-none transition-transform duration-75 ease-out"
+                        class="w-full h-full object-contain pointer-events-none transition-transform duration-75 ease-out"
                         :class="isZoomed ? 'scale-[2.4]' : 'scale-100'"
                         :style="isZoomed ? { transformOrigin: `${zoomOriginX}% ${zoomOriginY}%` } : {}"
                         alt="{{ $product->name }}"
