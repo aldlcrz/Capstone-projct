@@ -2,10 +2,14 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\ArchivedRecord;
+use App\Models\Banner;
+use App\Models\Category;
 use App\Models\CommissionRecord;
 use App\Models\Notification;
 use App\Models\Order;
 use App\Models\Product;
+use App\Models\SellerSubscription;
 use App\Models\SystemSetting;
 use App\Models\User;
 use Carbon\Carbon;
@@ -1008,5 +1012,240 @@ class SuperAdminController extends Controller
         } catch (\Exception $e) {
             Log::error('SuperAdmin notification error: ' . $e->getMessage());
         }
+    }
+
+    // ─── Archives Vault ──────────────────────────────────────────────────────
+
+    public function archives(Request $request)
+    {
+        $type   = $request->input('type', 'all');
+        $search = trim($request->input('search', ''));
+
+        $query = ArchivedRecord::orderBy('created_at', 'desc');
+
+        if ($type && $type !== 'all') {
+            $query->where('item_type', $type);
+        }
+
+        if ($search) {
+            $query->where(function($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%")
+                  ->orWhere('identifier', 'like', "%{$search}%")
+                  ->orWhere('reason', 'like', "%{$search}%")
+                  ->orWhere('archived_by', 'like', "%{$search}%");
+            });
+        }
+
+        $archives = $query->paginate(15);
+
+        $counts = [
+            'all'      => ArchivedRecord::count(),
+            'product'  => ArchivedRecord::where('item_type', 'product')->count(),
+            'category' => ArchivedRecord::where('item_type', 'category')->count(),
+            'customer' => ArchivedRecord::where('item_type', 'customer')->count(),
+            'seller'   => ArchivedRecord::where('item_type', 'seller')->count(),
+        ];
+
+        return view('superadmin.archives', compact('archives', 'counts', 'type', 'search'));
+    }
+
+    public function restoreArchive(string $id)
+    {
+        return (new AdminController)->restoreArchive($id);
+    }
+
+    public function purgeArchive(string $id)
+    {
+        return (new AdminController)->purgeArchive($id);
+    }
+
+    // ─── Product Categories ───────────────────────────────────────────────────
+
+    public function categories(Request $request)
+    {
+        $categories = Category::withCount('products')->orderBy('name', 'asc')->get();
+
+        foreach ($categories as $cat) {
+            if (empty($cat->image) || $cat->image === '/uploads/categories/pina_formal.png') {
+                $matched = $cat->getImageUrl();
+                if ($matched !== $cat->image) {
+                    $cat->update(['image' => $matched]);
+                }
+            }
+        }
+
+        return view('superadmin.categories', compact('categories'));
+    }
+
+    // ─── Product Moderation ───────────────────────────────────────────────────
+
+    public function products(Request $request)
+    {
+        $status = $request->input('status', 'pending');
+        $search = trim($request->input('search', ''));
+        $query  = Product::with(['seller:id,name,email,shopName', 'category:id,name'])->orderBy('createdAt', 'desc');
+
+        if ($search) {
+            $query->where(function($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%")
+                  ->orWhere('description', 'like', "%{$search}%")
+                  ->orWhereHas('seller', function($sq) use ($search) {
+                      $sq->where('name', 'like', "%{$search}%")
+                        ->orWhere('shopName', 'like', "%{$search}%");
+                  });
+            });
+        }
+
+        if ($status && $status !== 'all') {
+            $query->where('status', $status);
+        }
+
+        $products = $query->paginate(12);
+        $counts = [
+            'pending'  => Product::where('status', 'pending')->count(),
+            'approved' => Product::where('status', 'approved')->count(),
+            'rejected' => Product::where('status', 'rejected')->count(),
+            'all'      => Product::count(),
+        ];
+
+        return view('superadmin.products', compact('products', 'counts', 'status', 'search'));
+    }
+
+    public function approveProductWeb(string $id)
+    {
+        return (new AdminController)->approveProductWeb($id);
+    }
+
+    public function rejectProductWeb(Request $request, string $id)
+    {
+        return (new AdminController)->rejectProductWeb($request, $id);
+    }
+
+    public function deleteProductWeb(Request $request, string $id)
+    {
+        return (new AdminController)->deleteProductWeb($request, $id);
+    }
+
+    // ─── Homepage Banners & Promotions ────────────────────────────────────────
+
+    public function banners(Request $request)
+    {
+        Banner::where('subtitle', 'like', '%macapagal%')->update(['subtitle' => 'LumBarong Shop']);
+
+        $banners = Banner::with('user')
+            ->orderBy('order_index', 'asc')
+            ->orderBy('created_at', 'desc')
+            ->get();
+
+        $sellerBanners = Banner::with('user')
+            ->whereNotNull('userId')
+            ->orderByRaw("FIELD(status,'pending','approved','rejected')")
+            ->orderBy('created_at', 'desc')
+            ->get();
+
+        $pendingCount = Banner::whereNotNull('userId')->where('status', 'pending')->count();
+        $categories = Category::select('id', 'name')->orderBy('name')->get();
+
+        $sellers = User::where('role', 'seller')
+            ->where(function($q) {
+                $q->where('isVerified', true)->orWhere('status', 'active')->orWhereNull('status');
+            })
+            ->with(['products' => function($q) {
+                $q->where('status', 'approved')->select('id', 'name', 'image', 'sellerId', 'price');
+            }])
+            ->select('id', 'name', 'shopName')
+            ->orderBy('shopName')
+            ->get()
+            ->map(function (User $s) {
+                return [
+                    'id'        => (string)$s->id,
+                    'name'      => $s->name,
+                    'shop_name' => $s->shopName ?: $s->name,
+                    'products'  => $s->products->map(function (Product $p) {
+                        return [
+                            'id'         => (string)$p->id,
+                            'name'       => $p->name,
+                            'price'      => (float)$p->price,
+                            'image_url'  => $p->getImageUrl(),
+                            'all_images' => $p->getAllImageUrls(),
+                            'seller_id'  => (string)$p->sellerId,
+                        ];
+                    }),
+                ];
+            });
+
+        $allProducts = Product::where('status', 'approved')
+            ->with('seller:id,name,shopName')
+            ->select('id', 'name', 'price', 'image', 'sellerId')
+            ->get()
+            ->map(function (Product $p) {
+                return [
+                    'id'         => (string)$p->id,
+                    'name'       => $p->name,
+                    'price'      => (float)$p->price,
+                    'image_url'  => $p->getImageUrl(),
+                    'all_images' => $p->getAllImageUrls(),
+                    'seller_id'  => (string)$p->sellerId,
+                    'shop_name'  => $p->seller->shopName ?? $p->seller->name ?? '',
+                ];
+            });
+
+        return view('superadmin.banners', compact('banners', 'sellerBanners', 'pendingCount', 'categories', 'sellers', 'allProducts'));
+    }
+
+    // ─── Premium Subscriptions ────────────────────────────────────────────────
+
+    public function subscriptions(Request $request)
+    {
+        $pending = SellerSubscription::with('user')
+            ->where('status', 'pending')
+            ->orderBy('createdAt', 'desc')
+            ->get();
+
+        $history = SellerSubscription::with('user')
+            ->where('status', '!=', 'pending')
+            ->orderBy('createdAt', 'desc')
+            ->paginate(15);
+
+        $admin = User::where('role', 'superadmin')->first() ?: User::where('role', 'admin')->first();
+
+        return view('superadmin.subscriptions', compact('pending', 'history', 'admin'));
+    }
+
+    public function approveSubscription(string $id)
+    {
+        return (new AdminSubscriptionController)->approve($id);
+    }
+
+    public function rejectSubscription(Request $request, string $id)
+    {
+        return (new AdminSubscriptionController)->reject($request, $id);
+    }
+
+    public function updateSubscriptionSettings(Request $request)
+    {
+        $request->validate([
+            'gcashName'   => 'nullable|string|max:100',
+            'gcashNumber' => 'nullable|string|max:30',
+            'gcashQr'     => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:5120',
+        ]);
+
+        $admin = User::where('role', 'superadmin')->first() ?: User::where('role', 'admin')->first();
+        if ($admin) {
+            $admin->gcashName   = $request->gcashName;
+            $admin->gcashNumber = $request->gcashNumber;
+
+            if ($request->hasFile('gcashQr')) {
+                $file = $request->file('gcashQr');
+                $filename = 'gcash_qr_' . time() . '_' . uniqid() . '.' . $file->getClientOriginalExtension();
+                $path = 'uploads/admin/' . $filename;
+                $file->move(public_path('uploads/admin'), $filename);
+                $admin->gcashQr = '/' . $path;
+            }
+
+            $admin->save();
+        }
+
+        return redirect()->back()->with('success', 'Subscription payment receiving settings updated successfully.');
     }
 }

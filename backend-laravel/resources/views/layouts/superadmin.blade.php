@@ -47,7 +47,7 @@
                 <nav class="flex-1 space-y-6 overflow-y-auto no-scrollbar">
                     {{-- Governance Group --}}
                     <div class="space-y-1.5">
-                        <div class="text-[10px] font-black text-gray-400 tracking-widest uppercase px-3 mb-2">Governance</div>
+                        <div class="text-[10px] font-black text-gray-400 tracking-widest uppercase px-3 mb-2">Governance &amp; Finance</div>
                         
                         <a href="{{ route('superadmin.dashboard') }}"
                            class="flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 text-sm font-medium {{ request()->routeIs('superadmin.dashboard') ? 'bg-[rgba(192,66,42,0.08)] text-[#C0422A] border-l-4 border-[#C0422A] font-bold' : 'text-[#3D2B1F] hover:bg-[#F7F3EE] hover:text-[#C0422A]' }}">
@@ -80,6 +80,61 @@
                             </svg>
                             <span>Payment Gateways</span>
                         </a>
+
+                        <a href="{{ route('superadmin.subscriptions.index') }}"
+                           class="flex items-center justify-between px-4 py-3 rounded-xl transition-all duration-200 text-sm font-medium {{ request()->routeIs('superadmin.subscriptions*') ? 'bg-[rgba(192,66,42,0.08)] text-[#C0422A] border-l-4 border-[#C0422A] font-bold' : 'text-[#3D2B1F] hover:bg-[#F7F3EE] hover:text-[#C0422A]' }}">
+                            <div class="flex items-center gap-3">
+                                <svg class="w-5 h-5 {{ request()->routeIs('superadmin.subscriptions*') ? 'text-[#C0422A]' : 'text-gray-400' }}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z"></path>
+                                </svg>
+                                <span>Subscription Tiers</span>
+                            </div>
+                            @php
+                                $pendingSubs = \App\Models\SellerSubscription::where('status', 'pending')->count();
+                            @endphp
+                            @if($pendingSubs > 0)
+                                <span class="px-2 py-0.5 bg-amber-50 text-amber-600 border border-amber-200 text-[10px] font-bold rounded-full">{{ $pendingSubs }}</span>
+                            @endif
+                        </a>
+                    </div>
+
+                    <div class="border-t border-[#F0EAE1]"></div>
+
+                    {{-- Catalog & Content Group --}}
+                    <div class="space-y-1.5">
+                        <div class="text-[10px] font-black text-gray-400 tracking-widest uppercase px-3 mb-2">Catalog &amp; Content</div>
+
+                        <a href="{{ route('superadmin.categories.index') }}"
+                           class="flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 text-sm font-medium {{ request()->routeIs('superadmin.categories*') ? 'bg-[rgba(192,66,42,0.08)] text-[#C0422A] border-l-4 border-[#C0422A] font-bold' : 'text-[#3D2B1F] hover:bg-[#F7F3EE] hover:text-[#C0422A]' }}">
+                            <svg class="w-5 h-5 {{ request()->routeIs('superadmin.categories*') ? 'text-[#C0422A]' : 'text-gray-400' }}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"></path>
+                            </svg>
+                            <span>Product Categories</span>
+                        </a>
+
+                        <a href="{{ route('superadmin.products') }}"
+                           class="flex items-center justify-between px-4 py-3 rounded-xl transition-all duration-200 text-sm font-medium {{ request()->routeIs('superadmin.products*') ? 'bg-[rgba(192,66,42,0.08)] text-[#C0422A] border-l-4 border-[#C0422A] font-bold' : 'text-[#3D2B1F] hover:bg-[#F7F3EE] hover:text-[#C0422A]' }}">
+                            <div class="flex items-center gap-3">
+                                <svg class="w-5 h-5 {{ request()->routeIs('superadmin.products*') ? 'text-[#C0422A]' : 'text-gray-400' }}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"></path>
+                                </svg>
+                                <span>Product Moderation</span>
+                            </div>
+                            @php
+                                $pendingProducts = \App\Models\Product::where('status', 'pending')->count();
+                            @endphp
+                            @if($pendingProducts > 0)
+                                <span class="px-2 py-0.5 bg-amber-50 text-amber-600 border border-amber-200 text-[10px] font-bold rounded-full">{{ $pendingProducts }}</span>
+                            @endif
+                        </a>
+
+                        <a href="{{ route('superadmin.banners.index') }}"
+                           class="flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 text-sm font-medium {{ request()->routeIs('superadmin.banners*') ? 'bg-[rgba(192,66,42,0.08)] text-[#C0422A] border-l-4 border-[#C0422A] font-bold' : 'text-[#3D2B1F] hover:bg-[#F7F3EE] hover:text-[#C0422A]' }}">
+                            <svg class="w-5 h-5 {{ request()->routeIs('superadmin.banners*') ? 'text-[#C0422A]' : 'text-gray-400' }}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                            </svg>
+                            <span>Promotions &amp; Banners</span>
+                        </a>
                     </div>
 
                     <div class="border-t border-[#F0EAE1]"></div>
@@ -110,6 +165,14 @@
                     {{-- Developer & System Tools Group --}}
                     <div class="space-y-1.5">
                         <div class="text-[10px] font-black text-gray-400 tracking-widest uppercase px-3 mb-2">Developer &amp; System</div>
+
+                        <a href="{{ route('superadmin.archives') }}"
+                           class="flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 text-sm font-medium {{ request()->routeIs('superadmin.archives*') ? 'bg-[rgba(192,66,42,0.08)] text-[#C0422A] border-l-4 border-[#C0422A] font-bold' : 'text-[#3D2B1F] hover:bg-[#F7F3EE] hover:text-[#C0422A]' }}">
+                            <svg class="w-5 h-5 {{ request()->routeIs('superadmin.archives*') ? 'text-[#C0422A]' : 'text-gray-400' }}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4"></path>
+                            </svg>
+                            <span>Archive Vault</span>
+                        </a>
 
                         <a href="{{ route('superadmin.maintenance') }}"
                            class="flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 text-sm font-medium {{ request()->routeIs('superadmin.maintenance*') ? 'bg-[rgba(192,66,42,0.08)] text-[#C0422A] border-l-4 border-[#C0422A] font-bold' : 'text-[#3D2B1F] hover:bg-[#F7F3EE] hover:text-[#C0422A]' }}">
@@ -159,7 +222,14 @@
 
                     <form x-ref="logoutForm" action="{{ route('superadmin.logout') }}" method="POST">
                         @csrf
-                        <button type="submit" 
+                        <button type="button" 
+                                @click="$dispatch('open-confirmation', {
+                                    title: 'Sign Out',
+                                    message: 'Are you sure you want to sign out of Super Admin?',
+                                    confirmText: 'Sign Out',
+                                    type: 'danger',
+                                    onConfirm: () => $refs.logoutForm.submit()
+                                })"
                                 class="flex items-center justify-center gap-2 w-full px-4 py-2.5 bg-red-50 hover:bg-red-100 text-red-600 border border-red-200 rounded-xl transition-all font-bold text-[10px] tracking-widest uppercase cursor-pointer">
                             <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path></svg>
                             <span>Sign Out</span>

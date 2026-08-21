@@ -279,6 +279,41 @@ Route::middleware(['auth', 'superadmin'])->prefix('superadmin')->group(function 
     Route::match(['post', 'patch'], '/customers/{id}/ban', [SuperAdminController::class, 'banCustomer'])->name('superadmin.customers.ban');
     Route::match(['post', 'patch'], '/customers/{id}/unban', [SuperAdminController::class, 'unbanCustomer'])->name('superadmin.customers.unban');
 
+    // Subscriptions
+    Route::get('/subscriptions', [SuperAdminController::class, 'subscriptions'])->name('superadmin.subscriptions.index');
+    Route::post('/subscriptions/{id}/approve', [SuperAdminController::class, 'approveSubscription'])->name('superadmin.subscriptions.approve');
+    Route::post('/subscriptions/{id}/reject', [SuperAdminController::class, 'rejectSubscription'])->name('superadmin.subscriptions.reject');
+    Route::post('/subscriptions/settings', [SuperAdminController::class, 'updateSubscriptionSettings'])->name('superadmin.subscriptions.settings');
+
+    // Categories
+    Route::get('/categories', [SuperAdminController::class, 'categories'])->name('superadmin.categories.index');
+    Route::post('/categories', [AdminCategoryController::class, 'store'])->name('superadmin.categories.store');
+    Route::put('/categories/{id}', [AdminCategoryController::class, 'update'])->name('superadmin.categories.update');
+    Route::delete('/categories/{id}', [AdminCategoryController::class, 'destroy'])->name('superadmin.categories.destroy');
+    Route::post('/categories/initialize', [AdminCategoryController::class, 'initializeDefaults'])->name('superadmin.categories.initialize');
+
+    // Product Moderation
+    Route::get('/products', [SuperAdminController::class, 'products'])->name('superadmin.products');
+    Route::match(['get', 'post'], '/products/{id}/approve', [SuperAdminController::class, 'approveProductWeb'])->name('superadmin.products.approve');
+    Route::match(['get', 'post'], '/products/{id}/reject', [SuperAdminController::class, 'rejectProductWeb'])->name('superadmin.products.reject');
+    Route::delete('/products/{id}', [SuperAdminController::class, 'deleteProductWeb'])->name('superadmin.products.delete');
+
+    // Hero Banners & Promotions
+    Route::get('/banners', [SuperAdminController::class, 'banners'])->name('superadmin.banners.index');
+    Route::get('/banners/search-destinations', [AdminBannerController::class, 'searchDestinations'])->name('superadmin.banners.search-destinations');
+    Route::post('/banners/reorder', [AdminBannerController::class, 'reorder'])->name('superadmin.banners.reorder');
+    Route::post('/banners', [AdminBannerController::class, 'store'])->name('superadmin.banners.store');
+    Route::put('/banners/{id}', [AdminBannerController::class, 'update'])->name('superadmin.banners.update');
+    Route::delete('/banners/{id}', [AdminBannerController::class, 'destroy'])->name('superadmin.banners.destroy');
+    Route::patch('/banners/{id}/toggle', [AdminBannerController::class, 'toggleActive'])->name('superadmin.banners.toggle');
+    Route::patch('/banners/{id}/approve', [AdminBannerController::class, 'approve'])->name('superadmin.banners.approve');
+    Route::patch('/banners/{id}/reject', [AdminBannerController::class, 'reject'])->name('superadmin.banners.reject');
+
+    // Archive Vault
+    Route::get('/archives', [SuperAdminController::class, 'archives'])->name('superadmin.archives');
+    Route::post('/archives/{id}/restore', [SuperAdminController::class, 'restoreArchive'])->name('superadmin.archives.restore');
+    Route::delete('/archives/{id}', [SuperAdminController::class, 'purgeArchive'])->name('superadmin.archives.purge');
+
     // Developer & System Tools
     Route::get('/maintenance', [SuperAdminController::class, 'maintenance'])->name('superadmin.maintenance');
     Route::post('/maintenance/toggle', [SuperAdminController::class, 'toggleMaintenance'])->name('superadmin.maintenance.toggle');
