@@ -594,54 +594,55 @@
         x-show="showLightbox" 
         x-cloak
         style="display: none;"
-        class="fixed inset-0 z-9999 bg-black/95 backdrop-blur-md flex flex-col justify-between p-4 sm:p-6 select-none"
+        class="fixed inset-0 z-9999 bg-black/95 backdrop-blur-md flex flex-col justify-between p-3 sm:p-6 select-none"
         @keydown.window.escape="closeLightbox()"
     >
-        <!-- Top Toolbar -->
-        <div class="w-full flex items-center justify-between z-20 shrink-0">
-            <div class="flex items-center gap-2 text-white">
-                <span class="text-xs sm:text-sm font-bold truncate max-w-xs sm:max-w-md">{{ $product->name }}</span>
-                <span class="text-[10px] text-gray-400 font-medium" x-text="'(' + (activeImage + 1) + ' of ' + variations.length + ')'"></span>
+        <!-- Top Toolbar (Responsive) -->
+        <div class="w-full flex items-center justify-between gap-2 z-20 shrink-0 pb-2 border-b border-white/10">
+            <div class="flex items-center gap-1.5 min-w-0 text-white">
+                <span class="text-xs sm:text-sm font-bold truncate max-w-[130px] sm:max-w-md">{{ $product->name }}</span>
+                <span class="text-[9px] sm:text-[10px] text-gray-400 font-medium shrink-0" x-text="'(' + (activeImage + 1) + '/' + variations.length + ')'"></span>
             </div>
 
             <!-- Zoom & Close Controls -->
-            <div class="flex items-center gap-2">
-                <button type="button" @click="zoomOut()" class="w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-white/10 hover:bg-white/20 text-white flex items-center justify-center transition-all cursor-pointer" title="Zoom Out (-)">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 12H4"/></svg>
+            <div class="flex items-center gap-1 sm:gap-2 shrink-0">
+                <button type="button" @click="zoomOut()" class="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-white/10 hover:bg-white/20 active:bg-white/30 text-white flex items-center justify-center transition-all cursor-pointer" title="Zoom Out (-)">
+                    <svg class="w-3.5 h-3.5 sm:w-4 sm:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M20 12H4"/></svg>
                 </button>
-                <span class="text-xs font-bold text-white px-2 min-w-12 text-center" x-text="Math.round(lightboxScale * 100) + '%'"></span>
-                <button type="button" @click="zoomIn()" class="w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-white/10 hover:bg-white/20 text-white flex items-center justify-center transition-all cursor-pointer" title="Zoom In (+)">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+                <span class="text-[11px] sm:text-xs font-bold text-white px-1 sm:px-2 min-w-10 text-center" x-text="Math.round(lightboxScale * 100) + '%'"></span>
+                <button type="button" @click="zoomIn()" class="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-white/10 hover:bg-white/20 active:bg-white/30 text-white flex items-center justify-center transition-all cursor-pointer" title="Zoom In (+)">
+                    <svg class="w-3.5 h-3.5 sm:w-4 sm:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"/></svg>
                 </button>
-                <button type="button" @click="resetZoom()" class="px-3 py-2 rounded-full bg-white/10 hover:bg-white/20 text-white text-[10px] font-bold uppercase tracking-wider transition-all cursor-pointer">
+                <button type="button" @click="resetZoom()" class="hidden sm:inline-flex px-3 py-2 rounded-full bg-white/10 hover:bg-white/20 text-white text-[10px] font-bold uppercase tracking-wider transition-all cursor-pointer">
                     Reset
                 </button>
-                <button type="button" @click="closeLightbox()" class="w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-red-600/80 hover:bg-red-600 text-white flex items-center justify-center transition-all cursor-pointer ml-2" title="Close (Esc)">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                <button type="button" @click="closeLightbox()" class="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-red-600/90 hover:bg-red-600 active:scale-95 text-white flex items-center justify-center transition-all cursor-pointer ml-1 sm:ml-2" title="Close (Esc)">
+                    <svg class="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12"/></svg>
                 </button>
             </div>
         </div>
 
         <!-- Center Image Viewport -->
-        <div class="relative flex-1 w-full h-full flex items-center justify-center overflow-hidden my-4">
+        <div class="relative flex-1 w-full h-full flex items-center justify-center overflow-hidden my-2 sm:my-4">
             <!-- Left Arrow -->
             <button 
                 type="button" 
                 @click="prevImage()" 
                 x-show="variations.length > 1" 
-                class="absolute left-2 sm:left-4 z-20 w-11 h-11 rounded-full bg-white/15 hover:bg-white/30 text-white flex items-center justify-center backdrop-blur-md transition-all cursor-pointer"
+                class="absolute left-1 sm:left-4 z-20 w-9 h-9 sm:w-12 sm:h-12 rounded-full bg-white/20 hover:bg-white/40 active:bg-white/50 text-white flex items-center justify-center backdrop-blur-md transition-all cursor-pointer shadow-lg"
+                title="Previous photo"
             >
-                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 19l-7-7 7-7"/></svg>
+                <svg class="w-5 h-5 sm:w-6 sm:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 19l-7-7 7-7"/></svg>
             </button>
 
-            <!-- Zoomable Image -->
-            <div class="w-full h-full flex items-center justify-center overflow-auto no-scrollbar cursor-grab active:cursor-grabbing">
+            <!-- Zoomable Image Viewport -->
+            <div class="w-full h-full flex items-center justify-center overflow-auto no-scrollbar touch-pan-x touch-pan-y">
                 <template x-for="(variation, index) in variations" :key="index">
                     <img 
                         x-show="activeImage === index"
                         :src="imageUrl(variation.url)"
                         onerror="this.src='/uploads/products/default.jpg'"
-                        class="max-h-[78vh] max-w-full rounded-xl object-contain transition-transform duration-200 ease-out"
+                        class="max-h-[72vh] sm:max-h-[78vh] max-w-full rounded-xl object-contain transition-transform duration-200 ease-out select-none"
                         :style="{ transform: 'scale(' + lightboxScale + ')' }"
                         @click="lightboxScale === 1 ? zoomIn() : resetZoom()"
                     >
@@ -653,20 +654,21 @@
                 type="button" 
                 @click="nextImage()" 
                 x-show="variations.length > 1" 
-                class="absolute right-2 sm:right-4 z-20 w-11 h-11 rounded-full bg-white/15 hover:bg-white/30 text-white flex items-center justify-center backdrop-blur-md transition-all cursor-pointer"
+                class="absolute right-1 sm:right-4 z-20 w-9 h-9 sm:w-12 sm:h-12 rounded-full bg-white/20 hover:bg-white/40 active:bg-white/50 text-white flex items-center justify-center backdrop-blur-md transition-all cursor-pointer shadow-lg"
+                title="Next photo"
             >
-                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5l7 7-7 7"/></svg>
+                <svg class="w-5 h-5 sm:w-6 sm:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5l7 7-7 7"/></svg>
             </button>
         </div>
 
         <!-- Bottom Thumbnails Strip -->
-        <div class="w-full flex items-center justify-center gap-2 overflow-x-auto no-scrollbar py-2 z-20 shrink-0" x-show="variations.length > 1">
+        <div class="w-full flex items-center justify-center gap-2 overflow-x-auto no-scrollbar py-1 sm:py-2 z-20 shrink-0" x-show="variations.length > 1">
             <template x-for="(variation, index) in variations" :key="index">
                 <button 
                     type="button"
                     @click="activeImage = index; selectedVariation = index; lightboxScale = 1;"
-                    class="w-12 h-16 rounded-lg overflow-hidden border-2 transition-all cursor-pointer shrink-0"
-                    :class="activeImage === index ? 'border-[#C0420A] scale-105 opacity-100' : 'border-white/20 opacity-50 hover:opacity-100'"
+                    class="w-10 h-14 sm:w-12 sm:h-16 rounded-lg overflow-hidden border-2 transition-all cursor-pointer shrink-0"
+                    :class="activeImage === index ? 'border-[#C0420A] scale-105 opacity-100 ring-2 ring-[#C0420A]/40' : 'border-white/20 opacity-50 hover:opacity-100'"
                 >
                     <img :src="imageUrl(variation.url)" class="w-full h-full object-cover">
                 </button>
