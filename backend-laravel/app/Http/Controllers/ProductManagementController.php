@@ -428,20 +428,16 @@ class ProductManagementController extends Controller
     {
         $product = Product::where('id', $id)->where('sellerId', Auth::id())->firstOrFail();
 
-        // Delete product images from local storage
-        $images = is_array($product->image)
-            ? $product->image
-            : (json_decode($product->image ?? '[]', true) ?? []);
-
-        foreach ($images as $img) {
-            if (!str_starts_with($img, 'http')) {
-                \Illuminate\Support\Facades\Storage::disk('public')->delete($img);
-            }
+        // Archive product before deletion
+        try {
+            \App\Models\ArchivedRecord::archive('product', $product, 'Deleted by seller from catalogue', Auth::user()->name);
+        } catch (\Throwable $ae) {
+            \Illuminate\Support\Facades\Log::warning('Archive error on seller product destroy: ' . $ae->getMessage());
         }
 
         $product->delete();
 
-        return redirect()->route('seller.products.index')->with('success', 'Product listing removed.');
+        return redirect()->route('seller.products.index')->with('success', 'Product listing deleted and archived successfully.');
     }
 
     public function updateSizeGuides(Request $request)
