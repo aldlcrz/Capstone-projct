@@ -36,13 +36,13 @@ class ReportController extends Controller
 
         // Send In-App & System Notifications
         if ($validated['type'] === 'CustomerReportingSeller') {
-            // 1. Notify the reported Seller
+            // 1. Notify the reported Seller with direct link to report
             Notification::send(
                 (string) $validated['reportedId'],
                 '⚠️ Integrity Violation Notice',
                 "Your shop has received a report from a customer regarding \"{$validated['reason']}\". Our Trust & Safety team is reviewing the matter. Please ensure your shop listings and conduct adhere to platform guidelines.",
                 'warning',
-                null,
+                '/seller/dashboard?view_report=' . $report->id,
                 'seller'
             );
 
@@ -74,6 +74,39 @@ class ReportController extends Controller
         }
 
         return response()->json($report, 201);
+    }
+
+    /**
+     * Get report details for the reported seller.
+     */
+    public function getSellerReportDetail(Request $request, $id = null)
+    {
+        $userId = Auth::id() ?? $request->user()?->id;
+        if (!$userId) {
+            return response()->json(['message' => 'Unauthenticated'], 401);
+        }
+
+        $query = Report::where('reportedId', $userId);
+        if ($id && $id !== 'latest') {
+            $report = $query->where('id', $id)->first();
+        } else {
+            $report = $query->orderBy('createdAt', 'desc')->first();
+        }
+
+        if (!$report) {
+            return response()->json(['message' => 'Report not found'], 404);
+        }
+
+        return response()->json([
+            'id' => $report->id,
+            'reason' => $report->reason,
+            'description' => $report->description,
+            'evidence' => $report->evidence,
+            'status' => $report->status,
+            'type' => $report->type,
+            'createdAt' => $report->createdAt ? $report->createdAt->toIso8601String() : null,
+            'formattedDate' => $report->createdAt ? $report->createdAt->format('M d, Y h:i A') : '',
+        ]);
     }
 
     public function getReports()

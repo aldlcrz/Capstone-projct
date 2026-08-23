@@ -302,14 +302,31 @@
                                 </div>
                                 <div class="max-h-96 overflow-y-auto no-scrollbar">
                                     @forelse($recentNotifications as $notif)
-                                        <a href="{{ route('notifications.read-and-redirect', $notif->id) }}" class="flex items-start gap-3 p-4 hover:bg-gray-50 transition-all border-b border-gray-50 last:border-0">
-                                            <div class="w-2 h-2 mt-1.5 rounded-full {{ $notif->isRead ? 'bg-gray-200' : 'bg-red-500' }} shrink-0"></div>
-                                            <div class="space-y-0.5">
-                                                <div class="text-[11px] font-bold text-black text-left">{{ $notif->title }}</div>
-                                                <div class="text-[10px] text-gray-500 text-left leading-relaxed">{{ Str::limit($notif->message, 80) }}</div>
-                                                <div class="text-[8px] text-gray-400 text-left">{{ $notif->createdAt ? \Carbon\Carbon::parse($notif->createdAt)->diffForHumans() : '' }}</div>
-                                            </div>
-                                        </a>
+                                        @if(str_contains(strtolower($notif->title), 'integrity') || str_contains(strtolower($notif->title), 'report') || str_contains($notif->link ?? '', 'report'))
+                                            <button type="button" 
+                                                @click="open = false; fetch('{{ route('notifications.read-and-redirect', $notif->id) }}').catch(()=>{}); window.dispatchEvent(new CustomEvent('open-seller-report', { detail: { id: '{{ Str::after($notif->link ?? '', 'view_report=') ?: 'latest' }}', reason: '{{ addslashes($notif->title) }}', message: '{{ addslashes($notif->message) }}' } }))"
+                                                class="w-full text-left flex items-start gap-3 p-4 hover:bg-amber-50/50 transition-all border-b border-gray-50 last:border-0 cursor-pointer"
+                                            >
+                                                <div class="w-2 h-2 mt-1.5 rounded-full {{ $notif->isRead ? 'bg-gray-200' : 'bg-red-500' }} shrink-0"></div>
+                                                <div class="space-y-0.5 flex-1 min-w-0">
+                                                    <div class="text-[11px] font-bold text-black text-left flex items-center justify-between">
+                                                        <span>{{ $notif->title }}</span>
+                                                        <span class="text-[8px] font-black text-[#C0422A] uppercase tracking-wider">View Notice</span>
+                                                    </div>
+                                                    <div class="text-[10px] text-gray-500 text-left leading-relaxed line-clamp-2">{{ $notif->message }}</div>
+                                                    <div class="text-[8px] text-gray-400 text-left">{{ $notif->createdAt ? \Carbon\Carbon::parse($notif->createdAt)->diffForHumans() : '' }}</div>
+                                                </div>
+                                            </button>
+                                        @else
+                                            <a href="{{ route('notifications.read-and-redirect', $notif->id) }}" class="flex items-start gap-3 p-4 hover:bg-gray-50 transition-all border-b border-gray-50 last:border-0">
+                                                <div class="w-2 h-2 mt-1.5 rounded-full {{ $notif->isRead ? 'bg-gray-200' : 'bg-red-500' }} shrink-0"></div>
+                                                <div class="space-y-0.5">
+                                                    <div class="text-[11px] font-bold text-black text-left">{{ $notif->title }}</div>
+                                                    <div class="text-[10px] text-gray-500 text-left leading-relaxed">{{ Str::limit($notif->message, 80) }}</div>
+                                                    <div class="text-[8px] text-gray-400 text-left">{{ $notif->createdAt ? \Carbon\Carbon::parse($notif->createdAt)->diffForHumans() : '' }}</div>
+                                                </div>
+                                            </a>
+                                        @endif
                                     @empty
                                         <div class="p-8 text-center">
                                             <div class="text-xs text-gray-400 italic">No seller notifications yet</div>
@@ -519,6 +536,7 @@
         </div>
     </div>
 
+    <x-seller-report-modal />
     <x-confirmation-modal />
     <x-modal-scroll-lock />
     @stack('scripts')

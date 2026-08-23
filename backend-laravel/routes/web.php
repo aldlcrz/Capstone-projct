@@ -403,5 +403,8 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/api/v1/reports', [\App\Http\Controllers\ReportController::class, 'createReport']);
     Route::post('/upload', [\App\Http\Controllers\UploadController::class, 'uploadImage']);
     Route::post('/reports', [\App\Http\Controllers\ReportController::class, 'createReport']);
+    Route::get('/api/v1/seller/reports/{id?}', [\App\Http\Controllers\ReportController::class, 'getSellerReportDetail']);
+    Route::get('/seller/reports/{id?}', [\App\Http\Controllers\ReportController::class, 'getSellerReportDetail']);
 });
+
 
