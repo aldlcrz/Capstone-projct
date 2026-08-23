@@ -72,6 +72,7 @@ Route::post('/submit-commission-payment', [WebAuthController::class, 'submitComm
 Route::middleware('auth')->group(function () {
     // Profile
     Route::get('/profile', [WebAuthController::class, 'profile'])->name('profile');
+    Route::get('/customer/profile', fn() => redirect()->route('profile'));
     Route::post('/profile', [WebAuthController::class, 'updateProfile'])->name('profile.update');
     Route::put('/profile', [WebAuthController::class, 'updateProfile']);
     Route::get('/profile/addresses', [WebAuthController::class, 'addresses'])->name('profile.addresses');
@@ -93,6 +94,8 @@ Route::middleware('auth')->group(function () {
 
     // Orders
     Route::get('/orders', fn() => redirect()->route('orders'));
+    Route::get('/customer/orders', fn() => redirect()->route('orders'));
+    Route::get('/customer/orders/{id}', fn($id) => redirect()->route('orders.show', $id));
     Route::get('/orders/my-orders', [WebController::class, 'orders'])->name('orders');
     Route::get('/orders/{id}', [WebController::class, 'orderDetail'])->name('orders.show');
     Route::patch('/orders/{id}/confirm', [OrderController::class, 'confirmReceived'])->name('orders.confirm');

@@ -467,15 +467,13 @@ KNOWLEDGE BASE:
 - Budget ranges: Organza (₱1,500–₱3,500), Jusi (₱3,800–₱7,500), Cocoon Silk (₱6,500–₱12,000), Piña-Seda (₱9,500–₱25,000+).
 - Occasion Styling: Grooms (Piña-Seda / Cocoon with Calado pechera & Camisa de Chino), Ninongs/Guests (Jusi / Organza), Graduations (Organza / Monoray).
 - Sizing: True to standard Philippine Barong sizes with 3-4 inches comfort ease.
-- Payments & Tracking: GCash, Maya with receipt verification; live order tracking & artisan packing photos in the My Orders tab.
 
 PLATFORM IN-TAB LINKS:
 - When mentioning or directing customers to specific pages or features, ALWAYS include direct markdown links so the customer can tap and navigate in the same tab:
-  • For Orders & Tracking: [My Orders](/customer/orders)
-  • For Artisan Shops Directory: [Shops Hub](/shops)
+  • For Orders & Tracking: [My Orders](/orders/my-orders)
   • For Shopping Cart: [Shopping Cart](/cart)
   • For Login & Account Access: [Sign In](/login)
-  • For Account Profile: [My Profile](/customer/profile)
+  • For Account Profile: [My Profile](/profile)
 
 STRICT DOMAIN LIMITS & SECURITY:
 - You ONLY discuss Philippine fashion, Barongs, Filipiniana, fabrics, sizing, care, styling, shop location, orders, and Lumban culture.
@@ -508,25 +506,34 @@ STRICT DOMAIN LIMITS & SECURITY:
             return self::heuristicStylistReply($lower);
         }
 
-        $best = $products[0];
-        $occasion = ucfirst($pref['occasion'] ?? 'your special event');
-        $budgetStr = !empty($pref['max_budget']) ? " within ₱" . number_format($pref['max_budget']) : "";
+        $top = $products[0];
+        $count = count($products);
 
-        $text = "⭐ **Curated Recommendations for {$occasion}{$budgetStr}:**\n\n";
-        $text .= "• **{$best['name']}** is our **{$best['badge']}** ({$best['score']}% match). Hand-embroidered with authentic {$best['fabric']}, it offers heirloom elegance and tailored drape.\n";
+        $reply = "Mabuhay! Based on your preferences";
+        if (!empty($pref['occasion'])) {
+            $reply .= " for a **" . ucfirst($pref['occasion']) . "**";
+        }
+        if (!empty($pref['max_budget'])) {
+            $reply .= " under **₱" . number_format($pref['max_budget']) . "**";
+        }
+        $reply .= ", I curated **{$count} exquisite authentic Lumban Barong Tagalog options** for you.\n\n";
 
-        if (isset($products[1])) {
-            $alt = $products[1];
-            $text .= "• **{$alt['name']}** ({$alt['badge']}) provides a distinctive style option with comfortable wear.\n";
+        $reply .= "🌟 **Top Recommendation: " . htmlspecialchars($top['name']) . "** (₱" . number_format((float)$top['price'], 2) . ")\n";
+        $reply .= "• **Fabric**: " . ($top['fabric'] ?? 'Authentic Lumban Weave') . "\n";
+        $reply .= "• **Score**: " . $top['score'] . "% Compatibility Match\n\n";
+
+        if (!empty($top['reasons'])) {
+            $reply .= "**Why our master artisans recommend this:**\n";
+            foreach ($top['reasons'] as $r) {
+                $cleanR = preg_replace('/^[✓•\s]+/', '', $r);
+                $reply .= "• {$cleanR}\n";
+            }
+            $reply .= "\n";
         }
 
-        if (isset($products[2])) {
-            $bud = $products[2];
-            $text .= "• **{$bud['name']}** ({$bud['badge']}) delivers outstanding value at ₱{$bud['price']} while maintaining Lumban artisan standards.\n";
-        }
+        $reply .= "You can click **View** on any card below to see custom embroidery close-ups and place your order directly.";
 
-        $text .= "\nClick on any piece below to view detailed measurements, fabric close-ups, and artisan customization options!";
-        return $text;
+        return $reply;
     }
 
     /**
@@ -564,16 +571,16 @@ STRICT DOMAIN LIMITS & SECURITY:
     private static function handleGeneralConversation(string $lower, string $cleaned): ?string
     {
         // Greetings
-        if (preg_match('/^(hi|hello|hey|heyy)[.!?\s]*$/i', $cleaned)) {
-            return "Hello! 👋 Welcome to LumBarong Smart Assistance. How can I help you today?";
+        if (preg_match('/^(hello|hi|hey|heya|hola)[.!?\s]*$/i', $cleaned)) {
+            return "Hello! 👋 Welcome to LumBarong Smart Assistance. How can I help you discover authentic Lumban Barongs today?";
         }
 
         if (preg_match('/^(good\s*morning|magandang\s*umaga)[.!?\s]*$/i', $cleaned)) {
-            return "Good morning! ☀️ How can I assist you with LumBarong today?";
+            return "Good morning! ☀️ How can I assist you with your Barong styling or shopping today?";
         }
 
         if (preg_match('/^(good\s*afternoon|magandang\s*hapon)[.!?\s]*$/i', $cleaned)) {
-            return "Good afternoon! ☀️ How can I help you today?";
+            return "Good afternoon! 🌤️ Looking for the perfect Barong or need assistance with an order?";
         }
 
         if (preg_match('/^(good\s*evening|magandang\s*gabi)[.!?\s]*$/i', $cleaned)) {
@@ -618,13 +625,23 @@ STRICT DOMAIN LIMITS & SECURITY:
      */
     private static function handleAccountSupport(string $lower): ?string
     {
+        // Profile & Account Settings
+        if (preg_match('/\b(where\s+(is|to\s+find|to\s+see)\s+(my\s+)?profile|my\s+profile|account\s+settings|view\s+profile|profile\s+page|wheres?\s+my\s+profile|saan\s+(ang\s+)?profile)\b/i', $lower)) {
+            return "👤 **Your Account & Profile:**\n\n"
+                . "You can view and update your personal details, shipping address, and password settings on your **[My Profile](/profile)** page.\n\n"
+                . "• **[Edit Profile Details](/profile)**\n"
+                . "• **[Manage Shipping Addresses](/profile/addresses)**\n"
+                . "• **[Change Password](/profile/change-password)**\n\n"
+                . "👉 Click here to go straight to: **[My Profile](/profile)**";
+        }
+
         // Password Reset & Forgot Password Guidance
         if (preg_match('/\b(reset\s+password|forgot\s+password|change\s+password|paano\s+mag\s*palit\s+ng\s+password|nakalimutan\s+ang\s+password)\b/i', $lower)) {
             return "🔑 **Password Reset & Account Assistance:**\n\n"
                 . "1. Go to the [Login Page](/login) and click **Forgot Password?**\n"
                 . "2. Enter your registered email address to receive a secure password reset link.\n"
                 . "3. Follow the instructions sent to your email to create a new password.\n\n"
-                . "If you are already logged in, you can also update your password under your **Account Profile** settings.";
+                . "If you are already logged in, you can update your password directly at **[Change Password](/profile/change-password)**.";
         }
 
         // What is an OTP?
