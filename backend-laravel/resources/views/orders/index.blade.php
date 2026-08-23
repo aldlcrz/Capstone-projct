@@ -78,8 +78,8 @@
         </form>
     </div>
 
-    {{-- Filter Capsule Tabs --}}
-    <div class="flex flex-wrap gap-1.5 sm:gap-2 pb-1">
+    {{-- Filter Capsule Tabs (Horizontally scrollable on mobile, single row) --}}
+    <div class="flex items-center overflow-x-auto no-scrollbar gap-1.5 sm:gap-2 pb-2 -mx-4 px-4 sm:mx-0 sm:px-0 scroll-smooth">
         @foreach(['ALL' => 'All', 'PENDING' => 'Pending', 'TO SHIP' => 'To Ship', 'TO RECEIVE' => 'To Receive', 'DELIVERED' => 'Delivered', 'COMPLETED' => 'Completed', 'CANCELLED' => 'Cancelled'] as $key => $label)
             @php
                 $isActive = strtoupper(request('tab', 'ALL')) === $key;
