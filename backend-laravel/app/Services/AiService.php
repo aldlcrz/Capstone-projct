@@ -131,28 +131,69 @@ class AiService
     }
 
     /**
-     * Check if a message attempts to access or submit sensitive information (financial, PII, credentials, system data).
+     * Check if a message attempts to extract private system secrets, database internals, or admin credentials.
+     * Note: Legitimate questions like "How do I reset my password?" or "What is an OTP?" are explicitly allowed.
      */
-    public static function isSensitiveInfoQuery(string $message): bool
+    public static function isSecurityExtractionAttempt(string $message): bool
     {
         $lower = strtolower($message);
-        $sensitivePatterns = [
+
+        // Allow legitimate customer questions about account / password reset / OTP explanation
+        if (preg_match('/\b(how\s+do\s+i\s+(reset|change|update)|i\s+forgot\s+my|paano\s+mag\s*(reset|palit)|what\s+is\s+an?\s+otp|ano\s+ang\s+otp|forgot\s+password|reset\s+password)\b/i', $lower)) {
+            return false;
+        }
+
+        $extractionPatterns = [
             '/\b(select\s+.*\s+from|insert\s+into|update\s+.*\s+set|delete\s+from|drop\s+table|drop\s+database|truncate\s+table|alter\s+table)\b/i',
-            '/\b(database|sql|sqlite|mysql|postgres|db_host|db_password|db_user|db_connection|schema|table_schema)\b/i',
-            '/\b(password|passwd|credentials|app_key|api_key|secret_key|jwt_secret|\.env|env\(|config\(|auth::)\b/i',
-            '/\b(admin_password|admin\s+account|user\s+records|users\s+table|login\s+credentials)\b/i',
-            '/\b(credit\s*card|cvv|cvc|card\s*number|debit\s*card|bank\s*account|bank\s*pin|atm\s*pin|otp\b|one\s*time\s*pin)\b/i',
-            '/\b(social\s*security|sss\s*number|tin\s*number|passport\s*number|driver\'?s?\s*license)\b/i',
+            '/\b(sql\s*injection|schema|table_schema|db_password|db_host|db_connection|users\s+table|database\s+credentials|dump\s+database)\b/i',
+            '/\b(what\s+is\s+(the\s+)?(admin|system|root)\s*password|show\s+(me\s+)?(all\s+)?(passwords?|credentials?|secrets?|api\s*keys?))\b/i',
+            '/\b(app_key|api_key|secret_key|jwt_secret|\.env|env\(|config\(|auth::id\(\))\b/i',
             '/\b(system\s+prompt|jailbreak|ignore\s+previous\s+instructions|prompt\s+injection|override\s+rules|bypass\s+security|exploit|vulnerability)\b/i',
+            '/\b(give\s+me\s+(the\s+)?(admin|user|database)\s+credentials|what\s+is\s+my\s+password|show\s+my\s+password)\b/i',
         ];
 
-        foreach ($sensitivePatterns as $pattern) {
+        foreach ($extractionPatterns as $pattern) {
             if (preg_match($pattern, $lower)) {
                 return true;
             }
         }
 
         return false;
+    }
+
+    /**
+     * Check if a message attempts to submit or request financial credentials (CVV, Card PIN, requesting raw OTPs).
+     */
+    public static function isFinancialCredentialsAttempt(string $message): bool
+    {
+        $lower = strtolower($message);
+
+        // Allow explanatory questions like "What is an OTP?"
+        if (preg_match('/\b(what\s+is\s+(an?\s+)?otp|ano\s+ang\s+otp|how\s+does\s+otp\s+work)\b/i', $lower)) {
+            return false;
+        }
+
+        $financialPatterns = [
+            '/\b(credit\s*card\s*number|card\s*number\s+is|cvv\s*is|cvc\s*is|my\s+cvv|my\s+pin\s+is|atm\s*pin|bank\s*pin)\b/i',
+            '/\b(give\s+me\s+(the\s+|my\s+)?otp|send\s+me\s+(the\s+|my\s+)?otp|what\s+is\s+my\s+otp)\b/i',
+            '/\b(gcash\s+pin|gcash\s+mpin|maya\s+password|bank\s+password)\b/i',
+        ];
+
+        foreach ($financialPatterns as $pattern) {
+            if (preg_match($pattern, $lower)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * Backward compatibility wrapper for security screening.
+     */
+    public static function isSensitiveInfoQuery(string $message): bool
+    {
+        return self::isSecurityExtractionAttempt($message) || self::isFinancialCredentialsAttempt($message);
     }
 
     public static function isSecurityProhibitedQuery(string $message): bool
@@ -170,13 +211,13 @@ class AiService
     }
 
     /**
-     * MODE 3: Handle Live Customer Order Status with database lookup.
+     * MODE 3: Handle Live Customer Order Status with database lookup & strict authorization.
      */
     public static function handleOrderSupport(string $message, ?string $userId = null): array
     {
         if (!$userId) {
             return [
-                'reply' => "📦 **Order Tracking & Support:**\n\nTo view your live order tracking, packing proof, and courier status, please **Sign In** to your LumBarong account and visit the [My Orders](/customer/orders) page.\n\nIf you have your Order ID or tracking inquiry, you may also email **lumbarongsupport@gmail.com** for direct artisan assistance.",
+                'reply' => "🔐 **Order Tracking & Support:**\n\nI can help you check your live order tracking and packaging proofs, but you'll need to **Sign In** first so I can securely access your order information.\n\nPlease [Sign In to LumBarong](/login) and check your [My Orders](/customer/orders) portal. If you need urgent assistance, our team is also available at **lumbarongsupport@gmail.com**.",
                 'products' => [],
                 'refinements' => [
                     ['label' => '🛍️ Browse Best Sellers', 'prompt' => 'Show me the top best selling barongs'],
@@ -191,6 +232,7 @@ class AiService
         }
 
         try {
+            // Strictly query ONLY orders belonging to the authenticated customer
             $query = Order::where('customerId', $userId);
 
             if ($specificId) {
@@ -202,7 +244,7 @@ class AiService
             if ($orders->isEmpty()) {
                 if ($specificId) {
                     return [
-                        'reply' => "📦 **Order Lookup:** No order matching `#" . strtoupper($specificId) . "` was found under your authenticated account.\n\nPlease verify your order ID in your [My Orders](/customer/orders) page or email **lumbarongsupport@gmail.com**.",
+                        'reply' => "📦 **Order Lookup:** I couldn't find order `#" . strtoupper($specificId) . "` under your account.\n\nPlease check the Order ID in your [My Orders](/customer/orders) page or make sure you're signed in with the account used for this purchase.",
                         'products' => [],
                         'refinements' => [
                             ['label' => '📦 View All My Orders', 'prompt' => 'Where is my order?'],
@@ -212,7 +254,7 @@ class AiService
                 }
 
                 return [
-                    'reply' => "📦 **Order Status:** I checked your account, but there are no active orders placed under this profile yet.\n\nReady to find your authentic Lumban Barong? You can ask me for wedding, graduation, or fabric recommendations!",
+                    'reply' => "📦 **Order Status:** I checked your account, but there are no active orders placed under this profile yet.\n\nReady to find your authentic Lumban Barong? Tell me about your occasion or budget and I'll match the best options!",
                     'products' => [],
                     'refinements' => [
                         ['label' => '⭐ View Best Sellers', 'prompt' => 'Show me your best selling Barongs'],
@@ -251,9 +293,10 @@ class AiService
                 ]
             ];
         } catch (\Throwable $e) {
+            Log::error("Order Support Lookup Error: " . $e->getMessage());
             if ($specificId) {
                 return [
-                    'reply' => "📦 **Order Lookup:** No order matching `#" . strtoupper($specificId) . "` was found under your authenticated account.\n\nPlease verify your order ID in your [My Orders](/customer/orders) page or email **lumbarongsupport@gmail.com**.",
+                    'reply' => "📦 **Order Lookup:** I couldn't find order `#" . strtoupper($specificId) . "` under your account.\n\nPlease check the Order ID in your [My Orders](/customer/orders) page or make sure you're signed in with the account used for this purchase.",
                     'products' => [],
                     'refinements' => [
                         ['label' => '📦 View All My Orders', 'prompt' => 'Where is my order?'],
@@ -263,15 +306,17 @@ class AiService
             }
 
             return [
-                'reply' => "📦 You can track all your orders and view seller packing proofs directly in your [My Orders](/customer/orders) portal.",
+                'reply' => "📦 **Order Tracking:** You can view your complete order history, courier updates, and packing proofs anytime in your [My Orders](/customer/orders) page.",
                 'products' => [],
-                'refinements' => []
+                'refinements' => [
+                    ['label' => '⭐ View Best Sellers', 'prompt' => 'Show me your best selling Barongs']
+                ]
             ];
         }
     }
 
     /**
-     * MODE 2: Check if user has explicit or implicit shopping intent.
+     * Check if user has explicit or implicit shopping intent.
      */
     public static function isShoppingIntent(string $message): bool
     {
@@ -283,6 +328,7 @@ class AiService
             '/\b(what\s+is|difference\s+between|define|meaning\s+of|history|about\s+lumban|origin\s+of)\b/i',
             '/\b(return\s+policy|refund|payment\s+method|gcash|maya|cod|shipping\s+fee|delivery\s+time|contact\s+support|email)\b/i',
             '/\b(size\s+chart|how\s+to\s+measure|measurement\s+guide|paano\s+sukatin)\b/i',
+            '/\b(reset\s+password|forgot\s+password|login|what\s+is\s+otp)\b/i',
         ];
 
         foreach ($pureGuides as $pattern) {
@@ -291,15 +337,15 @@ class AiService
             }
         }
 
-        // Pure greetings
-        if (preg_match('/^(hi|hello|hey|heyy|mabuhay|good\s*(morning|afternoon|evening|day)|kumusta|kamusta|sup|yo|help|start)[.!?\s]*$/i', $lower)) {
+        // Pure conversational
+        if (preg_match('/^(hi|hello|hey|heyy|mabuhay|good\s*(morning|afternoon|evening|day)|kumusta|kamusta|sup|yo|help|start|thanks?|thank\s*you|salamat|ok|okay|sige|noted|got\s*it)[.!?\s]*$/i', $lower)) {
             return false;
         }
 
         // Shopping & Product Recommendation Intents
         $shoppingIntents = [
             '/\b(show|recommend|suggest|browse|view|find|search|look\s+for|shop|buy|order|purchase)\b/i',
-            '/\b(bestseller|best\s*seller|top\s*seller|popular\s+barong|catalog|collection|available\s+products?|items?|models?)\b/i',
+            '/\b(bestseller|best\s*seller|top\s+seller|popular\s+barong|catalog|collection|available\s+products?|items?|models?)\b/i',
             '/\b(price|magkano|how\s+much|cost|budget|under\s+\d+|less\s+than\s+\d+|patingin|sample|list\s+of\s+barong|meron\s+ba|anong\s+tinda)\b/i',
             '/\b(barong\s+for\s+(wedding|groom|ninong|graduation|event|work)|filipiniana\s+dress|terno\s+dress|lady\s+barong)\b/i',
             '/\b(attending\s+a\s+wedding|attending\s+graduation|what\s+should\s+i\s+wear|what\s+to\s+wear|need\s+a\s+barong|looking\s+for\s+a\s+barong)\b/i',
@@ -324,10 +370,8 @@ class AiService
     }
 
     /**
-     * 3-Mode Smart Assistance entrypoint:
-     * Mode 1: Fashion & Heritage Advisor (Informational / Care / Fabric)
-     * Mode 2: Multi-Factor Scored Shopping Assistant (RecommendationEngine)
-     * Mode 3: Customer Support & Live Order Lookup (MySQL Orders DB)
+     * Main Conversational Concierge entrypoint:
+     * Architecture: Security -> Intent -> Context -> Authorized DB -> Gemini / Natural Heuristic
      */
     public static function chatStylist(string $userMessage, array $conversationHistory = [], array $sessionContext = [], ?string $userId = null): array
     {
@@ -337,30 +381,40 @@ class AiService
         // 1. INAPPROPRIATE CONTENT & PROFANITY GUARDRAIL
         if (self::isInappropriateMessage($userMessage)) {
             return [
-                'reply' => "⚠️ **Community Standards Notice:** LumBarong Smart Assistance maintains a respectful and family-friendly environment. Please refrain from using inappropriate language.\n\nHow may I assist you with our handcrafted Barong Tagalog or Filipiniana collections today?",
+                'reply' => "⚠️ **Community Standards Notice:** Mabuhay! 😊 Please refrain from using inappropriate language. I’m here to help with LumBarong products, styling, orders, and other shopping questions. Let’s keep our conversation respectful so I can assist you better.",
                 'products' => [],
                 'refinements' => [],
                 'session_context' => $sessionContext
             ];
         }
 
-        // 2. STRICT SENSITIVE INFORMATION & SYSTEM SECURITY GUARDRAIL
-        if (self::isSensitiveInfoQuery($userMessage)) {
+        // 2. SECURITY EXTRACTION ATTEMPT GUARDRAIL
+        if (self::isSecurityExtractionAttempt($userMessage)) {
             return [
-                'reply' => "🛡️ **Security Notice:** For your privacy and security, LumBarong Smart Assistance does not handle, request, or disclose sensitive personal, financial, authentication, or internal system information (such as passwords, credit card numbers, OTPs, PINs, or internal databases).\n\nI do not have access to internal databases, user records, or credentials. If you need assistance regarding your account or order status, please visit your **My Orders** page or contact customer support directly.",
+                'reply' => "🔒 **Security Notice:** For security and privacy, I cannot provide internal credentials, private database records, system secrets, or restricted platform information (and do not have access to internal databases). I can still help you with LumBarong products, orders, styling, and account-related questions.",
                 'products' => [],
                 'refinements' => [],
                 'session_context' => $sessionContext
             ];
         }
 
-        // 3. MODE 3: CUSTOMER SUPPORT / LIVE ORDER LOOKUP
+        // 3. FINANCIAL CREDENTIALS PROTECTION GUARDRAIL
+        if (self::isFinancialCredentialsAttempt($userMessage)) {
+            return [
+                'reply' => "⚠️ **Security Notice:** For your security, please never share your OTP, PIN, CVV, password, or other banking credentials here. I can still help explain payment procedures or troubleshoot a payment issue without asking for those details.",
+                'products' => [],
+                'refinements' => [],
+                'session_context' => $sessionContext
+            ];
+        }
+
+        // 4. AUTHENTICATED LIVE ORDER SUPPORT
         if (self::isOrderSupportQuery($userMessage)) {
             $supportRes = self::handleOrderSupport($userMessage, $userId);
             return array_merge($supportRes, ['session_context' => $sessionContext]);
         }
 
-        // 4. MODE 2: SHOPPING ASSISTANT & MULTI-FACTOR RECOMMENDATION ENGINE
+        // 5. SHOPPING ASSISTANT & MULTI-FACTOR RECOMMENDATION ENGINE
         if (self::isShoppingIntent($userMessage)) {
             $recResult = RecommendationEngine::recommend($userMessage, $sessionContext);
             $newContext = $recResult['preferences'];
@@ -375,14 +429,14 @@ class AiService
             }
 
             $recommendationSystemPrompt = "You are LumBarong Smart Assistance, an authentic Philippine fashion and recommendation concierge in Lumban, Laguna.
-The Laravel recommendation engine has evaluated the customer's request and computed the Top 3 scored matches:
+The recommendation engine computed the following matches:
 {$productsContext}
 
-YOUR INSTRUCTIONS:
-1. Speak naturally, warmly, and concisely (1-2 short paragraphs) like a real human fashion stylist.
-2. Directly address the customer's question, highlighting why the top match fits their requested occasion or style.
-3. Mention that they can click the product cards below to view measurements, fabric close-ups, and artisan customization options.
-4. Keep the tone courteous, proud of Lumban heritage, and genuine. Do NOT recite robotic bulleted menus.";
+INSTRUCTIONS:
+1. Speak naturally, warmly, and concisely (1-2 short paragraphs) like a real human personal stylist.
+2. Directly answer why the top match fits their requested occasion or style.
+3. Mention that they can tap on the product cards below to view measurements, fabric close-ups, and artisan customization options.
+4. Keep the tone courteous, proud of Lumban heritage, and genuine.";
 
             $aiText = self::callGemini($userMessage, $recommendationSystemPrompt, $conversationHistory);
 
@@ -398,27 +452,25 @@ YOUR INSTRUCTIONS:
             ];
         }
 
-        // 5. MODE 1: FASHION ADVISOR & HERITAGE GUIDE (No unsolicited product cards)
+        // 6. GENERAL CONVERSATION & KNOWLEDGE CONSULTATION
         $systemPrompt = "You are the LumBarong Smart Assistant, a friendly, intelligent, and knowledgeable heritage fashion consultant for LumBarong in Lumban, Laguna, Philippines (the Embroidery Capital of the Philippines).
 
 PERSONALITY & HUMAN-LIKE CONVERSATION:
-- Answer naturally, conversationally, and warmly like a real personal stylist.
+- Answer naturally, conversationally, and warmly like a friendly personal stylist.
 - Answer the customer's EXACT question directly in 1 to 3 concise, clear paragraphs.
+- If the user simply greets you (e.g. 'Hello', 'Hi', 'Good morning', 'Thank you', 'Okay'), reply in a friendly, natural, and concise way without repeating long standard introductions.
 - Speak in natural English or Taglish (matching the customer's language).
-- Do NOT output repetitive generic menus or robotic scripts. Answer the specific question directly.
 
 KNOWLEDGE BASE:
-- Location: LumBarong master artisans and workshops are based in Lumban, Laguna, Philippines. We ship door-to-door nationwide across the Philippines and worldwide with parcel tracking.
+- Location: LumBarong master artisans and workshops are based in Lumban, Laguna, Philippines. We ship door-to-door nationwide with parcel tracking.
 - Fabrics: Piña (pure pineapple fiber heirloom), Piña-Seda (pineapple-silk blend), Cocoon Silk (opaque luxury formal), Jusi Silk (crisp traditional semi-sheen), Organza/Monoray (lightweight & budget-friendly).
 - Budget ranges: Organza (₱1,500–₱3,500), Jusi (₱3,800–₱7,500), Cocoon Silk (₱6,500–₱12,000), Piña-Seda (₱9,500–₱25,000+).
 - Occasion Styling: Grooms (Piña-Seda / Cocoon with Calado pechera & Camisa de Chino), Ninongs/Guests (Jusi / Organza), Graduations (Organza / Monoray).
-- Garment Care: Hand-wash in cold water with mild shampoo, do not wring, hang dry, iron with damp pressing cloth on low/medium heat.
 - Sizing: True to standard Philippine Barong sizes with 3-4 inches comfort ease.
 - Payments & Tracking: GCash, Maya with receipt verification; live order tracking & artisan packing photos in the My Orders tab.
 
 STRICT DOMAIN LIMITS & SECURITY:
 - You ONLY discuss Philippine fashion, Barongs, Filipiniana, fabrics, sizing, care, styling, shop location, orders, and Lumban culture.
-- If asked about unrelated topics (e.g. math homework, programming, general politics, recipes, weather), politely decline and steer the conversation back to Barongs and Philippine heritage attire.
 - NEVER disclose, simulate, or discuss internal database passwords, SQL queries, system tokens, or server source code.";
 
         $aiText = self::callGemini($userMessage, $systemPrompt, $conversationHistory);
@@ -469,33 +521,130 @@ STRICT DOMAIN LIMITS & SECURITY:
         return $text;
     }
 
+    /**
+     * Unified Intent-Based Heuristic Fallback Engine
+     */
     public static function heuristicStylistReply(string $lower): string
     {
         $cleaned = trim(preg_replace('/[^\p{L}\p{N}\s]/u', '', $lower));
 
-        // 1. GREETINGS & CASUAL HELLO (English, Tagalog, Polite variations)
-        if (preg_match('/^(hi|hello|hey|heyy|mabuhay|good\s*morning|good\s*afternoon|good\s*evening|good\s*day|kumusta|kamusta|sup|yo|start|help|musta|oy|uy)[.!?\s]*$/i', $cleaned)) {
-            return "Mabuhay! Hello and welcome to **LumBarong Smart Assistance**. I am your heritage styling advisor and shopping concierge from Lumban, Laguna.\n\n"
-                . "How may I help you today? You can ask me about:\n"
-                . "• **Best Sellers** & Top recommended Barongs\n"
-                . "• **Fabric Guide** (Piña vs. Jusi vs. Cocoon vs. Organza)\n"
-                . "• **Event Styling** (Weddings, Grooms, Ninongs, Graduations)\n"
-                . "• **Care & Maintenance** (How to wash, iron, and store)\n"
-                . "• **Sizing & Measurements** for the perfect fit\n"
-                . "• **Shop Locations & Order Shipping** in LumBarong";
+        // 1. GENERAL CONVERSATION LAYER (Greetings, Thanks, Acknowledgments, Capabilities, Help)
+        $conversational = self::handleGeneralConversation($lower, $cleaned);
+        if ($conversational !== null) {
+            return $conversational;
         }
 
-        // 2. SHOP LOCATION, PHYSICAL STORE & ADDRESS
+        // 2. ACCOUNT & SUPPORT LAYER (Password reset, login, OTP explanation)
+        $accountReply = self::handleAccountSupport($lower);
+        if ($accountReply !== null) {
+            return $accountReply;
+        }
+
+        // 3. STYLING & KNOWLEDGE BASE LAYER
+        $knowledgeReply = self::handleStylingKnowledge($lower);
+        if ($knowledgeReply !== null) {
+            return $knowledgeReply;
+        }
+
+        // 4. NATURAL CONTEXTUAL FALLBACK
+        return "I'm still here to help! 😊 I can assist with LumBarong products, Barong fabrics, styling recommendations, sizing, care instructions, orders, and shopping questions. Could you tell me a little more about what you need?";
+    }
+
+    /**
+     * Layer 1: General Conversation Handler
+     */
+    private static function handleGeneralConversation(string $lower, string $cleaned): ?string
+    {
+        // Greetings
+        if (preg_match('/^(hi|hello|hey|heyy)[.!?\s]*$/i', $cleaned)) {
+            return "Hello! 👋 Welcome to LumBarong Smart Assistance. How can I help you today?";
+        }
+
+        if (preg_match('/^(good\s*morning|magandang\s*umaga)[.!?\s]*$/i', $cleaned)) {
+            return "Good morning! ☀️ How can I assist you with LumBarong today?";
+        }
+
+        if (preg_match('/^(good\s*afternoon|magandang\s*hapon)[.!?\s]*$/i', $cleaned)) {
+            return "Good afternoon! ☀️ How can I help you today?";
+        }
+
+        if (preg_match('/^(good\s*evening|magandang\s*gabi)[.!?\s]*$/i', $cleaned)) {
+            return "Good evening! 🌙 How can I assist you tonight?";
+        }
+
+        if (preg_match('/^(mabuhay|kumusta|kamusta|musta|good\s*day|sup|yo)[.!?\s]*$/i', $cleaned)) {
+            return "Mabuhay! 😊 Kumusta! How can I help you discover authentic Lumban Barongs today?";
+        }
+
+        // Thank you / Gratitude
+        if (preg_match('/\b(thank\s*you|thanks|salamat|maraming\s*salamat|thank\s*u|thx|ty)\b/i', $lower)) {
+            return "You're very welcome! 😊 Let me know if you need anything else or have more questions about our Barongs.";
+        }
+
+        // Acknowledgments & Confirmations
+        if (preg_match('/^(ok|okay|sige|got\s*it|noted|alright|sure|cge)[.!?\s]*$/i', $cleaned)) {
+            return "Sounds good! 😊 I'm here whenever you need styling tips, fabric advice, or order assistance.";
+        }
+
+        // Capabilities & About LumBarong
+        if (preg_match('/\b(what\s+can\s+you\s+do|what\s+is\s+lumbarong|who\s+are\s+you|about\s+lumbarong|what\s+do\s+you\s+do|ano\s+ang\s+lumbarong)\b/i', $lower)) {
+            return "I'm your **LumBarong Smart Assistant**! 😊 I can help you with:\n\n"
+                . "• **Product Recommendations**: Finding the right Barong for weddings, graduations, or formal events.\n"
+                . "• **Heritage Fabric Guides**: Comparing Piña, Jusi, Cocoon, and Organza.\n"
+                . "• **Sizing & Measurements**: Finding your ideal tailored fit.\n"
+                . "• **Garment Care**: Tips on washing, ironing, and storing your Barong.\n"
+                . "• **Order Support**: Checking tracking updates and packing proofs.\n\n"
+                . "What would you like to know more about?";
+        }
+
+        // General Help Request
+        if (preg_match('/^(i\s+need\s+help|help\s+me|can\s+you\s+help\s+me|help|tulungan\s+mo\s+ako)[.!?\s]*$/i', $cleaned)) {
+            return "Of course! 😊 Tell me what you need help with. You can ask about products, sizing, fabrics, styling, orders, payments, or anything related to shopping on LumBarong.";
+        }
+
+        return null;
+    }
+
+    /**
+     * Layer 2: Account, Authentication & Support Explanations
+     */
+    private static function handleAccountSupport(string $lower): ?string
+    {
+        // Password Reset & Forgot Password Guidance
+        if (preg_match('/\b(reset\s+password|forgot\s+password|change\s+password|paano\s+mag\s*palit\s+ng\s+password|nakalimutan\s+ang\s+password)\b/i', $lower)) {
+            return "🔑 **Password Reset & Account Assistance:**\n\n"
+                . "1. Go to the [Login Page](/login) and click **Forgot Password?**\n"
+                . "2. Enter your registered email address to receive a secure password reset link.\n"
+                . "3. Follow the instructions sent to your email to create a new password.\n\n"
+                . "If you are already logged in, you can also update your password under your **Account Profile** settings.";
+        }
+
+        // What is an OTP?
+        if (preg_match('/\b(what\s+is\s+(an?\s+)?otp|ano\s+ang\s+otp|explain\s+otp|how\s+does\s+otp\s+work)\b/i', $lower)) {
+            return "ℹ️ **What is an OTP?**\n\n"
+                . "An **OTP (One-Time Password)** is a temporary, single-use security code sent to your registered email or mobile number to verify your identity during logins or transactions.\n\n"
+                . "🛡️ *Security Reminder*: LumBarong will never ask you to share your OTP or banking PINs in this chat or via message.";
+        }
+
+        return null;
+    }
+
+    /**
+     * Layer 3: Styling & Heritage Knowledge Base
+     */
+    private static function handleStylingKnowledge(string $lower): ?string
+    {
+        // 1. SHOP LOCATION & WORKSHOP
         if (preg_match('/\b(where\s+(is|are)\s+(your|the)?\s*(shop|store|boutique|workshop|office|location|artisans?)|location|located|address|physical\s+store|saan\s+(ang\s+)?(shop|tinda|tindahan|pwesto))\b/i', $lower)) {
             return "📍 **Our Heritage Workshop Location:**\n\n"
                 . "LumBarong's master artisans and embroidery workshops are proudly based in **Lumban, Laguna, Philippines** — renowned worldwide as the *Embroidery Capital of the Philippines*.\n\n"
                 . "• **Direct Artisan Workshops**: Every piece is tailored and hand-embroidered right here in Lumban by our certified master artisans.\n"
                 . "• **Nationwide & International Delivery**: We ship door-to-door across the Philippines with express courier partners and full parcel tracking.\n"
-                . "• **Artisan Directory**: You can explore individual artisan shops in our [Shops Hub](/shops) or chat directly with shop owners in the **💬 Artisans** tab above!";
+                . "• **Artisan Directory**: You can explore individual artisan shops in our [Shops Hub](/shops) or chat directly with shop owners in the **💬 Artisans** tab!";
         }
 
-        // 3. LOWEST PRICE & BUDGET-FRIENDLY OPTIONS
-        if (preg_match('/\b(lowest\s+price|cheapest|pinakamura|least\s+expensive|budget\s+friendly|pinaka\s+mura)\b/i', $lower)) {
+        // 2. LOWEST PRICE & BUDGET-FRIENDLY OPTIONS
+        if (preg_match('/\b(lowest\s+price|cheapest|pinakamura|least\s+expensive|budget\s+friendly|pinaka\s+mura|affordable|mura)\b/i', $lower)) {
             return "🏷️ **Lowest Price & Budget-Friendly Barong Tagalog:**\n\n"
                 . "Our most accessible, high-quality handcrafted Barongs start at:\n\n"
                 . "1. **Organza / Monoray Barongs** — **₱1,500 to ₱3,200**\n"
@@ -505,10 +654,10 @@ STRICT DOMAIN LIMITS & SECURITY:
                 . "   • Traditional semi-sheen formal Barong for wedding guests & sponsors.\n\n"
                 . "3. **Cocoon Silk** — **₱6,000 to ₱9,500** (Opaque luxury)\n"
                 . "4. **Pure Piña-Seda** — **₱9,500+** (Heirloom groom wear)\n\n"
-                . "💡 *Tip*: You can click the **🎓 Graduation under ₱3,500** chip above to view available pieces in this budget range!";
+                . "Tell me your target price range or occasion and I'll find the best options in stock!";
         }
 
-        // 4. CONTACT & CUSTOMER SERVICE
+        // 3. CONTACT & CUSTOMER SERVICE
         if (preg_match('/\b(contact|email|phone|cellphone|number|hotline|support|help\s+desk|customer\s+service|kausap|tawag)\b/i', $lower)) {
             return "📞 **LumBarong Customer Support & Contact Channels:**\n\n"
                 . "• **Official Support Email**: **lumbarongsupport@gmail.com**\n"
@@ -516,7 +665,7 @@ STRICT DOMAIN LIMITS & SECURITY:
                 . "• **Order Concerns**: View live courier tracking and packing proofs under your [My Orders](/customer/orders) portal.";
         }
 
-        // 5. RETURNS, REFUNDS & EXCHANGES
+        // 4. RETURNS, REFUNDS & EXCHANGES
         if (preg_match('/\b(return|refund|exchange|palit|bawi|warranty|policy|reklamo)\b/i', $lower)) {
             return "🔄 **Returns, Exchanges & Quality Guarantee:**\n\n"
                 . "• **Authenticity Guarantee**: 100% genuine Lumban hand-embroidery craftsmanship.\n"
@@ -524,8 +673,8 @@ STRICT DOMAIN LIMITS & SECURITY:
                 . "• **Artisan Support**: You can also email **lumbarongsupport@gmail.com** with photos of the garment for fast resolution.";
         }
 
-        // 6. BEST SELLERS & MOST POPULAR
-        if (str_contains($lower, 'best seller') || str_contains($lower, 'bestseller') || str_contains($lower, 'popular') || str_contains($lower, 'top seller') || str_contains($lower, 'most bought') || str_contains($lower, 'recommendation')) {
+        // 5. BEST SELLERS & MOST POPULAR
+        if (str_contains($lower, 'best seller') || str_contains($lower, 'bestseller') || str_contains($lower, 'popular') || str_contains($lower, 'top seller') || str_contains($lower, 'most bought')) {
             return "⭐ **Our Top Best Sellers & Customer Favorites:**\n\n"
                 . "1. **Piña-Seda Classic Pechera Barong** — Our #1 choice for grooms and formal occasions, featuring intricate *Calado* openwork hand-embroidery along the chest.\n"
                 . "2. **Modern Cocoon Silk Barong** — A contemporary favorite with a crisp Chinese/Mandarin collar and smooth opaque sheen.\n"
@@ -534,17 +683,18 @@ STRICT DOMAIN LIMITS & SECURITY:
                 . "Let me know your preferred occasion or budget and I'll match the best piece for you!";
         }
 
-        // 7. WEDDING & GROOM ATTIRE
+        // 6. WEDDING & GROOM ATTIRE
         if (str_contains($lower, 'wedding') || str_contains($lower, 'groom') || str_contains($lower, 'kasal') || str_contains($lower, 'bride')) {
             return "🤵 **Wedding & Groom Styling Guide:**\n\n"
-                . "For the **Groom**, the gold standard is an authentic **Piña-Seda** (Pineapple-Silk) or **Cocoon Silk Barong** handcrafted in Lumban, Laguna. Key recommendations:\n"
+                . "For the **Groom**, the gold standard is an authentic **Piña-Seda** (Pineapple-Silk) or **Cocoon Silk Barong** handcrafted in Lumban, Laguna. Key recommendations:\n\n"
                 . "• **Embroidery Style**: Half-open *Pechera* with Lumban *Calado* (pulled-thread lace) creates a regal, heirloom aesthetic.\n"
                 . "• **Collar**: Classic pointed collar for traditional elegance, or Chinese/Mandarin collar for a sleek modern look.\n"
                 . "• **Undergarment**: Pair with a high-grade cream or white *Camisa de Chino* (long sleeves).\n"
-                . "• **Trousers**: Pure black tailored wool or wool-blend slacks with polished black leather shoes.";
+                . "• **Trousers**: Pure black tailored wool or wool-blend slacks with polished black leather shoes.\n\n"
+                . "If you tell me whether you are the groom, sponsor (ninong), or a guest, I can provide more specific styling suggestions!";
         }
 
-        // 8. NINONG / PRINCIPAL SPONSOR / GUESTS / ENTOURAGE
+        // 7. NINONG / PRINCIPAL SPONSOR / GUESTS / ENTOURAGE
         if (str_contains($lower, 'ninong') || str_contains($lower, 'sponsor') || str_contains($lower, 'groomsmen') || str_contains($lower, 'entourage') || str_contains($lower, 'guest')) {
             return "👔 **Ninong & Wedding Entourage Guide:**\n\n"
                 . "For **Principal Sponsors (Ninong)** and formal guests, a **Jusi** or **High-grade Organza Barong** strikes the ideal balance of dignity, breathability, and formality.\n\n"
@@ -553,7 +703,7 @@ STRICT DOMAIN LIMITS & SECURITY:
                 . "• **Fit**: Traditional comfort fit allows easy movement throughout long church and reception ceremonies.";
         }
 
-        // 9. GRADUATION & BUDGET PIECES
+        // 8. GRADUATION & CEREMONY ATTIRE
         if (str_contains($lower, 'graduation') || str_contains($lower, 'student') || str_contains($lower, 'college') || str_contains($lower, 'diploma') || str_contains($lower, 'graduate')) {
             return "🎓 **Graduation & Ceremony Attire:**\n\n"
                 . "For graduations, moving-up ceremonies, and academic functions:\n"
@@ -562,7 +712,7 @@ STRICT DOMAIN LIMITS & SECURITY:
                 . "• Pair with dark slacks and an undershirt for a distinguished academic stage appearance.";
         }
 
-        // 10. FABRIC COMPARISON & GUIDE
+        // 9. FABRIC COMPARISON & GUIDE
         if (str_contains($lower, 'difference') || str_contains($lower, 'piña vs') || str_contains($lower, 'pina vs') || str_contains($lower, 'fabric') || str_contains($lower, 'tela') || str_contains($lower, 'material') || str_contains($lower, 'piña') || str_contains($lower, 'jusi') || str_contains($lower, 'cocoon') || str_contains($lower, 'organza')) {
             return "🧵 **Philippine Heritage Fabric Guide:**\n\n"
                 . "• **Piña (Pineapple Fiber)**: The queen of Philippine textiles. Hand-scraped from Spanish Red pineapple leaves. Ultra-delicate, naturally ivory, and an heirloom investment.\n"
@@ -572,7 +722,7 @@ STRICT DOMAIN LIMITS & SECURITY:
                 . "• **Organza / Monoray**: Synthetic sheer fabric. Lightweight, durable, and budget-friendly.";
         }
 
-        // 11. BARONG CARE, WASHING & IRONING
+        // 10. BARONG CARE, WASHING & IRONING
         if (str_contains($lower, 'wash') || str_contains($lower, 'clean') || str_contains($lower, 'care') || str_contains($lower, 'iron') || str_contains($lower, 'press') || str_contains($lower, 'maintain') || str_contains($lower, 'laba') || str_contains($lower, 'stain')) {
             return "🧺 **How to Care for Your Handcrafted Barong:**\n\n"
                 . "1. **Washing**: Hand-wash only in cold/lukewarm water with gentle baby shampoo or mild detergent. **Never wring, twist, or machine wash.**\n"
@@ -581,7 +731,7 @@ STRICT DOMAIN LIMITS & SECURITY:
                 . "4. **Storage**: Store in a breathable cotton garment bag (avoid airtight plastic) on a wide wooden hanger.";
         }
 
-        // 12. SIZING & MEASUREMENTS
+        // 11. SIZING & MEASUREMENTS
         if (str_contains($lower, 'size') || str_contains($lower, 'sizing') || str_contains($lower, 'fit') || str_contains($lower, 'measure') || str_contains($lower, 'measurement') || str_contains($lower, 'chest') || str_contains($lower, 'shoulder')) {
             return "📏 **Barong Sizing & Fit Advice:**\n\n"
                 . "Barongs do not stretch, so picking the proper allowance is essential for comfort:\n"
@@ -593,7 +743,7 @@ STRICT DOMAIN LIMITS & SECURITY:
                 . "💡 *Pro-Tip*: Measure your actual chest circumference and add **3 to 4 inches of ease** for a comfortable traditional fit!";
         }
 
-        // 13. LUMBAN HERITAGE & CALADO EMBROIDERY
+        // 12. LUMBAN HERITAGE & CALADO EMBROIDERY
         if (str_contains($lower, 'lumban') || str_contains($lower, 'laguna') || str_contains($lower, 'heritage') || str_contains($lower, 'calado') || str_contains($lower, 'embroidery') || str_contains($lower, 'burda') || str_contains($lower, 'artisan') || str_contains($lower, 'origin')) {
             return "🏛️ **Lumban, Laguna — The Embroidery Capital:**\n\n"
                 . "Lumban is renowned worldwide for its centuries-old embroidery tradition. Our master artisans specialize in:\n"
@@ -602,7 +752,7 @@ STRICT DOMAIN LIMITS & SECURITY:
                 . "• Every Barong purchased directly supports local artisan families and preserves this Philippine cultural heritage.";
         }
 
-        // 14. PAYMENTS, GCASH & MAYA
+        // 13. PAYMENTS, GCASH & MAYA
         if (str_contains($lower, 'payment') || str_contains($lower, 'gcash') || str_contains($lower, 'maya') || str_contains($lower, 'pay') || str_contains($lower, 'bayad') || str_contains($lower, 'reference')) {
             return "💳 **Payment Methods on LumBarong:**\n\n"
                 . "We accept **GCash** and **Maya** mobile payments with instant verification:\n"
@@ -611,7 +761,7 @@ STRICT DOMAIN LIMITS & SECURITY:
                 . "• Our system verifies unique references to prevent duplication and ensure your order is immediately processed by the artisan.";
         }
 
-        // 15. SHIPPING & ORDER TRACKING
+        // 14. SHIPPING & ORDER TRACKING
         if (str_contains($lower, 'ship') || str_contains($lower, 'shipping') || str_contains($lower, 'delivery') || str_contains($lower, 'track') || str_contains($lower, 'tracking') || str_contains($lower, 'deliver') || str_contains($lower, 'kailan')) {
             return "📦 **Shipment Tracking & Delivery Steps:**\n\n"
                 . "Once your order is confirmed, you can track live updates in 5 easy steps:\n"
@@ -622,7 +772,7 @@ STRICT DOMAIN LIMITS & SECURITY:
                 . "5. **Delivered**: Inspect your items and click **Confirm Received** to leave a verified review!";
         }
 
-        // 16. FILIPINIANA & WOMEN'S ATTIRE
+        // 15. FILIPINIANA & WOMEN'S ATTIRE
         if (str_contains($lower, 'filipiniana') || str_contains($lower, 'terno') || str_contains($lower, 'bolero') || str_contains($lower, 'alampay') || str_contains($lower, 'maria clara') || str_contains($lower, 'women') || str_contains($lower, 'dress')) {
             return "👗 **Filipiniana & Women's Heritage Wear:**\n\n"
                 . "We showcase exquisite handcrafted pieces for women:\n"
@@ -631,26 +781,7 @@ STRICT DOMAIN LIMITS & SECURITY:
                 . "• **Alampay / Pañuelo**: Triangular hand-embroidered shoulder shawls crafted with intricate *Calado* motifs.";
         }
 
-        // 17. BUDGET & PRICE RANGES
-        if (str_contains($lower, 'price') || str_contains($lower, 'cost') || str_contains($lower, 'budget') || str_contains($lower, 'cheap') || str_contains($lower, 'affordable') || str_contains($lower, 'mura') || str_contains($lower, 'magkano')) {
-            return "💰 **Price Ranges & Budget Guide:**\n\n"
-                . "• **Organza / Monoray Barongs**: ₱1,500 – ₱3,500 (Great for graduations, school events, and budget ceremonies)\n"
-                . "• **Jusi Hand-Embroidered Barongs**: ₱3,800 – ₱7,500 (Ideal for Ninongs, wedding guests, and corporate functions)\n"
-                . "• **Cocoon Silk Barongs**: ₱6,500 – ₱12,000 (Luxurious opaque formal wear)\n"
-                . "• **Pure Piña-Seda Heirloom Barongs**: ₱9,500 – ₱25,000+ (Masterpiece wedding groom attire)\n\n"
-                . "Tell me your target price range and I'll find the best options in stock!";
-        }
-
-        // 18. DEFAULT CONTEXTUAL ASSISTANCE
-        return "Mabuhay! I am your **LumBarong Smart Assistant**.\n\n"
-            . "I can help answer your questions on:\n"
-            . "• **Best Sellers & Product Recommendations**\n"
-            . "• **Fabric Comparison** (Piña vs. Jusi vs. Cocoon vs. Organza)\n"
-            . "• **Event Attire** for Grooms, Ninongs, Guests, or Graduations\n"
-            . "• **Care & Cleaning Instructions** for delicate Barongs\n"
-            . "• **Sizing Guidance & Fit Advice**\n"
-            . "• **Our Workshop Location in Lumban, Laguna**\n\n"
-            . "What event, price range, or fabric would you like to know more about?";
+        return null;
     }
 
     // ==========================================
