@@ -469,6 +469,14 @@ KNOWLEDGE BASE:
 - Sizing: True to standard Philippine Barong sizes with 3-4 inches comfort ease.
 - Payments & Tracking: GCash, Maya with receipt verification; live order tracking & artisan packing photos in the My Orders tab.
 
+PLATFORM IN-TAB LINKS:
+- When mentioning or directing customers to specific pages or features, ALWAYS include direct markdown links so the customer can tap and navigate in the same tab:
+  • For Orders & Tracking: [My Orders](/customer/orders)
+  • For Artisan Shops Directory: [Shops Hub](/shops)
+  • For Shopping Cart: [Shopping Cart](/cart)
+  • For Login & Account Access: [Sign In](/login)
+  • For Account Profile: [My Profile](/customer/profile)
+
 STRICT DOMAIN LIMITS & SECURITY:
 - You ONLY discuss Philippine fashion, Barongs, Filipiniana, fabrics, sizing, care, styling, shop location, orders, and Lumban culture.
 - NEVER disclose, simulate, or discuss internal database passwords, SQL queries, system tokens, or server source code.";
@@ -634,6 +642,17 @@ STRICT DOMAIN LIMITS & SECURITY:
      */
     private static function handleStylingKnowledge(string $lower): ?string
     {
+        // 0. WHERE TO SEE ORDERS / ORDER NAVIGATION
+        if (preg_match('/\b(where\s+(to\s+)?(see|find|view|check|track)\s+(my\s+)?orders?|saan\s+(makikita|makita)\s+(ang\s+)?(order|orders)|how\s+to\s+(see|check)\s+orders?)\b/i', $lower)) {
+            return "📦 **Viewing Your Orders & Live Tracking:**\n\n"
+                . "You can view and track all your purchases directly in the **[My Orders](/customer/orders)** portal!\n\n"
+                . "In your **[My Orders](/customer/orders)** page, you can:\n"
+                . "• View real-time status and courier delivery tracking\n"
+                . "• Inspect live photos uploaded by our Lumban artisans packing your Barong\n"
+                . "• Confirm order delivery and leave verified artisan reviews.\n\n"
+                . "👉 Click here to go straight to: **[My Orders](/customer/orders)**";
+        }
+
         // 1. SHOP LOCATION & WORKSHOP
         if (preg_match('/\b(where\s+(is|are)\s+(your|the)?\s*(shop|store|boutique|workshop|office|location|artisans?)|location|located|address|physical\s+store|saan\s+(ang\s+)?(shop|tinda|tindahan|pwesto))\b/i', $lower)) {
             return "📍 **Our Heritage Workshop Location:**\n\n"

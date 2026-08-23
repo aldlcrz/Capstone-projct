@@ -151,6 +151,28 @@
                 });
             },
 
+            formatAiMessage(rawText) {
+                if (!rawText) return '';
+                let text = String(rawText);
+                
+                // Convert markdown links [Text](url) -> <a href="url" target="_self" class="...">Text</a>
+                text = text.replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_self" class="text-[#C0422A] hover:underline font-bold transition-colors cursor-pointer inline-flex items-center gap-0.5">$1</a>');
+                
+                // Convert **bold** -> <strong>
+                text = text.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+                
+                // Convert *italic* -> <em>
+                text = text.replace(/\*(.*?)\*/g, '<em>$1</em>');
+                
+                // Convert `code` -> <code>
+                text = text.replace(/`([^`]+)`/g, '<code class="px-1.5 py-0.5 bg-gray-100 rounded text-[11px] font-mono text-gray-800">$1</code>');
+                
+                // Convert newlines -> <br>
+                text = text.replace(/\n/g, '<br>');
+                
+                return text;
+            },
+
             scrollAiToBottom() {
                 this.$nextTick(() => {
                     const box = this.$refs.aiMsgBox;
@@ -505,7 +527,7 @@
                              :class="msg.role === 'user' 
                                  ? 'bg-[#3D2B1F] text-white rounded-tr-none shadow-sm' 
                                  : 'bg-white text-gray-800 rounded-tl-none border border-[#E5DDD5] shadow-xs prose prose-xs'"
-                             x-html="msg.text.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>').replace(/\n/g, '<br>')">
+                             x-html="formatAiMessage(msg.text)">
                         </div>
 
                         <!-- Scored Recommendation Product Cards -->
