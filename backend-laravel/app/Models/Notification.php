@@ -116,7 +116,7 @@ class Notification extends Model
     public static function sendToAdmins(string $title, string $message, string $type = 'system', ?string $link = null)
     {
         try {
-            $admins = \App\Models\User::where('role', 'admin')->get();
+            $admins = \App\Models\User::whereIn('role', ['admin', 'superadmin'])->get();
             foreach ($admins as $admin) {
                 self::create([
                     'userId' => $admin->id,
@@ -124,7 +124,7 @@ class Notification extends Model
                     'message' => $message,
                     'type' => $type,
                     'link' => $link,
-                    'targetRole' => $role ?? 'admin', // use admin role
+                    'targetRole' => 'admin',
                     'isRead' => false
                 ]);
             }
