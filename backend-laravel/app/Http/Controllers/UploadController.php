@@ -35,11 +35,16 @@ class UploadController extends Controller
         }
 
         $results = [];
+        $destination = public_path('uploads/misc');
+        if (!file_exists($destination)) {
+            mkdir($destination, 0755, true);
+        }
+
         foreach ($files as $file) {
             $filename = time() . '_' . Str::random(10) . '.' . $file->getClientOriginalExtension();
-            $file->move(public_path('uploads/misc'), $filename);
+            $file->move($destination, $filename);
             
-            $url = $request->getSchemeAndHttpHost() . '/uploads/misc/' . $filename;
+            $url = asset('uploads/misc/' . $filename);
             $results[] = [
                 'url' => $url,
                 'name' => $file->getClientOriginalName()

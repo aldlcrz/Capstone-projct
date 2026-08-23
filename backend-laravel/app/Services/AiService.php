@@ -28,7 +28,14 @@ class AiService
             return null; // Triggers built-in heuristic AI engine
         }
 
-        $models = ['gemini-3.6-flash', 'gemini-3.5-flash', 'gemini-flash-latest', 'gemini-2.5-flash', 'gemini-1.5-flash'];
+        $configuredModel = config('services.gemini.model') ?: env('GEMINI_MODEL', 'gemini-2.5-flash');
+        $models = array_unique(array_filter([
+            $configuredModel,
+            'gemini-2.5-flash',
+            'gemini-2.0-flash',
+            'gemini-1.5-flash',
+            'gemini-flash-latest'
+        ]));
 
         // Build multi-turn contents array
         $contents = [];
@@ -836,62 +843,73 @@ STRICT DOMAIN LIMITS & SECURITY:
         // 1. Try Gemini Vision if API key configured
         $apiKey = self::getApiKey();
         if ($apiKey && file_exists($imagePath)) {
-            try {
-                $imageData = base64_encode(file_get_contents($imagePath));
-                $mimeType = mime_content_type($imagePath) ?: 'image/jpeg';
+            $imageData = base64_encode(file_get_contents($imagePath));
+            $mimeType = mime_content_type($imagePath) ?: 'image/jpeg';
 
-                $url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={$apiKey}";
-                $amountPrompt = $expectedAmount > 0 ? " Expected payment amount is around ₱" . number_format($expectedAmount, 2) . "." : "";
-                $prompt = "Analyze this uploaded image for a Philippine e-commerce store (LumBarong). "
-                    . "1. Is this a legitimate mobile payment receipt or transaction screenshot (from {$method}, GCash, Maya, or Philippine bank)? "
-                    . "Or is it an unrelated image (such as clothing, people, scenery, general product photo, meme, or costume)? "
-                    . "2. Does it contain the payment reference number '{$ref}'?{$amountPrompt} "
-                    . "Respond strictly in JSON: {\"status\": \"PASS\"|\"REVIEW\"|\"REJECT\", \"is_receipt\": boolean, \"ref_matched\": boolean, \"confidence\": number, \"detected_ref\": string, \"message\": string}";
+            $amountPrompt = $expectedAmount > 0 ? " Expected payment amount is around ₱" . number_format($expectedAmount, 2) . "." : "";
+            $prompt = "Analyze this uploaded image for a Philippine e-commerce store (LumBarong). "
+                . "1. Is this a legitimate mobile payment receipt or transaction screenshot (from {$method}, GCash, Maya, or Philippine bank)? "
+                . "Or is it an unrelated image (such as clothing, people, scenery, general product photo, meme, or costume)? "
+                . "2. Does it contain the payment reference number '{$ref}'?{$amountPrompt} "
+                . "Respond strictly in JSON: {\"status\": \"PASS\"|\"REVIEW\"|\"REJECT\", \"is_receipt\": boolean, \"ref_matched\": boolean, \"confidence\": number, \"detected_ref\": string, \"message\": string}";
 
-                $payload = [
-                    'contents' => [
-                        [
-                            'parts' => [
-                                ['text' => $prompt],
-                                [
-                                    'inline_data' => [
-                                        'mime_type' => $mimeType,
-                                        'data' => $imageData
-                                    ]
+            $payload = [
+                'contents' => [
+                    [
+                        'parts' => [
+                            ['text' => $prompt],
+                            [
+                                'inline_data' => [
+                                    'mime_type' => $mimeType,
+                                    'data' => $imageData
                                 ]
                             ]
                         ]
                     ]
-                ];
+                ]
+            ];
 
-                $res = Http::timeout(12)->post($url, $payload);
-                if ($res->successful()) {
-                    $json = $res->json();
-                    $rawText = $json['candidates'][0]['content']['parts'][0]['text'] ?? '';
-                    if (preg_match('/\{[\s\S]*\}/', $rawText, $m)) {
-                        $parsed = json_decode($m[0], true);
-                        if (is_array($parsed)) {
-                            $isReceipt = (bool) ($parsed['is_receipt'] ?? false);
-                            $refMatched = (bool) ($parsed['ref_matched'] ?? false);
-                            $tier = strtoupper(trim((string) ($parsed['status'] ?? '')));
-                            if (!in_array($tier, ['PASS', 'REVIEW', 'REJECT'], true)) {
-                                $tier = (!$isReceipt) ? 'REJECT' : ($refMatched ? 'PASS' : 'REVIEW');
+            $configuredModel = config('services.gemini.model') ?: env('GEMINI_MODEL', 'gemini-2.5-flash');
+            $visionModels = array_unique(array_filter([
+                $configuredModel,
+                'gemini-2.5-flash',
+                'gemini-2.0-flash',
+                'gemini-1.5-flash',
+                'gemini-flash-latest'
+            ]));
+
+            foreach ($visionModels as $vModel) {
+                try {
+                    $url = "https://generativelanguage.googleapis.com/v1beta/models/{$vModel}:generateContent?key={$apiKey}";
+                    $res = Http::timeout(12)->post($url, $payload);
+                    if ($res->successful()) {
+                        $json = $res->json();
+                        $rawText = $json['candidates'][0]['content']['parts'][0]['text'] ?? '';
+                        if (preg_match('/\{[\s\S]*\}/', $rawText, $m)) {
+                            $parsed = json_decode($m[0], true);
+                            if (is_array($parsed)) {
+                                $isReceipt = (bool) ($parsed['is_receipt'] ?? false);
+                                $refMatched = (bool) ($parsed['ref_matched'] ?? false);
+                                $tier = strtoupper(trim((string) ($parsed['status'] ?? '')));
+                                if (!in_array($tier, ['PASS', 'REVIEW', 'REJECT'], true)) {
+                                    $tier = (!$isReceipt) ? 'REJECT' : ($refMatched ? 'PASS' : 'REVIEW');
+                                }
+
+                                return [
+                                    'status' => $tier,
+                                    'is_receipt' => $isReceipt,
+                                    'ref_matched' => $refMatched,
+                                    'confidence' => (int) ($parsed['confidence'] ?? 85),
+                                    'detected_ref' => (string) ($parsed['detected_ref'] ?? ''),
+                                    'needs_seller_verification' => true,
+                                    'message' => (string) ($parsed['message'] ?? 'Receipt screening complete.')
+                                ];
                             }
-
-                            return [
-                                'status' => $tier,
-                                'is_receipt' => $isReceipt,
-                                'ref_matched' => $refMatched,
-                                'confidence' => (int) ($parsed['confidence'] ?? 85),
-                                'detected_ref' => (string) ($parsed['detected_ref'] ?? ''),
-                                'needs_seller_verification' => true,
-                                'message' => (string) ($parsed['message'] ?? 'Receipt screening complete.')
-                            ];
                         }
                     }
+                } catch (\Throwable $e) {
+                    Log::warning("Gemini Vision ({$vModel}) receipt check failed: " . $e->getMessage());
                 }
-            } catch (\Throwable $e) {
-                Log::warning("Gemini Vision receipt check failed: " . $e->getMessage());
             }
         }
 

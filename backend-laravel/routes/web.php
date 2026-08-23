@@ -396,3 +396,12 @@ Route::prefix('ai')->group(function () {
     Route::post('/payment-reference/check', [AiController::class, 'checkPaymentReference'])->name('ai.payment.check');
     Route::post('/receipt/verify', [AiController::class, 'verifyReceipt'])->name('ai.receipt.verify');
 });
+
+// Web Upload & Report Routes (For Session-Authenticated Users)
+Route::middleware(['auth'])->group(function () {
+    Route::post('/api/v1/upload', [\App\Http\Controllers\UploadController::class, 'uploadImage']);
+    Route::post('/api/v1/reports', [\App\Http\Controllers\ReportController::class, 'createReport']);
+    Route::post('/upload', [\App\Http\Controllers\UploadController::class, 'uploadImage']);
+    Route::post('/reports', [\App\Http\Controllers\ReportController::class, 'createReport']);
+});
+

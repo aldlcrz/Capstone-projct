@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Report;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 
 class ReportController extends Controller
 {
@@ -17,8 +18,13 @@ class ReportController extends Controller
             'evidence' => 'nullable|string'
         ]);
 
+        $userId = Auth::id() ?? $request->user()?->id;
+        if (!$userId) {
+            return response()->json(['message' => 'Unauthenticated. Please log in.'], 401);
+        }
+
         $report = Report::create([
-            'reporterId' => $request->user()->id,
+            'reporterId' => $userId,
             'reportedId' => $validated['reportedId'],
             'type' => $validated['type'],
             'reason' => $validated['reason'],

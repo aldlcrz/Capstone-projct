@@ -145,17 +145,29 @@ function reportModal() {
         async uploadImage(event) {
             const file = event.target.files[0];
             if (!file) return;
+
+            if (file.size > 10 * 1024 * 1024) {
+                alert('File size exceeds 10MB limit. Please choose a smaller image.');
+                event.target.value = '';
+                return;
+            }
+
             this.imageFileName = file.name;
             this.isUploading = true;
             
             const formData = new FormData();
             formData.append('image', file);
             
+            const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') 
+                || document.querySelector('input[name="_token"]')?.value 
+                || '';
+
             try {
                 const res = await fetch('/api/v1/upload', {
                     method: 'POST',
                     headers: {
-                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content || ''
+                        'X-CSRF-TOKEN': csrfToken,
+                        'Accept': 'application/json'
                     },
                     body: formData
                 });
@@ -163,24 +175,32 @@ function reportModal() {
                     const data = await res.json();
                     this.evidenceUrl = data.url;
                 } else {
-                    alert('Failed to upload image. Please try again.');
+                    const err = await res.json().catch(() => ({}));
+                    alert(err.message || 'Failed to upload image. Please make sure you are logged in and try again.');
                     this.imageFileName = '';
+                    this.evidenceUrl = '';
                 }
             } catch (e) {
                 console.error(e);
-                alert('Error uploading image.');
+                alert('Network error while uploading image.');
                 this.imageFileName = '';
+                this.evidenceUrl = '';
             }
             this.isUploading = false;
         },
         async submit() {
             this.isSubmitting = true;
+            const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') 
+                || document.querySelector('input[name="_token"]')?.value 
+                || '';
+
             try {
                 const res = await fetch('/api/v1/reports', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
-                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content || ''
+                        'Accept': 'application/json',
+                        'X-CSRF-TOKEN': csrfToken
                     },
                     body: JSON.stringify({
                         reportedId: this.reportedId,
@@ -194,8 +214,8 @@ function reportModal() {
                     this.success = true;
                     setTimeout(() => { this.isOpen = false; }, 3000);
                 } else {
-                    const err = await res.json();
-                    alert(err.message || 'Failed to submit report');
+                    const err = await res.json().catch(() => ({}));
+                    alert(err.message || 'Failed to submit report. Please try again.');
                 }
             } catch (e) { 
                 console.error(e);
