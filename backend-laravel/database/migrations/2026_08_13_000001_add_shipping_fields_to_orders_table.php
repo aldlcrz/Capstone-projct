@@ -25,7 +25,9 @@ return new class extends Migration
         });
 
         // Change status column from enum to varchar(255) so new status strings can be stored
-        DB::statement("ALTER TABLE `orders` MODIFY `status` VARCHAR(255) NOT NULL DEFAULT 'Pending'");
+        if (DB::getDriverName() === 'mysql') {
+            DB::statement("ALTER TABLE `orders` MODIFY `status` VARCHAR(255) NOT NULL DEFAULT 'Pending'");
+        }
     }
 
     /**

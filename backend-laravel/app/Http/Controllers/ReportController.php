@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Notification;
 use App\Models\Report;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -32,6 +33,45 @@ class ReportController extends Controller
             'evidence' => $validated['evidence'] ?? null,
             'status' => 'Pending'
         ]);
+
+        // Send In-App & System Notifications
+        if ($validated['type'] === 'CustomerReportingSeller') {
+            // 1. Notify the reported Seller
+            Notification::send(
+                (string) $validated['reportedId'],
+                '⚠️ Integrity Violation Notice',
+                "Your shop has received a report from a customer regarding \"{$validated['reason']}\". Our Trust & Safety team is reviewing the matter. Please ensure your shop listings and conduct adhere to platform guidelines.",
+                'warning',
+                null,
+                'seller'
+            );
+
+            // 2. Alert Platform Admins
+            Notification::sendToAdmins(
+                '🚩 New Shop Report Filed',
+                "A customer reported a seller shop for \"{$validated['reason']}\".",
+                'warning',
+                '/admin/reports'
+            );
+        } elseif ($validated['type'] === 'SellerReportingCustomer') {
+            // 1. Notify the reported Customer
+            Notification::send(
+                (string) $validated['reportedId'],
+                '⚠️ Account Activity Notice',
+                "Your account has received a report from a seller regarding \"{$validated['reason']}\".",
+                'warning',
+                null,
+                'customer'
+            );
+
+            // 2. Alert Platform Admins
+            Notification::sendToAdmins(
+                '🚩 New Customer Report Filed',
+                "A seller reported a customer for \"{$validated['reason']}\".",
+                'warning',
+                '/admin/reports'
+            );
+        }
 
         return response()->json($report, 201);
     }

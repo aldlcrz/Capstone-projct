@@ -11,8 +11,12 @@ return new class extends Migration
         if (!Schema::hasTable('wishlists')) {
             Schema::create('wishlists', function (Blueprint $table) {
                 $table->id();
-                $table->uuid('user_id')->collation('utf8mb4_general_ci');
-                $table->uuid('product_id')->collation('utf8mb4_bin');
+                $userCol = $table->uuid('user_id');
+                $prodCol = $table->uuid('product_id');
+                if (\Illuminate\Support\Facades\DB::getDriverName() === 'mysql') {
+                    $userCol->collation('utf8mb4_general_ci');
+                    $prodCol->collation('utf8mb4_bin');
+                }
                 $table->timestamps();
 
                 $table->foreign('user_id')->references('id')->on('users')->onDelete('cascade');

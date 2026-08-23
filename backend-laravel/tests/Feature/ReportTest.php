@@ -39,5 +39,11 @@ class ReportTest extends TestCase
         $response->assertStatus(201);
         $this->assertEquals(1, Report::count());
         $this->assertEquals('http://localhost:8000/uploads/misc/evidence_screenshot.png', Report::first()->evidence);
+
+        // Verify seller received in-app notification
+        $this->assertEquals(1, \App\Models\Notification::where('userId', $seller->id)->count());
+        $sellerNotification = \App\Models\Notification::where('userId', $seller->id)->first();
+        $this->assertEquals('⚠️ Integrity Violation Notice', $sellerNotification->title);
+        $this->assertEquals('seller', $sellerNotification->targetRole);
     }
 }
