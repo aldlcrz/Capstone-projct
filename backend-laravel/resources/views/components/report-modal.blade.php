@@ -60,15 +60,15 @@
                     <div class="space-y-2">
                         <div class="flex items-center justify-between ml-1">
                             <label class="text-[9px] font-black uppercase tracking-widest text-gray-400">Detailed Description</label>
-                            <span class="text-[9px] font-bold tabular-nums" :class="description.length >= 50 ? 'text-green-600' : 'text-gray-400'" x-text="description.length + '/50 min'"></span>
+                            <span class="text-[9px] font-bold tabular-nums" :class="description.length >= 10 ? 'text-green-600' : 'text-amber-500'" x-text="description.length + '/10 min'"></span>
                         </div>
                         <textarea 
                             x-model="description" 
                             required 
                             rows="4" 
                             class="w-full px-5 py-4 bg-gray-50/30 border focus:border-[#C0420A] rounded-2xl outline-none text-[11px] font-bold transition-all shadow-sm resize-none" 
-                            :class="description.length > 0 && description.length < 50 ? 'border-amber-400' : 'border-gray-100'"
-                            placeholder="Please explain the situation in detail (minimum 50 characters)..."
+                            :class="description.length > 0 && description.length < 10 ? 'border-amber-400' : 'border-gray-100'"
+                            placeholder="Please explain the situation in detail (minimum 10 characters)..."
                         ></textarea>
                     </div>
 
@@ -100,10 +100,10 @@
                         </button>
                         <button 
                             type="submit" 
-                            :disabled="isSubmitting || isUploading || description.length < 50 || !reason" 
+                            :disabled="isSubmitting || isUploading || description.length < 10 || !reason" 
                             class="flex-2 py-4 bg-[#C0420A] text-white text-[11px] font-black uppercase tracking-[0.2em] rounded-2xl shadow-xl shadow-red-100 hover:bg-black transition-all active:scale-[0.98] disabled:opacity-50 disabled:pointer-events-none"
                         >
-                            <span x-text="isSubmitting ? 'Submitting...' : 'Submit Report'"></span>
+                            <span x-text="isSubmitting ? 'Submitting...' : (description.length < 10 ? 'Enter ' + (10 - description.length) + ' more chars' : 'Submit Report')"></span>
                         </button>
                     </div>
                 </form>
