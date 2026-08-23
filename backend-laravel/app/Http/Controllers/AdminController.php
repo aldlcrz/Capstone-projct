@@ -336,7 +336,7 @@ class AdminController extends Controller
         try {
             \App\Services\WishlistService::handleProductRestocked($product);
         } catch (\Throwable $we) {
-            \Illuminate\Support\Facades\Log::warning('Wishlist restock handling error on approval API: ' . $we->getMessage());
+            Log::warning('Wishlist restock handling error on approval API: ' . $we->getMessage());
         }
 
         return response()->json(['message' => 'Product approved successfully', 'product' => $product]);
@@ -1106,7 +1106,7 @@ class AdminController extends Controller
         try {
             \App\Services\WishlistService::handleProductRestocked($product);
         } catch (\Throwable $we) {
-            \Illuminate\Support\Facades\Log::warning('Wishlist restock handling error on approval: ' . $we->getMessage());
+            Log::warning('Wishlist restock handling error on approval: ' . $we->getMessage());
         }
 
         return redirect()->back()->with('success', 'Product approved and notifications sent.');

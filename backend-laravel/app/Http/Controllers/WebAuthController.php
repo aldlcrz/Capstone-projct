@@ -392,7 +392,7 @@ class WebAuthController extends Controller
 
             return redirect()->route('register')->with('error', 'Registration session expired. Please register again.');
         } catch (\Throwable $e) {
-            \Illuminate\Support\Facades\Log::error('verifyEmail fatal error: ' . $e->getMessage() . ' at ' . $e->getFile() . ':' . $e->getLine());
+            Log::error('verifyEmail fatal error: ' . $e->getMessage() . ' at ' . $e->getFile() . ':' . $e->getLine());
             return back()->withErrors(['code' => 'Verification error: ' . $e->getMessage()]);
         }
     }

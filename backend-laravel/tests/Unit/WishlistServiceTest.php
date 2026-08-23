@@ -27,7 +27,6 @@ class WishlistServiceTest extends TestCase
         $product->id = (string) Str::uuid();
         $product->name = 'Handcrafted Piña-Seda Barong Tagalog';
         $product->price = '8500.00';
-        $product->sale_price = '8500.00';
         $product->status = 'approved';
         $product->sellerId = $seller->id;
         $product->stock = 5;

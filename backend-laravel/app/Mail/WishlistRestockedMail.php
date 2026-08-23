@@ -10,13 +10,13 @@ class WishlistRestockedMail extends Mailable
 {
     use Queueable, SerializesModels;
 
-    public $customerName;
-    public $productName;
-    public $shopName;
-    public $price;
-    public $size;
-    public $productId;
-    public $imageUrl;
+    public string $customerName;
+    public string $productName;
+    public string $shopName;
+    public float $price;
+    public ?string $size;
+    public string $productId;
+    public ?string $imageUrl;
 
     public function __construct(
         string $customerName,
