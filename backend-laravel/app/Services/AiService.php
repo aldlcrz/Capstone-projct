@@ -74,10 +74,21 @@ class AiService
             ];
         }
 
+        $models = array_unique(array_filter([
+            config('services.gemini.model'),
+            'gemini-flash-latest',
+            'gemini-3.5-flash',
+            'gemini-3.7-flash',
+            'gemini-3.6-flash'
+        ]));
+
         foreach ($models as $model) {
             try {
                 $url = "https://generativelanguage.googleapis.com/v1beta/models/{$model}:generateContent?key={$apiKey}";
-                $response = Http::timeout(8)->post($url, $payload);
+                $response = Http::withOptions([
+                    'curl' => [CURLOPT_IPRESOLVE => CURL_IPRESOLVE_V4],
+                    'verify' => false,
+                ])->timeout(12)->post($url, $payload);
                 if ($response->successful()) {
                     $data = $response->json();
                     $text = $data['candidates'][0]['content']['parts'][0]['text'] ?? null;
@@ -843,13 +854,20 @@ STRICT DOMAIN LIMITS & SECURITY:
         // 1. Try Gemini Vision if API key configured
         $apiKey = self::getApiKey();
         if ($apiKey && file_exists($imagePath)) {
+            $rawMime = @mime_content_type($imagePath) ?: 'image/jpeg';
+            $mimeType = match (strtolower($rawMime)) {
+                'image/png' => 'image/png',
+                'image/webp' => 'image/webp',
+                'image/heic' => 'image/heic',
+                'image/heif' => 'image/heif',
+                default => 'image/jpeg'
+            };
             $imageData = base64_encode(file_get_contents($imagePath));
-            $mimeType = mime_content_type($imagePath) ?: 'image/jpeg';
 
             $amountPrompt = $expectedAmount > 0 ? " Expected payment amount is around ₱" . number_format($expectedAmount, 2) . "." : "";
             $prompt = "Analyze this uploaded image for a Philippine e-commerce store (LumBarong). "
                 . "1. Is this a legitimate mobile payment receipt or transaction screenshot (from {$method}, GCash, Maya, or Philippine bank)? "
-                . "Or is it an unrelated image (such as clothing, people, scenery, general product photo, meme, or costume)? "
+                . "Or is it an unrelated image (such as clothing, people, scenery, general product photo, meme, social media post screenshot, or costume)? "
                 . "2. Does it contain the payment reference number '{$ref}'?{$amountPrompt} "
                 . "Respond strictly in JSON: {\"status\": \"PASS\"|\"REVIEW\"|\"REJECT\", \"is_receipt\": boolean, \"ref_matched\": boolean, \"confidence\": number, \"detected_ref\": string, \"message\": string}";
 
@@ -869,19 +887,22 @@ STRICT DOMAIN LIMITS & SECURITY:
                 ]
             ];
 
-            $configuredModel = config('services.gemini.model') ?: env('GEMINI_MODEL', 'gemini-2.5-flash');
+            $configuredModel = config('services.gemini.model') ?: env('GEMINI_MODEL', 'gemini-flash-latest');
             $visionModels = array_unique(array_filter([
                 $configuredModel,
-                'gemini-2.5-flash',
-                'gemini-2.0-flash',
-                'gemini-1.5-flash',
-                'gemini-flash-latest'
+                'gemini-flash-latest',
+                'gemini-3.5-flash',
+                'gemini-3.7-flash',
+                'gemini-3.6-flash'
             ]));
 
             foreach ($visionModels as $vModel) {
                 try {
                     $url = "https://generativelanguage.googleapis.com/v1beta/models/{$vModel}:generateContent?key={$apiKey}";
-                    $res = Http::timeout(12)->post($url, $payload);
+                    $res = Http::withOptions([
+                        'curl' => [CURLOPT_IPRESOLVE => CURL_IPRESOLVE_V4],
+                        'verify' => false,
+                    ])->timeout(15)->post($url, $payload);
                     if ($res->successful()) {
                         $json = $res->json();
                         $rawText = $json['candidates'][0]['content']['parts'][0]['text'] ?? '';
