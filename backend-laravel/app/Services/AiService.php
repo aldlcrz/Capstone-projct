@@ -890,9 +890,25 @@ STRICT DOMAIN LIMITS & SECURITY:
                             if (is_array($parsed)) {
                                 $isReceipt = (bool) ($parsed['is_receipt'] ?? false);
                                 $refMatched = (bool) ($parsed['ref_matched'] ?? false);
+                                $detectedRef = trim((string) ($parsed['detected_ref'] ?? ''));
+
+                                // Strict reference check if detected on receipt
+                                if ($ref && $detectedRef && str_replace([' ', '-'], '', $detectedRef) !== str_replace([' ', '-'], '', $ref)) {
+                                    $refMatched = false;
+                                }
+
                                 $tier = strtoupper(trim((string) ($parsed['status'] ?? '')));
-                                if (!in_array($tier, ['PASS', 'REVIEW', 'REJECT'], true)) {
-                                    $tier = (!$isReceipt) ? 'REJECT' : ($refMatched ? 'PASS' : 'REVIEW');
+                                if (!$isReceipt) {
+                                    $tier = 'REJECT';
+                                } elseif (!$refMatched) {
+                                    $tier = 'REVIEW';
+                                } elseif (!in_array($tier, ['PASS', 'REVIEW', 'REJECT'], true)) {
+                                    $tier = 'PASS';
+                                }
+
+                                $msg = (string) ($parsed['message'] ?? 'Receipt screening complete.');
+                                if ($isReceipt && !$refMatched && $detectedRef) {
+                                    $msg = "Reference number mismatch: Detected \"{$detectedRef}\" on image, but entered \"{$ref}\". Artisan manual verification required.";
                                 }
 
                                 return [
@@ -900,9 +916,9 @@ STRICT DOMAIN LIMITS & SECURITY:
                                     'is_receipt' => $isReceipt,
                                     'ref_matched' => $refMatched,
                                     'confidence' => (int) ($parsed['confidence'] ?? 85),
-                                    'detected_ref' => (string) ($parsed['detected_ref'] ?? ''),
+                                    'detected_ref' => $detectedRef,
                                     'needs_seller_verification' => true,
-                                    'message' => (string) ($parsed['message'] ?? 'Receipt screening complete.')
+                                    'message' => $msg
                                 ];
                             }
                         }

@@ -312,9 +312,9 @@
                                        :class="refError ? 'border-red-500 focus:ring-red-200 bg-red-50/20' : (hasReceiptMismatch() ? 'border-rose-400 focus:border-rose-400 focus:ring-rose-200 bg-rose-50/20' : (isRefValid() ? 'border-emerald-500 focus:border-emerald-500 focus:ring-emerald-500/10 bg-emerald-50/10' : 'border-gray-200 focus:border-[#C0422A] focus:ring-[#C0422A]/10 bg-gray-50/50'))"
                                        class="w-full px-4 py-3 border rounded-xl text-sm lg:text-base font-bold outline-none focus:ring-4 transition-all">
                                 <div x-show="refError" x-cloak x-text="refError" class="text-xs font-bold text-red-500 px-1 mt-1"></div>
-                                <div x-show="!refError && hasReceiptMismatch()" x-cloak class="text-[10px] lg:text-xs text-rose-600 font-bold px-1 mt-0.5 flex items-center gap-1">
-                                    <svg class="w-3.5 h-3.5 text-rose-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
-                                    <span>Format valid, but attached image is not a recognized payment receipt screenshot.</span>
+                                <div x-show="!refError && hasReceiptMismatch()" x-cloak class="text-[10px] lg:text-xs text-amber-700 font-bold px-1 mt-0.5 flex items-center gap-1">
+                                    <svg class="w-3.5 h-3.5 text-amber-600 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+                                    <span>⚠️ Notice: Receipt screenshot requires manual seller verification against reference number.</span>
                                 </div>
                                 <div x-show="!refError && !hasReceiptMismatch() && isRefValid()" x-cloak class="text-[10px] lg:text-xs text-emerald-600 font-bold px-1 mt-0.5 flex items-center gap-1">
                                     <svg class="w-3.5 h-3.5 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
@@ -381,15 +381,24 @@
                                     </div>
 
                                     <template x-if="!aiChecking && aiVerificationResult">
-                                        <div class="p-3 rounded-xl border flex items-start gap-2.5 text-xs font-bold transition-all"
-                                             :class="aiVerificationResult.is_receipt 
-                                                 ? 'bg-emerald-50/80 border-emerald-200 text-emerald-800' 
-                                                 : 'bg-rose-50/80 border-rose-200 text-rose-800'">
-                                            <span class="text-sm shrink-0" x-text="aiVerificationResult.is_receipt ? '✓' : '⚠️'"></span>
-                                            <div class="space-y-0.5">
+                                        <div class="p-3.5 rounded-xl border flex items-start gap-2.5 text-xs font-bold transition-all"
+                                             :class="{
+                                                 'bg-emerald-50/80 border-emerald-200 text-emerald-800': aiVerificationResult.status === 'PASS',
+                                                 'bg-amber-50/80 border-amber-200 text-amber-900': aiVerificationResult.status === 'REVIEW',
+                                                 'bg-rose-50/80 border-rose-200 text-rose-800': aiVerificationResult.status === 'REJECT' || aiVerificationResult.is_receipt === false
+                                             }">
+                                            <span class="text-sm shrink-0" x-text="aiVerificationResult.status === 'PASS' ? '✓' : (aiVerificationResult.status === 'REVIEW' ? '⚠️' : '❌')"></span>
+                                            <div class="space-y-1">
                                                 <div class="font-extrabold uppercase text-[10px] tracking-wider"
-                                                     x-text="aiVerificationResult.is_receipt ? 'Receipt Verification Passed' : 'Receipt Verification Alert'"></div>
+                                                     x-text="aiVerificationResult.status === 'PASS' 
+                                                         ? 'Receipt Verification Passed' 
+                                                         : (aiVerificationResult.status === 'REVIEW' ? 'Manual Verification Required' : 'Receipt Verification Rejected')"></div>
                                                 <p class="text-[11px] font-medium leading-relaxed" x-text="aiVerificationResult.message"></p>
+                                                <template x-if="aiVerificationResult.status === 'REVIEW' && !aiVerificationResult.ref_matched && aiVerificationResult.detected_ref">
+                                                    <div class="text-[10px] font-mono bg-amber-100/70 text-amber-900 px-2 py-1 rounded-lg mt-1 inline-block">
+                                                        Detected Ref: <span class="font-bold" x-text="aiVerificationResult.detected_ref"></span>
+                                                    </div>
+                                                </template>
                                             </div>
                                         </div>
                                     </template>
@@ -1060,11 +1069,17 @@ function checkoutApp(initialAddress, initialAddresses, defaultPaymentMethod) {
         },
 
         hasReceiptMismatch() {
-            return Boolean(this.fileName && this.aiVerificationResult && this.aiVerificationResult.is_receipt === false);
+            if (!this.fileName || !this.aiVerificationResult) return false;
+            return this.aiVerificationResult.is_receipt === false 
+                || this.aiVerificationResult.status === 'REJECT' 
+                || (this.aiVerificationResult.status === 'REVIEW' && this.aiVerificationResult.ref_matched === false);
         },
 
         isReceiptVerified() {
-            return Boolean(this.fileName && this.aiVerificationResult && this.aiVerificationResult.is_receipt === true);
+            if (!this.fileName || !this.aiVerificationResult) return false;
+            return this.aiVerificationResult.is_receipt === true 
+                && this.aiVerificationResult.status === 'PASS' 
+                && this.aiVerificationResult.ref_matched === true;
         },
 
         locationDropdownOpen: false,
