@@ -149,10 +149,21 @@
                 return this.selectedSize;
             },
             toggleWishlist: async function() {
+                var hasSizes = Object.keys(this.sizeStocks || {}).length > 0;
+                if (hasSizes && !this.selectedSize) {
+                    if (window.Alpine && Alpine.store('toast')) {
+                        Alpine.store('toast').trigger('Please select your preferred size first before saving to your wishlist.', 'info');
+                    } else {
+                        alert('Please select your preferred size first before saving to your wishlist.');
+                    }
+                    return;
+                }
+
                 if (!window.isLoggedIn) {
                     const intent = {
                         action: 'wishlist',
                         productId: productId,
+                        size: this.selectedSize || null,
                         redirectUrl: window.location.href
                     };
                     try { localStorage.setItem('lumbarong_pending_intent', JSON.stringify(intent)); } catch(err) {}
@@ -167,7 +178,10 @@
                             'X-CSRF-TOKEN': csrfToken,
                             'X-Requested-With': 'XMLHttpRequest'
                         },
-                        body: JSON.stringify({ product_id: productId })
+                        body: JSON.stringify({ 
+                            product_id: productId,
+                            size: this.selectedSize || null
+                        })
                     });
                     var data = await res.json();
                     this.isWishlisted = data.status === 'added';

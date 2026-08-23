@@ -332,6 +332,12 @@ class AdminController extends Controller
         $product->save();
 
         $this->sendNotification($product->sellerId, 'Product Approved', "Your product \"{$product->name}\" has been approved and is now live!", 'product_approved', "/seller/products/{$product->id}", 'seller');
+        
+        try {
+            \App\Services\WishlistService::handleProductRestocked($product);
+        } catch (\Throwable $we) {
+            \Illuminate\Support\Facades\Log::warning('Wishlist restock handling error on approval API: ' . $we->getMessage());
+        }
 
         return response()->json(['message' => 'Product approved successfully', 'product' => $product]);
     }
@@ -1094,6 +1100,13 @@ class AdminController extends Controller
                     \App\Services\EmailNotificationService::sendNotification($customer->email, $cMail, 'new_product_alert', $customer->id, 'Product', $product->id);
                 }
             }
+        }
+
+        // Auto-add restocked wishlisted items to customer cart & send email notification
+        try {
+            \App\Services\WishlistService::handleProductRestocked($product);
+        } catch (\Throwable $we) {
+            \Illuminate\Support\Facades\Log::warning('Wishlist restock handling error on approval: ' . $we->getMessage());
         }
 
         return redirect()->back()->with('success', 'Product approved and notifications sent.');

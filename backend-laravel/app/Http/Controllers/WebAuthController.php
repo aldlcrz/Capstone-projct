@@ -925,11 +925,17 @@ class WebAuthController extends Controller
                     }
 
                     if ($action === 'wishlist') {
-                        \App\Models\Wishlist::firstOrCreate([
-                            'user_id'    => $user->id,
-                            'product_id' => $product->id,
-                        ]);
-                        session()->flash('success', "Welcome back, {$user->name}! Added \"{$product->name}\" to your wishlist.");
+                        $wishlistSize = $intent['size'] ?? null;
+                        \App\Models\Wishlist::updateOrCreate(
+                            [
+                                'user_id'    => $user->id,
+                                'product_id' => $product->id,
+                            ],
+                            [
+                                'size'       => $wishlistSize,
+                            ]
+                        );
+                        session()->flash('success', "Welcome back, {$user->name}! Added \"{$product->name}\"" . ($wishlistSize ? " (Size {$wishlistSize})" : "") . " to your wishlist.");
                         return redirect($redirect ?: '/wishlist');
                     }
                 }

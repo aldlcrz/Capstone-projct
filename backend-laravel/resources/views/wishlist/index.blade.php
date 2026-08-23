@@ -16,9 +16,11 @@
         </div>
     </div>
 
-    @if($products->isNotEmpty())
+    @if($wishlists->isNotEmpty())
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6">
-            @foreach($products as $product)
+            @foreach($wishlists as $wishlist)
+                @php $product = $wishlist->product; @endphp
+                @if(!$product) @continue @endif
                 <div class="bg-white rounded-2xl border border-gray-100 p-4 shadow-xs flex flex-col justify-between group transition-all hover:border-gray-200 hover:shadow-md relative" id="wishlist-card-{{ $product->id }}">
                     
                     <!-- Remove Button -->
@@ -36,6 +38,11 @@
                             @if($product->is_on_sale && $product->discount_percentage > 0)
                                 <div class="absolute top-2.5 left-2.5 bg-[#C0422A] text-white text-[8px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full">
                                     -{{ number_format($product->discount_percentage, 0) }}% OFF
+                                </div>
+                            @endif
+                            @if($wishlist->size)
+                                <div class="absolute bottom-2.5 left-2.5 bg-black/75 backdrop-blur-xs text-white text-[9px] font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-lg border border-white/20">
+                                    Size: {{ $wishlist->size }}
                                 </div>
                             @endif
                         </a>

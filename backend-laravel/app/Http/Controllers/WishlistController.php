@@ -20,9 +20,7 @@ class WishlistController extends Controller
             ->latest()
             ->get();
 
-        $products = $wishlists->pluck('product')->filter();
-
-        return view('wishlist.index', compact('products'));
+        return view('wishlist.index', compact('wishlists'));
     }
 
     /**
@@ -53,24 +51,37 @@ class WishlistController extends Controller
 
         $request->validate([
             'product_id' => 'required|string|exists:products,id',
+            'size'       => 'nullable|string|max:50',
         ]);
 
         $userId = Auth::id();
         $productId = $request->product_id;
+        $size = $request->input('size');
 
-        $existing = Wishlist::where('user_id', $userId)->where('product_id', $productId)->first();
+        $existing = Wishlist::where('user_id', $userId)
+            ->where('product_id', $productId)
+            ->first();
 
         if ($existing) {
-            $existing->delete();
-            $status = 'removed';
-            $message = 'Item removed from your wishlist.';
+            // If already wishlisted with the same size (or no size change), toggle off
+            if (!$size || $existing->size === $size) {
+                $existing->delete();
+                $status = 'removed';
+                $message = 'Item removed from your wishlist.';
+            } else {
+                // Update preferred size
+                $existing->update(['size' => $size]);
+                $status = 'added';
+                $message = "Wishlist updated to Size {$size}!";
+            }
         } else {
             Wishlist::create([
-                'user_id' => $userId,
+                'user_id'    => $userId,
                 'product_id' => $productId,
+                'size'       => $size,
             ]);
             $status = 'added';
-            $message = 'Item added to your wishlist!';
+            $message = $size ? "Size {$size} added to your wishlist!" : 'Item added to your wishlist!';
         }
 
         $count = Wishlist::where('user_id', $userId)->count();
@@ -80,6 +91,7 @@ class WishlistController extends Controller
             'status'  => $status,
             'message' => $message,
             'count'   => $count,
+            'size'    => $size,
         ]);
     }
 }

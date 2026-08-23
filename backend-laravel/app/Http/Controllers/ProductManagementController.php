@@ -297,6 +297,10 @@ class ProductManagementController extends Controller
             return redirect()->back()->withInput()->with('error', 'Please assign a stock quantity greater than 0 for at least one selected size.');
         }
 
+        $oldSizeStocks = is_array($product->size_stocks) ? $product->size_stocks : [];
+        $oldTotalStock = (int) $product->stock;
+        $wasApproved   = ($product->status === 'approved');
+
         $product->name         = $request->name;
         $product->description  = $request->description;
         $product->fabric_type  = $request->input('fabric_type', '100% Piña');
@@ -420,6 +424,15 @@ class ProductManagementController extends Controller
             'system',
             '/admin/products'
         );
+
+        // Auto-add restocked wishlisted items to customer cart & send email notification if approved
+        if ($wasApproved && $product->status === 'approved') {
+            try {
+                \App\Services\WishlistService::handleProductRestocked($product, $oldSizeStocks, $oldTotalStock);
+            } catch (\Throwable $we) {
+                \Illuminate\Support\Facades\Log::warning('Wishlist restock handling error on seller product update: ' . $we->getMessage());
+            }
+        }
 
         return redirect()->route('seller.products.index')->with('success', 'Product updated and pending review.');
     }
