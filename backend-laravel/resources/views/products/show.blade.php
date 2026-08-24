@@ -369,6 +369,8 @@
                                 <span class="text-xs text-gray-400 font-medium">New • No ratings yet</span>
                             @endif
                         </div>
+                        <span class="text-gray-300">•</span>
+                        <span class="text-xs text-gray-600 font-semibold">{{ (int)($soldCount ?? 0) }} sold</span>
                     </div>
 
                     <!-- Price Row -->
@@ -1331,13 +1333,19 @@
 
                 <h3 class="font-extrabold text-sm text-gray-900 group-hover:text-[#C0422A] transition-colors leading-tight line-clamp-2 uppercase tracking-tight">{{ $rec->name }}</h3>
 
-                @if($rec->avgRating)
-                    <div class="flex items-center gap-1 text-[10px] font-bold text-yellow-500 mt-1">
-                        <span>★</span>
-                        <span>{{ number_format($rec->avgRating, 1) }}</span>
-                        <span class="text-gray-400">({{ $rec->reviewCount }})</span>
-                    </div>
-                @endif
+                <div class="flex items-center gap-1.5 text-[10px] mt-1">
+                    @if($rec->avgRating)
+                        <div class="flex items-center gap-1 font-bold text-yellow-500">
+                            <span>★</span>
+                            <span>{{ number_format($rec->avgRating, 1) }}</span>
+                            <span class="text-gray-400 font-normal">({{ $rec->reviewCount }})</span>
+                        </div>
+                        <span class="text-gray-300">•</span>
+                    @endif
+                    <span class="text-gray-500 font-semibold text-[10px]">
+                        {{ (int)($rec->sold_count ?? 0) }} sold
+                    </span>
+                </div>
 
                 <div class="flex items-center gap-2 mt-1">
                     @if($rec->is_on_sale && $rec->discount_percentage > 0)

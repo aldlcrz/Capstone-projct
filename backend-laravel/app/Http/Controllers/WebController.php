@@ -289,7 +289,7 @@ class WebController extends Controller
         $soldCount = DB::table('order_items')
             ->join('orders', 'order_items.orderId', '=', 'orders.id')
             ->where('order_items.productId', $id)
-            ->whereIn('orders.status', ['Delivered', 'Completed'])
+            ->whereIn('orders.status', ['Delivered', 'Completed', 'completed', 'delivered'])
             ->sum('order_items.quantity') ?: 0;
 
         $recommended = $this->getRecommendedProducts($product);
@@ -315,6 +315,7 @@ class WebController extends Controller
     public function sellerShop(string $id)
     {
         $seller = User::where('role', 'seller')
+            ->where('status', '!=', 'blocked')
             ->where(function($q) use ($id) {
                 $q->where('id', $id)
                   ->orWhere('shopName', $id)
@@ -333,6 +334,14 @@ class WebController extends Controller
         $baseQuery = fn () => Product::where('status', 'approved')
             ->where('id', '!=', $product->id)
             ->where('stock', '>', 0)
+            ->select('products.*')
+            ->selectSub(function($q) {
+                $q->selectRaw('COALESCE(SUM(order_items.quantity), 0)')
+                    ->from('order_items')
+                    ->join('orders', 'order_items.orderId', '=', 'orders.id')
+                    ->whereColumn('order_items.productId', 'products.id')
+                    ->whereIn('orders.status', ['Delivered', 'Completed', 'completed', 'delivered']);
+            }, 'sold_count')
             ->withAvg('reviews as avgRating', 'rating')
             ->withCount('reviews as reviewCount');
 

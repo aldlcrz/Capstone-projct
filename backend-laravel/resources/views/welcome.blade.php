@@ -747,26 +747,25 @@
                 <a href="/products/{{ $product->id }}" class="block">
                     <h3 class="font-extrabold text-sm text-gray-900 group-hover:text-[#C0422A] transition-colors leading-tight line-clamp-2 uppercase tracking-tight">{{ $product->name }}</h3>
                 </a>
-                @if($product->avgRating)
-                    <div class="flex items-center gap-1 text-[10px] font-bold text-yellow-500 mt-1">
-                        <span>★</span>
-                        <span>{{ number_format($product->avgRating, 1) }}</span>
-                        <span class="text-gray-400">({{ $product->reviewCount }})</span>
-                    </div>
-                @endif
-                <div class="flex items-center justify-between mt-1">
-                    <div class="flex items-center gap-2">
-                        <p class="text-base font-extrabold {{ $product->is_on_sale && $product->discount_percentage > 0 ? 'text-[#E02424]' : 'text-gray-900' }}">
-                            ₱{{ number_format($product->salePrice) }}
-                        </p>
-                        @if($product->is_on_sale && $product->discount_percentage > 0)
-                            <p class="text-xs font-bold text-gray-400 line-through">₱{{ number_format($product->price) }}</p>
-                        @endif
-                    </div>
-                    @if(isset($product->sold_count) && $product->sold_count > 0)
-                        <span class="text-[9px] font-bold text-stone-500 bg-stone-100 px-1.5 py-0.5 rounded uppercase tracking-wider shrink-0">
-                            {{ $product->sold_count }} sold
-                        </span>
+                <div class="flex items-center gap-1.5 text-[10px] mt-1">
+                    @if($product->avgRating)
+                        <div class="flex items-center gap-1 font-bold text-yellow-500">
+                            <span>★</span>
+                            <span>{{ number_format($product->avgRating, 1) }}</span>
+                            <span class="text-gray-400 font-normal">({{ $product->reviewCount }})</span>
+                        </div>
+                        <span class="text-gray-300">•</span>
+                    @endif
+                    <span class="text-gray-500 font-semibold text-[10px]">
+                        {{ (int)($product->sold_count ?? 0) }} sold
+                    </span>
+                </div>
+                <div class="flex items-center gap-2 mt-1">
+                    <p class="text-base font-extrabold {{ $product->is_on_sale && $product->discount_percentage > 0 ? 'text-[#E02424]' : 'text-gray-900' }}">
+                        ₱{{ number_format($product->salePrice) }}
+                    </p>
+                    @if($product->is_on_sale && $product->discount_percentage > 0)
+                        <p class="text-xs font-bold text-gray-400 line-through">₱{{ number_format($product->price) }}</p>
                     @endif
                 </div>
                 @if($product->artisan)
