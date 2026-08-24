@@ -668,9 +668,12 @@
         $catReq = request('category');
         $activeCatObj = isset($categories) && $catReq ? $categories->first(fn($c) => $c->id == $catReq || strtolower($c->name) == strtolower($catReq)) : null;
         $displayCatName = $activeCatObj ? $activeCatObj->name : $catReq;
+        $isBestSellers = in_array(request('sort'), ['best_sellers', 'trending', 'most_sold']);
         $headerTitle = request('sort') === 'lumban_special' || request('lumban_special') 
             ? 'Lumban Special Collection' 
-            : ($displayCatName ? $displayCatName.' Collection' : (request('search') ? 'Search Results' : 'Recommended Products'));
+            : ($isBestSellers 
+                ? 'Best Sellers Collection' 
+                : ($displayCatName ? $displayCatName.' Collection' : (request('search') ? 'Search Results' : 'Recommended Products')));
     @endphp
 
     {{-- ====== Unified Product Catalogue ====== --}}
@@ -751,12 +754,19 @@
                         <span class="text-gray-400">({{ $product->reviewCount }})</span>
                     </div>
                 @endif
-                <div class="flex items-center gap-2 mt-1">
-                    <p class="text-base font-extrabold {{ $product->is_on_sale && $product->discount_percentage > 0 ? 'text-[#E02424]' : 'text-gray-900' }}">
-                        ₱{{ number_format($product->salePrice) }}
-                    </p>
-                    @if($product->is_on_sale && $product->discount_percentage > 0)
-                        <p class="text-xs font-bold text-gray-400 line-through">₱{{ number_format($product->price) }}</p>
+                <div class="flex items-center justify-between mt-1">
+                    <div class="flex items-center gap-2">
+                        <p class="text-base font-extrabold {{ $product->is_on_sale && $product->discount_percentage > 0 ? 'text-[#E02424]' : 'text-gray-900' }}">
+                            ₱{{ number_format($product->salePrice) }}
+                        </p>
+                        @if($product->is_on_sale && $product->discount_percentage > 0)
+                            <p class="text-xs font-bold text-gray-400 line-through">₱{{ number_format($product->price) }}</p>
+                        @endif
+                    </div>
+                    @if(isset($product->sold_count) && $product->sold_count > 0)
+                        <span class="text-[9px] font-bold text-stone-500 bg-stone-100 px-1.5 py-0.5 rounded uppercase tracking-wider shrink-0">
+                            {{ $product->sold_count }} sold
+                        </span>
                     @endif
                 </div>
                 @if($product->artisan)
@@ -778,8 +788,12 @@
             <div class="w-16 h-16 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-4 border border-gray-100">
                 <svg class="w-8 h-8 text-gray-200" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
             </div>
-            <h3 class="text-sm font-bold text-black uppercase tracking-widest mb-1">No Products Found</h3>
-            <p class="text-xs text-gray-400 mb-6">Try a different search term or browse all collections.</p>
+            <h3 class="text-sm font-bold text-black uppercase tracking-widest mb-1">
+                {{ in_array(request('sort'), ['best_sellers', 'trending', 'most_sold']) ? 'No Best Sellers Yet' : 'No Products Found' }}
+            </h3>
+            <p class="text-xs text-gray-400 mb-6">
+                {{ in_array(request('sort'), ['best_sellers', 'trending', 'most_sold']) ? 'Products will appear here in real-time once sales are completed.' : 'Try a different search term or browse all collections.' }}
+            </p>
             <a href="/#catalogue-section" class="ajax-filter-link px-6 py-2.5 bg-black hover:bg-[#C0422A] text-white text-xs font-bold uppercase tracking-widest rounded-full transition-all shadow-md inline-block">View All Products</a>
         </div>
     @endif

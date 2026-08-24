@@ -36,10 +36,16 @@ class WebController extends Controller
             ->selectSub(function($q) {
                 $q->select('isPremium')->from('users')->whereColumn('users.id', 'products.sellerId');
             }, 'seller_is_premium')
+            ->selectSub(function($q) {
+                $q->selectRaw('COALESCE(SUM(order_items.quantity), 0)')
+                    ->from('order_items')
+                    ->join('orders', 'order_items.orderId', '=', 'orders.id')
+                    ->whereColumn('order_items.productId', 'products.id')
+                    ->whereIn('orders.status', ['Delivered', 'Completed', 'completed', 'delivered']);
+            }, 'sold_count')
             ->with(['seller'])
             ->withAvg('reviews as avgRating', 'rating')
-            ->withCount('reviews as reviewCount')
-            ->orderBy('seller_is_premium', 'desc');
+            ->withCount('reviews as reviewCount');
 
         if ($request->filled('category')) {
             $catVal = $request->category;
@@ -92,12 +98,25 @@ class WebController extends Controller
 
         if ($request->has('sort')) {
             if (in_array($request->sort, ['trending', 'best_sellers', 'most_sold'])) {
-                $query->orderBy('views', 'desc')->orderBy('createdAt', 'desc');
-            } else {
+                // Real-time: only products with confirmed sales are shown
+                $query->whereExists(function($q) {
+                    $q->select(DB::raw(1))
+                      ->from('order_items')
+                      ->join('orders', 'order_items.orderId', '=', 'orders.id')
+                      ->whereColumn('order_items.productId', 'products.id')
+                      ->whereIn('orders.status', ['Delivered', 'Completed', 'completed', 'delivered'])
+                      ->where('order_items.quantity', '>', 0);
+                })
+                ->orderBy('sold_count', 'desc')
+                ->orderBy('views', 'desc')
+                ->orderBy('createdAt', 'desc');
+            } elseif ($request->sort === 'newest') {
                 $query->orderBy('createdAt', 'desc');
+            } else {
+                $query->orderBy('seller_is_premium', 'desc')->orderBy('createdAt', 'desc');
             }
         } else {
-            $query->orderBy('createdAt', 'desc');
+            $query->orderBy('seller_is_premium', 'desc')->orderBy('createdAt', 'desc');
         }
 
         $products = $query->paginate(100);
