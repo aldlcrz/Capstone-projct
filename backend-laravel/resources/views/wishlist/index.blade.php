@@ -33,7 +33,7 @@
 
                 <div style="display:inline-flex;align-items:center;gap:6px;padding:6px 14px;background-color:#FAF5EA;border:1px solid #E6D8BA;border-radius:20px;font-size:12px;font-weight:700;color:#8C6212;">
                     <span>✦</span>
-                    <span>{{ $products->count() }} {{ Str::plural('piece', $products->count()) }} saved</span>
+                    <span>{{ $wishlists->count() }} {{ Str::plural('piece', $wishlists->count()) }} saved</span>
                 </div>
             </div>
 
