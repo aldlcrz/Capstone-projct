@@ -99,9 +99,11 @@
                     $count = $counts[$key] ?? 0;
                 @endphp
                 <a href="/orders/my-orders?tab={{ $key }}"
-                   class="shrink-0 whitespace-nowrap px-4 py-2 rounded-full text-[10px] font-black uppercase tracking-wider transition-all flex items-center gap-2 active:scale-95 {{ $isActive ? 'bg-[#1E1915] text-white border border-[#1E1915] shadow-md' : 'bg-white text-[#78716C] border border-[#ECE3D2] shadow-2xs hover:bg-[#FAF8F5]' }}">
-                    <span>{{ $label }}</span>
-                    <span class="px-2 py-0.5 text-[9px] rounded-full font-extrabold {{ $isActive ? 'bg-[#DFC97A]/25 text-[#DFC97A]' : 'bg-[#FAF8F5] text-[#8C827A] border border-[#EAE2D2]' }}">
+                   style="background-color: {{ $isActive ? '#1E1915' : '#FDFBF7' }}; color: {{ $isActive ? '#FFFFFF' : '#78716C' }}; border: 1px solid {{ $isActive ? '#1E1915' : '#EAE2D2' }}; box-shadow: {{ $isActive ? '0 4px 14px rgba(0,0,0,0.18)' : '0 2px 6px rgba(0,0,0,0.02)' }};"
+                   class="shrink-0 whitespace-nowrap px-4 py-2 rounded-full text-[10px] font-black uppercase tracking-wider transition-all flex items-center gap-2 active:scale-95 hover:opacity-90">
+                    <span style="color: {{ $isActive ? '#FFFFFF' : '#78716C' }} !important; font-weight: 800; letter-spacing: 0.08em;">{{ $label }}</span>
+                    <span style="background-color: {{ $isActive ? 'rgba(223, 201, 122, 0.25)' : '#FAF5EA' }}; color: {{ $isActive ? '#DFC97A' : '#8C6212' }} !important; border: 1px solid {{ $isActive ? 'rgba(223, 201, 122, 0.4)' : '#E6D8BA' }};"
+                          class="px-2 py-0.5 text-[9px] rounded-full font-extrabold">
                         {{ $count }}
                     </span>
                 </a>
