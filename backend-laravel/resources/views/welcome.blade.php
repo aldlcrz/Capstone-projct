@@ -612,27 +612,27 @@
                          class="w-full h-full object-cover object-top group-hover:scale-105 transition-transform duration-500 ease-out">
 
                     @if($product->is_on_sale && $product->discount_percentage > 0)
-                        <div style="position:absolute;top:8px;left:8px;display:flex;flex-direction:column;gap:4px;z-index:10;pointer-events:none;">
-                            {{-- Top badge: icon + LUMBAN SPECIAL --}}
-                            <div style="display:flex;align-items:center;gap:5px;padding:4px 9px 4px 7px;background:#090705;border:1px solid #C4961E;border-radius:5px;white-space:nowrap;">
-                                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" style="flex-shrink:0;">
-                                    <circle cx="12" cy="12" r="10.5" stroke="#C4961E" stroke-width="0.9" stroke-dasharray="2 2"/>
-                                    <circle cx="12" cy="12" r="3" fill="#C4961E"/>
-                                    <line x1="12" y1="1" x2="12" y2="8.5" stroke="#C4961E" stroke-width="1.2" stroke-linecap="round"/>
-                                    <line x1="12" y1="15.5" x2="12" y2="23" stroke="#C4961E" stroke-width="1.2" stroke-linecap="round"/>
-                                    <line x1="1" y1="12" x2="8.5" y2="12" stroke="#C4961E" stroke-width="1.2" stroke-linecap="round"/>
-                                    <line x1="15.5" y1="12" x2="23" y2="12" stroke="#C4961E" stroke-width="1.2" stroke-linecap="round"/>
-                                    <line x1="3.5" y1="3.5" x2="9" y2="9" stroke="#C4961E" stroke-width="1.2" stroke-linecap="round"/>
-                                    <line x1="15" y1="15" x2="20.5" y2="20.5" stroke="#C4961E" stroke-width="1.2" stroke-linecap="round"/>
-                                    <line x1="20.5" y1="3.5" x2="15" y2="9" stroke="#C4961E" stroke-width="1.2" stroke-linecap="round"/>
-                                    <line x1="9" y1="15" x2="3.5" y2="20.5" stroke="#C4961E" stroke-width="1.2" stroke-linecap="round"/>
+                        <div style="position:absolute;top:8px;left:8px;display:flex;flex-direction:column;gap:5px;z-index:10;pointer-events:none;">
+                            {{-- Top badge: LUMBAN SPECIAL --}}
+                            <div style="display:inline-flex;align-items:center;gap:5px;padding:4px 11px 4px 8px;background:linear-gradient(135deg,#0F0C08 0%,#1C1609 100%);border:1px solid #A87B10;border-radius:20px;box-shadow:0 0 8px rgba(180,130,15,0.45),inset 0 1px 0 rgba(230,185,60,0.12);white-space:nowrap;">
+                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" style="flex-shrink:0;">
+                                    <circle cx="12" cy="12" r="10" stroke="#C49520" stroke-width="0.8" stroke-dasharray="2.5 2"/>
+                                    <circle cx="12" cy="12" r="2.8" fill="#C49520"/>
+                                    <line x1="12" y1="1.5" x2="12" y2="7.5" stroke="#C49520" stroke-width="1.3" stroke-linecap="round"/>
+                                    <line x1="12" y1="16.5" x2="12" y2="22.5" stroke="#C49520" stroke-width="1.3" stroke-linecap="round"/>
+                                    <line x1="1.5" y1="12" x2="7.5" y2="12" stroke="#C49520" stroke-width="1.3" stroke-linecap="round"/>
+                                    <line x1="16.5" y1="12" x2="22.5" y2="12" stroke="#C49520" stroke-width="1.3" stroke-linecap="round"/>
+                                    <line x1="4" y1="4" x2="8.5" y2="8.5" stroke="#C49520" stroke-width="1.3" stroke-linecap="round"/>
+                                    <line x1="15.5" y1="15.5" x2="20" y2="20" stroke="#C49520" stroke-width="1.3" stroke-linecap="round"/>
+                                    <line x1="20" y1="4" x2="15.5" y2="8.5" stroke="#C49520" stroke-width="1.3" stroke-linecap="round"/>
+                                    <line x1="8.5" y1="15.5" x2="4" y2="20" stroke="#C49520" stroke-width="1.3" stroke-linecap="round"/>
                                 </svg>
-                                <span style="color:#C9A435;font-family:ui-sans-serif,system-ui,sans-serif;font-size:7.5px;font-weight:700;letter-spacing:0.16em;text-transform:uppercase;">Lumban Special</span>
+                                <span style="color:#DFC97A;font-family:ui-sans-serif,system-ui,sans-serif;font-size:8px;font-weight:700;letter-spacing:0.18em;text-transform:uppercase;">Lumban Special</span>
                             </div>
-                            {{-- Bottom badge: -10% OFF --}}
-                            <div style="display:flex;align-items:baseline;gap:0px;padding:4px 9px;background:#090705;border:1px solid #C4961E;border-radius:5px;white-space:nowrap;">
-                                <span style="color:#D4A820;font-family:ui-sans-serif,system-ui,sans-serif;font-size:14px;font-weight:900;line-height:1;letter-spacing:-0.02em;">-{{ number_format($product->discount_percentage, 0) }}%</span>
-                                <span style="color:#A07C18;font-family:ui-sans-serif,system-ui,sans-serif;font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:0.06em;margin-left:3px;">OFF</span>
+                            {{-- Bottom badge: -10% OFF (golden gradient) --}}
+                            <div style="display:inline-flex;align-items:baseline;padding:4px 11px;background:linear-gradient(90deg,#7A5505 0%,#C8890A 25%,#E8AD12 50%,#C8890A 75%,#7A5505 100%);border:1px solid #5C3E04;border-radius:20px;box-shadow:0 2px 10px rgba(200,137,10,0.5),inset 0 1px 0 rgba(255,220,80,0.25);white-space:nowrap;">
+                                <span style="color:#FFF8E0;font-family:ui-sans-serif,system-ui,sans-serif;font-size:15px;font-weight:900;line-height:1;letter-spacing:-0.02em;">-{{ number_format($product->discount_percentage, 0) }}%</span>
+                                <span style="color:#FFE8A0;font-family:ui-sans-serif,system-ui,sans-serif;font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;margin-left:3px;">OFF</span>
                             </div>
                         </div>
                     @elseif($product->target_group)
