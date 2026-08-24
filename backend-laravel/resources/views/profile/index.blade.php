@@ -1,37 +1,37 @@
 @extends('layouts.app')
 
 @section('content')
-<div class="min-h-[calc(100vh-80px)] bg-white py-6 px-4 sm:px-6" x-data="profileApp()" x-init="init()">
+<div class="min-h-[calc(100vh-80px)] bg-white py-8 px-4 sm:px-6" x-data="profileApp()" x-init="init()">
     <div class="max-w-md mx-auto space-y-6">
 
         {{-- Top Header --}}
         <div class="pt-2">
-            <div class="flex items-center gap-2 mb-1">
+            <div class="flex items-center gap-2 mb-1.5">
                 <div class="w-5 h-0.5 bg-[#C0422A]"></div>
-                <span class="text-[10px] font-bold uppercase tracking-widest text-[#C0422A]">Account</span>
+                <span class="text-[10px] sm:text-[11px] font-bold uppercase tracking-widest text-[#C0422A]">Account</span>
             </div>
-            <h1 class="font-serif text-2xl font-bold text-black">My <span class="text-[#C0422A] italic">Profile</span></h1>
+            <h1 class="font-serif text-2xl sm:text-3xl font-bold text-gray-900">My <span class="text-[#C0422A] italic">Profile</span></h1>
         </div>
 
         {{-- Profile Avatar & User Card --}}
         <div class="relative pt-6">
             {{-- Floating Avatar --}}
-            <div class="relative w-28 h-28 mx-auto -mb-14 z-10">
-                <div class="w-28 h-28 rounded-full overflow-hidden border-4 border-white shadow-lg bg-emerald-100 flex items-center justify-center">
+            <div class="relative w-26 h-26 sm:w-28 sm:h-28 mx-auto -mb-13 sm:-mb-14 z-10">
+                <div class="w-full h-full rounded-full overflow-hidden border-4 border-white shadow-md bg-stone-100 flex items-center justify-center">
                     @if($user->profilePhoto)
                         <img id="avatar-display" src="{{ str_starts_with($user->profilePhoto, 'http') || str_starts_with($user->profilePhoto, '/') ? $user->profilePhoto : asset('storage/' . $user->profilePhoto) }}" class="w-full h-full object-cover">
                     @else
-                        <span class="text-3xl font-extrabold text-emerald-700">{{ strtoupper(substr($user->name, 0, 1)) }}</span>
+                        <span class="text-3xl font-extrabold text-stone-600">{{ strtoupper(substr($user->name, 0, 1)) }}</span>
                     @endif
                 </div>
             </div>
 
             {{-- User Info Card --}}
-            <div class="bg-white rounded-3xl pt-16 pb-5 px-6 shadow-xs border border-gray-100/80 relative">
+            <div class="bg-white rounded-[24px] pt-16 pb-5 px-6 shadow-2xs border border-gray-100/90 relative">
                 <div class="flex items-center justify-between gap-3">
                     {{-- Left-aligned Username & Name --}}
                     <div class="text-left min-w-0 pr-2">
-                        <h2 class="text-lg font-extrabold text-gray-900 tracking-tight leading-tight truncate">
+                        <h2 class="text-lg sm:text-xl font-bold text-gray-900 tracking-tight leading-tight truncate">
                             {{ $user->username ?? $user->name }}
                         </h2>
                         @if($user->username && $user->username !== $user->name)
@@ -42,9 +42,10 @@
                     {{-- Edit Button (Top Right of Card) --}}
                     <button type="button"
                             @click="showEditModal = true"
-                            class="w-9 h-9 bg-gray-50 hover:bg-gray-100 rounded-xl flex items-center justify-center border border-gray-200/80 text-gray-700 shadow-2xs transition-all cursor-pointer group shrink-0">
-                        <svg class="w-4 h-4 text-gray-600 group-hover:text-black transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+                            class="w-9 h-9 sm:w-10 sm:h-10 bg-gray-50/60 hover:bg-gray-100 rounded-xl flex items-center justify-center border border-gray-200/80 text-gray-600 hover:text-black shadow-2xs transition-all cursor-pointer group shrink-0">
+                        <svg class="w-4 h-4 text-gray-500 group-hover:text-black transition-colors" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/>
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/>
                         </svg>
                     </button>
                 </div>
@@ -53,63 +54,65 @@
 
         {{-- Account Settings Section --}}
         <div>
-            <h3 class="text-[10px] font-bold uppercase tracking-widest text-[#C0422A] mb-3 px-1">Account Settings</h3>
+            <h3 class="text-[10px] sm:text-[11px] font-bold uppercase tracking-widest text-[#C0422A] mb-3 px-1">Account Settings</h3>
 
-            <div class="space-y-2.5">
+            <div class="space-y-3">
                 {{-- Email --}}
-                <div class="bg-white rounded-2xl p-4 shadow-2xs border border-gray-100 flex items-center justify-between">
+                <div class="bg-white rounded-2xl p-4 sm:p-4.5 shadow-2xs border border-gray-100/90 flex items-center justify-between">
                     <div class="flex items-center gap-3 min-w-0">
-                        <div class="w-9 h-9 rounded-xl bg-[#FDF9F4] text-[#C0422A] border border-[#C0422A]/20 flex items-center justify-center shrink-0">
-                            <svg class="w-4.5 h-4.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
+                        <div class="w-9 h-9 rounded-xl bg-[#FDF9F4] text-[#C0422A] border border-[#C0422A]/25 flex items-center justify-center shrink-0">
+                            <svg class="w-4.5 h-4.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                                <rect x="2" y="4" width="20" height="16" rx="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                <path d="M22 7l-8.97 5.7a1.94 1.94 0 01-2.06 0L2 7" stroke-linecap="round" stroke-linejoin="round"/>
                             </svg>
                         </div>
                         <span class="font-bold text-sm text-gray-900">Email</span>
                     </div>
-                    <span class="text-xs font-semibold text-gray-500 truncate max-w-45 sm:max-w-xs">{{ $user->email }}</span>
+                    <span class="text-xs sm:text-sm font-medium text-gray-500 truncate max-w-45 sm:max-w-xs">{{ $user->email }}</span>
                 </div>
 
                 {{-- Saved Address (Opens Modal) --}}
                 <button type="button"
                         @click="openSavedAddresses()"
-                        class="w-full bg-white rounded-2xl p-4 shadow-2xs border border-gray-100 flex items-center justify-between hover:bg-gray-50/80 transition-colors group cursor-pointer text-left">
+                        class="w-full bg-white rounded-2xl p-4 sm:p-4.5 shadow-2xs border border-gray-100/90 flex items-center justify-between hover:bg-gray-50/70 transition-colors group cursor-pointer text-left">
                     <div class="flex items-center gap-3">
-                        <div class="w-9 h-9 rounded-xl bg-[#FDF9F4] text-[#C0422A] border border-[#C0422A]/20 flex items-center justify-center shrink-0">
-                            <svg class="w-4.5 h-4.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
+                        <div class="w-9 h-9 rounded-xl bg-[#FDF9F4] text-[#C0422A] border border-[#C0422A]/25 flex items-center justify-center shrink-0">
+                            <svg class="w-4.5 h-4.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M12 21s-7-4.35-7-10a7 7 0 1114 0c0 5.65-7 10-7 10z"/>
+                                <circle cx="12" cy="11" r="2.5" stroke-linecap="round" stroke-linejoin="round"/>
                             </svg>
                         </div>
                         <span class="font-bold text-sm text-gray-900">Saved address</span>
                     </div>
-                    <svg class="w-4 h-4 text-gray-400 group-hover:text-black group-hover:translate-x-0.5 transition-all" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5l7 7-7 7"/>
+                    <svg class="w-4 h-4 text-gray-400 group-hover:text-gray-900 group-hover:translate-x-0.5 transition-all" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M9 5l7 7-7 7"/>
                     </svg>
                 </button>
 
                 {{-- Orders --}}
-                <a href="{{ route('orders') }}" class="bg-white rounded-2xl p-4 shadow-2xs border border-gray-100 flex items-center justify-between hover:bg-gray-50/80 transition-colors group cursor-pointer">
+                <a href="{{ route('orders') }}" class="bg-white rounded-2xl p-4 sm:p-4.5 shadow-2xs border border-gray-100/90 flex items-center justify-between hover:bg-gray-50/70 transition-colors group cursor-pointer">
                     <div class="flex items-center gap-3">
-                        <div class="w-9 h-9 rounded-xl bg-[#FDF9F4] text-[#C0422A] border border-[#C0422A]/20 flex items-center justify-center shrink-0">
-                            <svg class="w-4.5 h-4.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/>
+                        <div class="w-9 h-9 rounded-xl bg-[#FDF9F4] text-[#C0422A] border border-[#C0422A]/25 flex items-center justify-center shrink-0">
+                            <svg class="w-4.5 h-4.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/>
                             </svg>
                         </div>
                         <span class="font-bold text-sm text-gray-900">Orders</span>
                     </div>
-                    <svg class="w-4 h-4 text-gray-400 group-hover:text-black group-hover:translate-x-0.5 transition-all" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5l7 7-7 7"/>
+                    <svg class="w-4 h-4 text-gray-400 group-hover:text-gray-900 group-hover:translate-x-0.5 transition-all" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M9 5l7 7-7 7"/>
                     </svg>
                 </a>
 
                 {{-- Change Password (Opens Modal) --}}
                 <button type="button"
                         @click="showPasswordModal = true"
-                        class="w-full bg-white rounded-2xl p-4 shadow-2xs border border-gray-100 flex items-center justify-between hover:bg-gray-50/80 transition-colors group cursor-pointer text-left">
+                        class="w-full bg-white rounded-2xl p-4 sm:p-4.5 shadow-2xs border border-gray-100/90 flex items-center justify-between hover:bg-gray-50/70 transition-colors group cursor-pointer text-left">
                     <div class="flex items-center gap-3">
-                        <div class="w-9 h-9 rounded-xl bg-[#FDF9F4] text-[#C0422A] border border-[#C0422A]/20 flex items-center justify-center shrink-0">
-                            <svg class="w-4.5 h-4.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
+                        <div class="w-9 h-9 rounded-xl bg-[#FDF9F4] text-[#C0422A] border border-[#C0422A]/25 flex items-center justify-center shrink-0">
+                            <svg class="w-4.5 h-4.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                                <rect x="3" y="11" width="18" height="11" rx="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                <path d="M7 11V7a5 5 0 0110 0v4" stroke-linecap="round" stroke-linejoin="round"/>
                             </svg>
                         </div>
                         <span class="font-bold text-sm text-gray-900">Change Password</span>
