@@ -612,15 +612,18 @@
                          class="w-full h-full object-cover object-top group-hover:scale-105 transition-transform duration-500 ease-out">
 
                     @if($product->is_on_sale && $product->discount_percentage > 0)
-                        <div class="absolute top-2.5 left-2.5 flex flex-col gap-1">
-                            <div class="flex items-center gap-1 bg-[#C0422A] text-white px-2 py-0.5 rounded-full shadow-lg">
-                                <svg class="w-2.5 h-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-5 5a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 10V5a2 2 0 012-2z"/>
+                        <div class="absolute top-2.5 left-2.5 flex flex-col gap-1.5 z-10 pointer-events-none items-start">
+                            <div class="flex items-center gap-1.5 bg-[#0C0C0C]/85 backdrop-blur-md border border-[#D4AF37]/60 text-white px-2.5 py-1 rounded-full shadow-md shadow-black/40">
+                                <svg class="w-3 h-3 text-[#F3D079] shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                                    <circle cx="12" cy="12" r="9" stroke="#E5B869" stroke-width="1.2"/>
+                                    <circle cx="12" cy="12" r="3.5" fill="#E5B869" fill-opacity="0.25" stroke="#E5B869" stroke-width="1.2"/>
+                                    <path d="M12 3v3M12 18v3M3 12h3M18 12h3M5.64 5.64l2.12 2.12M16.24 16.24l2.12 2.12M5.64 18.36l2.12-2.12M16.24 7.76l2.12-2.12" stroke="#E5B869" stroke-width="1.2" stroke-linecap="round"/>
                                 </svg>
-                                <span class="text-[8px] font-black uppercase tracking-widest">Lumban Special</span>
+                                <span class="text-[8px] sm:text-[9px] font-bold uppercase tracking-[0.14em] text-[#F3E2B3] drop-shadow-xs">Lumban Special</span>
                             </div>
-                            <div class="bg-black/80 text-white text-[8px] font-black px-2 py-0.5 rounded-full w-fit">
-                                -{{ number_format($product->discount_percentage, 0) }}% OFF
+                            <div class="flex items-baseline bg-[#0C0C0C]/85 backdrop-blur-md border border-[#D4AF37]/60 px-2.5 py-0.5 rounded-full shadow-md shadow-black/40 w-fit">
+                                <span class="text-[10px] sm:text-xs font-black text-[#F8D368] tracking-tight">-{{ number_format($product->discount_percentage, 0) }}%</span>
+                                <span class="text-[8px] sm:text-[9px] font-bold text-[#E5B869]/90 tracking-wider uppercase ml-1">OFF</span>
                             </div>
                         </div>
                     @elseif($product->target_group)
@@ -630,7 +633,7 @@
                     @endif
                 </div>
                 <a href="/products/{{ $product->id }}" class="block">
-                    <h3 class="font-bold text-sm text-gray-900 group-hover:text-[#C0422A] transition-colors leading-tight line-clamp-2">{{ $product->name }}</h3>
+                    <h3 class="font-extrabold text-sm text-gray-900 group-hover:text-[#C0422A] transition-colors leading-tight line-clamp-2 uppercase tracking-tight">{{ $product->name }}</h3>
                 </a>
                 @if($product->avgRating)
                     <div class="flex items-center gap-1 text-[10px] font-bold text-yellow-500 mt-1">
@@ -640,7 +643,7 @@
                     </div>
                 @endif
                 <div class="flex items-center gap-2 mt-1">
-                    <p class="text-sm font-black {{ $product->is_on_sale && $product->discount_percentage > 0 ? 'text-[#C0422A]' : 'text-gray-800' }}">
+                    <p class="text-base font-extrabold {{ $product->is_on_sale && $product->discount_percentage > 0 ? 'text-[#E02424]' : 'text-gray-900' }}">
                         ₱{{ number_format($product->salePrice) }}
                     </p>
                     @if($product->is_on_sale && $product->discount_percentage > 0)

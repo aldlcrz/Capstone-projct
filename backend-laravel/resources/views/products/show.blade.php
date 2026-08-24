@@ -317,6 +317,23 @@
                         >
                     </template>
 
+                    @if($product->is_on_sale && $product->discount_percentage > 0)
+                        <div class="absolute top-3 left-3 flex flex-col gap-1.5 z-10 pointer-events-none items-start">
+                            <div class="flex items-center gap-1.5 bg-[#0C0C0C]/85 backdrop-blur-md border border-[#D4AF37]/60 text-white px-3 py-1 rounded-full shadow-md shadow-black/40">
+                                <svg class="w-3.5 h-3.5 text-[#F3D079] shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                                    <circle cx="12" cy="12" r="9" stroke="#E5B869" stroke-width="1.2"/>
+                                    <circle cx="12" cy="12" r="3.5" fill="#E5B869" fill-opacity="0.25" stroke="#E5B869" stroke-width="1.2"/>
+                                    <path d="M12 3v3M12 18v3M3 12h3M18 12h3M5.64 5.64l2.12 2.12M16.24 16.24l2.12 2.12M5.64 18.36l2.12-2.12M16.24 7.76l2.12-2.12" stroke="#E5B869" stroke-width="1.2" stroke-linecap="round"/>
+                                </svg>
+                                <span class="text-[9px] sm:text-[10px] font-bold uppercase tracking-[0.14em] text-[#F3E2B3] drop-shadow-xs">Lumban Special</span>
+                            </div>
+                            <div class="flex items-baseline bg-[#0C0C0C]/85 backdrop-blur-md border border-[#D4AF37]/60 px-3 py-0.5 rounded-full shadow-md shadow-black/40 w-fit">
+                                <span class="text-xs sm:text-sm font-black text-[#F8D368] tracking-tight">-{{ number_format($product->discount_percentage, 0) }}%</span>
+                                <span class="text-[9px] sm:text-[10px] font-bold text-[#E5B869]/90 tracking-wider uppercase ml-1">OFF</span>
+                            </div>
+                        </div>
+                    @endif
+
                     <!-- Zoom Helper Hint Badge (Bottom Right) -->
                     <div class="absolute bottom-3.5 right-3.5 z-10 px-3 py-1.5 rounded-full bg-white/90 backdrop-blur-md border border-gray-200 shadow-sm flex items-center gap-1.5 text-gray-700 pointer-events-none opacity-85 group-hover:opacity-100 transition-opacity">
                         <svg class="w-3.5 h-3.5 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1278,8 +1295,19 @@
                          class="w-full h-full object-cover object-top group-hover:scale-105 transition-transform duration-500 ease-out">
 
                     @if($rec->is_on_sale && $rec->discount_percentage > 0)
-                        <div class="absolute top-2.5 left-2.5 bg-[#C0422A] text-white text-[8px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full">
-                            -{{ number_format($rec->discount_percentage, 0) }}% OFF
+                        <div class="absolute top-2.5 left-2.5 flex flex-col gap-1.5 z-10 pointer-events-none items-start">
+                            <div class="flex items-center gap-1.5 bg-[#0C0C0C]/85 backdrop-blur-md border border-[#D4AF37]/60 text-white px-2 py-0.5 rounded-full shadow-md shadow-black/40">
+                                <svg class="w-2.5 h-2.5 text-[#F3D079] shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                                    <circle cx="12" cy="12" r="9" stroke="#E5B869" stroke-width="1.2"/>
+                                    <circle cx="12" cy="12" r="3.5" fill="#E5B869" fill-opacity="0.25" stroke="#E5B869" stroke-width="1.2"/>
+                                    <path d="M12 3v3M12 18v3M3 12h3M18 12h3M5.64 5.64l2.12 2.12M16.24 16.24l2.12 2.12M5.64 18.36l2.12-2.12M16.24 7.76l2.12-2.12" stroke="#E5B869" stroke-width="1.2" stroke-linecap="round"/>
+                                </svg>
+                                <span class="text-[7.5px] font-bold uppercase tracking-[0.14em] text-[#F3E2B3] drop-shadow-xs">Lumban Special</span>
+                            </div>
+                            <div class="flex items-baseline bg-[#0C0C0C]/85 backdrop-blur-md border border-[#D4AF37]/60 px-2 py-0.5 rounded-full shadow-md shadow-black/40 w-fit">
+                                <span class="text-[9px] font-black text-[#F8D368] tracking-tight">-{{ number_format($rec->discount_percentage, 0) }}%</span>
+                                <span class="text-[7.5px] font-bold text-[#E5B869]/90 tracking-wider uppercase ml-0.5">OFF</span>
+                            </div>
                         </div>
                     @elseif($rec->target_group)
                         <div class="absolute top-2.5 left-2.5 bg-white/90 backdrop-blur-sm text-[8px] font-black uppercase tracking-widest text-gray-500 px-2 py-0.5 rounded-full">
@@ -1288,7 +1316,7 @@
                     @endif
                 </div>
 
-                <h3 class="font-bold text-sm text-gray-900 group-hover:text-[#C0422A] transition-colors leading-tight line-clamp-2">{{ $rec->name }}</h3>
+                <h3 class="font-extrabold text-sm text-gray-900 group-hover:text-[#C0422A] transition-colors leading-tight line-clamp-2 uppercase tracking-tight">{{ $rec->name }}</h3>
 
                 @if($rec->avgRating)
                     <div class="flex items-center gap-1 text-[10px] font-bold text-yellow-500 mt-1">
@@ -1300,7 +1328,7 @@
 
                 <div class="flex items-center gap-2 mt-1">
                     @if($rec->is_on_sale && $rec->discount_percentage > 0)
-                        <p class="text-sm font-black text-[#C0422A]">₱{{ number_format($rec->salePrice) }}</p>
+                        <p class="text-base font-extrabold text-[#E02424]">₱{{ number_format($rec->salePrice) }}</p>
                         <p class="text-xs font-bold text-gray-400 line-through">₱{{ number_format($rec->price) }}</p>
                     @else
                         <p class="text-sm font-black text-gray-800">₱{{ number_format($rec->price) }}</p>

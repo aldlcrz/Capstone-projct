@@ -198,12 +198,20 @@
                 <a :href="'/products/' + product.id" class="group relative flex flex-col bg-white rounded-sm shadow-sm hover:-translate-y-1 hover:shadow-lg border border-transparent hover:border-[#C0420A] transition-all duration-300">
                     <div class="relative aspect-square overflow-hidden bg-stone-50 rounded-t-sm">
                         <img :src="getProductImage(product.image)" class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" x-on:error="$event.target.src='/uploads/products/default.jpg'" />
-                        <template x-if="product.is_on_sale">
-                            <div class="absolute top-2.5 right-2.5 bg-[#C0420A] text-white px-2.5 py-1 rounded-sm flex items-center gap-1 shadow-md z-10">
-                                <span class="text-[8px] font-black uppercase tracking-widest">Lumban Special</span>
-                                <template x-if="parseFloat(product.discount_percentage || 0) > 0">
-                                    <span class="text-[9px] font-black" x-text="'-' + Math.round(product.discount_percentage) + '%'"></span>
-                                </template>
+                        <template x-if="product.is_on_sale && parseFloat(product.discount_percentage || 0) > 0">
+                            <div class="absolute top-2.5 left-2.5 flex flex-col gap-1.5 z-10 pointer-events-none items-start">
+                                <div class="flex items-center gap-1.5 bg-[#0C0C0C]/85 backdrop-blur-md border border-[#D4AF37]/60 text-white px-2.5 py-1 rounded-full shadow-md shadow-black/40">
+                                    <svg class="w-3 h-3 text-[#F3D079] shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                                        <circle cx="12" cy="12" r="9" stroke="#E5B869" stroke-width="1.2"/>
+                                        <circle cx="12" cy="12" r="3.5" fill="#E5B869" fill-opacity="0.25" stroke="#E5B869" stroke-width="1.2"/>
+                                        <path d="M12 3v3M12 18v3M3 12h3M18 12h3M5.64 5.64l2.12 2.12M16.24 16.24l2.12 2.12M5.64 18.36l2.12-2.12M16.24 7.76l2.12-2.12" stroke="#E5B869" stroke-width="1.2" stroke-linecap="round"/>
+                                    </svg>
+                                    <span class="text-[8px] sm:text-[9px] font-bold uppercase tracking-[0.14em] text-[#F3E2B3] drop-shadow-xs">Lumban Special</span>
+                                </div>
+                                <div class="flex items-baseline bg-[#0C0C0C]/85 backdrop-blur-md border border-[#D4AF37]/60 px-2.5 py-0.5 rounded-full shadow-md shadow-black/40 w-fit">
+                                    <span class="text-[10px] sm:text-xs font-black text-[#F8D368] tracking-tight" x-text="'-' + Math.round(product.discount_percentage) + '%'"></span>
+                                    <span class="text-[8px] sm:text-[9px] font-bold text-[#E5B869]/90 tracking-wider uppercase ml-1">OFF</span>
+                                </div>
                             </div>
                         </template>
                     </div>

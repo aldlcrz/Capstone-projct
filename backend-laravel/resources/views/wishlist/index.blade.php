@@ -36,8 +36,19 @@
                         <a href="/products/{{ $product->id }}" class="block aspect-4/5 bg-gray-50 rounded-xl overflow-hidden mb-3 relative">
                             <img src="{{ $product->getImageUrl() }}" onerror="this.src='/uploads/products/default.jpg'" class="w-full h-full object-cover object-top group-hover:scale-105 transition-transform duration-300">
                             @if($product->is_on_sale && $product->discount_percentage > 0)
-                                <div class="absolute top-2.5 left-2.5 bg-[#C0422A] text-white text-[8px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full">
-                                    -{{ number_format($product->discount_percentage, 0) }}% OFF
+                                <div class="absolute top-2.5 left-2.5 flex flex-col gap-1 z-10 pointer-events-none items-start">
+                                    <div class="flex items-center gap-1 bg-[#0C0C0C]/85 backdrop-blur-md border border-[#D4AF37]/60 text-white px-2 py-0.5 rounded-full shadow-md shadow-black/40">
+                                        <svg class="w-2.5 h-2.5 text-[#F3D079] shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                                            <circle cx="12" cy="12" r="9" stroke="#E5B869" stroke-width="1.2"/>
+                                            <circle cx="12" cy="12" r="3.5" fill="#E5B869" fill-opacity="0.25" stroke="#E5B869" stroke-width="1.2"/>
+                                            <path d="M12 3v3M12 18v3M3 12h3M18 12h3M5.64 5.64l2.12 2.12M16.24 16.24l2.12 2.12M5.64 18.36l2.12-2.12M16.24 7.76l2.12-2.12" stroke="#E5B869" stroke-width="1.2" stroke-linecap="round"/>
+                                        </svg>
+                                        <span class="text-[7.5px] font-bold uppercase tracking-[0.14em] text-[#F3E2B3] drop-shadow-xs">Lumban Special</span>
+                                    </div>
+                                    <div class="flex items-baseline bg-[#0C0C0C]/85 backdrop-blur-md border border-[#D4AF37]/60 px-2 py-0.5 rounded-full shadow-md shadow-black/40 w-fit">
+                                        <span class="text-[9px] font-black text-[#F8D368] tracking-tight">-{{ number_format($product->discount_percentage, 0) }}%</span>
+                                        <span class="text-[7.5px] font-bold text-[#E5B869]/90 tracking-wider uppercase ml-0.5">OFF</span>
+                                    </div>
                                 </div>
                             @endif
                             @if($wishlist->size)
