@@ -63,10 +63,10 @@
         </div>
 
         {{-- When Cart has items --}}
-        <div class="flex flex-col lg:flex-row gap-6 lg:gap-8 items-start" x-show="items.length > 0">
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8 items-start" x-show="items.length > 0">
 
-            {{-- ===== Left: Cart Items ===== --}}
-            <div class="flex-1 space-y-4 min-w-0 w-full">
+            {{-- ===== Left: Cart Items (8 cols) ===== --}}
+            <div class="lg:col-span-7 xl:col-span-8 space-y-4 min-w-0">
 
                 {{-- Minimalist Select All & Actions Bar --}}
                 <div class="bg-white border border-[#ECE3D2] rounded-xl px-4 py-3 flex items-center justify-between shadow-xs">
@@ -253,9 +253,9 @@
                 </div>
             </div>
 
-            {{-- ===== Right: Minimalist Order Summary Sidebar ===== --}}
-            <div class="lg:w-88 w-full hidden lg:block shrink-0">
-                <div class="bg-white border border-[#ECE3D2] rounded-2xl p-6 shadow-xs sticky top-24 space-y-5">
+            {{-- ===== Right: Minimalist Order Summary Sidebar (4 cols) ===== --}}
+            <div class="lg:col-span-5 xl:col-span-4 hidden lg:block">
+                <div style="background-color:#FFFFFF;border:1px solid #ECE3D2;border-radius:20px;padding:24px;box-shadow:0 4px 16px rgba(0,0,0,0.03);position:sticky;top:96px;" class="space-y-5">
                     <div>
                         <h2 style="font-family:ui-serif,Georgia,serif;" class="text-xl font-bold text-[#1E1915] tracking-tight">
                             Order Summary
@@ -296,12 +296,12 @@
                         </template>
                         <button type="submit"
                                 :disabled="selected.length === 0"
-                                :class="selected.length === 0
-                                    ? 'opacity-40 cursor-not-allowed bg-stone-400'
-                                    : 'bg-[#1E1915] hover:bg-[#C0422A] shadow-md cursor-pointer active:scale-98'"
-                                class="w-full text-white py-3.5 px-4 rounded-xl text-xs font-bold uppercase tracking-wider transition-all duration-200 flex items-center justify-center gap-2">
+                                :style="selected.length === 0 ? 'background-color:#A8A29E;cursor:not-allowed;opacity:0.6;' : 'background-color:#1E1915;cursor:pointer;opacity:1;'"
+                                style="width:100%;background-color:#1E1915;color:#FFFFFF;padding:14px;border-radius:14px;font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:0.12em;border:none;box-shadow:0 4px 14px rgba(0,0,0,0.15);transition:all 0.2s;display:flex;align-items:center;justify-content:center;gap:6px;"
+                                onmouseover="if(this.getAttribute('disabled') === null) this.style.backgroundColor='#C0422A';"
+                                onmouseout="if(this.getAttribute('disabled') === null) this.style.backgroundColor='#1E1915';">
                             <span>Proceed to Checkout</span>
-                            <span x-show="selected.length > 0" class="text-[#DFC97A]" x-text="'(' + selected.length + ')'"></span>
+                            <span x-show="selected.length > 0" style="color:#DFC97A;" x-text="'(' + selected.length + ')'"></span>
                         </button>
                     </form>
 
@@ -360,11 +360,10 @@
                     <button type="button"
                             @click="$refs.checkoutForm.submit()"
                             :disabled="selected.length === 0"
-                            :class="selected.length === 0
-                                ? 'opacity-40 cursor-not-allowed bg-stone-400'
-                                : 'bg-[#1E1915] hover:bg-[#C0422A] active:scale-95 shadow-md cursor-pointer'"
-                            class="px-5 py-2.5 text-white text-xs font-bold uppercase tracking-wider rounded-xl transition-all shrink-0">
-                        Check Out <span x-show="selected.length > 0" x-text="'(' + selected.length + ')'"></span>
+                            :style="selected.length === 0 ? 'background-color:#A8A29E;cursor:not-allowed;opacity:0.6;' : 'background-color:#1E1915;cursor:pointer;opacity:1;'"
+                            style="background-color:#1E1915;color:#FFFFFF;padding:10px 18px;border-radius:12px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;border:none;box-shadow:0 2px 8px rgba(0,0,0,0.12);transition:all 0.2s;"
+                            class="shrink-0">
+                        <span>Check Out</span> <span x-show="selected.length > 0" style="color:#DFC97A;" x-text="'(' + selected.length + ')'"></span>
                     </button>
                 </div>
             </div>
