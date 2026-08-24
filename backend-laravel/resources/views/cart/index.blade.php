@@ -82,12 +82,12 @@
                     </div>
                 </div>
 
-                {{-- Luxury Gold Heritage Pill Button --}}
+                {{-- Luxury Gold Heritage Pill Button (Hidden on mobile screens, visible on sm and up) --}}
                 <a href="/" 
-                   style="background-color:#FAF5EA;border:1px solid #E6D8BA;border-radius:24px;padding:8px 16px;color:#8C6212;font-size:11px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;display:inline-flex;align-items:center;gap:7px;transition:all 0.2s ease-in-out;box-shadow:0 1px 3px rgba(0,0,0,0.02);"
+                   style="background-color:#FAF5EA;border:1px solid #E6D8BA;border-radius:24px;padding:8px 16px;color:#8C6212;font-size:11px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;align-items:center;gap:7px;transition:all 0.2s ease-in-out;box-shadow:0 1px 3px rgba(0,0,0,0.02);"
                    onmouseover="this.style.backgroundColor='#1E1915';this.style.borderColor='#1E1915';this.style.color='#DFC97A';this.querySelector('svg').style.transform='translateX(-2px)';"
                    onmouseout="this.style.backgroundColor='#FAF5EA';this.style.borderColor='#E6D8BA';this.style.color='#8C6212';this.querySelector('svg').style.transform='translateX(0)';"
-                   class="shrink-0 group">
+                   class="hidden sm:inline-flex shrink-0 group">
                     <svg style="width:14px;height:14px;transition:transform 0.2s ease;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
                     </svg>
@@ -101,6 +101,19 @@
                 <span style="position:absolute;background-color:#FDFBF7;padding:0 12px;color:#C49520;font-size:11px;">✦</span>
             </div>
         </div>
+
+        {{-- Mobile Chat Widget Position Elevation Style --}}
+        <style>
+        @media (max-width: 1023px) {
+            .lumbarong-chat-wrapper {
+                bottom: calc(144px + env(safe-area-inset-bottom, 0px)) !important;
+                right: 16px !important;
+            }
+            .lumbarong-chat-window {
+                bottom: calc(208px + env(safe-area-inset-bottom, 0px)) !important;
+            }
+        }
+        </style>
 
         {{-- When Cart has items --}}
         <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8 items-start" x-show="items.length > 0">
