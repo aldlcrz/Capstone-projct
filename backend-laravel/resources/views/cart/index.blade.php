@@ -313,12 +313,14 @@
                         </template>
                         <button type="submit"
                                 :disabled="selected.length === 0"
-                                :style="selected.length === 0 ? 'background-color:#A8A29E;cursor:not-allowed;opacity:0.6;' : 'background-color:#1E1915;cursor:pointer;opacity:1;'"
-                                style="width:100%;background-color:#1E1915;color:#FFFFFF;padding:14px;border-radius:14px;font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:0.12em;border:none;box-shadow:0 4px 14px rgba(0,0,0,0.15);transition:all 0.2s;display:flex;align-items:center;justify-content:center;gap:6px;"
+                                :style="selected.length === 0 
+                                    ? 'width:100%;background-color:#A8A29E;color:#FFFFFF;padding:14px;border-radius:14px;font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:0.14em;border:none;display:flex;align-items:center;justify-content:center;gap:6px;cursor:not-allowed;opacity:0.6;' 
+                                    : 'width:100%;background-color:#1E1915;color:#FFFFFF;padding:14px;border-radius:14px;font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:0.14em;border:none;display:flex;align-items:center;justify-content:center;gap:6px;cursor:pointer;opacity:1;box-shadow:0 4px 14px rgba(0,0,0,0.15);transition:all 0.2s;'"
+                                style="width:100%;background-color:#1E1915;color:#FFFFFF;padding:14px;border-radius:14px;font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:0.14em;border:none;display:flex;align-items:center;justify-content:center;gap:6px;"
                                 onmouseover="if(this.getAttribute('disabled') === null) this.style.backgroundColor='#C0422A';"
                                 onmouseout="if(this.getAttribute('disabled') === null) this.style.backgroundColor='#1E1915';">
-                            <span>Proceed to Checkout</span>
-                            <span x-show="selected.length > 0" style="color:#DFC97A;" x-text="'(' + selected.length + ')'"></span>
+                            <span style="color:#FFFFFF !important;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;">Proceed to Checkout</span>
+                            <span x-show="selected.length > 0" style="color:#DFC97A !important;font-weight:800;" x-text="'(' + selected.length + ')'"></span>
                         </button>
                     </form>
 
@@ -377,10 +379,13 @@
                     <button type="button"
                             @click="$refs.checkoutForm.submit()"
                             :disabled="selected.length === 0"
-                            :style="selected.length === 0 ? 'background-color:#A8A29E;cursor:not-allowed;opacity:0.6;' : 'background-color:#1E1915;cursor:pointer;opacity:1;'"
-                            style="background-color:#1E1915;color:#FFFFFF;padding:10px 18px;border-radius:12px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;border:none;box-shadow:0 2px 8px rgba(0,0,0,0.12);transition:all 0.2s;"
+                            :style="selected.length === 0 
+                                ? 'background-color:#A8A29E;color:#FFFFFF;padding:10px 18px;border-radius:12px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;border:none;cursor:not-allowed;opacity:0.6;' 
+                                : 'background-color:#1E1915;color:#FFFFFF;padding:10px 18px;border-radius:12px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;border:none;cursor:pointer;opacity:1;box-shadow:0 2px 8px rgba(0,0,0,0.12);transition:all 0.2s;'"
+                            style="background-color:#1E1915;color:#FFFFFF;padding:10px 18px;border-radius:12px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;border:none;"
                             class="shrink-0">
-                        <span>Check Out</span> <span x-show="selected.length > 0" style="color:#DFC97A;" x-text="'(' + selected.length + ')'"></span>
+                        <span style="color:#FFFFFF !important;font-weight:700;">Check Out</span>
+                        <span x-show="selected.length > 0" style="color:#DFC97A !important;font-weight:800;" x-text="'(' + selected.length + ')'"></span>
                     </button>
                 </div>
             </div>
