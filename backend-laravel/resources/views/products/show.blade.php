@@ -318,19 +318,20 @@
                     </template>
 
                     @if($product->is_on_sale && $product->discount_percentage > 0)
-                        <div class="absolute top-3 left-3 flex flex-col gap-1.5 z-10 pointer-events-none items-start">
-                            <div class="flex items-center gap-2 px-3 py-1 shadow-lg" style="background: linear-gradient(180deg, rgba(26, 20, 15, 0.94) 0%, rgba(12, 10, 8, 0.96) 100%); border: 1px solid rgba(229, 184, 105, 0.75); border-radius: 10px; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.6), inset 0 1px 1px rgba(255, 235, 180, 0.2);">
-                                <svg class="w-4 h-4 shrink-0" viewBox="0 0 24 24" fill="none" style="filter: drop-shadow(0 0 2px rgba(229,184,105,0.4));">
-                                    <circle cx="12" cy="12" r="10" stroke="#E5B869" stroke-width="1.2" stroke-dasharray="2 1.5"/>
-                                    <circle cx="12" cy="12" r="6" stroke="#E5B869" stroke-width="1"/>
-                                    <path d="M12 2v4M12 18v4M2 12h4M18 12h4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83" stroke="#E5B869" stroke-width="1.2" stroke-linecap="round"/>
-                                    <circle cx="12" cy="12" r="2.5" fill="#E5B869"/>
+                        <div class="absolute top-3 left-3 flex flex-col gap-1 z-10 pointer-events-none items-start">
+                            <div class="flex items-center gap-1.5 px-2.5 py-1" style="background:#0D0B09;border:1.2px solid #C8A84B;border-radius:6px;">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" style="flex-shrink:0;">
+                                    <circle cx="12" cy="12" r="10.5" stroke="#C8A84B" stroke-width="1"/>
+                                    <circle cx="12" cy="12" r="7" stroke="#C8A84B" stroke-width="0.7"/>
+                                    <circle cx="12" cy="12" r="2.8" fill="#C8A84B"/>
+                                    <path d="M12 1.5v4M12 18.5v4M1.5 12h4M18.5 12h4" stroke="#C8A84B" stroke-width="1.1" stroke-linecap="round"/>
+                                    <path d="M5.05 5.05l2.83 2.83M16.12 16.12l2.83 2.83M5.05 18.95l2.83-2.83M16.12 7.88l2.83-2.83" stroke="#C8A84B" stroke-width="1.1" stroke-linecap="round"/>
                                 </svg>
-                                <span class="font-serif text-[9.5px] font-bold uppercase tracking-[0.18em]" style="color: #EAD8B1 !important; text-shadow: 0 1px 2px rgba(0,0,0,0.9);">Lumban Special</span>
+                                <span style="color:#C8A84B;font-size:9px;font-weight:700;letter-spacing:0.15em;text-transform:uppercase;">Lumban Special</span>
                             </div>
-                            <div class="flex items-baseline px-3 py-1 shadow-lg w-fit" style="background: linear-gradient(180deg, rgba(26, 20, 15, 0.94) 0%, rgba(12, 10, 8, 0.96) 100%); border: 1px solid rgba(229, 184, 105, 0.75); border-radius: 10px; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.6), inset 0 1px 1px rgba(255, 235, 180, 0.2);">
-                                <span class="text-sm font-black tracking-tight" style="color: #F7E7C4 !important; font-family: ui-sans-serif, system-ui, -apple-system, sans-serif; text-shadow: 0 1px 3px rgba(0,0,0,0.9);">-{{ number_format($product->discount_percentage, 0) }}%</span>
-                                <span class="text-[9.5px] font-extrabold uppercase tracking-[0.12em] ml-1.5" style="color: #C5A059 !important; text-shadow: 0 1px 2px rgba(0,0,0,0.9);">OFF</span>
+                            <div class="flex items-baseline gap-0.5 px-2.5 py-0.5" style="background:#0D0B09;border:1.2px solid #C8A84B;border-radius:6px;">
+                                <span style="color:#D4A843;font-size:15px;font-weight:900;line-height:1.1;letter-spacing:-0.02em;">-{{ number_format($product->discount_percentage, 0) }}%</span>
+                                <span style="color:#8C6A28;font-size:9.5px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;margin-left:3px;">OFF</span>
                             </div>
                         </div>
                     @endif
@@ -1296,19 +1297,20 @@
                          class="w-full h-full object-cover object-top group-hover:scale-105 transition-transform duration-500 ease-out">
 
                     @if($rec->is_on_sale && $rec->discount_percentage > 0)
-                        <div class="absolute top-2.5 left-2.5 flex flex-col gap-1.5 z-10 pointer-events-none items-start">
-                            <div class="flex items-center gap-1.5 px-2.5 py-0.5 shadow-lg" style="background: linear-gradient(180deg, rgba(26, 20, 15, 0.94) 0%, rgba(12, 10, 8, 0.96) 100%); border: 1px solid rgba(229, 184, 105, 0.75); border-radius: 9px; box-shadow: 0 4px 10px rgba(0,0,0,0.6), inset 0 1px 1px rgba(255, 235, 180, 0.2);">
-                                <svg class="w-3 h-3 shrink-0" viewBox="0 0 24 24" fill="none" style="filter: drop-shadow(0 0 2px rgba(229,184,105,0.4));">
-                                    <circle cx="12" cy="12" r="10" stroke="#E5B869" stroke-width="1.2" stroke-dasharray="2 1.5"/>
-                                    <circle cx="12" cy="12" r="6" stroke="#E5B869" stroke-width="1"/>
-                                    <path d="M12 2v4M12 18v4M2 12h4M18 12h4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83" stroke="#E5B869" stroke-width="1.2" stroke-linecap="round"/>
-                                    <circle cx="12" cy="12" r="2.5" fill="#E5B869"/>
+                        <div class="absolute top-2.5 left-2.5 flex flex-col gap-1 z-10 pointer-events-none items-start">
+                            <div class="flex items-center gap-1.5 px-2 py-0.5" style="background:#0D0B09;border:1.2px solid #C8A84B;border-radius:6px;">
+                                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" style="flex-shrink:0;">
+                                    <circle cx="12" cy="12" r="10.5" stroke="#C8A84B" stroke-width="1"/>
+                                    <circle cx="12" cy="12" r="7" stroke="#C8A84B" stroke-width="0.7"/>
+                                    <circle cx="12" cy="12" r="2.8" fill="#C8A84B"/>
+                                    <path d="M12 1.5v4M12 18.5v4M1.5 12h4M18.5 12h4" stroke="#C8A84B" stroke-width="1.1" stroke-linecap="round"/>
+                                    <path d="M5.05 5.05l2.83 2.83M16.12 16.12l2.83 2.83M5.05 18.95l2.83-2.83M16.12 7.88l2.83-2.83" stroke="#C8A84B" stroke-width="1.1" stroke-linecap="round"/>
                                 </svg>
-                                <span class="font-serif text-[7.5px] font-bold uppercase tracking-[0.18em]" style="color: #EAD8B1 !important; text-shadow: 0 1px 2px rgba(0,0,0,0.9);">Lumban Special</span>
+                                <span style="color:#C8A84B;font-size:7px;font-weight:700;letter-spacing:0.15em;text-transform:uppercase;">Lumban Special</span>
                             </div>
-                            <div class="flex items-baseline px-2.5 py-0.5 shadow-lg w-fit" style="background: linear-gradient(180deg, rgba(26, 20, 15, 0.94) 0%, rgba(12, 10, 8, 0.96) 100%); border: 1px solid rgba(229, 184, 105, 0.75); border-radius: 9px; box-shadow: 0 4px 10px rgba(0,0,0,0.6), inset 0 1px 1px rgba(255, 235, 180, 0.2);">
-                                <span class="text-[9px] font-black tracking-tight" style="color: #F7E7C4 !important; font-family: ui-sans-serif, system-ui, -apple-system, sans-serif; text-shadow: 0 1px 3px rgba(0,0,0,0.9);">-{{ number_format($rec->discount_percentage, 0) }}%</span>
-                                <span class="text-[7.5px] font-extrabold uppercase tracking-[0.12em] ml-1" style="color: #C5A059 !important; text-shadow: 0 1px 2px rgba(0,0,0,0.9);">OFF</span>
+                            <div class="flex items-baseline gap-0.5 px-2 py-0.5" style="background:#0D0B09;border:1.2px solid #C8A84B;border-radius:6px;">
+                                <span style="color:#D4A843;font-size:12px;font-weight:900;line-height:1.1;letter-spacing:-0.02em;">-{{ number_format($rec->discount_percentage, 0) }}%</span>
+                                <span style="color:#8C6A28;font-size:8px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;margin-left:2px;">OFF</span>
                             </div>
                         </div>
                     @elseif($rec->target_group)

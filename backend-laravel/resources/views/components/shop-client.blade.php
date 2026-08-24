@@ -199,19 +199,20 @@
                     <div class="relative aspect-square overflow-hidden bg-stone-50 rounded-t-sm">
                         <img :src="getProductImage(product.image)" class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" x-on:error="$event.target.src='/uploads/products/default.jpg'" />
                         <template x-if="product.is_on_sale && parseFloat(product.discount_percentage || 0) > 0">
-                            <div class="absolute top-2.5 left-2.5 flex flex-col gap-1.5 z-10 pointer-events-none items-start">
-                                <div class="flex items-center gap-1.5 px-2.5 py-1 shadow-lg" style="background: linear-gradient(180deg, rgba(26, 20, 15, 0.94) 0%, rgba(12, 10, 8, 0.96) 100%); border: 1px solid rgba(229, 184, 105, 0.75); border-radius: 9px; box-shadow: 0 4px 10px rgba(0,0,0,0.6), inset 0 1px 1px rgba(255, 235, 180, 0.2);">
-                                    <svg class="w-3.5 h-3.5 shrink-0" viewBox="0 0 24 24" fill="none" style="filter: drop-shadow(0 0 2px rgba(229,184,105,0.4));">
-                                        <circle cx="12" cy="12" r="10" stroke="#E5B869" stroke-width="1.2" stroke-dasharray="2 1.5"/>
-                                        <circle cx="12" cy="12" r="6" stroke="#E5B869" stroke-width="1"/>
-                                        <path d="M12 2v4M12 18v4M2 12h4M18 12h4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83" stroke="#E5B869" stroke-width="1.2" stroke-linecap="round"/>
-                                        <circle cx="12" cy="12" r="2.5" fill="#E5B869"/>
+                            <div class="absolute top-2.5 left-2.5 flex flex-col gap-1 z-10 pointer-events-none items-start">
+                                <div class="flex items-center gap-1.5 px-2 py-1" style="background:#0D0B09;border:1.2px solid #C8A84B;border-radius:6px;">
+                                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" style="flex-shrink:0;">
+                                        <circle cx="12" cy="12" r="10.5" stroke="#C8A84B" stroke-width="1"/>
+                                        <circle cx="12" cy="12" r="7" stroke="#C8A84B" stroke-width="0.7"/>
+                                        <circle cx="12" cy="12" r="2.8" fill="#C8A84B"/>
+                                        <path d="M12 1.5v4M12 18.5v4M1.5 12h4M18.5 12h4" stroke="#C8A84B" stroke-width="1.1" stroke-linecap="round"/>
+                                        <path d="M5.05 5.05l2.83 2.83M16.12 16.12l2.83 2.83M5.05 18.95l2.83-2.83M16.12 7.88l2.83-2.83" stroke="#C8A84B" stroke-width="1.1" stroke-linecap="round"/>
                                     </svg>
-                                    <span class="font-serif text-[8.5px] font-bold uppercase tracking-[0.18em]" style="color: #EAD8B1 !important; text-shadow: 0 1px 2px rgba(0,0,0,0.9);">Lumban Special</span>
+                                    <span style="color:#C8A84B;font-size:8px;font-weight:700;letter-spacing:0.15em;text-transform:uppercase;">Lumban Special</span>
                                 </div>
-                                <div class="flex items-baseline px-2.5 py-0.5 shadow-lg w-fit" style="background: linear-gradient(180deg, rgba(26, 20, 15, 0.94) 0%, rgba(12, 10, 8, 0.96) 100%); border: 1px solid rgba(229, 184, 105, 0.75); border-radius: 9px; box-shadow: 0 4px 10px rgba(0,0,0,0.6), inset 0 1px 1px rgba(255, 235, 180, 0.2);">
-                                    <span class="text-xs font-black tracking-tight" style="color: #F7E7C4 !important; font-family: ui-sans-serif, system-ui, -apple-system, sans-serif; text-shadow: 0 1px 3px rgba(0,0,0,0.9);" x-text="'-' + Math.round(product.discount_percentage) + '%'"></span>
-                                    <span class="text-[8.5px] font-extrabold uppercase tracking-[0.12em] ml-1.5" style="color: #C5A059 !important; text-shadow: 0 1px 2px rgba(0,0,0,0.9);">OFF</span>
+                                <div class="flex items-baseline gap-0.5 px-2 py-0.5" style="background:#0D0B09;border:1.2px solid #C8A84B;border-radius:6px;">
+                                    <span style="color:#D4A843;font-size:14px;font-weight:900;line-height:1.1;letter-spacing:-0.02em;" x-text="'-' + Math.round(product.discount_percentage) + '%'"></span>
+                                    <span style="color:#8C6A28;font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;margin-left:2px;">OFF</span>
                                 </div>
                             </div>
                         </template>
