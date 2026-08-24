@@ -134,53 +134,87 @@ class WebController extends Controller
 
         try {
             $dbSellers = User::where('role', 'seller')
-                ->where('isVerified', true)
                 ->where('status', '!=', 'blocked')
                 ->get();
 
             foreach ($dbSellers as $seller) {
-                $pCount = Product::where('sellerId', $seller->id)
-                    ->where('status', 'approved')
-                    ->count();
-
-                // Calculate real total sold items
-                $totalSold = DB::table('order_items')
-                    ->join('orders', 'order_items.orderId', '=', 'orders.id')
-                    ->where(function($q) use ($seller) {
-                        $q->where('order_items.sellerId', $seller->id)
-                          ->orWhere('orders.sellerId', $seller->id);
-                    })
-                    ->whereIn('orders.status', ['Delivered', 'Completed', 'completed', 'delivered'])
-                    ->sum('order_items.quantity');
-
-                if (!$totalSold) {
-                    $totalSold = Order::where('sellerId', $seller->id)
-                        ->whereIn('status', ['Delivered', 'Completed', 'completed', 'delivered'])
+                // Real product count
+                $pCount = 0;
+                try {
+                    $pCount = Product::where('sellerId', $seller->id)
+                        ->where('status', 'approved')
                         ->count();
+                } catch (\Throwable $pe) {
+                    $pCount = 0;
                 }
 
-                $avgRating = Review::whereHas('product', function($q) use ($seller) {
-                    $q->where('sellerId', $seller->id);
-                })->avg('rating');
+                // Real total sold
+                $totalSold = 0;
+                try {
+                    $totalSold = DB::table('order_items')
+                        ->join('orders', 'order_items.orderId', '=', 'orders.id')
+                        ->where('orders.sellerId', $seller->id)
+                        ->whereIn('orders.status', ['Delivered', 'Completed', 'completed', 'delivered'])
+                        ->sum('order_items.quantity');
 
-                $reviewCount = Review::whereHas('product', function($q) use ($seller) {
-                    $q->where('sellerId', $seller->id);
-                })->count();
+                    if (!$totalSold) {
+                        $totalSold = Order::where('sellerId', $seller->id)
+                            ->whereIn('status', ['Delivered', 'Completed', 'completed', 'delivered'])
+                            ->count();
+                    }
+                } catch (\Throwable $oe) {
+                    $totalSold = 0;
+                }
+
+                // Real rating
+                $avgRating = null;
+                $reviewCount = 0;
+                try {
+                    $avgRating = Review::whereHas('product', function($q) use ($seller) {
+                        $q->where('sellerId', $seller->id);
+                    })->avg('rating');
+
+                    $reviewCount = Review::whereHas('product', function($q) use ($seller) {
+                        $q->where('sellerId', $seller->id);
+                    })->count();
+                } catch (\Throwable $re) {
+                    $avgRating = null;
+                    $reviewCount = 0;
+                }
 
                 $topShops->push((object)[
                     'id' => $seller->id,
-                    'name' => $seller->shopName ?: $seller->name ?: 'Lumban Heritage Shop',
+                    'name' => $seller->shopName ?: ($seller->name ?: 'Lumban Heritage Shop'),
                     'description' => $seller->shopDescription ?: 'Handcrafted Barong Tagalog & Filipiniana specialists from Lumban, Laguna.',
                     'location' => trim(($seller->shopCity ?? 'Lumban') . ', ' . ($seller->shopProvince ?? 'Laguna'), ', '),
                     'avatar' => $seller->profile_photo_url ?: ($seller->profilePhoto ?: '/uploads/products/default.jpg'),
                     'rating' => $avgRating ? number_format($avgRating, 1) : '0.0',
-                    'review_count' => $reviewCount,
+                    'review_count' => (int)$reviewCount,
                     'total_sold' => (int)$totalSold,
                     'products_count' => (int)$pCount,
                 ]);
             }
         } catch (\Throwable $e) {
-            // Ignore DB schema exceptions on live environment
+            // Ignore DB schema exceptions
+        }
+
+        if ($topShops->isEmpty()) {
+            try {
+                $anySellers = User::where('role', 'seller')->get();
+                foreach ($anySellers as $s) {
+                    $topShops->push((object)[
+                        'id' => $s->id,
+                        'name' => $s->shopName ?: ($s->name ?: 'Lumban Shop'),
+                        'description' => $s->shopDescription ?: 'Handcrafted Barong Tagalog specialists.',
+                        'location' => 'Lumban, Laguna',
+                        'avatar' => $s->profile_photo_url ?: ($s->profilePhoto ?: '/uploads/products/default.jpg'),
+                        'rating' => '0.0',
+                        'review_count' => 0,
+                        'total_sold' => 0,
+                        'products_count' => 0,
+                    ]);
+                }
+            } catch (\Throwable $e2) {}
         }
 
         return $topShops->sortByDesc('total_sold')->sortByDesc('products_count')->values();
