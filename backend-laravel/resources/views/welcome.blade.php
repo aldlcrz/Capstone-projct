@@ -469,7 +469,8 @@
             {{-- Top Rated Shops Modal --}}
             <template x-if="topShopsModalOpen">
                 <div 
-                    class="fixed inset-0 z-9999 flex items-center justify-center p-3 sm:p-5 bg-black/65 backdrop-blur-sm"
+                    class="fixed inset-0 z-9999 flex items-center justify-center p-3 sm:p-5 bg-black/75 backdrop-blur-sm"
+                    style="position:fixed;inset:0;z-index:9999;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,0.75);backdrop-filter:blur(6px);"
                     @click="topShopsModalOpen = false"
                     @keydown.escape.window="topShopsModalOpen = false"
                     x-transition:enter="transition ease-out duration-200"
@@ -481,17 +482,18 @@
                 >
                     <div 
                         @click.stop
-                        class="bg-[#FDFBF7] w-full max-w-4xl rounded-[28px] border border-[#EAE2D2] shadow-2xl p-5 sm:p-7 relative max-h-[90vh] flex flex-col overflow-hidden"
+                        class="w-full max-w-4xl max-h-[90vh] flex flex-col overflow-hidden relative"
+                        style="background-color:#FDFBF7 !important;border:1px solid #EAE2D2 !important;border-radius:28px !important;box-shadow:0 25px 60px rgba(0,0,0,0.25) !important;padding:24px !important;color:#1E1915 !important;"
                         x-transition:enter="transition ease-out duration-300 transform"
                         x-transition:enter-start="opacity-0 scale-95 translate-y-4"
                         x-transition:enter-end="opacity-100 scale-100 translate-y-0"
                     >
                         <!-- Modal Header -->
-                        <div class="flex items-start justify-between gap-4 shrink-0">
-                            <div class="flex items-center gap-3.5">
+                        <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:16px;flex-shrink:0;">
+                            <div style="display:flex;align-items:center;gap:14px;">
                                 <!-- Heraldic Laurel Wreath + Star Emblem -->
-                                <div class="w-12 h-12 flex items-center justify-center shrink-0">
-                                    <svg class="w-11 h-11" viewBox="0 0 48 48" fill="none">
+                                <div style="width:48px;height:48px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+                                    <svg width="46" height="46" viewBox="0 0 48 48" fill="none">
                                         <!-- Central Medallion -->
                                         <circle cx="24" cy="23" r="10.5" stroke="#C49520" stroke-width="1" stroke-dasharray="2 1.5"/>
                                         <circle cx="24" cy="23" r="8.5" stroke="#C49520" stroke-width="0.8"/>
@@ -507,64 +509,66 @@
                                     </svg>
                                 </div>
                                 <div>
-                                    <h3 class="text-xl sm:text-2xl font-serif font-bold text-[#1E1915] tracking-tight">
+                                    <h3 style="font-family:ui-serif,Georgia,Cambria,serif;font-size:22px;font-weight:700;color:#1E1915;letter-spacing:-0.01em;line-height:1.2;margin:0;">
                                         Top Rated Shops & Artisans
                                     </h3>
-                                    <p class="text-xs sm:text-[13px] text-[#78716C] mt-0.5">Verified master embroiderers & top-performing Lumban ateliers</p>
+                                    <p style="font-size:13px;color:#78716C;margin-top:3px;margin-bottom:0;">
+                                        Verified master embroiderers & top-performing Lumban ateliers
+                                    </p>
                                 </div>
                             </div>
                             <button 
                                 type="button"
                                 @click="topShopsModalOpen = false"
-                                class="w-10 h-10 rounded-full border border-[#E2D9C8] bg-white flex items-center justify-center text-[#8C827A] hover:text-[#1E1915] hover:border-[#C49520] hover:bg-[#FAF6EE] transition-all shadow-xs shrink-0"
+                                style="width:40px;height:40px;border-radius:50%;border:1px solid #E2D9C8;background-color:#FFFFFF;display:flex;align-items:center;justify-content:center;color:#8C827A;cursor:pointer;flex-shrink:0;box-shadow:0 1px 3px rgba(0,0,0,0.05);transition:all 0.2s;"
                             >
-                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                                <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
                                     <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"></path>
                                 </svg>
                             </button>
                         </div>
 
                         <!-- Star Divider -->
-                        <div class="relative my-4 shrink-0 flex items-center justify-center">
-                            <div class="w-full border-t border-[#EAE1D0]"></div>
-                            <span class="absolute bg-[#FDFBF7] px-3 text-[#C49520] text-xs">✦</span>
+                        <div style="position:relative;margin:16px 0;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+                            <div style="width:100%;border-top:1px solid #EAE1D0;"></div>
+                            <span style="position:absolute;background-color:#FDFBF7;padding:0 12px;color:#C49520;font-size:12px;">✦</span>
                         </div>
 
                         <!-- Modal Body (Grid of Top Rated Shops) -->
-                        <div class="overflow-y-auto no-scrollbar pr-1 grow space-y-4">
-                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div class="overflow-y-auto no-scrollbar pr-1 grow space-y-4" style="overflow-y:auto;">
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:16px;">
                                 @foreach($topShops as $shop)
-                                    <div class="bg-white rounded-2xl p-4 sm:p-5 border border-[#ECE3D2] shadow-xs hover:border-[#D4AF37]/50 hover:shadow-md transition-all flex flex-col justify-between group">
+                                    <div style="background-color:#FFFFFF !important;border:1px solid #ECE3D2 !important;border-radius:18px !important;padding:18px !important;box-shadow:0 2px 6px rgba(0,0,0,0.03) !important;display:flex;flex-direction:column;justify-content:space-between;transition:all 0.2s;">
                                         <div>
-                                            <div class="flex items-start justify-between gap-3">
-                                                <div class="flex items-start gap-3.5 min-w-0">
+                                            <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px;">
+                                                <div style="display:flex;align-items:flex-start;gap:14px;min-width:0;">
                                                     <!-- Gold Ringed Circular Avatar -->
-                                                    <div class="w-14 h-14 sm:w-16 sm:h-16 rounded-full shrink-0 p-[2px] bg-gradient-to-tr from-[#996515] via-[#E6CA65] to-[#996515] shadow-xs">
+                                                    <div style="width:58px;height:58px;min-width:58px;max-width:58px;min-height:58px;max-height:58px;border-radius:50%;padding:2px;background:linear-gradient(135deg,#996515,#E6CA65,#996515);box-shadow:0 2px 6px rgba(0,0,0,0.08);flex-shrink:0;">
                                                         <img src="{{ $shop->avatar }}" 
                                                              onerror="this.src='/uploads/products/default.jpg'" 
-                                                             class="w-full h-full rounded-full object-cover bg-stone-100" 
+                                                             style="width:100%;height:100%;border-radius:50%;object-fit:cover;background:#FAF8F5;display:block;"
                                                              alt="{{ $shop->name }}">
                                                     </div>
-                                                    <div class="min-w-0">
-                                                        <h4 class="font-serif font-bold text-[15px] text-[#1E1915] truncate group-hover:text-[#996515] transition-colors leading-snug">
+                                                    <div style="min-width:0;">
+                                                        <h4 style="font-family:ui-serif,Georgia,serif;font-size:15px;font-weight:700;color:#1E1915;line-height:1.2;margin:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">
                                                             {{ $shop->name }}
                                                         </h4>
-                                                        <p class="text-[11px] text-[#78716C] line-clamp-2 mt-1 leading-relaxed">
+                                                        <p style="font-size:11px;color:#78716C;margin-top:4px;margin-bottom:0;line-height:1.4;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;">
                                                             {{ $shop->description }}
                                                         </p>
-                                                        <div class="flex items-center gap-1 text-[11px] text-[#8C827A] font-medium mt-1.5">
-                                                            <svg class="w-3.5 h-3.5 text-[#B88728] shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                                        <div style="display:flex;align-items:center;gap:4px;font-size:11px;color:#8C827A;font-weight:500;margin-top:6px;">
+                                                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#B88728" stroke-width="2" style="flex-shrink:0;">
                                                                 <path stroke-linecap="round" stroke-linejoin="round" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
                                                                 <path stroke-linecap="round" stroke-linejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
                                                             </svg>
-                                                            <span class="truncate">{{ $shop->location }}</span>
+                                                            <span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">{{ $shop->location }}</span>
                                                         </div>
                                                     </div>
                                                 </div>
 
                                                 <!-- Rating Pill Badge -->
-                                                <div class="bg-[#FDF8EE] border border-[#EEDBBA] text-[#7A5505] text-xs font-bold px-2.5 py-1 rounded-full flex items-center gap-1 shrink-0 shadow-2xs">
-                                                    <svg class="w-3.5 h-3.5 fill-[#C49520] text-[#C49520]" viewBox="0 0 20 20">
+                                                <div style="background-color:#FDF8EE;border:1px solid #EEDBBA;color:#7A5505;font-size:12px;font-weight:700;padding:3px 9px;border-radius:20px;display:flex;align-items:center;gap:4px;flex-shrink:0;">
+                                                    <svg width="13" height="13" viewBox="0 0 20 20" fill="#C49520">
                                                         <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/>
                                                     </svg>
                                                     <span>{{ $shop->rating }}</span>
@@ -573,29 +577,29 @@
                                         </div>
 
                                         <!-- Card Bottom Stats & Action -->
-                                        <div class="mt-4 pt-3.5 border-t border-[#F2ECE1] flex items-center justify-between gap-2">
-                                            <div class="flex items-center gap-4 sm:gap-6 text-xs">
+                                        <div style="margin-top:14px;padding-top:12px;border-top:1px solid #F2ECE1;display:flex;align-items:center;justify-content:space-between;gap:8px;">
+                                            <div style="display:flex;align-items:center;gap:18px;">
                                                 <!-- Total Sold -->
-                                                <div class="flex items-center gap-2">
-                                                    <svg class="w-4 h-4 text-[#8C827A] shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                                                <div style="display:flex;align-items:center;gap:6px;">
+                                                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#8C827A" stroke-width="1.8" style="flex-shrink:0;">
                                                         <path stroke-linecap="round" stroke-linejoin="round" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/>
                                                     </svg>
                                                     <div>
-                                                        <span class="text-[9px] text-[#8C827A] block uppercase font-bold tracking-wider leading-none mb-0.5">Total Sold</span>
-                                                        <strong class="text-[#1E1915] font-extrabold text-xs block leading-tight">
+                                                        <span style="font-size:9px;color:#8C827A;text-transform:uppercase;font-weight:700;letter-spacing:0.06em;display:block;line-height:1;margin-bottom:2px;">Total Sold</span>
+                                                        <strong style="font-size:12px;font-weight:800;color:#1E1915;display:block;line-height:1;">
                                                             {{ $shop->total_sold }} {{ $shop->total_sold == 1 ? 'barong' : 'barongs' }}
                                                         </strong>
                                                     </div>
                                                 </div>
                                                 <!-- Products Count -->
-                                                <div class="flex items-center gap-2">
-                                                    <svg class="w-4 h-4 text-[#8C827A] shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                                                <div style="display:flex;align-items:center;gap:6px;">
+                                                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#8C827A" stroke-width="1.8" style="flex-shrink:0;">
                                                         <rect x="3" y="8" width="18" height="13" rx="2" stroke-linecap="round" stroke-linejoin="round"/>
                                                         <path d="M3 13h18M10 13v2a2 2 0 004 0v-2M8 8V5a2 2 0 012-2h4a2 2 0 012 2v3" stroke-linecap="round" stroke-linejoin="round"/>
                                                     </svg>
                                                     <div>
-                                                        <span class="text-[9px] text-[#8C827A] block uppercase font-bold tracking-wider leading-none mb-0.5">Products</span>
-                                                        <strong class="text-[#1E1915] font-extrabold text-xs block leading-tight">
+                                                        <span style="font-size:9px;color:#8C827A;text-transform:uppercase;font-weight:700;letter-spacing:0.06em;display:block;line-height:1;margin-bottom:2px;">Products</span>
+                                                        <strong style="font-size:12px;font-weight:800;color:#1E1915;display:block;line-height:1;">
                                                             {{ $shop->products_count }} {{ $shop->products_count == 1 ? 'item' : 'items' }}
                                                         </strong>
                                                     </div>
@@ -605,9 +609,9 @@
                                             <!-- View Shop Button -->
                                             <a href="/shops/{{ $shop->id }}#shop-catalogue" 
                                                @click="topShopsModalOpen = false"
-                                               class="px-3.5 sm:px-4 py-2 bg-[#1C160E] hover:bg-[#332717] text-[#FAF6F0] text-xs font-semibold rounded-xl transition-all shadow-xs flex items-center gap-1 shrink-0">
+                                               style="padding:7px 14px;background-color:#1C160E;color:#FAF6F0;font-size:12px;font-weight:600;border-radius:12px;text-decoration:none;display:flex;align-items:center;gap:4px;flex-shrink:0;box-shadow:0 1px 3px rgba(0,0,0,0.1);transition:background-color 0.2s;">
                                                 <span>View Shop</span>
-                                                <span class="text-[13px] leading-none">→</span>
+                                                <span style="font-size:13px;line-height:1;">→</span>
                                             </a>
                                         </div>
                                     </div>
@@ -615,21 +619,21 @@
                             </div>
 
                             <!-- Verified & Trusted Footer Banner -->
-                            <div class="mt-4 p-4 rounded-2xl bg-gradient-to-r from-[#F6F0E4] via-[#F2EADA] to-[#EAE0CD] border border-[#E2D6C0] flex items-center justify-between gap-3.5 relative overflow-hidden shadow-xs">
-                                <div class="flex items-center gap-3.5 relative z-10">
-                                    <div class="w-8 h-8 rounded-full border-2 border-[#B88728] flex items-center justify-center text-[#B88728] shrink-0 bg-[#FAF4EA] shadow-xs">
-                                        <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                            <div style="margin-top:16px;padding:14px 18px;border-radius:18px;background:linear-gradient(90deg,#F6F0E4 0%,#F2EADA 50%,#EAE0CD 100%);border:1px solid #E2D6C0;display:flex;align-items:center;justify-content:space-between;gap:12px;position:relative;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,0.03);">
+                                <div style="display:flex;align-items:center;gap:12px;position:relative;z-index:10;">
+                                    <div style="width:32px;height:32px;border-radius:50%;border:2px solid #B88728;background-color:#FAF4EA;display:flex;align-items:center;justify-content:center;color:#B88728;flex-shrink:0;box-shadow:0 1px 2px rgba(0,0,0,0.05);">
+                                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
                                             <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/>
                                         </svg>
                                     </div>
                                     <div>
-                                        <h5 class="text-xs sm:text-[13px] font-bold text-[#1E1915] leading-tight">All shops are verified and trusted</h5>
-                                        <p class="text-[11px] text-[#78716C] mt-0.5">Quality craftsmanship. Authentic Filipino heritage.</p>
+                                        <h5 style="font-size:13px;font-weight:700;color:#1E1915;margin:0;line-height:1.2;">All shops are verified and trusted</h5>
+                                        <p style="font-size:11px;color:#78716C;margin:2px 0 0 0;">Quality craftsmanship. Authentic Filipino heritage.</p>
                                     </div>
                                 </div>
                                 <!-- Background Embroidery Flourish Watermark -->
-                                <svg class="absolute right-2 -bottom-4 w-36 h-24 text-[#C49520]/15 pointer-events-none" viewBox="0 0 120 80" fill="currentColor">
-                                    <path d="M60 10C40 10 30 30 10 35C30 40 40 60 60 60C80 60 90 40 110 35C90 30 80 10 60 10ZM60 25C65 25 70 30 70 35C70 40 65 45 60 45C55 45 50 40 50 35C50 30 55 25 60 25Z" opacity="0.6"/>
+                                <svg width="120" height="70" viewBox="0 0 120 80" fill="#C49520" style="position:absolute;right:8px;bottom:-10px;opacity:0.18;pointer-events:none;">
+                                    <path d="M60 10C40 10 30 30 10 35C30 40 40 60 60 60C80 60 90 40 110 35C90 30 80 10 60 10ZM60 25C65 25 70 30 70 35C70 40 65 45 60 45C55 45 50 40 50 35C50 30 55 25 60 25Z"/>
                                 </svg>
                             </div>
                         </div>

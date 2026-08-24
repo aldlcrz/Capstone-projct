@@ -1,154 +1,177 @@
 @extends('layouts.app')
 
 @section('content')
-<div class="min-h-[calc(100vh-80px)] bg-white py-8 px-4 sm:px-6" x-data="profileApp()" x-init="init()">
-    <div class="max-w-md mx-auto space-y-6">
+<div style="min-height:calc(100vh - 80px);background-color:#FAF8F5;padding:32px 16px;" x-data="profileApp()" x-init="init()">
+    <div style="max-width:500px;margin:0 auto;background-color:#FDFBF7;border:1px solid #EAE2D2;border-radius:28px;box-shadow:0 20px 50px rgba(0,0,0,0.06);padding:26px 24px;color:#1E1915;">
 
-        {{-- Top Header --}}
-        <div class="pt-2">
-            <div class="flex items-center gap-2 mb-1.5">
-                <div class="w-5 h-0.5 bg-[#C0422A]"></div>
-                <span class="text-[10px] sm:text-[11px] font-bold uppercase tracking-widest text-[#C0422A]">Account</span>
+        {{-- Top Header with Heraldic Laurel Wreath --}}
+        <div style="display:flex;align-items:center;gap:14px;flex-shrink:0;">
+            <div style="width:48px;height:48px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+                <svg width="46" height="46" viewBox="0 0 48 48" fill="none">
+                    <!-- Central Medallion -->
+                    <circle cx="24" cy="23" r="10.5" stroke="#C49520" stroke-width="1" stroke-dasharray="2 1.5"/>
+                    <circle cx="24" cy="23" r="8.5" stroke="#C49520" stroke-width="0.8"/>
+                    <path d="M24 17.5l1.6 3.4 3.7.5-2.7 2.6.6 3.7-3.2-1.7-3.2 1.7.6-3.7-2.7-2.6 3.7-.5L24 17.5z" fill="#C49520"/>
+                    <!-- Laurel Wreath Left -->
+                    <path d="M15 32.5c-4-3.5-6-8.5-6-14 0-3.5 1-6.5 2.5-9" stroke="#C49520" stroke-width="1.3" stroke-linecap="round"/>
+                    <path d="M10 12c1.8 1.2 3.5 2.8 4 4.5M8 17.5c2 .6 3.8 1.8 4.8 3.5M8 23.5c2 0 3.8.6 5 2M9.5 29.5c2-.8 3.8-.8 5.2 0M12.5 34c1.8-1.2 3.6-1.5 5-.8" stroke="#C49520" stroke-width="1.2" stroke-linecap="round"/>
+                    <!-- Laurel Wreath Right -->
+                    <path d="M33 32.5c4-3.5 6-8.5 6-14 0-3.5-1-6.5-2.5-9" stroke="#C49520" stroke-width="1.3" stroke-linecap="round"/>
+                    <path d="M38 12c-1.8 1.2-3.5 2.8-4 4.5M40 17.5c-2 .6-3.8 1.8-4.8 3.5M40 23.5c-2 0-3.8.6-5 2M38.5 29.5c-2-.8-3.8-.8-5.2 0M35.5 34c-1.8-1.2-3.6-1.5-5-.8" stroke="#C49520" stroke-width="1.2" stroke-linecap="round"/>
+                    <!-- Base Ribbon -->
+                    <path d="M19 36c3 1.2 7 1.2 10 0" stroke="#C49520" stroke-width="1.3" stroke-linecap="round"/>
+                </svg>
             </div>
-            <h1 class="font-serif text-2xl sm:text-3xl font-bold text-gray-900">My <span class="text-[#C0422A] italic">Profile</span></h1>
+            <div>
+                <h1 style="font-family:ui-serif,Georgia,Cambria,serif;font-size:22px;font-weight:700;color:#1E1915;letter-spacing:-0.01em;line-height:1.2;margin:0;">
+                    My Profile & Account
+                </h1>
+                <p style="font-size:12.5px;color:#78716C;margin-top:3px;margin-bottom:0;">
+                    Personal information & account settings
+                </p>
+            </div>
+        </div>
+
+        {{-- Star Divider --}}
+        <div style="position:relative;margin:18px 0 20px 0;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+            <div style="width:100%;border-top:1px solid #EAE1D0;"></div>
+            <span style="position:absolute;background-color:#FDFBF7;padding:0 12px;color:#C49520;font-size:12px;">✦</span>
         </div>
 
         {{-- Profile Avatar & User Card --}}
-        <div class="relative pt-6">
-            {{-- Floating Avatar --}}
-            <div class="relative w-26 h-26 sm:w-28 sm:h-28 mx-auto -mb-13 sm:-mb-14 z-10">
-                <div class="w-full h-full rounded-full overflow-hidden border-4 border-white shadow-md bg-stone-100 flex items-center justify-center">
+        <div style="position:relative;padding-top:10px;margin-bottom:20px;">
+            {{-- Floating Gold-Ringed Avatar --}}
+            <div style="width:92px;height:92px;min-width:92px;max-width:92px;min-height:92px;max-height:92px;border-radius:50%;padding:2.5px;background:linear-gradient(135deg,#996515,#E6CA65,#996515);box-shadow:0 4px 14px rgba(0,0,0,0.12);margin:0 auto -46px auto;position:relative;z-index:10;display:block;">
+                <div style="width:100%;height:100%;border-radius:50%;overflow:hidden;background-color:#FAF8F5;display:flex;align-items:center;justify-content:center;">
                     @if($user->profilePhoto)
-                        <img id="avatar-display" src="{{ str_starts_with($user->profilePhoto, 'http') || str_starts_with($user->profilePhoto, '/') ? $user->profilePhoto : asset('storage/' . $user->profilePhoto) }}" class="w-full h-full object-cover">
+                        <img id="avatar-display" 
+                             src="{{ str_starts_with($user->profilePhoto, 'http') || str_starts_with($user->profilePhoto, '/') ? $user->profilePhoto : asset('storage/' . $user->profilePhoto) }}" 
+                             style="width:100%;height:100%;border-radius:50%;object-fit:cover;display:block;"
+                             alt="{{ $user->name }}">
                     @else
-                        <span class="text-3xl font-extrabold text-stone-600">{{ strtoupper(substr($user->name, 0, 1)) }}</span>
+                        <span style="font-size:30px;font-weight:800;color:#996515;">{{ strtoupper(substr($user->name, 0, 1)) }}</span>
                     @endif
                 </div>
             </div>
 
             {{-- User Info Card --}}
-            <div class="bg-white rounded-[24px] pt-16 pb-5 px-6 shadow-2xs border border-gray-100/90 relative">
-                <div class="flex items-center justify-between gap-3">
-                    {{-- Left-aligned Username & Name --}}
-                    <div class="text-left min-w-0 pr-2">
-                        <h2 class="text-lg sm:text-xl font-bold text-gray-900 tracking-tight leading-tight truncate">
-                            {{ $user->username ?? $user->name }}
-                        </h2>
-                        @if($user->username && $user->username !== $user->name)
-                            <p class="text-xs text-gray-400 font-medium mt-0.5 truncate">{{ $user->name }}</p>
-                        @endif
-                    </div>
-
-                    {{-- Edit Button (Top Right of Card) --}}
-                    <button type="button"
-                            @click="showEditModal = true"
-                            class="w-9 h-9 sm:w-10 sm:h-10 bg-gray-50/60 hover:bg-gray-100 rounded-xl flex items-center justify-center border border-gray-200/80 text-gray-600 hover:text-black shadow-2xs transition-all cursor-pointer group shrink-0">
-                        <svg class="w-4 h-4 text-gray-500 group-hover:text-black transition-colors" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/>
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/>
-                        </svg>
-                    </button>
+            <div style="background-color:#FFFFFF;border:1px solid #ECE3D2;border-radius:20px;padding:56px 20px 18px 20px;box-shadow:0 2px 8px rgba(0,0,0,0.03);display:flex;align-items:center;justify-content:space-between;position:relative;">
+                <div style="text-align:left;min-width:0;padding-right:10px;">
+                    <h2 style="font-family:ui-serif,Georgia,serif;font-size:19px;font-weight:700;color:#1E1915;letter-spacing:-0.01em;line-height:1.2;margin:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">
+                        {{ $user->username ?? $user->name }}
+                    </h2>
+                    <p style="font-size:12px;color:#78716C;margin:3px 0 0 0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">
+                        {{ $user->name }} • Customer
+                    </p>
                 </div>
+
+                {{-- Edit Button (Top Right of Card) --}}
+                <button type="button"
+                        @click="showEditModal = true"
+                        style="width:40px;height:40px;border-radius:12px;background-color:#FAF6EE;border:1px solid #E2D9C8;display:flex;align-items:center;justify-content:center;color:#78716C;cursor:pointer;flex-shrink:0;box-shadow:0 1px 3px rgba(0,0,0,0.05);transition:all 0.2s;"
+                        title="Edit Profile">
+                    <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/>
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                    </svg>
+                </button>
             </div>
         </div>
 
         {{-- Account Settings Section --}}
         <div>
-            <h3 class="text-[10px] sm:text-[11px] font-bold uppercase tracking-widest text-[#C0422A] mb-3 px-1">Account Settings</h3>
+            <h3 style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.14em;color:#996515;margin:0 0 12px 2px;">
+                Account Settings
+            </h3>
 
-            <div class="space-y-3">
+            <div style="display:flex;flex-direction:column;gap:10px;">
                 {{-- Email --}}
-                <div class="bg-white rounded-2xl p-4 sm:p-4.5 shadow-2xs border border-gray-100/90 flex items-center justify-between">
-                    <div class="flex items-center gap-3 min-w-0">
-                        <div class="w-9 h-9 rounded-xl bg-[#FDF9F4] text-[#C0422A] border border-[#C0422A]/25 flex items-center justify-center shrink-0">
-                            <svg class="w-4.5 h-4.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                <div style="background-color:#FFFFFF;border:1px solid #ECE3D2;border-radius:16px;padding:14px 16px;display:flex;align-items:center;justify-content:space-between;box-shadow:0 2px 6px rgba(0,0,0,0.02);">
+                    <div style="display:flex;align-items:center;gap:12px;min-width:0;">
+                        <div style="width:38px;height:38px;border-radius:11px;background-color:#FAF5EA;border:1px solid #E6D8BA;display:flex;align-items:center;justify-content:center;color:#B88728;flex-shrink:0;">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
                                 <rect x="2" y="4" width="20" height="16" rx="2" stroke-linecap="round" stroke-linejoin="round"/>
                                 <path d="M22 7l-8.97 5.7a1.94 1.94 0 01-2.06 0L2 7" stroke-linecap="round" stroke-linejoin="round"/>
                             </svg>
                         </div>
-                        <span class="font-bold text-sm text-gray-900">Email</span>
+                        <span style="font-size:14px;font-weight:700;color:#1E1915;">Email</span>
                     </div>
-                    <span class="text-xs sm:text-sm font-medium text-gray-500 truncate max-w-45 sm:max-w-xs">{{ $user->email }}</span>
+                    <span style="font-size:13px;font-weight:500;color:#78716C;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:200px;">
+                        {{ $user->email }}
+                    </span>
                 </div>
 
                 {{-- Saved Address (Opens Modal) --}}
                 <button type="button"
                         @click="openSavedAddresses()"
-                        class="w-full bg-white rounded-2xl p-4 sm:p-4.5 shadow-2xs border border-gray-100/90 flex items-center justify-between hover:bg-gray-50/70 transition-colors group cursor-pointer text-left">
-                    <div class="flex items-center gap-3">
-                        <div class="w-9 h-9 rounded-xl bg-[#FDF9F4] text-[#C0422A] border border-[#C0422A]/25 flex items-center justify-center shrink-0">
-                            <svg class="w-4.5 h-4.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                        style="background-color:#FFFFFF;border:1px solid #ECE3D2;border-radius:16px;padding:14px 16px;display:flex;align-items:center;justify-content:space-between;box-shadow:0 2px 6px rgba(0,0,0,0.02);cursor:pointer;width:100%;text-align:left;transition:background-color 0.2s;">
+                    <div style="display:flex;align-items:center;gap:12px;">
+                        <div style="width:38px;height:38px;border-radius:11px;background-color:#FAF5EA;border:1px solid #E6D8BA;display:flex;align-items:center;justify-content:center;color:#B88728;flex-shrink:0;">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
                                 <path stroke-linecap="round" stroke-linejoin="round" d="M12 21s-7-4.35-7-10a7 7 0 1114 0c0 5.65-7 10-7 10z"/>
                                 <circle cx="12" cy="11" r="2.5" stroke-linecap="round" stroke-linejoin="round"/>
                             </svg>
                         </div>
-                        <span class="font-bold text-sm text-gray-900">Saved address</span>
+                        <span style="font-size:14px;font-weight:700;color:#1E1915;">Saved address</span>
                     </div>
-                    <svg class="w-4 h-4 text-gray-400 group-hover:text-gray-900 group-hover:translate-x-0.5 transition-all" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M9 5l7 7-7 7"/>
+                    <svg width="16" height="16" fill="none" stroke="#8C827A" viewBox="0 0 24 24" stroke-width="2.2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/>
                     </svg>
                 </button>
 
                 {{-- Orders --}}
-                <a href="{{ route('orders') }}" class="bg-white rounded-2xl p-4 sm:p-4.5 shadow-2xs border border-gray-100/90 flex items-center justify-between hover:bg-gray-50/70 transition-colors group cursor-pointer">
-                    <div class="flex items-center gap-3">
-                        <div class="w-9 h-9 rounded-xl bg-[#FDF9F4] text-[#C0422A] border border-[#C0422A]/25 flex items-center justify-center shrink-0">
-                            <svg class="w-4.5 h-4.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                <a href="{{ route('orders') }}" 
+                   style="background-color:#FFFFFF;border:1px solid #ECE3D2;border-radius:16px;padding:14px 16px;display:flex;align-items:center;justify-content:space-between;box-shadow:0 2px 6px rgba(0,0,0,0.02);cursor:pointer;width:100%;text-decoration:none;transition:background-color 0.2s;">
+                    <div style="display:flex;align-items:center;gap:12px;">
+                        <div style="width:38px;height:38px;border-radius:11px;background-color:#FAF5EA;border:1px solid #E6D8BA;display:flex;align-items:center;justify-content:center;color:#B88728;flex-shrink:0;">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
                                 <path stroke-linecap="round" stroke-linejoin="round" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/>
                             </svg>
                         </div>
-                        <span class="font-bold text-sm text-gray-900">Orders</span>
+                        <span style="font-size:14px;font-weight:700;color:#1E1915;">Orders</span>
                     </div>
-                    <svg class="w-4 h-4 text-gray-400 group-hover:text-gray-900 group-hover:translate-x-0.5 transition-all" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M9 5l7 7-7 7"/>
+                    <svg width="16" height="16" fill="none" stroke="#8C827A" viewBox="0 0 24 24" stroke-width="2.2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/>
                     </svg>
                 </a>
 
                 {{-- Change Password (Opens Modal) --}}
                 <button type="button"
                         @click="showPasswordModal = true"
-                        class="w-full bg-white rounded-2xl p-4 sm:p-4.5 shadow-2xs border border-gray-100/90 flex items-center justify-between hover:bg-gray-50/70 transition-colors group cursor-pointer text-left">
-                    <div class="flex items-center gap-3">
-                        <div class="w-9 h-9 rounded-xl bg-[#FDF9F4] text-[#C0422A] border border-[#C0422A]/25 flex items-center justify-center shrink-0">
-                            <svg class="w-4.5 h-4.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                        style="background-color:#FFFFFF;border:1px solid #ECE3D2;border-radius:16px;padding:14px 16px;display:flex;align-items:center;justify-content:space-between;box-shadow:0 2px 6px rgba(0,0,0,0.02);cursor:pointer;width:100%;text-align:left;transition:background-color 0.2s;">
+                    <div style="display:flex;align-items:center;gap:12px;">
+                        <div style="width:38px;height:38px;border-radius:11px;background-color:#FAF5EA;border:1px solid #E6D8BA;display:flex;align-items:center;justify-content:center;color:#B88728;flex-shrink:0;">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
                                 <rect x="3" y="11" width="18" height="11" rx="2" stroke-linecap="round" stroke-linejoin="round"/>
                                 <path d="M7 11V7a5 5 0 0110 0v4" stroke-linecap="round" stroke-linejoin="round"/>
                             </svg>
                         </div>
-                        <span class="font-bold text-sm text-gray-900">Change Password</span>
+                        <span style="font-size:14px;font-weight:700;color:#1E1915;">Change Password</span>
                     </div>
+                    <svg width="16" height="16" fill="none" stroke="#8C827A" viewBox="0 0 24 24" stroke-width="2.2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/>
+                    </svg>
                 </button>
-
-                {{-- Logout (Mobile Screens Only) --}}
-                @auth
-                <div class="sm:hidden pt-1">
-                    <form x-ref="mobileProfileLogoutForm" action="{{ route('logout') }}" method="POST">
-                        @csrf
-                        <button type="button"
-                                @click="$dispatch('open-confirmation', { 
-                                    title: 'Logout', 
-                                    message: 'Are you sure you want to logout?', 
-                                    confirmText: 'Logout', 
-                                    type: 'danger', 
-                                    onConfirm: () => $refs.mobileProfileLogoutForm.submit() 
-                                })"
-                                class="w-full bg-red-50 hover:bg-red-100/80 rounded-2xl p-4 shadow-2xs border border-red-100 flex items-center justify-between transition-colors group cursor-pointer text-left">
-                            <div class="flex items-center gap-3">
-                                <div class="w-9 h-9 rounded-xl bg-red-100/80 text-red-600 border border-red-200/50 flex items-center justify-center shrink-0">
-                                    <svg class="w-4.5 h-4.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/>
-                                    </svg>
-                                </div>
-                                <span class="font-bold text-sm text-red-600">Logout</span>
-                            </div>
-                            <svg class="w-4 h-4 text-red-400 group-hover:text-red-600 group-hover:translate-x-0.5 transition-all" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5l7 7-7 7"/>
-                            </svg>
-                        </button>
-                    </form>
-                </div>
-                @endauth
             </div>
+        </div>
+
+        {{-- Verified & Trusted Customer Footer Banner --}}
+        <div style="margin-top:18px;padding:14px 18px;border-radius:18px;background:linear-gradient(90deg,#F6F0E4 0%,#F2EADA 50%,#EAE0CD 100%);border:1px solid #E2D6C0;display:flex;align-items:center;justify-content:space-between;gap:12px;position:relative;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,0.03);">
+            <div style="display:flex;align-items:center;gap:12px;position:relative;z-index:10;">
+                <div style="width:32px;height:32px;border-radius:50%;border:2px solid #B88728;background-color:#FAF4EA;display:flex;align-items:center;justify-content:center;color:#B88728;flex-shrink:0;box-shadow:0 1px 2px rgba(0,0,0,0.05);">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/>
+                    </svg>
+                </div>
+                <div>
+                    <h5 style="font-size:13px;font-weight:700;color:#1E1915;margin:0;line-height:1.2;">Verified LumBarong Account</h5>
+                    <p style="font-size:11px;color:#78716C;margin:2px 0 0 0;">Quality craftsmanship. Authentic Filipino heritage.</p>
+                </div>
+            </div>
+            <!-- Background Embroidery Flourish Watermark -->
+            <svg width="120" height="70" viewBox="0 0 120 80" fill="#C49520" style="position:absolute;right:8px;bottom:-10px;opacity:0.18;pointer-events:none;">
+                <path d="M60 10C40 10 30 30 10 35C30 40 40 60 60 60C80 60 90 40 110 35C90 30 80 10 60 10ZM60 25C65 25 70 30 70 35C70 40 65 45 60 45C55 45 50 40 50 35C50 30 55 25 60 25Z"/>
+            </svg>
         </div>
 
     </div>
