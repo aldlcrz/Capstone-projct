@@ -36,20 +36,20 @@
                         <a href="/products/{{ $product->id }}" class="block aspect-4/5 bg-gray-50 rounded-xl overflow-hidden mb-3 relative">
                             <img src="{{ $product->getImageUrl() }}" onerror="this.src='/uploads/products/default.jpg'" class="w-full h-full object-cover object-top group-hover:scale-105 transition-transform duration-300">
                             @if($product->is_on_sale && $product->discount_percentage > 0)
-                                <div class="absolute top-2.5 left-2.5 flex flex-col gap-1 z-10 pointer-events-none items-start">
-                                    <div class="flex items-center gap-1.5 px-2 py-0.5" style="background:#0D0B09;border:1.2px solid #C8A84B;border-radius:6px;">
-                                        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" style="flex-shrink:0;">
-                                            <circle cx="12" cy="12" r="10.5" stroke="#C8A84B" stroke-width="1"/>
-                                            <circle cx="12" cy="12" r="7" stroke="#C8A84B" stroke-width="0.7"/>
-                                            <circle cx="12" cy="12" r="2.8" fill="#C8A84B"/>
-                                            <path d="M12 1.5v4M12 18.5v4M1.5 12h4M18.5 12h4" stroke="#C8A84B" stroke-width="1.1" stroke-linecap="round"/>
-                                            <path d="M5.05 5.05l2.83 2.83M16.12 16.12l2.83 2.83M5.05 18.95l2.83-2.83M16.12 7.88l2.83-2.83" stroke="#C8A84B" stroke-width="1.1" stroke-linecap="round"/>
+                                <div class="absolute top-2 left-2 flex flex-col gap-1 z-10 pointer-events-none items-start">
+                                    <div style="display:inline-flex;align-items:center;gap:4px;padding:3px 7px;background:#0C0A08;border:1px solid #BF9B30;border-radius:5px;">
+                                        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" style="flex-shrink:0;opacity:0.95;">
+                                            <circle cx="12" cy="12" r="11" stroke="#C8A84B" stroke-width="0.8" stroke-dasharray="1.8 2"/>
+                                            <circle cx="12" cy="12" r="7.5" stroke="#C8A84B" stroke-width="0.7"/>
+                                            <path d="M12 0.5v5M12 18.5v5M0.5 12h5M18.5 12h5" stroke="#C8A84B" stroke-width="0.9" stroke-linecap="round"/>
+                                            <path d="M4.1 4.1l3.5 3.5M16.4 16.4l3.5 3.5M4.1 19.9l3.5-3.5M16.4 7.6l3.5-3.5" stroke="#C8A84B" stroke-width="0.9" stroke-linecap="round"/>
+                                            <circle cx="12" cy="12" r="2.2" fill="#C8A84B"/>
                                         </svg>
-                                        <span style="color:#C8A84B;font-size:7px;font-weight:700;letter-spacing:0.15em;text-transform:uppercase;">Lumban Special</span>
+                                        <span style="color:#C9A84C;font-family:ui-sans-serif,system-ui,sans-serif;font-size:7px;font-weight:700;letter-spacing:0.14em;text-transform:uppercase;">Lumban Special</span>
                                     </div>
-                                    <div class="flex items-baseline gap-0.5 px-2 py-0.5" style="background:#0D0B09;border:1.2px solid #C8A84B;border-radius:6px;">
-                                        <span style="color:#D4A843;font-size:12px;font-weight:900;line-height:1.1;letter-spacing:-0.02em;">-{{ number_format($product->discount_percentage, 0) }}%</span>
-                                        <span style="color:#8C6A28;font-size:8px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;margin-left:2px;">OFF</span>
+                                    <div style="display:inline-flex;align-items:baseline;gap:2px;padding:2px 7px;background:#0C0A08;border:1px solid #BF9B30;border-radius:5px;">
+                                        <span style="color:#D4AA3A;font-family:ui-sans-serif,system-ui,sans-serif;font-size:12px;font-weight:900;line-height:1;letter-spacing:-0.01em;">-{{ number_format($product->discount_percentage, 0) }}%</span>
+                                        <span style="color:#7A5E20;font-family:ui-sans-serif,system-ui,sans-serif;font-size:7.5px;font-weight:700;text-transform:uppercase;letter-spacing:0.07em;margin-left:1px;">OFF</span>
                                     </div>
                                 </div>
                             @endif
