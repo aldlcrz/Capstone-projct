@@ -173,7 +173,7 @@ class WebController extends Controller
                     'description' => $seller->shopDescription ?: 'Handcrafted Barong Tagalog & Filipiniana specialists from Lumban, Laguna.',
                     'location' => trim(($seller->shopCity ?? 'Lumban') . ', ' . ($seller->shopProvince ?? 'Laguna'), ', '),
                     'avatar' => $seller->profile_photo_url ?: ($seller->profilePhoto ?: '/uploads/products/default.jpg'),
-                    'rating' => $avgRating ? number_format($avgRating, 1) : '5.0',
+                    'rating' => $avgRating ? number_format($avgRating, 1) : '0.0',
                     'review_count' => $reviewCount,
                     'total_sold' => (int)$totalSold,
                     'products_count' => (int)$pCount,
