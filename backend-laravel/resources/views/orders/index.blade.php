@@ -95,15 +95,27 @@
                     $isActive = strtoupper(request('tab', 'ALL')) === $key;
                     $count = $counts[$key] ?? 0;
                 @endphp
-                <a href="/orders/my-orders?tab={{ $key }}"
-                   style="background-color: {{ $isActive ? '#1E1915' : '#FDFBF7' }}; color: {{ $isActive ? '#FFFFFF' : '#78716C' }}; border: 1px solid {{ $isActive ? '#1E1915' : '#EAE2D2' }}; box-shadow: {{ $isActive ? '0 4px 14px rgba(0,0,0,0.18)' : '0 2px 6px rgba(0,0,0,0.02)' }};"
-                   class="shrink-0 whitespace-nowrap px-4 py-2 rounded-full text-[10px] font-black uppercase tracking-wider transition-all flex items-center gap-2 active:scale-95 hover:opacity-90">
-                    <span style="color: {{ $isActive ? '#FFFFFF' : '#78716C' }} !important; font-weight: 800; letter-spacing: 0.08em;">{{ $label }}</span>
-                    <span style="background-color: {{ $isActive ? 'rgba(223, 201, 122, 0.25)' : '#FAF5EA' }}; color: {{ $isActive ? '#DFC97A' : '#8C6212' }} !important; border: 1px solid {{ $isActive ? 'rgba(223, 201, 122, 0.4)' : '#E6D8BA' }};"
-                          class="px-2 py-0.5 text-[9px] rounded-full font-extrabold">
-                        {{ $count }}
-                    </span>
-                </a>
+                @if($isActive)
+                    <a href="/orders/my-orders?tab={{ $key }}"
+                       style="background-color:#1E1915;color:#FFFFFF;border:1px solid #1E1915;box-shadow:0 4px 14px rgba(0,0,0,0.18);"
+                       class="shrink-0 whitespace-nowrap px-4 py-2 rounded-full text-[10px] font-black uppercase tracking-wider transition-all flex items-center gap-2 active:scale-95 hover:opacity-90">
+                        <span style="color:#FFFFFF !important;font-weight:800;letter-spacing:0.08em;">{{ $label }}</span>
+                        <span style="background-color:rgba(223,201,122,0.25);color:#DFC97A !important;border:1px solid rgba(223,201,122,0.4);"
+                              class="px-2 py-0.5 text-[9px] rounded-full font-extrabold">
+                            {{ $count }}
+                        </span>
+                    </a>
+                @else
+                    <a href="/orders/my-orders?tab={{ $key }}"
+                       style="background-color:#FDFBF7;color:#78716C;border:1px solid #EAE2D2;box-shadow:0 2px 6px rgba(0,0,0,0.02);"
+                       class="shrink-0 whitespace-nowrap px-4 py-2 rounded-full text-[10px] font-black uppercase tracking-wider transition-all flex items-center gap-2 active:scale-95 hover:opacity-90">
+                        <span style="color:#78716C !important;font-weight:800;letter-spacing:0.08em;">{{ $label }}</span>
+                        <span style="background-color:#FAF5EA;color:#8C6212 !important;border:1px solid #E6D8BA;"
+                              class="px-2 py-0.5 text-[9px] rounded-full font-extrabold">
+                            {{ $count }}
+                        </span>
+                    </a>
+                @endif
             @endforeach
         </div>
 
