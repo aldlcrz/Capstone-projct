@@ -353,12 +353,6 @@
                             <span x-show="selected.length > 0" style="color:#DFC97A !important;font-weight:800;" x-text="'(' + selected.length + ')'"></span>
                         </button>
                     </form>
-
-                    <div class="text-center pt-1">
-                        <a href="/" class="text-[11px] font-bold text-[#78716C] hover:text-[#1E1915] uppercase tracking-wider transition-colors">
-                            Continue Browsing
-                        </a>
-                    </div>
                 </div>
             </div>
 
