@@ -31,35 +31,52 @@
 
 <div id="cart-root"
      data-cart-items="{{ json_encode($cartItemsForJs) }}"
-     style="min-height:calc(100vh - 80px);background-color:#FAF8F5;padding:32px 16px 64px 16px;"
+     style="min-height:calc(100vh - 80px);background-color:#FAF8F5;padding:24px 16px 48px 16px;"
      x-data="cartApp()"
      x-init="init()">
 
-    <div style="max-width:1120px;margin:0 auto;" class="space-y-6">
+    <div style="max-width:1160px;margin:0 auto;">
 
-        {{-- Minimalist Clean Page Header --}}
-        <div class="flex flex-col sm:flex-row sm:items-end justify-between pb-4 border-b border-[#EAE1D0] gap-3">
-            <div>
-                <div class="flex items-center gap-2 mb-1">
-                    <span class="w-2 h-2 rounded-full bg-[#C49520]"></span>
-                    <span class="text-[10px] font-black uppercase tracking-widest text-[#8C6212]">Artisan Marketplace</span>
+        {{-- Top Header with Heraldic Laurel Wreath --}}
+        <div style="background-color:#FDFBF7;border:1px solid #EAE2D2;border-radius:24px;box-shadow:0 10px 30px rgba(0,0,0,0.04);padding:24px 28px;margin-bottom:24px;">
+            <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:16px;">
+                <div style="display:flex;align-items:center;gap:14px;">
+                    <!-- Heraldic Laurel Wreath + Star Emblem -->
+                    <div style="width:48px;height:48px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+                        <svg width="46" height="46" viewBox="0 0 48 48" fill="none">
+                            <circle cx="24" cy="23" r="10.5" stroke="#C49520" stroke-width="1" stroke-dasharray="2 1.5"/>
+                            <circle cx="24" cy="23" r="8.5" stroke="#C49520" stroke-width="0.8"/>
+                            <path d="M24 17.5l1.6 3.4 3.7.5-2.7 2.6.6 3.7-3.2-1.7-3.2 1.7.6-3.7-2.7-2.6 3.7-.5L24 17.5z" fill="#C49520"/>
+                            <path d="M15 32.5c-4-3.5-6-8.5-6-14 0-3.5 1-6.5 2.5-9" stroke="#C49520" stroke-width="1.3" stroke-linecap="round"/>
+                            <path d="M10 12c1.8 1.2 3.5 2.8 4 4.5M8 17.5c2 .6 3.8 1.8 4.8 3.5M8 23.5c2 0 3.8.6 5 2M9.5 29.5c2-.8 3.8-.8 5.2 0M12.5 34c1.8-1.2 3.6-1.5 5-.8" stroke="#C49520" stroke-width="1.2" stroke-linecap="round"/>
+                            <path d="M33 32.5c4-3.5 6-8.5 6-14 0-3.5-1-6.5-2.5-9" stroke="#C49520" stroke-width="1.3" stroke-linecap="round"/>
+                            <path d="M38 12c-1.8 1.2-3.5 2.8-4 4.5M40 17.5c-2 .6-3.8 1.8-4.8 3.5M40 23.5c-2 0-3.8.6-5 2M38.5 29.5c-2-.8-3.8-.8-5.2 0M35.5 34c-1.8-1.2-3.6-1.5-5-.8" stroke="#C49520" stroke-width="1.2" stroke-linecap="round"/>
+                            <path d="M19 36c3 1.2 7 1.2 10 0" stroke="#C49520" stroke-width="1.3" stroke-linecap="round"/>
+                        </svg>
+                    </div>
+                    <div>
+                        <h1 style="font-family:ui-serif,Georgia,Cambria,serif;font-size:22px;font-weight:700;color:#1E1915;letter-spacing:-0.01em;line-height:1.2;margin:0;">
+                            Shopping Bag & Atelier Cart
+                        </h1>
+                        <p style="font-size:12.5px;color:#78716C;margin-top:3px;margin-bottom:0;">
+                            Select handcrafted pieces from authentic Lumban artisans to proceed to checkout
+                        </p>
+                    </div>
                 </div>
-                <div class="flex items-baseline gap-3">
-                    <h1 style="font-family:ui-serif,Georgia,Cambria,serif;" class="text-2xl sm:text-3xl font-bold text-[#1E1915] tracking-tight">
-                        Shopping Bag
-                    </h1>
-                    <span class="text-xs font-bold text-[#78716C]" x-show="items.length > 0">
-                        (<span x-text="items.length"></span> <span x-text="items.length === 1 ? 'item' : 'items'"></span>)
-                    </span>
-                </div>
+
+                <a href="/" class="hidden sm:inline-flex items-center gap-2 text-xs font-bold text-gray-500 hover:text-[#C0422A] transition-colors">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
+                    </svg>
+                    <span>Back to Catalogue</span>
+                </a>
             </div>
 
-            <a href="/" class="inline-flex items-center gap-1.5 text-xs font-bold text-[#78716C] hover:text-[#C0422A] transition-colors group">
-                <svg class="w-4 h-4 text-stone-400 group-hover:text-[#C0422A] transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
-                </svg>
-                <span>Continue Shopping</span>
-            </a>
+            {{-- Star Divider --}}
+            <div style="position:relative;margin:16px 0 0 0;display:flex;align-items:center;justify-content:center;">
+                <div style="width:100%;border-top:1px solid #EAE1D0;"></div>
+                <span style="position:absolute;background-color:#FDFBF7;padding:0 12px;color:#C49520;font-size:11px;">✦</span>
+            </div>
         </div>
 
         {{-- When Cart has items --}}
