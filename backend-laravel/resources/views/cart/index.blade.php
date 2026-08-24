@@ -56,11 +56,8 @@
                     </div>
                     <div>
                         <h1 style="font-family:ui-serif,Georgia,Cambria,serif;font-size:22px;font-weight:700;color:#1E1915;letter-spacing:-0.01em;line-height:1.2;margin:0;">
-                            Shopping Bag & Atelier Cart
+                            Cart
                         </h1>
-                        <p style="font-size:12.5px;color:#78716C;margin-top:3px;margin-bottom:0;">
-                            Select handcrafted pieces from authentic Lumban artisans to proceed to checkout
-                        </p>
                     </div>
                 </div>
 
@@ -86,7 +83,7 @@
             <div class="lg:col-span-7 xl:col-span-8 space-y-4 min-w-0">
 
                 {{-- Minimalist Select All & Actions Bar --}}
-                <div class="bg-white border border-[#ECE3D2] rounded-xl px-4 py-3 flex items-center justify-between shadow-xs">
+                <div style="background-color:#FDFBF7;border:1px solid #EAE2D2;border-radius:18px;box-shadow:0 4px 14px rgba(0,0,0,0.03);" class="px-4 py-3 flex items-center justify-between">
                     <label class="flex items-center gap-2.5 cursor-pointer select-none group">
                         <input type="checkbox"
                                id="select-all"
@@ -117,11 +114,12 @@
                             $firstItem = reset($shopItems);
                             $sellerId = $firstItem['sellerId'] ?? null;
                         @endphp
-                        <div class="bg-white border border-[#ECE3D2] rounded-2xl shadow-xs overflow-hidden transition-all duration-200"
+                        <div style="background-color:#FDFBF7;border:1px solid #EAE2D2;border-radius:24px;box-shadow:0 6px 20px rgba(0,0,0,0.03);overflow:hidden;"
+                             class="transition-all duration-200"
                              x-show="items.some(i => (i.shop_name || 'Lumban Heritage Shop') === '{{ addslashes($shopName) }}')">
 
                             {{-- Clean Shop Header --}}
-                            <div class="bg-[#FAF8F5] border-b border-[#ECE3D2] px-4 py-3 flex items-center justify-between gap-3">
+                            <div style="background-color:#FAF5EA;border-bottom:1px solid #EAE2D2;" class="px-4 py-3.5 flex items-center justify-between gap-3">
                                 <div class="flex items-center gap-2.5 min-w-0">
                                     <label class="flex items-center cursor-pointer shrink-0">
                                         <input type="checkbox"
@@ -152,7 +150,7 @@
                             </div>
 
                             {{-- Product Items in Shop --}}
-                            <div class="divide-y divide-[#F4EFE6]">
+                            <div class="divide-y divide-[#EAE2D2]">
                                 @foreach($shopItems as $cartKey => $item)
                                     @php
                                         $itemKey = (string) $cartKey;
@@ -176,7 +174,7 @@
                                     @endphp
                                     <div class="p-4 sm:p-5 transition-colors duration-150"
                                          x-show="items.some(i => String(i.key) === '{{ addslashes($itemKey) }}')"
-                                         :class="isSelected('{{ addslashes($itemKey) }}') ? 'bg-[#FCFAF6]' : 'bg-white'">
+                                         :style="isSelected('{{ addslashes($itemKey) }}') ? 'background-color:#FAF6EE;' : 'background-color:#FDFBF7;'">
 
                                         <div class="flex gap-3.5 sm:gap-4 items-center">
                                             {{-- Checkbox --}}
@@ -204,7 +202,7 @@
 
                                                         {{-- Size / Variation Pill --}}
                                                         <div class="mt-1 flex flex-wrap items-center gap-1.5 text-[10px] text-[#78716C]">
-                                                            <span class="inline-flex items-center px-2 py-0.5 rounded bg-[#FAF8F5] border border-[#ECE3D2] font-semibold">
+                                                            <span class="inline-flex items-center px-2 py-0.5 rounded bg-[#FAF5EA] border border-[#EAE2D2] font-semibold">
                                                                 @if(!empty($item['size']))
                                                                     Size: <strong class="ml-1 text-[#1E1915]">{{ $item['size'] }}</strong>
                                                                 @else
@@ -236,14 +234,14 @@
                                                 </div>
 
                                                 {{-- Bottom Row: Stepper & Remove --}}
-                                                <div class="flex items-center justify-between sm:justify-end gap-3 mt-3 pt-2 border-t border-[#F4EFE6]/60">
+                                                <div class="flex items-center justify-between sm:justify-end gap-3 mt-3 pt-2 border-t border-[#EAE2D2]">
                                                     <div class="flex items-center gap-3">
                                                         {{-- Minimalist Stepper --}}
-                                                        <div class="flex items-center border border-[#ECE3D2] rounded-lg overflow-hidden h-7 bg-white">
+                                                        <div class="flex items-center border border-[#EAE2D2] rounded-lg overflow-hidden h-7 bg-white">
                                                             <button type="button" 
                                                                     @click="updateQty('{{ addslashes($itemKey) }}', (items.find(i => String(i.key) === '{{ addslashes($itemKey) }}')?.quantity || {{ $item['quantity'] }}) - 1)" 
                                                                     class="w-7 h-7 flex items-center justify-center text-stone-500 hover:text-black hover:bg-[#FAF8F5] font-bold text-xs transition-colors cursor-pointer">−</button>
-                                                            <span class="w-8 text-center text-xs font-bold text-[#1E1915] border-x border-[#ECE3D2]" 
+                                                            <span class="w-8 text-center text-xs font-bold text-[#1E1915] border-x border-[#EAE2D2]" 
                                                                   x-text="items.find(i => String(i.key) === '{{ addslashes($itemKey) }}')?.quantity || {{ $item['quantity'] }}"></span>
                                                             <button type="button" 
                                                                     @click="updateQty('{{ addslashes($itemKey) }}', (items.find(i => String(i.key) === '{{ addslashes($itemKey) }}')?.quantity || {{ $item['quantity'] }}) + 1)" 
@@ -272,7 +270,7 @@
 
             {{-- ===== Right: Minimalist Order Summary Sidebar (4 cols) ===== --}}
             <div class="lg:col-span-5 xl:col-span-4 hidden lg:block">
-                <div style="background-color:#FFFFFF;border:1px solid #ECE3D2;border-radius:20px;padding:24px;box-shadow:0 4px 16px rgba(0,0,0,0.03);position:sticky;top:96px;" class="space-y-5">
+                <div style="background-color:#FDFBF7;border:1px solid #EAE2D2;border-radius:24px;padding:24px;box-shadow:0 10px 30px rgba(0,0,0,0.04);position:sticky;top:96px;" class="space-y-5">
                     <div>
                         <h2 style="font-family:ui-serif,Georgia,serif;" class="text-xl font-bold text-[#1E1915] tracking-tight">
                             Order Summary
@@ -283,7 +281,7 @@
                     </div>
 
                     {{-- Empty selection notice --}}
-                    <div x-show="selected.length === 0" class="p-4 text-center bg-[#FAF8F5] rounded-xl border border-dashed border-[#ECE3D2]">
+                    <div x-show="selected.length === 0" class="p-4 text-center bg-[#FAF5EA] rounded-xl border border-dashed border-[#EAE2D2]">
                         <p class="text-xs font-bold text-[#78716C]">Select items to proceed to checkout</p>
                     </div>
 
@@ -299,7 +297,7 @@
                         </div>
 
                         {{-- Total line --}}
-                        <div class="pt-3 border-t border-[#ECE3D2] flex justify-between items-baseline">
+                        <div class="pt-3 border-t border-[#EAE2D2] flex justify-between items-baseline">
                             <span class="text-sm font-bold text-[#1E1915] uppercase tracking-wider">Total</span>
                             <span class="text-2xl font-black text-[#C0422A]">₱<span x-text="(subtotal + shipping).toLocaleString('en-PH', {minimumFractionDigits:0,maximumFractionDigits:0})"></span></span>
                         </div>
