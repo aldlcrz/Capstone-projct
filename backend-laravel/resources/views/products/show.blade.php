@@ -319,17 +319,17 @@
 
                     @if($product->is_on_sale && $product->discount_percentage > 0)
                         <div class="absolute top-3 left-3 flex flex-col gap-1.5 z-10 pointer-events-none items-start">
-                            <div class="flex items-center gap-1.5 bg-[#0C0C0C]/85 backdrop-blur-md border border-[#D4AF37]/60 text-white px-3 py-1 rounded-full shadow-md shadow-black/40">
-                                <svg class="w-3.5 h-3.5 text-[#F3D079] shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                            <div class="flex items-center gap-1.5 px-3 py-1 rounded-full shadow-lg" style="background: rgba(10, 10, 10, 0.9); backdrop-filter: blur(8px); border: 1.2px solid #E5C158;">
+                                <svg class="w-3.5 h-3.5 shrink-0" style="color: #F5D061;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
                                     <circle cx="12" cy="12" r="9" stroke="#E5B869" stroke-width="1.2"/>
-                                    <circle cx="12" cy="12" r="3.5" fill="#E5B869" fill-opacity="0.25" stroke="#E5B869" stroke-width="1.2"/>
+                                    <circle cx="12" cy="12" r="3.5" fill="#E5B869" fill-opacity="0.3" stroke="#E5B869" stroke-width="1.2"/>
                                     <path d="M12 3v3M12 18v3M3 12h3M18 12h3M5.64 5.64l2.12 2.12M16.24 16.24l2.12 2.12M5.64 18.36l2.12-2.12M16.24 7.76l2.12-2.12" stroke="#E5B869" stroke-width="1.2" stroke-linecap="round"/>
                                 </svg>
-                                <span class="text-[9px] sm:text-[10px] font-bold uppercase tracking-[0.14em] text-[#F3E2B3] drop-shadow-xs">Lumban Special</span>
+                                <span class="text-[9px] sm:text-[10px] font-extrabold uppercase tracking-[0.14em]" style="color: #FFF3D6 !important; text-shadow: 0 1px 3px rgba(0,0,0,0.9);">Lumban Special</span>
                             </div>
-                            <div class="flex items-baseline bg-[#0C0C0C]/85 backdrop-blur-md border border-[#D4AF37]/60 px-3 py-0.5 rounded-full shadow-md shadow-black/40 w-fit">
-                                <span class="text-xs sm:text-sm font-black text-[#F8D368] tracking-tight">-{{ number_format($product->discount_percentage, 0) }}%</span>
-                                <span class="text-[9px] sm:text-[10px] font-bold text-[#E5B869]/90 tracking-wider uppercase ml-1">OFF</span>
+                            <div class="flex items-baseline px-3 py-0.5 rounded-full shadow-lg w-fit" style="background: rgba(10, 10, 10, 0.9); backdrop-filter: blur(8px); border: 1.2px solid #E5C158;">
+                                <span class="text-xs sm:text-sm font-black tracking-tight" style="color: #FFD700 !important; text-shadow: 0 1px 3px rgba(0,0,0,0.9);">-{{ number_format($product->discount_percentage, 0) }}%</span>
+                                <span class="text-[9px] sm:text-[10px] font-extrabold uppercase tracking-wider ml-1" style="color: #FFE082 !important; text-shadow: 0 1px 2px rgba(0,0,0,0.8);">OFF</span>
                             </div>
                         </div>
                     @endif
@@ -1296,17 +1296,17 @@
 
                     @if($rec->is_on_sale && $rec->discount_percentage > 0)
                         <div class="absolute top-2.5 left-2.5 flex flex-col gap-1.5 z-10 pointer-events-none items-start">
-                            <div class="flex items-center gap-1.5 bg-[#0C0C0C]/85 backdrop-blur-md border border-[#D4AF37]/60 text-white px-2 py-0.5 rounded-full shadow-md shadow-black/40">
-                                <svg class="w-2.5 h-2.5 text-[#F3D079] shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                            <div class="flex items-center gap-1.5 px-2.5 py-0.5 rounded-full shadow-lg" style="background: rgba(10, 10, 10, 0.9); backdrop-filter: blur(8px); border: 1.2px solid #E5C158;">
+                                <svg class="w-2.5 h-2.5 shrink-0" style="color: #F5D061;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
                                     <circle cx="12" cy="12" r="9" stroke="#E5B869" stroke-width="1.2"/>
-                                    <circle cx="12" cy="12" r="3.5" fill="#E5B869" fill-opacity="0.25" stroke="#E5B869" stroke-width="1.2"/>
+                                    <circle cx="12" cy="12" r="3.5" fill="#E5B869" fill-opacity="0.3" stroke="#E5B869" stroke-width="1.2"/>
                                     <path d="M12 3v3M12 18v3M3 12h3M18 12h3M5.64 5.64l2.12 2.12M16.24 16.24l2.12 2.12M5.64 18.36l2.12-2.12M16.24 7.76l2.12-2.12" stroke="#E5B869" stroke-width="1.2" stroke-linecap="round"/>
                                 </svg>
-                                <span class="text-[7.5px] font-bold uppercase tracking-[0.14em] text-[#F3E2B3] drop-shadow-xs">Lumban Special</span>
+                                <span class="text-[7.5px] font-extrabold uppercase tracking-[0.14em]" style="color: #FFF3D6 !important; text-shadow: 0 1px 3px rgba(0,0,0,0.9);">Lumban Special</span>
                             </div>
-                            <div class="flex items-baseline bg-[#0C0C0C]/85 backdrop-blur-md border border-[#D4AF37]/60 px-2 py-0.5 rounded-full shadow-md shadow-black/40 w-fit">
-                                <span class="text-[9px] font-black text-[#F8D368] tracking-tight">-{{ number_format($rec->discount_percentage, 0) }}%</span>
-                                <span class="text-[7.5px] font-bold text-[#E5B869]/90 tracking-wider uppercase ml-0.5">OFF</span>
+                            <div class="flex items-baseline px-2.5 py-0.5 rounded-full shadow-lg w-fit" style="background: rgba(10, 10, 10, 0.9); backdrop-filter: blur(8px); border: 1.2px solid #E5C158;">
+                                <span class="text-[9px] font-black tracking-tight" style="color: #FFD700 !important; text-shadow: 0 1px 3px rgba(0,0,0,0.9);">-{{ number_format($rec->discount_percentage, 0) }}%</span>
+                                <span class="text-[7.5px] font-extrabold uppercase tracking-wider ml-0.5" style="color: #FFE082 !important; text-shadow: 0 1px 2px rgba(0,0,0,0.8);">OFF</span>
                             </div>
                         </div>
                     @elseif($rec->target_group)

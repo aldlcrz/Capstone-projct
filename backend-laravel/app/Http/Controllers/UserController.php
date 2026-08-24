@@ -101,7 +101,7 @@ class UserController extends Controller
             return response()->json(['message' => 'Seller not found'], 404);
         }
 
-        $productCount = Product::where('sellerId', $id)->count();
+        $productCount = Product::where('sellerId', $id)->where('status', 'approved')->count();
         $avgRating = Review::join('products', 'reviews.productId', '=', 'products.id')
             ->where('products.sellerId', $id)
             ->avg('rating') ?: 0;

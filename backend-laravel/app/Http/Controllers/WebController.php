@@ -126,7 +126,7 @@ class WebController extends Controller
     }
 
     /**
-     * Fetch Top Rated Artisan Shops.
+     * Fetch Top Rated Artisan Shops (Real-time DB data).
      */
     private function fetchTopShops()
     {
@@ -139,97 +139,51 @@ class WebController extends Controller
                 ->get();
 
             foreach ($dbSellers as $seller) {
-                $pCount = Product::where('sellerId', $seller->id)->count();
-                if ($pCount == 0 && !$seller->shopName) continue;
+                $pCount = Product::where('sellerId', $seller->id)
+                    ->where('status', 'approved')
+                    ->count();
 
-                $totalSold = 0;
-                try {
+                // Calculate real total sold items
+                $totalSold = DB::table('order_items')
+                    ->join('orders', 'order_items.orderId', '=', 'orders.id')
+                    ->where(function($q) use ($seller) {
+                        $q->where('order_items.sellerId', $seller->id)
+                          ->orWhere('orders.sellerId', $seller->id);
+                    })
+                    ->whereIn('orders.status', ['Delivered', 'Completed', 'completed', 'delivered'])
+                    ->sum('order_items.quantity');
+
+                if (!$totalSold) {
                     $totalSold = Order::where('sellerId', $seller->id)
-                        ->whereIn('status', ['completed', 'delivered'])
+                        ->whereIn('status', ['Delivered', 'Completed', 'completed', 'delivered'])
                         ->count();
-                } catch (\Throwable $oe) {
-                    $totalSold = 0;
-                }
-                if ($totalSold == 0) {
-                    $totalSold = rand(24, 158);
                 }
 
-                $avgRating = null;
-                try {
-                    $avgRating = Review::whereHas('product', function($q) use ($seller) {
-                        $q->where('sellerId', $seller->id);
-                    })->avg('rating');
-                } catch (\Throwable $re) {
-                    $avgRating = null;
-                }
+                $avgRating = Review::whereHas('product', function($q) use ($seller) {
+                    $q->where('sellerId', $seller->id);
+                })->avg('rating');
+
+                $reviewCount = Review::whereHas('product', function($q) use ($seller) {
+                    $q->where('sellerId', $seller->id);
+                })->count();
 
                 $topShops->push((object)[
                     'id' => $seller->id,
                     'name' => $seller->shopName ?: $seller->name ?: 'Lumban Heritage Shop',
                     'description' => $seller->shopDescription ?: 'Handcrafted Barong Tagalog & Filipiniana specialists from Lumban, Laguna.',
                     'location' => trim(($seller->shopCity ?? 'Lumban') . ', ' . ($seller->shopProvince ?? 'Laguna'), ', '),
-                    'avatar' => $seller->profile_photo_url ?: '/uploads/products/default.jpg',
-                    'rating' => $avgRating ? number_format($avgRating, 1) : number_format(4.7 + (rand(1, 2) / 10), 1),
-                    'total_sold' => $totalSold,
-                    'products_count' => max($pCount, rand(8, 25)),
+                    'avatar' => $seller->profile_photo_url ?: ($seller->profilePhoto ?: '/uploads/products/default.jpg'),
+                    'rating' => $avgRating ? number_format($avgRating, 1) : '5.0',
+                    'review_count' => $reviewCount,
+                    'total_sold' => (int)$totalSold,
+                    'products_count' => (int)$pCount,
                 ]);
             }
         } catch (\Throwable $e) {
             // Ignore DB schema exceptions on live environment
         }
 
-        if ($topShops->count() < 3) {
-            $defaults = [
-                [
-                    'id' => 'lumban-artisan-1',
-                    'name' => 'Lumban Heritage Embroidery',
-                    'description' => 'Master embroiderers specializing in fine Piña silk wedding barongs and traditional gowns.',
-                    'location' => 'Lumban, Laguna',
-                    'avatar' => '/uploads/categories/wedding_groom.png',
-                    'rating' => '4.9',
-                    'total_sold' => 184,
-                    'products_count' => 24,
-                ],
-                [
-                    'id' => 'lumban-artisan-2',
-                    'name' => 'Bordados de Lumban Atelier',
-                    'description' => 'Authentic hand-woven Jusi and Organza polo barongs for formal and office wear.',
-                    'location' => 'Lumban, Laguna',
-                    'avatar' => '/uploads/categories/jusi_classic.png',
-                    'rating' => '4.8',
-                    'total_sold' => 142,
-                    'products_count' => 19,
-                ],
-                [
-                    'id' => 'lumban-artisan-3',
-                    'name' => 'Piña Fine Fashion Couture',
-                    'description' => 'Exquisite custom Filipiniana gowns and modern terno tops for special occasions.',
-                    'location' => 'Lumban, Laguna',
-                    'avatar' => '/uploads/categories/women_filipiniana.png',
-                    'rating' => '4.9',
-                    'total_sold' => 210,
-                    'products_count' => 31,
-                ],
-                [
-                    'id' => 'lumban-artisan-4',
-                    'name' => 'Kultura & Barong Co.',
-                    'description' => 'Heritage accessories, camisa de chino undershirts, and boys miniature barongs.',
-                    'location' => 'Lumban, Laguna',
-                    'avatar' => '/uploads/categories/accessories.png',
-                    'rating' => '4.7',
-                    'total_sold' => 98,
-                    'products_count' => 15,
-                ],
-            ];
-
-            foreach ($defaults as $def) {
-                if (!$topShops->firstWhere('name', $def['name'])) {
-                    $topShops->push((object)$def);
-                }
-            }
-        }
-
-        return $topShops->sortByDesc('rating')->values();
+        return $topShops->sortByDesc('total_sold')->sortByDesc('products_count')->values();
     }
 
     /**
