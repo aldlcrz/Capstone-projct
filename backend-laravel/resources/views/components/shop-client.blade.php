@@ -200,19 +200,8 @@
                         <img :src="getProductImage(product.image)" class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" x-on:error="$event.target.src='/uploads/products/default.jpg'" />
                         <template x-if="product.is_on_sale && parseFloat(product.discount_percentage || 0) > 0">
                             <div style="position:absolute;top:8px;left:8px;display:flex;flex-direction:column;gap:5px;z-index:10;pointer-events:none;">
-                                <div style="display:inline-flex;align-items:center;gap:5px;padding:4px 11px 4px 8px;background:linear-gradient(135deg,#0F0C08 0%,#1C1609 100%);border:1px solid #A87B10;border-radius:20px;box-shadow:0 0 8px rgba(180,130,15,0.45),inset 0 1px 0 rgba(230,185,60,0.12);white-space:nowrap;">
-                                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" style="flex-shrink:0;">
-                                        <circle cx="12" cy="12" r="10" stroke="#C49520" stroke-width="0.8" stroke-dasharray="2.5 2"/>
-                                        <circle cx="12" cy="12" r="2.8" fill="#C49520"/>
-                                        <line x1="12" y1="1.5" x2="12" y2="7.5" stroke="#C49520" stroke-width="1.3" stroke-linecap="round"/>
-                                        <line x1="12" y1="16.5" x2="12" y2="22.5" stroke="#C49520" stroke-width="1.3" stroke-linecap="round"/>
-                                        <line x1="1.5" y1="12" x2="7.5" y2="12" stroke="#C49520" stroke-width="1.3" stroke-linecap="round"/>
-                                        <line x1="16.5" y1="12" x2="22.5" y2="12" stroke="#C49520" stroke-width="1.3" stroke-linecap="round"/>
-                                        <line x1="4" y1="4" x2="8.5" y2="8.5" stroke="#C49520" stroke-width="1.3" stroke-linecap="round"/>
-                                        <line x1="15.5" y1="15.5" x2="20" y2="20" stroke="#C49520" stroke-width="1.3" stroke-linecap="round"/>
-                                        <line x1="20" y1="4" x2="15.5" y2="8.5" stroke="#C49520" stroke-width="1.3" stroke-linecap="round"/>
-                                        <line x1="8.5" y1="15.5" x2="4" y2="20" stroke="#C49520" stroke-width="1.3" stroke-linecap="round"/>
-                                    </svg>
+                                <div style="display:inline-flex;align-items:center;gap:5px;padding:4px 11px 4px 7px;background:linear-gradient(135deg,#0F0C08 0%,#1C1609 100%);border:1px solid #A87B10;border-radius:20px;box-shadow:0 0 8px rgba(180,130,15,0.45),inset 0 1px 0 rgba(230,185,60,0.12);white-space:nowrap;">
+                                    <img src="/images/logo-icon.png" alt="LumBarong" style="width:15px;height:15px;border-radius:50%;flex-shrink:0;object-fit:cover;">
                                     <span style="color:#DFC97A;font-family:ui-sans-serif,system-ui,sans-serif;font-size:8px;font-weight:700;letter-spacing:0.18em;text-transform:uppercase;">Lumban Special</span>
                                 </div>
                                 <div style="display:inline-flex;align-items:baseline;padding:4px 11px;background:linear-gradient(90deg,#7A5505 0%,#C8890A 25%,#E8AD12 50%,#C8890A 75%,#7A5505 100%);border:1px solid #5C3E04;border-radius:20px;box-shadow:0 2px 10px rgba(200,137,10,0.5),inset 0 1px 0 rgba(255,220,80,0.25);white-space:nowrap;">
