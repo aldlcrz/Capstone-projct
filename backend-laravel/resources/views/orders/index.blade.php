@@ -78,9 +78,6 @@
                     <h1 style="font-family:ui-serif,Georgia,Cambria,serif;font-size:22px;font-weight:700;color:#1E1915;letter-spacing:-0.01em;line-height:1.2;margin:0;">
                         My Orders & Purchases
                     </h1>
-                    <p style="font-size:12.5px;color:#78716C;margin-top:3px;margin-bottom:0;">
-                        Track handcrafted barong purchases, view packing proofs, and manage deliveries
-                    </p>
                 </div>
             </div>
 
