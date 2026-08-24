@@ -613,17 +613,17 @@
 
                     @if($product->is_on_sale && $product->discount_percentage > 0)
                         <div class="absolute top-2.5 left-2.5 flex flex-col gap-1.5 z-10 pointer-events-none items-start">
-                            <div class="flex items-center gap-1.5 px-2.5 py-1 rounded-full shadow-lg" style="background: rgba(10, 10, 10, 0.9); backdrop-filter: blur(8px); border: 1.2px solid #E5C158;">
-                                <svg class="w-3.5 h-3.5 shrink-0" style="color: #F5D061;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-                                    <circle cx="12" cy="12" r="9" stroke="#E5B869" stroke-width="1.2"/>
-                                    <circle cx="12" cy="12" r="3.5" fill="#E5B869" fill-opacity="0.3" stroke="#E5B869" stroke-width="1.2"/>
-                                    <path d="M12 3v3M12 18v3M3 12h3M18 12h3M5.64 5.64l2.12 2.12M16.24 16.24l2.12 2.12M5.64 18.36l2.12-2.12M16.24 7.76l2.12-2.12" stroke="#E5B869" stroke-width="1.2" stroke-linecap="round"/>
+                            <div class="flex items-center gap-1.5 px-2.5 py-1 rounded-full shadow-lg" style="background: rgba(12, 12, 12, 0.88); backdrop-filter: blur(8px); border: 1.2px solid rgba(212, 175, 55, 0.65);">
+                                <svg class="w-3.5 h-3.5 shrink-0" style="color: #D4AF37;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                                    <circle cx="12" cy="12" r="9" stroke="#D4AF37" stroke-width="1.2"/>
+                                    <circle cx="12" cy="12" r="3.5" fill="#D4AF37" fill-opacity="0.3" stroke="#D4AF37" stroke-width="1.2"/>
+                                    <path d="M12 3v3M12 18v3M3 12h3M18 12h3M5.64 5.64l2.12 2.12M16.24 16.24l2.12 2.12M5.64 18.36l2.12-2.12M16.24 7.76l2.12-2.12" stroke="#D4AF37" stroke-width="1.2" stroke-linecap="round"/>
                                 </svg>
-                                <span class="text-[8px] sm:text-[9px] font-extrabold uppercase tracking-[0.14em]" style="color: #FFF3D6 !important; text-shadow: 0 1px 3px rgba(0,0,0,0.9);">Lumban Special</span>
+                                <span class="text-[8px] sm:text-[9px] font-extrabold uppercase tracking-[0.14em]" style="color: #E8D399 !important; text-shadow: 0 1px 3px rgba(0,0,0,0.9);">Lumban Special</span>
                             </div>
-                            <div class="flex items-baseline px-2.5 py-0.5 rounded-full shadow-lg w-fit" style="background: rgba(10, 10, 10, 0.9); backdrop-filter: blur(8px); border: 1.2px solid #E5C158;">
-                                <span class="text-[10px] sm:text-xs font-black tracking-tight" style="color: #FFD700 !important; text-shadow: 0 1px 3px rgba(0,0,0,0.9);">-{{ number_format($product->discount_percentage, 0) }}%</span>
-                                <span class="text-[8px] sm:text-[9px] font-extrabold uppercase tracking-wider ml-1" style="color: #FFE082 !important; text-shadow: 0 1px 2px rgba(0,0,0,0.8);">OFF</span>
+                            <div class="flex items-baseline px-2.5 py-0.5 rounded-full shadow-lg w-fit" style="background: rgba(12, 12, 12, 0.88); backdrop-filter: blur(8px); border: 1.2px solid rgba(212, 175, 55, 0.65);">
+                                <span class="text-[10px] sm:text-xs font-black tracking-tight" style="color: #E5C158 !important; text-shadow: 0 1px 2px rgba(0,0,0,0.9);">-{{ number_format($product->discount_percentage, 0) }}%</span>
+                                <span class="text-[8px] sm:text-[9px] font-extrabold uppercase tracking-wider ml-1" style="color: #C5A059 !important; text-shadow: 0 1px 2px rgba(0,0,0,0.8);">OFF</span>
                             </div>
                         </div>
                     @elseif($product->target_group)
