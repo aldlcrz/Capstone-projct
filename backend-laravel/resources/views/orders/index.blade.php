@@ -89,13 +89,9 @@
                     $count = $counts[$key] ?? 0;
                 @endphp
                 <a href="/orders/my-orders?tab={{ $key }}"
-                   style="{{ $isActive
-                       ? 'background-color:#1E1915;color:#FFFFFF;border:1px solid #1E1915;box-shadow:0 4px 12px rgba(0,0,0,0.15);'
-                       : 'background-color:#FFFFFF;color:#78716C;border:1px solid #ECE3D2;box-shadow:0 1px 3px rgba(0,0,0,0.02);' }}"
-                   class="shrink-0 whitespace-nowrap px-4 py-2 rounded-full text-[10px] font-black uppercase tracking-wider transition-all flex items-center gap-2 active:scale-95">
+                   class="shrink-0 whitespace-nowrap px-4 py-2 rounded-full text-[10px] font-black uppercase tracking-wider transition-all flex items-center gap-2 active:scale-95 {{ $isActive ? 'bg-[#1E1915] text-white border border-[#1E1915] shadow-md' : 'bg-white text-[#78716C] border border-[#ECE3D2] shadow-2xs hover:bg-[#FAF8F5]' }}">
                     <span>{{ $label }}</span>
-                    <span style="{{ $isActive ? 'background:rgba(223,201,122,0.25);color:#DFC97A;' : 'background:#FAF8F5;color:#8C827A;border:1px solid #EAE2D2;' }}"
-                          class="px-2 py-0.5 text-[9px] rounded-full font-extrabold">
+                    <span class="px-2 py-0.5 text-[9px] rounded-full font-extrabold {{ $isActive ? 'bg-[#DFC97A]/25 text-[#DFC97A]' : 'bg-[#FAF8F5] text-[#8C827A] border border-[#EAE2D2]' }}">
                         {{ $count }}
                     </span>
                 </a>
@@ -191,17 +187,17 @@
                                 'cancellation pending' => 'Cancellation Pending',
                                 default => 'Pending',
                             };
-                            $statusPillStyle = match($customerStatus) {
-                                'Completed' => 'background:#ECFDF5;color:#047857;border:1px solid #A7F3D0;',
-                                'Delivered' => 'background:#F0FDFA;color:#0F766E;border:1px solid #99F6E4;',
-                                'To Receive' => 'background:#FAF5FF;color:#7E22CE;border:1px solid #E9D5FF;',
-                                'To Ship' => 'background:#F0F9FF;color:#0369A1;border:1px solid #BAE6FD;',
-                                'Cancelled' => 'background:#FEF2F2;color:#B91C1C;border:1px solid #FECACA;',
-                                'Cancellation Pending' => 'background:#FFF7ED;color:#C2410C;border:1px solid #FFEDD5;',
-                                default => 'background:#FFFBEB;color:#B45309;border:1px solid #FDE68A;',
+                            $statusPillClass = match($customerStatus) {
+                                'Completed' => 'bg-emerald-50 text-emerald-700 border border-emerald-200',
+                                'Delivered' => 'bg-teal-50 text-teal-700 border border-teal-200',
+                                'To Receive' => 'bg-purple-50 text-purple-700 border border-purple-200',
+                                'To Ship' => 'bg-sky-50 text-sky-700 border border-sky-200',
+                                'Cancelled' => 'bg-red-50 text-red-700 border border-red-200',
+                                'Cancellation Pending' => 'bg-orange-50 text-orange-700 border border-orange-200',
+                                default => 'bg-amber-50 text-amber-700 border border-amber-200',
                             };
                         @endphp
-                        <span style="{{ $statusPillStyle }}" class="shrink-0 px-3.5 py-1 rounded-full text-[9px] font-black uppercase tracking-widest">
+                        <span class="shrink-0 px-3.5 py-1 rounded-full text-[9px] font-black uppercase tracking-widest {{ $statusPillClass }}">
                             {{ $customerStatus }}
                         </span>
                     </div>

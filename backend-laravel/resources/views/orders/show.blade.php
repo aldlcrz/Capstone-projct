@@ -75,13 +75,13 @@
                 'cancelled' => 'Cancelled',
                 default => 'Order Placed',
             };
-            $statusPillStyle = match($customerStatusDisplay) {
-                'Completed' => 'background:#ECFDF5;color:#047857;border:1px solid #A7F3D0;',
-                'Delivered' => 'background:#F0FDFA;color:#0F766E;border:1px solid #99F6E4;',
-                'To Receive' => 'background:#FAF5FF;color:#7E22CE;border:1px solid #E9D5FF;',
-                'To Ship' => 'background:#F0F9FF;color:#0369A1;border:1px solid #BAE6FD;',
-                'Cancelled' => 'background:#FEF2F2;color:#B91C1C;border:1px solid #FECACA;',
-                default => 'background:#FFFBEB;color:#B45309;border:1px solid #FDE68A;',
+            $statusPillClass = match($customerStatusDisplay) {
+                'Completed' => 'bg-emerald-50 text-emerald-700 border border-emerald-200',
+                'Delivered' => 'bg-teal-50 text-teal-700 border border-teal-200',
+                'To Receive' => 'bg-purple-50 text-purple-700 border border-purple-200',
+                'To Ship' => 'bg-sky-50 text-sky-700 border border-sky-200',
+                'Cancelled' => 'bg-red-50 text-red-700 border border-red-200',
+                default => 'bg-amber-50 text-amber-700 border border-amber-200',
             };
         @endphp
 
@@ -116,7 +116,7 @@
                         <span>Cancel Order</span>
                     </button>
                 @endif
-                <span style="{{ $statusPillStyle }}" class="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-[10px] sm:text-[11px] font-black tracking-wider uppercase shadow-2xs">
+                <span class="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-[10px] sm:text-[11px] font-black tracking-wider uppercase shadow-2xs {{ $statusPillClass }}">
                     <span>{{ $customerStatusDisplay }}</span>
                 </span>
             </div>
@@ -183,12 +183,7 @@
 
                     <div class="flex flex-col items-center text-center">
                         {{-- Step Circle --}}
-                        <div class="w-7 h-7 sm:w-8 sm:h-8 rounded-full flex items-center justify-center text-[11px] font-black transition-all"
-                            style="{{ $isCurrent
-                                ? 'background-color:#1E1915;color:#DFC97A;border:2px solid #A87B10;box-shadow:0 4px 10px rgba(0,0,0,0.15);'
-                                : ($isDone 
-                                    ? 'background-color:#1E1915;color:#FFFFFF;border:1px solid #1E1915;' 
-                                    : 'background-color:#FFFFFF;border:1px solid #ECE3D2;color:#A8A29E;') }}">
+                        <div class="w-7 h-7 sm:w-8 sm:h-8 rounded-full flex items-center justify-center text-[11px] font-black transition-all {{ $isCurrent ? 'bg-[#1E1915] text-[#DFC97A] border-2 border-[#A87B10] shadow-md' : ($isDone ? 'bg-[#1E1915] text-white border border-[#1E1915]' : 'bg-white border border-[#ECE3D2] text-[#A8A29E]') }}">
                             @if($isDone && !$isCurrent)
                                 <svg class="w-3.5 h-3.5 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/></svg>
                             @else
@@ -353,9 +348,13 @@
                                 <span class="font-bold text-[#8C827A] uppercase tracking-wider text-[10px]">Payment Status</span>
                                 @php
                                     $resolvedPayment = $order->resolved_payment_status;
-                                    $payColor = ($resolvedPayment === 'Verified' || $resolvedPayment === 'Paid') ? 'background:#ECFDF5;color:#047857;border:1px solid #A7F3D0;' : ($resolvedPayment === 'Payment Rejected' || $resolvedPayment === 'Failed' ? 'background:#FEF2F2;color:#B91C1C;border:1px solid #FECACA;' : 'background:#FFFBEB;color:#B45309;border:1px solid #FDE68A;');
+                                    $payClass = ($resolvedPayment === 'Verified' || $resolvedPayment === 'Paid')
+                                        ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
+                                        : (($resolvedPayment === 'Payment Rejected' || $resolvedPayment === 'Failed')
+                                            ? 'bg-red-50 text-red-700 border border-red-200'
+                                            : 'bg-amber-50 text-amber-700 border border-amber-200');
                                 @endphp
-                                <span style="{{ $payColor }}" class="font-black text-[10px] uppercase tracking-wider px-2.5 py-0.5 rounded-full">
+                                <span class="font-black text-[10px] uppercase tracking-wider px-2.5 py-0.5 rounded-full {{ $payClass }}">
                                     @if($resolvedPayment === 'Payment Submitted')
                                         ⏳ Awaiting Verification
                                     @elseif($resolvedPayment === 'Verified' || $resolvedPayment === 'Paid')

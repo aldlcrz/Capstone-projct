@@ -553,7 +553,7 @@
                                                         <h4 style="font-family:ui-serif,Georgia,serif;font-size:15px;font-weight:700;color:#1E1915;line-height:1.2;margin:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">
                                                             {{ $shop->name }}
                                                         </h4>
-                                                        <p style="font-size:11px;color:#78716C;margin-top:4px;margin-bottom:0;line-height:1.4;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;">
+                                                        <p class="line-clamp-2" style="font-size:11px;color:#78716C;margin-top:4px;margin-bottom:0;line-height:1.4;">
                                                             {{ $shop->description }}
                                                         </p>
                                                         <div style="display:flex;align-items:center;gap:4px;font-size:11px;color:#8C827A;font-weight:500;margin-top:6px;">
