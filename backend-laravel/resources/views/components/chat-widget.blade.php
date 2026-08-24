@@ -390,19 +390,28 @@
     box-shadow: 0 20px 40px rgba(0,0,0,0.25);
 }
 
-/* Mobile Screens: Position floating button cleanly above the bottom navigation bar */
+/* Mobile Screens: Position floating button cleanly above bottom bars */
 @media (max-width: 1023px) {
     .lumbarong-chat-wrapper {
-        bottom: calc(82px + env(safe-area-inset-bottom, 0px)) !important;
+        @if(request()->is('cart*', 'checkout*'))
+            bottom: calc(144px + env(safe-area-inset-bottom, 0px)) !important;
+        @else
+            bottom: calc(82px + env(safe-area-inset-bottom, 0px)) !important;
+        @endif
         right: 16px !important;
     }
     .lumbarong-chat-window {
-        bottom: calc(148px + env(safe-area-inset-bottom, 0px)) !important;
+        @if(request()->is('cart*', 'checkout*'))
+            bottom: calc(210px + env(safe-area-inset-bottom, 0px)) !important;
+            height: calc(100dvh - 230px) !important;
+        @else
+            bottom: calc(148px + env(safe-area-inset-bottom, 0px)) !important;
+            height: calc(100dvh - 170px) !important;
+        @endif
         right: 12px !important;
         left: 12px !important;
         width: auto !important;
         max-width: none !important;
-        height: calc(100dvh - 170px) !important;
         max-height: 560px !important;
     }
 }
