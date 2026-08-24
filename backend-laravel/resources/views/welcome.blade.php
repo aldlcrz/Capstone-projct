@@ -612,26 +612,27 @@
                          class="w-full h-full object-cover object-top group-hover:scale-105 transition-transform duration-500 ease-out">
 
                     @if($product->is_on_sale && $product->discount_percentage > 0)
-                        <div class="absolute top-2 left-2 flex flex-col gap-1 z-10 pointer-events-none items-start">
-                            {{-- Top: LUMBAN SPECIAL badge --}}
-                            <div style="display:inline-flex;align-items:center;gap:5px;padding:4px 8px;background:#0C0A08;border:1px solid #BF9B30;border-radius:5px;">
-                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="flex-shrink:0;opacity:0.95;">
-                                    {{-- Outer dotted circle --}}
-                                    <circle cx="12" cy="12" r="11" stroke="#C8A84B" stroke-width="0.8" stroke-dasharray="1.8 2"/>
-                                    {{-- Inner solid ring --}}
-                                    <circle cx="12" cy="12" r="7.5" stroke="#C8A84B" stroke-width="0.7"/>
-                                    {{-- 8 radiating spokes --}}
-                                    <path d="M12 0.5v5M12 18.5v5M0.5 12h5M18.5 12h5" stroke="#C8A84B" stroke-width="0.9" stroke-linecap="round"/>
-                                    <path d="M4.1 4.1l3.5 3.5M16.4 16.4l3.5 3.5M4.1 19.9l3.5-3.5M16.4 7.6l3.5-3.5" stroke="#C8A84B" stroke-width="0.9" stroke-linecap="round"/>
-                                    {{-- Center dot --}}
-                                    <circle cx="12" cy="12" r="2.2" fill="#C8A84B"/>
+                        <div style="position:absolute;top:8px;left:8px;display:flex;flex-direction:column;gap:4px;z-index:10;pointer-events:none;">
+                            {{-- Top badge: icon + LUMBAN SPECIAL --}}
+                            <div style="display:flex;align-items:center;gap:5px;padding:4px 9px 4px 7px;background:#090705;border:1px solid #C4961E;border-radius:5px;white-space:nowrap;">
+                                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" style="flex-shrink:0;">
+                                    <circle cx="12" cy="12" r="10.5" stroke="#C4961E" stroke-width="0.9" stroke-dasharray="2 2"/>
+                                    <circle cx="12" cy="12" r="3" fill="#C4961E"/>
+                                    <line x1="12" y1="1" x2="12" y2="8.5" stroke="#C4961E" stroke-width="1.2" stroke-linecap="round"/>
+                                    <line x1="12" y1="15.5" x2="12" y2="23" stroke="#C4961E" stroke-width="1.2" stroke-linecap="round"/>
+                                    <line x1="1" y1="12" x2="8.5" y2="12" stroke="#C4961E" stroke-width="1.2" stroke-linecap="round"/>
+                                    <line x1="15.5" y1="12" x2="23" y2="12" stroke="#C4961E" stroke-width="1.2" stroke-linecap="round"/>
+                                    <line x1="3.5" y1="3.5" x2="9" y2="9" stroke="#C4961E" stroke-width="1.2" stroke-linecap="round"/>
+                                    <line x1="15" y1="15" x2="20.5" y2="20.5" stroke="#C4961E" stroke-width="1.2" stroke-linecap="round"/>
+                                    <line x1="20.5" y1="3.5" x2="15" y2="9" stroke="#C4961E" stroke-width="1.2" stroke-linecap="round"/>
+                                    <line x1="9" y1="15" x2="3.5" y2="20.5" stroke="#C4961E" stroke-width="1.2" stroke-linecap="round"/>
                                 </svg>
-                                <span style="color:#C9A84C;font-family:ui-sans-serif,system-ui,sans-serif;font-size:7.5px;font-weight:700;letter-spacing:0.14em;text-transform:uppercase;">Lumban Special</span>
+                                <span style="color:#C9A435;font-family:ui-sans-serif,system-ui,sans-serif;font-size:7.5px;font-weight:700;letter-spacing:0.16em;text-transform:uppercase;">Lumban Special</span>
                             </div>
-                            {{-- Bottom: -10% OFF badge --}}
-                            <div style="display:inline-flex;align-items:baseline;gap:2px;padding:3px 8px;background:#0C0A08;border:1px solid #BF9B30;border-radius:5px;">
-                                <span style="color:#D4AA3A;font-family:ui-sans-serif,system-ui,sans-serif;font-size:13px;font-weight:900;line-height:1;letter-spacing:-0.01em;">-{{ number_format($product->discount_percentage, 0) }}%</span>
-                                <span style="color:#7A5E20;font-family:ui-sans-serif,system-ui,sans-serif;font-size:8.5px;font-weight:700;text-transform:uppercase;letter-spacing:0.07em;margin-left:1px;">OFF</span>
+                            {{-- Bottom badge: -10% OFF --}}
+                            <div style="display:flex;align-items:baseline;gap:0px;padding:4px 9px;background:#090705;border:1px solid #C4961E;border-radius:5px;white-space:nowrap;">
+                                <span style="color:#D4A820;font-family:ui-sans-serif,system-ui,sans-serif;font-size:14px;font-weight:900;line-height:1;letter-spacing:-0.02em;">-{{ number_format($product->discount_percentage, 0) }}%</span>
+                                <span style="color:#A07C18;font-family:ui-sans-serif,system-ui,sans-serif;font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:0.06em;margin-left:3px;">OFF</span>
                             </div>
                         </div>
                     @elseif($product->target_group)
