@@ -36,14 +36,14 @@
                         <a href="/products/{{ $product->id }}" class="block aspect-4/5 bg-gray-50 rounded-xl overflow-hidden mb-3 relative">
                             <img src="{{ $product->getImageUrl() }}" onerror="this.src='/uploads/products/default.jpg'" class="w-full h-full object-cover object-top group-hover:scale-105 transition-transform duration-300">
                             @if($product->is_on_sale && $product->discount_percentage > 0)
-                                <div style="position:absolute;top:8px;left:8px;display:flex;flex-direction:column;gap:4px;z-index:10;pointer-events:none;">
-                                    <div style="display:inline-flex;align-items:center;gap:4px;padding:3px 9px 3px 6px;background:linear-gradient(135deg,#0F0C08 0%,#1C1609 100%);border:1px solid #A87B10;border-radius:20px;box-shadow:0 0 8px rgba(180,130,15,0.45),inset 0 1px 0 rgba(230,185,60,0.12);white-space:nowrap;">
-                                        <img src="/images/logo-icon.png" alt="LumBarong" style="width:13px;height:13px;border-radius:50%;flex-shrink:0;object-fit:cover;">
-                                        <span style="color:#DFC97A;font-family:ui-sans-serif,system-ui,sans-serif;font-size:7px;font-weight:700;letter-spacing:0.18em;text-transform:uppercase;">Lumban Special</span>
+                                <div class="absolute top-1.5 left-1.5 sm:top-2 sm:left-2 flex flex-col gap-1 sm:gap-1.5 z-10 pointer-events-none max-w-[calc(100%-12px)]">
+                                    <div class="inline-flex items-center gap-1 sm:gap-1.5 px-1.5 py-0.5 sm:px-2.5 sm:py-1 rounded-full border border-[#A87B10] shadow-[0_0_8px_rgba(180,130,15,0.45),inset_0_1px_0_rgba(230,185,60,0.12)] bg-gradient-to-br from-[#0F0C08] to-[#1C1609] whitespace-nowrap self-start max-w-full">
+                                        <img src="/images/logo-icon.png" alt="LumBarong" class="w-2.5 h-2.5 sm:w-3.5 sm:h-3.5 rounded-full shrink-0 object-cover">
+                                        <span class="text-[#DFC97A] text-[6.5px] sm:text-[8px] font-bold tracking-tight sm:tracking-wider uppercase truncate">Lumban Special</span>
                                     </div>
-                                    <div style="display:inline-flex;align-items:baseline;padding:3px 9px;background:linear-gradient(90deg,#7A5505 0%,#C8890A 25%,#E8AD12 50%,#C8890A 75%,#7A5505 100%);border:1px solid #5C3E04;border-radius:20px;box-shadow:0 2px 10px rgba(200,137,10,0.5),inset 0 1px 0 rgba(255,220,80,0.25);white-space:nowrap;">
-                                        <span style="color:#FFF8E0;font-family:ui-sans-serif,system-ui,sans-serif;font-size:13px;font-weight:900;line-height:1;letter-spacing:-0.02em;">-{{ number_format($product->discount_percentage, 0) }}%</span>
-                                        <span style="color:#FFE8A0;font-family:ui-sans-serif,system-ui,sans-serif;font-size:8px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;margin-left:2px;">OFF</span>
+                                    <div class="inline-flex items-baseline px-1.5 py-0.5 sm:px-2.5 sm:py-1 rounded-full border border-[#5C3E04] shadow-[0_2px_10px_rgba(200,137,10,0.5),inset_0_1px_0_rgba(255,220,80,0.25)] bg-gradient-to-r from-[#7A5505] via-[#C8890A] to-[#7A5505] whitespace-nowrap self-start">
+                                        <span class="text-[#FFF8E0] text-[10px] sm:text-[13px] md:text-[15px] font-black leading-none tracking-tight">-{{ number_format($product->discount_percentage, 0) }}%</span>
+                                        <span class="text-[#FFE8A0] text-[6px] sm:text-[8px] md:text-[9px] font-bold uppercase tracking-wider ml-0.5 sm:ml-1">OFF</span>
                                     </div>
                                 </div>
                             @endif
