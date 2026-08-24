@@ -456,7 +456,10 @@
                     <img src="/uploads/categories/pina_formal.png" loading="lazy" decoding="async" class="absolute inset-0 w-full h-full object-cover opacity-85 group-hover:scale-105 transition-transform duration-500" alt="Lumban Special">
                     <div class="absolute inset-0 bg-linear-to-t from-black/85 via-black/20 to-transparent"></div>
                     <div class="relative z-10 text-white">
-                        <span class="px-2 py-0.5 bg-[#C0420A] text-white text-[8px] font-black uppercase tracking-widest rounded-md mb-1 inline-block">Special Sale</span>
+                        <div style="display:inline-flex;align-items:center;gap:5px;padding:4px 11px 4px 7px;background:linear-gradient(90deg,#7A5505 0%,#C8890A 25%,#E8AD12 50%,#C8890A 75%,#7A5505 100%);border:1px solid #5C3E04;border-radius:20px;box-shadow:0 2px 10px rgba(200,137,10,0.5),inset 0 1px 0 rgba(255,220,80,0.25);white-space:nowrap;margin-bottom:5px;">
+                            <img src="/images/logo-icon.png" alt="LumBarong" style="width:13px;height:13px;border-radius:50%;flex-shrink:0;object-fit:cover;">
+                            <span style="color:#FFF8E0;font-family:ui-sans-serif,system-ui,sans-serif;font-size:8px;font-weight:800;letter-spacing:0.18em;text-transform:uppercase;">Special Sale</span>
+                        </div>
                         <h4 class="font-bold text-xs sm:text-sm">Lumban Special</h4>
                         <p class="text-[10px] text-gray-300">Exclusive discounted barongs</p>
                     </div>
