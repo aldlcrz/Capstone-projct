@@ -37,17 +37,18 @@
                             <img src="{{ $product->getImageUrl() }}" onerror="this.src='/uploads/products/default.jpg'" class="w-full h-full object-cover object-top group-hover:scale-105 transition-transform duration-300">
                             @if($product->is_on_sale && $product->discount_percentage > 0)
                                 <div class="absolute top-2.5 left-2.5 flex flex-col gap-1.5 z-10 pointer-events-none items-start">
-                                    <div class="flex items-center gap-1.5 px-2.5 py-0.5 rounded-full shadow-lg" style="background: rgba(12, 12, 12, 0.88); backdrop-filter: blur(8px); border: 1.2px solid rgba(212, 175, 55, 0.65);">
-                                        <svg class="w-2.5 h-2.5 shrink-0" style="color: #D4AF37;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-                                            <circle cx="12" cy="12" r="9" stroke="#D4AF37" stroke-width="1.2"/>
-                                            <circle cx="12" cy="12" r="3.5" fill="#D4AF37" fill-opacity="0.3" stroke="#D4AF37" stroke-width="1.2"/>
-                                            <path d="M12 3v3M12 18v3M3 12h3M18 12h3M5.64 5.64l2.12 2.12M16.24 16.24l2.12 2.12M5.64 18.36l2.12-2.12M16.24 7.76l2.12-2.12" stroke="#D4AF37" stroke-width="1.2" stroke-linecap="round"/>
+                                    <div class="flex items-center gap-1.5 px-2.5 py-0.5 shadow-lg" style="background: linear-gradient(180deg, rgba(26, 20, 15, 0.94) 0%, rgba(12, 10, 8, 0.96) 100%); border: 1px solid rgba(229, 184, 105, 0.75); border-radius: 9px; box-shadow: 0 4px 10px rgba(0,0,0,0.6), inset 0 1px 1px rgba(255, 235, 180, 0.2);">
+                                        <svg class="w-3 h-3 shrink-0" viewBox="0 0 24 24" fill="none" style="filter: drop-shadow(0 0 2px rgba(229,184,105,0.4));">
+                                            <circle cx="12" cy="12" r="10" stroke="#E5B869" stroke-width="1.2" stroke-dasharray="2 1.5"/>
+                                            <circle cx="12" cy="12" r="6" stroke="#E5B869" stroke-width="1"/>
+                                            <path d="M12 2v4M12 18v4M2 12h4M18 12h4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83" stroke="#E5B869" stroke-width="1.2" stroke-linecap="round"/>
+                                            <circle cx="12" cy="12" r="2.5" fill="#E5B869"/>
                                         </svg>
-                                        <span class="text-[7.5px] font-extrabold uppercase tracking-[0.14em]" style="color: #E8D399 !important; text-shadow: 0 1px 3px rgba(0,0,0,0.9);">Lumban Special</span>
+                                        <span class="font-serif text-[7.5px] font-bold uppercase tracking-[0.18em]" style="color: #EAD8B1 !important; text-shadow: 0 1px 2px rgba(0,0,0,0.9);">Lumban Special</span>
                                     </div>
-                                    <div class="flex items-baseline px-2.5 py-0.5 rounded-full shadow-lg w-fit" style="background: rgba(12, 12, 12, 0.88); backdrop-filter: blur(8px); border: 1.2px solid rgba(212, 175, 55, 0.65);">
-                                        <span class="text-[9px] font-black tracking-tight" style="color: #E5C158 !important; text-shadow: 0 1px 2px rgba(0,0,0,0.9);">-{{ number_format($product->discount_percentage, 0) }}%</span>
-                                        <span class="text-[7.5px] font-extrabold uppercase tracking-wider ml-0.5" style="color: #C5A059 !important; text-shadow: 0 1px 2px rgba(0,0,0,0.8);">OFF</span>
+                                    <div class="flex items-baseline px-2.5 py-0.5 shadow-lg w-fit" style="background: linear-gradient(180deg, rgba(26, 20, 15, 0.94) 0%, rgba(12, 10, 8, 0.96) 100%); border: 1px solid rgba(229, 184, 105, 0.75); border-radius: 9px; box-shadow: 0 4px 10px rgba(0,0,0,0.6), inset 0 1px 1px rgba(255, 235, 180, 0.2);">
+                                        <span class="text-[9px] font-black tracking-tight" style="color: #F7E7C4 !important; font-family: ui-sans-serif, system-ui, -apple-system, sans-serif; text-shadow: 0 1px 3px rgba(0,0,0,0.9);">-{{ number_format($product->discount_percentage, 0) }}%</span>
+                                        <span class="text-[7.5px] font-extrabold uppercase tracking-[0.12em] ml-1" style="color: #C5A059 !important; text-shadow: 0 1px 2px rgba(0,0,0,0.9);">OFF</span>
                                     </div>
                                 </div>
                             @endif
