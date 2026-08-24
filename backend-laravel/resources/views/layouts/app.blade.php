@@ -67,6 +67,7 @@
                 </div>
                 
                 <!-- Center: Modern Pill Search Bar (LumBarong theme) -->
+                @if(!request()->is('cart*', 'profile*', 'orders*', 'wishlist*', 'checkout*'))
                 <div class="flex-1 min-w-0 max-w-lg mx-auto">
                     <form action="/" method="GET" class="ajax-search-form" style="position: relative; width: 100%;">
                         <input type="text" name="search" value="{{ request('search') }}"
@@ -83,6 +84,9 @@
                         </button>
                     </form>
                 </div>
+                @else
+                <div class="flex-1"></div>
+                @endif
 
                 <!-- Right: Quick Action Icons (Bell, Cart, Avatar) -->
                 <div class="flex items-center gap-1.5 sm:gap-3.5 shrink-0">
@@ -213,8 +217,12 @@
                     <!-- Profile Dropdown -->
                     <div x-data="{ open: false }" class="relative" @mouseenter="open = true" @mouseleave="open = false" @click.away="open = false">
                         @auth
-                            <button type="button" @click="open = !open" class="w-9 h-9 sm:w-11 sm:h-11 rounded-full border border-gray-100 flex items-center justify-center overflow-hidden bg-white hover:border-gray-400 transition-all shadow-sm">
-                                <span class="font-bold text-gray-700 text-xs sm:text-sm">{{ strtoupper(substr(Auth::user()->name, 0, 1)) }}</span>
+                            <button type="button" @click="open = !open" class="w-9 h-9 sm:w-11 sm:h-11 rounded-full border border-gray-100 flex items-center justify-center overflow-hidden bg-white hover:border-gray-400 transition-all shadow-sm cursor-pointer">
+                                @if(Auth::user()->profile_photo_url)
+                                    <img src="{{ Auth::user()->profile_photo_url }}" alt="{{ Auth::user()->name }}" class="w-full h-full object-cover rounded-full">
+                                @else
+                                    <span class="font-bold text-gray-700 text-xs sm:text-sm">{{ strtoupper(substr(Auth::user()->name, 0, 1)) }}</span>
+                                @endif
                             </button>
                             <div x-show="open" 
                                  x-transition:enter="transition ease-out duration-200"
@@ -226,9 +234,18 @@
                                  class="absolute right-0 mt-2 w-56 bg-white rounded-2xl shadow-2xl border border-gray-100 py-2 z-50 overflow-hidden"
                                  style="display: none;"
                                  x-cloak>
-                                <div class="px-4 py-3 border-b border-gray-50 bg-gray-50/50">
-                                    <div class="text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-0.5">My Account</div>
-                                    <div class="text-sm font-bold text-black truncate">{{ Auth::user()->name }}</div>
+                                <div class="px-4 py-3 border-b border-gray-50 bg-gray-50/50 flex items-center gap-3">
+                                    <div class="w-9 h-9 rounded-full overflow-hidden shrink-0 border border-gray-200 flex items-center justify-center bg-stone-100">
+                                        @if(Auth::user()->profile_photo_url)
+                                            <img src="{{ Auth::user()->profile_photo_url }}" alt="{{ Auth::user()->name }}" class="w-full h-full object-cover">
+                                        @else
+                                            <span class="font-bold text-gray-700 text-xs">{{ strtoupper(substr(Auth::user()->name, 0, 1)) }}</span>
+                                        @endif
+                                    </div>
+                                    <div class="min-w-0">
+                                        <div class="text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-0.5">My Account</div>
+                                        <div class="text-sm font-bold text-black truncate">{{ Auth::user()->name }}</div>
+                                    </div>
                                 </div>
                                 @if(Auth::user()->role === 'superadmin')
                                     <a href="/superadmin/dashboard" class="flex items-center gap-3 px-4 py-3 text-[11px] font-bold text-amber-600 hover:bg-amber-50 transition-all">👑 Super Admin Governance</a>

@@ -60,41 +60,28 @@
 
         {{-- Top Header with Heraldic Laurel Wreath --}}
         <div style="background-color:#FDFBF7;border:1px solid #EAE2D2;border-radius:24px;box-shadow:0 10px 30px rgba(0,0,0,0.04);padding:24px 28px;">
-            <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:16px;">
-                <div style="display:flex;align-items:center;gap:14px;">
-                    <!-- Heraldic Laurel Wreath + Star Emblem -->
-                    <div style="width:48px;height:48px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
-                        <svg width="46" height="46" viewBox="0 0 48 48" fill="none">
-                            <circle cx="24" cy="23" r="10.5" stroke="#C49520" stroke-width="1" stroke-dasharray="2 1.5"/>
-                            <circle cx="24" cy="23" r="8.5" stroke="#C49520" stroke-width="0.8"/>
-                            <path d="M24 17.5l1.6 3.4 3.7.5-2.7 2.6.6 3.7-3.2-1.7-3.2 1.7.6-3.7-2.7-2.6 3.7-.5L24 17.5z" fill="#C49520"/>
-                            <path d="M15 32.5c-4-3.5-6-8.5-6-14 0-3.5 1-6.5 2.5-9" stroke="#C49520" stroke-width="1.3" stroke-linecap="round"/>
-                            <path d="M10 12c1.8 1.2 3.5 2.8 4 4.5M8 17.5c2 .6 3.8 1.8 4.8 3.5M8 23.5c2 0 3.8.6 5 2M9.5 29.5c2-.8 3.8-.8 5.2 0M12.5 34c1.8-1.2 3.6-1.5 5-.8" stroke="#C49520" stroke-width="1.2" stroke-linecap="round"/>
-                            <path d="M33 32.5c4-3.5 6-8.5 6-14 0-3.5-1-6.5-2.5-9" stroke="#C49520" stroke-width="1.3" stroke-linecap="round"/>
-                            <path d="M38 12c-1.8 1.2-3.5 2.8-4 4.5M40 17.5c-2 .6-3.8 1.8-4.8 3.5M40 23.5c-2 0-3.8.6-5 2M38.5 29.5c-2-.8-3.8-.8-5.2 0M35.5 34c-1.8-1.2-3.6-1.5-5-.8" stroke="#C49520" stroke-width="1.2" stroke-linecap="round"/>
-                            <path d="M19 36c3 1.2 7 1.2 10 0" stroke="#C49520" stroke-width="1.3" stroke-linecap="round"/>
-                        </svg>
-                    </div>
-                    <div>
-                        <h1 style="font-family:ui-serif,Georgia,Cambria,serif;font-size:22px;font-weight:700;color:#1E1915;letter-spacing:-0.01em;line-height:1.2;margin:0;">
-                            My Orders & Purchases
-                        </h1>
-                        <p style="font-size:12.5px;color:#78716C;margin-top:3px;margin-bottom:0;">
-                            Track handcrafted barong purchases, view packing proofs, and manage deliveries
-                        </p>
-                    </div>
-                </div>
-
-                {{-- Search Input --}}
-                <form action="/orders/my-orders" method="GET" class="relative w-full sm:w-72">
-                    <input type="text" name="search" value="{{ request('search') }}"
-                           placeholder="Search order ID or item..."
-                           style="background-color:#FFFFFF;border:1px solid #ECE3D2;border-radius:24px;box-shadow:0 2px 6px rgba(0,0,0,0.03);outline:none;font-size:12px;font-weight:600;color:#1E1915;"
-                           class="w-full h-10 sm:h-11 pl-9 sm:pl-10 pr-4 transition-all focus:border-[#C49520]">
-                    <svg class="w-4 h-4 text-stone-400 absolute left-3.5 top-3 sm:top-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+            <div style="display:flex;align-items:center;gap:14px;">
+                <!-- Heraldic Laurel Wreath + Star Emblem -->
+                <div style="width:48px;height:48px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+                    <svg width="46" height="46" viewBox="0 0 48 48" fill="none">
+                        <circle cx="24" cy="23" r="10.5" stroke="#C49520" stroke-width="1" stroke-dasharray="2 1.5"/>
+                        <circle cx="24" cy="23" r="8.5" stroke="#C49520" stroke-width="0.8"/>
+                        <path d="M24 17.5l1.6 3.4 3.7.5-2.7 2.6.6 3.7-3.2-1.7-3.2 1.7.6-3.7-2.7-2.6 3.7-.5L24 17.5z" fill="#C49520"/>
+                        <path d="M15 32.5c-4-3.5-6-8.5-6-14 0-3.5 1-6.5 2.5-9" stroke="#C49520" stroke-width="1.3" stroke-linecap="round"/>
+                        <path d="M10 12c1.8 1.2 3.5 2.8 4 4.5M8 17.5c2 .6 3.8 1.8 4.8 3.5M8 23.5c2 0 3.8.6 5 2M9.5 29.5c2-.8 3.8-.8 5.2 0M12.5 34c1.8-1.2 3.6-1.5 5-.8" stroke="#C49520" stroke-width="1.2" stroke-linecap="round"/>
+                        <path d="M33 32.5c4-3.5 6-8.5 6-14 0-3.5-1-6.5-2.5-9" stroke="#C49520" stroke-width="1.3" stroke-linecap="round"/>
+                        <path d="M38 12c-1.8 1.2-3.5 2.8-4 4.5M40 17.5c-2 .6-3.8 1.8-4.8 3.5M40 23.5c-2 0-3.8.6-5 2M38.5 29.5c-2-.8-3.8-.8-5.2 0M35.5 34c-1.8-1.2-3.6-1.5-5-.8" stroke="#C49520" stroke-width="1.2" stroke-linecap="round"/>
+                        <path d="M19 36c3 1.2 7 1.2 10 0" stroke="#C49520" stroke-width="1.3" stroke-linecap="round"/>
                     </svg>
-                </form>
+                </div>
+                <div>
+                    <h1 style="font-family:ui-serif,Georgia,Cambria,serif;font-size:22px;font-weight:700;color:#1E1915;letter-spacing:-0.01em;line-height:1.2;margin:0;">
+                        My Orders & Purchases
+                    </h1>
+                    <p style="font-size:12.5px;color:#78716C;margin-top:3px;margin-bottom:0;">
+                        Track handcrafted barong purchases, view packing proofs, and manage deliveries
+                    </p>
+                </div>
             </div>
 
             {{-- Star Divider --}}
