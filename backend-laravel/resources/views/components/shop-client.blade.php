@@ -210,6 +210,32 @@
                                 </div>
                             </div>
                         </template>
+                        <template x-if="!product.is_on_sale && product.target_group">
+                            <div style="position:absolute;top:6px;left:6px;display:inline-flex;align-items:center;gap:5px;padding:3px 7px 3px 5px;background:linear-gradient(135deg,#131E2E 0%,#0B111A 100%);border:1px solid #A87B10;border-radius:4px;box-shadow:0 2px 8px rgba(0,0,0,0.45),inset 0 1px 0 rgba(230,185,60,0.2);white-space:nowrap;z-index:10;pointer-events:none;">
+                                <template x-if="(product.target_group || '').toLowerCase().includes('men') && !(product.target_group || '').toLowerCase().includes('women')">
+                                    <svg style="width:11px;height:11px;flex-shrink:0;" viewBox="0 0 24 24">
+                                        <path fill="#DFC97A" d="M12 2l-2.5 5 2.5 1.5 2.5-1.5L12 2zm-4.5 5.5L3 9v13h7v-9l-2.5-2.5zm9 0l-2.5 2.5v9h7V9l-4.5-1.5zM11 9.5v8l1 3.5 1-3.5v-8l-1 1-1-1z"/>
+                                    </svg>
+                                </template>
+                                <template x-if="(product.target_group || '').toLowerCase().includes('women')">
+                                    <svg style="width:11px;height:11px;flex-shrink:0;" viewBox="0 0 24 24">
+                                        <path fill="#DFC97A" d="M12 2a2.2 2.2 0 1 0 0 4.4 2.2 2.2 0 0 0 0-4.4zm-2.5 5.5L7 11.5l2 1.5-2 9h10l-2-9 2-1.5-2.5-4h-5zM11 9h2l1 3.5-2 1.5-2-1.5L11 9z"/>
+                                    </svg>
+                                </template>
+                                <template x-if="(product.target_group || '').toLowerCase().includes('kid')">
+                                    <svg style="width:11px;height:11px;flex-shrink:0;" viewBox="0 0 24 24">
+                                        <path fill="#DFC97A" d="M12 2a3 3 0 1 0 0 6 3 3 0 0 0 0-6zm-4 7.5c-1.4 0-2.5 1.1-2.5 2.5v3.5c0 .8.7 1.5 1.5 1.5H8V21h8v-4h1c.8 0 1.5-.7 1.5-1.5V12c0-1.4-1.1-2.5-2.5-2.5h-8z"/>
+                                    </svg>
+                                </template>
+                                <template x-if="!(product.target_group || '').toLowerCase().includes('men') && !(product.target_group || '').toLowerCase().includes('women') && !(product.target_group || '').toLowerCase().includes('kid')">
+                                    <svg style="width:11px;height:11px;flex-shrink:0;" viewBox="0 0 24 24">
+                                        <path fill="#DFC97A" d="M12 2l2.4 7.2h7.6l-6.1 4.5 2.3 7.3L12 16.5 5.8 21l2.3-7.3L2 9.2h7.6z"/>
+                                    </svg>
+                                </template>
+                                <div style="width:1px;height:9px;background:rgba(223,201,122,0.35);flex-shrink:0;"></div>
+                                <span style="color:#DFC97A;font-family:ui-serif,Georgia,Cambria,'Times New Roman',serif;font-size:7.5px;font-weight:700;letter-spacing:0.16em;text-transform:uppercase;line-height:1;" x-text="product.target_group"></span>
+                            </div>
+                        </template>
                     </div>
                     <div class="flex flex-1 flex-col justify-between p-3 sm:p-4">
                         <div>
