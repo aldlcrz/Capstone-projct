@@ -55,13 +55,34 @@
                         </svg>
                     </div>
                     <div>
-                        <h1 style="font-family:ui-serif,Georgia,Cambria,serif;font-size:22px;font-weight:700;color:#1E1915;letter-spacing:-0.01em;line-height:1.2;margin:0;">
-                            Cart
+                        <h1 style="font-family:ui-serif,Georgia,Cambria,serif;font-size:22px;font-weight:700;color:#1E1915;letter-spacing:-0.01em;line-height:1.2;margin:0;white-space:nowrap;">
+                            My Shopping Cart
                         </h1>
                     </div>
                 </div>
 
-                <a href="/" class="hidden sm:inline-flex items-center gap-2 text-xs font-bold text-gray-500 hover:text-[#C0422A] transition-colors">
+                {{-- Center: Cart Item Search Bar --}}
+                <div class="flex-1 max-w-md mx-auto w-full sm:w-auto px-0 sm:px-4">
+                    <div class="relative w-full">
+                        <input type="text"
+                               x-model="searchQuery"
+                               placeholder="Search added items in cart..."
+                               style="background-color:#FFFFFF;border:1px solid #ECE3D2;border-radius:24px;box-shadow:0 2px 6px rgba(0,0,0,0.03);outline:none;font-size:12px;font-weight:600;color:#1E1915;width:100%;height:38px;padding-left:36px;padding-right:32px;"
+                               class="transition-all focus:border-[#C49520]">
+                        <svg style="position:absolute;left:12px;top:50%;transform:translateY(-50%);width:15px;height:15px;color:#A8A29E;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                        </svg>
+                        <button type="button" 
+                                x-show="searchQuery.length > 0"
+                                @click="searchQuery = ''"
+                                style="position:absolute;right:10px;top:50%;transform:translateY(-50%);background:none;border:none;color:#A8A29E;cursor:pointer;padding:2px;"
+                                class="hover:text-black">
+                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                        </button>
+                    </div>
+                </div>
+
+                <a href="/" class="hidden sm:inline-flex items-center gap-2 text-xs font-bold text-gray-500 hover:text-[#C0422A] transition-colors shrink-0">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
                     </svg>
@@ -107,6 +128,12 @@
                     </button>
                 </div>
 
+                {{-- Search No Results View --}}
+                <div x-show="searchQuery.trim() && !hasMatchingItems" style="display:none;" class="p-8 text-center bg-[#FDFBF7] border border-[#EAE2D2] rounded-2xl shadow-xs">
+                    <p class="text-xs font-bold text-[#78716C]">No items in your cart match "<span x-text="searchQuery"></span>"</p>
+                    <button type="button" @click="searchQuery = ''" class="mt-2 text-xs font-bold text-[#8C6212] hover:underline cursor-pointer">Clear Search</button>
+                </div>
+
                 {{-- Cart Items Grouped by Shop --}}
                 <div class="space-y-4">
                     @forelse($groupedCart as $shopName => $shopItems)
@@ -116,7 +143,7 @@
                         @endphp
                         <div style="background-color:#FDFBF7;border:1px solid #EAE2D2;border-radius:24px;box-shadow:0 6px 20px rgba(0,0,0,0.03);overflow:hidden;"
                              class="transition-all duration-200"
-                             x-show="items.some(i => (i.shop_name || 'Lumban Heritage Shop') === '{{ addslashes($shopName) }}')">
+                             x-show="shopMatchesSearch('{{ addslashes($shopName) }}')">
 
                             {{-- Clean Shop Header --}}
                             <div style="background-color:#FAF5EA;border-bottom:1px solid #EAE2D2;" class="px-4 py-3.5 flex items-center justify-between gap-3">
@@ -173,7 +200,7 @@
                                         }
                                     @endphp
                                     <div class="p-4 sm:p-5 transition-colors duration-150"
-                                         x-show="items.some(i => String(i.key) === '{{ addslashes($itemKey) }}')"
+                                         x-show="itemMatchesSearch('{{ addslashes($itemKey) }}')"
                                          :style="isSelected('{{ addslashes($itemKey) }}') ? 'background-color:#FAF6EE;' : 'background-color:#FDFBF7;'">
 
                                         <div class="flex gap-3.5 sm:gap-4 items-center">
@@ -459,10 +486,36 @@ function cartApp() {
         items: JSON.parse(document.getElementById('cart-root')?.dataset?.cartItems || '[]'),
         selected: [],
         allSelected: false,
+        searchQuery: '',
         showDeleteModal: false,
         deleteModalTitle: '',
         deleteModalMessage: '',
         deleteAction: null,
+
+        itemMatchesSearch(key) {
+            if (!this.searchQuery || !this.searchQuery.trim()) return true;
+            const item = this.items.find(i => String(i.key) === String(key));
+            if (!item) return false;
+            const q = this.searchQuery.toLowerCase().trim();
+            const name = (item.name || '').toLowerCase();
+            const shop = (item.shop_name || '').toLowerCase();
+            const variation = (item.variation || '').toLowerCase();
+            const size = (item.size || '').toLowerCase();
+            return name.includes(q) || shop.includes(q) || variation.includes(q) || size.includes(q);
+        },
+
+        shopMatchesSearch(shopName) {
+            if (!this.searchQuery || !this.searchQuery.trim()) {
+                return this.items.some(i => (i.shop_name || 'Lumban Heritage Shop') === shopName);
+            }
+            const shopItems = this.items.filter(i => (i.shop_name || 'Lumban Heritage Shop') === shopName);
+            return shopItems.some(i => this.itemMatchesSearch(i.key));
+        },
+
+        get hasMatchingItems() {
+            if (!this.searchQuery || !this.searchQuery.trim()) return this.items.length > 0;
+            return this.items.some(i => this.itemMatchesSearch(i.key));
+        },
 
         init() {
             // Pre-select all items on load
