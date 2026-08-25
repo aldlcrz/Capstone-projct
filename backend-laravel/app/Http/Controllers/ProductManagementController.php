@@ -31,6 +31,21 @@ class ProductManagementController extends Controller
             }
         }
         $categories = \App\Models\Category::orderBy('name', 'asc')->get();
+        foreach ($categories as $cat) {
+            $tg = $cat->target_group;
+            if (empty($tg) || !is_array($tg)) {
+                $nameLower = strtolower($cat->name);
+                if (str_contains($nameLower, 'gown') || str_contains($nameLower, 'terno') || str_contains($nameLower, 'lady') || (str_contains($nameLower, 'filipiniana') && !str_contains($nameLower, 'girl'))) {
+                    $cat->target_group = ['Women'];
+                } elseif (str_contains($nameLower, 'boy') || str_contains($nameLower, 'girl') || str_contains($nameLower, 'kid')) {
+                    $cat->target_group = ['Kids'];
+                } elseif (str_contains($nameLower, 'barong') || str_contains($nameLower, 'camisa') || str_contains($nameLower, 'polo') || str_contains($nameLower, 'men')) {
+                    $cat->target_group = ['Men'];
+                } else {
+                    $cat->target_group = [];
+                }
+            }
+        }
         return view('seller.products.create', compact('categories'));
     }
 

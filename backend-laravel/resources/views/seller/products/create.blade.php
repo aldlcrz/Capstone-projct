@@ -711,10 +711,24 @@
     })->values();
 @endphp
 
+<script id="categories-data-json" type="application/json">
+{!! json_encode($categoriesJson, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP) !!}
+</script>
+
 <script>
 let productImagesDT = new DataTransfer();
 
 function addProductManager() {
+    let parsedCats = [];
+    try {
+        const jsonEl = document.getElementById('categories-data-json');
+        if (jsonEl && jsonEl.textContent) {
+            parsedCats = JSON.parse(jsonEl.textContent);
+        }
+    } catch (e) {
+        parsedCats = [];
+    }
+
     return {
         step: 1,
         imageCount: 0,
@@ -729,7 +743,7 @@ function addProductManager() {
         isAiLoading: false,
 
         // Real-time categories state
-        categoriesList: {!! json_encode($categoriesJson) !!},
+        categoriesList: parsedCats,
         categoryFilter: 'All',
         categorySearch: '',
         isCategoryDropdownOpen: false,
