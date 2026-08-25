@@ -376,7 +376,11 @@
     position: fixed;
     right: 24px;
     bottom: 24px;
-    z-index: 99999;
+    z-index: 40;
+    transition: z-index 0.2s ease;
+}
+.lumbarong-chat-wrapper.chat-is-open {
+    z-index: 99999 !important;
 }
 .lumbarong-chat-window {
     position: fixed;
@@ -417,7 +421,7 @@
 }
 </style>
 
-<div x-data="chatWidget" class="lumbarong-chat-wrapper">
+<div x-data="chatWidget" class="lumbarong-chat-wrapper" :class="isOpen ? 'chat-is-open' : ''">
     <!-- Floating Trigger Button -->
     <button 
         type="button"

@@ -111,19 +111,26 @@
                 {{-- Saved Address (Opens Modal) --}}
                 <button type="button"
                         @click="openSavedAddresses()"
-                        style="background-color:#FFFFFF;border:1px solid #ECE3D2;border-radius:16px;padding:14px 16px;display:flex;align-items:center;justify-content:space-between;box-shadow:0 2px 6px rgba(0,0,0,0.02);cursor:pointer;width:100%;text-align:left;transition:background-color 0.2s;">
+                        style="background-color:#FFFFFF;border:1px solid #ECE3D2;border-radius:16px;padding:14px 16px;display:flex;align-items:center;justify-content:space-between;box-shadow:0 2px 6px rgba(0,0,0,0.02);cursor:pointer;width:100%;text-align:left;transition:all 0.2s;"
+                        class="hover:border-[#C49520] hover:bg-[#FDFBF7] group">
                     <div style="display:flex;align-items:center;gap:12px;">
-                        <div style="width:38px;height:38px;border-radius:11px;background-color:#FAF5EA;border:1px solid #E6D8BA;display:flex;align-items:center;justify-content:center;color:#B88728;flex-shrink:0;">
+                        <div style="width:38px;height:38px;border-radius:11px;background-color:#FAF5EA;border:1px solid #E6D8BA;display:flex;align-items:center;justify-content:center;color:#B88728;flex-shrink:0;" class="group-hover:scale-105 transition-transform">
                             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
                                 <path stroke-linecap="round" stroke-linejoin="round" d="M12 21s-7-4.35-7-10a7 7 0 1114 0c0 5.65-7 10-7 10z"/>
                                 <circle cx="12" cy="11" r="2.5" stroke-linecap="round" stroke-linejoin="round"/>
                             </svg>
                         </div>
-                        <span style="font-size:14px;font-weight:700;color:#1E1915;">Saved address</span>
+                        <div>
+                            <div style="font-size:14px;font-weight:700;color:#1E1915;">Shipping Addresses</div>
+                            <div style="font-size:11px;color:#8C827A;margin-top:1px;">Manage delivery destinations & GPS pinpoint</div>
+                        </div>
                     </div>
-                    <svg width="16" height="16" fill="none" stroke="#8C827A" viewBox="0 0 24 24" stroke-width="2.2">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/>
-                    </svg>
+                    <div style="display:flex;align-items:center;gap:6px;">
+                        <span style="font-size:10px;font-weight:800;color:#996515;background-color:#FAF5EA;border:1px solid #E6D8BA;padding:2px 8px;border-radius:6px;text-transform:uppercase;letter-spacing:0.04em;">Manage</span>
+                        <svg width="16" height="16" fill="none" stroke="#8C827A" viewBox="0 0 24 24" stroke-width="2.2" class="group-hover:translate-x-0.5 transition-transform">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/>
+                        </svg>
+                    </div>
                 </button>
 
                 {{-- Orders --}}
@@ -687,18 +694,25 @@
                         </label>
                     </div>
 
-                    <div style="display:flex;gap:10px;padding-top:14px;">
+                    <div style="display:flex;align-items:center;gap:12px;padding-top:16px;border-top:1px solid #ECE3D2;margin-top:6px;">
                         <button type="button" 
                                 @click="addEditModalOpen = false" 
-                                style="flex:1;padding:10px 0;background-color:#FAF8F5;border:1px solid #D8CEBE;color:#78716C;border-radius:12px;font-size:12px;font-weight:700;cursor:pointer;transition:all 0.2s;"
-                                class="hover:bg-[#EAE2D2]">
-                            Cancel
+                                style="flex:1;height:42px;background-color:#FAF8F5;border:1.5px solid #D8CEBE;color:#59514A;border-radius:14px;font-size:12px;font-weight:700;cursor:pointer;transition:all 0.2s;display:flex;align-items:center;justify-content:center;gap:6px;"
+                                class="hover:bg-[#EAE2D2] hover:text-[#1E1915]">
+                            <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.2"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
+                            <span>Cancel</span>
                         </button>
                         <button type="button" 
                                 @click="saveAddress()" 
                                 :disabled="savingAddress" 
-                                style="flex:1;padding:10px 0;background:linear-gradient(135deg,#1E1915,#2C241E);color:#DFC97A;border:1px solid #C49520;border-radius:12px;font-size:12px;font-weight:800;letter-spacing:0.06em;text-transform:uppercase;cursor:pointer;box-shadow:0 4px 12px rgba(0,0,0,0.15);transition:all 0.2s;"
-                                class="hover:bg-black active:scale-[0.98] disabled:opacity-50">
+                                style="flex:1.4;height:42px;background:linear-gradient(135deg,#1E1915 0%,#2D241E 50%,#1E1915 100%);color:#DFC97A;border:1.5px solid #C49520;border-radius:14px;font-size:12px;font-weight:800;letter-spacing:0.07em;text-transform:uppercase;cursor:pointer;box-shadow:0 4px 14px rgba(196,149,32,0.22);transition:all 0.2s;display:flex;align-items:center;justify-content:center;gap:8px;"
+                                class="hover:bg-black hover:scale-[1.01] active:scale-[0.98] disabled:opacity-50">
+                            <template x-if="savingAddress">
+                                <svg class="w-4 h-4 animate-spin text-[#DFC97A]" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+                            </template>
+                            <template x-if="!savingAddress">
+                                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+                            </template>
                             <span x-text="savingAddress ? 'Saving...' : 'Save Address'"></span>
                         </button>
                     </div>
