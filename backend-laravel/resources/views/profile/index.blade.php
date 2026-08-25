@@ -1,7 +1,11 @@
 @extends('layouts.app')
 
 @section('content')
-<div style="min-height:calc(100vh - 80px);background-color:#FAF8F5;padding:32px 16px;" x-data="profileApp()" x-init="init()">
+<div id="profile-root"
+     data-show-password="{{ $errors->has('current_password') || $errors->has('password') || request()->has('change_password') ? 'true' : 'false' }}"
+     style="min-height:calc(100vh - 80px);background-color:#FAF8F5;padding:32px 16px;" 
+     x-data="profileApp()" 
+     x-init="init()">
     <div style="max-width:500px;margin:0 auto;background-color:#FDFBF7;border:1px solid #EAE2D2;border-radius:28px;box-shadow:0 20px 50px rgba(0,0,0,0.06);padding:26px 24px;color:#1E1915;">
 
         {{-- Top Header with Heraldic Laurel Wreath --}}
@@ -609,7 +613,7 @@ function profileApp() {
         showEditModal: false,
         showAddressModal: false,
         showDeleteConfirmModal: false,
-        showPasswordModal: {{ $errors->has('current_password') || $errors->has('password') || request()->has('change_password') ? 'true' : 'false' }},
+        showPasswordModal: document.getElementById('profile-root')?.dataset?.showPassword === 'true',
         pendingDeleteAddressId: null,
 
         // Address management state
