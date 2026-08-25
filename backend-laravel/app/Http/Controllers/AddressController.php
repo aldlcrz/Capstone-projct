@@ -30,10 +30,14 @@ class AddressController extends Controller
             'recipientName' => ['required', 'string', 'max:255', 'regex:/^[a-zA-Z\s\.\,\'\-]+$/'],
             'phone' => ['required', 'string', 'regex:/^(09|\+639)\d{9}$/'],
             'houseNo' => 'required|string|max:255',
+            'street' => 'nullable|string|max:255',
+            'barangay' => 'nullable|string|max:255',
             'city' => 'required|string|max:255',
             'province' => 'required|string|max:255',
             'region' => 'nullable|string|max:255',
             'postalCode' => ['nullable', 'string', 'regex:/^\d{4}$/'],
+            'latitude' => 'nullable|numeric',
+            'longitude' => 'nullable|numeric',
         ], [
             'recipientName.regex' => 'Recipient name can only contain letters, spaces, hyphens, and periods (no numbers allowed).',
             'phone.regex' => 'Phone number must be a valid 11-digit mobile number starting with 09 (e.g., 09123456789).',
@@ -74,10 +78,14 @@ class AddressController extends Controller
             'recipientName' => ['required', 'string', 'max:255', 'regex:/^[a-zA-Z\s\.\,\'\-]+$/'],
             'phone' => ['required', 'string', 'regex:/^(09|\+639)\d{9}$/'],
             'houseNo' => 'required|string|max:255',
+            'street' => 'nullable|string|max:255',
+            'barangay' => 'nullable|string|max:255',
             'city' => 'required|string|max:255',
             'province' => 'required|string|max:255',
             'region' => 'nullable|string|max:255',
             'postalCode' => ['nullable', 'string', 'regex:/^\d{4}$/'],
+            'latitude' => 'nullable|numeric',
+            'longitude' => 'nullable|numeric',
         ], [
             'recipientName.regex' => 'Recipient name can only contain letters, spaces, hyphens, and periods (no numbers allowed).',
             'phone.regex' => 'Phone number must be a valid 11-digit mobile number starting with 09 (e.g., 09123456789).',
@@ -87,6 +95,12 @@ class AddressController extends Controller
         if ($request->isDefault && !$address->isDefault) {
             Address::where('userId', Auth::id())->update(['isDefault' => false]);
         }
+
+        $validated['street'] = trim($request->street ?? '');
+        $validated['barangay'] = trim($request->barangay ?? '');
+        $validated['latitude'] = $request->latitude;
+        $validated['longitude'] = $request->longitude;
+        $validated['isDefault'] = $request->isDefault ?? false;
 
         $address->update($validated);
 

@@ -1,6 +1,9 @@
 @extends('layouts.app')
 
 @section('content')
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin=""/>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
+
 <div id="profile-root"
      data-show-password="{{ $errors->has('current_password') || $errors->has('password') || request()->has('change_password') ? 'true' : 'false' }}"
      style="min-height:calc(100vh - 80px);background-color:#FAF8F5;padding:32px 16px;" 
@@ -450,6 +453,57 @@
                     <h4 class="text-sm font-extrabold text-gray-900" x-text="editAddressId ? 'Edit Address' : 'Add New Address'"></h4>
 
                     <div class="space-y-3 text-xs">
+                        {{-- Real-Time Interactive Map Location Pinpointer --}}
+                        <div class="space-y-2 pb-3 border-b border-gray-150">
+                            <div class="flex items-center justify-between gap-2">
+                                <label class="font-bold text-gray-800 block text-[11px] uppercase tracking-wider">
+                                    Pin Exact Delivery Location
+                                </label>
+                                <button type="button"
+                                        @click="locateUserGps()"
+                                        :disabled="isLocatingGps"
+                                        class="inline-flex items-center gap-1.5 text-[10px] font-bold text-[#8C6212] bg-[#FAF5EA] hover:bg-[#EAE2D2] border border-[#E6D8BA] px-2.5 py-1 rounded-lg transition-all cursor-pointer disabled:opacity-50 shadow-xs">
+                                    <template x-if="isLocatingGps">
+                                        <svg class="w-3 h-3 animate-spin text-[#8C6212]" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+                                    </template>
+                                    <template x-if="!isLocatingGps">
+                                        <svg class="w-3 h-3 text-[#8C6212]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+                                    </template>
+                                    <span x-text="isLocatingGps ? 'Locating GPS...' : 'Use Current Location'"></span>
+                                </button>
+                            </div>
+
+                            {{-- Map Search Input --}}
+                            <div class="relative">
+                                <input type="text"
+                                       x-model="mapSearchQuery"
+                                       @keydown.enter.prevent="searchMapLocation()"
+                                       placeholder="Search landmark, street, or city to drop pin..."
+                                       class="w-full h-8 pl-8 pr-16 bg-gray-50 border border-gray-200 rounded-xl text-[11px] outline-none focus:border-[#C0422A] transition-all">
+                                <svg class="w-3.5 h-3.5 text-gray-400 absolute left-2.5 top-1/2 -translate-y-1/2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+                                <button type="button"
+                                        @click="searchMapLocation()"
+                                        :disabled="pinSearching"
+                                        class="absolute right-1.5 top-1/2 -translate-y-1/2 px-2 py-0.5 bg-[#1E1915] text-[#DFC97A] text-[9px] font-bold uppercase tracking-wider rounded-lg hover:bg-black transition-all cursor-pointer">
+                                    <span x-text="pinSearching ? '...' : 'Search'"></span>
+                                </button>
+                            </div>
+
+                            {{-- Leaflet Map Container --}}
+                            <div style="height:185px;border-radius:14px;overflow:hidden;border:1px solid #ECE3D2;position:relative;z-index:10;box-shadow:inset 0 1px 4px rgba(0,0,0,0.06);"
+                                 x-ref="addressMapContainer"></div>
+
+                            {{-- Detected Location Bar --}}
+                            <div class="p-2.5 bg-[#FAF8F5] border border-[#ECE3D2] rounded-xl flex items-center justify-between gap-2 text-[10px]">
+                                <div class="flex items-center gap-1.5 min-w-0">
+                                    <span class="w-2 h-2 rounded-full bg-emerald-500 shrink-0 animate-pulse"></span>
+                                    <span class="text-[#78716C] font-medium truncate" x-text="detectedLocationName || 'Drag pin or tap on map to lock coordinates'"></span>
+                                </div>
+                                <span class="shrink-0 px-2 py-0.5 bg-[#1E1915] text-[#DFC97A] text-[9px] font-black rounded-md uppercase tracking-wider"
+                                      x-text="addressForm.latitude && addressForm.longitude ? 'Pin Locked' : 'Set Pin'"></span>
+                            </div>
+                        </div>
+
                         {{-- Full Name --}}
                         <div>
                             <label class="font-bold text-gray-700 mb-1 block">Full Name *</label>
@@ -624,7 +678,15 @@ function profileApp() {
         editAddressId: null,
         addressFormError: '',
         fieldErrors: { recipientName: '', phone: '', location: '', houseNo: '', postalCode: '' },
-        addressForm: { recipientName:'', phone:'', houseNo:'', street:'', barangay:'', city:'', province:'', region:'', postalCode:'', isDefault: false },
+        addressForm: { recipientName:'', phone:'', houseNo:'', street:'', barangay:'', city:'', province:'', region:'', postalCode:'', latitude: 14.2952, longitude: 121.4647, isDefault: false },
+
+        // Real-Time Map Location Picker state
+        map: null,
+        marker: null,
+        mapSearchQuery: '',
+        pinSearching: false,
+        isLocatingGps: false,
+        detectedLocationName: '',
 
         // Location picker variables
         locationDropdownOpen: false,
@@ -677,7 +739,20 @@ function profileApp() {
 
         openAddAddress() {
             this.editAddressId = null;
-            this.addressForm = { recipientName:'', phone:'', houseNo:'', street:'', barangay:'', city:'', province:'', region:'', postalCode:'', isDefault: false };
+            this.addressForm = { 
+                recipientName:'', 
+                phone:'', 
+                houseNo:'', 
+                street:'', 
+                barangay:'', 
+                city:'', 
+                province:'', 
+                region:'', 
+                postalCode:'', 
+                latitude: 14.2952, 
+                longitude: 121.4647, 
+                isDefault: false 
+            };
             this.addressFormError = '';
             this.fieldErrors = { recipientName: '', phone: '', location: '', houseNo: '', postalCode: '' };
             this.selectedRegion = null;
@@ -687,12 +762,21 @@ function profileApp() {
             this.activeTab = 'region';
             this.locationSearch = '';
             this.locationDropdownOpen = false;
+            this.mapSearchQuery = '';
+            this.detectedLocationName = '';
             this.addEditModalOpen = true;
+            this.initAddressMap(14.2952, 121.4647);
         },
 
         openEditAddress(addr) {
             this.editAddressId = addr.id;
-            this.addressForm = { ...addr };
+            const lat = parseFloat(addr.latitude) || 14.2952;
+            const lng = parseFloat(addr.longitude) || 121.4647;
+            this.addressForm = { 
+                ...addr,
+                latitude: lat,
+                longitude: lng
+            };
             this.addressFormError = '';
             this.fieldErrors = { recipientName: '', phone: '', location: '', houseNo: '', postalCode: '' };
             this.selectedRegion = addr.region ? { name: addr.region } : null;
@@ -702,7 +786,10 @@ function profileApp() {
             this.activeTab = 'region';
             this.locationSearch = '';
             this.locationDropdownOpen = false;
+            this.mapSearchQuery = '';
+            this.detectedLocationName = '';
             this.addEditModalOpen = true;
+            this.initAddressMap(lat, lng);
         },
 
         async saveAddress() {
@@ -869,6 +956,7 @@ function profileApp() {
             this.locationSearch = '';
             this.activeTab = 'barangay';
             await this.loadBarangays(city.code);
+            this.syncMapToSelectedLocation();
         },
 
         async loadBarangays(cityCode) {
@@ -885,6 +973,7 @@ function profileApp() {
             this.addressForm.barangay = barangay.name;
             this.locationDropdownOpen = false;
             this.locationSearch = '';
+            this.syncMapToSelectedLocation();
         },
 
         filteredGeoList(list) {
@@ -898,6 +987,177 @@ function profileApp() {
                 return [this.addressForm.region, this.addressForm.province, this.addressForm.city, this.addressForm.barangay].filter(Boolean).join(', ');
             }
             return '';
+        },
+
+        // Real-Time Map Location Picker Methods
+        initAddressMap(lat = 14.2952, lng = 121.4647) {
+            this.$nextTick(() => {
+                if (!this.$refs.addressMapContainer) return;
+
+                if (this.map) {
+                    this.map.setView([lat, lng], 15);
+                    if (this.marker) {
+                        this.marker.setLatLng([lat, lng]);
+                    }
+                    setTimeout(() => {
+                        if (this.map) this.map.invalidateSize();
+                    }, 300);
+                    return;
+                }
+
+                if (typeof L === 'undefined') {
+                    console.warn('Leaflet library is still loading...');
+                    return;
+                }
+
+                this.map = L.map(this.$refs.addressMapContainer, {
+                    attributionControl: false
+                }).setView([lat, lng], 15);
+
+                L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                    maxZoom: 19
+                }).addTo(this.map);
+
+                const customPinIcon = L.divIcon({
+                    className: 'lumbarong-pin-icon',
+                    html: `
+                        <div style="position:relative;transform:translate(-50%, -100%);">
+                            <div style="width:32px;height:32px;background:#1E1915;border:2px solid #DFC97A;border-radius:50% 50% 50% 0;transform:rotate(-45deg);display:flex;align-items:center;justify-content:center;box-shadow:0 4px 10px rgba(0,0,0,0.35);">
+                                <span style="transform:rotate(45deg);color:#DFC97A;font-size:11px;font-weight:900;">✦</span>
+                            </div>
+                            <div style="width:8px;height:4px;background:rgba(0,0,0,0.3);border-radius:50%;margin:-2px auto 0 auto;filter:blur(1px);"></div>
+                        </div>
+                    `,
+                    iconSize: [0, 0],
+                    iconAnchor: [0, 0]
+                });
+
+                this.marker = L.marker([lat, lng], {
+                    draggable: true,
+                    icon: customPinIcon
+                }).addTo(this.map);
+
+                this.map.on('click', (e) => {
+                    this.updatePinLocation(e.latlng.lat, e.latlng.lng);
+                });
+
+                this.marker.on('dragend', (e) => {
+                    const pos = e.target.getLatLng();
+                    this.updatePinLocation(pos.lat, pos.lng);
+                });
+
+                this.reverseGeocode(lat, lng);
+
+                setTimeout(() => {
+                    if (this.map) this.map.invalidateSize();
+                }, 350);
+            });
+        },
+
+        updatePinLocation(lat, lng, doReverseGeocode = true) {
+            this.addressForm.latitude = lat;
+            this.addressForm.longitude = lng;
+            if (this.marker) {
+                this.marker.setLatLng([lat, lng]);
+            }
+            if (this.map) {
+                this.map.panTo([lat, lng]);
+            }
+            if (doReverseGeocode) {
+                this.reverseGeocode(lat, lng);
+            }
+        },
+
+        async locateUserGps() {
+            if (!navigator.geolocation) {
+                alert('Geolocation is not supported by your browser.');
+                return;
+            }
+            this.isLocatingGps = true;
+            navigator.geolocation.getCurrentPosition(
+                (pos) => {
+                    this.isLocatingGps = false;
+                    const lat = pos.coords.latitude;
+                    const lng = pos.coords.longitude;
+                    this.updatePinLocation(lat, lng);
+                    if (this.map) {
+                        this.map.setView([lat, lng], 16);
+                    }
+                },
+                (err) => {
+                    this.isLocatingGps = false;
+                    alert('Unable to retrieve your location. Please check browser GPS permissions.');
+                },
+                { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+            );
+        },
+
+        async searchMapLocation() {
+            if (!this.mapSearchQuery.trim()) return;
+            this.pinSearching = true;
+            try {
+                const query = encodeURIComponent(this.mapSearchQuery.trim() + ', Philippines');
+                const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${query}&limit=1`);
+                const data = await res.json();
+                if (data && data.length > 0) {
+                    const loc = data[0];
+                    const lat = parseFloat(loc.lat);
+                    const lng = parseFloat(loc.lon);
+                    this.updatePinLocation(lat, lng);
+                    if (this.map) {
+                        this.map.setView([lat, lng], 16);
+                    }
+                } else {
+                    alert('Location not found. Please try a different landmark or street.');
+                }
+            } catch(e) {
+                console.error(e);
+            }
+            this.pinSearching = false;
+        },
+
+        async reverseGeocode(lat, lon) {
+            try {
+                const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}&addressdetails=1&accept-language=en-US`);
+                const data = await res.json();
+                if (data) {
+                    this.detectedLocationName = data.display_name || '';
+                    const addr = data.address || {};
+                    // Auto-fill house/street if empty
+                    if (!this.addressForm.houseNo && (addr.road || addr.pedestrian || addr.suburb)) {
+                        this.addressForm.houseNo = [addr.house_number, addr.road || addr.pedestrian || addr.suburb].filter(Boolean).join(' ');
+                    }
+                    if (!this.addressForm.postalCode && addr.postcode && /^\d{4}$/.test(addr.postcode)) {
+                        this.addressForm.postalCode = addr.postcode;
+                    }
+                }
+            } catch(e) {
+                console.error(e);
+            }
+        },
+
+        async syncMapToSelectedLocation() {
+            const parts = [
+                this.addressForm.barangay,
+                this.addressForm.city,
+                this.addressForm.province,
+                'Philippines'
+            ].filter(Boolean);
+            if (parts.length <= 1) return;
+            try {
+                const query = encodeURIComponent(parts.join(', '));
+                const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${query}&limit=1`);
+                const data = await res.json();
+                if (data && data.length > 0) {
+                    const loc = data[0];
+                    const lat = parseFloat(loc.lat);
+                    const lng = parseFloat(loc.lon);
+                    this.updatePinLocation(lat, lng, false);
+                    if (this.map) {
+                        this.map.setView([lat, lng], 15);
+                    }
+                }
+            } catch(e) {}
         }
     };
 }
