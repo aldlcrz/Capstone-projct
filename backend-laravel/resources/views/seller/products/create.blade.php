@@ -179,33 +179,100 @@
                             </span>
                             <span class="text-[9px] text-gray-400 font-medium">Select tag</span>
                         </div>
-                        <div class="flex items-center gap-1.5 overflow-x-auto pb-1 no-scrollbar">
+
+                        <style>
+                            .tag-chip {
+                                display: inline-flex;
+                                align-items: center;
+                                gap: 6px;
+                                padding: 6px 13px;
+                                border-radius: 12px;
+                                font-size: 11px;
+                                font-weight: 700;
+                                text-transform: uppercase;
+                                letter-spacing: 0.05em;
+                                cursor: pointer;
+                                transition: all 0.15s ease;
+                                border: 1.5px solid transparent;
+                                user-select: none;
+                            }
+                            .tag-chip-all {
+                                background-color: #f3f4f6;
+                                color: #374151;
+                                border-color: #e5e7eb;
+                            }
+                            .tag-chip-all.active {
+                                background-color: #111827 !important;
+                                color: #ffffff !important;
+                                border-color: #111827 !important;
+                                box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+                            }
+                            .tag-chip-men {
+                                background-color: #eff6ff;
+                                color: #1d4ed8;
+                                border-color: #bfdbfe;
+                            }
+                            .tag-chip-men.active {
+                                background-color: #2563eb !important;
+                                color: #ffffff !important;
+                                border-color: #2563eb !important;
+                                box-shadow: 0 2px 4px rgba(37,99,235,0.25);
+                            }
+                            .tag-chip-women {
+                                background-color: #fdf2f8;
+                                color: #be185d;
+                                border-color: #fbcfe8;
+                            }
+                            .tag-chip-women.active {
+                                background-color: #db2777 !important;
+                                color: #ffffff !important;
+                                border-color: #db2777 !important;
+                                box-shadow: 0 2px 4px rgba(219,39,119,0.25);
+                            }
+                            .tag-chip-kids {
+                                background-color: #fffbeb;
+                                color: #b45309;
+                                border-color: #fde68a;
+                            }
+                            .tag-chip-kids.active {
+                                background-color: #d97706 !important;
+                                color: #ffffff !important;
+                                border-color: #d97706 !important;
+                                box-shadow: 0 2px 4px rgba(217,119,6,0.25);
+                            }
+                        </style>
+
+                        <div class="flex items-center gap-2 overflow-x-auto pb-1 no-scrollbar">
                             <button type="button" 
                                     @click="filterByTag('All')"
-                                    :class="categoryFilter === 'All' ? 'bg-black text-white border-black shadow-xs' : 'bg-gray-100 text-gray-700 border-gray-200 hover:bg-gray-200'"
-                                    class="px-3 py-1.5 rounded-xl text-[10px] font-bold uppercase tracking-wider transition-all shrink-0 cursor-pointer border">
-                                All (<span x-text="categoriesList ? categoriesList.length : 0"></span>)
+                                    :class="categoryFilter === 'All' ? 'active' : ''"
+                                    class="tag-chip tag-chip-all">
+                                <span>All</span>
+                                <span style="font-size: 10px; opacity: 0.85;" x-text="'(' + (categoriesList ? categoriesList.length : 0) + ')'"></span>
                             </button>
+
                             <button type="button" 
                                     @click="filterByTag('Men')"
-                                    :class="categoryFilter === 'Men' ? 'bg-blue-600 text-white border-blue-600 shadow-xs' : 'bg-blue-50 text-blue-700 border-blue-200 hover:bg-blue-100'"
-                                    class="px-3 py-1.5 rounded-xl text-[10px] font-bold uppercase tracking-wider transition-all shrink-0 flex items-center gap-1.5 cursor-pointer border">
+                                    :class="categoryFilter === 'Men' ? 'active' : ''"
+                                    class="tag-chip tag-chip-men">
                                 <span>👔 Men</span>
-                                <span class="text-[9px] opacity-80" x-text="'(' + getTagCount('Men') + ')'"></span>
+                                <span style="font-size: 10px; opacity: 0.85;" x-text="'(' + getTagCount('Men') + ')'"></span>
                             </button>
+
                             <button type="button" 
                                     @click="filterByTag('Women')"
-                                    :class="categoryFilter === 'Women' ? 'bg-[#e11d48] text-white border-[#e11d48] shadow-xs' : 'bg-pink-50 text-pink-700 border-pink-200 hover:bg-pink-100'"
-                                    class="px-3 py-1.5 rounded-xl text-[10px] font-bold uppercase tracking-wider transition-all shrink-0 flex items-center gap-1.5 cursor-pointer border">
+                                    :class="categoryFilter === 'Women' ? 'active' : ''"
+                                    class="tag-chip tag-chip-women">
                                 <span>👗 Women</span>
-                                <span class="text-[9px] opacity-80" x-text="'(' + getTagCount('Women') + ')'"></span>
+                                <span style="font-size: 10px; opacity: 0.85;" x-text="'(' + getTagCount('Women') + ')'"></span>
                             </button>
+
                             <button type="button" 
                                     @click="filterByTag('Kids')"
-                                    :class="categoryFilter === 'Kids' ? 'bg-amber-600 text-white border-amber-600 shadow-xs' : 'bg-amber-50 text-amber-700 border-amber-200 hover:bg-amber-100'"
-                                    class="px-3 py-1.5 rounded-xl text-[10px] font-bold uppercase tracking-wider transition-all shrink-0 flex items-center gap-1.5 cursor-pointer border">
+                                    :class="categoryFilter === 'Kids' ? 'active' : ''"
+                                    class="tag-chip tag-chip-kids">
                                 <span>🧸 Kids</span>
-                                <span class="text-[9px] opacity-80" x-text="'(' + getTagCount('Kids') + ')'"></span>
+                                <span style="font-size: 10px; opacity: 0.85;" x-text="'(' + getTagCount('Kids') + ')'"></span>
                             </button>
                         </div>
                     </div>
