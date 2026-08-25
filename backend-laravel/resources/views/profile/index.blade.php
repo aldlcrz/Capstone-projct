@@ -462,35 +462,40 @@
                                 <button type="button"
                                         @click="locateUserGps()"
                                         :disabled="isLocatingGps"
-                                        class="inline-flex items-center gap-1.5 text-[10px] font-bold text-[#8C6212] bg-[#FAF5EA] hover:bg-[#EAE2D2] border border-[#E6D8BA] px-2.5 py-1 rounded-lg transition-all cursor-pointer disabled:opacity-50 shadow-xs">
+                                        style="background-color:#FAF5EA;border:1px solid #E6D8BA;color:#8C6212;padding:5px 10px;border-radius:10px;font-size:11px;font-weight:700;display:inline-flex;align-items:center;gap:6px;cursor:pointer;transition:all 0.2s;white-space:nowrap;"
+                                        class="hover:bg-[#EAE2D2] disabled:opacity-50 shadow-xs">
                                     <template x-if="isLocatingGps">
-                                        <svg class="w-3 h-3 animate-spin text-[#8C6212]" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+                                        <svg class="w-3.5 h-3.5 animate-spin text-[#8C6212]" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
                                     </template>
                                     <template x-if="!isLocatingGps">
-                                        <svg class="w-3 h-3 text-[#8C6212]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+                                        <svg class="w-3.5 h-3.5 text-[#8C6212]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
                                     </template>
                                     <span x-text="isLocatingGps ? 'Locating GPS...' : 'Use Current Location'"></span>
                                 </button>
                             </div>
 
                             {{-- Map Search Input --}}
-                            <div class="relative">
+                            <div style="position:relative;display:flex;align-items:center;width:100%;">
+                                <div style="position:absolute;left:11px;display:flex;align-items:center;pointer-events:none;color:#8C827A;z-index:5;">
+                                    <svg width="15" height="15" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+                                </div>
                                 <input type="text"
                                        x-model="mapSearchQuery"
                                        @keydown.enter.prevent="searchMapLocation()"
-                                       placeholder="Search landmark, street, or city to drop pin..."
-                                       class="w-full h-8 pl-8 pr-16 bg-gray-50 border border-gray-200 rounded-xl text-[11px] outline-none focus:border-[#C0422A] transition-all">
-                                <svg class="w-3.5 h-3.5 text-gray-400 absolute left-2.5 top-1/2 -translate-y-1/2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+                                       placeholder="Search street, barangay, or landmark to drop pin..."
+                                       style="width:100%;height:38px;padding-left:36px;padding-right:80px;background-color:#FFFFFF;border:1px solid #D8CEBE;border-radius:12px;font-size:12px;color:#1E1915;outline:none;box-shadow:inset 0 1px 2px rgba(0,0,0,0.03);transition:border-color 0.2s;"
+                                       class="focus:border-[#996515]">
                                 <button type="button"
                                         @click="searchMapLocation()"
                                         :disabled="pinSearching"
-                                        class="absolute right-1.5 top-1/2 -translate-y-1/2 px-2 py-0.5 bg-[#1E1915] text-[#DFC97A] text-[9px] font-bold uppercase tracking-wider rounded-lg hover:bg-black transition-all cursor-pointer">
+                                        style="position:absolute;right:4px;height:30px;padding:0 12px;background-color:#1E1915;color:#DFC97A;border:none;border-radius:8px;font-size:10px;font-weight:800;letter-spacing:0.08em;text-transform:uppercase;cursor:pointer;transition:all 0.2s;display:flex;align-items:center;justify-content:center;z-index:5;"
+                                        class="hover:bg-black disabled:opacity-50">
                                     <span x-text="pinSearching ? '...' : 'Search'"></span>
                                 </button>
                             </div>
 
                             {{-- Leaflet Map Container --}}
-                            <div style="height:185px;border-radius:14px;overflow:hidden;border:1px solid #ECE3D2;position:relative;z-index:10;box-shadow:inset 0 1px 4px rgba(0,0,0,0.06);"
+                            <div style="height:190px;border-radius:14px;overflow:hidden;border:1px solid #ECE3D2;position:relative;z-index:10;box-shadow:inset 0 1px 4px rgba(0,0,0,0.06);"
                                  x-ref="addressMapContainer"></div>
 
                             {{-- Detected Location Bar --}}
@@ -1021,15 +1026,16 @@ function profileApp() {
                 const customPinIcon = L.divIcon({
                     className: 'lumbarong-pin-icon',
                     html: `
-                        <div style="position:relative;transform:translate(-50%, -100%);">
-                            <div style="width:32px;height:32px;background:#1E1915;border:2px solid #DFC97A;border-radius:50% 50% 50% 0;transform:rotate(-45deg);display:flex;align-items:center;justify-content:center;box-shadow:0 4px 10px rgba(0,0,0,0.35);">
+                        <div style="position:relative;width:32px;height:32px;display:flex;align-items:center;justify-content:center;">
+                            <div style="width:28px;height:28px;background:#1E1915;border:2.5px solid #DFC97A;border-radius:50% 50% 50% 0;transform:rotate(-45deg);display:flex;align-items:center;justify-content:center;box-shadow:0 4px 10px rgba(0,0,0,0.35);">
                                 <span style="transform:rotate(45deg);color:#DFC97A;font-size:11px;font-weight:900;">✦</span>
                             </div>
-                            <div style="width:8px;height:4px;background:rgba(0,0,0,0.3);border-radius:50%;margin:-2px auto 0 auto;filter:blur(1px);"></div>
+                            <div style="position:absolute;bottom:-6px;width:10px;height:4px;background:rgba(0,0,0,0.25);border-radius:50%;filter:blur(1px);"></div>
                         </div>
                     `,
-                    iconSize: [0, 0],
-                    iconAnchor: [0, 0]
+                    iconSize: [32, 32],
+                    iconAnchor: [16, 32],
+                    popupAnchor: [0, -32]
                 });
 
                 this.marker = L.marker([lat, lng], {
@@ -1122,17 +1128,120 @@ function profileApp() {
                 const data = await res.json();
                 if (data) {
                     this.detectedLocationName = data.display_name || '';
-                    const addr = data.address || {};
-                    // Auto-fill house/street if empty
-                    if (!this.addressForm.houseNo && (addr.road || addr.pedestrian || addr.suburb)) {
-                        this.addressForm.houseNo = [addr.house_number, addr.road || addr.pedestrian || addr.suburb].filter(Boolean).join(' ');
-                    }
-                    if (!this.addressForm.postalCode && addr.postcode && /^\d{4}$/.test(addr.postcode)) {
-                        this.addressForm.postalCode = addr.postcode;
+                    if (data.address) {
+                        await this.autoFillFromGeocode(data.address);
                     }
                 }
             } catch(e) {
                 console.error(e);
+            }
+        },
+
+        async autoFillFromGeocode(addr) {
+            if (!addr) return;
+
+            const rawRegion = addr.region || addr.state || '';
+            const rawProvince = addr.province || addr.state_district || addr.county || '';
+            const rawCity = addr.city || addr.town || addr.municipality || addr.city_district || '';
+            const rawBarangay = addr.village || addr.suburb || addr.neighbourhood || addr.quarter || addr.residential || '';
+            const rawStreet = [addr.house_number, addr.road || addr.pedestrian || addr.highway].filter(Boolean).join(' ');
+            const rawPostal = addr.postcode || '';
+
+            // Auto-fill Street/House No if empty or updated
+            if (rawStreet) {
+                this.addressForm.houseNo = rawStreet;
+                this.fieldErrors.houseNo = '';
+            }
+            // Auto-fill Postal code
+            if (rawPostal && /^\d{4}$/.test(rawPostal)) {
+                this.addressForm.postalCode = rawPostal;
+                this.fieldErrors.postalCode = '';
+            }
+
+            // Direct fallback fill first
+            if (rawProvince) this.addressForm.province = rawProvince;
+            if (rawCity) this.addressForm.city = rawCity;
+            if (rawBarangay) this.addressForm.barangay = rawBarangay;
+            if (rawRegion) this.addressForm.region = rawRegion;
+
+            // Match with official PSGC data
+            try {
+                if (!this.regionsList || this.regionsList.length === 0) {
+                    await this.loadRegions();
+                }
+
+                const normalize = (str) => (str || '').toLowerCase().replace(/[^a-z0-9]/g, '');
+
+                const normRegion = normalize(rawRegion);
+                const normProv = normalize(rawProvince);
+                const normCity = normalize(rawCity);
+                const normBgy = normalize(rawBarangay);
+
+                // Match Region
+                let matchedRegion = this.regionsList.find(r => {
+                    const nr = normalize(r.name);
+                    return (normRegion && (nr.includes(normRegion) || normRegion.includes(nr))) ||
+                           (normProv && nr.includes(normProv));
+                });
+
+                // Special handling for NCR / Metro Manila
+                if (!matchedRegion && (normRegion.includes('ncr') || normRegion.includes('metromanila') || normRegion.includes('nationalcapital') || normProv.includes('metromanila') || normCity.includes('manila') || normCity.includes('quezoncity'))) {
+                    matchedRegion = this.regionsList.find(r => r.code === '130000000');
+                }
+
+                if (matchedRegion) {
+                    this.selectedRegion = matchedRegion;
+                    this.addressForm.region = matchedRegion.name;
+
+                    if (matchedRegion.code === '130000000') {
+                        this.hasProvinces = false;
+                        this.selectedProvince = { code: '130000000', name: 'Metro Manila' };
+                        this.addressForm.province = 'Metro Manila';
+                        await this.loadNCRCities();
+                    } else {
+                        this.hasProvinces = true;
+                        await this.loadProvinces(matchedRegion.code);
+
+                        // Match Province
+                        let matchedProv = this.provincesList.find(p => {
+                            const np = normalize(p.name);
+                            return normProv && (np.includes(normProv) || normProv.includes(np));
+                        });
+                        if (matchedProv) {
+                            this.selectedProvince = matchedProv;
+                            this.addressForm.province = matchedProv.name;
+                            await this.loadCities(matchedProv.code);
+                        }
+                    }
+
+                    // Match City
+                    if (this.citiesList && this.citiesList.length > 0) {
+                        let matchedCity = this.citiesList.find(c => {
+                            const nc = normalize(c.name);
+                            return normCity && (nc.includes(normCity) || normCity.includes(nc));
+                        });
+                        if (matchedCity) {
+                            this.selectedCity = matchedCity;
+                            this.addressForm.city = matchedCity.name;
+                            await this.loadBarangays(matchedCity.code);
+
+                            // Match Barangay
+                            if (this.barangaysList && this.barangaysList.length > 0) {
+                                let matchedBgy = this.barangaysList.find(b => {
+                                    const nb = normalize(b.name);
+                                    return normBgy && (nb.includes(normBgy) || normBgy.includes(nb));
+                                });
+                                if (matchedBgy) {
+                                    this.selectedBarangay = matchedBgy;
+                                    this.addressForm.barangay = matchedBgy.name;
+                                }
+                            }
+                        }
+                    }
+                }
+                this.fieldErrors.location = '';
+            } catch(e) {
+                console.error('PSGC autofill match error:', e);
             }
         },
 
