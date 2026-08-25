@@ -433,20 +433,27 @@
                         </div>
 
                         {{-- Variant Items List --}}
-                        <div class="space-y-2.5">
+                        <div class="space-y-3">
                             <template x-for="(variant, index) in variants" :key="index">
-                                <div class="p-3 bg-gray-50/90 border border-gray-200/90 rounded-xl flex items-center gap-3 transition-all hover:bg-gray-50">
+                                <div class="p-3.5 sm:p-4 bg-white border border-gray-200 rounded-2xl flex items-center gap-3.5 transition-all hover:border-gray-300 shadow-2xs">
                                     
-                                    {{-- Variant Image Upload Box --}}
+                                    {{-- Highly Visible Variant Image Upload Box --}}
                                     <div class="relative shrink-0">
-                                        <label class="w-13 h-13 rounded-xl border-2 border-dashed border-gray-300 hover:border-[#C0420A] bg-white flex flex-col items-center justify-center cursor-pointer overflow-hidden transition-all relative group/img shadow-2xs">
+                                        <label class="w-18 h-18 sm:w-20 sm:h-20 rounded-2xl border-2 border-dashed border-[#C0420A]/40 bg-orange-50/60 hover:bg-orange-100/70 hover:border-[#C0420A] flex flex-col items-center justify-center cursor-pointer overflow-hidden transition-all relative group/img shadow-2xs select-none">
                                             <template x-if="variant.imagePreview">
-                                                <img :src="variant.imagePreview" class="w-full h-full object-cover">
+                                                <div class="relative w-full h-full">
+                                                    <img :src="variant.imagePreview" class="w-full h-full object-cover rounded-xl">
+                                                    <div class="absolute inset-0 bg-black/30 opacity-0 group-hover/img:opacity-100 transition-opacity flex items-center justify-center text-white text-[9px] font-bold uppercase tracking-wider">
+                                                        Change
+                                                    </div>
+                                                </div>
                                             </template>
                                             <template x-if="!variant.imagePreview">
-                                                <div class="flex flex-col items-center justify-center text-gray-400">
-                                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
-                                                    <span class="text-[7px] font-black uppercase tracking-wider mt-0.5">Image</span>
+                                                <div class="flex flex-col items-center justify-center text-center p-1">
+                                                    <div class="w-7 h-7 rounded-full bg-[#C0420A]/10 flex items-center justify-center text-[#C0420A] mb-0.5 group-hover/img:scale-110 transition-transform">
+                                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                                                    </div>
+                                                    <span class="text-[9px] font-extrabold text-[#C0420A] uppercase tracking-wider">+ Photo</span>
                                                 </div>
                                             </template>
                                             <input type="file" 
@@ -459,22 +466,25 @@
 
                                     {{-- Variant Name Input --}}
                                     <div class="flex-1 min-w-0">
-                                        <label class="text-[9px] font-bold uppercase tracking-widest text-gray-400 block mb-1">
-                                            Variant Name <span class="text-[#C0420A]">*</span>
-                                        </label>
+                                        <div class="flex items-center justify-between mb-1">
+                                            <label class="text-[10px] font-black uppercase tracking-wider text-gray-700">
+                                                Variant Name <span class="text-[#C0420A]">*</span>
+                                            </label>
+                                            <span class="text-[9px] text-gray-400 font-medium hidden sm:inline">Color, fabric, or style</span>
+                                        </div>
                                         <input type="text" 
                                                name="variant_names[]" 
                                                x-model="variant.name" 
-                                               placeholder="e.g. Off-White, Ivory, Navy Blue..." 
-                                               class="w-full px-3 py-2 bg-white border border-gray-200 rounded-lg text-xs font-bold text-gray-800 outline-none focus:border-[#C0420A] transition-all">
+                                               placeholder="e.g. Off-White, Classic Ivory, Navy Blue..." 
+                                               class="w-full px-3.5 py-2.5 bg-gray-50/80 border border-gray-200 rounded-xl text-xs font-bold text-gray-900 outline-none focus:border-[#C0420A] focus:bg-white transition-all shadow-2xs">
                                     </div>
 
                                     {{-- Delete Variant Button --}}
                                     <button type="button" 
                                             @click="removeVariantRow(index)" 
-                                            class="w-8 h-8 rounded-lg text-gray-400 hover:text-red-600 hover:bg-red-50 flex items-center justify-center transition-colors shrink-0 cursor-pointer" 
+                                            class="w-9 h-9 rounded-xl text-gray-400 hover:text-red-600 hover:bg-red-50 flex items-center justify-center transition-colors shrink-0 cursor-pointer" 
                                             title="Remove Variant">
-                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+                                        <svg class="w-4.5 h-4.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
                                     </button>
                                 </div>
                             </template>
