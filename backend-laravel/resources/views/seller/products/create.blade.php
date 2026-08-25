@@ -505,6 +505,13 @@
                                     </button>
                                 </div>
                             </template>
+
+                            <template x-if="variants.length === 0">
+                                <div class="py-5 text-center bg-gray-50/80 border border-dashed border-gray-200 rounded-2xl space-y-1">
+                                    <p class="text-xs font-bold text-gray-500">No product variants added yet.</p>
+                                    <p class="text-[10px] text-gray-400">Click "+ Add Variant" below to add a variant row.</p>
+                                </div>
+                            </template>
                         </div>
 
                         {{-- Add Variant Button --}}
@@ -848,7 +855,28 @@
             'image' => $c->getImageUrl(),
         ];
     })->values();
+
+    $currentUser = auth()->user();
+    $productInitData = [
+        'name'             => (string) old('name', ''),
+        'categoryId'       => (string) old('CategoryId', ''),
+        'targetGroup'      => (string) old('target_group', 'Men'),
+        'fabricType'       => (string) old('fabric_type', '100% Piña'),
+        'price'            => (string) old('price', ''),
+        'description'      => (string) old('description', ''),
+        'csrfToken'        => (string) csrf_token(),
+        'aiSuggestUrl'     => (string) route('ai.seller.suggest'),
+        'aiDescriptionUrl' => (string) route('ai.seller.description'),
+        'hasGcashNumber'   => !empty($currentUser?->gcashNumber),
+        'hasGcashQr'       => !empty($currentUser?->gcashQrCode),
+        'hasMayaNumber'    => !empty($currentUser?->mayaNumber),
+        'hasMayaQr'        => !empty($currentUser?->mayaQrCode),
+    ];
 @endphp
+
+<script id="product-init-data" type="application/json">
+{!! json_encode($productInitData, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP) !!}
+</script>
 
 <script id="categories-data-json" type="application/json">
 {!! json_encode($categoriesJson, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP) !!}
@@ -856,6 +884,16 @@
 
 <script>
 let productImagesDT = new DataTransfer();
+
+function getProductInitData() {
+    try {
+        const el = document.getElementById('product-init-data');
+        if (el && el.textContent) {
+            return JSON.parse(el.textContent);
+        }
+    } catch (e) {}
+    return {};
+}
 
 function addProductManager() {
     let parsedCats = [];
@@ -868,16 +906,18 @@ function addProductManager() {
         parsedCats = [];
     }
 
+    const initData = getProductInitData();
+
     return {
         step: 1,
         imageCount: 0,
         imagePreviews: [],
-        productName: @json(old('name', '')),
-        selectedCategory: @json(old('CategoryId', '')),
-        targetGroup: @json(old('target_group', 'Men')),
-        fabricType: @json(old('fabric_type', '100% Piña')),
-        price: @json(old('price', '')),
-        description: @json(old('description', '')),
+        productName: initData.name || '',
+        selectedCategory: initData.categoryId || '',
+        targetGroup: initData.targetGroup || 'Men',
+        fabricType: initData.fabricType || '100% Piña',
+        price: initData.price || '',
+        description: initData.description || '',
         fillRate: 15,
         isAiLoading: false,
 
@@ -893,11 +933,7 @@ function addProductManager() {
         },
 
         removeVariantRow(index) {
-            if (this.variants.length > 1) {
-                this.variants.splice(index, 1);
-            } else {
-                this.variants = [{ name: '', imagePreview: null }];
-            }
+            this.variants.splice(index, 1);
             this.calculateFillRate();
         },
 
@@ -1082,9 +1118,10 @@ function addProductManager() {
                 }
                 formData.append('current_name', this.productName || '');
                 formData.append('current_category', this.selectedCategory || '');
-                formData.append('_token', @json(csrf_token()));
+                const initData = getProductInitData();
+                formData.append('_token', initData.csrfToken || '');
 
-                const response = await fetch(@json(route('ai.seller.suggest')), {
+                const response = await fetch(initData.aiSuggestUrl || '', {
                     method: 'POST',
                     body: formData,
                     headers: {
@@ -1118,11 +1155,12 @@ function addProductManager() {
         async generateDescriptionAi() {
             this.isAiLoading = true;
             try {
-                const response = await fetch(@json(route('ai.seller.description')), {
+                const initData = getProductInitData();
+                const response = await fetch(initData.aiDescriptionUrl || '', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
-                        'X-CSRF-TOKEN': @json(csrf_token())
+                        'X-CSRF-TOKEN': initData.csrfToken || ''
                     },
                     body: JSON.stringify({
                         fabric: this.fabricType || '100% Piña',
@@ -1385,16 +1423,11 @@ function validateProductForm(e, isEdit = false) {
     const isGcashChecked = gcashToggle ? gcashToggle.checked : false;
     const isMayaChecked = mayaToggle ? mayaToggle.checked : false;
 
-    const paymentConfig = {
-        hasGcashNumber: @json(!empty($user->gcashNumber)),
-        hasGcashQr: @json(!empty($user->gcashQrCode)),
-        hasMayaNumber: @json(!empty($user->mayaNumber)),
-        hasMayaQr: @json(!empty($user->mayaQrCode)),
-    };
-    const hasGcashNumber = Boolean(paymentConfig.hasGcashNumber);
-    const hasGcashQr = Boolean(paymentConfig.hasGcashQr);
-    const hasMayaNumber = Boolean(paymentConfig.hasMayaNumber);
-    const hasMayaQr = Boolean(paymentConfig.hasMayaQr);
+    const initData = getProductInitData();
+    const hasGcashNumber = Boolean(initData.hasGcashNumber);
+    const hasGcashQr = Boolean(initData.hasGcashQr);
+    const hasMayaNumber = Boolean(initData.hasMayaNumber);
+    const hasMayaQr = Boolean(initData.hasMayaQr);
 
     let hasAnyCompleteEnabled = false;
 
