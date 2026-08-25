@@ -182,28 +182,28 @@
                         <div class="flex items-center gap-1.5 overflow-x-auto pb-1 no-scrollbar">
                             <button type="button" 
                                     @click="filterByTag('All')"
-                                    :class="categoryFilter === 'All' ? 'bg-black text-white shadow-xs' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'"
-                                    class="px-3 py-1.5 rounded-xl text-[10px] font-bold uppercase tracking-wider transition-all shrink-0 cursor-pointer">
+                                    :class="categoryFilter === 'All' ? 'bg-black text-white border-black shadow-xs' : 'bg-gray-100 text-gray-700 border-gray-200 hover:bg-gray-200'"
+                                    class="px-3 py-1.5 rounded-xl text-[10px] font-bold uppercase tracking-wider transition-all shrink-0 cursor-pointer border">
                                 All (<span x-text="categoriesList ? categoriesList.length : 0"></span>)
                             </button>
                             <button type="button" 
                                     @click="filterByTag('Men')"
-                                    :class="categoryFilter === 'Men' ? 'bg-blue-600 text-white shadow-xs' : 'bg-blue-50 text-blue-700 border border-blue-100 hover:bg-blue-100'"
-                                    class="px-3 py-1.5 rounded-xl text-[10px] font-bold uppercase tracking-wider transition-all shrink-0 flex items-center gap-1.5 cursor-pointer">
+                                    :class="categoryFilter === 'Men' ? 'bg-blue-600 text-white border-blue-600 shadow-xs' : 'bg-blue-50 text-blue-700 border-blue-200 hover:bg-blue-100'"
+                                    class="px-3 py-1.5 rounded-xl text-[10px] font-bold uppercase tracking-wider transition-all shrink-0 flex items-center gap-1.5 cursor-pointer border">
                                 <span>👔 Men</span>
                                 <span class="text-[9px] opacity-80" x-text="'(' + getTagCount('Men') + ')'"></span>
                             </button>
                             <button type="button" 
                                     @click="filterByTag('Women')"
-                                    :class="categoryFilter === 'Women' ? 'bg-rose-600 text-white shadow-xs' : 'bg-rose-50 text-rose-700 border border-rose-100 hover:bg-rose-100'"
-                                    class="px-3 py-1.5 rounded-xl text-[10px] font-bold uppercase tracking-wider transition-all shrink-0 flex items-center gap-1.5 cursor-pointer">
+                                    :class="categoryFilter === 'Women' ? 'bg-[#e11d48] text-white border-[#e11d48] shadow-xs' : 'bg-pink-50 text-pink-700 border-pink-200 hover:bg-pink-100'"
+                                    class="px-3 py-1.5 rounded-xl text-[10px] font-bold uppercase tracking-wider transition-all shrink-0 flex items-center gap-1.5 cursor-pointer border">
                                 <span>👗 Women</span>
                                 <span class="text-[9px] opacity-80" x-text="'(' + getTagCount('Women') + ')'"></span>
                             </button>
                             <button type="button" 
                                     @click="filterByTag('Kids')"
-                                    :class="categoryFilter === 'Kids' ? 'bg-amber-600 text-white shadow-xs' : 'bg-amber-50 text-amber-700 border border-amber-100 hover:bg-amber-100'"
-                                    class="px-3 py-1.5 rounded-xl text-[10px] font-bold uppercase tracking-wider transition-all shrink-0 flex items-center gap-1.5 cursor-pointer">
+                                    :class="categoryFilter === 'Kids' ? 'bg-amber-600 text-white border-amber-600 shadow-xs' : 'bg-amber-50 text-amber-700 border-amber-200 hover:bg-amber-100'"
+                                    class="px-3 py-1.5 rounded-xl text-[10px] font-bold uppercase tracking-wider transition-all shrink-0 flex items-center gap-1.5 cursor-pointer border">
                                 <span>🧸 Kids</span>
                                 <span class="text-[9px] opacity-80" x-text="'(' + getTagCount('Kids') + ')'"></span>
                             </button>
@@ -733,12 +733,12 @@ function addProductManager() {
         step: 1,
         imageCount: 0,
         imagePreviews: [],
-        productName: '{{ old('name', '') }}',
-        selectedCategory: '{{ old('CategoryId', '') }}',
-        targetGroup: '{{ old('target_group', 'Men') }}',
-        fabricType: '{{ old('fabric_type', '100% Piña') }}',
-        price: '{{ old('price', '') }}',
-        description: '{{ old('description', '') }}',
+        productName: @json(old('name', '')),
+        selectedCategory: @json(old('CategoryId', '')),
+        targetGroup: @json(old('target_group', 'Men')),
+        fabricType: @json(old('fabric_type', '100% Piña')),
+        price: @json(old('price', '')),
+        description: @json(old('description', '')),
         fillRate: 15,
         isAiLoading: false,
 
@@ -907,9 +907,9 @@ function addProductManager() {
                 }
                 formData.append('current_name', this.productName || '');
                 formData.append('current_category', this.selectedCategory || '');
-                formData.append('_token', '{{ csrf_token() }}');
+                formData.append('_token', @json(csrf_token()));
 
-                const response = await fetch('{{ route('ai.seller.suggest') }}', {
+                const response = await fetch(@json(route('ai.seller.suggest')), {
                     method: 'POST',
                     body: formData,
                     headers: {
@@ -943,11 +943,11 @@ function addProductManager() {
         async generateDescriptionAi() {
             this.isAiLoading = true;
             try {
-                const response = await fetch('{{ route('ai.seller.description') }}', {
+                const response = await fetch(@json(route('ai.seller.description')), {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
-                        'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                        'X-CSRF-TOKEN': @json(csrf_token())
                     },
                     body: JSON.stringify({
                         fabric: this.fabricType || '100% Piña',
@@ -1211,10 +1211,10 @@ function validateProductForm(e, isEdit = false) {
     const isMayaChecked = mayaToggle ? mayaToggle.checked : false;
 
     const paymentConfig = {
-        hasGcashNumber: {{ !empty($user->gcashNumber) ? 'true' : 'false' }},
-        hasGcashQr: {{ !empty($user->gcashQrCode) ? 'true' : 'false' }},
-        hasMayaNumber: {{ !empty($user->mayaNumber) ? 'true' : 'false' }},
-        hasMayaQr: {{ !empty($user->mayaQrCode) ? 'true' : 'false' }},
+        hasGcashNumber: @json(!empty($user->gcashNumber)),
+        hasGcashQr: @json(!empty($user->gcashQrCode)),
+        hasMayaNumber: @json(!empty($user->mayaNumber)),
+        hasMayaQr: @json(!empty($user->mayaQrCode)),
     };
     const hasGcashNumber = Boolean(paymentConfig.hasGcashNumber);
     const hasGcashQr = Boolean(paymentConfig.hasGcashQr);
