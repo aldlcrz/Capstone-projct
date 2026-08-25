@@ -177,30 +177,161 @@
                     </div>
                 </div>
 
-                {{-- 3. Product Category --}}
-                <div class="space-y-1.5">
+                {{-- 3. Real-time Product Category (with Men, Women, Kids Tags) --}}
+                <div class="space-y-2">
                     <div class="flex items-center justify-between">
                         <label class="text-[11px] font-bold uppercase tracking-wider text-gray-700">
                             Category <span class="text-[#C0420A]">*</span>
                         </label>
-                        <span class="text-[9px] text-gray-400 font-medium">Heritage classification</span>
+                        <span class="text-[9px] text-gray-400 font-medium">Real-time Admin Categories & Demographic Tags</span>
                     </div>
 
+                    {{-- Category Demographic Quick Filter Chips --}}
+                    <div class="flex items-center gap-1.5 overflow-x-auto pb-1 no-scrollbar">
+                        <button type="button" 
+                                @click="categoryFilter = 'All'"
+                                :class="categoryFilter === 'All' ? 'bg-black text-white shadow-xs' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'"
+                                class="px-2.5 py-1 rounded-lg text-[10px] font-bold uppercase tracking-wider transition-all shrink-0">
+                            All (<span x-text="categoriesList.length"></span>)
+                        </button>
+                        <button type="button" 
+                                @click="categoryFilter = 'Men'"
+                                :class="categoryFilter === 'Men' ? 'bg-blue-600 text-white shadow-xs' : 'bg-blue-50 text-blue-700 border border-blue-100 hover:bg-blue-100'"
+                                class="px-2.5 py-1 rounded-lg text-[10px] font-bold uppercase tracking-wider transition-all shrink-0 flex items-center gap-1">
+                            <span>👔 Men</span>
+                            <span class="text-[9px] opacity-80" x-text="'(' + categoriesList.filter(c => c.target_group.includes('Men')).length + ')'"></span>
+                        </button>
+                        <button type="button" 
+                                @click="categoryFilter = 'Women'"
+                                :class="categoryFilter === 'Women' ? 'bg-pink-600 text-white shadow-xs' : 'bg-pink-50 text-pink-700 border border-pink-100 hover:bg-pink-100'"
+                                class="px-2.5 py-1 rounded-lg text-[10px] font-bold uppercase tracking-wider transition-all shrink-0 flex items-center gap-1">
+                            <span>👗 Women</span>
+                            <span class="text-[9px] opacity-80" x-text="'(' + categoriesList.filter(c => c.target_group.includes('Women')).length + ')'"></span>
+                        </button>
+                        <button type="button" 
+                                @click="categoryFilter = 'Kids'"
+                                :class="categoryFilter === 'Kids' ? 'bg-amber-600 text-white shadow-xs' : 'bg-amber-50 text-amber-700 border border-amber-100 hover:bg-amber-100'"
+                                class="px-2.5 py-1 rounded-lg text-[10px] font-bold uppercase tracking-wider transition-all shrink-0 flex items-center gap-1">
+                            <span>🧸 Kids</span>
+                            <span class="text-[9px] opacity-80" x-text="'(' + categoriesList.filter(c => c.target_group.includes('Kids')).length + ')'"></span>
+                        </button>
+                    </div>
+
+                    {{-- Interactive Category Selector Trigger --}}
                     <div class="relative">
+                        <button type="button" 
+                                @click="isCategoryDropdownOpen = !isCategoryDropdownOpen"
+                                class="w-full px-4 py-3 bg-gray-50/80 border border-gray-200 rounded-xl outline-none focus:border-[#C0420A] focus:bg-white text-left flex items-center justify-between transition-all group shadow-2xs">
+                            
+                            <div class="flex items-center gap-2.5 min-w-0">
+                                <template x-if="selectedCategoryObj">
+                                    <div class="flex items-center gap-2 truncate">
+                                        <span class="text-sm font-bold text-gray-900 truncate" x-text="selectedCategoryObj.name"></span>
+                                        
+                                        {{-- Demographic Badges for Selected Category --}}
+                                        <div class="flex items-center gap-1 shrink-0">
+                                            <template x-for="tag in selectedCategoryObj.target_group" :key="tag">
+                                                <span class="px-2 py-0.5 rounded-md text-[9px] font-black uppercase tracking-wider"
+                                                      :class="{
+                                                          'bg-blue-100 text-blue-700 border border-blue-200': tag === 'Men',
+                                                          'bg-pink-100 text-pink-700 border border-pink-200': tag === 'Women',
+                                                          'bg-amber-100 text-amber-700 border border-amber-200': tag === 'Kids'
+                                                      }"
+                                                      x-text="tag"></span>
+                                            </template>
+                                            <template x-if="!selectedCategoryObj.target_group || selectedCategoryObj.target_group.length === 0">
+                                                <span class="px-2 py-0.5 rounded-md bg-gray-100 text-gray-600 border border-gray-200 text-[9px] font-bold uppercase">Unisex / All</span>
+                                            </template>
+                                        </div>
+                                    </div>
+                                </template>
+                                <template x-if="!selectedCategoryObj">
+                                    <span class="text-sm text-gray-400 font-normal">Select a category (e.g. Formal Barong > Men)</span>
+                                </template>
+                            </div>
+
+                            <div class="flex items-center gap-1.5 text-gray-400 group-hover:text-gray-700 transition-colors shrink-0">
+                                <span class="text-[11px] font-bold uppercase tracking-wider hidden sm:inline" x-text="isCategoryDropdownOpen ? 'Close' : 'Browse'"></span>
+                                <svg class="w-4 h-4 transition-transform duration-200 text-gray-400" :class="isCategoryDropdownOpen ? 'rotate-180 text-[#C0420A]' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+                            </div>
+                        </button>
+
+                        {{-- Category Dropdown Picker Modal / Menu --}}
+                        <div x-show="isCategoryDropdownOpen" 
+                             @click.away="isCategoryDropdownOpen = false"
+                             x-transition:enter="transition ease-out duration-200"
+                             x-transition:enter-start="opacity-0 translate-y-1 scale-98"
+                             x-transition:enter-end="opacity-100 translate-y-0 scale-100"
+                             x-transition:leave="transition ease-in duration-150"
+                             x-transition:leave-start="opacity-100 translate-y-0 scale-100"
+                             x-transition:leave-end="opacity-0 translate-y-1 scale-98"
+                             class="absolute top-full left-0 right-0 mt-1.5 z-40 bg-white rounded-2xl shadow-2xl border border-gray-200 overflow-hidden max-h-76 flex flex-col p-2 space-y-2"
+                             x-cloak>
+                            
+                            {{-- Search input inside dropdown --}}
+                            <div class="relative px-1 pt-1">
+                                <input type="text" 
+                                       x-model="categorySearch" 
+                                       placeholder="Type to search category (e.g. Barong, Gown, Polo)..." 
+                                       class="w-full px-3.5 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-xs font-semibold outline-none focus:border-[#C0420A] focus:bg-white transition-all pl-9">
+                                <svg class="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+                            </div>
+
+                            {{-- Categories List --}}
+                            <div class="overflow-y-auto space-y-1 pr-1 max-h-56 divide-y divide-gray-50">
+                                <template x-for="cat in filteredCategories" :key="cat.id">
+                                    <button type="button" 
+                                            @click="selectCategory(cat)"
+                                            class="w-full px-3 py-2.5 rounded-xl hover:bg-orange-50/70 flex items-center justify-between text-left transition-colors group cursor-pointer"
+                                            :class="selectedCategory === cat.id ? 'bg-orange-50/90 border border-[#C0420A]/30' : ''">
+                                        
+                                        <div class="flex items-center gap-2 min-w-0">
+                                            <span class="text-xs font-bold text-gray-800 group-hover:text-[#C0420A]" x-text="cat.name"></span>
+                                        </div>
+
+                                        {{-- Demographic Tag Badges --}}
+                                        <div class="flex items-center gap-1 shrink-0">
+                                            <template x-for="tag in cat.target_group" :key="tag">
+                                                <span class="px-2 py-0.5 rounded-md text-[9px] font-black uppercase tracking-wider"
+                                                      :class="{
+                                                          'bg-blue-100 text-blue-700 border border-blue-200': tag === 'Men',
+                                                          'bg-pink-100 text-pink-700 border border-pink-200': tag === 'Women',
+                                                          'bg-amber-100 text-amber-700 border border-amber-200': tag === 'Kids'
+                                                      }"
+                                                      x-text="tag"></span>
+                                            </template>
+                                            <template x-if="!cat.target_group || cat.target_group.length === 0">
+                                                <span class="px-2 py-0.5 rounded-md bg-gray-100 text-gray-600 border border-gray-200 text-[8px] font-bold uppercase">All</span>
+                                            </template>
+                                        </div>
+                                    </button>
+                                </template>
+
+                                <template x-if="filteredCategories.length === 0">
+                                    <div class="py-8 text-center text-xs text-gray-400">
+                                        No categories found matching "<span class="font-bold text-gray-700" x-text="categorySearch"></span>"
+                                    </div>
+                                </template>
+                            </div>
+                        </div>
+
+                        {{-- Fallback Synchronized Hidden Native Select with Complete Tag Names --}}
                         <select name="CategoryId" 
                                 id="categorySelect" 
                                 required
                                 x-model="selectedCategory"
-                                @change="calculateFillRate()"
-                                class="w-full px-4 py-3 bg-gray-50/70 border border-gray-200 rounded-xl outline-none focus:border-[#C0420A] focus:bg-white focus:ring-2 focus:ring-[#C0420A]/10 transition-all font-semibold text-sm text-gray-800 appearance-none pr-10">
-                            <option value="" disabled selected>Select category (e.g. Barong Tagalog > Piña Formal)</option>
+                                class="sr-only">
+                            <option value="" disabled selected>Select category</option>
                             @foreach($categories as $category)
-                                <option value="{{ $category->id }}" data-name="{{ strtolower($category->name) }}">{{ $category->name }}</option>
+                                @php
+                                    $tags = is_array($category->target_group) ? $category->target_group : (is_string($category->target_group) ? json_decode($category->target_group, true) ?? [] : []);
+                                    $tagStr = !empty($tags) ? implode(', ', $tags) : 'All';
+                                @endphp
+                                <option value="{{ $category->id }}" data-tags="{{ implode(',', $tags) }}" data-name="{{ strtolower($category->name) }}">
+                                    {{ $category->name }} ({{ $tagStr }})
+                                </option>
                             @endforeach
                         </select>
-                        <div class="absolute right-3.5 top-1/2 -translate-y-1/2 pointer-events-none text-gray-400">
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
-                        </div>
                     </div>
                 </div>
             </div>
@@ -258,7 +389,7 @@
                 </div>
 
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    {{-- Target Group --}}
+                    {{-- Target Group (Who is this for?) --}}
                     <div id="target-group-container" class="space-y-1.5">
                         <label class="text-[10px] font-bold uppercase tracking-widest text-gray-500">Who is this for? <span class="text-[#C0420A]">*</span></label>
                         <div class="flex gap-2">
@@ -268,7 +399,7 @@
                                            name="target_group" 
                                            value="{{ $group }}" 
                                            x-model="targetGroup"
-                                           @change="calculateFillRate()"
+                                           @change="onTargetGroupChange('{{ $group }}')"
                                            class="hidden peer target-group-radio" 
                                            {{ old('target_group', 'Men') == $group ? 'checked' : '' }}>
                                     <div class="w-full py-2.5 rounded-xl border border-gray-200 bg-gray-50 text-xs font-bold text-gray-600 text-center uppercase tracking-wider peer-checked:border-[#C0420A] peer-checked:bg-[#C0420A]/10 peer-checked:text-[#C0420A] transition-all">
@@ -580,15 +711,17 @@
     </form>
 </div>
 
-{{-- Seller Payment Config Helper JSON --}}
-<script type="application/json" id="seller-payment-config">
-{!! json_encode([
-    'hasGcashNumber' => !empty($user->gcashNumber),
-    'hasGcashQr' => !empty($user->gcashQrCode),
-    'hasMayaNumber' => !empty($user->mayaNumber),
-    'hasMayaQr' => !empty($user->mayaQrCode),
-]) !!}
-</script>
+@php
+    $categoriesJson = $categories->map(function($c) {
+        $tags = is_array($c->target_group) ? $c->target_group : (is_string($c->target_group) ? json_decode($c->target_group, true) ?? [] : []);
+        return [
+            'id' => (string) $c->id,
+            'name' => (string) $c->name,
+            'target_group' => $tags,
+            'image' => $c->getImageUrl(),
+        ];
+    });
+@endphp
 
 <script>
 let productImagesDT = new DataTransfer();
@@ -607,7 +740,45 @@ function addProductManager() {
         fillRate: 15,
         isAiLoading: false,
 
+        // Real-time categories state
+        categoriesList: {!! json_encode($categoriesJson) !!},
+        categoryFilter: 'All',
+        categorySearch: '',
+        isCategoryDropdownOpen: false,
+
         init() {
+            this.calculateFillRate();
+        },
+
+        get filteredCategories() {
+            let list = this.categoriesList;
+            if (this.categoryFilter !== 'All') {
+                list = list.filter(c => Array.isArray(c.target_group) && c.target_group.includes(this.categoryFilter));
+            }
+            if (this.categorySearch && this.categorySearch.trim() !== '') {
+                const q = this.categorySearch.toLowerCase().trim();
+                list = list.filter(c => c.name.toLowerCase().includes(q));
+            }
+            return list;
+        },
+
+        get selectedCategoryObj() {
+            return this.categoriesList.find(c => c.id === this.selectedCategory) || null;
+        },
+
+        selectCategory(cat) {
+            this.selectedCategory = cat.id;
+            if (cat.target_group && cat.target_group.length > 0) {
+                // Auto-sync demographic radio if category has assigned target_group in Admin
+                this.targetGroup = cat.target_group[0];
+            }
+            this.isCategoryDropdownOpen = false;
+            this.calculateFillRate();
+        },
+
+        onTargetGroupChange(group) {
+            this.targetGroup = group;
+            // Highlight matching categories if category filter is set or auto-switch filter
             this.calculateFillRate();
         },
 
@@ -728,7 +899,13 @@ function addProductManager() {
                 if (response.ok) {
                     const data = await response.json();
                     if (data.title) this.productName = data.title;
-                    if (data.category_id) this.selectedCategory = data.category_id;
+                    if (data.category_id) {
+                        this.selectedCategory = data.category_id;
+                        const matchCat = this.categoriesList.find(c => c.id === data.category_id);
+                        if (matchCat && matchCat.target_group && matchCat.target_group.length > 0) {
+                            this.targetGroup = matchCat.target_group[0];
+                        }
+                    }
                     if (data.target_group) this.targetGroup = data.target_group;
                     if (data.fabric_type) this.fabricType = data.fabric_type;
                     if (data.description) this.description = data.description;
@@ -1012,7 +1189,12 @@ function validateProductForm(e, isEdit = false) {
     const isGcashChecked = gcashToggle ? gcashToggle.checked : false;
     const isMayaChecked = mayaToggle ? mayaToggle.checked : false;
 
-    const paymentConfig = JSON.parse(document.getElementById('seller-payment-config')?.textContent || '{}');
+    const paymentConfig = {
+        hasGcashNumber: {{ !empty($user->gcashNumber) ? 'true' : 'false' }},
+        hasGcashQr: {{ !empty($user->gcashQrCode) ? 'true' : 'false' }},
+        hasMayaNumber: {{ !empty($user->mayaNumber) ? 'true' : 'false' }},
+        hasMayaQr: {{ !empty($user->mayaQrCode) ? 'true' : 'false' }},
+    };
     const hasGcashNumber = Boolean(paymentConfig.hasGcashNumber);
     const hasGcashQr = Boolean(paymentConfig.hasGcashQr);
     const hasMayaNumber = Boolean(paymentConfig.hasMayaNumber);

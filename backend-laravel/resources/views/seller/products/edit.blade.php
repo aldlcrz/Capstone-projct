@@ -184,8 +184,12 @@
                             class="w-full px-4 py-2.5 bg-gray-50/50 border border-gray-200/80 rounded-xl outline-none focus:border-[#C0420A] transition-all font-bold text-xs appearance-none">
                             <option value="" disabled>Select a category</option>
                             @foreach($categories as $category)
-                                <option value="{{ $category->id }}" data-name="{{ strtolower($category->name) }}" {{ $product->CategoryId == $category->id ? 'selected' : '' }}>
-                                    {{ $category->name }}
+                                @php
+                                    $tags = is_array($category->target_group) ? $category->target_group : (is_string($category->target_group) ? json_decode($category->target_group, true) ?? [] : []);
+                                    $tagStr = !empty($tags) ? implode(', ', $tags) : 'All';
+                                @endphp
+                                <option value="{{ $category->id }}" data-tags="{{ implode(',', $tags) }}" data-name="{{ strtolower($category->name) }}" {{ $product->CategoryId == $category->id ? 'selected' : '' }}>
+                                    {{ $category->name }} ({{ $tagStr }})
                                 </option>
                             @endforeach
                         </select>
