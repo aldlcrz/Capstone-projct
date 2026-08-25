@@ -21,6 +21,8 @@ class Product extends Model
         'sellerId', 'status', 'rejectionReason', 'views',
         'sku', 'fabric_type', 'collar_type', 'artisan_region', 'CategoryId',
         'target_group', 'size_stocks',
+        // Product Variants / Variations
+        'has_variants', 'variations',
         // Lumban Special discount
         'is_on_sale', 'discount_percentage',
         // Per-product payment overrides
@@ -88,6 +90,8 @@ class Product extends Model
             'image'                   => 'array',
             'size_stocks'             => 'array',
             'size_guide_measurements' => 'array',
+            'variations'              => 'array',
+            'has_variants'            => 'boolean',
             'is_on_sale'              => 'boolean',
             'is_gcash_available'      => 'boolean',
             'is_maya_available'       => 'boolean',

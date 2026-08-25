@@ -217,6 +217,18 @@ class ProductManagementController extends Controller
             $product->is_on_sale          = $request->boolean('is_on_sale');
             $product->discount_percentage = $product->is_on_sale ? ($request->discount_percentage ?? 0) : null;
 
+            // Product Variations / Variants
+            $product->has_variants = $request->boolean('has_variants');
+            $variationsInput = $request->input('variations', []);
+            if ($product->has_variants && !empty($variationsInput)) {
+                if (is_string($variationsInput)) {
+                    $variationsInput = json_decode($variationsInput, true) ?? [];
+                }
+                $product->variations = is_array($variationsInput) ? array_values(array_filter($variationsInput)) : [];
+            } else {
+                $product->variations = null;
+            }
+
             $product->status = $isDraft ? 'draft' : 'pending'; // Draft vs Pending Admin Approval
 
             $images = [];

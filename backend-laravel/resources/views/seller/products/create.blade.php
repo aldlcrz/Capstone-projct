@@ -394,6 +394,96 @@
                         </select>
                     </div>
                 </div>
+
+                {{-- 4. Product Variations / Variants Switch & Configurator --}}
+                <div class="pt-1 space-y-3">
+                    <div class="p-3.5 sm:p-4 bg-gray-50/90 rounded-2xl border border-gray-200 flex items-center justify-between gap-3 transition-all hover:bg-gray-100/70 shadow-2xs">
+                        <div class="space-y-0.5 min-w-0">
+                            <div class="flex items-center gap-2">
+                                <span class="text-xs font-black uppercase tracking-wider text-gray-900">Product Variations / Variants</span>
+                                <span class="px-2 py-0.5 rounded-md bg-blue-50 text-blue-700 text-[9px] font-black uppercase tracking-wider border border-blue-100">Optional</span>
+                            </div>
+                            <p class="text-[11px] text-gray-500 font-medium leading-relaxed truncate sm:whitespace-normal">
+                                Enable if this item comes in multiple colors, embroidery styles, or patterns.
+                            </p>
+                        </div>
+                        
+                        <label class="relative inline-flex items-center cursor-pointer shrink-0">
+                            <input type="checkbox" 
+                                   name="has_variants" 
+                                   value="1"
+                                   x-model="hasVariants" 
+                                   @change="calculateFillRate()"
+                                   class="sr-only peer">
+                            <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-0.5 after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#C0420A]"></div>
+                        </label>
+                    </div>
+
+                    {{-- Expanded Variations Setup Panel --}}
+                    <div x-show="hasVariants" 
+                         x-collapse 
+                         x-cloak 
+                         class="p-4 bg-white rounded-2xl border border-orange-200/70 bg-orange-50/15 space-y-3.5 shadow-xs">
+                        
+                        <div class="flex items-center justify-between pb-2 border-b border-orange-100/60">
+                            <span class="text-[11px] font-black uppercase tracking-wider text-gray-800 flex items-center gap-1.5">
+                                <span>🎨 Configure Variation Options</span>
+                            </span>
+                            <span class="text-[9px] font-bold text-gray-400 uppercase" x-text="variationsList.length + ' options added'"></span>
+                        </div>
+
+                        {{-- Quick Preset Suggestion Chips --}}
+                        <div class="space-y-1.5">
+                            <span class="text-[10px] font-bold uppercase tracking-wider text-gray-400">Quick-Add Popular Styles / Colors:</span>
+                            <div class="flex flex-wrap gap-1.5">
+                                <template x-for="preset in ['Natural / Ecru', 'Classic Ivory', 'Monochromatic Black', 'Navy Blue', 'Wine / Burgundy', 'Olive / Sage', 'Barong with Lining']" :key="preset">
+                                    <button type="button" 
+                                            @click="addVariantPreset(preset)"
+                                            :disabled="variationsList.includes(preset)"
+                                            :class="variationsList.includes(preset) ? 'opacity-40 bg-gray-100 text-gray-400 cursor-not-allowed' : 'bg-white hover:bg-orange-50 text-gray-700 hover:text-[#C0420A] border-gray-200 hover:border-orange-300 cursor-pointer'"
+                                            class="px-2.5 py-1 rounded-lg border text-[10px] font-bold transition-all flex items-center gap-1">
+                                        <span x-text="'+ ' + preset"></span>
+                                    </button>
+                                </template>
+                            </div>
+                        </div>
+
+                        {{-- Custom Variant Input Box --}}
+                        <div class="flex gap-2">
+                            <input type="text" 
+                                   x-model="newVariantInput" 
+                                   @keydown.enter.prevent="addCustomVariant()"
+                                   placeholder="Type custom color, embroidery, or pattern (e.g. Charcoal Gray)..." 
+                                   class="flex-1 px-3.5 py-2.5 bg-white border border-gray-200 rounded-xl text-xs font-semibold outline-none focus:border-[#C0420A] transition-all">
+                            <button type="button" 
+                                    @click="addCustomVariant()"
+                                    class="px-4 py-2.5 bg-black hover:bg-gray-800 text-white rounded-xl text-xs font-bold transition-all shrink-0 cursor-pointer">
+                                + Add Option
+                            </button>
+                        </div>
+
+                        {{-- Selected Variants Chips List --}}
+                        <div class="space-y-1.5 pt-1">
+                            <span class="text-[10px] font-bold uppercase tracking-wider text-gray-500">Active Variants for this Product:</span>
+                            <div class="flex flex-wrap gap-1.5 min-h-7">
+                                <template x-for="(v, index) in variationsList" :key="index">
+                                    <span class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-[#C0420A]/10 border border-[#C0420A]/30 text-[#C0420A] rounded-xl text-xs font-bold animate-fadeIn">
+                                        <span x-text="v"></span>
+                                        <button type="button" @click="removeVariant(index)" class="w-3.5 h-3.5 rounded-full bg-[#C0420A]/20 hover:bg-[#C0420A] hover:text-white flex items-center justify-center text-[10px] transition-colors leading-none cursor-pointer">
+                                            &times;
+                                        </button>
+                                        {{-- Hidden inputs to submit array --}}
+                                        <input type="hidden" name="variations[]" :value="v">
+                                    </span>
+                                </template>
+                                <template x-if="variationsList.length === 0">
+                                    <span class="text-xs text-gray-400 italic py-1">No variants added yet. Click a quick-add chip above or type a custom option.</span>
+                                </template>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
             </div>
 
             {{-- Step 1 Primary CTA Button: "Next: Complete Product Info" --}}
@@ -755,6 +845,32 @@ function addProductManager() {
         description: @json(old('description', '')),
         fillRate: 15,
         isAiLoading: false,
+
+        // Product Variations / Variants State
+        hasVariants: false,
+        variationsList: [],
+        newVariantInput: '',
+
+        addVariantPreset(preset) {
+            if (preset && !this.variationsList.includes(preset)) {
+                this.variationsList.push(preset);
+                this.calculateFillRate();
+            }
+        },
+
+        addCustomVariant() {
+            const val = (this.newVariantInput || '').trim();
+            if (val && !this.variationsList.includes(val)) {
+                this.variationsList.push(val);
+                this.newVariantInput = '';
+                this.calculateFillRate();
+            }
+        },
+
+        removeVariant(index) {
+            this.variationsList.splice(index, 1);
+            this.calculateFillRate();
+        },
 
         // Real-time categories state
         categoriesList: parsedCats,
