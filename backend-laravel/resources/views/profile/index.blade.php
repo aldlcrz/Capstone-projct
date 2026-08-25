@@ -1147,11 +1147,6 @@ function profileApp() {
             const rawStreet = [addr.house_number, addr.road || addr.pedestrian || addr.highway].filter(Boolean).join(' ');
             const rawPostal = addr.postcode || '';
 
-            // Auto-fill Street/House No if empty or updated
-            if (rawStreet) {
-                this.addressForm.houseNo = rawStreet;
-                this.fieldErrors.houseNo = '';
-            }
             // Auto-fill Postal code
             if (rawPostal && /^\d{4}$/.test(rawPostal)) {
                 this.addressForm.postalCode = rawPostal;
