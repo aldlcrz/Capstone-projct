@@ -162,44 +162,52 @@
                     </div>
                 </div>
 
-                {{-- 3. Real-time Product Category (with Men, Women, Kids Tags) --}}
-                <div class="space-y-2">
+                {{-- 3. Product Category & Tag Selection --}}
+                <div class="space-y-2.5">
                     <div class="flex items-center justify-between">
                         <label class="text-[11px] font-bold uppercase tracking-wider text-gray-700">
                             Category <span class="text-[#C0420A]">*</span>
                         </label>
-                        <span class="text-[9px] text-gray-400 font-medium">Real-time Admin Categories & Demographic Tags</span>
+                        <span class="text-[9px] text-[#C0420A] font-semibold">Select category</span>
                     </div>
 
                     {{-- Category Demographic Quick Filter Chips --}}
-                    <div class="flex items-center gap-1.5 overflow-x-auto pb-1 no-scrollbar">
-                        <button type="button" 
-                                @click="categoryFilter = 'All'"
-                                :class="categoryFilter === 'All' ? 'bg-black text-white shadow-xs' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'"
-                                class="px-2.5 py-1 rounded-lg text-[10px] font-bold uppercase tracking-wider transition-all shrink-0">
-                            All (<span x-text="categoriesList.length"></span>)
-                        </button>
-                        <button type="button" 
-                                @click="categoryFilter = 'Men'"
-                                :class="categoryFilter === 'Men' ? 'bg-blue-600 text-white shadow-xs' : 'bg-blue-50 text-blue-700 border border-blue-100 hover:bg-blue-100'"
-                                class="px-2.5 py-1 rounded-lg text-[10px] font-bold uppercase tracking-wider transition-all shrink-0 flex items-center gap-1">
-                            <span>👔 Men</span>
-                            <span class="text-[9px] opacity-80" x-text="'(' + categoriesList.filter(c => c.target_group.includes('Men')).length + ')'"></span>
-                        </button>
-                        <button type="button" 
-                                @click="categoryFilter = 'Women'"
-                                :class="categoryFilter === 'Women' ? 'bg-pink-600 text-white shadow-xs' : 'bg-pink-50 text-pink-700 border border-pink-100 hover:bg-pink-100'"
-                                class="px-2.5 py-1 rounded-lg text-[10px] font-bold uppercase tracking-wider transition-all shrink-0 flex items-center gap-1">
-                            <span>👗 Women</span>
-                            <span class="text-[9px] opacity-80" x-text="'(' + categoriesList.filter(c => c.target_group.includes('Women')).length + ')'"></span>
-                        </button>
-                        <button type="button" 
-                                @click="categoryFilter = 'Kids'"
-                                :class="categoryFilter === 'Kids' ? 'bg-amber-600 text-white shadow-xs' : 'bg-amber-50 text-amber-700 border border-amber-100 hover:bg-amber-100'"
-                                class="px-2.5 py-1 rounded-lg text-[10px] font-bold uppercase tracking-wider transition-all shrink-0 flex items-center gap-1">
-                            <span>🧸 Kids</span>
-                            <span class="text-[9px] opacity-80" x-text="'(' + categoriesList.filter(c => c.target_group.includes('Kids')).length + ')'"></span>
-                        </button>
+                    <div class="space-y-1.5">
+                        <div class="flex items-center justify-between">
+                            <span class="text-[10px] font-bold uppercase tracking-wider text-gray-500">
+                                Target Tag <span class="text-[#C0420A]">*</span>
+                            </span>
+                            <span class="text-[9px] text-gray-400 font-medium">Select tag</span>
+                        </div>
+                        <div class="flex items-center gap-1.5 overflow-x-auto pb-1 no-scrollbar">
+                            <button type="button" 
+                                    @click="filterByTag('All')"
+                                    :class="categoryFilter === 'All' ? 'bg-black text-white shadow-xs' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'"
+                                    class="px-3 py-1.5 rounded-xl text-[10px] font-bold uppercase tracking-wider transition-all shrink-0 cursor-pointer">
+                                All (<span x-text="categoriesList ? categoriesList.length : 0"></span>)
+                            </button>
+                            <button type="button" 
+                                    @click="filterByTag('Men')"
+                                    :class="categoryFilter === 'Men' ? 'bg-blue-600 text-white shadow-xs' : 'bg-blue-50 text-blue-700 border border-blue-100 hover:bg-blue-100'"
+                                    class="px-3 py-1.5 rounded-xl text-[10px] font-bold uppercase tracking-wider transition-all shrink-0 flex items-center gap-1.5 cursor-pointer">
+                                <span>👔 Men</span>
+                                <span class="text-[9px] opacity-80" x-text="'(' + getTagCount('Men') + ')'"></span>
+                            </button>
+                            <button type="button" 
+                                    @click="filterByTag('Women')"
+                                    :class="categoryFilter === 'Women' ? 'bg-rose-600 text-white shadow-xs' : 'bg-rose-50 text-rose-700 border border-rose-100 hover:bg-rose-100'"
+                                    class="px-3 py-1.5 rounded-xl text-[10px] font-bold uppercase tracking-wider transition-all shrink-0 flex items-center gap-1.5 cursor-pointer">
+                                <span>👗 Women</span>
+                                <span class="text-[9px] opacity-80" x-text="'(' + getTagCount('Women') + ')'"></span>
+                            </button>
+                            <button type="button" 
+                                    @click="filterByTag('Kids')"
+                                    :class="categoryFilter === 'Kids' ? 'bg-amber-600 text-white shadow-xs' : 'bg-amber-50 text-amber-700 border border-amber-100 hover:bg-amber-100'"
+                                    class="px-3 py-1.5 rounded-xl text-[10px] font-bold uppercase tracking-wider transition-all shrink-0 flex items-center gap-1.5 cursor-pointer">
+                                <span>🧸 Kids</span>
+                                <span class="text-[9px] opacity-80" x-text="'(' + getTagCount('Kids') + ')'"></span>
+                            </button>
+                        </div>
                     </div>
 
                     {{-- Interactive Category Selector Trigger --}}
@@ -215,11 +223,11 @@
                                         
                                         {{-- Demographic Badges for Selected Category --}}
                                         <div class="flex items-center gap-1 shrink-0">
-                                            <template x-for="tag in selectedCategoryObj.target_group" :key="tag">
+                                            <template x-for="tag in (selectedCategoryObj.target_group || [])" :key="tag">
                                                 <span class="px-2 py-0.5 rounded-md text-[9px] font-black uppercase tracking-wider"
                                                       :class="{
                                                           'bg-blue-100 text-blue-700 border border-blue-200': tag === 'Men',
-                                                          'bg-pink-100 text-pink-700 border border-pink-200': tag === 'Women',
+                                                          'bg-rose-100 text-rose-700 border border-rose-200': tag === 'Women',
                                                           'bg-amber-100 text-amber-700 border border-amber-200': tag === 'Kids'
                                                       }"
                                                       x-text="tag"></span>
@@ -236,7 +244,7 @@
                             </div>
 
                             <div class="flex items-center gap-1.5 text-gray-400 group-hover:text-gray-700 transition-colors shrink-0">
-                                <span class="text-[11px] font-bold uppercase tracking-wider hidden sm:inline" x-text="isCategoryDropdownOpen ? 'Close' : 'Browse'"></span>
+                                <span class="text-[11px] font-bold uppercase tracking-wider hidden sm:inline" x-text="isCategoryDropdownOpen ? 'Close' : 'Select'"></span>
                                 <svg class="w-4 h-4 transition-transform duration-200 text-gray-400" :class="isCategoryDropdownOpen ? 'rotate-180 text-[#C0420A]' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
                             </div>
                         </button>
@@ -685,14 +693,22 @@
 
 @php
     $categoriesJson = $categories->map(function($c) {
-        $tags = is_array($c->target_group) ? $c->target_group : (is_string($c->target_group) ? json_decode($c->target_group, true) ?? [] : []);
+        $tags = $c->target_group;
+        if (is_string($tags)) {
+            $decoded = json_decode($tags, true);
+            $tags = is_array($decoded) ? $decoded : [$tags];
+        }
+        if (!is_array($tags)) {
+            $tags = [];
+        }
+        $tags = array_values(array_filter(array_map('trim', $tags)));
         return [
             'id' => (string) $c->id,
             'name' => (string) $c->name,
             'target_group' => $tags,
             'image' => $c->getImageUrl(),
         ];
-    });
+    })->values();
 @endphp
 
 <script>
@@ -722,27 +738,52 @@ function addProductManager() {
             this.calculateFillRate();
         },
 
+        getTagCount(tag) {
+            if (!Array.isArray(this.categoriesList)) return 0;
+            return this.categoriesList.filter(c => {
+                if (!c || !Array.isArray(c.target_group)) return false;
+                return c.target_group.includes(tag);
+            }).length;
+        },
+
+        filterByTag(tag) {
+            this.categoryFilter = tag;
+            if (tag !== 'All') {
+                this.targetGroup = tag;
+            }
+            this.calculateFillRate();
+        },
+
         get filteredCategories() {
+            if (!Array.isArray(this.categoriesList)) return [];
             let list = this.categoriesList;
             if (this.categoryFilter !== 'All') {
-                list = list.filter(c => Array.isArray(c.target_group) && c.target_group.includes(this.categoryFilter));
+                list = list.filter(c => {
+                    if (!c) return false;
+                    if (Array.isArray(c.target_group)) return c.target_group.includes(this.categoryFilter);
+                    if (typeof c.target_group === 'string') return c.target_group === this.categoryFilter;
+                    return false;
+                });
             }
             if (this.categorySearch && this.categorySearch.trim() !== '') {
                 const q = this.categorySearch.toLowerCase().trim();
-                list = list.filter(c => c.name.toLowerCase().includes(q));
+                list = list.filter(c => c && c.name && c.name.toLowerCase().includes(q));
             }
             return list;
         },
 
         get selectedCategoryObj() {
-            return this.categoriesList.find(c => c.id === this.selectedCategory) || null;
+            if (!Array.isArray(this.categoriesList)) return null;
+            return this.categoriesList.find(c => c && c.id === this.selectedCategory) || null;
         },
 
         selectCategory(cat) {
+            if (!cat) return;
             this.selectedCategory = cat.id;
-            if (cat.target_group && cat.target_group.length > 0) {
+            let tags = Array.isArray(cat.target_group) ? cat.target_group : [];
+            if (tags.length > 0) {
                 // Auto-sync demographic radio if category has assigned target_group in Admin
-                this.targetGroup = cat.target_group[0];
+                this.targetGroup = tags[0];
             }
             this.isCategoryDropdownOpen = false;
             this.calculateFillRate();
@@ -750,7 +791,6 @@ function addProductManager() {
 
         onTargetGroupChange(group) {
             this.targetGroup = group;
-            // Highlight matching categories if category filter is set or auto-switch filter
             this.calculateFillRate();
         },
 
