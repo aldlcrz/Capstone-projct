@@ -419,67 +419,75 @@
                         </label>
                     </div>
 
-                    {{-- Expanded Variations Setup Panel --}}
+                    {{-- Expanded Variations Setup Panel (Variant Image & Variant Name) --}}
                     <div x-show="hasVariants" 
                          x-collapse 
                          x-cloak 
-                         class="p-4 bg-white rounded-2xl border border-orange-200/70 bg-orange-50/15 space-y-3.5 shadow-xs">
+                         class="p-4 bg-white rounded-2xl border border-gray-200 space-y-3.5 shadow-xs">
                         
-                        <div class="flex items-center justify-between pb-2 border-b border-orange-100/60">
-                            <span class="text-[11px] font-black uppercase tracking-wider text-gray-800 flex items-center gap-1.5">
-                                <span>🎨 Configure Variation Options</span>
+                        <div class="flex items-center justify-between pb-2 border-b border-gray-100">
+                            <span class="text-[11px] font-black uppercase tracking-wider text-gray-800">
+                                Product Variants
                             </span>
-                            <span class="text-[9px] font-bold text-gray-400 uppercase" x-text="variationsList.length + ' options added'"></span>
+                            <span class="text-[9px] font-bold text-gray-400 uppercase" x-text="variants.length + ' variant(s)'"></span>
                         </div>
 
-                        {{-- Quick Preset Suggestion Chips --}}
-                        <div class="space-y-1.5">
-                            <span class="text-[10px] font-bold uppercase tracking-wider text-gray-400">Quick-Add Popular Styles / Colors:</span>
-                            <div class="flex flex-wrap gap-1.5">
-                                <template x-for="preset in ['Natural / Ecru', 'Classic Ivory', 'Monochromatic Black', 'Navy Blue', 'Wine / Burgundy', 'Olive / Sage', 'Barong with Lining']" :key="preset">
+                        {{-- Variant Items List --}}
+                        <div class="space-y-2.5">
+                            <template x-for="(variant, index) in variants" :key="index">
+                                <div class="p-3 bg-gray-50/90 border border-gray-200/90 rounded-xl flex items-center gap-3 transition-all hover:bg-gray-50">
+                                    
+                                    {{-- Variant Image Upload Box --}}
+                                    <div class="relative shrink-0">
+                                        <label class="w-13 h-13 rounded-xl border-2 border-dashed border-gray-300 hover:border-[#C0420A] bg-white flex flex-col items-center justify-center cursor-pointer overflow-hidden transition-all relative group/img shadow-2xs">
+                                            <template x-if="variant.imagePreview">
+                                                <img :src="variant.imagePreview" class="w-full h-full object-cover">
+                                            </template>
+                                            <template x-if="!variant.imagePreview">
+                                                <div class="flex flex-col items-center justify-center text-gray-400">
+                                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                                                    <span class="text-[7px] font-black uppercase tracking-wider mt-0.5">Image</span>
+                                                </div>
+                                            </template>
+                                            <input type="file" 
+                                                   name="variant_images[]" 
+                                                   accept="image/jpeg,image/png,image/webp,image/jpg" 
+                                                   class="hidden" 
+                                                   @change="handleVariantImage($event, index)">
+                                        </label>
+                                    </div>
+
+                                    {{-- Variant Name Input --}}
+                                    <div class="flex-1 min-w-0">
+                                        <label class="text-[9px] font-bold uppercase tracking-widest text-gray-400 block mb-1">
+                                            Variant Name <span class="text-[#C0420A]">*</span>
+                                        </label>
+                                        <input type="text" 
+                                               name="variant_names[]" 
+                                               x-model="variant.name" 
+                                               placeholder="e.g. Off-White, Ivory, Navy Blue..." 
+                                               class="w-full px-3 py-2 bg-white border border-gray-200 rounded-lg text-xs font-bold text-gray-800 outline-none focus:border-[#C0420A] transition-all">
+                                    </div>
+
+                                    {{-- Delete Variant Button --}}
                                     <button type="button" 
-                                            @click="addVariantPreset(preset)"
-                                            :disabled="variationsList.includes(preset)"
-                                            :class="variationsList.includes(preset) ? 'opacity-40 bg-gray-100 text-gray-400 cursor-not-allowed' : 'bg-white hover:bg-orange-50 text-gray-700 hover:text-[#C0420A] border-gray-200 hover:border-orange-300 cursor-pointer'"
-                                            class="px-2.5 py-1 rounded-lg border text-[10px] font-bold transition-all flex items-center gap-1">
-                                        <span x-text="'+ ' + preset"></span>
+                                            @click="removeVariantRow(index)" 
+                                            class="w-8 h-8 rounded-lg text-gray-400 hover:text-red-600 hover:bg-red-50 flex items-center justify-center transition-colors shrink-0 cursor-pointer" 
+                                            title="Remove Variant">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
                                     </button>
-                                </template>
-                            </div>
+                                </div>
+                            </template>
                         </div>
 
-                        {{-- Custom Variant Input Box --}}
-                        <div class="flex gap-2">
-                            <input type="text" 
-                                   x-model="newVariantInput" 
-                                   @keydown.enter.prevent="addCustomVariant()"
-                                   placeholder="Type custom color, embroidery, or pattern (e.g. Charcoal Gray)..." 
-                                   class="flex-1 px-3.5 py-2.5 bg-white border border-gray-200 rounded-xl text-xs font-semibold outline-none focus:border-[#C0420A] transition-all">
+                        {{-- Add Variant Button --}}
+                        <div class="pt-1">
                             <button type="button" 
-                                    @click="addCustomVariant()"
-                                    class="px-4 py-2.5 bg-black hover:bg-gray-800 text-white rounded-xl text-xs font-bold transition-all shrink-0 cursor-pointer">
-                                + Add Option
+                                    @click="addVariantRow()" 
+                                    class="w-full py-2.5 px-4 bg-gray-50 hover:bg-gray-100 border border-dashed border-gray-300 hover:border-gray-400 text-gray-700 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer">
+                                <svg class="w-4 h-4 text-[#C0420A]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+                                <span>+ Add Variant</span>
                             </button>
-                        </div>
-
-                        {{-- Selected Variants Chips List --}}
-                        <div class="space-y-1.5 pt-1">
-                            <span class="text-[10px] font-bold uppercase tracking-wider text-gray-500">Active Variants for this Product:</span>
-                            <div class="flex flex-wrap gap-1.5 min-h-7">
-                                <template x-for="(v, index) in variationsList" :key="index">
-                                    <span class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-[#C0420A]/10 border border-[#C0420A]/30 text-[#C0420A] rounded-xl text-xs font-bold animate-fadeIn">
-                                        <span x-text="v"></span>
-                                        <button type="button" @click="removeVariant(index)" class="w-3.5 h-3.5 rounded-full bg-[#C0420A]/20 hover:bg-[#C0420A] hover:text-white flex items-center justify-center text-[10px] transition-colors leading-none cursor-pointer">
-                                            &times;
-                                        </button>
-                                        {{-- Hidden inputs to submit array --}}
-                                        <input type="hidden" name="variations[]" :value="v">
-                                    </span>
-                                </template>
-                                <template x-if="variationsList.length === 0">
-                                    <span class="text-xs text-gray-400 italic py-1">No variants added yet. Click a quick-add chip above or type a custom option.</span>
-                                </template>
-                            </div>
                         </div>
 
                     </div>
@@ -848,28 +856,38 @@ function addProductManager() {
 
         // Product Variations / Variants State
         hasVariants: false,
-        variationsList: [],
-        newVariantInput: '',
+        variants: [
+            { name: '', imagePreview: null }
+        ],
 
-        addVariantPreset(preset) {
-            if (preset && !this.variationsList.includes(preset)) {
-                this.variationsList.push(preset);
-                this.calculateFillRate();
-            }
-        },
-
-        addCustomVariant() {
-            const val = (this.newVariantInput || '').trim();
-            if (val && !this.variationsList.includes(val)) {
-                this.variationsList.push(val);
-                this.newVariantInput = '';
-                this.calculateFillRate();
-            }
-        },
-
-        removeVariant(index) {
-            this.variationsList.splice(index, 1);
+        addVariantRow() {
+            this.variants.push({ name: '', imagePreview: null });
             this.calculateFillRate();
+        },
+
+        removeVariantRow(index) {
+            if (this.variants.length > 1) {
+                this.variants.splice(index, 1);
+            } else {
+                this.variants = [{ name: '', imagePreview: null }];
+            }
+            this.calculateFillRate();
+        },
+
+        handleVariantImage(event, index) {
+            const file = event.target.files[0];
+            if (file) {
+                if (file.size > 5 * 1024 * 1024) {
+                    alert('Variant image must be less than 5MB.');
+                    event.target.value = '';
+                    return;
+                }
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    this.variants[index].imagePreview = e.target.result;
+                };
+                reader.readAsDataURL(file);
+            }
         },
 
         // Real-time categories state

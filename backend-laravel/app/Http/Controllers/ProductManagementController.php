@@ -217,14 +217,37 @@ class ProductManagementController extends Controller
             $product->is_on_sale          = $request->boolean('is_on_sale');
             $product->discount_percentage = $product->is_on_sale ? ($request->discount_percentage ?? 0) : null;
 
-            // Product Variations / Variants
+            // Product Variations / Variants (Variant Name & Product Image)
             $product->has_variants = $request->boolean('has_variants');
-            $variationsInput = $request->input('variations', []);
-            if ($product->has_variants && !empty($variationsInput)) {
-                if (is_string($variationsInput)) {
-                    $variationsInput = json_decode($variationsInput, true) ?? [];
+            $savedVariations = [];
+            if ($product->has_variants) {
+                $variantNames = $request->input('variant_names', []);
+                $variantImages = $request->file('variant_images', []);
+
+                if (!file_exists(public_path('uploads/products/variants'))) {
+                    @mkdir(public_path('uploads/products/variants'), 0777, true);
                 }
-                $product->variations = is_array($variationsInput) ? array_values(array_filter($variationsInput)) : [];
+
+                if (is_array($variantNames)) {
+                    foreach ($variantNames as $idx => $vName) {
+                        $vName = trim($vName);
+                        if (empty($vName)) continue;
+
+                        $vImgPath = null;
+                        if (isset($variantImages[$idx]) && $variantImages[$idx]->isValid()) {
+                            $vFile = $variantImages[$idx];
+                            $vFileName = time() . '_variant_' . Str::random(8) . '.' . $vFile->getClientOriginalExtension();
+                            $vFile->move(public_path('uploads/products/variants'), $vFileName);
+                            $vImgPath = 'uploads/products/variants/' . $vFileName;
+                        }
+
+                        $savedVariations[] = [
+                            'name'  => $vName,
+                            'image' => $vImgPath,
+                        ];
+                    }
+                }
+                $product->variations = !empty($savedVariations) ? $savedVariations : null;
             } else {
                 $product->variations = null;
             }
