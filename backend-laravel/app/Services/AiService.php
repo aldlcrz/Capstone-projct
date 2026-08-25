@@ -872,6 +872,7 @@ STRICT DOMAIN LIMITS & SECURITY:
     }
 
     // ==========================================
+    // ==========================================
     // 3. AI SELLER LISTING & DESCRIPTION GENERATOR
     // ==========================================
 
@@ -916,6 +917,151 @@ STRICT DOMAIN LIMITS & SECURITY:
             'description' => $aiOutput,
             'fabric' => $fabric,
             'collar' => $collar,
+        ];
+    }
+
+    /**
+     * AI Image-to-Product Suggestion & Auto-Fill.
+     */
+    public static function suggestProductFromImage(string $imagePath, ?string $currentName = null, ?string $currentCategory = null): array
+    {
+        $categories = \App\Models\Category::pluck('name', 'id')->toArray();
+        $catListStr = implode(', ', $categories);
+
+        $apiKey = self::getApiKey();
+        if ($apiKey && file_exists($imagePath)) {
+            $rawMime = @mime_content_type($imagePath) ?: 'image/jpeg';
+            $mimeType = match (strtolower($rawMime)) {
+                'image/png' => 'image/png',
+                'image/webp' => 'image/webp',
+                'image/heic' => 'image/heic',
+                'image/heif' => 'image/heif',
+                default => 'image/jpeg'
+            };
+            $imageData = base64_encode(file_get_contents($imagePath));
+
+            $prompt = "You are an AI heritage fashion expert for LumBarong, an e-commerce platform for authentic handcrafted Philippine garments from Lumban, Laguna. "
+                . "Analyze this product photo and recommend: "
+                . "1. A concise, elegant high-converting product title (English, max 80 chars, e.g. 'Hand-Embroidered Piña-Jusi Barong Tagalog' or 'Traditional Mestiza Filipiniana Bolero Dress'). "
+                . "2. The most matching category from these available options: [{$catListStr}]. "
+                . "3. The target group ('Men', 'Women', or 'Kids'). "
+                . "4. Recommended fabric type ('100% Piña', 'Jusi Silk', 'Piña-Seda', 'Organza', 'Cocoon Silk'). "
+                . "5. An inspiring 2-3 paragraph artisan description celebrating the craftsmanship, embroidery technique (e.g., Calado), and care instructions. "
+                . "Respond strictly in JSON format: {\"title\": string, \"category\": string, \"target_group\": \"Men\"|\"Women\"|\"Kids\", \"fabric_type\": string, \"description\": string}";
+
+            $payload = [
+                'contents' => [
+                    [
+                        'parts' => [
+                            ['text' => $prompt],
+                            [
+                                'inline_data' => [
+                                    'mime_type' => $mimeType,
+                                    'data' => $imageData
+                                ]
+                            ]
+                        ]
+                    ]
+                ]
+            ];
+
+            $configuredModel = config('services.gemini.model') ?: env('GEMINI_MODEL', 'gemini-flash-latest');
+            $visionModels = array_unique(array_filter([
+                $configuredModel,
+                'gemini-flash-latest',
+                'gemini-2.5-flash',
+                'gemini-2.0-flash',
+                'gemini-1.5-flash'
+            ]));
+
+            foreach ($visionModels as $vModel) {
+                try {
+                    $url = "https://generativelanguage.googleapis.com/v1beta/models/{$vModel}:generateContent?key={$apiKey}";
+                    $res = Http::withOptions([
+                        'curl' => [CURLOPT_IPRESOLVE => CURL_IPRESOLVE_V4],
+                        'verify' => false,
+                    ])->timeout(15)->post($url, $payload);
+                    if ($res->successful()) {
+                        $json = $res->json();
+                        $rawText = $json['candidates'][0]['content']['parts'][0]['text'] ?? '';
+                        if (preg_match('/\{[\s\S]*\}/', $rawText, $m)) {
+                            $parsed = json_decode($m[0], true);
+                            if (is_array($parsed) && !empty($parsed['title'])) {
+                                // Find matching category id
+                                $matchedCatId = null;
+                                $suggestedCatName = strtolower($parsed['category'] ?? '');
+                                foreach ($categories as $id => $name) {
+                                    if (str_contains($suggestedCatName, strtolower($name)) || str_contains(strtolower($name), $suggestedCatName)) {
+                                        $matchedCatId = $id;
+                                        break;
+                                    }
+                                }
+                                if (!$matchedCatId && !empty($categories)) {
+                                    $matchedCatId = array_key_first($categories);
+                                }
+
+                                return [
+                                    'success' => true,
+                                    'title' => trim(str_replace(['"', "'", 'Title:', 'Product Title:'], '', $parsed['title'])),
+                                    'category_id' => $matchedCatId,
+                                    'category_name' => $parsed['category'] ?? 'Barong Tagalog',
+                                    'target_group' => in_array($parsed['target_group'] ?? '', ['Men', 'Women', 'Kids']) ? $parsed['target_group'] : 'Men',
+                                    'fabric_type' => $parsed['fabric_type'] ?? '100% Piña',
+                                    'description' => trim($parsed['description'] ?? ''),
+                                ];
+                            }
+                        }
+                    }
+                } catch (\Throwable $e) {
+                    Log::warning("Gemini Vision suggestProductFromImage failed on {$vModel}: " . $e->getMessage());
+                }
+            }
+        }
+
+        // Fallback intelligent heuristics
+        $fn = strtolower(basename($imagePath));
+        $isFilipiniana = str_contains($fn, 'filipiniana') || str_contains($fn, 'dress') || str_contains($fn, 'women') || str_contains($fn, 'terno') || str_contains($fn, 'bolero');
+        $isKid = str_contains($fn, 'kid') || str_contains($fn, 'child') || str_contains($fn, 'boy') || str_contains($fn, 'girl');
+
+        $targetGroup = $isKid ? 'Kids' : ($isFilipiniana ? 'Women' : 'Men');
+        $fabric = '100% Piña';
+        $title = $isKid ? "Handmade Heritage Barong for Kids" : ($isFilipiniana ? "Traditional Lumban Filipiniana Dress" : "Handcrafted Artisan Piña Barong Tagalog");
+
+        $matchedCatId = null;
+        foreach ($categories as $id => $name) {
+            $n = strtolower($name);
+            if ($isFilipiniana && (str_contains($n, 'filipiniana') || str_contains($n, 'dress') || str_contains($n, 'terno'))) {
+                $matchedCatId = $id;
+                break;
+            } elseif ($isKid && str_contains($n, 'kid')) {
+                $matchedCatId = $id;
+                break;
+            } elseif (!$isFilipiniana && !$isKid && str_contains($n, 'barong')) {
+                $matchedCatId = $id;
+                break;
+            }
+        }
+        if (!$matchedCatId && !empty($categories)) {
+            $matchedCatId = array_key_first($categories);
+        }
+
+        $description = "Experience timeless Filipino elegance with this exquisite handcrafted masterpiece, meticulously tailored by master artisans in Lumban, Laguna—the Embroidery Capital of the Philippines.\n\n"
+            . "**Product Highlights:**\n"
+            . "• Fabric: Premium {$fabric}\n"
+            . "• Embroidery: Authentic Calado hand-embroidery\n"
+            . "• Origin: Lumban, Laguna, Philippines\n"
+            . "• Perfect For: Formal Gatherings, Weddings, and Cultural Occasions\n\n"
+            . "**Garment Care Instructions:**\n"
+            . "Dry clean or gentle hand wash in cold water with mild soap. Do not wring. Iron with a pressing cloth on low heat.";
+
+        return [
+            'success' => true,
+            'title' => $title,
+            'category_id' => $matchedCatId,
+            'category_name' => $categories[$matchedCatId] ?? 'Barong Tagalog',
+            'target_group' => $targetGroup,
+            'fabric_type' => $fabric,
+            'description' => $description,
         ];
     }
 

@@ -395,6 +395,7 @@ Route::prefix('ai')->group(function () {
     Route::post('/stylist/chat', [AiController::class, 'chatStylist'])->name('ai.stylist');
     Route::post('/sizing/recommend', [AiController::class, 'recommendSize'])->name('ai.sizing');
     Route::post('/seller/generate-description', [AiController::class, 'generateSellerListing'])->name('ai.seller.description');
+    Route::post('/seller/suggest-product', [AiController::class, 'suggestProduct'])->name('ai.seller.suggest');
     Route::post('/security/password-check', [AiController::class, 'analyzePassword'])->name('ai.security.password');
     Route::post('/payment-reference/check', [AiController::class, 'checkPaymentReference'])->name('ai.payment.check');
     Route::post('/receipt/verify', [AiController::class, 'verifyReceipt'])->name('ai.receipt.verify');

@@ -1,14 +1,29 @@
 @extends('layouts.seller')
 
 @section('content')
-<div class="max-w-350 mx-auto pb-36 sm:pb-28 lg:pb-12 px-2.5 sm:px-6">
-    <div class="mb-3 sm:mb-10">
-        <a href="{{ route('seller.products.index') }}" class="inline-flex items-center gap-2 text-[10px] font-bold text-gray-400 uppercase tracking-widest hover:text-[#C0420A] transition-colors mb-1.5 sm:mb-2">
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
-            Back to catalogue
-        </a>
-        <h1 class="font-serif text-xl sm:text-3xl font-bold text-black uppercase">New <span class="text-[#C0420A] italic lowercase">heritage piece</span></h1>
+<div class="max-w-4xl mx-auto pb-36 sm:pb-28 lg:pb-16 px-3 sm:px-6" x-data="addProductManager()">
+    {{-- Top Header & Navigation --}}
+    <div class="mb-4 sm:mb-8 flex items-center justify-between">
+        <div>
+            <a href="{{ route('seller.products.index') }}" class="inline-flex items-center gap-2 text-[10px] font-bold text-gray-400 uppercase tracking-widest hover:text-[#C0420A] transition-colors mb-1.5 sm:mb-2">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
+                Back to catalogue
+            </a>
+            <h1 class="font-serif text-xl sm:text-3xl font-bold text-black uppercase tracking-tight">
+                New <span class="text-[#C0420A] italic lowercase">heritage piece</span>
+            </h1>
+        </div>
+
+        {{-- Step Indicator Badge --}}
+        <div class="flex items-center gap-2">
+            <span class="text-[10px] font-black uppercase tracking-widest px-3 py-1 rounded-full border transition-all"
+                  :class="step === 1 ? 'bg-amber-50 text-amber-700 border-amber-200' : 'bg-emerald-50 text-emerald-700 border-emerald-200'">
+                <span x-text="step === 1 ? 'Step 1: Image & Core Info' : 'Step 2: Specifications'"></span>
+            </span>
+        </div>
     </div>
+
+    {{-- Error Flash Notification --}}
     @if($errors->any() || session('error'))
     <div 
         x-data="{ show: true, init() { setTimeout(() => this.show = false, 8000) } }"
@@ -44,149 +59,355 @@
     </div>
     @endif
 
-    <form action="{{ route('seller.products.store') }}" method="POST" enctype="multipart/form-data" onsubmit="return validateProductForm(event, false)" class="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
+    {{-- Main Product Form --}}
+    <form action="{{ route('seller.products.store') }}" method="POST" id="productForm" enctype="multipart/form-data" onsubmit="return validateProductForm(event, false)" class="space-y-6">
         @csrf
+        <input type="hidden" name="action" id="formActionInput" value="publish">
 
-        {{-- Left Column: Core Product Data (2 cols) --}}
-        <div class="lg:col-span-2 space-y-4">
-
-            {{-- 1. Basic Product Information --}}
-            <div class="bg-white p-4 sm:p-6 rounded-2xl border border-gray-100 shadow-xs space-y-4">
-                <div class="flex items-center gap-2.5 pb-2 border-b border-gray-100/80">
-                    <div class="w-7 h-7 rounded-lg bg-[#C0420A]/10 flex items-center justify-center text-[#C0420A] shrink-0">
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                    </div>
-                    <div>
-                        <h3 class="text-xs sm:text-sm font-black text-gray-900 uppercase tracking-widest leading-none">Basic Information</h3>
-                        <p class="text-[10px] text-gray-400 font-medium mt-0.5">Core title and artisan craftsmanship story</p>
-                    </div>
-                </div>
-
-                <div class="space-y-3.5 sm:space-y-4">
-                    {{-- Product Name --}}
-                    <div class="space-y-1.5">
-                        <div class="flex items-center justify-between">
-                            <label class="text-[10px] sm:text-[11px] font-bold uppercase tracking-wider text-gray-700">
-                                Product Name <span class="text-[#C0420A]">*</span>
-                            </label>
-                            <span class="text-[9px] text-gray-400 font-medium hidden sm:inline-block">Concise & descriptive</span>
-                        </div>
-                        <input type="text" name="name" required value="{{ old('name') }}"
-                            placeholder="e.g. Hand-Woven Piña Barong Tagalog"
-                            class="w-full px-3.5 py-2.5 sm:px-4 sm:py-3 bg-gray-50/70 border border-gray-200/90 rounded-xl outline-none focus:border-[#C0420A] focus:bg-white focus:ring-2 focus:ring-[#C0420A]/10 transition-all font-semibold text-sm text-gray-800 placeholder:text-gray-400 placeholder:font-normal">
-                    </div>
-
-                    {{-- Artisan Description --}}
-                    <div class="space-y-1.5">
-                        <div class="flex items-center justify-between">
-                            <label class="text-[10px] sm:text-[11px] font-bold uppercase tracking-wider text-gray-700">
-                                Artisan Description <span class="text-[#C0420A]">*</span>
-                            </label>
-                            <span class="text-[9px] text-gray-400 font-medium hidden sm:inline-block">Max 500 characters</span>
-                        </div>
-
-                        <div class="relative group">
-                            <textarea name="description" id="artisanDescription" required rows="4" maxlength="500"
-                                oninput="updateCharCount(this)"
-                                placeholder="Describe the craftsmanship, cultural heritage, weaving techniques, and unique story behind this piece..."
-                                class="w-full px-3.5 py-2.5 sm:px-4 sm:py-3 bg-gray-50/70 border border-gray-200/90 rounded-xl outline-none focus:border-[#C0420A] focus:bg-white focus:ring-2 focus:ring-[#C0420A]/10 transition-all font-normal text-sm text-gray-800 placeholder:text-gray-400 resize-none pb-7 sm:pb-8">{{ old('description') }}</textarea>
-                            <div class="absolute bottom-2 right-2.5 sm:bottom-2.5 sm:right-3.5 flex items-center gap-1 bg-white/95 backdrop-blur-xs px-2 py-0.5 rounded-md border border-gray-100 text-[9px] sm:text-[10px] font-bold text-gray-400 pointer-events-none shadow-2xs">
-                                <span id="charCounter">{{ strlen(old('description', '')) }}</span><span class="text-gray-300">/</span><span>500</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            {{-- 2. Pricing & Shipping Stat Card --}}
-            <div class="bg-white p-4 sm:p-6 rounded-2xl border border-gray-100 shadow-xs">
-                <div class="grid grid-cols-2 lg:grid-cols-4 gap-3">
-                    <div id="price-card" class="p-3.5 bg-[#F9F8F6] border border-stone-200/60 rounded-xl flex flex-col justify-between h-24 sm:h-26 transition-all">
-                        <label class="text-[9px] font-bold uppercase tracking-widest text-stone-500">Price (₱) <span class="text-[#C0420A]">*</span></label>
-                        <input type="number" name="price" id="priceInput" required min="1" max="10000" step="0.01" placeholder="0.00"
-                            oninput="if(parseFloat(this.value) > 10000) this.value = 10000; updateDiscountPreview();"
-                            class="w-full bg-transparent font-sans text-lg font-bold text-gray-900 outline-none border-b border-transparent focus:border-[#C0420A] transition-all">
-                        <p class="text-[8px] text-stone-400 font-medium">Item base price</p>
-                    </div>
-
-                    <div id="stock-card" class="p-3.5 bg-[#F9F8F6] border border-stone-200/60 rounded-xl flex flex-col justify-between h-24 sm:h-26 transition-all">
-                        <label class="text-[9px] font-bold uppercase tracking-widest text-stone-500">Total Stock <span class="text-[#C0420A]">*</span></label>
-                        <input type="number" name="stock" id="total_stock" min="0" placeholder="0"
-                            readonly tabindex="-1"
-                            class="w-full bg-transparent font-sans text-lg font-bold text-gray-900 outline-none select-none cursor-not-allowed">
-                        <p class="text-[8px] text-stone-400 font-medium">Auto-calculated</p>
-                    </div>
-
-                    <div id="shipping-fee-card" class="p-3.5 bg-[#F9F8F6] border border-stone-200/60 rounded-xl flex flex-col justify-between h-24 sm:h-26 transition-all">
-                        <label class="text-[9px] font-bold uppercase tracking-widest text-stone-500">Shipping Fee (₱) <span class="text-[#C0420A]">*</span></label>
-                        <input type="number" name="shippingFee" id="shippingFeeInput" required min="0" max="500" step="0.01" placeholder="0.00"
-                            value="{{ old('shippingFee', 0) }}"
-                            oninput="if(parseFloat(this.value) > 500) this.value = 500;"
-                            class="w-full bg-transparent font-sans text-lg font-bold text-gray-900 outline-none border-b border-transparent focus:border-[#C0420A] transition-all">
-                        <p class="text-[8px] text-stone-400 font-medium">Enter 0 for free</p>
-                    </div>
-
-                    <div id="shipping-days-card" class="p-3.5 bg-[#F9F8F6] border border-stone-200/60 rounded-xl flex flex-col justify-between h-24 sm:h-26 transition-all">
-                        <label class="text-[9px] font-bold uppercase tracking-widest text-stone-500">Est. Shipping Days <span class="text-[#C0420A]">*</span></label>
-                        <input type="number" name="shippingDays" id="shippingDaysInput" required min="1" max="30" step="1" placeholder="5"
-                            value="{{ old('shippingDays', 5) }}"
-                            oninput="if(parseInt(this.value) > 30) this.value = 30;"
-                            class="w-full bg-transparent font-sans text-lg font-bold text-gray-900 outline-none border-b border-transparent focus:border-[#C0420A] transition-all">
-                        <p class="text-[8px] text-stone-400 font-medium">To deliver</p>
-                    </div>
-                </div>
-            </div>
-
-            {{-- 3. Heritage Sizing & Inventory Card --}}
-            <div id="sizing-section" class="bg-white p-4 sm:p-6 rounded-2xl border border-gray-100 shadow-xs space-y-3 transition-all">
+        {{-- ========================================================================= --}}
+        {{-- PHASE 1: IMAGE FIRST & CORE IDENTIFICATION (Always at Top)               --}}
+        {{-- ========================================================================= --}}
+        <div class="bg-white p-5 sm:p-7 rounded-2xl border border-gray-100 shadow-sm space-y-6">
+            
+            {{-- 1. Product Image Section (1/8) --}}
+            <div class="space-y-3">
                 <div class="flex items-center justify-between">
-                    <h3 class="text-xs sm:text-sm font-bold text-black uppercase tracking-widest">Heritage Sizing & Stock <span class="text-[#C0420A]">*</span></h3>
-                    <span class="text-[10px] text-gray-400 font-medium">Assign stock per size</span>
+                    <div class="flex items-center gap-2">
+                        <label class="text-xs sm:text-sm font-bold text-gray-900 uppercase tracking-wider">
+                            Product Image <span class="text-gray-400 font-normal" x-text="'(' + imageCount + '/8)'"></span> <span class="text-[#C0420A]">*</span>
+                        </label>
+                    </div>
+                    <span class="text-[10px] text-gray-400 font-medium hidden sm:inline-block">First photo will be the Cover Image</span>
                 </div>
-                <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-2.5">
-                    @foreach(['S', 'M', 'L', 'XL', 'XXL', 'Custom'] as $size)
-                        <div class="p-2.5 bg-gray-50 border border-gray-200 rounded-xl space-y-2 text-center transition-all hover:bg-white hover:border-gray-300">
-                            <label class="flex items-center justify-center gap-1.5 text-xs font-black uppercase text-gray-700 cursor-pointer select-none">
-                                <input type="checkbox" name="sizes[]" value="{{ $size }}" id="size_cb_{{ $size }}"
-                                    class="rounded text-[#C0420A] focus:ring-[#C0420A] w-3.5 h-3.5 size-checkbox"
-                                    onchange="toggleSizeStock(this, '{{ $size }}')">
-                                <span>Size {{ $size }}</span>
-                            </label>
-                            <input type="number" name="size_stocks[{{ $size }}]" id="stock_{{ $size }}" 
-                                value="0" min="0" max="10000" disabled
-                                oninput="if(parseInt(this.value) > 10000) this.value = 10000; calculateTotalStock();"
-                                class="w-full px-2 py-1.5 bg-white border border-gray-200 rounded-lg outline-none text-xs font-bold text-center size-stock-input">
+
+                {{-- Image Slots & Upload Trigger --}}
+                <div class="flex flex-wrap gap-3 items-center">
+                    {{-- Rendered Previews (Cover Image & Additional Photos) --}}
+                    <template x-for="(img, index) in imagePreviews" :key="index">
+                        <div class="relative w-24 h-24 sm:w-28 sm:h-28 rounded-xl overflow-hidden border border-gray-200 bg-gray-50 shadow-xs group shrink-0">
+                            <img :src="img.url" class="w-full h-full object-cover object-top transition-transform group-hover:scale-105">
+                            
+                            {{-- Cover Image Ribbon on First Image --}}
+                            <template x-if="index === 0">
+                                <div class="absolute bottom-0 inset-x-0 bg-black/75 backdrop-blur-xs py-0.5 text-center text-[9px] font-bold text-white uppercase tracking-wider">
+                                    Cover Image
+                                </div>
+                            </template>
+
+                            {{-- Image Number Badge (for secondary images) --}}
+                            <template x-if="index > 0">
+                                <div class="absolute top-1.5 left-1.5 w-5 h-5 rounded-full bg-black/60 backdrop-blur-xs flex items-center justify-center text-[9px] font-bold text-white" x-text="index + 1"></div>
+                            </template>
+
+                            {{-- Delete Button (X) --}}
+                            <button type="button" @click="removeImage(index)" class="absolute top-1.5 right-1.5 w-5 h-5 bg-red-600 hover:bg-red-700 text-white rounded-full flex items-center justify-center text-[10px] font-black shadow-md hover:scale-110 active:scale-95 transition-all">
+                                ✕
+                            </button>
                         </div>
-                    @endforeach
+                    </template>
+
+                    {{-- Add Image [+] Slot (Only shown if less than 8 images) --}}
+                    <template x-if="imageCount < 8">
+                        <label for="imageUploadInput"
+                               id="dropZone"
+                               class="w-24 h-24 sm:w-28 sm:h-28 rounded-xl border-2 border-dashed border-gray-300 hover:border-[#C0420A] bg-gray-50/70 hover:bg-orange-50/20 flex flex-col items-center justify-center gap-1 cursor-pointer transition-all shrink-0 text-center p-2 group">
+                            <div class="w-8 h-8 rounded-lg bg-gray-100 group-hover:bg-[#C0420A]/10 text-gray-400 group-hover:text-[#C0420A] flex items-center justify-center transition-colors">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                                </svg>
+                            </div>
+                            <span class="text-[10px] font-bold text-gray-500 group-hover:text-[#C0420A]" x-text="imageCount === 0 ? 'Upload Photo' : 'Add Photo'"></span>
+                        </label>
+                    </template>
+
+                    {{-- Hidden Multi-File Input --}}
+                    <input type="file" id="imageUploadInput" name="images[]" multiple accept="image/jpeg,image/png,image/webp" class="hidden" @change="handleFileChange($event)">
+                </div>
+
+                {{-- Empty Image Helper Warning --}}
+                <div x-show="imageCount === 0" class="text-[11px] text-gray-400 flex items-center gap-1.5 pt-1">
+                    <svg class="w-3.5 h-3.5 text-[#C0420A]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                    <span>Upload your main cover photo first to unlock auto-suggestions and full specifications.</span>
                 </div>
             </div>
 
-            {{-- 4. Category & Sale Configuration --}}
-            <div class="bg-white p-4 sm:p-6 rounded-2xl border border-gray-100 shadow-xs space-y-4">
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <div class="space-y-1.5">
-                        <label class="text-[10px] font-bold uppercase tracking-widest text-gray-400">Product Category <span class="text-[#C0420A]">*</span></label>
-                        <select name="CategoryId" id="categorySelect" required
-                            class="w-full px-4 py-2.5 bg-gray-50/50 border border-gray-200/80 rounded-xl outline-none focus:border-[#C0420A] transition-all font-bold text-xs appearance-none">
-                            <option value="" disabled selected>Select a category</option>
+            <div class="border-t border-gray-100 pt-5 space-y-4">
+                {{-- 2. Product Name (English) --}}
+                <div class="space-y-1.5">
+                    <div class="flex items-center justify-between">
+                        <label class="text-[11px] font-bold uppercase tracking-wider text-gray-700">
+                            Product Name(English) <span class="text-[#C0420A]">*</span>
+                            <span class="text-[10px] text-gray-400 font-normal" x-text="'(' + (productName ? productName.length : 0) + '/100)'"></span>
+                        </label>
+                        
+                        {{-- AI Auto-Fill / Re-Generate Button --}}
+                        <button type="button" 
+                                @click="triggerAiGenerate()"
+                                :disabled="isAiLoading || imageCount === 0"
+                                class="inline-flex items-center gap-1.5 text-xs font-bold text-blue-600 hover:text-blue-700 disabled:opacity-40 disabled:cursor-not-allowed transition-all">
+                            <span x-show="!isAiLoading" class="flex items-center gap-1">
+                                <svg class="w-3.5 h-3.5 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+                                <span>Re-Generate</span>
+                            </span>
+                            <span x-show="isAiLoading" class="flex items-center gap-1 text-blue-500">
+                                <svg class="animate-spin w-3.5 h-3.5" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path></svg>
+                                <span>AI Analyzing...</span>
+                            </span>
+                        </button>
+                    </div>
+
+                    <div class="relative flex items-center">
+                        <input type="text" 
+                               name="name" 
+                               id="productNameInput"
+                               required 
+                               maxlength="100"
+                               x-model="productName"
+                               @input="calculateFillRate()"
+                               placeholder="e.g. Hand-Woven Piña Barong Tagalog with Calado Embroidery"
+                               class="w-full px-4 py-3 bg-gray-50/70 border border-gray-200 rounded-xl outline-none focus:border-[#C0420A] focus:bg-white focus:ring-2 focus:ring-[#C0420A]/10 transition-all font-semibold text-sm text-gray-800 placeholder:text-gray-400 placeholder:font-normal pr-10">
+                        
+                        {{-- Clear Button (X) --}}
+                        <button type="button" 
+                                x-show="productName && productName.length > 0"
+                                @click="productName = ''; calculateFillRate();"
+                                class="absolute right-3 text-gray-400 hover:text-gray-600 transition-colors">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                        </button>
+                    </div>
+                </div>
+
+                {{-- 3. Product Category --}}
+                <div class="space-y-1.5">
+                    <div class="flex items-center justify-between">
+                        <label class="text-[11px] font-bold uppercase tracking-wider text-gray-700">
+                            Category <span class="text-[#C0420A]">*</span>
+                        </label>
+                        <span class="text-[9px] text-gray-400 font-medium">Heritage classification</span>
+                    </div>
+
+                    <div class="relative">
+                        <select name="CategoryId" 
+                                id="categorySelect" 
+                                required
+                                x-model="selectedCategory"
+                                @change="calculateFillRate()"
+                                class="w-full px-4 py-3 bg-gray-50/70 border border-gray-200 rounded-xl outline-none focus:border-[#C0420A] focus:bg-white focus:ring-2 focus:ring-[#C0420A]/10 transition-all font-semibold text-sm text-gray-800 appearance-none pr-10">
+                            <option value="" disabled selected>Select category (e.g. Barong Tagalog > Piña Formal)</option>
                             @foreach($categories as $category)
                                 <option value="{{ $category->id }}" data-name="{{ strtolower($category->name) }}">{{ $category->name }}</option>
                             @endforeach
                         </select>
+                        <div class="absolute right-3.5 top-1/2 -translate-y-1/2 pointer-events-none text-gray-400">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+                        </div>
                     </div>
+                </div>
+            </div>
 
-                    <div id="target-group-container" class="space-y-1.5 p-1 rounded-xl transition-all">
-                        <label class="text-[10px] font-bold uppercase tracking-widest text-gray-400">Who is this for? <span class="text-[#C0420A]">*</span></label>
+            {{-- AI Helper Informational Card (Matching Screenshot) --}}
+            <div class="p-3.5 rounded-xl bg-blue-50/60 border border-blue-100 flex items-start gap-2.5">
+                <div class="w-5 h-5 rounded-md bg-blue-500/10 text-blue-600 flex items-center justify-center shrink-0 mt-0.5">
+                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+                </div>
+                <p class="text-[11px] text-blue-900/80 leading-relaxed font-medium">
+                    Please upload your product image and the AI Services will auto-generate title, category, target group, and artisan description to help complete your listing.
+                </p>
+            </div>
+
+            {{-- Step 1 Primary CTA Button: "Next: Complete Product Info" --}}
+            <div x-show="step === 1" class="pt-2">
+                <button type="button" 
+                        @click="goToStep2()"
+                        class="w-full py-4 bg-blue-600 hover:bg-blue-700 active:scale-[0.99] text-white rounded-full font-bold text-sm tracking-wide shadow-lg shadow-blue-500/20 transition-all flex items-center justify-center gap-2">
+                    <span>Next: Complete Product Info</span>
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
+                </button>
+            </div>
+        </div>
+
+        {{-- ========================================================================= --}}
+        {{-- PHASE 2: COMPLETE SPECIFICATIONS (Progressively Revealed after Step 1)     --}}
+        {{-- ========================================================================= --}}
+        <div x-show="step >= 2" x-collapse class="space-y-6">
+
+            {{-- 1. Fill Rate & Listing Health Bar --}}
+            <div class="bg-white p-4 sm:p-5 rounded-2xl border border-gray-100 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                <div class="flex items-center gap-3">
+                    <span class="text-xs font-black uppercase tracking-wider text-gray-700">Fill Rate</span>
+                    <div class="w-36 sm:w-48 h-2.5 bg-gray-100 rounded-full overflow-hidden">
+                        <div class="h-full bg-linear-to-r from-blue-500 to-indigo-600 rounded-full transition-all duration-500" :style="'width: ' + fillRate + '%'"></div>
+                    </div>
+                    <span class="text-xs font-black text-blue-600" x-text="fillRate + '%'"></span>
+                    <span class="text-base">🚀</span>
+                </div>
+
+                <div class="flex items-center gap-2">
+                    <span class="text-[10px] text-gray-400 font-medium">All essential specifications</span>
+                    <button type="button" @click="triggerAiGenerate()" class="text-[11px] font-bold text-blue-600 hover:underline">
+                        Re-Generate All
+                    </button>
+                </div>
+            </div>
+
+            {{-- 2. Heritage Specifications (Fabric Type & Target Group) --}}
+            <div class="bg-white p-5 sm:p-6 rounded-2xl border border-gray-100 shadow-xs space-y-4">
+                <div class="flex items-center gap-2.5 pb-2 border-b border-gray-100">
+                    <div class="w-7 h-7 rounded-lg bg-[#C0420A]/10 flex items-center justify-center text-[#C0420A] shrink-0 font-bold text-xs">1</div>
+                    <h3 class="text-xs sm:text-sm font-black text-gray-900 uppercase tracking-widest leading-none">Heritage Classification</h3>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    {{-- Target Group --}}
+                    <div id="target-group-container" class="space-y-1.5">
+                        <label class="text-[10px] font-bold uppercase tracking-widest text-gray-500">Who is this for? <span class="text-[#C0420A]">*</span></label>
                         <div class="flex gap-2">
                             @foreach(['Men', 'Women', 'Kids'] as $group)
                                 <label class="flex-1 cursor-pointer">
-                                    <input type="radio" name="target_group" value="{{ $group }}" class="hidden peer target-group-radio" {{ old('target_group') == $group ? 'checked' : '' }}>
-                                    <div class="w-full py-2 rounded-xl border border-gray-200 bg-gray-50/50 text-xs font-bold text-gray-500 text-center uppercase tracking-wider peer-checked:border-[#C0420A] peer-checked:bg-[#C0420A]/5 peer-checked:text-[#C0420A] transition-all">
+                                    <input type="radio" 
+                                           name="target_group" 
+                                           value="{{ $group }}" 
+                                           x-model="targetGroup"
+                                           @change="calculateFillRate()"
+                                           class="hidden peer target-group-radio" 
+                                           {{ old('target_group', 'Men') == $group ? 'checked' : '' }}>
+                                    <div class="w-full py-2.5 rounded-xl border border-gray-200 bg-gray-50 text-xs font-bold text-gray-600 text-center uppercase tracking-wider peer-checked:border-[#C0420A] peer-checked:bg-[#C0420A]/10 peer-checked:text-[#C0420A] transition-all">
                                         {{ $group }}
                                     </div>
                                 </label>
                             @endforeach
                         </div>
+                    </div>
+
+                    {{-- Fabric Type --}}
+                    <div class="space-y-1.5">
+                        <label class="text-[10px] font-bold uppercase tracking-widest text-gray-500">Fabric Type <span class="text-[#C0420A]">*</span></label>
+                        <select name="fabric_type" 
+                                id="fabricTypeSelect"
+                                x-model="fabricType"
+                                @change="calculateFillRate()"
+                                class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl outline-none focus:border-[#C0420A] transition-all font-bold text-xs">
+                            <option value="100% Piña">100% Authentic Piña (Pineapple Fiber)</option>
+                            <option value="Piña-Seda">Piña-Seda (Pineapple Silk Blend)</option>
+                            <option value="Jusi Silk">Jusi Silk (Classic Traditional)</option>
+                            <option value="Cocoon Silk">Cocoon Silk</option>
+                            <option value="Organza">Organza</option>
+                            <option value="Cotton-Linen">Premium Cotton-Linen</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            {{-- 3. Heritage Sizing & Inventory Matrix --}}
+            <div id="sizing-section" class="bg-white p-5 sm:p-6 rounded-2xl border border-gray-100 shadow-xs space-y-4">
+                <div class="flex items-center justify-between pb-2 border-b border-gray-100">
+                    <div class="flex items-center gap-2.5">
+                        <div class="w-7 h-7 rounded-lg bg-[#C0420A]/10 flex items-center justify-center text-[#C0420A] shrink-0 font-bold text-xs">2</div>
+                        <div>
+                            <h3 class="text-xs sm:text-sm font-black text-gray-900 uppercase tracking-widest leading-none">Heritage Sizing & Stock <span class="text-[#C0420A]">*</span></h3>
+                            <p class="text-[10px] text-gray-400 font-medium mt-0.5">Assign stock quantities per size</p>
+                        </div>
+                    </div>
+                    <span class="text-[10px] text-gray-400 font-bold uppercase">At least 1 size required</span>
+                </div>
+
+                <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-2.5">
+                    @foreach(['S', 'M', 'L', 'XL', 'XXL', 'Custom'] as $size)
+                        <div class="p-2.5 bg-gray-50 border border-gray-200 rounded-xl space-y-2 text-center transition-all hover:bg-white hover:border-gray-300">
+                            <label class="flex items-center justify-center gap-1.5 text-xs font-black uppercase text-gray-700 cursor-pointer select-none">
+                                <input type="checkbox" 
+                                       name="sizes[]" 
+                                       value="{{ $size }}" 
+                                       id="size_cb_{{ $size }}"
+                                       class="rounded text-[#C0420A] focus:ring-[#C0420A] w-3.5 h-3.5 size-checkbox"
+                                       onchange="toggleSizeStock(this, '{{ $size }}'); calculateFillRate();">
+                                <span>Size {{ $size }}</span>
+                            </label>
+                            <input type="number" 
+                                   name="size_stocks[{{ $size }}]" 
+                                   id="stock_{{ $size }}" 
+                                   value="0" 
+                                   min="0" 
+                                   max="10000" 
+                                   disabled
+                                   oninput="if(parseInt(this.value) > 10000) this.value = 10000; calculateTotalStock(); calculateFillRate();"
+                                   class="w-full px-2 py-1.5 bg-white border border-gray-200 rounded-lg outline-none text-xs font-bold text-center size-stock-input">
+                        </div>
+                    @endforeach
+                </div>
+            </div>
+
+            {{-- 4. Pricing & Logistics Grid --}}
+            <div class="bg-white p-5 sm:p-6 rounded-2xl border border-gray-100 shadow-xs space-y-4">
+                <div class="flex items-center gap-2.5 pb-2 border-b border-gray-100">
+                    <div class="w-7 h-7 rounded-lg bg-[#C0420A]/10 flex items-center justify-center text-[#C0420A] shrink-0 font-bold text-xs">3</div>
+                    <h3 class="text-xs sm:text-sm font-black text-gray-900 uppercase tracking-widest leading-none">Price & Shipping Information</h3>
+                </div>
+
+                <div class="grid grid-cols-2 lg:grid-cols-4 gap-3">
+                    {{-- Price Input --}}
+                    <div id="price-card" class="p-3.5 bg-[#F9F8F6] border border-stone-200/80 rounded-xl flex flex-col justify-between h-24 sm:h-26 transition-all">
+                        <label class="text-[9px] font-bold uppercase tracking-widest text-stone-500">Price (₱) <span class="text-[#C0420A]">*</span></label>
+                        <input type="number" 
+                               name="price" 
+                               id="priceInput" 
+                               required 
+                               min="1" 
+                               max="10000" 
+                               step="0.01" 
+                               placeholder="0.00"
+                               x-model="price"
+                               oninput="if(parseFloat(this.value) > 10000) this.value = 10000; updateDiscountPreview(); calculateFillRate();"
+                               class="w-full bg-transparent font-sans text-lg font-bold text-gray-900 outline-none border-b border-transparent focus:border-[#C0420A] transition-all">
+                        <p class="text-[8px] text-stone-400 font-medium">Item base price</p>
+                    </div>
+
+                    {{-- Total Stock (Auto) --}}
+                    <div id="stock-card" class="p-3.5 bg-[#F9F8F6] border border-stone-200/80 rounded-xl flex flex-col justify-between h-24 sm:h-26 transition-all">
+                        <label class="text-[9px] font-bold uppercase tracking-widest text-stone-500">Total Stock <span class="text-[#C0420A]">*</span></label>
+                        <input type="number" 
+                               name="stock" 
+                               id="total_stock" 
+                               min="0" 
+                               placeholder="0"
+                               readonly 
+                               tabindex="-1"
+                               class="w-full bg-transparent font-sans text-lg font-bold text-gray-900 outline-none select-none cursor-not-allowed">
+                        <p class="text-[8px] text-stone-400 font-medium">Auto-summed from sizes</p>
+                    </div>
+
+                    {{-- Shipping Fee --}}
+                    <div id="shipping-fee-card" class="p-3.5 bg-[#F9F8F6] border border-stone-200/80 rounded-xl flex flex-col justify-between h-24 sm:h-26 transition-all">
+                        <label class="text-[9px] font-bold uppercase tracking-widest text-stone-500">Shipping Fee (₱) <span class="text-[#C0420A]">*</span></label>
+                        <input type="number" 
+                               name="shippingFee" 
+                               id="shippingFeeInput" 
+                               required 
+                               min="0" 
+                               max="500" 
+                               step="0.01" 
+                               placeholder="0.00"
+                               value="{{ old('shippingFee', 0) }}"
+                               oninput="if(parseFloat(this.value) > 500) this.value = 500; calculateFillRate();"
+                               class="w-full bg-transparent font-sans text-lg font-bold text-gray-900 outline-none border-b border-transparent focus:border-[#C0420A] transition-all">
+                        <p class="text-[8px] text-stone-400 font-medium">Enter 0 for free delivery</p>
+                    </div>
+
+                    {{-- Shipping Days --}}
+                    <div id="shipping-days-card" class="p-3.5 bg-[#F9F8F6] border border-stone-200/80 rounded-xl flex flex-col justify-between h-24 sm:h-26 transition-all">
+                        <label class="text-[9px] font-bold uppercase tracking-widest text-stone-500">Est. Shipping Days <span class="text-[#C0420A]">*</span></label>
+                        <input type="number" 
+                               name="shippingDays" 
+                               id="shippingDaysInput" 
+                               required 
+                               min="1" 
+                               max="30" 
+                               step="1" 
+                               placeholder="5"
+                               value="{{ old('shippingDays', 5) }}"
+                               oninput="if(parseInt(this.value) > 30) this.value = 30; calculateFillRate();"
+                               class="w-full bg-transparent font-sans text-lg font-bold text-gray-900 outline-none border-b border-transparent focus:border-[#C0420A] transition-all">
+                        <p class="text-[8px] text-stone-400 font-medium">To deliver</p>
                     </div>
                 </div>
 
@@ -197,12 +418,11 @@
                     <div class="flex items-center justify-between">
                         <div class="flex items-center gap-2">
                             <span class="w-2 h-2 rounded-full bg-[#C0420A]"></span>
-                            <span class="text-xs font-black text-[#C0420A] uppercase tracking-widest">Lumban Special Sale</span>
+                            <span class="text-xs font-black text-[#C0420A] uppercase tracking-widest">Special Price / Sale Discount</span>
                             <span class="text-[9px] text-gray-400 font-bold uppercase tracking-wider">(Optional)</span>
                         </div>
                         <label class="relative inline-flex items-center cursor-pointer shrink-0">
-                            <input type="checkbox" id="discountToggle" class="sr-only peer"
-                                onchange="toggleDiscount(this)">
+                            <input type="checkbox" id="discountToggle" class="sr-only peer" onchange="toggleDiscount(this)">
                             <div class="w-9 h-5 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-0.5 after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-[#C0420A]"></div>
                         </label>
                     </div>
@@ -211,10 +431,15 @@
                         <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 items-end">
                             <div>
                                 <label class="text-[9px] font-bold uppercase tracking-widest text-gray-400 mb-1 block">Discount (%)</label>
-                                <input type="number" name="discount_percentage" id="discountPercentage"
-                                    min="1" max="99" step="1" placeholder="e.g. 20"
-                                    class="w-full px-3.5 py-2.5 bg-white border border-[#C0420A]/30 rounded-xl outline-none font-bold text-sm text-[#C0420A]"
-                                    oninput="if(parseInt(this.value) > 99) this.value = 99; updateDiscountPreview();">
+                                <input type="number" 
+                                       name="discount_percentage" 
+                                       id="discountPercentage"
+                                       min="1" 
+                                       max="99" 
+                                       step="1" 
+                                       placeholder="e.g. 20"
+                                       class="w-full px-3.5 py-2.5 bg-white border border-[#C0420A]/30 rounded-xl outline-none font-bold text-sm text-[#C0420A]"
+                                       oninput="if(parseInt(this.value) > 99) this.value = 99; updateDiscountPreview();">
                             </div>
                             <div>
                                 <label class="text-[9px] font-bold uppercase tracking-widest text-gray-400 mb-1 block">Price Preview</label>
@@ -228,186 +453,134 @@
                 </div>
             </div>
 
-        </div>
-
-        {{-- Right Column: Media & Submission Controls (1 col) --}}
-        <div class="space-y-4">
-
-            {{-- Product Media --}}
-            <div class="bg-white p-4 sm:p-6 rounded-2xl border border-gray-100 shadow-xs space-y-4">
-                <div class="flex items-center justify-between">
-                    <h3 class="text-xs sm:text-sm font-bold text-black uppercase tracking-widest">Product Images <span class="text-[#C0420A]">*</span></h3>
-                    <span id="img-count-badge" class="hidden text-[9px] font-black uppercase tracking-widest px-2.5 py-0.5 bg-[#C0420A]/10 text-[#C0420A] rounded-full">0 photos</span>
-                </div>
-
-                <div class="space-y-2">
-                    <label for="imageUploadInput"
-                        id="dropZone"
-                        class="flex flex-col items-center justify-center gap-2 w-full min-h-32 rounded-xl border-2 border-dashed border-gray-200 bg-gray-50/50 hover:bg-white hover:border-[#C0420A] transition-all cursor-pointer p-4 text-center relative overflow-hidden">
-                        <svg class="w-6 h-6 text-gray-400 group-hover:text-[#C0420A] transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/>
-                        </svg>
-                        <div id="dropZoneTitle" class="text-xs font-bold text-gray-700 uppercase tracking-widest">Click to Upload Photos</div>
-                        <p id="dropZoneSubtitle" class="text-[9px] text-gray-400">PNG, JPG, WEBP &mdash; portrait shots</p>
-                        <input type="file" id="imageUploadInput" name="images[]" multiple class="hidden" onchange="previewImages(this)">
-                    </label>
-
-                    <div id="image-preview-grid" class="hidden grid-cols-3 gap-2">
-                        {{-- JS populated --}}
+            {{-- 5. Payment Methods Card --}}
+            <div id="payment-methods-card" class="bg-white p-5 sm:p-6 rounded-2xl border border-gray-100 shadow-xs space-y-4">
+                <div class="flex items-center justify-between pb-2 border-b border-gray-100">
+                    <div class="flex items-center gap-2.5">
+                        <div class="w-7 h-7 rounded-lg bg-[#C0420A]/10 flex items-center justify-center text-[#C0420A] shrink-0 font-bold text-xs">4</div>
+                        <h3 class="text-xs sm:text-sm font-black text-gray-900 uppercase tracking-widest leading-none">Payment Methods <span class="text-[#C0420A]">*</span></h3>
                     </div>
-                </div>
-            </div>
-
-            {{-- Payment Method Configuration --}}
-            <div id="payment-methods-card" class="bg-white p-4 sm:p-6 rounded-2xl border border-gray-100 shadow-xs space-y-3 transition-all">
-                <div class="flex items-center justify-between mb-1">
-                    <h3 class="text-xs sm:text-sm font-black text-black uppercase tracking-widest">Payment Methods <span class="text-[#C0420A]">*</span></h3>
-                    <a href="{{ route('seller.profile') }}?open_payment=1#payment-methods" class="text-[11px] font-bold text-[#C0420A] hover:underline flex items-center gap-1">
-                        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><circle cx="12" cy="12" r="3"/></svg>
-                        Settings
+                    <a href="{{ route('seller.profile') }}?open_payment=1#payment-methods" target="_blank" class="text-[11px] font-bold text-[#C0420A] hover:underline flex items-center gap-1">
+                        Settings ↗
                     </a>
                 </div>
 
-                {{-- GCash --}}
-                @php 
-                    $user = auth()->user(); 
-                    $hasGcashNumber = !empty($user->gcashNumber);
-                    $hasGcashQr = !empty($user->gcashQrCode);
-                    $isGcashComplete = $hasGcashNumber && $hasGcashQr;
-                @endphp
-                <div class="rounded-xl border border-blue-100 overflow-hidden">
-                    {{-- Header --}}
-                    <div class="flex items-center justify-between px-3 py-2.5 bg-linear-to-r from-blue-600 to-blue-500">
-                        <div class="flex items-center gap-2">
-                            <div class="w-6 h-6 rounded-md bg-white/20 flex items-center justify-center">
-                                <svg class="w-3.5 h-3.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"/></svg>
-                            </div>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    {{-- GCash --}}
+                    @php 
+                        $user = auth()->user(); 
+                        $hasGcashNumber = !empty($user->gcashNumber);
+                        $hasGcashQr = !empty($user->gcashQrCode);
+                        $isGcashComplete = $hasGcashNumber && $hasGcashQr;
+                    @endphp
+                    <div class="rounded-xl border border-blue-100 overflow-hidden">
+                        <div class="flex items-center justify-between px-3 py-2 bg-linear-to-r from-blue-600 to-blue-500">
                             <span class="text-[10px] font-black uppercase tracking-widest text-white">GCash</span>
+                            <label class="relative inline-flex items-center cursor-pointer">
+                                <input type="checkbox" name="product_is_gcash_available" value="1" id="gcash_toggle_create" class="sr-only peer" {{ old('product_is_gcash_available', true) ? 'checked' : '' }} onchange="document.getElementById('gcash_fields_create').style.display = this.checked ? '' : 'none'; calculateFillRate();">
+                                <div class="w-8 h-4.5 bg-white/30 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-0.5 after:bg-white after:rounded-full after:h-3.5 after:w-3.5 after:transition-all peer-checked:bg-white/40 border border-white/40"></div>
+                            </label>
                         </div>
-                        <label class="relative inline-flex items-center cursor-pointer">
-                            <input type="checkbox" name="product_is_gcash_available" value="1" id="gcash_toggle_create" class="sr-only peer" {{ old('product_is_gcash_available', true) ? 'checked' : '' }} onchange="document.getElementById('gcash_fields_create').style.display = this.checked ? '' : 'none'">
-                            <div class="w-9 h-5 bg-white/30 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-0.5 after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-white/40 border border-white/40"></div>
-                        </label>
-                    </div>
-                    {{-- Body --}}
-                    <div id="gcash_fields_create" {{ old('product_is_gcash_available', true) ? '' : 'style=display:none' }} class="p-3 bg-white flex items-center gap-3">
-                        @if($hasGcashQr)
-                            @php
-                                $gcashQr = $user->gcashQrCode;
-                                $gcashQrUrl = str_starts_with($gcashQr, 'http') ? $gcashQr : (str_starts_with(ltrim($gcashQr,'/'), 'uploads/') ? asset(ltrim($gcashQr,'/')) : asset('storage/' . ltrim($gcashQr,'/')));
-                            @endphp
-                            <img src="{{ $gcashQrUrl }}" class="w-12 h-12 object-contain rounded-lg border-2 border-blue-100 bg-blue-50/40 shrink-0" onerror="this.style.display='none'">
-                        @else
-                            <div class="w-12 h-12 rounded-lg border-2 border-dashed border-blue-100 bg-blue-50/30 flex items-center justify-center shrink-0">
-                                <svg class="w-5 h-5 text-blue-200" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z"/></svg>
+                        <div id="gcash_fields_create" {{ old('product_is_gcash_available', true) ? '' : 'style=display:none' }} class="p-3 bg-white flex items-center gap-3">
+                            <div class="flex-1 min-w-0">
+                                @if($isGcashComplete)
+                                    <div class="text-xs font-black text-gray-900">{{ $user->gcashNumber }}</div>
+                                    <div class="text-[9px] text-blue-500 font-bold uppercase tracking-widest mt-0.5">✓ Ready (Number & QR Set)</div>
+                                @else
+                                    <div class="text-[10px] text-amber-600 font-bold">Incomplete setup</div>
+                                    <a href="{{ route('seller.profile') }}?open_payment=1#payment-methods" class="text-[9px] text-blue-600 font-bold underline">Add in Settings →</a>
+                                @endif
                             </div>
-                        @endif
-                        <div class="flex-1 min-w-0">
-                            @if($isGcashComplete)
-                                <div class="text-sm font-black text-gray-900 tracking-wide">{{ $user->gcashNumber }}</div>
-                                <div class="text-[9px] text-blue-500 font-bold uppercase tracking-widest mt-0.5 flex items-center gap-1">
-                                    <svg class="w-2.5 h-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/></svg>
-                                    Ready (Number & QR Set)
-                                </div>
-                            @elseif($hasGcashNumber && !$hasGcashQr)
-                                <div class="text-xs font-black text-gray-900">{{ $user->gcashNumber }}</div>
-                                <div class="text-[9px] text-amber-600 font-bold mt-0.5">Missing QR Code (Required)</div>
-                                <a href="{{ route('seller.profile') }}?open_payment=1#payment-methods" class="text-[9px] text-blue-600 font-bold underline">Upload QR in Settings →</a>
-                            @elseif(!$hasGcashNumber && $hasGcashQr)
-                                <div class="text-[10px] text-amber-600 font-bold">Missing Mobile Number (Required)</div>
-                                <a href="{{ route('seller.profile') }}?open_payment=1#payment-methods" class="text-[9px] text-blue-600 font-bold underline">Add Number in Settings →</a>
-                            @else
-                                <div class="text-[10px] text-gray-400 italic">Not configured</div>
-                                <div class="text-[8px] text-gray-400 font-medium">Both Number & QR required</div>
-                                <a href="{{ route('seller.profile') }}?open_payment=1#payment-methods" class="text-[9px] text-blue-600 font-bold underline">Add in Settings →</a>
-                            @endif
                         </div>
                     </div>
-                </div>
 
-                {{-- Maya --}}
-                @php 
-                    $hasMayaNumber = !empty($user->mayaNumber);
-                    $hasMayaQr = !empty($user->mayaQrCode);
-                    $isMayaComplete = $hasMayaNumber && $hasMayaQr;
-                @endphp
-                <div class="rounded-xl border border-green-100 overflow-hidden">
-                    {{-- Header --}}
-                    <div class="flex items-center justify-between px-3 py-2.5 bg-linear-to-r from-green-600 to-green-500">
-                        <div class="flex items-center gap-2">
-                            <div class="w-6 h-6 rounded-md bg-white/20 flex items-center justify-center">
-                                <svg class="w-3.5 h-3.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"/></svg>
-                            </div>
+                    {{-- Maya --}}
+                    @php 
+                        $hasMayaNumber = !empty($user->mayaNumber);
+                        $hasMayaQr = !empty($user->mayaQrCode);
+                        $isMayaComplete = $hasMayaNumber && $hasMayaQr;
+                    @endphp
+                    <div class="rounded-xl border border-green-100 overflow-hidden">
+                        <div class="flex items-center justify-between px-3 py-2 bg-linear-to-r from-green-600 to-green-500">
                             <span class="text-[10px] font-black uppercase tracking-widest text-white">Maya</span>
+                            <label class="relative inline-flex items-center cursor-pointer">
+                                <input type="checkbox" name="product_is_maya_available" value="1" id="maya_toggle_create" class="sr-only peer" {{ old('product_is_maya_available', false) ? 'checked' : '' }} onchange="document.getElementById('maya_fields_create').style.display = this.checked ? '' : 'none'; calculateFillRate();">
+                                <div class="w-8 h-4.5 bg-white/30 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-0.5 after:bg-white after:rounded-full after:h-3.5 after:w-3.5 after:transition-all peer-checked:bg-white/40 border border-white/40"></div>
+                            </label>
                         </div>
-                        <label class="relative inline-flex items-center cursor-pointer">
-                            <input type="checkbox" name="product_is_maya_available" value="1" id="maya_toggle_create" class="sr-only peer" {{ old('product_is_maya_available', false) ? 'checked' : '' }} onchange="document.getElementById('maya_fields_create').style.display = this.checked ? '' : 'none'">
-                            <div class="w-9 h-5 bg-white/30 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-0.5 after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-white/40 border border-white/40"></div>
-                        </label>
-                    </div>
-                    {{-- Body --}}
-                    <div id="maya_fields_create" {{ old('product_is_maya_available', false) ? '' : 'style=display:none' }} class="p-3 bg-white flex items-center gap-3">
-                        @if($hasMayaQr)
-                            @php
-                                $mayaQr = $user->mayaQrCode;
-                                $mayaQrUrl = str_starts_with($mayaQr, 'http') ? $mayaQr : (str_starts_with(ltrim($mayaQr,'/'), 'uploads/') ? asset(ltrim($mayaQr,'/')) : asset('storage/' . ltrim($mayaQr,'/')));
-                            @endphp
-                            <img src="{{ $mayaQrUrl }}" class="w-12 h-12 object-contain rounded-lg border-2 border-green-100 bg-green-50/40 shrink-0" onerror="this.style.display='none'">
-                        @else
-                            <div class="w-12 h-12 rounded-lg border-2 border-dashed border-green-100 bg-green-50/30 flex items-center justify-center shrink-0">
-                                <svg class="w-5 h-5 text-green-200" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z"/></svg>
+                        <div id="maya_fields_create" {{ old('product_is_maya_available', false) ? '' : 'style=display:none' }} class="p-3 bg-white flex items-center gap-3">
+                            <div class="flex-1 min-w-0">
+                                @if($isMayaComplete)
+                                    <div class="text-xs font-black text-gray-900">{{ $user->mayaNumber }}</div>
+                                    <div class="text-[9px] text-green-600 font-bold uppercase tracking-widest mt-0.5">✓ Ready (Number & QR Set)</div>
+                                @else
+                                    <div class="text-[10px] text-amber-600 font-bold">Incomplete setup</div>
+                                    <a href="{{ route('seller.profile') }}?open_payment=1#payment-methods" class="text-[9px] text-green-600 font-bold underline">Add in Settings →</a>
+                                @endif
                             </div>
-                        @endif
-                        <div class="flex-1 min-w-0">
-                            @if($isMayaComplete)
-                                <div class="text-sm font-black text-gray-900 tracking-wide">{{ $user->mayaNumber }}</div>
-                                <div class="text-[9px] text-green-600 font-bold uppercase tracking-widest mt-0.5 flex items-center gap-1">
-                                    <svg class="w-2.5 h-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/></svg>
-                                    Ready (Number & QR Set)
-                                </div>
-                            @elseif($hasMayaNumber && !$hasMayaQr)
-                                <div class="text-xs font-black text-gray-900">{{ $user->mayaNumber }}</div>
-                                <div class="text-[9px] text-amber-600 font-bold mt-0.5">Missing QR Code (Required)</div>
-                                <a href="{{ route('seller.profile') }}?open_payment=1#payment-methods" class="text-[9px] text-green-600 font-bold underline">Upload QR in Settings →</a>
-                            @elseif(!$hasMayaNumber && $hasMayaQr)
-                                <div class="text-[10px] text-amber-600 font-bold">Missing Mobile Number (Required)</div>
-                                <a href="{{ route('seller.profile') }}?open_payment=1#payment-methods" class="text-[9px] text-green-600 font-bold underline">Add Number in Settings →</a>
-                            @else
-                                <div class="text-[10px] text-gray-400 italic">Not configured</div>
-                                <div class="text-[8px] text-gray-400 font-medium">Both Number & QR required</div>
-                                <a href="{{ route('seller.profile') }}?open_payment=1#payment-methods" class="text-[9px] text-green-600 font-bold underline">Add in Settings →</a>
-                            @endif
                         </div>
                     </div>
                 </div>
             </div>
 
-            {{-- Submission Action Card --}}
-            <div class="bg-white p-4 sm:p-6 rounded-2xl border border-gray-100 shadow-xs space-y-3">
-                <div class="p-3 rounded-xl bg-amber-50/60 border border-amber-100">
-                    <p class="text-[9px] text-amber-800 font-bold uppercase tracking-wider">
-                        New listings are reviewed by admin before appearing in shop.
-                    </p>
+            {{-- 6. Artisan Description & Storytelling Card --}}
+            <div class="bg-white p-5 sm:p-6 rounded-2xl border border-gray-100 shadow-xs space-y-4">
+                <div class="flex items-center justify-between pb-2 border-b border-gray-100">
+                    <div class="flex items-center gap-2.5">
+                        <div class="w-7 h-7 rounded-lg bg-[#C0420A]/10 flex items-center justify-center text-[#C0420A] shrink-0 font-bold text-xs">5</div>
+                        <div>
+                            <h3 class="text-xs sm:text-sm font-black text-gray-900 uppercase tracking-widest leading-none">Artisan Description & Story <span class="text-[#C0420A]">*</span></h3>
+                            <p class="text-[10px] text-gray-400 font-medium mt-0.5">Highlight the craftsmanship, weaving techniques, and care instructions</p>
+                        </div>
+                    </div>
+
+                    {{-- AI Copywriter Button --}}
+                    <button type="button" 
+                            @click="generateDescriptionAi()"
+                            :disabled="isAiLoading"
+                            class="text-xs font-bold text-blue-600 hover:text-blue-700 flex items-center gap-1">
+                        <svg class="w-3.5 h-3.5 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+                        <span>AI Copywriter</span>
+                    </button>
                 </div>
-                <button type="submit" class="w-full py-3.5 bg-black text-white rounded-xl font-bold uppercase tracking-[0.15em] shadow-md hover:bg-[#C0420A] transition-all text-xs">
-                    Submit Listing
+
+                <div class="relative group">
+                    <textarea name="description" 
+                              id="artisanDescription" 
+                              required 
+                              rows="5" 
+                              maxlength="500"
+                              x-model="description"
+                              @input="updateCharCount($el); calculateFillRate();"
+                              placeholder="Describe the craftsmanship, cultural heritage, weaving techniques, and unique story behind this piece..."
+                              class="w-full px-4 py-3 bg-gray-50/70 border border-gray-200 rounded-xl outline-none focus:border-[#C0420A] focus:bg-white focus:ring-2 focus:ring-[#C0420A]/10 transition-all font-normal text-sm text-gray-800 placeholder:text-gray-400 resize-none pb-8"></textarea>
+                    
+                    <div class="absolute bottom-2.5 right-3.5 flex items-center gap-1 bg-white/95 backdrop-blur-xs px-2 py-0.5 rounded-md border border-gray-100 text-[10px] font-bold text-gray-400 pointer-events-none shadow-2xs">
+                        <span id="charCounter" x-text="description ? description.length : 0">0</span><span class="text-gray-300">/</span><span>500</span>
+                    </div>
+                </div>
+            </div>
+
+            {{-- 7. Bottom Submission Actions (Draft & Publish) --}}
+            <div class="pt-4 flex flex-col-reverse sm:flex-row items-center justify-end gap-3.5">
+                <button type="button" 
+                        @click="submitAsDraft()"
+                        class="w-full sm:w-auto px-8 py-3.5 rounded-full border-2 border-gray-300 hover:border-gray-800 bg-white text-gray-700 hover:text-black font-bold text-xs uppercase tracking-widest transition-all">
+                    Save as Draft
+                </button>
+
+                <button type="submit" 
+                        @click="document.getElementById('formActionInput').value = 'publish'"
+                        class="w-full sm:w-auto px-10 py-3.5 rounded-full bg-blue-600 hover:bg-blue-700 active:scale-[0.99] text-white font-bold text-xs uppercase tracking-widest shadow-lg shadow-blue-500/25 transition-all">
+                    Publish Product
                 </button>
             </div>
         </div>
 
-        {{-- Mobile Sticky Action Bar --}}
-        <div class="lg:hidden fixed bottom-16 inset-x-0 bg-white/95 backdrop-blur-md border-t border-gray-200 px-3.5 py-2.5 z-30 shadow-2xl flex items-center justify-between gap-2.5">
-            <div class="min-w-0">
-                <div class="text-[10px] font-black text-black uppercase tracking-wider truncate">New Heritage Piece</div>
-                <div class="text-[9px] text-gray-400 font-bold uppercase tracking-widest truncate">Ready to submit</div>
-            </div>
-            <button type="submit" class="px-4 py-2 bg-[#C0420A] text-white rounded-xl text-[11px] font-black uppercase tracking-widest shadow-md hover:bg-black transition-all shrink-0">
-                Submit Listing
-            </button>
-        </div>
     </form>
 </div>
 
+{{-- Seller Payment Config Helper JSON --}}
 <script type="application/json" id="seller-payment-config">
 {!! json_encode([
     'hasGcashNumber' => !empty($user->gcashNumber),
@@ -419,6 +592,191 @@
 
 <script>
 let productImagesDT = new DataTransfer();
+
+function addProductManager() {
+    return {
+        step: 1,
+        imageCount: 0,
+        imagePreviews: [],
+        productName: '{{ old('name', '') }}',
+        selectedCategory: '{{ old('CategoryId', '') }}',
+        targetGroup: '{{ old('target_group', 'Men') }}',
+        fabricType: '{{ old('fabric_type', '100% Piña') }}',
+        price: '{{ old('price', '') }}',
+        description: '{{ old('description', '') }}',
+        fillRate: 15,
+        isAiLoading: false,
+
+        init() {
+            this.calculateFillRate();
+        },
+
+        goToStep2() {
+            if (this.imageCount === 0) {
+                triggerAppModal('Cover Image Required', 'Please upload at least one product photo to proceed.', 'warning');
+                const dropZone = document.getElementById('dropZone');
+                if (dropZone) dropZone.classList.add('border-red-500');
+                return;
+            }
+            this.step = 2;
+            this.calculateFillRate();
+            setTimeout(() => {
+                window.scrollTo({ top: 320, behavior: 'smooth' });
+            }, 100);
+        },
+
+        handleFileChange(event) {
+            const input = event.target;
+            if (input.files && input.files.length > 0) {
+                let duplicateCount = 0;
+                let oversizedCount = 0;
+
+                Array.from(input.files).forEach(file => {
+                    if (file.size > 5 * 1024 * 1024) {
+                        oversizedCount++;
+                        return;
+                    }
+                    const exists = Array.from(productImagesDT.files).some(f => f.name === file.name && f.size === file.size);
+                    if (exists) {
+                        duplicateCount++;
+                    } else {
+                        if (productImagesDT.items.length < 8) {
+                            productImagesDT.items.add(file);
+                        }
+                    }
+                });
+
+                if (oversizedCount > 0) {
+                    triggerAppModal('Image Exceeds 5MB', `${oversizedCount} photo(s) exceeded the 5MB size limit and were skipped.`, 'warning');
+                } else if (duplicateCount > 0) {
+                    triggerAppModal('Duplicate Image Skipped', `${duplicateCount} duplicate image(s) already added.`, 'warning');
+                }
+
+                input.files = productImagesDT.files;
+                this.syncPreviews();
+                
+                // Automatically auto-suggest with AI on initial upload if title is blank
+                if (this.imageCount > 0 && (!this.productName || this.productName.trim() === '')) {
+                    this.triggerAiGenerate();
+                }
+            }
+        },
+
+        removeImage(index) {
+            const input = document.getElementById('imageUploadInput');
+            const newDT = new DataTransfer();
+            Array.from(productImagesDT.files).forEach((file, i) => {
+                if (i !== index) newDT.items.add(file);
+            });
+            productImagesDT = newDT;
+            if (input) input.files = productImagesDT.files;
+            this.syncPreviews();
+        },
+
+        syncPreviews() {
+            const files = Array.from(productImagesDT.files);
+            this.imageCount = files.length;
+            this.imagePreviews = [];
+
+            files.forEach((file, idx) => {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    this.imagePreviews.push({ url: e.target.result, name: file.name });
+                };
+                reader.readAsDataURL(file);
+            });
+
+            this.calculateFillRate();
+        },
+
+        calculateFillRate() {
+            let score = 0;
+            if (this.imageCount > 0) score += 20;
+            if (this.productName && this.productName.trim().length >= 3) score += 20;
+            if (this.selectedCategory) score += 15;
+            if (parseFloat(this.price) > 0) score += 15;
+            if (this.description && this.description.trim().length >= 10) score += 15;
+            if (document.querySelectorAll('.size-checkbox:checked').length > 0) score += 10;
+            if (this.targetGroup) score += 5;
+            this.fillRate = Math.min(100, score);
+        },
+
+        async triggerAiGenerate() {
+            if (this.imageCount === 0 && !this.productName) {
+                triggerAppModal('Upload Cover Photo', 'Please upload a product photo first for AI auto-recommendations.', 'info');
+                return;
+            }
+
+            this.isAiLoading = true;
+            try {
+                const formData = new FormData();
+                if (productImagesDT.files.length > 0) {
+                    formData.append('image', productImagesDT.files[0]);
+                }
+                formData.append('current_name', this.productName || '');
+                formData.append('current_category', this.selectedCategory || '');
+                formData.append('_token', '{{ csrf_token() }}');
+
+                const response = await fetch('{{ route('ai.seller.suggest') }}', {
+                    method: 'POST',
+                    body: formData,
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest'
+                    }
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    if (data.title) this.productName = data.title;
+                    if (data.category_id) this.selectedCategory = data.category_id;
+                    if (data.target_group) this.targetGroup = data.target_group;
+                    if (data.fabric_type) this.fabricType = data.fabric_type;
+                    if (data.description) this.description = data.description;
+
+                    this.calculateFillRate();
+                }
+            } catch (err) {
+                console.error('AI suggestion failed', err);
+            } finally {
+                this.isAiLoading = false;
+            }
+        },
+
+        async generateDescriptionAi() {
+            this.isAiLoading = true;
+            try {
+                const response = await fetch('{{ route('ai.seller.description') }}', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                    },
+                    body: JSON.stringify({
+                        fabric: this.fabricType || '100% Piña',
+                        category: this.selectedCategory || 'Barong Tagalog',
+                        theme: 'Wedding & Formal'
+                    })
+                });
+                if (response.ok) {
+                    const data = await response.json();
+                    if (data.description) {
+                        this.description = data.description;
+                        this.calculateFillRate();
+                    }
+                }
+            } catch (e) {
+                console.error(e);
+            } finally {
+                this.isAiLoading = false;
+            }
+        },
+
+        submitAsDraft() {
+            document.getElementById('formActionInput').value = 'draft';
+            document.getElementById('productForm').submit();
+        }
+    };
+}
 
 function triggerAppModal(title, message, type = 'warning') {
     window.dispatchEvent(new CustomEvent('open-confirmation', {
@@ -433,155 +791,9 @@ function triggerAppModal(title, message, type = 'warning') {
     }));
 }
 
-function previewImages(input) {
-    if (input.files && input.files.length > 0) {
-        let duplicateCount = 0;
-        let oversizedCount = 0;
-
-        Array.from(input.files).forEach(file => {
-            if (file.size > 5 * 1024 * 1024) {
-                oversizedCount++;
-                return;
-            }
-            const exists = Array.from(productImagesDT.files).some(f => f.name === file.name && f.size === file.size);
-            if (exists) {
-                duplicateCount++;
-            } else {
-                productImagesDT.items.add(file);
-            }
-        });
-
-        if (oversizedCount > 0) {
-            triggerAppModal('Image Exceeds 5MB', `${oversizedCount} photo(s) exceeded the 5MB size limit and were skipped.`, 'warning');
-        } else if (duplicateCount > 0) {
-            triggerAppModal('Duplicate Image Skipped', `${duplicateCount} duplicate image(s) already added and were skipped.`, 'warning');
-        }
-
-        input.files = productImagesDT.files;
-    }
-    renderImagePreviews();
-}
-
-function removeImageAt(index) {
-    const input = document.getElementById('imageUploadInput');
-    const newDT = new DataTransfer();
-    Array.from(productImagesDT.files).forEach((file, i) => {
-        if (i !== index) newDT.items.add(file);
-    });
-    productImagesDT = newDT;
-    if (input) input.files = productImagesDT.files;
-    renderImagePreviews();
-}
-
-function renderImagePreviews() {
-    const grid = document.getElementById('image-preview-grid');
-    const badge = document.getElementById('img-count-badge');
-    const titleEl = document.getElementById('dropZoneTitle');
-    const subEl = document.getElementById('dropZoneSubtitle');
-
-    if (!grid) return;
-    grid.innerHTML = '';
-
-    const files = productImagesDT.files;
-    if (files && files.length > 0) {
-        grid.classList.remove('hidden');
-        grid.classList.add('grid');
-        if (badge) {
-            badge.classList.remove('hidden');
-            badge.textContent = files.length + ' photo' + (files.length !== 1 ? 's' : '');
-        }
-        if (titleEl) titleEl.textContent = '+ Add More Photos';
-        if (subEl) subEl.textContent = `${files.length} photo(s) selected — click or drop to add more`;
-
-        Array.from(files).forEach((file, idx) => {
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                const card = document.createElement('div');
-                card.className = 'relative group rounded-2xl overflow-hidden border border-gray-200/80 bg-gray-50 shadow-sm hover:shadow-md transition-all duration-300';
-                card.style.aspectRatio = '3/4';
-                card.innerHTML = `
-                    <img src="${e.target.result}" class="w-full h-full object-cover object-top group-hover:scale-105 transition-transform duration-500">
-                    <div class="absolute inset-0 bg-linear-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end p-2 pointer-events-none">
-                        <span class="text-[9px] font-bold text-white truncate">${file.name}</span>
-                    </div>
-                    <div class="absolute top-2 left-2 px-2 py-0.5 bg-black/75 backdrop-blur-md rounded-full text-[9px] font-black text-white shadow-sm border border-white/10">
-                        ${idx + 1}
-                    </div>
-                    <button type="button" onclick="removeImageAt(${idx})" class="absolute top-2 right-2 w-7 h-7 bg-red-600/95 hover:bg-red-600 text-white rounded-full flex items-center justify-center text-xs font-black shadow-lg hover:scale-110 active:scale-95 transition-all z-10" title="Remove photo">✕</button>
-                `;
-                grid.appendChild(card);
-            };
-            reader.readAsDataURL(file);
-        });
-    } else {
-        grid.classList.add('hidden');
-        grid.classList.remove('grid');
-        if (badge) badge.classList.add('hidden');
-        if (titleEl) titleEl.textContent = 'Click to Upload Photos';
-        if (subEl) subEl.textContent = 'PNG, JPG, WEBP — portrait shots recommended';
-    }
-}
-
-document.addEventListener('DOMContentLoaded', function() {
-    const dropZone = document.getElementById('dropZone');
-    const input = document.getElementById('imageUploadInput');
-    
-    if (dropZone && input) {
-        ['dragenter', 'dragover'].forEach(evt => {
-            dropZone.addEventListener(evt, (e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                dropZone.classList.add('border-[#C0420A]', 'bg-orange-50/40');
-            });
-        });
-
-        ['dragleave', 'drop'].forEach(evt => {
-            dropZone.addEventListener(evt, (e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                dropZone.classList.remove('border-[#C0420A]', 'bg-orange-50/40');
-            });
-        });
-
-        dropZone.addEventListener('drop', (e) => {
-            const files = e.dataTransfer?.files;
-            if (files && files.length > 0) {
-                let duplicateCount = 0;
-                let oversizedCount = 0;
-
-                Array.from(files).forEach(file => {
-                    if (file.type.startsWith('image/')) {
-                        if (file.size > 5 * 1024 * 1024) {
-                            oversizedCount++;
-                            return;
-                        }
-                        const exists = Array.from(productImagesDT.files).some(f => f.name === file.name && f.size === file.size);
-                        if (exists) {
-                            duplicateCount++;
-                        } else {
-                            productImagesDT.items.add(file);
-                        }
-                    }
-                });
-
-                if (oversizedCount > 0) {
-                    triggerAppModal('Image Exceeds 5MB', `${oversizedCount} photo(s) exceeded the 5MB size limit and were skipped.`, 'warning');
-                } else if (duplicateCount > 0) {
-                    triggerAppModal('Duplicate Image Skipped', `${duplicateCount} duplicate image(s) already added and were skipped.`, 'warning');
-                }
-
-                input.files = productImagesDT.files;
-                renderImagePreviews();
-            }
-        });
-    }
-});
-
 function updateCharCount(el) {
     const counter = document.getElementById('charCounter');
-    if (counter) {
-        counter.textContent = el.value.length;
-    }
+    if (counter) counter.textContent = el.value.length;
 }
 
 function toggleSizeStock(checkbox, size) {
@@ -598,20 +810,6 @@ function toggleSizeStock(checkbox, size) {
     calculateTotalStock();
 }
 
-function previewQr(input, previewId, placeholderId) {
-    const preview = document.getElementById(previewId);
-    const placeholder = document.getElementById(placeholderId);
-    if (input.files && input.files[0]) {
-        const reader = new FileReader();
-        reader.onload = e => {
-            preview.querySelector('img').src = e.target.result;
-            preview.classList.remove('hidden');
-            placeholder.classList.add('hidden');
-        };
-        reader.readAsDataURL(input.files[0]);
-    }
-}
-
 function calculateTotalStock() {
     let total = 0;
     const inputs = document.querySelectorAll('.size-stock-input');
@@ -626,9 +824,6 @@ function calculateTotalStock() {
 
     document.getElementById('total_stock').value = total;
 }
-
-
-
 
 function toggleDiscount(checkbox) {
     const fields = document.getElementById('discountFields');
@@ -671,6 +866,17 @@ function updateDiscountPreview() {
 }
 
 function validateProductForm(e, isEdit = false) {
+    const action = document.getElementById('formActionInput')?.value;
+    if (action === 'draft') {
+        const nameInput = document.querySelector('input[name="name"]');
+        if (!nameInput || !nameInput.value.trim()) {
+            e.preventDefault();
+            triggerAppModal('Draft Name Required', 'Please enter at least a product name to save a draft.', 'warning');
+            return false;
+        }
+        return true;
+    }
+
     const errors = [];
     
     // Clear previous error styles
@@ -799,7 +1005,7 @@ function validateProductForm(e, isEdit = false) {
         }
     }
 
-    // 6. Payment Methods (Both Number and QR Code strictly required)
+    // 6. Payment Methods
     const gcashToggle = document.getElementById('gcash_toggle_create');
     const mayaToggle = document.getElementById('maya_toggle_create');
     const paymentCard = document.getElementById('payment-methods-card');
@@ -817,11 +1023,11 @@ function validateProductForm(e, isEdit = false) {
     if (isGcashChecked) {
         if (!hasGcashNumber || !hasGcashQr) {
             if (!hasGcashNumber && !hasGcashQr) {
-                errors.push('GCash is enabled but not configured. Both Mobile Number and QR Code are required (Add in Settings).');
+                errors.push('GCash is enabled but not configured. Both Mobile Number and QR Code are required.');
             } else if (!hasGcashQr) {
-                errors.push('GCash is enabled but missing a QR Code. Both Mobile Number and QR Code are required (Upload in Settings).');
+                errors.push('GCash is enabled but missing a QR Code.');
             } else {
-                errors.push('GCash is enabled but missing a Mobile Number. Both Mobile Number and QR Code are required (Add in Settings).');
+                errors.push('GCash is enabled but missing a Mobile Number.');
             }
             if (paymentCard) paymentCard.classList.add('border-red-500');
         } else {
@@ -832,11 +1038,11 @@ function validateProductForm(e, isEdit = false) {
     if (isMayaChecked) {
         if (!hasMayaNumber || !hasMayaQr) {
             if (!hasMayaNumber && !hasMayaQr) {
-                errors.push('Maya is enabled but not configured. Both Account Number and QR Code are required (Add in Settings).');
+                errors.push('Maya is enabled but not configured. Both Account Number and QR Code are required.');
             } else if (!hasMayaQr) {
-                errors.push('Maya is enabled but missing a QR Code. Both Account Number and QR Code are required (Upload in Settings).');
+                errors.push('Maya is enabled but missing a QR Code.');
             } else {
-                errors.push('Maya is enabled but missing an Account Number. Both Account Number and QR Code are required (Add in Settings).');
+                errors.push('Maya is enabled but missing an Account Number.');
             }
             if (paymentCard) paymentCard.classList.add('border-red-500');
         } else {
@@ -852,7 +1058,7 @@ function validateProductForm(e, isEdit = false) {
         if (paymentCard) paymentCard.classList.add('border-red-500');
     }
 
-    // 7. Lumban Special Discount (Optional)
+    // 7. Lumban Special Discount
     const isOnSale = document.getElementById('discountToggle')?.checked;
     if (isOnSale) {
         const pctInput = document.getElementById('discountPercentage');
@@ -866,7 +1072,7 @@ function validateProductForm(e, isEdit = false) {
     if (errors.length > 0) {
         e.preventDefault();
 
-        // Create floating error banner (Centered at top)
+        // Create floating error banner
         const banner = document.createElement('div');
         banner.id = 'js-error-banner';
         banner.className = 'fixed top-8 left-1/2 -translate-x-1/2 z-50 w-[92%] max-w-md bg-white rounded-2xl shadow-2xl border border-red-200 p-4.5 flex items-start gap-3.5 transition-all';
@@ -882,19 +1088,15 @@ function validateProductForm(e, isEdit = false) {
         `;
         document.body.appendChild(banner);
 
-        // Auto remove banner after 8 seconds
         setTimeout(() => {
             const b = document.getElementById('js-error-banner');
             if (b) b.remove();
         }, 8000);
 
-        // Smooth scroll & focus to first invalid field
         const firstError = document.querySelector('.border-red-500');
         if (firstError) {
             firstError.scrollIntoView({ behavior: 'smooth', block: 'center' });
-            if (typeof firstError.focus === 'function') {
-                firstError.focus();
-            }
+            if (typeof firstError.focus === 'function') firstError.focus();
         }
 
         return false;
@@ -902,22 +1104,5 @@ function validateProductForm(e, isEdit = false) {
 
     return true;
 }
-
-// Also update preview when price changes & clear radio validation errors
-document.addEventListener('DOMContentLoaded', function() {
-    const priceInput = document.querySelector('input[name="price"]');
-    if (priceInput) {
-        priceInput.addEventListener('input', updateDiscountPreview);
-    }
-
-    document.querySelectorAll('.target-group-radio').forEach(radio => {
-        radio.addEventListener('change', function() {
-            const container = document.getElementById('target-group-container');
-            if (container) {
-                container.classList.remove('border-red-500', 'border');
-            }
-        });
-    });
-});
 </script>
 @endsection

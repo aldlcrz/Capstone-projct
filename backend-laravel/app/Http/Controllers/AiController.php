@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Services\AiService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Validator;
 
 class AiController extends Controller
@@ -21,7 +22,7 @@ class AiController extends Controller
 
             $history = $request->input('history', []);
             $sessionContext = $request->input('session_context', []);
-            $userId = auth()->id() ?? (string) ($request->user()?->id ?? '');
+            $userId = Auth::id() ?? (string) ($request->user()?->id ?? '');
 
             $response = AiService::chatStylist(
                 $message,
@@ -90,6 +91,57 @@ class AiController extends Controller
         $result = AiService::generateProductListing($params);
 
         return response()->json($result);
+    }
+
+    /**
+     * AI Image-to-Product Suggestion & Auto-Fill for Add Product.
+     */
+    public function suggestProduct(Request $request)
+    {
+        $imagePath = null;
+        $tempCreated = false;
+
+        if ($request->hasFile('image')) {
+            $file = $request->file('image');
+            $imagePath = $file->getRealPath();
+        } elseif ($request->filled('image_base64')) {
+            $base64 = $request->input('image_base64');
+            $base64 = preg_replace('/^data:image\/\w+;base64,/', '', $base64);
+            $decoded = base64_decode($base64);
+            if ($decoded) {
+                $tempPath = tempnam(sys_get_temp_dir(), 'lum_prod_');
+                file_put_contents($tempPath, $decoded);
+                $imagePath = $tempPath;
+                $tempCreated = true;
+            }
+        }
+
+        $currentName = $request->input('current_name');
+        $currentCat = $request->input('current_category');
+
+        if ($imagePath && file_exists($imagePath)) {
+            $result = AiService::suggestProductFromImage($imagePath, $currentName, $currentCat);
+            if ($tempCreated && file_exists($imagePath)) {
+                @unlink($imagePath);
+            }
+            return response()->json($result);
+        }
+
+        // Fallback without image
+        $result = AiService::generateProductListing([
+            'category' => $currentCat ?: 'Barong Tagalog',
+            'fabric' => '100% Piña',
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'title' => $result['title'] ?? 'Handcrafted Artisan Piña Barong Tagalog',
+            'category_id' => \App\Models\Category::first()?->id,
+            'category_name' => 'Barong Tagalog',
+            'target_group' => 'Men',
+            'fabric_type' => '100% Piña',
+            'description' => $result['description'] ?? '',
+        ]);
     }
 
     /**
