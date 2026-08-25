@@ -139,21 +139,6 @@
                             Product Name(English) <span class="text-[#C0420A]">*</span>
                             <span class="text-[10px] text-gray-400 font-normal" x-text="'(' + (productName ? productName.length : 0) + '/100)'"></span>
                         </label>
-                        
-                        {{-- AI Auto-Fill / Re-Generate Button --}}
-                        <button type="button" 
-                                @click="triggerAiGenerate()"
-                                :disabled="isAiLoading || imageCount === 0"
-                                class="inline-flex items-center gap-1.5 text-xs font-bold text-blue-600 hover:text-blue-700 disabled:opacity-40 disabled:cursor-not-allowed transition-all">
-                            <span x-show="!isAiLoading" class="flex items-center gap-1">
-                                <svg class="w-3.5 h-3.5 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
-                                <span>Re-Generate</span>
-                            </span>
-                            <span x-show="isAiLoading" class="flex items-center gap-1 text-blue-500">
-                                <svg class="animate-spin w-3.5 h-3.5" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path></svg>
-                                <span>AI Analyzing...</span>
-                            </span>
-                        </button>
                     </div>
 
                     <div class="relative flex items-center">
@@ -336,16 +321,6 @@
                 </div>
             </div>
 
-            {{-- AI Helper Informational Card (Matching Screenshot) --}}
-            <div class="p-3.5 rounded-xl bg-blue-50/60 border border-blue-100 flex items-start gap-2.5">
-                <div class="w-5 h-5 rounded-md bg-blue-500/10 text-blue-600 flex items-center justify-center shrink-0 mt-0.5">
-                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
-                </div>
-                <p class="text-[11px] text-blue-900/80 leading-relaxed font-medium">
-                    Please upload your product image and the AI Services will auto-generate title, category, target group, and artisan description to help complete your listing.
-                </p>
-            </div>
-
             {{-- Step 1 Primary CTA Button: "Next: Complete Product Info" --}}
             <div x-show="step === 1" class="pt-2">
                 <button type="button" 
@@ -375,9 +350,6 @@
 
                 <div class="flex items-center gap-2">
                     <span class="text-[10px] text-gray-400 font-medium">All essential specifications</span>
-                    <button type="button" @click="triggerAiGenerate()" class="text-[11px] font-bold text-blue-600 hover:underline">
-                        Re-Generate All
-                    </button>
                 </div>
             </div>
 
@@ -825,11 +797,6 @@ function addProductManager() {
 
                 input.files = productImagesDT.files;
                 this.syncPreviews();
-                
-                // Automatically auto-suggest with AI on initial upload if title is blank
-                if (this.imageCount > 0 && (!this.productName || this.productName.trim() === '')) {
-                    this.triggerAiGenerate();
-                }
             }
         },
 
