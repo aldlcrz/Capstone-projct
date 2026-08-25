@@ -384,63 +384,116 @@
          x-transition
          @click.self="if (!showDeleteConfirmModal && !addEditModalOpen) showAddressModal = false">
 
-        <div class="relative w-full max-w-lg bg-white rounded-3xl p-6 shadow-2xl border border-gray-100 max-h-[85vh] flex flex-col space-y-4">
+        <div style="background-color:#FDFBF7;border:1px solid #EAE2D2;border-radius:28px;box-shadow:0 25px 60px rgba(0,0,0,0.18);padding:24px;width:100%;max-width:520px;max-height:85vh;display:flex;flex-direction:column;gap:16px;position:relative;">
 
-            <div class="flex items-center justify-between pb-3 border-b border-gray-100 shrink-0">
-                <div>
-                    <h3 class="text-base font-extrabold text-gray-900">Saved Addresses</h3>
-                    <p class="text-[10px] text-gray-400 font-medium">Manage your shipping destinations</p>
+            {{-- Modal Header --}}
+            <div style="display:flex;align-items:center;justify-content:space-between;padding-bottom:14px;border-bottom:1px solid #ECE3D2;flex-shrink:0;">
+                <div style="display:flex;align-items:center;gap:12px;">
+                    <div style="width:40px;height:40px;border-radius:12px;background-color:#FAF5EA;border:1px solid #E6D8BA;display:flex;align-items:center;justify-content:center;color:#B88728;flex-shrink:0;box-shadow:0 2px 5px rgba(0,0,0,0.03);">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 21s-7-4.35-7-10a7 7 0 1114 0c0 5.65-7 10-7 10z"/>
+                            <circle cx="12" cy="11" r="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+                        </svg>
+                    </div>
+                    <div>
+                        <h3 style="font-family:ui-serif,Georgia,Cambria,serif;font-size:18px;font-weight:700;color:#1E1915;line-height:1.2;margin:0;">
+                            Saved Addresses
+                        </h3>
+                        <p style="font-size:11.5px;color:#78716C;margin:2px 0 0 0;">
+                            Manage your delivery destinations
+                        </p>
+                    </div>
                 </div>
-                <div class="flex items-center gap-2">
-                    <button type="button" @click="openAddAddress()" class="px-3 py-1.5 bg-[#C0422A] text-white rounded-xl text-xs font-bold shadow-xs hover:bg-black transition-all">
-                        + Add Address
+                <div style="display:flex;align-items:center;gap:8px;">
+                    <button type="button" 
+                            @click="openAddAddress()" 
+                            style="background-color:#1E1915;color:#DFC97A;border:1px solid #DFC97A;padding:7px 14px;border-radius:12px;font-size:11px;font-weight:800;letter-spacing:0.06em;text-transform:uppercase;cursor:pointer;display:flex;align-items:center;gap:5px;box-shadow:0 2px 8px rgba(0,0,0,0.12);transition:all 0.2s;"
+                            class="hover:bg-black hover:scale-[1.02] active:scale-[0.98]">
+                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/></svg>
+                        <span>Add Address</span>
                     </button>
-                    <button type="button" @click="showAddressModal = false" class="text-gray-400 hover:text-black transition-colors p-1">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                    <button type="button" 
+                            @click="showAddressModal = false" 
+                            style="width:32px;height:32px;border-radius:10px;background-color:#FAF5EA;border:1px solid #E6D8BA;color:#78716C;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all 0.2s;"
+                            class="hover:bg-[#1E1915] hover:text-[#DFC97A] hover:border-[#1E1915]">
+                        <svg width="15" height="15" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.2"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
                     </button>
                 </div>
             </div>
 
             {{-- Address List Body --}}
-            <div class="flex-1 overflow-y-auto space-y-3 pr-1">
+            <div class="flex-1 overflow-y-auto space-y-3 pr-1" style="max-height:calc(85vh - 120px);">
                 <template x-if="loadingAddresses">
-                    <div class="py-12 text-center text-xs text-gray-400">Loading saved addresses...</div>
+                    <div style="padding:48px 0;text-align:center;font-size:12px;color:#8C827A;">
+                        <svg class="w-6 h-6 animate-spin text-[#996515] mx-auto mb-2" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+                        Loading saved addresses...
+                    </div>
                 </template>
 
                 <template x-if="!loadingAddresses && addresses.length === 0">
-                    <div class="py-12 text-center space-y-2">
-                        <svg class="w-10 h-10 text-gray-200 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
-                        <p class="text-xs font-bold text-gray-400">No addresses saved yet</p>
+                    <div style="padding:48px 0;text-align:center;">
+                        <div style="width:48px;height:48px;border-radius:16px;background-color:#FAF5EA;border:1px solid #E6D8BA;display:flex;align-items:center;justify-content:center;color:#B88728;margin:0 auto 12px auto;">
+                            <svg width="22" height="22" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path stroke-linecap="round" stroke-linejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+                        </div>
+                        <h4 style="font-size:14px;font-weight:700;color:#1E1915;margin:0;">No addresses saved yet</h4>
+                        <p style="font-size:12px;color:#78716C;margin:4px 0 0 0;">Add your first shipping destination to proceed with orders.</p>
                     </div>
                 </template>
 
                 <template x-if="!loadingAddresses">
-                    <div class="space-y-3">
+                    <div style="display:flex;flex-direction:column;gap:12px;">
                         <template x-for="addr in addresses" :key="addr.id">
-                            <div class="p-3.5 border border-gray-150 rounded-2xl bg-gray-50/50 hover:bg-white hover:border-gray-300 transition-all space-y-2">
-                                <div class="flex items-start justify-between gap-2">
-                                    <div>
-                                        <div class="flex items-center gap-2 flex-wrap">
-                                            <span class="text-xs font-bold text-gray-900" x-text="addr.recipientName"></span>
-                                            <span class="text-xs text-gray-400 font-semibold" x-text="addr.phone"></span>
-                                            <template x-if="addr.isDefault">
-                                                <span class="px-2 py-0.5 bg-[#C0422A]/10 text-[#C0422A] text-[9px] font-black uppercase rounded">Default</span>
+                            <div style="background-color:#FFFFFF;border:1.5px solid #ECE3D2;border-radius:18px;padding:16px 18px;box-shadow:0 2px 8px rgba(0,0,0,0.02);transition:all 0.2s;"
+                                 class="hover:border-[#C49520] hover:shadow-md">
+                                <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px;">
+                                    <div style="display:flex;align-items:flex-start;gap:12px;min-width:0;flex:1;">
+                                        <div style="width:36px;height:36px;border-radius:11px;background-color:#FAF5EA;border:1px solid #E6D8BA;display:flex;align-items:center;justify-content:center;color:#B88728;flex-shrink:0;margin-top:2px;">
+                                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                                                <path stroke-linecap="round" stroke-linejoin="round" d="M12 21s-7-4.35-7-10a7 7 0 1114 0c0 5.65-7 10-7 10z"/>
+                                                <circle cx="12" cy="11" r="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+                                            </svg>
+                                        </div>
+                                        <div style="min-width:0;flex:1;">
+                                            <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+                                                <span style="font-size:14.5px;font-weight:700;color:#1E1915;" x-text="addr.recipientName"></span>
+                                                <span style="font-size:11.5px;font-weight:600;color:#78716C;background-color:#FAF8F5;border:1px solid #EAE2D2;padding:2px 7px;border-radius:6px;" x-text="addr.phone"></span>
+                                                <template x-if="addr.isDefault">
+                                                    <span style="background:linear-gradient(135deg,#1E1915,#2C241E);color:#DFC97A;border:1px solid #C49520;font-size:9.5px;font-weight:900;letter-spacing:0.08em;text-transform:uppercase;padding:2px 8px;border-radius:6px;box-shadow:0 1px 4px rgba(0,0,0,0.1);">
+                                                        DEFAULT
+                                                    </span>
+                                                </template>
+                                            </div>
+                                            <p style="font-size:12.5px;line-height:1.5;color:#59514A;margin:6px 0 0 0;font-weight:500;"
+                                               x-text="[addr.houseNo, addr.street, addr.barangay, addr.city, addr.province, addr.postalCode].filter(Boolean).join(', ')">
+                                            </p>
+                                            <template x-if="!addr.isDefault">
+                                                <div style="margin-top:10px;">
+                                                    <button type="button" 
+                                                            @click="setDefaultAddress(addr.id)" 
+                                                            style="background-color:#FAF8F5;border:1px solid #D8CEBE;color:#78716C;padding:4px 10px;border-radius:8px;font-size:10.5px;font-weight:700;cursor:pointer;transition:all 0.2s;"
+                                                            class="hover:bg-[#1E1915] hover:text-[#DFC97A] hover:border-[#1E1915]">
+                                                        Set as Default
+                                                    </button>
+                                                </div>
                                             </template>
                                         </div>
-                                        <p class="text-xs text-gray-600 mt-1 leading-relaxed"
-                                           x-text="[addr.houseNo, addr.street, addr.barangay, addr.city, addr.province, addr.postalCode].filter(Boolean).join(', ')">
-                                        </p>
                                     </div>
-                                    <div class="flex items-center gap-2 shrink-0">
-                                        <button type="button" @click="openEditAddress(addr)" class="text-[11px] font-bold text-[#C0422A] hover:underline">Edit</button>
-                                        <button type="button" @click="promptDeleteAddress(addr.id)" class="text-[11px] font-bold text-gray-400 hover:text-red-500 hover:underline">Delete</button>
+                                    <div style="display:flex;align-items:center;gap:6px;flex-shrink:0;">
+                                        <button type="button" 
+                                                @click="openEditAddress(addr)" 
+                                                style="background-color:#FAF5EA;border:1px solid #E6D8BA;color:#8C6212;padding:5px 10px;border-radius:8px;font-size:11px;font-weight:700;display:inline-flex;align-items:center;gap:4px;cursor:pointer;transition:all 0.2s;"
+                                                class="hover:bg-[#1E1915] hover:text-[#DFC97A] hover:border-[#1E1915]">
+                                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path stroke-linecap="round" stroke-linejoin="round" d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                                            <span>Edit</span>
+                                        </button>
+                                        <button type="button" 
+                                                @click="promptDeleteAddress(addr.id)" 
+                                               style="background-color:#FFF5F5;border:1px solid #FED7D7;color:#E53E3E;padding:5px 9px;border-radius:8px;font-size:11px;font-weight:700;display:inline-flex;align-items:center;gap:3px;cursor:pointer;transition:all 0.2s;"
+                                               class="hover:bg-red-600 hover:text-white hover:border-red-600">
+                                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+                                        </button>
                                     </div>
                                 </div>
-                                <template x-if="!addr.isDefault">
-                                    <button type="button" @click="setDefaultAddress(addr.id)" class="text-[10px] font-bold text-gray-500 hover:text-black border border-gray-200 px-2 py-0.5 rounded-md hover:bg-white transition-all">
-                                        Set as Default
-                                    </button>
-                                </template>
                             </div>
                         </template>
                     </div>
@@ -448,15 +501,27 @@
             </div>
 
             {{-- Inner Add / Edit Form Modal Popup --}}
-            <div x-show="addEditModalOpen" class="fixed inset-0 z-60 flex items-center justify-center p-4 bg-black/50" style="z-index: 60;" x-cloak>
-                <div class="relative bg-white rounded-3xl shadow-2xl w-full max-w-md p-6 space-y-4 max-h-[85vh] overflow-y-auto" @click.away="addEditModalOpen = false">
-                    <h4 class="text-sm font-extrabold text-gray-900" x-text="editAddressId ? 'Edit Address' : 'Add New Address'"></h4>
+            <div x-show="addEditModalOpen" class="fixed inset-0 z-60 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs" style="z-index: 60;" x-cloak>
+                <div style="background-color:#FDFBF7;border:1px solid #EAE2D2;border-radius:28px;box-shadow:0 25px 60px rgba(0,0,0,0.22);padding:24px;width:100%;max-width:480px;max-height:85vh;overflow-y:auto;position:relative;" 
+                     @click.away="addEditModalOpen = false">
 
-                    <div class="space-y-3 text-xs">
+                    {{-- Form Header --}}
+                    <div style="display:flex;align-items:center;justify-content:space-between;padding-bottom:12px;border-bottom:1px solid #ECE3D2;margin-bottom:14px;">
+                        <h4 style="font-family:ui-serif,Georgia,Cambria,serif;font-size:17px;font-weight:700;color:#1E1915;margin:0;" 
+                            x-text="editAddressId ? 'Edit Address' : 'Add New Address'"></h4>
+                        <button type="button" 
+                                @click="addEditModalOpen = false" 
+                                style="width:30px;height:30px;border-radius:8px;background-color:#FAF5EA;border:1px solid #E6D8BA;color:#78716C;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all 0.2s;"
+                                class="hover:bg-[#1E1915] hover:text-[#DFC97A] hover:border-[#1E1915]">
+                            <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.2"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
+                        </button>
+                    </div>
+
+                    <div class="space-y-3.5 text-xs">
                         {{-- Real-Time Interactive Map Location Pinpointer --}}
-                        <div class="space-y-2 pb-3 border-b border-gray-150">
+                        <div class="space-y-2 pb-3 border-b border-[#ECE3D2]">
                             <div class="flex items-center justify-between gap-2">
-                                <label class="font-bold text-gray-800 block text-[11px] uppercase tracking-wider">
+                                <label style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:#996515;margin:0;">
                                     Pin Exact Delivery Location
                                 </label>
                                 <button type="button"
@@ -516,8 +581,9 @@
                                    @input="fieldErrors.recipientName = ''; addressForm.recipientName = addressForm.recipientName.replace(/[^a-zA-Z\u00C0-\u024F\s.'-]/g, '')"
                                    type="text" placeholder="Recipient's full name (letters only)"
                                    maxlength="30"
-                                   :class="fieldErrors.recipientName ? 'border-red-400 bg-red-50' : 'border-gray-200'"
-                                   class="w-full h-9 px-3 border rounded-xl outline-none focus:border-[#C0422A] transition-colors">
+                                   :class="fieldErrors.recipientName ? 'border-red-400 bg-red-50' : 'border-[#D8CEBE]'"
+                                   style="width:100%;height:38px;padding:0 12px;background-color:#FFFFFF;border-radius:12px;outline:none;font-size:12.5px;transition:border-color 0.2s;"
+                                   class="border focus:border-[#996515]">
                             <p x-show="fieldErrors.recipientName" x-text="fieldErrors.recipientName" class="mt-1 text-[10px] text-red-500 font-semibold"></p>
                         </div>
                         {{-- Phone Number --}}
@@ -527,8 +593,9 @@
                                    @input="fieldErrors.phone = ''; addressForm.phone = addressForm.phone.replace(/[^0-9+]/g, '')"
                                    type="text" placeholder="e.g. 09XXXXXXXXX"
                                    maxlength="11"
-                                   :class="fieldErrors.phone ? 'border-red-400 bg-red-50' : 'border-gray-200'"
-                                   class="w-full h-9 px-3 border rounded-xl outline-none focus:border-[#C0422A] transition-colors">
+                                   :class="fieldErrors.phone ? 'border-red-400 bg-red-50' : 'border-[#D8CEBE]'"
+                                   style="width:100%;height:38px;padding:0 12px;background-color:#FFFFFF;border-radius:12px;outline:none;font-size:12.5px;transition:border-color 0.2s;"
+                                   class="border focus:border-[#996515]">
                             <p x-show="fieldErrors.phone" x-text="fieldErrors.phone" class="mt-1 text-[10px] text-red-500 font-semibold"></p>
                         </div>
 
@@ -536,20 +603,21 @@
                         <div class="relative">
                             <label class="font-bold text-gray-700 mb-1 block">Region, Province, City, Barangay *</label>
                             <div @click="toggleLocationDropdown(); fieldErrors.location = ''"
-                                 :class="fieldErrors.location ? 'border-red-400 bg-red-50' : 'border-gray-200 bg-gray-50'"
-                                 class="w-full h-9 px-3 border rounded-xl flex items-center justify-between cursor-pointer transition-colors">
+                                 :class="fieldErrors.location ? 'border-red-400 bg-red-50' : 'border-[#D8CEBE] bg-[#FFFFFF]'"
+                                 style="width:100%;height:38px;padding:0 12px;border-radius:12px;display:flex;align-items:center;justify-content:space-between;cursor:pointer;transition:border-color 0.2s;"
+                                 class="border">
                                 <span class="truncate" :class="getLocationSummary() ? 'text-gray-900 font-semibold' : 'text-gray-400'" x-text="getLocationSummary() || 'Select Region, Province, City, Barangay'"></span>
                                 <svg class="w-4 h-4 text-gray-400" :class="locationDropdownOpen ? 'rotate-180' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
                             </div>
                             <p x-show="fieldErrors.location" x-text="fieldErrors.location" class="mt-1 text-[10px] text-red-500 font-semibold"></p>
 
                             <div x-show="locationDropdownOpen" @click.away="locationDropdownOpen = false"
-                                 class="absolute left-0 right-0 z-50 mt-1 bg-white border border-gray-200 rounded-xl shadow-xl overflow-hidden flex flex-col max-h-62.5" x-cloak>
-                                <div class="flex border-b border-gray-100 bg-gray-50 text-[10px] font-bold text-gray-500">
-                                    <button @click="activeTab = 'region'" type="button" :class="activeTab === 'region' ? 'text-[#C0422A] bg-white' : ''" class="flex-1 py-2 text-center">Region</button>
-                                    <button @click="if(selectedRegion && hasProvinces) activeTab = 'province'" type="button" :disabled="!selectedRegion || !hasProvinces" :class="activeTab === 'province' ? 'text-[#C0422A] bg-white' : ''" class="flex-1 py-2 text-center disabled:opacity-40">Province</button>
-                                    <button @click="if(selectedProvince || (selectedRegion && !hasProvinces)) activeTab = 'city'" type="button" :disabled="!selectedProvince && (hasProvinces || !selectedRegion)" :class="activeTab === 'city' ? 'text-[#C0422A] bg-white' : ''" class="flex-1 py-2 text-center disabled:opacity-40">City</button>
-                                    <button @click="if(selectedCity) activeTab = 'barangay'" type="button" :disabled="!selectedCity" :class="activeTab === 'barangay' ? 'text-[#C0422A] bg-white' : ''" class="flex-1 py-2 text-center disabled:opacity-40">Barangay</button>
+                                 style="position:absolute;left:0;right:0;z-index:50;margin-top:4px;background-color:#FFFFFF;border:1px solid #ECE3D2;border-radius:14px;box-shadow:0 10px 30px rgba(0,0,0,0.12);overflow:hidden;display:flex;flex-direction:column;max-height:250px;" x-cloak>
+                                <div class="flex border-b border-gray-100 bg-[#FAF8F5] text-[10px] font-bold text-gray-500">
+                                    <button @click="activeTab = 'region'" type="button" :class="activeTab === 'region' ? 'text-[#996515] bg-white border-b-2 border-[#996515]' : ''" class="flex-1 py-2 text-center">Region</button>
+                                    <button @click="if(selectedRegion && hasProvinces) activeTab = 'province'" type="button" :disabled="!selectedRegion || !hasProvinces" :class="activeTab === 'province' ? 'text-[#996515] bg-white border-b-2 border-[#996515]' : ''" class="flex-1 py-2 text-center disabled:opacity-40">Province</button>
+                                    <button @click="if(selectedProvince || (selectedRegion && !hasProvinces)) activeTab = 'city'" type="button" :disabled="!selectedProvince && (hasProvinces || !selectedRegion)" :class="activeTab === 'city' ? 'text-[#996515] bg-white border-b-2 border-[#996515]' : ''" class="flex-1 py-2 text-center disabled:opacity-40">City</button>
+                                    <button @click="if(selectedCity) activeTab = 'barangay'" type="button" :disabled="!selectedCity" :class="activeTab === 'barangay' ? 'text-[#996515] bg-white border-b-2 border-[#996515]' : ''" class="flex-1 py-2 text-center disabled:opacity-40">Barangay</button>
                                 </div>
                                 <div class="p-1.5 border-b border-gray-100 bg-gray-50/50">
                                     <input type="text" x-model="locationSearch" :placeholder="'Search ' + activeTab + '...'" class="w-full h-7 px-2 border border-gray-200 rounded-md text-[11px]">
@@ -594,8 +662,9 @@
                                    @input="fieldErrors.houseNo = ''"
                                    type="text" placeholder="e.g. Unit 402, Sunset Bldg, Main St."
                                    maxlength="150"
-                                   :class="fieldErrors.houseNo ? 'border-red-400 bg-red-50' : 'border-gray-200'"
-                                   class="w-full h-9 px-3 border rounded-xl outline-none focus:border-[#C0422A] transition-colors">
+                                   :class="fieldErrors.houseNo ? 'border-red-400 bg-red-50' : 'border-[#D8CEBE]'"
+                                   style="width:100%;height:38px;padding:0 12px;background-color:#FFFFFF;border-radius:12px;outline:none;font-size:12.5px;transition:border-color 0.2s;"
+                                   class="border focus:border-[#996515]">
                             <p x-show="fieldErrors.houseNo" x-text="fieldErrors.houseNo" class="mt-1 text-[10px] text-red-500 font-semibold"></p>
                         </div>
 
@@ -606,20 +675,30 @@
                                    @input="fieldErrors.postalCode = ''; addressForm.postalCode = addressForm.postalCode.replace(/[^0-9]/g, '')"
                                    type="text" placeholder="e.g. 1000"
                                    maxlength="4"
-                                   :class="fieldErrors.postalCode ? 'border-red-400 bg-red-50' : 'border-gray-200'"
-                                   class="w-full h-9 px-3 border rounded-xl outline-none focus:border-[#C0422A] transition-colors">
+                                   :class="fieldErrors.postalCode ? 'border-red-400 bg-red-50' : 'border-[#D8CEBE]'"
+                                   style="width:100%;height:38px;padding:0 12px;background-color:#FFFFFF;border-radius:12px;outline:none;font-size:12.5px;transition:border-color 0.2s;"
+                                   class="border focus:border-[#996515]">
                             <p x-show="fieldErrors.postalCode" x-text="fieldErrors.postalCode" class="mt-1 text-[10px] text-red-500 font-semibold"></p>
                         </div>
 
                         <label class="flex items-center gap-2 cursor-pointer pt-1">
-                            <input type="checkbox" x-model="addressForm.isDefault" class="accent-[#C0422A]">
+                            <input type="checkbox" x-model="addressForm.isDefault" class="accent-[#996515]">
                             <span class="text-xs font-semibold text-gray-700">Set as default shipping address</span>
                         </label>
                     </div>
 
-                    <div class="flex gap-3 pt-2">
-                        <button type="button" @click="addEditModalOpen = false" class="flex-1 py-2 border border-gray-200 text-xs font-bold text-gray-600 rounded-xl hover:bg-gray-50">Cancel</button>
-                        <button type="button" @click="saveAddress()" :disabled="savingAddress" class="flex-1 py-2 bg-[#C0422A] text-white text-xs font-bold rounded-xl hover:bg-black shadow-xs">
+                    <div style="display:flex;gap:10px;padding-top:14px;">
+                        <button type="button" 
+                                @click="addEditModalOpen = false" 
+                                style="flex:1;padding:10px 0;background-color:#FAF8F5;border:1px solid #D8CEBE;color:#78716C;border-radius:12px;font-size:12px;font-weight:700;cursor:pointer;transition:all 0.2s;"
+                                class="hover:bg-[#EAE2D2]">
+                            Cancel
+                        </button>
+                        <button type="button" 
+                                @click="saveAddress()" 
+                                :disabled="savingAddress" 
+                                style="flex:1;padding:10px 0;background:linear-gradient(135deg,#1E1915,#2C241E);color:#DFC97A;border:1px solid #C49520;border-radius:12px;font-size:12px;font-weight:800;letter-spacing:0.06em;text-transform:uppercase;cursor:pointer;box-shadow:0 4px 12px rgba(0,0,0,0.15);transition:all 0.2s;"
+                                class="hover:bg-black active:scale-[0.98] disabled:opacity-50">
                             <span x-text="savingAddress ? 'Saving...' : 'Save Address'"></span>
                         </button>
                     </div>
@@ -635,29 +714,31 @@
          style="z-index: 9999;"
          @click.self="showDeleteConfirmModal = false">
 
-        <div class="relative w-full max-w-xs bg-white rounded-3xl p-6 shadow-2xl border border-gray-100 text-center space-y-4">
+        <div style="background-color:#FDFBF7;border:1px solid #EAE2D2;border-radius:28px;padding:24px;box-shadow:0 25px 60px rgba(0,0,0,0.22);width:100%;max-width:340px;text-align:center;display:flex;flex-direction:column;gap:14px;position:relative;">
 
-            <div class="w-12 h-12 rounded-full bg-red-50 text-red-500 border border-red-100 flex items-center justify-center mx-auto shadow-xs">
-                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+            <div style="width:48px;height:48px;border-radius:16px;background-color:#FFF5F5;color:#E53E3E;border:1px solid #FED7D7;display:flex;align-items:center;justify-content:center;margin:0 auto;box-shadow:0 2px 6px rgba(229,62,62,0.1);">
+                <svg width="22" height="22" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
                 </svg>
             </div>
 
             <div>
-                <h3 class="text-base font-extrabold text-gray-900">Delete Address</h3>
-                <p class="text-xs text-gray-500 font-medium mt-1 leading-relaxed">Are you sure you want to delete this address?</p>
+                <h3 style="font-family:ui-serif,Georgia,Cambria,serif;font-size:17px;font-weight:700;color:#1E1915;margin:0;">Delete Address</h3>
+                <p style="font-size:12px;color:#78716C;margin:4px 0 0 0;">Are you sure you want to remove this address from your registry?</p>
             </div>
 
-            <div class="flex items-center gap-3 pt-2">
+            <div style="display:flex;align-items:center;gap:10px;padding-top:4px;">
                 <button type="button"
                         @click="showDeleteConfirmModal = false"
-                        class="flex-1 py-2.5 px-4 rounded-xl border border-gray-200 text-gray-700 text-xs font-bold uppercase tracking-wider hover:bg-gray-50 transition-all cursor-pointer">
+                        style="flex:1;padding:9px 0;background-color:#FAF8F5;border:1px solid #D8CEBE;color:#78716C;border-radius:12px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.06em;cursor:pointer;transition:all 0.2s;"
+                        class="hover:bg-[#EAE2D2]">
                     Cancel
                 </button>
                 <button type="button"
                         @click="confirmDeleteAddress()"
-                        class="flex-1 py-2.5 px-4 rounded-xl bg-red-600 hover:bg-red-700 text-white text-xs font-bold uppercase tracking-wider shadow-lg shadow-red-600/20 active:scale-95 transition-all cursor-pointer">
-                    OK
+                        style="flex:1;padding:9px 0;background-color:#E53E3E;color:#FFFFFF;border:1px solid #C53030;border-radius:12px;font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:0.06em;box-shadow:0 4px 12px rgba(229,62,62,0.25);cursor:pointer;transition:all 0.2s;"
+                        class="hover:bg-[#C53030] active:scale-95">
+                    Delete
                 </button>
             </div>
         </div>
