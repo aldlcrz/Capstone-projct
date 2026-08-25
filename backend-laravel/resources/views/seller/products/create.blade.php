@@ -428,59 +428,15 @@
                 </div>
             </div>
 
-            {{-- 2. Heritage Specifications (Fabric Type & Target Group) --}}
-            <div class="bg-white p-5 sm:p-6 rounded-2xl border border-gray-100 shadow-xs space-y-4">
-                <div class="flex items-center gap-2.5 pb-2 border-b border-gray-100">
-                    <div class="w-7 h-7 rounded-lg bg-[#C0420A]/10 flex items-center justify-center text-[#C0420A] shrink-0 font-bold text-xs">1</div>
-                    <h3 class="text-xs sm:text-sm font-black text-gray-900 uppercase tracking-widest leading-none">Heritage Classification</h3>
-                </div>
+            {{-- Hidden Inputs for Target Group & Fabric Type (Configured via Step 1 Tag Selection) --}}
+            <input type="hidden" name="target_group" :value="targetGroup || 'Men'">
+            <input type="hidden" name="fabric_type" :value="fabricType || '100% Piña'">
 
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    {{-- Target Group (Who is this for?) --}}
-                    <div id="target-group-container" class="space-y-1.5">
-                        <label class="text-[10px] font-bold uppercase tracking-widest text-gray-500">Who is this for? <span class="text-[#C0420A]">*</span></label>
-                        <div class="flex gap-2">
-                            @foreach(['Men', 'Women', 'Kids'] as $group)
-                                <label class="flex-1 cursor-pointer">
-                                    <input type="radio" 
-                                           name="target_group" 
-                                           value="{{ $group }}" 
-                                           x-model="targetGroup"
-                                           @change="onTargetGroupChange('{{ $group }}')"
-                                           class="hidden peer target-group-radio" 
-                                           {{ old('target_group', 'Men') == $group ? 'checked' : '' }}>
-                                    <div class="w-full py-2.5 rounded-xl border border-gray-200 bg-gray-50 text-xs font-bold text-gray-600 text-center uppercase tracking-wider peer-checked:border-[#C0420A] peer-checked:bg-[#C0420A]/10 peer-checked:text-[#C0420A] transition-all">
-                                        {{ $group }}
-                                    </div>
-                                </label>
-                            @endforeach
-                        </div>
-                    </div>
-
-                    {{-- Fabric Type --}}
-                    <div class="space-y-1.5">
-                        <label class="text-[10px] font-bold uppercase tracking-widest text-gray-500">Fabric Type <span class="text-[#C0420A]">*</span></label>
-                        <select name="fabric_type" 
-                                id="fabricTypeSelect"
-                                x-model="fabricType"
-                                @change="calculateFillRate()"
-                                class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl outline-none focus:border-[#C0420A] transition-all font-bold text-xs">
-                            <option value="100% Piña">100% Authentic Piña (Pineapple Fiber)</option>
-                            <option value="Piña-Seda">Piña-Seda (Pineapple Silk Blend)</option>
-                            <option value="Jusi Silk">Jusi Silk (Classic Traditional)</option>
-                            <option value="Cocoon Silk">Cocoon Silk</option>
-                            <option value="Organza">Organza</option>
-                            <option value="Cotton-Linen">Premium Cotton-Linen</option>
-                        </select>
-                    </div>
-                </div>
-            </div>
-
-            {{-- 3. Heritage Sizing & Inventory Matrix --}}
+            {{-- 1. Heritage Sizing & Inventory Matrix --}}
             <div id="sizing-section" class="bg-white p-5 sm:p-6 rounded-2xl border border-gray-100 shadow-xs space-y-4">
                 <div class="flex items-center justify-between pb-2 border-b border-gray-100">
                     <div class="flex items-center gap-2.5">
-                        <div class="w-7 h-7 rounded-lg bg-[#C0420A]/10 flex items-center justify-center text-[#C0420A] shrink-0 font-bold text-xs">2</div>
+                        <div class="w-7 h-7 rounded-lg bg-[#C0420A]/10 flex items-center justify-center text-[#C0420A] shrink-0 font-bold text-xs">1</div>
                         <div>
                             <h3 class="text-xs sm:text-sm font-black text-gray-900 uppercase tracking-widest leading-none">Heritage Sizing & Stock <span class="text-[#C0420A]">*</span></h3>
                             <p class="text-[10px] text-gray-400 font-medium mt-0.5">Assign stock quantities per size</p>
@@ -515,10 +471,10 @@
                 </div>
             </div>
 
-            {{-- 4. Pricing & Logistics Grid --}}
+            {{-- 2. Pricing & Logistics Grid --}}
             <div class="bg-white p-5 sm:p-6 rounded-2xl border border-gray-100 shadow-xs space-y-4">
                 <div class="flex items-center gap-2.5 pb-2 border-b border-gray-100">
-                    <div class="w-7 h-7 rounded-lg bg-[#C0420A]/10 flex items-center justify-center text-[#C0420A] shrink-0 font-bold text-xs">3</div>
+                    <div class="w-7 h-7 rounded-lg bg-[#C0420A]/10 flex items-center justify-center text-[#C0420A] shrink-0 font-bold text-xs">2</div>
                     <h3 class="text-xs sm:text-sm font-black text-gray-900 uppercase tracking-widest leading-none">Price & Shipping Information</h3>
                 </div>
 
@@ -631,11 +587,11 @@
                 </div>
             </div>
 
-            {{-- 5. Payment Methods Card --}}
+            {{-- 3. Payment Methods Card --}}
             <div id="payment-methods-card" class="bg-white p-5 sm:p-6 rounded-2xl border border-gray-100 shadow-xs space-y-4">
                 <div class="flex items-center justify-between pb-2 border-b border-gray-100">
                     <div class="flex items-center gap-2.5">
-                        <div class="w-7 h-7 rounded-lg bg-[#C0420A]/10 flex items-center justify-center text-[#C0420A] shrink-0 font-bold text-xs">4</div>
+                        <div class="w-7 h-7 rounded-lg bg-[#C0420A]/10 flex items-center justify-center text-[#C0420A] shrink-0 font-bold text-xs">3</div>
                         <h3 class="text-xs sm:text-sm font-black text-gray-900 uppercase tracking-widest leading-none">Payment Methods <span class="text-[#C0420A]">*</span></h3>
                     </div>
                     <a href="{{ route('seller.profile') }}?open_payment=1#payment-methods" target="_blank" class="text-[11px] font-bold text-[#C0420A] hover:underline flex items-center gap-1">
@@ -701,25 +657,16 @@
                 </div>
             </div>
 
-            {{-- 6. Artisan Description & Storytelling Card --}}
+            {{-- 4. Artisan Description & Storytelling Card --}}
             <div class="bg-white p-5 sm:p-6 rounded-2xl border border-gray-100 shadow-xs space-y-4">
                 <div class="flex items-center justify-between pb-2 border-b border-gray-100">
                     <div class="flex items-center gap-2.5">
-                        <div class="w-7 h-7 rounded-lg bg-[#C0420A]/10 flex items-center justify-center text-[#C0420A] shrink-0 font-bold text-xs">5</div>
+                        <div class="w-7 h-7 rounded-lg bg-[#C0420A]/10 flex items-center justify-center text-[#C0420A] shrink-0 font-bold text-xs">4</div>
                         <div>
                             <h3 class="text-xs sm:text-sm font-black text-gray-900 uppercase tracking-widest leading-none">Artisan Description & Story <span class="text-[#C0420A]">*</span></h3>
                             <p class="text-[10px] text-gray-400 font-medium mt-0.5">Highlight the craftsmanship, weaving techniques, and care instructions</p>
                         </div>
                     </div>
-
-                    {{-- AI Copywriter Button --}}
-                    <button type="button" 
-                            @click="generateDescriptionAi()"
-                            :disabled="isAiLoading"
-                            class="text-xs font-bold text-blue-600 hover:text-blue-700 flex items-center gap-1">
-                        <svg class="w-3.5 h-3.5 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
-                        <span>AI Copywriter</span>
-                    </button>
                 </div>
 
                 <div class="relative group">
