@@ -81,53 +81,70 @@
                 </div>
 
                 {{-- Image Slots & Upload Trigger --}}
-                <div class="flex flex-wrap gap-3 items-center">
-                    {{-- Rendered Previews (Cover Image & Additional Photos) --}}
-                    <template x-for="(img, index) in imagePreviews" :key="index">
-                        <div class="relative w-24 h-24 sm:w-28 sm:h-28 rounded-xl overflow-hidden border border-gray-200 bg-gray-50 shadow-xs group shrink-0">
-                            <img :src="img.url" class="w-full h-full object-cover object-top transition-transform group-hover:scale-105">
-                            
-                            {{-- Cover Image Ribbon on First Image --}}
-                            <template x-if="index === 0">
-                                <div class="absolute bottom-0 inset-x-0 bg-black/75 backdrop-blur-xs py-0.5 text-center text-[9px] font-bold text-white uppercase tracking-wider">
-                                    Cover Image
-                                </div>
-                            </template>
-
-                            {{-- Image Number Badge (for secondary images) --}}
-                            <template x-if="index > 0">
-                                <div class="absolute top-1.5 left-1.5 w-5 h-5 rounded-full bg-black/60 backdrop-blur-xs flex items-center justify-center text-[9px] font-bold text-white" x-text="index + 1"></div>
-                            </template>
-
-                            {{-- Delete Button (X) --}}
-                            <button type="button" @click="removeImage(index)" class="absolute top-1.5 right-1.5 w-5 h-5 bg-red-600 hover:bg-red-700 text-white rounded-full flex items-center justify-center text-[10px] font-black shadow-md hover:scale-110 active:scale-95 transition-all">
-                                ✕
-                            </button>
-                        </div>
-                    </template>
-
-                    {{-- Add Image [+] Slot (Only shown if less than 8 images) --}}
-                    <template x-if="imageCount < 8">
+                <div>
+                    {{-- 1. Full-Width Wide Upload Dropzone when empty (0 photos) --}}
+                    <div x-show="imageCount === 0">
                         <label for="imageUploadInput"
                                id="dropZone"
-                               class="w-24 h-24 sm:w-28 sm:h-28 rounded-xl border-2 border-dashed border-gray-300 hover:border-[#C0420A] bg-gray-50/70 hover:bg-orange-50/20 flex flex-col items-center justify-center gap-1 cursor-pointer transition-all shrink-0 text-center p-2 group">
-                            <div class="w-8 h-8 rounded-lg bg-gray-100 group-hover:bg-[#C0420A]/10 text-gray-400 group-hover:text-[#C0420A] flex items-center justify-center transition-colors">
-                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                               class="w-full py-8 sm:py-10 px-4 rounded-2xl border-2 border-dashed border-gray-300 hover:border-[#C0420A] bg-gray-50/70 hover:bg-orange-50/20 flex flex-col items-center justify-center gap-2.5 cursor-pointer transition-all text-center group shadow-2xs">
+                            <div class="w-13 h-13 rounded-2xl bg-white border border-gray-200 group-hover:border-[#C0420A]/30 group-hover:bg-[#C0420A]/10 text-gray-400 group-hover:text-[#C0420A] flex items-center justify-center transition-all shadow-xs group-hover:scale-105">
+                                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/>
                                 </svg>
                             </div>
-                            <span class="text-[10px] font-bold text-gray-500 group-hover:text-[#C0420A]" x-text="imageCount === 0 ? 'Upload Photo' : 'Add Photo'"></span>
+                            <div class="space-y-1">
+                                <span class="text-xs sm:text-sm font-black text-gray-800 group-hover:text-[#C0420A] transition-colors block uppercase tracking-wide">
+                                    Click or Drag & Drop to Upload Photos
+                                </span>
+                                <span class="text-[11px] text-gray-400 font-medium block">
+                                    High-resolution cover image • JPEG, PNG, WEBP up to 5MB (Max 8 photos)
+                                </span>
+                            </div>
                         </label>
-                    </template>
+                    </div>
+
+                    {{-- 2. Thumbnail Previews & Compact Add Photo Slot when photos exist (> 0) --}}
+                    <div x-show="imageCount > 0" class="flex flex-wrap gap-3 items-center">
+                        {{-- Rendered Previews (Cover Image & Additional Photos) --}}
+                        <template x-for="(img, index) in imagePreviews" :key="index">
+                            <div class="relative w-24 h-24 sm:w-28 sm:h-28 rounded-xl overflow-hidden border border-gray-200 bg-gray-50 shadow-xs group shrink-0">
+                                <img :src="img.url" class="w-full h-full object-cover object-top transition-transform group-hover:scale-105">
+                                
+                                {{-- Cover Image Ribbon on First Image --}}
+                                <template x-if="index === 0">
+                                    <div class="absolute bottom-0 inset-x-0 bg-black/75 backdrop-blur-xs py-0.5 text-center text-[9px] font-bold text-white uppercase tracking-wider">
+                                        Cover Image
+                                    </div>
+                                </template>
+
+                                {{-- Image Number Badge (for secondary images) --}}
+                                <template x-if="index > 0">
+                                    <div class="absolute top-1.5 left-1.5 w-5 h-5 rounded-full bg-black/60 backdrop-blur-xs flex items-center justify-center text-[9px] font-bold text-white" x-text="index + 1"></div>
+                                </template>
+
+                                {{-- Delete Button (X) --}}
+                                <button type="button" @click="removeImage(index)" class="absolute top-1.5 right-1.5 w-5 h-5 bg-red-600 hover:bg-red-700 text-white rounded-full flex items-center justify-center text-[10px] font-black shadow-md hover:scale-110 active:scale-95 transition-all">
+                                    ✕
+                                </button>
+                            </div>
+                        </template>
+
+                        {{-- Add Another Photo Button (Shown when imageCount < 8) --}}
+                        <template x-if="imageCount < 8">
+                            <label for="imageUploadInput"
+                                   class="w-24 h-24 sm:w-28 sm:h-28 rounded-xl border-2 border-dashed border-gray-300 hover:border-[#C0420A] bg-gray-50/70 hover:bg-orange-50/20 flex flex-col items-center justify-center gap-1 cursor-pointer transition-all shrink-0 text-center p-2 group shadow-2xs">
+                                <div class="w-8 h-8 rounded-lg bg-gray-100 group-hover:bg-[#C0420A]/10 text-gray-400 group-hover:text-[#C0420A] flex items-center justify-center transition-colors">
+                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+                                    </svg>
+                                </div>
+                                <span class="text-[10px] font-bold text-gray-500 group-hover:text-[#C0420A]">Add Photo</span>
+                            </label>
+                        </template>
+                    </div>
 
                     {{-- Hidden Multi-File Input --}}
                     <input type="file" id="imageUploadInput" name="images[]" multiple accept="image/jpeg,image/png,image/webp" class="hidden" @change="handleFileChange($event)">
-                </div>
-
-                {{-- Empty Image Helper Warning --}}
-                <div x-show="imageCount === 0" class="text-[11px] text-gray-400 flex items-center gap-1.5 pt-1">
-                    <svg class="w-3.5 h-3.5 text-[#C0420A]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                    <span>Upload your main cover photo first to unlock auto-suggestions and full specifications.</span>
                 </div>
             </div>
 
