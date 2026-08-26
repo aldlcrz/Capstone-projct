@@ -80,12 +80,21 @@ class AiController extends Controller
      */
     public function generateSellerListing(Request $request)
     {
+        $categoryName = $request->input('category');
+        if (!$categoryName && $request->filled('category_id')) {
+            $cat = \App\Models\Category::find($request->input('category_id'));
+            if ($cat) $categoryName = $cat->name;
+        }
+
         $params = [
-            'fabric'     => $request->input('fabric', 'Jusi Silk'),
-            'embroidery' => $request->input('embroidery', 'Calado Hand Embroidery'),
-            'category'   => $request->input('category', 'Barong Tagalog'),
-            'theme'      => $request->input('theme', 'Formal & Wedding'),
-            'collar'     => $request->input('collar', 'Chinese / Mandarin Collar'),
+            'name'         => trim((string) $request->input('name', '')),
+            'fabric'       => $request->input('fabric', '100% Piña'),
+            'embroidery'   => $request->input('embroidery', 'Calado Hand Embroidery'),
+            'category'     => $categoryName ?: 'Barong Tagalog',
+            'target_group' => $request->input('target_group', 'Men'),
+            'variants'     => $request->input('variants', []),
+            'theme'        => $request->input('theme', 'Heritage & Cultural Formalities'),
+            'collar'       => $request->input('collar', 'Mandarin Collar'),
         ];
 
         $result = AiService::generateProductListing($params);

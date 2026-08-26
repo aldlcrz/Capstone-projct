@@ -738,6 +738,24 @@
                             <p class="text-[10px] text-gray-400 font-medium mt-0.5">Highlight the craftsmanship, weaving techniques, and care instructions</p>
                         </div>
                     </div>
+
+                    {{-- AI Auto-Write Story Button --}}
+                    <button type="button" 
+                            @click="generateDescriptionAi()"
+                            :disabled="isAiLoading"
+                            class="px-3.5 py-1.5 rounded-xl bg-gradient-to-r from-orange-500 to-[#C0420A] hover:from-orange-600 hover:to-[#a63707] active:scale-95 text-white text-xs font-bold shadow-xs flex items-center gap-1.5 cursor-pointer transition-all disabled:opacity-50">
+                        <span x-show="!isAiLoading" class="flex items-center gap-1.5">
+                            <span class="text-xs">✨</span>
+                            <span>AI Auto-Write</span>
+                        </span>
+                        <span x-show="isAiLoading" class="flex items-center gap-1.5" x-cloak>
+                            <svg class="animate-spin h-3.5 w-3.5 text-white" fill="none" viewBox="0 0 24 24">
+                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path>
+                            </svg>
+                            <span>Writing...</span>
+                        </span>
+                    </button>
                 </div>
 
                 <div class="relative group">
@@ -1171,30 +1189,46 @@ function addProductManager() {
         },
 
         async generateDescriptionAi() {
+            if (this.isAiLoading) return;
             this.isAiLoading = true;
             try {
                 const initData = getProductInitData();
-                const response = await fetch(initData.aiDescriptionUrl || '', {
+                const selectedCatName = this.selectedCategoryObj ? this.selectedCategoryObj.name : '';
+                const variantNames = this.hasVariants ? this.variants.map(v => v.name).filter(Boolean) : [];
+
+                const response = await fetch(initData.aiDescriptionUrl || '/seller/generate-description', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
-                        'X-CSRF-TOKEN': initData.csrfToken || ''
+                        'X-CSRF-TOKEN': initData.csrfToken || '',
+                        'X-Requested-With': 'XMLHttpRequest'
                     },
                     body: JSON.stringify({
+                        name: this.productName || '',
+                        category: selectedCatName,
+                        category_id: this.selectedCategory || '',
+                        target_group: this.targetGroup || 'Men',
                         fabric: this.fabricType || '100% Piña',
-                        category: this.selectedCategory || 'Barong Tagalog',
-                        theme: 'Wedding & Formal'
+                        variants: variantNames,
+                        theme: 'Wedding & Cultural Heritage'
                     })
                 });
                 if (response.ok) {
                     const data = await response.json();
-                    if (data.description) {
+                    if (data && data.description) {
                         this.description = data.description;
+                        const textarea = document.getElementById('artisanDescription');
+                        if (textarea) {
+                            textarea.classList.add('ring-2', 'ring-[#C0420A]', 'border-[#C0420A]');
+                            setTimeout(() => {
+                                textarea.classList.remove('ring-2', 'ring-[#C0420A]', 'border-[#C0420A]');
+                            }, 1500);
+                        }
                         this.calculateFillRate();
                     }
                 }
             } catch (e) {
-                console.error(e);
+                console.error('AI Description error:', e);
             } finally {
                 this.isAiLoading = false;
             }

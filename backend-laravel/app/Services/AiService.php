@@ -74,13 +74,12 @@ class AiService
             ];
         }
 
-        $models = array_unique(array_filter([
-            config('services.gemini.model'),
-            'gemini-flash-latest',
-            'gemini-3.5-flash',
-            'gemini-3.7-flash',
-            'gemini-3.6-flash'
-        ]));
+        $configuredModel = config('services.gemini.model') ?: env('GEMINI_MODEL', 'gemini-2.5-flash');
+        $models = array_slice(array_unique(array_filter([
+            $configuredModel,
+            'gemini-2.5-flash',
+            'gemini-1.5-flash',
+        ])), 0, 1);
 
         foreach ($models as $model) {
             try {
@@ -88,7 +87,7 @@ class AiService
                 $response = Http::withOptions([
                     'curl' => [CURLOPT_IPRESOLVE => CURL_IPRESOLVE_V4],
                     'verify' => false,
-                ])->timeout(12)->post($url, $payload);
+                ])->timeout(2.5)->post($url, $payload);
                 if ($response->successful()) {
                     $data = $response->json();
                     $text = $data['candidates'][0]['content']['parts'][0]['text'] ?? null;
@@ -878,45 +877,46 @@ STRICT DOMAIN LIMITS & SECURITY:
 
     public static function generateProductListing(array $params): array
     {
-        $fabric   = $params['fabric'] ?? 'Jusi Silk';
-        $embroidery = $params['embroidery'] ?? 'Calado Hand Embroidery';
-        $category = $params['category'] ?? 'Barong Tagalog';
-        $theme    = $params['theme'] ?? 'Wedding & Formal';
-        $collar   = $params['collar'] ?? 'Chinese / Mandarin Collar';
+        $name        = trim($params['name'] ?? '');
+        $fabric      = $params['fabric'] ?? '100% Piña';
+        $embroidery  = $params['embroidery'] ?? 'Calado Hand Embroidery';
+        $category    = $params['category'] ?? 'Barong Tagalog';
+        $targetGroup = $params['target_group'] ?? 'Men';
+        $theme       = $params['theme'] ?? 'Wedding & Formal';
 
-        $prompt = "Write an elegant, high-converting product title and description for an authentic handcrafted {$category} from Lumban, Laguna, Philippines. Fabric: {$fabric}, Embroidery: {$embroidery}, Collar: {$collar}, Occasion: {$theme}. Include: 1. Catchy Title, 2. Storytelling description highlighting Lumban artisan heritage, 3. Bulleted specifications, 4. Care instructions.";
+        $prompt = "Write a concise, high-converting 2-paragraph artisan product description (under 400 characters) for an authentic handcrafted {$targetGroup} {$category}" . ($name ? " titled '{$name}'" : "") . " from Lumban, Laguna, Philippines. Fabric: {$fabric}. Embroidery: {$embroidery}. Highlight Lumban heritage weaving and timeless elegance. Output plain text paragraphs only without titles, asterisks, or markdown headers.";
 
         $aiOutput = self::callGemini($prompt);
 
-        if (!$aiOutput) {
-            $title = "Handcrafted {$fabric} {$category} with {$embroidery}";
-            $description = "Experience timeless Filipino elegance with this exquisite {$category}, meticulously crafted by master embroiderers in Lumban, Laguna. Made from premium {$fabric}, this garment features intricate {$embroidery} along the pechera and cuffs, framed by a distinguished {$collar}.\n\n"
-                . "**Product Highlights:**\n"
-                . "• Fabric: Authentic {$fabric}\n"
-                . "• Embroidery: Detailed {$embroidery} (Pechera & Cuffs)\n"
-                . "• Collar Style: {$collar}\n"
-                . "• Origin: Lumban, Laguna (The Embroidery Capital of the Philippines)\n"
-                . "• Best For: {$theme}, Galas, and Prestigious Ceremonies\n\n"
-                . "**Garment Care Instructions:**\n"
-                . "Dry clean or gentle hand wash in lukewarm water with mild detergent. Do not wring. Hang to dry and iron on low-medium heat with a protective pressing cloth.";
+        if (!$aiOutput || strlen($aiOutput) < 20) {
+            $catLabel = $category ?: 'Philippine heritage piece';
+            $fabricLabel = $fabric ?: 'premium woven fabric';
+            $nameLabel = $name ? "The {$name}" : "This exquisite {$catLabel}";
+            
+            $descOptions = [
+                "{$nameLabel} is handcrafted by master artisans in Lumban, Laguna, the embroidery capital of the Philippines. Made from {$fabricLabel}, it features intricate embroidery and timeless tailoring suitable for formal ceremonies and prestigious gatherings.",
+                "Experience authentic Filipino artistry with this meticulously crafted {$catLabel}. Tailored in Lumban, Laguna using {$fabricLabel}, each delicate stitch reflects generations of heritage craftsmanship designed for elegance and comfort.",
+                "An authentic masterpiece from Lumban's master embroiderers, this {$catLabel} showcases refined {$fabricLabel} craftsmanship with classic detailing. Perfect for weddings, celebrations, and cultural pride."
+            ];
+            $description = $descOptions[array_rand($descOptions)];
 
             return [
-                'title' => $title,
+                'title' => $name ?: "Handcrafted {$fabric} {$category}",
                 'description' => $description,
                 'fabric' => $fabric,
-                'collar' => $collar,
             ];
         }
 
-        // Parse title and description if Gemini responded
-        $lines = explode("\n", trim($aiOutput));
-        $title = str_replace(['#', '*', 'Title:'], '', $lines[0] ?? "Handcrafted {$fabric} {$category}");
-        
+        // Clean up markdown / headers if any
+        $cleaned = trim(preg_replace('/^#+\s*|^\*\*[^*]+\*\*\s*/m', '', $aiOutput));
+        if (mb_strlen($cleaned) > 490) {
+            $cleaned = mb_substr($cleaned, 0, 485) . '...';
+        }
+
         return [
-            'title' => trim($title),
-            'description' => $aiOutput,
+            'title' => $name ?: "Handcrafted {$fabric} {$category}",
+            'description' => $cleaned,
             'fabric' => $fabric,
-            'collar' => $collar,
         ];
     }
 
