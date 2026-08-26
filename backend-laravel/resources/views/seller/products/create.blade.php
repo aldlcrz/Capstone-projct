@@ -518,8 +518,8 @@
                         <div class="pt-1">
                             <button type="button" 
                                     @click="addVariantRow()" 
-                                    class="w-full py-2.5 px-4 bg-gray-50 hover:bg-gray-100 border border-dashed border-gray-300 hover:border-gray-400 text-gray-700 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer">
-                                <svg class="w-4 h-4 text-[#C0420A]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+                                    class="w-full py-2.5 px-4 bg-orange-50/50 hover:bg-orange-50 border border-dashed border-[#C0420A]/40 hover:border-[#C0420A] text-[#C0420A] rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer shadow-2xs">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"/></svg>
                                 <span>+ Add Variant</span>
                             </button>
                         </div>
@@ -528,13 +528,13 @@
                 </div>
             </div>
 
-            {{-- Step 1 Primary CTA Button: "Next: Complete Product Info" --}}
-            <div x-show="step === 1" class="pt-2">
+            {{-- Step 1 Primary CTA Button: "Next: Complete Product Details" --}}
+            <div x-show="step === 1" class="pt-3">
                 <button type="button" 
                         @click="goToStep2()"
-                        class="w-full py-4 bg-blue-600 hover:bg-blue-700 active:scale-[0.99] text-white rounded-full font-bold text-sm tracking-wide shadow-lg shadow-blue-500/20 transition-all flex items-center justify-center gap-2">
-                    <span>Next: Complete Product Info</span>
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
+                        class="w-full py-3.5 sm:py-4 px-6 bg-[#C0420A] hover:bg-[#a63707] active:scale-[0.99] text-white rounded-2xl font-bold text-sm tracking-wide shadow-md shadow-[#C0420A]/20 hover:shadow-lg hover:shadow-[#C0420A]/30 transition-all flex items-center justify-center gap-2.5 cursor-pointer group">
+                    <span>Next: Complete Product Details</span>
+                    <svg class="w-4 h-4 transition-transform group-hover:translate-x-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
                 </button>
             </div>
         </div>
@@ -547,12 +547,12 @@
             {{-- 1. Fill Rate & Listing Health Bar --}}
             <div class="bg-white p-4 sm:p-5 rounded-2xl border border-gray-100 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                 <div class="flex items-center gap-3">
-                    <span class="text-xs font-black uppercase tracking-wider text-gray-700">Fill Rate</span>
+                    <span class="text-xs font-black uppercase tracking-wider text-gray-700">Listing Completeness</span>
                     <div class="w-36 sm:w-48 h-2.5 bg-gray-100 rounded-full overflow-hidden">
-                        <div class="h-full bg-linear-to-r from-blue-500 to-indigo-600 rounded-full transition-all duration-500" :style="'width: ' + fillRate + '%'"></div>
+                        <div class="h-full bg-linear-to-r from-orange-400 to-[#C0420A] rounded-full transition-all duration-500" :style="'width: ' + fillRate + '%'"></div>
                     </div>
-                    <span class="text-xs font-black text-blue-600" x-text="fillRate + '%'"></span>
-                    <span class="text-base">🚀</span>
+                    <span class="text-xs font-black text-[#C0420A]" x-text="fillRate + '%'"></span>
+                    <span class="text-base">✨</span>
                 </div>
 
                 <div class="flex items-center gap-2">
@@ -818,19 +818,36 @@
                 </div>
             </div>
 
-            {{-- 7. Bottom Submission Actions (Draft & Publish) --}}
-            <div class="pt-4 flex flex-col-reverse sm:flex-row items-center justify-end gap-3.5">
+            {{-- 7. Bottom Submission Actions (Back, Draft & Publish) --}}
+            <div class="pt-6 pb-2 border-t border-gray-100 flex flex-col sm:flex-row items-center justify-between gap-4">
                 <button type="button" 
-                        @click="submitAsDraft()"
-                        class="w-full sm:w-auto px-8 py-3.5 rounded-full border-2 border-gray-300 hover:border-gray-800 bg-white text-gray-700 hover:text-black font-bold text-xs uppercase tracking-widest transition-all">
-                    Save as Draft
+                        @click="step = 1; window.scrollTo({ top: 0, behavior: 'smooth' })"
+                        class="w-full sm:w-auto px-5 py-3 rounded-xl border border-gray-200 hover:bg-gray-50 text-gray-600 hover:text-gray-900 font-bold text-xs transition-all flex items-center justify-center gap-2 cursor-pointer shadow-2xs">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
+                    </svg>
+                    <span>Back to Step 1</span>
                 </button>
 
-                <button type="submit" 
-                        @click="document.getElementById('formActionInput').value = 'publish'"
-                        class="w-full sm:w-auto px-10 py-3.5 rounded-full bg-blue-600 hover:bg-blue-700 active:scale-[0.99] text-white font-bold text-xs uppercase tracking-widest shadow-lg shadow-blue-500/25 transition-all">
-                    Publish Product
-                </button>
+                <div class="flex flex-col sm:flex-row items-center gap-3 w-full sm:w-auto">
+                    <button type="button" 
+                            @click="submitAsDraft()"
+                            class="w-full sm:w-auto px-6 py-3.5 rounded-xl border border-gray-300 hover:border-gray-400 bg-white hover:bg-gray-50 text-gray-800 font-bold text-xs tracking-wide transition-all shadow-xs flex items-center justify-center gap-2 cursor-pointer active:scale-[0.99]">
+                        <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4"/>
+                        </svg>
+                        <span>Save as Draft</span>
+                    </button>
+
+                    <button type="submit" 
+                            @click="document.getElementById('formActionInput').value = 'publish'"
+                            class="w-full sm:w-auto px-8 py-3.5 rounded-xl bg-[#C0420A] hover:bg-[#a63707] active:scale-[0.99] text-white font-bold text-xs tracking-wide shadow-md shadow-[#C0420A]/20 hover:shadow-lg hover:shadow-[#C0420A]/30 transition-all flex items-center justify-center gap-2 cursor-pointer">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/>
+                        </svg>
+                        <span>Publish Product</span>
+                    </button>
+                </div>
             </div>
         </div>
 
