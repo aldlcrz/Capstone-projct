@@ -176,27 +176,21 @@
                                 class="absolute right-3 text-gray-400 hover:text-gray-600 transition-colors">
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
                         </button>
-                    </div>
                 </div>
 
-                {{-- 3. Product Category & Tag Selection --}}
-                <div class="space-y-2.5">
+                {{-- 3. Product Category & Target Audience Selection (Direct Tag & Category Grid) --}}
+                <div class="space-y-3">
                     <div class="flex items-center justify-between">
                         <label class="text-[11px] font-bold uppercase tracking-wider text-gray-700">
-                            Category <span class="text-[#C0420A]">*</span>
+                            Category & Target Tag <span class="text-[#C0420A]">*</span>
                         </label>
-                        <span class="text-[9px] font-bold transition-colors" :class="selectedCategory ? 'text-emerald-600' : 'text-[#C0420A]'" x-text="selectedCategory ? '✓ Category selected' : 'Select category'"></span>
+                        <span class="text-[9px] font-bold transition-colors" 
+                              :class="selectedCategory && targetGroup ? 'text-emerald-600' : 'text-[#C0420A]'" 
+                              x-text="selectedCategory && selectedCategoryObj ? ('✓ ' + selectedCategoryObj.name + (targetGroup ? ' (' + targetGroup + ')' : '')) : (targetGroup ? '✓ ' + targetGroup + ' selected • Pick category below' : 'Select tag & category')"></span>
                     </div>
 
-                    {{-- Category Demographic Quick Filter Chips --}}
+                    {{-- Target Tag Tabs --}}
                     <div class="space-y-1.5">
-                        <div class="flex items-center justify-between">
-                            <span class="text-[10px] font-bold uppercase tracking-wider text-gray-500">
-                                Target Tag <span class="text-[#C0420A]">*</span>
-                            </span>
-                            <span class="text-[9px] font-bold transition-colors" :class="targetGroup && targetGroup !== 'All' ? 'text-emerald-600' : 'text-gray-400'" x-text="targetGroup && targetGroup !== 'All' ? '✓ ' + targetGroup + ' selected' : 'Select tag'"></span>
-                        </div>
-
                         <style>
                             .tag-chip {
                                 display: inline-flex;
@@ -261,15 +255,7 @@
 
                         <div class="flex items-center gap-2 overflow-x-auto pb-1 no-scrollbar">
                             <button type="button" 
-                                    @click="filterByTag('All')"
-                                    :class="categoryFilter === 'All' ? 'active' : ''"
-                                    class="tag-chip tag-chip-all">
-                                <span>All</span>
-                                <span style="font-size: 10px; opacity: 0.85;" x-text="'(' + (categoriesList ? categoriesList.length : 0) + ')'"></span>
-                            </button>
-
-                            <button type="button" 
-                                    @click="filterByTag('Men')"
+                                    @click="selectTag('Men')"
                                     :class="categoryFilter === 'Men' ? 'active' : ''"
                                     class="tag-chip tag-chip-men">
                                 <span>👔 Men</span>
@@ -277,7 +263,7 @@
                             </button>
 
                             <button type="button" 
-                                    @click="filterByTag('Women')"
+                                    @click="selectTag('Women')"
                                     :class="categoryFilter === 'Women' ? 'active' : ''"
                                     class="tag-chip tag-chip-women">
                                 <span>👗 Women</span>
@@ -285,132 +271,69 @@
                             </button>
 
                             <button type="button" 
-                                    @click="filterByTag('Kids')"
+                                    @click="selectTag('Kids')"
                                     :class="categoryFilter === 'Kids' ? 'active' : ''"
                                     class="tag-chip tag-chip-kids">
                                 <span>🧸 Kids</span>
                                 <span style="font-size: 10px; opacity: 0.85;" x-text="'(' + getTagCount('Kids') + ')'"></span>
                             </button>
+
+                            <button type="button" 
+                                    @click="selectTag('All')"
+                                    :class="categoryFilter === 'All' ? 'active' : ''"
+                                    class="tag-chip tag-chip-all">
+                                <span>All</span>
+                                <span style="font-size: 10px; opacity: 0.85;" x-text="'(' + (categoriesList ? categoriesList.length : 0) + ')'"></span>
+                            </button>
                         </div>
                     </div>
 
-                    {{-- Interactive Category Selector Trigger --}}
-                    <div class="relative">
-                        <button type="button" 
-                                @click="isCategoryDropdownOpen = !isCategoryDropdownOpen"
-                                class="w-full px-4 py-3 bg-gray-50/80 border border-gray-200 rounded-xl outline-none focus:border-[#C0420A] focus:bg-white text-left flex items-center justify-between transition-all group shadow-2xs">
-                            
-                            <div class="flex items-center gap-2.5 min-w-0">
-                                <template x-if="selectedCategoryObj">
-                                    <div class="flex items-center gap-2 truncate">
-                                        <span class="text-sm font-bold text-gray-900 truncate" x-text="selectedCategoryObj.name"></span>
-                                        
-                                        {{-- Demographic Badges for Selected Category --}}
-                                        <div class="flex items-center gap-1 shrink-0">
-                                            <template x-for="tag in (selectedCategoryObj.target_group || [])" :key="tag">
-                                                <span class="px-2 py-0.5 rounded-md text-[9px] font-black uppercase tracking-wider"
-                                                      :class="{
-                                                          'bg-blue-100 text-blue-700 border border-blue-200': tag === 'Men',
-                                                          'bg-rose-100 text-rose-700 border border-rose-200': tag === 'Women',
-                                                          'bg-amber-100 text-amber-700 border border-amber-200': tag === 'Kids'
-                                                      }"
-                                                      x-text="tag"></span>
-                                            </template>
-                                            <template x-if="!selectedCategoryObj.target_group || selectedCategoryObj.target_group.length === 0">
-                                                <span class="px-2 py-0.5 rounded-md bg-gray-100 text-gray-600 border border-gray-200 text-[9px] font-bold uppercase">Unisex / All</span>
-                                            </template>
-                                        </div>
-                                    </div>
-                                </template>
-                                <template x-if="!selectedCategoryObj">
-                                    <span class="text-sm text-gray-400 font-normal">Select a category (e.g. Formal Barong > Men)</span>
-                                </template>
-                            </div>
+                    {{-- Direct Categories Grid (No Dropdown Box) --}}
+                    <div class="space-y-2 pt-1">
+                        <div class="flex items-center justify-between">
+                            <span class="text-[10px] font-bold uppercase tracking-wider text-gray-500">
+                                Categories <span x-show="categoryFilter !== 'All'" x-text="'for ' + categoryFilter"></span>:
+                            </span>
+                            <span class="text-[10px] text-gray-400 font-medium" x-text="filteredCategories.length + ' options'"></span>
+                        </div>
 
-                            <div class="flex items-center gap-1.5 text-gray-400 group-hover:text-gray-700 transition-colors shrink-0">
-                                <span class="text-[11px] font-bold uppercase tracking-wider hidden sm:inline" x-text="isCategoryDropdownOpen ? 'Close' : 'Select'"></span>
-                                <svg class="w-4 h-4 transition-transform duration-200 text-gray-400" :class="isCategoryDropdownOpen ? 'rotate-180 text-[#C0420A]' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
-                            </div>
-                        </button>
-
-                        {{-- Category Dropdown Picker Modal / Menu --}}
-                        <div x-show="isCategoryDropdownOpen" 
-                             @click.away="isCategoryDropdownOpen = false"
-                             x-transition:enter="transition ease-out duration-200"
-                             x-transition:enter-start="opacity-0 translate-y-1 scale-98"
-                             x-transition:enter-end="opacity-100 translate-y-0 scale-100"
-                             x-transition:leave="transition ease-in duration-150"
-                             x-transition:leave-start="opacity-100 translate-y-0 scale-100"
-                             x-transition:leave-end="opacity-0 translate-y-1 scale-98"
-                             class="absolute top-full left-0 right-0 mt-1.5 z-40 bg-white rounded-2xl shadow-2xl border border-gray-200 overflow-hidden max-h-76 flex flex-col p-2 space-y-2"
-                             x-cloak>
-                            
-                            {{-- Search input inside dropdown --}}
-                            <div class="relative px-1 pt-1">
+                        {{-- Search Filter if many categories --}}
+                        <template x-if="categoriesList.length > 8">
+                            <div class="relative">
                                 <input type="text" 
                                        x-model="categorySearch" 
-                                       placeholder="Type to search category (e.g. Barong, Gown, Polo)..." 
-                                       class="w-full px-3.5 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-xs font-semibold outline-none focus:border-[#C0420A] focus:bg-white transition-all pl-9">
-                                <svg class="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+                                       placeholder="Filter categories (e.g. Barong, Gown, Polo)..." 
+                                       class="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-xl text-xs font-semibold outline-none focus:border-[#C0420A] focus:bg-white transition-all pl-8">
+                                <svg class="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
                             </div>
+                        </template>
 
-                            {{-- Categories List --}}
-                            <div class="overflow-y-auto space-y-1 pr-1 max-h-56 divide-y divide-gray-50">
-                                <template x-for="cat in filteredCategories" :key="cat.id">
-                                    <button type="button" 
-                                            @click="selectCategory(cat)"
-                                            class="w-full px-3 py-2.5 rounded-xl hover:bg-orange-50/70 flex items-center justify-between text-left transition-colors group cursor-pointer"
-                                            :class="selectedCategory === cat.id ? 'bg-orange-50/90 border border-[#C0420A]/30' : ''">
-                                        
-                                        <div class="flex items-center gap-2 min-w-0">
-                                            <span class="text-xs font-bold text-gray-800 group-hover:text-[#C0420A]" x-text="cat.name"></span>
-                                        </div>
+                        {{-- Category Selection Grid --}}
+                        <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2.5 max-h-56 overflow-y-auto p-2 bg-gray-50/70 rounded-2xl border border-gray-200 shadow-2xs">
+                            <template x-for="cat in filteredCategories" :key="cat.id">
+                                <button type="button" 
+                                        @click="selectCategory(cat)"
+                                        :class="selectedCategory === cat.id 
+                                            ? 'bg-white border-2 border-[#C0420A] text-[#C0420A] shadow-xs font-black ring-2 ring-[#C0420A]/10' 
+                                            : 'bg-white border border-gray-200/90 hover:border-gray-300 text-gray-700 hover:text-gray-900 font-bold'"
+                                        class="p-3 rounded-xl flex items-center justify-between text-left transition-all cursor-pointer group hover:scale-[1.01] active:scale-[0.99] text-xs">
+                                    <span class="truncate" x-text="cat.name"></span>
+                                    <span x-show="selectedCategory === cat.id" class="w-4 h-4 rounded-full bg-[#C0420A] text-white flex items-center justify-center text-[9px] shrink-0 font-bold">✓</span>
+                                </button>
+                            </template>
 
-                                        {{-- Demographic Tag Badges --}}
-                                        <div class="flex items-center gap-1 shrink-0">
-                                            <template x-for="tag in cat.target_group" :key="tag">
-                                                <span class="px-2 py-0.5 rounded-md text-[9px] font-black uppercase tracking-wider"
-                                                      :class="{
-                                                          'bg-blue-100 text-blue-700 border border-blue-200': tag === 'Men',
-                                                          'bg-pink-100 text-pink-700 border border-pink-200': tag === 'Women',
-                                                          'bg-amber-100 text-amber-700 border border-amber-200': tag === 'Kids'
-                                                      }"
-                                                      x-text="tag"></span>
-                                            </template>
-                                            <template x-if="!cat.target_group || cat.target_group.length === 0">
-                                                <span class="px-2 py-0.5 rounded-md bg-gray-100 text-gray-600 border border-gray-200 text-[8px] font-bold uppercase">All</span>
-                                            </template>
-                                        </div>
-                                    </button>
-                                </template>
-
-                                <template x-if="filteredCategories.length === 0">
-                                    <div class="py-8 text-center text-xs text-gray-400">
-                                        No categories found matching "<span class="font-bold text-gray-700" x-text="categorySearch"></span>"
-                                    </div>
-                                </template>
-                            </div>
+                            <template x-if="filteredCategories.length === 0">
+                                <div class="col-span-full py-6 text-center text-xs text-gray-400">
+                                    No categories found for this tag. Select "All" to browse all categories.
+                                </div>
+                            </template>
                         </div>
-
-                        {{-- Fallback Synchronized Hidden Native Select with Complete Tag Names --}}
-                        <select name="CategoryId" 
-                                id="categorySelect" 
-                                required
-                                x-model="selectedCategory"
-                                class="sr-only">
-                            <option value="" disabled selected>Select category</option>
-                            @foreach($categories as $category)
-                                @php
-                                    $tags = is_array($category->target_group) ? $category->target_group : (is_string($category->target_group) ? json_decode($category->target_group, true) ?? [] : []);
-                                    $tagStr = !empty($tags) ? implode(', ', $tags) : 'All';
-                                @endphp
-                                <option value="{{ $category->id }}" data-tags="{{ implode(',', $tags) }}" data-name="{{ strtolower($category->name) }}">
-                                    {{ $category->name }} ({{ $tagStr }})
-                                </option>
-                            @endforeach
-                        </select>
                     </div>
-                </div>
+
+                    {{-- Hidden Form Inputs to reliably submit CategoryId & target_group --}}
+                    <input type="hidden" name="CategoryId" id="categorySelect" :value="selectedCategory">
+                    <input type="hidden" name="target_group" id="targetGroupInput" :value="targetGroup">
+                </div>            </div>
 
                 {{-- 4. Product Variations / Variants Switch & Configurator --}}
                 <div class="pt-1 space-y-3">
@@ -1004,12 +927,25 @@ function addProductManager() {
             }).length;
         },
 
-        filterByTag(tag) {
+        selectTag(tag) {
             this.categoryFilter = tag;
             if (tag !== 'All') {
                 this.targetGroup = tag;
             }
+            // If current category does not belong to the selected tag, unselect it
+            if (tag !== 'All' && this.selectedCategory) {
+                const currentCat = this.categoriesList.find(c => c.id === this.selectedCategory);
+                if (currentCat && currentCat.target_group && currentCat.target_group.length > 0) {
+                    if (!currentCat.target_group.includes(tag)) {
+                        this.selectedCategory = '';
+                    }
+                }
+            }
             this.calculateFillRate();
+        },
+
+        filterByTag(tag) {
+            this.selectTag(tag);
         },
 
         get filteredCategories() {
@@ -1040,10 +976,13 @@ function addProductManager() {
             this.selectedCategory = cat.id;
             let tags = Array.isArray(cat.target_group) ? cat.target_group : [];
             if (tags.length > 0) {
-                // Auto-sync demographic radio if category has assigned target_group in Admin
-                this.targetGroup = tags[0];
+                if (!this.targetGroup || this.targetGroup === 'All' || !tags.includes(this.targetGroup)) {
+                    this.targetGroup = tags[0];
+                    this.categoryFilter = tags[0];
+                }
+            } else if (!this.targetGroup || this.targetGroup === 'All') {
+                this.targetGroup = 'Men';
             }
-            this.isCategoryDropdownOpen = false;
             this.calculateFillRate();
         },
 
@@ -1471,17 +1410,16 @@ function validateProductForm(e, isEdit = false) {
     }
 
     // 4. Product Category & Target Group
-    const categorySelect = document.getElementById('categorySelect');
-    if (!categorySelect || !categorySelect.value) {
+    const categoryInput = document.querySelector('input[name="CategoryId"]');
+    const categoryVal = categoryInput ? categoryInput.value : '';
+    if (!categoryVal) {
         errors.push('Please select a Product Category.');
-        if (categorySelect) categorySelect.classList.add('border-red-500');
     }
 
-    const targetGroupChecked = document.querySelector('input[name="target_group"]:checked');
-    const targetGroupContainer = document.getElementById('target-group-container');
-    if (!targetGroupChecked) {
+    const targetGroupInput = document.querySelector('input[name="target_group"]');
+    const targetGroupVal = targetGroupInput ? targetGroupInput.value : '';
+    if (!targetGroupVal || !['Men', 'Women', 'Kids'].includes(targetGroupVal)) {
         errors.push('Please specify who this product is for (Men, Women, or Kids).');
-        if (targetGroupContainer) targetGroupContainer.classList.add('border-red-500', 'border');
     }
 
     // 5. Product Imagery
