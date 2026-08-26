@@ -240,55 +240,84 @@ class ProductManagementController extends Controller
                 \Illuminate\Support\Facades\Log::warning('Could not auto-add variation columns: ' . $e->getMessage());
             }
 
-            // Product Variations / Variants (Variant Name & Product Image)
-            if (\Illuminate\Support\Facades\Schema::hasColumn('products', 'has_variants')) {
-                $product->has_variants = $request->boolean('has_variants');
+            // Ensure product upload directory exists
+            if (!file_exists(public_path('uploads/products'))) {
+                @mkdir(public_path('uploads/products'), 0777, true);
             }
+
             $savedVariations = [];
-            if ($request->boolean('has_variants')) {
-                $variantNames = $request->input('variant_names', []);
-                $variantImages = $request->file('variant_images', []);
-
-                if (!file_exists(public_path('uploads/products/variants'))) {
-                    @mkdir(public_path('uploads/products/variants'), 0777, true);
-                }
-
-                if (is_array($variantNames)) {
-                    foreach ($variantNames as $idx => $vName) {
-                        $vName = trim($vName);
-                        if (empty($vName)) continue;
-
-                        $vImgPath = null;
-                        if (isset($variantImages[$idx]) && $variantImages[$idx]->isValid()) {
-                            $vFile = $variantImages[$idx];
-                            $vFileName = time() . '_variant_' . Str::random(8) . '.' . $vFile->getClientOriginalExtension();
-                            $vFile->move(public_path('uploads/products/variants'), $vFileName);
-                            $vImgPath = 'uploads/products/variants/' . $vFileName;
-                        }
-
-                        $savedVariations[] = [
-                            'name'  => $vName,
-                            'image' => $vImgPath,
-                        ];
-                    }
-                }
-                if (\Illuminate\Support\Facades\Schema::hasColumn('products', 'variations')) {
-                    $product->variations = !empty($savedVariations) ? $savedVariations : null;
-                }
-            } elseif (\Illuminate\Support\Facades\Schema::hasColumn('products', 'variations')) {
-                $product->variations = null;
-            }
-
-            $product->status = $isDraft ? 'draft' : 'pending'; // Draft vs Pending Admin Approval
-
             $images = [];
             $uploadedHashes = [];
+
+            // 1. Process Variant 1 (Main / Cover Style)
+            // Name: from variant_names[0] or mirrors product name
+            $v1Name = trim($request->input('variant_names.0', '')) ?: trim($product->name);
+            $v1File = null;
+            if ($request->hasFile('variant_image_0') && $request->file('variant_image_0')->isValid()) {
+                $v1File = $request->file('variant_image_0');
+            } elseif ($request->hasFile('variant_images.0') && $request->file('variant_images.0')->isValid()) {
+                $v1File = $request->file('variant_images.0');
+            } elseif ($request->hasFile('images') && is_array($request->file('images')) && count($request->file('images')) > 0 && $request->file('images')[0]->isValid()) {
+                $v1File = $request->file('images')[0];
+            }
+
+            if ($v1File) {
+                $v1FileName = time() . '_v1_' . Str::random(8) . '.' . $v1File->getClientOriginalExtension();
+                $v1File->move(public_path('uploads/products'), $v1FileName);
+                $v1Path = 'uploads/products/' . $v1FileName;
+                $images[] = $v1Path;
+                $savedVariations[] = [
+                    'name'  => $v1Name,
+                    'image' => $v1Path,
+                ];
+                if (file_exists(public_path($v1Path))) {
+                    $uploadedHashes[] = md5_file(public_path($v1Path));
+                }
+            }
+
+            // 2. Process Additional Variants (Variant 2, 3, etc.)
+            $variantIndexes = $request->input('variant_indexes', []);
+            if (!is_array($variantIndexes) || empty($variantIndexes)) {
+                $rawNames = $request->input('variant_names', []);
+                $variantIndexes = is_array($rawNames) ? array_keys($rawNames) : [];
+            }
+
+            foreach ($variantIndexes as $idx) {
+                $numIdx = (int)$idx;
+                if ($numIdx === 0) continue; // Already processed Variant 1
+
+                $vName = trim($request->input("variant_names.{$numIdx}", $request->input("variant_name_{$numIdx}", '')));
+                if (empty($vName)) {
+                    $vName = 'Style ' . ($numIdx + 1);
+                }
+
+                $vFile = null;
+                if ($request->hasFile("variant_image_{$numIdx}") && $request->file("variant_image_{$numIdx}")->isValid()) {
+                    $vFile = $request->file("variant_image_{$numIdx}");
+                } elseif ($request->hasFile("variant_images.{$numIdx}") && $request->file("variant_images.{$numIdx}")->isValid()) {
+                    $vFile = $request->file("variant_images.{$numIdx}");
+                }
+
+                if ($vFile) {
+                    $vFileName = time() . "_v{$numIdx}_" . Str::random(8) . '.' . $vFile->getClientOriginalExtension();
+                    $vFile->move(public_path('uploads/products'), $vFileName);
+                    $vImgPath = 'uploads/products/' . $vFileName;
+
+                    $images[] = $vImgPath;
+                    $savedVariations[] = [
+                        'name'  => $vName,
+                        'image' => $vImgPath,
+                    ];
+                }
+            }
+
+            // 3. Fallback: Check if any general legacy images were passed
             if ($request->hasFile('images')) {
-                foreach ($request->file('images') as $image) {
+                foreach ($request->file('images') as $i => $image) {
+                    if ($i === 0 && !empty($v1File)) continue;
+                    if (!$image->isValid()) continue;
                     $hash = md5_file($image->getRealPath());
-                    if (in_array($hash, $uploadedHashes)) {
-                        continue; // Skip duplicate image in same upload batch
-                    }
+                    if (in_array($hash, $uploadedHashes)) continue;
                     $uploadedHashes[] = $hash;
 
                     $filename = time() . '_' . Str::random(8) . '.' . $image->getClientOriginalExtension();
@@ -296,7 +325,15 @@ class ProductManagementController extends Controller
                     $images[] = 'uploads/products/' . $filename;
                 }
             }
+
+            $product->status = $isDraft ? 'draft' : 'pending'; // Draft vs Pending Admin Approval
             $product->image = !empty($images) ? $images : ['products/default.jpg'];
+            if (\Illuminate\Support\Facades\Schema::hasColumn('products', 'has_variants')) {
+                $product->has_variants = count($savedVariations) > 1;
+            }
+            if (\Illuminate\Support\Facades\Schema::hasColumn('products', 'variations')) {
+                $product->variations = !empty($savedVariations) ? $savedVariations : null;
+            }
             $product->save();
 
             if (!$isDraft) {

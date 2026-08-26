@@ -57,25 +57,40 @@ class VariationFormatter
     {
         $variations = [];
 
-        foreach (self::normalizeProductImages($images) as $i => $img) {
-            if (is_array($img)) {
-                $url = $img['url'] ?? $img['path'] ?? '';
-                $label = trim((string) ($img['variation'] ?? $img['label'] ?? ''));
-            } else {
-                $url = (string) $img;
-                $label = '';
+        // 1. Priority: If product has structured variations defined in $product->variations
+        if ($product && !empty($product->variations) && is_array($product->variations)) {
+            foreach ($product->variations as $i => $v) {
+                if (is_array($v) && !empty($v['image'])) {
+                    $variations[] = [
+                        'url' => $product->getImageUrl($v['image']),
+                        'label' => !empty($v['name']) ? trim($v['name']) : self::labelForIndex($i),
+                    ];
+                }
             }
+        }
 
-            if ($url === '') {
-                continue;
+        // 2. Fallback to images array if variations is empty
+        if (empty($variations)) {
+            foreach (self::normalizeProductImages($images) as $i => $img) {
+                if (is_array($img)) {
+                    $url = $img['url'] ?? $img['path'] ?? '';
+                    $label = trim((string) ($img['variation'] ?? $img['label'] ?? ''));
+                } else {
+                    $url = (string) $img;
+                    $label = '';
+                }
+
+                if ($url === '') {
+                    continue;
+                }
+
+                $resolvedUrl = $product ? $product->getImageUrl($url) : $url;
+
+                $variations[] = [
+                    'url' => $resolvedUrl,
+                    'label' => self::labelForIndex($i, $label),
+                ];
             }
-
-            $resolvedUrl = $product ? $product->getImageUrl($url) : $url;
-
-            $variations[] = [
-                'url' => $resolvedUrl,
-                'label' => self::labelForIndex($i, $label),
-            ];
         }
 
         if (empty($variations)) {

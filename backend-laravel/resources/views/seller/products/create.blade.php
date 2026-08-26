@@ -69,123 +69,44 @@
         {{-- ========================================================================= --}}
         <div class="bg-white p-5 sm:p-7 rounded-2xl border border-gray-100 shadow-sm space-y-6">
             
-            {{-- 1. Product Image Section (1/8) --}}
-            <div class="space-y-3">
+            {{-- 1. Product Name (English) --}}
+            <div class="space-y-1.5">
                 <div class="flex items-center justify-between">
-                    <div class="flex items-center gap-2">
-                        <label class="text-xs sm:text-sm font-bold text-gray-900 uppercase tracking-wider">
-                            Product Image <span class="text-gray-400 font-normal" x-text="'(' + imageCount + '/8)'"></span> <span class="text-[#C0420A]">*</span>
-                        </label>
-                    </div>
-                    <span class="text-[10px] text-gray-400 font-medium hidden sm:inline-block">First photo will be the Cover Image</span>
+                    <label class="text-[11px] font-bold uppercase tracking-wider text-gray-700">
+                        1. Product Name (English) <span class="text-[#C0420A]">*</span>
+                        <span class="text-[10px] text-gray-400 font-normal" x-text="'(' + (productName ? productName.length : 0) + '/100)'"></span>
+                    </label>
                 </div>
 
-                {{-- Image Slots & Upload Trigger --}}
-                <div>
-                    {{-- 1. Full-Width Wide Upload Dropzone when empty (0 photos) --}}
-                    <div x-show="imageCount === 0">
-                        <label for="imageUploadInput"
-                               id="dropZone"
-                               class="w-full py-8 sm:py-10 px-4 rounded-2xl border-2 border-dashed border-gray-300 hover:border-[#C0420A] bg-gray-50/70 hover:bg-orange-50/20 flex flex-col items-center justify-center gap-2.5 cursor-pointer transition-all text-center group shadow-2xs">
-                            <div class="w-13 h-13 rounded-2xl bg-white border border-gray-200 group-hover:border-[#C0420A]/30 group-hover:bg-[#C0420A]/10 text-gray-400 group-hover:text-[#C0420A] flex items-center justify-center transition-all shadow-xs group-hover:scale-105">
-                                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/>
-                                </svg>
-                            </div>
-                            <div class="space-y-1">
-                                <span class="text-xs sm:text-sm font-black text-gray-800 group-hover:text-[#C0420A] transition-colors block uppercase tracking-wide">
-                                    Click or Drag & Drop to Upload Photos
-                                </span>
-                                <span class="text-[11px] text-gray-400 font-medium block">
-                                    High-resolution cover image • JPEG, PNG, WEBP up to 5MB (Max 8 photos)
-                                </span>
-                            </div>
-                        </label>
-                    </div>
-
-                    {{-- 2. Thumbnail Previews & Compact Add Photo Slot when photos exist (> 0) --}}
-                    <div x-show="imageCount > 0" class="flex flex-wrap gap-3 items-center">
-                        {{-- Rendered Previews (Cover Image & Additional Photos) --}}
-                        <template x-for="(img, index) in imagePreviews" :key="index">
-                            <div class="relative w-24 h-24 sm:w-28 sm:h-28 rounded-xl overflow-hidden border border-gray-200 bg-gray-50 shadow-xs group shrink-0">
-                                <img :src="img.url" class="w-full h-full object-cover object-top transition-transform group-hover:scale-105">
-                                
-                                {{-- Cover Image Ribbon on First Image --}}
-                                <template x-if="index === 0">
-                                    <div class="absolute bottom-0 inset-x-0 bg-black/75 backdrop-blur-xs py-0.5 text-center text-[9px] font-bold text-white uppercase tracking-wider">
-                                        Cover Image
-                                    </div>
-                                </template>
-
-                                {{-- Image Number Badge (for secondary images) --}}
-                                <template x-if="index > 0">
-                                    <div class="absolute top-1.5 left-1.5 w-5 h-5 rounded-full bg-black/60 backdrop-blur-xs flex items-center justify-center text-[9px] font-bold text-white" x-text="index + 1"></div>
-                                </template>
-
-                                {{-- Delete Button (X) --}}
-                                <button type="button" @click="removeImage(index)" class="absolute top-1.5 right-1.5 w-5 h-5 bg-red-600 hover:bg-red-700 text-white rounded-full flex items-center justify-center text-[10px] font-black shadow-md hover:scale-110 active:scale-95 transition-all">
-                                    ✕
-                                </button>
-                            </div>
-                        </template>
-
-                        {{-- Add Another Photo Button (Shown when imageCount < 8) --}}
-                        <template x-if="imageCount < 8">
-                            <label for="imageUploadInput"
-                                   class="w-24 h-24 sm:w-28 sm:h-28 rounded-xl border-2 border-dashed border-gray-300 hover:border-[#C0420A] bg-gray-50/70 hover:bg-orange-50/20 flex flex-col items-center justify-center gap-1 cursor-pointer transition-all shrink-0 text-center p-2 group shadow-2xs">
-                                <div class="w-8 h-8 rounded-lg bg-gray-100 group-hover:bg-[#C0420A]/10 text-gray-400 group-hover:text-[#C0420A] flex items-center justify-center transition-colors">
-                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
-                                    </svg>
-                                </div>
-                                <span class="text-[10px] font-bold text-gray-500 group-hover:text-[#C0420A]">Add Photo</span>
-                            </label>
-                        </template>
-                    </div>
-
-                    {{-- Hidden Multi-File Input --}}
-                    <input type="file" id="imageUploadInput" name="images[]" multiple accept="image/jpeg,image/png,image/webp" class="hidden" @change="handleFileChange($event)">
+                <div class="relative flex items-center">
+                    <input type="text" 
+                           name="name" 
+                           id="productNameInput"
+                           required 
+                           maxlength="100"
+                           x-model="productName"
+                           @input="calculateFillRate()"
+                           placeholder="e.g. Hand-Woven Piña Barong Tagalog with Calado Embroidery"
+                           class="w-full px-4 py-3 bg-gray-50/70 border border-gray-200 rounded-xl outline-none focus:border-[#C0420A] focus:bg-white focus:ring-2 focus:ring-[#C0420A]/10 transition-all font-semibold text-sm text-gray-800 placeholder:text-gray-400 placeholder:font-normal pr-10">
+                    
+                    {{-- Clear Button (X) --}}
+                    <button type="button" 
+                            x-show="productName && productName.length > 0"
+                            @click="productName = ''; calculateFillRate();"
+                            class="absolute right-3 text-gray-400 hover:text-gray-600 transition-colors cursor-pointer">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                    </button>
                 </div>
             </div>
 
-            <div class="border-t border-gray-100 pt-5 space-y-4">
-                {{-- 2. Product Name (English) --}}
-                <div class="space-y-1.5">
-                    <div class="flex items-center justify-between">
-                        <label class="text-[11px] font-bold uppercase tracking-wider text-gray-700">
-                            Product Name(English) <span class="text-[#C0420A]">*</span>
-                            <span class="text-[10px] text-gray-400 font-normal" x-text="'(' + (productName ? productName.length : 0) + '/100)'"></span>
-                        </label>
-                    </div>
-
-                    <div class="relative flex items-center">
-                        <input type="text" 
-                               name="name" 
-                               id="productNameInput"
-                               required 
-                               maxlength="100"
-                               x-model="productName"
-                               @input="calculateFillRate()"
-                               placeholder="e.g. Hand-Woven Piña Barong Tagalog with Calado Embroidery"
-                               class="w-full px-4 py-3 bg-gray-50/70 border border-gray-200 rounded-xl outline-none focus:border-[#C0420A] focus:bg-white focus:ring-2 focus:ring-[#C0420A]/10 transition-all font-semibold text-sm text-gray-800 placeholder:text-gray-400 placeholder:font-normal pr-10">
-                        
-                        {{-- Clear Button (X) --}}
-                        <button type="button" 
-                                x-show="productName && productName.length > 0"
-                                @click="productName = ''; calculateFillRate();"
-                                class="absolute right-3 text-gray-400 hover:text-gray-600 transition-colors">
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
-                        </button>
-                    </div>
-                </div>
-
-                {{-- 3. Target Tag & Dynamic Matching Category Selection --}}
-                <div class="space-y-4 pt-1">
-                    {{-- Step 1: Who is this for? (Target Tag) --}}
+            <div class="border-t border-gray-100 pt-5 space-y-5">
+                {{-- 2. Target Tag & Dynamic Matching Category Selection --}}
+                <div class="space-y-4">
+                    {{-- Step A: Who is this for? (Target Tag) --}}
                     <div class="space-y-1.5">
                         <div class="flex items-center justify-between">
                             <label class="text-[11px] font-bold uppercase tracking-wider text-gray-700">
-                                1. Who is this for? (Target Tag) <span class="text-[#C0420A]">*</span>
+                                2. Who is this for? (Target Tag) <span class="text-[#C0420A]">*</span>
                             </label>
                             <span class="text-[9px] font-bold transition-colors"
                                   :class="targetGroup ? 'text-emerald-600' : 'text-[#C0420A]'"
@@ -219,11 +140,11 @@
                         </div>
                     </div>
 
-                    {{-- Step 2: Product Category matching selected tag --}}
+                    {{-- Step B: Product Category matching selected tag --}}
                     <div class="space-y-1.5 pt-1">
                         <div class="flex items-center justify-between">
                             <label class="text-[11px] font-bold uppercase tracking-wider text-gray-700">
-                                2. Product Category <span x-show="targetGroup" x-text="'for ' + targetGroup"></span> <span class="text-[#C0420A]">*</span>
+                                Product Category <span x-show="targetGroup" x-text="'for ' + targetGroup"></span> <span class="text-[#C0420A]">*</span>
                             </label>
                             <span class="text-[9px] font-bold transition-colors"
                                   :class="selectedCategory ? 'text-emerald-600' : 'text-[#C0420A]'"
@@ -268,51 +189,125 @@
                     </div>
                 </div>
 
-                {{-- 4. Product Variations / Variants Switch & Configurator --}}
-                <div class="pt-1 space-y-3">
-                    <div class="p-3.5 sm:p-4 bg-gray-50/90 rounded-2xl border border-gray-200 flex items-center justify-between gap-3 transition-all hover:bg-gray-100/70 shadow-2xs">
-                        <div class="space-y-0.5 min-w-0">
-                            <div class="flex items-center gap-2">
-                                <span class="text-xs font-black uppercase tracking-wider text-gray-900">Product Variations / Variants</span>
-                                <span class="px-2 py-0.5 rounded-md bg-blue-50 text-blue-700 text-[9px] font-black uppercase tracking-wider border border-blue-100">Optional</span>
-                            </div>
-                            <p class="text-[11px] text-gray-500 font-medium leading-relaxed truncate sm:whitespace-normal">
-                                Enable if this item comes in multiple colors, embroidery styles, or patterns.
+                {{-- 3. Product Media & Variants (Unified Single Step!) --}}
+                <div class="border-t border-gray-100 pt-5 space-y-4">
+                    <div class="flex items-center justify-between">
+                        <div class="space-y-0.5">
+                            <label class="text-[11px] font-bold uppercase tracking-wider text-gray-700 flex items-center gap-2">
+                                <span>3. Product Media & Variants</span>
+                                <span class="text-[#C0420A]">*</span>
+                            </label>
+                            <p class="text-[11px] text-gray-500 font-medium">
+                                Upload your product photos directly to styles/variants. Variant 1 is your main product style and cover photo.
                             </p>
                         </div>
-                        
-                        <label class="relative inline-flex items-center cursor-pointer shrink-0">
-                            <input type="checkbox" 
-                                   name="has_variants" 
-                                   value="1"
-                                   x-model="hasVariants" 
-                                   @change="calculateFillRate()"
-                                   class="sr-only peer">
-                            <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-0.5 after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#C0420A]"></div>
-                        </label>
+                        <span class="text-[9px] font-bold text-gray-400 uppercase" x-text="variants.length + ' style(s)'"></span>
                     </div>
 
-                    {{-- Expanded Variations Setup Panel (Variant Image & Variant Name) --}}
-                    <div x-show="hasVariants" 
-                         x-collapse 
-                         x-cloak 
-                         class="p-4 bg-white rounded-2xl border border-gray-200 space-y-3.5 shadow-xs">
-                        
-                        <div class="flex items-center justify-between pb-2 border-b border-gray-100">
-                            <span class="text-[11px] font-black uppercase tracking-wider text-gray-800">
-                                Product Variants
+                    {{-- Variant 1: Main Product Style & Cover Photo (Always Present) --}}
+                    <div class="p-4 sm:p-5 bg-orange-50/20 border-2 border-dashed border-[#C0420A]/30 rounded-2xl space-y-3.5 transition-all shadow-2xs hover:border-[#C0420A]/50" id="variant_card_0">
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center gap-2">
+                                <span class="w-2 h-2 rounded-full bg-[#C0420A]"></span>
+                                <span class="text-xs font-black uppercase tracking-wider text-gray-900">
+                                    Variant 1 (Main Style)
+                                </span>
+                                <span class="px-2 py-0.5 rounded-md bg-[#C0420A]/10 text-[#C0420A] text-[9px] font-black uppercase tracking-wider">Cover Photo</span>
+                            </div>
+                            <span class="text-[10px] text-gray-400 font-medium">
+                                Mirrors: <strong class="text-gray-700" x-text="productName || 'Product Title above'"></strong>
                             </span>
-                            <span class="text-[9px] font-bold text-gray-400 uppercase" x-text="variants.length + ' variant(s)'"></span>
                         </div>
 
-                        {{-- Variant Items List --}}
-                        <div class="space-y-3">
-                            <template x-for="(variant, index) in variants" :key="index">
-                                <div class="p-3.5 sm:p-4 bg-white border border-gray-200 rounded-2xl flex items-center gap-3.5 transition-all hover:border-gray-300 shadow-2xs">
+                        {{-- Hidden inputs for Variant 1 --}}
+                        <input type="hidden" name="variant_indexes[]" value="0">
+                        <input type="hidden" name="variant_names[0]" :value="productName || 'Original Style'">
+
+                        {{-- Variant 1 Image Upload Box --}}
+                        <div class="flex flex-col sm:flex-row items-start sm:items-center gap-4">
+                            <div class="relative shrink-0 w-full sm:w-auto">
+                                <label for="variant_file_0"
+                                       id="variant_upload_box_0"
+                                       class="w-full sm:w-40 h-40 rounded-2xl border-2 border-dashed border-gray-300 hover:border-[#C0420A] bg-white hover:bg-orange-50/40 flex flex-col items-center justify-center cursor-pointer overflow-hidden transition-all relative group/img shadow-2xs select-none">
                                     
-                                    {{-- Highly Visible Variant Image Upload Box --}}
+                                    <template x-if="variants[0].imagePreview">
+                                        <div class="relative w-full h-full">
+                                            <img :src="variants[0].imagePreview" class="w-full h-full object-cover rounded-xl">
+                                            <div class="absolute inset-0 bg-black/40 opacity-0 group-hover/img:opacity-100 transition-opacity flex flex-col items-center justify-center text-white text-[10px] font-bold uppercase tracking-wider gap-1">
+                                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+                                                <span>Change Photo</span>
+                                            </div>
+                                            <div class="absolute bottom-1.5 inset-x-1.5 bg-black/60 backdrop-blur-xs py-0.5 rounded text-center text-[9px] font-bold text-white uppercase tracking-wider">
+                                                Cover Image
+                                            </div>
+                                        </div>
+                                    </template>
+
+                                    <template x-if="!variants[0].imagePreview">
+                                        <div class="flex flex-col items-center justify-center text-center p-3">
+                                            <div class="w-10 h-10 rounded-2xl bg-[#C0420A]/10 flex items-center justify-center text-[#C0420A] mb-1.5 group-hover/img:scale-110 transition-transform">
+                                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                                            </div>
+                                            <span class="text-xs font-black text-[#C0420A] uppercase tracking-wide">+ Upload Main Photo</span>
+                                            <span class="text-[10px] text-gray-400 font-medium mt-0.5">JPEG, PNG, WEBP</span>
+                                        </div>
+                                    </template>
+
+                                    <input type="file" 
+                                           id="variant_file_0"
+                                           name="variant_image_0" 
+                                           accept="image/jpeg,image/png,image/webp,image/jpg" 
+                                           class="hidden" 
+                                           @change="handleVariantFile($event, 0)">
+                                </label>
+
+                                <button type="button" 
+                                        x-show="variants[0].imagePreview"
+                                        @click="removeVariantImage(0)" 
+                                        class="absolute -top-2 -right-2 w-6 h-6 bg-red-600 hover:bg-red-700 text-white rounded-full flex items-center justify-center text-[10px] font-black shadow-md transition-all cursor-pointer"
+                                        title="Remove photo">
+                                    ✕
+                                </button>
+                            </div>
+
+                            <div class="flex-1 space-y-1 text-xs text-gray-600">
+                                <h4 class="font-bold text-gray-800">Primary Product Appearance</h4>
+                                <p class="text-[11px] text-gray-500 leading-relaxed">
+                                    This photo will be showcased as the main thumbnail in the catalogue, search results, and at the top of your product page.
+                                </p>
+                                <p class="text-[10px] text-[#C0420A] font-semibold flex items-center gap-1 pt-1">
+                                    <span>💡</span> Have different colors, patterns, or sleeve styles? Click "+ Add Another Variant" below.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+
+                    {{-- Additional Variants List (Variant 2, 3, etc.) --}}
+                    <div class="space-y-3">
+                        <template x-for="(variant, index) in variants" :key="variant.id">
+                            <div x-show="index > 0" class="p-4 bg-white border border-gray-200 hover:border-gray-300 rounded-2xl space-y-3 transition-all shadow-2xs">
+                                <div class="flex items-center justify-between pb-2 border-b border-gray-100">
+                                    <div class="flex items-center gap-2">
+                                        <span class="w-1.5 h-1.5 rounded-full bg-[#C0420A]"></span>
+                                        <span class="text-xs font-black uppercase tracking-wider text-gray-800" x-text="'Variant ' + (index + 1)"></span>
+                                        <span class="px-2 py-0.5 rounded-md bg-blue-50 text-blue-700 text-[9px] font-black uppercase tracking-wider">Style Option</span>
+                                    </div>
+                                    <button type="button" 
+                                            @click="removeVariantRow(index)" 
+                                            class="text-[11px] font-bold text-red-600 hover:text-red-700 flex items-center gap-1 cursor-pointer">
+                                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+                                        <span>Remove Variant</span>
+                                    </button>
+                                </div>
+
+                                {{-- Hidden input mapping for PHP --}}
+                                <input type="hidden" name="variant_indexes[]" :value="index">
+
+                                <div class="flex items-center gap-3.5">
+                                    {{-- Variant Image Box --}}
                                     <div class="relative shrink-0">
-                                        <label class="w-18 h-18 sm:w-20 sm:h-20 rounded-2xl border-2 border-dashed border-[#C0420A]/40 bg-orange-50/60 hover:bg-orange-100/70 hover:border-[#C0420A] flex flex-col items-center justify-center cursor-pointer overflow-hidden transition-all relative group/img shadow-2xs select-none">
+                                        <label :for="'variant_file_' + index"
+                                               class="w-20 h-20 sm:w-22 sm:h-22 rounded-2xl border-2 border-dashed border-gray-300 hover:border-[#C0420A] bg-gray-50/70 hover:bg-orange-50/40 flex flex-col items-center justify-center cursor-pointer overflow-hidden transition-all relative group/img shadow-2xs select-none">
                                             <template x-if="variant.imagePreview">
                                                 <div class="relative w-full h-full">
                                                     <img :src="variant.imagePreview" class="w-full h-full object-cover rounded-xl">
@@ -323,18 +318,25 @@
                                             </template>
                                             <template x-if="!variant.imagePreview">
                                                 <div class="flex flex-col items-center justify-center text-center p-1">
-                                                    <div class="w-7 h-7 rounded-full bg-[#C0420A]/10 flex items-center justify-center text-[#C0420A] mb-0.5 group-hover/img:scale-110 transition-transform">
-                                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                                                    <div class="w-6 h-6 rounded-full bg-[#C0420A]/10 flex items-center justify-center text-[#C0420A] mb-0.5 group-hover/img:scale-110 transition-transform">
+                                                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
                                                     </div>
                                                     <span class="text-[9px] font-extrabold text-[#C0420A] uppercase tracking-wider">+ Photo</span>
                                                 </div>
                                             </template>
                                             <input type="file" 
-                                                   name="variant_images[]" 
+                                                   :id="'variant_file_' + index" 
+                                                   :name="'variant_image_' + index" 
                                                    accept="image/jpeg,image/png,image/webp,image/jpg" 
                                                    class="hidden" 
-                                                   @change="handleVariantImage($event, index)">
+                                                   @change="handleVariantFile($event, index)">
                                         </label>
+                                        <button type="button" 
+                                                x-show="variant.imagePreview"
+                                                @click="removeVariantImage(index)" 
+                                                class="absolute -top-1.5 -right-1.5 w-5 h-5 bg-red-600 hover:bg-red-700 text-white rounded-full flex items-center justify-center text-[9px] font-black shadow-md transition-all cursor-pointer">
+                                            ✕
+                                        </button>
                                     </div>
 
                                     {{-- Variant Name Input --}}
@@ -343,46 +345,31 @@
                                             <label class="text-[10px] font-black uppercase tracking-wider text-gray-700">
                                                 Variant Name <span class="text-[#C0420A]">*</span>
                                             </label>
-                                            <span class="text-[9px] text-gray-400 font-medium hidden sm:inline">Color, fabric, or style</span>
+                                            <span class="text-[9px] text-gray-400 font-medium hidden sm:inline">e.g. Color, embroidery, or style</span>
                                         </div>
                                         <input type="text" 
-                                               name="variant_names[]" 
+                                               :name="'variant_names[' + index + ']'" 
                                                x-model="variant.name" 
-                                               placeholder="e.g. Off-White, Classic Ivory, Navy Blue..." 
+                                               placeholder="e.g. Emerald Green, Ivory Piña, Short Sleeve..." 
                                                class="w-full px-3.5 py-2.5 bg-gray-50/80 border border-gray-200 rounded-xl text-xs font-bold text-gray-900 outline-none focus:border-[#C0420A] focus:bg-white transition-all shadow-2xs">
                                     </div>
-
-                                    {{-- Delete Variant Button --}}
-                                    <button type="button" 
-                                            @click="removeVariantRow(index)" 
-                                            class="w-9 h-9 rounded-xl text-gray-400 hover:text-red-600 hover:bg-red-50 flex items-center justify-center transition-colors shrink-0 cursor-pointer" 
-                                            title="Remove Variant">
-                                        <svg class="w-4.5 h-4.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
-                                    </button>
                                 </div>
-                            </template>
+                            </div>
+                        </template>
+                    </div>
 
-                            <template x-if="variants.length === 0">
-                                <div class="py-5 text-center bg-gray-50/80 border border-dashed border-gray-200 rounded-2xl space-y-1">
-                                    <p class="text-xs font-bold text-gray-500">No product variants added yet.</p>
-                                    <p class="text-[10px] text-gray-400">Click "+ Add Variant" below to add a variant row.</p>
-                                </div>
-                            </template>
-                        </div>
-
-                        {{-- Add Variant Button --}}
-                        <div class="pt-1">
-                            <button type="button" 
-                                    @click="addVariantRow()" 
-                                    class="w-full py-2.5 px-4 bg-orange-50/50 hover:bg-orange-50 border border-dashed border-[#C0420A]/40 hover:border-[#C0420A] text-[#C0420A] rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer shadow-2xs">
-                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"/></svg>
-                                <span>+ Add Variant</span>
-                            </button>
-                        </div>
-
+                    {{-- Add Another Variant Button --}}
+                    <div>
+                        <button type="button" 
+                                @click="addVariantRow()" 
+                                class="w-full py-3 px-4 rounded-2xl border-2 border-dashed border-gray-300 hover:border-[#C0420A] bg-gray-50/70 hover:bg-orange-50/20 text-gray-700 hover:text-[#C0420A] font-bold text-xs flex items-center justify-center gap-2 transition-all cursor-pointer shadow-2xs">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"/></svg>
+                            <span>+ Add Another Variant (Optional Style / Color)</span>
+                        </button>
                     </div>
                 </div>
             </div>
+        </div>
 
             {{-- Step 1 Primary CTA Button: "Next: Complete Product Details" --}}
             <div x-show="step === 1" class="pt-3 space-y-2">
@@ -827,36 +814,53 @@ function addProductManager() {
         fillRate: 15,
         isAiLoading: false,
 
-        // Product Variations / Variants State
-        hasVariants: false,
+        // Product Variations / Unified Media & Variants State
         variants: [
-            { name: '', imagePreview: null }
+            { id: 0, name: '', file: null, imagePreview: null }
         ],
 
+        get imageCount() {
+            return this.variants.filter(v => v && v.imagePreview !== null).length;
+        },
+
         addVariantRow() {
-            this.variants.push({ name: '', imagePreview: null });
+            const nextId = this.variants.length;
+            this.variants.push({ id: nextId, name: '', file: null, imagePreview: null });
             this.calculateFillRate();
         },
 
         removeVariantRow(index) {
+            if (index === 0) return;
             this.variants.splice(index, 1);
             this.calculateFillRate();
         },
 
-        handleVariantImage(event, index) {
+        handleVariantFile(event, index) {
             const file = event.target.files[0];
             if (file) {
                 if (file.size > 5 * 1024 * 1024) {
-                    alert('Variant image must be less than 5MB.');
+                    triggerAppModal('Image Exceeds 5MB', 'Selected photo exceeds the 5MB size limit.', 'warning');
                     event.target.value = '';
                     return;
                 }
+                this.variants[index].file = file;
                 const reader = new FileReader();
                 reader.onload = (e) => {
                     this.variants[index].imagePreview = e.target.result;
+                    const box = document.getElementById('variant_upload_box_' + index);
+                    if (box) box.classList.remove('border-red-500');
+                    this.calculateFillRate();
                 };
                 reader.readAsDataURL(file);
             }
+        },
+
+        removeVariantImage(index) {
+            this.variants[index].file = null;
+            this.variants[index].imagePreview = null;
+            const fileInput = document.getElementById('variant_file_' + index);
+            if (fileInput) fileInput.value = '';
+            this.calculateFillRate();
         },
 
         // Real-time categories state
@@ -919,25 +923,21 @@ function addProductManager() {
         },
 
         get isStep1Complete() {
-            const hasImage = this.imageCount > 0;
             const hasName = Boolean(this.productName && this.productName.trim().length > 0);
             const hasCategory = Boolean(this.selectedCategory && this.selectedCategory !== '');
             const hasTarget = Boolean(this.targetGroup && ['Men', 'Women', 'Kids'].includes(this.targetGroup));
-            let variantsValid = true;
-            if (this.hasVariants) {
-                variantsValid = this.variants.length > 0 && this.variants.every(v => v.name && v.name.trim().length > 0);
+            const hasMainImage = Boolean(this.variants[0] && this.variants[0].imagePreview !== null);
+            let extraVariantsValid = true;
+            for (let i = 1; i < this.variants.length; i++) {
+                if (!this.variants[i].name || this.variants[i].name.trim().length === 0 || !this.variants[i].imagePreview) {
+                    extraVariantsValid = false;
+                    break;
+                }
             }
-            return hasImage && hasName && hasCategory && hasTarget && variantsValid;
+            return hasName && hasCategory && hasTarget && hasMainImage && extraVariantsValid;
         },
 
         goToStep2() {
-            if (this.imageCount === 0) {
-                triggerAppModal('Product Photo Required', 'Please upload at least one product photo to proceed.', 'warning');
-                const dropZone = document.getElementById('dropZone');
-                if (dropZone) dropZone.classList.add('border-red-500');
-                return;
-            }
-
             if (!this.productName || this.productName.trim().length === 0) {
                 triggerAppModal('Product Name Required', 'Please enter a product name to proceed.', 'warning');
                 const nameInput = document.getElementById('productNameInput');
@@ -961,16 +961,24 @@ function addProductManager() {
                 if (catContainer) {
                     catContainer.classList.add('border-red-500');
                 }
+                return;
             }
 
-            if (this.hasVariants) {
-                if (this.variants.length === 0) {
-                    triggerAppModal('Variants Required', 'You enabled product variations. Please add at least one variant or toggle off the switch.', 'warning');
+            if (!this.variants[0] || !this.variants[0].imagePreview) {
+                triggerAppModal('Product Photo Required', 'Please upload the main product photo for Variant 1.', 'warning');
+                const v1Box = document.getElementById('variant_upload_box_0');
+                if (v1Box) v1Box.classList.add('border-red-500');
+                return;
+            }
+
+            for (let i = 1; i < this.variants.length; i++) {
+                const v = this.variants[i];
+                if (!v.name || v.name.trim().length === 0) {
+                    triggerAppModal('Variant Name Missing', 'Please enter a name for Variant ' + (i + 1) + '.', 'warning');
                     return;
                 }
-                const missingVariant = this.variants.some(v => !v.name || v.name.trim().length === 0);
-                if (missingVariant) {
-                    triggerAppModal('Variant Name Missing', 'Please provide a name for all product variants.', 'warning');
+                if (!v.imagePreview) {
+                    triggerAppModal('Variant Photo Missing', 'Please upload a photo for Variant ' + (i + 1) + ' ("' + v.name + '").', 'warning');
                     return;
                 }
             }
@@ -980,65 +988,6 @@ function addProductManager() {
             setTimeout(() => {
                 window.scrollTo({ top: 350, behavior: 'smooth' });
             }, 100);
-        },
-
-        handleFileChange(event) {
-            const input = event.target;
-            if (input.files && input.files.length > 0) {
-                let duplicateCount = 0;
-                let oversizedCount = 0;
-
-                Array.from(input.files).forEach(file => {
-                    if (file.size > 5 * 1024 * 1024) {
-                        oversizedCount++;
-                        return;
-                    }
-                    const exists = Array.from(productImagesDT.files).some(f => f.name === file.name && f.size === file.size);
-                    if (exists) {
-                        duplicateCount++;
-                    } else {
-                        if (productImagesDT.items.length < 8) {
-                            productImagesDT.items.add(file);
-                        }
-                    }
-                });
-
-                if (oversizedCount > 0) {
-                    triggerAppModal('Image Exceeds 5MB', `${oversizedCount} photo(s) exceeded the 5MB size limit and were skipped.`, 'warning');
-                } else if (duplicateCount > 0) {
-                    triggerAppModal('Duplicate Image Skipped', `${duplicateCount} duplicate image(s) already added.`, 'warning');
-                }
-
-                input.files = productImagesDT.files;
-                this.syncPreviews();
-            }
-        },
-
-        removeImage(index) {
-            const input = document.getElementById('imageUploadInput');
-            const newDT = new DataTransfer();
-            Array.from(productImagesDT.files).forEach((file, i) => {
-                if (i !== index) newDT.items.add(file);
-            });
-            productImagesDT = newDT;
-            if (input) input.files = productImagesDT.files;
-            this.syncPreviews();
-        },
-
-        syncPreviews() {
-            const files = Array.from(productImagesDT.files);
-            this.imageCount = files.length;
-            this.imagePreviews = [];
-
-            files.forEach((file, idx) => {
-                const reader = new FileReader();
-                reader.onload = (e) => {
-                    this.imagePreviews.push({ url: e.target.result, name: file.name });
-                };
-                reader.readAsDataURL(file);
-            });
-
-            this.calculateFillRate();
         },
 
         calculateFillRate() {
@@ -1062,8 +1011,8 @@ function addProductManager() {
             this.isAiLoading = true;
             try {
                 const formData = new FormData();
-                if (productImagesDT.files.length > 0) {
-                    formData.append('image', productImagesDT.files[0]);
+                if (this.variants[0]?.file) {
+                    formData.append('image', this.variants[0].file);
                 }
                 formData.append('current_name', this.productName || '');
                 formData.append('current_category', this.selectedCategory || '');
@@ -1373,14 +1322,14 @@ function validateProductForm(e, isEdit = false) {
         if (catContainer) catContainer.classList.add('border-red-500');
     }
 
-    // 5. Product Imagery
+    // 5. Product Imagery (Variant 1 is required)
     if (!isEdit) {
-        const hasFiles = (productImagesDT && productImagesDT.files && productImagesDT.files.length > 0) ||
-                         (document.getElementById('imageUploadInput')?.files?.length > 0);
-        if (!hasFiles) {
-            errors.push('Please upload at least one product image.');
-            const dropZone = document.getElementById('dropZone');
-            if (dropZone) dropZone.classList.add('border-red-500');
+        const v1FileInput = document.getElementById('variant_file_0');
+        const hasV1File = Boolean(v1FileInput && v1FileInput.files && v1FileInput.files.length > 0);
+        if (!hasV1File) {
+            errors.push('Please upload the main product photo for Variant 1 (Cover Photo).');
+            const v1Box = document.getElementById('variant_upload_box_0');
+            if (v1Box) v1Box.classList.add('border-red-500');
         }
     }
 

@@ -387,6 +387,32 @@
                         <div><span class="font-bold text-gray-800">Category:</span> {{ $product->category->name ?? 'Wedding Barong' }}</div>
                     </div>
 
+                    <!-- Style / Variation Selection (When product has multiple variants) -->
+                    <div x-show="variations && variations.length > 1" class="mb-6" x-cloak>
+                        <div class="flex items-center justify-between mb-2">
+                            <span class="text-xs font-bold text-gray-900">
+                                Style / Variation: <span class="text-[#C0420A] font-black" x-text="selectedVariationLabel()"></span>
+                            </span>
+                            <span class="text-[10px] text-gray-400 font-semibold" x-text="variations.length + ' styles'"></span>
+                        </div>
+                        <div class="flex flex-wrap gap-2.5">
+                            <template x-for="(variation, index) in variations" :key="index">
+                                <button 
+                                    @click="activeImage = index; selectedVariation = index"
+                                    type="button"
+                                    class="px-3.5 py-2 rounded-xl flex items-center gap-2 text-xs font-bold border transition-all cursor-pointer shadow-2xs group"
+                                    :class="selectedVariation === index 
+                                        ? 'border-[#C0420A] bg-[#C0420A]/5 text-[#C0420A] ring-2 ring-[#C0420A]/20 font-black' 
+                                        : 'border-gray-200 text-gray-700 bg-white hover:border-gray-400 font-semibold'"
+                                >
+                                    <img :src="imageUrl(variation.url)" onerror="this.src='/uploads/products/default.jpg'" class="w-6 h-6 rounded-lg object-cover">
+                                    <span x-text="variation.label || ('Style ' + (index + 1))"></span>
+                                    <span x-show="selectedVariation === index" class="w-3.5 h-3.5 rounded-full bg-[#C0420A] text-white flex items-center justify-center text-[8px] font-bold">✓</span>
+                                </button>
+                            </template>
+                        </div>
+                    </div>
+
                     <!-- Available Sizes Row -->
                     <div class="mb-6">
                         <div class="flex items-center justify-between mb-2">
