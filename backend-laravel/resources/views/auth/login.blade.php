@@ -95,20 +95,10 @@
                 <p class="font-medium leading-relaxed">{{ session('info') }}</p>
             </div>
         @endif
-                <span class="text-base shrink-0">ℹ️</span>
-                <p class="font-medium leading-relaxed">{{ session('info') }}</p>
-            </div>
-        @endif
         @if (session('success'))
             <div class="mb-6 p-4 rounded-2xl bg-emerald-50 border border-emerald-200 text-emerald-900 text-xs flex items-start gap-2.5">
                 <span class="text-base shrink-0">✓</span>
                 <p class="font-medium leading-relaxed">{{ session('success') }}</p>
-            </div>
-        @endif
-        @if (session('warning'))
-            <div class="mb-6 p-4 rounded-2xl bg-amber-50 border border-amber-200 text-amber-900 text-xs flex items-start gap-2.5">
-                <span class="text-base shrink-0">⚠️</span>
-                <p class="font-medium leading-relaxed">{{ session('warning') }}</p>
             </div>
         @endif
 
