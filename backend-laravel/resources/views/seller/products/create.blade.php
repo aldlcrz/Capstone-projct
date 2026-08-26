@@ -185,7 +185,7 @@
                         <label class="text-[11px] font-bold uppercase tracking-wider text-gray-700">
                             Category <span class="text-[#C0420A]">*</span>
                         </label>
-                        <span class="text-[9px] text-[#C0420A] font-semibold">Select category</span>
+                        <span class="text-[9px] font-bold transition-colors" :class="selectedCategory ? 'text-emerald-600' : 'text-[#C0420A]'" x-text="selectedCategory ? '✓ Category selected' : 'Select category'"></span>
                     </div>
 
                     {{-- Category Demographic Quick Filter Chips --}}
@@ -194,7 +194,7 @@
                             <span class="text-[10px] font-bold uppercase tracking-wider text-gray-500">
                                 Target Tag <span class="text-[#C0420A]">*</span>
                             </span>
-                            <span class="text-[9px] text-gray-400 font-medium">Select tag</span>
+                            <span class="text-[9px] font-bold transition-colors" :class="targetGroup && targetGroup !== 'All' ? 'text-emerald-600' : 'text-gray-400'" x-text="targetGroup && targetGroup !== 'All' ? '✓ ' + targetGroup + ' selected' : 'Select tag'"></span>
                         </div>
 
                         <style>
@@ -529,13 +529,29 @@
             </div>
 
             {{-- Step 1 Primary CTA Button: "Next: Complete Product Details" --}}
-            <div x-show="step === 1" class="pt-3">
+            <div x-show="step === 1" class="pt-3 space-y-2">
                 <button type="button" 
                         @click="goToStep2()"
-                        class="w-full py-3.5 sm:py-4 px-6 bg-[#C0420A] hover:bg-[#a63707] active:scale-[0.99] text-white rounded-2xl font-bold text-sm tracking-wide shadow-md shadow-[#C0420A]/20 hover:shadow-lg hover:shadow-[#C0420A]/30 transition-all flex items-center justify-center gap-2.5 cursor-pointer group">
+                        :disabled="!isStep1Complete"
+                        :class="isStep1Complete 
+                            ? 'bg-[#C0420A] hover:bg-[#a63707] active:scale-[0.99] text-white shadow-md shadow-[#C0420A]/20 hover:shadow-lg hover:shadow-[#C0420A]/30 cursor-pointer' 
+                            : 'bg-gray-200 text-gray-400 cursor-not-allowed opacity-75 shadow-none select-none'"
+                        class="w-full py-3.5 sm:py-4 px-6 rounded-2xl font-bold text-sm tracking-wide transition-all flex items-center justify-center gap-2.5 group">
                     <span>Next: Complete Product Details</span>
-                    <svg class="w-4 h-4 transition-transform group-hover:translate-x-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
+                    <svg class="w-4 h-4 transition-transform group-hover:translate-x-1" :class="isStep1Complete ? 'opacity-100' : 'opacity-40'" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M14 5l7 7m0 0l-7 7m7-7H3"/>
+                    </svg>
                 </button>
+
+                {{-- Status prompt when fields are missing --}}
+                <template x-if="!isStep1Complete">
+                    <p class="text-center text-[11px] text-gray-400 font-medium flex items-center justify-center gap-1.5 pt-0.5">
+                        <svg class="w-3.5 h-3.5 text-amber-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                        </svg>
+                        <span>Please upload a photo, enter product name, choose a category, and select target tag to proceed.</span>
+                    </p>
+                </template>
             </div>
         </div>
 
@@ -877,7 +893,7 @@
     $productInitData = [
         'name'             => (string) old('name', ''),
         'categoryId'       => (string) old('CategoryId', ''),
-        'targetGroup'      => (string) old('target_group', 'Men'),
+        'targetGroup'      => (string) old('target_group', ''),
         'fabricType'       => (string) old('fabric_type', '100% Piña'),
         'price'            => (string) old('price', ''),
         'description'      => (string) old('description', ''),
@@ -1036,17 +1052,63 @@ function addProductManager() {
             this.calculateFillRate();
         },
 
+        get isStep1Complete() {
+            const hasImage = this.imageCount > 0;
+            const hasName = Boolean(this.productName && this.productName.trim().length > 0);
+            const hasCategory = Boolean(this.selectedCategory && this.selectedCategory !== '');
+            const hasTarget = Boolean(this.targetGroup && ['Men', 'Women', 'Kids'].includes(this.targetGroup));
+            let variantsValid = true;
+            if (this.hasVariants) {
+                variantsValid = this.variants.length > 0 && this.variants.every(v => v.name && v.name.trim().length > 0);
+            }
+            return hasImage && hasName && hasCategory && hasTarget && variantsValid;
+        },
+
         goToStep2() {
             if (this.imageCount === 0) {
-                triggerAppModal('Cover Image Required', 'Please upload at least one product photo to proceed.', 'warning');
+                triggerAppModal('Product Photo Required', 'Please upload at least one product photo to proceed.', 'warning');
                 const dropZone = document.getElementById('dropZone');
                 if (dropZone) dropZone.classList.add('border-red-500');
                 return;
             }
+
+            if (!this.productName || this.productName.trim().length === 0) {
+                triggerAppModal('Product Name Required', 'Please enter a product name to proceed.', 'warning');
+                const nameInput = document.getElementById('productNameInput');
+                if (nameInput) {
+                    nameInput.classList.add('border-red-500');
+                    nameInput.focus();
+                }
+                return;
+            }
+
+            if (!this.selectedCategory || this.selectedCategory === '') {
+                triggerAppModal('Category Required', 'Please select a product category from the dropdown.', 'warning');
+                this.isCategoryDropdownOpen = true;
+                return;
+            }
+
+            if (!this.targetGroup || !['Men', 'Women', 'Kids'].includes(this.targetGroup)) {
+                triggerAppModal('Target Tag Required', 'Please select a target tag (Men, Women, or Kids).', 'warning');
+                return;
+            }
+
+            if (this.hasVariants) {
+                if (this.variants.length === 0) {
+                    triggerAppModal('Variants Required', 'You enabled product variations. Please add at least one variant or toggle off the switch.', 'warning');
+                    return;
+                }
+                const missingVariant = this.variants.some(v => !v.name || v.name.trim().length === 0);
+                if (missingVariant) {
+                    triggerAppModal('Variant Name Missing', 'Please provide a name for all product variants.', 'warning');
+                    return;
+                }
+            }
+
             this.step = 2;
             this.calculateFillRate();
             setTimeout(() => {
-                window.scrollTo({ top: 320, behavior: 'smooth' });
+                window.scrollTo({ top: 350, behavior: 'smooth' });
             }, 100);
         },
 
