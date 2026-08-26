@@ -3,34 +3,50 @@
 @section('content')
 <div class="max-w-4xl mx-auto pb-36 sm:pb-28 lg:pb-16 px-3 sm:px-6" x-data="addProductManager()">
     {{-- Top Header & Navigation --}}
-    <div class="mb-6 sm:mb-8 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+    <div style="margin-bottom:24px;display:flex;flex-direction:column;gap:16px;">
         <div>
-            <a href="{{ route('seller.products.index') }}" class="inline-flex items-center gap-2 text-[11px] font-bold text-[#78716C] uppercase tracking-widest hover:text-[#18181B] transition-colors mb-2">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
+            <a href="{{ route('seller.products.index') }}" style="display:inline-flex;align-items:center;gap:8px;font-size:11px;font-weight:700;color:#78716C;text-transform:uppercase;letter-spacing:0.08em;text-decoration:none;margin-bottom:10px;transition:color 0.2s;">
+                <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
                 Back to catalogue
             </a>
-            <div class="flex items-center gap-3">
-                <div class="w-10 h-10 rounded-full bg-[#FEF9EC] border border-[#F3E8CE] flex items-center justify-center text-[#9A6B1F] shrink-0 shadow-2xs">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/>
-                    </svg>
+            <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:16px;flex-wrap:wrap;">
+                <div style="display:flex;align-items:center;gap:14px;">
+                    <!-- Heraldic Laurel Wreath + Star Emblem (From Top Rated Shops Modal) -->
+                    <div style="width:48px;height:48px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+                        <svg width="46" height="46" viewBox="0 0 48 48" fill="none">
+                            <!-- Central Medallion -->
+                            <circle cx="24" cy="23" r="10.5" stroke="#C49520" stroke-width="1" stroke-dasharray="2 1.5"/>
+                            <circle cx="24" cy="23" r="8.5" stroke="#C49520" stroke-width="0.8"/>
+                            <path d="M24 17.5l1.6 3.4 3.7.5-2.7 2.6.6 3.7-3.2-1.7-3.2 1.7.6-3.7-2.7-2.6 3.7-.5L24 17.5z" fill="#C49520"/>
+                            <!-- Laurel Wreath Left -->
+                            <path d="M15 32.5c-4-3.5-6-8.5-6-14 0-3.5 1-6.5 2.5-9" stroke="#C49520" stroke-width="1.3" stroke-linecap="round"/>
+                            <path d="M10 12c1.8 1.2 3.5 2.8 4 4.5M8 17.5c2 .6 3.8 1.8 4.8 3.5M8 23.5c2 0 3.8.6 5 2M9.5 29.5c2-.8 3.8-.8 5.2 0M12.5 34c1.8-1.2 3.6-1.5 5-.8" stroke="#C49520" stroke-width="1.2" stroke-linecap="round"/>
+                            <!-- Laurel Wreath Right -->
+                            <path d="M33 32.5c4-3.5 6-8.5 6-14 0-3.5-1-6.5-2.5-9" stroke="#C49520" stroke-width="1.3" stroke-linecap="round"/>
+                            <path d="M38 12c-1.8 1.2-3.5 2.8-4 4.5M40 17.5c-2 .6-3.8 1.8-4.8 3.5M40 23.5c-2 0-3.8.6-5 2M38.5 29.5c-2-.8-3.8-.8-5.2 0M35.5 34c-1.8-1.2-3.6-1.5-5-.8" stroke="#C49520" stroke-width="1.2" stroke-linecap="round"/>
+                            <!-- Base Ribbon -->
+                            <path d="M19 36c3 1.2 7 1.2 10 0" stroke="#C49520" stroke-width="1.3" stroke-linecap="round"/>
+                        </svg>
+                    </div>
+                    <div>
+                        <h1 style="font-family:ui-serif,Georgia,Cambria,serif;font-size:24px;font-weight:700;color:#1E1915;letter-spacing:-0.01em;line-height:1.2;margin:0;">
+                            New Heritage Piece
+                        </h1>
+                        <p style="font-size:13px;color:#78716C;margin-top:3px;margin-bottom:0;">
+                            List a new handcrafted Lumban creation for discerning buyers
+                        </p>
+                    </div>
                 </div>
-                <div>
-                    <h1 class="font-serif text-2xl sm:text-3xl font-bold text-[#18181B] tracking-tight">
-                        New Heritage Piece
-                    </h1>
-                    <p class="text-xs text-[#78716C] font-medium mt-0.5">List a new handcrafted Lumban creation for discerning buyers</p>
+
+                {{-- Step Indicator Badge (Artisan Pill Style) --}}
+                <div style="display:flex;align-items:center;gap:8px;">
+                    <span style="font-size:12px;font-weight:700;border-radius:20px;padding:5px 14px;display:flex;align-items:center;gap:6px;box-shadow:0 1px 3px rgba(0,0,0,0.03);transition:all 0.2s;"
+                          :style="step === 1 ? 'background-color:#FDF8EE;border:1px solid #EEDBBA;color:#7A5505;' : 'background-color:#1C160E;border:1px solid #1C160E;color:#FAF6F0;'">
+                        <span style="width:7px;height:7px;border-radius:50%;" :style="step === 1 ? 'background-color:#C49520;' : 'background-color:#10B981;'"></span>
+                        <span x-text="step === 1 ? 'Step 1: Media & Core Info' : 'Step 2: Specifications'"></span>
+                    </span>
                 </div>
             </div>
-        </div>
-
-        {{-- Step Indicator Badge (Artisan Pill Style) --}}
-        <div class="flex items-center gap-2">
-            <span class="text-xs font-bold tracking-wide px-4 py-1.5 rounded-full border transition-all flex items-center gap-2 shadow-2xs"
-                  :class="step === 1 ? 'bg-[#FEF9EC] text-[#9A6B1F] border-[#F3E8CE]' : 'bg-[#18181B] text-white border-[#18181B]'">
-                <span class="w-2 h-2 rounded-full" :class="step === 1 ? 'bg-[#C5A059]' : 'bg-emerald-400'"></span>
-                <span x-text="step === 1 ? 'Step 1: Media & Core Info' : 'Step 2: Specifications'"></span>
-            </span>
         </div>
     </div>
 
@@ -76,36 +92,35 @@
         <input type="hidden" name="action" id="formActionInput" value="publish">
 
         {{-- ========================================================================= --}}
-        {{-- PHASE 1: IMAGE FIRST & CORE IDENTIFICATION (Heritage Artisan Theme)       --}}
+        {{-- PHASE 1: IMAGE FIRST & CORE IDENTIFICATION (Exact Top Rated Shops Theme) --}}
         {{-- ========================================================================= --}}
-        <div class="bg-white p-6 sm:p-8 rounded-3xl border border-[#EFE8DA] shadow-[0_12px_40px_-8px_rgba(0,0,0,0.06),0_4px_12px_-2px_rgba(0,0,0,0.03)] space-y-6">
+        <div style="background-color:#FDFBF7 !important;border:1px solid #EAE2D2 !important;border-radius:28px !important;box-shadow:0 10px 40px rgba(0,0,0,0.06) !important;padding:24px sm:padding:30px;color:#1E1915 !important;" class="p-5 sm:p-8 space-y-6">
             
             {{-- 1. Product Media & Variants (Unified: Variant 1 is Cover Photo & Product Name) --}}
             <div class="space-y-4">
-                <div class="flex items-center justify-between pb-1">
-                    <div class="space-y-0.5">
-                        <h2 class="font-serif text-lg font-bold text-[#18181B] flex items-center gap-2">
-                            <span>1. Product Media & Variants</span>
-                            <span class="text-[#C5A059]">*</span>
+                <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px;">
+                    <div>
+                        <h2 style="font-family:ui-serif,Georgia,Cambria,serif;font-size:18px;font-weight:700;color:#1E1915;margin:0;line-height:1.2;">
+                            1. Product Media & Variants <span style="color:#C49520;">*</span>
                         </h2>
-                        <p class="text-xs text-[#78716C]">
+                        <p style="font-size:12px;color:#78716C;margin-top:4px;margin-bottom:0;">
                             Variant 1 represents your main product style, cover photo, and product name.
                         </p>
                     </div>
-                    <span class="text-[11px] font-bold text-[#9A6B1F] bg-[#FEF9EC] border border-[#F3E8CE] px-3 py-1 rounded-full shadow-2xs" x-text="variants.length + ' style(s)'"></span>
+                    <span style="background-color:#FDF8EE;border:1px solid #EEDBBA;color:#7A5505;font-size:11px;font-weight:700;border-radius:20px;padding:3px 10px;flex-shrink:0;" x-text="variants.length + ' style(s)'"></span>
                 </div>
 
                 {{-- Variant 1: Main Product Style & Cover Photo (Unified with Product Name) --}}
-                <div class="p-5 sm:p-6 bg-[#FFFDF9] border border-[#EFE8DA] rounded-2xl space-y-4 transition-all shadow-2xs hover:border-[#C5A059]" id="variant_card_0">
-                    <div class="flex items-center justify-between pb-2 border-b border-[#EFE8DA]">
-                        <div class="flex items-center gap-2">
-                            <span class="w-2.5 h-2.5 rounded-full bg-[#C5A059]"></span>
-                            <span class="font-serif text-sm font-bold text-[#18181B] tracking-tight">
+                <div style="background-color:#FFFFFF !important;border:1px solid #ECE3D2 !important;border-radius:20px !important;padding:20px !important;box-shadow:0 2px 6px rgba(0,0,0,0.03) !important;" class="space-y-4" id="variant_card_0">
+                    <div style="display:flex;align-items:center;justify-content:space-between;padding-bottom:10px;border-bottom:1px solid #F2ECE1;">
+                        <div style="display:flex;align-items:center;gap:8px;">
+                            <span style="width:8px;height:8px;border-radius:50%;background-color:#C49520;"></span>
+                            <span style="font-family:ui-serif,Georgia,serif;font-size:15px;font-weight:700;color:#1E1915;">
                                 Variant 1 (Main Style / Cover)
                             </span>
-                            <span class="px-2.5 py-0.5 rounded-full bg-[#FEF9EC] border border-[#F3E8CE] text-[#9A6B1F] text-[10px] font-bold uppercase tracking-wider">Cover Image</span>
+                            <span style="background-color:#FDF8EE;border:1px solid #EEDBBA;color:#7A5505;font-size:10px;font-weight:700;border-radius:20px;padding:2px 8px;text-transform:uppercase;letter-spacing:0.04em;">Cover Image</span>
                         </div>
-                        <span class="text-xs text-[#78716C] font-medium hidden sm:inline">Primary Product Listing</span>
+                        <span style="font-size:11px;color:#8C827A;font-weight:500;" class="hidden sm:inline">Primary Product Listing</span>
                     </div>
 
                     {{-- Hidden inputs for Variant 1 mapping --}}
@@ -114,10 +129,10 @@
 
                     {{-- 1. Product Name (English) --}}
                     <div class="space-y-1.5">
-                        <div class="flex items-center justify-between">
-                            <label class="text-xs font-bold uppercase tracking-wider text-[#18181B]">
-                                Product Name (English) <span class="text-[#C5A059]">*</span>
-                                <span class="text-[10px] text-[#A8A29E] font-normal" x-text="'(' + (productName ? productName.length : 0) + '/100)'"></span>
+                        <div style="display:flex;align-items:center;justify-content:space-between;">
+                            <label style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.06em;color:#1E1915;">
+                                Product Name (English) <span style="color:#C49520;">*</span>
+                                <span style="font-size:10px;color:#A8A096;font-weight:400;" x-text="'(' + (productName ? productName.length : 0) + '/100)'"></span>
                             </label>
                         </div>
 
@@ -130,50 +145,55 @@
                                    x-model="productName"
                                    @input="calculateFillRate()"
                                    placeholder="e.g. Hand-Woven Piña Barong Tagalog with Calado Embroidery"
-                                   class="w-full px-4 py-3.5 bg-white border border-[#E5DECE] rounded-xl outline-none focus:border-[#C5A059] focus:ring-2 focus:ring-[#C5A059]/15 transition-all font-semibold text-sm text-[#18181B] placeholder:text-[#A8A29E] placeholder:font-normal pr-10 shadow-2xs">
+                                   style="width:100%;padding:13px 16px;background-color:#FAF8F5;border:1px solid #E2D9C8;border-radius:14px;font-size:14px;font-weight:600;color:#1E1915;outline:none;transition:all 0.2s;"
+                                   onfocus="this.style.borderColor='#C49520';this.style.backgroundColor='#FFFFFF';"
+                                   onblur="this.style.borderColor='#E2D9C8';this.style.backgroundColor='#FAF8F5';"
+                                   class="pr-10 shadow-2xs">
                             
                             {{-- Clear Button (X) --}}
                             <button type="button" 
                                     x-show="productName && productName.length > 0"
                                     @click="productName = ''; calculateFillRate();"
-                                    class="absolute right-3 text-[#A8A29E] hover:text-[#18181B] transition-colors cursor-pointer">
-                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                                    style="position:absolute;right:12px;color:#A8A096;background:none;border:none;cursor:pointer;">
+                                <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
                             </button>
                         </div>
                     </div>
 
                     {{-- 2. Cover Photo Upload --}}
                     <div class="space-y-1.5 pt-1">
-                        <label class="text-xs font-bold uppercase tracking-wider text-[#18181B] block">
-                            Variant 1 Photo (Cover Image) <span class="text-[#C5A059]">*</span>
+                        <label style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.06em;color:#1E1915;display:block;">
+                            Variant 1 Photo (Cover Image) <span style="color:#C49520;">*</span>
                         </label>
                         <div class="flex flex-col sm:flex-row items-start sm:items-center gap-4 sm:gap-5">
-                            <div class="relative shrink-0" style="width: 140px; height: 140px;">
+                            <div style="width:140px;height:140px;position:relative;flex-shrink:0;">
                                 <label for="variant_file_0"
                                        id="variant_upload_box_0"
-                                       style="width: 140px; height: 140px;"
-                                       class="rounded-2xl border-2 border-dashed border-[#E5DECE] hover:border-[#C5A059] bg-[#FAF8F5] hover:bg-white flex flex-col items-center justify-center cursor-pointer overflow-hidden transition-all relative group/img shadow-2xs select-none">
+                                       style="width:140px;height:140px;border-radius:18px;border:2px dashed #E2D9C8;background-color:#FAF8F5;display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;overflow:hidden;position:relative;transition:all 0.2s;"
+                                       onmouseover="this.style.borderColor='#C49520';this.style.backgroundColor='#FFFFFF';"
+                                       onmouseout="this.style.borderColor='#E2D9C8';this.style.backgroundColor='#FAF8F5';"
+                                       class="group/img shadow-2xs select-none">
                                     
                                     <template x-if="variants[0].imagePreview">
-                                        <div class="relative w-full h-full">
-                                            <img :src="variants[0].imagePreview" class="w-full h-full object-cover rounded-xl">
+                                        <div style="position:relative;width:100%;height:100%;">
+                                            <img :src="variants[0].imagePreview" style="width:100%;height:100%;object-fit:cover;">
                                             <div class="absolute inset-0 bg-black/40 opacity-0 group-hover/img:opacity-100 transition-opacity flex flex-col items-center justify-center text-white text-[10px] font-bold uppercase tracking-wider gap-1">
-                                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+                                                <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
                                                 <span>Change</span>
                                             </div>
-                                            <div class="absolute bottom-1.5 inset-x-1.5 bg-black/60 backdrop-blur-xs py-0.5 rounded text-center text-[9px] font-bold text-white uppercase tracking-wider">
+                                            <div style="position:absolute;bottom:6px;left:6px;right:6px;background:rgba(0,0,0,0.65);backdrop-filter:blur(4px);padding:3px 0;border-radius:6px;text-align:center;font-size:9px;font-weight:700;color:#FFFFFF;text-transform:uppercase;letter-spacing:0.04em;">
                                                 Cover Image
                                             </div>
                                         </div>
                                     </template>
 
                                     <template x-if="!variants[0].imagePreview">
-                                        <div class="flex flex-col items-center justify-center text-center p-3">
-                                            <div class="w-10 h-10 rounded-full bg-[#FEF9EC] border border-[#F3E8CE] flex items-center justify-center text-[#9A6B1F] mb-1.5 group-hover/img:scale-110 transition-transform">
-                                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                                        <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:12px;">
+                                            <div style="width:40px;height:40px;border-radius:50%;background-color:#FDF8EE;border:1px solid #EEDBBA;display:flex;align-items:center;justify-content:center;color:#C49520;margin-bottom:6px;" class="group-hover/img:scale-105 transition-transform">
+                                                <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
                                             </div>
-                                            <span class="text-xs font-bold text-[#9A6B1F]">+ Upload Photo</span>
-                                            <span class="text-[10px] text-[#A8A29E] font-medium mt-0.5">JPEG, PNG, WEBP</span>
+                                            <span style="font-size:12px;font-weight:700;color:#7A5505;">+ Upload Photo</span>
+                                            <span style="font-size:10px;color:#A8A096;margin-top:2px;">JPEG, PNG, WEBP</span>
                                         </div>
                                     </template>
 
@@ -188,19 +208,21 @@
                                 <button type="button" 
                                         x-show="variants[0].imagePreview"
                                         @click="removeVariantImage(0)" 
-                                        class="absolute -top-2 -right-2 w-6 h-6 bg-red-600 hover:bg-red-700 text-white rounded-full flex items-center justify-center text-[10px] font-black shadow-md transition-all cursor-pointer"
+                                        style="position:absolute;top:-6px;right:-6px;width:24px;height:24px;background-color:#DC2626;color:#FFFFFF;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:900;border:none;cursor:pointer;box-shadow:0 2px 6px rgba(0,0,0,0.2);"
                                         title="Remove photo">
                                     ✕
                                 </button>
                             </div>
 
                             <div class="flex-1 space-y-1.5 text-xs text-[#78716C]">
-                                <h4 class="font-serif font-bold text-[#18181B] text-sm">Primary Product Appearance</h4>
-                                <p class="text-[11px] text-[#78716C] leading-relaxed">
+                                <h4 style="font-family:ui-serif,Georgia,serif;font-size:14px;font-weight:700;color:#1E1915;margin:0;">
+                                    Primary Product Appearance
+                                </h4>
+                                <p style="font-size:12px;color:#78716C;line-height:1.5;margin-top:4px;margin-bottom:0;">
                                     This photo will be showcased as the main thumbnail across the store, search, and catalogue.
                                 </p>
-                                <p class="text-[11px] text-[#9A6B1F] font-semibold flex items-center gap-1">
-                                    <span>✦</span> Have other colors, fabrics, or sleeve styles? Click "+ Add Another Variant" below.
+                                <p style="font-size:11px;color:#7A5505;font-weight:600;margin-top:6px;margin-bottom:0;">
+                                    <span style="color:#C49520;">✦</span> Have other colors, fabrics, or sleeve styles? Click "+ Add Another Variant" below.
                                 </p>
                             </div>
                         </div>
@@ -210,17 +232,17 @@
                 {{-- Additional Variants List (Variant 2, 3, etc.) --}}
                 <div class="space-y-3">
                     <template x-for="(variant, index) in variants" :key="variant.id">
-                        <div x-show="index > 0" class="p-4 bg-white border border-[#EFE8DA] hover:border-[#C5A059] rounded-2xl space-y-3 transition-all shadow-2xs">
-                            <div class="flex items-center justify-between pb-2 border-b border-[#EFE8DA]/60">
-                                <div class="flex items-center gap-2">
-                                    <span class="w-1.5 h-1.5 rounded-full bg-[#C5A059]"></span>
-                                    <span class="font-serif text-sm font-bold text-[#18181B]" x-text="'Variant ' + (index + 1)"></span>
-                                    <span class="px-2.5 py-0.5 rounded-full bg-[#FAF8F5] border border-[#E5DECE] text-[#78716C] text-[10px] font-bold uppercase tracking-wider">Style Option</span>
+                        <div x-show="index > 0" style="background-color:#FFFFFF !important;border:1px solid #ECE3D2 !important;border-radius:18px !important;padding:16px !important;box-shadow:0 2px 6px rgba(0,0,0,0.02) !important;" class="space-y-3">
+                            <div style="display:flex;align-items:center;justify-content:space-between;padding-bottom:8px;border-bottom:1px solid #F2ECE1;">
+                                <div style="display:flex;align-items:center;gap:8px;">
+                                    <span style="width:6px;height:6px;border-radius:50%;background-color:#C49520;"></span>
+                                    <span style="font-family:ui-serif,Georgia,serif;font-size:14px;font-weight:700;color:#1E1915;" x-text="'Variant ' + (index + 1)"></span>
+                                    <span style="background-color:#FAF8F5;border:1px solid #E2D9C8;color:#78716C;font-size:9px;font-weight:700;border-radius:20px;padding:2px 8px;text-transform:uppercase;letter-spacing:0.04em;">Style Option</span>
                                 </div>
                                 <button type="button" 
                                         @click="removeVariantRow(index)" 
-                                        class="text-xs font-semibold text-red-600 hover:text-red-700 flex items-center gap-1 cursor-pointer">
-                                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+                                        style="font-size:12px;font-weight:600;color:#DC2626;background:none;border:none;cursor:pointer;display:flex;align-items:center;gap:4px;">
+                                    <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
                                     <span>Remove</span>
                                 </button>
                             </div>
@@ -228,26 +250,28 @@
                             {{-- Hidden input mapping for PHP --}}
                             <input type="hidden" name="variant_indexes[]" :value="index">
 
-                            <div class="flex items-center gap-3.5">
+                            <div style="display:flex;align-items:center;gap:14px;">
                                 {{-- Variant Image Box --}}
-                                <div class="relative shrink-0" style="width: 80px; height: 80px;">
+                                <div style="width:80px;height:80px;position:relative;flex-shrink:0;">
                                     <label :for="'variant_file_' + index"
-                                           style="width: 80px; height: 80px;"
-                                           class="rounded-2xl border-2 border-dashed border-[#E5DECE] hover:border-[#C5A059] bg-[#FAF8F5] hover:bg-white flex flex-col items-center justify-center cursor-pointer overflow-hidden transition-all relative group/img shadow-2xs select-none">
+                                           style="width:80px;height:80px;border-radius:14px;border:2px dashed #E2D9C8;background-color:#FAF8F5;display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;overflow:hidden;position:relative;transition:all 0.2s;"
+                                           onmouseover="this.style.borderColor='#C49520';this.style.backgroundColor='#FFFFFF';"
+                                           onmouseout="this.style.borderColor='#E2D9C8';this.style.backgroundColor='#FAF8F5';"
+                                           class="group/img shadow-2xs select-none">
                                         <template x-if="variant.imagePreview">
-                                            <div class="relative w-full h-full">
-                                                <img :src="variant.imagePreview" class="w-full h-full object-cover rounded-xl">
+                                            <div style="position:relative;width:100%;height:100%;">
+                                                <img :src="variant.imagePreview" style="width:100%;height:100%;object-fit:cover;">
                                                 <div class="absolute inset-0 bg-black/30 opacity-0 group-hover/img:opacity-100 transition-opacity flex items-center justify-center text-white text-[9px] font-bold uppercase tracking-wider">
                                                     Change
                                                 </div>
                                             </div>
                                         </template>
                                         <template x-if="!variant.imagePreview">
-                                            <div class="flex flex-col items-center justify-center text-center p-1">
-                                                <div class="w-6 h-6 rounded-full bg-[#FEF9EC] border border-[#F3E8CE] flex items-center justify-center text-[#9A6B1F] mb-0.5 group-hover/img:scale-110 transition-transform">
-                                                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                                            <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:4px;">
+                                                <div style="width:24px;height:24px;border-radius:50%;background-color:#FDF8EE;border:1px solid #EEDBBA;display:flex;align-items:center;justify-content:center;color:#C49520;margin-bottom:2px;">
+                                                    <svg width="13" height="13" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
                                                 </div>
-                                                <span class="text-[9px] font-extrabold text-[#9A6B1F] uppercase tracking-wider">+ Photo</span>
+                                                <span style="font-size:9px;font-weight:700;color:#7A5505;">+ Photo</span>
                                             </div>
                                         </template>
                                         <input type="file" 
@@ -260,24 +284,27 @@
                                     <button type="button" 
                                             x-show="variant.imagePreview"
                                             @click="removeVariantImage(index)" 
-                                            class="absolute -top-1.5 -right-1.5 w-5 h-5 bg-red-600 hover:bg-red-700 text-white rounded-full flex items-center justify-center text-[9px] font-black shadow-md transition-all cursor-pointer">
+                                            style="position:absolute;top:-5px;right:-5px;width:20px;height:20px;background-color:#DC2626;color:#FFFFFF;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:900;border:none;cursor:pointer;"
+                                            title="Remove photo">
                                         ✕
                                     </button>
                                 </div>
 
                                 {{-- Variant Name Input --}}
-                                <div class="flex-1 min-w-0">
-                                    <div class="flex items-center justify-between mb-1">
-                                        <label class="text-[10px] font-bold uppercase tracking-wider text-[#18181B]">
-                                            Variant Name <span class="text-[#C5A059]">*</span>
+                                <div style="flex:1;min-width:0;">
+                                    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;">
+                                        <label style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.04em;color:#1E1915;">
+                                            Variant Name <span style="color:#C49520;">*</span>
                                         </label>
-                                        <span class="text-[9px] text-[#A8A29E] font-medium hidden sm:inline">e.g. Color, embroidery, or style</span>
+                                        <span style="font-size:9px;color:#A8A096;" class="hidden sm:inline">e.g. Color, embroidery, or style</span>
                                     </div>
                                     <input type="text" 
                                            :name="'variant_names[' + index + ']'" 
                                            x-model="variant.name" 
                                            placeholder="e.g. Emerald Green, Ivory Piña, Short Sleeve..." 
-                                           class="w-full px-3.5 py-2.5 bg-[#FAF8F5] border border-[#E5DECE] rounded-xl text-xs font-bold text-[#18181B] outline-none focus:border-[#C5A059] focus:bg-white transition-all shadow-2xs">
+                                           style="width:100%;padding:10px 14px;background-color:#FAF8F5;border:1px solid #E2D9C8;border-radius:12px;font-size:13px;font-weight:600;color:#1E1915;outline:none;transition:all 0.2s;"
+                                           onfocus="this.style.borderColor='#C49520';this.style.backgroundColor='#FFFFFF';"
+                                           onblur="this.style.borderColor='#E2D9C8';this.style.backgroundColor='#FAF8F5';">
                                 </div>
                             </div>
                         </div>
@@ -288,31 +315,31 @@
                 <div>
                     <button type="button" 
                             @click="addVariantRow()" 
-                            class="w-full py-3.5 px-4 rounded-2xl border border-dashed border-[#E5DECE] hover:border-[#C5A059] bg-[#FAF8F5] hover:bg-[#FFFDF9] text-[#18181B] font-bold text-xs flex items-center justify-center gap-2 transition-all cursor-pointer shadow-2xs">
-                        <span class="text-[#C5A059] text-base font-bold">+</span>
+                            style="width:100%;padding:14px 20px;border-radius:18px;border:1px dashed #C49520;background-color:#FAF8F5;color:#1E1915;font-size:13px;font-weight:700;display:flex;align-items:center;justify-content:center;gap:8px;cursor:pointer;transition:all 0.2s;"
+                            onmouseover="this.style.backgroundColor='#FDFBF7';this.style.borderColor='#7A5505';"
+                            onmouseout="this.style.backgroundColor='#FAF8F5';this.style.borderColor='#C49520';">
+                        <span style="color:#C49520;font-size:16px;font-weight:700;line-height:1;">+</span>
                         <span>Add Another Variant (Optional Style / Color)</span>
                     </button>
                 </div>
             </div>
 
-            {{-- Ornamental Heritage Divider (From Artisan Modal) --}}
-            <div class="flex items-center justify-center my-6">
-                <div class="h-px bg-[#EFE8DA] flex-1"></div>
-                <span class="px-3.5 text-[#C5A059] text-xs">✦</span>
-                <div class="h-px bg-[#EFE8DA] flex-1"></div>
+            {{-- Star Divider (Exact from Top Rated Shops Modal) --}}
+            <div style="position:relative;margin:24px 0;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+                <div style="width:100%;border-top:1px solid #EAE1D0;"></div>
+                <span style="position:absolute;background-color:#FDFBF7;padding:0 14px;color:#C49520;font-size:13px;">✦</span>
             </div>
 
             {{-- 2. Target Tag & Dynamic Matching Category Selection --}}
             <div class="space-y-4">
                 {{-- Step A: Who is this for? (Target Tag) --}}
                 <div class="space-y-1.5">
-                    <div class="flex items-center justify-between">
-                        <h2 class="font-serif text-lg font-bold text-[#18181B] flex items-center gap-2">
-                            <span>2. Who is this for? (Target Tag)</span>
-                            <span class="text-[#C5A059]">*</span>
+                    <div style="display:flex;align-items:center;justify-content:space-between;">
+                        <h2 style="font-family:ui-serif,Georgia,Cambria,serif;font-size:18px;font-weight:700;color:#1E1915;margin:0;">
+                            2. Who is this for? (Target Tag) <span style="color:#C49520;">*</span>
                         </h2>
-                        <span class="text-xs font-bold transition-colors"
-                              :class="targetGroup ? 'text-emerald-700' : 'text-[#C5A059]'"
+                        <span style="font-size:12px;font-weight:700;transition:color 0.2s;"
+                              :style="targetGroup ? 'color:#10B981;' : 'color:#C49520;'"
                               x-text="targetGroup ? ('✓ ' + targetGroup + ' selected') : 'Select a tag'"></span>
                     </div>
 
@@ -326,17 +353,19 @@
                                     default => '🏷️'
                                 };
                             @endphp
-                            <label class="cursor-pointer">
+                            <label class="cursor-pointer" @click="onTargetGroupChange('{{ $group }}')">
                                 <input type="radio" 
                                        name="target_group" 
                                        value="{{ $group }}" 
                                        x-model="targetGroup" 
-                                       @change="onTargetGroupChange('{{ $group }}')" 
-                                       class="hidden peer target-group-radio">
-                                <div class="w-full py-3.5 px-3 rounded-2xl border border-[#E5DECE] bg-[#FAF8F5] hover:bg-[#FFFDF9] text-xs font-bold text-[#44403C] text-center uppercase tracking-wider flex items-center justify-center gap-2 transition-all peer-checked:border-[#18181B] peer-checked:bg-[#18181B] peer-checked:text-white peer-checked:font-bold peer-checked:shadow-sm shadow-2xs">
-                                    <span class="text-base">{{ $emoji }}</span>
+                                       class="hidden">
+                                <div style="width:100%;padding:14px 12px;border-radius:18px;border:1px solid #E2D9C8;font-size:13px;font-weight:700;text-align:center;text-transform:uppercase;letter-spacing:0.04em;display:flex;align-items:center;justify-content:center;gap:8px;transition:all 0.2s;box-shadow:0 1px 3px rgba(0,0,0,0.03);"
+                                     :style="targetGroup === '{{ $group }}' 
+                                        ? 'background-color:#1C160E !important;color:#FAF6F0 !important;border-color:#1C160E !important;box-shadow:0 4px 12px rgba(28,22,14,0.18) !important;' 
+                                        : 'background-color:#FAF8F5 !important;color:#44403C !important;border-color:#E2D9C8 !important;'">
+                                    <span style="font-size:16px;">{{ $emoji }}</span>
                                     <span>{{ $group }}</span>
-                                    <span x-show="targetGroup === '{{ $group }}'" class="w-4 h-4 rounded-full bg-[#C5A059] text-white flex items-center justify-center text-[9px] font-bold ml-1">✓</span>
+                                    <span x-show="targetGroup === '{{ $group }}'" style="width:16px;height:16px;border-radius:50%;background-color:#C49520;color:#FFFFFF;display:inline-flex;align-items:center;justify-content:center;font-size:9px;font-weight:800;margin-left:4px;">✓</span>
                                 </div>
                             </label>
                         @endforeach
@@ -345,36 +374,36 @@
 
                 {{-- Step B: Product Category matching selected tag --}}
                 <div class="space-y-1.5 pt-2">
-                    <div class="flex items-center justify-between">
-                        <h3 class="font-serif text-sm font-bold text-[#18181B]">
-                            Product Category <span x-show="targetGroup" x-text="'for ' + targetGroup"></span> <span class="text-[#C5A059]">*</span>
+                    <div style="display:flex;align-items:center;justify-content:space-between;">
+                        <h3 style="font-family:ui-serif,Georgia,serif;font-size:15px;font-weight:700;color:#1E1915;margin:0;">
+                            Product Category <span x-show="targetGroup" x-text="'for ' + targetGroup"></span> <span style="color:#C49520;">*</span>
                         </h3>
-                        <span class="text-xs font-bold transition-colors"
-                              :class="selectedCategory ? 'text-emerald-700' : 'text-[#C5A059]'"
+                        <span style="font-size:12px;font-weight:700;transition:color 0.2s;"
+                              :style="selectedCategory ? 'color:#10B981;' : 'color:#C49520;'"
                               x-text="selectedCategory && selectedCategoryObj ? ('✓ ' + selectedCategoryObj.name) : (targetGroup ? 'Choose from options below' : 'Select tag above first')"></span>
                     </div>
 
                     {{-- Hidden CategoryId input for form submission --}}
                     <input type="hidden" name="CategoryId" id="categorySelect" :value="selectedCategory" required>
 
-                    {{-- Prompt when NO tag is selected (Artisan Sand Style) --}}
-                    <div x-show="!targetGroup" class="p-4 rounded-2xl bg-[#FAF3E0]/70 border border-[#ECDDC0] text-[#7C6A4F] text-xs font-medium flex items-center gap-2.5">
-                        <span class="text-base shrink-0">👆</span>
+                    {{-- Prompt when NO tag is selected (Exact Sand Banner Style) --}}
+                    <div x-show="!targetGroup" style="padding:14px 18px;border-radius:18px;background:linear-gradient(90deg,#F6F0E4 0%,#F2EADA 50%,#EAE0CD 100%);border:1px solid #E2D6C0;color:#78716C;font-size:13px;font-weight:500;display:flex;align-items:center;gap:10px;">
+                        <span style="font-size:16px;flex-shrink:0;">👆</span>
                         <span>Please select who this product is for (<strong>Men</strong>, <strong>Women</strong>, or <strong>Kids</strong>) above to display matching categories.</span>
                     </div>
 
                     {{-- Category grid displayed when a tag is picked --}}
                     <div x-show="targetGroup" class="space-y-2" x-cloak>
-                        <div class="grid grid-cols-2 sm:grid-cols-3 gap-2.5 max-h-60 overflow-y-auto p-3 bg-[#FAF8F5] rounded-2xl border border-[#EFE8DA] shadow-2xs" id="category-cards-container">
+                        <div class="grid grid-cols-2 sm:grid-cols-3 gap-2.5 max-h-60 overflow-y-auto p-3" style="background-color:#FAF8F5;border:1px solid #EAE1D0;border-radius:20px;box-shadow:0 1px 4px rgba(0,0,0,0.02);" id="category-cards-container">
                             <template x-for="cat in filteredCategories" :key="cat.id">
                                 <button type="button" 
                                         @click="selectCategory(cat)"
-                                        :class="selectedCategory === cat.id 
-                                            ? 'bg-[#FEF9EC] border-2 border-[#C5A059] text-[#9A6B1F] font-bold shadow-xs ring-2 ring-[#C5A059]/10' 
-                                            : 'bg-white border border-[#EFE8DA] hover:border-[#C5A059] text-[#18181B] hover:bg-[#FFFDF9] font-semibold'"
-                                        class="p-3.5 rounded-xl flex items-center justify-between text-left transition-all cursor-pointer group hover:scale-[1.01] active:scale-[0.99] text-xs">
+                                        style="padding:13px 15px;border-radius:14px;display:flex;align-items:center;justify-content:space-between;text-align:left;transition:all 0.2s;cursor:pointer;font-size:13px;"
+                                        :style="selectedCategory === cat.id 
+                                            ? 'background-color:#FDF8EE !important;border:2px solid #C49520 !important;color:#7A5505 !important;font-weight:700 !important;box-shadow:0 2px 8px rgba(196,149,32,0.15) !important;' 
+                                            : 'background-color:#FFFFFF !important;border:1px solid #ECE3D2 !important;color:#1E1915 !important;font-weight:600 !important;'">
                                     <span class="truncate" x-text="cat.name"></span>
-                                    <span x-show="selectedCategory === cat.id" class="w-4 h-4 rounded-full bg-[#C5A059] text-white flex items-center justify-center text-[9px] shrink-0 font-bold ml-1.5">✓</span>
+                                    <span x-show="selectedCategory === cat.id" style="width:16px;height:16px;border-radius:50%;background-color:#C49520;color:#FFFFFF;display:inline-flex;align-items:center;justify-content:center;font-size:9px;font-weight:800;flex-shrink:0;margin-left:6px;">✓</span>
                                 </button>
                             </template>
 
@@ -385,8 +414,8 @@
                             </template>
                         </div>
 
-                        <p x-show="selectedCategory && selectedCategoryObj" class="text-xs text-[#78716C] font-medium px-1">
-                            Selected Category: <strong class="text-[#18181B]" x-text="selectedCategoryObj.name"></strong>
+                        <p x-show="selectedCategory && selectedCategoryObj" style="font-size:12px;color:#78716C;font-weight:500;padding:0 4px;margin:0;">
+                            Selected Category: <strong style="color:#1E1915;font-weight:700;" x-text="selectedCategoryObj.name"></strong>
                         </p>
                     </div>
                 </div>
@@ -394,57 +423,64 @@
         </div>
 
         {{-- Step 1 Primary CTA Button: Sleek Onyx Pill Button matching "View Shop →" --}}
-        <div x-show="step === 1" class="pt-2 space-y-3">
+        <div x-show="step === 1" style="margin-top:20px;display:flex;flex-direction:column;gap:12px;">
             <button type="button" 
                     @click="goToStep2()"
                     :disabled="!isStep1Complete"
-                    :class="isStep1Complete 
-                        ? 'bg-[#18181B] hover:bg-[#27272A] active:scale-[0.99] text-white shadow-md hover:shadow-xl cursor-pointer' 
-                        : 'bg-gray-200 text-gray-400 cursor-not-allowed opacity-75 shadow-none select-none'"
-                    class="w-full py-4 px-8 rounded-full font-bold text-sm tracking-wide transition-all flex items-center justify-center gap-3 group">
+                    style="width:100%;padding:16px 28px;border-radius:9999px;font-size:14px;font-weight:700;letter-spacing:0.02em;display:flex;align-items:center;justify-content:center;gap:10px;border:none;box-shadow:0 4px 14px rgba(28,22,14,0.12);transition:all 0.2s;"
+                    :style="isStep1Complete 
+                        ? 'background-color:#1C160E !important;color:#FAF6F0 !important;cursor:pointer;' 
+                        : 'background-color:#E5E0D8 !important;color:#A8A096 !important;cursor:not-allowed;box-shadow:none;'">
                 <span>Next: Complete Product Details</span>
-                <span class="text-base font-bold transition-transform group-hover:translate-x-1">→</span>
+                <span style="font-size:15px;line-height:1;font-weight:700;">→</span>
             </button>
 
             {{-- Status prompt when fields are missing --}}
             <template x-if="!isStep1Complete">
-                <p class="text-center text-xs text-[#78716C] font-medium flex items-center justify-center gap-1.5 pt-0.5">
-                    <span class="text-[#C5A059]">✦</span>
+                <p style="text-align:center;font-size:12px;color:#78716C;margin:0;display:flex;align-items:center;justify-content:center;gap:6px;">
+                    <span style="color:#C49520;">✦</span>
                     <span>Please upload a photo, enter product name, choose a category, and select target tag to proceed.</span>
                 </p>
             </template>
 
-            {{-- Authentic Heritage Verification Banner (Direct from Artisan Modal) --}}
-            <div class="bg-[#FAF3E0]/80 border border-[#ECDDC0] rounded-2xl p-4 sm:p-5 flex items-center justify-between relative overflow-hidden shadow-2xs mt-4">
-                <div class="flex items-center gap-3.5 relative z-10">
-                    <div class="w-9 h-9 rounded-full bg-[#EBD8B3]/70 text-[#8C6226] flex items-center justify-center font-bold text-sm shrink-0">
-                        ✓
+            {{-- Verified & Trusted Footer Banner (Exact from welcome.blade.php) --}}
+            <div style="margin-top:10px;padding:16px 20px;border-radius:18px;background:linear-gradient(90deg,#F6F0E4 0%,#F2EADA 50%,#EAE0CD 100%);border:1px solid #E2D6C0;display:flex;align-items:center;justify-content:space-between;gap:12px;position:relative;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,0.03);">
+                <div style="display:flex;align-items:center;gap:12px;position:relative;z-index:10;">
+                    <div style="width:34px;height:34px;border-radius:50%;border:2px solid #B88728;background-color:#FAF4EA;display:flex;align-items:center;justify-content:center;color:#B88728;flex-shrink:0;box-shadow:0 1px 2px rgba(0,0,0,0.05);">
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/>
+                        </svg>
                     </div>
                     <div>
-                        <h4 class="font-serif font-bold text-sm text-[#423118]">Handcrafted Heritage Guarantee</h4>
-                        <p class="text-xs text-[#7C6A4F] mt-0.5">Every Lumban artisan listing is verified for genuine Filipino craftsmanship and authentic materials.</p>
+                        <h5 style="font-size:13px;font-weight:700;color:#1E1915;margin:0;line-height:1.2;">All artisan listings are verified and trusted</h5>
+                        <p style="font-size:11px;color:#78716C;margin:2px 0 0 0;">Quality craftsmanship. Authentic Lumban, Laguna Filipino heritage.</p>
                     </div>
                 </div>
-                <div class="hidden sm:block text-[#C5A059]/25 text-3xl font-serif select-none pointer-events-none pr-2">
-                    ❖
-                     {{-- ========================================================================= --}}
+                <!-- Background Embroidery Flourish Watermark -->
+                <svg width="120" height="70" viewBox="0 0 120 80" fill="#C49520" style="position:absolute;right:8px;bottom:-10px;opacity:0.18;pointer-events:none;">
+                    <path d="M60 10C40 10 30 30 10 35C30 40 40 60 60 60C80 60 90 40 110 35C90 30 80 10 60 10ZM60 25C65 25 70 30 70 35C70 40 65 45 60 45C55 45 50 40 50 35C50 30 55 25 60 25Z"/>
+                </svg>
+            </div>
+        </div>
+        
+        {{-- ========================================================================= --}}
         {{-- PHASE 2: COMPLETE SPECIFICATIONS (Progressively Revealed after Step 1)     --}}
         {{-- ========================================================================= --}}
         <div x-show="step >= 2" x-collapse class="space-y-6">
 
             {{-- 1. Fill Rate & Listing Health Bar --}}
-            <div class="bg-white p-5 sm:p-6 rounded-3xl border border-[#EFE8DA] shadow-[0_12px_40px_-8px_rgba(0,0,0,0.06),0_4px_12px_-2px_rgba(0,0,0,0.03)] flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div style="background-color:#FFFFFF !important;border:1px solid #EAE2D2 !important;border-radius:24px !important;padding:20px 24px !important;box-shadow:0 4px 20px rgba(0,0,0,0.04) !important;" class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                 <div class="flex items-center gap-3">
-                    <span class="font-serif text-sm font-bold text-[#18181B]">Listing Completeness</span>
-                    <div class="w-36 sm:w-48 h-2.5 bg-[#FAF8F5] border border-[#E5DECE] rounded-full overflow-hidden">
-                        <div class="h-full bg-linear-to-r from-[#C5A059] to-[#18181B] rounded-full transition-all duration-500" :style="'width: ' + fillRate + '%'"></div>
+                    <span style="font-family:ui-serif,Georgia,serif;font-size:14px;font-weight:700;color:#1E1915;">Listing Completeness</span>
+                    <div style="width:160px;height:10px;background-color:#FAF8F5;border:1px solid #E2D9C8;border-radius:9999px;overflow:hidden;">
+                        <div style="height:100%;background:linear-gradient(90deg,#C49520 0%,#1C160E 100%);border-radius:9999px;transition:width 0.5s;" :style="'width: ' + fillRate + '%'"></div>
                     </div>
-                    <span class="text-xs font-black text-[#9A6B1F]" x-text="fillRate + '%'"></span>
-                    <span class="text-xs text-[#C5A059]">✦</span>
+                    <span style="font-size:12px;font-weight:800;color:#7A5505;" x-text="fillRate + '%'"></span>
+                    <span style="color:#C49520;font-size:11px;">✦</span>
                 </div>
 
                 <div class="flex items-center gap-2">
-                    <span class="text-xs text-[#78716C] font-medium">All essential artisan specifications</span>
+                    <span style="font-size:12px;color:#78716C;font-weight:500;">All essential artisan specifications</span>
                 </div>
             </div>
 
@@ -452,27 +488,27 @@
             <input type="hidden" name="fabric_type" :value="fabricType || '100% Piña'">
 
             {{-- 1. Heritage Sizing & Inventory Matrix --}}
-            <div id="sizing-section" class="bg-white p-6 sm:p-7 rounded-3xl border border-[#EFE8DA] shadow-2xs space-y-4">
-                <div class="flex items-center justify-between pb-3 border-b border-[#EFE8DA]">
-                    <div class="flex items-center gap-3">
-                        <div class="w-8 h-8 rounded-full bg-[#FEF9EC] border border-[#F3E8CE] flex items-center justify-center text-[#9A6B1F] shrink-0 font-serif font-bold text-xs shadow-2xs">1</div>
+            <div id="sizing-section" style="background-color:#FDFBF7 !important;border:1px solid #EAE2D2 !important;border-radius:24px !important;padding:24px !important;box-shadow:0 4px 20px rgba(0,0,0,0.03) !important;" class="space-y-4">
+                <div style="display:flex;align-items:center;justify-content:space-between;padding-bottom:12px;border-bottom:1px solid #EAE1D0;">
+                    <div style="display:flex;align-items:center;gap:12px;">
+                        <div style="width:32px;height:32px;border-radius:50%;background-color:#FDF8EE;border:1px solid #EEDBBA;display:flex;align-items:center;justify-content:center;color:#7A5505;font-family:ui-serif,Georgia,serif;font-weight:700;font-size:13px;flex-shrink:0;">1</div>
                         <div>
-                            <h3 class="font-serif text-sm sm:text-base font-bold text-[#18181B] tracking-tight">Heritage Sizing & Stock <span class="text-[#C5A059]">*</span></h3>
-                            <p class="text-xs text-[#78716C] font-medium mt-0.5">Assign available inventory quantities per size</p>
+                            <h3 style="font-family:ui-serif,Georgia,Cambria,serif;font-size:16px;font-weight:700;color:#1E1915;margin:0;">Heritage Sizing & Stock <span style="color:#C49520;">*</span></h3>
+                            <p style="font-size:12px;color:#78716C;margin-top:2px;margin-bottom:0;">Assign available inventory quantities per size</p>
                         </div>
                     </div>
-                    <span class="text-[10px] font-bold text-[#9A6B1F] uppercase bg-[#FEF9EC] border border-[#F3E8CE] px-3 py-1 rounded-full">At least 1 size required</span>
+                    <span style="font-size:10px;font-weight:700;color:#7A5505;background-color:#FDF8EE;border:1px solid #EEDBBA;padding:3px 10px;border-radius:20px;text-transform:uppercase;letter-spacing:0.04em;">At least 1 size required</span>
                 </div>
 
                 <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-2.5 pt-1">
                     @foreach(['S', 'M', 'L', 'XL', 'XXL', 'Custom'] as $size)
-                        <div class="p-3 bg-[#FAF8F5] border border-[#E5DECE] rounded-2xl space-y-2 text-center transition-all hover:bg-white hover:border-[#C5A059] shadow-2xs">
-                            <label class="flex items-center justify-center gap-1.5 text-xs font-bold uppercase text-[#18181B] cursor-pointer select-none">
+                        <div style="background-color:#FFFFFF;border:1px solid #E2D9C8;border-radius:16px;padding:12px;text-align:center;box-shadow:0 1px 3px rgba(0,0,0,0.02);transition:all 0.2s;" class="space-y-2 hover:border-[#C49520]">
+                            <label style="display:flex;align-items:center;justify-content:center;gap:6px;font-size:12px;font-weight:700;text-transform:uppercase;color:#1E1915;cursor:pointer;">
                                 <input type="checkbox" 
                                        name="sizes[]" 
                                        value="{{ $size }}" 
                                        id="size_cb_{{ $size }}"
-                                       class="rounded text-[#18181B] focus:ring-[#C5A059] w-3.5 h-3.5 size-checkbox"
+                                       class="rounded text-[#1C160E] focus:ring-[#C49520] w-3.5 h-3.5 size-checkbox"
                                        onchange="toggleSizeStock(this, '{{ $size }}'); calculateFillRate();">
                                 <span>Size {{ $size }}</span>
                             </label>
@@ -484,26 +520,26 @@
                                    max="10000" 
                                    disabled
                                    oninput="if(parseInt(this.value) > 10000) this.value = 10000; calculateTotalStock(); calculateFillRate();"
-                                   class="w-full px-2 py-1.5 bg-white border border-[#E5DECE] rounded-xl outline-none text-xs font-bold text-center size-stock-input text-[#18181B]">
+                                   style="width:100%;padding:6px 8px;background-color:#FAF8F5;border:1px solid #E2D9C8;border-radius:10px;outline:none;font-size:13px;font-weight:700;text-align:center;color:#1E1915;">
                         </div>
                     @endforeach
                 </div>
             </div>
 
             {{-- 2. Pricing & Logistics Grid --}}
-            <div class="bg-white p-6 sm:p-7 rounded-3xl border border-[#EFE8DA] shadow-2xs space-y-4">
-                <div class="flex items-center gap-3 pb-3 border-b border-[#EFE8DA]">
-                    <div class="w-8 h-8 rounded-full bg-[#FEF9EC] border border-[#F3E8CE] flex items-center justify-center text-[#9A6B1F] shrink-0 font-serif font-bold text-xs shadow-2xs">2</div>
+            <div style="background-color:#FDFBF7 !important;border:1px solid #EAE2D2 !important;border-radius:24px !important;padding:24px !important;box-shadow:0 4px 20px rgba(0,0,0,0.03) !important;" class="space-y-4">
+                <div style="display:flex;align-items:center;gap:12px;padding-bottom:12px;border-bottom:1px solid #EAE1D0;">
+                    <div style="width:32px;height:32px;border-radius:50%;background-color:#FDF8EE;border:1px solid #EEDBBA;display:flex;align-items:center;justify-content:center;color:#7A5505;font-family:ui-serif,Georgia,serif;font-weight:700;font-size:13px;flex-shrink:0;">2</div>
                     <div>
-                        <h3 class="font-serif text-sm sm:text-base font-bold text-[#18181B] tracking-tight">Price & Shipping Information</h3>
-                        <p class="text-xs text-[#78716C] font-medium mt-0.5">Define fair artisan pricing and realistic delivery estimates</p>
+                        <h3 style="font-family:ui-serif,Georgia,Cambria,serif;font-size:16px;font-weight:700;color:#1E1915;margin:0;">Price & Shipping Information</h3>
+                        <p style="font-size:12px;color:#78716C;margin-top:2px;margin-bottom:0;">Define fair artisan pricing and realistic delivery estimates</p>
                     </div>
                 </div>
 
                 <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 pt-1">
                     {{-- Price Input --}}
-                    <div id="price-card" class="p-4 bg-[#FAF8F5] border border-[#E5DECE] rounded-2xl flex flex-col justify-between h-26 sm:h-28 transition-all hover:border-[#C5A059] shadow-2xs">
-                        <label class="text-[10px] font-bold uppercase tracking-wider text-[#78716C]">Price (₱) <span class="text-[#C5A059]">*</span></label>
+                    <div id="price-card" style="background-color:#FFFFFF;border:1px solid #E2D9C8;border-radius:16px;padding:14px;display:flex;flex-direction:column;justify-content:space-between;height:100px;box-shadow:0 1px 3px rgba(0,0,0,0.02);">
+                        <label style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.06em;color:#78716C;">Price (₱) <span style="color:#C49520;">*</span></label>
                         <input type="number" 
                                name="price" 
                                id="priceInput" 
@@ -514,13 +550,13 @@
                                placeholder="0.00"
                                x-model="price"
                                oninput="if(parseFloat(this.value) > 10000) this.value = 10000; updateDiscountPreview(); calculateFillRate();"
-                               class="w-full bg-transparent font-sans text-xl font-bold text-[#18181B] outline-none border-b border-transparent focus:border-[#C5A059] transition-all">
-                        <p class="text-[9px] text-[#A8A29E] font-medium">Item base price</p>
+                               style="width:100%;background:transparent;font-size:18px;font-weight:700;color:#1E1915;outline:none;border:none;">
+                        <p style="font-size:9px;color:#A8A096;margin:0;">Item base price</p>
                     </div>
 
                     {{-- Total Stock (Auto) --}}
-                    <div id="stock-card" class="p-4 bg-[#FAF8F5] border border-[#E5DECE] rounded-2xl flex flex-col justify-between h-26 sm:h-28 transition-all shadow-2xs">
-                        <label class="text-[10px] font-bold uppercase tracking-wider text-[#78716C]">Total Stock <span class="text-[#C5A059]">*</span></label>
+                    <div id="stock-card" style="background-color:#FAF8F5;border:1px solid #E2D9C8;border-radius:16px;padding:14px;display:flex;flex-direction:column;justify-content:space-between;height:100px;box-shadow:0 1px 3px rgba(0,0,0,0.02);">
+                        <label style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.06em;color:#78716C;">Total Stock <span style="color:#C49520;">*</span></label>
                         <input type="number" 
                                name="stock" 
                                id="total_stock" 
@@ -528,13 +564,13 @@
                                placeholder="0"
                                readonly 
                                tabindex="-1"
-                               class="w-full bg-transparent font-sans text-xl font-bold text-[#18181B] outline-none select-none cursor-not-allowed">
-                        <p class="text-[9px] text-[#A8A29E] font-medium">Auto-summed from sizes</p>
+                               style="width:100%;background:transparent;font-size:18px;font-weight:700;color:#1E1915;outline:none;border:none;cursor:not-allowed;">
+                        <p style="font-size:9px;color:#A8A096;margin:0;">Auto-summed from sizes</p>
                     </div>
 
                     {{-- Shipping Fee --}}
-                    <div id="shipping-fee-card" class="p-4 bg-[#FAF8F5] border border-[#E5DECE] rounded-2xl flex flex-col justify-between h-26 sm:h-28 transition-all hover:border-[#C5A059] shadow-2xs">
-                        <label class="text-[10px] font-bold uppercase tracking-wider text-[#78716C]">Shipping Fee (₱) <span class="text-[#C5A059]">*</span></label>
+                    <div id="shipping-fee-card" style="background-color:#FFFFFF;border:1px solid #E2D9C8;border-radius:16px;padding:14px;display:flex;flex-direction:column;justify-content:space-between;height:100px;box-shadow:0 1px 3px rgba(0,0,0,0.02);">
+                        <label style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.06em;color:#78716C;">Shipping Fee (₱) <span style="color:#C49520;">*</span></label>
                         <input type="number" 
                                name="shippingFee" 
                                id="shippingFeeInput" 
@@ -545,13 +581,13 @@
                                placeholder="0.00"
                                value="{{ old('shippingFee', 0) }}"
                                oninput="if(parseFloat(this.value) > 500) this.value = 500; calculateFillRate();"
-                               class="w-full bg-transparent font-sans text-xl font-bold text-[#18181B] outline-none border-b border-transparent focus:border-[#C5A059] transition-all">
-                        <p class="text-[9px] text-[#A8A29E] font-medium">Enter 0 for free delivery</p>
+                               style="width:100%;background:transparent;font-size:18px;font-weight:700;color:#1E1915;outline:none;border:none;">
+                        <p style="font-size:9px;color:#A8A096;margin:0;">Enter 0 for free delivery</p>
                     </div>
 
                     {{-- Shipping Days --}}
-                    <div id="shipping-days-card" class="p-4 bg-[#FAF8F5] border border-[#E5DECE] rounded-2xl flex flex-col justify-between h-26 sm:h-28 transition-all hover:border-[#C5A059] shadow-2xs">
-                        <label class="text-[10px] font-bold uppercase tracking-wider text-[#78716C]">Est. Shipping Days <span class="text-[#C5A059]">*</span></label>
+                    <div id="shipping-days-card" style="background-color:#FFFFFF;border:1px solid #E2D9C8;border-radius:16px;padding:14px;display:flex;flex-direction:column;justify-content:space-between;height:100px;box-shadow:0 1px 3px rgba(0,0,0,0.02);">
+                        <label style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.06em;color:#78716C;">Est. Shipping Days <span style="color:#C49520;">*</span></label>
                         <input type="number" 
                                name="shippingDays" 
                                id="shippingDaysInput" 
@@ -562,31 +598,31 @@
                                placeholder="5"
                                value="{{ old('shippingDays', 5) }}"
                                oninput="if(parseInt(this.value) > 30) this.value = 30; calculateFillRate();"
-                               class="w-full bg-transparent font-sans text-xl font-bold text-[#18181B] outline-none border-b border-transparent focus:border-[#C5A059] transition-all">
-                        <p class="text-[9px] text-[#A8A29E] font-medium">Delivery lead time</p>
+                               style="width:100%;background:transparent;font-size:18px;font-weight:700;color:#1E1915;outline:none;border:none;">
+                        <p style="font-size:9px;color:#A8A096;margin:0;">Delivery lead time</p>
                     </div>
                 </div>
 
                 {{-- Lumban Special Discount Panel --}}
-                <div class="p-4 rounded-2xl border border-[#F3E8CE] bg-[#FEF9EC]/50 space-y-3">
+                <div style="padding:14px 18px;border-radius:18px;background-color:#FDF8EE;border:1px solid #EEDBBA;" class="space-y-3">
                     <input type="hidden" name="is_on_sale" id="isOnSaleInput" value="0">
 
-                    <div class="flex items-center justify-between">
-                        <div class="flex items-center gap-2">
-                            <span class="w-2 h-2 rounded-full bg-[#C5A059]"></span>
-                            <span class="text-xs font-bold text-[#9A6B1F] uppercase tracking-wider">Special Price / Sale Discount</span>
-                            <span class="text-[9px] text-[#78716C] font-bold uppercase tracking-wider">(Optional)</span>
+                    <div style="display:flex;align-items:center;justify-content:space-between;">
+                        <div style="display:flex;align-items:center;gap:8px;">
+                            <span style="width:8px;height:8px;border-radius:50%;background-color:#C49520;"></span>
+                            <span style="font-size:12px;font-weight:700;color:#7A5505;text-transform:uppercase;letter-spacing:0.06em;">Special Price / Sale Discount</span>
+                            <span style="font-size:10px;color:#78716C;font-weight:700;text-transform:uppercase;">(Optional)</span>
                         </div>
                         <label class="relative inline-flex items-center cursor-pointer shrink-0">
                             <input type="checkbox" id="discountToggle" class="sr-only peer" onchange="toggleDiscount(this)">
-                            <div class="w-9 h-5 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-0.5 after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-[#18181B]"></div>
+                            <div class="w-9 h-5 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-0.5 after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-[#1C160E]"></div>
                         </label>
                     </div>
 
-                    <div id="discountFields" class="hidden space-y-2.5 pt-2 border-t border-[#F3E8CE]">
+                    <div id="discountFields" class="hidden space-y-2.5 pt-2 border-t border-[#EEDBBA]">
                         <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 items-end">
                             <div>
-                                <label class="text-[10px] font-bold uppercase tracking-wider text-[#78716C] mb-1 block">Discount (%)</label>
+                                <label style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.06em;color:#78716C;display:block;margin-bottom:4px;">Discount (%)</label>
                                 <input type="number" 
                                        name="discount_percentage" 
                                        id="discountPercentage" 
@@ -594,14 +630,14 @@
                                        max="99" 
                                        step="1" 
                                        placeholder="e.g. 20"
-                                       class="w-full px-4 py-2.5 bg-white border border-[#E5DECE] rounded-xl outline-none font-bold text-sm text-[#18181B] focus:border-[#C5A059]"
+                                       style="width:100%;padding:10px 14px;background-color:#FFFFFF;border:1px solid #E2D9C8;border-radius:12px;font-size:14px;font-weight:700;color:#1E1915;outline:none;"
                                        oninput="if(parseInt(this.value) > 99) this.value = 99; updateDiscountPreview();">
                             </div>
                             <div>
-                                <label class="text-[10px] font-bold uppercase tracking-wider text-[#78716C] mb-1 block">Price Preview</label>
-                                <div id="discountPreview" class="hidden w-full px-4 py-2.5 bg-white rounded-xl border border-[#F3E8CE] items-center justify-center gap-2 h-10.5 shadow-2xs">
+                                <label style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.06em;color:#78716C;display:block;margin-bottom:4px;">Price Preview</label>
+                                <div id="discountPreview" class="hidden w-full px-4 py-2 bg-white rounded-xl border border-[#EEDBBA] items-center justify-center gap-2 h-10.5 shadow-2xs">
                                     <span id="previewOriginal" class="text-xs text-[#78716C] line-through font-bold"></span>
-                                    <span id="previewSale" class="text-sm font-black text-[#9A6B1F]"></span>
+                                    <span id="previewSale" class="text-sm font-black text-[#7A5505]"></span>
                                 </div>
                             </div>
                         </div>
@@ -610,13 +646,13 @@
             </div>
 
             {{-- 3. Payment Methods Card --}}
-            <div id="payment-methods-card" class="bg-white p-6 sm:p-7 rounded-3xl border border-[#EFE8DA] shadow-2xs space-y-4">
-                <div class="flex items-center justify-between pb-3 border-b border-[#EFE8DA]">
-                    <div class="flex items-center gap-3">
-                        <div class="w-8 h-8 rounded-full bg-[#FEF9EC] border border-[#F3E8CE] flex items-center justify-center text-[#9A6B1F] shrink-0 font-serif font-bold text-xs shadow-2xs">3</div>
-                        <h3 class="font-serif text-sm sm:text-base font-bold text-[#18181B] tracking-tight">Payment Methods <span class="text-[#C5A059]">*</span></h3>
+            <div id="payment-methods-card" style="background-color:#FDFBF7 !important;border:1px solid #EAE2D2 !important;border-radius:24px !important;padding:24px !important;box-shadow:0 4px 20px rgba(0,0,0,0.03) !important;" class="space-y-4">
+                <div style="display:flex;align-items:center;justify-content:space-between;padding-bottom:12px;border-bottom:1px solid #EAE1D0;">
+                    <div style="display:flex;align-items:center;gap:12px;">
+                        <div style="width:32px;height:32px;border-radius:50%;background-color:#FDF8EE;border:1px solid #EEDBBA;display:flex;align-items:center;justify-content:center;color:#7A5505;font-family:ui-serif,Georgia,serif;font-weight:700;font-size:13px;flex-shrink:0;">3</div>
+                        <h3 style="font-family:ui-serif,Georgia,Cambria,serif;font-size:16px;font-weight:700;color:#1E1915;margin:0;">Payment Methods <span style="color:#C49520;">*</span></h3>
                     </div>
-                    <a href="{{ route('seller.profile') }}?open_payment=1#payment-methods" target="_blank" class="text-xs font-bold text-[#9A6B1F] hover:text-[#18181B] flex items-center gap-1">
+                    <a href="{{ route('seller.profile') }}?open_payment=1#payment-methods" target="_blank" style="font-size:12px;font-weight:700;color:#7A5505;text-decoration:none;display:flex;align-items:center;gap:4px;">
                         Settings ↗
                     </a>
                 </div>
@@ -629,22 +665,22 @@
                         $hasGcashQr = !empty($user->gcashQrCode);
                         $isGcashComplete = $hasGcashNumber && $hasGcashQr;
                     @endphp
-                    <div class="rounded-2xl border border-blue-100 overflow-hidden shadow-2xs">
-                        <div class="flex items-center justify-between px-4 py-2.5 bg-linear-to-r from-blue-600 to-blue-500">
-                            <span class="text-[10px] font-black uppercase tracking-widest text-white">GCash</span>
+                    <div style="border-radius:18px;border:1px solid #DBEAFE;overflow:hidden;background:#FFFFFF;box-shadow:0 1px 3px rgba(0,0,0,0.02);">
+                        <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 14px;background:linear-gradient(90deg,#2563EB,#3B82F6);">
+                            <span style="font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:0.06em;color:#FFFFFF;">GCash</span>
                             <label class="relative inline-flex items-center cursor-pointer">
                                 <input type="checkbox" name="product_is_gcash_available" value="1" id="gcash_toggle_create" class="sr-only peer" {{ old('product_is_gcash_available', true) ? 'checked' : '' }} onchange="document.getElementById('gcash_fields_create').style.display = this.checked ? '' : 'none'; calculateFillRate();">
                                 <div class="w-8 h-4.5 bg-white/30 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-0.5 after:bg-white after:border-gray-300 after:border after:rounded-full after:h-3.5 after:w-3.5 after:transition-all peer-checked:bg-white/40 border border-white/40"></div>
                             </label>
                         </div>
-                        <div id="gcash_fields_create" {{ old('product_is_gcash_available', true) ? '' : 'style=display:none' }} class="p-3.5 bg-white flex items-center gap-3">
+                        <div id="gcash_fields_create" {{ old('product_is_gcash_available', true) ? '' : 'style=display:none' }} style="padding:14px;background:#FFFFFF;display:flex;align-items:center;gap:12px;">
                             <div class="flex-1 min-w-0">
                                 @if($isGcashComplete)
-                                    <div class="text-xs font-black text-gray-900">{{ $user->gcashNumber }}</div>
-                                    <div class="text-[9px] text-blue-600 font-bold uppercase tracking-widest mt-0.5">✓ Ready (Number & QR Set)</div>
+                                    <div style="font-size:13px;font-weight:700;color:#1E1915;">{{ $user->gcashNumber }}</div>
+                                    <div style="font-size:10px;color:#2563EB;font-weight:700;text-transform:uppercase;letter-spacing:0.04em;margin-top:2px;">✓ Ready (Number & QR Set)</div>
                                 @else
-                                    <div class="text-[10px] text-amber-600 font-bold">Incomplete setup</div>
-                                    <a href="{{ route('seller.profile') }}?open_payment=1#payment-methods" class="text-[9px] text-blue-600 font-bold underline">Add in Settings →</a>
+                                    <div style="font-size:11px;color:#D97706;font-weight:700;">Incomplete setup</div>
+                                    <a href="{{ route('seller.profile') }}?open_payment=1#payment-methods" style="font-size:10px;color:#2563EB;font-weight:700;text-decoration:underline;">Add in Settings →</a>
                                 @endif
                             </div>
                         </div>
@@ -656,22 +692,22 @@
                         $hasMayaQr = !empty($user->mayaQrCode);
                         $isMayaComplete = $hasMayaNumber && $hasMayaQr;
                     @endphp
-                    <div class="rounded-2xl border border-emerald-100 overflow-hidden shadow-2xs">
-                        <div class="flex items-center justify-between px-4 py-2.5 bg-linear-to-r from-emerald-600 to-emerald-500">
-                            <span class="text-[10px] font-black uppercase tracking-widest text-white">Maya</span>
+                    <div style="border-radius:18px;border:1px solid #D1FAE5;overflow:hidden;background:#FFFFFF;box-shadow:0 1px 3px rgba(0,0,0,0.02);">
+                        <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 14px;background:linear-gradient(90deg,#059669,#10B981);">
+                            <span style="font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:0.06em;color:#FFFFFF;">Maya</span>
                             <label class="relative inline-flex items-center cursor-pointer">
                                 <input type="checkbox" name="product_is_maya_available" value="1" id="maya_toggle_create" class="sr-only peer" {{ old('product_is_maya_available', false) ? 'checked' : '' }} onchange="document.getElementById('maya_fields_create').style.display = this.checked ? '' : 'none'; calculateFillRate();">
                                 <div class="w-8 h-4.5 bg-white/30 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-0.5 after:bg-white after:border-gray-300 after:border after:rounded-full after:h-3.5 after:w-3.5 after:transition-all peer-checked:bg-white/40 border border-white/40"></div>
                             </label>
                         </div>
-                        <div id="maya_fields_create" {{ old('product_is_maya_available', false) ? '' : 'style=display:none' }} class="p-3.5 bg-white flex items-center gap-3">
+                        <div id="maya_fields_create" {{ old('product_is_maya_available', false) ? '' : 'style=display:none' }} style="padding:14px;background:#FFFFFF;display:flex;align-items:center;gap:12px;">
                             <div class="flex-1 min-w-0">
                                 @if($isMayaComplete)
-                                    <div class="text-xs font-black text-gray-900">{{ $user->mayaNumber }}</div>
-                                    <div class="text-[9px] text-emerald-600 font-bold uppercase tracking-widest mt-0.5">✓ Ready (Number & QR Set)</div>
+                                    <div style="font-size:13px;font-weight:700;color:#1E1915;">{{ $user->mayaNumber }}</div>
+                                    <div style="font-size:10px;color:#059669;font-weight:700;text-transform:uppercase;letter-spacing:0.04em;margin-top:2px;">✓ Ready (Number & QR Set)</div>
                                 @else
-                                    <div class="text-[10px] text-amber-600 font-bold">Incomplete setup</div>
-                                    <a href="{{ route('seller.profile') }}?open_payment=1#payment-methods" class="text-[9px] text-emerald-600 font-bold underline">Add in Settings →</a>
+                                    <div style="font-size:11px;color:#D97706;font-weight:700;">Incomplete setup</div>
+                                    <a href="{{ route('seller.profile') }}?open_payment=1#payment-methods" style="font-size:10px;color:#059669;font-weight:700;text-decoration:underline;">Add in Settings →</a>
                                 @endif
                             </div>
                         </div>
@@ -680,13 +716,13 @@
             </div>
 
             {{-- 4. Artisan Description & Storytelling Card --}}
-            <div class="bg-white p-6 sm:p-7 rounded-3xl border border-[#EFE8DA] shadow-2xs space-y-4">
-                <div class="flex items-center justify-between pb-3 border-b border-[#EFE8DA]">
-                    <div class="flex items-center gap-3">
-                        <div class="w-8 h-8 rounded-full bg-[#FEF9EC] border border-[#F3E8CE] flex items-center justify-center text-[#9A6B1F] shrink-0 font-serif font-bold text-xs shadow-2xs">4</div>
+            <div style="background-color:#FDFBF7 !important;border:1px solid #EAE2D2 !important;border-radius:24px !important;padding:24px !important;box-shadow:0 4px 20px rgba(0,0,0,0.03) !important;" class="space-y-4">
+                <div style="display:flex;align-items:center;justify-content:space-between;padding-bottom:12px;border-bottom:1px solid #EAE1D0;">
+                    <div style="display:flex;align-items:center;gap:12px;">
+                        <div style="width:32px;height:32px;border-radius:50%;background-color:#FDF8EE;border:1px solid #EEDBBA;display:flex;align-items:center;justify-content:center;color:#7A5505;font-family:ui-serif,Georgia,serif;font-weight:700;font-size:13px;flex-shrink:0;">4</div>
                         <div>
-                            <h3 class="font-serif text-sm sm:text-base font-bold text-[#18181B] tracking-tight">Artisan Description & Story <span class="text-[#C5A059]">*</span></h3>
-                            <p class="text-xs text-[#78716C] font-medium mt-0.5">Highlight the craftsmanship, weaving techniques, and care instructions</p>
+                            <h3 style="font-family:ui-serif,Georgia,Cambria,serif;font-size:16px;font-weight:700;color:#1E1915;margin:0;">Artisan Description & Story <span style="color:#C49520;">*</span></h3>
+                            <p style="font-size:12px;color:#78716C;margin-top:2px;margin-bottom:0;">Highlight the craftsmanship, weaving techniques, and care instructions</p>
                         </div>
                     </div>
 
@@ -694,12 +730,13 @@
                     <button type="button" 
                             @click="generateDescriptionAi()"
                             :disabled="isAiLoading"
-                            class="px-4 py-2 rounded-full bg-[#18181B] hover:bg-[#27272A] active:scale-95 text-white text-xs font-bold shadow-xs flex items-center gap-1.5 cursor-pointer transition-all disabled:opacity-50">
-                        <span x-show="!isAiLoading" class="flex items-center gap-1.5">
-                            <span class="text-xs text-[#C5A059]">✦</span>
+                            style="padding:8px 18px;border-radius:9999px;background-color:#1C160E;color:#FAF6F0;font-size:12px;font-weight:700;display:flex;align-items:center;gap:6px;border:none;cursor:pointer;box-shadow:0 2px 6px rgba(28,22,14,0.15);transition:all 0.2s;"
+                            class="hover:opacity-90 active:scale-95 disabled:opacity-50">
+                        <span x-show="!isAiLoading" style="display:flex;align-items:center;gap:6px;">
+                            <span style="color:#C49520;font-size:12px;">✦</span>
                             <span>AI Auto-Write</span>
                         </span>
-                        <span x-show="isAiLoading" class="flex items-center gap-1.5" x-cloak>
+                        <span x-show="isAiLoading" style="display:flex;align-items:center;gap:6px;" x-cloak>
                             <svg class="animate-spin h-3.5 w-3.5 text-white" fill="none" viewBox="0 0 24 24">
                                 <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
                                 <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path>
@@ -718,30 +755,37 @@
                               x-model="description"
                               @input="updateCharCount($el); calculateFillRate();"
                               placeholder="Describe the craftsmanship, cultural heritage, weaving techniques, and unique story behind this piece..."
-                              class="w-full px-4 py-3.5 bg-[#FAF8F5] border border-[#E5DECE] rounded-2xl outline-none focus:border-[#C5A059] focus:bg-white focus:ring-2 focus:ring-[#C5A059]/15 transition-all font-normal text-sm text-[#18181B] placeholder:text-[#A8A29E] resize-none pb-8 shadow-2xs"></textarea>
+                              style="width:100%;padding:14px 16px;background-color:#FFFFFF;border:1px solid #E2D9C8;border-radius:16px;outline:none;font-size:14px;font-weight:500;color:#1E1915;resize:none;transition:all 0.2s;"
+                              onfocus="this.style.borderColor='#C49520';"
+                              onblur="this.style.borderColor='#E2D9C8';"
+                              class="shadow-2xs pb-8"></textarea>
                     
-                    <div class="absolute bottom-3 right-4 flex items-center gap-1 bg-white/95 backdrop-blur-xs px-2.5 py-0.5 rounded-full border border-[#E5DECE] text-[10px] font-bold text-[#78716C] pointer-events-none shadow-2xs">
-                        <span id="charCounter" x-text="description ? description.length : 0">0</span><span class="text-[#A8A29E]">/</span><span>500</span>
+                    <div style="position:absolute;bottom:14px;right:16px;display:flex;align-items:center;gap:4px;background:rgba(255,255,255,0.95);padding:2px 8px;border-radius:9999px;border:1px solid #E2D9C8;font-size:10px;font-weight:700;color:#78716C;pointer-events:none;">
+                        <span id="charCounter" x-text="description ? description.length : 0">0</span><span style="color:#A8A096;">/</span><span>500</span>
                     </div>
                 </div>
             </div>
 
             {{-- 7. Bottom Submission Actions (Back, Draft & Publish) --}}
-            <div class="pt-6 pb-2 border-t border-[#EFE8DA] flex flex-col sm:flex-row items-center justify-between gap-4">
+            <div style="padding-top:20px;display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;border-top:1px solid #EAE1D0;">
                 <button type="button" 
                         @click="step = 1; window.scrollTo({ top: 0, behavior: 'smooth' })"
-                        class="w-full sm:w-auto px-6 py-3.5 rounded-full border border-[#E5DECE] hover:bg-[#FAF8F5] text-[#18181B] font-bold text-xs transition-all flex items-center justify-center gap-2 cursor-pointer shadow-2xs">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        style="padding:14px 24px;border-radius:9999px;border:1px solid #E2D9C8;background-color:#FFFFFF;color:#1E1915;font-size:13px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:8px;box-shadow:0 1px 3px rgba(0,0,0,0.03);transition:all 0.2s;"
+                        onmouseover="this.style.backgroundColor='#FAF8F5';"
+                        onmouseout="this.style.backgroundColor='#FFFFFF';">
+                    <svg width="15" height="15" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
                     </svg>
                     <span>Back to Step 1</span>
                 </button>
 
-                <div class="flex flex-col sm:flex-row items-center gap-3 w-full sm:w-auto">
+                <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
                     <button type="button" 
                             @click="submitAsDraft()"
-                            class="w-full sm:w-auto px-7 py-3.5 rounded-full border border-[#18181B] bg-white hover:bg-[#FAF8F5] text-[#18181B] font-bold text-xs tracking-wide transition-all shadow-xs flex items-center justify-center gap-2 cursor-pointer active:scale-[0.99]">
-                        <svg class="w-4 h-4 text-[#78716C]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            style="padding:14px 26px;border-radius:9999px;border:1px solid #1C160E;background-color:#FFFFFF;color:#1C160E;font-size:13px;font-weight:700;letter-spacing:0.02em;cursor:pointer;display:flex;align-items:center;gap:8px;box-shadow:0 1px 3px rgba(0,0,0,0.03);transition:all 0.2s;"
+                            onmouseover="this.style.backgroundColor='#FAF8F5';"
+                            onmouseout="this.style.backgroundColor='#FFFFFF';">
+                        <svg width="15" height="15" style="color:#78716C;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4"/>
                         </svg>
                         <span>Save as Draft</span>
@@ -749,9 +793,11 @@
 
                     <button type="submit" 
                             @click="document.getElementById('formActionInput').value = 'publish'"
-                            class="w-full sm:w-auto px-8 py-3.5 rounded-full bg-[#18181B] hover:bg-[#27272A] active:scale-[0.99] text-white font-bold text-xs tracking-wide shadow-md hover:shadow-xl transition-all flex items-center justify-center gap-2.5 cursor-pointer">
+                            style="padding:14px 32px;border-radius:9999px;border:none;background-color:#1C160E;color:#FAF6F0;font-size:13px;font-weight:700;letter-spacing:0.02em;cursor:pointer;display:flex;align-items:center;gap:10px;box-shadow:0 4px 14px rgba(28,22,14,0.15);transition:all 0.2s;"
+                            onmouseover="this.style.backgroundColor='#2C2419';"
+                            onmouseout="this.style.backgroundColor='#1C160E';">
                         <span>Publish Heritage Piece</span>
-                        <span class="text-sm font-bold">→</span>
+                        <span style="font-size:15px;line-height:1;font-weight:700;">→</span>
                     </button>
                 </div>
             </div>
