@@ -176,164 +176,83 @@
                                 class="absolute right-3 text-gray-400 hover:text-gray-600 transition-colors">
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
                         </button>
+                    </div>
                 </div>
 
-                {{-- 3. Product Category & Target Audience Selection (Direct Tag & Category Grid) --}}
-                <div class="space-y-3">
-                    <div class="flex items-center justify-between">
-                        <label class="text-[11px] font-bold uppercase tracking-wider text-gray-700">
-                            Category & Target Tag <span class="text-[#C0420A]">*</span>
-                        </label>
-                        <span class="text-[9px] font-bold transition-colors" 
-                              :class="selectedCategory && targetGroup ? 'text-emerald-600' : 'text-[#C0420A]'" 
-                              x-text="selectedCategory && selectedCategoryObj ? ('✓ ' + selectedCategoryObj.name + (targetGroup ? ' (' + targetGroup + ')' : '')) : (targetGroup ? '✓ ' + targetGroup + ' selected • Pick category below' : 'Select tag & category')"></span>
-                    </div>
-
-                    {{-- Target Tag Tabs --}}
+                {{-- 3. Product Category & Target Tag Selection (Side-by-Side) --}}
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-1">
+                    {{-- Column 1: Product Category --}}
                     <div class="space-y-1.5">
-                        <style>
-                            .tag-chip {
-                                display: inline-flex;
-                                align-items: center;
-                                gap: 6px;
-                                padding: 6px 13px;
-                                border-radius: 12px;
-                                font-size: 11px;
-                                font-weight: 700;
-                                text-transform: uppercase;
-                                letter-spacing: 0.05em;
-                                cursor: pointer;
-                                transition: all 0.15s ease;
-                                border: 1.5px solid transparent;
-                                user-select: none;
-                            }
-                            .tag-chip-all {
-                                background-color: #f3f4f6;
-                                color: #374151;
-                                border-color: #e5e7eb;
-                            }
-                            .tag-chip-all.active {
-                                background-color: #111827 !important;
-                                color: #ffffff !important;
-                                border-color: #111827 !important;
-                                box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-                            }
-                            .tag-chip-men {
-                                background-color: #eff6ff;
-                                color: #1d4ed8;
-                                border-color: #bfdbfe;
-                            }
-                            .tag-chip-men.active {
-                                background-color: #2563eb !important;
-                                color: #ffffff !important;
-                                border-color: #2563eb !important;
-                                box-shadow: 0 2px 4px rgba(37,99,235,0.25);
-                            }
-                            .tag-chip-women {
-                                background-color: #fdf2f8;
-                                color: #be185d;
-                                border-color: #fbcfe8;
-                            }
-                            .tag-chip-women.active {
-                                background-color: #db2777 !important;
-                                color: #ffffff !important;
-                                border-color: #db2777 !important;
-                                box-shadow: 0 2px 4px rgba(219,39,119,0.25);
-                            }
-                            .tag-chip-kids {
-                                background-color: #fffbeb;
-                                color: #b45309;
-                                border-color: #fde68a;
-                            }
-                            .tag-chip-kids.active {
-                                background-color: #d97706 !important;
-                                color: #ffffff !important;
-                                border-color: #d97706 !important;
-                                box-shadow: 0 2px 4px rgba(217,119,6,0.25);
-                            }
-                        </style>
-
-                        <div class="flex items-center gap-2 overflow-x-auto pb-1 no-scrollbar">
-                            <button type="button" 
-                                    @click="selectTag('Men')"
-                                    :class="categoryFilter === 'Men' ? 'active' : ''"
-                                    class="tag-chip tag-chip-men">
-                                <span>👔 Men</span>
-                                <span style="font-size: 10px; opacity: 0.85;" x-text="'(' + getTagCount('Men') + ')'"></span>
-                            </button>
-
-                            <button type="button" 
-                                    @click="selectTag('Women')"
-                                    :class="categoryFilter === 'Women' ? 'active' : ''"
-                                    class="tag-chip tag-chip-women">
-                                <span>👗 Women</span>
-                                <span style="font-size: 10px; opacity: 0.85;" x-text="'(' + getTagCount('Women') + ')'"></span>
-                            </button>
-
-                            <button type="button" 
-                                    @click="selectTag('Kids')"
-                                    :class="categoryFilter === 'Kids' ? 'active' : ''"
-                                    class="tag-chip tag-chip-kids">
-                                <span>🧸 Kids</span>
-                                <span style="font-size: 10px; opacity: 0.85;" x-text="'(' + getTagCount('Kids') + ')'"></span>
-                            </button>
-
-                            <button type="button" 
-                                    @click="selectTag('All')"
-                                    :class="categoryFilter === 'All' ? 'active' : ''"
-                                    class="tag-chip tag-chip-all">
-                                <span>All</span>
-                                <span style="font-size: 10px; opacity: 0.85;" x-text="'(' + (categoriesList ? categoriesList.length : 0) + ')'"></span>
-                            </button>
-                        </div>
-                    </div>
-
-                    {{-- Direct Categories Grid (No Dropdown Box) --}}
-                    <div class="space-y-2 pt-1">
                         <div class="flex items-center justify-between">
-                            <span class="text-[10px] font-bold uppercase tracking-wider text-gray-500">
-                                Categories <span x-show="categoryFilter !== 'All'" x-text="'for ' + categoryFilter"></span>:
-                            </span>
-                            <span class="text-[10px] text-gray-400 font-medium" x-text="filteredCategories.length + ' options'"></span>
+                            <label for="categorySelect" class="text-[11px] font-bold uppercase tracking-wider text-gray-700">
+                                Product Category <span class="text-[#C0420A]">*</span>
+                            </label>
+                            <span class="text-[9px] font-bold transition-colors"
+                                  :class="selectedCategory ? 'text-emerald-600' : 'text-[#C0420A]'"
+                                  x-text="selectedCategory && selectedCategoryObj ? ('✓ ' + selectedCategoryObj.name) : 'Required'"></span>
                         </div>
 
-                        {{-- Search Filter if many categories --}}
-                        <template x-if="categoriesList.length > 8">
-                            <div class="relative">
-                                <input type="text" 
-                                       x-model="categorySearch" 
-                                       placeholder="Filter categories (e.g. Barong, Gown, Polo)..." 
-                                       class="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-xl text-xs font-semibold outline-none focus:border-[#C0420A] focus:bg-white transition-all pl-8">
-                                <svg class="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+                        <div class="relative">
+                            <select name="CategoryId" 
+                                    id="categorySelect" 
+                                    required
+                                    x-model="selectedCategory"
+                                    @change="onCategorySelectChange($event)"
+                                    class="w-full px-4 py-3 bg-gray-50/70 border border-gray-200 rounded-xl outline-none focus:border-[#C0420A] focus:bg-white focus:ring-2 focus:ring-[#C0420A]/10 transition-all font-semibold text-xs text-gray-800 appearance-none pr-10 cursor-pointer">
+                                <option value="" disabled selected>Select a category...</option>
+                                @foreach($categories as $category)
+                                    @php
+                                        $tags = is_array($category->target_group) ? $category->target_group : (is_string($category->target_group) ? json_decode($category->target_group, true) ?? [] : []);
+                                        $tagStr = !empty($tags) ? implode(', ', $tags) : 'All';
+                                    @endphp
+                                    <option value="{{ $category->id }}" data-tags="{{ implode(',', $tags) }}" data-name="{{ strtolower($category->name) }}">
+                                        {{ $category->name }} ({{ $tagStr }})
+                                    </option>
+                                @endforeach
+                            </select>
+                            <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3.5 text-gray-400">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
                             </div>
-                        </template>
-
-                        {{-- Category Selection Grid --}}
-                        <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2.5 max-h-56 overflow-y-auto p-2 bg-gray-50/70 rounded-2xl border border-gray-200 shadow-2xs">
-                            <template x-for="cat in filteredCategories" :key="cat.id">
-                                <button type="button" 
-                                        @click="selectCategory(cat)"
-                                        :class="selectedCategory === cat.id 
-                                            ? 'bg-white border-2 border-[#C0420A] text-[#C0420A] shadow-xs font-black ring-2 ring-[#C0420A]/10' 
-                                            : 'bg-white border border-gray-200/90 hover:border-gray-300 text-gray-700 hover:text-gray-900 font-bold'"
-                                        class="p-3 rounded-xl flex items-center justify-between text-left transition-all cursor-pointer group hover:scale-[1.01] active:scale-[0.99] text-xs">
-                                    <span class="truncate" x-text="cat.name"></span>
-                                    <span x-show="selectedCategory === cat.id" class="w-4 h-4 rounded-full bg-[#C0420A] text-white flex items-center justify-center text-[9px] shrink-0 font-bold">✓</span>
-                                </button>
-                            </template>
-
-                            <template x-if="filteredCategories.length === 0">
-                                <div class="col-span-full py-6 text-center text-xs text-gray-400">
-                                    No categories found for this tag. Select "All" to browse all categories.
-                                </div>
-                            </template>
                         </div>
                     </div>
 
-                    {{-- Hidden Form Inputs to reliably submit CategoryId & target_group --}}
-                    <input type="hidden" name="CategoryId" id="categorySelect" :value="selectedCategory">
-                    <input type="hidden" name="target_group" id="targetGroupInput" :value="targetGroup">
-                </div>            </div>
+                    {{-- Column 2: Target Tag (Who is this for?) --}}
+                    <div class="space-y-1.5">
+                        <div class="flex items-center justify-between">
+                            <label class="text-[11px] font-bold uppercase tracking-wider text-gray-700">
+                                Who is this for? (Target Tag) <span class="text-[#C0420A]">*</span>
+                            </label>
+                            <span class="text-[9px] font-bold transition-colors"
+                                  :class="targetGroup ? 'text-emerald-600' : 'text-[#C0420A]'"
+                                  x-text="targetGroup ? ('✓ ' + targetGroup) : 'Select tag'"></span>
+                        </div>
+
+                        <div id="target-group-container" class="grid grid-cols-3 gap-2">
+                            @foreach(['Men', 'Women', 'Kids'] as $group)
+                                @php
+                                    $emoji = match($group) {
+                                        'Men' => '👔',
+                                        'Women' => '👗',
+                                        'Kids' => '🧸',
+                                        default => '🏷️'
+                                    };
+                                @endphp
+                                <label class="cursor-pointer">
+                                    <input type="radio" 
+                                           name="target_group" 
+                                           value="{{ $group }}" 
+                                           x-model="targetGroup" 
+                                           @change="onTargetGroupChange('{{ $group }}')" 
+                                           class="hidden peer target-group-radio">
+                                    <div class="w-full py-2.5 px-2 rounded-xl border border-gray-200 bg-gray-50/70 hover:bg-gray-100/70 text-xs font-bold text-gray-600 text-center uppercase tracking-wider flex items-center justify-center gap-1.5 transition-all peer-checked:border-[#C0420A] peer-checked:bg-[#C0420A]/5 peer-checked:text-[#C0420A] peer-checked:font-black peer-checked:ring-2 peer-checked:ring-[#C0420A]/10 shadow-2xs">
+                                        <span>{{ $emoji }}</span>
+                                        <span>{{ $group }}</span>
+                                    </div>
+                                </label>
+                            @endforeach
+                        </div>
+                    </div>
+                </div>
 
                 {{-- 4. Product Variations / Variants Switch & Configurator --}}
                 <div class="pt-1 space-y-3">
@@ -499,8 +418,7 @@
                 </div>
             </div>
 
-            {{-- Hidden Inputs for Target Group & Fabric Type (Configured via Step 1 Tag Selection) --}}
-            <input type="hidden" name="target_group" :value="targetGroup || 'Men'">
+            {{-- Hidden Input for Fabric Type --}}
             <input type="hidden" name="fabric_type" :value="fabricType || '100% Piña'">
 
             {{-- 1. Heritage Sizing & Inventory Matrix --}}
@@ -929,64 +847,31 @@ function addProductManager() {
 
         // Real-time categories state
         categoriesList: parsedCats,
-        categoryFilter: 'All',
-        categorySearch: '',
-        isCategoryDropdownOpen: false,
 
         init() {
             this.calculateFillRate();
         },
 
-        getTagCount(tag) {
-            if (!Array.isArray(this.categoriesList)) return 0;
-            return this.categoriesList.filter(c => {
-                if (!c || !Array.isArray(c.target_group)) return false;
-                return c.target_group.includes(tag);
-            }).length;
+        get selectedCategoryObj() {
+            if (!Array.isArray(this.categoriesList)) return null;
+            return this.categoriesList.find(c => c && String(c.id) === String(this.selectedCategory)) || null;
         },
 
-        selectTag(tag) {
-            this.categoryFilter = tag;
-            if (tag !== 'All') {
-                this.targetGroup = tag;
-            }
-            // If current category does not belong to the selected tag, unselect it
-            if (tag !== 'All' && this.selectedCategory) {
-                const currentCat = this.categoriesList.find(c => c.id === this.selectedCategory);
-                if (currentCat && currentCat.target_group && currentCat.target_group.length > 0) {
-                    if (!currentCat.target_group.includes(tag)) {
-                        this.selectedCategory = '';
-                    }
+        onCategorySelectChange(event) {
+            const catId = event ? event.target.value : this.selectedCategory;
+            this.selectedCategory = catId;
+
+            const selectEl = document.getElementById('categorySelect');
+            if (selectEl) selectEl.classList.remove('border-red-500');
+
+            // Intelligently auto-sync target group if category has specific demographic tags
+            const cat = Array.isArray(this.categoriesList) ? this.categoriesList.find(c => c && String(c.id) === String(catId)) : null;
+            if (cat && Array.isArray(cat.target_group) && cat.target_group.length > 0) {
+                if (!this.targetGroup || !cat.target_group.includes(this.targetGroup)) {
+                    this.targetGroup = cat.target_group[0];
                 }
             }
             this.calculateFillRate();
-        },
-
-        filterByTag(tag) {
-            this.selectTag(tag);
-        },
-
-        get filteredCategories() {
-            if (!Array.isArray(this.categoriesList)) return [];
-            let list = this.categoriesList;
-            if (this.categoryFilter !== 'All') {
-                list = list.filter(c => {
-                    if (!c) return false;
-                    if (Array.isArray(c.target_group)) return c.target_group.includes(this.categoryFilter);
-                    if (typeof c.target_group === 'string') return c.target_group === this.categoryFilter;
-                    return false;
-                });
-            }
-            if (this.categorySearch && this.categorySearch.trim() !== '') {
-                const q = this.categorySearch.toLowerCase().trim();
-                list = list.filter(c => c && c.name && c.name.toLowerCase().includes(q));
-            }
-            return list;
-        },
-
-        get selectedCategoryObj() {
-            if (!Array.isArray(this.categoriesList)) return null;
-            return this.categoriesList.find(c => c && c.id === this.selectedCategory) || null;
         },
 
         selectCategory(cat) {
@@ -994,18 +879,17 @@ function addProductManager() {
             this.selectedCategory = cat.id;
             let tags = Array.isArray(cat.target_group) ? cat.target_group : [];
             if (tags.length > 0) {
-                if (!this.targetGroup || this.targetGroup === 'All' || !tags.includes(this.targetGroup)) {
+                if (!this.targetGroup || !tags.includes(this.targetGroup)) {
                     this.targetGroup = tags[0];
-                    this.categoryFilter = tags[0];
                 }
-            } else if (!this.targetGroup || this.targetGroup === 'All') {
-                this.targetGroup = 'Men';
             }
             this.calculateFillRate();
         },
 
         onTargetGroupChange(group) {
             this.targetGroup = group;
+            const tgContainer = document.getElementById('target-group-container');
+            if (tgContainer) tgContainer.classList.remove('border-red-500', 'p-1', 'border', 'rounded-xl');
             this.calculateFillRate();
         },
 
@@ -1041,12 +925,18 @@ function addProductManager() {
 
             if (!this.selectedCategory || this.selectedCategory === '') {
                 triggerAppModal('Category Required', 'Please select a product category from the dropdown.', 'warning');
-                this.isCategoryDropdownOpen = true;
+                const catSelect = document.getElementById('categorySelect');
+                if (catSelect) {
+                    catSelect.classList.add('border-red-500');
+                    catSelect.focus();
+                }
                 return;
             }
 
             if (!this.targetGroup || !['Men', 'Women', 'Kids'].includes(this.targetGroup)) {
-                triggerAppModal('Target Tag Required', 'Please select a target tag (Men, Women, or Kids).', 'warning');
+                triggerAppModal('Target Tag Required', 'Please select who this product is for (Men, Women, or Kids).', 'warning');
+                const tgContainer = document.getElementById('target-group-container');
+                if (tgContainer) tgContainer.classList.add('border-red-500', 'p-1', 'border', 'rounded-xl');
                 return;
             }
 
@@ -1444,16 +1334,19 @@ function validateProductForm(e, isEdit = false) {
     }
 
     // 4. Product Category & Target Group
-    const categoryInput = document.querySelector('input[name="CategoryId"]');
-    const categoryVal = categoryInput ? categoryInput.value : '';
+    const categorySelect = document.getElementById('categorySelect') || document.querySelector('select[name="CategoryId"], input[name="CategoryId"]');
+    const categoryVal = categorySelect ? categorySelect.value : '';
     if (!categoryVal) {
         errors.push('Please select a Product Category.');
+        if (categorySelect) categorySelect.classList.add('border-red-500');
     }
 
-    const targetGroupInput = document.querySelector('input[name="target_group"]');
-    const targetGroupVal = targetGroupInput ? targetGroupInput.value : '';
+    const targetGroupChecked = document.querySelector('input[name="target_group"]:checked');
+    const targetGroupContainer = document.getElementById('target-group-container');
+    const targetGroupVal = targetGroupChecked ? targetGroupChecked.value : '';
     if (!targetGroupVal || !['Men', 'Women', 'Kids'].includes(targetGroupVal)) {
         errors.push('Please specify who this product is for (Men, Women, or Kids).');
+        if (targetGroupContainer) targetGroupContainer.classList.add('border-red-500', 'p-1', 'border', 'rounded-xl');
     }
 
     // 5. Product Imagery

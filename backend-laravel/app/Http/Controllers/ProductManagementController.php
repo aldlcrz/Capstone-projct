@@ -217,10 +217,30 @@ class ProductManagementController extends Controller
             $product->is_on_sale          = $request->boolean('is_on_sale');
             $product->discount_percentage = $product->is_on_sale ? ($request->discount_percentage ?? 0) : null;
 
+            // Auto-heal missing variations columns if migration was not run yet
+            try {
+                if (\Illuminate\Support\Facades\Schema::hasTable('products')) {
+                    if (!\Illuminate\Support\Facades\Schema::hasColumn('products', 'has_variants')) {
+                        \Illuminate\Support\Facades\Schema::table('products', function (\Illuminate\Database\Schema\Blueprint $table) {
+                            $table->boolean('has_variants')->default(false)->after('target_group');
+                        });
+                    }
+                    if (!\Illuminate\Support\Facades\Schema::hasColumn('products', 'variations')) {
+                        \Illuminate\Support\Facades\Schema::table('products', function (\Illuminate\Database\Schema\Blueprint $table) {
+                            $table->json('variations')->nullable()->after('has_variants');
+                        });
+                    }
+                }
+            } catch (\Throwable $e) {
+                \Illuminate\Support\Facades\Log::warning('Could not auto-add variation columns: ' . $e->getMessage());
+            }
+
             // Product Variations / Variants (Variant Name & Product Image)
-            $product->has_variants = $request->boolean('has_variants');
+            if (\Illuminate\Support\Facades\Schema::hasColumn('products', 'has_variants')) {
+                $product->has_variants = $request->boolean('has_variants');
+            }
             $savedVariations = [];
-            if ($product->has_variants) {
+            if ($request->boolean('has_variants')) {
                 $variantNames = $request->input('variant_names', []);
                 $variantImages = $request->file('variant_images', []);
 
@@ -247,8 +267,10 @@ class ProductManagementController extends Controller
                         ];
                     }
                 }
-                $product->variations = !empty($savedVariations) ? $savedVariations : null;
-            } else {
+                if (\Illuminate\Support\Facades\Schema::hasColumn('products', 'variations')) {
+                    $product->variations = !empty($savedVariations) ? $savedVariations : null;
+                }
+            } elseif (\Illuminate\Support\Facades\Schema::hasColumn('products', 'variations')) {
                 $product->variations = null;
             }
 
