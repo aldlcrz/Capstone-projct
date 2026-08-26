@@ -29,7 +29,7 @@ class User extends Authenticatable
         'hasPasswordSet', 'loginAttempts', 'loginLockedUntil', 'bio', 'username',
         'gender', 'birthday', 'resetPasswordToken', 'resetPasswordExpires',
         'shopName', 'shopDescription', 'cancellation_policy', 'refund_policy', 'businessPermit', 'cart',
-        'isPremium', 'premiumEndsAt',
+        'isPremium', 'premiumEndsAt', 'is_onboarded',
     ];
 
 
@@ -107,7 +107,21 @@ class User extends Authenticatable
             'isPremium'         => 'boolean',
             'premiumEndsAt'     => 'datetime',
             'size_guides'       => 'array',
+            'is_onboarded'      => 'boolean',
         ];
+    }
+
+    /**
+     * Determine if user has completed or skipped initial profile onboarding.
+     */
+    public function isOnboarded(): bool
+    {
+        try {
+            if (\Illuminate\Support\Facades\Schema::hasColumn('users', 'is_onboarded')) {
+                return (bool) $this->is_onboarded;
+            }
+        } catch (\Throwable $e) {}
+        return true;
     }
 
     // Relationships

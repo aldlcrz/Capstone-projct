@@ -70,13 +70,23 @@ Route::middleware('guest')->group(function () {
 Route::post('/submit-commission-payment', [WebAuthController::class, 'submitCommissionPayment'])->name('commission.submit-payment');
 
 Route::middleware('auth')->group(function () {
-    // Profile
+    // Session Heartbeat for Single-Device Login Detection
+    Route::get('/auth/session-heartbeat', [WebAuthController::class, 'sessionHeartbeat'])->name('auth.session-heartbeat');
+
+    // New Account Profile Setup Onboarding
+    Route::get('/onboarding/profile', [WebAuthController::class, 'showOnboarding'])->name('onboarding.profile');
+    Route::post('/onboarding/profile', [WebAuthController::class, 'saveOnboarding'])->name('onboarding.save');
+    Route::post('/onboarding/profile/skip', [WebAuthController::class, 'skipOnboarding'])->name('onboarding.skip');
+
+    // Profile & Password Security
     Route::get('/profile', [WebAuthController::class, 'profile'])->name('profile');
     Route::get('/customer/profile', fn() => redirect()->route('profile'));
     Route::post('/profile', [WebAuthController::class, 'updateProfile'])->name('profile.update');
     Route::put('/profile', [WebAuthController::class, 'updateProfile']);
     Route::get('/profile/addresses', [WebAuthController::class, 'addresses'])->name('profile.addresses');
     Route::get('/profile/change-password', [WebAuthController::class, 'changePasswordPage'])->name('profile.change-password');
+    Route::post('/profile/change-password/send-code', [WebAuthController::class, 'sendPasswordChangeCode'])->name('profile.change-password.send-code');
+    Route::post('/profile/change-password/verify-code', [WebAuthController::class, 'verifyPasswordChangeCode'])->name('profile.change-password.verify-code');
     Route::post('/profile/change-password', [WebAuthController::class, 'changePassword'])->name('profile.change-password.submit');
 
     // Cart

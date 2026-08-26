@@ -552,6 +552,41 @@
                 }
             });
         });
+
+        @auth
+        (function() {
+            let isChecking = false;
+            async function verifyActiveSession() {
+                if (isChecking) return;
+                isChecking = true;
+                try {
+                    const res = await fetch('{{ route("auth.session-heartbeat") }}', {
+                        headers: {
+                            'X-Requested-With': 'XMLHttpRequest',
+                            'Accept': 'application/json'
+                        }
+                    });
+                    if (res.status === 401) {
+                        const data = await res.json().catch(() => ({}));
+                        if (data.status === 'session_terminated') {
+                            window.location.href = '{{ route("login") }}';
+                        }
+                    }
+                } catch(e) {}
+                finally {
+                    isChecking = false;
+                }
+            }
+
+            document.addEventListener('visibilitychange', function() {
+                if (document.visibilityState === 'visible') {
+                    verifyActiveSession();
+                }
+            });
+            window.addEventListener('focus', verifyActiveSession);
+            setInterval(verifyActiveSession, 45000);
+        })();
+        @endauth
     </script>
 
     <x-confirmation-modal />

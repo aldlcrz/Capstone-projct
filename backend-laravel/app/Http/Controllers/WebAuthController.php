@@ -4,6 +4,10 @@ namespace App\Http\Controllers;
 
 use App\Models\User;
 use App\Models\CommissionRecord;
+use App\Models\EmailVerification;
+use App\Mail\PasswordChangeVerificationMail;
+use App\Services\EmailNotificationService;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
@@ -105,6 +109,11 @@ class WebAuthController extends Controller
 
             $request->session()->regenerate();
 
+            // Single-device login: increment user's sessionVersion and bind to this session
+            $user->sessionVersion = ((int) ($user->sessionVersion ?? 1)) + 1;
+            $user->save();
+            session(['login_session_version' => $user->sessionVersion]);
+
             // Restore cart: merge saved DB cart with any current guest session cart
             $guestCart    = session()->get('cart', []);
             $savedCartRaw = $user->cart;
@@ -131,6 +140,11 @@ class WebAuthController extends Controller
             if ($user->role === 'superadmin') return redirect()->route('superadmin.dashboard');
             if ($user->role === 'admin') return redirect()->route('admin.dashboard');
             if ($user->role === 'seller') return redirect()->route('seller.dashboard');
+
+            // Newly created customer accounts prompt for profile setup
+            if ($user->role === 'customer' && !$user->isOnboarded()) {
+                return redirect()->route('onboarding.profile');
+            }
 
             // Restore guest customer pending context (Add to cart / Buy now / Wishlist / Checkout restoration)
             $contextRedirect = $this->restorePendingContext($user, $request);
@@ -383,6 +397,14 @@ class WebAuthController extends Controller
             if ($user) {
                 \App\Services\EmailNotificationService::consumeCode($email, 'registration');
                 Auth::login($user);
+                $request->session()->regenerate();
+                $user->sessionVersion = ((int) ($user->sessionVersion ?? 1)) + 1;
+                $user->save();
+                session(['login_session_version' => $user->sessionVersion]);
+
+                if ($user->role === 'customer' && !$user->isOnboarded()) {
+                    return redirect()->route('onboarding.profile');
+                }
 
                 $contextRedirect = $this->restorePendingContext($user, $request);
                 if ($contextRedirect) return $contextRedirect;
@@ -543,10 +565,17 @@ class WebAuthController extends Controller
 
             Auth::login($user);
             $request->session()->regenerate();
+            $user->sessionVersion = ((int) ($user->sessionVersion ?? 1)) + 1;
+            $user->save();
+            session(['login_session_version' => $user->sessionVersion]);
 
             if ($user->role === 'superadmin') return redirect()->route('superadmin.dashboard');
             if ($user->role === 'admin') return redirect()->route('admin.dashboard');
             if ($user->role === 'seller') return redirect()->route('seller.dashboard');
+
+            if ($user->role === 'customer' && !$user->isOnboarded()) {
+                return redirect()->route('onboarding.profile');
+            }
 
             $contextRedirect = $this->restorePendingContext($user, $request);
             if ($contextRedirect) return $contextRedirect;
@@ -823,6 +852,103 @@ class WebAuthController extends Controller
         return back()->with('payment_submitted', 'Your payment proof and reference number have been submitted successfully! Super Admin will verify and unfreeze your account soon.');
     }
 
+    public function sessionHeartbeat(Request $request)
+    {
+        if (!Auth::check()) {
+            return response()->json(['status' => 'guest'], 200);
+        }
+        return response()->json(['status' => 'active'], 200);
+    }
+
+    public function showOnboarding()
+    {
+        /** @var User $user */
+        $user = Auth::user();
+        if (!$user) {
+            return redirect()->route('login');
+        }
+
+        if ($user->isOnboarded()) {
+            return redirect('/');
+        }
+
+        return view('auth.onboarding');
+    }
+
+    public function saveOnboarding(Request $request)
+    {
+        /** @var User $user */
+        $user = Auth::user();
+        if (!$user) {
+            return redirect()->route('login');
+        }
+
+        $request->validate([
+            'name'         => 'required|string|max:255',
+            'username'     => 'required|string|min:3|max:50|unique:users,username,' . $user->id,
+            'mobileNumber' => ['nullable', 'string', 'regex:/^(09|\+639|9)\d{9}$/'],
+            'postalCode'   => ['nullable', 'string', 'regex:/^\d{4}$/'],
+        ], [
+            'username.unique'    => 'This username is already in use by another member.',
+            'mobileNumber.regex' => 'Please enter a valid Philippine mobile number (e.g. 09171234567).',
+            'postalCode.regex'   => 'Postal code should contain exactly 4 numeric digits.',
+        ]);
+
+        $cleanMobile = $request->mobileNumber ? trim($request->mobileNumber) : null;
+        if ($cleanMobile && str_starts_with($cleanMobile, '+63')) {
+            $cleanMobile = '0' . substr($cleanMobile, 3);
+        } elseif ($cleanMobile && str_starts_with($cleanMobile, '9') && strlen($cleanMobile) === 10) {
+            $cleanMobile = '0' . $cleanMobile;
+        }
+
+        $user->name = trim($request->name);
+        $user->username = trim($request->username);
+        if ($cleanMobile) {
+            $user->mobileNumber = $cleanMobile;
+        }
+
+        if (\Illuminate\Support\Facades\Schema::hasColumn('users', 'is_onboarded')) {
+            $user->is_onboarded = true;
+        }
+        $user->save();
+
+        // If address fields provided, create default Address record
+        if ($request->filled('city') || $request->filled('province') || $request->filled('houseNo')) {
+            try {
+                \App\Models\Address::create([
+                    'userId'        => $user->id,
+                    'recipientName' => $user->name,
+                    'phone'         => $user->mobileNumber ?: '09000000000',
+                    'houseNo'       => trim($request->houseNo ?? 'Unit'),
+                    'street'        => trim($request->street ?? ''),
+                    'barangay'      => trim($request->barangay ?? ''),
+                    'city'          => trim($request->city ?? 'Lumban'),
+                    'province'      => trim($request->province ?? 'Laguna'),
+                    'postalCode'    => trim($request->postalCode ?? '4014'),
+                    'isDefault'     => true,
+                ]);
+            } catch (\Throwable $e) {
+                Log::warning('Could not create default address during onboarding: ' . $e->getMessage());
+            }
+        }
+
+        return redirect('/')->with('success', 'Welcome to LumBarong, ' . $user->name . '! Your profile setup is complete.');
+    }
+
+    public function skipOnboarding()
+    {
+        /** @var User $user */
+        $user = Auth::user();
+        if ($user) {
+            if (\Illuminate\Support\Facades\Schema::hasColumn('users', 'is_onboarded')) {
+                $user->is_onboarded = true;
+                $user->save();
+            }
+        }
+
+        return redirect('/')->with('info', 'You can complete your profile and address anytime in your account settings.');
+    }
+
     public function addresses()
     {
         $user = Auth::user();
@@ -831,27 +957,156 @@ class WebAuthController extends Controller
 
     public function changePasswordPage()
     {
-        return redirect()->route('profile', ['change_password' => 1]);
+        $user = Auth::user();
+        return view('profile.change-password', compact('user'));
+    }
+
+    public function sendPasswordChangeCode(Request $request)
+    {
+        /** @var User $user */
+        $user = Auth::user();
+        if (!$user) {
+            return response()->json(['status' => 'unauthenticated', 'message' => 'Please log in to proceed.'], 401);
+        }
+
+        // Validate current password if provided
+        if ($user->hasPasswordSet && $request->filled('current_password')) {
+            if (!Hash::check($request->current_password, $user->password)) {
+                return response()->json([
+                    'status'  => 'error',
+                    'message' => 'The current password is incorrect.'
+                ], 422);
+            }
+        }
+
+        // 60-second cooldown check
+        $existing = EmailVerification::where('email', strtolower($user->email))
+            ->where('type', 'password_change')
+            ->first();
+
+        if ($existing && $existing->last_sent_at) {
+            $diff = $existing->last_sent_at->diffInSeconds(now());
+            if ($diff < 60) {
+                $remaining = 60 - $diff;
+                return response()->json([
+                    'status'    => 'cooldown',
+                    'message'   => "Please wait {$remaining} seconds before requesting a new code.",
+                    'remaining' => $remaining,
+                ], 429);
+            }
+        }
+
+        // Generate 6-digit code
+        $verification = EmailNotificationService::createVerificationCode($user->email, 'password_change');
+
+        // Send branded mailable
+        $mailable = new PasswordChangeVerificationMail($user->name, $verification->code);
+        $sent = EmailNotificationService::sendNotification($user->email, $mailable, 'password_change', $user->id, 'User', $user->id);
+
+        return response()->json([
+            'status'     => 'code_sent',
+            'message'    => 'A 6-digit verification code has been sent to your registered Gmail address.',
+            'expires_in' => 600,
+            'cooldown'   => 60,
+        ]);
+    }
+
+    public function verifyPasswordChangeCode(Request $request)
+    {
+        /** @var User $user */
+        $user = Auth::user();
+        if (!$user) {
+            return response()->json(['status' => 'unauthenticated', 'message' => 'Please log in to proceed.'], 401);
+        }
+
+        $code = trim($request->input('code', ''));
+        if (strlen($code) !== 6) {
+            return response()->json([
+                'status'  => 'incorrect_code',
+                'message' => 'Please enter the complete 6-digit verification code.'
+            ], 422);
+        }
+
+        $record = EmailVerification::where('email', strtolower($user->email))
+            ->where('type', 'password_change')
+            ->first();
+
+        if (!$record || $record->isExpired()) {
+            return response()->json([
+                'status'  => 'expired_code',
+                'message' => 'This verification code has expired. Please click Resend Code to receive a fresh code.'
+            ], 422);
+        }
+
+        $isValid = EmailNotificationService::verifyCode($user->email, $code, 'password_change');
+        if (!$isValid) {
+            $rem = max(0, 5 - ((int) $record->failed_attempts));
+            return response()->json([
+                'status'  => 'incorrect_code',
+                'message' => "Incorrect verification code. Please check your Gmail or request a new code. ({$rem} attempts remaining)"
+            ], 422);
+        }
+
+        // Mark code as verified in session
+        session(['password_change_verified_code' => $code, 'password_change_verified_at' => now()->timestamp]);
+
+        return response()->json([
+            'status'  => 'verified',
+            'message' => 'Security code verified! You may now create and confirm your new password.'
+        ]);
     }
 
     public function changePassword(Request $request)
     {
         /** @var User $user */
         $user = Auth::user();
+        if (!$user) {
+            return redirect()->route('login');
+        }
 
         $request->validate([
-            'current_password' => 'required',
+            'current_password' => $user->hasPasswordSet ? 'required' : 'nullable',
+            'code'             => 'required|string|size:6',
             'password'         => 'required|string|min:8|confirmed',
+        ], [
+            'code.required'      => 'Email security verification code is required to change password.',
+            'code.size'          => 'The verification code must be exactly 6 digits.',
+            'password.min'       => 'New password must be at least 8 characters.',
+            'password.confirmed' => 'New password confirmation does not match.',
         ]);
 
-        if (!Hash::check($request->current_password, $user->password)) {
+        if ($user->hasPasswordSet && !Hash::check($request->current_password, $user->password)) {
             return back()->withErrors(['current_password' => 'The current password is incorrect.'])->withInput();
         }
 
-        $user->password = Hash::make($request->password);
-        $user->save();
+        // Verify the 6-digit code
+        $isValid = EmailNotificationService::verifyCode($user->email, $request->code, 'password_change');
+        if (!$isValid) {
+            $record = EmailVerification::where('email', strtolower($user->email))
+                ->where('type', 'password_change')
+                ->first();
 
-        return redirect()->route('profile')->with('success', 'Password changed successfully!');
+            if (!$record || $record->isExpired()) {
+                return back()->withErrors(['code' => 'The verification code has expired. Please click Resend Code.'])->withInput();
+            }
+            return back()->withErrors(['code' => 'Incorrect verification code. Please check your Gmail.'])->withInput();
+        }
+
+        // Consume code
+        EmailNotificationService::consumeCode($user->email, 'password_change');
+        session()->forget(['password_change_verified_code', 'password_change_verified_at']);
+
+        // Update password
+        $user->password = Hash::make($request->password);
+        $user->hasPasswordSet = true;
+
+        // Security: increment sessionVersion so all other device sessions are automatically terminated!
+        $user->sessionVersion = ((int) ($user->sessionVersion ?? 1)) + 1;
+        $user->save();
+        // Keep THIS device's session active with the new version
+        session(['login_session_version' => $user->sessionVersion]);
+
+        return redirect()->route('profile.change-password')->with('success', 'Password changed successfully! For your security, other active device sessions have been invalidated.');
     }
 
     /**

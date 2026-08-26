@@ -25,13 +25,16 @@ return Application::configure(basePath: dirname(__DIR__))
             'seller'       => \App\Http\Middleware\SellerMiddleware::class,
             'superadmin'   => \App\Http\Middleware\SuperAdminMiddleware::class,
             'prevent.back' => \App\Http\Middleware\PreventBackHistory::class,
-            'check.status' => \App\Http\Middleware\CheckAccountStatus::class,
+            'check.status'  => \App\Http\Middleware\CheckAccountStatus::class,
+            'single.device' => \App\Http\Middleware\SingleDeviceSession::class,
         ]);
 
+        $middleware->appendToGroup('web', \App\Http\Middleware\SingleDeviceSession::class);
         $middleware->appendToGroup('web', \App\Http\Middleware\CheckAccountStatus::class);
         $middleware->appendToGroup('web', \App\Http\Middleware\CheckMaintenance::class);
         $middleware->appendToGroup('web', \App\Http\Middleware\PreventBackHistory::class);
         $middleware->appendToGroup('web', \App\Http\Middleware\SyncUserCart::class);
+        $middleware->appendToGroup('api', \App\Http\Middleware\SingleDeviceSession::class);
         $middleware->appendToGroup('api', \App\Http\Middleware\CheckAccountStatus::class);
         $middleware->appendToGroup('api', \App\Http\Middleware\CheckMaintenance::class);
     })
