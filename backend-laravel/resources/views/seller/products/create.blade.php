@@ -3,22 +3,33 @@
 @section('content')
 <div class="max-w-4xl mx-auto pb-36 sm:pb-28 lg:pb-16 px-3 sm:px-6" x-data="addProductManager()">
     {{-- Top Header & Navigation --}}
-    <div class="mb-4 sm:mb-8 flex items-center justify-between">
+    <div class="mb-6 sm:mb-8 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-            <a href="{{ route('seller.products.index') }}" class="inline-flex items-center gap-2 text-[10px] font-bold text-gray-400 uppercase tracking-widest hover:text-[#C0420A] transition-colors mb-1.5 sm:mb-2">
+            <a href="{{ route('seller.products.index') }}" class="inline-flex items-center gap-2 text-[11px] font-bold text-[#78716C] uppercase tracking-widest hover:text-[#18181B] transition-colors mb-2">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
                 Back to catalogue
             </a>
-            <h1 class="font-serif text-xl sm:text-3xl font-bold text-black uppercase tracking-tight">
-                New <span class="text-[#C0420A] italic lowercase">heritage piece</span>
-            </h1>
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-full bg-[#FEF9EC] border border-[#F3E8CE] flex items-center justify-center text-[#9A6B1F] shrink-0 shadow-2xs">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/>
+                    </svg>
+                </div>
+                <div>
+                    <h1 class="font-serif text-2xl sm:text-3xl font-bold text-[#18181B] tracking-tight">
+                        New Heritage Piece
+                    </h1>
+                    <p class="text-xs text-[#78716C] font-medium mt-0.5">List a new handcrafted Lumban creation for discerning buyers</p>
+                </div>
+            </div>
         </div>
 
-        {{-- Step Indicator Badge --}}
+        {{-- Step Indicator Badge (Artisan Pill Style) --}}
         <div class="flex items-center gap-2">
-            <span class="text-[10px] font-black uppercase tracking-widest px-3 py-1 rounded-full border transition-all"
-                  :class="step === 1 ? 'bg-amber-50 text-amber-700 border-amber-200' : 'bg-emerald-50 text-emerald-700 border-emerald-200'">
-                <span x-text="step === 1 ? 'Step 1: Image & Core Info' : 'Step 2: Specifications'"></span>
+            <span class="text-xs font-bold tracking-wide px-4 py-1.5 rounded-full border transition-all flex items-center gap-2 shadow-2xs"
+                  :class="step === 1 ? 'bg-[#FEF9EC] text-[#9A6B1F] border-[#F3E8CE]' : 'bg-[#18181B] text-white border-[#18181B]'">
+                <span class="w-2 h-2 rounded-full" :class="step === 1 ? 'bg-[#C5A059]' : 'bg-emerald-400'"></span>
+                <span x-text="step === 1 ? 'Step 1: Media & Core Info' : 'Step 2: Specifications'"></span>
             </span>
         </div>
     </div>
@@ -65,36 +76,36 @@
         <input type="hidden" name="action" id="formActionInput" value="publish">
 
         {{-- ========================================================================= --}}
-        {{-- PHASE 1: IMAGE FIRST & CORE IDENTIFICATION (Always at Top)               --}}
+        {{-- PHASE 1: IMAGE FIRST & CORE IDENTIFICATION (Heritage Artisan Theme)       --}}
         {{-- ========================================================================= --}}
-        <div class="bg-white p-5 sm:p-7 rounded-2xl border border-gray-100 shadow-sm space-y-6">
+        <div class="bg-white p-6 sm:p-8 rounded-3xl border border-[#EFE8DA] shadow-[0_12px_40px_-8px_rgba(0,0,0,0.06),0_4px_12px_-2px_rgba(0,0,0,0.03)] space-y-6">
             
             {{-- 1. Product Media & Variants (Unified: Variant 1 is Cover Photo & Product Name) --}}
             <div class="space-y-4">
-                <div class="flex items-center justify-between">
+                <div class="flex items-center justify-between pb-1">
                     <div class="space-y-0.5">
-                        <label class="text-[11px] font-bold uppercase tracking-wider text-gray-700 flex items-center gap-2">
+                        <h2 class="font-serif text-lg font-bold text-[#18181B] flex items-center gap-2">
                             <span>1. Product Media & Variants</span>
-                            <span class="text-[#C0420A]">*</span>
-                        </label>
-                        <p class="text-[11px] text-gray-500 font-medium">
+                            <span class="text-[#C5A059]">*</span>
+                        </h2>
+                        <p class="text-xs text-[#78716C]">
                             Variant 1 represents your main product style, cover photo, and product name.
                         </p>
                     </div>
-                    <span class="text-[9px] font-bold text-gray-400 uppercase" x-text="variants.length + ' style(s)'"></span>
+                    <span class="text-[11px] font-bold text-[#9A6B1F] bg-[#FEF9EC] border border-[#F3E8CE] px-3 py-1 rounded-full shadow-2xs" x-text="variants.length + ' style(s)'"></span>
                 </div>
 
                 {{-- Variant 1: Main Product Style & Cover Photo (Unified with Product Name) --}}
-                <div class="p-5 sm:p-6 bg-orange-50/20 border-2 border-dashed border-[#C0420A]/40 rounded-2xl space-y-4 transition-all shadow-2xs hover:border-[#C0420A]" id="variant_card_0">
-                    <div class="flex items-center justify-between pb-2 border-b border-orange-200/50">
+                <div class="p-5 sm:p-6 bg-[#FFFDF9] border border-[#EFE8DA] rounded-2xl space-y-4 transition-all shadow-2xs hover:border-[#C5A059]" id="variant_card_0">
+                    <div class="flex items-center justify-between pb-2 border-b border-[#EFE8DA]">
                         <div class="flex items-center gap-2">
-                            <span class="w-2.5 h-2.5 rounded-full bg-[#C0420A]"></span>
-                            <span class="text-xs font-black uppercase tracking-wider text-gray-900">
+                            <span class="w-2.5 h-2.5 rounded-full bg-[#C5A059]"></span>
+                            <span class="font-serif text-sm font-bold text-[#18181B] tracking-tight">
                                 Variant 1 (Main Style / Cover)
                             </span>
-                            <span class="px-2 py-0.5 rounded-md bg-[#C0420A]/10 text-[#C0420A] text-[9px] font-black uppercase tracking-wider">Cover Image</span>
+                            <span class="px-2.5 py-0.5 rounded-full bg-[#FEF9EC] border border-[#F3E8CE] text-[#9A6B1F] text-[10px] font-bold uppercase tracking-wider">Cover Image</span>
                         </div>
-                        <span class="text-[10px] text-gray-400 font-medium">Primary Product Listing</span>
+                        <span class="text-xs text-[#78716C] font-medium hidden sm:inline">Primary Product Listing</span>
                     </div>
 
                     {{-- Hidden inputs for Variant 1 mapping --}}
@@ -104,9 +115,9 @@
                     {{-- 1. Product Name (English) --}}
                     <div class="space-y-1.5">
                         <div class="flex items-center justify-between">
-                            <label class="text-[11px] font-bold uppercase tracking-wider text-gray-700">
-                                Product Name (English) <span class="text-[#C0420A]">*</span>
-                                <span class="text-[10px] text-gray-400 font-normal" x-text="'(' + (productName ? productName.length : 0) + '/100)'"></span>
+                            <label class="text-xs font-bold uppercase tracking-wider text-[#18181B]">
+                                Product Name (English) <span class="text-[#C5A059]">*</span>
+                                <span class="text-[10px] text-[#A8A29E] font-normal" x-text="'(' + (productName ? productName.length : 0) + '/100)'"></span>
                             </label>
                         </div>
 
@@ -119,13 +130,13 @@
                                    x-model="productName"
                                    @input="calculateFillRate()"
                                    placeholder="e.g. Hand-Woven Piña Barong Tagalog with Calado Embroidery"
-                                   class="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl outline-none focus:border-[#C0420A] focus:ring-2 focus:ring-[#C0420A]/10 transition-all font-semibold text-sm text-gray-800 placeholder:text-gray-400 placeholder:font-normal pr-10 shadow-2xs">
+                                   class="w-full px-4 py-3.5 bg-white border border-[#E5DECE] rounded-xl outline-none focus:border-[#C5A059] focus:ring-2 focus:ring-[#C5A059]/15 transition-all font-semibold text-sm text-[#18181B] placeholder:text-[#A8A29E] placeholder:font-normal pr-10 shadow-2xs">
                             
                             {{-- Clear Button (X) --}}
                             <button type="button" 
                                     x-show="productName && productName.length > 0"
                                     @click="productName = ''; calculateFillRate();"
-                                    class="absolute right-3 text-gray-400 hover:text-gray-600 transition-colors cursor-pointer">
+                                    class="absolute right-3 text-[#A8A29E] hover:text-[#18181B] transition-colors cursor-pointer">
                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
                             </button>
                         </div>
@@ -133,22 +144,22 @@
 
                     {{-- 2. Cover Photo Upload --}}
                     <div class="space-y-1.5 pt-1">
-                        <label class="text-[11px] font-bold uppercase tracking-wider text-gray-700 block">
-                            Variant 1 Photo (Cover Image) <span class="text-[#C0420A]">*</span>
+                        <label class="text-xs font-bold uppercase tracking-wider text-[#18181B] block">
+                            Variant 1 Photo (Cover Image) <span class="text-[#C5A059]">*</span>
                         </label>
-                        <div class="flex flex-col sm:flex-row items-start sm:items-center gap-4">
+                        <div class="flex flex-col sm:flex-row items-start sm:items-center gap-4 sm:gap-5">
                             <div class="relative shrink-0" style="width: 140px; height: 140px;">
                                 <label for="variant_file_0"
                                        id="variant_upload_box_0"
                                        style="width: 140px; height: 140px;"
-                                       class="rounded-2xl border-2 border-dashed border-gray-300 hover:border-[#C0420A] bg-white hover:bg-orange-50/40 flex flex-col items-center justify-center cursor-pointer overflow-hidden transition-all relative group/img shadow-2xs select-none">
+                                       class="rounded-2xl border-2 border-dashed border-[#E5DECE] hover:border-[#C5A059] bg-[#FAF8F5] hover:bg-white flex flex-col items-center justify-center cursor-pointer overflow-hidden transition-all relative group/img shadow-2xs select-none">
                                     
                                     <template x-if="variants[0].imagePreview">
                                         <div class="relative w-full h-full">
                                             <img :src="variants[0].imagePreview" class="w-full h-full object-cover rounded-xl">
                                             <div class="absolute inset-0 bg-black/40 opacity-0 group-hover/img:opacity-100 transition-opacity flex flex-col items-center justify-center text-white text-[10px] font-bold uppercase tracking-wider gap-1">
                                                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
-                                                <span>Change Photo</span>
+                                                <span>Change</span>
                                             </div>
                                             <div class="absolute bottom-1.5 inset-x-1.5 bg-black/60 backdrop-blur-xs py-0.5 rounded text-center text-[9px] font-bold text-white uppercase tracking-wider">
                                                 Cover Image
@@ -158,11 +169,11 @@
 
                                     <template x-if="!variants[0].imagePreview">
                                         <div class="flex flex-col items-center justify-center text-center p-3">
-                                            <div class="w-10 h-10 rounded-2xl bg-[#C0420A]/10 flex items-center justify-center text-[#C0420A] mb-1.5 group-hover/img:scale-110 transition-transform">
+                                            <div class="w-10 h-10 rounded-full bg-[#FEF9EC] border border-[#F3E8CE] flex items-center justify-center text-[#9A6B1F] mb-1.5 group-hover/img:scale-110 transition-transform">
                                                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
                                             </div>
-                                            <span class="text-xs font-black text-[#C0420A] uppercase tracking-wide">+ Upload Photo</span>
-                                            <span class="text-[10px] text-gray-400 font-medium mt-0.5">JPEG, PNG, WEBP</span>
+                                            <span class="text-xs font-bold text-[#9A6B1F]">+ Upload Photo</span>
+                                            <span class="text-[10px] text-[#A8A29E] font-medium mt-0.5">JPEG, PNG, WEBP</span>
                                         </div>
                                     </template>
 
@@ -183,13 +194,13 @@
                                 </button>
                             </div>
 
-                            <div class="flex-1 space-y-1 text-xs text-gray-600">
-                                <h4 class="font-bold text-gray-800">Primary Product Appearance</h4>
-                                <p class="text-[11px] text-gray-500 leading-relaxed">
+                            <div class="flex-1 space-y-1.5 text-xs text-[#78716C]">
+                                <h4 class="font-serif font-bold text-[#18181B] text-sm">Primary Product Appearance</h4>
+                                <p class="text-[11px] text-[#78716C] leading-relaxed">
                                     This photo will be showcased as the main thumbnail across the store, search, and catalogue.
                                 </p>
-                                <p class="text-[10px] text-[#C0420A] font-semibold flex items-center gap-1">
-                                    <span>💡</span> Have other colors, fabrics, or sleeve styles? Click "+ Add Another Variant" below.
+                                <p class="text-[11px] text-[#9A6B1F] font-semibold flex items-center gap-1">
+                                    <span>✦</span> Have other colors, fabrics, or sleeve styles? Click "+ Add Another Variant" below.
                                 </p>
                             </div>
                         </div>
@@ -199,18 +210,18 @@
                 {{-- Additional Variants List (Variant 2, 3, etc.) --}}
                 <div class="space-y-3">
                     <template x-for="(variant, index) in variants" :key="variant.id">
-                        <div x-show="index > 0" class="p-4 bg-white border border-gray-200 hover:border-gray-300 rounded-2xl space-y-3 transition-all shadow-2xs">
-                            <div class="flex items-center justify-between pb-2 border-b border-gray-100">
+                        <div x-show="index > 0" class="p-4 bg-white border border-[#EFE8DA] hover:border-[#C5A059] rounded-2xl space-y-3 transition-all shadow-2xs">
+                            <div class="flex items-center justify-between pb-2 border-b border-[#EFE8DA]/60">
                                 <div class="flex items-center gap-2">
-                                    <span class="w-1.5 h-1.5 rounded-full bg-[#C0420A]"></span>
-                                    <span class="text-xs font-black uppercase tracking-wider text-gray-800" x-text="'Variant ' + (index + 1)"></span>
-                                    <span class="px-2 py-0.5 rounded-md bg-blue-50 text-blue-700 text-[9px] font-black uppercase tracking-wider">Style Option</span>
+                                    <span class="w-1.5 h-1.5 rounded-full bg-[#C5A059]"></span>
+                                    <span class="font-serif text-sm font-bold text-[#18181B]" x-text="'Variant ' + (index + 1)"></span>
+                                    <span class="px-2.5 py-0.5 rounded-full bg-[#FAF8F5] border border-[#E5DECE] text-[#78716C] text-[10px] font-bold uppercase tracking-wider">Style Option</span>
                                 </div>
                                 <button type="button" 
                                         @click="removeVariantRow(index)" 
-                                        class="text-[11px] font-bold text-red-600 hover:text-red-700 flex items-center gap-1 cursor-pointer">
+                                        class="text-xs font-semibold text-red-600 hover:text-red-700 flex items-center gap-1 cursor-pointer">
                                     <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
-                                    <span>Remove Variant</span>
+                                    <span>Remove</span>
                                 </button>
                             </div>
 
@@ -222,7 +233,7 @@
                                 <div class="relative shrink-0" style="width: 80px; height: 80px;">
                                     <label :for="'variant_file_' + index"
                                            style="width: 80px; height: 80px;"
-                                           class="rounded-2xl border-2 border-dashed border-gray-300 hover:border-[#C0420A] bg-gray-50/70 hover:bg-orange-50/40 flex flex-col items-center justify-center cursor-pointer overflow-hidden transition-all relative group/img shadow-2xs select-none">
+                                           class="rounded-2xl border-2 border-dashed border-[#E5DECE] hover:border-[#C5A059] bg-[#FAF8F5] hover:bg-white flex flex-col items-center justify-center cursor-pointer overflow-hidden transition-all relative group/img shadow-2xs select-none">
                                         <template x-if="variant.imagePreview">
                                             <div class="relative w-full h-full">
                                                 <img :src="variant.imagePreview" class="w-full h-full object-cover rounded-xl">
@@ -233,10 +244,10 @@
                                         </template>
                                         <template x-if="!variant.imagePreview">
                                             <div class="flex flex-col items-center justify-center text-center p-1">
-                                                <div class="w-6 h-6 rounded-full bg-[#C0420A]/10 flex items-center justify-center text-[#C0420A] mb-0.5 group-hover/img:scale-110 transition-transform">
+                                                <div class="w-6 h-6 rounded-full bg-[#FEF9EC] border border-[#F3E8CE] flex items-center justify-center text-[#9A6B1F] mb-0.5 group-hover/img:scale-110 transition-transform">
                                                     <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
                                                 </div>
-                                                <span class="text-[9px] font-extrabold text-[#C0420A] uppercase tracking-wider">+ Photo</span>
+                                                <span class="text-[9px] font-extrabold text-[#9A6B1F] uppercase tracking-wider">+ Photo</span>
                                             </div>
                                         </template>
                                         <input type="file" 
@@ -257,16 +268,16 @@
                                 {{-- Variant Name Input --}}
                                 <div class="flex-1 min-w-0">
                                     <div class="flex items-center justify-between mb-1">
-                                        <label class="text-[10px] font-black uppercase tracking-wider text-gray-700">
-                                            Variant Name <span class="text-[#C0420A]">*</span>
+                                        <label class="text-[10px] font-bold uppercase tracking-wider text-[#18181B]">
+                                            Variant Name <span class="text-[#C5A059]">*</span>
                                         </label>
-                                        <span class="text-[9px] text-gray-400 font-medium hidden sm:inline">e.g. Color, embroidery, or style</span>
+                                        <span class="text-[9px] text-[#A8A29E] font-medium hidden sm:inline">e.g. Color, embroidery, or style</span>
                                     </div>
                                     <input type="text" 
                                            :name="'variant_names[' + index + ']'" 
                                            x-model="variant.name" 
                                            placeholder="e.g. Emerald Green, Ivory Piña, Short Sleeve..." 
-                                           class="w-full px-3.5 py-2.5 bg-gray-50/80 border border-gray-200 rounded-xl text-xs font-bold text-gray-900 outline-none focus:border-[#C0420A] focus:bg-white transition-all shadow-2xs">
+                                           class="w-full px-3.5 py-2.5 bg-[#FAF8F5] border border-[#E5DECE] rounded-xl text-xs font-bold text-[#18181B] outline-none focus:border-[#C5A059] focus:bg-white transition-all shadow-2xs">
                                 </div>
                             </div>
                         </div>
@@ -277,27 +288,35 @@
                 <div>
                     <button type="button" 
                             @click="addVariantRow()" 
-                            class="w-full py-3 px-4 rounded-2xl border-2 border-dashed border-gray-300 hover:border-[#C0420A] bg-gray-50/70 hover:bg-orange-50/20 text-gray-700 hover:text-[#C0420A] font-bold text-xs flex items-center justify-center gap-2 transition-all cursor-pointer shadow-2xs">
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"/></svg>
-                        <span>+ Add Another Variant (Optional Style / Color)</span>
+                            class="w-full py-3.5 px-4 rounded-2xl border border-dashed border-[#E5DECE] hover:border-[#C5A059] bg-[#FAF8F5] hover:bg-[#FFFDF9] text-[#18181B] font-bold text-xs flex items-center justify-center gap-2 transition-all cursor-pointer shadow-2xs">
+                        <span class="text-[#C5A059] text-base font-bold">+</span>
+                        <span>Add Another Variant (Optional Style / Color)</span>
                     </button>
                 </div>
             </div>
 
+            {{-- Ornamental Heritage Divider (From Artisan Modal) --}}
+            <div class="flex items-center justify-center my-6">
+                <div class="h-px bg-[#EFE8DA] flex-1"></div>
+                <span class="px-3.5 text-[#C5A059] text-xs">✦</span>
+                <div class="h-px bg-[#EFE8DA] flex-1"></div>
+            </div>
+
             {{-- 2. Target Tag & Dynamic Matching Category Selection --}}
-            <div class="border-t border-gray-100 pt-5 space-y-4">
+            <div class="space-y-4">
                 {{-- Step A: Who is this for? (Target Tag) --}}
                 <div class="space-y-1.5">
                     <div class="flex items-center justify-between">
-                        <label class="text-[11px] font-bold uppercase tracking-wider text-gray-700">
-                            2. Who is this for? (Target Tag) <span class="text-[#C0420A]">*</span>
-                        </label>
-                        <span class="text-[9px] font-bold transition-colors"
-                              :class="targetGroup ? 'text-emerald-600' : 'text-[#C0420A]'"
+                        <h2 class="font-serif text-lg font-bold text-[#18181B] flex items-center gap-2">
+                            <span>2. Who is this for? (Target Tag)</span>
+                            <span class="text-[#C5A059]">*</span>
+                        </h2>
+                        <span class="text-xs font-bold transition-colors"
+                              :class="targetGroup ? 'text-emerald-700' : 'text-[#C5A059]'"
                               x-text="targetGroup ? ('✓ ' + targetGroup + ' selected') : 'Select a tag'"></span>
                     </div>
 
-                    <div id="target-group-container" class="grid grid-cols-3 gap-2.5">
+                    <div id="target-group-container" class="grid grid-cols-3 gap-3">
                         @foreach(['Men', 'Women', 'Kids'] as $group)
                             @php
                                 $emoji = match($group) {
@@ -314,10 +333,10 @@
                                        x-model="targetGroup" 
                                        @change="onTargetGroupChange('{{ $group }}')" 
                                        class="hidden peer target-group-radio">
-                                <div class="w-full py-3 px-2.5 rounded-xl border border-gray-200 bg-gray-50/70 hover:bg-gray-100/70 text-xs font-bold text-gray-600 text-center uppercase tracking-wider flex items-center justify-center gap-1.5 transition-all peer-checked:border-[#C0420A] peer-checked:bg-[#C0420A]/5 peer-checked:text-[#C0420A] peer-checked:font-black peer-checked:ring-2 peer-checked:ring-[#C0420A]/10 shadow-2xs">
+                                <div class="w-full py-3.5 px-3 rounded-2xl border border-[#E5DECE] bg-[#FAF8F5] hover:bg-[#FFFDF9] text-xs font-bold text-[#44403C] text-center uppercase tracking-wider flex items-center justify-center gap-2 transition-all peer-checked:border-[#18181B] peer-checked:bg-[#18181B] peer-checked:text-white peer-checked:font-bold peer-checked:shadow-sm shadow-2xs">
                                     <span class="text-base">{{ $emoji }}</span>
                                     <span>{{ $group }}</span>
-                                    <span x-show="targetGroup === '{{ $group }}'" class="w-3.5 h-3.5 rounded-full bg-[#C0420A] text-white flex items-center justify-center text-[8px] font-bold ml-1">✓</span>
+                                    <span x-show="targetGroup === '{{ $group }}'" class="w-4 h-4 rounded-full bg-[#C5A059] text-white flex items-center justify-center text-[9px] font-bold ml-1">✓</span>
                                 </div>
                             </label>
                         @endforeach
@@ -325,100 +344,107 @@
                 </div>
 
                 {{-- Step B: Product Category matching selected tag --}}
-                <div class="space-y-1.5 pt-1">
+                <div class="space-y-1.5 pt-2">
                     <div class="flex items-center justify-between">
-                        <label class="text-[11px] font-bold uppercase tracking-wider text-gray-700">
-                            Product Category <span x-show="targetGroup" x-text="'for ' + targetGroup"></span> <span class="text-[#C0420A]">*</span>
-                        </label>
-                        <span class="text-[9px] font-bold transition-colors"
-                              :class="selectedCategory ? 'text-emerald-600' : 'text-[#C0420A]'"
+                        <h3 class="font-serif text-sm font-bold text-[#18181B]">
+                            Product Category <span x-show="targetGroup" x-text="'for ' + targetGroup"></span> <span class="text-[#C5A059]">*</span>
+                        </h3>
+                        <span class="text-xs font-bold transition-colors"
+                              :class="selectedCategory ? 'text-emerald-700' : 'text-[#C5A059]'"
                               x-text="selectedCategory && selectedCategoryObj ? ('✓ ' + selectedCategoryObj.name) : (targetGroup ? 'Choose from options below' : 'Select tag above first')"></span>
                     </div>
 
                     {{-- Hidden CategoryId input for form submission --}}
                     <input type="hidden" name="CategoryId" id="categorySelect" :value="selectedCategory" required>
 
-                    {{-- Prompt when NO tag is selected --}}
-                    <div x-show="!targetGroup" class="p-4 rounded-2xl bg-amber-50/70 border border-amber-200/80 text-amber-900 text-xs font-medium flex items-center gap-2.5">
+                    {{-- Prompt when NO tag is selected (Artisan Sand Style) --}}
+                    <div x-show="!targetGroup" class="p-4 rounded-2xl bg-[#FAF3E0]/70 border border-[#ECDDC0] text-[#7C6A4F] text-xs font-medium flex items-center gap-2.5">
                         <span class="text-base shrink-0">👆</span>
                         <span>Please select who this product is for (<strong>Men</strong>, <strong>Women</strong>, or <strong>Kids</strong>) above to display matching categories.</span>
                     </div>
 
                     {{-- Category grid displayed when a tag is picked --}}
                     <div x-show="targetGroup" class="space-y-2" x-cloak>
-                        <div class="grid grid-cols-2 sm:grid-cols-3 gap-2.5 max-h-60 overflow-y-auto p-2.5 bg-gray-50/70 rounded-2xl border border-gray-200 shadow-2xs" id="category-cards-container">
+                        <div class="grid grid-cols-2 sm:grid-cols-3 gap-2.5 max-h-60 overflow-y-auto p-3 bg-[#FAF8F5] rounded-2xl border border-[#EFE8DA] shadow-2xs" id="category-cards-container">
                             <template x-for="cat in filteredCategories" :key="cat.id">
                                 <button type="button" 
                                         @click="selectCategory(cat)"
                                         :class="selectedCategory === cat.id 
-                                            ? 'bg-white border-2 border-[#C0420A] text-[#C0420A] shadow-xs font-black ring-2 ring-[#C0420A]/10' 
-                                            : 'bg-white border border-gray-200/90 hover:border-gray-300 text-gray-700 hover:text-gray-900 font-bold'"
-                                        class="p-3 rounded-xl flex items-center justify-between text-left transition-all cursor-pointer group hover:scale-[1.01] active:scale-[0.99] text-xs">
+                                            ? 'bg-[#FEF9EC] border-2 border-[#C5A059] text-[#9A6B1F] font-bold shadow-xs ring-2 ring-[#C5A059]/10' 
+                                            : 'bg-white border border-[#EFE8DA] hover:border-[#C5A059] text-[#18181B] hover:bg-[#FFFDF9] font-semibold'"
+                                        class="p-3.5 rounded-xl flex items-center justify-between text-left transition-all cursor-pointer group hover:scale-[1.01] active:scale-[0.99] text-xs">
                                     <span class="truncate" x-text="cat.name"></span>
-                                    <span x-show="selectedCategory === cat.id" class="w-4 h-4 rounded-full bg-[#C0420A] text-white flex items-center justify-center text-[9px] shrink-0 font-bold ml-1.5">✓</span>
+                                    <span x-show="selectedCategory === cat.id" class="w-4 h-4 rounded-full bg-[#C5A059] text-white flex items-center justify-center text-[9px] shrink-0 font-bold ml-1.5">✓</span>
                                 </button>
                             </template>
 
                             <template x-if="filteredCategories.length === 0">
-                                <div class="col-span-full py-6 text-center text-xs text-gray-400 font-medium">
+                                <div class="col-span-full py-6 text-center text-xs text-[#78716C] font-medium">
                                     No categories found for this tag.
                                 </div>
                             </template>
                         </div>
 
-                        <p x-show="selectedCategory && selectedCategoryObj" class="text-[11px] text-gray-500 font-medium px-1">
-                            Selected Category: <strong class="text-gray-900" x-text="selectedCategoryObj.name"></strong>
+                        <p x-show="selectedCategory && selectedCategoryObj" class="text-xs text-[#78716C] font-medium px-1">
+                            Selected Category: <strong class="text-[#18181B]" x-text="selectedCategoryObj.name"></strong>
                         </p>
                     </div>
                 </div>
             </div>
         </div>
 
-            {{-- Step 1 Primary CTA Button: "Next: Complete Product Details" --}}
-            <div x-show="step === 1" class="pt-3 space-y-2">
-                <button type="button" 
-                        @click="goToStep2()"
-                        :disabled="!isStep1Complete"
-                        :class="isStep1Complete 
-                            ? 'bg-[#C0420A] hover:bg-[#a63707] active:scale-[0.99] text-white shadow-md shadow-[#C0420A]/20 hover:shadow-lg hover:shadow-[#C0420A]/30 cursor-pointer' 
-                            : 'bg-gray-200 text-gray-400 cursor-not-allowed opacity-75 shadow-none select-none'"
-                        class="w-full py-3.5 sm:py-4 px-6 rounded-2xl font-bold text-sm tracking-wide transition-all flex items-center justify-center gap-2.5 group">
-                    <span>Next: Complete Product Details</span>
-                    <svg class="w-4 h-4 transition-transform group-hover:translate-x-1" :class="isStep1Complete ? 'opacity-100' : 'opacity-40'" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M14 5l7 7m0 0l-7 7m7-7H3"/>
-                    </svg>
-                </button>
+        {{-- Step 1 Primary CTA Button: Sleek Onyx Pill Button matching "View Shop →" --}}
+        <div x-show="step === 1" class="pt-2 space-y-3">
+            <button type="button" 
+                    @click="goToStep2()"
+                    :disabled="!isStep1Complete"
+                    :class="isStep1Complete 
+                        ? 'bg-[#18181B] hover:bg-[#27272A] active:scale-[0.99] text-white shadow-md hover:shadow-xl cursor-pointer' 
+                        : 'bg-gray-200 text-gray-400 cursor-not-allowed opacity-75 shadow-none select-none'"
+                    class="w-full py-4 px-8 rounded-full font-bold text-sm tracking-wide transition-all flex items-center justify-center gap-3 group">
+                <span>Next: Complete Product Details</span>
+                <span class="text-base font-bold transition-transform group-hover:translate-x-1">→</span>
+            </button>
 
-                {{-- Status prompt when fields are missing --}}
-                <template x-if="!isStep1Complete">
-                    <p class="text-center text-[11px] text-gray-400 font-medium flex items-center justify-center gap-1.5 pt-0.5">
-                        <svg class="w-3.5 h-3.5 text-amber-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                        </svg>
-                        <span>Please upload a photo, enter product name, choose a category, and select target tag to proceed.</span>
-                    </p>
-                </template>
-            </div>
-        </div>
+            {{-- Status prompt when fields are missing --}}
+            <template x-if="!isStep1Complete">
+                <p class="text-center text-xs text-[#78716C] font-medium flex items-center justify-center gap-1.5 pt-0.5">
+                    <span class="text-[#C5A059]">✦</span>
+                    <span>Please upload a photo, enter product name, choose a category, and select target tag to proceed.</span>
+                </p>
+            </template>
 
-        {{-- ========================================================================= --}}
+            {{-- Authentic Heritage Verification Banner (Direct from Artisan Modal) --}}
+            <div class="bg-[#FAF3E0]/80 border border-[#ECDDC0] rounded-2xl p-4 sm:p-5 flex items-center justify-between relative overflow-hidden shadow-2xs mt-4">
+                <div class="flex items-center gap-3.5 relative z-10">
+                    <div class="w-9 h-9 rounded-full bg-[#EBD8B3]/70 text-[#8C6226] flex items-center justify-center font-bold text-sm shrink-0">
+                        ✓
+                    </div>
+                    <div>
+                        <h4 class="font-serif font-bold text-sm text-[#423118]">Handcrafted Heritage Guarantee</h4>
+                        <p class="text-xs text-[#7C6A4F] mt-0.5">Every Lumban artisan listing is verified for genuine Filipino craftsmanship and authentic materials.</p>
+                    </div>
+                </div>
+                <div class="hidden sm:block text-[#C5A059]/25 text-3xl font-serif select-none pointer-events-none pr-2">
+                    ❖
+                     {{-- ========================================================================= --}}
         {{-- PHASE 2: COMPLETE SPECIFICATIONS (Progressively Revealed after Step 1)     --}}
         {{-- ========================================================================= --}}
         <div x-show="step >= 2" x-collapse class="space-y-6">
 
             {{-- 1. Fill Rate & Listing Health Bar --}}
-            <div class="bg-white p-4 sm:p-5 rounded-2xl border border-gray-100 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div class="bg-white p-5 sm:p-6 rounded-3xl border border-[#EFE8DA] shadow-[0_12px_40px_-8px_rgba(0,0,0,0.06),0_4px_12px_-2px_rgba(0,0,0,0.03)] flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                 <div class="flex items-center gap-3">
-                    <span class="text-xs font-black uppercase tracking-wider text-gray-700">Listing Completeness</span>
-                    <div class="w-36 sm:w-48 h-2.5 bg-gray-100 rounded-full overflow-hidden">
-                        <div class="h-full bg-linear-to-r from-orange-400 to-[#C0420A] rounded-full transition-all duration-500" :style="'width: ' + fillRate + '%'"></div>
+                    <span class="font-serif text-sm font-bold text-[#18181B]">Listing Completeness</span>
+                    <div class="w-36 sm:w-48 h-2.5 bg-[#FAF8F5] border border-[#E5DECE] rounded-full overflow-hidden">
+                        <div class="h-full bg-linear-to-r from-[#C5A059] to-[#18181B] rounded-full transition-all duration-500" :style="'width: ' + fillRate + '%'"></div>
                     </div>
-                    <span class="text-xs font-black text-[#C0420A]" x-text="fillRate + '%'"></span>
-                    <span class="text-base">✨</span>
+                    <span class="text-xs font-black text-[#9A6B1F]" x-text="fillRate + '%'"></span>
+                    <span class="text-xs text-[#C5A059]">✦</span>
                 </div>
 
                 <div class="flex items-center gap-2">
-                    <span class="text-[10px] text-gray-400 font-medium">All essential specifications</span>
+                    <span class="text-xs text-[#78716C] font-medium">All essential artisan specifications</span>
                 </div>
             </div>
 
@@ -426,27 +452,27 @@
             <input type="hidden" name="fabric_type" :value="fabricType || '100% Piña'">
 
             {{-- 1. Heritage Sizing & Inventory Matrix --}}
-            <div id="sizing-section" class="bg-white p-5 sm:p-6 rounded-2xl border border-gray-100 shadow-xs space-y-4">
-                <div class="flex items-center justify-between pb-2 border-b border-gray-100">
-                    <div class="flex items-center gap-2.5">
-                        <div class="w-7 h-7 rounded-lg bg-[#C0420A]/10 flex items-center justify-center text-[#C0420A] shrink-0 font-bold text-xs">1</div>
+            <div id="sizing-section" class="bg-white p-6 sm:p-7 rounded-3xl border border-[#EFE8DA] shadow-2xs space-y-4">
+                <div class="flex items-center justify-between pb-3 border-b border-[#EFE8DA]">
+                    <div class="flex items-center gap-3">
+                        <div class="w-8 h-8 rounded-full bg-[#FEF9EC] border border-[#F3E8CE] flex items-center justify-center text-[#9A6B1F] shrink-0 font-serif font-bold text-xs shadow-2xs">1</div>
                         <div>
-                            <h3 class="text-xs sm:text-sm font-black text-gray-900 uppercase tracking-widest leading-none">Heritage Sizing & Stock <span class="text-[#C0420A]">*</span></h3>
-                            <p class="text-[10px] text-gray-400 font-medium mt-0.5">Assign stock quantities per size</p>
+                            <h3 class="font-serif text-sm sm:text-base font-bold text-[#18181B] tracking-tight">Heritage Sizing & Stock <span class="text-[#C5A059]">*</span></h3>
+                            <p class="text-xs text-[#78716C] font-medium mt-0.5">Assign available inventory quantities per size</p>
                         </div>
                     </div>
-                    <span class="text-[10px] text-gray-400 font-bold uppercase">At least 1 size required</span>
+                    <span class="text-[10px] font-bold text-[#9A6B1F] uppercase bg-[#FEF9EC] border border-[#F3E8CE] px-3 py-1 rounded-full">At least 1 size required</span>
                 </div>
 
-                <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-2.5">
+                <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-2.5 pt-1">
                     @foreach(['S', 'M', 'L', 'XL', 'XXL', 'Custom'] as $size)
-                        <div class="p-2.5 bg-gray-50 border border-gray-200 rounded-xl space-y-2 text-center transition-all hover:bg-white hover:border-gray-300">
-                            <label class="flex items-center justify-center gap-1.5 text-xs font-black uppercase text-gray-700 cursor-pointer select-none">
+                        <div class="p-3 bg-[#FAF8F5] border border-[#E5DECE] rounded-2xl space-y-2 text-center transition-all hover:bg-white hover:border-[#C5A059] shadow-2xs">
+                            <label class="flex items-center justify-center gap-1.5 text-xs font-bold uppercase text-[#18181B] cursor-pointer select-none">
                                 <input type="checkbox" 
                                        name="sizes[]" 
                                        value="{{ $size }}" 
                                        id="size_cb_{{ $size }}"
-                                       class="rounded text-[#C0420A] focus:ring-[#C0420A] w-3.5 h-3.5 size-checkbox"
+                                       class="rounded text-[#18181B] focus:ring-[#C5A059] w-3.5 h-3.5 size-checkbox"
                                        onchange="toggleSizeStock(this, '{{ $size }}'); calculateFillRate();">
                                 <span>Size {{ $size }}</span>
                             </label>
@@ -458,23 +484,26 @@
                                    max="10000" 
                                    disabled
                                    oninput="if(parseInt(this.value) > 10000) this.value = 10000; calculateTotalStock(); calculateFillRate();"
-                                   class="w-full px-2 py-1.5 bg-white border border-gray-200 rounded-lg outline-none text-xs font-bold text-center size-stock-input">
+                                   class="w-full px-2 py-1.5 bg-white border border-[#E5DECE] rounded-xl outline-none text-xs font-bold text-center size-stock-input text-[#18181B]">
                         </div>
                     @endforeach
                 </div>
             </div>
 
             {{-- 2. Pricing & Logistics Grid --}}
-            <div class="bg-white p-5 sm:p-6 rounded-2xl border border-gray-100 shadow-xs space-y-4">
-                <div class="flex items-center gap-2.5 pb-2 border-b border-gray-100">
-                    <div class="w-7 h-7 rounded-lg bg-[#C0420A]/10 flex items-center justify-center text-[#C0420A] shrink-0 font-bold text-xs">2</div>
-                    <h3 class="text-xs sm:text-sm font-black text-gray-900 uppercase tracking-widest leading-none">Price & Shipping Information</h3>
+            <div class="bg-white p-6 sm:p-7 rounded-3xl border border-[#EFE8DA] shadow-2xs space-y-4">
+                <div class="flex items-center gap-3 pb-3 border-b border-[#EFE8DA]">
+                    <div class="w-8 h-8 rounded-full bg-[#FEF9EC] border border-[#F3E8CE] flex items-center justify-center text-[#9A6B1F] shrink-0 font-serif font-bold text-xs shadow-2xs">2</div>
+                    <div>
+                        <h3 class="font-serif text-sm sm:text-base font-bold text-[#18181B] tracking-tight">Price & Shipping Information</h3>
+                        <p class="text-xs text-[#78716C] font-medium mt-0.5">Define fair artisan pricing and realistic delivery estimates</p>
+                    </div>
                 </div>
 
-                <div class="grid grid-cols-2 lg:grid-cols-4 gap-3">
+                <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 pt-1">
                     {{-- Price Input --}}
-                    <div id="price-card" class="p-3.5 bg-[#F9F8F6] border border-stone-200/80 rounded-xl flex flex-col justify-between h-24 sm:h-26 transition-all">
-                        <label class="text-[9px] font-bold uppercase tracking-widest text-stone-500">Price (₱) <span class="text-[#C0420A]">*</span></label>
+                    <div id="price-card" class="p-4 bg-[#FAF8F5] border border-[#E5DECE] rounded-2xl flex flex-col justify-between h-26 sm:h-28 transition-all hover:border-[#C5A059] shadow-2xs">
+                        <label class="text-[10px] font-bold uppercase tracking-wider text-[#78716C]">Price (₱) <span class="text-[#C5A059]">*</span></label>
                         <input type="number" 
                                name="price" 
                                id="priceInput" 
@@ -485,13 +514,13 @@
                                placeholder="0.00"
                                x-model="price"
                                oninput="if(parseFloat(this.value) > 10000) this.value = 10000; updateDiscountPreview(); calculateFillRate();"
-                               class="w-full bg-transparent font-sans text-lg font-bold text-gray-900 outline-none border-b border-transparent focus:border-[#C0420A] transition-all">
-                        <p class="text-[8px] text-stone-400 font-medium">Item base price</p>
+                               class="w-full bg-transparent font-sans text-xl font-bold text-[#18181B] outline-none border-b border-transparent focus:border-[#C5A059] transition-all">
+                        <p class="text-[9px] text-[#A8A29E] font-medium">Item base price</p>
                     </div>
 
                     {{-- Total Stock (Auto) --}}
-                    <div id="stock-card" class="p-3.5 bg-[#F9F8F6] border border-stone-200/80 rounded-xl flex flex-col justify-between h-24 sm:h-26 transition-all">
-                        <label class="text-[9px] font-bold uppercase tracking-widest text-stone-500">Total Stock <span class="text-[#C0420A]">*</span></label>
+                    <div id="stock-card" class="p-4 bg-[#FAF8F5] border border-[#E5DECE] rounded-2xl flex flex-col justify-between h-26 sm:h-28 transition-all shadow-2xs">
+                        <label class="text-[10px] font-bold uppercase tracking-wider text-[#78716C]">Total Stock <span class="text-[#C5A059]">*</span></label>
                         <input type="number" 
                                name="stock" 
                                id="total_stock" 
@@ -499,13 +528,13 @@
                                placeholder="0"
                                readonly 
                                tabindex="-1"
-                               class="w-full bg-transparent font-sans text-lg font-bold text-gray-900 outline-none select-none cursor-not-allowed">
-                        <p class="text-[8px] text-stone-400 font-medium">Auto-summed from sizes</p>
+                               class="w-full bg-transparent font-sans text-xl font-bold text-[#18181B] outline-none select-none cursor-not-allowed">
+                        <p class="text-[9px] text-[#A8A29E] font-medium">Auto-summed from sizes</p>
                     </div>
 
                     {{-- Shipping Fee --}}
-                    <div id="shipping-fee-card" class="p-3.5 bg-[#F9F8F6] border border-stone-200/80 rounded-xl flex flex-col justify-between h-24 sm:h-26 transition-all">
-                        <label class="text-[9px] font-bold uppercase tracking-widest text-stone-500">Shipping Fee (₱) <span class="text-[#C0420A]">*</span></label>
+                    <div id="shipping-fee-card" class="p-4 bg-[#FAF8F5] border border-[#E5DECE] rounded-2xl flex flex-col justify-between h-26 sm:h-28 transition-all hover:border-[#C5A059] shadow-2xs">
+                        <label class="text-[10px] font-bold uppercase tracking-wider text-[#78716C]">Shipping Fee (₱) <span class="text-[#C5A059]">*</span></label>
                         <input type="number" 
                                name="shippingFee" 
                                id="shippingFeeInput" 
@@ -516,13 +545,13 @@
                                placeholder="0.00"
                                value="{{ old('shippingFee', 0) }}"
                                oninput="if(parseFloat(this.value) > 500) this.value = 500; calculateFillRate();"
-                               class="w-full bg-transparent font-sans text-lg font-bold text-gray-900 outline-none border-b border-transparent focus:border-[#C0420A] transition-all">
-                        <p class="text-[8px] text-stone-400 font-medium">Enter 0 for free delivery</p>
+                               class="w-full bg-transparent font-sans text-xl font-bold text-[#18181B] outline-none border-b border-transparent focus:border-[#C5A059] transition-all">
+                        <p class="text-[9px] text-[#A8A29E] font-medium">Enter 0 for free delivery</p>
                     </div>
 
                     {{-- Shipping Days --}}
-                    <div id="shipping-days-card" class="p-3.5 bg-[#F9F8F6] border border-stone-200/80 rounded-xl flex flex-col justify-between h-24 sm:h-26 transition-all">
-                        <label class="text-[9px] font-bold uppercase tracking-widest text-stone-500">Est. Shipping Days <span class="text-[#C0420A]">*</span></label>
+                    <div id="shipping-days-card" class="p-4 bg-[#FAF8F5] border border-[#E5DECE] rounded-2xl flex flex-col justify-between h-26 sm:h-28 transition-all hover:border-[#C5A059] shadow-2xs">
+                        <label class="text-[10px] font-bold uppercase tracking-wider text-[#78716C]">Est. Shipping Days <span class="text-[#C5A059]">*</span></label>
                         <input type="number" 
                                name="shippingDays" 
                                id="shippingDaysInput" 
@@ -533,46 +562,46 @@
                                placeholder="5"
                                value="{{ old('shippingDays', 5) }}"
                                oninput="if(parseInt(this.value) > 30) this.value = 30; calculateFillRate();"
-                               class="w-full bg-transparent font-sans text-lg font-bold text-gray-900 outline-none border-b border-transparent focus:border-[#C0420A] transition-all">
-                        <p class="text-[8px] text-stone-400 font-medium">To deliver</p>
+                               class="w-full bg-transparent font-sans text-xl font-bold text-[#18181B] outline-none border-b border-transparent focus:border-[#C5A059] transition-all">
+                        <p class="text-[9px] text-[#A8A29E] font-medium">Delivery lead time</p>
                     </div>
                 </div>
 
                 {{-- Lumban Special Discount Panel --}}
-                <div class="p-4 rounded-xl border border-[#C0420A]/15 bg-orange-50/20 space-y-3">
+                <div class="p-4 rounded-2xl border border-[#F3E8CE] bg-[#FEF9EC]/50 space-y-3">
                     <input type="hidden" name="is_on_sale" id="isOnSaleInput" value="0">
 
                     <div class="flex items-center justify-between">
                         <div class="flex items-center gap-2">
-                            <span class="w-2 h-2 rounded-full bg-[#C0420A]"></span>
-                            <span class="text-xs font-black text-[#C0420A] uppercase tracking-widest">Special Price / Sale Discount</span>
-                            <span class="text-[9px] text-gray-400 font-bold uppercase tracking-wider">(Optional)</span>
+                            <span class="w-2 h-2 rounded-full bg-[#C5A059]"></span>
+                            <span class="text-xs font-bold text-[#9A6B1F] uppercase tracking-wider">Special Price / Sale Discount</span>
+                            <span class="text-[9px] text-[#78716C] font-bold uppercase tracking-wider">(Optional)</span>
                         </div>
                         <label class="relative inline-flex items-center cursor-pointer shrink-0">
                             <input type="checkbox" id="discountToggle" class="sr-only peer" onchange="toggleDiscount(this)">
-                            <div class="w-9 h-5 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-0.5 after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-[#C0420A]"></div>
+                            <div class="w-9 h-5 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-0.5 after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-[#18181B]"></div>
                         </label>
                     </div>
 
-                    <div id="discountFields" class="hidden space-y-2.5 pt-2 border-t border-[#C0420A]/10">
+                    <div id="discountFields" class="hidden space-y-2.5 pt-2 border-t border-[#F3E8CE]">
                         <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 items-end">
                             <div>
-                                <label class="text-[9px] font-bold uppercase tracking-widest text-gray-400 mb-1 block">Discount (%)</label>
+                                <label class="text-[10px] font-bold uppercase tracking-wider text-[#78716C] mb-1 block">Discount (%)</label>
                                 <input type="number" 
                                        name="discount_percentage" 
-                                       id="discountPercentage"
+                                       id="discountPercentage" 
                                        min="1" 
                                        max="99" 
                                        step="1" 
                                        placeholder="e.g. 20"
-                                       class="w-full px-3.5 py-2.5 bg-white border border-[#C0420A]/30 rounded-xl outline-none font-bold text-sm text-[#C0420A]"
+                                       class="w-full px-4 py-2.5 bg-white border border-[#E5DECE] rounded-xl outline-none font-bold text-sm text-[#18181B] focus:border-[#C5A059]"
                                        oninput="if(parseInt(this.value) > 99) this.value = 99; updateDiscountPreview();">
                             </div>
                             <div>
-                                <label class="text-[9px] font-bold uppercase tracking-widest text-gray-400 mb-1 block">Price Preview</label>
-                                <div id="discountPreview" class="hidden w-full px-3.5 py-2.5 bg-white rounded-xl border border-[#C0420A]/20 items-center justify-center gap-2 h-10.5">
-                                    <span id="previewOriginal" class="text-xs text-gray-400 line-through font-bold"></span>
-                                    <span id="previewSale" class="text-sm font-black text-[#C0420A]"></span>
+                                <label class="text-[10px] font-bold uppercase tracking-wider text-[#78716C] mb-1 block">Price Preview</label>
+                                <div id="discountPreview" class="hidden w-full px-4 py-2.5 bg-white rounded-xl border border-[#F3E8CE] items-center justify-center gap-2 h-10.5 shadow-2xs">
+                                    <span id="previewOriginal" class="text-xs text-[#78716C] line-through font-bold"></span>
+                                    <span id="previewSale" class="text-sm font-black text-[#9A6B1F]"></span>
                                 </div>
                             </div>
                         </div>
@@ -581,18 +610,18 @@
             </div>
 
             {{-- 3. Payment Methods Card --}}
-            <div id="payment-methods-card" class="bg-white p-5 sm:p-6 rounded-2xl border border-gray-100 shadow-xs space-y-4">
-                <div class="flex items-center justify-between pb-2 border-b border-gray-100">
-                    <div class="flex items-center gap-2.5">
-                        <div class="w-7 h-7 rounded-lg bg-[#C0420A]/10 flex items-center justify-center text-[#C0420A] shrink-0 font-bold text-xs">3</div>
-                        <h3 class="text-xs sm:text-sm font-black text-gray-900 uppercase tracking-widest leading-none">Payment Methods <span class="text-[#C0420A]">*</span></h3>
+            <div id="payment-methods-card" class="bg-white p-6 sm:p-7 rounded-3xl border border-[#EFE8DA] shadow-2xs space-y-4">
+                <div class="flex items-center justify-between pb-3 border-b border-[#EFE8DA]">
+                    <div class="flex items-center gap-3">
+                        <div class="w-8 h-8 rounded-full bg-[#FEF9EC] border border-[#F3E8CE] flex items-center justify-center text-[#9A6B1F] shrink-0 font-serif font-bold text-xs shadow-2xs">3</div>
+                        <h3 class="font-serif text-sm sm:text-base font-bold text-[#18181B] tracking-tight">Payment Methods <span class="text-[#C5A059]">*</span></h3>
                     </div>
-                    <a href="{{ route('seller.profile') }}?open_payment=1#payment-methods" target="_blank" class="text-[11px] font-bold text-[#C0420A] hover:underline flex items-center gap-1">
+                    <a href="{{ route('seller.profile') }}?open_payment=1#payment-methods" target="_blank" class="text-xs font-bold text-[#9A6B1F] hover:text-[#18181B] flex items-center gap-1">
                         Settings ↗
                     </a>
                 </div>
 
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-1">
                     {{-- GCash --}}
                     @php 
                         $user = auth()->user(); 
@@ -600,19 +629,19 @@
                         $hasGcashQr = !empty($user->gcashQrCode);
                         $isGcashComplete = $hasGcashNumber && $hasGcashQr;
                     @endphp
-                    <div class="rounded-xl border border-blue-100 overflow-hidden">
-                        <div class="flex items-center justify-between px-3 py-2 bg-linear-to-r from-blue-600 to-blue-500">
+                    <div class="rounded-2xl border border-blue-100 overflow-hidden shadow-2xs">
+                        <div class="flex items-center justify-between px-4 py-2.5 bg-linear-to-r from-blue-600 to-blue-500">
                             <span class="text-[10px] font-black uppercase tracking-widest text-white">GCash</span>
                             <label class="relative inline-flex items-center cursor-pointer">
                                 <input type="checkbox" name="product_is_gcash_available" value="1" id="gcash_toggle_create" class="sr-only peer" {{ old('product_is_gcash_available', true) ? 'checked' : '' }} onchange="document.getElementById('gcash_fields_create').style.display = this.checked ? '' : 'none'; calculateFillRate();">
-                                <div class="w-8 h-4.5 bg-white/30 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-0.5 after:bg-white after:rounded-full after:h-3.5 after:w-3.5 after:transition-all peer-checked:bg-white/40 border border-white/40"></div>
+                                <div class="w-8 h-4.5 bg-white/30 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-0.5 after:bg-white after:border-gray-300 after:border after:rounded-full after:h-3.5 after:w-3.5 after:transition-all peer-checked:bg-white/40 border border-white/40"></div>
                             </label>
                         </div>
-                        <div id="gcash_fields_create" {{ old('product_is_gcash_available', true) ? '' : 'style=display:none' }} class="p-3 bg-white flex items-center gap-3">
+                        <div id="gcash_fields_create" {{ old('product_is_gcash_available', true) ? '' : 'style=display:none' }} class="p-3.5 bg-white flex items-center gap-3">
                             <div class="flex-1 min-w-0">
                                 @if($isGcashComplete)
                                     <div class="text-xs font-black text-gray-900">{{ $user->gcashNumber }}</div>
-                                    <div class="text-[9px] text-blue-500 font-bold uppercase tracking-widest mt-0.5">✓ Ready (Number & QR Set)</div>
+                                    <div class="text-[9px] text-blue-600 font-bold uppercase tracking-widest mt-0.5">✓ Ready (Number & QR Set)</div>
                                 @else
                                     <div class="text-[10px] text-amber-600 font-bold">Incomplete setup</div>
                                     <a href="{{ route('seller.profile') }}?open_payment=1#payment-methods" class="text-[9px] text-blue-600 font-bold underline">Add in Settings →</a>
@@ -627,22 +656,22 @@
                         $hasMayaQr = !empty($user->mayaQrCode);
                         $isMayaComplete = $hasMayaNumber && $hasMayaQr;
                     @endphp
-                    <div class="rounded-xl border border-green-100 overflow-hidden">
-                        <div class="flex items-center justify-between px-3 py-2 bg-linear-to-r from-green-600 to-green-500">
+                    <div class="rounded-2xl border border-emerald-100 overflow-hidden shadow-2xs">
+                        <div class="flex items-center justify-between px-4 py-2.5 bg-linear-to-r from-emerald-600 to-emerald-500">
                             <span class="text-[10px] font-black uppercase tracking-widest text-white">Maya</span>
                             <label class="relative inline-flex items-center cursor-pointer">
                                 <input type="checkbox" name="product_is_maya_available" value="1" id="maya_toggle_create" class="sr-only peer" {{ old('product_is_maya_available', false) ? 'checked' : '' }} onchange="document.getElementById('maya_fields_create').style.display = this.checked ? '' : 'none'; calculateFillRate();">
-                                <div class="w-8 h-4.5 bg-white/30 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-0.5 after:bg-white after:rounded-full after:h-3.5 after:w-3.5 after:transition-all peer-checked:bg-white/40 border border-white/40"></div>
+                                <div class="w-8 h-4.5 bg-white/30 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-0.5 after:bg-white after:border-gray-300 after:border after:rounded-full after:h-3.5 after:w-3.5 after:transition-all peer-checked:bg-white/40 border border-white/40"></div>
                             </label>
                         </div>
-                        <div id="maya_fields_create" {{ old('product_is_maya_available', false) ? '' : 'style=display:none' }} class="p-3 bg-white flex items-center gap-3">
+                        <div id="maya_fields_create" {{ old('product_is_maya_available', false) ? '' : 'style=display:none' }} class="p-3.5 bg-white flex items-center gap-3">
                             <div class="flex-1 min-w-0">
                                 @if($isMayaComplete)
                                     <div class="text-xs font-black text-gray-900">{{ $user->mayaNumber }}</div>
-                                    <div class="text-[9px] text-green-600 font-bold uppercase tracking-widest mt-0.5">✓ Ready (Number & QR Set)</div>
+                                    <div class="text-[9px] text-emerald-600 font-bold uppercase tracking-widest mt-0.5">✓ Ready (Number & QR Set)</div>
                                 @else
                                     <div class="text-[10px] text-amber-600 font-bold">Incomplete setup</div>
-                                    <a href="{{ route('seller.profile') }}?open_payment=1#payment-methods" class="text-[9px] text-green-600 font-bold underline">Add in Settings →</a>
+                                    <a href="{{ route('seller.profile') }}?open_payment=1#payment-methods" class="text-[9px] text-emerald-600 font-bold underline">Add in Settings →</a>
                                 @endif
                             </div>
                         </div>
@@ -651,23 +680,23 @@
             </div>
 
             {{-- 4. Artisan Description & Storytelling Card --}}
-            <div class="bg-white p-5 sm:p-6 rounded-2xl border border-gray-100 shadow-xs space-y-4">
-                <div class="flex items-center justify-between pb-2 border-b border-gray-100">
-                    <div class="flex items-center gap-2.5">
-                        <div class="w-7 h-7 rounded-lg bg-[#C0420A]/10 flex items-center justify-center text-[#C0420A] shrink-0 font-bold text-xs">4</div>
+            <div class="bg-white p-6 sm:p-7 rounded-3xl border border-[#EFE8DA] shadow-2xs space-y-4">
+                <div class="flex items-center justify-between pb-3 border-b border-[#EFE8DA]">
+                    <div class="flex items-center gap-3">
+                        <div class="w-8 h-8 rounded-full bg-[#FEF9EC] border border-[#F3E8CE] flex items-center justify-center text-[#9A6B1F] shrink-0 font-serif font-bold text-xs shadow-2xs">4</div>
                         <div>
-                            <h3 class="text-xs sm:text-sm font-black text-gray-900 uppercase tracking-widest leading-none">Artisan Description & Story <span class="text-[#C0420A]">*</span></h3>
-                            <p class="text-[10px] text-gray-400 font-medium mt-0.5">Highlight the craftsmanship, weaving techniques, and care instructions</p>
+                            <h3 class="font-serif text-sm sm:text-base font-bold text-[#18181B] tracking-tight">Artisan Description & Story <span class="text-[#C5A059]">*</span></h3>
+                            <p class="text-xs text-[#78716C] font-medium mt-0.5">Highlight the craftsmanship, weaving techniques, and care instructions</p>
                         </div>
                     </div>
 
-                    {{-- AI Auto-Write Story Button --}}
+                    {{-- AI Auto-Write Story Button (Sleek Onyx Pill) --}}
                     <button type="button" 
                             @click="generateDescriptionAi()"
                             :disabled="isAiLoading"
-                            class="px-3.5 py-1.5 rounded-xl bg-gradient-to-r from-orange-500 to-[#C0420A] hover:from-orange-600 hover:to-[#a63707] active:scale-95 text-white text-xs font-bold shadow-xs flex items-center gap-1.5 cursor-pointer transition-all disabled:opacity-50">
+                            class="px-4 py-2 rounded-full bg-[#18181B] hover:bg-[#27272A] active:scale-95 text-white text-xs font-bold shadow-xs flex items-center gap-1.5 cursor-pointer transition-all disabled:opacity-50">
                         <span x-show="!isAiLoading" class="flex items-center gap-1.5">
-                            <span class="text-xs">✨</span>
+                            <span class="text-xs text-[#C5A059]">✦</span>
                             <span>AI Auto-Write</span>
                         </span>
                         <span x-show="isAiLoading" class="flex items-center gap-1.5" x-cloak>
@@ -680,7 +709,7 @@
                     </button>
                 </div>
 
-                <div class="relative group">
+                <div class="relative group pt-1">
                     <textarea name="description" 
                               id="artisanDescription" 
                               required 
@@ -689,19 +718,19 @@
                               x-model="description"
                               @input="updateCharCount($el); calculateFillRate();"
                               placeholder="Describe the craftsmanship, cultural heritage, weaving techniques, and unique story behind this piece..."
-                              class="w-full px-4 py-3 bg-gray-50/70 border border-gray-200 rounded-xl outline-none focus:border-[#C0420A] focus:bg-white focus:ring-2 focus:ring-[#C0420A]/10 transition-all font-normal text-sm text-gray-800 placeholder:text-gray-400 resize-none pb-8"></textarea>
+                              class="w-full px-4 py-3.5 bg-[#FAF8F5] border border-[#E5DECE] rounded-2xl outline-none focus:border-[#C5A059] focus:bg-white focus:ring-2 focus:ring-[#C5A059]/15 transition-all font-normal text-sm text-[#18181B] placeholder:text-[#A8A29E] resize-none pb-8 shadow-2xs"></textarea>
                     
-                    <div class="absolute bottom-2.5 right-3.5 flex items-center gap-1 bg-white/95 backdrop-blur-xs px-2 py-0.5 rounded-md border border-gray-100 text-[10px] font-bold text-gray-400 pointer-events-none shadow-2xs">
-                        <span id="charCounter" x-text="description ? description.length : 0">0</span><span class="text-gray-300">/</span><span>500</span>
+                    <div class="absolute bottom-3 right-4 flex items-center gap-1 bg-white/95 backdrop-blur-xs px-2.5 py-0.5 rounded-full border border-[#E5DECE] text-[10px] font-bold text-[#78716C] pointer-events-none shadow-2xs">
+                        <span id="charCounter" x-text="description ? description.length : 0">0</span><span class="text-[#A8A29E]">/</span><span>500</span>
                     </div>
                 </div>
             </div>
 
             {{-- 7. Bottom Submission Actions (Back, Draft & Publish) --}}
-            <div class="pt-6 pb-2 border-t border-gray-100 flex flex-col sm:flex-row items-center justify-between gap-4">
+            <div class="pt-6 pb-2 border-t border-[#EFE8DA] flex flex-col sm:flex-row items-center justify-between gap-4">
                 <button type="button" 
                         @click="step = 1; window.scrollTo({ top: 0, behavior: 'smooth' })"
-                        class="w-full sm:w-auto px-5 py-3 rounded-xl border border-gray-200 hover:bg-gray-50 text-gray-600 hover:text-gray-900 font-bold text-xs transition-all flex items-center justify-center gap-2 cursor-pointer shadow-2xs">
+                        class="w-full sm:w-auto px-6 py-3.5 rounded-full border border-[#E5DECE] hover:bg-[#FAF8F5] text-[#18181B] font-bold text-xs transition-all flex items-center justify-center gap-2 cursor-pointer shadow-2xs">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
                     </svg>
@@ -711,8 +740,8 @@
                 <div class="flex flex-col sm:flex-row items-center gap-3 w-full sm:w-auto">
                     <button type="button" 
                             @click="submitAsDraft()"
-                            class="w-full sm:w-auto px-6 py-3.5 rounded-xl border border-gray-300 hover:border-gray-400 bg-white hover:bg-gray-50 text-gray-800 font-bold text-xs tracking-wide transition-all shadow-xs flex items-center justify-center gap-2 cursor-pointer active:scale-[0.99]">
-                        <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            class="w-full sm:w-auto px-7 py-3.5 rounded-full border border-[#18181B] bg-white hover:bg-[#FAF8F5] text-[#18181B] font-bold text-xs tracking-wide transition-all shadow-xs flex items-center justify-center gap-2 cursor-pointer active:scale-[0.99]">
+                        <svg class="w-4 h-4 text-[#78716C]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4"/>
                         </svg>
                         <span>Save as Draft</span>
@@ -720,11 +749,9 @@
 
                     <button type="submit" 
                             @click="document.getElementById('formActionInput').value = 'publish'"
-                            class="w-full sm:w-auto px-8 py-3.5 rounded-xl bg-[#C0420A] hover:bg-[#a63707] active:scale-[0.99] text-white font-bold text-xs tracking-wide shadow-md shadow-[#C0420A]/20 hover:shadow-lg hover:shadow-[#C0420A]/30 transition-all flex items-center justify-center gap-2 cursor-pointer">
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/>
-                        </svg>
-                        <span>Publish Product</span>
+                            class="w-full sm:w-auto px-8 py-3.5 rounded-full bg-[#18181B] hover:bg-[#27272A] active:scale-[0.99] text-white font-bold text-xs tracking-wide shadow-md hover:shadow-xl transition-all flex items-center justify-center gap-2.5 cursor-pointer">
+                        <span>Publish Heritage Piece</span>
+                        <span class="text-sm font-bold">→</span>
                     </button>
                 </div>
             </div>
