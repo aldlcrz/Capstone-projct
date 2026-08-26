@@ -331,55 +331,34 @@
             </div>
 
             {{-- 2. Target Tag & Dynamic Matching Category Selection --}}
-            <div class="space-y-5">
-                {{-- Step A: Who is this for? (Target Tag) --}}
+            <div class="space-y-4">
+                {{-- Step A: Who is this for? (Target Tag - Clean Pills) --}}
                 <div class="space-y-2">
                     <div style="display:flex;align-items:center;justify-content:space-between;">
-                        <div>
-                            <h2 style="font-family:ui-serif,Georgia,Cambria,serif;font-size:18px;font-weight:700;color:#1E1915;margin:0;">
-                                2. Who is this for? (Target Tag) <span style="color:#C49520;">*</span>
-                            </h2>
-                            <p style="font-size:12px;color:#78716C;margin-top:2px;margin-bottom:0;">
-                                Select the target audience to filter authentic Lumban categories
-                            </p>
-                        </div>
+                        <h2 style="font-family:ui-serif,Georgia,Cambria,serif;font-size:18px;font-weight:700;color:#1E1915;margin:0;">
+                            2. Who is this for? (Target Tag) <span style="color:#C49520;">*</span>
+                        </h2>
                         <span style="font-size:11px;font-weight:700;border-radius:20px;padding:3px 12px;transition:all 0.2s;"
                               :style="targetGroup ? 'background-color:#E8F5E9;border:1px solid #A5D6A7;color:#2E7D32;' : 'background-color:#FDF8EE;border:1px solid #EEDBBA;color:#7A5505;'"
                               x-text="targetGroup ? ('✓ ' + targetGroup + ' selected') : 'Select a tag'"></span>
                     </div>
 
-                    <div id="target-group-container" class="grid grid-cols-3 gap-3">
+                    <div id="target-group-container" style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding-top:2px;">
                         @foreach(['Men', 'Women', 'Kids'] as $group)
-                            @php
-                                $emoji = match($group) {
-                                    'Men' => '👔',
-                                    'Women' => '👗',
-                                    'Kids' => '🧸',
-                                    default => '🏷️'
-                                };
-                            @endphp
                             <label class="cursor-pointer select-none" @click="onTargetGroupChange('{{ $group }}')">
                                 <input type="radio" 
                                        name="target_group" 
                                        value="{{ $group }}" 
                                        x-model="targetGroup" 
                                        class="hidden">
-                                <div style="width:100%;padding:14px 16px;border-radius:18px;display:flex;align-items:center;justify-content:space-between;gap:8px;transition:all 0.2s;box-shadow:0 1px 3px rgba(0,0,0,0.03);"
+                                <div style="padding:9px 26px;border-radius:9999px;font-size:13px;font-weight:700;letter-spacing:0.02em;display:inline-flex;align-items:center;justify-content:center;gap:6px;transition:all 0.2s;box-shadow:0 1px 3px rgba(0,0,0,0.03);"
                                      :style="targetGroup === '{{ $group }}' 
-                                        ? 'background:linear-gradient(135deg, #241C14 0%, #15100B 100%) !important;color:#FAF6F0 !important;border:1.5px solid #C49520 !important;box-shadow:0 4px 14px rgba(28,22,14,0.18) !important;' 
-                                        : 'background-color:#FFFFFF !important;color:#383430 !important;border:1.5px solid #E2D9C8 !important;'"
+                                        ? 'background-color:#18181B !important;color:#FFFFFF !important;border:1.5px solid #18181B !important;box-shadow:0 2px 8px rgba(0,0,0,0.18) !important;' 
+                                        : 'background-color:#FFFFFF !important;color:#57534E !important;border:1.5px solid #E2D9C8 !important;'"
                                      onmouseover="if(this.getAttribute('data-selected') !== 'true') { this.style.backgroundColor='#FAF8F5'; this.style.borderColor='#C49520'; }"
                                      onmouseout="if(this.getAttribute('data-selected') !== 'true') { this.style.backgroundColor='#FFFFFF'; this.style.borderColor='#E2D9C8'; }">
-                                    <div style="display:flex;align-items:center;gap:8px;">
-                                        <span style="font-size:18px;">{{ $emoji }}</span>
-                                        <span style="font-size:13px;font-weight:700;letter-spacing:0.04em;text-transform:uppercase;">{{ $group }}</span>
-                                    </div>
-                                    <div style="width:18px;height:18px;border-radius:50%;display:flex;align-items:center;justify-content:center;transition:all 0.2s;"
-                                         :style="targetGroup === '{{ $group }}' 
-                                            ? 'background-color:#C49520;border:1.5px solid #C49520;color:#FFFFFF;font-size:10px;font-weight:900;' 
-                                            : 'border:1.5px solid #D6CEBE;background-color:transparent;'">
-                                        <span x-show="targetGroup === '{{ $group }}'">✓</span>
-                                    </div>
+                                    <span>{{ $group }}</span>
+                                    <span x-show="targetGroup === '{{ $group }}'" style="color:#C49520;font-size:12px;font-weight:900;">✓</span>
                                 </div>
                             </label>
                         @endforeach
@@ -389,14 +368,9 @@
                 {{-- Step B: Product Category matching selected tag --}}
                 <div class="space-y-2 pt-2">
                     <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;">
-                        <div>
-                            <h3 style="font-family:ui-serif,Georgia,serif;font-size:16px;font-weight:700;color:#1E1915;margin:0;">
-                                Product Category <span x-show="targetGroup" x-text="'for ' + targetGroup"></span> <span style="color:#C49520;">*</span>
-                            </h3>
-                            <p style="font-size:12px;color:#78716C;margin-top:2px;margin-bottom:0;" x-show="targetGroup">
-                                Choose the specific style or garment classification
-                            </p>
-                        </div>
+                        <h3 style="font-family:ui-serif,Georgia,serif;font-size:16px;font-weight:700;color:#1E1915;margin:0;">
+                            Product Category <span x-show="targetGroup" x-text="'for ' + targetGroup"></span> <span style="color:#C49520;">*</span>
+                        </h3>
                         <div style="display:flex;align-items:center;gap:8px;">
                             <span style="font-size:11px;font-weight:700;border-radius:20px;padding:3px 12px;background-color:#FDF8EE;border:1px solid #EEDBBA;color:#7A5505;"
                                   x-show="targetGroup && filteredCategories.length > 0"
@@ -411,49 +385,24 @@
 
                     {{-- Prompt when NO tag is selected (Exact Sand Banner Style) --}}
                     <div x-show="!targetGroup" style="padding:16px 20px;border-radius:18px;background:linear-gradient(90deg,#F6F0E4 0%,#F2EADA 50%,#EAE0CD 100%);border:1px solid #E2D6C0;color:#78716C;font-size:13px;font-weight:500;display:flex;align-items:center;gap:12px;">
-                        <span style="font-size:18px;flex-shrink:0;">👆</span>
+                        <span style="font-size:16px;flex-shrink:0;">👆</span>
                         <span>Please select who this product is for (<strong>Men</strong>, <strong>Women</strong>, or <strong>Kids</strong>) above to display matching categories.</span>
                     </div>
 
-                    {{-- Category Cards Grid (Redesigned with Bespoke Icons, Subtitles & Indicators) --}}
+                    {{-- Category Cards Grid (Clean Minimalist: No Icons, Single Line, Subtle Checkmark) --}}
                     <div x-show="targetGroup" class="space-y-3" x-cloak>
-                        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2.5 max-h-80 overflow-y-auto p-1 pr-1.5" id="category-cards-container">
+                        <div class="grid grid-cols-2 sm:grid-cols-3 gap-2.5 max-h-80 overflow-y-auto p-1 pr-1.5" id="category-cards-container">
                             <template x-for="cat in filteredCategories" :key="cat.id">
                                 <button type="button" 
                                         @click="selectCategory(cat)"
-                                        style="padding:12px 14px;border-radius:16px;display:flex;align-items:center;justify-content:space-between;gap:10px;text-align:left;transition:all 0.2s;cursor:pointer;position:relative;"
+                                        style="padding:12px 16px;border-radius:14px;display:flex;align-items:center;justify-content:space-between;text-align:left;transition:all 0.2s;cursor:pointer;min-height:46px;"
                                         :style="selectedCategory === cat.id 
-                                            ? 'background-color:#FDF9EE !important;border:2px solid #C49520 !important;box-shadow:0 4px 14px rgba(196,149,32,0.12) !important;transform:translateY(-1px);' 
-                                            : 'background-color:#FFFFFF !important;border:1.5px solid #ECE3D2 !important;box-shadow:0 1px 3px rgba(0,0,0,0.02) !important;'"
+                                            ? 'background-color:#FDF8EE !important;border:1.5px solid #C49520 !important;color:#7A5505 !important;font-weight:700 !important;box-shadow:0 2px 8px rgba(196,149,32,0.12) !important;' 
+                                            : 'background-color:#FFFFFF !important;border:1px solid #ECE3D2 !important;color:#1E1915 !important;font-weight:600 !important;box-shadow:0 1px 3px rgba(0,0,0,0.02) !important;'"
                                         onmouseover="if(this.getAttribute('data-active') !== 'true') { this.style.borderColor='#C49520'; this.style.backgroundColor='#FAF8F5'; }"
                                         onmouseout="if(this.getAttribute('data-active') !== 'true') { this.style.borderColor='#ECE3D2'; this.style.backgroundColor='#FFFFFF'; }">
-                                    
-                                    {{-- Left: Icon Emblem + Category Name --}}
-                                    <div style="display:flex;align-items:center;gap:10px;min-width:0;">
-                                        <div style="width:34px;height:34px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0;transition:all 0.2s;"
-                                             :style="selectedCategory === cat.id 
-                                                ? 'background-color:#FAF2DD;border:1px solid #E5CCA0;color:#7A5505;' 
-                                                : 'background-color:#FAF8F5;border:1px solid #EAE2D2;color:#78716C;'">
-                                            <span x-text="getCategoryIcon(cat.name)"></span>
-                                        </div>
-                                        <div style="min-width:0;">
-                                            <span style="display:block;font-size:13px;line-height:1.25;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"
-                                                  :style="selectedCategory === cat.id ? 'color:#382405;' : 'color:#1E1915;'"
-                                                  x-text="cat.name"></span>
-                                            <span style="display:block;font-size:10px;font-weight:500;text-transform:uppercase;letter-spacing:0.04em;margin-top:1px;"
-                                                  :style="selectedCategory === cat.id ? 'color:#A07218;' : 'color:#8C827A;'">
-                                                Artisan Collection
-                                            </span>
-                                        </div>
-                                    </div>
-
-                                    {{-- Right: Radio Circle Indicator --}}
-                                    <div style="width:20px;height:20px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;transition:all 0.2s;"
-                                         :style="selectedCategory === cat.id 
-                                            ? 'background-color:#C49520;border:1.5px solid #C49520;color:#FFFFFF;font-size:11px;font-weight:900;box-shadow:0 2px 5px rgba(196,149,32,0.3);' 
-                                            : 'border:1.5px solid #D6CEBE;background-color:transparent;'">
-                                        <span x-show="selectedCategory === cat.id">✓</span>
-                                    </div>
+                                    <span style="font-size:13px;line-height:1.3;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;" x-text="cat.name"></span>
+                                    <span x-show="selectedCategory === cat.id" style="color:#C49520;font-size:13px;font-weight:900;margin-left:8px;flex-shrink:0;">✓</span>
                                 </button>
                             </template>
 
@@ -468,14 +417,10 @@
                         <div x-show="selectedCategory && selectedCategoryObj" 
                              style="display:flex;align-items:center;justify-content:space-between;padding:12px 18px;border-radius:16px;background-color:#FDF8EE;border:1px solid #EEDBBA;box-shadow:0 1px 3px rgba(0,0,0,0.02);"
                              class="transition-all">
-                            <div style="display:flex;align-items:center;gap:10px;">
-                                <div style="width:24px;height:24px;border-radius:50%;background-color:#C49520;color:#FFFFFF;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:900;">
-                                    ✓
-                                </div>
-                                <div>
-                                    <span style="font-size:11px;color:#7A5505;font-weight:600;text-transform:uppercase;letter-spacing:0.04em;">Selected Category:</span>
-                                    <strong style="font-size:13px;color:#1E1915;font-weight:800;margin-left:4px;" x-text="selectedCategoryObj.name"></strong>
-                                </div>
+                            <div style="display:flex;align-items:center;gap:8px;">
+                                <span style="color:#C49520;font-size:13px;font-weight:900;">✓</span>
+                                <span style="font-size:11px;color:#7A5505;font-weight:600;text-transform:uppercase;letter-spacing:0.04em;">Selected Category:</span>
+                                <strong style="font-size:13px;color:#1E1915;font-weight:800;" x-text="selectedCategoryObj.name"></strong>
                             </div>
                             <span style="font-size:11px;color:#A07218;font-weight:600;" class="hidden sm:inline">
                                 Lumban Verified Specification ✦
@@ -1029,25 +974,6 @@ function addProductManager() {
                 }
                 return false;
             });
-        },
-
-        getCategoryIcon(name) {
-            if (!name) return '❖';
-            const lower = name.toLowerCase();
-            if (lower.includes('piña')) return '🍍';
-            if (lower.includes('jusi')) return '📜';
-            if (lower.includes('formal') && lower.includes('barong')) return '🪡';
-            if (lower.includes('camisa')) return '🥼';
-            if (lower.includes('accessory') || lower.includes('accessories')) return '💎';
-            if (lower.includes('lumban') || lower.includes('special')) return '⭐';
-            if (lower.includes('casual')) return '🌿';
-            if (lower.includes('traditional')) return '🏛️';
-            if (lower.includes('modern')) return '⚡';
-            if (lower.includes('occasion')) return '🥂';
-            if (lower.includes('wedding')) return '💍';
-            if (lower.includes('gown') || lower.includes('dress')) return '👗';
-            if (lower.includes('suit') || lower.includes('barong') || lower.includes('semi')) return '👔';
-            return '❖';
         },
 
         selectCategory(cat) {
