@@ -179,55 +179,20 @@
                     </div>
                 </div>
 
-                {{-- 3. Product Category & Target Tag Selection (Side-by-Side) --}}
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-1">
-                    {{-- Column 1: Product Category --}}
-                    <div class="space-y-1.5">
-                        <div class="flex items-center justify-between">
-                            <label for="categorySelect" class="text-[11px] font-bold uppercase tracking-wider text-gray-700">
-                                Product Category <span class="text-[#C0420A]">*</span>
-                            </label>
-                            <span class="text-[9px] font-bold transition-colors"
-                                  :class="selectedCategory ? 'text-emerald-600' : 'text-[#C0420A]'"
-                                  x-text="selectedCategory && selectedCategoryObj ? ('✓ ' + selectedCategoryObj.name) : 'Required'"></span>
-                        </div>
-
-                        <div class="relative">
-                            <select name="CategoryId" 
-                                    id="categorySelect" 
-                                    required
-                                    x-model="selectedCategory"
-                                    @change="onCategorySelectChange($event)"
-                                    class="w-full px-4 py-3 bg-gray-50/70 border border-gray-200 rounded-xl outline-none focus:border-[#C0420A] focus:bg-white focus:ring-2 focus:ring-[#C0420A]/10 transition-all font-semibold text-xs text-gray-800 appearance-none pr-10 cursor-pointer">
-                                <option value="" disabled selected>Select a category...</option>
-                                @foreach($categories as $category)
-                                    @php
-                                        $tags = is_array($category->target_group) ? $category->target_group : (is_string($category->target_group) ? json_decode($category->target_group, true) ?? [] : []);
-                                        $tagStr = !empty($tags) ? implode(', ', $tags) : 'All';
-                                    @endphp
-                                    <option value="{{ $category->id }}" data-tags="{{ implode(',', $tags) }}" data-name="{{ strtolower($category->name) }}">
-                                        {{ $category->name }} ({{ $tagStr }})
-                                    </option>
-                                @endforeach
-                            </select>
-                            <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3.5 text-gray-400">
-                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
-                            </div>
-                        </div>
-                    </div>
-
-                    {{-- Column 2: Target Tag (Who is this for?) --}}
+                {{-- 3. Target Tag & Dynamic Matching Category Selection --}}
+                <div class="space-y-4 pt-1">
+                    {{-- Step 1: Who is this for? (Target Tag) --}}
                     <div class="space-y-1.5">
                         <div class="flex items-center justify-between">
                             <label class="text-[11px] font-bold uppercase tracking-wider text-gray-700">
-                                Who is this for? (Target Tag) <span class="text-[#C0420A]">*</span>
+                                1. Who is this for? (Target Tag) <span class="text-[#C0420A]">*</span>
                             </label>
                             <span class="text-[9px] font-bold transition-colors"
                                   :class="targetGroup ? 'text-emerald-600' : 'text-[#C0420A]'"
-                                  x-text="targetGroup ? ('✓ ' + targetGroup) : 'Select tag'"></span>
+                                  x-text="targetGroup ? ('✓ ' + targetGroup + ' selected') : 'Select a tag'"></span>
                         </div>
 
-                        <div id="target-group-container" class="grid grid-cols-3 gap-2">
+                        <div id="target-group-container" class="grid grid-cols-3 gap-2.5">
                             @foreach(['Men', 'Women', 'Kids'] as $group)
                                 @php
                                     $emoji = match($group) {
@@ -244,12 +209,61 @@
                                            x-model="targetGroup" 
                                            @change="onTargetGroupChange('{{ $group }}')" 
                                            class="hidden peer target-group-radio">
-                                    <div class="w-full py-2.5 px-2 rounded-xl border border-gray-200 bg-gray-50/70 hover:bg-gray-100/70 text-xs font-bold text-gray-600 text-center uppercase tracking-wider flex items-center justify-center gap-1.5 transition-all peer-checked:border-[#C0420A] peer-checked:bg-[#C0420A]/5 peer-checked:text-[#C0420A] peer-checked:font-black peer-checked:ring-2 peer-checked:ring-[#C0420A]/10 shadow-2xs">
-                                        <span>{{ $emoji }}</span>
+                                    <div class="w-full py-3 px-2.5 rounded-xl border border-gray-200 bg-gray-50/70 hover:bg-gray-100/70 text-xs font-bold text-gray-600 text-center uppercase tracking-wider flex items-center justify-center gap-1.5 transition-all peer-checked:border-[#C0420A] peer-checked:bg-[#C0420A]/5 peer-checked:text-[#C0420A] peer-checked:font-black peer-checked:ring-2 peer-checked:ring-[#C0420A]/10 shadow-2xs">
+                                        <span class="text-base">{{ $emoji }}</span>
                                         <span>{{ $group }}</span>
+                                        <span x-show="targetGroup === '{{ $group }}'" class="w-3.5 h-3.5 rounded-full bg-[#C0420A] text-white flex items-center justify-center text-[8px] font-bold ml-1">✓</span>
                                     </div>
                                 </label>
                             @endforeach
+                        </div>
+                    </div>
+
+                    {{-- Step 2: Product Category matching selected tag --}}
+                    <div class="space-y-1.5 pt-1">
+                        <div class="flex items-center justify-between">
+                            <label class="text-[11px] font-bold uppercase tracking-wider text-gray-700">
+                                2. Product Category <span x-show="targetGroup" x-text="'for ' + targetGroup"></span> <span class="text-[#C0420A]">*</span>
+                            </label>
+                            <span class="text-[9px] font-bold transition-colors"
+                                  :class="selectedCategory ? 'text-emerald-600' : 'text-[#C0420A]'"
+                                  x-text="selectedCategory && selectedCategoryObj ? ('✓ ' + selectedCategoryObj.name) : (targetGroup ? 'Choose from options below' : 'Select tag above first')"></span>
+                        </div>
+
+                        {{-- Hidden CategoryId input for form submission --}}
+                        <input type="hidden" name="CategoryId" id="categorySelect" :value="selectedCategory" required>
+
+                        {{-- Prompt when NO tag is selected --}}
+                        <div x-show="!targetGroup" class="p-4 rounded-2xl bg-amber-50/70 border border-amber-200/80 text-amber-900 text-xs font-medium flex items-center gap-2.5">
+                            <span class="text-base shrink-0">👆</span>
+                            <span>Please select who this product is for (<strong>Men</strong>, <strong>Women</strong>, or <strong>Kids</strong>) above to display matching categories.</span>
+                        </div>
+
+                        {{-- Category grid displayed when a tag is picked --}}
+                        <div x-show="targetGroup" class="space-y-2" x-cloak>
+                            <div class="grid grid-cols-2 sm:grid-cols-3 gap-2.5 max-h-60 overflow-y-auto p-2.5 bg-gray-50/70 rounded-2xl border border-gray-200 shadow-2xs" id="category-cards-container">
+                                <template x-for="cat in filteredCategories" :key="cat.id">
+                                    <button type="button" 
+                                            @click="selectCategory(cat)"
+                                            :class="selectedCategory === cat.id 
+                                                ? 'bg-white border-2 border-[#C0420A] text-[#C0420A] shadow-xs font-black ring-2 ring-[#C0420A]/10' 
+                                                : 'bg-white border border-gray-200/90 hover:border-gray-300 text-gray-700 hover:text-gray-900 font-bold'"
+                                            class="p-3 rounded-xl flex items-center justify-between text-left transition-all cursor-pointer group hover:scale-[1.01] active:scale-[0.99] text-xs">
+                                        <span class="truncate" x-text="cat.name"></span>
+                                        <span x-show="selectedCategory === cat.id" class="w-4 h-4 rounded-full bg-[#C0420A] text-white flex items-center justify-center text-[9px] shrink-0 font-bold ml-1.5">✓</span>
+                                    </button>
+                                </template>
+
+                                <template x-if="filteredCategories.length === 0">
+                                    <div class="col-span-full py-6 text-center text-xs text-gray-400 font-medium">
+                                        No categories found for this tag.
+                                    </div>
+                                </template>
+                            </div>
+
+                            <p x-show="selectedCategory && selectedCategoryObj" class="text-[11px] text-gray-500 font-medium px-1">
+                                Selected Category: <strong class="text-gray-900" x-text="selectedCategoryObj.name"></strong>
+                            </p>
                         </div>
                     </div>
                 </div>
@@ -857,32 +871,27 @@ function addProductManager() {
             return this.categoriesList.find(c => c && String(c.id) === String(this.selectedCategory)) || null;
         },
 
-        onCategorySelectChange(event) {
-            const catId = event ? event.target.value : this.selectedCategory;
-            this.selectedCategory = catId;
-
-            const selectEl = document.getElementById('categorySelect');
-            if (selectEl) selectEl.classList.remove('border-red-500');
-
-            // Intelligently auto-sync target group if category has specific demographic tags
-            const cat = Array.isArray(this.categoriesList) ? this.categoriesList.find(c => c && String(c.id) === String(catId)) : null;
-            if (cat && Array.isArray(cat.target_group) && cat.target_group.length > 0) {
-                if (!this.targetGroup || !cat.target_group.includes(this.targetGroup)) {
-                    this.targetGroup = cat.target_group[0];
+        get filteredCategories() {
+            if (!Array.isArray(this.categoriesList)) return [];
+            if (!this.targetGroup) return [];
+            return this.categoriesList.filter(c => {
+                if (!c) return false;
+                let tg = c.target_group;
+                if (Array.isArray(tg)) {
+                    return tg.includes(this.targetGroup);
                 }
-            }
-            this.calculateFillRate();
+                if (typeof tg === 'string') {
+                    return tg === this.targetGroup;
+                }
+                return false;
+            });
         },
 
         selectCategory(cat) {
             if (!cat) return;
             this.selectedCategory = cat.id;
-            let tags = Array.isArray(cat.target_group) ? cat.target_group : [];
-            if (tags.length > 0) {
-                if (!this.targetGroup || !tags.includes(this.targetGroup)) {
-                    this.targetGroup = tags[0];
-                }
-            }
+            const catContainer = document.getElementById('category-cards-container');
+            if (catContainer) catContainer.classList.remove('border-red-500');
             this.calculateFillRate();
         },
 
@@ -890,6 +899,22 @@ function addProductManager() {
             this.targetGroup = group;
             const tgContainer = document.getElementById('target-group-container');
             if (tgContainer) tgContainer.classList.remove('border-red-500', 'p-1', 'border', 'rounded-xl');
+
+            // If current category does not belong to the selected tag, unselect it
+            if (this.selectedCategory) {
+                const currentCat = Array.isArray(this.categoriesList) ? this.categoriesList.find(c => String(c.id) === String(this.selectedCategory)) : null;
+                if (currentCat) {
+                    let tg = currentCat.target_group;
+                    let hasTag = Array.isArray(tg) ? tg.includes(group) : (tg === group);
+                    if (!hasTag) {
+                        this.selectedCategory = '';
+                    }
+                }
+            }
+
+            const catContainer = document.getElementById('category-cards-container');
+            if (catContainer) catContainer.classList.remove('border-red-500');
+
             this.calculateFillRate();
         },
 
@@ -923,21 +948,19 @@ function addProductManager() {
                 return;
             }
 
-            if (!this.selectedCategory || this.selectedCategory === '') {
-                triggerAppModal('Category Required', 'Please select a product category from the dropdown.', 'warning');
-                const catSelect = document.getElementById('categorySelect');
-                if (catSelect) {
-                    catSelect.classList.add('border-red-500');
-                    catSelect.focus();
-                }
-                return;
-            }
-
             if (!this.targetGroup || !['Men', 'Women', 'Kids'].includes(this.targetGroup)) {
                 triggerAppModal('Target Tag Required', 'Please select who this product is for (Men, Women, or Kids).', 'warning');
                 const tgContainer = document.getElementById('target-group-container');
                 if (tgContainer) tgContainer.classList.add('border-red-500', 'p-1', 'border', 'rounded-xl');
                 return;
+            }
+
+            if (!this.selectedCategory || this.selectedCategory === '') {
+                triggerAppModal('Category Required', 'Please select a product category for ' + this.targetGroup + '.', 'warning');
+                const catContainer = document.getElementById('category-cards-container');
+                if (catContainer) {
+                    catContainer.classList.add('border-red-500');
+                }
             }
 
             if (this.hasVariants) {
@@ -1334,19 +1357,20 @@ function validateProductForm(e, isEdit = false) {
     }
 
     // 4. Product Category & Target Group
-    const categorySelect = document.getElementById('categorySelect') || document.querySelector('select[name="CategoryId"], input[name="CategoryId"]');
-    const categoryVal = categorySelect ? categorySelect.value : '';
-    if (!categoryVal) {
-        errors.push('Please select a Product Category.');
-        if (categorySelect) categorySelect.classList.add('border-red-500');
-    }
-
-    const targetGroupChecked = document.querySelector('input[name="target_group"]:checked');
+    const targetGroupChecked = document.querySelector('input[name="target_group"]:checked') || document.getElementById('targetGroupInput');
     const targetGroupContainer = document.getElementById('target-group-container');
     const targetGroupVal = targetGroupChecked ? targetGroupChecked.value : '';
     if (!targetGroupVal || !['Men', 'Women', 'Kids'].includes(targetGroupVal)) {
         errors.push('Please specify who this product is for (Men, Women, or Kids).');
         if (targetGroupContainer) targetGroupContainer.classList.add('border-red-500', 'p-1', 'border', 'rounded-xl');
+    }
+
+    const categorySelect = document.getElementById('categorySelect') || document.querySelector('input[name="CategoryId"], select[name="CategoryId"]');
+    const categoryVal = categorySelect ? categorySelect.value : '';
+    const catContainer = document.getElementById('category-cards-container');
+    if (!categoryVal) {
+        errors.push('Please select a Product Category.');
+        if (catContainer) catContainer.classList.add('border-red-500');
     }
 
     // 5. Product Imagery

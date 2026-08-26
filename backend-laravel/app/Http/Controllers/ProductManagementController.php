@@ -33,18 +33,23 @@ class ProductManagementController extends Controller
         $categories = \App\Models\Category::orderBy('name', 'asc')->get();
         foreach ($categories as $cat) {
             $tg = $cat->target_group;
+            if (is_string($tg)) {
+                $decoded = json_decode($tg, true);
+                $tg = is_array($decoded) ? $decoded : (in_array($tg, ['Men', 'Women', 'Kids']) ? [$tg] : []);
+            }
             if (empty($tg) || !is_array($tg)) {
                 $nameLower = strtolower($cat->name);
-                if (str_contains($nameLower, 'gown') || str_contains($nameLower, 'terno') || str_contains($nameLower, 'lady') || (str_contains($nameLower, 'filipiniana') && !str_contains($nameLower, 'girl'))) {
-                    $cat->target_group = ['Women'];
-                } elseif (str_contains($nameLower, 'boy') || str_contains($nameLower, 'girl') || str_contains($nameLower, 'kid')) {
-                    $cat->target_group = ['Kids'];
-                } elseif (str_contains($nameLower, 'barong') || str_contains($nameLower, 'camisa') || str_contains($nameLower, 'polo') || str_contains($nameLower, 'men')) {
-                    $cat->target_group = ['Men'];
+                if (str_contains($nameLower, 'boy') || str_contains($nameLower, 'girl') || str_contains($nameLower, 'kid')) {
+                    $tg = ['Kids'];
+                } elseif (str_contains($nameLower, 'gown') || str_contains($nameLower, 'terno') || str_contains($nameLower, 'lady') || (str_contains($nameLower, 'filipiniana') && !str_contains($nameLower, 'girl')) || str_contains($nameLower, 'dress') || str_contains($nameLower, 'blouse')) {
+                    $tg = ['Women'];
+                } elseif (str_contains($nameLower, 'barong') || str_contains($nameLower, 'camisa') || str_contains($nameLower, 'polo') || str_contains($nameLower, 'men') || str_contains($nameLower, 'coat')) {
+                    $tg = ['Men'];
                 } else {
-                    $cat->target_group = [];
+                    $tg = ['Men', 'Women'];
                 }
             }
+            $cat->target_group = $tg;
         }
         return view('seller.products.create', compact('categories'));
     }
