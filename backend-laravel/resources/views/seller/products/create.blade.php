@@ -69,303 +69,298 @@
         {{-- ========================================================================= --}}
         <div class="bg-white p-5 sm:p-7 rounded-2xl border border-gray-100 shadow-sm space-y-6">
             
-            {{-- 1. Product Name (English) --}}
-            <div class="space-y-1.5">
+            {{-- 1. Product Media & Variants (Unified: Variant 1 is Cover Photo & Product Name) --}}
+            <div class="space-y-4">
                 <div class="flex items-center justify-between">
-                    <label class="text-[11px] font-bold uppercase tracking-wider text-gray-700">
-                        1. Product Name (English) <span class="text-[#C0420A]">*</span>
-                        <span class="text-[10px] text-gray-400 font-normal" x-text="'(' + (productName ? productName.length : 0) + '/100)'"></span>
-                    </label>
+                    <div class="space-y-0.5">
+                        <label class="text-[11px] font-bold uppercase tracking-wider text-gray-700 flex items-center gap-2">
+                            <span>1. Product Media & Variants</span>
+                            <span class="text-[#C0420A]">*</span>
+                        </label>
+                        <p class="text-[11px] text-gray-500 font-medium">
+                            Variant 1 represents your main product style, cover photo, and product name.
+                        </p>
+                    </div>
+                    <span class="text-[9px] font-bold text-gray-400 uppercase" x-text="variants.length + ' style(s)'"></span>
                 </div>
 
-                <div class="relative flex items-center">
-                    <input type="text" 
-                           name="name" 
-                           id="productNameInput"
-                           required 
-                           maxlength="100"
-                           x-model="productName"
-                           @input="calculateFillRate()"
-                           placeholder="e.g. Hand-Woven Piña Barong Tagalog with Calado Embroidery"
-                           class="w-full px-4 py-3 bg-gray-50/70 border border-gray-200 rounded-xl outline-none focus:border-[#C0420A] focus:bg-white focus:ring-2 focus:ring-[#C0420A]/10 transition-all font-semibold text-sm text-gray-800 placeholder:text-gray-400 placeholder:font-normal pr-10">
-                    
-                    {{-- Clear Button (X) --}}
+                {{-- Variant 1: Main Product Style & Cover Photo (Unified with Product Name) --}}
+                <div class="p-4 sm:p-5 bg-orange-50/20 border-2 border-dashed border-[#C0420A]/40 rounded-2xl space-y-4 transition-all shadow-2xs hover:border-[#C0420A]" id="variant_card_0">
+                    <div class="flex items-center justify-between pb-2 border-b border-orange-200/50">
+                        <div class="flex items-center gap-2">
+                            <span class="w-2 h-2 rounded-full bg-[#C0420A]"></span>
+                            <span class="text-xs font-black uppercase tracking-wider text-gray-900">
+                                Variant 1 (Main Style / Cover)
+                            </span>
+                            <span class="px-2 py-0.5 rounded-md bg-[#C0420A]/10 text-[#C0420A] text-[9px] font-black uppercase tracking-wider">Cover Image</span>
+                        </div>
+                        <span class="text-[10px] text-gray-400 font-medium">Primary Product Listing</span>
+                    </div>
+
+                    {{-- Hidden inputs for Variant 1 mapping --}}
+                    <input type="hidden" name="variant_indexes[]" value="0">
+                    <input type="hidden" name="variant_names[0]" :value="productName || 'Original Style'">
+
+                    <div class="flex flex-col sm:flex-row items-start gap-4 sm:gap-5">
+                        {{-- Cover Image Upload Box --}}
+                        <div class="relative shrink-0 w-full sm:w-44">
+                            <label for="variant_file_0"
+                                   id="variant_upload_box_0"
+                                   class="w-full h-44 rounded-2xl border-2 border-dashed border-gray-300 hover:border-[#C0420A] bg-white hover:bg-orange-50/40 flex flex-col items-center justify-center cursor-pointer overflow-hidden transition-all relative group/img shadow-2xs select-none">
+                                
+                                <template x-if="variants[0].imagePreview">
+                                    <div class="relative w-full h-full">
+                                        <img :src="variants[0].imagePreview" class="w-full h-full object-cover rounded-xl">
+                                        <div class="absolute inset-0 bg-black/40 opacity-0 group-hover/img:opacity-100 transition-opacity flex flex-col items-center justify-center text-white text-[10px] font-bold uppercase tracking-wider gap-1">
+                                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+                                            <span>Change Photo</span>
+                                        </div>
+                                        <div class="absolute bottom-1.5 inset-x-1.5 bg-black/60 backdrop-blur-xs py-0.5 rounded text-center text-[9px] font-bold text-white uppercase tracking-wider">
+                                            Cover Image
+                                        </div>
+                                    </div>
+                                </template>
+
+                                <template x-if="!variants[0].imagePreview">
+                                    <div class="flex flex-col items-center justify-center text-center p-3">
+                                        <div class="w-10 h-10 rounded-2xl bg-[#C0420A]/10 flex items-center justify-center text-[#C0420A] mb-1.5 group-hover/img:scale-110 transition-transform">
+                                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                                        </div>
+                                        <span class="text-xs font-black text-[#C0420A] uppercase tracking-wide">+ Upload Main Photo</span>
+                                        <span class="text-[10px] text-gray-400 font-medium mt-0.5">JPEG, PNG, WEBP</span>
+                                    </div>
+                                </template>
+
+                                <input type="file" 
+                                       id="variant_file_0"
+                                       name="variant_image_0" 
+                                       accept="image/jpeg,image/png,image/webp,image/jpg" 
+                                       class="hidden" 
+                                       @change="handleVariantFile($event, 0)">
+                            </label>
+
+                            <button type="button" 
+                                    x-show="variants[0].imagePreview"
+                                    @click="removeVariantImage(0)" 
+                                    class="absolute -top-2 -right-2 w-6 h-6 bg-red-600 hover:bg-red-700 text-white rounded-full flex items-center justify-center text-[10px] font-black shadow-md transition-all cursor-pointer"
+                                    title="Remove photo">
+                                ✕
+                            </button>
+                        </div>
+
+                        {{-- Product Name Input (Variant 1 Name) --}}
+                        <div class="flex-1 w-full space-y-2">
+                            <div class="flex items-center justify-between">
+                                <label class="text-[11px] font-bold uppercase tracking-wider text-gray-700">
+                                    Product Name (English) <span class="text-[#C0420A]">*</span>
+                                    <span class="text-[10px] text-gray-400 font-normal" x-text="'(' + (productName ? productName.length : 0) + '/100)'"></span>
+                                </label>
+                            </div>
+
+                            <div class="relative flex items-center">
+                                <input type="text" 
+                                       name="name" 
+                                       id="productNameInput"
+                                       required 
+                                       maxlength="100"
+                                       x-model="productName"
+                                       @input="calculateFillRate()"
+                                       placeholder="e.g. Hand-Woven Piña Barong Tagalog with Calado Embroidery"
+                                       class="w-full px-4 py-3.5 bg-white border border-gray-200 rounded-xl outline-none focus:border-[#C0420A] focus:ring-2 focus:ring-[#C0420A]/10 transition-all font-semibold text-sm text-gray-800 placeholder:text-gray-400 placeholder:font-normal pr-10 shadow-2xs">
+                                
+                                {{-- Clear Button (X) --}}
+                                <button type="button" 
+                                        x-show="productName && productName.length > 0"
+                                        @click="productName = ''; calculateFillRate();"
+                                        class="absolute right-3 text-gray-400 hover:text-gray-600 transition-colors cursor-pointer">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                                </button>
+                            </div>
+
+                            <div class="space-y-1 pt-1">
+                                <p class="text-[11px] text-gray-500 font-medium leading-relaxed">
+                                    This photo and title serve as your <strong>primary product listing</strong> across the store, search, and catalogue.
+                                </p>
+                                <p class="text-[10px] text-[#C0420A] font-semibold flex items-center gap-1">
+                                    <span>💡</span> Have other colors, fabrics, or sleeve styles? Click "+ Add Another Variant" below.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                {{-- Additional Variants List (Variant 2, 3, etc.) --}}
+                <div class="space-y-3">
+                    <template x-for="(variant, index) in variants" :key="variant.id">
+                        <div x-show="index > 0" class="p-4 bg-white border border-gray-200 hover:border-gray-300 rounded-2xl space-y-3 transition-all shadow-2xs">
+                            <div class="flex items-center justify-between pb-2 border-b border-gray-100">
+                                <div class="flex items-center gap-2">
+                                    <span class="w-1.5 h-1.5 rounded-full bg-[#C0420A]"></span>
+                                    <span class="text-xs font-black uppercase tracking-wider text-gray-800" x-text="'Variant ' + (index + 1)"></span>
+                                    <span class="px-2 py-0.5 rounded-md bg-blue-50 text-blue-700 text-[9px] font-black uppercase tracking-wider">Style Option</span>
+                                </div>
+                                <button type="button" 
+                                        @click="removeVariantRow(index)" 
+                                        class="text-[11px] font-bold text-red-600 hover:text-red-700 flex items-center gap-1 cursor-pointer">
+                                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+                                    <span>Remove Variant</span>
+                                </button>
+                            </div>
+
+                            {{-- Hidden input mapping for PHP --}}
+                            <input type="hidden" name="variant_indexes[]" :value="index">
+
+                            <div class="flex items-center gap-3.5">
+                                {{-- Variant Image Box --}}
+                                <div class="relative shrink-0">
+                                    <label :for="'variant_file_' + index"
+                                           class="w-20 h-20 sm:w-22 sm:h-22 rounded-2xl border-2 border-dashed border-gray-300 hover:border-[#C0420A] bg-gray-50/70 hover:bg-orange-50/40 flex flex-col items-center justify-center cursor-pointer overflow-hidden transition-all relative group/img shadow-2xs select-none">
+                                        <template x-if="variant.imagePreview">
+                                            <div class="relative w-full h-full">
+                                                <img :src="variant.imagePreview" class="w-full h-full object-cover rounded-xl">
+                                                <div class="absolute inset-0 bg-black/30 opacity-0 group-hover/img:opacity-100 transition-opacity flex items-center justify-center text-white text-[9px] font-bold uppercase tracking-wider">
+                                                    Change
+                                                </div>
+                                            </div>
+                                        </template>
+                                        <template x-if="!variant.imagePreview">
+                                            <div class="flex flex-col items-center justify-center text-center p-1">
+                                                <div class="w-6 h-6 rounded-full bg-[#C0420A]/10 flex items-center justify-center text-[#C0420A] mb-0.5 group-hover/img:scale-110 transition-transform">
+                                                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                                                </div>
+                                                <span class="text-[9px] font-extrabold text-[#C0420A] uppercase tracking-wider">+ Photo</span>
+                                            </div>
+                                        </template>
+                                        <input type="file" 
+                                               :id="'variant_file_' + index" 
+                                               :name="'variant_image_' + index" 
+                                               accept="image/jpeg,image/png,image/webp,image/jpg" 
+                                               class="hidden" 
+                                               @change="handleVariantFile($event, index)">
+                                    </label>
+                                    <button type="button" 
+                                            x-show="variant.imagePreview"
+                                            @click="removeVariantImage(index)" 
+                                            class="absolute -top-1.5 -right-1.5 w-5 h-5 bg-red-600 hover:bg-red-700 text-white rounded-full flex items-center justify-center text-[9px] font-black shadow-md transition-all cursor-pointer">
+                                        ✕
+                                    </button>
+                                </div>
+
+                                {{-- Variant Name Input --}}
+                                <div class="flex-1 min-w-0">
+                                    <div class="flex items-center justify-between mb-1">
+                                        <label class="text-[10px] font-black uppercase tracking-wider text-gray-700">
+                                            Variant Name <span class="text-[#C0420A]">*</span>
+                                        </label>
+                                        <span class="text-[9px] text-gray-400 font-medium hidden sm:inline">e.g. Color, embroidery, or style</span>
+                                    </div>
+                                    <input type="text" 
+                                           :name="'variant_names[' + index + ']'" 
+                                           x-model="variant.name" 
+                                           placeholder="e.g. Emerald Green, Ivory Piña, Short Sleeve..." 
+                                           class="w-full px-3.5 py-2.5 bg-gray-50/80 border border-gray-200 rounded-xl text-xs font-bold text-gray-900 outline-none focus:border-[#C0420A] focus:bg-white transition-all shadow-2xs">
+                                </div>
+                            </div>
+                        </div>
+                    </template>
+                </div>
+
+                {{-- Add Another Variant Button --}}
+                <div>
                     <button type="button" 
-                            x-show="productName && productName.length > 0"
-                            @click="productName = ''; calculateFillRate();"
-                            class="absolute right-3 text-gray-400 hover:text-gray-600 transition-colors cursor-pointer">
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                            @click="addVariantRow()" 
+                            class="w-full py-3 px-4 rounded-2xl border-2 border-dashed border-gray-300 hover:border-[#C0420A] bg-gray-50/70 hover:bg-orange-50/20 text-gray-700 hover:text-[#C0420A] font-bold text-xs flex items-center justify-center gap-2 transition-all cursor-pointer shadow-2xs">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"/></svg>
+                        <span>+ Add Another Variant (Optional Style / Color)</span>
                     </button>
                 </div>
             </div>
 
-            <div class="border-t border-gray-100 pt-5 space-y-5">
-                {{-- 2. Target Tag & Dynamic Matching Category Selection --}}
-                <div class="space-y-4">
-                    {{-- Step A: Who is this for? (Target Tag) --}}
-                    <div class="space-y-1.5">
-                        <div class="flex items-center justify-between">
-                            <label class="text-[11px] font-bold uppercase tracking-wider text-gray-700">
-                                2. Who is this for? (Target Tag) <span class="text-[#C0420A]">*</span>
-                            </label>
-                            <span class="text-[9px] font-bold transition-colors"
-                                  :class="targetGroup ? 'text-emerald-600' : 'text-[#C0420A]'"
-                                  x-text="targetGroup ? ('✓ ' + targetGroup + ' selected') : 'Select a tag'"></span>
-                        </div>
-
-                        <div id="target-group-container" class="grid grid-cols-3 gap-2.5">
-                            @foreach(['Men', 'Women', 'Kids'] as $group)
-                                @php
-                                    $emoji = match($group) {
-                                        'Men' => '👔',
-                                        'Women' => '👗',
-                                        'Kids' => '🧸',
-                                        default => '🏷️'
-                                    };
-                                @endphp
-                                <label class="cursor-pointer">
-                                    <input type="radio" 
-                                           name="target_group" 
-                                           value="{{ $group }}" 
-                                           x-model="targetGroup" 
-                                           @change="onTargetGroupChange('{{ $group }}')" 
-                                           class="hidden peer target-group-radio">
-                                    <div class="w-full py-3 px-2.5 rounded-xl border border-gray-200 bg-gray-50/70 hover:bg-gray-100/70 text-xs font-bold text-gray-600 text-center uppercase tracking-wider flex items-center justify-center gap-1.5 transition-all peer-checked:border-[#C0420A] peer-checked:bg-[#C0420A]/5 peer-checked:text-[#C0420A] peer-checked:font-black peer-checked:ring-2 peer-checked:ring-[#C0420A]/10 shadow-2xs">
-                                        <span class="text-base">{{ $emoji }}</span>
-                                        <span>{{ $group }}</span>
-                                        <span x-show="targetGroup === '{{ $group }}'" class="w-3.5 h-3.5 rounded-full bg-[#C0420A] text-white flex items-center justify-center text-[8px] font-bold ml-1">✓</span>
-                                    </div>
-                                </label>
-                            @endforeach
-                        </div>
+            {{-- 2. Target Tag & Dynamic Matching Category Selection --}}
+            <div class="border-t border-gray-100 pt-5 space-y-4">
+                {{-- Step A: Who is this for? (Target Tag) --}}
+                <div class="space-y-1.5">
+                    <div class="flex items-center justify-between">
+                        <label class="text-[11px] font-bold uppercase tracking-wider text-gray-700">
+                            2. Who is this for? (Target Tag) <span class="text-[#C0420A]">*</span>
+                        </label>
+                        <span class="text-[9px] font-bold transition-colors"
+                              :class="targetGroup ? 'text-emerald-600' : 'text-[#C0420A]'"
+                              x-text="targetGroup ? ('✓ ' + targetGroup + ' selected') : 'Select a tag'"></span>
                     </div>
 
-                    {{-- Step B: Product Category matching selected tag --}}
-                    <div class="space-y-1.5 pt-1">
-                        <div class="flex items-center justify-between">
-                            <label class="text-[11px] font-bold uppercase tracking-wider text-gray-700">
-                                Product Category <span x-show="targetGroup" x-text="'for ' + targetGroup"></span> <span class="text-[#C0420A]">*</span>
+                    <div id="target-group-container" class="grid grid-cols-3 gap-2.5">
+                        @foreach(['Men', 'Women', 'Kids'] as $group)
+                            @php
+                                $emoji = match($group) {
+                                    'Men' => '👔',
+                                    'Women' => '👗',
+                                    'Kids' => '🧸',
+                                    default => '🏷️'
+                                };
+                            @endphp
+                            <label class="cursor-pointer">
+                                <input type="radio" 
+                                       name="target_group" 
+                                       value="{{ $group }}" 
+                                       x-model="targetGroup" 
+                                       @change="onTargetGroupChange('{{ $group }}')" 
+                                       class="hidden peer target-group-radio">
+                                <div class="w-full py-3 px-2.5 rounded-xl border border-gray-200 bg-gray-50/70 hover:bg-gray-100/70 text-xs font-bold text-gray-600 text-center uppercase tracking-wider flex items-center justify-center gap-1.5 transition-all peer-checked:border-[#C0420A] peer-checked:bg-[#C0420A]/5 peer-checked:text-[#C0420A] peer-checked:font-black peer-checked:ring-2 peer-checked:ring-[#C0420A]/10 shadow-2xs">
+                                    <span class="text-base">{{ $emoji }}</span>
+                                    <span>{{ $group }}</span>
+                                    <span x-show="targetGroup === '{{ $group }}'" class="w-3.5 h-3.5 rounded-full bg-[#C0420A] text-white flex items-center justify-center text-[8px] font-bold ml-1">✓</span>
+                                </div>
                             </label>
-                            <span class="text-[9px] font-bold transition-colors"
-                                  :class="selectedCategory ? 'text-emerald-600' : 'text-[#C0420A]'"
-                                  x-text="selectedCategory && selectedCategoryObj ? ('✓ ' + selectedCategoryObj.name) : (targetGroup ? 'Choose from options below' : 'Select tag above first')"></span>
-                        </div>
-
-                        {{-- Hidden CategoryId input for form submission --}}
-                        <input type="hidden" name="CategoryId" id="categorySelect" :value="selectedCategory" required>
-
-                        {{-- Prompt when NO tag is selected --}}
-                        <div x-show="!targetGroup" class="p-4 rounded-2xl bg-amber-50/70 border border-amber-200/80 text-amber-900 text-xs font-medium flex items-center gap-2.5">
-                            <span class="text-base shrink-0">👆</span>
-                            <span>Please select who this product is for (<strong>Men</strong>, <strong>Women</strong>, or <strong>Kids</strong>) above to display matching categories.</span>
-                        </div>
-
-                        {{-- Category grid displayed when a tag is picked --}}
-                        <div x-show="targetGroup" class="space-y-2" x-cloak>
-                            <div class="grid grid-cols-2 sm:grid-cols-3 gap-2.5 max-h-60 overflow-y-auto p-2.5 bg-gray-50/70 rounded-2xl border border-gray-200 shadow-2xs" id="category-cards-container">
-                                <template x-for="cat in filteredCategories" :key="cat.id">
-                                    <button type="button" 
-                                            @click="selectCategory(cat)"
-                                            :class="selectedCategory === cat.id 
-                                                ? 'bg-white border-2 border-[#C0420A] text-[#C0420A] shadow-xs font-black ring-2 ring-[#C0420A]/10' 
-                                                : 'bg-white border border-gray-200/90 hover:border-gray-300 text-gray-700 hover:text-gray-900 font-bold'"
-                                            class="p-3 rounded-xl flex items-center justify-between text-left transition-all cursor-pointer group hover:scale-[1.01] active:scale-[0.99] text-xs">
-                                        <span class="truncate" x-text="cat.name"></span>
-                                        <span x-show="selectedCategory === cat.id" class="w-4 h-4 rounded-full bg-[#C0420A] text-white flex items-center justify-center text-[9px] shrink-0 font-bold ml-1.5">✓</span>
-                                    </button>
-                                </template>
-
-                                <template x-if="filteredCategories.length === 0">
-                                    <div class="col-span-full py-6 text-center text-xs text-gray-400 font-medium">
-                                        No categories found for this tag.
-                                    </div>
-                                </template>
-                            </div>
-
-                            <p x-show="selectedCategory && selectedCategoryObj" class="text-[11px] text-gray-500 font-medium px-1">
-                                Selected Category: <strong class="text-gray-900" x-text="selectedCategoryObj.name"></strong>
-                            </p>
-                        </div>
+                        @endforeach
                     </div>
                 </div>
 
-                {{-- 3. Product Media & Variants (Unified Single Step!) --}}
-                <div class="border-t border-gray-100 pt-5 space-y-4">
+                {{-- Step B: Product Category matching selected tag --}}
+                <div class="space-y-1.5 pt-1">
                     <div class="flex items-center justify-between">
-                        <div class="space-y-0.5">
-                            <label class="text-[11px] font-bold uppercase tracking-wider text-gray-700 flex items-center gap-2">
-                                <span>3. Product Media & Variants</span>
-                                <span class="text-[#C0420A]">*</span>
-                            </label>
-                            <p class="text-[11px] text-gray-500 font-medium">
-                                Upload your product photos directly to styles/variants. Variant 1 is your main product style and cover photo.
-                            </p>
-                        </div>
-                        <span class="text-[9px] font-bold text-gray-400 uppercase" x-text="variants.length + ' style(s)'"></span>
+                        <label class="text-[11px] font-bold uppercase tracking-wider text-gray-700">
+                            Product Category <span x-show="targetGroup" x-text="'for ' + targetGroup"></span> <span class="text-[#C0420A]">*</span>
+                        </label>
+                        <span class="text-[9px] font-bold transition-colors"
+                              :class="selectedCategory ? 'text-emerald-600' : 'text-[#C0420A]'"
+                              x-text="selectedCategory && selectedCategoryObj ? ('✓ ' + selectedCategoryObj.name) : (targetGroup ? 'Choose from options below' : 'Select tag above first')"></span>
                     </div>
 
-                    {{-- Variant 1: Main Product Style & Cover Photo (Always Present) --}}
-                    <div class="p-4 sm:p-5 bg-orange-50/20 border-2 border-dashed border-[#C0420A]/30 rounded-2xl space-y-3.5 transition-all shadow-2xs hover:border-[#C0420A]/50" id="variant_card_0">
-                        <div class="flex items-center justify-between">
-                            <div class="flex items-center gap-2">
-                                <span class="w-2 h-2 rounded-full bg-[#C0420A]"></span>
-                                <span class="text-xs font-black uppercase tracking-wider text-gray-900">
-                                    Variant 1 (Main Style)
-                                </span>
-                                <span class="px-2 py-0.5 rounded-md bg-[#C0420A]/10 text-[#C0420A] text-[9px] font-black uppercase tracking-wider">Cover Photo</span>
-                            </div>
-                            <span class="text-[10px] text-gray-400 font-medium">
-                                Mirrors: <strong class="text-gray-700" x-text="productName || 'Product Title above'"></strong>
-                            </span>
-                        </div>
+                    {{-- Hidden CategoryId input for form submission --}}
+                    <input type="hidden" name="CategoryId" id="categorySelect" :value="selectedCategory" required>
 
-                        {{-- Hidden inputs for Variant 1 --}}
-                        <input type="hidden" name="variant_indexes[]" value="0">
-                        <input type="hidden" name="variant_names[0]" :value="productName || 'Original Style'">
+                    {{-- Prompt when NO tag is selected --}}
+                    <div x-show="!targetGroup" class="p-4 rounded-2xl bg-amber-50/70 border border-amber-200/80 text-amber-900 text-xs font-medium flex items-center gap-2.5">
+                        <span class="text-base shrink-0">👆</span>
+                        <span>Please select who this product is for (<strong>Men</strong>, <strong>Women</strong>, or <strong>Kids</strong>) above to display matching categories.</span>
+                    </div>
 
-                        {{-- Variant 1 Image Upload Box --}}
-                        <div class="flex flex-col sm:flex-row items-start sm:items-center gap-4">
-                            <div class="relative shrink-0 w-full sm:w-auto">
-                                <label for="variant_file_0"
-                                       id="variant_upload_box_0"
-                                       class="w-full sm:w-40 h-40 rounded-2xl border-2 border-dashed border-gray-300 hover:border-[#C0420A] bg-white hover:bg-orange-50/40 flex flex-col items-center justify-center cursor-pointer overflow-hidden transition-all relative group/img shadow-2xs select-none">
-                                    
-                                    <template x-if="variants[0].imagePreview">
-                                        <div class="relative w-full h-full">
-                                            <img :src="variants[0].imagePreview" class="w-full h-full object-cover rounded-xl">
-                                            <div class="absolute inset-0 bg-black/40 opacity-0 group-hover/img:opacity-100 transition-opacity flex flex-col items-center justify-center text-white text-[10px] font-bold uppercase tracking-wider gap-1">
-                                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
-                                                <span>Change Photo</span>
-                                            </div>
-                                            <div class="absolute bottom-1.5 inset-x-1.5 bg-black/60 backdrop-blur-xs py-0.5 rounded text-center text-[9px] font-bold text-white uppercase tracking-wider">
-                                                Cover Image
-                                            </div>
-                                        </div>
-                                    </template>
-
-                                    <template x-if="!variants[0].imagePreview">
-                                        <div class="flex flex-col items-center justify-center text-center p-3">
-                                            <div class="w-10 h-10 rounded-2xl bg-[#C0420A]/10 flex items-center justify-center text-[#C0420A] mb-1.5 group-hover/img:scale-110 transition-transform">
-                                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
-                                            </div>
-                                            <span class="text-xs font-black text-[#C0420A] uppercase tracking-wide">+ Upload Main Photo</span>
-                                            <span class="text-[10px] text-gray-400 font-medium mt-0.5">JPEG, PNG, WEBP</span>
-                                        </div>
-                                    </template>
-
-                                    <input type="file" 
-                                           id="variant_file_0"
-                                           name="variant_image_0" 
-                                           accept="image/jpeg,image/png,image/webp,image/jpg" 
-                                           class="hidden" 
-                                           @change="handleVariantFile($event, 0)">
-                                </label>
-
+                    {{-- Category grid displayed when a tag is picked --}}
+                    <div x-show="targetGroup" class="space-y-2" x-cloak>
+                        <div class="grid grid-cols-2 sm:grid-cols-3 gap-2.5 max-h-60 overflow-y-auto p-2.5 bg-gray-50/70 rounded-2xl border border-gray-200 shadow-2xs" id="category-cards-container">
+                            <template x-for="cat in filteredCategories" :key="cat.id">
                                 <button type="button" 
-                                        x-show="variants[0].imagePreview"
-                                        @click="removeVariantImage(0)" 
-                                        class="absolute -top-2 -right-2 w-6 h-6 bg-red-600 hover:bg-red-700 text-white rounded-full flex items-center justify-center text-[10px] font-black shadow-md transition-all cursor-pointer"
-                                        title="Remove photo">
-                                    ✕
+                                        @click="selectCategory(cat)"
+                                        :class="selectedCategory === cat.id 
+                                            ? 'bg-white border-2 border-[#C0420A] text-[#C0420A] shadow-xs font-black ring-2 ring-[#C0420A]/10' 
+                                            : 'bg-white border border-gray-200/90 hover:border-gray-300 text-gray-700 hover:text-gray-900 font-bold'"
+                                        class="p-3 rounded-xl flex items-center justify-between text-left transition-all cursor-pointer group hover:scale-[1.01] active:scale-[0.99] text-xs">
+                                    <span class="truncate" x-text="cat.name"></span>
+                                    <span x-show="selectedCategory === cat.id" class="w-4 h-4 rounded-full bg-[#C0420A] text-white flex items-center justify-center text-[9px] shrink-0 font-bold ml-1.5">✓</span>
                                 </button>
-                            </div>
+                            </template>
 
-                            <div class="flex-1 space-y-1 text-xs text-gray-600">
-                                <h4 class="font-bold text-gray-800">Primary Product Appearance</h4>
-                                <p class="text-[11px] text-gray-500 leading-relaxed">
-                                    This photo will be showcased as the main thumbnail in the catalogue, search results, and at the top of your product page.
-                                </p>
-                                <p class="text-[10px] text-[#C0420A] font-semibold flex items-center gap-1 pt-1">
-                                    <span>💡</span> Have different colors, patterns, or sleeve styles? Click "+ Add Another Variant" below.
-                                </p>
-                            </div>
+                            <template x-if="filteredCategories.length === 0">
+                                <div class="col-span-full py-6 text-center text-xs text-gray-400 font-medium">
+                                    No categories found for this tag.
+                                </div>
+                            </template>
                         </div>
-                    </div>
 
-                    {{-- Additional Variants List (Variant 2, 3, etc.) --}}
-                    <div class="space-y-3">
-                        <template x-for="(variant, index) in variants" :key="variant.id">
-                            <div x-show="index > 0" class="p-4 bg-white border border-gray-200 hover:border-gray-300 rounded-2xl space-y-3 transition-all shadow-2xs">
-                                <div class="flex items-center justify-between pb-2 border-b border-gray-100">
-                                    <div class="flex items-center gap-2">
-                                        <span class="w-1.5 h-1.5 rounded-full bg-[#C0420A]"></span>
-                                        <span class="text-xs font-black uppercase tracking-wider text-gray-800" x-text="'Variant ' + (index + 1)"></span>
-                                        <span class="px-2 py-0.5 rounded-md bg-blue-50 text-blue-700 text-[9px] font-black uppercase tracking-wider">Style Option</span>
-                                    </div>
-                                    <button type="button" 
-                                            @click="removeVariantRow(index)" 
-                                            class="text-[11px] font-bold text-red-600 hover:text-red-700 flex items-center gap-1 cursor-pointer">
-                                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
-                                        <span>Remove Variant</span>
-                                    </button>
-                                </div>
-
-                                {{-- Hidden input mapping for PHP --}}
-                                <input type="hidden" name="variant_indexes[]" :value="index">
-
-                                <div class="flex items-center gap-3.5">
-                                    {{-- Variant Image Box --}}
-                                    <div class="relative shrink-0">
-                                        <label :for="'variant_file_' + index"
-                                               class="w-20 h-20 sm:w-22 sm:h-22 rounded-2xl border-2 border-dashed border-gray-300 hover:border-[#C0420A] bg-gray-50/70 hover:bg-orange-50/40 flex flex-col items-center justify-center cursor-pointer overflow-hidden transition-all relative group/img shadow-2xs select-none">
-                                            <template x-if="variant.imagePreview">
-                                                <div class="relative w-full h-full">
-                                                    <img :src="variant.imagePreview" class="w-full h-full object-cover rounded-xl">
-                                                    <div class="absolute inset-0 bg-black/30 opacity-0 group-hover/img:opacity-100 transition-opacity flex items-center justify-center text-white text-[9px] font-bold uppercase tracking-wider">
-                                                        Change
-                                                    </div>
-                                                </div>
-                                            </template>
-                                            <template x-if="!variant.imagePreview">
-                                                <div class="flex flex-col items-center justify-center text-center p-1">
-                                                    <div class="w-6 h-6 rounded-full bg-[#C0420A]/10 flex items-center justify-center text-[#C0420A] mb-0.5 group-hover/img:scale-110 transition-transform">
-                                                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
-                                                    </div>
-                                                    <span class="text-[9px] font-extrabold text-[#C0420A] uppercase tracking-wider">+ Photo</span>
-                                                </div>
-                                            </template>
-                                            <input type="file" 
-                                                   :id="'variant_file_' + index" 
-                                                   :name="'variant_image_' + index" 
-                                                   accept="image/jpeg,image/png,image/webp,image/jpg" 
-                                                   class="hidden" 
-                                                   @change="handleVariantFile($event, index)">
-                                        </label>
-                                        <button type="button" 
-                                                x-show="variant.imagePreview"
-                                                @click="removeVariantImage(index)" 
-                                                class="absolute -top-1.5 -right-1.5 w-5 h-5 bg-red-600 hover:bg-red-700 text-white rounded-full flex items-center justify-center text-[9px] font-black shadow-md transition-all cursor-pointer">
-                                            ✕
-                                        </button>
-                                    </div>
-
-                                    {{-- Variant Name Input --}}
-                                    <div class="flex-1 min-w-0">
-                                        <div class="flex items-center justify-between mb-1">
-                                            <label class="text-[10px] font-black uppercase tracking-wider text-gray-700">
-                                                Variant Name <span class="text-[#C0420A]">*</span>
-                                            </label>
-                                            <span class="text-[9px] text-gray-400 font-medium hidden sm:inline">e.g. Color, embroidery, or style</span>
-                                        </div>
-                                        <input type="text" 
-                                               :name="'variant_names[' + index + ']'" 
-                                               x-model="variant.name" 
-                                               placeholder="e.g. Emerald Green, Ivory Piña, Short Sleeve..." 
-                                               class="w-full px-3.5 py-2.5 bg-gray-50/80 border border-gray-200 rounded-xl text-xs font-bold text-gray-900 outline-none focus:border-[#C0420A] focus:bg-white transition-all shadow-2xs">
-                                    </div>
-                                </div>
-                            </div>
-                        </template>
-                    </div>
-
-                    {{-- Add Another Variant Button --}}
-                    <div>
-                        <button type="button" 
-                                @click="addVariantRow()" 
-                                class="w-full py-3 px-4 rounded-2xl border-2 border-dashed border-gray-300 hover:border-[#C0420A] bg-gray-50/70 hover:bg-orange-50/20 text-gray-700 hover:text-[#C0420A] font-bold text-xs flex items-center justify-center gap-2 transition-all cursor-pointer shadow-2xs">
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"/></svg>
-                            <span>+ Add Another Variant (Optional Style / Color)</span>
-                        </button>
+                        <p x-show="selectedCategory && selectedCategoryObj" class="text-[11px] text-gray-500 font-medium px-1">
+                            Selected Category: <strong class="text-gray-900" x-text="selectedCategoryObj.name"></strong>
+                        </p>
                     </div>
                 </div>
             </div>
