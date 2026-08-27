@@ -112,7 +112,7 @@
         {{-- ========================================================================= --}}
         {{-- STEP 1: MEDIA & CORE INFO (Exact Screenshot Layout & Aesthetics)           --}}
         {{-- ========================================================================= --}}
-        <div x-show="step === 1" style="background-color:#FFFFFF !important;border:1px solid #ECE3D2 !important;border-radius:28px !important;box-shadow:0 8px 30px rgba(0,0,0,0.03) !important;padding:26px sm:padding:32px;color:#1E1915 !important;" class="p-5 sm:p-8 space-y-6">
+        <div x-show="step === 1" style="background-color:#FFFFFF !important;border:1px solid #ECE3D2 !important;border-radius:28px !important;box-shadow:0 8px 30px rgba(0,0,0,0.03) !important;color:#1E1915 !important;" class="p-5 sm:p-8 space-y-6">
             
             {{-- 1. Product Media & Variants --}}
             <div class="space-y-4">
