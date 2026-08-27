@@ -31,6 +31,12 @@ class ProductManagementController extends Controller
             }
         }
         $categories = \App\Models\Category::orderBy('name', 'asc')->get();
+        if ($categories->isEmpty()) {
+            try {
+                (new \Database\Seeders\CategorySeeder())->run();
+                $categories = \App\Models\Category::orderBy('name', 'asc')->get();
+            } catch (\Throwable $e) {}
+        }
         foreach ($categories as $cat) {
             $tg = $cat->target_group;
             if (is_string($tg)) {
@@ -62,6 +68,22 @@ class ProductManagementController extends Controller
             $productCount = Product::where('sellerId', $user->id)->count();
             if ($productCount >= 10) {
                 return redirect()->route('seller.products.index')->with('error', 'Free accounts are limited to 10 product listings. Upgrade to Premium for unlimited listings!');
+            }
+        }
+
+        // Normalization: Ensure $request->files has 'images' if files were submitted via variant inputs
+        if (!$request->hasFile('images')) {
+            $gatheredImages = [];
+            if ($request->hasFile('variant_image_0')) {
+                $gatheredImages[] = $request->file('variant_image_0');
+            }
+            if ($request->hasFile('variant_images')) {
+                foreach ((array)$request->file('variant_images') as $vImg) {
+                    if ($vImg) $gatheredImages[] = $vImg;
+                }
+            }
+            if (!empty($gatheredImages)) {
+                $request->files->set('images', $gatheredImages);
             }
         }
 
