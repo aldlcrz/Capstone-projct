@@ -470,8 +470,8 @@
                               x-text="'✓ ' + targetGroup + ' selected'"></span>
                     </div>
 
-                    {{-- Target Tag Segmented Pills (Spacious Luxury Gold & Beveled Pearl Capsule Pills) --}}
-                    <div id="target-group-container" style="display:flex;align-items:center;gap:14px;flex-wrap:wrap;padding-top:6px;">
+                    {{-- Target Tag Segmented Pills (Clean Modern Minimal Luxury Pills) --}}
+                    <div id="target-group-container" style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding-top:4px;">
                         @foreach(['Men', 'Women', 'Kids'] as $group)
                             <label class="cursor-pointer select-none" @click="onTargetGroupChange('{{ $group }}')">
                                 <input type="radio" 
@@ -479,14 +479,14 @@
                                        value="{{ $group }}" 
                                        x-model="targetGroup" 
                                        class="hidden">
-                                <div style="min-width:140px;height:52px;padding:0 34px;border-radius:9999px !important;font-family:ui-serif,Georgia,Cambria,'Times New Roman',Times,serif;letter-spacing:0.04em;display:inline-flex;align-items:center;justify-content:center;gap:8px;transition:all 0.25s cubic-bezier(0.4, 0, 0.2, 1);cursor:pointer;box-sizing:border-box;"
+                                <div style="min-width:105px;height:42px;padding:0 24px;border-radius:9999px;font-size:13.5px;font-weight:600;letter-spacing:0.01em;display:inline-flex;align-items:center;justify-content:center;gap:6px;transition:all 0.2s ease;cursor:pointer;box-sizing:border-box;"
                                      :style="targetGroup === '{{ $group }}' 
-                                        ? 'background: linear-gradient(180deg, #E6C98A 0%, #D8B263 45%, #C29643 55%, #AD7D2D 100%) !important; border: 2px solid #8C6A28 !important; border-radius: 9999px !important; box-shadow: inset 0 1.5px 1px rgba(255,255,255,0.85), inset 0 -2px 3px rgba(70,45,10,0.35), 0 4px 12px rgba(160,115,30,0.35) !important;' 
-                                        : 'background: linear-gradient(180deg, #FFFFFF 0%, #FAF6EE 50%, #ECE4D6 100%) !important; border: 2px solid #483E32 !important; border-radius: 9999px !important; box-shadow: inset 0 1.5px 2px rgba(255,255,255,0.95), inset 0 -1.5px 2px rgba(0,0,0,0.07), 0 2px 6px rgba(0,0,0,0.08) !important;'"
-                                     onmouseover="if(this.getAttribute('data-selected') !== 'true') { this.style.borderColor='#8C6A28'; this.style.transform='translateY(-1px)'; }"
-                                     onmouseout="if(this.getAttribute('data-selected') !== 'true') { this.style.borderColor='#483E32'; this.style.transform='none'; }">
-                                    <span style="font-size:16px;font-weight:700;line-height:1;white-space:nowrap;" :style="targetGroup === '{{ $group }}' ? 'color:#2B1E0A !important;text-shadow:0 1px 0 rgba(255,235,180,0.5);' : 'color:#362D24 !important;text-shadow:0 1px 0 rgba(255,255,255,0.9);'">{{ $group === 'Men' ? 'MEN' : $group }}</span>
-                                    <span x-show="targetGroup === '{{ $group }}'" style="color:#2B1E0A;font-size:14px;font-weight:900;margin-left:2px;text-shadow:0 1px 0 rgba(255,235,180,0.6);">✓</span>
+                                        ? 'background-color:#1C1917 !important;color:#FDFBF7 !important;border:1px solid #1C1917 !important;box-shadow:0 2px 8px rgba(0,0,0,0.08) !important;' 
+                                        : 'background-color:#FFFFFF !important;color:#44403C !important;border:1px solid #E7E0D2 !important;box-shadow:0 1px 2px rgba(0,0,0,0.02) !important;'"
+                                     onmouseover="if(this.getAttribute('data-selected') !== 'true') { this.style.borderColor='#C49520'; this.style.backgroundColor='#FDFBF7'; }"
+                                     onmouseout="if(this.getAttribute('data-selected') !== 'true') { this.style.borderColor='#E7E0D2'; this.style.backgroundColor='#FFFFFF'; }">
+                                    <span style="font-size:13.5px;font-weight:600;line-height:1;white-space:nowrap;" :style="targetGroup === '{{ $group }}' ? 'color:#FDFBF7 !important;' : 'color:#44403C !important;'">{{ $group }}</span>
+                                    <span x-show="targetGroup === '{{ $group }}'" style="color:#C49520;font-size:12px;font-weight:800;margin-left:2px;">✓</span>
                                 </div>
                             </label>
                         @endforeach
