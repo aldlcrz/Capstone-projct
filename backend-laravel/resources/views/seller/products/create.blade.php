@@ -513,26 +513,23 @@
                     {{-- Hidden CategoryId input for form submission --}}
                     <input type="hidden" name="CategoryId" id="categorySelect" :value="selectedCategory" required>
 
-                    {{-- Category Cards Grid (Exact 3-column layout with bespoke golden line icons) --}}
+                    {{-- Category Cards Grid (Clean layout without icons) --}}
                     <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 pt-1" id="category-cards-container">
                         <template x-for="cat in filteredCategories" :key="cat.id">
                             <button type="button" 
                                     @click="selectCategory(cat)"
-                                    style="padding:13px 16px;border-radius:14px;display:flex;align-items:center;gap:12px;text-align:left;transition:all 0.2s;cursor:pointer;width:100%;min-height:50px;"
+                                    style="padding:14px 18px;border-radius:14px;display:flex;align-items:center;justify-content:center;text-align:center;transition:all 0.2s;cursor:pointer;width:100%;min-height:50px;position:relative;"
                                     :style="selectedCategory === cat.id 
-                                        ? 'background-color:#FDF8EE !important;border:1.5px solid #C49520 !important;color:#7A5505 !important;font-weight:700 !important;box-shadow:0 2px 8px rgba(196,149,32,0.12) !important;' 
+                                        ? 'background-color:#FDF8EE !important;border:1.5px solid #C49520 !important;color:#7A5505 !important;font-weight:800 !important;box-shadow:0 2px 8px rgba(196,149,32,0.12) !important;' 
                                         : 'background-color:#FFFFFF !important;border:1px solid #ECE3D2 !important;color:#1E1915 !important;font-weight:600 !important;box-shadow:0 1px 3px rgba(0,0,0,0.02) !important;'"
                                     onmouseover="if(this.getAttribute('data-active') !== 'true') { this.style.borderColor='#C49520'; this.style.backgroundColor='#FAF8F5'; }"
                                     onmouseout="if(this.getAttribute('data-active') !== 'true') { this.style.borderColor='#ECE3D2'; this.style.backgroundColor='#FFFFFF'; }">
                                 
-                                {{-- Bespoke Golden Category Icon --}}
-                                <div style="color:#B88728;flex-shrink:0;width:20px;height:20px;display:flex;align-items:center;justify-content:center;" x-html="getCategoryIconSvg(cat.name)"></div>
-
                                 {{-- Category Name --}}
-                                <span style="font-size:13px;line-height:1.3;flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;" x-text="cat.name"></span>
+                                <span style="font-size:13.5px;line-height:1.3;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;" x-text="cat.name"></span>
                                 
                                 {{-- Checkmark if selected --}}
-                                <span x-show="selectedCategory === cat.id" style="color:#C49520;font-size:12px;font-weight:900;margin-left:4px;flex-shrink:0;">✓</span>
+                                <span x-show="selectedCategory === cat.id" style="color:#C49520;font-size:12px;font-weight:900;position:absolute;right:14px;top:50%;transform:translateY(-50%);">✓</span>
                             </button>
                         </template>
 
@@ -1241,72 +1238,6 @@ function addProductManager() {
             if (catContainer) catContainer.classList.remove('border-red-500');
 
             this.calculateFillRate();
-        },
-
-        getCategoryIconSvg(categoryName) {
-            const name = (categoryName || '').toLowerCase();
-
-            // 1. Accessories: Handbag / tote bag
-            if (name.includes('heritage accessories') || name.includes('crown')) {
-                return `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M2 4l3 12h14l3-12-6 7-4-7-4 7-6-7zm3 16h14"/></svg>`;
-            }
-            if (name.includes('accessories') || name.includes('bag')) {
-                return `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4H6z"/><path d="M3 6h18"/><path d="M16 10a4 4 0 01-8 0"/></svg>`;
-            }
-
-            // 2. Camisa de Chino
-            if (name.includes('camisa')) {
-                return `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20.38 3.46L16 2a4 4 0 01-8 0L3.62 3.46a2 2 0 00-1.34 2.23l.58 3.47a1 1 0 00.99.84H6v10a2 2 0 002 2h8a2 2 0 002-2V10h2.15a1 1 0 00.99-.84l.58-3.47a2 2 0 00-1.34-2.23z"/><path d="M12 2v6"/></svg>`;
-            }
-
-            // 3. Casual
-            if (name.includes('casual')) {
-                return `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 7l-5-4H9L4 7v4h3v9a1 1 0 001 1h8a1 1 0 001-1v-9h3V7z"/><path d="M9 3v4a3 3 0 006 0V3"/></svg>`;
-            }
-
-            // 4. Formal Barong / Piña / Jusi
-            if (name.includes('piña') || name.includes('pina')) {
-                return `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 7l-5-4H9L4 7v4h3v9a1 1 0 001 1h8a1 1 0 001-1v-9h3V7z"/><path d="M12 7v8M10 9h4M10 11h4M10 13h4"/></svg>`;
-            }
-            if (name.includes('jusi')) {
-                return `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 7l-5-4H9L4 7v4h3v9a1 1 0 001 1h8a1 1 0 001-1v-9h3V7z"/><path d="M12 7v10M9.5 10h5M9.5 14h5"/></svg>`;
-            }
-            if (name.includes('barong') || name.includes('polo')) {
-                return `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 7l-5-4H9L4 7v4h3v9a1 1 0 001 1h8a1 1 0 001-1v-9h3V7z"/><path d="M12 7v9"/></svg>`;
-            }
-
-            // 5. Lumban Specials: Star outline
-            if (name.includes('special') && name.includes('lumban')) {
-                return `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>`;
-            }
-
-            // 6. Modern: Sparkles
-            if (name.includes('modern')) {
-                return `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/></svg>`;
-            }
-
-            // 7. Semi-Formal: Coat hanger
-            if (name.includes('semi-formal') || name.includes('semi')) {
-                return `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a3 3 0 00-3 3c0 .8.3 1.5.8 2L2 14v1a2 2 0 002 2h16a2 2 0 002-2v-1l-7.8-7a2.8 2.8 0 00.8-2 3 3 0 00-3-3z"/></svg>`;
-            }
-
-            // 8. Special Occasion: Rosette award ribbon
-            if (name.includes('occasion')) {
-                return `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="6"/><path d="M8.21 13.89L7 23l5-3 5 3-1.21-9.12"/></svg>`;
-            }
-
-            // 9. Traditional: Classical column / pillar
-            if (name.includes('traditional')) {
-                return `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 3h16M6 3v2M18 3v2M6 5h12M7 5v14M11 5v14M13 5v14M17 5v14M6 19h12M4 21h16"/></svg>`;
-            }
-
-            // 10. Gown / Filipiniana dress / Terno
-            if (name.includes('gown') || name.includes('terno') || name.includes('dress') || name.includes('filipiniana')) {
-                return `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 3h6l2 4-3 3 4 11H6l4-11-3-3 2-4z"/><circle cx="12" cy="7" r="1.5"/></svg>`;
-            }
-
-            // Fallback: Sparkle star
-            return `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>`;
         },
 
         get isStep1Complete() {
