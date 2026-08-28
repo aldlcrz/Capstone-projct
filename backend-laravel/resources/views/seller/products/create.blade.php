@@ -119,7 +119,7 @@
                 <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px;">
                     <div>
                         <h2 style="font-family:ui-serif,Georgia,Cambria,serif;font-size:18px;font-weight:700;color:#1E1915;margin:0;line-height:1.2;">
-                            1. Product Media & Variants <span style="color:#C49520;">*</span>
+                            1. Product Media & Variants <span style="color:#DC2626;">*</span>
                         </h2>
                         <p style="font-size:12px;color:#78716C;margin-top:4px;margin-bottom:0;">
                             Variant 1 is your main style and will be shown as the primary listing.
@@ -151,7 +151,7 @@
                     {{-- Product Name (English) --}}
                     <div class="space-y-1.5">
                         <label style="font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:0.06em;color:#1E1915;display:block;">
-                            PRODUCT NAME (ENGLISH) <span style="color:#C49520;">*</span>
+                            PRODUCT NAME (ENGLISH) <span style="color:#DC2626;">*</span>
                             <span style="font-size:10px;color:#A8A096;font-weight:400;margin-left:4px;" x-text="'(' + (productName ? productName.length : 0) + '/100)'"></span>
                         </label>
 
@@ -183,7 +183,7 @@
                     <div class="space-y-2 pt-1">
                         <div style="display:flex;align-items:center;gap:5px;">
                             <label style="font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:0.06em;color:#1E1915;">
-                                VARIANT IMAGES <span style="color:#C49520;">*</span>
+                                VARIANT IMAGES <span style="color:#DC2626;">*</span>
                             </label>
                             <span style="font-size:12px;color:#A8A096;cursor:help;" title="Upload the cover photo and additional angles or details for Variant 1">ⓘ</span>
                         </div>
@@ -422,7 +422,7 @@
                                 {{-- Variant Name Input --}}
                                 <div style="flex:1;min-width:0;">
                                     <label style="font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:0.04em;color:#1E1915;display:block;margin-bottom:4px;">
-                                        Variant Name <span style="color:#C49520;">*</span>
+                                        Variant Name <span style="color:#DC2626;">*</span>
                                     </label>
                                     <input type="text" 
                                            :name="'variant_names[' + index + ']'" 
@@ -464,7 +464,7 @@
                 <div class="space-y-2.5">
                     <div style="display:flex;align-items:center;justify-content:space-between;">
                         <h2 style="font-family:ui-serif,Georgia,Cambria,serif;font-size:18px;font-weight:700;color:#1E1915;margin:0;">
-                            2. Who is this for? (Target Tag) <span style="color:#C49520;">*</span>
+                            2. Who is this for? (Target Tag) <span style="color:#DC2626;">*</span>
                         </h2>
                         <span style="font-size:11px;font-weight:700;border-radius:20px;padding:3px 12px;background-color:#E8F5E9;border:1px solid #A5D6A7;color:#2E7D32;transition:all 0.2s;"
                               x-text="'✓ ' + targetGroup + ' selected'"></span>
@@ -531,7 +531,7 @@
                 <div class="space-y-2.5 pt-2">
                     <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;">
                         <h3 style="font-family:ui-serif,Georgia,serif;font-size:15px;font-weight:700;color:#1E1915;margin:0;">
-                            Product Category for <span x-text="targetGroup"></span> <span style="color:#C49520;">*</span>
+                            Product Category for <span x-text="targetGroup"></span> <span style="color:#DC2626;">*</span>
                         </h3>
                         <div style="display:flex;align-items:center;gap:8px;">
                             <span style="font-size:11px;font-weight:700;border-radius:20px;padding:3px 12px;background-color:#FDF8EE;border:1px solid #EEDBBA;color:#7A5505;"
@@ -659,7 +659,7 @@
                     <div style="display:flex;align-items:center;gap:12px;">
                         <div style="width:32px;height:32px;border-radius:50%;background-color:#FDF8EE;border:1px solid #EEDBBA;display:flex;align-items:center;justify-content:center;color:#7A5505;font-family:ui-serif,Georgia,serif;font-weight:700;font-size:13px;flex-shrink:0;">1</div>
                         <div>
-                            <h3 style="font-family:ui-serif,Georgia,Cambria,serif;font-size:16px;font-weight:700;color:#1E1915;margin:0;">Heritage Sizing & Stock <span style="color:#C49520;">*</span></h3>
+                            <h3 style="font-family:ui-serif,Georgia,Cambria,serif;font-size:16px;font-weight:700;color:#1E1915;margin:0;">Heritage Sizing & Stock <span style="color:#DC2626;">*</span></h3>
                             <p style="font-size:12px;color:#78716C;margin-top:2px;margin-bottom:0;">Assign available inventory quantities per size</p>
                         </div>
                     </div>
@@ -706,7 +706,7 @@
                 <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 pt-1">
                     {{-- Price Input --}}
                     <div id="price-card" style="background-color:#FAF8F5;border:1px solid #E2D9C8;border-radius:16px;padding:14px;display:flex;flex-direction:column;justify-content:space-between;height:100px;box-shadow:0 1px 3px rgba(0,0,0,0.02);">
-                        <label style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.06em;color:#78716C;">Price (₱) <span style="color:#C49520;">*</span></label>
+                        <label style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.06em;color:#78716C;">Price (₱) <span style="color:#DC2626;">*</span></label>
                         <input type="number" 
                                name="price" 
                                id="priceInput" 
@@ -723,7 +723,7 @@
 
                     {{-- Total Stock (Auto) --}}
                     <div id="stock-card" style="background-color:#FAF8F5;border:1px solid #E2D9C8;border-radius:16px;padding:14px;display:flex;flex-direction:column;justify-content:space-between;height:100px;box-shadow:0 1px 3px rgba(0,0,0,0.02);">
-                        <label style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.06em;color:#78716C;">Total Stock <span style="color:#C49520;">*</span></label>
+                        <label style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.06em;color:#78716C;">Total Stock <span style="color:#DC2626;">*</span></label>
                         <input type="number" 
                                name="stock" 
                                id="total_stock" 
@@ -737,7 +737,7 @@
 
                     {{-- Shipping Fee --}}
                     <div id="shipping-fee-card" style="background-color:#FAF8F5;border:1px solid #E2D9C8;border-radius:16px;padding:14px;display:flex;flex-direction:column;justify-content:space-between;height:100px;box-shadow:0 1px 3px rgba(0,0,0,0.02);">
-                        <label style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.06em;color:#78716C;">Shipping Fee (₱) <span style="color:#C49520;">*</span></label>
+                        <label style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.06em;color:#78716C;">Shipping Fee (₱) <span style="color:#DC2626;">*</span></label>
                         <input type="number" 
                                name="shippingFee" 
                                id="shippingFeeInput" 
@@ -754,7 +754,7 @@
 
                     {{-- Shipping Days --}}
                     <div id="shipping-days-card" style="background-color:#FAF8F5;border:1px solid #E2D9C8;border-radius:16px;padding:14px;display:flex;flex-direction:column;justify-content:space-between;height:100px;box-shadow:0 1px 3px rgba(0,0,0,0.02);">
-                        <label style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.06em;color:#78716C;">Est. Shipping Days <span style="color:#C49520;">*</span></label>
+                        <label style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.06em;color:#78716C;">Est. Shipping Days <span style="color:#DC2626;">*</span></label>
                         <input type="number" 
                                name="shippingDays" 
                                id="shippingDaysInput" 
@@ -841,7 +841,7 @@
                 <div style="display:flex;align-items:center;justify-content:space-between;padding-bottom:12px;border-bottom:1px solid #F2ECE1;">
                     <div style="display:flex;align-items:center;gap:12px;">
                         <div style="width:32px;height:32px;border-radius:50%;background-color:#FDF8EE;border:1px solid #EEDBBA;display:flex;align-items:center;justify-content:center;color:#7A5505;font-family:ui-serif,Georgia,serif;font-weight:700;font-size:13px;flex-shrink:0;">1</div>
-                        <h3 style="font-family:ui-serif,Georgia,Cambria,serif;font-size:16px;font-weight:700;color:#1E1915;margin:0;">Payment Methods <span style="color:#C49520;">*</span></h3>
+                        <h3 style="font-family:ui-serif,Georgia,Cambria,serif;font-size:16px;font-weight:700;color:#1E1915;margin:0;">Payment Methods <span style="color:#DC2626;">*</span></h3>
                     </div>
                     <a href="{{ route('seller.profile') }}?open_payment=1#payment-methods" target="_blank" style="font-size:12px;font-weight:700;color:#7A5505;text-decoration:none;display:flex;align-items:center;gap:4px;">
                         Settings ↗
@@ -912,7 +912,7 @@
                     <div style="display:flex;align-items:center;gap:12px;">
                         <div style="width:32px;height:32px;border-radius:50%;background-color:#FDF8EE;border:1px solid #EEDBBA;display:flex;align-items:center;justify-content:center;color:#7A5505;font-family:ui-serif,Georgia,serif;font-weight:700;font-size:13px;flex-shrink:0;">2</div>
                         <div>
-                            <h3 style="font-family:ui-serif,Georgia,Cambria,serif;font-size:16px;font-weight:700;color:#1E1915;margin:0;">Artisan Description & Story <span style="color:#C49520;">*</span></h3>
+                            <h3 style="font-family:ui-serif,Georgia,Cambria,serif;font-size:16px;font-weight:700;color:#1E1915;margin:0;">Artisan Description & Story <span style="color:#DC2626;">*</span></h3>
                             <p style="font-size:12px;color:#78716C;margin-top:2px;margin-bottom:0;">Highlight the craftsmanship, weaving techniques, and care instructions</p>
                         </div>
                     </div>
