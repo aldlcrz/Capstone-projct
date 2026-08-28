@@ -562,22 +562,22 @@ function sellerOrdersManager(initialOrders) {
         },
 
         statusColor(s) {
-            if (!s) return 'bg-gray-50 text-gray-600 border-gray-200';
+            if (!s) return 'bg-[#FDF8EE] text-[#766C60] border-[#E8DECB]';
             const norm = this.normalizeStatus(s);
             const m = {
-                'pending': 'bg-amber-50 text-amber-700 border-amber-200',
-                'to ship': 'bg-sky-50 text-sky-700 border-sky-200',
-                'shipped': 'bg-indigo-50 text-indigo-700 border-indigo-200',
-                'to receive': 'bg-indigo-50 text-indigo-700 border-indigo-200',
-                'in transit': 'bg-purple-50 text-purple-700 border-purple-200',
-                'out for delivery': 'bg-orange-50 text-orange-700 border-orange-200',
-                'delivered': 'bg-teal-50 text-teal-700 border-teal-200',
-                'completed': 'bg-emerald-50 text-emerald-700 border-emerald-200',
-                'cancelled': 'bg-red-50 text-red-700 border-red-200',
-                'cancellation pending': 'bg-red-50 text-red-700 border-red-200',
-                'cancellation requested': 'bg-red-50 text-red-700 border-red-200',
+                'pending': 'bg-[#FDF8EE] text-[#A16D19] border-[#E8DECB]',
+                'to ship': 'bg-[#FDF8EE] text-[#1E1915] border-[#E8DECB]',
+                'shipped': 'bg-[#FDF8EE] text-[#766C60] border-[#E8DECB]',
+                'to receive': 'bg-[#FDF8EE] text-[#766C60] border-[#E8DECB]',
+                'in transit': 'bg-[#FDF8EE] text-[#766C60] border-[#E8DECB]',
+                'out for delivery': 'bg-[#FDF8EE] text-[#A16D19] border-[#E8DECB]',
+                'delivered': 'bg-[#F0F4EF] text-[#4A6741] border-[#C5D9B8]',
+                'completed': 'bg-[#F0F4EF] text-[#4A6741] border-[#C5D9B8]',
+                'cancelled': 'bg-[#FEF2F2] text-[#DC2626] border-[#FECACA]',
+                'cancellation pending': 'bg-[#FEF2F2] text-[#DC2626] border-[#FECACA]',
+                'cancellation requested': 'bg-[#FEF2F2] text-[#DC2626] border-[#FECACA]',
             };
-            return m[norm] || 'bg-gray-50 text-gray-600 border-gray-200';
+            return m[norm] || 'bg-[#FDF8EE] text-[#766C60] border-[#E8DECB]';
         },
 
         countForStatus(statusKey) {
@@ -680,32 +680,40 @@ function sellerOrdersManager(initialOrders) {
     </div>
 
     {{-- Header --}}
-    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4">
+    <div class="flex flex-col sm:flex-row sm:items-end justify-between gap-3 sm:gap-4 pb-2 border-b" style="border-color: #E8DECB;">
         <div>
-            <div class="text-[9px] sm:text-[10px] font-bold text-[#C0420A] uppercase tracking-[0.2em] mb-0.5">Order Management</div>
-            <h1 class="font-serif text-xl sm:text-3xl font-bold text-black uppercase">
-                My <span class="text-[#C0420A] italic lowercase">orders</span>
+            <div class="flex items-center gap-2 mb-1">
+                <span class="text-[9px] font-extrabold uppercase tracking-[0.25em]" style="color: #C49520;">✦ Studio Orders</span>
+                <span class="text-xs" style="color: #E8DECB;">•</span>
+                <span class="text-[10px] font-semibold tracking-wider uppercase" style="color: #766C60;">Fulfillment Ledger</span>
+            </div>
+            <h1 class="font-serif text-2xl sm:text-3xl font-bold tracking-tight" style="color: #1E1915;">
+                Client <span class="italic font-normal" style="color: #766C60;">Orders</span>
             </h1>
-            <p class="text-[11px] sm:text-xs text-gray-500 mt-0.5">Tap any order capsule to view complete items, buyer details, enter tracking info, and update status.</p>
+            <p class="text-xs font-medium mt-1" style="color: #766C60;">Track bespoke commissions, customer delivery details, and fulfillment state.</p>
         </div>
         
         {{-- Search Input --}}
         <div class="relative w-full sm:w-72">
             <input type="text" x-model="searchTerm" placeholder="Search order ID or customer..."
-                class="w-full h-10 sm:h-11 pl-9 sm:pl-10 pr-4 bg-white border border-gray-200 rounded-full text-xs font-semibold shadow-sm outline-none focus:border-[#C0420A] transition-all">
-            <svg class="w-4 h-4 text-gray-400 absolute left-3.5 top-3 sm:top-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+                class="w-full h-10 sm:h-11 pl-9 pr-4 rounded-xl text-xs font-semibold shadow-xs outline-none transition-all"
+                style="background: #FDF8EE; border: 1px solid #E8DECB; color: #1E1915;"
+                onfocus="this.style.borderColor='#C49520'; this.style.background='#FFF';"
+                onblur="this.style.borderColor='#E8DECB'; this.style.background='#FDF8EE';">
+            <svg class="w-4 h-4 absolute left-3 top-3 sm:top-3.5" style="color: #766C60;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
         </div>
     </div>
 
-    {{-- Status Filter Tabs (Capsules in straight line on mobile) --}}
+    {{-- Status Filter Tabs (Pill System) --}}
     <div class="flex items-center gap-1.5 sm:gap-2 overflow-x-auto no-scrollbar pb-2 -mx-2 px-2 sm:mx-0 sm:px-0 scroll-smooth">
         @foreach(['all' => 'All', 'pending' => 'Pending', 'to ship' => 'To Ship', 'shipped' => 'Shipped', 'in transit' => 'In Transit', 'delivered' => 'Delivered', 'completed' => 'Completed', 'cancelled' => 'Cancelled'] as $val => $label)
             <button @click="statusFilter = '{{ $val }}'"
-                :class="statusFilter === '{{ $val }}' ? 'bg-black text-white shadow-md' : 'bg-white text-gray-500 border border-gray-200 hover:border-gray-300'"
-                class="px-3 sm:px-4 py-1.5 sm:py-2 rounded-full text-[9px] sm:text-[10px] font-black uppercase tracking-wider whitespace-nowrap transition-all flex items-center gap-1.5 shrink-0 active:scale-95 cursor-pointer">
+                :style="statusFilter === '{{ $val }}' ? 'background:#1E1915; color:#FFFCF7; border:1px solid #C49520;' : 'background:#FDF8EE; color:#1E1915; border:1px solid #E8DECB;'"
+                class="px-3 sm:px-4 py-1.5 sm:py-2 rounded-xl text-[9px] sm:text-[10px] font-extrabold uppercase tracking-wider whitespace-nowrap transition-all flex items-center gap-1.5 shrink-0 active:scale-95 cursor-pointer shadow-2xs">
+                <span x-show="statusFilter === '{{ $val }}'" style="color:#C49520;">✓</span>
                 <span>{{ $label }}</span>
-                <span class="px-1.5 py-0.5 text-[8px] sm:text-[9px] rounded-full" 
-                      :class="statusFilter === '{{ $val }}' ? 'bg-white/20 text-white' : 'bg-gray-100 text-gray-600'"
+                <span class="px-1.5 py-0.5 text-[8px] sm:text-[9px] rounded-full font-bold" 
+                      :style="statusFilter === '{{ $val }}' ? 'background:rgba(196,149,32,0.25); color:#FFFCF7;' : 'background:#E8DECB; color:#766C60;'"
                       x-text="countForStatus('{{ $val }}')">
                     {{ $counts[$val] ?? 0 }}
                 </span>
@@ -713,42 +721,46 @@ function sellerOrdersManager(initialOrders) {
         @endforeach
     </div>
 
-    {{-- Order Capsule List (Pill Layout like Customer Directory) --}}
+    {{-- Order Capsule List --}}
     <div class="space-y-2.5 sm:space-y-3">
         <template x-if="filtered.length === 0">
-            <div class="bg-white rounded-3xl p-10 text-center space-y-2 border border-gray-100 shadow-sm">
-                <div class="w-12 h-12 rounded-full bg-gray-100 text-gray-400 flex items-center justify-center mx-auto text-xl">🛍️</div>
-                <h3 class="text-xs sm:text-sm font-black text-black uppercase tracking-wider">No Orders Found</h3>
-                <p class="text-[11px] text-gray-400">When customers place orders matching this filter, they will appear here as clickable capsules.</p>
+            <div class="rounded-3xl p-10 text-center space-y-2 shadow-xs" style="background: #FFFCF7; border: 1px solid #E8DECB;">
+                <div class="w-12 h-12 rounded-2xl flex items-center justify-center mx-auto text-xl" style="background: #FDF8EE; color: #C49520; border: 1px solid #E8DECB;">🛍️</div>
+                <h3 class="font-serif text-sm font-bold uppercase tracking-wider" style="color: #1E1915;">No Orders Found</h3>
+                <p class="text-[11px]" style="color: #766C60;">When customer orders match this filter state, they will be catalogued here.</p>
             </div>
         </template>
 
         <template x-for="order in filtered" :key="order.id">
             <div @click="openDetails(order)"
-                 class="group bg-white hover:bg-gray-50/80 rounded-full p-2.5 sm:p-3.5 px-4 sm:px-6 border border-gray-100 hover:border-[#C0420A]/40 shadow-sm hover:shadow-md transition-all duration-300 cursor-pointer flex items-center justify-between gap-3 active:scale-[0.99]">
+                 class="group rounded-2xl p-2.5 sm:p-3.5 px-4 sm:px-6 shadow-xs hover:shadow-md transition-all duration-300 cursor-pointer flex items-center justify-between gap-3 active:scale-[0.99]"
+                 style="background: #FFFCF7; border: 1px solid #E8DECB;"
+                 onmouseover="this.style.borderColor='#C49520';"
+                 onmouseout="this.style.borderColor='#E8DECB';">
                 
                 {{-- Left: Avatar & Order Info --}}
                 <div class="flex items-center gap-3 min-w-0 flex-1">
-                    <div class="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-linear-to-tr from-[#3D2B1F] to-[#C0420A] flex items-center justify-center text-white font-black text-xs sm:text-base shadow-sm shrink-0 overflow-hidden group-hover:scale-105 transition-transform">
+                    <div class="w-10 h-10 sm:w-11 sm:h-11 rounded-xl flex items-center justify-center font-bold text-xs sm:text-sm shadow-xs shrink-0 overflow-hidden group-hover:scale-105 transition-transform" style="background: #1E1915; color: #C49520; border: 1px solid rgba(196,149,32,0.4);">
                         <span x-text="(order.customer?.name || 'O')[0].toUpperCase()"></span>
                     </div>
                     <div class="min-w-0 flex-1">
                         <div class="flex items-center gap-2 flex-wrap">
-                            <h3 class="text-xs sm:text-sm font-black text-black truncate uppercase tracking-tight group-hover:text-[#C0420A] transition-colors"
+                            <h3 class="font-serif text-xs sm:text-sm font-bold truncate tracking-tight transition-colors"
+                                style="color: #1E1915;"
                                 x-text="'#LB-' + order.id.slice(-8).toUpperCase()"></h3>
                             <span class="px-2.5 py-0.5 rounded-full border text-[8px] sm:text-[9px] font-black uppercase tracking-wider shrink-0"
                                   :class="statusColor(order.status)"
                                   x-text="normalizeStatus(order.status) === 'to ship' ? 'To Ship' : order.status"></span>
                             <template x-if="order.reviews && order.reviews.length > 0">
-                                <span class="px-2 py-0.5 rounded-full bg-amber-50 text-amber-800 border border-amber-200 text-[8px] sm:text-[9px] font-black uppercase tracking-wider flex items-center gap-1 shrink-0">
-                                    <span class="text-amber-500 font-black">★</span>
+                                <span class="px-2 py-0.5 rounded-full text-[8px] sm:text-[9px] font-bold uppercase tracking-wider flex items-center gap-1 shrink-0" style="background: #FDF8EE; color: #A16D19; border: 1px solid #E8DECB;">
+                                    <span style="color: #C49520;">★</span>
                                     <span x-text="Number(order.reviews[0].rating).toFixed(1) + ' Rated'"></span>
                                 </span>
                             </template>
                         </div>
-                        <p class="text-[10px] sm:text-[11px] text-gray-400 truncate font-medium mt-0.5">
-                            <span class="font-bold text-gray-600" x-text="order.customer?.name || 'Customer'"></span>
-                            <span class="text-gray-300"> • </span>
+                        <p class="text-[10px] sm:text-[11px] truncate font-medium mt-0.5" style="color: #766C60;">
+                            <span class="font-bold" style="color: #1E1915;" x-text="order.customer?.name || 'Customer'"></span>
+                            <span style="color: #E8DECB;"> • </span>
                             <span x-text="(order.items ? order.items.length : 0) + ' item' + (order.items && order.items.length !== 1 ? 's' : '')"></span>
                         </p>
                     </div>
@@ -757,12 +769,13 @@ function sellerOrdersManager(initialOrders) {
                 {{-- Right: Total Price & Navigation Arrow Pill --}}
                 <div class="flex items-center gap-3 shrink-0">
                     <div class="text-right">
-                        <div class="text-[8px] sm:text-[9px] font-bold text-gray-400 uppercase tracking-widest"
+                        <div class="text-[8px] sm:text-[9px] font-bold uppercase tracking-widest"
+                             style="color: #766C60;"
                              x-text="order.createdAt ? new Date(order.createdAt).toLocaleDateString('en-PH', {month:'short', day:'numeric'}) : ''"></div>
-                        <div class="text-xs sm:text-sm font-black text-[#C0420A]" x-text="'₱' + Number(order.totalAmount).toLocaleString()"></div>
+                        <div class="text-xs sm:text-sm font-black font-serif" style="color: #C49520;" x-text="'₱' + Number(order.totalAmount).toLocaleString()"></div>
                     </div>
-                    <div class="w-8 h-8 rounded-full bg-gray-100 group-hover:bg-[#C0420A] group-hover:text-white flex items-center justify-center text-gray-400 transition-all shrink-0">
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+                    <div class="w-8 h-8 rounded-xl flex items-center justify-center transition-all shrink-0" style="background: #FDF8EE; border: 1px solid #E8DECB; color: #766C60;" onmouseover="this.style.background='#C49520'; this.style.color='#FFF'; this.style.borderColor='#C49520';" onmouseout="this.style.background='#FDF8EE'; this.style.color='#766C60'; this.style.borderColor='#E8DECB';">
+                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
                     </div>
                 </div>
             </div>

@@ -24,7 +24,7 @@
     <div class="absolute top-0 right-0 w-96 sm:w-140 h-96 sm:h-140 rounded-full -translate-y-1/2 translate-x-1/3 blur-3xl opacity-[0.05] pointer-events-none bg-[#C0422A]"></div>
     <div class="absolute bottom-0 left-0 w-72 sm:w-96 h-72 sm:h-96 rounded-full translate-y-1/2 -translate-x-1/3 blur-3xl opacity-[0.10] pointer-events-none bg-[#D4B896]"></div>
 
-    <div class="w-full max-w-xl bg-white rounded-[2rem] sm:rounded-[2.5rem] border border-[#E5DDD5] p-6 sm:p-10 shadow-[0_20px_60px_rgba(60,40,20,0.06)] relative z-10 my-4 sm:my-8" x-data="{ isSubmitting: false }">
+    <div class="w-full max-w-xl bg-white rounded-4xl sm:rounded-[2.5rem] border border-[#E5DDD5] p-6 sm:p-10 shadow-[0_20px_60px_rgba(60,40,20,0.06)] relative z-10 my-4 sm:my-8" x-data="{ isSubmitting: false }">
         
         {{-- Header & Progress --}}
         <div class="text-center mb-8">

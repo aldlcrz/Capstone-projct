@@ -3,23 +3,23 @@
 @section('content')
 <div class="space-y-6 sm:space-y-8 max-w-6xl pb-28 lg:pb-12 px-2 sm:px-6">
     <div>
-        <div class="text-[10px] font-bold text-[#C0422A] uppercase tracking-[0.2em] mb-1">Financial Settlement</div>
-        <h1 class="font-serif text-2xl sm:text-3xl font-bold text-[#2A2A28]">Seller <span class="text-gray-400 font-light italic">Commission Payment</span></h1>
-        <p class="text-xs text-gray-500 mt-1">Settle your monthly platform commission to maintain an active seller account.</p>
+        <div class="text-[10px] font-bold text-[#C49520] uppercase tracking-[0.2em] mb-1">✦ Financial Settlement</div>
+        <h1 class="font-serif text-2xl sm:text-3xl font-bold text-[#1E1915]">Seller <span class="text-[#766C60] font-light italic">Commission Payment</span></h1>
+        <p class="text-xs text-[#766C60] mt-1">Settle your monthly platform commission to maintain an active seller studio account.</p>
     </div>
 
     {{-- Monthly Summary Card --}}
     <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-6">
-        <div class="bg-white rounded-2xl sm:rounded-3xl p-4 sm:p-6 border border-gray-100 shadow-sm space-y-1 sm:space-y-2">
-            <div class="text-[10px] font-bold uppercase tracking-widest text-gray-400">Current Period</div>
-            <div class="text-xl sm:text-2xl font-black text-black">{{ \Carbon\Carbon::parse($period . '-01')->format('F Y') }}</div>
-            <div class="text-xs text-gray-500">Commission due by 10th of next month</div>
+        <div class="rounded-2xl sm:rounded-3xl p-4 sm:p-6 shadow-xs space-y-1 sm:space-y-2" style="background: #FFFCF7; border: 1px solid #E8DECB;">
+            <div class="text-[10px] font-bold uppercase tracking-widest text-[#766C60]">Current Period</div>
+            <div class="text-xl sm:text-2xl font-black font-serif text-[#1E1915]">{{ \Carbon\Carbon::parse($period . '-01')->format('F Y') }}</div>
+            <div class="text-xs text-[#766C60]">Commission due by 10th of next month</div>
         </div>
 
-        <div class="bg-white rounded-2xl sm:rounded-3xl p-4 sm:p-6 border border-gray-100 shadow-sm space-y-1 sm:space-y-2">
-            <div class="text-[10px] font-bold uppercase tracking-widest text-gray-400">Gross Sales ({{ $rate }}%)</div>
-            <div class="text-xl sm:text-2xl font-black text-[#C0422A]">₱{{ number_format($totalSales, 2) }}</div>
-            <div class="text-xs text-gray-500">Total completed &amp; active orders</div>
+        <div class="rounded-2xl sm:rounded-3xl p-4 sm:p-6 shadow-xs space-y-1 sm:space-y-2" style="background: #FFFCF7; border: 1px solid #E8DECB;">
+            <div class="text-[10px] font-bold uppercase tracking-widest text-[#766C60]">Gross Sales ({{ $rate }}%)</div>
+            <div class="text-xl sm:text-2xl font-black font-serif text-[#C49520]">₱{{ number_format($totalSales, 2) }}</div>
+            <div class="text-xs text-[#766C60]">Total completed &amp; active orders</div>
         </div>
 
         <div class="bg-[#2A2A28] text-white rounded-2xl sm:rounded-3xl p-4 sm:p-6 shadow-xl space-y-1 sm:space-y-2 relative overflow-hidden">

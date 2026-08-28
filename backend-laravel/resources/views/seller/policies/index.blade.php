@@ -14,12 +14,12 @@
     <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white p-6 sm:p-8 rounded-3xl border border-gray-100 shadow-xs">
         <div>
             <div class="flex items-center gap-2 mb-2">
-                <a href="{{ route('seller.profile') }}" class="text-[10px] font-bold text-gray-400 uppercase tracking-widest hover:text-[#C0420A] transition-colors flex items-center gap-1">
+                <a href="{{ route('seller.profile') }}" class="text-[10px] font-bold text-gray-400 uppercase tracking-widest hover:text-[#C49520] transition-colors flex items-center gap-1">
                     <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
                     Account Settings
                 </a>
                 <span class="text-gray-300">/</span>
-                <span class="text-[10px] font-bold uppercase tracking-widest text-[#C0420A]">Shop Policies</span>
+                <span class="text-[10px] font-bold uppercase tracking-widest text-[#C49520]">Shop Policies</span>
             </div>
             <h1 class="text-2xl sm:text-3xl font-serif font-black text-black">Shop Cancellation & Refund Policies</h1>
             <p class="text-xs text-gray-500 mt-1 max-w-2xl leading-relaxed">
