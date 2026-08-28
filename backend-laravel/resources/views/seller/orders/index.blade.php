@@ -697,8 +697,8 @@ function sellerOrdersManager(initialOrders) {
         </div>
     </div>
 
-    {{-- Status Filter Tabs (Capsules) --}}
-    <div class="flex flex-wrap gap-1.5 sm:gap-2 pb-1">
+    {{-- Status Filter Tabs (Capsules in straight line on mobile) --}}
+    <div class="flex items-center gap-1.5 sm:gap-2 overflow-x-auto no-scrollbar pb-2 -mx-2 px-2 sm:mx-0 sm:px-0 scroll-smooth">
         @foreach(['all' => 'All', 'pending' => 'Pending', 'to ship' => 'To Ship', 'shipped' => 'Shipped', 'in transit' => 'In Transit', 'delivered' => 'Delivered', 'completed' => 'Completed', 'cancelled' => 'Cancelled'] as $val => $label)
             <button @click="statusFilter = '{{ $val }}'"
                 :class="statusFilter === '{{ $val }}' ? 'bg-black text-white shadow-md' : 'bg-white text-gray-500 border border-gray-200 hover:border-gray-300'"

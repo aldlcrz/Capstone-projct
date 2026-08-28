@@ -417,7 +417,7 @@
                 </div>
             </main>
 
-            <!-- Mobile Bottom Nav: Home | Orders | Messages | Profile -->
+            <!-- Mobile Bottom Nav: Home | Orders | ➕ Add | Messages | Profile -->
             <nav class="lg:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200/80 h-16 flex items-center justify-around px-2 z-40 shadow-lg">
                 <!-- Home -->
                 <a href="{{ route('seller.dashboard') }}" class="flex-1 flex flex-col items-center justify-center gap-0.5 py-1 {{ request()->is('seller/dashboard') || request()->is('seller') ? 'text-[#C0422A]' : 'text-gray-500 hover:text-gray-700' }}">
@@ -438,6 +438,16 @@
                         @endif
                     </div>
                     <span class="text-[10px] font-semibold">Orders</span>
+                </a>
+
+                <!-- Center Floating Plus Button (Add New Product) -->
+                <a href="{{ route('seller.products.create') }}" class="flex flex-col items-center justify-center -mt-5 group shrink-0 px-2" title="Add New Product">
+                    <div class="w-12 h-12 rounded-full bg-[#221F1C] text-white flex items-center justify-center shadow-lg group-hover:bg-[#C0422A] transition-all">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M12 4.5v15m7.5-7.5h-15"></path>
+                        </svg>
+                    </div>
+                    <span class="text-[9px] font-semibold text-gray-400 mt-0.5">Add</span>
                 </a>
 
                 <!-- Messages -->
