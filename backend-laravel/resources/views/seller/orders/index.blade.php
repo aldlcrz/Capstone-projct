@@ -772,7 +772,7 @@ function sellerOrdersManager(initialOrders) {
                         <div class="text-[8px] sm:text-[9px] font-bold uppercase tracking-widest"
                              style="color: #766C60;"
                              x-text="order.createdAt ? new Date(order.createdAt).toLocaleDateString('en-PH', {month:'short', day:'numeric'}) : ''"></div>
-                        <div class="text-xs sm:text-sm font-black font-serif" style="color: #C49520;" x-text="'₱' + Number(order.totalAmount).toLocaleString()"></div>
+                        <div class="text-xs sm:text-sm font-black font-sans" style="color: #C49520;" x-text="'₱' + Number(order.totalAmount).toLocaleString()"></div>
                     </div>
                     <div class="w-8 h-8 rounded-xl flex items-center justify-center transition-all shrink-0" style="background: #FDF8EE; border: 1px solid #E8DECB; color: #766C60;" onmouseover="this.style.background='#C49520'; this.style.color='#FFF'; this.style.borderColor='#C49520';" onmouseout="this.style.background='#FDF8EE'; this.style.color='#766C60'; this.style.borderColor='#E8DECB';">
                         <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>

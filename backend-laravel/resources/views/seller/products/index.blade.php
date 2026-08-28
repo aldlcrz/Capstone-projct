@@ -133,8 +133,8 @@
                                 <div class="flex items-center justify-between gap-2 mt-2 pt-2 border-t" style="border-color: #E8DECB;">
                                     <div class="flex items-center gap-1.5">
                                         <span class="text-xs" style="color: #C49520;">★</span>
-                                        <span class="text-[11px] font-black font-serif" style="color: #1E1915;">{{ $product->reviews_avg_rating ? number_format($product->reviews_avg_rating, 1) : '0.0' }}</span>
-                                        <span class="text-[9px] font-medium" style="color: #766C60;">({{ $product->reviews_count }})</span>
+                                        <span class="text-[11px] font-black font-sans" style="color: #1E1915;">{{ $product->reviews_avg_rating ? number_format($product->reviews_avg_rating, 1) : '0.0' }}</span>
+                                        <span class="text-[9px] font-medium font-sans" style="color: #766C60;">({{ $product->reviews_count }})</span>
                                     </div>
                                     @if($product->reviews_count > 0)
                                         <button type="button" @click="openReviewsModal('{{ $product->id }}')" class="text-[9px] font-extrabold uppercase tracking-wider hover:underline cursor-pointer" style="color: #C49520;">
@@ -147,11 +147,11 @@
                             <div class="flex items-center justify-between pt-2 border-t" style="border-color: #E8DECB;">
                                 <div>
                                     <div class="text-[8px] sm:text-[9px] font-bold uppercase tracking-widest" style="color: #766C60;">Price</div>
-                                    <div class="text-xs sm:text-sm font-black font-serif" style="color: #1E1915;">₱{{ number_format($product->price) }}</div>
+                                    <div class="text-xs sm:text-sm font-black font-sans" style="color: #1E1915;">₱{{ number_format($product->price) }}</div>
                                 </div>
                                 <div class="text-right">
                                     <div class="text-[8px] sm:text-[9px] font-bold uppercase tracking-widest" style="color: #766C60;">Stock</div>
-                                    <div class="text-xs sm:text-sm font-black font-serif" style="color: #A16D19;">{{ $product->stock }}</div>
+                                    <div class="text-xs sm:text-sm font-black font-sans" style="color: #A16D19;">{{ $product->stock }}</div>
                                 </div>
                             </div>
 
@@ -229,8 +229,8 @@
                             <div class="flex items-center justify-between gap-2 mt-2 pt-2 border-t" style="border-color: #E8DECB;">
                                 <div class="flex items-center gap-1.5">
                                     <span class="text-xs" style="color: #C49520;">★</span>
-                                    <span class="text-[11px] font-black font-serif" style="color: #1E1915;">{{ $product->reviews_avg_rating ? number_format($product->reviews_avg_rating, 1) : '0.0' }}</span>
-                                    <span class="text-[9px] font-medium" style="color: #766C60;">({{ $product->reviews_count }})</span>
+                                    <span class="text-[11px] font-black font-sans" style="color: #1E1915;">{{ $product->reviews_avg_rating ? number_format($product->reviews_avg_rating, 1) : '0.0' }}</span>
+                                    <span class="text-[9px] font-medium font-sans" style="color: #766C60;">({{ $product->reviews_count }})</span>
                                 </div>
                                 @if($product->reviews_count > 0)
                                     <button type="button" @click="openReviewsModal('{{ $product->id }}')" class="text-[9px] font-extrabold uppercase tracking-wider hover:underline cursor-pointer" style="color: #C49520;">
@@ -244,15 +244,15 @@
                             <div>
                                 <div class="text-[8px] sm:text-[9px] font-bold uppercase tracking-widest" style="color: #766C60;">Price</div>
                                 <div class="flex items-center gap-1">
-                                    <span class="text-xs sm:text-sm font-black font-serif" style="color: #1E1915;">₱{{ number_format($product->salePrice) }}</span>
+                                    <span class="text-xs sm:text-sm font-black font-sans" style="color: #1E1915;">₱{{ number_format($product->salePrice) }}</span>
                                     @if($product->is_on_sale && $product->discount_percentage > 0)
-                                        <span class="text-[9px] line-through" style="color: #A09585;">₱{{ number_format($product->price) }}</span>
+                                        <span class="text-[9px] line-through font-sans" style="color: #A09585;">₱{{ number_format($product->price) }}</span>
                                     @endif
                                 </div>
                             </div>
                             <div class="text-right">
                                 <div class="text-[8px] sm:text-[9px] font-bold uppercase tracking-widest" style="color: #766C60;">Stock</div>
-                                <div class="text-xs sm:text-sm font-black font-serif {{ $product->stock < 5 ? 'text-red-500' : 'text-stone-800' }}">{{ $product->stock }}</div>
+                                <div class="text-xs sm:text-sm font-black font-sans {{ $product->stock < 5 ? 'text-red-500' : 'text-stone-800' }}">{{ $product->stock }}</div>
                             </div>
                         </div>
 

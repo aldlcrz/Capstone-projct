@@ -72,40 +72,40 @@
 <body class="antialiased">
     <div x-data="{ isMobileMenuOpen: false }" class="flex h-screen overflow-hidden">
 
-        <!-- DESKTOP SIDEBAR (Light Artisan Theme) -->
-        <aside class="hidden lg:flex flex-col w-72 h-full overflow-hidden shrink-0" style="background-color:#FAF7F2; border-right: 1px solid #E8DECB;">
-            <div class="p-7 flex flex-col h-full">
+        <!-- DESKTOP SIDEBAR (Light Artisan Theme - Larger Layout) -->
+        <aside class="hidden lg:flex flex-col w-80 h-full overflow-hidden shrink-0" style="background-color:#FAF7F2; border-right: 1px solid #E8DECB;">
+            <div class="p-8 flex flex-col h-full">
 
                 <!-- Brand -->
                 <div class="mb-7 shrink-0">
-                    <a href="/seller/dashboard" class="flex items-center gap-3 group">
-                        <div class="w-10 h-10 rounded-xl overflow-hidden shadow-xs border shrink-0" style="border-color: #E8DECB; background: #FFFFFF;">
-                            <img src="{{ asset('images/logo-icon.png') }}" alt="LumBarong Logo" class="w-full h-full object-contain group-hover:scale-105 transition-transform">
+                    <a href="/seller/dashboard" class="flex items-center gap-3.5 group">
+                        <div class="w-11 h-11 rounded-2xl overflow-hidden shadow-xs border shrink-0 flex items-center justify-center" style="border-color: #E8DECB; background: #FFFFFF;">
+                            <img src="{{ asset('images/logo-icon.png') }}" alt="LumBarong Logo" class="w-8 h-8 object-contain group-hover:scale-105 transition-transform">
                         </div>
                         <div>
-                            <span class="font-serif text-lg font-bold tracking-tight" style="color: #1E1915;">LUMBARONG</span>
+                            <span class="font-serif text-xl font-bold tracking-tight" style="color: #1E1915;">LUMBARONG</span>
                             <div class="flex items-center gap-1.5 mt-0.5">
-                                <span style="font-size:9px; font-weight:800; color:#A16D19; letter-spacing:0.18em; text-transform:uppercase;">✦ Artisan Studio</span>
+                                <span style="font-size:10px; font-weight:800; color:#A16D19; letter-spacing:0.18em; text-transform:uppercase;">✦ Artisan Studio</span>
                             </div>
                         </div>
                     </a>
                 </div>
 
                 <!-- Seller Profile Snapshot -->
-                <div class="mb-7 px-3.5 py-3 rounded-2xl shrink-0 shadow-2xs" style="background: #FFFFFF; border: 1px solid #ECE3D2;">
-                    <div class="flex items-center gap-3">
-                        <div style="width:36px;height:36px;min-width:36px;border-radius:50%;padding:2px;background:linear-gradient(135deg,#996515,#E6CA65,#996515);box-shadow:0 2px 6px rgba(0,0,0,0.08);" class="shrink-0">
+                <div class="mb-7 px-4 py-3.5 rounded-2xl shrink-0 shadow-2xs" style="background: #FFFFFF; border: 1px solid #ECE3D2;">
+                    <div class="flex items-center gap-3.5">
+                        <div style="width:40px;height:40px;min-width:40px;border-radius:50%;padding:2px;background:linear-gradient(135deg,#996515,#E6CA65,#996515);box-shadow:0 2px 6px rgba(0,0,0,0.08);" class="shrink-0">
                             <div style="width:100%;height:100%;border-radius:50%;overflow:hidden;background:#FAF8F5;display:flex;align-items:center;justify-content:center;">
                                 @if(Auth::user()->profile_photo_url)
                                     <img src="{{ Auth::user()->profile_photo_url }}" class="w-full h-full object-cover" onerror="this.style.display='none'">
                                 @else
-                                    <span style="font-size:13px;font-weight:800;color:#996515;">{{ strtoupper(substr(Auth::user()->name, 0, 1)) }}</span>
+                                    <span style="font-size:14px;font-weight:800;color:#996515;">{{ strtoupper(substr(Auth::user()->name, 0, 1)) }}</span>
                                 @endif
                             </div>
                         </div>
-                        <div class="min-w-0">
-                            <div class="text-xs font-bold truncate font-serif" style="color: #1E1915;">{{ Auth::user()->name }}</div>
-                            <div class="text-[9px] font-extrabold uppercase tracking-wider mt-0.5" style="color: #A16D19;">
+                        <div class="min-w-0 flex-1">
+                            <div class="text-[13px] font-bold truncate" style="color: #1E1915;">{{ Auth::user()->name }}</div>
+                            <div class="text-[9.5px] font-extrabold uppercase tracking-wider mt-0.5" style="color: #A16D19;">
                                 {{ Auth::user()->isPremiumActive() ? '✦ Premium Artisan' : 'Verified Artisan' }}
                             </div>
                         </div>
@@ -147,17 +147,17 @@
 
                     @foreach($menuGroups as $groupLabel => $items)
                         <div class="space-y-1">
-                            <div class="text-[9px] font-bold tracking-[0.2em] uppercase px-3 mb-2" style="color: #A16D19;">{{ $groupLabel }}</div>
+                            <div class="text-[9.5px] font-bold tracking-[0.22em] uppercase px-3.5 mb-2" style="color: #A16D19;">{{ $groupLabel }}</div>
                             @foreach($items as $item)
                                 @php $isActive = request()->is($item['path'] . '*'); @endphp
                                 <a href="/{{ $item['path'] }}"
-                                   class="flex items-center justify-between px-3 py-2.5 rounded-xl transition-all duration-200 tracking-wide text-xs font-semibold {{ $isActive ? 'seller-nav-active' : 'seller-nav-inactive' }}"
+                                   class="flex items-center justify-between px-3.5 py-3 rounded-2xl transition-all duration-200 tracking-wide text-[13px] font-semibold {{ $isActive ? 'seller-nav-active' : 'seller-nav-inactive' }}"
                                    @if(!$isActive)
                                    onmouseover="this.style.color='#1E1915'; this.style.background='rgba(196,149,32,0.08)';"
                                    onmouseout="this.style.color='#6C6256'; this.style.background='transparent';"
                                    @endif>
-                                    <div class="flex items-center gap-3">
-                                        <svg class="w-4 h-4 shrink-0 {{ $isActive ? 'seller-nav-icon-active' : 'seller-nav-icon-inactive' }}" fill="none" stroke="currentColor" viewBox="0 0 24 24">{!! $item['icon'] !!}</svg>
+                                    <div class="flex items-center gap-3.5">
+                                        <svg class="w-4.5 h-4.5 shrink-0 {{ $isActive ? 'seller-nav-icon-active' : 'seller-nav-icon-inactive' }}" fill="none" stroke="currentColor" viewBox="0 0 24 24">{!! $item['icon'] !!}</svg>
                                         <span>{{ $item['label'] }}</span>
                                     </div>
                                     @if(($item['badge'] ?? 0) > 0)
@@ -169,7 +169,7 @@
                     @endforeach
                 </nav>
 
-                <!-- Logout -->
+                <!-- Logout (Red Theme) -->
                 <div class="mt-6 pt-5 shrink-0" style="border-top: 1px solid #E8DECB;">
                     <form x-ref="logoutForm" action="{{ route('logout') }}" method="POST">
                         @csrf
@@ -181,12 +181,12 @@
                                     type: 'danger',
                                     onConfirm: () => $refs.logoutForm.submit()
                                 })"
-                                class="flex items-center gap-3 w-full px-3 py-2.5 rounded-xl transition-all text-xs font-semibold cursor-pointer"
-                                style="color: #78716C;"
-                                onmouseover="this.style.color='#DC2626'; this.style.background='rgba(220,38,38,0.06)';"
-                                onmouseout="this.style.color='#78716C'; this.style.background='transparent';">
-                            <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path></svg>
-                            Logout
+                                class="flex items-center gap-3.5 w-full px-4 py-3 rounded-2xl transition-all text-xs font-bold cursor-pointer shadow-2xs"
+                                style="background: #FEF2F2; border: 1px solid #FECACA; color: #DC2626;"
+                                onmouseover="this.style.background='#DC2626'; this.style.color='#FFFFFF'; this.style.borderColor='#DC2626';"
+                                onmouseout="this.style.background='#FEF2F2'; this.style.color='#DC2626'; this.style.borderColor='#FECACA';">
+                            <svg class="w-4.5 h-4.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path></svg>
+                            <span>Logout Workspace</span>
                         </button>
                     </form>
                 </div>
@@ -280,9 +280,7 @@
                             </a>
                         @endforeach
                     </nav>
-                </div>
-
-                <!-- Drawer Logout -->
+                                <!-- Drawer Logout -->
                 <div class="pt-5 mt-5" style="border-top: 1px solid #E8DECB;">
                     <form x-ref="mobileLogoutForm" action="{{ route('logout') }}" method="POST">
                         @csrf
@@ -294,40 +292,40 @@
                                     type: 'danger',
                                     onConfirm: () => $refs.mobileLogoutForm.submit()
                                 })"
-                                class="flex items-center gap-3 w-full px-3 py-2.5 rounded-xl text-xs font-semibold transition-all cursor-pointer"
-                                style="color: #78716C;"
-                                onmouseover="this.style.color='#DC2626'; this.style.background='rgba(220,38,38,0.06)';"
-                                onmouseout="this.style.color='#78716C'; this.style.background='transparent';">
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path></svg>
-                            Logout
+                                class="flex items-center gap-3.5 w-full px-4 py-3 rounded-2xl text-xs font-bold transition-all cursor-pointer shadow-2xs"
+                                style="background: #FEF2F2; border: 1px solid #FECACA; color: #DC2626;"
+                                onmouseover="this.style.background='#DC2626'; this.style.color='#FFFFFF'; this.style.borderColor='#DC2626';"
+                                onmouseout="this.style.background='#FEF2F2'; this.style.color='#DC2626'; this.style.borderColor='#FECACA';">
+                            <svg class="w-4.5 h-4.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path></svg>
+                            <span>Logout Workspace</span>
                         </button>
                     </form>
                 </div>
             </div>
         </div>
 
-        <!-- MAIN CONTENT AREA -->
+        <!-- MAIN WRAPPER -->
         <div class="flex-1 flex flex-col h-full relative overflow-hidden" style="background-color: #FFFCF7;">
 
-            <!-- Top Header -->
-            <header class="sticky top-0 z-40 h-16 lg:h-17 flex items-center shrink-0" style="background-color: #FFFCF7; border-bottom: 1px solid #E8DECB;">
-                <div class="w-full flex items-center justify-between px-4 lg:px-8">
+            <!-- Top Header (Enlarged & Cleaned) -->
+            <header class="sticky top-0 z-40 h-20 flex items-center shrink-0" style="background-color: #FFFCF7; border-bottom: 1px solid #E8DECB;">
+                <div class="w-full flex items-center justify-between px-6 lg:px-10">
                     <!-- Mobile: Hamburger + Logo -->
-                    <div class="flex items-center gap-3 lg:hidden">
-                        <button @click="isMobileMenuOpen = true" class="w-9 h-9 rounded-xl flex items-center justify-center transition-all" style="background: #FDF8EE; border: 1px solid #E8DECB; color: #766C60;"
+                    <div class="flex items-center gap-3.5 lg:hidden">
+                        <button @click="isMobileMenuOpen = true" class="w-10 h-10 rounded-2xl flex items-center justify-center transition-all cursor-pointer" style="background: #FDF8EE; border: 1px solid #E8DECB; color: #766C60;"
                                 onmouseover="this.style.borderColor='#C49520'; this.style.color='#C49520';"
                                 onmouseout="this.style.borderColor='#E8DECB'; this.style.color='#766C60';">
                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path></svg>
                         </button>
                         <a href="/seller/dashboard" class="flex items-center gap-2">
-                            <img src="{{ asset('images/logo-icon.png') }}" alt="LumBarong" class="w-7 h-7 object-contain rounded-lg">
+                            <img src="{{ asset('images/logo-icon.png') }}" alt="LumBarong" class="w-8 h-8 object-contain rounded-lg">
                             <span class="font-serif text-base font-bold tracking-tight" style="color: #1E1915;">LUMBARONG</span>
                         </a>
                     </div>
                     <div class="hidden lg:flex flex-1"></div>
 
-                    <!-- Right Side: Notifications + Profile -->
-                    <div class="flex items-center gap-2 lg:gap-4">
+                    <!-- Right Side: Notifications -->
+                    <div class="flex items-center gap-3">
 
                         <!-- Notifications -->
                         <div x-data="{ open: false }" class="relative" @click.away="open = false">
@@ -343,7 +341,7 @@
                                     ->get();
                             @endphp
                             <button @click="open = !open"
-                                    class="relative w-9 h-9 sm:w-10 sm:h-10 flex items-center justify-center rounded-xl transition-all"
+                                    class="relative w-11 h-11 flex items-center justify-center rounded-2xl transition-all cursor-pointer shadow-2xs"
                                     style="background: #FDF8EE; border: 1px solid #E8DECB; color: #766C60;"
                                     onmouseover="this.style.color='#C49520'; this.style.borderColor='#C49520';"
                                     onmouseout="this.style.color='#766C60'; this.style.borderColor='#E8DECB';">
@@ -351,7 +349,7 @@
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"></path>
                                 </svg>
                                 @if($unreadCount > 0)
-                                    <span class="absolute -top-1 -right-1 min-w-4.5 h-4.5 px-1 text-white text-[9px] font-bold rounded-full flex items-center justify-center border-2 border-white" style="background: #C49520;">{{ $unreadCount }}</span>
+                                    <span class="absolute -top-1 -right-1 min-w-5 h-5 px-1.5 text-white text-[10px] font-bold rounded-full flex items-center justify-center border-2 border-white" style="background: #C49520;">{{ $unreadCount }}</span>
                                 @endif
                             </button>
 
@@ -366,7 +364,7 @@
                                     @if($unreadCount > 0)
                                         <form action="{{ route('seller.notifications.read-all') }}" method="POST" class="inline">
                                             @csrf
-                                            <button type="submit" class="text-[9px] font-bold uppercase tracking-widest transition-colors" style="color: #C49520;" onmouseover="this.style.color='#1E1915';" onmouseout="this.style.color='#C49520';">Mark all read</button>
+                                            <button type="submit" class="text-[9px] font-bold uppercase tracking-widest transition-colors cursor-pointer" style="color: #C49520;" onmouseover="this.style.color='#1E1915';" onmouseout="this.style.color='#C49520';">Mark all read</button>
                                         </form>
                                     @endif
                                 </div>
@@ -415,29 +413,6 @@
                             </div>
                         </div>
 
-                        <!-- Profile -->
-                        <a href="{{ route('seller.profile') }}" class="flex items-center gap-3 cursor-pointer group" title="Go to Profile">
-                            <div class="text-right hidden sm:block">
-                                <div class="text-xs font-bold font-serif flex items-center gap-1.5 justify-end" style="color: #1E1915;">
-                                    {{ Auth::user()->name }}
-                                    @if(Auth::user()->isPremiumActive())
-                                        <span class="text-xs" title="Premium Seller" style="color: #C49520;">✦</span>
-                                    @endif
-                                </div>
-                                <div class="text-[9px] font-extrabold uppercase tracking-widest" style="color: #996515;">
-                                    {{ Auth::user()->isPremiumActive() ? 'Premium Artisan' : 'Verified Artisan' }}
-                                </div>
-                            </div>
-                            <div style="width:38px;height:38px;min-width:38px;border-radius:50%;padding:2px;background:linear-gradient(135deg,#996515,#E6CA65,#996515);box-shadow:0 2px 8px rgba(0,0,0,0.1);" class="shrink-0 group-hover:scale-105 transition-transform">
-                                <div style="width:100%;height:100%;border-radius:50%;overflow:hidden;background:#FAF8F5;display:flex;align-items:center;justify-content:center;">
-                                    @if(Auth::user()->profile_photo_url)
-                                        <img src="{{ Auth::user()->profile_photo_url }}" class="w-full h-full object-cover" onerror="this.style.display='none'">
-                                    @else
-                                        <span style="font-size:14px;font-weight:800;color:#996515;">{{ strtoupper(substr(Auth::user()->name, 0, 1)) }}</span>
-                                    @endif
-                                </div>
-                            </div>
-                        </a>
                     </div>
                 </div>
             </header>

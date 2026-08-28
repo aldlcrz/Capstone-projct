@@ -125,19 +125,19 @@
             {{-- Artisan Quick Metrics Row --}}
             <div style="display:grid;grid-template-columns:repeat(4, 1fr);gap:8px;margin-bottom:20px;">
                 <div style="background-color:#FFFFFF;border:1px solid #ECE3D2;border-radius:14px;padding:10px 6px;text-align:center;box-shadow:0 1px 4px rgba(0,0,0,0.02);">
-                    <div style="font-size:14px;font-weight:800;color:#C49520;font-family:ui-serif,Georgia,serif;">{{ $sellerListingCount }}</div>
+                    <div style="font-size:14px;font-weight:800;color:#C49520;" class="font-sans">{{ $sellerListingCount }}</div>
                     <div style="font-size:8px;font-weight:700;color:#8C827A;text-transform:uppercase;letter-spacing:0.04em;margin-top:2px;">Creations</div>
                 </div>
                 <div style="background-color:#FFFFFF;border:1px solid #ECE3D2;border-radius:14px;padding:10px 6px;text-align:center;box-shadow:0 1px 4px rgba(0,0,0,0.02);">
-                    <div style="font-size:14px;font-weight:800;color:#1E1915;font-family:ui-serif,Georgia,serif;">{{ $sellerOrderCount }}</div>
+                    <div style="font-size:14px;font-weight:800;color:#1E1915;" class="font-sans">{{ $sellerOrderCount }}</div>
                     <div style="font-size:8px;font-weight:700;color:#8C827A;text-transform:uppercase;letter-spacing:0.04em;margin-top:2px;">Orders</div>
                 </div>
                 <div style="background-color:#FFFFFF;border:1px solid #ECE3D2;border-radius:14px;padding:10px 6px;text-align:center;box-shadow:0 1px 4px rgba(0,0,0,0.02);">
-                    <div style="font-size:14px;font-weight:800;color:#1E1915;font-family:ui-serif,Georgia,serif;">₱{{ number_format($sellerTotalEarnings, 0) }}</div>
+                    <div style="font-size:14px;font-weight:800;color:#1E1915;" class="font-sans">₱{{ number_format($sellerTotalEarnings, 0) }}</div>
                     <div style="font-size:8px;font-weight:700;color:#8C827A;text-transform:uppercase;letter-spacing:0.04em;margin-top:2px;">Sales</div>
                 </div>
                 <div style="background-color:#FFFFFF;border:1px solid #ECE3D2;border-radius:14px;padding:10px 6px;text-align:center;box-shadow:0 1px 4px rgba(0,0,0,0.02);">
-                    <div style="font-size:14px;font-weight:800;color:#1E1915;font-family:ui-serif,Georgia,serif;">{{ $sellerAvgRating ? number_format($sellerAvgRating, 1) : '5.0' }}★</div>
+                    <div style="font-size:14px;font-weight:800;color:#1E1915;" class="font-sans">{{ $sellerAvgRating ? number_format($sellerAvgRating, 1) : '5.0' }}★</div>
                     <div style="font-size:8px;font-weight:700;color:#8C827A;text-transform:uppercase;letter-spacing:0.04em;margin-top:2px;">Rating</div>
                 </div>
             </div>
@@ -484,7 +484,7 @@
                                 <div class="flex-1 min-w-0">
                                     <div class="text-[9px] font-bold uppercase tracking-widest" style="color: #766C60;">Mobile Number</div>
                                     @if($user->gcashNumber)
-                                        <div class="text-base font-bold font-serif select-all" style="color: #1E1915;">{{ $user->gcashNumber }}</div>
+                                        <div class="text-base font-bold font-sans select-all" style="color: #1E1915;">{{ $user->gcashNumber }}</div>
                                         <div class="text-[9px] font-bold uppercase tracking-widest mt-1 flex items-center gap-1" style="color: #4A6741;">
                                             ✓ Ready to receive customer payments
                                         </div>
@@ -524,7 +524,7 @@
                                 <div class="flex-1 min-w-0">
                                     <div class="text-[9px] font-bold uppercase tracking-widest" style="color: #766C60;">Mobile Number</div>
                                     @if($user->mayaNumber)
-                                        <div class="text-base font-bold font-serif select-all" style="color: #1E1915;">{{ $user->mayaNumber }}</div>
+                                        <div class="text-base font-bold font-sans select-all" style="color: #1E1915;">{{ $user->mayaNumber }}</div>
                                         <div class="text-[9px] font-bold uppercase tracking-widest mt-1 flex items-center gap-1" style="color: #4A6741;">
                                             ✓ Ready to receive customer payments
                                         </div>
