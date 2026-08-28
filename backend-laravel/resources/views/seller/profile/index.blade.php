@@ -17,7 +17,7 @@
         $sellerAvgRating = \App\Models\Review::whereHas('product', fn($q) => $q->where('sellerId', $user->id))->avg('rating');
     @endphp
 
-    <div style="min-height:calc(100vh - 120px);padding:16px 8px sm:padding:24px 16px;" 
+    <div class="min-h-[calc(100vh-120px)] px-2 py-4 sm:px-4 sm:py-6" 
          x-data="{ 
              showEditModal: false,
              showPaymentModal: false,

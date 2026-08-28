@@ -70,9 +70,11 @@
                     <div class="w-8 h-8 rounded-xl flex items-center justify-center shrink-0" style="background: #FDF8EE; color: #C49520; border: 1px solid #E8DECB;">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/></svg>
                     </div>
-                    <span class="text-[8px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full font-sans" style="{{ ($quickAlerts['newOrders'] ?? 0) > 0 ? 'background:#FDF8EE; color:#A16D19; border:1px solid #E8DECB;' : 'background:#F7F4EC; color:#A09585;' }}">
-                        {{ ($quickAlerts['newOrders'] ?? 0) > 0 ? 'Action Req.' : 'Clear' }}
-                    </span>
+                    @if(($quickAlerts['newOrders'] ?? 0) > 0)
+                        <span class="text-[8px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full font-sans" style="background: #FDF8EE; color: #A16D19; border: 1px solid #E8DECB;">Action Req.</span>
+                    @else
+                        <span class="text-[8px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full font-sans" style="background: #F7F4EC; color: #A09585;">Clear</span>
+                    @endif
                 </div>
                 <div class="text-xl sm:text-2xl font-black font-sans" style="color: #1E1915;">{{ $quickAlerts['newOrders'] ?? 0 }}</div>
                 <div class="text-[9px] font-bold uppercase tracking-wider mt-1" style="color: #766C60;">New Orders (24h)</div>
@@ -84,9 +86,11 @@
                     <div class="w-8 h-8 rounded-xl flex items-center justify-center shrink-0" style="background: #FDF8EE; color: #C49520; border: 1px solid #E8DECB;">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
                     </div>
-                    <span class="text-[8px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full font-sans" style="{{ ($quickAlerts['lowStock'] ?? 0) > 0 ? 'background:#FDF8EE; color:#A16D19; border:1px solid #E8DECB;' : 'background:#F7F4EC; color:#A09585;' }}">
-                        {{ ($quickAlerts['lowStock'] ?? 0) > 0 ? 'Restock' : 'Healthy' }}
-                    </span>
+                    @if(($quickAlerts['lowStock'] ?? 0) > 0)
+                        <span class="text-[8px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full font-sans" style="background: #FDF8EE; color: #A16D19; border: 1px solid #E8DECB;">Restock</span>
+                    @else
+                        <span class="text-[8px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full font-sans" style="background: #F7F4EC; color: #A09585;">Healthy</span>
+                    @endif
                 </div>
                 <div class="text-xl sm:text-2xl font-black font-sans" style="color: #1E1915;">{{ $quickAlerts['lowStock'] ?? 0 }}</div>
                 <div class="text-[9px] font-bold uppercase tracking-wider mt-1" style="color: #766C60;">Low Stock Items</div>
@@ -112,9 +116,11 @@
                     <div class="w-8 h-8 rounded-xl flex items-center justify-center shrink-0" style="background: #FDF8EE; color: #C49520; border: 1px solid #E8DECB;">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/></svg>
                     </div>
-                    <span class="text-[8px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full font-sans" style="{{ ($quickAlerts['messages'] ?? 0) > 0 ? 'background:#FDF8EE; color:#A16D19; border:1px solid #E8DECB;' : 'background:#F7F4EC; color:#A09585;' }}">
-                        Inbox
-                    </span>
+                    @if(($quickAlerts['messages'] ?? 0) > 0)
+                        <span class="text-[8px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full font-sans" style="background: #FDF8EE; color: #A16D19; border: 1px solid #E8DECB;">Inbox</span>
+                    @else
+                        <span class="text-[8px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full font-sans" style="background: #F7F4EC; color: #A09585;">Inbox</span>
+                    @endif
                 </div>
                 <div class="text-xl sm:text-2xl font-black font-sans" style="color: #1E1915;">{{ $quickAlerts['messages'] ?? 0 }}</div>
                 <div class="text-[9px] font-bold uppercase tracking-wider mt-1" style="color: #766C60;">Buyer Inquiries</div>
@@ -224,7 +230,7 @@
                                 <div class="w-full flex items-end justify-center h-28">
                                     @php $barHeightPct = $maxChartRevenue > 0 ? max(8, ($day['revenue'] / $maxChartRevenue) * 100) : 8; @endphp
                                     <div class="h-full w-full max-w-10 rounded-t-lg relative group flex items-end justify-center" style="background: #FDF8EE; border: 1px solid rgba(232,222,203,0.5);">
-                                        <div class="w-full rounded-t-lg transition-all duration-300" style="background: #B5870F; height: {{ $barHeightPct }}%;" onmouseover="this.style.background='#A16D19';" onmouseout="this.style.background='#B5870F';"></div>
+                                        <div class="w-full rounded-t-lg transition-all duration-300" :style="'height: {{ $barHeightPct }}%'" style="background: #B5870F;" onmouseover="this.style.background='#A16D19';" onmouseout="this.style.background='#B5870F';"></div>
                                     </div>
                                 </div>
                                 <div class="text-center">

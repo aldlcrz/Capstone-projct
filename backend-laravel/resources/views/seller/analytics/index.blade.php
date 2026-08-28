@@ -155,7 +155,7 @@
                             @endphp
                             <div class="w-full max-w-12 rounded-t-xl relative overflow-hidden h-32" style="background: #FAF7F2;">
                                 <div class="absolute inset-x-0 bottom-0 rounded-t-xl transition-all duration-500" 
-                                     style="height: {{ $heightPct }}%; background: linear-gradient(180deg, #C49520 0%, #A16D19 100%);"></div>
+                                     :style="'height: {{ $heightPct }}%'" style="background: linear-gradient(180deg, #C49520 0%, #A16D19 100%);"></div>
                             </div>
                             <div class="text-center">
                                 <div class="text-[9px] font-bold uppercase" style="color: #8C827A;">{{ $pt['label'] }}</div>
