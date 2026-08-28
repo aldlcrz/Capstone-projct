@@ -6,18 +6,20 @@
     <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
             <div class="mb-1">
-                <span class="text-[10px] font-bold text-[#C0422A] uppercase tracking-[0.2em]">Deep Shop Insights</span>
+                <span class="text-[10px] font-bold uppercase tracking-[0.2em]" style="color: #A16D19;">✦ Deep Studio Insights</span>
             </div>
-            <h1 class="font-serif text-2xl sm:text-3xl font-bold text-black uppercase">Seller <span class="text-[#C0422A] italic lowercase">analytics</span></h1>
+            <h1 class="font-serif text-2xl sm:text-3xl font-bold uppercase" style="color: #1E1915;">
+                Seller <span class="italic lowercase" style="color: #C49520;">Analytics</span>
+            </h1>
         </div>
 
         {{-- Date Filter Form --}}
         <form method="GET" action="{{ route('seller.analytics') }}" x-data="{ selectedPreset: '{{ $filters['preset'] ?? 'all_time' }}' }" class="flex items-center gap-2">
-            <div class="relative flex items-center bg-white border border-gray-200 rounded-2xl px-4 py-2 shadow-xs hover:border-gray-300 transition-all">
-                <svg class="w-4 h-4 text-gray-400 shrink-0 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div class="relative flex items-center rounded-2xl px-4 py-2 shadow-2xs transition-all" style="background: #FFFFFF; border: 1px solid #E8DECB;">
+                <svg class="w-4 h-4 shrink-0 mr-2" style="color: #A16D19;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
                 </svg>
-                <select name="date_preset" x-model="selectedPreset" @change="$el.form.submit()" class="bg-transparent text-xs font-bold text-black outline-none cursor-pointer pr-4">
+                <select name="date_preset" x-model="selectedPreset" @change="$el.form.submit()" class="bg-transparent text-xs font-bold outline-none cursor-pointer pr-4" style="color: #1E1915;">
                     <option value="all_time" {{ in_array(($filters['preset'] ?? ''), ['all_time', '']) ? 'selected' : '' }}>All Time</option>
                     <option value="today" {{ ($filters['preset'] ?? '') == 'today' ? 'selected' : '' }}>Today</option>
                     <option value="1_week" {{ in_array(($filters['preset'] ?? ''), ['1_week', 'last_7_days']) ? 'selected' : '' }}>1 Week</option>
@@ -26,34 +28,48 @@
                 </select>
             </div>
             @if(($filters['preset'] ?? 'all_time') !== 'all_time')
-                <a href="{{ route('seller.analytics') }}" class="text-[10px] font-bold text-gray-400 hover:text-red-600 uppercase tracking-widest px-2">Reset ✕</a>
+                <a href="{{ route('seller.analytics') }}" class="text-[10px] font-bold uppercase tracking-widest px-2" style="color: #766C60;" onmouseover="this.style.color='#DC2626'" onmouseout="this.style.color='#766C60'">Reset ✕</a>
             @endif
         </form>
     </div>
 
     {{-- Interactive Module Tabs --}}
     <div class="overflow-x-auto no-scrollbar -mx-4 px-4 sm:mx-0 sm:px-0">
-        <div class="flex items-center gap-2 border-b border-gray-200 pb-2 min-w-max">
-            <button @click="activeTab = 'sales'" :class="activeTab === 'sales' ? 'bg-[#C0422A] text-white shadow-sm' : 'bg-white text-gray-600 hover:bg-gray-100'" class="px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2">
+        <div class="flex items-center gap-2 border-b pb-3 min-w-max" style="border-color: #E8DECB;">
+            <button @click="activeTab = 'sales'" 
+                    class="px-4 py-2.5 rounded-xl text-xs font-bold transition-all flex items-center gap-2 cursor-pointer"
+                    :style="activeTab === 'sales' ? 'background: #1E1915; color: #FFFCF7; box-shadow: 0 2px 8px rgba(30,25,21,0.12);' : 'background: #FFFFFF; color: #6C6256; border: 1px solid #ECE3D2;'">
                 <span>💰 Sales Analytics</span>
             </button>
-            <button @click="activeTab = 'orders'" :class="activeTab === 'orders' ? 'bg-[#C0422A] text-white shadow-sm' : 'bg-white text-gray-600 hover:bg-gray-100'" class="px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2">
+            <button @click="activeTab = 'orders'" 
+                    class="px-4 py-2.5 rounded-xl text-xs font-bold transition-all flex items-center gap-2 cursor-pointer"
+                    :style="activeTab === 'orders' ? 'background: #1E1915; color: #FFFCF7; box-shadow: 0 2px 8px rgba(30,25,21,0.12);' : 'background: #FFFFFF; color: #6C6256; border: 1px solid #ECE3D2;'">
                 <span>📦 Order Analytics</span>
             </button>
-            <button @click="activeTab = 'products'" :class="activeTab === 'products' ? 'bg-[#C0422A] text-white shadow-sm' : 'bg-white text-gray-600 hover:bg-gray-100'" class="px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2">
+            <button @click="activeTab = 'products'" 
+                    class="px-4 py-2.5 rounded-xl text-xs font-bold transition-all flex items-center gap-2 cursor-pointer"
+                    :style="activeTab === 'products' ? 'background: #1E1915; color: #FFFCF7; box-shadow: 0 2px 8px rgba(30,25,21,0.12);' : 'background: #FFFFFF; color: #6C6256; border: 1px solid #ECE3D2;'">
                 <span>🛍️ Product Analytics</span>
             </button>
-            <button @click="activeTab = 'customers'" :class="activeTab === 'customers' ? 'bg-[#C0422A] text-white shadow-sm' : 'bg-white text-gray-600 hover:bg-gray-100'" class="px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2">
+            <button @click="activeTab = 'customers'" 
+                    class="px-4 py-2.5 rounded-xl text-xs font-bold transition-all flex items-center gap-2 cursor-pointer"
+                    :style="activeTab === 'customers' ? 'background: #1E1915; color: #FFFCF7; box-shadow: 0 2px 8px rgba(30,25,21,0.12);' : 'background: #FFFFFF; color: #6C6256; border: 1px solid #ECE3D2;'">
                 <span>👥 Customer Analytics</span>
             </button>
-            <button @click="activeTab = 'category'" :class="activeTab === 'category' ? 'bg-[#C0422A] text-white shadow-sm' : 'bg-white text-gray-600 hover:bg-gray-100'" class="px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2">
-                <span>🏷️ Sales by Category</span>
+            <button @click="activeTab = 'category'" 
+                    class="px-4 py-2.5 rounded-xl text-xs font-bold transition-all flex items-center gap-2 cursor-pointer"
+                    :style="activeTab === 'category' ? 'background: #1E1915; color: #FFFCF7; box-shadow: 0 2px 8px rgba(30,25,21,0.12);' : 'background: #FFFFFF; color: #6C6256; border: 1px solid #ECE3D2;'">
+                <span>🏷️ Category Demand</span>
             </button>
-            <button @click="activeTab = 'financials'" :class="activeTab === 'financials' ? 'bg-[#C0422A] text-white shadow-sm' : 'bg-white text-gray-600 hover:bg-gray-100'" class="px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2">
-                <span>💵 Financial Analytics</span>
+            <button @click="activeTab = 'financials'" 
+                    class="px-4 py-2.5 rounded-xl text-xs font-bold transition-all flex items-center gap-2 cursor-pointer"
+                    :style="activeTab === 'financials' ? 'background: #1E1915; color: #FFFCF7; box-shadow: 0 2px 8px rgba(30,25,21,0.12);' : 'background: #FFFFFF; color: #6C6256; border: 1px solid #ECE3D2;'">
+                <span>💵 Financials & Payout</span>
             </button>
-            <button @click="activeTab = 'marketing'" :class="activeTab === 'marketing' ? 'bg-[#C0422A] text-white shadow-sm' : 'bg-white text-gray-600 hover:bg-gray-100'" class="px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2">
-                <span>🏷️ Marketing Analytics</span>
+            <button @click="activeTab = 'marketing'" 
+                    class="px-4 py-2.5 rounded-xl text-xs font-bold transition-all flex items-center gap-2 cursor-pointer"
+                    :style="activeTab === 'marketing' ? 'background: #1E1915; color: #FFFCF7; box-shadow: 0 2px 8px rgba(30,25,21,0.12);' : 'background: #FFFFFF; color: #6C6256; border: 1px solid #ECE3D2;'">
+                <span>🏷️ Promotions</span>
             </button>
         </div>
     </div>
@@ -61,61 +77,61 @@
     {{-- TAB 1: SALES ANALYTICS --}}
     <div x-show="activeTab === 'sales'" class="space-y-6">
         <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6">
-            <div class="bg-white p-4 sm:p-6 rounded-2xl border border-gray-100 shadow-xs">
-                <div class="text-[9px] sm:text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-1">Total Sales</div>
-                <div class="text-lg sm:text-2xl font-black text-[#C0422A]">₱{{ number_format($salesAnalytics['totalSales'], 2) }}</div>
-                <div class="text-[9px] font-bold text-gray-400 mt-1 uppercase">Net Sales: ₱{{ number_format($salesAnalytics['netSales'], 2) }}</div>
+            <div class="p-4 sm:p-6 rounded-2xl shadow-2xs" style="background: #FFFFFF; border: 1px solid #ECE3D2;">
+                <div class="text-[9px] sm:text-[10px] font-bold uppercase tracking-widest mb-1" style="color: #8C827A;">Total Sales</div>
+                <div class="text-lg sm:text-2xl font-black font-serif" style="color: #C49520;">₱{{ number_format($salesAnalytics['totalSales'], 2) }}</div>
+                <div class="text-[9px] font-bold mt-1 uppercase" style="color: #8C827A;">Net Sales: ₱{{ number_format($salesAnalytics['netSales'], 2) }}</div>
             </div>
 
-            <div class="bg-white p-4 sm:p-6 rounded-2xl border border-gray-100 shadow-xs">
-                <div class="text-[9px] sm:text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-1">Average Order Value</div>
-                <div class="text-lg sm:text-2xl font-black text-black">₱{{ number_format($salesAnalytics['averageOrderValue'], 2) }}</div>
-                <div class="text-[9px] font-bold text-gray-400 mt-1 uppercase">Per completed order</div>
+            <div class="p-4 sm:p-6 rounded-2xl shadow-2xs" style="background: #FFFFFF; border: 1px solid #ECE3D2;">
+                <div class="text-[9px] sm:text-[10px] font-bold uppercase tracking-widest mb-1" style="color: #8C827A;">Average Order Value</div>
+                <div class="text-lg sm:text-2xl font-black font-serif" style="color: #1E1915;">₱{{ number_format($salesAnalytics['averageOrderValue'], 2) }}</div>
+                <div class="text-[9px] font-bold mt-1 uppercase" style="color: #8C827A;">Per completed order</div>
             </div>
 
-            <div class="bg-white p-4 sm:p-6 rounded-2xl border border-gray-100 shadow-xs">
-                <div class="text-[9px] sm:text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-1">Total Items Sold</div>
-                <div class="text-lg sm:text-2xl font-black text-black">{{ number_format($salesAnalytics['totalItemsSold']) }} pcs</div>
-                <div class="text-[9px] font-bold text-gray-400 mt-1 uppercase">Heritage barong pieces</div>
+            <div class="p-4 sm:p-6 rounded-2xl shadow-2xs" style="background: #FFFFFF; border: 1px solid #ECE3D2;">
+                <div class="text-[9px] sm:text-[10px] font-bold uppercase tracking-widest mb-1" style="color: #8C827A;">Total Items Sold</div>
+                <div class="text-lg sm:text-2xl font-black font-serif" style="color: #1E1915;">{{ number_format($salesAnalytics['totalItemsSold']) }} pcs</div>
+                <div class="text-[9px] font-bold mt-1 uppercase" style="color: #8C827A;">Heritage barong pieces</div>
             </div>
 
-            <div class="bg-white p-4 sm:p-6 rounded-2xl border border-gray-100 shadow-xs">
-                <div class="text-[9px] sm:text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-1">Monthly Growth</div>
-                <div class="text-lg sm:text-2xl font-black {{ $salesAnalytics['monthGrowthPct'] >= 0 ? 'text-green-600' : 'text-red-600' }}">
+            <div class="p-4 sm:p-6 rounded-2xl shadow-2xs" style="background: #FFFFFF; border: 1px solid #ECE3D2;">
+                <div class="text-[9px] sm:text-[10px] font-bold uppercase tracking-widest mb-1" style="color: #8C827A;">Monthly Growth</div>
+                <div class="text-lg sm:text-2xl font-black font-serif {{ $salesAnalytics['monthGrowthPct'] >= 0 ? 'text-emerald-600' : 'text-rose-600' }}">
                     {{ $salesAnalytics['monthGrowthPct'] >= 0 ? '+' : '' }}{{ $salesAnalytics['monthGrowthPct'] }}%
                 </div>
-                <div class="text-[9px] font-bold text-gray-400 mt-1 uppercase">This Month vs Last Month</div>
+                <div class="text-[9px] font-bold mt-1 uppercase" style="color: #8C827A;">This Month vs Last Month</div>
             </div>
         </div>
 
         {{-- Sales Comparisons Matrix --}}
-        <div class="bg-white p-5 sm:p-6 rounded-3xl border border-gray-100 shadow-xs space-y-4">
-            <h3 class="text-xs sm:text-sm font-bold text-black uppercase">Sales Comparison Analysis</h3>
+        <div class="p-5 sm:p-6 rounded-3xl shadow-2xs space-y-4" style="background: #FFFFFF; border: 1px solid #ECE3D2;">
+            <h3 class="font-serif text-xs sm:text-sm font-bold uppercase tracking-wider" style="color: #1E1915;">Sales Period Comparisons</h3>
             
             <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                <div class="p-4 bg-gray-50/60 rounded-2xl border border-gray-100">
-                    <div class="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">This Month vs Last Month</div>
-                    <div class="text-base font-black text-black">₱{{ number_format($salesAnalytics['thisMonthSales'], 2) }}</div>
-                    <div class="text-[10px] text-gray-500 mt-0.5">Last Month: ₱{{ number_format($salesAnalytics['lastMonthSales'], 2) }}</div>
-                    <span class="inline-block mt-2 px-2 py-0.5 rounded-full text-[9px] font-black uppercase {{ $salesAnalytics['monthGrowthPct'] >= 0 ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700' }}">
+                <div class="p-4 rounded-2xl" style="background: #FAF7F2; border: 1px solid #E8DECB;">
+                    <div class="text-[10px] font-bold uppercase tracking-widest mb-1" style="color: #8C827A;">This Month vs Last Month</div>
+                    <div class="text-base font-bold font-serif" style="color: #1E1915;">₱{{ number_format($salesAnalytics['thisMonthSales'], 2) }}</div>
+                    <div class="text-[10px] mt-0.5" style="color: #766C60;">Last Month: ₱{{ number_format($salesAnalytics['lastMonthSales'], 2) }}</div>
+                    <span class="inline-block mt-2 px-2.5 py-0.5 rounded-full text-[9px] font-black uppercase {{ $salesAnalytics['monthGrowthPct'] >= 0 ? 'bg-emerald-100 text-emerald-800' : 'bg-rose-100 text-rose-800' }}">
                         {{ $salesAnalytics['monthGrowthPct'] >= 0 ? '▲' : '▼' }} {{ abs($salesAnalytics['monthGrowthPct']) }}%
                     </span>
                 </div>
 
-                <div class="p-4 bg-gray-50/60 rounded-2xl border border-gray-100">
-                    <div class="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">This Week vs Last Week</div>
-                    <div class="text-base font-black text-black">₱{{ number_format($salesAnalytics['thisWeekSales'], 2) }}</div>
-                    <div class="text-[10px] text-gray-500 mt-0.5">Last Week: ₱{{ number_format($salesAnalytics['prevWeekSales'], 2) }}</div>
-                    <span class="inline-block mt-2 px-2 py-0.5 rounded-full text-[9px] font-black uppercase {{ $salesAnalytics['weekGrowthPct'] >= 0 ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700' }}">
+                <div class="p-4 rounded-2xl" style="background: #FAF7F2; border: 1px solid #E8DECB;">
+                    <div class="text-[10px] font-bold uppercase tracking-widest mb-1" style="color: #8C827A;">This Week vs Last Week</div>
+                    <div class="text-base font-bold font-serif" style="color: #1E1915;">₱{{ number_format($salesAnalytics['thisWeekSales'], 2) }}</div>
+                    <div class="text-[10px] mt-0.5" style="color: #766C60;">Last Week: ₱{{ number_format($salesAnalytics['prevWeekSales'], 2) }}</div>
+                    <span class="inline-block mt-2 px-2.5 py-0.5 rounded-full text-[9px] font-black uppercase {{ $salesAnalytics['weekGrowthPct'] >= 0 ? 'bg-emerald-100 text-emerald-800' : 'bg-rose-100 text-rose-800' }}">
                         {{ $salesAnalytics['weekGrowthPct'] >= 0 ? '▲' : '▼' }} {{ abs($salesAnalytics['weekGrowthPct']) }}%
                     </span>
                 </div>
 
-                <div class="p-4 bg-gray-50/60 rounded-2xl border border-gray-100">
-                    <div class="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">This Year vs Last Year</div>
-                    <div class="text-base font-black text-black">₱{{ number_format($salesAnalytics['thisYearSales'], 2) }}</div>
-                    <div class="text-[10px] text-gray-500 mt-0.5">Last Year: ₱{{ number_format($salesAnalytics['prevYearSales'], 2) }}</div>
-                    <span class="inline-block mt-2 px-2 py-0.5 rounded-full text-[9px] font-black uppercase {{ $salesAnalytics['yearGrowthPct'] >= 0 ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700' }}">
+                <div class="p-4 rounded-2xl" style="background: #FAF7F2; border: 1px solid #E8DECB;">
+                    <div class="text-[10px] font-bold uppercase tracking-widest mb-1" style="color: #8C827A;">This Year vs Last Year</div>
+                    <div class="text-base font-bold font-serif" style="color: #1E1915;">₱{{ number_format($salesAnalytics['thisYearSales'], 2) }}</div>
+                    <div class="text-[10px] mt-0.5" style="color: #766C60;">Last Year: ₱{{ number_format($salesAnalytics['prevYearSales'], 2) }}</div>
+                    <span class="inline-block mt-2 px-2.5 py-0.5 rounded-full text-[9px] font-black uppercase {{ $salesAnalytics['yearGrowthPct'] >= 0 ? 'bg-emerald-100 text-emerald-800' : 'bg-rose-100 text-rose-800' }}">
                         {{ $salesAnalytics['yearGrowthPct'] >= 0 ? '▲' : '▼' }} {{ abs($salesAnalytics['yearGrowthPct']) }}%
                     </span>
                 </div>
@@ -123,9 +139,12 @@
         </div>
 
         {{-- Sales Trend Visualizer Chart --}}
-        <div class="bg-white p-5 sm:p-6 rounded-3xl border border-gray-100 shadow-xs space-y-4">
-            <h3 class="text-xs sm:text-sm font-bold text-black uppercase">Sales Trend Overview</h3>
-            <div class="overflow-x-auto">
+        <div class="p-5 sm:p-6 rounded-3xl shadow-2xs space-y-4" style="background: #FFFFFF; border: 1px solid #ECE3D2;">
+            <div class="flex items-center justify-between">
+                <h3 class="font-serif text-xs sm:text-sm font-bold uppercase tracking-wider" style="color: #1E1915;">Sales Trend Overview</h3>
+                <span class="text-[10px] font-bold uppercase tracking-widest" style="color: #A16D19;">Revenue Trend (₱)</span>
+            </div>
+            <div class="overflow-x-auto no-scrollbar">
                 <div class="flex items-end justify-between gap-3 h-44 min-w-80 pt-4">
                     @foreach($salesTrendChart['points'] as $pt)
                         <div class="flex-1 flex flex-col items-center gap-2">
@@ -134,12 +153,13 @@
                                     ? ($pt['revenue'] > 0 ? max(8, round(($pt['revenue'] / $salesTrendChart['max']) * 100)) : 4) 
                                     : 4; 
                             @endphp
-                            <div class="w-full max-w-12 bg-gray-100 rounded-t-xl relative overflow-hidden h-32">
-                                <div class="absolute inset-x-0 bottom-0 bg-[#C0422A] rounded-t-xl transition-all duration-500" :style="'height: {{ $heightPct }}%'"></div>
+                            <div class="w-full max-w-12 rounded-t-xl relative overflow-hidden h-32" style="background: #FAF7F2;">
+                                <div class="absolute inset-x-0 bottom-0 rounded-t-xl transition-all duration-500" 
+                                     style="height: {{ $heightPct }}%; background: linear-gradient(180deg, #C49520 0%, #A16D19 100%);"></div>
                             </div>
                             <div class="text-center">
-                                <div class="text-[9px] font-black text-gray-400 uppercase">{{ $pt['label'] }}</div>
-                                <div class="text-[9px] font-bold text-black">₱{{ number_format($pt['revenue']) }}</div>
+                                <div class="text-[9px] font-bold uppercase" style="color: #8C827A;">{{ $pt['label'] }}</div>
+                                <div class="text-[9px] font-bold font-serif" style="color: #1E1915;">₱{{ number_format($pt['revenue']) }}</div>
                             </div>
                         </div>
                     @endforeach
@@ -151,49 +171,49 @@
     {{-- TAB 2: ORDER ANALYTICS --}}
     <div x-show="activeTab === 'orders'" class="space-y-6">
         <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6">
-            <div class="bg-white p-4 sm:p-6 rounded-2xl border border-gray-100 shadow-xs">
-                <div class="text-[9px] sm:text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-1">Total Orders</div>
-                <div class="text-lg sm:text-2xl font-black text-black">{{ number_format($orderAnalytics['stats']['total']) }}</div>
+            <div class="p-4 sm:p-6 rounded-2xl shadow-2xs" style="background: #FFFFFF; border: 1px solid #ECE3D2;">
+                <div class="text-[9px] sm:text-[10px] font-bold uppercase tracking-widest mb-1" style="color: #8C827A;">Total Orders</div>
+                <div class="text-lg sm:text-2xl font-black font-serif" style="color: #1E1915;">{{ number_format($orderAnalytics['stats']['total']) }}</div>
             </div>
 
-            <div class="bg-white p-4 sm:p-6 rounded-2xl border border-gray-100 shadow-xs">
-                <div class="text-[9px] sm:text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-1">Completion Rate</div>
-                <div class="text-lg sm:text-2xl font-black text-green-600">{{ $orderAnalytics['completionRate'] }}%</div>
+            <div class="p-4 sm:p-6 rounded-2xl shadow-2xs" style="background: #FFFFFF; border: 1px solid #ECE3D2;">
+                <div class="text-[9px] sm:text-[10px] font-bold uppercase tracking-widest mb-1" style="color: #8C827A;">Completion Rate</div>
+                <div class="text-lg sm:text-2xl font-black font-serif text-emerald-600">{{ $orderAnalytics['completionRate'] }}%</div>
             </div>
 
-            <div class="bg-white p-4 sm:p-6 rounded-2xl border border-gray-100 shadow-xs">
-                <div class="text-[9px] sm:text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-1">To Ship / Processing</div>
-                <div class="text-lg sm:text-2xl font-black text-blue-600">{{ number_format($orderAnalytics['stats']['toShip']) }}</div>
+            <div class="p-4 sm:p-6 rounded-2xl shadow-2xs" style="background: #FFFFFF; border: 1px solid #ECE3D2;">
+                <div class="text-[9px] sm:text-[10px] font-bold uppercase tracking-widest mb-1" style="color: #8C827A;">To Ship / Processing</div>
+                <div class="text-lg sm:text-2xl font-black font-serif" style="color: #A16D19;">{{ number_format($orderAnalytics['stats']['toShip']) }}</div>
             </div>
 
-            <div class="bg-white p-4 sm:p-6 rounded-2xl border border-gray-100 shadow-xs">
-                <div class="text-[9px] sm:text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-1">Avg Processing Time</div>
-                <div class="text-lg sm:text-2xl font-black text-black">~{{ $orderAnalytics['avgProcessingTimeHours'] }} hrs</div>
+            <div class="p-4 sm:p-6 rounded-2xl shadow-2xs" style="background: #FFFFFF; border: 1px solid #ECE3D2;">
+                <div class="text-[9px] sm:text-[10px] font-bold uppercase tracking-widest mb-1" style="color: #8C827A;">Avg Processing Time</div>
+                <div class="text-lg sm:text-2xl font-black font-serif" style="color: #1E1915;">~{{ $orderAnalytics['avgProcessingTimeHours'] }} hrs</div>
             </div>
         </div>
 
         {{-- Order Status Breakdown --}}
-        <div class="bg-white p-5 sm:p-6 rounded-3xl border border-gray-100 shadow-xs space-y-4">
-            <h3 class="text-xs sm:text-sm font-bold text-black uppercase">Order Status Distribution</h3>
+        <div class="p-5 sm:p-6 rounded-3xl shadow-2xs space-y-4" style="background: #FFFFFF; border: 1px solid #ECE3D2;">
+            <h3 class="font-serif text-xs sm:text-sm font-bold uppercase tracking-wider" style="color: #1E1915;">Order Status Distribution</h3>
             <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                <div class="p-4 bg-amber-50/60 rounded-2xl border border-amber-100">
-                    <div class="text-[10px] font-bold text-amber-700 uppercase tracking-widest">Pending Orders</div>
-                    <div class="text-xl font-black text-amber-900 mt-1">{{ number_format($orderAnalytics['stats']['pending']) }}</div>
+                <div class="p-4 rounded-2xl" style="background: #FEF9EE; border: 1px solid #F6E6C2;">
+                    <div class="text-[10px] font-bold uppercase tracking-widest" style="color: #A16D19;">Pending Orders</div>
+                    <div class="text-xl font-bold font-serif mt-1" style="color: #5C3D0E;">{{ number_format($orderAnalytics['stats']['pending']) }}</div>
                 </div>
 
-                <div class="p-4 bg-blue-50/60 rounded-2xl border border-blue-100">
-                    <div class="text-[10px] font-bold text-blue-700 uppercase tracking-widest">To Ship</div>
-                    <div class="text-xl font-black text-blue-900 mt-1">{{ number_format($orderAnalytics['stats']['toShip']) }}</div>
+                <div class="p-4 rounded-2xl" style="background: #F0F6FF; border: 1px solid #D0E1FD;">
+                    <div class="text-[10px] font-bold uppercase tracking-widest text-blue-700">To Ship / In Transit</div>
+                    <div class="text-xl font-bold font-serif text-blue-950 mt-1">{{ number_format($orderAnalytics['stats']['toShip']) }}</div>
                 </div>
 
-                <div class="p-4 bg-green-50/60 rounded-2xl border border-green-100">
-                    <div class="text-[10px] font-bold text-green-700 uppercase tracking-widest">Delivered / Completed</div>
-                    <div class="text-xl font-black text-green-900 mt-1">{{ number_format($orderAnalytics['stats']['completed']) }}</div>
+                <div class="p-4 rounded-2xl" style="background: #F0FDF4; border: 1px solid #DCFCE7;">
+                    <div class="text-[10px] font-bold uppercase tracking-widest text-emerald-700">Delivered / Completed</div>
+                    <div class="text-xl font-bold font-serif text-emerald-950 mt-1">{{ number_format($orderAnalytics['stats']['completed']) }}</div>
                 </div>
 
-                <div class="p-4 bg-red-50/60 rounded-2xl border border-red-100">
-                    <div class="text-[10px] font-bold text-red-700 uppercase tracking-widest">Cancelled</div>
-                    <div class="text-xl font-black text-red-900 mt-1">{{ number_format($orderAnalytics['stats']['cancelled']) }}</div>
+                <div class="p-4 rounded-2xl" style="background: #FEF2F2; border: 1px solid #FEE2E2;">
+                    <div class="text-[10px] font-bold uppercase tracking-widest text-rose-700">Cancelled</div>
+                    <div class="text-xl font-bold font-serif text-rose-950 mt-1">{{ number_format($orderAnalytics['stats']['cancelled']) }}</div>
                 </div>
             </div>
         </div>
@@ -203,63 +223,67 @@
     <div x-show="activeTab === 'products'" class="space-y-6">
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
             <!-- Best Selling Products -->
-            <div class="bg-white p-5 sm:p-6 rounded-3xl border border-gray-100 shadow-xs space-y-4">
-                <h3 class="text-xs sm:text-sm font-bold text-black uppercase flex items-center justify-between">
-                    <span>🔥 Best Selling Products</span>
-                    <span class="text-[9px] text-[#C0422A] uppercase font-bold">Top Revenue</span>
-                </h3>
+            <div class="p-5 sm:p-6 rounded-3xl shadow-2xs space-y-4" style="background: #FFFFFF; border: 1px solid #ECE3D2;">
+                <div class="flex items-center justify-between">
+                    <h3 class="font-serif text-xs sm:text-sm font-bold uppercase tracking-wider" style="color: #1E1915;">🔥 Best Selling Creations</h3>
+                    <span class="text-[9px] font-bold uppercase tracking-wider" style="color: #C49520;">Top Revenue</span>
+                </div>
                 <div class="space-y-3">
-                    @foreach($productAnalytics['bestSelling'] as $prod)
-                        <div class="flex items-center justify-between p-3 bg-gray-50/50 rounded-2xl border border-gray-100 gap-3">
+                    @forelse($productAnalytics['bestSelling'] as $prod)
+                        <div class="flex items-center justify-between p-3 rounded-2xl gap-3" style="background: #FAF7F2; border: 1px solid #E8DECB;">
                             <div class="flex items-center gap-3 min-w-0">
-                                <img src="{{ $prod['image'] }}" class="w-10 h-10 rounded-xl object-cover border border-gray-100 shrink-0">
+                                <img src="{{ $prod['image'] }}" class="w-10 h-10 rounded-xl object-cover border shrink-0" style="border-color: #E8DECB;">
                                 <div class="min-w-0">
-                                    <div class="text-xs font-bold text-black truncate uppercase">{{ $prod['name'] }}</div>
-                                    <div class="text-[9px] text-gray-400 font-bold">Stock: {{ $prod['stock'] }} | Rating: {{ $prod['rating'] }} ★</div>
+                                    <div class="text-xs font-bold truncate uppercase" style="color: #1E1915;">{{ $prod['name'] }}</div>
+                                    <div class="text-[9px] font-bold mt-0.5" style="color: #8C827A;">Stock: {{ $prod['stock'] }} | Rating: {{ $prod['rating'] }} ★</div>
                                 </div>
                             </div>
                             <div class="text-right shrink-0">
-                                <div class="text-xs font-black text-[#C0422A]">₱{{ number_format($prod['revenue']) }}</div>
-                                <div class="text-[9px] font-bold text-gray-500 uppercase">{{ $prod['unitsSold'] }} Sold</div>
+                                <div class="text-xs font-bold font-serif" style="color: #C49520;">₱{{ number_format($prod['revenue']) }}</div>
+                                <div class="text-[9px] font-bold uppercase" style="color: #8C827A;">{{ $prod['unitsSold'] }} Sold</div>
                             </div>
                         </div>
-                    @endforeach
+                    @empty
+                        <div class="p-6 text-center text-xs italic" style="color: #8C827A;">No products recorded yet.</div>
+                    @endforelse
                 </div>
             </div>
 
             <!-- Most Viewed Products -->
-            <div class="bg-white p-5 sm:p-6 rounded-3xl border border-gray-100 shadow-xs space-y-4">
-                <h3 class="text-xs sm:text-sm font-bold text-black uppercase flex items-center justify-between">
-                    <span>👁️ Most Viewed Products</span>
-                    <span class="text-[9px] text-blue-600 uppercase font-bold">High Traffic</span>
-                </h3>
+            <div class="p-5 sm:p-6 rounded-3xl shadow-2xs space-y-4" style="background: #FFFFFF; border: 1px solid #ECE3D2;">
+                <div class="flex items-center justify-between">
+                    <h3 class="font-serif text-xs sm:text-sm font-bold uppercase tracking-wider" style="color: #1E1915;">👁️ Most Viewed Creations</h3>
+                    <span class="text-[9px] font-bold uppercase tracking-wider text-blue-600">High Traffic</span>
+                </div>
                 <div class="space-y-3">
-                    @foreach($productAnalytics['mostViewed'] as $prod)
-                        <div class="flex items-center justify-between p-3 bg-gray-50/50 rounded-2xl border border-gray-100 gap-3">
+                    @forelse($productAnalytics['mostViewed'] as $prod)
+                        <div class="flex items-center justify-between p-3 rounded-2xl gap-3" style="background: #FAF7F2; border: 1px solid #E8DECB;">
                             <div class="flex items-center gap-3 min-w-0">
-                                <img src="{{ $prod['image'] }}" class="w-10 h-10 rounded-xl object-cover border border-gray-100 shrink-0">
+                                <img src="{{ $prod['image'] }}" class="w-10 h-10 rounded-xl object-cover border shrink-0" style="border-color: #E8DECB;">
                                 <div class="min-w-0">
-                                    <div class="text-xs font-bold text-black truncate uppercase">{{ $prod['name'] }}</div>
-                                    <div class="text-[9px] text-gray-400 font-bold">Conversion: {{ $prod['conversionRate'] }}%</div>
+                                    <div class="text-xs font-bold truncate uppercase" style="color: #1E1915;">{{ $prod['name'] }}</div>
+                                    <div class="text-[9px] font-bold mt-0.5" style="color: #8C827A;">Conversion: {{ $prod['conversionRate'] }}%</div>
                                 </div>
                             </div>
                             <div class="text-right shrink-0">
-                                <div class="text-xs font-black text-black">{{ number_format($prod['views']) }} Views</div>
-                                <div class="text-[9px] font-bold text-gray-500 uppercase">{{ $prod['orders'] }} Orders</div>
+                                <div class="text-xs font-bold font-serif" style="color: #1E1915;">{{ number_format($prod['views']) }} Views</div>
+                                <div class="text-[9px] font-bold uppercase" style="color: #8C827A;">{{ $prod['orders'] }} Orders</div>
                             </div>
                         </div>
-                    @endforeach
+                    @empty
+                        <div class="p-6 text-center text-xs italic" style="color: #8C827A;">No views recorded yet.</div>
+                    @endforelse
                 </div>
             </div>
         </div>
 
         {{-- Granular Per-Product Performance Table --}}
-        <div class="bg-white p-5 sm:p-6 rounded-3xl border border-gray-100 shadow-xs space-y-4">
-            <h3 class="text-xs sm:text-sm font-bold text-black uppercase">Per-Product Performance Catalogue</h3>
-            <div class="overflow-x-auto">
+        <div class="p-5 sm:p-6 rounded-3xl shadow-2xs space-y-4" style="background: #FFFFFF; border: 1px solid #ECE3D2;">
+            <h3 class="font-serif text-xs sm:text-sm font-bold uppercase tracking-wider" style="color: #1E1915;">Per-Product Performance Catalogue</h3>
+            <div class="overflow-x-auto no-scrollbar">
                 <table class="w-full text-left border-collapse min-w-140">
                     <thead>
-                        <tr class="border-b border-gray-100 text-[9px] font-black uppercase text-gray-400 tracking-wider">
+                        <tr class="border-b text-[9px] font-bold uppercase tracking-wider" style="border-color: #E8DECB; color: #8C827A;">
                             <th class="py-3 px-2">Product</th>
                             <th class="py-3 px-2">Views</th>
                             <th class="py-3 px-2">Add to Cart</th>
@@ -270,20 +294,20 @@
                             <th class="py-3 px-2">Rating</th>
                         </tr>
                     </thead>
-                    <tbody class="divide-y divide-gray-100 text-xs font-medium text-black">
+                    <tbody class="divide-y text-xs font-medium" style="border-color: #F0EAE1; color: #1E1915;">
                         @foreach($productAnalytics['all'] as $p)
-                            <tr class="hover:bg-gray-50/50">
+                            <tr class="hover:bg-[#FAF7F2]">
                                 <td class="py-3 px-2 flex items-center gap-2">
-                                    <img src="{{ $p['image'] }}" class="w-8 h-8 rounded-lg object-cover border border-gray-100 shrink-0">
+                                    <img src="{{ $p['image'] }}" class="w-8 h-8 rounded-lg object-cover border shrink-0" style="border-color: #E8DECB;">
                                     <span class="font-bold truncate max-w-40 uppercase">{{ $p['name'] }}</span>
                                 </td>
                                 <td class="py-3 px-2">{{ number_format($p['views']) }}</td>
                                 <td class="py-3 px-2">{{ number_format($p['addToCart']) }}</td>
                                 <td class="py-3 px-2">{{ number_format($p['wishlist']) }}</td>
                                 <td class="py-3 px-2 font-bold">{{ number_format($p['unitsSold']) }}</td>
-                                <td class="py-3 px-2 font-black text-[#C0422A]">₱{{ number_format($p['revenue']) }}</td>
+                                <td class="py-3 px-2 font-bold font-serif" style="color: #C49520;">₱{{ number_format($p['revenue']) }}</td>
                                 <td class="py-3 px-2">{{ $p['conversionRate'] }}%</td>
-                                <td class="py-3 px-2 text-amber-500 font-bold">{{ $p['rating'] }} ★</td>
+                                <td class="py-3 px-2 font-bold" style="color: #A16D19;">{{ $p['rating'] }} ★</td>
                             </tr>
                         @endforeach
                     </tbody>
@@ -295,105 +319,109 @@
     {{-- TAB 4: CUSTOMER ANALYTICS --}}
     <div x-show="activeTab === 'customers'" class="space-y-6">
         <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6">
-            <div class="bg-white p-4 sm:p-6 rounded-2xl border border-gray-100 shadow-xs">
-                <div class="text-[9px] sm:text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-1">Total Customers</div>
-                <div class="text-lg sm:text-2xl font-black text-black">{{ number_format($customerAnalytics['totalCustomers']) }}</div>
+            <div class="p-4 sm:p-6 rounded-2xl shadow-2xs" style="background: #FFFFFF; border: 1px solid #ECE3D2;">
+                <div class="text-[9px] sm:text-[10px] font-bold uppercase tracking-widest mb-1" style="color: #8C827A;">Total Customers</div>
+                <div class="text-lg sm:text-2xl font-black font-serif" style="color: #1E1915;">{{ number_format($customerAnalytics['totalCustomers']) }}</div>
             </div>
 
-            <div class="bg-white p-4 sm:p-6 rounded-2xl border border-gray-100 shadow-xs">
-                <div class="text-[9px] sm:text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-1">Repeat Purchase Rate</div>
-                <div class="text-lg sm:text-2xl font-black text-purple-600">{{ $customerAnalytics['repeatRate'] }}%</div>
+            <div class="p-4 sm:p-6 rounded-2xl shadow-2xs" style="background: #FFFFFF; border: 1px solid #ECE3D2;">
+                <div class="text-[9px] sm:text-[10px] font-bold uppercase tracking-widest mb-1" style="color: #8C827A;">Repeat Purchase Rate</div>
+                <div class="text-lg sm:text-2xl font-black font-serif text-purple-700">{{ $customerAnalytics['repeatRate'] }}%</div>
             </div>
 
-            <div class="bg-white p-4 sm:p-6 rounded-2xl border border-gray-100 shadow-xs">
-                <div class="text-[9px] sm:text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-1">Retention Rate</div>
-                <div class="text-lg sm:text-2xl font-black text-blue-600">{{ $customerAnalytics['retentionRate'] }}%</div>
+            <div class="p-4 sm:p-6 rounded-2xl shadow-2xs" style="background: #FFFFFF; border: 1px solid #ECE3D2;">
+                <div class="text-[9px] sm:text-[10px] font-bold uppercase tracking-widest mb-1" style="color: #8C827A;">Retention Rate</div>
+                <div class="text-lg sm:text-2xl font-black font-serif text-blue-700">{{ $customerAnalytics['retentionRate'] }}%</div>
             </div>
 
-            <div class="bg-white p-4 sm:p-6 rounded-2xl border border-gray-100 shadow-xs">
-                <div class="text-[9px] sm:text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-1">Avg Spend / Customer</div>
-                <div class="text-lg sm:text-2xl font-black text-[#C0422A]">₱{{ number_format($customerAnalytics['avgCustomerSpend'], 2) }}</div>
+            <div class="p-4 sm:p-6 rounded-2xl shadow-2xs" style="background: #FFFFFF; border: 1px solid #ECE3D2;">
+                <div class="text-[9px] sm:text-[10px] font-bold uppercase tracking-widest mb-1" style="color: #8C827A;">Avg Spend / Customer</div>
+                <div class="text-lg sm:text-2xl font-black font-serif" style="color: #C49520;">₱{{ number_format($customerAnalytics['avgCustomerSpend'], 2) }}</div>
             </div>
         </div>
 
         {{-- E-Commerce Customer Behavior Funnel --}}
-        <div class="bg-white p-5 sm:p-6 rounded-3xl border border-gray-100 shadow-xs space-y-4">
-            <h3 class="text-xs sm:text-sm font-bold text-black uppercase">Customer Behavior Conversion Funnel</h3>
-            <div class="space-y-3">
+        <div class="p-5 sm:p-6 rounded-3xl shadow-2xs space-y-4" style="background: #FFFFFF; border: 1px solid #ECE3D2;">
+            <h3 class="font-serif text-xs sm:text-sm font-bold uppercase tracking-wider" style="color: #1E1915;">Customer Conversion Funnel</h3>
+            <div class="space-y-3.5">
                 <div>
-                    <div class="flex justify-between text-xs font-bold text-gray-700 mb-1">
+                    <div class="flex justify-between text-xs font-bold mb-1" style="color: #1E1915;">
                         <span>1. Product Views</span>
                         <span>{{ number_format($customerAnalytics['funnel']['views']) }} Views</span>
                     </div>
-                    <div class="w-full h-3 bg-gray-100 rounded-full overflow-hidden">
-                        <div class="h-full bg-blue-500 rounded-full" style="width: 100%;"></div>
+                    <div class="w-full h-3 rounded-full overflow-hidden" style="background: #FAF7F2;">
+                        <div class="h-full rounded-full" style="width: 100%; background: #3B82F6;"></div>
                     </div>
                 </div>
 
                 <div>
-                    <div class="flex justify-between text-xs font-bold text-gray-700 mb-1">
+                    <div class="flex justify-between text-xs font-bold mb-1" style="color: #1E1915;">
                         <span>2. Add to Cart</span>
                         <span>{{ number_format($customerAnalytics['funnel']['addToCart']) }} Events</span>
                     </div>
-                    <div class="w-full h-3 bg-gray-100 rounded-full overflow-hidden">
-                        <div class="h-full bg-purple-500 rounded-full js-width" data-width="{{ min(100, round(($customerAnalytics['funnel']['addToCart'] / max($customerAnalytics['funnel']['views'], 1)) * 100)) }}"></div>
+                    <div class="w-full h-3 rounded-full overflow-hidden" style="background: #FAF7F2;">
+                        <div class="h-full rounded-full js-width" style="background: #8B5CF6;" data-width="{{ min(100, round(($customerAnalytics['funnel']['addToCart'] / max($customerAnalytics['funnel']['views'], 1)) * 100)) }}"></div>
                     </div>
                 </div>
 
                 <div>
-                    <div class="flex justify-between text-xs font-bold text-gray-700 mb-1">
+                    <div class="flex justify-between text-xs font-bold mb-1" style="color: #1E1915;">
                         <span>3. Saved to Wishlist</span>
                         <span>{{ number_format($customerAnalytics['funnel']['wishlist']) }} Saves</span>
                     </div>
-                    <div class="w-full h-3 bg-gray-100 rounded-full overflow-hidden">
-                        <div class="h-full bg-amber-500 rounded-full js-width" data-width="{{ min(100, round(($customerAnalytics['funnel']['wishlist'] / max($customerAnalytics['funnel']['views'], 1)) * 100)) }}"></div>
+                    <div class="w-full h-3 rounded-full overflow-hidden" style="background: #FAF7F2;">
+                        <div class="h-full rounded-full js-width" style="background: #F59E0B;" data-width="{{ min(100, round(($customerAnalytics['funnel']['wishlist'] / max($customerAnalytics['funnel']['views'], 1)) * 100)) }}"></div>
                     </div>
                 </div>
 
                 <div>
-                    <div class="flex justify-between text-xs font-bold text-gray-700 mb-1">
+                    <div class="flex justify-between text-xs font-bold mb-1" style="color: #1E1915;">
                         <span>4. Checkout Initiated</span>
                         <span>{{ number_format($customerAnalytics['funnel']['checkout']) }} Checkouts</span>
                     </div>
-                    <div class="w-full h-3 bg-gray-100 rounded-full overflow-hidden">
-                        <div class="h-full bg-emerald-500 rounded-full js-width" data-width="{{ min(100, round(($customerAnalytics['funnel']['checkout'] / max($customerAnalytics['funnel']['views'], 1)) * 100)) }}"></div>
+                    <div class="w-full h-3 rounded-full overflow-hidden" style="background: #FAF7F2;">
+                        <div class="h-full rounded-full js-width" style="background: #10B981;" data-width="{{ min(100, round(($customerAnalytics['funnel']['checkout'] / max($customerAnalytics['funnel']['views'], 1)) * 100)) }}"></div>
                     </div>
                 </div>
 
                 <div>
-                    <div class="flex justify-between text-xs font-bold text-black mb-1">
+                    <div class="flex justify-between text-xs font-bold mb-1" style="color: #1E1915;">
                         <span>5. Completed Purchases</span>
                         <span>{{ number_format($customerAnalytics['funnel']['completed']) }} Orders</span>
                     </div>
-                    <div class="w-full h-3 bg-gray-100 rounded-full overflow-hidden">
-                        <div class="h-full bg-[#C0422A] rounded-full js-width" data-width="{{ min(100, round(($customerAnalytics['funnel']['completed'] / max($customerAnalytics['funnel']['views'], 1)) * 100)) }}"></div>
+                    <div class="w-full h-3 rounded-full overflow-hidden" style="background: #FAF7F2;">
+                        <div class="h-full rounded-full js-width" style="background: #C49520;" data-width="{{ min(100, round(($customerAnalytics['funnel']['completed'] / max($customerAnalytics['funnel']['views'], 1)) * 100)) }}"></div>
                     </div>
                 </div>
             </div>
         </div>
 
         {{-- Top Customer Lifetime Value Leaderboard --}}
-        <div class="bg-white p-5 sm:p-6 rounded-3xl border border-gray-100 shadow-xs space-y-4">
-            <h3 class="text-xs sm:text-sm font-bold text-black uppercase">Top Customers (Lifetime Value)</h3>
-            <div class="overflow-x-auto">
+        <div class="p-5 sm:p-6 rounded-3xl shadow-2xs space-y-4" style="background: #FFFFFF; border: 1px solid #ECE3D2;">
+            <h3 class="font-serif text-xs sm:text-sm font-bold uppercase tracking-wider" style="color: #1E1915;">Top Customers (Lifetime Value)</h3>
+            <div class="overflow-x-auto no-scrollbar">
                 <table class="w-full text-left border-collapse min-w-100">
                     <thead>
-                        <tr class="border-b border-gray-100 text-[9px] font-black uppercase text-gray-400 tracking-wider">
+                        <tr class="border-b text-[9px] font-bold uppercase tracking-wider" style="border-color: #E8DECB; color: #8C827A;">
                             <th class="py-3 px-2">Customer</th>
                             <th class="py-3 px-2">Email</th>
                             <th class="py-3 px-2">Orders Placed</th>
                             <th class="py-3 px-2">Total Spent</th>
                         </tr>
                     </thead>
-                    <tbody class="divide-y divide-gray-100 text-xs font-medium text-black">
-                        @foreach($customerAnalytics['topCustomers'] as $cust)
-                            <tr class="hover:bg-gray-50/50">
+                    <tbody class="divide-y text-xs font-medium" style="border-color: #F0EAE1; color: #1E1915;">
+                        @forelse($customerAnalytics['topCustomers'] as $cust)
+                            <tr class="hover:bg-[#FAF7F2]">
                                 <td class="py-3 px-2 font-bold uppercase">{{ $cust['name'] }}</td>
-                                <td class="py-3 px-2 text-gray-500">{{ $cust['email'] }}</td>
+                                <td class="py-3 px-2" style="color: #766C60;">{{ $cust['email'] }}</td>
                                 <td class="py-3 px-2 font-bold">{{ $cust['orderCount'] }} orders</td>
-                                <td class="py-3 px-2 font-black text-[#C0422A]">₱{{ number_format($cust['totalSpent'], 2) }}</td>
+                                <td class="py-3 px-2 font-bold font-serif" style="color: #C49520;">₱{{ number_format($cust['totalSpent'], 2) }}</td>
                             </tr>
-                        @endforeach
+                        @empty
+                            <tr>
+                                <td colspan="4" class="py-6 text-center text-xs italic" style="color: #8C827A;">No customer orders recorded yet.</td>
+                            </tr>
+                        @endforelse
                     </tbody>
                 </table>
             </div>
@@ -402,23 +430,23 @@
 
     {{-- TAB 5: SALES BY CATEGORY --}}
     <div x-show="activeTab === 'category'" class="space-y-6">
-        <div class="bg-white p-5 sm:p-6 rounded-3xl border border-gray-100 shadow-xs space-y-4">
-            <h3 class="text-xs sm:text-sm font-bold text-black uppercase">Barong & Filipiniana Category Demand</h3>
+        <div class="p-5 sm:p-6 rounded-3xl shadow-2xs space-y-4" style="background: #FFFFFF; border: 1px solid #ECE3D2;">
+            <h3 class="font-serif text-xs sm:text-sm font-bold uppercase tracking-wider" style="color: #1E1915;">Barong & Filipiniana Category Demand</h3>
             
             <div class="space-y-4">
                 @forelse($categorySales as $cat)
-                    <div class="p-4 bg-gray-50/60 rounded-2xl border border-gray-100 space-y-2">
-                        <div class="flex items-center justify-between text-xs font-bold text-black">
+                    <div class="p-4 rounded-2xl space-y-2" style="background: #FAF7F2; border: 1px solid #E8DECB;">
+                        <div class="flex items-center justify-between text-xs font-bold" style="color: #1E1915;">
                             <span>{{ $cat->category_name }}</span>
-                            <span class="text-[#C0422A]">₱{{ number_format($cat->revenue, 2) }} ({{ $cat->percentage }}%)</span>
+                            <span style="color: #C49520;">₱{{ number_format($cat->revenue, 2) }} ({{ $cat->percentage }}%)</span>
                         </div>
-                        <div class="w-full h-2.5 bg-gray-200 rounded-full overflow-hidden">
-                            <div class="h-full bg-[#C0422A] rounded-full js-width" data-width="{{ $cat->percentage }}"></div>
+                        <div class="w-full h-2.5 rounded-full overflow-hidden" style="background: #ECE3D2;">
+                            <div class="h-full rounded-full js-width" style="background: #C49520;" data-width="{{ $cat->percentage }}"></div>
                         </div>
-                        <div class="text-[9px] font-bold text-gray-400 uppercase">{{ number_format($cat->units_sold) }} Barong Items Sold</div>
+                        <div class="text-[9px] font-bold uppercase" style="color: #8C827A;">{{ number_format($cat->units_sold) }} Barong Items Sold</div>
                     </div>
                 @empty
-                    <div class="p-6 text-center text-gray-400 text-xs italic">No category sales data recorded yet.</div>
+                    <div class="p-6 text-center text-xs italic" style="color: #8C827A;">No category sales data recorded yet.</div>
                 @endforelse
             </div>
         </div>
@@ -427,50 +455,50 @@
     {{-- TAB 6: FINANCIAL ANALYTICS --}}
     <div x-show="activeTab === 'financials'" class="space-y-6">
         <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6">
-            <div class="bg-white p-4 sm:p-6 rounded-2xl border border-gray-100 shadow-xs">
-                <div class="text-[9px] sm:text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-1">Gross Sales</div>
-                <div class="text-lg sm:text-2xl font-black text-black">₱{{ number_format($financialAnalytics['grossSales'], 2) }}</div>
+            <div class="p-4 sm:p-6 rounded-2xl shadow-2xs" style="background: #FFFFFF; border: 1px solid #ECE3D2;">
+                <div class="text-[9px] sm:text-[10px] font-bold uppercase tracking-widest mb-1" style="color: #8C827A;">Gross Sales</div>
+                <div class="text-lg sm:text-2xl font-black font-serif" style="color: #1E1915;">₱{{ number_format($financialAnalytics['grossSales'], 2) }}</div>
             </div>
 
-            <div class="bg-white p-4 sm:p-6 rounded-2xl border border-gray-100 shadow-xs">
-                <div class="text-[9px] sm:text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-1">Platform Commission (10%)</div>
-                <div class="text-lg sm:text-2xl font-black text-amber-600">₱{{ number_format($financialAnalytics['commissionFee'], 2) }}</div>
+            <div class="p-4 sm:p-6 rounded-2xl shadow-2xs" style="background: #FFFFFF; border: 1px solid #ECE3D2;">
+                <div class="text-[9px] sm:text-[10px] font-bold uppercase tracking-widest mb-1" style="color: #8C827A;">Platform Commission (10%)</div>
+                <div class="text-lg sm:text-2xl font-black font-serif" style="color: #A16D19;">₱{{ number_format($financialAnalytics['commissionFee'], 2) }}</div>
             </div>
 
-            <div class="bg-white p-4 sm:p-6 rounded-2xl border border-gray-100 shadow-xs">
-                <div class="text-[9px] sm:text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-1">Discounts & Refunds</div>
-                <div class="text-lg sm:text-2xl font-black text-red-600">₱{{ number_format($financialAnalytics['discounts'] + $financialAnalytics['refunds'], 2) }}</div>
+            <div class="p-4 sm:p-6 rounded-2xl shadow-2xs" style="background: #FFFFFF; border: 1px solid #ECE3D2;">
+                <div class="text-[9px] sm:text-[10px] font-bold uppercase tracking-widest mb-1" style="color: #8C827A;">Discounts & Refunds</div>
+                <div class="text-lg sm:text-2xl font-black font-serif text-rose-600">₱{{ number_format($financialAnalytics['discounts'] + $financialAnalytics['refunds'], 2) }}</div>
             </div>
 
-            <div class="bg-white p-4 sm:p-6 rounded-2xl border border-gray-100 shadow-xs">
-                <div class="text-[9px] sm:text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-1">Net Seller Earnings</div>
-                <div class="text-lg sm:text-2xl font-black text-green-600">₱{{ number_format($financialAnalytics['sellerEarnings'], 2) }}</div>
+            <div class="p-4 sm:p-6 rounded-2xl shadow-2xs" style="background: #FFFFFF; border: 1px solid #ECE3D2;">
+                <div class="text-[9px] sm:text-[10px] font-bold uppercase tracking-widest mb-1" style="color: #8C827A;">Net Seller Earnings</div>
+                <div class="text-lg sm:text-2xl font-black font-serif text-emerald-600">₱{{ number_format($financialAnalytics['sellerEarnings'], 2) }}</div>
             </div>
         </div>
 
         {{-- Detailed Financial Settlement Statement --}}
-        <div class="bg-white p-5 sm:p-6 rounded-3xl border border-gray-100 shadow-xs space-y-4">
-            <h3 class="text-xs sm:text-sm font-bold text-black uppercase">Financial Settlement Breakdown</h3>
-            <div class="divide-y divide-gray-100 text-xs font-medium text-black">
+        <div class="p-5 sm:p-6 rounded-3xl shadow-2xs space-y-4" style="background: #FFFFFF; border: 1px solid #ECE3D2;">
+            <h3 class="font-serif text-xs sm:text-sm font-bold uppercase tracking-wider" style="color: #1E1915;">Financial Settlement Breakdown</h3>
+            <div class="divide-y text-xs font-medium" style="border-color: #F0EAE1; color: #1E1915;">
                 <div class="py-3 flex justify-between">
                     <span>Gross Item Sales</span>
                     <span class="font-bold">₱{{ number_format($financialAnalytics['grossSales'], 2) }}</span>
                 </div>
-                <div class="py-3 flex justify-between text-amber-700">
+                <div class="py-3 flex justify-between" style="color: #A16D19;">
                     <span>LumBarong Marketplace Commission Fee (10%)</span>
                     <span class="font-bold">- ₱{{ number_format($financialAnalytics['commissionFee'], 2) }}</span>
                 </div>
-                <div class="py-3 flex justify-between text-red-600">
+                <div class="py-3 flex justify-between text-rose-600">
                     <span>Discounts & Vouchers Applied</span>
                     <span class="font-bold">- ₱{{ number_format($financialAnalytics['discounts'], 2) }}</span>
                 </div>
-                <div class="py-3 flex justify-between text-red-600">
+                <div class="py-3 flex justify-between text-rose-600">
                     <span>Refunds / Returns</span>
                     <span class="font-bold">- ₱{{ number_format($financialAnalytics['refunds'], 2) }}</span>
                 </div>
-                <div class="py-3 flex justify-between border-t-2 border-gray-900 text-sm font-black pt-4">
+                <div class="py-3.5 flex justify-between border-t-2 text-sm font-black pt-4" style="border-color: #1E1915;">
                     <span class="uppercase">Take-Home Seller Net Payout</span>
-                    <span class="text-green-600">₱{{ number_format($financialAnalytics['sellerEarnings'], 2) }}</span>
+                    <span class="text-emerald-600 font-serif text-base">₱{{ number_format($financialAnalytics['sellerEarnings'], 2) }}</span>
                 </div>
             </div>
         </div>
@@ -479,19 +507,19 @@
     {{-- TAB 7: MARKETING ANALYTICS --}}
     <div x-show="activeTab === 'marketing'" class="space-y-6">
         <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
-            <div class="bg-white p-4 sm:p-6 rounded-2xl border border-gray-100 shadow-xs">
-                <div class="text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-1">Listings On Sale</div>
-                <div class="text-xl font-black text-black">{{ number_format($marketingAnalytics['discountedProductsCount']) }} products</div>
+            <div class="p-4 sm:p-6 rounded-2xl shadow-2xs" style="background: #FFFFFF; border: 1px solid #ECE3D2;">
+                <div class="text-[10px] font-bold uppercase tracking-widest mb-1" style="color: #8C827A;">Listings On Sale</div>
+                <div class="text-xl font-black font-serif" style="color: #1E1915;">{{ number_format($marketingAnalytics['discountedProductsCount']) }} products</div>
             </div>
 
-            <div class="bg-white p-4 sm:p-6 rounded-2xl border border-gray-100 shadow-xs">
-                <div class="text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-1">Promotional Items Sold</div>
-                <div class="text-xl font-black text-purple-600">{{ number_format($marketingAnalytics['saleItemsSold']) }} pcs</div>
+            <div class="p-4 sm:p-6 rounded-2xl shadow-2xs" style="background: #FFFFFF; border: 1px solid #ECE3D2;">
+                <div class="text-[10px] font-bold uppercase tracking-widest mb-1" style="color: #8C827A;">Promotional Items Sold</div>
+                <div class="text-xl font-black font-serif text-purple-700">{{ number_format($marketingAnalytics['saleItemsSold']) }} pcs</div>
             </div>
 
-            <div class="bg-white p-4 sm:p-6 rounded-2xl border border-gray-100 shadow-xs">
-                <div class="text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-1">Promotional Sales Revenue</div>
-                <div class="text-xl font-black text-[#C0422A]">₱{{ number_format($marketingAnalytics['saleRevenue'], 2) }}</div>
+            <div class="p-4 sm:p-6 rounded-2xl shadow-2xs" style="background: #FFFFFF; border: 1px solid #ECE3D2;">
+                <div class="text-[10px] font-bold uppercase tracking-widest mb-1" style="color: #8C827A;">Promotional Sales Revenue</div>
+                <div class="text-xl font-black font-serif" style="color: #C49520;">₱{{ number_format($marketingAnalytics['saleRevenue'], 2) }}</div>
             </div>
         </div>
     </div>
@@ -499,13 +527,6 @@
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    document.querySelectorAll('.js-bar-height').forEach(function(el) {
-        const pct = el.getAttribute('data-bar-height');
-        const bar = el.querySelector('div');
-        if (bar && pct) {
-            bar.style.height = pct + '%';
-        }
-    });
     document.querySelectorAll('.js-width').forEach(function(el) {
         const w = el.getAttribute('data-width');
         if (w) {
