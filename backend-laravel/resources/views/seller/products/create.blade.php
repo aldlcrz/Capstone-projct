@@ -472,6 +472,7 @@
 
                     {{-- Target Tag Segmented Pills --}}
                     <style>
+                        /* Target Audience Pills */
                         .target-pill {
                             min-width: 100px;
                             height: 44px;
@@ -495,7 +496,6 @@
                         .target-pill:hover:not(.target-pill-selected) {
                             background-color: #F5ECD8;
                             border-color: #C8AC70;
-                            color: #221F1C;
                         }
                         .target-pill-selected {
                             background-color: #221F1C !important;
@@ -504,11 +504,52 @@
                             box-shadow: 0 4px 14px rgba(34,31,28,0.18), 0 1px 3px rgba(0,0,0,0.06) !important;
                             font-weight: 600 !important;
                         }
-                        .target-checkmark {
-                            color: #C49520;
+                        .target-checkmark { color: #C49520; font-size: 13px; font-weight: 800; }
+
+                        /* Category Pills */
+                        .cat-pill {
+                            width: 100%;
+                            min-height: 46px;
+                            padding: 10px 16px;
+                            border-radius: 12px;
                             font-size: 13px;
+                            font-weight: 500;
+                            letter-spacing: 0.01em;
+                            display: flex;
+                            align-items: center;
+                            justify-content: center;
+                            text-align: center;
+                            gap: 6px;
+                            position: relative;
+                            transition: all 180ms ease;
+                            cursor: pointer;
+                            box-sizing: border-box;
+                            border: 1px solid #E2D9C8;
+                            background-color: #FCFAF6;
+                            color: #221F1C;
+                            user-select: none;
+                        }
+                        .cat-pill:hover:not(.cat-pill-selected) {
+                            background-color: #F5ECD8;
+                            border-color: #C8AC70;
+                        }
+                        .cat-pill-selected {
+                            background-color: #221F1C !important;
+                            color: #FCFAF6 !important;
+                            border-color: #C49520 !important;
+                            box-shadow: 0 4px 14px rgba(34,31,28,0.18), 0 1px 3px rgba(0,0,0,0.06) !important;
+                            font-weight: 600 !important;
+                        }
+                        .cat-checkmark {
+                            position: absolute;
+                            right: 12px;
+                            top: 50%;
+                            transform: translateY(-50%);
+                            color: #C49520;
+                            font-size: 12px;
                             font-weight: 800;
                         }
+                        .cat-pill-selected .cat-checkmark { color: #C49520; }
                     </style>
                     <div id="target-group-container" style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;padding-top:4px;">
                         @foreach(['Men', 'Women', 'Kids'] as $group)
@@ -535,31 +576,29 @@
                         </h3>
                         <div style="display:flex;align-items:center;gap:8px;">
                             <span style="font-size:11px;font-weight:700;border-radius:20px;padding:3px 12px;background-color:#FDF8EE;border:1px solid #EEDBBA;color:#7A5505;"
-                                  x-text="filteredCategories.length + ' Categories Available'"></span>
-                            <span style="font-size:11.5px;font-weight:700;color:#C49520;">Choose from options below</span>
+                                  x-text="filteredCategories.length + ' Available'"></span>
+                            <span style="font-size:11px;font-weight:600;border-radius:20px;padding:3px 12px;background-color:#E8F5E9;border:1px solid #A5D6A7;color:#2E7D32;"
+                                  x-show="selectedCategories.length > 0"
+                                  x-text="selectedCategories.length + ' Selected'"></span>
                         </div>
                     </div>
 
-                    {{-- Hidden CategoryId input for form submission --}}
-                    <input type="hidden" name="CategoryId" id="categorySelect" :value="selectedCategory" required>
+                    {{-- Hidden inputs for multi-category form submission --}}
+                    <template x-for="catId in selectedCategories" :key="catId">
+                        <input type="hidden" name="category_ids[]" :value="catId">
+                    </template>
+                    {{-- Keep legacy CategoryId for backward compat (first selected) --}}
+                    <input type="hidden" name="CategoryId" id="categorySelect" :value="selectedCategories[0] || ''">
 
-                    {{-- Category Cards Grid (Clean layout without icons) --}}
+                    {{-- Category Cards Grid (Pill style, multi-select) --}}
                     <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 pt-1" id="category-cards-container">
                         <template x-for="cat in filteredCategories" :key="cat.id">
                             <button type="button" 
-                                    @click="selectCategory(cat)"
-                                    style="padding:14px 18px;border-radius:14px;display:flex;align-items:center;justify-content:center;text-align:center;transition:all 0.2s;cursor:pointer;width:100%;min-height:50px;position:relative;"
-                                    :style="selectedCategory === cat.id 
-                                        ? 'background-color:#FDF8EE !important;border:1.5px solid #C49520 !important;color:#7A5505 !important;font-weight:800 !important;box-shadow:0 2px 8px rgba(196,149,32,0.12) !important;' 
-                                        : 'background-color:#FFFFFF !important;border:1px solid #ECE3D2 !important;color:#1E1915 !important;font-weight:600 !important;box-shadow:0 1px 3px rgba(0,0,0,0.02) !important;'"
-                                    onmouseover="if(this.getAttribute('data-active') !== 'true') { this.style.borderColor='#C49520'; this.style.backgroundColor='#FAF8F5'; }"
-                                    onmouseout="if(this.getAttribute('data-active') !== 'true') { this.style.borderColor='#ECE3D2'; this.style.backgroundColor='#FFFFFF'; }">
-                                
-                                {{-- Category Name --}}
-                                <span style="font-size:13.5px;line-height:1.3;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;" x-text="cat.name"></span>
-                                
-                                {{-- Checkmark if selected --}}
-                                <span x-show="selectedCategory === cat.id" style="color:#C49520;font-size:12px;font-weight:900;position:absolute;right:14px;top:50%;transform:translateY(-50%);">✓</span>
+                                    @click="toggleCategory(cat)"
+                                    class="cat-pill"
+                                    :class="selectedCategories.includes(cat.id) ? 'cat-pill-selected' : ''">
+                                <span x-text="cat.name" style="line-height:1.3;"></span>
+                                <span class="cat-checkmark" x-show="selectedCategories.includes(cat.id)">✓</span>
                             </button>
                         </template>
 
@@ -570,32 +609,37 @@
                         </template>
                     </div>
 
-                    {{-- Selected Category Confirmation Toast / Badge --}}
-                    <div x-show="selectedCategory && selectedCategoryObj" 
-                         style="display:flex;align-items:center;justify-content:space-between;padding:10px 16px;border-radius:14px;background-color:#FDF8EE;border:1px solid #EEDBBA;margin-top:10px;"
-                         class="transition-all">
-                        <div style="display:flex;align-items:center;gap:8px;">
+                    {{-- Selected Categories Confirmation Badge --}}
+                    <div x-show="selectedCategories.length > 0"
+                         style="padding:10px 16px;border-radius:14px;background-color:#FDF8EE;border:1px solid #EEDBBA;margin-top:10px;display:flex;align-items:flex-start;justify-content:space-between;gap:8px;flex-wrap:wrap;">
+                        <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
                             <span style="color:#C49520;font-size:13px;font-weight:900;">✓</span>
-                            <span style="font-size:11px;color:#7A5505;font-weight:600;text-transform:uppercase;letter-spacing:0.04em;">Selected Category:</span>
-                            <strong style="font-size:13px;color:#1E1915;font-weight:800;" x-text="selectedCategoryObj ? selectedCategoryObj.name : ''"></strong>
+                            <span style="font-size:11px;color:#7A5505;font-weight:600;text-transform:uppercase;letter-spacing:0.04em;">Categories:</span>
+                            <template x-for="catId in selectedCategories" :key="catId">
+                                <span style="font-size:11px;background:#221F1C;color:#FCFAF6;border-radius:9999px;padding:2px 10px;font-weight:600;display:inline-flex;align-items:center;gap:4px;">
+                                    <span x-text="categoriesList.find(c => c.id === catId)?.name || catId"></span>
+                                    <button type="button" @click.stop="toggleCategory({id: catId})" style="margin-left:2px;font-size:11px;color:#C49520;background:none;border:none;cursor:pointer;padding:0;line-height:1;">×</button>
+                                </span>
+                            </template>
                         </div>
-                        <span style="font-size:11px;color:#A07218;font-weight:600;" class="hidden sm:inline">
-                            Lumban Verified ✦
-                        </span>
+                        <span style="font-size:11px;color:#A07218;font-weight:600;" class="hidden sm:inline">Lumban Verified ✦</span>
                     </div>
                 </div>
             </div>
 
-            {{-- Footer Action Bar (Exact Screenshot Layout) --}}
+            {{-- Footer Action Bar --}}
             <div style="margin-top:28px;padding-top:20px;border-top:1px solid #F2ECE1;display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;">
                 <div>
                     <div style="font-size:13px;font-weight:700;color:#1E1915;display:flex;align-items:center;gap:6px;">
                         <span>Next: Complete Product Details</span>
                         <span style="font-weight:700;">→</span>
                     </div>
-                    <p style="font-size:11px;color:#78716C;margin:3px 0 0 0;">
-                        * Please upload a photo, enter product name, choose a category, and select target tag to proceed.
-                    </p>
+                    <div style="display:flex;align-items:center;gap:10px;margin-top:4px;">
+                        <p style="font-size:11px;color:#78716C;margin:0;">
+                            * Please upload a photo, enter product name, choose a category, and select target tag to proceed.
+                        </p>
+                        <span id="draft-save-indicator" style="display:none;font-size:10px;font-weight:600;color:#2E7D32;white-space:nowrap;background:#E8F5E9;border:1px solid #A5D6A7;border-radius:9999px;padding:2px 10px;">✓ Draft saved</span>
+                    </div>
                 </div>
 
                 <button type="button" 
@@ -1098,7 +1142,7 @@ function addProductManager() {
     return {
         step: 1,
         productName: initData.name || '',
-        selectedCategory: initData.categoryId || '',
+        selectedCategories: initData.categoryIds || [],
         targetGroup: initData.targetGroup || 'Men',
         fabricType: initData.fabricType || '100% Piña',
         price: initData.price || '',
@@ -1218,33 +1262,30 @@ function addProductManager() {
             this.calculateFillRate();
         },
 
-        get selectedCategoryObj() {
-            if (!Array.isArray(this.categoriesList)) return null;
-            return this.categoriesList.find(c => c && String(c.id) === String(this.selectedCategory)) || null;
-        },
-
         get filteredCategories() {
             if (!Array.isArray(this.categoriesList)) return [];
             if (!this.targetGroup) return [];
             return this.categoriesList.filter(c => {
                 if (!c) return false;
                 let tg = c.target_group;
-                if (Array.isArray(tg)) {
-                    return tg.includes(this.targetGroup);
-                }
-                if (typeof tg === 'string') {
-                    return tg === this.targetGroup;
-                }
+                if (Array.isArray(tg)) return tg.includes(this.targetGroup);
+                if (typeof tg === 'string') return tg === this.targetGroup;
                 return false;
             }).sort((a, b) => a.name.localeCompare(b.name));
         },
 
-        selectCategory(cat) {
+        toggleCategory(cat) {
             if (!cat) return;
-            this.selectedCategory = cat.id;
+            const idx = this.selectedCategories.indexOf(cat.id);
+            if (idx === -1) {
+                this.selectedCategories.push(cat.id);
+            } else {
+                this.selectedCategories.splice(idx, 1);
+            }
             const catContainer = document.getElementById('category-cards-container');
             if (catContainer) catContainer.classList.remove('border-red-500');
             this.calculateFillRate();
+            saveDraft();
         },
 
         onTargetGroupChange(group) {
@@ -1252,27 +1293,25 @@ function addProductManager() {
             const tgContainer = document.getElementById('target-group-container');
             if (tgContainer) tgContainer.classList.remove('border-red-500', 'p-1', 'border', 'rounded-xl');
 
-            // If current category does not belong to the selected tag, unselect it
-            if (this.selectedCategory) {
-                const currentCat = Array.isArray(this.categoriesList) ? this.categoriesList.find(c => String(c.id) === String(this.selectedCategory)) : null;
-                if (currentCat) {
-                    let tg = currentCat.target_group;
-                    let hasTag = Array.isArray(tg) ? tg.includes(group) : (tg === group);
-                    if (!hasTag) {
-                        this.selectedCategory = '';
-                    }
-                }
+            // Filter out categories that don't belong to the new target group
+            if (this.selectedCategories.length > 0) {
+                this.selectedCategories = this.selectedCategories.filter(catId => {
+                    const cat = Array.isArray(this.categoriesList) ? this.categoriesList.find(c => String(c.id) === String(catId)) : null;
+                    if (!cat) return false;
+                    let tg = cat.target_group;
+                    return Array.isArray(tg) ? tg.includes(group) : (tg === group);
+                });
             }
 
             const catContainer = document.getElementById('category-cards-container');
             if (catContainer) catContainer.classList.remove('border-red-500');
-
             this.calculateFillRate();
+            saveDraft();
         },
 
         get isStep1Complete() {
             const hasName = Boolean(this.productName && this.productName.trim().length >= 3);
-            const hasCategory = Boolean(this.selectedCategory && this.selectedCategory !== '');
+            const hasCategory = this.selectedCategories.length > 0;
             const hasTarget = Boolean(this.targetGroup && ['Men', 'Women', 'Kids'].includes(this.targetGroup));
             const hasMainImage = Boolean(this.variants[0] && this.variants[0].imagePreview !== null);
             return hasName && hasCategory && hasTarget && hasMainImage;
@@ -1362,7 +1401,9 @@ function addProductManager() {
             this.isAiLoading = true;
             try {
                 const initData = getProductInitData();
-                const selectedCatName = this.selectedCategoryObj ? this.selectedCategoryObj.name : '';
+                const firstCatId = this.selectedCategories[0] || '';
+                const selectedCatObj = firstCatId ? (this.categoriesList || []).find(c => String(c.id) === String(firstCatId)) : null;
+                const selectedCatName = selectedCatObj ? selectedCatObj.name : '';
                 const variantNames = this.variants.map(v => v.name).filter(Boolean);
 
                 const response = await fetch(initData.aiDescriptionUrl || '/seller/generate-description', {
@@ -1375,7 +1416,7 @@ function addProductManager() {
                     body: JSON.stringify({
                         name: this.productName || '',
                         category: selectedCatName,
-                        category_id: this.selectedCategory || '',
+                        category_id: firstCatId,
                         target_group: this.targetGroup || 'Men',
                         fabric: this.fabricType || '100% Piña',
                         variants: variantNames,
@@ -1622,8 +1663,9 @@ function validateProductForm(e, isEdit = false) {
 
     const categorySelect = document.getElementById('categorySelect') || document.querySelector('input[name="CategoryId"]');
     const categoryVal = categorySelect ? categorySelect.value : '';
-    if (!categoryVal) {
-        errors.push('Please select a Product Category.');
+    const catIds = Array.from(document.querySelectorAll('input[name="category_ids[]"]')).map(i => i.value).filter(Boolean);
+    if (!categoryVal && catIds.length === 0) {
+        errors.push('Please select at least one Product Category.');
         const catContainer = document.getElementById('category-cards-container');
         if (catContainer) catContainer.classList.add('border-red-500');
     }
@@ -1738,5 +1780,280 @@ function validateProductForm(e, isEdit = false) {
 
     return true;
 }
+</script>
+
+{{-- ================================================================ --}}
+{{-- LEAVE PAGE CONFIRMATION MODAL                                     --}}
+{{-- ================================================================ --}}
+<div id="leave-page-modal" style="display:none;position:fixed;inset:0;z-index:9999;">
+    {{-- Backdrop --}}
+    <div id="leave-modal-backdrop" style="position:absolute;inset:0;background:rgba(15,10,5,0.55);backdrop-filter:blur(4px);" onclick="closeLeaveModal()"></div>
+    {{-- Modal Card --}}
+    <div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:calc(100% - 40px);max-width:440px;background:#FFFCF7;border:1px solid #E2D9C8;border-radius:24px;padding:32px 28px;box-shadow:0 20px 60px rgba(0,0,0,0.15);">
+        {{-- Icon --}}
+        <div style="width:48px;height:48px;border-radius:50%;background:#FDF8EE;border:1px solid #EEDBBA;display:flex;align-items:center;justify-content:center;margin-bottom:20px;">
+            <svg width="22" height="22" fill="none" stroke="#C49520" viewBox="0 0 24 24" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/>
+            </svg>
+        </div>
+        <h3 style="font-family:ui-serif,Georgia,serif;font-size:20px;font-weight:700;color:#1E1915;margin:0 0 10px 0;">Leave this page?</h3>
+        <p style="font-size:13.5px;color:#78716C;line-height:1.6;margin:0 0 28px 0;">
+            You have product information that hasn&rsquo;t been submitted yet. If you leave this page, your current changes may be lost.
+        </p>
+        <div style="display:flex;flex-direction:column;gap:10px;">
+            <button onclick="closeLeaveModal()" style="width:100%;padding:14px;border-radius:14px;background:#221F1C;color:#FCFAF6;font-size:14px;font-weight:700;border:none;cursor:pointer;transition:opacity 0.2s;" onmouseover="this.style.opacity='.88'" onmouseout="this.style.opacity='1'">
+                Stay and Continue Editing
+            </button>
+            <button onclick="confirmLeave()" style="width:100%;padding:14px;border-radius:14px;background:transparent;color:#78716C;font-size:13.5px;font-weight:600;border:1px solid #E2D9C8;cursor:pointer;transition:all 0.2s;" onmouseover="this.style.color='#DC2626';this.style.borderColor='#DC2626';" onmouseout="this.style.color='#78716C';this.style.borderColor='#E2D9C8';">
+                Leave Page
+            </button>
+        </div>
+    </div>
+</div>
+
+<script>
+// ================================================================
+// DRAFT AUTO-SAVE (localStorage)
+// ================================================================
+const DRAFT_KEY = 'add_product_draft_v1';
+let _draftTimer = null;
+let _formSubmitted = false;
+
+function saveDraft() {
+    clearTimeout(_draftTimer);
+    _draftTimer = setTimeout(() => {
+        const draft = {};
+        // Text fields
+        const nameEl = document.querySelector('input[name="name"]');
+        if (nameEl) draft.name = nameEl.value;
+
+        const descEl = document.querySelector('textarea[name="description"]');
+        if (descEl) draft.description = descEl.value;
+
+        const priceEl = document.querySelector('input[name="price"]');
+        if (priceEl) draft.price = priceEl.value;
+
+        const shipFeeEl = document.querySelector('input[name="shippingFee"]');
+        if (shipFeeEl) draft.shippingFee = shipFeeEl.value;
+
+        const shipDaysEl = document.querySelector('input[name="shippingDays"]');
+        if (shipDaysEl) draft.shippingDays = shipDaysEl.value;
+
+        const fabricEl = document.querySelector('input[name="fabric_type"]');
+        if (fabricEl) draft.fabric_type = fabricEl.value;
+
+        // Alpine.js state
+        const alpineRoot = document.querySelector('[x-data]');
+        if (alpineRoot && alpineRoot._x_dataStack) {
+            const alpineData = alpineRoot._x_dataStack[0];
+            if (alpineData) {
+                draft.targetGroup = alpineData.targetGroup || 'Men';
+                draft.selectedCategories = alpineData.selectedCategories || [];
+                draft.step = alpineData.step || 1;
+            }
+        }
+
+        // Sizes
+        const checkedSizes = Array.from(document.querySelectorAll('.size-checkbox:checked')).map(cb => cb.value);
+        draft.sizes = checkedSizes;
+        const sizeStocks = {};
+        checkedSizes.forEach(size => {
+            const input = document.getElementById('stock_' + size);
+            if (input) sizeStocks[size] = input.value;
+        });
+        draft.sizeStocks = sizeStocks;
+
+        // Variant names
+        const variantNameInputs = document.querySelectorAll('input[name^="variant_name"]');
+        draft.variantNames = Array.from(variantNameInputs).map(i => i.value);
+
+        // Toggles
+        const discountToggle = document.getElementById('discountToggle');
+        draft.isOnSale = discountToggle ? discountToggle.checked : false;
+        if (draft.isOnSale) {
+            const pctEl = document.getElementById('discountPercentage');
+            draft.discountPercentage = pctEl ? pctEl.value : '';
+        }
+
+        localStorage.setItem(DRAFT_KEY, JSON.stringify(draft));
+        showDraftSaved();
+    }, 1500);
+}
+
+function showDraftSaved() {
+    const indicator = document.getElementById('draft-save-indicator');
+    if (!indicator) return;
+    indicator.style.display = 'inline-flex';
+    indicator.textContent = '✓ Draft saved · just now';
+    clearTimeout(indicator._hideTimer);
+    indicator._hideTimer = setTimeout(() => {
+        indicator.style.display = 'none';
+    }, 4000);
+}
+
+function restoreDraft() {
+    const raw = localStorage.getItem(DRAFT_KEY);
+    if (!raw) return;
+    let draft;
+    try { draft = JSON.parse(raw); } catch (e) { return; }
+    if (!draft) return;
+
+    // Text fields
+    if (draft.name) {
+        const el = document.querySelector('input[name="name"]');
+        if (el && !el.value) el.value = draft.name;
+    }
+    if (draft.description) {
+        const el = document.querySelector('textarea[name="description"]');
+        if (el && !el.value) el.value = draft.description;
+    }
+    if (draft.price) {
+        const el = document.querySelector('input[name="price"]');
+        if (el && !el.value) el.value = draft.price;
+    }
+    if (draft.shippingFee) {
+        const el = document.querySelector('input[name="shippingFee"]');
+        if (el && !el.value) el.value = draft.shippingFee;
+    }
+    if (draft.shippingDays) {
+        const el = document.querySelector('input[name="shippingDays"]');
+        if (el && !el.value) el.value = draft.shippingDays;
+    }
+
+    // Alpine.js state
+    const alpineRoot = document.querySelector('[x-data]');
+    if (alpineRoot && alpineRoot._x_dataStack) {
+        const alpineData = alpineRoot._x_dataStack[0];
+        if (alpineData) {
+            if (draft.targetGroup) alpineData.targetGroup = draft.targetGroup;
+            if (Array.isArray(draft.selectedCategories) && draft.selectedCategories.length > 0) {
+                alpineData.selectedCategories = draft.selectedCategories;
+            }
+        }
+    }
+
+    // Sizes
+    if (Array.isArray(draft.sizes) && draft.sizes.length > 0) {
+        draft.sizes.forEach(size => {
+            const cb = document.getElementById('size_cb_' + size);
+            if (cb && !cb.checked) {
+                cb.checked = true;
+                toggleSizeStock(cb, size);
+            }
+            if (draft.sizeStocks && draft.sizeStocks[size]) {
+                const stockEl = document.getElementById('stock_' + size);
+                if (stockEl) stockEl.value = draft.sizeStocks[size];
+            }
+        });
+        calculateTotalStock();
+    }
+
+    // Discount toggle
+    if (draft.isOnSale) {
+        const toggle = document.getElementById('discountToggle');
+        if (toggle && !toggle.checked) {
+            toggle.checked = true;
+            toggleDiscount(toggle);
+        }
+        if (draft.discountPercentage) {
+            const pctEl = document.getElementById('discountPercentage');
+            if (pctEl) pctEl.value = draft.discountPercentage;
+        }
+    }
+
+    // Show indicator briefly
+    const indicator = document.getElementById('draft-save-indicator');
+    if (indicator) {
+        indicator.style.display = 'inline-flex';
+        indicator.textContent = '↩ Draft restored';
+        clearTimeout(indicator._hideTimer);
+        indicator._hideTimer = setTimeout(() => { indicator.style.display = 'none'; }, 5000);
+    }
+}
+
+function clearDraft() {
+    localStorage.removeItem(DRAFT_KEY);
+}
+
+// Attach save on input change
+document.addEventListener('DOMContentLoaded', () => {
+    // Restore draft on page load (after Alpine.js initializes)
+    setTimeout(restoreDraft, 300);
+
+    // Clear draft and set flag on successful submit
+    const form = document.getElementById('productForm');
+    if (form) {
+        form.addEventListener('submit', () => {
+            _formSubmitted = true;
+            clearDraft();
+        });
+    }
+
+    // Auto-save on any field change
+    document.addEventListener('input', saveDraft);
+    document.addEventListener('change', saveDraft);
+});
+
+// ================================================================
+// LEAVE PAGE CONFIRMATION
+// ================================================================
+let _pendingLeaveUrl = null;
+let _leaveAllowed = false;
+
+function hasFormData() {
+    if (_formSubmitted) return false;
+    const name = document.querySelector('input[name="name"]')?.value?.trim();
+    const desc = document.querySelector('textarea[name="description"]')?.value?.trim();
+    const price = document.querySelector('input[name="price"]')?.value?.trim();
+    return Boolean(name || desc || price);
+}
+
+function showLeaveModal(href) {
+    _pendingLeaveUrl = href;
+    document.getElementById('leave-page-modal').style.display = 'block';
+    document.body.style.overflow = 'hidden';
+}
+
+function closeLeaveModal() {
+    document.getElementById('leave-page-modal').style.display = 'none';
+    document.body.style.overflow = '';
+    _pendingLeaveUrl = null;
+}
+
+function confirmLeave() {
+    _leaveAllowed = true;
+    document.getElementById('leave-page-modal').style.display = 'none';
+    document.body.style.overflow = '';
+    if (_pendingLeaveUrl) {
+        window.location.href = _pendingLeaveUrl;
+    } else {
+        history.back();
+    }
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+    // Intercept all anchor clicks that leave this page
+    document.addEventListener('click', (e) => {
+        const anchor = e.target.closest('a[href]');
+        if (!anchor) return;
+        const href = anchor.getAttribute('href');
+        if (!href || href.startsWith('#') || href.startsWith('javascript')) return;
+        if (!hasFormData()) return;
+        if (_leaveAllowed) return;
+        const currentPath = window.location.pathname;
+        const destUrl = new URL(href, window.location.origin);
+        if (destUrl.pathname === currentPath) return;
+        e.preventDefault();
+        showLeaveModal(href);
+    });
+
+    // Intercept browser back/refresh
+    window.addEventListener('beforeunload', (e) => {
+        if (hasFormData() && !_formSubmitted && !_leaveAllowed) {
+            e.preventDefault();
+            e.returnValue = 'You have unsaved product information. Leave anyway?';
+        }
+    });
+});
 </script>
 @endsection
