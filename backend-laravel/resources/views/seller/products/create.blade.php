@@ -774,11 +774,11 @@
                 <div style="padding:14px 18px;border-radius:18px;background-color:#FDF8EE;border:1px solid #EEDBBA;" class="space-y-3">
                     <input type="hidden" name="is_on_sale" id="isOnSaleInput" value="0">
 
-                    <div style="display:flex;align-items:center;justify-content:space-between;">
-                        <div style="display:flex;align-items:center;gap:8px;">
-                            <span style="width:8px;height:8px;border-radius:50%;background-color:#C49520;"></span>
-                            <span style="font-size:12px;font-weight:700;color:#7A5505;text-transform:uppercase;letter-spacing:0.06em;">Special Price / Sale Discount</span>
-                            <span style="font-size:10px;color:#78716C;font-weight:700;text-transform:uppercase;">(Optional)</span>
+                    <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;">
+                        <div style="display:flex;align-items:center;gap:8px;min-width:0;flex:1;">
+                            <span style="width:8px;height:8px;border-radius:50%;background-color:#C49520;flex-shrink:0;"></span>
+                            <span style="font-size:12px;font-weight:700;color:#7A5505;text-transform:uppercase;letter-spacing:0.06em;white-space:nowrap;">Special Price / Sale Discount</span>
+                            <span style="font-size:10px;color:#78716C;font-weight:600;text-transform:uppercase;white-space:nowrap;flex-shrink:0;">(Optional)</span>
                         </div>
                         <label class="relative inline-flex items-center cursor-pointer shrink-0">
                             <input type="checkbox" id="discountToggle" class="sr-only peer" onchange="toggleDiscount(this)">
