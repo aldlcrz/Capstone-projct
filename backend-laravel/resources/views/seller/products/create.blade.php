@@ -437,17 +437,17 @@
                     </template>
                 </div>
 
-                {{-- Add Another Variant Button (Responsive layout for mobile & desktop) --}}
+                {{-- Add Another Variant Button (Clean non-breaking layout for mobile & desktop) --}}
                 <div>
                     <button type="button" 
                             @click="addVariantRow()" 
-                            style="width:100%;padding:12px 16px;border-radius:16px;border:1.5px dashed #C49520;background-color:#FAF8F5;color:#1E1915;display:flex;align-items:center;justify-content:center;gap:8px;cursor:pointer;transition:all 0.2s;text-align:center;"
+                            style="width:100%;padding:11px 16px;border-radius:16px;border:1.5px dashed #C49520;background-color:#FAF8F5;color:#1E1915;display:flex;align-items:center;justify-content:center;gap:8px;cursor:pointer;transition:all 0.2s;text-align:center;"
                             onmouseover="this.style.backgroundColor='#FDFBF7';this.style.borderColor='#7A5505';"
                             onmouseout="this.style.backgroundColor='#FAF8F5';this.style.borderColor='#C49520';">
-                        <span style="width:20px;height:20px;border-radius:50%;background-color:#FDF8EE;border:1px solid #EEDBBA;color:#7A5505;display:inline-flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;flex-shrink:0;">+</span>
-                        <span style="font-size:13px;font-weight:700;color:#1E1915;line-height:1.3;">
-                            Add Another Variant <span style="font-size:11.5px;font-weight:500;color:#78716C;">(Optional Style / Color)</span>
-                        </span>
+                        <span style="width:20px;height:20px;border-radius:50%;background-color:#FDF8EE;border:1px solid #EEDBBA;color:#7A5505;display:inline-flex;align-items:center;justify-content:center;font-size:14px;font-weight:800;flex-shrink:0;">+</span>
+                        <span style="font-size:13px;font-weight:700;color:#1E1915;white-space:nowrap;">Add Another Variant</span>
+                        <span style="font-size:11px;font-weight:500;color:#78716C;white-space:nowrap;" class="hidden sm:inline">(Optional Style / Color)</span>
+                        <span style="font-size:11px;font-weight:500;color:#78716C;white-space:nowrap;" class="sm:hidden">(Optional)</span>
                     </button>
                 </div>
             </div>
@@ -470,7 +470,7 @@
                               x-text="'✓ ' + targetGroup + ' selected'"></span>
                     </div>
 
-                    {{-- Target Tag Segmented Pills (Gold Theme with Crystal Clear Readable Text) --}}
+                    {{-- Target Tag Segmented Pills (Full Capsule Pill Shape in Gold) --}}
                     <div id="target-group-container" style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding-top:2px;">
                         @foreach(['Men', 'Women', 'Kids'] as $group)
                             <label class="cursor-pointer select-none" @click="onTargetGroupChange('{{ $group }}')">
@@ -479,14 +479,14 @@
                                        value="{{ $group }}" 
                                        x-model="targetGroup" 
                                        class="hidden">
-                                <div style="min-width:96px;padding:9px 24px;border-radius:12px;font-size:13.5px;letter-spacing:0.01em;display:inline-flex;align-items:center;justify-content:center;gap:6px;transition:all 0.2s;cursor:pointer;"
+                                <div style="padding:7px 22px;border-radius:9999px !important;font-size:13px;letter-spacing:0.01em;display:inline-flex;align-items:center;justify-content:center;gap:6px;transition:all 0.2s;cursor:pointer;"
                                      :style="targetGroup === '{{ $group }}' 
-                                        ? 'background: linear-gradient(135deg, #C49520 0%, #A16D19 100%) !important; background-color: #A16D19 !important; color: #FFFFFF !important; border: 1.5px solid #8C5C0F !important; box-shadow: 0 3px 10px rgba(161, 109, 25, 0.3) !important;' 
-                                        : 'background: #FFFFFF !important; background-color: #FFFFFF !important; color: #1E1915 !important; border: 1.5px solid #E2D9C8 !important; box-shadow: 0 1px 3px rgba(0,0,0,0.02) !important;'"
-                                     onmouseover="if(this.getAttribute('data-selected') !== 'true') { this.style.borderColor='#C49520'; this.style.backgroundColor='#FAF8F5'; }"
-                                     onmouseout="if(this.getAttribute('data-selected') !== 'true') { this.style.borderColor='#E2D9C8'; this.style.backgroundColor='#FFFFFF'; }">
-                                    <span style="font-size:13.5px;" :style="targetGroup === '{{ $group }}' ? 'color:#FFFFFF !important;font-weight:800;' : 'color:#1E1915 !important;font-weight:700;'">{{ $group }}</span>
-                                    <span x-show="targetGroup === '{{ $group }}'" style="color:#FFFFFF;font-size:13px;font-weight:900;margin-left:2px;">✓</span>
+                                        ? 'background: linear-gradient(135deg, #C49520 0%, #A16D19 100%) !important; background-color: #A16D19 !important; color: #FFFFFF !important; border: 1.5px solid #8C5C0F !important; border-radius: 9999px !important; box-shadow: 0 3px 10px rgba(161, 109, 25, 0.28) !important;' 
+                                        : 'background: #FFFFFF !important; background-color: #FFFFFF !important; color: #1E1915 !important; border: 1.5px solid #E2D9C8 !important; border-radius: 9999px !important; box-shadow: 0 1px 3px rgba(0,0,0,0.02) !important;'"
+                                     onmouseover="if(this.getAttribute('data-selected') !== 'true') { this.style.borderColor='#C49520'; }"
+                                     onmouseout="if(this.getAttribute('data-selected') !== 'true') { this.style.borderColor='#E2D9C8'; }">
+                                    <span style="font-size:13px;" :style="targetGroup === '{{ $group }}' ? 'color:#FFFFFF !important;font-weight:800;' : 'color:#1E1915 !important;font-weight:700;'">{{ $group }}</span>
+                                    <span x-show="targetGroup === '{{ $group }}'" style="color:#FFFFFF;font-size:12px;font-weight:900;margin-left:2px;">✓</span>
                                 </div>
                             </label>
                         @endforeach
