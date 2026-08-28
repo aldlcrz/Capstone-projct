@@ -303,8 +303,9 @@
                 </div>
             </div>
         </div>
+    </div>
 
-        <!-- MAIN WRAPPER -->
+    <!-- MAIN WRAPPER -->
         <div class="flex-1 flex flex-col min-w-0 min-h-0 h-full relative overflow-hidden" style="background-color: #FFFCF7;">
 
             <!-- Top Header (Enlarged & Cleaned) -->
