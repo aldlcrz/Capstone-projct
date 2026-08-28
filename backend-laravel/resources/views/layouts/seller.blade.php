@@ -92,18 +92,20 @@
                 </div>
 
                 <!-- Seller Profile Snapshot -->
-                <div class="mb-7 px-3 py-3.5 rounded-xl shrink-0" style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.07);">
+                <div class="mb-7 px-3 py-3 rounded-2xl shrink-0" style="background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08);">
                     <div class="flex items-center gap-3">
-                        <div class="w-9 h-9 rounded-xl overflow-hidden shrink-0 border-2 flex items-center justify-center font-bold text-sm" style="border-color: rgba(196,149,32,0.5); background: #2E2620; color: #C49520;">
-                            @if(Auth::user()->profile_photo_url)
-                                <img src="{{ Auth::user()->profile_photo_url }}" class="w-full h-full object-cover" onerror="this.style.display='none'">
-                            @else
-                                {{ strtoupper(substr(Auth::user()->name, 0, 1)) }}
-                            @endif
+                        <div style="width:36px;height:36px;min-width:36px;border-radius:50%;padding:2px;background:linear-gradient(135deg,#996515,#E6CA65,#996515);box-shadow:0 2px 6px rgba(0,0,0,0.2);" class="shrink-0">
+                            <div style="width:100%;height:100%;border-radius:50%;overflow:hidden;background:#FAF8F5;display:flex;align-items:center;justify-content:center;">
+                                @if(Auth::user()->profile_photo_url)
+                                    <img src="{{ Auth::user()->profile_photo_url }}" class="w-full h-full object-cover" onerror="this.style.display='none'">
+                                @else
+                                    <span style="font-size:13px;font-weight:800;color:#996515;">{{ strtoupper(substr(Auth::user()->name, 0, 1)) }}</span>
+                                @endif
+                            </div>
                         </div>
                         <div class="min-w-0">
-                            <div class="text-xs font-bold truncate" style="color: #FFFCF7;">{{ Auth::user()->name }}</div>
-                            <div class="text-[9px] font-bold uppercase tracking-wider mt-0.5" style="color: #C49520;">
+                            <div class="text-xs font-bold truncate font-serif" style="color: #FFFCF7;">{{ Auth::user()->name }}</div>
+                            <div class="text-[9px] font-extrabold uppercase tracking-wider mt-0.5" style="color: #C49520;">
                                 {{ Auth::user()->isPremiumActive() ? '✦ Premium Artisan' : 'Verified Artisan' }}
                             </div>
                         </div>
@@ -412,24 +414,26 @@
                         </div>
 
                         <!-- Profile -->
-                        <a href="{{ route('seller.profile') }}" class="flex items-center gap-3 cursor-pointer" title="Go to Profile" style="opacity:1; transition: opacity 0.15s;" onmouseover="this.style.opacity='.75';" onmouseout="this.style.opacity='1';">
+                        <a href="{{ route('seller.profile') }}" class="flex items-center gap-3 cursor-pointer group" title="Go to Profile">
                             <div class="text-right hidden sm:block">
-                                <div class="text-xs font-bold flex items-center gap-1.5 justify-end" style="color: #1E1915;">
+                                <div class="text-xs font-bold font-serif flex items-center gap-1.5 justify-end" style="color: #1E1915;">
                                     {{ Auth::user()->name }}
                                     @if(Auth::user()->isPremiumActive())
                                         <span class="text-xs" title="Premium Seller" style="color: #C49520;">✦</span>
                                     @endif
                                 </div>
-                                <div class="text-[9px] font-bold uppercase tracking-widest" style="color: #C49520;">
+                                <div class="text-[9px] font-extrabold uppercase tracking-widest" style="color: #996515;">
                                     {{ Auth::user()->isPremiumActive() ? 'Premium Artisan' : 'Verified Artisan' }}
                                 </div>
                             </div>
-                            <div class="w-9 h-9 sm:w-10 sm:h-10 rounded-xl overflow-hidden shrink-0 border-2 flex items-center justify-center font-bold text-sm" style="background: #1E1915; color: #C49520; border-color: rgba(196,149,32,0.4);">
-                                @if(Auth::user()->profile_photo_url)
-                                    <img src="{{ Auth::user()->profile_photo_url }}" class="w-full h-full object-cover" onerror="this.style.display='none'">
-                                @else
-                                    {{ strtoupper(substr(Auth::user()->name, 0, 1)) }}
-                                @endif
+                            <div style="width:38px;height:38px;min-width:38px;border-radius:50%;padding:2px;background:linear-gradient(135deg,#996515,#E6CA65,#996515);box-shadow:0 2px 8px rgba(0,0,0,0.1);" class="shrink-0 group-hover:scale-105 transition-transform">
+                                <div style="width:100%;height:100%;border-radius:50%;overflow:hidden;background:#FAF8F5;display:flex;align-items:center;justify-content:center;">
+                                    @if(Auth::user()->profile_photo_url)
+                                        <img src="{{ Auth::user()->profile_photo_url }}" class="w-full h-full object-cover" onerror="this.style.display='none'">
+                                    @else
+                                        <span style="font-size:14px;font-weight:800;color:#996515;">{{ strtoupper(substr(Auth::user()->name, 0, 1)) }}</span>
+                                    @endif
+                                </div>
                             </div>
                         </a>
                     </div>
