@@ -348,12 +348,6 @@
                             </label>
                         </div>
 
-                        {{-- Drag to reorder prompt text --}}
-                        <div style="font-size:11px;color:#78716C;display:flex;align-items:center;gap:4px;padding-left:142px;">
-                            <span>⇅</span>
-                            <span>Drag to reorder</span>
-                        </div>
-
                         {{-- Informational Subtext Notes (Exact from screenshot) --}}
                         <div class="space-y-1 pt-2">
                             <p style="font-size:11.5px;color:#78716C;margin:0;display:flex;align-items:center;gap:6px;">
@@ -443,15 +437,17 @@
                     </template>
                 </div>
 
-                {{-- Add Another Variant Button (Exact from Screenshot) --}}
+                {{-- Add Another Variant Button (Responsive layout for mobile & desktop) --}}
                 <div>
                     <button type="button" 
                             @click="addVariantRow()" 
-                            style="width:100%;padding:14px 20px;border-radius:16px;border:1px dashed #C49520;background-color:#FAF8F5;color:#1E1915;font-size:13px;font-weight:700;display:flex;align-items:center;justify-content:center;gap:8px;cursor:pointer;transition:all 0.2s;"
+                            style="width:100%;padding:12px 16px;border-radius:16px;border:1.5px dashed #C49520;background-color:#FAF8F5;color:#1E1915;display:flex;align-items:center;justify-content:center;gap:8px;cursor:pointer;transition:all 0.2s;text-align:center;"
                             onmouseover="this.style.backgroundColor='#FDFBF7';this.style.borderColor='#7A5505';"
                             onmouseout="this.style.backgroundColor='#FAF8F5';this.style.borderColor='#C49520';">
-                        <span style="color:#C49520;font-size:16px;font-weight:700;line-height:1;">+</span>
-                        <span>Add Another Variant (Optional Style / Color)</span>
+                        <span style="width:20px;height:20px;border-radius:50%;background-color:#FDF8EE;border:1px solid #EEDBBA;color:#7A5505;display:inline-flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;flex-shrink:0;">+</span>
+                        <span style="font-size:13px;font-weight:700;color:#1E1915;line-height:1.3;">
+                            Add Another Variant <span style="font-size:11.5px;font-weight:500;color:#78716C;">(Optional Style / Color)</span>
+                        </span>
                     </button>
                 </div>
             </div>
@@ -474,7 +470,7 @@
                               x-text="'✓ ' + targetGroup + ' selected'"></span>
                     </div>
 
-                    {{-- Target Tag Segmented Pills (Men in Black, Women & Kids in White) --}}
+                    {{-- Target Tag Segmented Pills (Gold Theme with Crystal Clear Readable Text) --}}
                     <div id="target-group-container" style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding-top:2px;">
                         @foreach(['Men', 'Women', 'Kids'] as $group)
                             <label class="cursor-pointer select-none" @click="onTargetGroupChange('{{ $group }}')">
@@ -483,14 +479,14 @@
                                        value="{{ $group }}" 
                                        x-model="targetGroup" 
                                        class="hidden">
-                                <div style="padding:8px 24px;border-radius:12px;font-size:13px;font-weight:700;letter-spacing:0.01em;display:inline-flex;align-items:center;justify-content:center;gap:6px;transition:all 0.2s;"
+                                <div style="min-width:96px;padding:9px 24px;border-radius:12px;font-size:13.5px;letter-spacing:0.01em;display:inline-flex;align-items:center;justify-content:center;gap:6px;transition:all 0.2s;cursor:pointer;"
                                      :style="targetGroup === '{{ $group }}' 
-                                        ? 'background-color:#18181B !important;color:#FFFFFF !important;border:1px solid #18181B !important;box-shadow:0 2px 6px rgba(0,0,0,0.15) !important;' 
-                                        : 'background-color:#FFFFFF !important;color:#57534E !important;border:1px solid #E2D9C8 !important;'"
-                                     onmouseover="if(this.getAttribute('data-selected') !== 'true') { this.style.backgroundColor='#FAF8F5'; this.style.borderColor='#C49520'; }"
-                                     onmouseout="if(this.getAttribute('data-selected') !== 'true') { this.style.backgroundColor='#FFFFFF'; this.style.borderColor='#E2D9C8'; }">
-                                    <span>{{ $group }}</span>
-                                    <span x-show="targetGroup === '{{ $group }}'" style="color:#C49520;font-size:12px;font-weight:900;">✓</span>
+                                        ? 'background: linear-gradient(135deg, #C49520 0%, #A16D19 100%) !important; background-color: #A16D19 !important; color: #FFFFFF !important; border: 1.5px solid #8C5C0F !important; box-shadow: 0 3px 10px rgba(161, 109, 25, 0.3) !important;' 
+                                        : 'background: #FFFFFF !important; background-color: #FFFFFF !important; color: #1E1915 !important; border: 1.5px solid #E2D9C8 !important; box-shadow: 0 1px 3px rgba(0,0,0,0.02) !important;'"
+                                     onmouseover="if(this.getAttribute('data-selected') !== 'true') { this.style.borderColor='#C49520'; this.style.backgroundColor='#FAF8F5'; }"
+                                     onmouseout="if(this.getAttribute('data-selected') !== 'true') { this.style.borderColor='#E2D9C8'; this.style.backgroundColor='#FFFFFF'; }">
+                                    <span style="font-size:13.5px;" :style="targetGroup === '{{ $group }}' ? 'color:#FFFFFF !important;font-weight:800;' : 'color:#1E1915 !important;font-weight:700;'">{{ $group }}</span>
+                                    <span x-show="targetGroup === '{{ $group }}'" style="color:#FFFFFF;font-size:13px;font-weight:900;margin-left:2px;">✓</span>
                                 </div>
                             </label>
                         @endforeach
