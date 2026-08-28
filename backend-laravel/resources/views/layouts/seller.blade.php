@@ -417,48 +417,48 @@
                 </div>
             </main>
 
-            <!-- Mobile Bottom Nav: Home | Orders | ➕ Add Product | Products -->
+            <!-- Mobile Bottom Nav: Home | Orders | Messages | Profile -->
             <nav class="lg:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200/80 h-16 flex items-center justify-around px-2 z-40 shadow-lg">
                 <!-- Home -->
-                <a href="{{ route('seller.dashboard') }}" class="flex flex-col items-center gap-0.5 px-3 py-1 {{ request()->is('seller/dashboard') || request()->is('seller') ? 'text-[#C0422A]' : 'text-gray-500 hover:text-gray-700' }}">
+                <a href="{{ route('seller.dashboard') }}" class="flex-1 flex flex-col items-center justify-center gap-0.5 py-1 {{ request()->is('seller/dashboard') || request()->is('seller') ? 'text-[#C0422A]' : 'text-gray-500 hover:text-gray-700' }}">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M3 12l9-9 9 9M5 10v10a1 1 0 001 1h3a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1h3a1 1 0 001-1V10"></path>
                     </svg>
-                    <span class="text-[9px] font-semibold">Home</span>
+                    <span class="text-[10px] font-semibold">Home</span>
                 </a>
 
                 <!-- Orders -->
-                <a href="{{ route('seller.orders') }}" class="flex flex-col items-center gap-0.5 px-3 py-1 {{ request()->is('seller/orders*') ? 'text-[#C0422A]' : 'text-gray-500 hover:text-gray-700' }}">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path>
-                    </svg>
-                    <span class="text-[9px] font-semibold">Orders</span>
-                </a>
-
-                <!-- Center Floating Plus Button (Add New Product) -->
-                <a href="{{ route('seller.products.create') }}" class="flex flex-col items-center justify-center -mt-5 group shrink-0" title="Add New Product">
-                    <div class="w-12 h-12 rounded-full bg-[#221F1C] text-white flex items-center justify-center shadow-lg group-hover:bg-[#C0422A] transition-all">
+                <a href="{{ route('seller.orders') }}" class="flex-1 flex flex-col items-center justify-center gap-0.5 py-1 relative {{ request()->is('seller/orders*') ? 'text-[#C0422A]' : 'text-gray-500 hover:text-gray-700' }}">
+                    <div class="relative">
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M12 4.5v15m7.5-7.5h-15"></path>
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path>
                         </svg>
+                        @if(($pendingOrdersCount ?? 0) > 0)
+                            <span class="absolute -top-1 -right-2 min-w-3.5 h-3.5 px-1 bg-[#C0420A] text-white text-[8px] font-black rounded-full flex items-center justify-center border-2 border-white">{{ $pendingOrdersCount }}</span>
+                        @endif
                     </div>
-                    <span class="text-[9px] font-semibold text-gray-400 mt-0.5">Add</span>
-                </a>
-
-                <!-- Analytics -->
-                <a href="{{ route('seller.analytics') }}" class="flex flex-col items-center gap-0.5 px-3 py-1 {{ request()->is('seller/analytics*') ? 'text-[#C0422A]' : 'text-gray-500 hover:text-gray-700' }}">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
-                    </svg>
-                    <span class="text-[9px] font-semibold">Analytics</span>
+                    <span class="text-[10px] font-semibold">Orders</span>
                 </a>
 
                 <!-- Messages -->
-                <a href="{{ route('seller.messages') }}" class="flex flex-col items-center gap-0.5 px-3 py-1 {{ request()->is('seller/messages*') ? 'text-[#C0422A]' : 'text-gray-500 hover:text-gray-700' }}">
+                <a href="{{ route('seller.messages') }}" class="flex-1 flex flex-col items-center justify-center gap-0.5 py-1 relative {{ request()->is('seller/messages*') ? 'text-[#C0422A]' : 'text-gray-500 hover:text-gray-700' }}">
+                    <div class="relative">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"></path>
+                        </svg>
+                        @if(($unreadMsgCount ?? 0) > 0)
+                            <span class="absolute -top-1 -right-2 min-w-3.5 h-3.5 px-1 bg-[#C0420A] text-white text-[8px] font-black rounded-full flex items-center justify-center border-2 border-white">{{ $unreadMsgCount }}</span>
+                        @endif
+                    </div>
+                    <span class="text-[10px] font-semibold">Messages</span>
+                </a>
+
+                <!-- Profile -->
+                <a href="{{ route('seller.profile') }}" class="flex-1 flex flex-col items-center justify-center gap-0.5 py-1 {{ request()->is('seller/profile*') ? 'text-[#C0422A]' : 'text-gray-500 hover:text-gray-700' }}">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"></path>
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
                     </svg>
-                    <span class="text-[9px] font-semibold">Messages</span>
+                    <span class="text-[10px] font-semibold">Profile</span>
                 </a>
             </nav>
         </div>

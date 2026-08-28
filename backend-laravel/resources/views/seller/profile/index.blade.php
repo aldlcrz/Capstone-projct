@@ -195,6 +195,20 @@
 
         {{-- Quick Links --}}
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5 sm:gap-3">
+            {{-- Shop Analytics Card --}}
+            <a href="{{ route('seller.analytics') }}" class="flex items-center justify-between px-4 py-3 sm:py-3.5 bg-white rounded-2xl border border-gray-100 hover:border-[#C0420A] transition-all group">
+                <div class="flex items-center gap-3">
+                    <div class="w-8 h-8 rounded-xl bg-purple-50 border border-purple-100 flex items-center justify-center text-purple-600 group-hover:scale-105 transition-transform">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
+                    </div>
+                    <div>
+                        <span class="text-xs font-bold text-black uppercase block">Shop Analytics</span>
+                        <span class="text-[9px] text-gray-400 font-medium">Sales trends, revenue & performance</span>
+                    </div>
+                </div>
+                <svg class="w-4 h-4 text-gray-300 group-hover:text-[#C0420A] transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+            </a>
+
             {{-- Shop Policies Card --}}
             <a href="{{ route('seller.policies.index') }}" class="flex items-center justify-between px-4 py-3 sm:py-3.5 bg-white rounded-2xl border border-gray-100 hover:border-[#C0420A] transition-all">
                 <div class="flex items-center gap-3">
