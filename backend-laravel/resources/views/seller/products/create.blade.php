@@ -470,8 +470,8 @@
                               x-text="'✓ ' + targetGroup + ' selected'"></span>
                     </div>
 
-                    {{-- Target Tag Segmented Pills (Clean Modern Minimal Luxury Pills) --}}
-                    <div id="target-group-container" style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding-top:4px;">
+                    {{-- Target Tag Segmented Pills (Clean Modern Minimal Luxury Pills matching Mockup) --}}
+                    <div id="target-group-container" style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;padding-top:4px;">
                         @foreach(['Men', 'Women', 'Kids'] as $group)
                             <label class="cursor-pointer select-none" @click="onTargetGroupChange('{{ $group }}')">
                                 <input type="radio" 
@@ -479,14 +479,14 @@
                                        value="{{ $group }}" 
                                        x-model="targetGroup" 
                                        class="hidden">
-                                <div style="min-width:105px;height:42px;padding:0 24px;border-radius:9999px;font-size:13.5px;font-weight:600;letter-spacing:0.01em;display:inline-flex;align-items:center;justify-content:center;gap:6px;transition:all 0.2s ease;cursor:pointer;box-sizing:border-box;"
+                                <div style="min-width:100px;height:44px;padding:0 24px;border-radius:9999px;font-size:14px;letter-spacing:0.01em;display:inline-flex;align-items:center;justify-content:center;gap:5px;transition:all 180ms cubic-bezier(0.4, 0, 0.2, 1);cursor:pointer;box-sizing:border-box;"
                                      :style="targetGroup === '{{ $group }}' 
-                                        ? 'background-color:#1C1917 !important;color:#FDFBF7 !important;border:1px solid #1C1917 !important;box-shadow:0 2px 8px rgba(0,0,0,0.08) !important;' 
-                                        : 'background-color:#FFFFFF !important;color:#44403C !important;border:1px solid #E7E0D2 !important;box-shadow:0 1px 2px rgba(0,0,0,0.02) !important;'"
-                                     onmouseover="if(this.getAttribute('data-selected') !== 'true') { this.style.borderColor='#C49520'; this.style.backgroundColor='#FDFBF7'; }"
-                                     onmouseout="if(this.getAttribute('data-selected') !== 'true') { this.style.borderColor='#E7E0D2'; this.style.backgroundColor='#FFFFFF'; }">
-                                    <span style="font-size:13.5px;font-weight:600;line-height:1;white-space:nowrap;" :style="targetGroup === '{{ $group }}' ? 'color:#FDFBF7 !important;' : 'color:#44403C !important;'">{{ $group }}</span>
-                                    <span x-show="targetGroup === '{{ $group }}'" style="color:#C49520;font-size:12px;font-weight:800;margin-left:2px;">✓</span>
+                                        ? 'background-color:#221F1C !important;color:#FCFAF6 !important;border:1px solid #C49520 !important;box-shadow:0 4px 14px rgba(34,31,28,0.22), 0 1px 3px rgba(0,0,0,0.08) !important;' 
+                                        : 'background-color:#FCFAF6 !important;color:#221F1C !important;border:1px solid #E2D9C8 !important;box-shadow:0 1px 2px rgba(0,0,0,0.02) !important;'"
+                                     onmouseover="if(this.getAttribute('data-selected') !== 'true') { this.style.borderColor='#C8AC70'; this.style.backgroundColor='#F8F2E6'; }"
+                                     onmouseout="if(this.getAttribute('data-selected') !== 'true') { this.style.borderColor='#E2D9C8'; this.style.backgroundColor='#FCFAF6'; }">
+                                    <span style="font-size:14px;line-height:1;white-space:nowrap;" :style="targetGroup === '{{ $group }}' ? 'color:#FCFAF6 !important;font-weight:600;' : 'color:#221F1C !important;font-weight:500;'">{{ $group }}</span>
+                                    <span x-show="targetGroup === '{{ $group }}'" style="color:#C49520;font-size:13px;font-weight:800;margin-left:4px;">✓</span>
                                 </div>
                             </label>
                         @endforeach
