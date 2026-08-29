@@ -461,20 +461,30 @@
                         </button>
                         <button type="button" 
                                 @click="requestPlaceOrder()" 
-                                :disabled="aiChecking"
-                                :class="aiChecking ? 'opacity-60 cursor-not-allowed bg-[#C0422A]/80' : 'hover:bg-[#A33622] active:scale-[0.99] cursor-pointer shadow-lg shadow-[#C0422A]/20'"
-                                class="flex-1 bg-[#C0422A] text-white py-4 rounded-xl text-sm font-bold transition-all flex items-center justify-center gap-2">
-                            <span x-show="!aiChecking" class="inline-flex items-center gap-2">
-                                <span>Place Order</span>
-                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
-                            </span>
-                            <span x-show="aiChecking" x-cloak class="inline-flex items-center gap-2">
-                                <svg class="w-4 h-4 animate-spin text-white" fill="none" viewBox="0 0 24 24">
-                                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                                </svg>
-                                <span>Verifying Receipt...</span>
-                            </span>
+                                :disabled="!canPlaceOrder()"
+                                :class="!canPlaceOrder() ? 'opacity-50 cursor-not-allowed bg-stone-400 text-white shadow-none' : 'bg-[#C0422A] hover:bg-[#A33622] active:scale-[0.99] cursor-pointer text-white shadow-lg shadow-[#C0422A]/20'"
+                                class="flex-1 py-4 rounded-xl text-sm font-bold transition-all flex items-center justify-center gap-2">
+                            <template x-if="aiChecking">
+                                <span class="inline-flex items-center gap-2">
+                                    <svg class="w-4 h-4 animate-spin text-white" fill="none" viewBox="0 0 24 24">
+                                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                    </svg>
+                                    <span>Verifying Receipt...</span>
+                                </span>
+                            </template>
+                            <template x-if="!aiChecking && isReceiptRejected()">
+                                <span class="inline-flex items-center gap-2">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                                    <span>Receipt Rejected (Attach Valid Receipt)</span>
+                                </span>
+                            </template>
+                            <template x-if="!aiChecking && !isReceiptRejected()">
+                                <span class="inline-flex items-center gap-2">
+                                    <span>Place Order</span>
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                                </span>
+                            </template>
                         </button>
                     </div>
                 </template>
@@ -546,17 +556,24 @@
                     </button>
                     <button type="button" 
                             @click="requestPlaceOrder()" 
-                            :disabled="aiChecking"
-                            :class="aiChecking ? 'opacity-60 cursor-not-allowed bg-[#C0422A]/80' : 'hover:bg-[#A33622] active:scale-95 cursor-pointer shadow-lg'"
-                            class="px-6 py-3 bg-[#C0422A] text-white text-xs font-bold uppercase tracking-widest rounded-xl transition-all flex items-center gap-1.5">
-                        <span x-show="!aiChecking">Place Order</span>
-                        <span x-show="aiChecking" x-cloak class="flex items-center gap-1.5">
-                            <svg class="w-3.5 h-3.5 animate-spin text-white" fill="none" viewBox="0 0 24 24">
-                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                            </svg>
-                            <span>Verifying...</span>
-                        </span>
+                            :disabled="!canPlaceOrder()"
+                            :class="!canPlaceOrder() ? 'opacity-50 cursor-not-allowed bg-stone-400 text-white shadow-none' : 'bg-[#C0422A] hover:bg-[#A33622] active:scale-95 cursor-pointer text-white shadow-lg'"
+                            class="px-6 py-3 text-xs font-bold uppercase tracking-widest rounded-xl transition-all flex items-center gap-1.5">
+                        <template x-if="aiChecking">
+                            <span class="flex items-center gap-1.5">
+                                <svg class="w-3.5 h-3.5 animate-spin text-white" fill="none" viewBox="0 0 24 24">
+                                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                </svg>
+                                <span>Verifying...</span>
+                            </span>
+                        </template>
+                        <template x-if="!aiChecking && isReceiptRejected()">
+                            <span>Receipt Rejected</span>
+                        </template>
+                        <template x-if="!aiChecking && !isReceiptRejected()">
+                            <span>Place Order</span>
+                        </template>
                     </button>
                 </div>
             </template>
@@ -1094,6 +1111,18 @@ function checkoutApp(initialAddress, initialAddresses, defaultPaymentMethod) {
             return this.aiVerificationResult.is_receipt === false 
                 || this.aiVerificationResult.status === 'REJECT' 
                 || (this.aiVerificationResult.status === 'REVIEW' && this.aiVerificationResult.ref_matched === false);
+        },
+
+        isReceiptRejected() {
+            if (!this.fileName || !this.aiVerificationResult) return false;
+            return this.aiVerificationResult.is_receipt === false || this.aiVerificationResult.status === 'REJECT';
+        },
+
+        canPlaceOrder() {
+            if (this.aiChecking) return false;
+            if (this.isReceiptRejected()) return false;
+            if (this.isRefDuplicate) return false;
+            return true;
         },
 
         isReceiptVerified() {
