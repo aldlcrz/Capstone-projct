@@ -417,7 +417,7 @@
             </header>
 
             <!-- Page Content -->
-            <main class="flex-1 min-h-0 overflow-y-auto p-3 sm:p-6 lg:p-10 pb-28">
+            <main class="flex-1 min-h-0 overflow-y-auto p-3 sm:p-6 lg:p-10 pb-12">
                 <div class="max-w-7xl mx-auto w-full">
                     {{-- Flash Messages --}}
                     @if(session('success') || session('error'))
@@ -459,44 +459,6 @@
                     @yield('content')
                 </div>
             </main>
-
-            <!-- MOBILE BOTTOM NAV -->
-            <nav class="lg:hidden fixed bottom-0 left-0 right-0 h-16 flex items-center justify-around px-2 z-40 shadow-lg" style="background: #FFFCF7; border-top: 1px solid #E8DECB;">
-                <a href="{{ route('seller.dashboard') }}" class="flex-1 flex flex-col items-center justify-center gap-0.5 py-1 transition-colors {{ request()->is('seller/dashboard') || request()->is('seller') ? 'mobile-nav-active' : 'mobile-nav-inactive' }}">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M3 12l9-9 9 9M5 10v10a1 1 0 001 1h3a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1h3a1 1 0 001-1V10"></path></svg>
-                    <span class="text-[10px] font-semibold">Home</span>
-                </a>
-                <a href="{{ route('seller.orders') }}" class="flex-1 flex flex-col items-center justify-center gap-0.5 py-1 relative transition-colors {{ request()->is('seller/orders*') ? 'mobile-nav-active' : 'mobile-nav-inactive' }}">
-                    <div class="relative">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path></svg>
-                        @if(($pendingOrdersCount ?? 0) > 0)
-                            <span class="absolute -top-1 -right-2 min-w-3.5 h-3.5 px-1 text-white text-[8px] font-black rounded-full flex items-center justify-center border-2 border-white" style="background: #C49520;">{{ $pendingOrdersCount }}</span>
-                        @endif
-                    </div>
-                    <span class="text-[10px] font-semibold">Orders</span>
-                </a>
-                <a href="{{ route('seller.products.create') }}" class="flex flex-col items-center justify-center -mt-5 group shrink-0 px-2" title="Add New Product">
-                    <div class="w-12 h-12 rounded-full flex items-center justify-center shadow-lg transition-all"
-                         style="background: #1E1915; color: #FFFCF7;"
-                         onmouseover="this.style.background='#C49520';" onmouseout="this.style.background='#1E1915';">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M12 4.5v15m7.5-7.5h-15"></path></svg>
-                    </div>
-                    <span class="text-[9px] font-semibold mt-0.5" style="color: #B0A090;">Add</span>
-                </a>
-                <a href="{{ route('seller.messages') }}" class="flex-1 flex flex-col items-center justify-center gap-0.5 py-1 relative transition-colors {{ request()->is('seller/messages*') ? 'mobile-nav-active' : 'mobile-nav-inactive' }}">
-                    <div class="relative">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"></path></svg>
-                        @if(($unreadMsgCount ?? 0) > 0)
-                            <span class="absolute -top-1 -right-2 min-w-3.5 h-3.5 px-1 text-white text-[8px] font-black rounded-full flex items-center justify-center border-2 border-white" style="background: #C49520;">{{ $unreadMsgCount }}</span>
-                        @endif
-                    </div>
-                    <span class="text-[10px] font-semibold">Messages</span>
-                </a>
-                <a href="{{ route('seller.profile') }}" class="flex-1 flex flex-col items-center justify-center gap-0.5 py-1 transition-colors {{ request()->is('seller/profile*') ? 'mobile-nav-active' : 'mobile-nav-inactive' }}">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg>
-                    <span class="text-[10px] font-semibold">Profile</span>
-                </a>
-            </nav>
         </div>
     </div>
 

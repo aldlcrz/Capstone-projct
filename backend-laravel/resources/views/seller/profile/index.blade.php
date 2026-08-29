@@ -124,22 +124,22 @@
 
             {{-- Artisan Quick Metrics Row --}}
             <div style="display:grid;grid-template-columns:repeat(4, 1fr);gap:8px;margin-bottom:20px;">
-                <div style="background-color:#FFFFFF;border:1px solid #ECE3D2;border-radius:14px;padding:10px 6px;text-align:center;box-shadow:0 1px 4px rgba(0,0,0,0.02);">
+                <a href="{{ route('seller.products') }}" style="text-decoration:none;background-color:#FFFFFF;border:1px solid #ECE3D2;border-radius:14px;padding:10px 6px;text-align:center;box-shadow:0 1px 4px rgba(0,0,0,0.02);display:block;transition:all 0.2s;" class="hover:border-[#C49520] hover:scale-102">
                     <div style="font-size:14px;font-weight:800;color:#C49520;" class="font-sans">{{ $sellerListingCount }}</div>
                     <div style="font-size:8px;font-weight:700;color:#8C827A;text-transform:uppercase;letter-spacing:0.04em;margin-top:2px;">Creations</div>
-                </div>
-                <div style="background-color:#FFFFFF;border:1px solid #ECE3D2;border-radius:14px;padding:10px 6px;text-align:center;box-shadow:0 1px 4px rgba(0,0,0,0.02);">
+                </a>
+                <a href="{{ route('seller.orders') }}" style="text-decoration:none;background-color:#FFFFFF;border:1px solid #ECE3D2;border-radius:14px;padding:10px 6px;text-align:center;box-shadow:0 1px 4px rgba(0,0,0,0.02);display:block;transition:all 0.2s;" class="hover:border-[#C49520] hover:scale-102">
                     <div style="font-size:14px;font-weight:800;color:#1E1915;" class="font-sans">{{ $sellerOrderCount }}</div>
                     <div style="font-size:8px;font-weight:700;color:#8C827A;text-transform:uppercase;letter-spacing:0.04em;margin-top:2px;">Orders</div>
-                </div>
-                <div style="background-color:#FFFFFF;border:1px solid #ECE3D2;border-radius:14px;padding:10px 6px;text-align:center;box-shadow:0 1px 4px rgba(0,0,0,0.02);">
+                </a>
+                <a href="{{ route('seller.analytics') }}" style="text-decoration:none;background-color:#FFFFFF;border:1px solid #ECE3D2;border-radius:14px;padding:10px 6px;text-align:center;box-shadow:0 1px 4px rgba(0,0,0,0.02);display:block;transition:all 0.2s;" class="hover:border-[#C49520] hover:scale-102">
                     <div style="font-size:14px;font-weight:800;color:#1E1915;" class="font-sans">₱{{ number_format($sellerTotalEarnings, 0) }}</div>
                     <div style="font-size:8px;font-weight:700;color:#8C827A;text-transform:uppercase;letter-spacing:0.04em;margin-top:2px;">Sales</div>
-                </div>
-                <div style="background-color:#FFFFFF;border:1px solid #ECE3D2;border-radius:14px;padding:10px 6px;text-align:center;box-shadow:0 1px 4px rgba(0,0,0,0.02);">
+                </a>
+                <a href="{{ route('seller.products') }}" style="text-decoration:none;background-color:#FFFFFF;border:1px solid #ECE3D2;border-radius:14px;padding:10px 6px;text-align:center;box-shadow:0 1px 4px rgba(0,0,0,0.02);display:block;transition:all 0.2s;" class="hover:border-[#C49520] hover:scale-102">
                     <div style="font-size:14px;font-weight:800;color:#1E1915;" class="font-sans">{{ $sellerAvgRating ? number_format($sellerAvgRating, 1) : '5.0' }}★</div>
                     <div style="font-size:8px;font-weight:700;color:#8C827A;text-transform:uppercase;letter-spacing:0.04em;margin-top:2px;">Rating</div>
-                </div>
+                </a>
             </div>
 
             {{-- Account Settings Section --}}
@@ -254,6 +254,29 @@
                             </svg>
                         </div>
                     </button>
+
+                    {{-- Shop Analytics & Reports (Link) --}}
+                    <a href="{{ route('seller.analytics') }}" 
+                       style="background-color:#FFFFFF;border:1px solid #ECE3D2;border-radius:16px;padding:14px 16px;display:flex;align-items:center;justify-content:space-between;box-shadow:0 2px 6px rgba(0,0,0,0.02);cursor:pointer;width:100%;text-decoration:none;transition:all 0.2s;"
+                       class="hover:border-[#C49520] hover:bg-[#FDFBF7] group">
+                        <div style="display:flex;align-items:center;gap:12px;">
+                            <div style="width:38px;height:38px;border-radius:11px;background-color:#FAF5EA;border:1px solid #E6D8BA;display:flex;align-items:center;justify-content:center;color:#B88728;flex-shrink:0;" class="group-hover:scale-105 transition-transform">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+                                </svg>
+                            </div>
+                            <div>
+                                <div style="font-size:14px;font-weight:700;color:#1E1915;">Shop Analytics & Reports</div>
+                                <div style="font-size:11px;color:#8C827A;margin-top:1px;">Sales trends, conversion rate & client metrics</div>
+                            </div>
+                        </div>
+                        <div style="display:flex;align-items:center;gap:6px;">
+                            <span style="font-size:10px;font-weight:800;color:#996515;background-color:#FAF5EA;border:1px solid #E6D8BA;padding:2px 8px;border-radius:6px;text-transform:uppercase;letter-spacing:0.04em;">View</span>
+                            <svg width="16" height="16" fill="none" stroke="#8C827A" viewBox="0 0 24 24" stroke-width="2.2" class="group-hover:translate-x-0.5 transition-transform">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/>
+                            </svg>
+                        </div>
+                    </a>
 
                     {{-- Shop Policies (Link) --}}
                     <a href="{{ route('seller.policies.index') }}" 
