@@ -787,12 +787,15 @@
 
             {{-- 2. Pricing & Logistics Grid --}}
             <div style="background-color:#FFFFFF !important;border:1px solid #ECE3D2 !important;border-radius:24px !important;padding:24px !important;box-shadow:0 4px 20px rgba(0,0,0,0.03) !important;" class="space-y-4">
-                <div style="display:flex;align-items:center;gap:12px;padding-bottom:12px;border-bottom:1px solid #F2ECE1;">
-                    <div style="width:32px;height:32px;border-radius:50%;background-color:#FDF8EE;border:1px solid #EEDBBA;display:flex;align-items:center;justify-content:center;color:#7A5505;font-family:ui-serif,Georgia,serif;font-weight:700;font-size:13px;flex-shrink:0;">2</div>
-                    <div>
-                        <h3 style="font-family:ui-serif,Georgia,Cambria,serif;font-size:16px;font-weight:700;color:#1E1915;margin:0;">Price & Shipping Information</h3>
-                        <p style="font-size:12px;color:#78716C;margin-top:2px;margin-bottom:0;">Define fair artisan pricing and realistic delivery estimates</p>
+                <div style="display:flex;align-items:center;justify-content:space-between;padding-bottom:12px;border-bottom:1px solid #F2ECE1;flex-wrap:wrap;gap:10px;">
+                    <div style="display:flex;align-items:center;gap:12px;">
+                        <div style="width:32px;height:32px;border-radius:50%;background-color:#FDF8EE;border:1px solid #EEDBBA;display:flex;align-items:center;justify-content:center;color:#7A5505;font-family:ui-serif,Georgia,serif;font-weight:700;font-size:13px;flex-shrink:0;">2</div>
+                        <div>
+                            <h3 style="font-family:ui-serif,Georgia,Cambria,serif;font-size:16px;font-weight:700;color:#1E1915;margin:0;">Price & Shipping Information <span style="color:#DC2626;">*</span></h3>
+                            <p style="font-size:12px;color:#78716C;margin-top:2px;margin-bottom:0;">Define fair artisan pricing and realistic delivery estimates</p>
+                        </div>
                     </div>
+                    <span style="font-size:10.5px;font-weight:700;color:#DC2626;background-color:#FEF2F2;border:1px solid #FECACA;padding:4px 12px;border-radius:9999px;text-transform:uppercase;letter-spacing:0.04em;display:inline-flex;align-items:center;gap:4px;">Base price required</span>
                 </div>
 
                 <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 pt-1">
