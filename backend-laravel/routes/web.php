@@ -261,6 +261,7 @@ Route::middleware(['auth', 'seller'])->prefix('seller')->group(function () {
     Route::delete('/products/{id}', [ProductManagementController::class, 'destroy'])->name('seller.products.destroy');
     Route::get('/products/archives', [ProductManagementController::class, 'archives'])->name('seller.products.archives');
     Route::post('/products/{id}/restore', [ProductManagementController::class, 'restoreProduct'])->name('seller.products.restore');
+    Route::delete('/products/archives/{id}', [ProductManagementController::class, 'destroyArchive'])->name('seller.products.archives.destroy');
     Route::post('/size-guides', [ProductManagementController::class, 'updateSizeGuides'])->name('seller.sizeguides.update');
     Route::delete('/size-guides/{targetGroup}', [ProductManagementController::class, 'deleteSizeGuide'])->name('seller.sizeguides.delete');
 

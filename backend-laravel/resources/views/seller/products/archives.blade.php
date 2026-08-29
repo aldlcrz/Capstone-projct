@@ -187,15 +187,28 @@
                             </div>
                         @endif
 
-                        {{-- Restore Button --}}
-                        <button type="button"
-                                @click="openRestoreModal('{{ $record->id }}', '{{ addslashes($record->name) }}')"
-                                class="mt-auto w-full py-2 text-xs font-bold uppercase tracking-wider rounded-xl transition-all border cursor-pointer"
-                                style="background: #FDF8EE; border-color: #E8DECB; color: #1E1915;"
-                                onmouseover="this.style.background='#1E1915'; this.style.color='#FFFCF7'; this.style.borderColor='#1E1915';"
-                                onmouseout="this.style.background='#FDF8EE'; this.style.color='#1E1915'; this.style.borderColor='#E8DECB';">
-                            ↩ Restore to Catalogue
-                        </button>
+                        {{-- Actions (Restore & Permanent Delete) --}}
+                        <div class="mt-auto pt-1 flex items-center gap-2">
+                            <button type="button"
+                                    @click="openRestoreModal('{{ $record->id }}', '{{ addslashes($record->name) }}')"
+                                    class="flex-1 py-2 px-2.5 text-[11px] sm:text-xs font-bold uppercase tracking-wider rounded-xl transition-all border cursor-pointer text-center"
+                                    style="background: #FDF8EE; border-color: #E8DECB; color: #1E1915;"
+                                    onmouseover="this.style.background='#1E1915'; this.style.color='#FFFCF7'; this.style.borderColor='#1E1915';"
+                                    onmouseout="this.style.background='#FDF8EE'; this.style.color='#1E1915'; this.style.borderColor='#E8DECB';"
+                                    title="Restore back to active catalogue">
+                                ↩ Restore
+                            </button>
+                            <button type="button"
+                                    @click="openDeleteModal('{{ $record->id }}', '{{ addslashes($record->name) }}')"
+                                    class="py-2 px-3 text-[11px] sm:text-xs font-bold uppercase tracking-wider rounded-xl transition-all border cursor-pointer text-center flex items-center justify-center gap-1 shadow-2xs text-red-600 hover:text-white hover:bg-red-600 hover:border-red-600"
+                                    style="background: #FEF2F2; border-color: #FECACA;"
+                                    title="Permanently Delete Archive Record">
+                                <svg class="w-3.5 h-3.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                                </svg>
+                                <span class="hidden sm:inline">Delete</span>
+                            </button>
+                        </div>
                     </div>
                 </div>
             @endforeach
@@ -259,6 +272,50 @@
             </form>
         </div>
     </div>
+
+    {{-- Permanent Delete Confirmation Modal --}}
+    <div x-show="showDeleteModal"
+         class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-xs"
+         x-cloak>
+        <div class="rounded-3xl w-full max-w-md p-6 sm:p-7 shadow-2xl space-y-5"
+             style="background: #FFFCF7; border: 1px solid #E8DECB;"
+             @click.away="showDeleteModal = false">
+
+            <div class="flex items-start gap-3.5">
+                <div class="w-12 h-12 rounded-2xl flex items-center justify-center shrink-0"
+                     style="background: #FEF2F2; color: #DC2626; border: 1px solid #FECACA;">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                              d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                    </svg>
+                </div>
+                <div class="min-w-0">
+                    <h3 class="font-serif text-base sm:text-lg font-bold leading-tight" style="color: #991B1B;">Permanently Delete Product</h3>
+                    <p class="text-xs mt-1" style="color: #766C60;">
+                        Are you sure you want to permanently delete <strong x-text="deletingProductName" class="text-stone-900"></strong>?
+                    </p>
+                </div>
+            </div>
+
+            <p class="text-xs leading-relaxed p-3 rounded-2xl" style="background: #FEF2F2; border: 1px solid #FECACA; color: #991B1B;">
+                ⚠️ <strong>Warning:</strong> This action cannot be undone. This product record and its archived images will be permanently erased.
+            </p>
+
+            <form :action="'/seller/products/archives/' + deletingProductId" method="POST" class="flex gap-3 pt-1">
+                @csrf
+                @method('DELETE')
+                <button type="button" @click="showDeleteModal = false"
+                        class="flex-1 py-2.5 text-xs font-bold rounded-xl transition-all cursor-pointer"
+                        style="background: #FDF8EE; border: 1px solid #E8DECB; color: #1E1915;">
+                    Cancel
+                </button>
+                <button type="submit"
+                        class="flex-1 py-2.5 text-white text-xs font-bold uppercase tracking-wider rounded-xl transition-all border-0 cursor-pointer shadow-xs bg-red-600 hover:bg-red-700">
+                    🗑 Delete Forever
+                </button>
+            </form>
+        </div>
+    </div>
 </div>
 @endsection
 
@@ -269,10 +326,18 @@ function sellerArchives() {
         showRestoreModal: false,
         restoringProductId: null,
         restoringProductName: '',
+        showDeleteModal: false,
+        deletingProductId: null,
+        deletingProductName: '',
         openRestoreModal(id, name) {
             this.restoringProductId = id;
             this.restoringProductName = name;
             this.showRestoreModal = true;
+        },
+        openDeleteModal(id, name) {
+            this.deletingProductId = id;
+            this.deletingProductName = name;
+            this.showDeleteModal = true;
         },
     };
 }

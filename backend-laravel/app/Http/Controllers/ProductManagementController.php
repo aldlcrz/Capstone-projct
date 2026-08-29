@@ -808,4 +808,54 @@ class ProductManagementController extends Controller
                 ->with('error', 'Failed to restore product: ' . $e->getMessage());
         }
     }
+
+    /**
+     * Permanently delete an archived product record for the seller.
+     */
+    public function destroyArchive(string $id)
+    {
+        $sellerId = Auth::id();
+
+        $record = \App\Models\ArchivedRecord::where('id', $id)
+            ->where('item_type', 'product')
+            ->firstOrFail();
+
+        $meta = is_array($record->metadata) ? $record->metadata : json_decode($record->metadata ?? '[]', true);
+
+        // Security check: ensure the product belongs to the authenticated seller
+        $itemSellerId = $meta['sellerId'] ?? null;
+        if ((string) $itemSellerId !== (string) $sellerId && $record->archived_by !== (Auth::user()->name ?? '')) {
+            return redirect()->route('seller.products.archives')
+                ->with('error', 'You do not have permission to delete this archived product.');
+        }
+
+        try {
+            $productName = $record->name;
+
+            // Clean up uploaded image files
+            if (!empty($meta['image']) && is_array($meta['image'])) {
+                foreach ($meta['image'] as $img) {
+                    if (!str_starts_with($img, 'http')) {
+                        $cleanImg = preg_replace('/^(storage|uploads)\//', '', $img);
+                        $cleanImg = ltrim(str_replace('\\', '/', $cleanImg), '/');
+                        if (file_exists(public_path('uploads/' . $cleanImg))) {
+                            @unlink(public_path('uploads/' . $cleanImg));
+                        }
+                        if (file_exists(public_path('uploads/products/' . $cleanImg))) {
+                            @unlink(public_path('uploads/products/' . $cleanImg));
+                        }
+                    }
+                }
+            }
+
+            $record->delete();
+
+            return redirect()->route('seller.products.archives')
+                ->with('success', "Archived product \"{$productName}\" has been permanently deleted.");
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::error('Seller archive destroy error: ' . $e->getMessage());
+            return redirect()->route('seller.products.archives')
+                ->with('error', 'Failed to permanently delete archived product: ' . $e->getMessage());
+        }
+    }
 }
