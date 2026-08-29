@@ -253,6 +253,7 @@ Route::middleware(['auth', 'seller'])->prefix('seller')->group(function () {
     Route::patch('/api/orders/{id}/status', [OrderController::class, 'updateOrderStatus']);
     Route::get('/messages', [ChatController::class, 'sellerChatView'])->name('seller.messages');
     Route::get('/products', [ProductManagementController::class, 'index'])->name('seller.products.index');
+    Route::get('/catalogue', [ProductManagementController::class, 'index'])->name('seller.products');
     Route::get('/products/create', [ProductManagementController::class, 'create'])->name('seller.products.create');
     Route::post('/products', [ProductManagementController::class, 'store'])->name('seller.products.store');
     Route::get('/products/{id}/edit', [ProductManagementController::class, 'edit'])->name('seller.products.edit');

@@ -124,7 +124,7 @@
 
             {{-- Artisan Quick Metrics Row --}}
             <div style="display:grid;grid-template-columns:repeat(4, 1fr);gap:8px;margin-bottom:20px;">
-                <a href="{{ route('seller.products') }}" style="text-decoration:none;background-color:#FFFFFF;border:1px solid #ECE3D2;border-radius:14px;padding:10px 6px;text-align:center;box-shadow:0 1px 4px rgba(0,0,0,0.02);display:block;transition:all 0.2s;" class="hover:border-[#C49520] hover:scale-102">
+                <a href="{{ route('seller.products.index') }}" style="text-decoration:none;background-color:#FFFFFF;border:1px solid #ECE3D2;border-radius:14px;padding:10px 6px;text-align:center;box-shadow:0 1px 4px rgba(0,0,0,0.02);display:block;transition:all 0.2s;" class="hover:border-[#C49520] hover:scale-102">
                     <div style="font-size:14px;font-weight:800;color:#C49520;" class="font-sans">{{ $sellerListingCount }}</div>
                     <div style="font-size:8px;font-weight:700;color:#8C827A;text-transform:uppercase;letter-spacing:0.04em;margin-top:2px;">Creations</div>
                 </a>
@@ -136,7 +136,7 @@
                     <div style="font-size:14px;font-weight:800;color:#1E1915;" class="font-sans">₱{{ number_format($sellerTotalEarnings, 0) }}</div>
                     <div style="font-size:8px;font-weight:700;color:#8C827A;text-transform:uppercase;letter-spacing:0.04em;margin-top:2px;">Sales</div>
                 </a>
-                <a href="{{ route('seller.products') }}" style="text-decoration:none;background-color:#FFFFFF;border:1px solid #ECE3D2;border-radius:14px;padding:10px 6px;text-align:center;box-shadow:0 1px 4px rgba(0,0,0,0.02);display:block;transition:all 0.2s;" class="hover:border-[#C49520] hover:scale-102">
+                <a href="{{ route('seller.products.index') }}" style="text-decoration:none;background-color:#FFFFFF;border:1px solid #ECE3D2;border-radius:14px;padding:10px 6px;text-align:center;box-shadow:0 1px 4px rgba(0,0,0,0.02);display:block;transition:all 0.2s;" class="hover:border-[#C49520] hover:scale-102">
                     <div style="font-size:14px;font-weight:800;color:#1E1915;" class="font-sans">{{ $sellerAvgRating ? number_format($sellerAvgRating, 1) : '5.0' }}★</div>
                     <div style="font-size:8px;font-weight:700;color:#8C827A;text-transform:uppercase;letter-spacing:0.04em;margin-top:2px;">Rating</div>
                 </a>
