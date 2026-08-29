@@ -1128,6 +1128,9 @@
         'targetGroup'      => (string) old('target_group', 'Men'),
         'fabricType'       => (string) old('fabric_type', '100% Piña'),
         'price'            => (string) old('price', ''),
+        'shippingFee'      => (string) old('shippingFee', '0'),
+        'shippingDays'     => (string) old('shippingDays', '5'),
+        'sellerId'         => (string) (auth()->id() ?? 'guest'),
         'description'      => (string) old('description', ''),
         'csrfToken'        => (string) csrf_token(),
         'aiSuggestUrl'     => (string) route('ai.seller.suggest'),
@@ -1211,8 +1214,8 @@ function addProductManager() {
         targetGroup: initData.targetGroup || 'Men',
         fabricType: initData.fabricType || '100% Piña',
         price: initData.price || '',
-        shippingFee: '{{ old('shippingFee', '0') }}',
-        shippingDays: '{{ old('shippingDays', '5') }}',
+        shippingFee: initData.shippingFee || '0',
+        shippingDays: initData.shippingDays || '5',
         description: initData.description || '',
         fillRate: 15,
         isAiLoading: false,
@@ -1256,7 +1259,7 @@ function addProductManager() {
 
         saveDraftState() {
             try {
-                const sellerId = '{{ Auth::id() }}';
+                const sellerId = initData.sellerId || 'guest';
                 const DRAFT_KEY = 'lumbarong_seller_product_draft_' + sellerId;
 
                 const hasAnyData = Boolean(
@@ -1317,7 +1320,7 @@ function addProductManager() {
 
         restoreDraftState() {
             try {
-                const sellerId = '{{ Auth::id() }}';
+                const sellerId = initData.sellerId || 'guest';
                 const DRAFT_KEY = 'lumbarong_seller_product_draft_' + sellerId;
                 const raw = localStorage.getItem(DRAFT_KEY);
                 if (!raw) return;
@@ -1345,9 +1348,15 @@ function addProductManager() {
 
                 // Restore shipping
                 const shipFeeEl = document.getElementById('shippingFeeInput');
-                if (shipFeeEl && draft.shippingFee !== undefined) shipFeeEl.value = draft.shippingFee;
+                if (shipFeeEl && draft.shippingFee !== undefined) {
+                    shipFeeEl.value = draft.shippingFee;
+                    this.shippingFee = draft.shippingFee;
+                }
                 const shipDaysEl = document.getElementById('shippingDaysInput');
-                if (shipDaysEl && draft.shippingDays !== undefined) shipDaysEl.value = draft.shippingDays;
+                if (shipDaysEl && draft.shippingDays !== undefined) {
+                    shipDaysEl.value = draft.shippingDays;
+                    this.shippingDays = draft.shippingDays;
+                }
 
                 // Restore discount
                 const discToggle = document.getElementById('discountToggle');
@@ -1436,7 +1445,7 @@ function addProductManager() {
 
         clearDraftAndReset() {
             try {
-                const sellerId = '{{ Auth::id() }}';
+                const sellerId = initData.sellerId || 'guest';
                 localStorage.removeItem('lumbarong_seller_product_draft_' + sellerId);
             } catch(e) {}
             this.hasRestoredDraft = false;
@@ -2204,9 +2213,16 @@ function validateProductForm(e, isEdit = false) {
 let _pendingLeaveUrl = null;
 let _leaveAllowed = false;
 
+function clearProductDraft() {
+    try {
+        const sellerId = getProductInitData().sellerId || 'guest';
+        localStorage.removeItem('lumbarong_seller_product_draft_' + sellerId);
+    } catch (e) {}
+}
+
 function hasUnsavedData() {
     try {
-        const sellerId = '{{ Auth::id() }}';
+        const sellerId = getProductInitData().sellerId || 'guest';
         const raw = localStorage.getItem('lumbarong_seller_product_draft_' + sellerId);
         if (!raw) return false;
         const draft = JSON.parse(raw);
