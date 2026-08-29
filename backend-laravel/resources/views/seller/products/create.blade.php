@@ -849,14 +849,14 @@
                                name="shippingFee" 
                                id="shippingFeeInput" 
                                required 
-                               min="0" 
+                               min="1" 
                                max="500" 
                                step="0.01" 
                                placeholder="0.00"
                                x-model="shippingFee"
                                oninput="if(parseFloat(this.value) > 500) this.value = 500; calculateFillRate(); document.getElementById('shipping-fee-card')?.classList.remove('border-red-500', 'ring-2', 'ring-red-400'); this.classList.remove('border-red-500');"
                                style="width:100%;background:transparent;font-size:18px;font-weight:700;color:#1E1915;outline:none;border:none;">
-                        <p style="font-size:9px;color:#A8A096;margin:0;">Enter 0 for free delivery</p>
+                        <p style="font-size:9px;color:#A8A096;margin:0;">Min. ₱1.00 (Max ₱500.00)</p>
                     </div>
 
                     {{-- Shipping Days --}}
@@ -1128,7 +1128,7 @@
         'targetGroup'      => (string) old('target_group', 'Men'),
         'fabricType'       => (string) old('fabric_type', '100% Piña'),
         'price'            => (string) old('price', ''),
-        'shippingFee'      => (string) old('shippingFee', '0'),
+        'shippingFee'      => (string) old('shippingFee', ''),
         'shippingDays'     => (string) old('shippingDays', '5'),
         'sellerId'         => (string) (auth()->id() ?? 'guest'),
         'description'      => (string) old('description', ''),
@@ -1214,7 +1214,7 @@ function addProductManager() {
         targetGroup: initData.targetGroup || 'Men',
         fabricType: initData.fabricType || '100% Piña',
         price: initData.price || '',
-        shippingFee: initData.shippingFee || '0',
+        shippingFee: initData.shippingFee || '',
         shippingDays: initData.shippingDays || '5',
         description: initData.description || '',
         fillRate: 15,
@@ -1225,16 +1225,16 @@ function addProductManager() {
 
         get isPricingComplete() {
             const hasPrice = Boolean(this.price && parseFloat(this.price) >= 1 && parseFloat(this.price) <= 10000);
-            const hasFee = Boolean(this.shippingFee !== '' && !isNaN(parseFloat(this.shippingFee)) && parseFloat(this.shippingFee) >= 0 && parseFloat(this.shippingFee) <= 500);
+            const hasFee = Boolean(this.shippingFee !== '' && !isNaN(parseFloat(this.shippingFee)) && parseFloat(this.shippingFee) >= 1 && parseFloat(this.shippingFee) <= 500);
             return hasPrice && hasFee;
         },
 
         get pricingStatusText() {
             const hasPrice = Boolean(this.price && parseFloat(this.price) >= 1 && parseFloat(this.price) <= 10000);
-            const hasFee = Boolean(this.shippingFee !== '' && !isNaN(parseFloat(this.shippingFee)) && parseFloat(this.shippingFee) >= 0 && parseFloat(this.shippingFee) <= 500);
+            const hasFee = Boolean(this.shippingFee !== '' && !isNaN(parseFloat(this.shippingFee)) && parseFloat(this.shippingFee) >= 1 && parseFloat(this.shippingFee) <= 500);
             if (!hasPrice && !hasFee) return 'Price & shipping fee required';
             if (!hasPrice) return 'Base price required';
-            if (!hasFee) return 'Shipping fee required';
+            if (!hasFee) return 'Shipping fee required (min ₱1)';
             return '✓ Price & shipping configured';
         },
 
@@ -1719,7 +1719,7 @@ function addProductManager() {
             }
 
             const shipFeeVal = parseFloat(this.shippingFee);
-            if (this.shippingFee === '' || isNaN(shipFeeVal) || shipFeeVal < 0 || shipFeeVal > 500) {
+            if (this.shippingFee === '' || isNaN(shipFeeVal) || shipFeeVal < 1 || shipFeeVal > 500) {
                 const feeCard = document.getElementById('shipping-fee-card');
                 const feeInput = document.getElementById('shippingFeeInput');
                 if (feeCard) feeCard.classList.add('border-red-500', 'ring-2', 'ring-red-400');
@@ -1991,12 +1991,12 @@ function validateProductForm(e, isEdit = false) {
     const shipFeeInput = document.querySelector('input[name="shippingFee"]');
     const shipFeeCard = document.getElementById('shipping-fee-card');
     if (!shipFeeInput || shipFeeInput.value === '' || isNaN(parseFloat(shipFeeInput.value))) {
-        errors.push('Shipping Fee is required (enter 0 for free delivery).');
+        errors.push('Shipping Fee is required and must be at least ₱1.00.');
         if (shipFeeCard) shipFeeCard.classList.add('border-red-500');
     } else {
         const shipFeeVal = parseFloat(shipFeeInput.value);
-        if (shipFeeVal < 0 || shipFeeVal > 500) {
-            errors.push('Shipping Fee must be between ₱0.00 and ₱500.00.');
+        if (shipFeeVal < 1 || shipFeeVal > 500) {
+            errors.push('Shipping Fee must be between ₱1.00 and ₱500.00.');
             if (shipFeeCard) shipFeeCard.classList.add('border-red-500');
         }
     }
