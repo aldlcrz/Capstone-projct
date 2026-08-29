@@ -878,14 +878,16 @@
                 </div>
 
                 {{-- Lumban Special Discount Panel --}}
-                <div style="padding:14px 18px;border-radius:18px;background-color:#FDF8EE;border:1px solid #EEDBBA;">
+                <div style="padding:14px 16px;border-radius:18px;background-color:#FDF8EE;border:1px solid #EEDBBA;">
                     <input type="hidden" name="is_on_sale" id="isOnSaleInput" value="0">
 
-                    <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;">
+                    <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;">
                         <div style="display:flex;align-items:center;gap:8px;min-width:0;flex:1;">
                             <span style="width:8px;height:8px;border-radius:50%;background-color:#C49520;flex-shrink:0;display:inline-block;"></span>
-                            <span style="font-size:12px;font-weight:700;color:#7A5505;text-transform:uppercase;letter-spacing:0.06em;white-space:nowrap;line-height:1;">Special Price / Sale Discount</span>
-                            <span style="font-size:10px;color:#78716C;font-weight:600;text-transform:uppercase;white-space:nowrap;flex-shrink:0;line-height:1;">(Optional)</span>
+                            <div style="display:flex;align-items:baseline;gap:4px 6px;flex-wrap:wrap;min-width:0;">
+                                <span style="font-size:12px;font-weight:700;color:#7A5505;text-transform:uppercase;letter-spacing:0.04em;line-height:1.2;">Special Price / Sale</span>
+                                <span style="font-size:10px;color:#78716C;font-weight:600;text-transform:uppercase;line-height:1.2;">(Optional)</span>
+                            </div>
                         </div>
                         <label class="relative inline-flex items-center cursor-pointer shrink-0" style="margin:0;line-height:1;">
                             <input type="checkbox" id="discountToggle" class="sr-only peer" onchange="toggleDiscount(this)">
@@ -920,19 +922,19 @@
             </div>
 
             {{-- Step 2 Navigation Actions --}}
-            <div style="padding-top:20px;display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;">
+            <div class="pt-5 flex flex-col-reverse sm:flex-row items-stretch sm:items-center justify-between gap-3 sm:gap-4">
                 <button type="button" 
                         @click="step = 1; window.scrollTo({ top: 0, behavior: 'smooth' })"
-                        style="padding:12px 24px;border-radius:9999px;border:1px solid #E2D9C8;background-color:#FFFFFF;color:#1E1915;font-size:13px;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;gap:8px;box-shadow:0 1px 3px rgba(0,0,0,0.03);transition:all 0.2s;"
+                        style="padding:13px 24px;border-radius:9999px;border:1px solid #E2D9C8;background-color:#FFFFFF;color:#1E1915;font-size:13.5px;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:8px;box-shadow:0 1px 3px rgba(0,0,0,0.03);transition:all 0.2s;"
                         onmouseover="this.style.backgroundColor='#FAF8F5';"
                         onmouseout="this.style.backgroundColor='#FFFFFF';">
                     <svg width="15" height="15" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/></svg>
-                    <span>← Back to Step 1</span>
+                    <span>Back to Step 1</span>
                 </button>
 
                 <button type="button" 
                         @click="goToStep3()"
-                        style="padding:12px 28px;border-radius:9999px;font-size:14px;font-weight:700;background-color:#A16D19;color:#FFFFFF;border:none;cursor:pointer;display:inline-flex;align-items:center;gap:8px;box-shadow:0 3px 10px rgba(161,109,25,0.3);transition:all 0.2s;"
+                        style="padding:13px 28px;border-radius:9999px;font-size:14px;font-weight:700;background-color:#A16D19;color:#FFFFFF;border:none;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:8px;box-shadow:0 3px 10px rgba(161,109,25,0.3);transition:all 0.2s;"
                         onmouseover="this.style.backgroundColor='#8A5C14';"
                         onmouseout="this.style.backgroundColor='#A16D19';">
                     <span>Continue to Step 3</span>
@@ -1067,20 +1069,20 @@
             </div>
 
             {{-- Step 3 Bottom Submission Actions --}}
-            <div style="padding-top:20px;display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;border-top:1px solid #F2ECE1;">
+            <div class="pt-5 flex flex-col-reverse sm:flex-row items-stretch sm:items-center justify-between gap-3 sm:gap-4 border-t border-[#F2ECE1]">
                 <button type="button" 
                         @click="step = 2; window.scrollTo({ top: 0, behavior: 'smooth' })"
-                        style="padding:12px 24px;border-radius:9999px;border:1px solid #E2D9C8;background-color:#FFFFFF;color:#1E1915;font-size:13px;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;gap:8px;box-shadow:0 1px 3px rgba(0,0,0,0.03);transition:all 0.2s;"
+                        style="padding:13px 24px;border-radius:9999px;border:1px solid #E2D9C8;background-color:#FFFFFF;color:#1E1915;font-size:13.5px;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:8px;box-shadow:0 1px 3px rgba(0,0,0,0.03);transition:all 0.2s;"
                         onmouseover="this.style.backgroundColor='#FAF8F5';"
                         onmouseout="this.style.backgroundColor='#FFFFFF';">
                     <svg width="15" height="15" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/></svg>
-                    <span>← Back to Step 2</span>
+                    <span>Back to Step 2</span>
                 </button>
 
-                <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
+                <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
                     <button type="button" 
                             @click="submitAsDraft()"
-                            style="padding:12px 26px;border-radius:9999px;border:1px solid #1C160E;background-color:#FFFFFF;color:#1C160E;font-size:13px;font-weight:700;letter-spacing:0.01em;cursor:pointer;display:inline-flex;align-items:center;gap:8px;box-shadow:0 1px 3px rgba(0,0,0,0.03);transition:all 0.2s;"
+                            style="padding:13px 26px;border-radius:9999px;border:1px solid #1C160E;background-color:#FFFFFF;color:#1C160E;font-size:13.5px;font-weight:700;letter-spacing:0.01em;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:8px;box-shadow:0 1px 3px rgba(0,0,0,0.03);transition:all 0.2s;"
                             onmouseover="this.style.backgroundColor='#FAF8F5';"
                             onmouseout="this.style.backgroundColor='#FFFFFF';">
                         <svg width="15" height="15" style="color:#78716C;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4"/></svg>
@@ -1089,7 +1091,7 @@
 
                     <button type="submit" 
                             @click="document.getElementById('formActionInput').value = 'publish'"
-                            style="padding:12px 32px;border-radius:9999px;border:none;background-color:#A16D19;color:#FFFFFF;font-size:13px;font-weight:700;letter-spacing:0.02em;cursor:pointer;display:inline-flex;align-items:center;gap:10px;box-shadow:0 4px 14px rgba(161,109,25,0.25);transition:all 0.2s;"
+                            style="padding:13px 32px;border-radius:9999px;border:none;background-color:#A16D19;color:#FFFFFF;font-size:13.5px;font-weight:700;letter-spacing:0.02em;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:10px;box-shadow:0 4px 14px rgba(161,109,25,0.25);transition:all 0.2s;"
                             onmouseover="this.style.backgroundColor='#8B5E14';"
                             onmouseout="this.style.backgroundColor='#A16D19';">
                         <span>Publish Heritage Piece</span>
