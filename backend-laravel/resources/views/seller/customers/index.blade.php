@@ -135,23 +135,23 @@
                     <div class="grid grid-cols-2 gap-3">
                         <div class="p-3.5 rounded-2xl" style="background: #FDF8EE; border: 1px solid #E8DECB;">
                             <div class="text-[9px] font-bold uppercase tracking-widest" style="color: #766C60;">Total Orders</div>
-                            <div class="text-lg font-black font-serif mt-0.5" style="color: #1E1915;" x-text="customer ? customer.ordersCount : 0"></div>
+                            <div class="text-lg font-black font-sans mt-0.5" style="color: #1E1915;" x-text="customer ? customer.ordersCount : 0"></div>
                         </div>
                         <div class="p-3.5 rounded-2xl" style="background: #FDF8EE; border: 1px solid #E8DECB;">
                             <div class="text-[9px] font-bold uppercase tracking-widest" style="color: #766C60;">Total Spend</div>
-                            <div class="text-lg font-black font-serif mt-0.5" style="color: #C49520;" x-text="customer ? '₱' + Number(customer.totalSpent).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2}) : '₱0.00'"></div>
+                            <div class="text-lg font-black font-sans mt-0.5" style="color: #C49520;" x-text="customer ? '₱' + Number(customer.totalSpent).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2}) : '₱0.00'"></div>
                         </div>
                     </div>
 
                     <div class="space-y-2 pt-1">
                         <div class="p-3.5 rounded-2xl flex items-center justify-between" style="background: #FDF8EE; border: 1px solid #E8DECB;">
                             <span class="text-xs font-bold uppercase tracking-wider" style="color: #766C60;">Mobile Number</span>
-                            <span class="text-xs font-bold" style="color: #1E1915;" x-text="customer && customer.phone ? customer.phone : 'N/A'"></span>
+                            <span class="text-xs font-bold font-sans" style="color: #1E1915;" x-text="customer && customer.phone ? customer.phone : 'N/A'"></span>
                         </div>
 
                         <div class="p-3.5 rounded-2xl flex items-center justify-between" style="background: #FDF8EE; border: 1px solid #E8DECB;">
                             <span class="text-xs font-bold uppercase tracking-wider" style="color: #766C60;">Avg. Spend Per Order</span>
-                            <span class="text-xs font-black font-serif" style="color: #4A6741;" x-text="customer && customer.ordersCount > 0 ? '₱' + (customer.totalSpent / customer.ordersCount).toFixed(2) : '₱0.00'"></span>
+                            <span class="text-xs font-black font-sans" style="color: #4A6741;" x-text="customer && customer.ordersCount > 0 ? '₱' + (customer.totalSpent / customer.ordersCount).toFixed(2) : '₱0.00'"></span>
                         </div>
                     </div>
                 </div>
