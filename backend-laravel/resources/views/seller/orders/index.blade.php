@@ -589,6 +589,24 @@ function sellerOrdersManager() {
             return m[norm] || 'bg-[#FDF8EE] text-[#766C60] border-[#E8DECB]';
         },
 
+        getCustomerAvatar(order) {
+            if (!order || !order.customer) return null;
+            const photo = order.customer.profilePhoto || order.customer.profile_photo_url;
+            if (!photo || typeof photo !== 'string') return null;
+            const p = photo.trim();
+            if (!p || p === '' || p.toLowerCase().includes('default.jpg') || p === 'null' || p === 'undefined') return null;
+            if (p.startsWith('http://') || p.startsWith('https://') || p.startsWith('/')) {
+                return p;
+            }
+            if (p.startsWith('storage/')) {
+                return '/' + p;
+            }
+            if (p.startsWith('uploads/')) {
+                return '/' + p;
+            }
+            return '/storage/' + p;
+        },
+
         countForStatus(statusKey) {
             if (statusKey === 'all') return this.orders.length;
             const normKey = this.normalizeStatus(statusKey);
@@ -754,13 +772,13 @@ function sellerOrdersManager() {
                 {{-- Left: Avatar & Order Info --}}
                 <div class="flex items-center gap-3 min-w-0 flex-1">
                     <div class="w-10 h-10 sm:w-11 sm:h-11 rounded-xl flex items-center justify-center font-bold text-xs sm:text-sm shadow-xs shrink-0 overflow-hidden group-hover:scale-105 transition-transform relative" style="background: #1E1915; color: #C49520; border: 1px solid rgba(196,149,32,0.4);">
-                        <template x-if="order.customer && (order.customer.profile_photo_url || order.customer.profilePhoto)">
-                            <img :src="order.customer.profile_photo_url || (order.customer.profilePhoto ? ('/uploads/' + order.customer.profilePhoto.replace(/^\/+/, '')) : '')" 
+                        <template x-if="getCustomerAvatar(order)">
+                            <img :src="getCustomerAvatar(order)" 
                                  :alt="order.customer?.name || 'Customer'"
                                  class="w-full h-full object-cover"
                                  x-on:error="$el.style.display='none'; if ($el.nextElementSibling) $el.nextElementSibling.style.display='inline-flex';">
                         </template>
-                        <span :style="order.customer && (order.customer.profile_photo_url || order.customer.profilePhoto) ? 'display:none;' : ''" 
+                        <span :style="getCustomerAvatar(order) ? 'display:none;' : ''" 
                               x-text="(order.customer?.name || 'O')[0].toUpperCase()"></span>
                     </div>
                     <div class="min-w-0 flex-1">
@@ -1043,7 +1061,15 @@ function sellerOrdersManager() {
                             <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
                                 <div>
                                     <div class="text-[9px] font-bold text-gray-400 uppercase tracking-wider">Customer Name</div>
-                                    <div class="font-black text-black mt-0.5" x-text="detailsOrder.customer?.name || 'Unknown Buyer'"></div>
+                                    <div class="flex items-center gap-2 mt-0.5">
+                                        <div class="w-5 h-5 rounded-md overflow-hidden bg-gray-100 flex items-center justify-center text-[9px] font-bold text-gray-700 shrink-0">
+                                            <template x-if="getCustomerAvatar(detailsOrder)">
+                                                <img :src="getCustomerAvatar(detailsOrder)" class="w-full h-full object-cover" x-on:error="$el.style.display='none'">
+                                            </template>
+                                            <span :style="getCustomerAvatar(detailsOrder) ? 'display:none;' : ''" x-text="(detailsOrder.customer?.name || 'O')[0].toUpperCase()"></span>
+                                        </div>
+                                        <div class="font-black text-black" x-text="detailsOrder.customer?.name || 'Unknown Buyer'"></div>
+                                    </div>
                                 </div>
                                 <div>
                                     <div class="text-[9px] font-bold text-gray-400 uppercase tracking-wider">Phone Contact</div>

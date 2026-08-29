@@ -196,19 +196,15 @@ class User extends Authenticatable
                 return asset($clean);
             }
 
-            if (@file_exists(public_path('uploads/avatars/' . $clean))) {
-                return asset('uploads/avatars/' . $clean);
-            }
-
-            if (@file_exists(public_path('uploads/' . $clean))) {
-                return asset('uploads/' . $clean);
-            }
-
-            if (@file_exists(public_path('storage/' . $clean))) {
+            if (str_starts_with($clean, 'profile_photos/')) {
                 return asset('storage/' . $clean);
             }
 
-            return asset('uploads/' . $clean);
+            if (str_starts_with($clean, 'avatars/')) {
+                return asset('uploads/' . $clean);
+            }
+
+            return asset('storage/' . $clean);
         } catch (\Throwable $e) {
             return null;
         }
