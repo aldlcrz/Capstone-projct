@@ -17,7 +17,7 @@
         $sellerAvgRating = \App\Models\Review::whereHas('product', fn($q) => $q->where('sellerId', $user->id))->avg('rating');
     @endphp
 
-    <div class="min-h-[calc(100vh-120px)] px-2 py-4 sm:px-4 sm:py-6 md:py-8 lg:px-8 pb-28 lg:pb-12" 
+    <div class="min-h-[calc(100vh-120px)] px-3 py-4 sm:px-6 sm:py-8 pb-28 lg:pb-12" 
          x-data="{ 
              showEditModal: false,
              showPaymentModal: false,
@@ -29,14 +29,13 @@
              shopDescription: @js(old('shopDescription', $user->shopDescription ?? ''))
          }">
 
-        {{-- Artisan Profile Card (Responsive Desktop & Mobile Theme) --}}
-        <div class="w-full max-w-135 md:max-w-3xl lg:max-w-4xl xl:max-w-5xl mx-auto rounded-3xl sm:rounded-[28px] md:rounded-4xl p-5 sm:p-7 md:p-9 lg:p-10 shadow-[0_20px_50px_rgba(0,0,0,0.06)] transition-all duration-300"
-             style="background-color:#FDFBF7;border:1px solid #EAE2D2;color:#1E1915;">
+        {{-- Centered Artisan Profile Card --}}
+        <div style="max-width:660px;margin:0 auto;background-color:#FDFBF7;border:1px solid #EAE2D2;border-radius:28px;box-shadow:0 20px 50px rgba(0,0,0,0.06);padding:28px 24px;color:#1E1915;">
 
             {{-- Top Header with Heraldic Laurel Wreath --}}
-            <div class="flex items-center gap-3.5 sm:gap-4 md:gap-5 shrink-0">
-                <div class="w-12 h-12 sm:w-14 sm:h-14 md:w-16 md:h-16 flex items-center justify-center shrink-0">
-                    <svg class="w-11 h-11 sm:w-12 sm:h-12 md:w-14 md:h-14" viewBox="0 0 48 48" fill="none">
+            <div style="display:flex;align-items:center;gap:14px;flex-shrink:0;">
+                <div style="width:48px;height:48px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+                    <svg width="46" height="46" viewBox="0 0 48 48" fill="none">
                         <!-- Central Medallion -->
                         <circle cx="24" cy="23" r="10.5" stroke="#C49520" stroke-width="1" stroke-dasharray="2 1.5"/>
                         <circle cx="24" cy="23" r="8.5" stroke="#C49520" stroke-width="0.8"/>
@@ -52,71 +51,70 @@
                     </svg>
                 </div>
                 <div>
-                    <h1 class="font-serif text-xl sm:text-2xl md:text-3xl font-bold text-[#1E1915] tracking-tight leading-tight m-0">
+                    <h1 style="font-family:ui-serif,Georgia,Cambria,serif;font-size:23px;font-weight:700;color:#1E1915;letter-spacing:-0.01em;line-height:1.2;margin:0;">
                         My Profile & Account
                     </h1>
-                    <p class="text-xs sm:text-sm text-[#78716C] mt-1 mb-0 font-medium">
+                    <p style="font-size:13px;color:#78716C;margin-top:3px;margin-bottom:0;">
                         Personal information & artisan shop settings
                     </p>
                 </div>
             </div>
 
             {{-- Star Divider --}}
-            <div class="relative my-4 sm:my-5 md:my-6 flex items-center justify-center shrink-0">
-                <div class="w-full border-t border-[#EAE1D0]"></div>
-                <span class="absolute bg-[#FDFBF7] px-3 text-[#C49520] text-xs sm:text-sm font-bold">✦</span>
+            <div style="position:relative;margin:18px 0 20px 0;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+                <div style="width:100%;border-top:1px solid #EAE1D0;"></div>
+                <span style="position:absolute;background-color:#FDFBF7;padding:0 12px;color:#C49520;font-size:12px;">✦</span>
             </div>
 
             {{-- Flash Messages --}}
             @if(session('success'))
-                <div class="mb-4 p-3.5 bg-emerald-50 border border-emerald-200 rounded-2xl text-emerald-800 text-xs sm:text-sm font-bold flex items-center gap-2.5 shadow-2xs">
-                    <svg class="w-4 h-4 sm:w-5 sm:h-5 text-emerald-600 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
+                <div class="mb-4 p-3.5 bg-emerald-50 border border-emerald-200 rounded-2xl text-emerald-800 text-xs font-bold flex items-center gap-2.5 shadow-2xs">
+                    <svg class="w-4 h-4 text-emerald-600 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
                     <span>{{ session('success') }}</span>
                 </div>
             @endif
 
             @if(session('error') || $errors->any())
-                <div class="mb-4 p-3.5 bg-red-50 border border-red-200 rounded-2xl text-red-700 text-xs sm:text-sm font-bold flex items-center gap-2.5 shadow-2xs">
-                    <svg class="w-4 h-4 sm:w-5 sm:h-5 text-red-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                <div class="mb-4 p-3.5 bg-red-50 border border-red-200 rounded-2xl text-red-700 text-xs font-bold flex items-center gap-2.5 shadow-2xs">
+                    <svg class="w-4 h-4 text-red-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
                     <span>{{ session('error') ?? $errors->first() }}</span>
                 </div>
             @endif
 
             {{-- Profile Avatar & User Card --}}
-            <div class="relative pt-2.5 mb-5 sm:mb-6">
-                {{-- Floating Gold-Ringed Avatar --}}
-                <div class="w-23 h-23 sm:w-26 sm:h-26 md:w-29 md:h-29 rounded-full p-[2.5px] shadow-[0_4px_14px_rgba(0,0,0,0.12)] mx-auto -mb-11.5 sm:-mb-13 md:-mb-14.5 relative z-10 block"
-                     style="background:linear-gradient(135deg,#996515,#E6CA65,#996515);">
-                    <div class="w-full h-full rounded-full overflow-hidden bg-[#FAF8F5] flex items-center justify-center relative">
+            <div style="position:relative;padding-top:10px;margin-bottom:20px;">
+                {{-- Floating Gold-Ringed Avatar (Strict fixed square to prevent distortion) --}}
+                <div style="width:96px;height:96px;min-width:96px;max-width:96px;min-height:96px;max-height:96px;border-radius:50%;padding:2.5px;background:linear-gradient(135deg,#996515,#E6CA65,#996515);box-shadow:0 4px 14px rgba(0,0,0,0.12);margin:0 auto -48px auto;position:relative;z-index:10;display:block;flex-shrink:0;">
+                    <div style="width:100%;height:100%;border-radius:50%;overflow:hidden;background-color:#FAF8F5;display:flex;align-items:center;justify-content:center;position:relative;">
                         @if($user->profile_photo_url)
                             <img src="{{ $user->profile_photo_url }}" 
-                                 class="w-full h-full rounded-full object-cover block"
+                                 style="width:100%;height:100%;border-radius:50%;object-fit:cover;display:block;"
                                  alt="{{ $user->name }}">
                         @else
-                            <span class="text-3xl sm:text-4xl font-extrabold text-[#996515]">{{ strtoupper(substr($user->name, 0, 1)) }}</span>
+                            <span style="font-size:32px;font-weight:800;color:#996515;">{{ strtoupper(substr($user->name, 0, 1)) }}</span>
                         @endif
                     </div>
                 </div>
 
                 {{-- User Info Card --}}
-                <div class="bg-white border border-[#ECE3D2] rounded-2xl sm:rounded-3xl pt-14 sm:pt-16 md:pt-18 pb-4 sm:pb-5 md:pb-6 px-4 sm:px-6 md:px-8 shadow-[0_2px_8px_rgba(0,0,0,0.03)] flex items-center justify-between relative">
-                    <div class="text-left min-w-0 pr-3 sm:pr-4 flex-1">
-                        <h2 class="font-serif text-lg sm:text-xl md:text-2xl lg:text-3xl font-bold text-[#1E1915] tracking-tight leading-tight m-0 truncate">
+                <div style="background-color:#FFFFFF;border:1px solid #ECE3D2;border-radius:20px;padding:58px 22px 20px 22px;box-shadow:0 2px 8px rgba(0,0,0,0.03);display:flex;align-items:center;justify-content:space-between;position:relative;">
+                    <div style="text-align:left;min-width:0;padding-right:12px;">
+                        <h2 style="font-family:ui-serif,Georgia,serif;font-size:20px;font-weight:700;color:#1E1915;letter-spacing:-0.01em;line-height:1.2;margin:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">
                             {{ $user->name }}
                         </h2>
-                        <p class="text-xs sm:text-sm text-[#78716C] mt-1 mb-0 truncate flex items-center gap-2">
-                            <span>{{ $user->email }}</span>
-                            <span class="text-[#ECE3D2]">•</span>
-                            <span class="text-[#A16D19] font-bold">Artisan Shop</span>
+                        <p style="font-size:13px;color:#78716C;margin:3px 0 0 0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">
+                            {{ $user->email }} • <span style="color:#A16D19;font-weight:600;">Artisan Shop</span>
                         </p>
                     </div>
 
                     {{-- Edit Button --}}
                     <button type="button"
                             @click="showEditModal = true"
-                            class="w-10 h-10 sm:w-11 sm:h-11 md:w-12 md:h-12 rounded-xl sm:rounded-2xl bg-[#FAF6EE] border border-[#E2D9C8] flex items-center justify-center text-[#78716C] hover:border-[#C49520] hover:text-[#1E1915] hover:bg-[#FDFBF7] cursor-pointer shrink-0 shadow-2xs transition-all duration-200"
+                            style="width:42px;height:42px;border-radius:12px;background-color:#FAF6EE;border:1px solid #E2D9C8;display:flex;align-items:center;justify-content:center;color:#78716C;cursor:pointer;flex-shrink:0;box-shadow:0 1px 3px rgba(0,0,0,0.05);transition:all 0.2s;"
+                            onmouseover="this.style.borderColor='#C49520'; this.style.color='#1E1915';"
+                            onmouseout="this.style.borderColor='#E2D9C8'; this.style.color='#78716C';"
                             title="Edit Profile">
-                        <svg class="w-4 h-4 sm:w-5 sm:h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/>
                             <path stroke-linecap="round" stroke-linejoin="round" d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/>
                         </svg>
@@ -125,84 +123,84 @@
             </div>
 
             {{-- Artisan Quick Metrics Row --}}
-            <div class="grid grid-cols-4 gap-2 sm:gap-3 md:gap-4 mb-5 sm:mb-6">
-                <a href="{{ route('seller.products.index') }}" class="no-underline bg-white border border-[#ECE3D2] rounded-xl sm:rounded-2xl p-2.5 sm:p-3.5 md:p-4 text-center shadow-2xs block transition-all duration-200 hover:border-[#C49520] hover:scale-[1.02] group">
-                    <div class="text-sm sm:text-lg md:text-xl font-extrabold text-[#C49520] font-sans group-hover:scale-105 transition-transform">{{ $sellerListingCount }}</div>
-                    <div class="text-[8px] sm:text-[10px] md:text-xs font-bold text-[#8C827A] uppercase tracking-wider mt-0.5 sm:mt-1">Creations</div>
+            <div style="display:grid;grid-template-columns:repeat(4, 1fr);gap:10px;margin-bottom:22px;">
+                <a href="{{ route('seller.products.index') }}" style="text-decoration:none;background-color:#FFFFFF;border:1px solid #ECE3D2;border-radius:15px;padding:12px 6px;text-align:center;box-shadow:0 1px 4px rgba(0,0,0,0.02);display:block;transition:all 0.2s;" class="hover:border-[#C49520] hover:scale-102">
+                    <div style="font-size:16px;font-weight:800;color:#C49520;" class="font-sans">{{ $sellerListingCount }}</div>
+                    <div style="font-size:8.5px;font-weight:700;color:#8C827A;text-transform:uppercase;letter-spacing:0.04em;margin-top:2px;">Creations</div>
                 </a>
-                <a href="{{ route('seller.orders') }}" class="no-underline bg-white border border-[#ECE3D2] rounded-xl sm:rounded-2xl p-2.5 sm:p-3.5 md:p-4 text-center shadow-2xs block transition-all duration-200 hover:border-[#C49520] hover:scale-[1.02] group">
-                    <div class="text-sm sm:text-lg md:text-xl font-extrabold text-[#1E1915] font-sans group-hover:scale-105 transition-transform">{{ $sellerOrderCount }}</div>
-                    <div class="text-[8px] sm:text-[10px] md:text-xs font-bold text-[#8C827A] uppercase tracking-wider mt-0.5 sm:mt-1">Orders</div>
+                <a href="{{ route('seller.orders') }}" style="text-decoration:none;background-color:#FFFFFF;border:1px solid #ECE3D2;border-radius:15px;padding:12px 6px;text-align:center;box-shadow:0 1px 4px rgba(0,0,0,0.02);display:block;transition:all 0.2s;" class="hover:border-[#C49520] hover:scale-102">
+                    <div style="font-size:16px;font-weight:800;color:#1E1915;" class="font-sans">{{ $sellerOrderCount }}</div>
+                    <div style="font-size:8.5px;font-weight:700;color:#8C827A;text-transform:uppercase;letter-spacing:0.04em;margin-top:2px;">Orders</div>
                 </a>
-                <a href="{{ route('seller.analytics') }}" class="no-underline bg-white border border-[#ECE3D2] rounded-xl sm:rounded-2xl p-2.5 sm:p-3.5 md:p-4 text-center shadow-2xs block transition-all duration-200 hover:border-[#C49520] hover:scale-[1.02] group">
-                    <div class="text-sm sm:text-lg md:text-xl font-extrabold text-[#1E1915] font-sans group-hover:scale-105 transition-transform">₱{{ number_format($sellerTotalEarnings, 0) }}</div>
-                    <div class="text-[8px] sm:text-[10px] md:text-xs font-bold text-[#8C827A] uppercase tracking-wider mt-0.5 sm:mt-1">Sales</div>
+                <a href="{{ route('seller.analytics') }}" style="text-decoration:none;background-color:#FFFFFF;border:1px solid #ECE3D2;border-radius:15px;padding:12px 6px;text-align:center;box-shadow:0 1px 4px rgba(0,0,0,0.02);display:block;transition:all 0.2s;" class="hover:border-[#C49520] hover:scale-102">
+                    <div style="font-size:16px;font-weight:800;color:#1E1915;" class="font-sans">₱{{ number_format($sellerTotalEarnings, 0) }}</div>
+                    <div style="font-size:8.5px;font-weight:700;color:#8C827A;text-transform:uppercase;letter-spacing:0.04em;margin-top:2px;">Sales</div>
                 </a>
-                <a href="{{ route('seller.products.index') }}" class="no-underline bg-white border border-[#ECE3D2] rounded-xl sm:rounded-2xl p-2.5 sm:p-3.5 md:p-4 text-center shadow-2xs block transition-all duration-200 hover:border-[#C49520] hover:scale-[1.02] group">
-                    <div class="text-sm sm:text-lg md:text-xl font-extrabold text-[#1E1915] font-sans group-hover:scale-105 transition-transform">{{ $sellerAvgRating ? number_format($sellerAvgRating, 1) : '5.0' }}★</div>
-                    <div class="text-[8px] sm:text-[10px] md:text-xs font-bold text-[#8C827A] uppercase tracking-wider mt-0.5 sm:mt-1">Rating</div>
+                <a href="{{ route('seller.products.index') }}" style="text-decoration:none;background-color:#FFFFFF;border:1px solid #ECE3D2;border-radius:15px;padding:12px 6px;text-align:center;box-shadow:0 1px 4px rgba(0,0,0,0.02);display:block;transition:all 0.2s;" class="hover:border-[#C49520] hover:scale-102">
+                    <div style="font-size:16px;font-weight:800;color:#1E1915;" class="font-sans">{{ $sellerAvgRating ? number_format($sellerAvgRating, 1) : '5.0' }}★</div>
+                    <div style="font-size:8.5px;font-weight:700;color:#8C827A;text-transform:uppercase;letter-spacing:0.04em;margin-top:2px;">Rating</div>
                 </a>
             </div>
 
             {{-- Account Settings Section --}}
             <div>
-                <h3 class="text-[11px] sm:text-xs md:text-sm font-bold uppercase tracking-[0.14em] text-[#996515] mb-3 ml-1">
+                <h3 style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.14em;color:#996515;margin:0 0 12px 2px;">
                     Account & Shop Settings
                 </h3>
 
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-2.5 sm:gap-3 md:gap-4">
+                <div style="display:flex;flex-direction:column;gap:10px;">
                     {{-- Email Address --}}
-                    <div class="bg-white border border-[#ECE3D2] rounded-2xl p-3.5 sm:p-4 md:p-4.5 flex items-center gap-3 sm:gap-3.5 shadow-2xs">
-                        <div class="w-10 h-10 sm:w-11 sm:h-11 rounded-xl bg-[#FAF5EA] border border-[#E6D8BA] flex items-center justify-center text-[#B88728] shrink-0">
-                            <svg class="w-4 h-4 sm:w-5 sm:h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                    <div style="background-color:#FFFFFF;border:1px solid #ECE3D2;border-radius:16px;padding:14px 16px;display:flex;align-items:center;gap:12px;box-shadow:0 2px 6px rgba(0,0,0,0.02);">
+                        <div style="width:38px;height:38px;border-radius:11px;background-color:#FAF5EA;border:1px solid #E6D8BA;display:flex;align-items:center;justify-content:center;color:#B88728;flex-shrink:0;">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
                                 <rect x="2" y="4" width="20" height="16" rx="2" stroke-linecap="round" stroke-linejoin="round"/>
                                 <path d="M22 7l-8.97 5.7a1.94 1.94 0 01-2.06 0L2 7" stroke-linecap="round" stroke-linejoin="round"/>
                             </svg>
                         </div>
-                        <div class="min-w-0 flex-1">
-                            <div class="text-[10px] sm:text-xs font-bold uppercase tracking-wider text-[#8C827A] leading-tight">Email Address</div>
-                            <div class="text-xs sm:text-sm md:text-[15px] font-bold text-[#1E1915] truncate mt-0.5">
+                        <div style="min-width:0;flex:1;">
+                            <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.06em;color:#8C827A;line-height:1.1;">Email Address</div>
+                            <div style="font-size:14px;font-weight:700;color:#1E1915;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin-top:2px;">
                                 {{ $user->email }}
                             </div>
                         </div>
                     </div>
 
                     {{-- Mobile Number --}}
-                    <div class="bg-white border border-[#ECE3D2] rounded-2xl p-3.5 sm:p-4 md:p-4.5 flex items-center justify-between gap-3 shadow-2xs">
-                        <div class="flex items-center gap-3 sm:gap-3.5 min-w-0">
-                            <div class="w-10 h-10 sm:w-11 sm:h-11 rounded-xl bg-[#FAF5EA] border border-[#E6D8BA] flex items-center justify-center text-[#B88728] shrink-0">
-                                <svg class="w-4 h-4 sm:w-5 sm:h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                    <div style="background-color:#FFFFFF;border:1px solid #ECE3D2;border-radius:16px;padding:14px 16px;display:flex;align-items:center;justify-content:space-between;box-shadow:0 2px 6px rgba(0,0,0,0.02);">
+                        <div style="display:flex;align-items:center;gap:12px;min-width:0;">
+                            <div style="width:38px;height:38px;border-radius:11px;background-color:#FAF5EA;border:1px solid #E6D8BA;display:flex;align-items:center;justify-content:center;color:#B88728;flex-shrink:0;">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
                                     <path stroke-linecap="round" stroke-linejoin="round" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"/>
                                 </svg>
                             </div>
-                            <div class="min-w-0">
-                                <div class="text-[10px] sm:text-xs font-bold uppercase tracking-wider text-[#8C827A] leading-tight">Mobile Number</div>
-                                <div class="text-xs sm:text-sm md:text-[15px] font-bold text-[#1E1915] truncate mt-0.5">
+                            <div style="min-width:0;">
+                                <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.06em;color:#8C827A;line-height:1.1;">Mobile Number</div>
+                                <div style="font-size:14px;font-weight:700;color:#1E1915;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin-top:2px;">
                                     {{ $user->mobileNumber ?: 'Not provided yet' }}
                                 </div>
                             </div>
                         </div>
-                        <button type="button" @click="showEditModal = true" class="text-[10px] sm:text-xs font-bold text-[#996515] bg-[#FAF5EA] border border-[#E6D8BA] hover:border-[#C49520] hover:bg-[#F5EAD4] px-2.5 sm:px-3 py-1 rounded-lg uppercase tracking-wider cursor-pointer shrink-0 transition-colors">
+                        <button type="button" @click="showEditModal = true" style="font-size:10px;font-weight:800;color:#996515;background-color:#FAF5EA;border:1px solid #E6D8BA;padding:3px 9px;border-radius:6px;text-transform:uppercase;letter-spacing:0.04em;cursor:pointer;">
                             Edit
                         </button>
                     </div>
 
-                    {{-- Shop Description / Bio (Spans 2 columns on desktop) --}}
-                    <div class="md:col-span-2 bg-white border border-[#ECE3D2] rounded-2xl p-3.5 sm:p-4 md:p-4.5 flex items-center justify-between gap-3 shadow-2xs">
-                        <div class="flex items-center gap-3 sm:gap-3.5 min-w-0">
-                            <div class="w-10 h-10 sm:w-11 sm:h-11 rounded-xl bg-[#FAF5EA] border border-[#E6D8BA] flex items-center justify-center text-[#B88728] shrink-0">
-                                <svg class="w-4 h-4 sm:w-5 sm:h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                    {{-- Shop Description / Bio --}}
+                    <div style="background-color:#FFFFFF;border:1px solid #ECE3D2;border-radius:16px;padding:14px 16px;display:flex;align-items:center;justify-content:space-between;box-shadow:0 2px 6px rgba(0,0,0,0.02);">
+                        <div style="display:flex;align-items:center;gap:12px;min-width:0;">
+                            <div style="width:38px;height:38px;border-radius:11px;background-color:#FAF5EA;border:1px solid #E6D8BA;display:flex;align-items:center;justify-content:center;color:#B88728;flex-shrink:0;">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
                                     <path stroke-linecap="round" stroke-linejoin="round" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/>
                                 </svg>
                             </div>
-                            <div class="min-w-0">
-                                <div class="text-xs sm:text-sm md:text-[15px] font-bold text-[#1E1915]">Shop Story & Bio</div>
-                                <div class="text-[11px] sm:text-xs text-[#8C827A] mt-0.5 truncate max-w-xs sm:max-w-md md:max-w-xl lg:max-w-2xl">
-                                    {{ $user->shopDescription ? $user->shopDescription : 'Add your Lumban artisan history and background' }}
+                            <div style="min-width:0;">
+                                <div style="font-size:14px;font-weight:700;color:#1E1915;">Shop Story & Bio</div>
+                                <div style="font-size:11.5px;color:#8C827A;margin-top:1px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:380px;">
+                                    {{ $user->shopDescription ? Str::limit($user->shopDescription, 65) : 'Add your Lumban artisan history and background' }}
                                 </div>
                             </div>
                         </div>
-                        <button type="button" @click="showEditModal = true" class="text-[10px] sm:text-xs font-bold text-[#996515] bg-[#FAF5EA] border border-[#E6D8BA] hover:border-[#C49520] hover:bg-[#F5EAD4] px-2.5 sm:px-3 py-1 rounded-lg uppercase tracking-wider cursor-pointer shrink-0 transition-colors">
+                        <button type="button" @click="showEditModal = true" style="font-size:10px;font-weight:800;color:#996515;background-color:#FAF5EA;border:1px solid #E6D8BA;padding:3px 9px;border-radius:6px;text-transform:uppercase;letter-spacing:0.04em;cursor:pointer;">
                             Manage
                         </button>
                     </div>
@@ -210,23 +208,24 @@
                     {{-- Payment Methods (GCash & Maya) --}}
                     <button type="button"
                             @click="showPaymentModal = true; paymentEditing = false;"
-                            class="bg-white border border-[#ECE3D2] rounded-2xl p-3.5 sm:p-4 md:p-4.5 flex items-center justify-between gap-3 shadow-2xs cursor-pointer w-full text-left transition-all duration-200 hover:border-[#C49520] hover:bg-[#FDFBF7] group">
-                        <div class="flex items-center gap-3 sm:gap-3.5 min-w-0">
-                            <div class="w-10 h-10 sm:w-11 sm:h-11 rounded-xl bg-[#FAF5EA] border border-[#E6D8BA] flex items-center justify-center text-[#B88728] shrink-0 group-hover:scale-105 transition-transform">
-                                <svg class="w-4 h-4 sm:w-5 sm:h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                            style="background-color:#FFFFFF;border:1px solid #ECE3D2;border-radius:16px;padding:14px 16px;display:flex;align-items:center;justify-content:space-between;box-shadow:0 2px 6px rgba(0,0,0,0.02);cursor:pointer;width:100%;text-align:left;transition:all 0.2s;"
+                            class="hover:border-[#C49520] hover:bg-[#FDFBF7] group">
+                        <div style="display:flex;align-items:center;gap:12px;">
+                            <div style="width:38px;height:38px;border-radius:11px;background-color:#FAF5EA;border:1px solid #E6D8BA;display:flex;align-items:center;justify-content:center;color:#B88728;flex-shrink:0;" class="group-hover:scale-105 transition-transform">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
                                     <path stroke-linecap="round" stroke-linejoin="round" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"/>
                                 </svg>
                             </div>
-                            <div class="min-w-0">
-                                <div class="text-xs sm:text-sm md:text-[15px] font-bold text-[#1E1915]">Payment Methods</div>
-                                <div class="text-[11px] sm:text-xs text-[#8C827A] mt-0.5 truncate">
+                            <div>
+                                <div style="font-size:14px;font-weight:700;color:#1E1915;">Payment Methods</div>
+                                <div style="font-size:11.5px;color:#8C827A;margin-top:1px;">
                                     GCash & Maya accounts & QR codes
                                 </div>
                             </div>
                         </div>
-                        <div class="flex items-center gap-1.5 shrink-0">
-                            <span class="text-[10px] sm:text-xs font-bold text-[#996515] bg-[#FAF5EA] border border-[#E6D8BA] px-2 sm:px-2.5 py-0.5 rounded-lg uppercase tracking-wider">Manage</span>
-                            <svg class="w-4 h-4 stroke-[#8C827A] group-hover:translate-x-0.5 transition-transform" fill="none" viewBox="0 0 24 24" stroke-width="2.2">
+                        <div style="display:flex;align-items:center;gap:6px;">
+                            <span style="font-size:10px;font-weight:800;color:#996515;background-color:#FAF5EA;border:1px solid #E6D8BA;padding:2px 8px;border-radius:6px;text-transform:uppercase;letter-spacing:0.04em;">Manage</span>
+                            <svg width="16" height="16" fill="none" stroke="#8C827A" viewBox="0 0 24 24" stroke-width="2.2" class="group-hover:translate-x-0.5 transition-transform">
                                 <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/>
                             </svg>
                         </div>
@@ -235,21 +234,22 @@
                     {{-- Legal Documents & Certificates --}}
                     <button type="button"
                             @click="showLegalModal = true; legalEditing = false;"
-                            class="bg-white border border-[#ECE3D2] rounded-2xl p-3.5 sm:p-4 md:p-4.5 flex items-center justify-between gap-3 shadow-2xs cursor-pointer w-full text-left transition-all duration-200 hover:border-[#C49520] hover:bg-[#FDFBF7] group">
-                        <div class="flex items-center gap-3 sm:gap-3.5 min-w-0">
-                            <div class="w-10 h-10 sm:w-11 sm:h-11 rounded-xl bg-[#FAF5EA] border border-[#E6D8BA] flex items-center justify-center text-[#B88728] shrink-0 group-hover:scale-105 transition-transform">
-                                <svg class="w-4 h-4 sm:w-5 sm:h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                            style="background-color:#FFFFFF;border:1px solid #ECE3D2;border-radius:16px;padding:14px 16px;display:flex;align-items:center;justify-content:space-between;box-shadow:0 2px 6px rgba(0,0,0,0.02);cursor:pointer;width:100%;text-align:left;transition:all 0.2s;"
+                            class="hover:border-[#C49520] hover:bg-[#FDFBF7] group">
+                        <div style="display:flex;align-items:center;gap:12px;">
+                            <div style="width:38px;height:38px;border-radius:11px;background-color:#FAF5EA;border:1px solid #E6D8BA;display:flex;align-items:center;justify-content:center;color:#B88728;flex-shrink:0;" class="group-hover:scale-105 transition-transform">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
                                     <path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
                                 </svg>
                             </div>
-                            <div class="min-w-0">
-                                <div class="text-xs sm:text-sm md:text-[15px] font-bold text-[#1E1915]">Legal Documents</div>
-                                <div class="text-[11px] sm:text-xs text-[#8C827A] mt-0.5 truncate">Business Permit, BIR & Residency</div>
+                            <div>
+                                <div style="font-size:14px;font-weight:700;color:#1E1915;">Legal Documents</div>
+                                <div style="font-size:11.5px;color:#8C827A;margin-top:1px;">Business Permit, BIR & Residency</div>
                             </div>
                         </div>
-                        <div class="flex items-center gap-1.5 shrink-0">
-                            <span class="text-[10px] sm:text-xs font-bold text-[#996515] bg-[#FAF5EA] border border-[#E6D8BA] px-2 sm:px-2.5 py-0.5 rounded-lg uppercase tracking-wider">Manage</span>
-                            <svg class="w-4 h-4 stroke-[#8C827A] group-hover:translate-x-0.5 transition-transform" fill="none" viewBox="0 0 24 24" stroke-width="2.2">
+                        <div style="display:flex;align-items:center;gap:6px;">
+                            <span style="font-size:10px;font-weight:800;color:#996515;background-color:#FAF5EA;border:1px solid #E6D8BA;padding:2px 8px;border-radius:6px;text-transform:uppercase;letter-spacing:0.04em;">Manage</span>
+                            <svg width="16" height="16" fill="none" stroke="#8C827A" viewBox="0 0 24 24" stroke-width="2.2" class="group-hover:translate-x-0.5 transition-transform">
                                 <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/>
                             </svg>
                         </div>
@@ -257,21 +257,22 @@
 
                     {{-- Shop Analytics & Reports (Link) --}}
                     <a href="{{ route('seller.analytics') }}" 
-                       class="no-underline bg-white border border-[#ECE3D2] rounded-2xl p-3.5 sm:p-4 md:p-4.5 flex items-center justify-between gap-3 shadow-2xs cursor-pointer w-full text-left transition-all duration-200 hover:border-[#C49520] hover:bg-[#FDFBF7] group">
-                        <div class="flex items-center gap-3 sm:gap-3.5 min-w-0">
-                            <div class="w-10 h-10 sm:w-11 sm:h-11 rounded-xl bg-[#FAF5EA] border border-[#E6D8BA] flex items-center justify-center text-[#B88728] shrink-0 group-hover:scale-105 transition-transform">
-                                <svg class="w-4 h-4 sm:w-5 sm:h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                       style="background-color:#FFFFFF;border:1px solid #ECE3D2;border-radius:16px;padding:14px 16px;display:flex;align-items:center;justify-content:space-between;box-shadow:0 2px 6px rgba(0,0,0,0.02);cursor:pointer;width:100%;text-decoration:none;transition:all 0.2s;"
+                       class="hover:border-[#C49520] hover:bg-[#FDFBF7] group">
+                        <div style="display:flex;align-items:center;gap:12px;">
+                            <div style="width:38px;height:38px;border-radius:11px;background-color:#FAF5EA;border:1px solid #E6D8BA;display:flex;align-items:center;justify-content:center;color:#B88728;flex-shrink:0;" class="group-hover:scale-105 transition-transform">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
                                     <path stroke-linecap="round" stroke-linejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
                                 </svg>
                             </div>
-                            <div class="min-w-0">
-                                <div class="text-xs sm:text-sm md:text-[15px] font-bold text-[#1E1915]">Shop Analytics & Reports</div>
-                                <div class="text-[11px] sm:text-xs text-[#8C827A] mt-0.5 truncate">Sales trends, conversion rate & metrics</div>
+                            <div>
+                                <div style="font-size:14px;font-weight:700;color:#1E1915;">Shop Analytics & Reports</div>
+                                <div style="font-size:11.5px;color:#8C827A;margin-top:1px;">Sales trends, conversion rate & client metrics</div>
                             </div>
                         </div>
-                        <div class="flex items-center gap-1.5 shrink-0">
-                            <span class="text-[10px] sm:text-xs font-bold text-[#996515] bg-[#FAF5EA] border border-[#E6D8BA] px-2 sm:px-2.5 py-0.5 rounded-lg uppercase tracking-wider">View</span>
-                            <svg class="w-4 h-4 stroke-[#8C827A] group-hover:translate-x-0.5 transition-transform" fill="none" viewBox="0 0 24 24" stroke-width="2.2">
+                        <div style="display:flex;align-items:center;gap:6px;">
+                            <span style="font-size:10px;font-weight:800;color:#996515;background-color:#FAF5EA;border:1px solid #E6D8BA;padding:2px 8px;border-radius:6px;text-transform:uppercase;letter-spacing:0.04em;">View</span>
+                            <svg width="16" height="16" fill="none" stroke="#8C827A" viewBox="0 0 24 24" stroke-width="2.2" class="group-hover:translate-x-0.5 transition-transform">
                                 <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/>
                             </svg>
                         </div>
@@ -279,58 +280,52 @@
 
                     {{-- Shop Policies (Link) --}}
                     <a href="{{ route('seller.policies.index') }}" 
-                       class="no-underline bg-white border border-[#ECE3D2] rounded-2xl p-3.5 sm:p-4 md:p-4.5 flex items-center justify-between gap-3 shadow-2xs cursor-pointer w-full text-left transition-all duration-200 hover:border-[#C49520] hover:bg-[#FDFBF7] group">
-                        <div class="flex items-center gap-3 sm:gap-3.5 min-w-0">
-                            <div class="w-10 h-10 sm:w-11 sm:h-11 rounded-xl bg-[#FAF5EA] border border-[#E6D8BA] flex items-center justify-center text-[#B88728] shrink-0 group-hover:scale-105 transition-transform">
-                                <svg class="w-4 h-4 sm:w-5 sm:h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                       style="background-color:#FFFFFF;border:1px solid #ECE3D2;border-radius:16px;padding:14px 16px;display:flex;align-items:center;justify-content:space-between;box-shadow:0 2px 6px rgba(0,0,0,0.02);cursor:pointer;width:100%;text-decoration:none;transition:all 0.2s;"
+                       class="hover:border-[#C49520] hover:bg-[#FDFBF7] group">
+                        <div style="display:flex;align-items:center;gap:12px;">
+                            <div style="width:38px;height:38px;border-radius:11px;background-color:#FAF5EA;border:1px solid #E6D8BA;display:flex;align-items:center;justify-content:center;color:#B88728;flex-shrink:0;" class="group-hover:scale-105 transition-transform">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
                                     <path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>
                                 </svg>
                             </div>
-                            <div class="min-w-0">
-                                <div class="text-xs sm:text-sm md:text-[15px] font-bold text-[#1E1915]">Shop Policies</div>
-                                <div class="text-[11px] sm:text-xs text-[#8C827A] mt-0.5 truncate">Cancellation & Refund policies</div>
-                            </div>
+                            <span style="font-size:14px;font-weight:700;color:#1E1915;">Shop Policies (Cancellation & Refund)</span>
                         </div>
-                        <svg class="w-4 h-4 stroke-[#8C827A] group-hover:translate-x-0.5 transition-transform shrink-0" fill="none" viewBox="0 0 24 24" stroke-width="2.2">
+                        <svg width="16" height="16" fill="none" stroke="#8C827A" viewBox="0 0 24 24" stroke-width="2.2" class="group-hover:translate-x-0.5 transition-transform">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/>
                         </svg>
                     </a>
 
                     {{-- Orders Ledger Link --}}
                     <a href="{{ route('seller.orders') }}" 
-                       class="no-underline bg-white border border-[#ECE3D2] rounded-2xl p-3.5 sm:p-4 md:p-4.5 flex items-center justify-between gap-3 shadow-2xs cursor-pointer w-full text-left transition-all duration-200 hover:border-[#C49520] hover:bg-[#FDFBF7] group">
-                        <div class="flex items-center gap-3 sm:gap-3.5 min-w-0">
-                            <div class="w-10 h-10 sm:w-11 sm:h-11 rounded-xl bg-[#FAF5EA] border border-[#E6D8BA] flex items-center justify-center text-[#B88728] shrink-0 group-hover:scale-105 transition-transform">
-                                <svg class="w-4 h-4 sm:w-5 sm:h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                       style="background-color:#FFFFFF;border:1px solid #ECE3D2;border-radius:16px;padding:14px 16px;display:flex;align-items:center;justify-content:space-between;box-shadow:0 2px 6px rgba(0,0,0,0.02);cursor:pointer;width:100%;text-decoration:none;transition:all 0.2s;"
+                       class="hover:border-[#C49520] hover:bg-[#FDFBF7] group">
+                        <div style="display:flex;align-items:center;gap:12px;">
+                            <div style="width:38px;height:38px;border-radius:11px;background-color:#FAF5EA;border:1px solid #E6D8BA;display:flex;align-items:center;justify-content:center;color:#B88728;flex-shrink:0;" class="group-hover:scale-105 transition-transform">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
                                     <path stroke-linecap="round" stroke-linejoin="round" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/>
                                 </svg>
                             </div>
-                            <div class="min-w-0">
-                                <div class="text-xs sm:text-sm md:text-[15px] font-bold text-[#1E1915]">Orders & Dispatch</div>
-                                <div class="text-[11px] sm:text-xs text-[#8C827A] mt-0.5 truncate">Track orders and dispatch workflow</div>
-                            </div>
+                            <span style="font-size:14px;font-weight:700;color:#1E1915;">Orders & Dispatch</span>
                         </div>
-                        <svg class="w-4 h-4 stroke-[#8C827A] group-hover:translate-x-0.5 transition-transform shrink-0" fill="none" viewBox="0 0 24 24" stroke-width="2.2">
+                        <svg width="16" height="16" fill="none" stroke="#8C827A" viewBox="0 0 24 24" stroke-width="2.2" class="group-hover:translate-x-0.5 transition-transform">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/>
                         </svg>
                     </a>
 
                     {{-- Change Password --}}
                     <a href="{{ route('profile.change-password') }}"
-                       class="no-underline bg-white border border-[#ECE3D2] rounded-2xl p-3.5 sm:p-4 md:p-4.5 flex items-center justify-between gap-3 shadow-2xs cursor-pointer w-full text-left transition-all duration-200 hover:border-[#C49520] hover:bg-[#FDFBF7] group">
-                        <div class="flex items-center gap-3 sm:gap-3.5 min-w-0">
-                            <div class="w-10 h-10 sm:w-11 sm:h-11 rounded-xl bg-[#FAF5EA] border border-[#E6D8BA] flex items-center justify-center text-[#B88728] shrink-0 group-hover:scale-105 transition-transform">
-                                <svg class="w-4 h-4 sm:w-5 sm:h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                       style="background-color:#FFFFFF;border:1px solid #ECE3D2;border-radius:16px;padding:14px 16px;display:flex;align-items:center;justify-content:space-between;box-shadow:0 2px 6px rgba(0,0,0,0.02);cursor:pointer;width:100%;text-align:left;transition:all 0.2s;text-decoration:none;"
+                       class="hover:border-[#C49520] hover:bg-[#FDFBF7] group">
+                        <div style="display:flex;align-items:center;gap:12px;">
+                            <div style="width:38px;height:38px;border-radius:11px;background-color:#FAF5EA;border:1px solid #E6D8BA;display:flex;align-items:center;justify-content:center;color:#B88728;flex-shrink:0;" class="group-hover:scale-105 transition-transform">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
                                     <rect x="3" y="11" width="18" height="11" rx="2" stroke-linecap="round" stroke-linejoin="round"/>
                                     <path d="M7 11V7a5 5 0 0110 0v4" stroke-linecap="round" stroke-linejoin="round"/>
                                 </svg>
                             </div>
-                            <div class="min-w-0">
-                                <div class="text-xs sm:text-sm md:text-[15px] font-bold text-[#1E1915]">Change Password</div>
-                                <div class="text-[11px] sm:text-xs text-[#8C827A] mt-0.5 truncate">Update account password</div>
-                            </div>
+                            <span style="font-size:14px;font-weight:700;color:#1E1915;">Change Password</span>
                         </div>
-                        <svg class="w-4 h-4 stroke-[#8C827A] group-hover:translate-x-0.5 transition-transform shrink-0" fill="none" viewBox="0 0 24 24" stroke-width="2.2">
+                        <svg width="16" height="16" fill="none" stroke="#8C827A" viewBox="0 0 24 24" stroke-width="2.2" class="group-hover:translate-x-0.5 transition-transform">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/>
                         </svg>
                     </a>
@@ -338,21 +333,20 @@
             </div>
 
             {{-- Verified & Trusted LumBarong Account Footer Banner --}}
-            <div class="mt-5 sm:mt-6 p-4 sm:p-5 md:p-6 rounded-2xl sm:rounded-3xl border border-[#E2D6C0] flex items-center justify-between gap-3 sm:gap-4 relative overflow-hidden shadow-2xs"
-                 style="background:linear-gradient(90deg,#F6F0E4 0%,#F2EADA 50%,#EAE0CD 100%);">
-                <div class="flex items-center gap-3 sm:gap-3.5 relative z-10">
-                    <div class="w-9 h-9 sm:w-10 sm:h-10 md:w-11 md:h-11 rounded-full border-2 border-[#B88728] bg-[#FAF4EA] flex items-center justify-center text-[#B88728] shrink-0 shadow-xs">
-                        <svg class="w-4 h-4 sm:w-5 sm:h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <div style="margin-top:18px;padding:14px 18px;border-radius:18px;background:linear-gradient(90deg,#F6F0E4 0%,#F2EADA 50%,#EAE0CD 100%);border:1px solid #E2D6C0;display:flex;align-items:center;justify-content:space-between;gap:12px;position:relative;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,0.03);">
+                <div style="display:flex;align-items:center;gap:12px;position:relative;z-index:10;">
+                    <div style="width:32px;height:32px;border-radius:50%;border:2px solid #B88728;background-color:#FAF4EA;display:flex;align-items:center;justify-content:center;color:#B88728;flex-shrink:0;box-shadow:0 1px 2px rgba(0,0,0,0.05);">
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/>
                         </svg>
                     </div>
                     <div>
-                        <h5 class="text-xs sm:text-sm md:text-base font-bold text-[#1E1915] m-0 leading-snug">Verified LumBarong Artisan Shop</h5>
-                        <p class="text-[11px] sm:text-xs text-[#78716C] mt-0.5 mb-0 font-medium">Quality craftsmanship. Authentic Filipino heritage.</p>
+                        <h5 style="font-size:13px;font-weight:700;color:#1E1915;margin:0;line-height:1.2;">Verified LumBarong Artisan Shop</h5>
+                        <p style="font-size:11px;color:#78716C;margin:2px 0 0 0;">Quality craftsmanship. Authentic Filipino heritage.</p>
                     </div>
                 </div>
                 <!-- Background Embroidery Flourish Watermark -->
-                <svg class="w-28 sm:w-36 md:w-44 h-auto absolute right-2 -bottom-2 text-[#C49520] opacity-20 pointer-events-none" viewBox="0 0 120 80" fill="currentColor">
+                <svg width="120" height="70" viewBox="0 0 120 80" fill="#C49520" style="position:absolute;right:8px;bottom:-10px;opacity:0.18;pointer-events:none;">
                     <path d="M60 10C40 10 30 30 10 35C30 40 40 60 60 60C80 60 90 40 110 35C90 30 80 10 60 10ZM60 25C65 25 70 30 70 35C70 40 65 45 60 45C55 45 50 40 50 35C50 30 55 25 60 25Z"/>
                 </svg>
             </div>
