@@ -878,22 +878,22 @@
                 </div>
 
                 {{-- Lumban Special Discount Panel --}}
-                <div style="padding:14px 18px;border-radius:18px;background-color:#FDF8EE;border:1px solid #EEDBBA;" class="space-y-3">
+                <div style="padding:14px 18px;border-radius:18px;background-color:#FDF8EE;border:1px solid #EEDBBA;">
                     <input type="hidden" name="is_on_sale" id="isOnSaleInput" value="0">
 
-                    <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;">
+                    <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;">
                         <div style="display:flex;align-items:center;gap:8px;min-width:0;flex:1;">
-                            <span style="width:8px;height:8px;border-radius:50%;background-color:#C49520;flex-shrink:0;"></span>
-                            <span style="font-size:12px;font-weight:700;color:#7A5505;text-transform:uppercase;letter-spacing:0.06em;white-space:nowrap;">Special Price / Sale Discount</span>
-                            <span style="font-size:10px;color:#78716C;font-weight:600;text-transform:uppercase;white-space:nowrap;flex-shrink:0;">(Optional)</span>
+                            <span style="width:8px;height:8px;border-radius:50%;background-color:#C49520;flex-shrink:0;display:inline-block;"></span>
+                            <span style="font-size:12px;font-weight:700;color:#7A5505;text-transform:uppercase;letter-spacing:0.06em;white-space:nowrap;line-height:1;">Special Price / Sale Discount</span>
+                            <span style="font-size:10px;color:#78716C;font-weight:600;text-transform:uppercase;white-space:nowrap;flex-shrink:0;line-height:1;">(Optional)</span>
                         </div>
-                        <label class="relative inline-flex items-center cursor-pointer shrink-0">
+                        <label class="relative inline-flex items-center cursor-pointer shrink-0" style="margin:0;line-height:1;">
                             <input type="checkbox" id="discountToggle" class="sr-only peer" onchange="toggleDiscount(this)">
                             <div class="w-9 h-5 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-0.5 after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-[#1C160E]"></div>
                         </label>
                     </div>
 
-                    <div id="discountFields" class="hidden space-y-2.5 pt-2 border-t border-[#EEDBBA]">
+                    <div id="discountFields" class="hidden space-y-2.5 pt-3.5 mt-3.5 border-t border-[#EEDBBA]">
                         <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 items-end">
                             <div>
                                 <label style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.06em;color:#78716C;display:block;margin-bottom:4px;">Discount (%)</label>
