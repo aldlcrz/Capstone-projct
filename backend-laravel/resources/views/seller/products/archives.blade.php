@@ -191,22 +191,27 @@
                         <div class="mt-auto pt-1 flex items-center gap-2">
                             <button type="button"
                                     @click="openRestoreModal('{{ $record->id }}', '{{ addslashes($record->name) }}')"
-                                    class="flex-1 py-2 px-2.5 text-[11px] sm:text-xs font-bold uppercase tracking-wider rounded-xl transition-all border cursor-pointer text-center"
-                                    style="background: #FDF8EE; border-color: #E8DECB; color: #1E1915;"
+                                    class="flex-1 py-1.5 px-2.5 rounded-lg text-[10px] sm:text-[11px] font-bold uppercase tracking-wider transition-all cursor-pointer text-center flex items-center justify-center gap-1.5"
+                                    style="background: #FDF8EE; border: 1px solid #E8DECB; color: #1E1915;"
                                     onmouseover="this.style.background='#1E1915'; this.style.color='#FFFCF7'; this.style.borderColor='#1E1915';"
                                     onmouseout="this.style.background='#FDF8EE'; this.style.color='#1E1915'; this.style.borderColor='#E8DECB';"
                                     title="Restore back to active catalogue">
-                                ↩ Restore
+                                <svg class="w-3 h-3 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+                                </svg>
+                                <span>Restore</span>
                             </button>
                             <button type="button"
                                     @click="openDeleteModal('{{ $record->id }}', '{{ addslashes($record->name) }}')"
-                                    class="py-2 px-3 text-[11px] sm:text-xs font-bold uppercase tracking-wider rounded-xl transition-all border cursor-pointer text-center flex items-center justify-center gap-1 shadow-2xs text-red-600 hover:text-white hover:bg-red-600 hover:border-red-600"
-                                    style="background: #FEF2F2; border-color: #FECACA;"
+                                    class="py-1.5 px-3 rounded-lg text-[10px] sm:text-[11px] font-bold uppercase tracking-wider transition-all cursor-pointer text-center flex items-center justify-center gap-1.5 shrink-0"
+                                    style="background: #FEF2F2; border: 1px solid #FECACA; color: #DC2626;"
+                                    onmouseover="this.style.background='#DC2626'; this.style.color='#FFFFFF'; this.style.borderColor='#DC2626';"
+                                    onmouseout="this.style.background='#FEF2F2'; this.style.color='#DC2626'; this.style.borderColor='#FECACA';"
                                     title="Permanently Delete Archive Record">
-                                <svg class="w-3.5 h-3.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                                <svg class="w-3 h-3 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
                                 </svg>
-                                <span class="hidden sm:inline">Delete</span>
+                                <span>Delete</span>
                             </button>
                         </div>
                     </div>
