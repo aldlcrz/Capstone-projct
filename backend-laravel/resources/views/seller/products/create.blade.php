@@ -1813,24 +1813,197 @@ function validateProductForm(e, isEdit = false) {
 
 <script>
 // ================================================================
-// LEAVE PAGE DISCARD LOGIC (All inputs erased on leave)
+// TEMPORARY FORM DATA PERSISTENCE (Reload = Keep, Leave = Delete)
 // ================================================================
-const DRAFT_KEY = 'add_product_draft_v1';
+const TEMP_STORAGE_KEY = 'lumbarong_seller_create_product_temp_v2';
 let _formSubmitted = false;
 let _pendingLeaveUrl = null;
 let _leaveAllowed = false;
+let _saveDebounceTimer = null;
 
-// Ensure any previous draft is completely removed so the form always starts fresh
-try {
-    localStorage.removeItem(DRAFT_KEY);
-} catch (e) {}
-
-function clearAllProductInputs() {
+// Function to detect if current page load is a browser reload/refresh
+function isPageReload() {
     try {
-        localStorage.removeItem(DRAFT_KEY);
+        const navEntries = performance.getEntriesByType('navigation');
+        if (navEntries && navEntries.length > 0) {
+            return navEntries[0].type === 'reload';
+        }
+        if (window.performance && window.performance.navigation) {
+            return window.performance.navigation.type === 1; // TYPE_RELOAD
+        }
     } catch (e) {}
-    const form = document.getElementById('productForm');
-    if (form) form.reset();
+    return false;
+}
+
+// Function to clear temporary storage
+function clearTemporaryFormData() {
+    try {
+        sessionStorage.removeItem(TEMP_STORAGE_KEY);
+        localStorage.removeItem(TEMP_STORAGE_KEY);
+        localStorage.removeItem('add_product_draft_v1');
+    } catch (e) {}
+}
+
+// Function to collect and save all current form data to sessionStorage
+function saveTemporaryFormData() {
+    if (_formSubmitted) return;
+    clearTimeout(_saveDebounceTimer);
+    _saveDebounceTimer = setTimeout(() => {
+        try {
+            const data = {
+                timestamp: Date.now(),
+                // Standard text inputs & textareas
+                name: document.querySelector('input[name="name"]')?.value || '',
+                description: document.querySelector('textarea[name="description"]')?.value || '',
+                price: document.querySelector('input[name="price"]')?.value || '',
+                fabric_type: document.querySelector('input[name="fabric_type"]')?.value || '',
+                shippingFee: document.querySelector('input[name="shippingFee"]')?.value || '',
+                shippingDays: document.querySelector('input[name="shippingDays"]')?.value || '',
+                embroidery_technique: document.querySelector('input[name="embroidery_technique"]')?.value || '',
+                delivery_notes: document.querySelector('textarea[name="delivery_notes"]')?.value || '',
+                customization_notes: document.querySelector('textarea[name="customization_notes"]')?.value || '',
+                stock: document.querySelector('input[name="stock"]')?.value || '',
+                
+                // Toggles
+                isOnSale: document.getElementById('discountToggle')?.checked || false,
+                discountPercentage: document.getElementById('discountPercentage')?.value || '',
+                isBespoke: document.querySelector('input[name="is_bespoke"]')?.checked || false,
+
+                // Sizing checkboxes & stock per size
+                sizes: Array.from(document.querySelectorAll('.size-checkbox:checked')).map(cb => cb.value),
+                sizeStocks: {},
+                
+                // Alpine data state
+                alpineState: {}
+            };
+
+            // Collect stock inputs for checked sizes
+            data.sizes.forEach(size => {
+                const stockInput = document.getElementById('stock_' + size);
+                if (stockInput) {
+                    data.sizeStocks[size] = stockInput.value;
+                }
+            });
+
+            // Collect Alpine data
+            const alpineEl = document.querySelector('[x-data]');
+            if (alpineEl && alpineEl._x_dataStack && alpineEl._x_dataStack[0]) {
+                const alp = alpineEl._x_dataStack[0];
+                data.alpineState = {
+                    step: alp.step || 1,
+                    targetGroup: alp.targetGroup || 'Men',
+                    selectedCategories: Array.isArray(alp.selectedCategories) ? alp.selectedCategories : [],
+                    productName: alp.productName || '',
+                    fabricType: alp.fabricType || '',
+                    price: alp.price || '',
+                    description: alp.description || ''
+                };
+            }
+
+            sessionStorage.setItem(TEMP_STORAGE_KEY, JSON.stringify(data));
+        } catch (e) {
+            console.error('Error saving temporary form data:', e);
+        }
+    }, 300);
+}
+
+// Function to restore all form data from sessionStorage
+function restoreTemporaryFormData() {
+    try {
+        const raw = sessionStorage.getItem(TEMP_STORAGE_KEY);
+        if (!raw) return;
+        const data = JSON.parse(raw);
+        if (!data) return;
+
+        // Restore standard inputs
+        if (data.name) {
+            const el = document.querySelector('input[name="name"]');
+            if (el) el.value = data.name;
+        }
+        if (data.description) {
+            const el = document.querySelector('textarea[name="description"]');
+            if (el) el.value = data.description;
+        }
+        if (data.price) {
+            const el = document.querySelector('input[name="price"]');
+            if (el) el.value = data.price;
+        }
+        if (data.fabric_type) {
+            const el = document.querySelector('input[name="fabric_type"]');
+            if (el) el.value = data.fabric_type;
+        }
+        if (data.shippingFee) {
+            const el = document.querySelector('input[name="shippingFee"]');
+            if (el) el.value = data.shippingFee;
+        }
+        if (data.shippingDays) {
+            const el = document.querySelector('input[name="shippingDays"]');
+            if (el) el.value = data.shippingDays;
+        }
+        if (data.embroidery_technique) {
+            const el = document.querySelector('input[name="embroidery_technique"]');
+            if (el) el.value = data.embroidery_technique;
+        }
+        if (data.delivery_notes) {
+            const el = document.querySelector('textarea[name="delivery_notes"]');
+            if (el) el.value = data.delivery_notes;
+        }
+        if (data.customization_notes) {
+            const el = document.querySelector('textarea[name="customization_notes"]');
+            if (el) el.value = data.customization_notes;
+        }
+        if (data.stock) {
+            const el = document.querySelector('input[name="stock"]');
+            if (el) el.value = data.stock;
+        }
+
+        // Restore Toggles
+        if (data.isOnSale) {
+            const toggle = document.getElementById('discountToggle');
+            if (toggle) {
+                toggle.checked = true;
+                if (typeof toggleDiscount === 'function') toggleDiscount(toggle);
+            }
+            if (data.discountPercentage) {
+                const pct = document.getElementById('discountPercentage');
+                if (pct) pct.value = data.discountPercentage;
+            }
+        }
+
+        // Restore Sizes & Stocks
+        if (Array.isArray(data.sizes) && data.sizes.length > 0) {
+            data.sizes.forEach(size => {
+                const cb = document.getElementById('size_cb_' + size);
+                if (cb && !cb.checked) {
+                    cb.checked = true;
+                    if (typeof toggleSizeStock === 'function') toggleSizeStock(cb, size);
+                }
+                if (data.sizeStocks && data.sizeStocks[size]) {
+                    const stockInput = document.getElementById('stock_' + size);
+                    if (stockInput) stockInput.value = data.sizeStocks[size];
+                }
+            });
+            if (typeof calculateTotalStock === 'function') calculateTotalStock();
+        }
+
+        // Restore Alpine.js state
+        const alpineEl = document.querySelector('[x-data]');
+        if (alpineEl && alpineEl._x_dataStack && alpineEl._x_dataStack[0] && data.alpineState) {
+            const alp = alpineEl._x_dataStack[0];
+            if (data.alpineState.step) alp.step = data.alpineState.step;
+            if (data.alpineState.targetGroup) alp.targetGroup = data.alpineState.targetGroup;
+            if (Array.isArray(data.alpineState.selectedCategories)) {
+                alp.selectedCategories = data.alpineState.selectedCategories;
+            }
+            if (data.alpineState.productName) alp.productName = data.alpineState.productName;
+            if (data.alpineState.fabricType) alp.fabricType = data.alpineState.fabricType;
+            if (data.alpineState.price) alp.price = data.alpineState.price;
+            if (data.alpineState.description) alp.description = data.alpineState.description;
+            if (typeof alp.calculateFillRate === 'function') alp.calculateFillRate();
+        }
+    } catch (e) {
+        console.error('Error restoring temporary form data:', e);
+    }
 }
 
 function hasFormData() {
@@ -1857,7 +2030,9 @@ function closeLeaveModal() {
 
 function confirmLeave() {
     _leaveAllowed = true;
-    clearAllProductInputs();
+    clearTemporaryFormData();
+    const form = document.getElementById('productForm');
+    if (form) form.reset();
     document.getElementById('leave-page-modal').style.display = 'none';
     document.body.style.overflow = '';
     if (_pendingLeaveUrl) {
@@ -1868,45 +2043,64 @@ function confirmLeave() {
 }
 
 document.addEventListener('DOMContentLoaded', () => {
-    // Clear any previous draft storage
-    clearAllProductInputs();
+    // 1. Check if this is a page reload or fresh entry
+    if (isPageReload()) {
+        // Persist through page reloads: restore the form state
+        setTimeout(restoreTemporaryFormData, 250);
+    } else {
+        // Brand new entry / returned after leaving: start fresh!
+        clearTemporaryFormData();
+    }
 
-    // Mark form as submitted on submit to allow navigation without prompt
+    // 2. Auto-save temporary form data on any user interaction
+    document.addEventListener('input', saveTemporaryFormData);
+    document.addEventListener('change', saveTemporaryFormData);
+
+    // 3. On successful form submission: delete temporary data
     const form = document.getElementById('productForm');
     if (form) {
         form.addEventListener('submit', () => {
             _formSubmitted = true;
-            try { localStorage.removeItem(DRAFT_KEY); } catch (e) {}
+            clearTemporaryFormData();
         });
     }
 
-    // Intercept all anchor clicks that leave this page
+    // 4. Intercept intentional navigation away from the form
     document.addEventListener('click', (e) => {
         const anchor = e.target.closest('a[href]');
         if (!anchor) return;
         const href = anchor.getAttribute('href');
         if (!href || href.startsWith('#') || href.startsWith('javascript')) return;
-        if (!hasFormData()) return;
-        if (_leaveAllowed) return;
+        
         const currentPath = window.location.pathname;
-        const destUrl = new URL(href, window.location.origin);
-        if (destUrl.pathname === currentPath) return;
+        let destUrl;
+        try {
+            destUrl = new URL(href, window.location.origin);
+        } catch (err) {
+            return;
+        }
+
+        // If clicking within the same page, do nothing
+        if (destUrl.pathname === currentPath && destUrl.search === window.location.search) return;
+
+        // If user already allowed leave or form is empty, clear temporary data and allow navigation
+        if (!hasFormData() || _leaveAllowed) {
+            clearTemporaryFormData();
+            return;
+        }
+
+        // Show leave confirmation modal
         e.preventDefault();
         showLeaveModal(href);
     });
 
-    // Intercept browser back/refresh/tab close
+    // 5. Browser close / reload confirmation prompt
     window.addEventListener('beforeunload', (e) => {
         if (hasFormData() && !_formSubmitted && !_leaveAllowed) {
+            // Save state right before reload happens
+            saveTemporaryFormData();
             e.preventDefault();
-            e.returnValue = 'You have unsaved product information. Once you leave, all entered details will be erased.';
-        }
-    });
-
-    // When page is actually unloaded, clear any cached inputs
-    window.addEventListener('pagehide', () => {
-        if (!_formSubmitted) {
-            clearAllProductInputs();
+            e.returnValue = 'You have unsaved product information.';
         }
     });
 });

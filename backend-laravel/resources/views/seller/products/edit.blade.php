@@ -1001,8 +1001,121 @@ function validateProductForm(e, isEdit = true) {
     return true;
 }
 
+// ================================================================
+// TEMPORARY FORM DATA PERSISTENCE (Reload = Keep, Leave = Delete)
+// ================================================================
+const EDIT_TEMP_KEY = 'lumbarong_seller_edit_product_temp_{{ $product->id }}';
+let _editFormSubmitted = false;
+let _editSaveTimer = null;
+
+function isEditPageReload() {
+    try {
+        const navEntries = performance.getEntriesByType('navigation');
+        if (navEntries && navEntries.length > 0) {
+            return navEntries[0].type === 'reload';
+        }
+        if (window.performance && window.performance.navigation) {
+            return window.performance.navigation.type === 1;
+        }
+    } catch (e) {}
+    return false;
+}
+
+function clearEditTemporaryFormData() {
+    try {
+        sessionStorage.removeItem(EDIT_TEMP_KEY);
+    } catch (e) {}
+}
+
+function saveEditTemporaryFormData() {
+    if (_editFormSubmitted) return;
+    clearTimeout(_editSaveTimer);
+    _editSaveTimer = setTimeout(() => {
+        try {
+            const data = {
+                name: document.querySelector('input[name="name"]')?.value || '',
+                description: document.querySelector('textarea[name="description"]')?.value || '',
+                price: document.querySelector('input[name="price"]')?.value || '',
+                fabric_type: document.querySelector('input[name="fabric_type"]')?.value || '',
+                shippingFee: document.querySelector('input[name="shippingFee"]')?.value || '',
+                shippingDays: document.querySelector('input[name="shippingDays"]')?.value || '',
+                embroidery_technique: document.querySelector('input[name="embroidery_technique"]')?.value || '',
+                delivery_notes: document.querySelector('textarea[name="delivery_notes"]')?.value || '',
+                customization_notes: document.querySelector('textarea[name="customization_notes"]')?.value || '',
+                isOnSale: document.getElementById('discountToggle')?.checked || false,
+                discountPercentage: document.getElementById('discountPercentage')?.value || ''
+            };
+            sessionStorage.setItem(EDIT_TEMP_KEY, JSON.stringify(data));
+        } catch (e) {}
+    }, 300);
+}
+
+function restoreEditTemporaryFormData() {
+    try {
+        const raw = sessionStorage.getItem(EDIT_TEMP_KEY);
+        if (!raw) return;
+        const data = JSON.parse(raw);
+        if (!data) return;
+
+        if (data.name) {
+            const el = document.querySelector('input[name="name"]');
+            if (el) el.value = data.name;
+        }
+        if (data.description) {
+            const el = document.querySelector('textarea[name="description"]');
+            if (el) el.value = data.description;
+        }
+        if (data.price) {
+            const el = document.querySelector('input[name="price"]');
+            if (el) el.value = data.price;
+        }
+        if (data.fabric_type) {
+            const el = document.querySelector('input[name="fabric_type"]');
+            if (el) el.value = data.fabric_type;
+        }
+        if (data.shippingFee) {
+            const el = document.querySelector('input[name="shippingFee"]');
+            if (el) el.value = data.shippingFee;
+        }
+        if (data.shippingDays) {
+            const el = document.querySelector('input[name="shippingDays"]');
+            if (el) el.value = data.shippingDays;
+        }
+        if (data.embroidery_technique) {
+            const el = document.querySelector('input[name="embroidery_technique"]');
+            if (el) el.value = data.embroidery_technique;
+        }
+        if (data.delivery_notes) {
+            const el = document.querySelector('textarea[name="delivery_notes"]');
+            if (el) el.value = data.delivery_notes;
+        }
+        if (data.customization_notes) {
+            const el = document.querySelector('textarea[name="customization_notes"]');
+            if (el) el.value = data.customization_notes;
+        }
+        if (data.isOnSale) {
+            const toggle = document.getElementById('discountToggle');
+            if (toggle) {
+                toggle.checked = true;
+                if (typeof toggleDiscount === 'function') toggleDiscount(toggle);
+            }
+            if (data.discountPercentage) {
+                const pct = document.getElementById('discountPercentage');
+                if (pct) pct.value = data.discountPercentage;
+            }
+        }
+        updateDiscountPreview();
+    } catch (e) {}
+}
+
 // Update preview on page load and register event listeners
 document.addEventListener('DOMContentLoaded', function() {
+    if (isEditPageReload()) {
+        setTimeout(restoreEditTemporaryFormData, 200);
+    } else {
+        clearEditTemporaryFormData();
+    }
+
     const priceInput = document.querySelector('input[name="price"]');
     if (priceInput) {
         priceInput.addEventListener('input', updateDiscountPreview);
@@ -1016,6 +1129,33 @@ document.addEventListener('DOMContentLoaded', function() {
                 container.classList.remove('border-red-500', 'border');
             }
         });
+    });
+
+    // Auto-save on edits
+    document.addEventListener('input', saveEditTemporaryFormData);
+    document.addEventListener('change', saveEditTemporaryFormData);
+
+    // Clear on submit
+    const form = document.querySelector('form[action*="products/"]');
+    if (form) {
+        form.addEventListener('submit', () => {
+            _editFormSubmitted = true;
+            clearEditTemporaryFormData();
+        });
+    }
+
+    // Clear on intentional navigation away
+    document.addEventListener('click', (e) => {
+        const anchor = e.target.closest('a[href]');
+        if (!anchor) return;
+        const href = anchor.getAttribute('href');
+        if (!href || href.startsWith('#') || href.startsWith('javascript')) return;
+        try {
+            const destUrl = new URL(href, window.location.origin);
+            if (destUrl.pathname !== window.location.pathname) {
+                clearEditTemporaryFormData();
+            }
+        } catch (err) {}
     });
 });
 </script>
