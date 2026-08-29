@@ -755,7 +755,13 @@
                             <p style="font-size:12px;color:#78716C;margin-top:2px;margin-bottom:0;">Assign available inventory quantities per size</p>
                         </div>
                     </div>
-                    <span style="font-size:10.5px;font-weight:700;color:#DC2626;background-color:#FEF2F2;border:1px solid #FECACA;padding:4px 12px;border-radius:9999px;text-transform:uppercase;letter-spacing:0.04em;display:inline-flex;align-items:center;gap:4px;">At least 1 size required</span>
+                    <span class="rounded-full"
+                          style="font-size:10.5px;font-weight:700;border-radius:9999px !important;padding:4px 12px !important;text-transform:uppercase;letter-spacing:0.04em;display:inline-flex;align-items:center;gap:4px;"
+                          :style="hasValidSizing 
+                              ? 'border-radius:9999px !important;padding:4px 12px !important;font-size:10.5px;font-weight:700;background:#E8F5E9;color:#2E7D32;border:1px solid #A5D6A7;display:inline-flex;align-items:center;' 
+                              : 'border-radius:9999px !important;padding:4px 12px !important;font-size:10.5px;font-weight:700;background:#FEF2F2;color:#DC2626;border:1px solid #FECACA;display:inline-flex;align-items:center;'">
+                        <span x-text="hasValidSizing ? '✓ Sizing configured' : 'At least 1 size required'"></span>
+                    </span>
                 </div>
 
                 <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-2.5 pt-1">
@@ -795,7 +801,13 @@
                             <p style="font-size:12px;color:#78716C;margin-top:2px;margin-bottom:0;">Define fair artisan pricing and realistic delivery estimates</p>
                         </div>
                     </div>
-                    <span style="font-size:10.5px;font-weight:700;color:#DC2626;background-color:#FEF2F2;border:1px solid #FECACA;padding:4px 12px;border-radius:9999px;text-transform:uppercase;letter-spacing:0.04em;display:inline-flex;align-items:center;gap:4px;">Base price required</span>
+                    <span class="rounded-full"
+                          style="font-size:10.5px;font-weight:700;border-radius:9999px !important;padding:4px 12px !important;text-transform:uppercase;letter-spacing:0.04em;display:inline-flex;align-items:center;gap:4px;"
+                          :style="isPricingComplete 
+                              ? 'border-radius:9999px !important;padding:4px 12px !important;font-size:10.5px;font-weight:700;background:#E8F5E9;color:#2E7D32;border:1px solid #A5D6A7;display:inline-flex;align-items:center;' 
+                              : 'border-radius:9999px !important;padding:4px 12px !important;font-size:10.5px;font-weight:700;background:#FEF2F2;color:#DC2626;border:1px solid #FECACA;display:inline-flex;align-items:center;'">
+                        <span x-text="pricingStatusText"></span>
+                    </span>
                 </div>
 
                 <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 pt-1">
@@ -841,8 +853,8 @@
                                max="500" 
                                step="0.01" 
                                placeholder="0.00"
-                               value="{{ old('shippingFee', 0) }}"
-                               oninput="if(parseFloat(this.value) > 500) this.value = 500; calculateFillRate();"
+                               x-model="shippingFee"
+                               oninput="if(parseFloat(this.value) > 500) this.value = 500; calculateFillRate(); document.getElementById('shipping-fee-card')?.classList.remove('border-red-500', 'ring-2', 'ring-red-400'); this.classList.remove('border-red-500');"
                                style="width:100%;background:transparent;font-size:18px;font-weight:700;color:#1E1915;outline:none;border:none;">
                         <p style="font-size:9px;color:#A8A096;margin:0;">Enter 0 for free delivery</p>
                     </div>
@@ -858,8 +870,8 @@
                                max="30" 
                                step="1" 
                                placeholder="5"
-                               value="{{ old('shippingDays', 5) }}"
-                               oninput="if(parseInt(this.value) > 30) this.value = 30; calculateFillRate();"
+                               x-model="shippingDays"
+                               oninput="if(parseInt(this.value) > 30) this.value = 30; calculateFillRate(); document.getElementById('shipping-days-card')?.classList.remove('border-red-500', 'ring-2', 'ring-red-400'); this.classList.remove('border-red-500');"
                                style="width:100%;background:transparent;font-size:18px;font-weight:700;color:#1E1915;outline:none;border:none;">
                         <p style="font-size:9px;color:#A8A096;margin:0;">Delivery lead time</p>
                     </div>
@@ -1199,11 +1211,29 @@ function addProductManager() {
         targetGroup: initData.targetGroup || 'Men',
         fabricType: initData.fabricType || '100% Piña',
         price: initData.price || '',
+        shippingFee: '{{ old('shippingFee', '0') }}',
+        shippingDays: '{{ old('shippingDays', '5') }}',
         description: initData.description || '',
         fillRate: 15,
         isAiLoading: false,
         hasRestoredDraft: false,
+        hasValidSizing: false,
         draftSaveTimer: null,
+
+        get isPricingComplete() {
+            const hasPrice = Boolean(this.price && parseFloat(this.price) >= 1 && parseFloat(this.price) <= 10000);
+            const hasFee = Boolean(this.shippingFee !== '' && !isNaN(parseFloat(this.shippingFee)) && parseFloat(this.shippingFee) >= 0 && parseFloat(this.shippingFee) <= 500);
+            return hasPrice && hasFee;
+        },
+
+        get pricingStatusText() {
+            const hasPrice = Boolean(this.price && parseFloat(this.price) >= 1 && parseFloat(this.price) <= 10000);
+            const hasFee = Boolean(this.shippingFee !== '' && !isNaN(parseFloat(this.shippingFee)) && parseFloat(this.shippingFee) >= 0 && parseFloat(this.shippingFee) <= 500);
+            if (!hasPrice && !hasFee) return 'Price & shipping fee required';
+            if (!hasPrice) return 'Base price required';
+            if (!hasFee) return 'Shipping fee required';
+            return '✓ Price & shipping configured';
+        },
 
         // Media State: Variant 1 (Cover Photo) + Additional Gallery Photos
         variants: [
@@ -1636,7 +1666,7 @@ function addProductManager() {
 
         goToStep3() {
             // Remove previous Step 2 error highlights
-            document.querySelectorAll('#price-card, #priceInput, #sizing-section, #stock-card').forEach(el => {
+            document.querySelectorAll('#price-card, #priceInput, #shipping-fee-card, #shippingFeeInput, #shipping-days-card, #shippingDaysInput, #sizing-section, #stock-card').forEach(el => {
                 el.classList.remove('border-red-500', 'ring-2', 'ring-red-400');
             });
 
@@ -1676,6 +1706,32 @@ function addProductManager() {
                     priceInput.focus();
                 }
                 if (priceCard) priceCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                return;
+            }
+
+            const shipFeeVal = parseFloat(this.shippingFee);
+            if (this.shippingFee === '' || isNaN(shipFeeVal) || shipFeeVal < 0 || shipFeeVal > 500) {
+                const feeCard = document.getElementById('shipping-fee-card');
+                const feeInput = document.getElementById('shippingFeeInput');
+                if (feeCard) feeCard.classList.add('border-red-500', 'ring-2', 'ring-red-400');
+                if (feeInput) {
+                    feeInput.classList.add('border-red-500');
+                    feeInput.focus();
+                }
+                if (feeCard) feeCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                return;
+            }
+
+            const shipDaysVal = parseInt(this.shippingDays);
+            if (this.shippingDays === '' || isNaN(shipDaysVal) || shipDaysVal < 1 || shipDaysVal > 30) {
+                const daysCard = document.getElementById('shipping-days-card');
+                const daysInput = document.getElementById('shippingDaysInput');
+                if (daysCard) daysCard.classList.add('border-red-500', 'ring-2', 'ring-red-400');
+                if (daysInput) {
+                    daysInput.classList.add('border-red-500');
+                    daysInput.focus();
+                }
+                if (daysCard) daysCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
                 return;
             }
 
