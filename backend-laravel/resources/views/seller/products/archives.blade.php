@@ -141,7 +141,7 @@
                      onmouseout="this.style.borderColor='#E8DECB'; this.style.boxShadow='0 1px 3px rgba(0,0,0,0.02)';">
 
                     {{-- Product Image --}}
-                    <div class="relative aspect-[4/3] overflow-hidden" style="background: #F5F0E8;">
+                    <div class="relative aspect-4/3 overflow-hidden" style="background: #F5F0E8;">
                         @if($imageUrl)
                             <img src="{{ $imageUrl }}"
                                  onerror="this.src='/uploads/products/default.jpg'"
