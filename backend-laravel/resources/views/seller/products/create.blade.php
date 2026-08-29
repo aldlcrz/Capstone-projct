@@ -645,7 +645,7 @@
                 <button type="button" 
                         @click="goToStep2()"
                         :disabled="!isStep1Complete"
-                        style="padding:14px 28px;border-radius:12px;font-size:14px;font-weight:700;display:flex;align-items:center;gap:8px;border:none;transition:all 0.2s;"
+                        style="padding:14px 28px;border-radius:9999px;font-size:14px;font-weight:700;display:flex;align-items:center;gap:8px;border:none;transition:all 0.2s;"
                         :style="isStep1Complete 
                             ? 'background-color:#A16D19 !important;color:#FFFFFF !important;cursor:pointer;box-shadow:0 2px 8px rgba(161,109,25,0.25);' 
                             : 'background-color:#E5E0D8 !important;color:#A8A096 !important;cursor:not-allowed;box-shadow:none;'">
@@ -1340,7 +1340,7 @@ function addProductManager() {
                 return;
             }
 
-            if (!this.selectedCategory || this.selectedCategory === '') {
+            if (!this.selectedCategories || this.selectedCategories.length === 0) {
                 triggerAppModal('Category Required', 'Please select a product category from the options below.', 'warning');
                 const catContainer = document.getElementById('category-cards-container');
                 if (catContainer) catContainer.classList.add('border-red-500');
@@ -1388,7 +1388,7 @@ function addProductManager() {
             let score = 0;
             if (this.imageCount > 0) score += 20;
             if (this.productName && this.productName.trim().length >= 3) score += 20;
-            if (this.selectedCategory) score += 15;
+            if (this.selectedCategories && this.selectedCategories.length > 0) score += 15;
             if (parseFloat(this.price) > 0) score += 15;
             if (this.description && this.description.trim().length >= 10) score += 15;
             if (document.querySelectorAll('.size-checkbox:checked').length > 0) score += 10;

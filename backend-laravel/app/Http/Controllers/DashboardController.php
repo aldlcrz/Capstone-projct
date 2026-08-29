@@ -931,11 +931,27 @@ class DashboardController extends Controller
         })->map(function ($customerOrders) {
             $firstOrder = $customerOrders->first();
             $customer = $firstOrder->customer ?? null;
+
+            // Resolve phone with shipping address fallback
+            $shippingAddr = null;
+            try {
+                $raw = $firstOrder->shippingAddress;
+                if (!empty($raw)) {
+                    $shippingAddr = is_array($raw) ? $raw : json_decode($raw, true);
+                }
+            } catch (\Throwable $e) {}
+
+            $phone = $customer->mobileNumber
+                ?? $customer->phone
+                ?? $firstOrder->customer_phone
+                ?? ($shippingAddr['phone'] ?? null)
+                ?? 'N/A';
+
             return [
                 'id'            => $customer->id ?? null,
                 'name'          => $customer->name ?? $firstOrder->customer_name ?? 'Guest Customer',
                 'email'         => $customer->email ?? $firstOrder->customer_email ?? 'N/A',
-                'phone'         => $customer->mobileNumber ?? $customer->phone ?? $firstOrder->customer_phone ?? 'N/A',
+                'phone'         => $phone,
                 'avatar'        => $customer->profilePhoto ?? null,
                 'ordersCount'   => $customerOrders->count(),
                 'totalSpent'    => (float) $customerOrders->sum('totalAmount'),

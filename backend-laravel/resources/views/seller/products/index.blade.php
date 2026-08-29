@@ -22,9 +22,13 @@
                 <svg class="w-4 h-4" style="color: #C49520;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z"></path></svg>
                 <span>Size Guides</span>
             </button>
+            <a href="{{ route('seller.products.archives') }}" class="flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold transition-all shadow-xs" style="background: #FDF8EE; border: 1px solid #E8DECB; color: #1E1915;" onmouseover="this.style.borderColor='#C49520';" onmouseout="this.style.borderColor='#E8DECB';">
+                <svg class="w-4 h-4" style="color: #766C60;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4"></path></svg>
+                <span>Archives</span>
+            </a>
             <a href="{{ route('seller.products.create') }}" class="flex items-center gap-2 px-5 py-2.5 text-white rounded-xl text-xs font-bold transition-all shadow-xs" style="background: #1E1915;" onmouseover="this.style.background='#C49520';" onmouseout="this.style.background='#1E1915';">
                 <svg class="w-4 h-4" style="color: #C49520;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
-                <span>＋ Add Product</span>
+                <span>Add Product</span>
             </a>
         </div>
     </div>
@@ -277,7 +281,7 @@
                     <h3 class="font-serif text-lg font-bold mb-1" style="color: #1E1915;">Your catalogue is ready for its first creation</h3>
                     <p class="text-xs max-w-xs mx-auto mb-5" style="color: #766C60;">Add your first handcrafted barong or embroidery piece to begin showcase.</p>
                     <a href="{{ route('seller.products.create') }}" class="inline-flex items-center gap-2 px-5 py-2.5 text-white rounded-xl text-xs font-bold transition-all shadow-xs" style="background: #1E1915;" onmouseover="this.style.background='#C49520';" onmouseout="this.style.background='#1E1915';">
-                        <span>＋ Add Your First Product</span>
+                        <span>Add Your First Product</span>
                     </a>
                 </div>
             @endforelse

@@ -259,6 +259,8 @@ Route::middleware(['auth', 'seller'])->prefix('seller')->group(function () {
     Route::get('/products/{id}/edit', [ProductManagementController::class, 'edit'])->name('seller.products.edit');
     Route::put('/products/{id}', [ProductManagementController::class, 'update'])->name('seller.products.update');
     Route::delete('/products/{id}', [ProductManagementController::class, 'destroy'])->name('seller.products.destroy');
+    Route::get('/products/archives', [ProductManagementController::class, 'archives'])->name('seller.products.archives');
+    Route::post('/products/{id}/restore', [ProductManagementController::class, 'restoreProduct'])->name('seller.products.restore');
     Route::post('/size-guides', [ProductManagementController::class, 'updateSizeGuides'])->name('seller.sizeguides.update');
     Route::delete('/size-guides/{targetGroup}', [ProductManagementController::class, 'deleteSizeGuide'])->name('seller.sizeguides.delete');
 

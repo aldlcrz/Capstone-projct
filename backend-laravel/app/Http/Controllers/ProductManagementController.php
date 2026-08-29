@@ -675,4 +675,107 @@ class ProductManagementController extends Controller
 
         return redirect()->back()->with('success', 'Size guide for ' . $targetGroup . ' removed.');
     }
+
+    /**
+     * Display the seller's archived products.
+     */
+    public function archives(Request $request)
+    {
+        $sellerId = Auth::id();
+        $search   = trim($request->input('search', ''));
+
+        $query = \App\Models\ArchivedRecord::where('item_type', 'product')
+            ->where(function ($q) use ($sellerId) {
+                // Match archived records whose metadata contains the seller's ID
+                $q->where('metadata->sellerId', $sellerId)
+                  ->orWhereRaw("JSON_UNQUOTE(JSON_EXTRACT(metadata, '$.sellerId')) = ?", [$sellerId]);
+            })
+            ->orderBy('created_at', 'desc');
+
+        if ($search) {
+            $query->where(function ($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%")
+                  ->orWhere('identifier', 'like', "%{$search}%")
+                  ->orWhere('reason', 'like', "%{$search}%");
+            });
+        }
+
+        $archives       = $query->paginate(12)->withQueryString();
+        $archivesCount  = \App\Models\ArchivedRecord::where('item_type', 'product')
+            ->where(function ($q) use ($sellerId) {
+                $q->where('metadata->sellerId', $sellerId)
+                  ->orWhereRaw("JSON_UNQUOTE(JSON_EXTRACT(metadata, '$.sellerId')) = ?", [$sellerId]);
+            })->count();
+
+        return view('seller.products.archives', compact('archives', 'archivesCount', 'search'));
+    }
+
+    /**
+     * Restore a seller-archived product back to the active catalogue as "pending" review.
+     */
+    public function restoreProduct(string $id)
+    {
+        $sellerId = Auth::id();
+
+        $record = \App\Models\ArchivedRecord::where('id', $id)
+            ->where('item_type', 'product')
+            ->firstOrFail();
+
+        $meta = $record->metadata ?? [];
+
+        // Security: only allow the owning seller to restore their own products
+        if (($meta['sellerId'] ?? null) !== $sellerId) {
+            return redirect()->route('seller.products.archives')
+                ->with('error', 'You do not have permission to restore this product.');
+        }
+
+        // Prevent restoring if a product with this ID already exists
+        if (!empty($record->item_id) && Product::find($record->item_id)) {
+            return redirect()->route('seller.products.archives')
+                ->with('error', 'A product with this ID is already active in your catalogue.');
+        }
+
+        try {
+            Product::create([
+                'id'                  => $record->item_id ?: (string) Str::uuid(),
+                'name'                => $meta['name'] ?? $record->name,
+                'description'         => $meta['description'] ?? null,
+                'price'               => $meta['price'] ?? 0,
+                'costPerPiece'        => $meta['costPerPiece'] ?? 0,
+                'stock'               => $meta['stock'] ?? 0,
+                'sizes'               => $meta['sizes'] ?? null,
+                'categories'          => $meta['categories'] ?? null,
+                'image'               => $meta['image'] ?? null,
+                'shippingFee'         => $meta['shippingFee'] ?? 0,
+                'shippingDays'        => $meta['shippingDays'] ?? null,
+                'sellerId'            => $sellerId,
+                'status'              => 'pending',
+                'sku'                 => $meta['sku'] ?? null,
+                'fabric_type'         => $meta['fabric_type'] ?? null,
+                'collar_type'         => $meta['collar_type'] ?? null,
+                'artisan_region'      => $meta['artisan_region'] ?? null,
+                'CategoryId'          => $meta['CategoryId'] ?? null,
+                'target_group'        => $meta['target_group'] ?? null,
+                'size_stocks'         => $meta['size_stocks'] ?? null,
+                'has_variants'        => $meta['has_variants'] ?? false,
+                'variations'          => $meta['variations'] ?? null,
+                'is_on_sale'          => $meta['is_on_sale'] ?? false,
+                'discount_percentage' => $meta['discount_percentage'] ?? 0,
+                'is_gcash_available'  => $meta['is_gcash_available'] ?? false,
+                'gcash_number'        => $meta['gcash_number'] ?? null,
+                'is_maya_available'   => $meta['is_maya_available'] ?? false,
+                'maya_number'         => $meta['maya_number'] ?? null,
+                'size_guide_image'    => $meta['size_guide_image'] ?? null,
+            ]);
+
+            $record->delete();
+
+            return redirect()->route('seller.products.archives')
+                ->with('success', "Product \"{$record->name}\" restored successfully and is now pending admin review.");
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::error('Seller product restore error: ' . $e->getMessage());
+            return redirect()->route('seller.products.archives')
+                ->with('error', 'Failed to restore product: ' . $e->getMessage());
+        }
+    }
 }
