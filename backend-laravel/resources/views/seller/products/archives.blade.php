@@ -112,8 +112,26 @@
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             @foreach($archives as $record)
                 @php
-                    $meta  = $record->metadata ?? [];
-                    $image = $meta['image'] ?? null;
+                    $meta   = $record->metadata ?? [];
+                    $rawImg = $meta['image'] ?? null;
+                    if (is_array($rawImg)) {
+                        $image = !empty($rawImg) ? reset($rawImg) : null;
+                    } elseif (is_string($rawImg)) {
+                        $decoded = json_decode($rawImg, true);
+                        $image = is_array($decoded) ? (!empty($decoded) ? reset($decoded) : null) : $rawImg;
+                    } else {
+                        $image = null;
+                    }
+
+                    $imageUrl = null;
+                    if (!empty($image) && is_string($image)) {
+                        if (str_starts_with($image, 'http://') || str_starts_with($image, 'https://') || str_starts_with($image, '/')) {
+                            $imageUrl = $image;
+                        } else {
+                            $imageUrl = asset($image);
+                        }
+                    }
+
                     $price = $meta['price'] ?? 0;
                     $sku   = $meta['sku'] ?? $record->identifier ?? null;
                 @endphp
@@ -124,8 +142,8 @@
 
                     {{-- Product Image --}}
                     <div class="relative aspect-[4/3] overflow-hidden" style="background: #F5F0E8;">
-                        @if($image)
-                            <img src="{{ str_starts_with($image, 'http') || str_starts_with($image, '/') ? $image : asset($image) }}"
+                        @if($imageUrl)
+                            <img src="{{ $imageUrl }}"
                                  onerror="this.src='/uploads/products/default.jpg'"
                                  class="w-full h-full object-cover object-top opacity-75">
                         @else
