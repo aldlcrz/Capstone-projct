@@ -9,15 +9,22 @@ use Illuminate\Support\Str;
 
 class ProductManagementController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $products = Product::where('sellerId', Auth::id())
+        $sellerId = Auth::id();
+        $totalCount = Product::where('sellerId', $sellerId)->count();
+        $approvedCount = Product::where('sellerId', $sellerId)->where('status', 'approved')->count();
+        $pendingCount = Product::where('sellerId', $sellerId)->where('status', '!=', 'approved')->count();
+
+        $products = Product::where('sellerId', $sellerId)
             ->with(['reviews.customer:id,name,profilePhoto'])
             ->withCount('reviews')
             ->withAvg('reviews', 'rating')
             ->orderBy('createdAt', 'desc')
-            ->get();
-        return view('seller.products.index', compact('products'));
+            ->paginate(15)
+            ->withQueryString();
+
+        return view('seller.products.index', compact('products', 'totalCount', 'approvedCount', 'pendingCount'));
     }
 
     public function create()

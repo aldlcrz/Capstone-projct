@@ -42,21 +42,21 @@
                 :style="activeTab === 'all' ? 'background:#1E1915; color:#FFFCF7; border:1px solid #C49520;' : 'background:#FDF8EE; color:#1E1915; border:1px solid #E8DECB;'"
                 class="px-4 py-2 rounded-xl text-[10px] font-extrabold uppercase tracking-widest transition-all shrink-0 flex items-center gap-1.5 cursor-pointer shadow-2xs">
                 <span x-show="activeTab === 'all'" style="color:#C49520;">✓</span>
-                <span>All Creations ({{ $products->count() }})</span>
+                <span>All Creations ({{ $totalCount ?? $products->total() }})</span>
             </button>
             <button @click="activeTab = 'approved'"
                 :style="activeTab === 'approved' ? 'background:#1E1915; color:#FFFCF7; border:1px solid #C49520;' : 'background:#FDF8EE; color:#1E1915; border:1px solid #E8DECB;'"
                 class="px-4 py-2 rounded-xl text-[10px] font-extrabold uppercase tracking-widest transition-all shrink-0 flex items-center gap-1.5 cursor-pointer shadow-2xs">
                 <span x-show="activeTab === 'approved'" style="color:#C49520;">✓</span>
                 <span class="w-1.5 h-1.5 rounded-full" style="background:#4A6741;"></span>
-                <span>Approved ({{ $approvedProducts->count() }})</span>
+                <span>Approved ({{ $approvedCount ?? $approvedProducts->count() }})</span>
             </button>
             <button @click="activeTab = 'pending'"
                 :style="activeTab === 'pending' ? 'background:#1E1915; color:#FFFCF7; border:1px solid #C49520;' : 'background:#FDF8EE; color:#1E1915; border:1px solid #E8DECB;'"
                 class="px-4 py-2 rounded-xl text-[10px] font-extrabold uppercase tracking-widest transition-all shrink-0 flex items-center gap-1.5 cursor-pointer shadow-2xs">
                 <span x-show="activeTab === 'pending'" style="color:#C49520;">✓</span>
                 <span class="w-1.5 h-1.5 rounded-full" style="background:#C49520;"></span>
-                <span>Pending Review ({{ $pendingProducts->count() }})</span>
+                <span>Pending Review ({{ $pendingCount ?? $pendingProducts->count() }})</span>
             </button>
         </div>
 
@@ -282,6 +282,51 @@
                 </div>
             @endforelse
         </div>
+
+        {{-- Pagination (15 products per page) --}}
+        @if($products->hasPages())
+            <div class="pt-8 flex items-center justify-between flex-wrap gap-4 border-t mt-6" style="border-color: #E8DECB;">
+                <div class="text-xs font-semibold" style="color: #766C60;">
+                    Showing <span class="font-bold" style="color: #1E1915;">{{ $products->firstItem() }}</span> to <span class="font-bold" style="color: #1E1915;">{{ $products->lastItem() }}</span> of <span class="font-bold" style="color: #1E1915;">{{ $products->total() }}</span> handcrafted creations
+                </div>
+                <div class="flex items-center gap-1.5">
+                    {{-- Previous Page Link --}}
+                    @if ($products->onFirstPage())
+                        <span class="px-3.5 py-2 rounded-xl text-xs font-bold opacity-40 cursor-not-allowed" style="background: #FDF8EE; border: 1px solid #E8DECB; color: #766C60;">
+                            ← Previous
+                        </span>
+                    @else
+                        <a href="{{ $products->previousPageUrl() }}" class="px-3.5 py-2 rounded-xl text-xs font-bold transition-all" style="background: #FDF8EE; border: 1px solid #E8DECB; color: #1E1915;" onmouseover="this.style.borderColor='#C49520'; this.style.color='#C49520';" onmouseout="this.style.borderColor='#E8DECB'; this.style.color='#1E1915';">
+                            ← Previous
+                        </a>
+                    @endif
+
+                    {{-- Pagination Elements --}}
+                    @foreach ($products->getUrlRange(1, $products->lastPage()) as $page => $url)
+                        @if ($page == $products->currentPage())
+                            <span class="w-9 h-9 rounded-xl text-xs font-black flex items-center justify-center shadow-xs" style="background: #1E1915; color: #FFFCF7; border: 1px solid #C49520;">
+                                {{ $page }}
+                            </span>
+                        @else
+                            <a href="{{ $url }}" class="w-9 h-9 rounded-xl text-xs font-bold flex items-center justify-center transition-all" style="background: #FDF8EE; border: 1px solid #E8DECB; color: #1E1915;" onmouseover="this.style.borderColor='#C49520'; this.style.color='#C49520';" onmouseout="this.style.borderColor='#E8DECB'; this.style.color='#1E1915';">
+                                {{ $page }}
+                            </a>
+                        @endif
+                    @endforeach
+
+                    {{-- Next Page Link --}}
+                    @if ($products->hasMorePages())
+                        <a href="{{ $products->nextPageUrl() }}" class="px-3.5 py-2 rounded-xl text-xs font-bold transition-all" style="background: #FDF8EE; border: 1px solid #E8DECB; color: #1E1915;" onmouseover="this.style.borderColor='#C49520'; this.style.color='#C49520';" onmouseout="this.style.borderColor='#E8DECB'; this.style.color='#1E1915';">
+                            Next →
+                        </a>
+                    @else
+                        <span class="px-3.5 py-2 rounded-xl text-xs font-bold opacity-40 cursor-not-allowed" style="background: #FDF8EE; border: 1px solid #E8DECB; color: #766C60;">
+                            Next →
+                        </span>
+                    @endif
+                </div>
+            </div>
+        @endif
     </div>
 
     {{-- Size Guide Management Modal (Artisan Luxury Theme) --}}

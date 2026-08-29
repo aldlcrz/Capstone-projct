@@ -740,8 +740,15 @@ function sellerOrdersManager(initialOrders) {
                 
                 {{-- Left: Avatar & Order Info --}}
                 <div class="flex items-center gap-3 min-w-0 flex-1">
-                    <div class="w-10 h-10 sm:w-11 sm:h-11 rounded-xl flex items-center justify-center font-bold text-xs sm:text-sm shadow-xs shrink-0 overflow-hidden group-hover:scale-105 transition-transform" style="background: #1E1915; color: #C49520; border: 1px solid rgba(196,149,32,0.4);">
-                        <span x-text="(order.customer?.name || 'O')[0].toUpperCase()"></span>
+                    <div class="w-10 h-10 sm:w-11 sm:h-11 rounded-xl flex items-center justify-center font-bold text-xs sm:text-sm shadow-xs shrink-0 overflow-hidden group-hover:scale-105 transition-transform relative" style="background: #1E1915; color: #C49520; border: 1px solid rgba(196,149,32,0.4);">
+                        <template x-if="order.customer && (order.customer.profile_photo_url || order.customer.profilePhoto)">
+                            <img :src="order.customer.profile_photo_url || (order.customer.profilePhoto ? ('/uploads/' + order.customer.profilePhoto.replace(/^\/+/, '')) : '')" 
+                                 :alt="order.customer?.name || 'Customer'"
+                                 class="w-full h-full object-cover"
+                                 @error="$el.style.display='none'; if ($el.nextElementSibling) $el.nextElementSibling.style.display='inline-flex';">
+                        </template>
+                        <span :style="order.customer && (order.customer.profile_photo_url || order.customer.profilePhoto) ? 'display:none;' : ''" 
+                              x-text="(order.customer?.name || 'O')[0].toUpperCase()"></span>
                     </div>
                     <div class="min-w-0 flex-1">
                         <div class="flex items-center gap-2 flex-wrap">
