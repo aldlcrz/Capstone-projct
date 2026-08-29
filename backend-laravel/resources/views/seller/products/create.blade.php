@@ -1787,25 +1787,25 @@ function validateProductForm(e, isEdit = false) {
 {{-- ================================================================ --}}
 <div id="leave-page-modal" style="display:none;position:fixed;inset:0;z-index:9999;">
     {{-- Backdrop --}}
-    <div id="leave-modal-backdrop" style="position:absolute;inset:0;background:rgba(15,10,5,0.55);backdrop-filter:blur(4px);" onclick="closeLeaveModal()"></div>
+    <div id="leave-modal-backdrop" style="position:absolute;inset:0;background:rgba(15,10,5,0.6);backdrop-filter:blur(4px);" onclick="closeLeaveModal()"></div>
     {{-- Modal Card --}}
-    <div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:calc(100% - 40px);max-width:440px;background:#FFFCF7;border:1px solid #E2D9C8;border-radius:24px;padding:32px 28px;box-shadow:0 20px 60px rgba(0,0,0,0.15);">
+    <div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:calc(100% - 40px);max-width:440px;background:#FFFCF7;border:1px solid #E8DECB;border-radius:24px;padding:32px 28px;box-shadow:0 20px 60px rgba(0,0,0,0.15);">
         {{-- Icon --}}
-        <div style="width:48px;height:48px;border-radius:50%;background:#FDF8EE;border:1px solid #EEDBBA;display:flex;align-items:center;justify-content:center;margin-bottom:20px;">
-            <svg width="22" height="22" fill="none" stroke="#C49520" viewBox="0 0 24 24" stroke-width="2">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/>
+        <div style="width:50px;height:50px;border-radius:50%;background:#FEF2F2;border:1px solid #FECACA;display:flex;align-items:center;justify-content:center;margin-bottom:20px;color:#DC2626;">
+            <svg width="24" height="24" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
             </svg>
         </div>
-        <h3 style="font-family:ui-serif,Georgia,serif;font-size:20px;font-weight:700;color:#1E1915;margin:0 0 10px 0;">Leave this page?</h3>
-        <p style="font-size:13.5px;color:#78716C;line-height:1.6;margin:0 0 28px 0;">
-            You have product information that hasn&rsquo;t been submitted yet. If you leave this page, your current changes may be lost.
+        <h3 style="font-family:ui-serif,Georgia,serif;font-size:20px;font-weight:700;color:#1E1915;margin:0 0 10px 0;">Discard product & leave?</h3>
+        <p style="font-size:13.5px;color:#78716C;line-height:1.6;margin:0 0 26px 0;">
+            You have unsaved product information. If you leave this page, <strong>all entered details, descriptions, prices, images, and variants will be completely erased</strong>.
         </p>
         <div style="display:flex;flex-direction:column;gap:10px;">
-            <button onclick="closeLeaveModal()" style="width:100%;padding:14px;border-radius:14px;background:#221F1C;color:#FCFAF6;font-size:14px;font-weight:700;border:none;cursor:pointer;transition:opacity 0.2s;" onmouseover="this.style.opacity='.88'" onmouseout="this.style.opacity='1'">
+            <button onclick="closeLeaveModal()" style="width:100%;padding:13px;border-radius:14px;background:#1E1915;color:#FFFCF7;font-size:13.5px;font-weight:700;border:none;cursor:pointer;transition:all 0.2s;" onmouseover="this.style.background='#C49520'" onmouseout="this.style.background='#1E1915'">
                 Stay and Continue Editing
             </button>
-            <button onclick="confirmLeave()" style="width:100%;padding:14px;border-radius:14px;background:transparent;color:#78716C;font-size:13.5px;font-weight:600;border:1px solid #E2D9C8;cursor:pointer;transition:all 0.2s;" onmouseover="this.style.color='#DC2626';this.style.borderColor='#DC2626';" onmouseout="this.style.color='#78716C';this.style.borderColor='#E2D9C8';">
-                Leave Page
+            <button onclick="confirmLeave()" style="width:100%;padding:13px;border-radius:14px;background:#FEF2F2;color:#DC2626;font-size:13.5px;font-weight:700;border:1px solid #FECACA;cursor:pointer;transition:all 0.2s;" onmouseover="this.style.background='#DC2626';this.style.color='#FFFFFF';this.style.borderColor='#DC2626';" onmouseout="this.style.background='#FEF2F2';this.style.color='#DC2626';this.style.borderColor='#FECACA';">
+                Discard & Leave Page
             </button>
         </div>
     </div>
@@ -1813,199 +1813,34 @@ function validateProductForm(e, isEdit = false) {
 
 <script>
 // ================================================================
-// DRAFT AUTO-SAVE (localStorage)
+// LEAVE PAGE DISCARD LOGIC (All inputs erased on leave)
 // ================================================================
 const DRAFT_KEY = 'add_product_draft_v1';
-let _draftTimer = null;
 let _formSubmitted = false;
-
-function saveDraft() {
-    clearTimeout(_draftTimer);
-    _draftTimer = setTimeout(() => {
-        const draft = {};
-        // Text fields
-        const nameEl = document.querySelector('input[name="name"]');
-        if (nameEl) draft.name = nameEl.value;
-
-        const descEl = document.querySelector('textarea[name="description"]');
-        if (descEl) draft.description = descEl.value;
-
-        const priceEl = document.querySelector('input[name="price"]');
-        if (priceEl) draft.price = priceEl.value;
-
-        const shipFeeEl = document.querySelector('input[name="shippingFee"]');
-        if (shipFeeEl) draft.shippingFee = shipFeeEl.value;
-
-        const shipDaysEl = document.querySelector('input[name="shippingDays"]');
-        if (shipDaysEl) draft.shippingDays = shipDaysEl.value;
-
-        const fabricEl = document.querySelector('input[name="fabric_type"]');
-        if (fabricEl) draft.fabric_type = fabricEl.value;
-
-        // Alpine.js state
-        const alpineRoot = document.querySelector('[x-data]');
-        if (alpineRoot && alpineRoot._x_dataStack) {
-            const alpineData = alpineRoot._x_dataStack[0];
-            if (alpineData) {
-                draft.targetGroup = alpineData.targetGroup || 'Men';
-                draft.selectedCategories = alpineData.selectedCategories || [];
-                draft.step = alpineData.step || 1;
-            }
-        }
-
-        // Sizes
-        const checkedSizes = Array.from(document.querySelectorAll('.size-checkbox:checked')).map(cb => cb.value);
-        draft.sizes = checkedSizes;
-        const sizeStocks = {};
-        checkedSizes.forEach(size => {
-            const input = document.getElementById('stock_' + size);
-            if (input) sizeStocks[size] = input.value;
-        });
-        draft.sizeStocks = sizeStocks;
-
-        // Variant names
-        const variantNameInputs = document.querySelectorAll('input[name^="variant_name"]');
-        draft.variantNames = Array.from(variantNameInputs).map(i => i.value);
-
-        // Toggles
-        const discountToggle = document.getElementById('discountToggle');
-        draft.isOnSale = discountToggle ? discountToggle.checked : false;
-        if (draft.isOnSale) {
-            const pctEl = document.getElementById('discountPercentage');
-            draft.discountPercentage = pctEl ? pctEl.value : '';
-        }
-
-        localStorage.setItem(DRAFT_KEY, JSON.stringify(draft));
-        showDraftSaved();
-    }, 1500);
-}
-
-function showDraftSaved() {
-    const indicator = document.getElementById('draft-save-indicator');
-    if (!indicator) return;
-    indicator.style.display = 'inline-flex';
-    indicator.textContent = '✓ Draft saved · just now';
-    clearTimeout(indicator._hideTimer);
-    indicator._hideTimer = setTimeout(() => {
-        indicator.style.display = 'none';
-    }, 4000);
-}
-
-function restoreDraft() {
-    const raw = localStorage.getItem(DRAFT_KEY);
-    if (!raw) return;
-    let draft;
-    try { draft = JSON.parse(raw); } catch (e) { return; }
-    if (!draft) return;
-
-    // Text fields
-    if (draft.name) {
-        const el = document.querySelector('input[name="name"]');
-        if (el && !el.value) el.value = draft.name;
-    }
-    if (draft.description) {
-        const el = document.querySelector('textarea[name="description"]');
-        if (el && !el.value) el.value = draft.description;
-    }
-    if (draft.price) {
-        const el = document.querySelector('input[name="price"]');
-        if (el && !el.value) el.value = draft.price;
-    }
-    if (draft.shippingFee) {
-        const el = document.querySelector('input[name="shippingFee"]');
-        if (el && !el.value) el.value = draft.shippingFee;
-    }
-    if (draft.shippingDays) {
-        const el = document.querySelector('input[name="shippingDays"]');
-        if (el && !el.value) el.value = draft.shippingDays;
-    }
-
-    // Alpine.js state
-    const alpineRoot = document.querySelector('[x-data]');
-    if (alpineRoot && alpineRoot._x_dataStack) {
-        const alpineData = alpineRoot._x_dataStack[0];
-        if (alpineData) {
-            if (draft.targetGroup) alpineData.targetGroup = draft.targetGroup;
-            if (Array.isArray(draft.selectedCategories) && draft.selectedCategories.length > 0) {
-                alpineData.selectedCategories = draft.selectedCategories;
-            }
-        }
-    }
-
-    // Sizes
-    if (Array.isArray(draft.sizes) && draft.sizes.length > 0) {
-        draft.sizes.forEach(size => {
-            const cb = document.getElementById('size_cb_' + size);
-            if (cb && !cb.checked) {
-                cb.checked = true;
-                toggleSizeStock(cb, size);
-            }
-            if (draft.sizeStocks && draft.sizeStocks[size]) {
-                const stockEl = document.getElementById('stock_' + size);
-                if (stockEl) stockEl.value = draft.sizeStocks[size];
-            }
-        });
-        calculateTotalStock();
-    }
-
-    // Discount toggle
-    if (draft.isOnSale) {
-        const toggle = document.getElementById('discountToggle');
-        if (toggle && !toggle.checked) {
-            toggle.checked = true;
-            toggleDiscount(toggle);
-        }
-        if (draft.discountPercentage) {
-            const pctEl = document.getElementById('discountPercentage');
-            if (pctEl) pctEl.value = draft.discountPercentage;
-        }
-    }
-
-    // Show indicator briefly
-    const indicator = document.getElementById('draft-save-indicator');
-    if (indicator) {
-        indicator.style.display = 'inline-flex';
-        indicator.textContent = '↩ Draft restored';
-        clearTimeout(indicator._hideTimer);
-        indicator._hideTimer = setTimeout(() => { indicator.style.display = 'none'; }, 5000);
-    }
-}
-
-function clearDraft() {
-    localStorage.removeItem(DRAFT_KEY);
-}
-
-// Attach save on input change
-document.addEventListener('DOMContentLoaded', () => {
-    // Restore draft on page load (after Alpine.js initializes)
-    setTimeout(restoreDraft, 300);
-
-    // Clear draft and set flag on successful submit
-    const form = document.getElementById('productForm');
-    if (form) {
-        form.addEventListener('submit', () => {
-            _formSubmitted = true;
-            clearDraft();
-        });
-    }
-
-    // Auto-save on any field change
-    document.addEventListener('input', saveDraft);
-    document.addEventListener('change', saveDraft);
-});
-
-// ================================================================
-// LEAVE PAGE CONFIRMATION
-// ================================================================
 let _pendingLeaveUrl = null;
 let _leaveAllowed = false;
+
+// Ensure any previous draft is completely removed so the form always starts fresh
+try {
+    localStorage.removeItem(DRAFT_KEY);
+} catch (e) {}
+
+function clearAllProductInputs() {
+    try {
+        localStorage.removeItem(DRAFT_KEY);
+    } catch (e) {}
+    const form = document.getElementById('productForm');
+    if (form) form.reset();
+}
 
 function hasFormData() {
     if (_formSubmitted) return false;
     const name = document.querySelector('input[name="name"]')?.value?.trim();
     const desc = document.querySelector('textarea[name="description"]')?.value?.trim();
     const price = document.querySelector('input[name="price"]')?.value?.trim();
-    return Boolean(name || desc || price);
+    const fabric = document.querySelector('input[name="fabric_type"]')?.value?.trim();
+    const hasCheckedSize = document.querySelector('.size-checkbox:checked') !== null;
+    return Boolean(name || desc || price || fabric || hasCheckedSize);
 }
 
 function showLeaveModal(href) {
@@ -2022,6 +1857,7 @@ function closeLeaveModal() {
 
 function confirmLeave() {
     _leaveAllowed = true;
+    clearAllProductInputs();
     document.getElementById('leave-page-modal').style.display = 'none';
     document.body.style.overflow = '';
     if (_pendingLeaveUrl) {
@@ -2032,6 +1868,18 @@ function confirmLeave() {
 }
 
 document.addEventListener('DOMContentLoaded', () => {
+    // Clear any previous draft storage
+    clearAllProductInputs();
+
+    // Mark form as submitted on submit to allow navigation without prompt
+    const form = document.getElementById('productForm');
+    if (form) {
+        form.addEventListener('submit', () => {
+            _formSubmitted = true;
+            try { localStorage.removeItem(DRAFT_KEY); } catch (e) {}
+        });
+    }
+
     // Intercept all anchor clicks that leave this page
     document.addEventListener('click', (e) => {
         const anchor = e.target.closest('a[href]');
@@ -2047,11 +1895,18 @@ document.addEventListener('DOMContentLoaded', () => {
         showLeaveModal(href);
     });
 
-    // Intercept browser back/refresh
+    // Intercept browser back/refresh/tab close
     window.addEventListener('beforeunload', (e) => {
         if (hasFormData() && !_formSubmitted && !_leaveAllowed) {
             e.preventDefault();
-            e.returnValue = 'You have unsaved product information. Leave anyway?';
+            e.returnValue = 'You have unsaved product information. Once you leave, all entered details will be erased.';
+        }
+    });
+
+    // When page is actually unloaded, clear any cached inputs
+    window.addEventListener('pagehide', () => {
+        if (!_formSubmitted) {
+            clearAllProductInputs();
         }
     });
 });
