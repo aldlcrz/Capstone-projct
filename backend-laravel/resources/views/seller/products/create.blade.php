@@ -808,7 +808,7 @@
                                step="0.01" 
                                placeholder="0.00"
                                x-model="price"
-                               oninput="if(parseFloat(this.value) > 10000) this.value = 10000; updateDiscountPreview(); calculateFillRate();"
+                               oninput="if(parseFloat(this.value) > 10000) this.value = 10000; updateDiscountPreview(); calculateFillRate(); document.getElementById('price-card')?.classList.remove('border-red-500', 'ring-2', 'ring-red-400'); this.classList.remove('border-red-500');"
                                style="width:100%;background:transparent;font-size:18px;font-weight:700;color:#1E1915;outline:none;border:none;">
                         <p style="font-size:9px;color:#A8A096;margin:0;">Item base price</p>
                     </div>
@@ -1581,21 +1581,24 @@ function addProductManager() {
         },
 
         goToStep2() {
+            // Remove previous error highlights
+            document.querySelectorAll('.border-red-500, .ring-2.ring-red-400').forEach(el => {
+                el.classList.remove('border-red-500', 'ring-2', 'ring-red-400');
+            });
+
             if (!this.variants[0] || !this.variants[0].imagePreview) {
-                triggerAppModal('Cover Photo Required', 'Please upload a Cover Photo for Variant 1 (at the top of the form).', 'warning');
                 const v1Box = document.getElementById('variant_upload_box_0');
                 if (v1Box) {
-                    v1Box.classList.add('border-red-500');
+                    v1Box.classList.add('border-red-500', 'ring-2', 'ring-red-400');
                     v1Box.scrollIntoView({ behavior: 'smooth', block: 'center' });
                 }
                 return;
             }
 
             if (!this.productName || this.productName.trim().length < 3) {
-                triggerAppModal('Product Name Required', 'Please enter a product name with at least 3 characters.', 'warning');
                 const nameInput = document.getElementById('productNameInput');
                 if (nameInput) {
-                    nameInput.classList.add('border-red-500');
+                    nameInput.classList.add('border-red-500', 'ring-2', 'ring-red-400');
                     nameInput.scrollIntoView({ behavior: 'smooth', block: 'center' });
                     nameInput.focus();
                 }
@@ -1603,17 +1606,18 @@ function addProductManager() {
             }
 
             if (!this.targetGroup || !['Men', 'Women', 'Kids'].includes(this.targetGroup)) {
-                triggerAppModal('Target Tag Required', 'Please select who this product is for (Men, Women, or Kids).', 'warning');
                 const tgContainer = document.getElementById('target-group-container');
-                if (tgContainer) tgContainer.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                if (tgContainer) {
+                    tgContainer.classList.add('border-red-500', 'ring-2', 'ring-red-400');
+                    tgContainer.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }
                 return;
             }
 
             if (!this.selectedCategories || this.selectedCategories.length === 0) {
-                triggerAppModal('Category Required', 'Please select at least one product category from the options below.', 'warning');
                 const catContainer = document.getElementById('category-cards-container');
                 if (catContainer) {
-                    catContainer.classList.add('border-red-500');
+                    catContainer.classList.add('border-red-500', 'ring-2', 'ring-red-400');
                     catContainer.scrollIntoView({ behavior: 'smooth', block: 'center' });
                 }
                 return;
@@ -1628,25 +1632,47 @@ function addProductManager() {
         },
 
         goToStep3() {
-            const priceVal = parseFloat(this.price);
-            if (isNaN(priceVal) || priceVal < 1 || priceVal > 10000) {
-                triggerAppModal('Valid Price Required', 'Please enter a valid base price between ₱1.00 and ₱10,000.00.', 'warning');
-                const priceCard = document.getElementById('price-card');
-                if (priceCard) priceCard.classList.add('border-red-500');
-                return;
-            }
+            // Remove previous Step 2 error highlights
+            document.querySelectorAll('#price-card, #priceInput, #sizing-section, #stock-card').forEach(el => {
+                el.classList.remove('border-red-500', 'ring-2', 'ring-red-400');
+            });
 
             const checkedSizes = document.querySelectorAll('.size-checkbox:checked');
             if (checkedSizes.length === 0) {
-                triggerAppModal('Size Required', 'Please check at least one Heritage Size (e.g. S, M, L, XL, XXL, Custom).', 'warning');
                 const sizeSec = document.getElementById('sizing-section');
-                if (sizeSec) sizeSec.classList.add('border-red-500');
+                if (sizeSec) {
+                    sizeSec.classList.add('border-red-500', 'ring-2', 'ring-red-400');
+                    sizeSec.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }
                 return;
             }
 
             const totalStock = parseInt(document.getElementById('total_stock')?.value || 0);
             if (totalStock <= 0) {
-                triggerAppModal('Stock Quantity Required', 'Please enter stock quantity greater than 0 for checked sizes.', 'warning');
+                const sizeSec = document.getElementById('sizing-section');
+                const stockCard = document.getElementById('stock-card');
+                if (sizeSec) sizeSec.classList.add('border-red-500', 'ring-2', 'ring-red-400');
+                if (stockCard) stockCard.classList.add('border-red-500', 'ring-2', 'ring-red-400');
+                const firstStockInput = document.querySelector('.size-checkbox:checked')?.closest('div')?.querySelector('.size-stock-input');
+                if (firstStockInput) {
+                    firstStockInput.focus();
+                    firstStockInput.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                } else if (sizeSec) {
+                    sizeSec.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }
+                return;
+            }
+
+            const priceVal = parseFloat(this.price);
+            if (isNaN(priceVal) || priceVal < 1 || priceVal > 10000) {
+                const priceCard = document.getElementById('price-card');
+                const priceInput = document.getElementById('priceInput');
+                if (priceCard) priceCard.classList.add('border-red-500', 'ring-2', 'ring-red-400');
+                if (priceInput) {
+                    priceInput.classList.add('border-red-500');
+                    priceInput.focus();
+                }
+                if (priceCard) priceCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
                 return;
             }
 
@@ -1772,6 +1798,7 @@ function toggleSizeStock(checkbox, size) {
         if (stockInput.value === '' || stockInput.value === '0') {
             stockInput.value = '5';
         }
+        document.getElementById('sizing-section')?.classList.remove('border-red-500', 'ring-2', 'ring-red-400');
     } else {
         stockInput.value = '0';
         stockInput.setAttribute('disabled', 'true');
@@ -1793,6 +1820,10 @@ function calculateTotalStock() {
 
     const totalStockEl = document.getElementById('total_stock');
     if (totalStockEl) totalStockEl.value = total;
+    if (total > 0) {
+        document.getElementById('stock-card')?.classList.remove('border-red-500', 'ring-2', 'ring-red-400');
+        document.getElementById('sizing-section')?.classList.remove('border-red-500', 'ring-2', 'ring-red-400');
+    }
 }
 
 function toggleDiscount(checkbox) {
