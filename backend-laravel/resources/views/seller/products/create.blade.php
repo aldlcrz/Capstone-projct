@@ -657,30 +657,34 @@
                     </div>
                     <div style="display:flex;align-items:center;gap:8px;margin-top:6px;flex-wrap:wrap;">
                         {{-- Photo Status --}}
-                        <span style="font-size:10px;font-weight:700;border-radius:20px;padding:3px 10px;display:inline-flex;align-items:center;gap:4px;"
-                              :style="variants[0] && variants[0].imagePreview ? 'background:#E8F5E9;color:#2E7D32;border:1px solid #A5D6A7;' : 'background:#FEF2F2;color:#DC2626;border:1px solid #FECACA;'">
+                        <span class="rounded-full"
+                              style="font-size:10.5px;font-weight:700;border-radius:9999px !important;padding:4px 12px !important;display:inline-flex;align-items:center;gap:4px;"
+                              :style="variants[0] && variants[0].imagePreview ? 'border-radius:9999px !important;padding:4px 12px !important;font-size:10.5px;font-weight:700;background:#E8F5E9;color:#2E7D32;border:1px solid #A5D6A7;display:inline-flex;align-items:center;' : 'border-radius:9999px !important;padding:4px 12px !important;font-size:10.5px;font-weight:700;background:#FEF2F2;color:#DC2626;border:1px solid #FECACA;display:inline-flex;align-items:center;'">
                             <span x-text="variants[0] && variants[0].imagePreview ? '✓ Photo added' : '✕ Photo missing'"></span>
                         </span>
 
                         {{-- Name Status --}}
-                        <span style="font-size:10px;font-weight:700;border-radius:20px;padding:3px 10px;display:inline-flex;align-items:center;gap:4px;"
-                              :style="productName && productName.trim().length >= 3 ? 'background:#E8F5E9;color:#2E7D32;border:1px solid #A5D6A7;' : 'background:#FEF2F2;color:#DC2626;border:1px solid #FECACA;'">
+                        <span class="rounded-full"
+                              style="font-size:10.5px;font-weight:700;border-radius:9999px !important;padding:4px 12px !important;display:inline-flex;align-items:center;gap:4px;"
+                              :style="productName && productName.trim().length >= 3 ? 'border-radius:9999px !important;padding:4px 12px !important;font-size:10.5px;font-weight:700;background:#E8F5E9;color:#2E7D32;border:1px solid #A5D6A7;display:inline-flex;align-items:center;' : 'border-radius:9999px !important;padding:4px 12px !important;font-size:10.5px;font-weight:700;background:#FEF2F2;color:#DC2626;border:1px solid #FECACA;display:inline-flex;align-items:center;'">
                             <span x-text="productName && productName.trim().length >= 3 ? '✓ Name set' : '✕ Name missing'"></span>
                         </span>
 
                         {{-- Target Status --}}
-                        <span style="font-size:10px;font-weight:700;border-radius:20px;padding:3px 10px;display:inline-flex;align-items:center;gap:4px;"
-                              :style="targetGroup ? 'background:#E8F5E9;color:#2E7D32;border:1px solid #A5D6A7;' : 'background:#FEF2F2;color:#DC2626;border:1px solid #FECACA;'">
+                        <span class="rounded-full"
+                              style="font-size:10.5px;font-weight:700;border-radius:9999px !important;padding:4px 12px !important;display:inline-flex;align-items:center;gap:4px;"
+                              :style="targetGroup ? 'border-radius:9999px !important;padding:4px 12px !important;font-size:10.5px;font-weight:700;background:#E8F5E9;color:#2E7D32;border:1px solid #A5D6A7;display:inline-flex;align-items:center;' : 'border-radius:9999px !important;padding:4px 12px !important;font-size:10.5px;font-weight:700;background:#FEF2F2;color:#DC2626;border:1px solid #FECACA;display:inline-flex;align-items:center;'">
                             <span x-text="targetGroup ? '✓ ' + targetGroup : '✕ Target missing'"></span>
                         </span>
 
                         {{-- Category Status --}}
-                        <span style="font-size:10px;font-weight:700;border-radius:20px;padding:3px 10px;display:inline-flex;align-items:center;gap:4px;"
-                              :style="selectedCategories.length > 0 ? 'background:#E8F5E9;color:#2E7D32;border:1px solid #A5D6A7;' : 'background:#FEF2F2;color:#DC2626;border:1px solid #FECACA;'">
+                        <span class="rounded-full"
+                              style="font-size:10.5px;font-weight:700;border-radius:9999px !important;padding:4px 12px !important;display:inline-flex;align-items:center;gap:4px;"
+                              :style="selectedCategories.length > 0 ? 'border-radius:9999px !important;padding:4px 12px !important;font-size:10.5px;font-weight:700;background:#E8F5E9;color:#2E7D32;border:1px solid #A5D6A7;display:inline-flex;align-items:center;' : 'border-radius:9999px !important;padding:4px 12px !important;font-size:10.5px;font-weight:700;background:#FEF2F2;color:#DC2626;border:1px solid #FECACA;display:inline-flex;align-items:center;'">
                             <span x-text="selectedCategories.length > 0 ? '✓ Category selected' : '✕ Category missing'"></span>
                         </span>
 
-                        <span id="draft-save-indicator" style="display:none;font-size:10px;font-weight:600;color:#2E7D32;white-space:nowrap;background:#E8F5E9;border:1px solid #A5D6A7;border-radius:9999px;padding:2px 10px;">✓ Draft saved</span>
+                        <span id="draft-save-indicator" style="display:none;font-size:10px;font-weight:600;color:#2E7D32;white-space:nowrap;background:#E8F5E9;border:1px solid #A5D6A7;border-radius:9999px;padding:3px 10px;">✓ Draft saved</span>
                     </div>
                 </div>
 
