@@ -49,7 +49,7 @@ class CartController extends Controller
             // Dynamic detail injection for UI rendering
             $seller = $product->seller;
             $item['name'] = $product->name;
-            $item['image'] = $product->getImageUrl();
+            $item['image'] = VariationFormatter::getImageForVariation($item['variation'] ?? null, $product) ?: $product->getImageUrl();
             $item['original_price'] = $product->price;
             $item['discount_percentage'] = $product->discount_percentage;
             $item['is_on_sale'] = $product->is_on_sale && ($product->discount_percentage > 0);
@@ -135,8 +135,8 @@ class CartController extends Controller
 
         $key = $productId . '_' . ($size ?? '') . '_' . ($variation ?? '');
 
-        // Safe image resolution
-        $image = $product->getImageUrl();
+        // Safe image resolution for selected variation
+        $image = VariationFormatter::getImageForVariation($variation, $product) ?: $product->getImageUrl();
 
         if (isset($cart[$key])) {
             $newQuantity = $cart[$key]['quantity'] + $quantity;

@@ -169,8 +169,9 @@
                                 'id' => $item->id,
                                 'productId' => $item->productId,
                                 'name' => $item->product ? $item->product->name : 'Heritage Product',
-                                'image' => $item->product ? $item->product->getImageUrl() : asset('uploads/products/default.jpg'),
+                                'image' => \App\Support\VariationFormatter::getImageForVariation($item->variation, $item->product) ?: ($item->product ? $item->product->getImageUrl() : asset('uploads/products/default.jpg')),
                                 'size' => $item->size,
+                                'variation' => $item->display_variation ?? $item->variation,
                                 'quantity' => $item->quantity,
                                 'price' => number_format($item->price),
                                 'subtotal' => number_format($item->price * $item->quantity),
@@ -231,7 +232,9 @@
                                 <div class="w-14 h-16 sm:w-16 sm:h-20 bg-[#FAF8F5] rounded-xl overflow-hidden border border-[#ECE3D2] shrink-0"
                                      onclick="event.stopPropagation(); window.location.href='/products/{{ $item->productId }}';">
                                     @php
-                                        $imgSrc = $item->product ? $item->product->getImageUrl() : asset('uploads/products/default.jpg');
+                                        $variationLabel = $item->display_variation ?? $item->variation;
+                                        $imgSrc = \App\Support\VariationFormatter::getImageForVariation($item->variation, $item->product)
+                                            ?: ($item->product ? $item->product->getImageUrl() : asset('uploads/products/default.jpg'));
                                     @endphp
                                     <img src="{{ $imgSrc }}" class="w-full h-full object-cover object-top"
                                          onerror="this.src='/uploads/products/default.jpg'"
@@ -250,6 +253,9 @@
                                     </h4>
                                     <div class="flex flex-wrap items-center gap-2 text-[9px] sm:text-[10px] font-bold text-[#8C827A] uppercase tracking-wider">
                                         @if($item->size)<span class="px-2 py-0.5 bg-[#FAF8F5] rounded-md text-[#1E1915] border border-[#EAE2D2]">Size: {{ $item->size }}</span>@endif
+                                        @if(!empty($variationLabel) && strcasecmp($variationLabel, 'Original') !== 0)
+                                            <span class="px-2 py-0.5 bg-[#FAF5EA] rounded-md text-[#996515] border border-[#E6D8BA]">Style: {{ $variationLabel }}</span>
+                                        @endif
                                         <span>Qty: {{ $item->quantity }}</span>
                                     </div>
                                 </div>

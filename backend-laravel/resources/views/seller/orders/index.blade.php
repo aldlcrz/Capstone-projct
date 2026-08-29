@@ -1095,7 +1095,7 @@ function sellerOrdersManager() {
                                 <template x-for="item in detailsOrder.items || []" :key="item.id">
                                     <div class="flex items-center gap-3 bg-white border border-gray-100 rounded-2xl p-3 shadow-xs">
                                         <div class="w-12 h-14 bg-gray-50 rounded-xl overflow-hidden shrink-0 border border-gray-100">
-                                            <img :src="productImage(item.product)" class="w-full h-full object-cover object-top" x-on:error="$event.target.src='/uploads/products/default.jpg'">
+                                            <img :src="item.image_url || productImage(item.product)" class="w-full h-full object-cover object-top" x-on:error="$event.target.src='/uploads/products/default.jpg'">
                                         </div>
                                         <div class="flex-1 min-w-0">
                                             <h4 class="text-xs font-bold text-black truncate" x-text="item.product?.name || 'Product Item'"></h4>

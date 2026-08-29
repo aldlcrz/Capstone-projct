@@ -238,7 +238,9 @@
                             @if($order->items)
                             @foreach($order->items as $item)
                                 @php
-                                    $imgSrc = $item->product ? $item->product->getImageUrl() : asset('uploads/products/default.jpg');
+                                    $variationLabel = $item->display_variation ?? $item->variation;
+                                    $imgSrc = \App\Support\VariationFormatter::getImageForVariation($item->variation, $item->product)
+                                        ?: ($item->product ? $item->product->getImageUrl() : asset('uploads/products/default.jpg'));
                                     $itemStatus = strtolower(trim($order->status ?? ''));
                                     $canRate = ($itemStatus === 'completed');
                                     $existingReview = $order->reviews ? $order->reviews->where('orderItemId', $item->id)->first() : null;
@@ -264,6 +266,11 @@
                                             @if($item->size)
                                                 <span class="px-2 py-0.5 bg-[#FAF8F5] text-[#1E1915] text-[10px] font-bold rounded-md border border-[#ECE3D2]">
                                                     Size {{ $item->size }}
+                                                </span>
+                                            @endif
+                                            @if(!empty($variationLabel) && strcasecmp($variationLabel, 'Original') !== 0)
+                                                <span class="px-2 py-0.5 bg-[#FAF5EA] text-[#996515] text-[10px] font-bold rounded-md border border-[#E6D8BA]">
+                                                    Style: {{ $variationLabel }}
                                                 </span>
                                             @endif
                                             <span class="px-2 py-0.5 bg-[#FAF8F5] text-[#78716C] text-[10px] font-bold rounded-md border border-[#ECE3D2]">

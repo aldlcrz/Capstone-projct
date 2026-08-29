@@ -101,6 +101,48 @@ class VariationFormatter
         return $variations;
     }
 
+    public static function getImageForVariation(?string $variation, ?\App\Models\Product $product = null): ?string
+    {
+        if (!$product) {
+            return null;
+        }
+
+        $allVariations = self::buildVariations($product->image, $product);
+        if (empty($allVariations)) {
+            return $product->getImageUrl();
+        }
+
+        if (empty($variation) || strcasecmp($variation, 'Original') === 0) {
+            return $allVariations[0]['url'] ?? $product->getImageUrl();
+        }
+
+        $varTrimmed = trim($variation);
+
+        // Match by variation label (e.g. "KOI", "CREAM", "GREEN")
+        foreach ($allVariations as $v) {
+            if (strcasecmp(trim($v['label']), $varTrimmed) === 0) {
+                return $v['url'];
+            }
+        }
+
+        // Match by index e.g. "Style 2" or "2"
+        if (preg_match('/(?:style\s*(\d+)|^\s*(\d+)\s*$)/i', $varTrimmed, $m)) {
+            $idx = (int) ($m[1] ?: $m[2]) - 1;
+            if (isset($allVariations[$idx]['url'])) {
+                return $allVariations[$idx]['url'];
+            }
+        }
+
+        // Match by partial path / filename match
+        foreach ($allVariations as $v) {
+            if (self::pathsMatch($varTrimmed, $v['url'])) {
+                return $v['url'];
+            }
+        }
+
+        return $allVariations[0]['url'] ?? $product->getImageUrl();
+    }
+
     private static function looksLikeImagePath(string $value): bool
     {
         return str_contains($value, '/')

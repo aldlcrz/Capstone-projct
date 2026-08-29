@@ -47,7 +47,7 @@ class OrderItem extends Model
      */
     protected $table = 'order_items';
 
-    protected $appends = ['display_variation'];
+    protected $appends = ['display_variation', 'image_url'];
 
     /**
      * Use custom timestamp column names to match the DB schema.
@@ -102,5 +102,11 @@ class OrderItem extends Model
     public function getDisplayVariationAttribute(): ?string
     {
         return VariationFormatter::label($this->variation, $this->product?->image);
+    }
+
+    public function getImageUrlAttribute(): string
+    {
+        return VariationFormatter::getImageForVariation($this->variation, $this->product)
+            ?: ($this->product ? $this->product->getImageUrl() : asset('uploads/products/default.jpg'));
     }
 }

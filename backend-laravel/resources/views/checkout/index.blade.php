@@ -120,30 +120,27 @@
                             @foreach($cart as $item)
                                 @php
                                     $itemProduct = !empty($item['id']) ? \App\Models\Product::find($item['id']) : null;
-                                    $imgSrc = $itemProduct ? $itemProduct->getImageUrl() : asset('uploads/products/default.jpg');
-                                    if ($imgSrc === asset('uploads/products/default.jpg') && !empty($item['image'])) {
-                                        $img = $item['image'];
-                                        if (str_starts_with($img, 'http') || str_starts_with($img, '/')) {
-                                            $imgSrc = $img;
-                                        } else {
-                                            $cleanImg = ltrim($img, '/');
-                                            if (file_exists(public_path('uploads/' . $cleanImg))) {
-                                                $imgSrc = asset('uploads/' . $cleanImg);
-                                            } elseif (file_exists(public_path('uploads/products/' . $cleanImg))) {
-                                                $imgSrc = asset('uploads/products/' . $cleanImg);
-                                            } elseif (file_exists(storage_path('app/public/' . $cleanImg))) {
-                                                $imgSrc = asset('storage/' . $cleanImg);
-                                            }
-                                        }
-                                    }
+                                    $variationLabel = !empty($item['variation']) 
+                                        ? (\App\Support\VariationFormatter::label($item['variation'], $itemProduct?->image) ?? $item['variation'])
+                                        : null;
+                                    $imgSrc = \App\Support\VariationFormatter::getImageForVariation($item['variation'] ?? null, $itemProduct)
+                                        ?: (!empty($item['image']) ? $item['image'] : ($itemProduct ? $itemProduct->getImageUrl() : asset('uploads/products/default.jpg')));
                                 @endphp
                                 <div class="flex gap-3.5 sm:gap-4 py-3.5 first:pt-0 last:pb-0 items-start">
                                     <img src="{{ $imgSrc }}" onerror="this.src='/uploads/products/default.jpg'" class="w-16 h-16 sm:w-20 sm:h-20 lg:w-24 lg:h-24 object-cover rounded-xl bg-gray-50 border border-gray-100 shrink-0">
                                     <div class="flex-1 min-w-0">
                                         <h4 class="text-xs sm:text-sm lg:text-base font-bold text-gray-900 line-clamp-2 leading-snug">{{ $item['name'] }}</h4>
                                         <div class="text-[10px] sm:text-xs text-gray-500 font-medium mt-1 flex items-center gap-2 flex-wrap">
-                                            @if(!empty($item['size'])) <span>Size: <strong class="text-gray-700">{{ $item['size'] }}</strong></span> @endif
-                                            @if(!empty($item['variation'])) <span>| <strong class="text-gray-700">{{ $item['variation'] }}</strong></span> @endif
+                                            @if(!empty($item['size'])) 
+                                                <span class="inline-flex items-center px-2 py-0.5 rounded bg-stone-100 text-gray-800 text-[10px] font-bold">
+                                                    Size: <strong class="ml-1 text-black">{{ $item['size'] }}</strong>
+                                                </span> 
+                                            @endif
+                                            @if(!empty($variationLabel) && strcasecmp($variationLabel, 'Original') !== 0) 
+                                                <span class="inline-flex items-center px-2 py-0.5 rounded bg-amber-50 text-amber-900 border border-amber-200/60 text-[10px] font-bold">
+                                                    Style: <strong class="ml-1 text-amber-950">{{ $variationLabel }}</strong>
+                                                </span> 
+                                            @endif
                                         </div>
                                         <div class="inline-flex items-center gap-1 mt-1.5 bg-amber-50 text-amber-900 text-[9px] lg:text-[10px] font-bold px-2 py-0.5 rounded border border-amber-200/50 max-w-full">
                                             <span class="shrink-0">🛡️</span> <span class="truncate">30 Days Heritage Return Guarantee</span>

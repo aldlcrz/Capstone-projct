@@ -200,22 +200,8 @@
                                     @php
                                         $itemKey = (string) $cartKey;
                                         $itemProduct = !empty($item['id']) ? \App\Models\Product::find($item['id']) : null;
-                                        $imgSrc = $itemProduct ? $itemProduct->getImageUrl() : asset('uploads/products/default.jpg');
-                                        if ($imgSrc === asset('uploads/products/default.jpg') && !empty($item['image'])) {
-                                            $img = $item['image'];
-                                            if (str_starts_with($img, 'http') || str_starts_with($img, '/')) {
-                                                $imgSrc = $img;
-                                            } else {
-                                                $cleanImg = ltrim($img, '/');
-                                                if (file_exists(public_path('uploads/' . $cleanImg))) {
-                                                    $imgSrc = asset('uploads/' . $cleanImg);
-                                                } elseif (file_exists(public_path('uploads/products/' . $cleanImg))) {
-                                                    $imgSrc = asset('uploads/products/' . $cleanImg);
-                                                } elseif (file_exists(storage_path('app/public/' . $cleanImg))) {
-                                                    $imgSrc = asset('storage/' . $cleanImg);
-                                                }
-                                            }
-                                        }
+                                        $imgSrc = \App\Support\VariationFormatter::getImageForVariation($item['variation'] ?? null, $itemProduct)
+                                            ?: (!empty($item['image']) ? $item['image'] : ($itemProduct ? $itemProduct->getImageUrl() : asset('uploads/products/default.jpg')));
                                     @endphp
                                     <div class="p-4 sm:p-5 transition-colors duration-150"
                                          x-show="itemMatchesSearch('{{ addslashes($itemKey) }}')"

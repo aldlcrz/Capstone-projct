@@ -575,7 +575,7 @@
                                                 window.location.href = window.loginUrl;
                                                 return;
                                             }
-                                            window.location.href = '/checkout?productId={{ $product->id }}&size=' + effectiveSize() + '&quantity=' + quantity + '&direct=1';
+                                            window.location.href = '/checkout?productId={{ $product->id }}&size=' + encodeURIComponent(effectiveSize()) + '&quantity=' + quantity + '&variation=' + encodeURIComponent(selectedVariationLabel()) + '&direct=1';
                                         }
                                     "
                                     :disabled="!selectedSize"

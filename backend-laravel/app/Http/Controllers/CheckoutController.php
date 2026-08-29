@@ -23,7 +23,9 @@ class CheckoutController extends Controller
         // Handle direct buy from product page
         if ($request->has('productId')) {
             $product = Product::findOrFail($request->productId);
-            $image = $product->getImageUrl();
+            $variation = VariationFormatter::label($request->input('variation'), $product->image)
+                ?? $request->input('variation');
+            $image = VariationFormatter::getImageForVariation($variation, $product) ?: $product->getImageUrl();
 
             $directItem = [
                 'id' => $product->id,
@@ -32,8 +34,7 @@ class CheckoutController extends Controller
                 'image' => $image,
                 'quantity' => (int) $request->input('quantity', 1),
                 'size' => $request->input('size'),
-                'variation' => VariationFormatter::label($request->input('variation'), $product->image)
-                    ?? $request->input('variation'),
+                'variation' => $variation,
                 'sellerId' => $product->sellerId,
                 'shippingFee' => $product->shippingFee ?? 0,
                 'original_price' => $product->price,
@@ -62,7 +63,7 @@ class CheckoutController extends Controller
             if (!empty($item['id'])) {
                 $p = Product::find($item['id']);
                 if ($p) {
-                    $item['image'] = $p->getImageUrl();
+                    $item['image'] = VariationFormatter::getImageForVariation($item['variation'] ?? null, $p) ?: $p->getImageUrl();
                     $item['name'] = $p->name;
                     $item['price'] = $p->sale_price;
                 }
