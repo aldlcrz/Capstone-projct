@@ -758,7 +758,7 @@ function sellerOrdersManager() {
                             <img :src="order.customer.profile_photo_url || (order.customer.profilePhoto ? ('/uploads/' + order.customer.profilePhoto.replace(/^\/+/, '')) : '')" 
                                  :alt="order.customer?.name || 'Customer'"
                                  class="w-full h-full object-cover"
-                                 @error="$el.style.display='none'; if ($el.nextElementSibling) $el.nextElementSibling.style.display='inline-flex';">
+                                 x-on:error="$el.style.display='none'; if ($el.nextElementSibling) $el.nextElementSibling.style.display='inline-flex';">
                         </template>
                         <span :style="order.customer && (order.customer.profile_photo_url || order.customer.profilePhoto) ? 'display:none;' : ''" 
                               x-text="(order.customer?.name || 'O')[0].toUpperCase()"></span>
