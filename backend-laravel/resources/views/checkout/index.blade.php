@@ -459,9 +459,22 @@
                         <button type="button" @click="step = 1" class="px-4 py-4 border border-gray-200 rounded-xl flex items-center justify-center text-gray-500 hover:text-black hover:border-black transition-colors">
                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path></svg>
                         </button>
-                        <button type="button" @click="requestPlaceOrder()" class="flex-1 bg-[#C0422A] text-white py-4 rounded-xl text-sm font-bold shadow-lg shadow-[#C0422A]/20 hover:bg-[#A33622] transition-all transform active:scale-[0.99] flex items-center justify-center gap-2">
-                            <span>Place Order</span>
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                        <button type="button" 
+                                @click="requestPlaceOrder()" 
+                                :disabled="aiChecking"
+                                :class="aiChecking ? 'opacity-60 cursor-not-allowed bg-[#C0422A]/80' : 'hover:bg-[#A33622] active:scale-[0.99] cursor-pointer shadow-lg shadow-[#C0422A]/20'"
+                                class="flex-1 bg-[#C0422A] text-white py-4 rounded-xl text-sm font-bold transition-all flex items-center justify-center gap-2">
+                            <span x-show="!aiChecking" class="inline-flex items-center gap-2">
+                                <span>Place Order</span>
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                            </span>
+                            <span x-show="aiChecking" x-cloak class="inline-flex items-center gap-2">
+                                <svg class="w-4 h-4 animate-spin text-white" fill="none" viewBox="0 0 24 24">
+                                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                </svg>
+                                <span>Scanning Receipt...</span>
+                            </span>
                         </button>
                     </div>
                 </template>
@@ -531,8 +544,19 @@
                     <button type="button" @click="step = 1" class="w-10 h-11 border border-gray-200 rounded-xl flex items-center justify-center text-gray-500 hover:bg-gray-50">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
                     </button>
-                    <button type="button" @click="requestPlaceOrder()" class="px-6 py-3 bg-[#C0422A] text-white text-xs font-bold uppercase tracking-widest rounded-xl shadow-lg hover:bg-[#A33622] transition-all">
-                        Place Order
+                    <button type="button" 
+                            @click="requestPlaceOrder()" 
+                            :disabled="aiChecking"
+                            :class="aiChecking ? 'opacity-60 cursor-not-allowed bg-[#C0422A]/80' : 'hover:bg-[#A33622] active:scale-95 cursor-pointer shadow-lg'"
+                            class="px-6 py-3 bg-[#C0422A] text-white text-xs font-bold uppercase tracking-widest rounded-xl transition-all flex items-center gap-1.5">
+                        <span x-show="!aiChecking">Place Order</span>
+                        <span x-show="aiChecking" x-cloak class="flex items-center gap-1.5">
+                            <svg class="w-3.5 h-3.5 animate-spin text-white" fill="none" viewBox="0 0 24 24">
+                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                            </svg>
+                            <span>Scanning...</span>
+                        </span>
                     </button>
                 </div>
             </template>
@@ -1536,6 +1560,10 @@ function checkoutApp(initialAddress, initialAddresses, defaultPaymentMethod) {
             window.scrollTo({ top: 0, behavior: 'smooth' });
         },
         requestPlaceOrder() {
+            if (this.aiChecking) {
+                this.screenshotError = 'Please wait while receipt scanning is in progress.';
+                return;
+            }
             if (!this.validateRef() || this.isRefDuplicate) {
                 if (this.isRefDuplicate) {
                     this.refError = '❌ Security Alert: This payment reference number has already been used in another order.';
@@ -1560,6 +1588,11 @@ function checkoutApp(initialAddress, initialAddresses, defaultPaymentMethod) {
             this.showConfirmModal = true;
         },
         confirmPlaceOrder() {
+            if (this.aiChecking) {
+                this.showConfirmModal = false;
+                this.screenshotError = 'Please wait while receipt scanning is in progress.';
+                return;
+            }
             if (!this.validateRef() || this.isRefDuplicate) {
                 this.showConfirmModal = false;
                 document.getElementById('paymentReferenceInput')?.focus();
