@@ -783,7 +783,7 @@ function sellerOrdersManager() {
                     </div>
                     <div class="min-w-0 flex-1">
                         <div class="flex items-center gap-2 flex-wrap">
-                            <h3 class="font-serif text-xs sm:text-sm font-bold truncate tracking-tight transition-colors"
+                            <h3 class="font-sans text-xs sm:text-sm font-extrabold tracking-tight transition-colors"
                                 style="color: #1E1915;"
                                 x-text="'#LB-' + order.id.slice(-8).toUpperCase()"></h3>
                             <span class="px-2.5 py-0.5 rounded-full border text-[8px] sm:text-[9px] font-black uppercase tracking-wider shrink-0"

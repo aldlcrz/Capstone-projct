@@ -27,19 +27,19 @@
     <div class="grid grid-cols-3 gap-2 sm:gap-4">
         <div class="rounded-2xl sm:rounded-3xl p-3 sm:p-5 shadow-xs space-y-0.5 sm:space-y-1 text-center sm:text-left" style="background: #FFFCF7; border: 1px solid #E8DECB;">
             <div class="text-[8px] sm:text-[10px] font-bold uppercase tracking-wider truncate" style="color: #766C60;">Unique Patrons</div>
-            <div class="text-base sm:text-2xl font-black font-serif" style="color: #1E1915;">{{ count($customerList) }}</div>
+            <div class="text-base sm:text-2xl font-black font-sans" style="color: #1E1915;">{{ count($customerList) }}</div>
             <div class="text-[8px] sm:text-[10px] hidden sm:block font-medium" style="color: #A09585;">Registered buyers</div>
         </div>
 
         <div class="rounded-2xl sm:rounded-3xl p-3 sm:p-5 shadow-xs space-y-0.5 sm:space-y-1 text-center sm:text-left" style="background: #FFFCF7; border: 1px solid #E8DECB;">
             <div class="text-[8px] sm:text-[10px] font-bold uppercase tracking-wider truncate" style="color: #766C60;">Orders Placed</div>
-            <div class="text-base sm:text-2xl font-black font-serif" style="color: #1E1915;">{{ $customerList->sum('ordersCount') }}</div>
+            <div class="text-base sm:text-2xl font-black font-sans" style="color: #1E1915;">{{ $customerList->sum('ordersCount') }}</div>
             <div class="text-[8px] sm:text-[10px] hidden sm:block font-medium" style="color: #A09585;">Completed transactions</div>
         </div>
 
         <div class="rounded-2xl sm:rounded-3xl p-3 sm:p-5 shadow-xs space-y-0.5 sm:space-y-1 text-center sm:text-left" style="background: #FFFCF7; border: 1px solid #E8DECB;">
             <div class="text-[8px] sm:text-[10px] font-bold uppercase tracking-wider truncate" style="color: #766C60;">Total Spend</div>
-            <div class="text-base sm:text-2xl font-black font-serif truncate" style="color: #C49520;">₱{{ number_format($customerList->sum('totalSpent')) }}</div>
+            <div class="text-base sm:text-2xl font-black font-sans truncate" style="color: #C49520;">₱{{ number_format($customerList->sum('totalSpent')) }}</div>
             <div class="text-[8px] sm:text-[10px] hidden sm:block font-medium" style="color: #A09585;">Lifetime value</div>
         </div>
     </div>
@@ -76,7 +76,7 @@
                 <div class="flex items-center gap-3 shrink-0">
                     <div class="text-right">
                         <div class="text-[8px] sm:text-[9px] font-bold uppercase tracking-widest" style="color: #766C60;">Total Spend</div>
-                        <div class="text-xs sm:text-sm font-black font-serif" style="color: #C49520;">₱{{ number_format($cust['totalSpent'], 2) }}</div>
+                        <div class="text-xs sm:text-sm font-black font-sans" style="color: #C49520;">₱{{ number_format($cust['totalSpent'], 2) }}</div>
                     </div>
                     <div class="w-8 h-8 rounded-xl flex items-center justify-center transition-all shrink-0" style="background: #FDF8EE; border: 1px solid #E8DECB; color: #766C60;" onmouseover="this.style.background='#C49520'; this.style.color='#FFF'; this.style.borderColor='#C49520';" onmouseout="this.style.background='#FDF8EE'; this.style.color='#766C60'; this.style.borderColor='#E8DECB';">
                         <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
@@ -164,7 +164,7 @@
                                 <div class="p-4 rounded-2xl space-y-2.5" style="background: #FDF8EE; border: 1px solid #E8DECB;">
                                     <div class="flex items-center justify-between">
                                         <div>
-                                            <div class="text-xs font-bold uppercase font-serif" style="color: #1E1915;" x-text="ord.orderNumber"></div>
+                                            <div class="text-xs font-black uppercase font-sans" style="color: #1E1915;" x-text="ord.orderNumber"></div>
                                             <div class="text-[10px] font-medium" style="color: #766C60;" x-text="ord.date"></div>
                                         </div>
                                         <span :class="{
@@ -180,14 +180,14 @@
                                         <template x-for="item in ord.items" :key="item.name">
                                             <div class="flex items-center justify-between text-xs">
                                                 <span class="font-medium" style="color: #1E1915;" x-text="item.name + ' × ' + item.quantity"></span>
-                                                <span class="font-bold font-serif" style="color: #766C60;" x-text="'₱' + (item.price * item.quantity).toFixed(2)"></span>
+                                                <span class="font-bold font-sans" style="color: #766C60;" x-text="'₱' + (item.price * item.quantity).toFixed(2)"></span>
                                             </div>
                                         </template>
                                     </div>
 
                                     <div class="flex items-center justify-between pt-0.5">
                                         <span class="text-[10px] font-bold uppercase tracking-widest" style="color: #766C60;" x-text="'Payment: ' + ord.paymentMethod"></span>
-                                        <span class="text-sm font-black font-serif" style="color: #C49520;" x-text="'Total: ₱' + Number(ord.totalAmount).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})"></span>
+                                        <span class="text-sm font-black font-sans" style="color: #C49520;" x-text="'Total: ₱' + Number(ord.totalAmount).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})"></span>
                                     </div>
                                 </div>
                             </template>
