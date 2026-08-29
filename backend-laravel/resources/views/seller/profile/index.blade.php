@@ -55,7 +55,7 @@
                         My Profile & Account
                     </h1>
                     <p style="font-size:12.5px;color:#78716C;margin-top:3px;margin-bottom:0;">
-                        Personal information & artisan studio settings
+                        Personal information & artisan shop settings
                     </p>
                 </div>
             </div>
@@ -103,7 +103,7 @@
                             {{ $user->name }}
                         </h2>
                         <p style="font-size:12px;color:#78716C;margin:3px 0 0 0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">
-                            {{ $user->email }} • <span style="color:#A16D19;font-weight:600;">Artisan Studio</span>
+                            {{ $user->email }} • <span style="color:#A16D19;font-weight:600;">Artisan Shop</span>
                         </p>
                     </div>
 
@@ -145,7 +145,7 @@
             {{-- Account Settings Section --}}
             <div>
                 <h3 style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.14em;color:#996515;margin:0 0 12px 2px;">
-                    Account & Studio Settings
+                    Account & Shop Settings
                 </h3>
 
                 <div style="display:flex;flex-direction:column;gap:10px;">
@@ -194,7 +194,7 @@
                                 </svg>
                             </div>
                             <div style="min-width:0;">
-                                <div style="font-size:14px;font-weight:700;color:#1E1915;">Studio Story & Bio</div>
+                                <div style="font-size:14px;font-weight:700;color:#1E1915;">Shop Story & Bio</div>
                                 <div style="font-size:11px;color:#8C827A;margin-top:1px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:280px;">
                                     {{ $user->shopDescription ? Str::limit($user->shopDescription, 45) : 'Add your Lumban artisan history and background' }}
                                 </div>
@@ -318,7 +318,7 @@
                         </svg>
                     </div>
                     <div>
-                        <h5 style="font-size:13px;font-weight:700;color:#1E1915;margin:0;line-height:1.2;">Verified LumBarong Artisan Studio</h5>
+                        <h5 style="font-size:13px;font-weight:700;color:#1E1915;margin:0;line-height:1.2;">Verified LumBarong Artisan Shop</h5>
                         <p style="font-size:11px;color:#78716C;margin:2px 0 0 0;">Quality craftsmanship. Authentic Filipino heritage.</p>
                     </div>
                 </div>

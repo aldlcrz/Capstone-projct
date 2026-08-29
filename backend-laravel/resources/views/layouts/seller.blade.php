@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>{{ $title ?? 'Seller Studio' }} | LumBarong</title>
+    <title>{{ $title ?? 'Seller Shop' }} | LumBarong</title>
 
     <!-- Favicon -->
     <link rel="icon" type="image/x-icon" href="{{ asset('favicon.ico') }}">
@@ -85,31 +85,10 @@
                         <div>
                             <span class="font-serif text-xl font-bold tracking-tight" style="color: #1E1915;">LUMBARONG</span>
                             <div class="flex items-center gap-1.5 mt-0.5">
-                                <span style="font-size:10px; font-weight:800; color:#A16D19; letter-spacing:0.18em; text-transform:uppercase;">✦ Artisan Studio</span>
+                                <span style="font-size:10px; font-weight:800; color:#A16D19; letter-spacing:0.18em; text-transform:uppercase;">✦ Artisan Shop</span>
                             </div>
                         </div>
                     </a>
-                </div>
-
-                <!-- Seller Profile Snapshot -->
-                <div class="mb-7 px-4 py-3.5 rounded-2xl shrink-0 shadow-2xs" style="background: #FFFFFF; border: 1px solid #ECE3D2;">
-                    <div class="flex items-center gap-3.5">
-                        <div style="width:40px;height:40px;min-width:40px;border-radius:50%;padding:2px;background:linear-gradient(135deg,#996515,#E6CA65,#996515);box-shadow:0 2px 6px rgba(0,0,0,0.08);" class="shrink-0">
-                            <div style="width:100%;height:100%;border-radius:50%;overflow:hidden;background:#FAF8F5;display:flex;align-items:center;justify-content:center;">
-                                @if(Auth::user()->profile_photo_url)
-                                    <img src="{{ Auth::user()->profile_photo_url }}" class="w-full h-full object-cover" onerror="this.style.display='none'">
-                                @else
-                                    <span style="font-size:14px;font-weight:800;color:#996515;">{{ strtoupper(substr(Auth::user()->name, 0, 1)) }}</span>
-                                @endif
-                            </div>
-                        </div>
-                        <div class="min-w-0 flex-1">
-                            <div class="text-[13px] font-bold truncate" style="color: #1E1915;">{{ Auth::user()->name }}</div>
-                            <div class="text-[9.5px] font-extrabold uppercase tracking-wider mt-0.5" style="color: #A16D19;">
-                                {{ Auth::user()->isPremiumActive() ? '✦ Premium Artisan' : 'Verified Artisan' }}
-                            </div>
-                        </div>
-                    </div>
                 </div>
 
                 <!-- Navigation -->
@@ -127,7 +106,7 @@
                             ->count();
 
                         $menuGroups = [
-                            'STUDIO' => [
+                            'SHOP' => [
                                 ['label' => 'Dashboard',     'path' => 'seller/dashboard',  'badge' => 0,                       'icon' => '<path d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path>'],
                                 ['label' => 'Analytics',     'path' => 'seller/analytics',  'badge' => 0,                       'icon' => '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>'],
                                 ['label' => 'Products',      'path' => 'seller/products',   'badge' => $attentionProductsCount,  'icon' => '<path d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 11m8 4V4"></path>'],
@@ -222,7 +201,7 @@
                             <img src="{{ asset('images/logo-icon.png') }}" alt="LumBarong" class="w-8 h-8 object-contain rounded-xl">
                             <div>
                                 <span class="font-serif font-black tracking-wider text-base uppercase" style="color: #1E1915;">LumBarong</span>
-                                <span class="block text-[8px] font-black tracking-widest uppercase" style="color: #A16D19;">✦ Artisan Studio</span>
+                                <span class="block text-[8px] font-black tracking-widest uppercase" style="color: #A16D19;">✦ Artisan Shop</span>
                             </div>
                         </div>
                         <button @click="isMobileMenuOpen = false" class="w-8 h-8 rounded-full flex items-center justify-center transition-colors cursor-pointer" style="background: #FDF8EE; color: #766C60;">
@@ -325,7 +304,7 @@
                     </div>
                     <div class="hidden lg:flex flex-1"></div>
 
-                    <!-- Right Side: Notifications -->
+                    <!-- Right Side: Notifications + Profile -->
                     <div class="flex items-center gap-3">
 
                         <!-- Notifications -->
@@ -361,7 +340,7 @@
                                  class="absolute right-0 mt-2 w-72 sm:w-80 rounded-2xl shadow-2xl z-50 overflow-hidden"
                                  style="display:none; background: #FFFCF7; border: 1px solid #E8DECB;" x-cloak>
                                 <div class="px-4 py-3 flex items-center justify-between" style="background: #FDF8EE; border-bottom: 1px solid #E8DECB;">
-                                    <span class="text-[10px] font-bold uppercase tracking-widest" style="color: #766C60;">Studio Notifications</span>
+                                    <span class="text-[10px] font-bold uppercase tracking-widest" style="color: #766C60;">Shop Notifications</span>
                                     @if($unreadCount > 0)
                                         <form action="{{ route('seller.notifications.read-all') }}" method="POST" class="inline">
                                             @csrf
@@ -413,6 +392,25 @@
                                    onmouseout="this.style.color='#766C60'; this.style.background='transparent';">View All</a>
                             </div>
                         </div>
+
+                        <!-- Artisan Shop Profile Card (At Notification Icon) -->
+                        <a href="{{ route('seller.profile') }}" class="flex items-center gap-3 px-3.5 py-2 rounded-2xl transition-all group shrink-0" style="background: #FFFFFF; border: 1px solid #ECE3D2; box-shadow: 0 2px 6px rgba(0,0,0,0.03);" onmouseover="this.style.borderColor='#C49520';" onmouseout="this.style.borderColor='#ECE3D2';" title="Artisan Shop Profile">
+                            <div style="width:36px;height:36px;min-width:36px;border-radius:50%;padding:2px;background:linear-gradient(135deg,#996515,#E6CA65,#996515);box-shadow:0 2px 6px rgba(0,0,0,0.08);" class="shrink-0 group-hover:scale-105 transition-transform">
+                                <div style="width:100%;height:100%;border-radius:50%;overflow:hidden;background:#FAF8F5;display:flex;align-items:center;justify-content:center;">
+                                    @if(Auth::user()->profile_photo_url)
+                                        <img src="{{ Auth::user()->profile_photo_url }}" class="w-full h-full object-cover" onerror="this.style.display='none'">
+                                    @else
+                                        <span style="font-size:13px;font-weight:800;color:#996515;">{{ strtoupper(substr(Auth::user()->name, 0, 1)) }}</span>
+                                    @endif
+                                </div>
+                            </div>
+                            <div class="min-w-0 text-left hidden sm:block pr-1">
+                                <div class="text-xs font-bold truncate leading-tight font-sans" style="color: #1E1915;">{{ Auth::user()->name }}</div>
+                                <div class="text-[9px] font-extrabold uppercase tracking-wider mt-0.5 font-sans" style="color: #A16D19;">
+                                    {{ Auth::user()->isPremiumActive() ? '✦ Premium Artisan' : 'Verified Artisan' }}
+                                </div>
+                            </div>
+                        </a>
 
                     </div>
                 </div>

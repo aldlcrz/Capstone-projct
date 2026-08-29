@@ -5,7 +5,7 @@
     <div>
         <div class="text-[10px] font-bold text-[#C49520] uppercase tracking-[0.2em] mb-1">✦ Financial Settlement</div>
         <h1 class="font-serif text-2xl sm:text-3xl font-bold text-[#1E1915]">Seller <span class="text-[#766C60] font-light italic">Commission Payment</span></h1>
-        <p class="text-xs text-[#766C60] mt-1 font-medium">Settle your monthly platform commission to maintain an active seller studio account.</p>
+        <p class="text-xs text-[#766C60] mt-1 font-medium">Settle your monthly platform commission to maintain an active seller shop account.</p>
     </div>
 
     {{-- Monthly Summary Card --}}

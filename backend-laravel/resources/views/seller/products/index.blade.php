@@ -6,7 +6,7 @@
     <div class="flex flex-col sm:flex-row sm:items-end justify-between gap-4 pb-2 border-b" style="border-color: #E8DECB;">
         <div>
             <div class="flex items-center gap-2 mb-1">
-                <span class="text-[9px] font-extrabold uppercase tracking-[0.25em]" style="color: #C49520;">✦ Catalogue Studio</span>
+                <span class="text-[9px] font-extrabold uppercase tracking-[0.25em]" style="color: #C49520;">✦ Shop Catalogue</span>
                 <span class="text-xs" style="color: #E8DECB;">•</span>
                 <span class="text-[10px] font-semibold tracking-wider uppercase" style="color: #766C60;">Lumban Artisan Registry</span>
             </div>

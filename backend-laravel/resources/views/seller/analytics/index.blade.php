@@ -6,7 +6,7 @@
     <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
             <div class="mb-1">
-                <span class="text-[10px] font-bold uppercase tracking-[0.2em]" style="color: #A16D19;">✦ Deep Studio Insights</span>
+                <span class="text-[10px] font-bold uppercase tracking-[0.2em]" style="color: #A16D19;">✦ Deep Shop Insights</span>
             </div>
             <h1 class="font-serif text-2xl sm:text-3xl font-bold uppercase" style="color: #1E1915;">
                 Seller <span class="italic lowercase" style="color: #C49520;">Analytics</span>

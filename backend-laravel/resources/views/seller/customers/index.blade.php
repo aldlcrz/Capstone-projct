@@ -87,7 +87,7 @@
             <div class="rounded-3xl p-10 text-center space-y-2" style="background: #FFFCF7; border: 1px solid #E8DECB;">
                 <div class="w-12 h-12 rounded-2xl flex items-center justify-center mx-auto text-xl" style="background: #FDF8EE; color: #C49520; border: 1px solid #E8DECB;">👥</div>
                 <h3 class="font-serif text-sm font-bold uppercase tracking-wider" style="color: #1E1915;">No Clients Recorded</h3>
-                <p class="text-[11px]" style="color: #766C60;">When buyers commission products from your studio, their client profile will be catalogued here.</p>
+                <p class="text-[11px]" style="color: #766C60;">When buyers commission products from your shop, their client profile will be catalogued here.</p>
             </div>
         @endforelse
     </div>

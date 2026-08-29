@@ -6,7 +6,7 @@
     <div class="flex flex-col md:flex-row md:items-end justify-between gap-4 pb-2 border-b" style="border-color: #E8DECB;">
         <div>
             <div class="flex items-center gap-2 mb-1">
-                <span class="text-[9px] font-extrabold uppercase tracking-[0.25em]" style="color: #C49520;">✦ Studio Overview</span>
+                <span class="text-[9px] font-extrabold uppercase tracking-[0.25em]" style="color: #C49520;">✦ Shop Overview</span>
                 <span class="text-xs" style="color: #E8DECB;">•</span>
                 <span class="text-[10px] font-semibold tracking-wider uppercase" style="color: #766C60;">
                     {{ auth()->user()->isPremiumActive() ? 'Premium Artisan' : 'Verified Artisan' }}
@@ -16,7 +16,7 @@
                 Good day, <span class="italic font-normal" style="color: #766C60;">{{ auth()->user()->name }}</span>
             </h1>
             <p class="text-xs sm:text-sm font-medium mt-1" style="color: #766C60;">
-                Manage your handcrafted creations, orders, and studio performance.
+                Manage your handcrafted creations, orders, and shop performance.
             </p>
         </div>
 
@@ -59,7 +59,7 @@
         <div class="flex items-center justify-between">
             <h2 class="text-[10px] font-extrabold uppercase tracking-[0.2em] flex items-center gap-2" style="color: #766C60;">
                 <span class="w-1.5 h-1.5 rounded-full" style="background: #C49520;"></span>
-                Studio Action Items & Inquiries
+                Shop Action Items & Inquiries
             </h2>
         </div>
 
@@ -245,11 +245,11 @@
 
             <!-- Store Key Metrics Matrix -->
             <div class="lg:col-span-4 p-4 sm:p-6 rounded-2xl sm:rounded-3xl space-y-3" style="background: #FFFCF7; border: 1px solid #E8DECB; box-shadow: 0 2px 8px rgba(30,25,21,0.03);">
-                <h3 class="font-serif text-sm sm:text-base font-bold uppercase mb-1" style="color: #1E1915;">Studio Benchmark</h3>
+                <h3 class="font-serif text-sm sm:text-base font-bold uppercase mb-1" style="color: #1E1915;">Shop Benchmark</h3>
                 
                 <div class="grid grid-cols-2 gap-3">
                     <div class="p-3 rounded-xl" style="background: #FDF8EE; border: 1px solid #E8DECB;">
-                        <div class="text-[9px] font-bold uppercase tracking-widest" style="color: #766C60;">Studio Rating</div>
+                        <div class="text-[9px] font-bold uppercase tracking-widest" style="color: #766C60;">Shop Rating</div>
                         <div class="text-base font-black mt-0.5 flex items-center gap-1 font-sans" style="color: #C49520;">
                             <span>{{ $storePerformance['rating'] ?? 5.0 }}</span>
                             <span class="text-xs">★</span>
