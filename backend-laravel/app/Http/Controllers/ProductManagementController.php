@@ -257,7 +257,7 @@ class ProductManagementController extends Controller
             $product->is_on_sale          = $request->boolean('is_on_sale');
             $product->discount_percentage = $product->is_on_sale ? ($request->discount_percentage ?? 0) : null;
 
-            // Auto-heal missing variations columns if migration was not run yet
+            // Auto-heal missing variations columns and status column if migration was not run yet
             try {
                 if (\Illuminate\Support\Facades\Schema::hasTable('products')) {
                     if (!\Illuminate\Support\Facades\Schema::hasColumn('products', 'has_variants')) {
@@ -270,9 +270,11 @@ class ProductManagementController extends Controller
                             $table->json('variations')->nullable()->after('has_variants');
                         });
                     }
+                    // Ensure status column accepts 'draft', 'pending', 'approved', 'rejected', 'archived'
+                    \Illuminate\Support\Facades\DB::statement("ALTER TABLE `products` MODIFY `status` VARCHAR(50) NOT NULL DEFAULT 'pending'");
                 }
             } catch (\Throwable $e) {
-                \Illuminate\Support\Facades\Log::warning('Could not auto-add variation columns: ' . $e->getMessage());
+                \Illuminate\Support\Facades\Log::warning('Could not auto-add variation columns or modify status: ' . $e->getMessage());
             }
 
             // Ensure product upload directory exists
