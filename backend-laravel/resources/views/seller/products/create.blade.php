@@ -645,10 +645,11 @@
                 <button type="button" 
                         @click="goToStep2()"
                         :disabled="!isStep1Complete"
-                        style="padding:14px 28px;border-radius:9999px;font-size:14px;font-weight:700;display:flex;align-items:center;gap:8px;border:none;transition:all 0.2s;"
+                        class="inline-flex items-center gap-2 font-bold transition-all border-0 shadow-sm"
+                        style="padding:12px 28px !important;border-radius:9999px !important;font-size:14px;display:inline-flex;align-items:center;gap:8px;border:none;transition:all 0.2s;"
                         :style="isStep1Complete 
-                            ? 'background-color:#A16D19 !important;color:#FFFFFF !important;cursor:pointer;box-shadow:0 2px 8px rgba(161,109,25,0.25);' 
-                            : 'background-color:#E5E0D8 !important;color:#A8A096 !important;cursor:not-allowed;box-shadow:none;'">
+                            ? 'background-color:#A16D19 !important;color:#FFFFFF !important;cursor:pointer;box-shadow:0 3px 10px rgba(161,109,25,0.3);border-radius:9999px !important;padding:12px 28px !important;font-size:14px;font-weight:700;display:inline-flex;align-items:center;gap:8px;border:none;' 
+                            : 'background-color:#E5E0D8 !important;color:#A8A096 !important;cursor:not-allowed;box-shadow:none;border-radius:9999px !important;padding:12px 28px !important;font-size:14px;font-weight:700;display:inline-flex;align-items:center;gap:8px;border:none;'">
                     <span>Save & Continue</span>
                     <span style="font-size:15px;line-height:1;font-weight:700;">→</span>
                 </button>
@@ -860,7 +861,7 @@
             <div style="padding-top:20px;display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;">
                 <button type="button" 
                         @click="step = 1; window.scrollTo({ top: 0, behavior: 'smooth' })"
-                        style="padding:14px 24px;border-radius:12px;border:1px solid #E2D9C8;background-color:#FFFFFF;color:#1E1915;font-size:13px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:8px;box-shadow:0 1px 3px rgba(0,0,0,0.03);transition:all 0.2s;"
+                        style="padding:12px 24px;border-radius:9999px;border:1px solid #E2D9C8;background-color:#FFFFFF;color:#1E1915;font-size:13px;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;gap:8px;box-shadow:0 1px 3px rgba(0,0,0,0.03);transition:all 0.2s;"
                         onmouseover="this.style.backgroundColor='#FAF8F5';"
                         onmouseout="this.style.backgroundColor='#FFFFFF';">
                     <svg width="15" height="15" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/></svg>
@@ -869,7 +870,9 @@
 
                 <button type="button" 
                         @click="goToStep3()"
-                        style="padding:14px 28px;border-radius:12px;font-size:14px;font-weight:700;background-color:#A16D19;color:#FFFFFF;border:none;cursor:pointer;display:flex;align-items:center;gap:8px;box-shadow:0 2px 8px rgba(161,109,25,0.25);transition:all 0.2s;">
+                        style="padding:12px 28px;border-radius:9999px;font-size:14px;font-weight:700;background-color:#A16D19;color:#FFFFFF;border:none;cursor:pointer;display:inline-flex;align-items:center;gap:8px;box-shadow:0 3px 10px rgba(161,109,25,0.3);transition:all 0.2s;"
+                        onmouseover="this.style.backgroundColor='#8A5C14';"
+                        onmouseout="this.style.backgroundColor='#A16D19';">
                     <span>Continue to Step 3</span>
                     <span style="font-size:15px;line-height:1;font-weight:700;">→</span>
                 </button>
@@ -1005,7 +1008,7 @@
             <div style="padding-top:20px;display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;border-top:1px solid #F2ECE1;">
                 <button type="button" 
                         @click="step = 2; window.scrollTo({ top: 0, behavior: 'smooth' })"
-                        style="padding:14px 24px;border-radius:12px;border:1px solid #E2D9C8;background-color:#FFFFFF;color:#1E1915;font-size:13px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:8px;box-shadow:0 1px 3px rgba(0,0,0,0.03);transition:all 0.2s;"
+                        style="padding:12px 24px;border-radius:9999px;border:1px solid #E2D9C8;background-color:#FFFFFF;color:#1E1915;font-size:13px;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;gap:8px;box-shadow:0 1px 3px rgba(0,0,0,0.03);transition:all 0.2s;"
                         onmouseover="this.style.backgroundColor='#FAF8F5';"
                         onmouseout="this.style.backgroundColor='#FFFFFF';">
                     <svg width="15" height="15" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/></svg>
@@ -1015,7 +1018,7 @@
                 <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
                     <button type="button" 
                             @click="submitAsDraft()"
-                            style="padding:14px 26px;border-radius:12px;border:1px solid #1C160E;background-color:#FFFFFF;color:#1C160E;font-size:13px;font-weight:700;letter-spacing:0.01em;cursor:pointer;display:flex;align-items:center;gap:8px;box-shadow:0 1px 3px rgba(0,0,0,0.03);transition:all 0.2s;"
+                            style="padding:12px 26px;border-radius:9999px;border:1px solid #1C160E;background-color:#FFFFFF;color:#1C160E;font-size:13px;font-weight:700;letter-spacing:0.01em;cursor:pointer;display:inline-flex;align-items:center;gap:8px;box-shadow:0 1px 3px rgba(0,0,0,0.03);transition:all 0.2s;"
                             onmouseover="this.style.backgroundColor='#FAF8F5';"
                             onmouseout="this.style.backgroundColor='#FFFFFF';">
                         <svg width="15" height="15" style="color:#78716C;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4"/></svg>
@@ -1024,7 +1027,7 @@
 
                     <button type="submit" 
                             @click="document.getElementById('formActionInput').value = 'publish'"
-                            style="padding:14px 32px;border-radius:12px;border:none;background-color:#A16D19;color:#FFFFFF;font-size:13px;font-weight:700;letter-spacing:0.02em;cursor:pointer;display:flex;align-items:center;gap:10px;box-shadow:0 4px 14px rgba(161,109,25,0.25);transition:all 0.2s;"
+                            style="padding:12px 32px;border-radius:9999px;border:none;background-color:#A16D19;color:#FFFFFF;font-size:13px;font-weight:700;letter-spacing:0.02em;cursor:pointer;display:inline-flex;align-items:center;gap:10px;box-shadow:0 4px 14px rgba(161,109,25,0.25);transition:all 0.2s;"
                             onmouseover="this.style.backgroundColor='#8B5E14';"
                             onmouseout="this.style.backgroundColor='#A16D19';">
                         <span>Publish Heritage Piece</span>
