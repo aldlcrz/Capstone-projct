@@ -158,7 +158,7 @@
                                 ₱{{ number_format((float)$price, 2) }}
                             </span>
                             <span class="text-[9px] font-medium" style="color: #A09585;">
-                                {{ $record->created_at ? $record->created_at->diffForHumans() : 'N/A' }}
+                                {{ $record->created_at ? \Carbon\Carbon::parse($record->created_at)->diffForHumans() : 'N/A' }}
                             </span>
                         </div>
 
@@ -187,11 +187,11 @@
         @if($archives->hasPages())
             <div class="pt-4 border-t flex items-center justify-between flex-wrap gap-4" style="border-color: #E8DECB;">
                 <div class="text-xs font-semibold" style="color: #766C60;">
-                    Showing <span class="font-bold" style="color: #1E1915;">{{ $archives->firstItem() }}</span>
-                    to <span class="font-bold" style="color: #1E1915;">{{ $archives->lastItem() }}</span>
+                    Showing <span class="font-bold" style="color: #1E1915;">{{ $archives->firstItem() ?? 1 }}</span>
+                    to <span class="font-bold" style="color: #1E1915;">{{ $archives->lastItem() ?? 1 }}</span>
                     of <span class="font-bold" style="color: #1E1915;">{{ $archives->total() }}</span> archived products
                 </div>
-                {{ $archives->appends(['search' => $search])->links() }}
+                {{ $archives->links() }}
             </div>
         @endif
     @endif

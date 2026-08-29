@@ -684,28 +684,58 @@ class ProductManagementController extends Controller
         $sellerId = Auth::id();
         $search   = trim($request->input('search', ''));
 
-        $query = \App\Models\ArchivedRecord::where('item_type', 'product')
-            ->where(function ($q) use ($sellerId) {
-                // Match archived records whose metadata contains the seller's ID
-                $q->where('metadata->sellerId', $sellerId)
-                  ->orWhereRaw("JSON_UNQUOTE(JSON_EXTRACT(metadata, '$.sellerId')) = ?", [$sellerId]);
-            })
-            ->orderBy('created_at', 'desc');
+        try {
+            $query = \App\Models\ArchivedRecord::where('item_type', 'product')
+                ->where(function ($q) use ($sellerId) {
+                    $q->where('metadata->sellerId', $sellerId)
+                      ->orWhere('metadata->sellerId', (string) $sellerId)
+                      ->orWhere('metadata', 'like', '%"sellerId":' . json_encode($sellerId) . '%')
+                      ->orWhere('metadata', 'like', '%"sellerId":"' . $sellerId . '"%')
+                      ->orWhere('archived_by', Auth::user()->name ?? '');
+                })
+                ->orderBy('created_at', 'desc');
 
-        if ($search) {
-            $query->where(function ($q) use ($search) {
-                $q->where('name', 'like', "%{$search}%")
-                  ->orWhere('identifier', 'like', "%{$search}%")
-                  ->orWhere('reason', 'like', "%{$search}%");
-            });
+            if ($search) {
+                $query->where(function ($q) use ($search) {
+                    $q->where('name', 'like', "%{$search}%")
+                      ->orWhere('identifier', 'like', "%{$search}%")
+                      ->orWhere('reason', 'like', "%{$search}%");
+                });
+            }
+
+            $archives      = $query->paginate(12)->withQueryString();
+            $archivesCount = $archives->total();
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::warning('Seller archives query fallback: ' . $e->getMessage());
+
+            $allProductArchives = \App\Models\ArchivedRecord::where('item_type', 'product')
+                ->orderBy('created_at', 'desc')
+                ->get()
+                ->filter(function ($item) use ($sellerId) {
+                    $meta = is_array($item->metadata) ? $item->metadata : json_decode($item->metadata ?? '[]', true);
+                    $itemSellerId = $meta['sellerId'] ?? null;
+                    return (string) $itemSellerId === (string) $sellerId || $item->archived_by === (Auth::user()->name ?? '');
+                });
+
+            if ($search) {
+                $allProductArchives = $allProductArchives->filter(function ($item) use ($search) {
+                    return stripos($item->name, $search) !== false
+                        || stripos($item->identifier ?? '', $search) !== false
+                        || stripos($item->reason ?? '', $search) !== false;
+                });
+            }
+
+            $page     = (int) $request->input('page', 1);
+            $perPage  = 12;
+            $archives = new \Illuminate\Pagination\LengthAwarePaginator(
+                $allProductArchives->forPage($page, $perPage)->values(),
+                $allProductArchives->count(),
+                $perPage,
+                $page,
+                ['path' => $request->url(), 'query' => $request->query()]
+            );
+            $archivesCount = $allProductArchives->count();
         }
-
-        $archives       = $query->paginate(12)->withQueryString();
-        $archivesCount  = \App\Models\ArchivedRecord::where('item_type', 'product')
-            ->where(function ($q) use ($sellerId) {
-                $q->where('metadata->sellerId', $sellerId)
-                  ->orWhereRaw("JSON_UNQUOTE(JSON_EXTRACT(metadata, '$.sellerId')) = ?", [$sellerId]);
-            })->count();
 
         return view('seller.products.archives', compact('archives', 'archivesCount', 'search'));
     }
