@@ -104,6 +104,27 @@
     </div>
     @endif
 
+    {{-- Restored Draft Notice Banner --}}
+    <div x-show="hasRestoredDraft"
+         x-transition
+         x-cloak
+         style="margin-bottom:18px;padding:14px 20px;border-radius:20px;background:#FDF8EE;border:1px solid #EEDBBA;display:flex;align-items:center;justify-content:space-between;gap:12px;box-shadow:0 2px 6px rgba(0,0,0,0.02);">
+        <div style="display:flex;align-items:center;gap:10px;">
+            <span style="font-size:18px;">✨</span>
+            <div>
+                <span style="font-size:13px;font-weight:700;color:#7A5505;">Unsaved draft recovered!</span>
+                <span style="font-size:12px;color:#8C7355;margin-left:4px;">We restored your creation inputs from your previous session.</span>
+            </div>
+        </div>
+        <button type="button" 
+                @click="clearDraftAndReset()"
+                style="font-size:11.5px;font-weight:700;color:#DC2626;background:#FFF5F5;border:1px solid #FECACA;border-radius:10px;padding:5px 12px;cursor:pointer;white-space:nowrap;transition:all 0.2s;"
+                onmouseover="this.style.background='#DC2626'; this.style.color='#FFFFFF';"
+                onmouseout="this.style.background='#FFF5F5'; this.style.color='#DC2626';">
+            Discard & Start Fresh
+        </button>
+    </div>
+
     {{-- Main Product Form --}}
     <form action="{{ route('seller.products.store') }}" method="POST" id="productForm" enctype="multipart/form-data" onsubmit="return validateProductForm(event, false)" class="space-y-6">
         @csrf
@@ -1152,6 +1173,8 @@ function addProductManager() {
         description: initData.description || '',
         fillRate: 15,
         isAiLoading: false,
+        hasRestoredDraft: false,
+        draftSaveTimer: null,
 
         // Media State: Variant 1 (Cover Photo) + Additional Gallery Photos
         variants: [
@@ -1163,6 +1186,202 @@ function addProductManager() {
             let count = this.variants.filter(v => v && v.imagePreview !== null).length;
             count += this.galleryImages.length;
             return count;
+        },
+
+        scheduleDraftSave() {
+            clearTimeout(this.draftSaveTimer);
+            this.draftSaveTimer = setTimeout(() => {
+                this.saveDraftState();
+            }, 300);
+        },
+
+        saveDraftState() {
+            try {
+                const sellerId = '{{ Auth::id() }}';
+                const DRAFT_KEY = 'lumbarong_seller_product_draft_' + sellerId;
+
+                const hasAnyData = Boolean(
+                    (this.productName && this.productName.trim()) ||
+                    (this.selectedCategories && this.selectedCategories.length) ||
+                    (this.price && parseFloat(this.price) > 0) ||
+                    (this.variants[0] && this.variants[0].imagePreview) ||
+                    (this.description && this.description.trim())
+                );
+
+                if (!hasAnyData) return;
+
+                const sizeStocks = {};
+                const checkedSizes = [];
+                document.querySelectorAll('.size-checkbox').forEach(cb => {
+                    if (cb.checked) {
+                        checkedSizes.push(cb.value);
+                        const stockEl = document.getElementById('stock_' + cb.value);
+                        sizeStocks[cb.value] = stockEl ? stockEl.value : '0';
+                    }
+                });
+
+                const draftData = {
+                    step: this.step || 1,
+                    productName: this.productName || '',
+                    selectedCategories: this.selectedCategories || [],
+                    targetGroup: this.targetGroup || 'Men',
+                    fabricType: this.fabricType || '100% Piña',
+                    price: this.price || '',
+                    description: this.description || '',
+                    shippingFee: document.getElementById('shippingFeeInput')?.value || '0',
+                    shippingDays: document.getElementById('shippingDaysInput')?.value || '5',
+                    checkedSizes: checkedSizes,
+                    sizeStocks: sizeStocks,
+                    isOnSale: document.getElementById('discountToggle')?.checked || false,
+                    discountPercentage: document.getElementById('discountPercentage')?.value || '',
+                    variants: this.variants.map(v => ({ id: v.id, name: v.name, imagePreview: v.imagePreview })),
+                    galleryImages: this.galleryImages.map(g => ({ preview: g.preview })),
+                    isGcashAvailable: document.getElementById('gcash_toggle_create')?.checked ?? true,
+                    isMayaAvailable: document.getElementById('maya_toggle_create')?.checked ?? false,
+                    savedAt: Date.now()
+                };
+
+                localStorage.setItem(DRAFT_KEY, JSON.stringify(draftData));
+
+                const indicator = document.getElementById('draft-save-indicator');
+                if (indicator) {
+                    indicator.style.display = 'inline-block';
+                    clearTimeout(window._draftIndicatorTimer);
+                    window._draftIndicatorTimer = setTimeout(() => {
+                        indicator.style.display = 'none';
+                    }, 2000);
+                }
+            } catch (e) {
+                console.warn('Could not save draft to localStorage:', e);
+            }
+        },
+
+        restoreDraftState() {
+            try {
+                const sellerId = '{{ Auth::id() }}';
+                const DRAFT_KEY = 'lumbarong_seller_product_draft_' + sellerId;
+                const raw = localStorage.getItem(DRAFT_KEY);
+                if (!raw) return;
+
+                const draft = JSON.parse(raw);
+                if (!draft) return;
+
+                const hasContent = Boolean(
+                    (draft.productName && draft.productName.trim()) ||
+                    (draft.selectedCategories && draft.selectedCategories.length) ||
+                    (draft.price && parseFloat(draft.price) > 0) ||
+                    (draft.variants && draft.variants[0] && draft.variants[0].imagePreview) ||
+                    (draft.description && draft.description.trim())
+                );
+
+                if (!hasContent) return;
+
+                if (draft.productName) this.productName = draft.productName;
+                if (draft.targetGroup) this.targetGroup = draft.targetGroup;
+                if (draft.fabricType) this.fabricType = draft.fabricType;
+                if (draft.price) this.price = draft.price;
+                if (draft.description) this.description = draft.description;
+                if (Array.isArray(draft.selectedCategories)) this.selectedCategories = draft.selectedCategories;
+                if (draft.step && [1, 2, 3].includes(draft.step)) this.step = draft.step;
+
+                // Restore shipping
+                const shipFeeEl = document.getElementById('shippingFeeInput');
+                if (shipFeeEl && draft.shippingFee !== undefined) shipFeeEl.value = draft.shippingFee;
+                const shipDaysEl = document.getElementById('shippingDaysInput');
+                if (shipDaysEl && draft.shippingDays !== undefined) shipDaysEl.value = draft.shippingDays;
+
+                // Restore discount
+                const discToggle = document.getElementById('discountToggle');
+                const discPct = document.getElementById('discountPercentage');
+                if (discToggle && draft.isOnSale) {
+                    discToggle.checked = true;
+                    toggleDiscount(discToggle);
+                    if (discPct && draft.discountPercentage) {
+                        discPct.value = draft.discountPercentage;
+                    }
+                    updateDiscountPreview();
+                }
+
+                // Restore sizes
+                if (Array.isArray(draft.checkedSizes)) {
+                    draft.checkedSizes.forEach(size => {
+                        const cb = document.getElementById('size_cb_' + size);
+                        const stockEl = document.getElementById('stock_' + size);
+                        if (cb) {
+                            cb.checked = true;
+                            if (stockEl) {
+                                stockEl.removeAttribute('disabled');
+                                stockEl.value = (draft.sizeStocks && draft.sizeStocks[size]) ? draft.sizeStocks[size] : '5';
+                            }
+                        }
+                    });
+                    calculateTotalStock();
+                }
+
+                // Restore payment toggles
+                const gcashToggle = document.getElementById('gcash_toggle_create');
+                if (gcashToggle && draft.isGcashAvailable !== undefined) {
+                    gcashToggle.checked = draft.isGcashAvailable;
+                    const gf = document.getElementById('gcash_fields_create');
+                    if (gf) gf.style.display = draft.isGcashAvailable ? '' : 'none';
+                }
+                const mayaToggle = document.getElementById('maya_toggle_create');
+                if (mayaToggle && draft.isMayaAvailable !== undefined) {
+                    mayaToggle.checked = draft.isMayaAvailable;
+                    const mf = document.getElementById('maya_fields_create');
+                    if (mf) mf.style.display = draft.isMayaAvailable ? '' : 'none';
+                }
+
+                // Restore variants & cover photo
+                if (Array.isArray(draft.variants) && draft.variants.length > 0) {
+                    this.variants = draft.variants.map((v, idx) => {
+                        let fileObj = null;
+                        if (v.imagePreview) {
+                            fileObj = dataURLtoFile(v.imagePreview, 'variant_' + idx + '.png');
+                            if (fileObj && typeof DataTransfer !== 'undefined') {
+                                const dt = new DataTransfer();
+                                dt.items.add(fileObj);
+                                const fileInput = document.getElementById('variant_file_' + idx);
+                                if (fileInput) fileInput.files = dt.files;
+                            }
+                        }
+                        return {
+                            id: v.id ?? idx,
+                            name: v.name || '',
+                            file: fileObj,
+                            imagePreview: v.imagePreview || null
+                        };
+                    });
+                }
+
+                // Restore gallery images
+                if (Array.isArray(draft.galleryImages) && draft.galleryImages.length > 0) {
+                    this.galleryImages = draft.galleryImages.map(g => {
+                        let fileObj = null;
+                        if (g.preview) {
+                            fileObj = dataURLtoFile(g.preview, 'gallery_photo.png');
+                        }
+                        return {
+                            file: fileObj,
+                            preview: g.preview
+                        };
+                    });
+                }
+
+                this.hasRestoredDraft = true;
+                this.calculateFillRate();
+            } catch (e) {
+                console.warn('Could not restore draft:', e);
+            }
+        },
+
+        clearDraftAndReset() {
+            try {
+                const sellerId = '{{ Auth::id() }}';
+                localStorage.removeItem('lumbarong_seller_product_draft_' + sellerId);
+            } catch(e) {}
+            this.hasRestoredDraft = false;
+            window.location.href = window.location.pathname;
         },
 
         handleCoverPhotoUpload(event) {
@@ -1180,6 +1399,7 @@ function addProductManager() {
                     const box = document.getElementById('variant_upload_box_0');
                     if (box) box.classList.remove('border-red-500');
                     this.calculateFillRate();
+                    this.scheduleDraftSave();
                 };
                 reader.readAsDataURL(file);
             }
@@ -1191,6 +1411,7 @@ function addProductManager() {
             const input = document.getElementById('variant_file_0');
             if (input) input.value = '';
             this.calculateFillRate();
+            this.scheduleDraftSave();
         },
 
         handleGalleryFilesUpload(event) {
@@ -1207,6 +1428,7 @@ function addProductManager() {
                             preview: e.target.result
                         });
                         this.calculateFillRate();
+                        this.scheduleDraftSave();
                     }
                 };
                 reader.readAsDataURL(file);
@@ -1217,6 +1439,7 @@ function addProductManager() {
             if (index >= 0 && index < this.galleryImages.length) {
                 this.galleryImages.splice(index, 1);
                 this.calculateFillRate();
+                this.scheduleDraftSave();
             }
         },
 
@@ -1224,12 +1447,14 @@ function addProductManager() {
             const nextId = this.variants.length;
             this.variants.push({ id: nextId, name: '', file: null, imagePreview: null });
             this.calculateFillRate();
+            this.scheduleDraftSave();
         },
 
         removeVariantRow(index) {
             if (index === 0) return;
             this.variants.splice(index, 1);
             this.calculateFillRate();
+            this.scheduleDraftSave();
         },
 
         handleVariantFile(event, index) {
@@ -1245,6 +1470,7 @@ function addProductManager() {
                 reader.onload = (e) => {
                     this.variants[index].imagePreview = e.target.result;
                     this.calculateFillRate();
+                    this.scheduleDraftSave();
                 };
                 reader.readAsDataURL(file);
             }
@@ -1256,13 +1482,21 @@ function addProductManager() {
             const fileInput = document.getElementById('variant_file_' + index);
             if (fileInput) fileInput.value = '';
             this.calculateFillRate();
+            this.scheduleDraftSave();
         },
 
         // Real-time categories state
         categoriesList: parsedCats,
 
         init() {
+            this.restoreDraftState();
             this.calculateFillRate();
+
+            const form = document.getElementById('productForm');
+            if (form) {
+                form.addEventListener('input', () => this.scheduleDraftSave());
+                form.addEventListener('change', () => this.scheduleDraftSave());
+            }
         },
 
         get filteredCategories() {
@@ -1288,7 +1522,7 @@ function addProductManager() {
             const catContainer = document.getElementById('category-cards-container');
             if (catContainer) catContainer.classList.remove('border-red-500');
             this.calculateFillRate();
-            saveDraft();
+            this.scheduleDraftSave();
         },
 
         onTargetGroupChange(group) {
@@ -1309,7 +1543,7 @@ function addProductManager() {
             const catContainer = document.getElementById('category-cards-container');
             if (catContainer) catContainer.classList.remove('border-red-500');
             this.calculateFillRate();
-            saveDraft();
+            this.scheduleDraftSave();
         },
 
         get isStep1Complete() {
@@ -1352,6 +1586,7 @@ function addProductManager() {
 
             this.step = 2;
             this.calculateFillRate();
+            this.scheduleDraftSave();
             setTimeout(() => {
                 window.scrollTo({ top: 0, behavior: 'smooth' });
             }, 100);
@@ -1382,6 +1617,7 @@ function addProductManager() {
 
             this.step = 3;
             this.calculateFillRate();
+            this.scheduleDraftSave();
             setTimeout(() => {
                 window.scrollTo({ top: 0, behavior: 'smooth' });
             }, 100);
@@ -1438,6 +1674,7 @@ function addProductManager() {
                             }, 1500);
                         }
                         this.calculateFillRate();
+                        this.scheduleDraftSave();
                     }
                 }
             } catch (e) {
@@ -1448,10 +1685,31 @@ function addProductManager() {
         },
 
         submitAsDraft() {
+            clearProductDraft();
             document.getElementById('formActionInput').value = 'draft';
             document.getElementById('productForm').submit();
         }
     };
+}
+
+function dataURLtoFile(dataurl, filename) {
+    try {
+        var arr = dataurl.split(','), mime = arr[0].match(/:(.*?);/)[1],
+            bstr = atob(arr[1]), n = bstr.length, u8arr = new Uint8Array(n);
+        while(n--){
+            u8arr[n] = bstr.charCodeAt(n);
+        }
+        return new File([u8arr], filename, {type:mime});
+    } catch(e) {
+        return null;
+    }
+}
+
+function clearProductDraft() {
+    try {
+        const sellerId = '{{ Auth::id() }}';
+        localStorage.removeItem('lumbarong_seller_product_draft_' + sellerId);
+    } catch(e) {}
 }
 
 function triggerAppModal(title, message, type = 'warning') {
@@ -1816,228 +2074,54 @@ function validateProductForm(e, isEdit = false) {
 
 <script>
 // ================================================================
-// TEMPORARY FORM DATA PERSISTENCE (Reload = Keep, Leave = Delete)
+// LEAVE CONFIRMATION & NAVIGATION GUARD
 // ================================================================
-const TEMP_STORAGE_KEY = 'lumbarong_seller_create_product_temp_v2';
-let _formSubmitted = false;
 let _pendingLeaveUrl = null;
 let _leaveAllowed = false;
-let _saveDebounceTimer = null;
 
-// Function to detect if current page load is a browser reload/refresh
-function isPageReload() {
+function hasUnsavedData() {
     try {
-        const navEntries = performance.getEntriesByType('navigation');
-        if (navEntries && navEntries.length > 0) {
-            return navEntries[0].type === 'reload';
-        }
-        if (window.performance && window.performance.navigation) {
-            return window.performance.navigation.type === 1; // TYPE_RELOAD
-        }
-    } catch (e) {}
-    return false;
-}
-
-// Function to clear temporary storage
-function clearTemporaryFormData() {
-    try {
-        sessionStorage.removeItem(TEMP_STORAGE_KEY);
-        localStorage.removeItem(TEMP_STORAGE_KEY);
-        localStorage.removeItem('add_product_draft_v1');
-    } catch (e) {}
-}
-
-// Function to collect and save all current form data to sessionStorage
-function saveTemporaryFormData() {
-    if (_formSubmitted) return;
-    clearTimeout(_saveDebounceTimer);
-    _saveDebounceTimer = setTimeout(() => {
-        try {
-            const data = {
-                timestamp: Date.now(),
-                // Standard text inputs & textareas
-                name: document.querySelector('input[name="name"]')?.value || '',
-                description: document.querySelector('textarea[name="description"]')?.value || '',
-                price: document.querySelector('input[name="price"]')?.value || '',
-                fabric_type: document.querySelector('input[name="fabric_type"]')?.value || '',
-                shippingFee: document.querySelector('input[name="shippingFee"]')?.value || '',
-                shippingDays: document.querySelector('input[name="shippingDays"]')?.value || '',
-                embroidery_technique: document.querySelector('input[name="embroidery_technique"]')?.value || '',
-                delivery_notes: document.querySelector('textarea[name="delivery_notes"]')?.value || '',
-                customization_notes: document.querySelector('textarea[name="customization_notes"]')?.value || '',
-                stock: document.querySelector('input[name="stock"]')?.value || '',
-                
-                // Toggles
-                isOnSale: document.getElementById('discountToggle')?.checked || false,
-                discountPercentage: document.getElementById('discountPercentage')?.value || '',
-                isBespoke: document.querySelector('input[name="is_bespoke"]')?.checked || false,
-
-                // Sizing checkboxes & stock per size
-                sizes: Array.from(document.querySelectorAll('.size-checkbox:checked')).map(cb => cb.value),
-                sizeStocks: {},
-                
-                // Alpine data state
-                alpineState: {}
-            };
-
-            // Collect stock inputs for checked sizes
-            data.sizes.forEach(size => {
-                const stockInput = document.getElementById('stock_' + size);
-                if (stockInput) {
-                    data.sizeStocks[size] = stockInput.value;
-                }
-            });
-
-            // Collect Alpine data
-            const alpineEl = document.querySelector('[x-data]');
-            if (alpineEl && alpineEl._x_dataStack && alpineEl._x_dataStack[0]) {
-                const alp = alpineEl._x_dataStack[0];
-                data.alpineState = {
-                    step: alp.step || 1,
-                    targetGroup: alp.targetGroup || 'Men',
-                    selectedCategories: Array.isArray(alp.selectedCategories) ? alp.selectedCategories : [],
-                    productName: alp.productName || '',
-                    fabricType: alp.fabricType || '',
-                    price: alp.price || '',
-                    description: alp.description || ''
-                };
-            }
-
-            sessionStorage.setItem(TEMP_STORAGE_KEY, JSON.stringify(data));
-        } catch (e) {
-            console.error('Error saving temporary form data:', e);
-        }
-    }, 300);
-}
-
-// Function to restore all form data from sessionStorage
-function restoreTemporaryFormData() {
-    try {
-        const raw = sessionStorage.getItem(TEMP_STORAGE_KEY);
-        if (!raw) return;
-        const data = JSON.parse(raw);
-        if (!data) return;
-
-        // Restore standard inputs
-        if (data.name) {
-            const el = document.querySelector('input[name="name"]');
-            if (el) el.value = data.name;
-        }
-        if (data.description) {
-            const el = document.querySelector('textarea[name="description"]');
-            if (el) el.value = data.description;
-        }
-        if (data.price) {
-            const el = document.querySelector('input[name="price"]');
-            if (el) el.value = data.price;
-        }
-        if (data.fabric_type) {
-            const el = document.querySelector('input[name="fabric_type"]');
-            if (el) el.value = data.fabric_type;
-        }
-        if (data.shippingFee) {
-            const el = document.querySelector('input[name="shippingFee"]');
-            if (el) el.value = data.shippingFee;
-        }
-        if (data.shippingDays) {
-            const el = document.querySelector('input[name="shippingDays"]');
-            if (el) el.value = data.shippingDays;
-        }
-        if (data.embroidery_technique) {
-            const el = document.querySelector('input[name="embroidery_technique"]');
-            if (el) el.value = data.embroidery_technique;
-        }
-        if (data.delivery_notes) {
-            const el = document.querySelector('textarea[name="delivery_notes"]');
-            if (el) el.value = data.delivery_notes;
-        }
-        if (data.customization_notes) {
-            const el = document.querySelector('textarea[name="customization_notes"]');
-            if (el) el.value = data.customization_notes;
-        }
-        if (data.stock) {
-            const el = document.querySelector('input[name="stock"]');
-            if (el) el.value = data.stock;
-        }
-
-        // Restore Toggles
-        if (data.isOnSale) {
-            const toggle = document.getElementById('discountToggle');
-            if (toggle) {
-                toggle.checked = true;
-                if (typeof toggleDiscount === 'function') toggleDiscount(toggle);
-            }
-            if (data.discountPercentage) {
-                const pct = document.getElementById('discountPercentage');
-                if (pct) pct.value = data.discountPercentage;
-            }
-        }
-
-        // Restore Sizes & Stocks
-        if (Array.isArray(data.sizes) && data.sizes.length > 0) {
-            data.sizes.forEach(size => {
-                const cb = document.getElementById('size_cb_' + size);
-                if (cb && !cb.checked) {
-                    cb.checked = true;
-                    if (typeof toggleSizeStock === 'function') toggleSizeStock(cb, size);
-                }
-                if (data.sizeStocks && data.sizeStocks[size]) {
-                    const stockInput = document.getElementById('stock_' + size);
-                    if (stockInput) stockInput.value = data.sizeStocks[size];
-                }
-            });
-            if (typeof calculateTotalStock === 'function') calculateTotalStock();
-        }
-
-        // Restore Alpine.js state
-        const alpineEl = document.querySelector('[x-data]');
-        if (alpineEl && alpineEl._x_dataStack && alpineEl._x_dataStack[0] && data.alpineState) {
-            const alp = alpineEl._x_dataStack[0];
-            if (data.alpineState.step) alp.step = data.alpineState.step;
-            if (data.alpineState.targetGroup) alp.targetGroup = data.alpineState.targetGroup;
-            if (Array.isArray(data.alpineState.selectedCategories)) {
-                alp.selectedCategories = data.alpineState.selectedCategories;
-            }
-            if (data.alpineState.productName) alp.productName = data.alpineState.productName;
-            if (data.alpineState.fabricType) alp.fabricType = data.alpineState.fabricType;
-            if (data.alpineState.price) alp.price = data.alpineState.price;
-            if (data.alpineState.description) alp.description = data.alpineState.description;
-            if (typeof alp.calculateFillRate === 'function') alp.calculateFillRate();
-        }
-    } catch (e) {
-        console.error('Error restoring temporary form data:', e);
+        const sellerId = '{{ Auth::id() }}';
+        const raw = localStorage.getItem('lumbarong_seller_product_draft_' + sellerId);
+        if (!raw) return false;
+        const draft = JSON.parse(raw);
+        return Boolean(
+            (draft.productName && draft.productName.trim()) ||
+            (draft.selectedCategories && draft.selectedCategories.length) ||
+            (draft.price && parseFloat(draft.price) > 0) ||
+            (draft.variants && draft.variants[0] && draft.variants[0].imagePreview)
+        );
+    } catch(e) {
+        return false;
     }
-}
-
-function hasFormData() {
-    if (_formSubmitted) return false;
-    const name = document.querySelector('input[name="name"]')?.value?.trim();
-    const desc = document.querySelector('textarea[name="description"]')?.value?.trim();
-    const price = document.querySelector('input[name="price"]')?.value?.trim();
-    const fabric = document.querySelector('input[name="fabric_type"]')?.value?.trim();
-    const hasCheckedSize = document.querySelector('.size-checkbox:checked') !== null;
-    return Boolean(name || desc || price || fabric || hasCheckedSize);
 }
 
 function showLeaveModal(href) {
     _pendingLeaveUrl = href;
-    document.getElementById('leave-page-modal').style.display = 'block';
-    document.body.style.overflow = 'hidden';
+    const modal = document.getElementById('leave-page-modal');
+    if (modal) {
+        modal.style.display = 'block';
+        document.body.style.overflow = 'hidden';
+    }
 }
 
 function closeLeaveModal() {
-    document.getElementById('leave-page-modal').style.display = 'none';
-    document.body.style.overflow = '';
+    const modal = document.getElementById('leave-page-modal');
+    if (modal) {
+        modal.style.display = 'none';
+        document.body.style.overflow = '';
+    }
     _pendingLeaveUrl = null;
 }
 
 function confirmLeave() {
     _leaveAllowed = true;
-    clearTemporaryFormData();
-    const form = document.getElementById('productForm');
-    if (form) form.reset();
-    document.getElementById('leave-page-modal').style.display = 'none';
-    document.body.style.overflow = '';
+    clearProductDraft();
+    const modal = document.getElementById('leave-page-modal');
+    if (modal) {
+        modal.style.display = 'none';
+        document.body.style.overflow = '';
+    }
     if (_pendingLeaveUrl) {
         window.location.href = _pendingLeaveUrl;
     } else {
@@ -2046,34 +2130,12 @@ function confirmLeave() {
 }
 
 document.addEventListener('DOMContentLoaded', () => {
-    // 1. Check if this is a page reload or fresh entry
-    if (isPageReload()) {
-        // Persist through page reloads: restore the form state
-        setTimeout(restoreTemporaryFormData, 250);
-    } else {
-        // Brand new entry / returned after leaving: start fresh!
-        clearTemporaryFormData();
-    }
-
-    // 2. Auto-save temporary form data on any user interaction
-    document.addEventListener('input', saveTemporaryFormData);
-    document.addEventListener('change', saveTemporaryFormData);
-
-    // 3. On successful form submission: delete temporary data
-    const form = document.getElementById('productForm');
-    if (form) {
-        form.addEventListener('submit', () => {
-            _formSubmitted = true;
-            clearTemporaryFormData();
-        });
-    }
-
-    // 4. Intercept intentional navigation away from the form
+    // Intercept back / leave clicks
     document.addEventListener('click', (e) => {
         const anchor = e.target.closest('a[href]');
         if (!anchor) return;
         const href = anchor.getAttribute('href');
-        if (!href || href.startsWith('#') || href.startsWith('javascript')) return;
+        if (!href || href.startsWith('#') || href.startsWith('javascript:')) return;
         
         const currentPath = window.location.pathname;
         let destUrl;
@@ -2083,29 +2145,24 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
-        // If clicking within the same page, do nothing
         if (destUrl.pathname === currentPath && destUrl.search === window.location.search) return;
 
-        // If user already allowed leave or form is empty, clear temporary data and allow navigation
-        if (!hasFormData() || _leaveAllowed) {
-            clearTemporaryFormData();
+        if (!hasUnsavedData() || _leaveAllowed) {
             return;
         }
 
-        // Show leave confirmation modal
         e.preventDefault();
         showLeaveModal(href);
     });
 
-    // 5. Browser close / reload confirmation prompt
-    window.addEventListener('beforeunload', (e) => {
-        if (hasFormData() && !_formSubmitted && !_leaveAllowed) {
-            // Save state right before reload happens
-            saveTemporaryFormData();
-            e.preventDefault();
-            e.returnValue = 'You have unsaved product information.';
-        }
-    });
+    // Clean up draft on successful form submit
+    const form = document.getElementById('productForm');
+    if (form) {
+        form.addEventListener('submit', () => {
+            _leaveAllowed = true;
+            clearProductDraft();
+        });
+    }
 });
 </script>
 @endsection
