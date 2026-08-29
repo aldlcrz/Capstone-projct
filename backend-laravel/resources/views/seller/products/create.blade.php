@@ -963,55 +963,196 @@
                     {{-- GCash --}}
                     @php 
                         $user = auth()->user(); 
-                        $hasGcashNumber = !empty($user->gcashNumber);
-                        $hasGcashQr = !empty($user->gcashQrCode);
+                        $getPaymentImgUrl = function($path) {
+                            if (empty($path)) return null;
+                            if (str_starts_with($path, 'http://') || str_starts_with($path, 'https://')) return $path;
+                            $clean = ltrim($path, '/');
+                            if (str_starts_with($clean, 'uploads/')) return asset($clean);
+                            return asset('storage/' . $clean);
+                        };
+
+                        $hasGcashNumber = !empty($user?->gcashNumber);
+                        $hasGcashQr = !empty($user?->gcashQrCode);
                         $isGcashComplete = $hasGcashNumber && $hasGcashQr;
+                        $gcashQrUrl = $hasGcashQr ? $getPaymentImgUrl($user->gcashQrCode) : null;
+
+                        $hasMayaNumber = !empty($user?->mayaNumber);
+                        $hasMayaQr = !empty($user?->mayaQrCode);
+                        $isMayaComplete = $hasMayaNumber && $hasMayaQr;
+                        $mayaQrUrl = $hasMayaQr ? $getPaymentImgUrl($user->mayaQrCode) : null;
                     @endphp
-                    <div style="border-radius:18px;border:1px solid #DBEAFE;overflow:hidden;background:#FFFFFF;box-shadow:0 1px 3px rgba(0,0,0,0.02);">
-                        <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 14px;background:linear-gradient(90deg,#2563EB,#3B82F6);">
-                            <span style="font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:0.06em;color:#FFFFFF;">GCash</span>
-                            <label class="relative inline-flex items-center cursor-pointer">
-                                <input type="checkbox" name="product_is_gcash_available" value="1" id="gcash_toggle_create" class="sr-only peer" {{ old('product_is_gcash_available', true) ? 'checked' : '' }} onchange="document.getElementById('gcash_fields_create').style.display = this.checked ? '' : 'none'; calculateFillRate();">
-                                <div class="w-8 h-4.5 bg-white/30 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-0.5 after:bg-white after:border-gray-300 after:border after:rounded-full after:h-3.5 after:w-3.5 after:transition-all peer-checked:bg-white/40 border border-white/40"></div>
+
+                    {{-- GCash Card --}}
+                    <div x-data="{ isGcashOn: {{ old('product_is_gcash_available', true) ? 'true' : 'false' }} }" 
+                         style="border-radius:20px;border:1px solid #E2D9C8;background:#FFFFFF;box-shadow:0 2px 8px rgba(0,0,0,0.02);overflow:hidden;transition:all 0.2s;"
+                         :style="isGcashOn ? 'border-color:#BFDBFE;box-shadow:0 4px 14px rgba(37,99,235,0.06);' : 'border-color:#E8DECB;opacity:0.85;'">
+                        
+                        {{-- Card Header --}}
+                        <div style="padding:14px 16px;display:flex;align-items:center;justify-content:space-between;gap:10px;background:#FAF8F5;border-bottom:1px solid #F0E8D9;">
+                            <div style="display:flex;align-items:center;gap:8px;min-width:0;">
+                                <div style="display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border-radius:9999px;background:#2563EB;color:#FFFFFF;font-size:11px;font-weight:800;letter-spacing:0.04em;box-shadow:0 1px 3px rgba(37,99,235,0.25);">
+                                    <svg width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"/></svg>
+                                    <span>GCash</span>
+                                </div>
+                                <template x-if="isGcashOn">
+                                    @if($isGcashComplete)
+                                        <span style="font-size:10px;font-weight:700;padding:3px 8px;border-radius:9999px;background:#ECFDF5;color:#16A34A;border:1px solid #BBF7D0;">✓ Configured</span>
+                                    @else
+                                        <span style="font-size:10px;font-weight:700;padding:3px 8px;border-radius:9999px;background:#FFFBEB;color:#D97706;border:1px solid #FDE68A;">⚠ Setup Needed</span>
+                                    @endif
+                                </template>
+                                <template x-if="!isGcashOn">
+                                    <span style="font-size:10px;font-weight:600;padding:3px 8px;border-radius:9999px;background:#F3F4F6;color:#6B7280;border:1px solid #E5E7EB;">○ Disabled</span>
+                                </template>
+                            </div>
+
+                            <label class="relative inline-flex items-center cursor-pointer shrink-0" style="margin:0;line-height:1;">
+                                <input type="checkbox" 
+                                       name="product_is_gcash_available" 
+                                       value="1" 
+                                       id="gcash_toggle_create" 
+                                       class="sr-only peer" 
+                                       x-model="isGcashOn"
+                                       @change="calculateFillRate()">
+                                <div class="w-9 h-5 bg-gray-300 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-0.5 after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-[#2563EB]"></div>
                             </label>
                         </div>
-                        <div id="gcash_fields_create" {{ old('product_is_gcash_available', true) ? '' : 'style=display:none' }} style="padding:14px;background:#FFFFFF;display:flex;align-items:center;gap:12px;">
-                            <div class="flex-1 min-w-0">
-                                @if($isGcashComplete)
-                                    <div style="font-size:13px;font-weight:700;color:#1E1915;">{{ $user->gcashNumber }}</div>
-                                    <div style="font-size:10px;color:#2563EB;font-weight:700;text-transform:uppercase;letter-spacing:0.04em;margin-top:2px;">✓ Ready (Number & QR Set)</div>
-                                @else
-                                    <div style="font-size:11px;color:#D97706;font-weight:700;">Incomplete setup</div>
-                                    <a href="{{ route('seller.profile') }}?open_payment=1#payment-methods" style="font-size:10px;color:#2563EB;font-weight:700;text-decoration:underline;">Add in Settings →</a>
-                                @endif
-                            </div>
+
+                        {{-- Card Body --}}
+                        <div style="padding:16px;">
+                            <template x-if="isGcashOn">
+                                <div>
+                                    @if($isGcashComplete)
+                                        <div style="display:flex;align-items:center;gap:14px;">
+                                            @if($gcashQrUrl)
+                                                <div style="position:relative;width:56px;height:56px;border-radius:12px;border:1px solid #BFDBFE;background:#EFF6FF;padding:3px;flex-shrink:0;overflow:hidden;">
+                                                    <img src="{{ $gcashQrUrl }}" alt="GCash QR" style="width:100%;height:100%;object-fit:contain;border-radius:8px;">
+                                                </div>
+                                            @endif
+                                            <div style="min-width:0;flex:1;">
+                                                <label style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.04em;color:#64748B;display:block;">GCash Mobile Number</label>
+                                                <div style="font-size:14.5px;font-weight:800;color:#1E1915;letter-spacing:0.02em;margin-top:2px;">{{ $user->gcashNumber }}</div>
+                                                <p style="font-size:10px;color:#16A34A;font-weight:700;margin:3px 0 0 0;">✓ Ready to receive direct payments</p>
+                                            </div>
+                                        </div>
+                                    @else
+                                        <div style="padding:12px;border-radius:14px;background:#FFFBEB;border:1px solid #FDE68A;">
+                                            <div style="display:flex;align-items:flex-start;gap:8px;">
+                                                <svg style="width:16px;height:16px;color:#D97706;flex-shrink:0;margin-top:1px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+                                                <div style="flex:1;min-width:0;">
+                                                    <div style="font-size:12px;font-weight:800;color:#92400E;">Incomplete GCash Setup</div>
+                                                    <p style="font-size:11px;color:#B45309;margin:2px 0 8px 0;line-height:1.4;">
+                                                        @if(!$hasGcashNumber && !$hasGcashQr)
+                                                            Both your GCash mobile number and QR code must be configured.
+                                                        @elseif(!$hasGcashQr)
+                                                            Your GCash QR code image has not been uploaded yet.
+                                                        @else
+                                                            Your GCash mobile number is missing.
+                                                        @endif
+                                                    </p>
+                                                    <a href="{{ route('seller.profile') }}?open_payment=1#payment-methods" target="_blank" style="display:inline-flex;align-items:center;gap:4px;font-size:11.5px;font-weight:700;color:#2563EB;text-decoration:none;" onmouseover="this.style.textDecoration='underline';" onmouseout="this.style.textDecoration='none';">
+                                                        <span>Configure GCash in Settings</span>
+                                                        <svg width="11" height="11" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
+                                                    </a>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    @endif
+                                </div>
+                            </template>
+
+                            <template x-if="!isGcashOn">
+                                <div style="padding:10px 12px;border-radius:12px;background:#F9FAFB;border:1px dashed #E5E7EB;display:flex;align-items:center;gap:8px;">
+                                    <span style="font-size:11px;color:#6B7280;">GCash is turned off for this item. Switch toggle on to accept GCash.</span>
+                                </div>
+                            </template>
                         </div>
                     </div>
 
-                    {{-- Maya --}}
-                    @php 
-                        $hasMayaNumber = !empty($user->mayaNumber);
-                        $hasMayaQr = !empty($user->mayaQrCode);
-                        $isMayaComplete = $hasMayaNumber && $hasMayaQr;
-                    @endphp
-                    <div style="border-radius:18px;border:1px solid #D1FAE5;overflow:hidden;background:#FFFFFF;box-shadow:0 1px 3px rgba(0,0,0,0.02);">
-                        <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 14px;background:linear-gradient(90deg,#059669,#10B981);">
-                            <span style="font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:0.06em;color:#FFFFFF;">Maya</span>
-                            <label class="relative inline-flex items-center cursor-pointer">
-                                <input type="checkbox" name="product_is_maya_available" value="1" id="maya_toggle_create" class="sr-only peer" {{ old('product_is_maya_available', false) ? 'checked' : '' }} onchange="document.getElementById('maya_fields_create').style.display = this.checked ? '' : 'none'; calculateFillRate();">
-                                <div class="w-8 h-4.5 bg-white/30 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-0.5 after:bg-white after:border-gray-300 after:border after:rounded-full after:h-3.5 after:w-3.5 after:transition-all peer-checked:bg-white/40 border border-white/40"></div>
+                    {{-- Maya Card --}}
+                    <div x-data="{ isMayaOn: {{ old('product_is_maya_available', false) ? 'true' : 'false' }} }" 
+                         style="border-radius:20px;border:1px solid #E2D9C8;background:#FFFFFF;box-shadow:0 2px 8px rgba(0,0,0,0.02);overflow:hidden;transition:all 0.2s;"
+                         :style="isMayaOn ? 'border-color:#A7F3D0;box-shadow:0 4px 14px rgba(5,150,105,0.06);' : 'border-color:#E8DECB;opacity:0.85;'">
+                        
+                        {{-- Card Header --}}
+                        <div style="padding:14px 16px;display:flex;align-items:center;justify-content:space-between;gap:10px;background:#FAF8F5;border-bottom:1px solid #F0E8D9;">
+                            <div style="display:flex;align-items:center;gap:8px;min-width:0;">
+                                <div style="display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border-radius:9999px;background:#059669;color:#FFFFFF;font-size:11px;font-weight:800;letter-spacing:0.04em;box-shadow:0 1px 3px rgba(5,150,105,0.25);">
+                                    <svg width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"/></svg>
+                                    <span>Maya</span>
+                                </div>
+                                <template x-if="isMayaOn">
+                                    @if($isMayaComplete)
+                                        <span style="font-size:10px;font-weight:700;padding:3px 8px;border-radius:9999px;background:#ECFDF5;color:#16A34A;border:1px solid #BBF7D0;">✓ Configured</span>
+                                    @else
+                                        <span style="font-size:10px;font-weight:700;padding:3px 8px;border-radius:9999px;background:#FFFBEB;color:#D97706;border:1px solid #FDE68A;">⚠ Setup Needed</span>
+                                    @endif
+                                </template>
+                                <template x-if="!isMayaOn">
+                                    <span style="font-size:10px;font-weight:600;padding:3px 8px;border-radius:9999px;background:#F3F4F6;color:#6B7280;border:1px solid #E5E7EB;">○ Disabled</span>
+                                </template>
+                            </div>
+
+                            <label class="relative inline-flex items-center cursor-pointer shrink-0" style="margin:0;line-height:1;">
+                                <input type="checkbox" 
+                                       name="product_is_maya_available" 
+                                       value="1" 
+                                       id="maya_toggle_create" 
+                                       class="sr-only peer" 
+                                       x-model="isMayaOn"
+                                       @change="calculateFillRate()">
+                                <div class="w-9 h-5 bg-gray-300 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-0.5 after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-[#059669]"></div>
                             </label>
                         </div>
-                        <div id="maya_fields_create" {{ old('product_is_maya_available', false) ? '' : 'style=display:none' }} style="padding:14px;background:#FFFFFF;display:flex;align-items:center;gap:12px;">
-                            <div class="flex-1 min-w-0">
-                                @if($isMayaComplete)
-                                    <div style="font-size:13px;font-weight:700;color:#1E1915;">{{ $user->mayaNumber }}</div>
-                                    <div style="font-size:10px;color:#059669;font-weight:700;text-transform:uppercase;letter-spacing:0.04em;margin-top:2px;">✓ Ready (Number & QR Set)</div>
-                                @else
-                                    <div style="font-size:11px;color:#D97706;font-weight:700;">Incomplete setup</div>
-                                    <a href="{{ route('seller.profile') }}?open_payment=1#payment-methods" style="font-size:10px;color:#059669;font-weight:700;text-decoration:underline;">Add in Settings →</a>
-                                @endif
-                            </div>
+
+                        {{-- Card Body --}}
+                        <div style="padding:16px;">
+                            <template x-if="isMayaOn">
+                                <div>
+                                    @if($isMayaComplete)
+                                        <div style="display:flex;align-items:center;gap:14px;">
+                                            @if($mayaQrUrl)
+                                                <div style="position:relative;width:56px;height:56px;border-radius:12px;border:1px solid #A7F3D0;background:#ECFDF5;padding:3px;flex-shrink:0;overflow:hidden;">
+                                                    <img src="{{ $mayaQrUrl }}" alt="Maya QR" style="width:100%;height:100%;object-fit:contain;border-radius:8px;">
+                                                </div>
+                                            @endif
+                                            <div style="min-width:0;flex:1;">
+                                                <label style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.04em;color:#64748B;display:block;">Maya Account Number</label>
+                                                <div style="font-size:14.5px;font-weight:800;color:#1E1915;letter-spacing:0.02em;margin-top:2px;">{{ $user->mayaNumber }}</div>
+                                                <p style="font-size:10px;color:#16A34A;font-weight:700;margin:3px 0 0 0;">✓ Ready to receive direct payments</p>
+                                            </div>
+                                        </div>
+                                    @else
+                                        <div style="padding:12px;border-radius:14px;background:#FFFBEB;border:1px solid #FDE68A;">
+                                            <div style="display:flex;align-items:flex-start;gap:8px;">
+                                                <svg style="width:16px;height:16px;color:#D97706;flex-shrink:0;margin-top:1px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+                                                <div style="flex:1;min-width:0;">
+                                                    <div style="font-size:12px;font-weight:800;color:#92400E;">Incomplete Maya Setup</div>
+                                                    <p style="font-size:11px;color:#B45309;margin:2px 0 8px 0;line-height:1.4;">
+                                                        @if(!$hasMayaNumber && !$hasMayaQr)
+                                                            Both your Maya account number and QR code must be configured.
+                                                        @elseif(!$hasMayaQr)
+                                                            Your Maya QR code image has not been uploaded yet.
+                                                        @else
+                                                            Your Maya account number is missing.
+                                                        @endif
+                                                    </p>
+                                                    <a href="{{ route('seller.profile') }}?open_payment=1#payment-methods" target="_blank" style="display:inline-flex;align-items:center;gap:4px;font-size:11.5px;font-weight:700;color:#059669;text-decoration:none;" onmouseover="this.style.textDecoration='underline';" onmouseout="this.style.textDecoration='none';">
+                                                        <span>Configure Maya in Settings</span>
+                                                        <svg width="11" height="11" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
+                                                    </a>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    @endif
+                                </div>
+                            </template>
+
+                            <template x-if="!isMayaOn">
+                                <div style="padding:10px 12px;border-radius:12px;background:#F9FAFB;border:1px dashed #E5E7EB;display:flex;align-items:center;gap:8px;">
+                                    <span style="font-size:11px;color:#6B7280;">Maya is turned off for this item. Switch toggle on to accept Maya.</span>
+                                </div>
+                            </template>
                         </div>
                     </div>
                 </div>
