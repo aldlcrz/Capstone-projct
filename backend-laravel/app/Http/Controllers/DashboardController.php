@@ -609,63 +609,83 @@ class DashboardController extends Controller
 
     public function sellerOrders(Request $request)
     {
-        $sellerId = $request->user()->id;
-        $query = Order::where('sellerId', $sellerId)
-            ->with(['customer:id,name,email,mobileNumber,profilePhoto', 'items.product', 'reviews.customer:id,name,profilePhoto']);
-
-        $status = strtolower($request->input('status', 'all'));
-        if ($status && $status !== 'all') {
-            if ($status === 'processing') {
-                $query->whereIn(DB::raw('LOWER(status)'), ['processing', 'to ship', 'confirmed', 'packed']);
-            } elseif ($status === 'shipped') {
-                $query->whereIn(DB::raw('LOWER(status)'), ['shipped', 'to receive']);
-            } elseif ($status === 'delivered') {
-                $query->whereIn(DB::raw('LOWER(status)'), ['delivered']);
-            } elseif ($status === 'completed') {
-                $query->whereIn(DB::raw('LOWER(status)'), ['completed']);
-            } elseif ($status === 'cancelled') {
-                $query->whereIn(DB::raw('LOWER(status)'), ['cancelled', 'cancellation pending', 'cancellation requested']);
-            } elseif ($status === 'pending') {
-                $query->whereIn(DB::raw('LOWER(status)'), ['pending']);
-            } else {
-                $query->where(DB::raw('LOWER(status)'), $status);
+        try {
+            $user = $request->user();
+            if (!$user) {
+                return redirect()->route('login');
             }
+            $sellerId = $user->id;
+
+            $query = Order::where('sellerId', $sellerId)
+                ->with(['customer', 'items.product', 'reviews.customer']);
+
+            $status = strtolower($request->input('status', 'all'));
+            if ($status && $status !== 'all') {
+                if ($status === 'processing') {
+                    $query->whereIn(DB::raw('LOWER(status)'), ['processing', 'to ship', 'confirmed', 'packed']);
+                } elseif ($status === 'shipped') {
+                    $query->whereIn(DB::raw('LOWER(status)'), ['shipped', 'to receive']);
+                } elseif ($status === 'delivered') {
+                    $query->whereIn(DB::raw('LOWER(status)'), ['delivered']);
+                } elseif ($status === 'completed') {
+                    $query->whereIn(DB::raw('LOWER(status)'), ['completed']);
+                } elseif ($status === 'cancelled') {
+                    $query->whereIn(DB::raw('LOWER(status)'), ['cancelled', 'cancellation pending', 'cancellation requested']);
+                } elseif ($status === 'pending') {
+                    $query->whereIn(DB::raw('LOWER(status)'), ['pending']);
+                } else {
+                    $query->where(DB::raw('LOWER(status)'), $status);
+                }
+            }
+
+            if ($request->filled('search')) {
+                $s = strtolower($request->search);
+                $query->where(function($q) use ($s) {
+                    $q->where(DB::raw('LOWER(id)'), 'like', "%{$s}%")
+                      ->orWhereHas('customer', function($cq) use ($s) {
+                          $cq->where(DB::raw('LOWER(name)'), 'like', "%{$s}%")
+                             ->orWhere(DB::raw('LOWER(email)'), 'like', "%{$s}%");
+                      });
+                });
+            }
+
+            if ($request->filled('start_date')) {
+                try {
+                    $query->where('createdAt', '>=', Carbon::parse($request->start_date)->startOfDay());
+                } catch (\Throwable $e) {}
+            }
+
+            if ($request->filled('end_date')) {
+                try {
+                    $query->where('createdAt', '<=', Carbon::parse($request->end_date)->endOfDay());
+                } catch (\Throwable $e) {}
+            }
+
+            $orders = $query->orderBy('createdAt', 'desc')->get();
+
+            $allOrders = Order::where('sellerId', $sellerId)->get();
+            $counts = [
+                'all'        => $allOrders->count(),
+                'pending'    => $allOrders->filter(fn($o) => strtolower($o->status ?? '') === 'pending')->count(),
+                'to ship'    => $allOrders->filter(fn($o) => in_array(strtolower($o->status ?? ''), ['to ship', 'to_ship', 'processing', 'ready to ship', 'ready_to_ship']))->count(),
+                'shipped'    => $allOrders->filter(fn($o) => strtolower($o->status ?? '') === 'shipped')->count(),
+                'in transit' => $allOrders->filter(fn($o) => in_array(strtolower($o->status ?? ''), ['in transit', 'in_transit']))->count(),
+                'delivered'  => $allOrders->filter(fn($o) => strtolower($o->status ?? '') === 'delivered')->count(),
+                'completed'  => $allOrders->filter(fn($o) => strtolower($o->status ?? '') === 'completed')->count(),
+                'cancelled'  => $allOrders->filter(fn($o) => in_array(strtolower($o->status ?? ''), ['cancelled', 'cancellation pending', 'cancellation requested']))->count(),
+            ];
+
+            return view('seller.orders.index', compact('orders', 'counts', 'status'));
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::error('Error in sellerOrders: ' . $e->getMessage());
+            $orders = collect([]);
+            $counts = [
+                'all' => 0, 'pending' => 0, 'to ship' => 0, 'shipped' => 0,
+                'in transit' => 0, 'delivered' => 0, 'completed' => 0, 'cancelled' => 0
+            ];
+            $status = 'all';
+            return view('seller.orders.index', compact('orders', 'counts', 'status'));
         }
-
-        if ($request->filled('search')) {
-            $s = strtolower($request->search);
-            $query->where(function($q) use ($s) {
-                $q->where(DB::raw('LOWER(id)'), 'like', "%{$s}%")
-                  ->orWhereHas('customer', function($cq) use ($s) {
-                      $cq->where(DB::raw('LOWER(name)'), 'like', "%{$s}%")
-                         ->orWhere(DB::raw('LOWER(email)'), 'like', "%{$s}%");
-                  });
-            });
-        }
-
-        if ($request->filled('start_date')) {
-            $query->where('createdAt', '>=', Carbon::parse($request->start_date)->startOfDay());
-        }
-
-        if ($request->filled('end_date')) {
-            $query->where('createdAt', '<=', Carbon::parse($request->end_date)->endOfDay());
-        }
-
-        $orders = $query->orderBy('createdAt', 'desc')->get();
-
-        $allOrders = Order::where('sellerId', $sellerId)->get();
-        $counts = [
-            'all'        => $allOrders->count(),
-            'pending'    => $allOrders->filter(fn($o) => strtolower($o->status) === 'pending')->count(),
-            'to ship'    => $allOrders->filter(fn($o) => in_array(strtolower($o->status), ['to ship', 'to_ship', 'processing', 'ready to ship', 'ready_to_ship']))->count(),
-            'shipped'    => $allOrders->filter(fn($o) => strtolower($o->status) === 'shipped')->count(),
-            'in transit' => $allOrders->filter(fn($o) => in_array(strtolower($o->status), ['in transit', 'in_transit']))->count(),
-            'delivered'  => $allOrders->filter(fn($o) => strtolower($o->status) === 'delivered')->count(),
-            'completed'  => $allOrders->filter(fn($o) => strtolower($o->status) === 'completed')->count(),
-            'cancelled'  => $allOrders->filter(fn($o) => in_array(strtolower($o->status), ['cancelled', 'cancellation pending', 'cancellation requested']))->count(),
-        ];
-
-        return view('seller.orders.index', compact('orders', 'counts', 'status'));
     }
 
     public function sellerProfile(Request $request)

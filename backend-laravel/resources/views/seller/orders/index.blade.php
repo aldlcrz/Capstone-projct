@@ -85,7 +85,16 @@ function printSellerOrder(order) {
     win.print();
 }
 
-function sellerOrdersManager(initialOrders) {
+function sellerOrdersManager() {
+    let initialOrders = [];
+    try {
+        const jsonEl = document.getElementById('seller-orders-json');
+        if (jsonEl && jsonEl.textContent) {
+            initialOrders = JSON.parse(jsonEl.textContent);
+        }
+    } catch(e) {
+        initialOrders = [];
+    }
     return {
         orders: initialOrders || [],
         searchTerm: '',
@@ -666,7 +675,11 @@ function sellerOrdersManager(initialOrders) {
 }
 </script>
 
-<div class="space-y-4 sm:space-y-6 max-w-5xl pb-28 lg:pb-12 px-2 sm:px-6" x-data="sellerOrdersManager({{ $orders->toJson() }})">
+<script id="seller-orders-json" type="application/json">
+    {!! json_encode($orders, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_AMP | JSON_HEX_QUOT) !!}
+</script>
+
+<div class="space-y-4 sm:space-y-6 max-w-5xl pb-28 lg:pb-12 px-2 sm:px-6" x-data="sellerOrdersManager()">
 
     {{-- Floating Toast Notification --}}
     <div x-show="toastMessage" x-transition:enter="transition ease-out duration-300 transform"
