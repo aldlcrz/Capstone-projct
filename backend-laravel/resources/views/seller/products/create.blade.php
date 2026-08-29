@@ -755,7 +755,7 @@
                             <p style="font-size:12px;color:#78716C;margin-top:2px;margin-bottom:0;">Assign available inventory quantities per size</p>
                         </div>
                     </div>
-                    <span style="font-size:10px;font-weight:700;color:#7A5505;background-color:#FDF8EE;border:1px solid #EEDBBA;padding:3px 10px;border-radius:20px;text-transform:uppercase;letter-spacing:0.04em;">At least 1 size required</span>
+                    <span style="font-size:10.5px;font-weight:700;color:#DC2626;background-color:#FEF2F2;border:1px solid #FECACA;padding:4px 12px;border-radius:9999px;text-transform:uppercase;letter-spacing:0.04em;display:inline-flex;align-items:center;gap:4px;">At least 1 size required</span>
                 </div>
 
                 <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-2.5 pt-1">
