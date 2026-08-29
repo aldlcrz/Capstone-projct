@@ -172,131 +172,14 @@
             </div>
         </aside>
 
-        <!-- MOBILE DRAWER -->
-        <div x-show="isMobileMenuOpen"
-             x-cloak
-             class="fixed inset-0 z-50 lg:hidden flex"
-             x-transition:enter="transition ease-out duration-300"
-             x-transition:enter-start="opacity-0"
-             x-transition:enter-end="opacity-100"
-             x-transition:leave="transition ease-in duration-200"
-             x-transition:leave-start="opacity-100"
-             x-transition:leave-end="opacity-0">
-
-            <div @click="isMobileMenuOpen = false" class="fixed inset-0 bg-black/60 backdrop-blur-xs"></div>
-
-            <div class="relative w-4/5 max-w-xs h-full flex flex-col justify-between p-6 shadow-2xl z-10 overflow-y-auto no-scrollbar"
-                 style="background-color:#FAF7F2; border-right: 1px solid #E8DECB;"
-                 x-transition:enter="transition ease-out duration-300 transform"
-                 x-transition:enter-start="-translate-x-full"
-                 x-transition:enter-end="translate-x-0"
-                 x-transition:leave="transition ease-in duration-200 transform"
-                 x-transition:leave-start="translate-x-0"
-                 x-transition:leave-end="-translate-x-full">
-
-                <div>
-                    <!-- Drawer Header -->
-                    <div class="flex items-center justify-between pb-5 mb-5" style="border-bottom: 1px solid #E8DECB;">
-                        <div class="flex items-center gap-2.5">
-                            <img src="{{ asset('images/logo-icon.png') }}" alt="LumBarong" class="w-8 h-8 object-contain rounded-xl">
-                            <div>
-                                <span class="font-serif font-black tracking-wider text-base uppercase" style="color: #1E1915;">LumBarong</span>
-                                <span class="block text-[8px] font-black tracking-widest uppercase" style="color: #A16D19;">✦ Artisan Shop</span>
-                            </div>
-                        </div>
-                        <button @click="isMobileMenuOpen = false" class="w-8 h-8 rounded-full flex items-center justify-center transition-colors cursor-pointer" style="background: #FDF8EE; color: #766C60;">
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
-                        </button>
-                    </div>
-
-                    <!-- Drawer Profile -->
-                    <div class="py-3 px-3.5 rounded-2xl mb-5 flex items-center gap-3 shadow-2xs" style="background: #FFFFFF; border: 1px solid #ECE3D2;">
-                        <div style="width:36px;height:36px;min-width:36px;border-radius:50%;padding:2px;background:linear-gradient(135deg,#996515,#E6CA65,#996515);box-shadow:0 2px 6px rgba(0,0,0,0.08);" class="shrink-0">
-                            <div style="width:100%;height:100%;border-radius:50%;overflow:hidden;background:#FAF8F5;display:flex;align-items:center;justify-content:center;">
-                                @if(Auth::user()->profile_photo_url)
-                                    <img src="{{ Auth::user()->profile_photo_url }}" class="w-full h-full object-cover">
-                                @else
-                                    <span style="font-size:13px;font-weight:800;color:#996515;">{{ strtoupper(substr(Auth::user()->name, 0, 1)) }}</span>
-                                @endif
-                            </div>
-                        </div>
-                        <div class="min-w-0">
-                            <div class="text-xs font-bold truncate font-serif" style="color: #1E1915;">{{ Auth::user()->name }}</div>
-                            <div class="text-[9px] font-extrabold uppercase tracking-wider mt-0.5" style="color: #A16D19;">{{ Auth::user()->isPremiumActive() ? '✦ Premium Artisan' : 'Verified Artisan' }}</div>
-                        </div>
-                    </div>
-
-                    <!-- Drawer Nav -->
-                    <nav class="space-y-1">
-                        @php
-                            $drawerMenu = [
-                                ['label' => 'Dashboard',     'path' => 'seller/dashboard',  'badge' => 0,                       'icon' => '<path d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path>'],
-                                ['label' => 'Analytics',     'path' => 'seller/analytics',  'badge' => 0,                       'icon' => '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>'],
-                                ['label' => 'Products',      'path' => 'seller/products',   'badge' => $attentionProductsCount,  'icon' => '<path d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 11m8 4V4"></path>'],
-                                ['label' => 'Customers',     'path' => 'seller/customers',  'badge' => 0,                       'icon' => '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path>'],
-                                ['label' => 'Orders',        'path' => 'seller/orders',     'badge' => $pendingOrdersCount,     'icon' => '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"></path>'],
-                                ['label' => 'Messages',      'path' => 'seller/messages',   'badge' => $unreadMsgCount,          'icon' => '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"></path>'],
-                                ['label' => 'Pay Commission','path' => 'seller/commission', 'badge' => 0,                       'icon' => '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"></path>'],
-                                ['label' => 'Shop Policies', 'path' => 'seller/policies',   'badge' => 0,                       'icon' => '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>'],
-                                ['label' => 'Shop Profile',  'path' => 'seller/profile',    'badge' => 0,                       'icon' => '<path d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>'],
-                            ];
-                        @endphp
-                        @foreach($drawerMenu as $item)
-                            @php $isActive = request()->is($item['path'] . '*'); @endphp
-                            <a href="/{{ $item['path'] }}"
-                               class="flex items-center justify-between px-3 py-2.5 rounded-xl text-xs font-semibold transition-all {{ $isActive ? 'drawer-nav-active' : 'drawer-nav-inactive' }}"
-                               @if(!$isActive)
-                               onmouseover="this.style.color='#1E1915'; this.style.background='rgba(196,149,32,0.08)';"
-                               onmouseout="this.style.color='#6C6256'; this.style.background='transparent';"
-                               @endif>
-                                <div class="flex items-center gap-3">
-                                    <svg class="w-4 h-4 {{ $isActive ? 'drawer-nav-icon-active' : 'drawer-nav-icon-inactive' }}" fill="none" stroke="currentColor" viewBox="0 0 24 24">{!! $item['icon'] !!}</svg>
-                                    <span>{{ $item['label'] }}</span>
-                                </div>
-                                @if(($item['badge'] ?? 0) > 0)
-                                    <span class="artisan-badge">{{ $item['badge'] }}</span>
-                                @endif
-                            </a>
-                        @endforeach
-                    </nav>
-                                <!-- Drawer Logout -->
-                <div class="pt-5 mt-5" style="border-top: 1px solid #E8DECB;">
-                    <form x-ref="mobileLogoutForm" action="{{ route('logout') }}" method="POST">
-                        @csrf
-                        <button type="button"
-                                @click="$dispatch('open-confirmation', {
-                                    title: 'Logout',
-                                    message: 'Are you sure you want to exit your artisan workspace?',
-                                    confirmText: 'Logout',
-                                    type: 'danger',
-                                    onConfirm: () => $refs.mobileLogoutForm.submit()
-                                })"
-                                class="flex items-center gap-3.5 w-full px-4 py-3 rounded-2xl text-xs font-bold transition-all cursor-pointer shadow-2xs"
-                                style="background: #FEF2F2; border: 1px solid #FECACA; color: #DC2626;"
-                                onmouseover="this.style.background='#DC2626'; this.style.color='#FFFFFF'; this.style.borderColor='#DC2626';"
-                                onmouseout="this.style.background='#FEF2F2'; this.style.color='#DC2626'; this.style.borderColor='#FECACA';">
-                            <svg class="w-4.5 h-4.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path></svg>
-                            <span>Logout Workspace</span>
-                        </button>
-                    </form>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- MAIN WRAPPER -->
+        <!-- MAIN WRAPPER -->
         <div class="flex-1 flex flex-col min-w-0 min-h-0 h-full relative overflow-hidden" style="background-color: #FFFCF7;">
 
             <!-- Top Header (Enlarged & Cleaned) -->
             <header class="sticky top-0 z-40 h-20 flex items-center shrink-0" style="background-color: #FFFCF7; border-bottom: 1px solid #E8DECB;">
                 <div class="w-full flex items-center justify-between px-6 lg:px-10">
-                    <!-- Mobile: Hamburger + Logo -->
+                    <!-- Mobile: Logo (Side drawer removed) -->
                     <div class="flex items-center gap-3.5 lg:hidden">
-                        <button @click="isMobileMenuOpen = true" class="w-10 h-10 rounded-2xl flex items-center justify-center transition-all cursor-pointer" style="background: #FDF8EE; border: 1px solid #E8DECB; color: #766C60;"
-                                onmouseover="this.style.borderColor='#C49520'; this.style.color='#C49520';"
-                                onmouseout="this.style.borderColor='#E8DECB'; this.style.color='#766C60';">
-                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path></svg>
-                        </button>
                         <a href="/seller/dashboard" class="flex items-center gap-2">
                             <img src="{{ asset('images/logo-icon.png') }}" alt="LumBarong" class="w-8 h-8 object-contain rounded-lg">
                             <span class="font-serif text-base font-bold tracking-tight" style="color: #1E1915;">LUMBARONG</span>
@@ -417,7 +300,7 @@
             </header>
 
             <!-- Page Content -->
-            <main class="flex-1 min-h-0 overflow-y-auto p-3 sm:p-6 lg:p-10 pb-12">
+            <main class="flex-1 min-h-0 overflow-y-auto p-3 sm:p-6 lg:p-10 pb-28 lg:pb-12">
                 <div class="max-w-7xl mx-auto w-full">
                     {{-- Flash Messages --}}
                     @if(session('success') || session('error'))
@@ -459,6 +342,44 @@
                     @yield('content')
                 </div>
             </main>
+
+            <!-- MOBILE BOTTOM NAVBAR (Black text with sharp icons) -->
+            <nav class="lg:hidden fixed bottom-0 left-0 right-0 h-16 flex items-center justify-around px-2 z-40 shadow-lg" style="background: #FFFCF7; border-top: 1px solid #E8DECB;">
+                <a href="{{ route('seller.dashboard') }}" class="flex-1 flex flex-col items-center justify-center gap-0.5 py-1 transition-colors {{ request()->is('seller/dashboard') || request()->is('seller') ? 'text-[#C49520]' : 'text-[#1E1915]' }}">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l9-9 9 9M5 10v10a1 1 0 001 1h3a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1h3a1 1 0 001-1V10"></path></svg>
+                    <span class="text-[10px] font-bold text-[#1E1915]">Home</span>
+                </a>
+                <a href="{{ route('seller.orders') }}" class="flex-1 flex flex-col items-center justify-center gap-0.5 py-1 relative transition-colors {{ request()->is('seller/orders*') ? 'text-[#C49520]' : 'text-[#1E1915]' }}">
+                    <div class="relative">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path></svg>
+                        @if(($pendingOrdersCount ?? 0) > 0)
+                            <span class="absolute -top-1 -right-2 min-w-3.5 h-3.5 px-1 text-white text-[8px] font-black rounded-full flex items-center justify-center border-2 border-white" style="background: #C49520;">{{ $pendingOrdersCount }}</span>
+                        @endif
+                    </div>
+                    <span class="text-[10px] font-bold text-[#1E1915]">Orders</span>
+                </a>
+                <a href="{{ route('seller.products.create') }}" class="flex flex-col items-center justify-center -mt-5 group shrink-0 px-2" title="Add New Product">
+                    <div class="w-12 h-12 rounded-full flex items-center justify-center shadow-lg transition-all"
+                         style="background: #1E1915; color: #FFFCF7;"
+                         onmouseover="this.style.background='#C49520';" onmouseout="this.style.background='#1E1915';">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4.5v15m7.5-7.5h-15"></path></svg>
+                    </div>
+                    <span class="text-[9px] font-bold mt-0.5 text-[#1E1915]">Add</span>
+                </a>
+                <a href="{{ route('seller.messages') }}" class="flex-1 flex flex-col items-center justify-center gap-0.5 py-1 relative transition-colors {{ request()->is('seller/messages*') ? 'text-[#C49520]' : 'text-[#1E1915]' }}">
+                    <div class="relative">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"></path></svg>
+                        @if(($unreadMsgCount ?? 0) > 0)
+                            <span class="absolute -top-1 -right-2 min-w-3.5 h-3.5 px-1 text-white text-[8px] font-black rounded-full flex items-center justify-center border-2 border-white" style="background: #C49520;">{{ $unreadMsgCount }}</span>
+                        @endif
+                    </div>
+                    <span class="text-[10px] font-bold text-[#1E1915]">Messages</span>
+                </a>
+                <a href="{{ route('seller.profile') }}" class="flex-1 flex flex-col items-center justify-center gap-0.5 py-1 transition-colors {{ request()->is('seller/profile*') ? 'text-[#C49520]' : 'text-[#1E1915]' }}">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg>
+                    <span class="text-[10px] font-bold text-[#1E1915]">Profile</span>
+                </a>
+            </nav>
         </div>
     </div>
 
