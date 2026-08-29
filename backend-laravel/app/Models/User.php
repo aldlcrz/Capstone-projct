@@ -34,16 +34,6 @@ class User extends Authenticatable
 
 
     /**
-     * The accessors to append to the model's array form.
-     *
-     * @var array<int, string>
-     */
-    protected $appends = [
-        'profile_photo_url',
-        'display_name',
-    ];
-
-    /**
      * The attributes that should be hidden for serialization.
      *
      * @var array<int, string>
@@ -174,7 +164,11 @@ class User extends Authenticatable
      */
     public function getDisplayNameAttribute(): string
     {
-        return $this->shopName ?: $this->name ?: 'Artisan';
+        try {
+            return $this->shopName ?: $this->name ?: 'Artisan';
+        } catch (\Throwable $e) {
+            return 'Artisan';
+        }
     }
 
     /**
@@ -182,35 +176,42 @@ class User extends Authenticatable
      */
     public function getProfilePhotoUrlAttribute(): ?string
     {
-        if (! $this->profilePhoto) {
+        try {
+            if (empty($this->profilePhoto) || !is_string($this->profilePhoto)) {
+                return null;
+            }
+
+            $photo = trim($this->profilePhoto);
+            if ($photo === '') {
+                return null;
+            }
+
+            if (str_starts_with($photo, 'http://') || str_starts_with($photo, 'https://')) {
+                return $photo;
+            }
+
+            $clean = ltrim($photo, '/');
+
+            if (str_starts_with($clean, 'uploads/') || str_starts_with($clean, 'storage/')) {
+                return asset($clean);
+            }
+
+            if (@file_exists(public_path('uploads/avatars/' . $clean))) {
+                return asset('uploads/avatars/' . $clean);
+            }
+
+            if (@file_exists(public_path('uploads/' . $clean))) {
+                return asset('uploads/' . $clean);
+            }
+
+            if (@file_exists(public_path('storage/' . $clean))) {
+                return asset('storage/' . $clean);
+            }
+
+            return asset('uploads/' . $clean);
+        } catch (\Throwable $e) {
             return null;
         }
-
-        $photo = trim($this->profilePhoto);
-
-        if (str_starts_with($photo, 'http://') || str_starts_with($photo, 'https://')) {
-            return $photo;
-        }
-
-        $clean = ltrim($photo, '/');
-
-        if (str_starts_with($clean, 'uploads/') || str_starts_with($clean, 'storage/')) {
-            return asset($clean);
-        }
-
-        if (file_exists(public_path('uploads/avatars/' . $clean))) {
-            return asset('uploads/avatars/' . $clean);
-        }
-
-        if (file_exists(public_path('uploads/' . $clean))) {
-            return asset('uploads/' . $clean);
-        }
-
-        if (file_exists(public_path('storage/' . $clean))) {
-            return asset('storage/' . $clean);
-        }
-
-        return asset('uploads/' . $clean);
     }
 
     public function wishlists()
