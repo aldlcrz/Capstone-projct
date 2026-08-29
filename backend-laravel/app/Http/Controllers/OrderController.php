@@ -241,9 +241,12 @@ class OrderController extends Controller
         $normalizedCurrent = strtolower($currentStatus);
 
         // Edit locking for shipping details
-        if (in_array($normalizedCurrent, ['delivered', 'completed', 'cancelled'], true)) {
-            if ($request->has('courierName') || $request->has('trackingNumber') || $request->has('trackingLink')) {
-                return response()->json(['message' => 'Shipping information is locked and cannot be edited after order is delivered or completed.'], 400);
+        if (in_array($normalizedCurrent, ['in transit', 'in_transit', 'delivered', 'completed', 'cancelled'], true)) {
+            $courier = trim($request->courierName ?? '');
+            $trackingNum = trim($request->trackingNumber ?? '');
+            $trackingLink = trim($request->trackingLink ?? '');
+            if (($courier && $courier !== $order->courierName) || ($trackingNum && $trackingNum !== $order->trackingNumber) || ($trackingLink && $trackingLink !== $order->trackingLink)) {
+                return response()->json(['message' => 'Shipping information is locked and cannot be edited after order is in transit or delivered.'], 400);
             }
             if (($normalizedCurrent === 'completed' || $normalizedCurrent === 'cancelled') && $normalizedTarget !== $normalizedCurrent) {
                 return response()->json(['message' => "Order is already {$order->status} and cannot be modified."], 400);
