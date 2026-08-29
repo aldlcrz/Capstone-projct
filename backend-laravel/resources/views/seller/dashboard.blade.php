@@ -272,7 +272,7 @@
                     </div>
 
                     <div class="p-3 rounded-xl" style="background: #FDF8EE; border: 1px solid #E8DECB;">
-                        <div class="text-[9px] font-bold uppercase tracking-widest" style="color: #766C60;">Repeat Patrons</div>
+                        <div class="text-[9px] font-bold uppercase tracking-widest" style="color: #766C60;">Repeat Customers</div>
                         <div class="text-base font-black mt-0.5 font-sans" style="color: #1E1915;">{{ $storePerformance['repeatCustomers'] ?? 0 }}</div>
                     </div>
 

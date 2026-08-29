@@ -8,12 +8,12 @@
             <div class="flex items-center gap-2 mb-1">
                 <span class="text-[9px] font-extrabold uppercase tracking-[0.25em]" style="color: #C49520;">✦ Client Relations</span>
                 <span class="text-xs" style="color: #E8DECB;">•</span>
-                <span class="text-[10px] font-semibold tracking-wider uppercase" style="color: #766C60;">Patron Directory</span>
+                <span class="text-[10px] font-semibold tracking-wider uppercase" style="color: #766C60;">Customer Directory</span>
             </div>
             <h1 class="font-serif text-2xl sm:text-3xl font-bold tracking-tight" style="color: #1E1915;">
                 Client <span class="italic font-normal" style="color: #766C60;">Directory</span>
             </h1>
-            <p class="text-xs font-medium mt-1" style="color: #766C60;">View customer purchasing history, direct communication channels, and total patronage.</p>
+            <p class="text-xs font-medium mt-1" style="color: #766C60;">View customer purchasing history, direct communication channels, and total spending.</p>
         </div>
         
         {{-- Search Input --}}
@@ -26,7 +26,7 @@
     {{-- Customer Statistics Summary Cards --}}
     <div class="grid grid-cols-3 gap-2 sm:gap-4">
         <div class="rounded-2xl sm:rounded-3xl p-3 sm:p-5 shadow-xs space-y-0.5 sm:space-y-1 text-center sm:text-left" style="background: #FFFCF7; border: 1px solid #E8DECB;">
-            <div class="text-[8px] sm:text-[10px] font-bold uppercase tracking-wider truncate" style="color: #766C60;">Unique Patrons</div>
+            <div class="text-[8px] sm:text-[10px] font-bold uppercase tracking-wider truncate" style="color: #766C60;">Customers</div>
             <div class="text-base sm:text-2xl font-black font-sans" style="color: #1E1915;">{{ count($customerList) }}</div>
             <div class="text-[8px] sm:text-[10px] hidden sm:block font-medium" style="color: #A09585;">Registered buyers</div>
         </div>
@@ -124,7 +124,7 @@
                 <h2 class="font-serif text-lg font-bold" style="color: #FFFCF7;" x-text="customer ? customer.name : 'Client Details'"></h2>
                 <p class="text-xs font-medium mt-0.5" style="color: rgba(255,252,247,0.6);" x-text="customer ? customer.email : ''"></p>
                 <div class="mt-2 inline-flex items-center gap-1.5 px-3 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-widest" style="background: rgba(196,149,32,0.15); color: #C49520; border: 1px solid rgba(196,149,32,0.3);">
-                    <span x-text="viewTab === 'orders' ? 'Transaction History (' + (customer ? customer.ordersCount : 0) + ')' : 'Verified Patron ✦'"></span>
+                    <span x-text="viewTab === 'orders' ? 'Transaction History (' + (customer ? customer.ordersCount : 0) + ')' : 'Verified Customer ✦'"></span>
                 </div>
             </div>
 
@@ -195,7 +195,7 @@
                     </template>
 
                     <template x-if="!customer || !customer.history || customer.history.length === 0">
-                        <div class="p-6 text-center text-xs italic" style="color: #A09585;">No purchase records found for this patron.</div>
+                        <div class="p-6 text-center text-xs italic" style="color: #A09585;">No purchase records found for this customer.</div>
                     </template>
                 </div>
             </div>

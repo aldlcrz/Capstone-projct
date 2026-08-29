@@ -462,7 +462,7 @@
                                     <span x-text="rev.customer ? rev.customer.name.charAt(0) : 'C'"></span>
                                 </div>
                                 <div>
-                                    <div class="text-xs font-bold" style="color: #1E1915;" x-text="rev.customer ? rev.customer.name : 'Verified Patron'"></div>
+                                    <div class="text-xs font-bold" style="color: #1E1915;" x-text="rev.customer ? rev.customer.name : 'Verified Customer'"></div>
                                     <div class="flex items-center text-xs" style="color: #C49520;">
                                         <template x-for="star in 5" :key="star">
                                             <span :style="star <= rev.rating ? 'color:#C49520;' : 'color:#E8DECB;'">★</span>
@@ -509,7 +509,7 @@
                                 <div class="flex justify-end">
                                     <button type="button" @click="startReply(rev)" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[10px] font-extrabold uppercase tracking-wider transition-all shadow-2xs cursor-pointer" style="background: #FFFCF7; border: 1px solid #E8DECB; color: #1E1915;" onmouseover="this.style.borderColor='#C49520'; this.style.color='#C49520';" onmouseout="this.style.borderColor='#E8DECB'; this.style.color='#1E1915';">
                                         <svg class="w-3.5 h-3.5" style="color: #C49520;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6"/></svg>
-                                        <span>Respond to Patron</span>
+                                        <span>Respond to Customer</span>
                                     </button>
                                 </div>
                             </template>
@@ -528,7 +528,7 @@
                                         x-model="replyText" 
                                         rows="3" 
                                         maxlength="1000" 
-                                        placeholder="Write a courteous, professional reply acknowledging their patronage..."
+                                        placeholder="Write a courteous, professional reply to the customer..."
                                         class="w-full text-xs p-2.5 rounded-xl outline-hidden leading-relaxed resize-none"
                                         style="background: #FDF8EE; border: 1px solid #E8DECB; color: #1E1915;"
                                     ></textarea>
