@@ -655,22 +655,44 @@
                         <span>Next: Complete Product Details</span>
                         <span style="font-weight:700;">→</span>
                     </div>
-                    <div style="display:flex;align-items:center;gap:10px;margin-top:4px;">
-                        <p style="font-size:11px;color:#78716C;margin:0;">
-                            * Please upload a photo, enter product name, choose a category, and select target tag to proceed.
-                        </p>
+                    <div style="display:flex;align-items:center;gap:8px;margin-top:6px;flex-wrap:wrap;">
+                        {{-- Photo Status --}}
+                        <span style="font-size:10px;font-weight:700;border-radius:20px;padding:3px 10px;display:inline-flex;align-items:center;gap:4px;"
+                              :style="variants[0] && variants[0].imagePreview ? 'background:#E8F5E9;color:#2E7D32;border:1px solid #A5D6A7;' : 'background:#FEF2F2;color:#DC2626;border:1px solid #FECACA;'">
+                            <span x-text="variants[0] && variants[0].imagePreview ? '✓ Photo added' : '✕ Photo missing'"></span>
+                        </span>
+
+                        {{-- Name Status --}}
+                        <span style="font-size:10px;font-weight:700;border-radius:20px;padding:3px 10px;display:inline-flex;align-items:center;gap:4px;"
+                              :style="productName && productName.trim().length >= 3 ? 'background:#E8F5E9;color:#2E7D32;border:1px solid #A5D6A7;' : 'background:#FEF2F2;color:#DC2626;border:1px solid #FECACA;'">
+                            <span x-text="productName && productName.trim().length >= 3 ? '✓ Name set' : '✕ Name missing'"></span>
+                        </span>
+
+                        {{-- Target Status --}}
+                        <span style="font-size:10px;font-weight:700;border-radius:20px;padding:3px 10px;display:inline-flex;align-items:center;gap:4px;"
+                              :style="targetGroup ? 'background:#E8F5E9;color:#2E7D32;border:1px solid #A5D6A7;' : 'background:#FEF2F2;color:#DC2626;border:1px solid #FECACA;'">
+                            <span x-text="targetGroup ? '✓ ' + targetGroup : '✕ Target missing'"></span>
+                        </span>
+
+                        {{-- Category Status --}}
+                        <span style="font-size:10px;font-weight:700;border-radius:20px;padding:3px 10px;display:inline-flex;align-items:center;gap:4px;"
+                              :style="selectedCategories.length > 0 ? 'background:#E8F5E9;color:#2E7D32;border:1px solid #A5D6A7;' : 'background:#FEF2F2;color:#DC2626;border:1px solid #FECACA;'">
+                            <span x-text="selectedCategories.length > 0 ? '✓ Category selected' : '✕ Category missing'"></span>
+                        </span>
+
                         <span id="draft-save-indicator" style="display:none;font-size:10px;font-weight:600;color:#2E7D32;white-space:nowrap;background:#E8F5E9;border:1px solid #A5D6A7;border-radius:9999px;padding:2px 10px;">✓ Draft saved</span>
                     </div>
                 </div>
 
                 <button type="button" 
                         @click="goToStep2()"
-                        :disabled="!isStep1Complete"
-                        class="inline-flex items-center gap-2 font-bold transition-all border-0 shadow-sm"
+                        class="inline-flex items-center gap-2 font-bold transition-all border-0 shadow-sm cursor-pointer"
                         style="padding:12px 28px !important;border-radius:9999px !important;font-size:14px;display:inline-flex;align-items:center;gap:8px;border:none;transition:all 0.2s;"
                         :style="isStep1Complete 
                             ? 'background-color:#A16D19 !important;color:#FFFFFF !important;cursor:pointer;box-shadow:0 3px 10px rgba(161,109,25,0.3);border-radius:9999px !important;padding:12px 28px !important;font-size:14px;font-weight:700;display:inline-flex;align-items:center;gap:8px;border:none;' 
-                            : 'background-color:#E5E0D8 !important;color:#A8A096 !important;cursor:not-allowed;box-shadow:none;border-radius:9999px !important;padding:12px 28px !important;font-size:14px;font-weight:700;display:inline-flex;align-items:center;gap:8px;border:none;'">
+                            : 'background-color:#1E1915 !important;color:#FFFFFF !important;cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,0.15);border-radius:9999px !important;padding:12px 28px !important;font-size:14px;font-weight:700;display:inline-flex;align-items:center;gap:8px;border:none;'"
+                        onmouseover="this.style.backgroundColor='#8A5C14';"
+                        onmouseout="this.style.backgroundColor=isStep1Complete ? '#A16D19' : '#1E1915';">
                     <span>Save & Continue</span>
                     <span style="font-size:15px;line-height:1;font-weight:700;">→</span>
                 </button>
@@ -1556,9 +1578,12 @@ function addProductManager() {
 
         goToStep2() {
             if (!this.variants[0] || !this.variants[0].imagePreview) {
-                triggerAppModal('Cover Photo Required', 'Please upload a Cover Photo for Variant 1.', 'warning');
+                triggerAppModal('Cover Photo Required', 'Please upload a Cover Photo for Variant 1 (at the top of the form).', 'warning');
                 const v1Box = document.getElementById('variant_upload_box_0');
-                if (v1Box) v1Box.classList.add('border-red-500');
+                if (v1Box) {
+                    v1Box.classList.add('border-red-500');
+                    v1Box.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }
                 return;
             }
 
@@ -1567,6 +1592,7 @@ function addProductManager() {
                 const nameInput = document.getElementById('productNameInput');
                 if (nameInput) {
                     nameInput.classList.add('border-red-500');
+                    nameInput.scrollIntoView({ behavior: 'smooth', block: 'center' });
                     nameInput.focus();
                 }
                 return;
@@ -1574,13 +1600,18 @@ function addProductManager() {
 
             if (!this.targetGroup || !['Men', 'Women', 'Kids'].includes(this.targetGroup)) {
                 triggerAppModal('Target Tag Required', 'Please select who this product is for (Men, Women, or Kids).', 'warning');
+                const tgContainer = document.getElementById('target-group-container');
+                if (tgContainer) tgContainer.scrollIntoView({ behavior: 'smooth', block: 'center' });
                 return;
             }
 
             if (!this.selectedCategories || this.selectedCategories.length === 0) {
-                triggerAppModal('Category Required', 'Please select a product category from the options below.', 'warning');
+                triggerAppModal('Category Required', 'Please select at least one product category from the options below.', 'warning');
                 const catContainer = document.getElementById('category-cards-container');
-                if (catContainer) catContainer.classList.add('border-red-500');
+                if (catContainer) {
+                    catContainer.classList.add('border-red-500');
+                    catContainer.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }
                 return;
             }
 
