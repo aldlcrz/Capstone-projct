@@ -219,7 +219,7 @@ class OrderController extends Controller
         $order = Order::find($id);
         if (!$order) return response()->json(['message' => 'Order not found'], 404);
 
-        $targetStatus = trim($request->status ?? '');
+        $targetStatus = trim($request->status ?? '') ?: $order->status;
         $normalizedTarget = strtolower($targetStatus);
 
         if ($normalizedTarget === 'cancelled') {
@@ -362,9 +362,15 @@ class OrderController extends Controller
             'Completed' => 'Your order has been marked as completed.',
         ];
 
-        $statusMsg = $statusMsgMap[$canonicalTarget] ?? "Your order status is now {$canonicalTarget}.";
+        if ($canonicalCurrent === $canonicalTarget && $shippingUpdated) {
+            $notifTitle = "Shipping Info Updated";
+            $statusMsg = "Your order shipping details have been updated: {$order->courierName} (Tracking: {$order->trackingNumber}).";
+        } else {
+            $notifTitle = "Order {$canonicalTarget}";
+            $statusMsg = $statusMsgMap[$canonicalTarget] ?? "Your order status is now {$canonicalTarget}.";
+        }
 
-        $this->sendNotification($order->customerId, "Order {$canonicalTarget}", $statusMsg, 'order', '/orders', 'customer');
+        $this->sendNotification($order->customerId, $notifTitle, $statusMsg, 'order', '/orders', 'customer');
 
         $customerUser = User::find($order->customerId);
         if ($customerUser && $customerUser->email) {

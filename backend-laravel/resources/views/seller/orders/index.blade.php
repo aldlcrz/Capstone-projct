@@ -153,6 +153,7 @@ function sellerOrdersManager() {
         rejectLoading: false,
         rejectError: '',
         statusUpdating: false,
+        shippingUpdating: false,
         toastMessage: '',
         toastTimeout: null,
 
@@ -346,6 +347,55 @@ function sellerOrdersManager() {
             } catch(e) {
                 this.deliveryConfirmError = 'Network error. Please try again.';
                 this.deliveryConfirmLoading = false;
+            }
+        },
+
+        async saveShippingDetails(order) {
+            const target = order || this.detailsOrder;
+            if (!target || this.shippingUpdating) return;
+            if (!this.trackingNumber || !this.trackingNumber.trim()) {
+                this.shippingError = 'Please enter a valid tracking number.';
+                return;
+            }
+            this.shippingUpdating = true;
+            this.shippingError = '';
+
+            try {
+                const payload = {
+                    status: target.status,
+                    courierName: this.courierName || 'J&T Express',
+                    trackingNumber: this.trackingNumber.trim(),
+                    trackingLink: this.trackingLink || null,
+                    notes: 'Artisan updated shipping/tracking information.'
+                };
+                const token = document.querySelector('meta[name="csrf-token"]')?.content || document.querySelector('input[name="_token"]')?.value || '';
+                const res = await fetch('/seller/api/orders/' + target.id + '/status', {
+                    method: 'PATCH',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json',
+                        'X-CSRF-TOKEN': token
+                    },
+                    body: JSON.stringify(payload)
+                });
+                const data = await res.json();
+                if (res.ok) {
+                    const idx = this.orders.findIndex(o => o.id === target.id);
+                    if (idx !== -1) {
+                        this.orders.splice(idx, 1, data);
+                        this.orders = [...this.orders];
+                    }
+                    if (this.detailsOrder && this.detailsOrder.id === target.id) {
+                        this.detailsOrder = data;
+                    }
+                    this.showToast('✓ Courier and tracking details saved successfully!');
+                } else {
+                    this.shippingError = data.message || 'Failed to update shipping info.';
+                }
+            } catch(e) {
+                this.shippingError = 'Network error while updating shipping details.';
+            } finally {
+                this.shippingUpdating = false;
             }
         },
 
@@ -945,11 +995,24 @@ function sellerOrdersManager() {
                                 <div class="text-[9px] font-black uppercase tracking-widest text-indigo-900 flex items-center gap-1.5">
                                     <span>🚚 Courier & Shipping Information</span>
                                 </div>
-                                <template x-if="isShippingLocked(detailsOrder)">
-                                    <span class="px-2 py-0.5 bg-amber-100 text-amber-800 rounded-md text-[9px] font-black uppercase tracking-widest flex items-center gap-1">
-                                        🔒 Read Only / Locked
-                                    </span>
-                                </template>
+                                <div class="flex items-center gap-2">
+                                    <template x-if="!isShippingLocked(detailsOrder) && (normalizeStatus(detailsOrder.status) === 'shipped' || normalizeStatus(detailsOrder.status) === 'in transit')">
+                                        <button type="button"
+                                            @click="saveShippingDetails(detailsOrder)"
+                                            :disabled="shippingUpdating"
+                                            class="px-3 py-1 bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 text-white rounded-lg text-[9px] font-black uppercase tracking-wider transition-all flex items-center gap-1 shadow-xs cursor-pointer">
+                                            <template x-if="shippingUpdating">
+                                                <svg class="w-3 h-3 animate-spin text-white shrink-0" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"/></svg>
+                                            </template>
+                                            <span x-text="shippingUpdating ? 'Saving...' : '💾 Save Changes'"></span>
+                                        </button>
+                                    </template>
+                                    <template x-if="isShippingLocked(detailsOrder)">
+                                        <span class="px-2 py-0.5 bg-amber-100 text-amber-800 rounded-md text-[9px] font-black uppercase tracking-widest flex items-center gap-1">
+                                            🔒 Read Only / Locked
+                                        </span>
+                                    </template>
+                                </div>
                             </div>
 
                             <template x-if="isShippingLocked(detailsOrder)">
@@ -1215,12 +1278,21 @@ function sellerOrdersManager() {
                         </div>
                     </template>
 
-                    {{-- Button for In Transit status: Mark as Delivered --}}
+                    {{-- Button for In Transit status: Update Tracking Info OR Mark as Delivered --}}
                     <template x-if="detailsOrder && normalizeStatus(detailsOrder.status) === 'in transit'">
-                        <div class="flex-1 flex justify-end">
+                        <div class="flex-1 flex flex-wrap sm:flex-nowrap items-center justify-end gap-2">
+                            <button type="button"
+                                @click="saveShippingDetails(detailsOrder)"
+                                :disabled="shippingUpdating || statusUpdating"
+                                class="px-4 py-2.5 sm:py-3 bg-white border border-indigo-200 hover:bg-indigo-50 text-indigo-700 rounded-full text-[10px] font-black uppercase tracking-wider whitespace-nowrap transition-all flex items-center justify-center gap-1.5 shadow-xs cursor-pointer">
+                                <template x-if="shippingUpdating">
+                                    <svg class="w-3.5 h-3.5 animate-spin text-indigo-600 shrink-0" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"/></svg>
+                                </template>
+                                <span x-text="shippingUpdating ? 'Saving Info...' : '💾 Save Tracking Info'"></span>
+                            </button>
                             <button type="button"
                                 @click="confirmMarkAsDelivered(detailsOrder)"
-                                :disabled="statusUpdating"
+                                :disabled="statusUpdating || shippingUpdating"
                                 style="background-color: #059669; color: #ffffff;"
                                 class="flex-1 sm:flex-none px-6 py-2.5 sm:py-3 bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 text-white text-[10px] font-black uppercase tracking-wider whitespace-nowrap rounded-full transition-all flex items-center justify-center gap-2 shadow-sm cursor-pointer">
                                 <template x-if="statusUpdating">
