@@ -35,7 +35,8 @@
 
     @php
         $approvedProducts = $products->filter(fn($p) => $p->status === 'approved');
-        $pendingProducts  = $products->filter(fn($p) => $p->status === 'pending' || $p->status !== 'approved');
+        $pendingProducts  = $products->filter(fn($p) => $p->status === 'pending');
+        $draftProducts    = $products->filter(fn($p) => $p->status === 'draft');
     @endphp
 
     {{-- Filter Toolbar & Real-Time Search Bar --}}
@@ -62,6 +63,13 @@
                 <span class="w-1.5 h-1.5 rounded-full" style="background:#C49520;"></span>
                 <span>Pending Review ({{ $pendingCount ?? $pendingProducts->count() }})</span>
             </button>
+            <button @click="activeTab = 'drafts'"
+                :style="activeTab === 'drafts' ? 'background:#1E1915; color:#FFFCF7; border:1px solid #C49520;' : 'background:#FDF8EE; color:#1E1915; border:1px solid #E8DECB;'"
+                class="px-4 py-2 rounded-xl text-[10px] font-extrabold uppercase tracking-widest transition-all shrink-0 flex items-center gap-1.5 cursor-pointer shadow-2xs">
+                <span x-show="activeTab === 'drafts'" style="color:#C49520;">✓</span>
+                <span class="w-1.5 h-1.5 rounded-full" style="background:#64748B;"></span>
+                <span>Drafts ({{ $draftCount ?? $draftProducts->count() }})</span>
+            </button>
         </div>
 
         {{-- Live Search Input --}}
@@ -80,7 +88,89 @@
         </div>
     </div>
 
-    {{-- SECTION 1: PENDING PRODUCTS --}}
+    {{-- SECTION 1: DRAFTS --}}
+    <div x-show="activeTab === 'all' || activeTab === 'drafts'" class="space-y-5">
+        @if($draftProducts->isNotEmpty())
+            <div class="flex items-center gap-2 pb-2.5 border-b" style="border-color: #E8DECB;">
+                <span class="w-2 h-2 rounded-full" style="background: #64748B;"></span>
+                <h2 class="text-xs font-black uppercase tracking-widest flex items-center gap-2" style="color: #475569;">
+                    <span>Unpublished Drafts</span>
+                    <span class="px-2 py-0.5 text-[9px] font-bold rounded-md" style="background: #F1F5F9; border: 1px solid #CBD5E1; color: #475569;">{{ $draftProducts->count() }} drafts saved</span>
+                </h2>
+            </div>
+
+            <div class="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-5">
+                @foreach($draftProducts as $product)
+                    <div x-show="matches('{{ addslashes($product->name) }}', '{{ addslashes($product->description ?? '') }}', '{{ $product->status }}')"
+                        class="group rounded-2xl sm:rounded-3xl shadow-xs transition-all duration-300 overflow-hidden flex flex-col"
+                        style="background: #FFFCF7; border: 1px dashed #CBD5E1;"
+                        onmouseover="this.style.borderColor='#C49520'; this.style.boxShadow='0 8px 24px rgba(30,25,21,0.06)';"
+                        onmouseout="this.style.borderColor='#CBD5E1'; this.style.boxShadow='0 1px 3px rgba(0,0,0,0.02)';">
+                        
+                        <!-- Image Section -->
+                        <div class="relative aspect-4/5 sm:aspect-3/4 overflow-hidden" style="background: #FDF8EE;">
+                            <img src="{{ $product->getImageUrl() }}" onerror="this.src='/uploads/products/default.jpg'" class="w-full h-full object-cover object-top group-hover:scale-105 transition-transform duration-700">
+                            
+                            <div class="absolute top-2.5 left-2.5 sm:top-3.5 sm:left-3.5">
+                                <span class="px-2 py-0.5 sm:px-2.5 sm:py-1 rounded-full text-[8px] sm:text-[9px] font-black uppercase tracking-wider shadow-xs" style="background: #F1F5F9; color: #475569; border: 1px solid #CBD5E1;">
+                                    📝 Draft
+                                </span>
+                            </div>
+
+                            {{-- Desktop Hover Action Buttons (Edit + Delete) --}}
+                            <div class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-3 backdrop-blur-xs">
+                                <a href="/seller/products/{{ $product->id }}/edit" title="Resume Editing Draft" class="w-10 h-10 bg-white rounded-full flex items-center justify-center text-stone-900 transition-all shadow-xl" onmouseover="this.style.background='#C49520'; this.style.color='#FFF';" onmouseout="this.style.background='#FFF'; this.style.color='#1E1915';">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
+                                </a>
+                                <button type="button" @click="openDeleteModal('{{ $product->id }}', '{{ addslashes($product->name) }}')" title="Discard Draft" class="w-10 h-10 bg-white rounded-full flex items-center justify-center text-red-600 transition-all shadow-xl cursor-pointer" onmouseover="this.style.background='#DC2626'; this.style.color='#FFF';" onmouseout="this.style.background='#FFF'; this.style.color='#DC2626';">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-4v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="p-3.5 sm:p-5 space-y-2 sm:space-y-3 flex-1 flex flex-col">
+                            <div class="flex-1">
+                                <h3 class="font-serif text-xs sm:text-sm font-bold line-clamp-1 tracking-tight" style="color: #1E1915;">{{ $product->name }}</h3>
+                                <p class="text-[9px] sm:text-[10px] mt-0.5 line-clamp-2 leading-relaxed" style="color: #766C60;">{{ $product->description ?: 'No description provided yet.' }}</p>
+                            </div>
+                            
+                            <div class="flex items-center justify-between pt-2 border-t" style="border-color: #E8DECB;">
+                                <div>
+                                    <div class="text-[8px] sm:text-[9px] font-bold uppercase tracking-widest" style="color: #766C60;">Price</div>
+                                    <div class="text-xs sm:text-sm font-black font-sans" style="color: #1E1915;">₱{{ number_format($product->price) }}</div>
+                                </div>
+                                <div class="text-right">
+                                    <div class="text-[8px] sm:text-[9px] font-bold uppercase tracking-widest" style="color: #766C60;">Stock</div>
+                                    <div class="text-xs sm:text-sm font-black font-sans" style="color: #475569;">{{ $product->stock }}</div>
+                                </div>
+                            </div>
+
+                            <!-- Action Button to Resume Draft -->
+                            <div class="pt-2 border-t" style="border-color: #E8DECB;">
+                                <a href="/seller/products/{{ $product->id }}/edit" class="w-full py-2 rounded-xl text-[10px] font-bold uppercase tracking-wider text-center flex items-center justify-center gap-1.5 transition-all shadow-2xs" style="background: #1E1915; color: #FFFCF7;" onmouseover="this.style.background='#C49520';" onmouseout="this.style.background='#1E1915';">
+                                    <svg class="w-3.5 h-3.5" style="color: #C49520;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
+                                    <span>Resume Editing</span>
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                @endforeach
+            </div>
+        @elseif($activeTab === 'drafts')
+            <div class="py-16 text-center rounded-3xl" style="background: #FFFCF7; border: 2px dashed #E8DECB;">
+                <div class="w-12 h-12 rounded-2xl mx-auto mb-3 flex items-center justify-center text-lg" style="background: #FDF8EE; color: #766C60; border: 1px solid #E8DECB;">
+                    📝
+                </div>
+                <h3 class="font-serif text-base font-bold mb-1" style="color: #1E1915;">No saved drafts found</h3>
+                <p class="text-xs max-w-xs mx-auto mb-4" style="color: #766C60;">When you choose "Save as Draft" during product creation, it will appear here.</p>
+                <a href="{{ route('seller.products.create') }}" class="inline-flex items-center gap-2 px-5 py-2.5 text-white rounded-xl text-xs font-bold transition-all shadow-xs" style="background: #1E1915;" onmouseover="this.style.background='#C49520';" onmouseout="this.style.background='#1E1915';">
+                    <span>Create New Product</span>
+                </a>
+            </div>
+        @endif
+    </div>
+
+    {{-- SECTION 2: PENDING PRODUCTS --}}
     <div x-show="activeTab === 'all' || activeTab === 'pending'" class="space-y-5">
         @if($pendingProducts->isNotEmpty())
             <div class="flex items-center gap-2 pb-2.5 border-b" style="border-color: #E8DECB;">
@@ -174,118 +264,146 @@
                     </div>
                 @endforeach
             </div>
+        @elseif($activeTab === 'pending')
+            <div class="py-16 text-center rounded-3xl" style="background: #FFFCF7; border: 2px dashed #E8DECB;">
+                <div class="w-12 h-12 rounded-2xl mx-auto mb-3 flex items-center justify-center text-lg" style="background: #FDF8EE; color: #C49520; border: 1px solid #E8DECB;">
+                    ⏳
+                </div>
+                <h3 class="font-serif text-base font-bold mb-1" style="color: #1E1915;">No creations awaiting review</h3>
+                <p class="text-xs max-w-xs mx-auto mb-4" style="color: #766C60;">All your published creations have been reviewed or are active in your catalogue.</p>
+                <a href="{{ route('seller.products.create') }}" class="inline-flex items-center gap-2 px-5 py-2.5 text-white rounded-xl text-xs font-bold transition-all shadow-xs" style="background: #1E1915;" onmouseover="this.style.background='#C49520';" onmouseout="this.style.background='#1E1915';">
+                    <span>Add New Product</span>
+                </a>
+            </div>
         @endif
     </div>
 
-    {{-- SECTION 2: APPROVED PRODUCTS --}}
+    {{-- SECTION 3: APPROVED PRODUCTS --}}
     <div x-show="activeTab === 'all' || activeTab === 'approved'" class="space-y-5">
-        <div class="flex items-center gap-2 pb-2.5 border-b" style="border-color: #E8DECB;">
-            <span class="w-2 h-2 rounded-full" style="background: #4A6741;"></span>
-            <h2 class="text-xs font-black uppercase tracking-widest flex items-center gap-2" style="color: #4A6741;">
-                <span>Active & Live Catalogue</span>
-                <span class="px-2 py-0.5 text-[9px] font-bold rounded-md" style="background: #F0F4EF; border: 1px solid #C5D9B8; color: #4A6741;">{{ $approvedProducts->count() }} items online</span>
-            </h2>
-        </div>
+        @if($approvedProducts->isNotEmpty())
+            <div class="flex items-center gap-2 pb-2.5 border-b" style="border-color: #E8DECB;">
+                <span class="w-2 h-2 rounded-full" style="background: #4A6741;"></span>
+                <h2 class="text-xs font-black uppercase tracking-widest flex items-center gap-2" style="color: #4A6741;">
+                    <span>Active & Live Catalogue</span>
+                    <span class="px-2 py-0.5 text-[9px] font-bold rounded-md" style="background: #F0F4EF; border: 1px solid #C5D9B8; color: #4A6741;">{{ $approvedProducts->count() }} items online</span>
+                </h2>
+            </div>
 
-        <div class="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-5">
-            @forelse($approvedProducts as $product)
-                <div x-show="matches('{{ addslashes($product->name) }}', '{{ addslashes($product->description ?? '') }}', '{{ $product->status }}')"
-                    class="group rounded-2xl sm:rounded-3xl shadow-xs transition-all duration-300 overflow-hidden flex flex-col"
-                    style="background: #FFFCF7; border: 1px solid #E8DECB;"
-                    onmouseover="this.style.borderColor='#C49520'; this.style.boxShadow='0 8px 24px rgba(30,25,21,0.06)';"
-                    onmouseout="this.style.borderColor='#E8DECB'; this.style.boxShadow='0 1px 3px rgba(0,0,0,0.02)';">
-                    
-                    <!-- Image Section -->
-                    <div class="relative aspect-4/5 sm:aspect-3/4 overflow-hidden" style="background: #FDF8EE;">
-                        <img src="{{ $product->getImageUrl() }}" onerror="this.src='/uploads/products/default.jpg'" class="w-full h-full object-cover object-top group-hover:scale-105 transition-transform duration-700">
+            <div class="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-5">
+                @foreach($approvedProducts as $product)
+                    <div x-show="matches('{{ addslashes($product->name) }}', '{{ addslashes($product->description ?? '') }}', '{{ $product->status }}')"
+                        class="group rounded-2xl sm:rounded-3xl shadow-xs transition-all duration-300 overflow-hidden flex flex-col"
+                        style="background: #FFFCF7; border: 1px solid #E8DECB;"
+                        onmouseover="this.style.borderColor='#C49520'; this.style.boxShadow='0 8px 24px rgba(30,25,21,0.06)';"
+                        onmouseout="this.style.borderColor='#E8DECB'; this.style.boxShadow='0 1px 3px rgba(0,0,0,0.02)';">
                         
-                        <div class="absolute top-2.5 left-2.5 sm:top-3.5 sm:left-3.5">
-                            <span class="px-2 py-0.5 sm:px-2.5 sm:py-1 rounded-full text-[8px] sm:text-[9px] font-black uppercase tracking-wider shadow-xs" style="background: #F0F4EF; color: #4A6741; border: 1px solid #C5D9B8;">
-                                ✓ Approved
-                            </span>
-                        </div>
-
-                        @if($product->is_on_sale && $product->discount_percentage > 0)
-                            <div class="absolute top-2.5 right-2.5 sm:top-3.5 sm:right-3.5 flex flex-col items-end gap-1">
-                                <span class="px-1.5 py-0.5 text-white text-[8px] font-black uppercase tracking-widest rounded-md shadow-xs" style="background: #1E1915; border: 1px solid #C49520;">
-                                    -{{ number_format($product->discount_percentage, 0) }}%
+                        <!-- Image Section -->
+                        <div class="relative aspect-4/5 sm:aspect-3/4 overflow-hidden" style="background: #FDF8EE;">
+                            <img src="{{ $product->getImageUrl() }}" onerror="this.src='/uploads/products/default.jpg'" class="w-full h-full object-cover object-top group-hover:scale-105 transition-transform duration-700">
+                            
+                            <div class="absolute top-2.5 left-2.5 sm:top-3.5 sm:left-3.5">
+                                <span class="px-2 py-0.5 sm:px-2.5 sm:py-1 rounded-full text-[8px] sm:text-[9px] font-black uppercase tracking-wider shadow-xs" style="background: #F0F4EF; color: #4A6741; border: 1px solid #C5D9B8;">
+                                    ✓ Approved
                                 </span>
                             </div>
-                        @endif
 
-                        {{-- Desktop Hover Action Buttons (Edit + Delete) --}}
-                        <div class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-3 backdrop-blur-xs">
-                            <a href="/seller/products/{{ $product->id }}/edit" title="Edit Product" class="w-10 h-10 bg-white rounded-full flex items-center justify-center text-stone-900 transition-all shadow-xl" onmouseover="this.style.background='#C49520'; this.style.color='#FFF';" onmouseout="this.style.background='#FFF'; this.style.color='#1E1915';">
-                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
-                            </a>
-                            <button type="button" @click="openDeleteModal('{{ $product->id }}', '{{ addslashes($product->name) }}')" title="Delete Product" class="w-10 h-10 bg-white rounded-full flex items-center justify-center text-red-600 transition-all shadow-xl cursor-pointer" onmouseover="this.style.background='#DC2626'; this.style.color='#FFF';" onmouseout="this.style.background='#FFF'; this.style.color='#DC2626';">
-                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-4v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
-                            </button>
-                        </div>
-                    </div>
-
-                    <div class="p-3.5 sm:p-5 space-y-2 sm:space-y-3 flex-1 flex flex-col">
-                        <div class="flex-1">
-                            <h3 class="font-serif text-xs sm:text-sm font-bold line-clamp-1 tracking-tight" style="color: #1E1915;">{{ $product->name }}</h3>
-                            <p class="text-[9px] sm:text-[10px] mt-0.5 line-clamp-2 leading-relaxed" style="color: #766C60;">{{ $product->description }}</p>
-                            
-                            {{-- Product Rating summary --}}
-                            <div class="flex items-center justify-between gap-2 mt-2 pt-2 border-t" style="border-color: #E8DECB;">
-                                <div class="flex items-center gap-1.5">
-                                    <span class="text-xs" style="color: #C49520;">★</span>
-                                    <span class="text-[11px] font-black font-sans" style="color: #1E1915;">{{ $product->reviews_avg_rating ? number_format($product->reviews_avg_rating, 1) : '0.0' }}</span>
-                                    <span class="text-[9px] font-medium font-sans" style="color: #766C60;">({{ $product->reviews_count }})</span>
+                            @if($product->is_on_sale && $product->discount_percentage > 0)
+                                <div class="absolute top-2.5 right-2.5 sm:top-3.5 sm:right-3.5 flex flex-col items-end gap-1">
+                                    <span class="px-1.5 py-0.5 text-white text-[8px] font-black uppercase tracking-widest rounded-md shadow-xs" style="background: #1E1915; border: 1px solid #C49520;">
+                                        -{{ number_format($product->discount_percentage, 0) }}%
+                                    </span>
                                 </div>
-                                @if($product->reviews_count > 0)
-                                    <button type="button" @click="openReviewsModal('{{ $product->id }}')" class="text-[9px] font-extrabold uppercase tracking-wider hover:underline cursor-pointer" style="color: #C49520;">
-                                        Reviews →
-                                    </button>
-                                @endif
+                            @endif
+
+                            {{-- Desktop Hover Action Buttons (Edit + Delete) --}}
+                            <div class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-3 backdrop-blur-xs">
+                                <a href="/seller/products/{{ $product->id }}/edit" title="Edit Product" class="w-10 h-10 bg-white rounded-full flex items-center justify-center text-stone-900 transition-all shadow-xl" onmouseover="this.style.background='#C49520'; this.style.color='#FFF';" onmouseout="this.style.background='#FFF'; this.style.color='#1E1915';">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
+                                </a>
+                                <button type="button" @click="openDeleteModal('{{ $product->id }}', '{{ addslashes($product->name) }}')" title="Delete Product" class="w-10 h-10 bg-white rounded-full flex items-center justify-center text-red-600 transition-all shadow-xl cursor-pointer" onmouseover="this.style.background='#DC2626'; this.style.color='#FFF';" onmouseout="this.style.background='#FFF'; this.style.color='#DC2626';">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-4v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                                </button>
                             </div>
                         </div>
-                        
-                        <div class="flex items-center justify-between pt-2 border-t" style="border-color: #E8DECB;">
-                            <div>
-                                <div class="text-[8px] sm:text-[9px] font-bold uppercase tracking-widest" style="color: #766C60;">Price</div>
-                                <div class="flex items-center gap-1">
-                                    <span class="text-xs sm:text-sm font-black font-sans" style="color: #1E1915;">₱{{ number_format($product->salePrice) }}</span>
-                                    @if($product->is_on_sale && $product->discount_percentage > 0)
-                                        <span class="text-[9px] line-through font-sans" style="color: #A09585;">₱{{ number_format($product->price) }}</span>
+
+                        <div class="p-3.5 sm:p-5 space-y-2 sm:space-y-3 flex-1 flex flex-col">
+                            <div class="flex-1">
+                                <h3 class="font-serif text-xs sm:text-sm font-bold line-clamp-1 tracking-tight" style="color: #1E1915;">{{ $product->name }}</h3>
+                                <p class="text-[9px] sm:text-[10px] mt-0.5 line-clamp-2 leading-relaxed" style="color: #766C60;">{{ $product->description }}</p>
+                                
+                                {{-- Product Rating summary --}}
+                                <div class="flex items-center justify-between gap-2 mt-2 pt-2 border-t" style="border-color: #E8DECB;">
+                                    <div class="flex items-center gap-1.5">
+                                        <span class="text-xs" style="color: #C49520;">★</span>
+                                        <span class="text-[11px] font-black font-sans" style="color: #1E1915;">{{ $product->reviews_avg_rating ? number_format($product->reviews_avg_rating, 1) : '0.0' }}</span>
+                                        <span class="text-[9px] font-medium font-sans" style="color: #766C60;">({{ $product->reviews_count }})</span>
+                                    </div>
+                                    @if($product->reviews_count > 0)
+                                        <button type="button" @click="openReviewsModal('{{ $product->id }}')" class="text-[9px] font-extrabold uppercase tracking-wider hover:underline cursor-pointer" style="color: #C49520;">
+                                            Reviews →
+                                        </button>
                                     @endif
                                 </div>
                             </div>
-                            <div class="text-right">
-                                <div class="text-[8px] sm:text-[9px] font-bold uppercase tracking-widest" style="color: #766C60;">Stock</div>
-                                <div class="text-xs sm:text-sm font-black font-sans {{ $product->stock < 5 ? 'text-red-500' : 'text-stone-800' }}">{{ $product->stock }}</div>
+                            
+                            <div class="flex items-center justify-between pt-2 border-t" style="border-color: #E8DECB;">
+                                <div>
+                                    <div class="text-[8px] sm:text-[9px] font-bold uppercase tracking-widest" style="color: #766C60;">Price</div>
+                                    <div class="flex items-center gap-1">
+                                        <span class="text-xs sm:text-sm font-black font-sans" style="color: #1E1915;">₱{{ number_format($product->salePrice) }}</span>
+                                        @if($product->is_on_sale && $product->discount_percentage > 0)
+                                            <span class="text-[9px] line-through font-sans" style="color: #A09585;">₱{{ number_format($product->price) }}</span>
+                                        @endif
+                                    </div>
+                                </div>
+                                <div class="text-right">
+                                    <div class="text-[8px] sm:text-[9px] font-bold uppercase tracking-widest" style="color: #766C60;">Stock</div>
+                                    <div class="text-xs sm:text-sm font-black font-sans {{ $product->stock < 5 ? 'text-red-500' : 'text-stone-800' }}">{{ $product->stock }}</div>
+                                </div>
+                            </div>
+
+                            <!-- Mobile Quick Edit & Delete Buttons -->
+                            <div class="sm:hidden grid grid-cols-2 gap-2 pt-2 border-t" style="border-color: #E8DECB;">
+                                <a href="/seller/products/{{ $product->id }}/edit" class="py-2 rounded-xl text-[9px] font-bold uppercase tracking-wider text-center flex items-center justify-center gap-1" style="background: #FDF8EE; border: 1px solid #E8DECB; color: #1E1915;">
+                                    <svg class="w-3 h-3" style="color: #C49520;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
+                                    Edit
+                                </a>
+                                <button type="button" @click="openDeleteModal('{{ $product->id }}', '{{ addslashes($product->name) }}')" class="w-full py-2 rounded-xl text-[9px] font-bold uppercase tracking-wider text-center flex items-center justify-center gap-1 cursor-pointer" style="background: #FEF2F2; border: 1px solid #FECACA; color: #DC2626;">
+                                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-4v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                                    Delete
+                                </button>
                             </div>
                         </div>
+                    </div>
+                @endforeach
+            </div>
+        @elseif($activeTab === 'approved')
+            <div class="py-16 text-center rounded-3xl" style="background: #FFFCF7; border: 2px dashed #E8DECB;">
+                <div class="w-12 h-12 rounded-2xl mx-auto mb-3 flex items-center justify-center text-lg" style="background: #FDF8EE; color: #4A6741; border: 1px solid #E8DECB;">
+                    ✓
+                </div>
+                <h3 class="font-serif text-base font-bold mb-1" style="color: #1E1915;">No approved creations yet</h3>
+                <p class="text-xs max-w-xs mx-auto mb-4" style="color: #766C60;">Creations approved by administrators will appear here and in the marketplace.</p>
+                <a href="{{ route('seller.products.create') }}" class="inline-flex items-center gap-2 px-5 py-2.5 text-white rounded-xl text-xs font-bold transition-all shadow-xs" style="background: #1E1915;" onmouseover="this.style.background='#C49520';" onmouseout="this.style.background='#1E1915';">
+                    <span>Add New Product</span>
+                </a>
+            </div>
+        @endif
+    </div>
 
-                        <!-- Mobile Quick Edit & Delete Buttons -->
-                        <div class="sm:hidden grid grid-cols-2 gap-2 pt-2 border-t" style="border-color: #E8DECB;">
-                            <a href="/seller/products/{{ $product->id }}/edit" class="py-2 rounded-xl text-[9px] font-bold uppercase tracking-wider text-center flex items-center justify-center gap-1" style="background: #FDF8EE; border: 1px solid #E8DECB; color: #1E1915;">
-                                <svg class="w-3 h-3" style="color: #C49520;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
-                                Edit
-                            </a>
-                            <button type="button" @click="openDeleteModal('{{ $product->id }}', '{{ addslashes($product->name) }}')" class="w-full py-2 rounded-xl text-[9px] font-bold uppercase tracking-wider text-center flex items-center justify-center gap-1 cursor-pointer" style="background: #FEF2F2; border: 1px solid #FECACA; color: #DC2626;">
-                                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-4v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
-                                Delete
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            @empty
-                <div class="col-span-full py-20 text-center rounded-3xl" style="background: #FFFCF7; border: 2px dashed #E8DECB;">
-                    <div class="w-12 h-12 rounded-2xl mx-auto mb-3 flex items-center justify-center" style="background: #FDF8EE; color: #C49520; border: 1px solid #E8DECB;">
-                        ✦
-                    </div>
-                    <h3 class="font-serif text-lg font-bold mb-1" style="color: #1E1915;">Your catalogue is ready for its first creation</h3>
-                    <p class="text-xs max-w-xs mx-auto mb-5" style="color: #766C60;">Add your first handcrafted barong or embroidery piece to begin showcase.</p>
-                    <a href="{{ route('seller.products.create') }}" class="inline-flex items-center gap-2 px-5 py-2.5 text-white rounded-xl text-xs font-bold transition-all shadow-xs" style="background: #1E1915;" onmouseover="this.style.background='#C49520';" onmouseout="this.style.background='#1E1915';">
-                        <span>Add Your First Product</span>
-                    </a>
-                </div>
-            @endforelse
+    {{-- GLOBAL EMPTY STATE IF NO PRODUCTS AT ALL --}}
+    @if($products->isEmpty())
+        <div class="py-20 text-center rounded-3xl" style="background: #FFFCF7; border: 2px dashed #E8DECB;">
+            <div class="w-12 h-12 rounded-2xl mx-auto mb-3 flex items-center justify-center" style="background: #FDF8EE; color: #C49520; border: 1px solid #E8DECB;">
+                ✦
+            </div>
+            <h3 class="font-serif text-lg font-bold mb-1" style="color: #1E1915;">Your catalogue is ready for its first creation</h3>
+            <p class="text-xs max-w-xs mx-auto mb-5" style="color: #766C60;">Add your first handcrafted barong or embroidery piece to begin showcase.</p>
+            <a href="{{ route('seller.products.create') }}" class="inline-flex items-center gap-2 px-5 py-2.5 text-white rounded-xl text-xs font-bold transition-all shadow-xs" style="background: #1E1915;" onmouseover="this.style.background='#C49520';" onmouseout="this.style.background='#1E1915';">
+                <span>Add Your First Product</span>
+            </a>
         </div>
+    @endif
 
         {{-- Pagination (15 products per page) --}}
         @if($products->hasPages())
@@ -652,7 +770,9 @@ function sellerProducts() {
         matches(productName, productDesc, productStatus) {
             const query = (this.search || '').toLowerCase().trim();
             const matchesSearch = !query || (productName || '').toLowerCase().includes(query) || (productDesc || '').toLowerCase().includes(query);
-            const matchesTab = this.activeTab === 'all' || (productStatus || '').toLowerCase() === this.activeTab.toLowerCase();
+            const statusLower = (productStatus || '').toLowerCase();
+            const tabLower = this.activeTab.toLowerCase();
+            const matchesTab = this.activeTab === 'all' || statusLower === tabLower || (this.activeTab === 'drafts' && statusLower === 'draft');
             return matchesSearch && matchesTab;
         },
         openReviewsModal(productId) {

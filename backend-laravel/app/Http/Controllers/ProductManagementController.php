@@ -14,7 +14,8 @@ class ProductManagementController extends Controller
         $sellerId = Auth::id();
         $totalCount = Product::where('sellerId', $sellerId)->count();
         $approvedCount = Product::where('sellerId', $sellerId)->where('status', 'approved')->count();
-        $pendingCount = Product::where('sellerId', $sellerId)->where('status', '!=', 'approved')->count();
+        $pendingCount = Product::where('sellerId', $sellerId)->where('status', 'pending')->count();
+        $draftCount = Product::where('sellerId', $sellerId)->where('status', 'draft')->count();
 
         $products = Product::where('sellerId', $sellerId)
             ->with(['reviews.customer:id,name,profilePhoto'])
@@ -24,7 +25,7 @@ class ProductManagementController extends Controller
             ->paginate(15)
             ->withQueryString();
 
-        return view('seller.products.index', compact('products', 'totalCount', 'approvedCount', 'pendingCount'));
+        return view('seller.products.index', compact('products', 'totalCount', 'approvedCount', 'pendingCount', 'draftCount'));
     }
 
     public function create()
