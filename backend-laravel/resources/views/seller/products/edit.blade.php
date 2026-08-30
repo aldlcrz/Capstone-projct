@@ -934,16 +934,49 @@
     </div>
 </div>
 
-<script type="application/json" id="seller-payment-config">
+@php
+    $editInitData = [
+        'productId' => (string) $product->id,
+        'csrfToken' => csrf_token(),
+        'profileUpdateUrl' => route('seller.profile.update'),
+        'hasGcashNumber' => !empty($product->gcash_number) || !empty($seller->gcashNumber),
+        'hasGcashQr' => !empty($product->gcash_qr_code) || !empty($seller->gcashQrCode),
+        'gcashNumber' => (string) ($product->gcash_number ?: ($seller->gcashNumber ?? '')),
+        'gcashQrUrl' => $product->gcash_qr_code ? asset($product->gcash_qr_code) : ($seller->gcashQrCode ? asset($seller->gcashQrCode) : null),
+        'isGcashOn' => (bool) old('product_is_gcash_available', $product->is_gcash_available),
+        
+        'hasMayaNumber' => !empty($product->maya_number) || !empty($seller->mayaNumber),
+        'hasMayaQr' => !empty($product->maya_qr_code) || !empty($seller->mayaQrCode),
+        'mayaNumber' => (string) ($product->maya_number ?: ($seller->mayaNumber ?? '')),
+        'mayaQrUrl' => $product->maya_qr_code ? asset($product->maya_qr_code) : ($seller->mayaQrCode ? asset($seller->mayaQrCode) : null),
+        'isMayaOn' => (bool) old('product_is_maya_available', $product->is_maya_available),
+    ];
+@endphp
+
+<script id="product-edit-init-data" type="application/json">
+{!! json_encode($editInitData, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP) !!}
+</script>
+
+<script id="seller-payment-config" type="application/json">
 {!! json_encode([
     'hasGcashNumber' => !empty($product->gcash_number) || !empty($seller->gcashNumber),
     'hasGcashQr' => !empty($product->gcash_qr_code) || !empty($seller->gcashQrCode),
     'hasMayaNumber' => !empty($product->maya_number) || !empty($seller->mayaNumber),
     'hasMayaQr' => !empty($product->maya_qr_code) || !empty($seller->mayaQrCode),
-]) !!}
+], JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP) !!}
 </script>
 
 <script>
+function getEditInitData() {
+    try {
+        const el = document.getElementById('product-edit-init-data');
+        if (el && el.textContent) {
+            return JSON.parse(el.textContent);
+        }
+    } catch (e) {}
+    return {};
+}
+
 let editProductImagesDT = new DataTransfer();
 
 function triggerAppModal(title, message, type = 'warning') {
@@ -960,7 +993,7 @@ function triggerAppModal(title, message, type = 'warning') {
 }
 
 function editProductManager() {
-    const initPayment = JSON.parse(document.getElementById('seller-payment-config')?.textContent || '{}');
+    const initData = getEditInitData();
     return {
         deleteModal: false,
         deleteProductId: null,
@@ -971,34 +1004,34 @@ function editProductManager() {
         isSavingPayment: false,
         paymentModalError: '',
         paymentModalSuccess: '',
-        modalGcashNumber: '{{ addslashes($product->gcash_number ?: ($seller->gcashNumber ?? '')) }}',
+        modalGcashNumber: initData.gcashNumber || '',
         modalGcashQrFile: null,
         modalGcashQrPreview: null,
-        modalMayaNumber: '{{ addslashes($product->maya_number ?: ($seller->mayaNumber ?? '')) }}',
+        modalMayaNumber: initData.mayaNumber || '',
         modalMayaQrFile: null,
         modalMayaQrPreview: null,
         showQrLightbox: false,
         lightboxImgUrl: '',
 
-        isGcashOn: {{ old('product_is_gcash_available', $product->is_gcash_available) ? 'true' : 'false' }},
-        isMayaOn: {{ old('product_is_maya_available', $product->is_maya_available) ? 'true' : 'false' }},
+        isGcashOn: Boolean(initData.isGcashOn),
+        isMayaOn: Boolean(initData.isMayaOn),
 
         paymentState: {
-            hasGcashNumber: Boolean(initPayment.hasGcashNumber),
-            hasGcashQr: Boolean(initPayment.hasGcashQr),
-            gcashNumber: '{{ addslashes($product->gcash_number ?: ($seller->gcashNumber ?? '')) }}',
-            gcashQrUrl: '{{ $product->gcash_qr_code ? asset($product->gcash_qr_code) : ($seller->gcashQrCode ? asset($seller->gcashQrCode) : '') }}',
+            hasGcashNumber: Boolean(initData.hasGcashNumber),
+            hasGcashQr: Boolean(initData.hasGcashQr),
+            gcashNumber: initData.gcashNumber || '',
+            gcashQrUrl: initData.gcashQrUrl || null,
             get isGcashComplete() { return Boolean(this.hasGcashNumber && this.hasGcashQr); },
 
-            hasMayaNumber: Boolean(initPayment.hasMayaNumber),
-            hasMayaQr: Boolean(initPayment.hasMayaQr),
-            mayaNumber: '{{ addslashes($product->maya_number ?: ($seller->mayaNumber ?? '')) }}',
-            mayaQrUrl: '{{ $product->maya_qr_code ? asset($product->maya_qr_code) : ($seller->mayaQrCode ? asset($seller->mayaQrCode) : '') }}',
+            hasMayaNumber: Boolean(initData.hasMayaNumber),
+            hasMayaQr: Boolean(initData.hasMayaQr),
+            mayaNumber: initData.mayaNumber || '',
+            mayaQrUrl: initData.mayaQrUrl || null,
             get isMayaComplete() { return Boolean(this.hasMayaNumber && this.hasMayaQr); }
         },
 
         openPaymentModal(tab = 'gcash') {
-            this.activePaymentTab = tab;
+            this.activePaymentTab = (tab === 'maya') ? 'maya' : 'gcash';
             this.paymentModalError = '';
             this.paymentModalSuccess = '';
             this.modalGcashNumber = this.paymentState.gcashNumber || '';
@@ -1007,6 +1040,10 @@ function editProductManager() {
             this.modalMayaQrFile = null;
             this.modalGcashQrPreview = null;
             this.modalMayaQrPreview = null;
+            const gInput = document.getElementById('modal_gcash_qr_input_edit');
+            if (gInput) gInput.value = '';
+            const mInput = document.getElementById('modal_maya_qr_input_edit');
+            if (mInput) mInput.value = '';
             this.showPaymentModal = true;
         },
 
@@ -1017,7 +1054,7 @@ function editProductManager() {
         },
 
         previewModalQr(type, event) {
-            const file = event.target.files[0];
+            const file = event.target.files && event.target.files[0];
             if (!file) return;
             if (file.size > 5 * 1024 * 1024) {
                 this.paymentModalError = 'QR Code image must not exceed 5MB.';
@@ -1087,7 +1124,7 @@ function editProductManager() {
 
             try {
                 const formData = new FormData();
-                formData.append('_token', '{{ csrf_token() }}');
+                formData.append('_token', initData.csrfToken || document.querySelector('input[name="_token"]')?.value || '');
                 formData.append('_method', 'PUT');
 
                 if (isGcash) {
@@ -1098,7 +1135,8 @@ function editProductManager() {
                     if (mayaFile) formData.append('mayaQrCode', mayaFile);
                 }
 
-                const response = await fetch('{{ route("seller.profile.update") }}', {
+                const url = initData.profileUpdateUrl || '/seller/profile';
+                const response = await fetch(url, {
                     method: 'POST',
                     headers: {
                         'X-Requested-With': 'XMLHttpRequest',
@@ -1128,14 +1166,16 @@ function editProductManager() {
                         }
                     }
 
+                    window._currentPaymentState = {
+                        hasGcashNumber: this.paymentState.hasGcashNumber,
+                        hasGcashQr: this.paymentState.hasGcashQr,
+                        hasMayaNumber: this.paymentState.hasMayaNumber,
+                        hasMayaQr: this.paymentState.hasMayaQr
+                    };
+
                     const cfgEl = document.getElementById('seller-payment-config');
                     if (cfgEl) {
-                        cfgEl.textContent = JSON.stringify({
-                            hasGcashNumber: this.paymentState.hasGcashNumber,
-                            hasGcashQr: this.paymentState.hasGcashQr,
-                            hasMayaNumber: this.paymentState.hasMayaNumber,
-                            hasMayaQr: this.paymentState.hasMayaQr
-                        });
+                        cfgEl.textContent = JSON.stringify(window._currentPaymentState);
                     }
 
                     const paymentCard = document.getElementById('payment-methods-card');
@@ -1291,7 +1331,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 let oversizedCount = 0;
 
                 Array.from(files).forEach(file => {
-                    if (file.type.startsWith('image/')) {
+                    if (file.type && file.type.startsWith('image/')) {
                         if (file.size > 5 * 1024 * 1024) {
                             oversizedCount++;
                             return;
@@ -1365,7 +1405,8 @@ function calculateTotalStock() {
         }
     });
 
-    document.getElementById('total_stock').value = total;
+    const totalStockEl = document.getElementById('total_stock');
+    if (totalStockEl) totalStockEl.value = total;
 }
 
 function handleCategoryChange(select) {
@@ -1388,12 +1429,13 @@ function toggleDiscount(checkbox) {
     const hiddenInput = document.getElementById('isOnSaleInput');
     if (checkbox && checkbox.checked) {
         fields.classList.remove('hidden');
-        hiddenInput.value = '1';
+        if (hiddenInput) hiddenInput.value = '1';
         updateDiscountPreview();
     } else {
         fields.classList.add('hidden');
-        hiddenInput.value = '0';
-        document.getElementById('discountPreview').classList.add('hidden');
+        if (hiddenInput) hiddenInput.value = '0';
+        const preview = document.getElementById('discountPreview');
+        if (preview) preview.classList.add('hidden');
         const pct = document.getElementById('discountPercentage');
         if (pct) pct.value = '';
     }
@@ -1413,11 +1455,13 @@ function updateDiscountPreview() {
 
     if (price > 0 && pct > 0 && pct < 100) {
         const salePrice = price * (1 - pct / 100);
-        previewOriginal.textContent = '₱' + price.toLocaleString('en-PH', {minimumFractionDigits: 2, maximumFractionDigits: 2});
-        previewSale.textContent = '₱' + salePrice.toLocaleString('en-PH', {minimumFractionDigits: 2, maximumFractionDigits: 2});
-        preview.classList.remove('hidden');
-        preview.classList.add('flex');
-    } else {
+        if (previewOriginal) previewOriginal.textContent = '₱' + price.toLocaleString('en-PH', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+        if (previewSale) previewSale.textContent = '₱' + salePrice.toLocaleString('en-PH', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+        if (preview) {
+            preview.classList.remove('hidden');
+            preview.classList.add('flex');
+        }
+    } else if (preview) {
         preview.classList.add('hidden');
         preview.classList.remove('flex');
     }
@@ -1544,7 +1588,11 @@ function validateProductForm(e, isEdit = true) {
     const isGcashChecked = gcashToggle ? gcashToggle.checked : false;
     const isMayaChecked = mayaToggle ? mayaToggle.checked : false;
 
-    const paymentConfig = JSON.parse(document.getElementById('seller-payment-config')?.textContent || '{}');
+    let paymentConfig = {};
+    try {
+        paymentConfig = JSON.parse(document.getElementById('seller-payment-config')?.textContent || '{}');
+    } catch (e) {}
+
     const hasGcashNumber = Boolean(paymentConfig.hasGcashNumber);
     const hasGcashQr = Boolean(paymentConfig.hasGcashQr);
     const hasMayaNumber = Boolean(paymentConfig.hasMayaNumber);
@@ -1638,7 +1686,11 @@ function validateProductForm(e, isEdit = true) {
 // ================================================================
 // TEMPORARY FORM DATA PERSISTENCE (Reload = Keep, Leave = Delete)
 // ================================================================
-const EDIT_TEMP_KEY = 'lumbarong_seller_edit_product_temp_{{ $product->id }}';
+function getEditTempKey() {
+    const initData = getEditInitData();
+    return 'lumbarong_seller_edit_product_temp_' + (initData.productId || 'default');
+}
+
 let _editFormSubmitted = false;
 let _editSaveTimer = null;
 
@@ -1657,7 +1709,7 @@ function isEditPageReload() {
 
 function clearEditTemporaryFormData() {
     try {
-        sessionStorage.removeItem(EDIT_TEMP_KEY);
+        sessionStorage.removeItem(getEditTempKey());
     } catch (e) {}
 }
 
@@ -1676,14 +1728,14 @@ function saveEditTemporaryFormData() {
                 isOnSale: document.getElementById('discountToggle')?.checked || false,
                 discountPercentage: document.getElementById('discountPercentage')?.value || ''
             };
-            sessionStorage.setItem(EDIT_TEMP_KEY, JSON.stringify(data));
+            sessionStorage.setItem(getEditTempKey(), JSON.stringify(data));
         } catch (e) {}
     }, 300);
 }
 
 function restoreEditTemporaryFormData() {
     try {
-        const raw = sessionStorage.getItem(EDIT_TEMP_KEY);
+        const raw = sessionStorage.getItem(getEditTempKey());
         if (!raw) return;
         const data = JSON.parse(raw);
         if (!data) return;
