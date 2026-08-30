@@ -37,6 +37,7 @@
         $approvedProducts = $products->filter(fn($p) => $p->status === 'approved');
         $pendingProducts  = $products->filter(fn($p) => $p->status === 'pending');
         $draftProducts    = $products->filter(fn($p) => $p->status === 'draft');
+        $rejectedProducts = $products->filter(fn($p) => $p->status === 'rejected');
     @endphp
 
     {{-- Filter Toolbar & Real-Time Search Bar --}}
@@ -69,6 +70,13 @@
                 <span x-show="activeTab === 'drafts'" style="color:#C49520;">✓</span>
                 <span class="w-1.5 h-1.5 rounded-full" style="background:#64748B;"></span>
                 <span>Drafts ({{ $draftCount ?? $draftProducts->count() }})</span>
+            </button>
+            <button @click="activeTab = 'rejected'"
+                :style="activeTab === 'rejected' ? 'background:#1E1915; color:#FFFCF7; border:1px solid #DC2626;' : 'background:#FEF2F2; color:#991B1B; border:1px solid #FECACA;'"
+                class="px-4 py-2 rounded-xl text-[10px] font-extrabold uppercase tracking-widest transition-all shrink-0 flex items-center gap-1.5 cursor-pointer shadow-2xs">
+                <span x-show="activeTab === 'rejected'" style="color:#DC2626;">✓</span>
+                <span class="w-1.5 h-1.5 rounded-full" style="background:#DC2626;"></span>
+                <span>Needs Revision ({{ $rejectedCount ?? $rejectedProducts->count() }})</span>
             </button>
         </div>
 
@@ -384,6 +392,100 @@
                 </div>
                 <h3 class="font-serif text-base font-bold mb-1" style="color: #1E1915;">No approved creations yet</h3>
                 <p class="text-xs max-w-xs mx-auto mb-4" style="color: #766C60;">Creations approved by administrators will appear here and in the marketplace.</p>
+                <a href="{{ route('seller.products.create') }}" class="inline-flex items-center gap-2 px-5 py-2.5 text-white rounded-xl text-xs font-bold transition-all shadow-xs" style="background: #1E1915;" onmouseover="this.style.background='#C49520';" onmouseout="this.style.background='#1E1915';">
+                    <span>Add New Product</span>
+                </a>
+            </div>
+        @endif
+    </div>
+
+    {{-- SECTION 4: REJECTED CREATIONS (NEEDS REVISION) --}}
+    <div x-show="activeTab === 'all' || activeTab === 'rejected'" class="space-y-5">
+        @if($rejectedProducts->isNotEmpty())
+            <div class="flex items-center gap-2 pb-2.5 border-b" style="border-color: #E8DECB;">
+                <span class="w-2 h-2 rounded-full" style="background: #DC2626;"></span>
+                <h2 class="text-xs font-black uppercase tracking-widest flex items-center gap-2" style="color: #991B1B;">
+                    <span>Needs Revision & Action</span>
+                    <span class="px-2 py-0.5 text-[9px] font-bold rounded-md" style="background: #FEF2F2; border: 1px solid #FECACA; color: #DC2626;">{{ $rejectedProducts->count() }} items need changes</span>
+                </h2>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-5">
+                @foreach($rejectedProducts as $product)
+                    <div x-show="matches('{{ addslashes($product->name) }}', '{{ addslashes($product->description ?? '') }}', '{{ $product->status }}')"
+                        class="group rounded-2xl sm:rounded-3xl shadow-xs transition-all duration-300 overflow-hidden flex flex-col"
+                        style="background: #FFFBFB; border: 1px solid #FECACA;"
+                        onmouseover="this.style.borderColor='#DC2626'; this.style.boxShadow='0 8px 24px rgba(220,38,38,0.08)';"
+                        onmouseout="this.style.borderColor='#FECACA'; this.style.boxShadow='0 1px 3px rgba(0,0,0,0.02)';">
+                        
+                        <!-- Image Section -->
+                        <div class="relative aspect-4/5 sm:aspect-3/4 overflow-hidden" style="background: #FEF2F2;">
+                            <img src="{{ $product->getImageUrl() }}" onerror="this.src='/uploads/products/default.jpg'" class="w-full h-full object-cover object-top group-hover:scale-105 transition-transform duration-700">
+                            
+                            <div class="absolute top-2.5 left-2.5 sm:top-3.5 sm:left-3.5">
+                                <span class="px-2 py-0.5 sm:px-2.5 sm:py-1 rounded-full text-[8px] sm:text-[9px] font-black uppercase tracking-wider shadow-xs" style="background: #FEF2F2; color: #DC2626; border: 1px solid #FECACA;">
+                                    ✕ Needs Revision
+                                </span>
+                            </div>
+
+                            {{-- Desktop Hover Action Buttons (Edit + Delete) --}}
+                            <div class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-3 backdrop-blur-xs">
+                                <a href="/seller/products/{{ $product->id }}/edit" title="Edit & Fix Product" class="w-10 h-10 bg-white rounded-full flex items-center justify-center text-stone-900 transition-all shadow-xl" onmouseover="this.style.background='#C49520'; this.style.color='#FFF';" onmouseout="this.style.background='#FFF'; this.style.color='#1E1915';">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
+                                </a>
+                                <button type="button" @click="openDeleteModal('{{ $product->id }}', '{{ addslashes($product->name) }}')" title="Delete/Archive Product" class="w-10 h-10 bg-white rounded-full flex items-center justify-center text-red-600 transition-all shadow-xl cursor-pointer" onmouseover="this.style.background='#DC2626'; this.style.color='#FFF';" onmouseout="this.style.background='#FFF'; this.style.color='#DC2626';">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-4v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="p-3.5 sm:p-5 space-y-2.5 sm:space-y-3 flex-1 flex flex-col justify-between">
+                            <div class="space-y-2">
+                                <h3 class="font-serif text-xs sm:text-sm font-bold line-clamp-1 tracking-tight" style="color: #1E1915;">{{ $product->name }}</h3>
+                                
+                                {{-- Rejection Reason Box --}}
+                                <div class="p-2.5 rounded-xl text-[10px] leading-relaxed" style="background: #FEF2F2; border: 1px solid #FECACA; color: #991B1B;">
+                                    <div class="font-bold flex items-center gap-1 mb-0.5">
+                                        <span>⚠️ Admin Feedback:</span>
+                                    </div>
+                                    <p class="line-clamp-3">{{ $product->rejectionReason ?: 'Please review the product details and photos before resubmitting.' }}</p>
+                                </div>
+                            </div>
+                            
+                            <div class="space-y-2 pt-2 border-t" style="border-color: #FECACA;">
+                                <div class="flex items-center justify-between">
+                                    <div>
+                                        <div class="text-[8px] sm:text-[9px] font-bold uppercase tracking-widest" style="color: #766C60;">Price</div>
+                                        <div class="text-xs sm:text-sm font-black font-sans" style="color: #1E1915;">₱{{ number_format($product->price) }}</div>
+                                    </div>
+                                    <div class="text-right">
+                                        <div class="text-[8px] sm:text-[9px] font-bold uppercase tracking-widest" style="color: #766C60;">Stock</div>
+                                        <div class="text-xs sm:text-sm font-black font-sans text-stone-800">{{ $product->stock }}</div>
+                                    </div>
+                                </div>
+
+                                <div class="grid grid-cols-2 gap-2 pt-1">
+                                    <a href="/seller/products/{{ $product->id }}/edit" class="py-2 px-2 rounded-xl text-[10px] font-extrabold uppercase tracking-wider text-center flex items-center justify-center gap-1 text-white shadow-xs transition-all" style="background: #1E1915;" onmouseover="this.style.background='#C49520';" onmouseout="this.style.background='#1E1915';">
+                                        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
+                                        <span>Edit & Fix</span>
+                                    </a>
+                                    <button type="button" @click="openDeleteModal('{{ $product->id }}', '{{ addslashes($product->name) }}')" class="w-full py-2 px-2 rounded-xl text-[10px] font-bold uppercase tracking-wider text-center flex items-center justify-center gap-1 cursor-pointer" style="background: #FEF2F2; border: 1px solid #FECACA; color: #DC2626;">
+                                        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-4v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                                        <span>Archive</span>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                @endforeach
+            </div>
+        @elseif($activeTab === 'rejected')
+            <div class="py-16 text-center rounded-3xl" style="background: #FFFCF7; border: 2px dashed #E8DECB;">
+                <div class="w-12 h-12 rounded-2xl mx-auto mb-3 flex items-center justify-center text-lg" style="background: #FEF2F2; color: #DC2626; border: 1px solid #FECACA;">
+                    ✓
+                </div>
+                <h3 class="font-serif text-base font-bold mb-1" style="color: #1E1915;">No creations requiring revision</h3>
+                <p class="text-xs max-w-xs mx-auto mb-4" style="color: #766C60;">None of your submitted creations have been rejected. Keep up the authentic craftsmanship!</p>
                 <a href="{{ route('seller.products.create') }}" class="inline-flex items-center gap-2 px-5 py-2.5 text-white rounded-xl text-xs font-bold transition-all shadow-xs" style="background: #1E1915;" onmouseover="this.style.background='#C49520';" onmouseout="this.style.background='#1E1915';">
                     <span>Add New Product</span>
                 </a>
@@ -756,7 +858,14 @@ function sellerProducts() {
         deletingProductName: '',
         selectedProduct: null,
         lightboxImage: null,
-        productsData: JSON.parse(document.getElementById('seller-products-data')?.textContent || '[]'),
+        productsData: (() => {
+            try {
+                const raw = JSON.parse(document.getElementById('seller-products-data')?.textContent || '[]');
+                return Array.isArray(raw) ? raw : (raw?.data || []);
+            } catch (e) {
+                return [];
+            }
+        })(),
         replyingToRevId: null,
         replyText: '',
         isSubmittingReply: false,
@@ -772,7 +881,10 @@ function sellerProducts() {
             const matchesSearch = !query || (productName || '').toLowerCase().includes(query) || (productDesc || '').toLowerCase().includes(query);
             const statusLower = (productStatus || '').toLowerCase();
             const tabLower = this.activeTab.toLowerCase();
-            const matchesTab = this.activeTab === 'all' || statusLower === tabLower || (this.activeTab === 'drafts' && statusLower === 'draft');
+            const matchesTab = this.activeTab === 'all' 
+                || statusLower === tabLower 
+                || (this.activeTab === 'drafts' && statusLower === 'draft')
+                || (this.activeTab === 'rejected' && statusLower === 'rejected');
             return matchesSearch && matchesTab;
         },
         openReviewsModal(productId) {

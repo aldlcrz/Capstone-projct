@@ -1169,20 +1169,10 @@ function editProductManager() {
         'Heritage Accessories', 'Jusi Classic Barong', 'Lumban Specials',
         'Modern', 'Piña Formal Barong', 'Semi-Formal', 'Special Occasion', 'Traditional'
     ];
-    referenceMenCategories.forEach((catName, idx) => {
-        const exists = parsedCats.some(c => c.name && c.name.toLowerCase() === catName.toLowerCase());
-        if (!exists) {
-            parsedCats.push({
-                id: 'ref_cat_' + (idx + 1),
-                name: catName,
-                target_group: ['Men', 'Women'],
-                image: ''
-            });
-        } else {
-            const item = parsedCats.find(c => c.name && c.name.toLowerCase() === catName.toLowerCase());
-            if (item && Array.isArray(item.target_group) && !item.target_group.includes('Men')) {
-                item.target_group.push('Men');
-            }
+    referenceMenCategories.forEach((catName) => {
+        const item = parsedCats.find(c => c.name && c.name.toLowerCase() === catName.toLowerCase());
+        if (item && Array.isArray(item.target_group) && !item.target_group.includes('Men')) {
+            item.target_group.push('Men');
         }
     });
 

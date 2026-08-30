@@ -9,11 +9,11 @@ use Illuminate\Support\Str;
 class CategorySeeder extends Seeder
 {
     /**
-     * Run the database seeds.
+     * Get the default list of Lumban heritage categories.
      */
-    public function run(): void
+    public static function getDefaultCategories(): array
     {
-        $defaults = [
+        return [
             [
                 'name' => 'Accessories',
                 'description' => 'Cufflinks, pins, and heritage Filipiniana accessories',
@@ -105,21 +105,48 @@ class CategorySeeder extends Seeder
                 'target_group' => ['Kids'],
             ],
         ];
+    }
 
-        // Clean up old generic demographic categories if they have no products
-        Category::whereIn('name', ['Men', 'Women', 'Kids'])
-            ->doesntHave('products')
-            ->delete();
+    /**
+     * Ensure all default categories are persisted in database.
+     */
+    public static function ensureDefaultCategories(): void
+    {
+        try {
+            $defaults = self::getDefaultCategories();
 
-        foreach ($defaults as $cat) {
-            Category::firstOrCreate(
-                ['name' => $cat['name']],
-                [
-                    'id' => (string) Str::uuid(),
-                    'description' => $cat['description'],
-                    'target_group' => $cat['target_group'],
-                ]
-            );
+            // Clean up old generic demographic categories if they have no products
+            Category::whereIn('name', ['Men', 'Women', 'Kids'])
+                ->doesntHave('products')
+                ->delete();
+
+            foreach ($defaults as $cat) {
+                $category = Category::where('name', $cat['name'])->first();
+                if (!$category) {
+                    Category::create([
+                        'id' => (string) Str::uuid(),
+                        'name' => $cat['name'],
+                        'description' => $cat['description'],
+                        'target_group' => $cat['target_group'],
+                    ]);
+                } else {
+                    // Update target_group if missing
+                    if (empty($category->target_group)) {
+                        $category->target_group = $cat['target_group'];
+                        $category->save();
+                    }
+                }
+            }
+        } catch (\Throwable $e) {
+            // Fail safely if DB table is inaccessible
         }
+    }
+
+    /**
+     * Run the database seeds.
+     */
+    public function run(): void
+    {
+        self::ensureDefaultCategories();
     }
 }

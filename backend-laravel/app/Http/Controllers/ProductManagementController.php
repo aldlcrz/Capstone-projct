@@ -16,6 +16,7 @@ class ProductManagementController extends Controller
         $approvedCount = Product::where('sellerId', $sellerId)->where('status', 'approved')->count();
         $pendingCount = Product::where('sellerId', $sellerId)->where('status', 'pending')->count();
         $draftCount = Product::where('sellerId', $sellerId)->where('status', 'draft')->count();
+        $rejectedCount = Product::where('sellerId', $sellerId)->where('status', 'rejected')->count();
 
         $products = Product::where('sellerId', $sellerId)
             ->with(['reviews.customer:id,name,profilePhoto'])
@@ -25,7 +26,7 @@ class ProductManagementController extends Controller
             ->paginate(15)
             ->withQueryString();
 
-        return view('seller.products.index', compact('products', 'totalCount', 'approvedCount', 'pendingCount', 'draftCount'));
+        return view('seller.products.index', compact('products', 'totalCount', 'approvedCount', 'pendingCount', 'draftCount', 'rejectedCount'));
     }
 
     public function create()
@@ -38,13 +39,11 @@ class ProductManagementController extends Controller
                 return redirect()->route('seller.products.index')->with('error', 'Free accounts are limited to 10 product listings. Upgrade to Premium for unlimited listings!');
             }
         }
+
+        // Ensure all default Lumban heritage categories are present in database
+        \Database\Seeders\CategorySeeder::ensureDefaultCategories();
+
         $categories = \App\Models\Category::orderBy('name', 'asc')->get();
-        if ($categories->isEmpty()) {
-            try {
-                (new \Database\Seeders\CategorySeeder())->run();
-                $categories = \App\Models\Category::orderBy('name', 'asc')->get();
-            } catch (\Throwable $e) {}
-        }
         foreach ($categories as $cat) {
             $tg = $cat->target_group;
             if (is_string($tg)) {
@@ -114,7 +113,7 @@ class ProductManagementController extends Controller
                 'name'                => 'required|string|max:100',
                 'description'         => 'required|string|min:10|max:500',
                 'price'               => 'required|numeric|min:1|max:10000',
-                'shippingFee'         => 'required|numeric|min:1|max:500',
+                'shippingFee'         => 'required|numeric|min:0|max:500',
                 'shippingDays'        => 'required|integer|min:1|max:30',
                 'category_ids'        => 'required|array|min:1',
                 'category_ids.*'      => 'exists:categories,id',
@@ -133,8 +132,8 @@ class ProductManagementController extends Controller
                 'price.required'          => 'Product Price is required.',
                 'price.min'               => 'Product Price must be at least ₱1.00.',
                 'price.max'               => 'Product Price cannot exceed ₱10,000.00.',
-                'shippingFee.required'    => 'Shipping Fee is required and must be at least ₱1.00.',
-                'shippingFee.min'         => 'Shipping Fee must be at least ₱1.00.',
+                'shippingFee.required'    => 'Shipping Fee is required (enter 0 for free shipping).',
+                'shippingFee.min'         => 'Shipping Fee must be at least ₱0.00.',
                 'shippingFee.max'         => 'Shipping Fee cannot exceed ₱500.00.',
                 'shippingDays.required'   => 'Estimated Shipping Days is required.',
                 'shippingDays.min'        => 'Estimated Shipping Days must be at least 1 day.',
@@ -396,13 +395,11 @@ class ProductManagementController extends Controller
     public function edit(string $id)
     {
         $product = Product::where('id', $id)->where('sellerId', Auth::id())->firstOrFail();
+
+        // Ensure all default Lumban heritage categories are present in database
+        \Database\Seeders\CategorySeeder::ensureDefaultCategories();
+
         $categories = \App\Models\Category::orderBy('name', 'asc')->get();
-        if ($categories->isEmpty()) {
-            try {
-                (new \Database\Seeders\CategorySeeder())->run();
-                $categories = \App\Models\Category::orderBy('name', 'asc')->get();
-            } catch (\Throwable $e) {}
-        }
         foreach ($categories as $cat) {
             $tg = $cat->target_group;
             if (is_string($tg)) {
@@ -471,7 +468,7 @@ class ProductManagementController extends Controller
                 'sizes'               => 'required|array|min:1',
                 'sizes.*'             => 'string',
                 'size_stocks.*'       => 'nullable|integer|min:0|max:10000',
-                'shippingFee'         => 'required|numeric|min:1|max:500',
+                'shippingFee'         => 'required|numeric|min:0|max:500',
                 'shippingDays'        => 'required|integer|min:1|max:30',
                 'discount_percentage' => 'nullable|numeric|min:1|max:99',
             ], [
@@ -482,7 +479,7 @@ class ProductManagementController extends Controller
                 'sizes'               => 'required|array|min:1',
                 'sizes.*'             => 'string',
                 'size_stocks.*'       => 'nullable|integer|min:0|max:10000',
-                'shippingFee'         => 'required|numeric|min:1|max:500',
+                'shippingFee'         => 'required|numeric|min:0|max:500',
                 'shippingDays'        => 'required|integer|min:1|max:30',
                 'discount_percentage' => 'nullable|numeric|min:1|max:99',
             ], [
@@ -492,8 +489,8 @@ class ProductManagementController extends Controller
                 'price.required'        => 'Product Price is required.',
                 'price.min'             => 'Product Price must be at least ₱1.00.',
                 'price.max'             => 'Product Price cannot exceed ₱10,000.00.',
-                'shippingFee.required'  => 'Shipping Fee is required and must be at least ₱1.00.',
-                'shippingFee.min'       => 'Shipping Fee must be at least ₱1.00.',
+                'shippingFee.required'  => 'Shipping Fee is required (enter 0 for free shipping).',
+                'shippingFee.min'       => 'Shipping Fee must be at least ₱0.00.',
                 'shippingFee.max'       => 'Shipping Fee cannot exceed ₱500.00.',
                 'shippingDays.required' => 'Estimated Shipping Days is required.',
                 'shippingDays.max'      => 'Estimated Shipping Days cannot exceed 30 days.',
@@ -835,10 +832,11 @@ class ProductManagementController extends Controller
             ->where('item_type', 'product')
             ->firstOrFail();
 
-        $meta = $record->metadata ?? [];
+        $meta = is_array($record->metadata) ? $record->metadata : (json_decode($record->metadata ?? '[]', true) ?? []);
 
         // Security: only allow the owning seller to restore their own products
-        if (($meta['sellerId'] ?? null) !== $sellerId) {
+        $itemSellerId = $meta['sellerId'] ?? null;
+        if ((string) $itemSellerId !== (string) $sellerId && $record->archived_by !== (Auth::user()->name ?? '')) {
             return redirect()->route('seller.products.archives')
                 ->with('error', 'You do not have permission to restore this product.');
         }
