@@ -164,8 +164,8 @@
                     </div>
                 @endforeach
             </div>
-        @elseif($activeTab === 'drafts')
-            <div class="py-16 text-center rounded-3xl" style="background: #FFFCF7; border: 2px dashed #E8DECB;">
+        @else
+            <div x-show="activeTab === 'drafts'" class="py-16 text-center rounded-3xl" style="background: #FFFCF7; border: 2px dashed #E8DECB;">
                 <div class="w-12 h-12 rounded-2xl mx-auto mb-3 flex items-center justify-center text-lg" style="background: #FDF8EE; color: #766C60; border: 1px solid #E8DECB;">
                     📝
                 </div>
@@ -272,8 +272,8 @@
                     </div>
                 @endforeach
             </div>
-        @elseif($activeTab === 'pending')
-            <div class="py-16 text-center rounded-3xl" style="background: #FFFCF7; border: 2px dashed #E8DECB;">
+        @else
+            <div x-show="activeTab === 'pending'" class="py-16 text-center rounded-3xl" style="background: #FFFCF7; border: 2px dashed #E8DECB;">
                 <div class="w-12 h-12 rounded-2xl mx-auto mb-3 flex items-center justify-center text-lg" style="background: #FDF8EE; color: #C49520; border: 1px solid #E8DECB;">
                     ⏳
                 </div>
@@ -385,8 +385,8 @@
                     </div>
                 @endforeach
             </div>
-        @elseif($activeTab === 'approved')
-            <div class="py-16 text-center rounded-3xl" style="background: #FFFCF7; border: 2px dashed #E8DECB;">
+        @else
+            <div x-show="activeTab === 'approved'" class="py-16 text-center rounded-3xl" style="background: #FFFCF7; border: 2px dashed #E8DECB;">
                 <div class="w-12 h-12 rounded-2xl mx-auto mb-3 flex items-center justify-center text-lg" style="background: #FDF8EE; color: #4A6741; border: 1px solid #E8DECB;">
                     ✓
                 </div>
@@ -479,8 +479,8 @@
                     </div>
                 @endforeach
             </div>
-        @elseif($activeTab === 'rejected')
-            <div class="py-16 text-center rounded-3xl" style="background: #FFFCF7; border: 2px dashed #E8DECB;">
+        @else
+            <div x-show="activeTab === 'rejected'" class="py-16 text-center rounded-3xl" style="background: #FFFCF7; border: 2px dashed #E8DECB;">
                 <div class="w-12 h-12 rounded-2xl mx-auto mb-3 flex items-center justify-center text-lg" style="background: #FEF2F2; color: #DC2626; border: 1px solid #FECACA;">
                     ✓
                 </div>

@@ -95,15 +95,20 @@
                 <nav class="flex-1 space-y-6 overflow-y-auto no-scrollbar">
                     @php
                         $sellerAuthId = Auth::id();
-                        $unreadMsgCount = \App\Models\Message::where('receiverId', $sellerAuthId)->where('read', false)->count();
-                        $pendingOrdersCount = \App\Models\Order::where('sellerId', $sellerAuthId)
-                            ->whereIn('status', ['Pending', 'pending', 'To Ship', 'to_ship', 'processing'])
-                            ->count();
-                        $attentionProductsCount = \App\Models\Product::where('sellerId', $sellerAuthId)
-                            ->where(function($q) {
-                                $q->where('stock', '<=', 5)->orWhere('status', 'pending');
-                            })
-                            ->count();
+                        $unreadMsgCount = 0;
+                        $pendingOrdersCount = 0;
+                        $attentionProductsCount = 0;
+                        try {
+                            $unreadMsgCount = \App\Models\Message::where('receiverId', $sellerAuthId)->where('read', false)->count();
+                            $pendingOrdersCount = \App\Models\Order::where('sellerId', $sellerAuthId)
+                                ->whereIn('status', ['Pending', 'pending', 'To Ship', 'to_ship', 'processing'])
+                                ->count();
+                            $attentionProductsCount = \App\Models\Product::where('sellerId', $sellerAuthId)
+                                ->where(function($q) {
+                                    $q->where('stock', '<=', 5)->orWhere('status', 'pending');
+                                })
+                                ->count();
+                        } catch (\Throwable $e) {}
 
                         $menuGroups = [
                             'SHOP' => [
@@ -193,15 +198,19 @@
                         <!-- Notifications -->
                         <div x-data="{ open: false }" class="relative" @click.away="open = false">
                             @php
-                                $unreadCount = \App\Models\Notification::where('userId', Auth::id())
-                                    ->where('targetRole', 'seller')
-                                    ->where('isRead', false)
-                                    ->count();
-                                $recentNotifications = \App\Models\Notification::where('userId', Auth::id())
-                                    ->where('targetRole', 'seller')
-                                    ->orderBy('createdAt', 'desc')
-                                    ->limit(5)
-                                    ->get();
+                                $unreadCount = 0;
+                                $recentNotifications = collect([]);
+                                try {
+                                    $unreadCount = \App\Models\Notification::where('userId', Auth::id())
+                                        ->where('targetRole', 'seller')
+                                        ->where('isRead', false)
+                                        ->count();
+                                    $recentNotifications = \App\Models\Notification::where('userId', Auth::id())
+                                        ->where('targetRole', 'seller')
+                                        ->orderBy('createdAt', 'desc')
+                                        ->limit(5)
+                                        ->get();
+                                } catch (\Throwable $e) {}
                             @endphp
                             <button @click="open = !open"
                                     class="relative w-11 h-11 flex items-center justify-center rounded-2xl transition-all cursor-pointer shadow-2xs"
