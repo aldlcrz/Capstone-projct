@@ -1,7 +1,20 @@
 @extends('layouts.seller')
 
 @section('content')
-<div class="max-w-350 mx-auto pb-36 sm:pb-28 lg:pb-12 px-2.5 sm:px-6" x-data="{ deleteModal: false, deleteProductId: null, deleteProductName: '' }">
+@php
+    $seller = auth()->user();
+    $initPaymentState = [
+        'hasGcashNumber' => !empty($product->gcash_number) || !empty($seller->gcashNumber),
+        'hasGcashQr'     => !empty($product->gcash_qr_code) || !empty($seller->gcashQrCode),
+        'gcashNumber'    => $product->gcash_number ?: ($seller->gcashNumber ?? ''),
+        'gcashQrUrl'     => $product->gcash_qr_code ? (str_starts_with($product->gcash_qr_code, 'http') ? $product->gcash_qr_code : asset($product->gcash_qr_code)) : ($seller->gcashQrCode ? (str_starts_with($seller->gcashQrCode, 'http') ? $seller->gcashQrCode : asset($seller->gcashQrCode)) : null),
+        'hasMayaNumber'  => !empty($product->maya_number) || !empty($seller->mayaNumber),
+        'hasMayaQr'      => !empty($product->maya_qr_code) || !empty($seller->mayaQrCode),
+        'mayaNumber'     => $product->maya_number ?: ($seller->mayaNumber ?? ''),
+        'mayaQrUrl'      => $product->maya_qr_code ? (str_starts_with($product->maya_qr_code, 'http') ? $product->maya_qr_code : asset($product->maya_qr_code)) : ($seller->mayaQrCode ? (str_starts_with($seller->mayaQrCode, 'http') ? $seller->mayaQrCode : asset($seller->mayaQrCode)) : null),
+    ];
+@endphp
+<div class="max-w-350 mx-auto pb-36 sm:pb-28 lg:pb-12 px-2.5 sm:px-6" x-data="editProductManager()">
     <div class="mb-3 sm:mb-10 pb-4 border-b" style="border-color: #E8DECB;">
         <div class="flex items-center gap-2 mb-1">
             <span class="text-[9px] font-extrabold uppercase tracking-[0.25em]" style="color: #C49520;">✦ Shop Catalogue</span>
@@ -51,6 +64,7 @@
     <form action="{{ route('seller.products.update', $product->id) }}" method="POST" enctype="multipart/form-data" onsubmit="return validateProductForm(event, true)" class="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
         @csrf
         @method('PUT')
+        <input type="hidden" name="action" id="formActionInput" value="publish">
 
         {{-- Left Column: Core Product Data (2 cols) --}}
         <div class="lg:col-span-2 space-y-4">
@@ -284,25 +298,14 @@
                     <label class="text-[9px] font-bold uppercase tracking-widest text-gray-400">Current Photos</label>
                     <div class="grid grid-cols-3 gap-2">
                         @foreach($images as $i => $img)
-                            @php
-                                if (str_starts_with($img, 'http')) {
-                                    $imgSrc = $img;
-                                } elseif (str_starts_with($img, 'products/')) {
-                                    $imgSrc = asset('storage/' . $img);
-                                } elseif (str_starts_with($img, 'uploads/')) {
-                                    $imgSrc = asset($img);
-                                } else {
-                                    $imgSrc = asset('uploads/products/' . $img);
-                                }
-                            @endphp
                             <div class="relative group aspect-3/4 rounded-xl overflow-hidden border transition-all shadow-xs"
                                  x-data="{ marked: false }"
                                  :class="marked ? 'border-red-500 ring-2 ring-red-400 opacity-60 scale-95' : 'border-gray-200 hover:border-gray-300'">
-                                <img src="{{ $imgSrc }}" class="w-full h-full object-cover">
+                                <img src="{{ $product->getImageUrl($img) }}" onerror="this.src='/uploads/products/default.jpg'" class="w-full h-full object-cover">
                                 <input type="checkbox" name="remove_images[]" value="{{ $img }}" :checked="marked" class="hidden">
                                 
                                 <button type="button" @click="marked = !marked"
-                                    class="absolute top-1.5 right-1.5 w-6 h-6 rounded-full text-[10px] font-black flex items-center justify-center shadow-md transition-all z-10"
+                                    class="absolute top-1.5 right-1.5 w-6 h-6 rounded-full text-[10px] font-black flex items-center justify-center shadow-md transition-all z-10 cursor-pointer"
                                     :class="marked ? 'bg-red-600 text-white' : 'bg-black/70 text-white hover:bg-red-600'"
                                     :title="marked ? 'Undo photo removal' : 'Remove photo'">
                                     <span x-show="!marked">✕</span>
@@ -338,158 +341,204 @@
             </div>
 
             {{-- Payment Method Configuration --}}
-            <div id="payment-methods-card" class="rounded-2xl border p-4 sm:p-6 shadow-xs" style="background: #FFFCF7; border-color: #E8DECB;"  space-y-3 transition-all">
+            <div id="payment-methods-card" class="rounded-2xl border p-4 sm:p-6 shadow-xs space-y-3 transition-all" style="background: #FFFCF7; border-color: #E8DECB;">
                 <div class="flex items-center justify-between mb-1">
-                    <h3 class="text-xs sm:text-sm font-black text-black uppercase tracking-widest">Payment Methods <span class="text-[#C49520]">*</span></h3>
-                    <a href="{{ route('seller.profile') }}?open_payment=1#payment-methods" class="text-[11px] font-bold text-[#C49520] hover:underline flex items-center gap-1">
-                        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><circle cx="12" cy="12" r="3"/></svg>
-                        Settings
-                    </a>
+                    <div>
+                        <h3 class="text-xs sm:text-sm font-black text-black uppercase tracking-widest">Payment Methods <span class="text-[#C49520]">*</span></h3>
+                        <p class="text-[10px] text-stone-500 font-medium mt-0.5">Configure direct buyer payout methods</p>
+                    </div>
                 </div>
 
                 {{-- GCash --}}
-                @php 
-                    $seller = auth()->user(); 
-                    $hasGcashNumber = !empty($product->gcash_number) || !empty($seller->gcashNumber);
-                    $hasGcashQr = !empty($product->gcash_qr_code) || !empty($seller->gcashQrCode);
-                    $isGcashComplete = $hasGcashNumber && $hasGcashQr;
-                    $gcashNumber = $product->gcash_number ?: $seller->gcashNumber;
-                    $gcashQr = $product->gcash_qr_code ?: $seller->gcashQrCode;
-                @endphp
-                <div class="rounded-xl border border-blue-100 overflow-hidden">
-                    {{-- Header --}}
-                    <div class="flex items-center justify-between px-3 py-2.5 bg-linear-to-r from-blue-600 to-blue-500">
+                <div class="rounded-2xl border overflow-hidden transition-all shadow-xs" style="background: #FFFFFF; border-color: #E2E8F0;">
+                    <div class="flex items-center justify-between px-3.5 py-3" style="background: #2563EB;">
                         <div class="flex items-center gap-2">
-                            <div class="w-6 h-6 rounded-md bg-white/20 flex items-center justify-center">
-                                <svg class="w-3.5 h-3.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"/></svg>
+                            <div class="w-7 h-7 rounded-xl bg-white/20 flex items-center justify-center font-black text-xs text-white">
+                                G
                             </div>
-                            <span class="text-[10px] font-black uppercase tracking-widest text-white">GCash</span>
+                            <span class="text-xs font-black uppercase tracking-widest text-white">GCash</span>
                         </div>
                         <label class="relative inline-flex items-center cursor-pointer">
                             <input type="checkbox" name="product_is_gcash_available" value="1" id="gcash_toggle_edit" class="sr-only peer"
-                                {{ old('product_is_gcash_available', $product->is_gcash_available) ? 'checked' : '' }} onchange="document.getElementById('gcash_fields_edit').style.display = this.checked ? '' : 'none'">
-                            <div class="w-9 h-5 bg-white/30 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-0.5 after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-white/40 border border-white/40"></div>
+                                x-model="isGcashOn"
+                                {{ old('product_is_gcash_available', $product->is_gcash_available) ? 'checked' : '' }}>
+                            <div class="w-9 h-5 bg-white/30 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-0.5 after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-white/50 border border-white/40"></div>
                         </label>
                     </div>
-                    {{-- Body --}}
-                    <div id="gcash_fields_edit" {{ old('product_is_gcash_available', $product->is_gcash_available) ? '' : 'style=display:none' }} class="p-3 bg-white flex items-center gap-3">
-                        @if($hasGcashQr)
-                            @php
-                                $gcashQrUrl = str_starts_with($gcashQr, 'http') ? $gcashQr : (str_starts_with(ltrim($gcashQr,'/'), 'uploads/') ? asset(ltrim($gcashQr,'/')) : asset('storage/' . ltrim($gcashQr,'/')));
-                            @endphp
-                            <img src="{{ $gcashQrUrl }}" class="w-12 h-12 object-contain rounded-lg border-2 border-blue-100 bg-blue-50/40 shrink-0" onerror="this.style.display='none'">
-                        @else
-                            <div class="w-12 h-12 rounded-lg border-2 border-dashed border-blue-100 bg-blue-50/30 flex items-center justify-center shrink-0">
-                                <svg class="w-5 h-5 text-blue-200" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z"/></svg>
-                            </div>
-                        @endif
-                        <div class="flex-1 min-w-0">
-                            @if($isGcashComplete)
-                                <div class="text-sm font-black text-gray-900 tracking-wide">{{ $gcashNumber }}</div>
-                                <div class="text-[9px] text-blue-500 font-bold uppercase tracking-widest mt-0.5 flex items-center gap-1">
-                                    <svg class="w-2.5 h-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/></svg>
-                                    Ready (Number & QR Set)
+
+                    <div x-show="isGcashOn" class="p-3.5 space-y-2.5">
+                        <template x-if="paymentState.isGcashComplete">
+                            <div class="flex items-center gap-3 p-2.5 rounded-xl bg-blue-50/60 border border-blue-100">
+                                <div class="w-12 h-12 rounded-lg border border-blue-200 overflow-hidden shrink-0 bg-white flex items-center justify-center cursor-zoom-in group relative"
+                                     @click="openLightbox(paymentState.gcashQrUrl)">
+                                    <img :src="paymentState.gcashQrUrl" class="w-full h-full object-contain" onerror="this.style.display='none'">
+                                    <div class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white">
+                                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m0-3h3m-3 0H7"/></svg>
+                                    </div>
                                 </div>
-                            @elseif($hasGcashNumber && !$hasGcashQr)
-                                <div class="text-xs font-black text-gray-900">{{ $gcashNumber }}</div>
-                                <div class="text-[9px] text-amber-600 font-bold mt-0.5">Missing QR Code (Required)</div>
-                                <a href="{{ route('seller.profile') }}?open_payment=1#payment-methods" class="text-[9px] text-blue-600 font-bold underline">Upload QR in Settings →</a>
-                            @elseif(!$hasGcashNumber && $hasGcashQr)
-                                <div class="text-[10px] text-amber-600 font-bold">Missing Mobile Number (Required)</div>
-                                <a href="{{ route('seller.profile') }}?open_payment=1#payment-methods" class="text-[9px] text-blue-600 font-bold underline">Add Number in Settings →</a>
-                            @else
-                                <div class="text-[10px] text-gray-400 italic">Not configured</div>
-                                <div class="text-[8px] text-gray-400 font-medium">Both Number & QR required</div>
-                                <a href="{{ route('seller.profile') }}?open_payment=1#payment-methods" class="text-[9px] text-blue-600 font-bold underline">Add in Settings →</a>
-                            @endif
-                        </div>
+                                <div class="flex-1 min-w-0">
+                                    <div class="flex items-center justify-between gap-1">
+                                        <span class="text-xs font-black text-gray-900 tracking-wide" x-text="paymentState.gcashNumber"></span>
+                                        <button type="button" @click="openPaymentModal('gcash')" 
+                                                class="px-2.5 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider text-blue-700 bg-white border border-blue-200 hover:bg-blue-50 transition-all cursor-pointer shadow-2xs">
+                                            GCash Setting
+                                        </button>
+                                    </div>
+                                    <div class="text-[9px] text-blue-600 font-bold uppercase tracking-widest mt-0.5 flex items-center gap-1">
+                                        <svg class="w-2.5 h-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/></svg>
+                                        Ready (Number & QR Set)
+                                    </div>
+                                </div>
+                            </div>
+                        </template>
+
+                        <template x-if="!paymentState.isGcashComplete">
+                            <div class="p-3 rounded-xl bg-amber-50 border border-amber-200 flex items-start justify-between gap-2">
+                                <div>
+                                    <div class="text-xs font-bold text-amber-900">Incomplete GCash Setup</div>
+                                    <p class="text-[10px] text-amber-700 mt-0.5">Both mobile number and QR code are required.</p>
+                                </div>
+                                <button type="button" @click="openPaymentModal('gcash')" 
+                                        class="px-2.5 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider text-blue-700 bg-white border border-blue-200 hover:bg-blue-50 transition-all cursor-pointer shadow-2xs shrink-0">
+                                    GCash Setting
+                                </button>
+                            </div>
+                        </template>
                     </div>
                 </div>
 
                 {{-- Maya --}}
-                @php 
-                    $hasMayaNumber = !empty($product->maya_number) || !empty($seller->mayaNumber);
-                    $hasMayaQr = !empty($product->maya_qr_code) || !empty($seller->mayaQrCode);
-                    $isMayaComplete = $hasMayaNumber && $hasMayaQr;
-                    $mayaNumber = $product->maya_number ?: $seller->mayaNumber;
-                    $mayaQr = $product->maya_qr_code ?: $seller->mayaQrCode;
-                @endphp
-                <div class="rounded-xl border border-green-100 overflow-hidden">
-                    {{-- Header --}}
-                    <div class="flex items-center justify-between px-3 py-2.5 bg-linear-to-r from-green-600 to-green-500">
+                <div class="rounded-2xl border overflow-hidden transition-all shadow-xs" style="background: #FFFFFF; border-color: #E2E8F0;">
+                    <div class="flex items-center justify-between px-3.5 py-3" style="background: #059669;">
                         <div class="flex items-center gap-2">
-                            <div class="w-6 h-6 rounded-md bg-white/20 flex items-center justify-center">
-                                <svg class="w-3.5 h-3.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"/></svg>
+                            <div class="w-7 h-7 rounded-xl bg-white/20 flex items-center justify-center font-black text-xs text-white">
+                                M
                             </div>
-                            <span class="text-[10px] font-black uppercase tracking-widest text-white">Maya</span>
+                            <span class="text-xs font-black uppercase tracking-widest text-white">Maya</span>
                         </div>
                         <label class="relative inline-flex items-center cursor-pointer">
                             <input type="checkbox" name="product_is_maya_available" value="1" id="maya_toggle_edit" class="sr-only peer"
-                                {{ old('product_is_maya_available', $product->is_maya_available) ? 'checked' : '' }} onchange="document.getElementById('maya_fields_edit').style.display = this.checked ? '' : 'none'">
-                            <div class="w-9 h-5 bg-white/30 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-0.5 after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-white/40 border border-white/40"></div>
+                                x-model="isMayaOn"
+                                {{ old('product_is_maya_available', $product->is_maya_available) ? 'checked' : '' }}>
+                            <div class="w-9 h-5 bg-white/30 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-0.5 after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-white/50 border border-white/40"></div>
                         </label>
                     </div>
-                    {{-- Body --}}
-                    <div id="maya_fields_edit" {{ old('product_is_maya_available', $product->is_maya_available) ? '' : 'style=display:none' }} class="p-3 bg-white flex items-center gap-3">
-                        @if($hasMayaQr)
-                            @php
-                                $mayaQrUrl = str_starts_with($mayaQr, 'http') ? $mayaQr : (str_starts_with(ltrim($mayaQr,'/'), 'uploads/') ? asset(ltrim($mayaQr,'/')) : asset('storage/' . ltrim($mayaQr,'/')));
-                            @endphp
-                            <img src="{{ $mayaQrUrl }}" class="w-12 h-12 object-contain rounded-lg border-2 border-green-100 bg-green-50/40 shrink-0" onerror="this.style.display='none'">
-                        @else
-                            <div class="w-12 h-12 rounded-lg border-2 border-dashed border-green-100 bg-green-50/30 flex items-center justify-center shrink-0">
-                                <svg class="w-5 h-5 text-green-200" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z"/></svg>
-                            </div>
-                        @endif
-                        <div class="flex-1 min-w-0">
-                            @if($isMayaComplete)
-                                <div class="text-sm font-black text-gray-900 tracking-wide">{{ $mayaNumber }}</div>
-                                <div class="text-[9px] text-green-600 font-bold uppercase tracking-widest mt-0.5 flex items-center gap-1">
-                                    <svg class="w-2.5 h-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/></svg>
-                                    Ready (Number & QR Set)
+
+                    <div x-show="isMayaOn" class="p-3.5 space-y-2.5">
+                        <template x-if="paymentState.isMayaComplete">
+                            <div class="flex items-center gap-3 p-2.5 rounded-xl bg-emerald-50/60 border border-emerald-100">
+                                <div class="w-12 h-12 rounded-lg border border-emerald-200 overflow-hidden shrink-0 bg-white flex items-center justify-center cursor-zoom-in group relative"
+                                     @click="openLightbox(paymentState.mayaQrUrl)">
+                                    <img :src="paymentState.mayaQrUrl" class="w-full h-full object-contain" onerror="this.style.display='none'">
+                                    <div class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white">
+                                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m0-3h3m-3 0H7"/></svg>
+                                    </div>
                                 </div>
-                            @elseif($hasMayaNumber && !$hasMayaQr)
-                                <div class="text-xs font-black text-gray-900">{{ $mayaNumber }}</div>
-                                <div class="text-[9px] text-amber-600 font-bold mt-0.5">Missing QR Code (Required)</div>
-                                <a href="{{ route('seller.profile') }}?open_payment=1#payment-methods" class="text-[9px] text-green-600 font-bold underline">Upload QR in Settings →</a>
-                            @elseif(!$hasMayaNumber && $hasMayaQr)
-                                <div class="text-[10px] text-amber-600 font-bold">Missing Mobile Number (Required)</div>
-                                <a href="{{ route('seller.profile') }}?open_payment=1#payment-methods" class="text-[9px] text-green-600 font-bold underline">Add Number in Settings →</a>
-                            @else
-                                <div class="text-[10px] text-gray-400 italic">Not configured</div>
-                                <div class="text-[8px] text-gray-400 font-medium">Both Number & QR required</div>
-                                <a href="{{ route('seller.profile') }}?open_payment=1#payment-methods" class="text-[9px] text-green-600 font-bold underline">Add in Settings →</a>
-                            @endif
-                        </div>
+                                <div class="flex-1 min-w-0">
+                                    <div class="flex items-center justify-between gap-1">
+                                        <span class="text-xs font-black text-gray-900 tracking-wide" x-text="paymentState.mayaNumber"></span>
+                                        <button type="button" @click="openPaymentModal('maya')" 
+                                                class="px-2.5 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider text-emerald-700 bg-white border border-emerald-200 hover:bg-emerald-50 transition-all cursor-pointer shadow-2xs">
+                                            Maya Setting
+                                        </button>
+                                    </div>
+                                    <div class="text-[9px] text-emerald-600 font-bold uppercase tracking-widest mt-0.5 flex items-center gap-1">
+                                        <svg class="w-2.5 h-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/></svg>
+                                        Ready (Number & QR Set)
+                                    </div>
+                                </div>
+                            </div>
+                        </template>
+
+                        <template x-if="!paymentState.isMayaComplete">
+                            <div class="p-3 rounded-xl bg-amber-50 border border-amber-200 flex items-start justify-between gap-2">
+                                <div>
+                                    <div class="text-xs font-bold text-amber-900">Incomplete Maya Setup</div>
+                                    <p class="text-[10px] text-amber-700 mt-0.5">Both account number and QR code are required.</p>
+                                </div>
+                                <button type="button" @click="openPaymentModal('maya')" 
+                                        class="px-2.5 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider text-emerald-700 bg-white border border-emerald-200 hover:bg-emerald-50 transition-all cursor-pointer shadow-2xs shrink-0">
+                                    Maya Setting
+                                </button>
+                            </div>
+                        </template>
                     </div>
                 </div>
             </div>
 
             {{-- Actions & Status Card --}}
-            <div class="rounded-2xl border p-4 sm:p-6 shadow-xs" style="background: #FFFCF7; border-color: #E8DECB;"  space-y-3">
-                <div class="flex items-center justify-between">
-                    <span class="text-xs font-bold uppercase tracking-widest text-gray-400">Status</span>
-                    <span class="text-xs font-black uppercase tracking-widest {{ $product->status === 'approved' ? 'text-green-600' : 'text-amber-600' }}">
-                        {{ ucfirst($product->status) }}
-                    </span>
+            <div class="rounded-2xl border p-4 sm:p-6 shadow-xs space-y-3.5" style="background: #FFFCF7; border-color: #E8DECB;">
+                <div class="flex items-center justify-between pb-2 border-b" style="border-color: #E8DECB;">
+                    <span class="text-[10px] font-extrabold uppercase tracking-widest text-stone-500">Listing Status</span>
+                    @if($product->status === 'approved')
+                        <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wider bg-green-100 text-green-800 border border-green-200">
+                            ✓ Approved
+                        </span>
+                    @elseif($product->status === 'pending')
+                        <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wider bg-amber-100 text-amber-800 border border-amber-200">
+                            ⏳ Pending Review
+                        </span>
+                    @elseif($product->status === 'draft')
+                        <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wider bg-stone-100 text-stone-700 border border-stone-300">
+                            📝 Draft
+                        </span>
+                    @else
+                        <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wider bg-red-100 text-red-800 border border-red-200">
+                            {{ ucfirst($product->status) }}
+                        </span>
+                    @endif
                 </div>
 
-                <button type="submit"
-                    class="w-full py-3.5 text-white rounded-xl font-bold uppercase tracking-[0.15em] shadow-md transition-all text-xs"
-                    style="background: #1E1915;"
-                    onmouseover="this.style.background='#C49520';"
-                    onmouseout="this.style.background='#1E1915';">
-                    Save Changes
-                </button>
+                @if($product->status === 'draft')
+                    {{-- For drafts: Publish vs Save as Draft --}}
+                    <button type="submit"
+                        onclick="document.getElementById('formActionInput').value = 'publish'"
+                        class="w-full py-3.5 text-white rounded-xl font-black uppercase tracking-[0.15em] shadow-md transition-all text-xs flex items-center justify-center gap-2 cursor-pointer"
+                        style="background: #1E1915;"
+                        onmouseover="this.style.background='#C49520';"
+                        onmouseout="this.style.background='#1E1915';">
+                        <span>Publish Listing</span>
+                        <span class="text-sm">→</span>
+                    </button>
 
-                <button type="button"
-                    @click="deleteModal = true; deleteProductId = '{{ $product->id }}'; deleteProductName = '{{ addslashes($product->name) }}'"
-                    class="w-full py-2.5 rounded-xl font-bold text-[10px] uppercase tracking-widest transition-all"
-                    style="border: 1px solid #FECACA; color: #B91C1C; background: transparent;"
-                    onmouseover="this.style.background='#FEF2F2';"
-                    onmouseout="this.style.background='transparent';">
-                    Archive / Delete Listing
-                </button>
+                    <button type="button"
+                        @click="submitAsDraft()"
+                        class="w-full py-3 rounded-xl font-extrabold text-xs uppercase tracking-wider transition-all flex items-center justify-center gap-2 cursor-pointer"
+                        style="background: #FDF8EE; border: 1.5px solid #C49520; color: #7A5505;"
+                        onmouseover="this.style.background='#FEF3C7';"
+                        onmouseout="this.style.background='#FDF8EE';">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4"/></svg>
+                        <span>Save as Draft</span>
+                    </button>
+
+                    <button type="button"
+                        @click="deleteModal = true; deleteProductId = '{{ $product->id }}'; deleteProductName = '{{ addslashes($product->name) }}'"
+                        class="w-full py-2.5 rounded-xl font-bold text-[10px] uppercase tracking-widest transition-all cursor-pointer"
+                        style="border: 1px solid #FECACA; color: #B91C1C; background: transparent;"
+                        onmouseover="this.style.background='#FEF2F2';"
+                        onmouseout="this.style.background='transparent';">
+                        Discard / Delete Draft
+                    </button>
+                @else
+                    {{-- For active/pending: Save Changes --}}
+                    <button type="submit"
+                        onclick="document.getElementById('formActionInput').value = 'publish'"
+                        class="w-full py-3.5 text-white rounded-xl font-black uppercase tracking-[0.15em] shadow-md transition-all text-xs flex items-center justify-center gap-2 cursor-pointer"
+                        style="background: #1E1915;"
+                        onmouseover="this.style.background='#C49520';"
+                        onmouseout="this.style.background='#1E1915';">
+                        Save Changes
+                    </button>
+
+                    <button type="button"
+                        @click="deleteModal = true; deleteProductId = '{{ $product->id }}'; deleteProductName = '{{ addslashes($product->name) }}'"
+                        class="w-full py-2.5 rounded-xl font-bold text-[10px] uppercase tracking-widest transition-all cursor-pointer"
+                        style="border: 1px solid #FECACA; color: #B91C1C; background: transparent;"
+                        onmouseover="this.style.background='#FEF2F2';"
+                        onmouseout="this.style.background='transparent';">
+                        Archive / Delete Listing
+                    </button>
+                @endif
             </div>
         </div>
 
@@ -497,24 +546,367 @@
         <div class="lg:hidden fixed bottom-16 inset-x-0 backdrop-blur-md border-t px-3.5 py-2.5 z-30 shadow-2xl flex items-center justify-between gap-2.5" style="background: rgba(253,248,238,0.97); border-color: #E8DECB;">
             <div class="min-w-0">
                 <div class="text-[10px] font-black uppercase tracking-wider truncate" style="color: #1E1915;" title="{{ $product->name }}">{{ $product->name }}</div>
-                <div class="text-[9px] font-bold uppercase tracking-widest truncate" style="color: #C49520;">Editing Listing</div>
+                <div class="text-[9px] font-bold uppercase tracking-widest truncate" style="color: #C49520;">
+                    {{ $product->status === 'draft' ? 'Editing Draft' : 'Editing Listing' }}
+                </div>
             </div>
             <div class="flex items-center gap-2 shrink-0">
                 <button type="button"
                     @click="deleteModal = true; deleteProductId = '{{ $product->id }}'; deleteProductName = '{{ addslashes($product->name) }}'"
-                    class="p-2.5 rounded-xl text-xs font-bold transition-all"
+                    class="p-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer"
                     style="background: #FEF2F2; color: #B91C1C;"
                     onmouseover="this.style.background='#FECACA';"
                     onmouseout="this.style.background='#FEF2F2';"
                     title="Delete Listing">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
                 </button>
-                <button type="submit" class="px-4 py-2 text-white rounded-xl text-[11px] font-black uppercase tracking-widest shadow-md transition-all" style="background: #1E1915;" onmouseover="this.style.background='#C49520';" onmouseout="this.style.background='#1E1915';">
-                    Save Changes
-                </button>
+                @if($product->status === 'draft')
+                    <button type="button" @click="submitAsDraft()" class="px-3 py-2 rounded-xl text-[11px] font-extrabold uppercase tracking-wider transition-all cursor-pointer" style="background: #FDF8EE; border: 1px solid #C49520; color: #7A5505;">
+                        Save Draft
+                    </button>
+                    <button type="submit" onclick="document.getElementById('formActionInput').value = 'publish'" class="px-4 py-2 text-white rounded-xl text-[11px] font-black uppercase tracking-widest shadow-md transition-all cursor-pointer" style="background: #1E1915;" onmouseover="this.style.background='#C49520';" onmouseout="this.style.background='#1E1915';">
+                        Publish
+                    </button>
+                @else
+                    <button type="submit" onclick="document.getElementById('formActionInput').value = 'publish'" class="px-4 py-2 text-white rounded-xl text-[11px] font-black uppercase tracking-widest shadow-md transition-all cursor-pointer" style="background: #1E1915;" onmouseover="this.style.background='#C49520';" onmouseout="this.style.background='#1E1915';">
+                        Save Changes
+                    </button>
+                @endif
             </div>
         </div>
     </form>
+
+    {{-- ================================================================ --}}
+    {{-- PAYMENT METHODS CONFIGURATION MODAL (IN-PAGE POPUP)               --}}
+    {{-- ================================================================ --}}
+    <div x-show="showPaymentModal" 
+         x-cloak 
+         style="display:none;" 
+         class="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-3 sm:p-5"
+         @keydown.escape.window="closePaymentModal()">
+        
+        {{-- Modal Card --}}
+        <div @click.away="closePaymentModal()" 
+             class="w-full max-w-lg rounded-3xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh] transition-all" 
+             style="background: #FFFCF7; border: 1px solid #E8DECB;">
+            
+            {{-- Header --}}
+            <div class="px-6 pt-5 pb-4 border-b shrink-0" style="border-color: #E8DECB; background: #FAF7F0;">
+                <div class="flex items-start justify-between gap-3">
+                    <div class="min-w-0">
+                        <div class="inline-flex items-center gap-2 mb-1">
+                            <template x-if="activePaymentTab === 'gcash'">
+                                <span style="background-color:#2563EB;color:#FFFFFF;padding:4px 12px;border-radius:9999px;font-size:11px;font-weight:800;letter-spacing:0.04em;display:inline-flex;align-items:center;gap:6px;box-shadow:0 2px 6px rgba(37,99,235,0.25);">
+                                    <svg width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"/></svg>
+                                    <span>GCash Payout</span>
+                                </span>
+                            </template>
+                            <template x-if="activePaymentTab === 'maya'">
+                                <span style="background-color:#059669;color:#FFFFFF;padding:4px 12px;border-radius:9999px;font-size:11px;font-weight:800;letter-spacing:0.04em;display:inline-flex;align-items:center;gap:6px;box-shadow:0 2px 6px rgba(5,150,105,0.25);">
+                                    <svg width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"/></svg>
+                                    <span>Maya Payout</span>
+                                </span>
+                            </template>
+                        </div>
+                        <h2 style="font-family:ui-serif,Georgia,Cambria,serif;font-size:22px;font-weight:700;color:#1E1915;margin:6px 0 2px 0;">
+                            <span x-text="activePaymentTab === 'gcash' ? 'GCash Setting' : 'Maya Setting'"></span>
+                        </h2>
+                        <p style="font-size:12.5px;color:#78716C;margin:0;">
+                            <span x-text="activePaymentTab === 'gcash' ? 'Configure your GCash mobile number & payment QR code' : 'Configure your Maya account number & payment QR code'"></span>
+                        </p>
+                    </div>
+                    <button type="button" @click="closePaymentModal()" class="w-8 h-8 rounded-xl flex items-center justify-center transition-all cursor-pointer hover:bg-black/5 shrink-0" style="background: #FDF8EE; color: #766C60; border: 1px solid #E8DECB;">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                    </button>
+                </div>
+            </div>
+
+            {{-- Body --}}
+            <div class="overflow-y-auto flex-1 p-6 space-y-5">
+                {{-- Error banner if any --}}
+                <div x-show="paymentModalError" x-cloak class="p-3.5 rounded-2xl bg-red-50 border border-red-200 text-xs text-red-700 flex items-start gap-2.5 shadow-xs">
+                    <svg class="w-4 h-4 text-red-500 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                    <span x-text="paymentModalError" class="font-semibold leading-relaxed"></span>
+                </div>
+
+                {{-- Success banner if any --}}
+                <div x-show="paymentModalSuccess" x-cloak class="p-3.5 rounded-2xl bg-green-50 border border-green-200 text-xs text-green-700 flex items-start gap-2.5 shadow-xs">
+                    <svg class="w-4 h-4 text-green-500 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                    <span x-text="paymentModalSuccess" class="font-bold leading-relaxed"></span>
+                </div>
+
+                {{-- GCASH FORM ONLY --}}
+                <div x-show="activePaymentTab === 'gcash'" class="space-y-4">
+                    {{-- Status Banner --}}
+                    <div class="flex items-center justify-between p-3.5 rounded-2xl bg-blue-50/80 border border-blue-200">
+                        <div class="flex items-center gap-2.5">
+                            <div class="w-8 h-8 rounded-xl bg-blue-600 text-white flex items-center justify-center font-black text-xs shadow-xs">
+                                G
+                            </div>
+                            <div>
+                                <h4 class="text-xs font-bold text-blue-950">GCash Direct Payment</h4>
+                                <p class="text-[11px] text-blue-700">Receive instant customer payments</p>
+                            </div>
+                        </div>
+                        <template x-if="modalGcashNumber && (modalGcashQrPreview || paymentState.hasGcashQr)">
+                            <span class="inline-flex items-center gap-1 text-[10px] font-bold text-green-700 bg-green-100/90 px-2.5 py-1 rounded-full border border-green-300">
+                                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
+                                Ready
+                            </span>
+                        </template>
+                        <template x-if="!modalGcashNumber || (!modalGcashQrPreview && !paymentState.hasGcashQr)">
+                            <span class="inline-flex items-center gap-1 text-[10px] font-bold text-amber-800 bg-amber-100/90 px-2.5 py-1 rounded-full border border-amber-300">
+                                ⚠ Incomplete
+                            </span>
+                        </template>
+                    </div>
+
+                    {{-- GCash Mobile Number Input --}}
+                    <div class="space-y-1.5">
+                        <label class="text-[11px] font-bold text-stone-700 uppercase tracking-wider block">
+                            GCash Mobile Number <span class="text-red-500">*</span>
+                        </label>
+                        <div class="relative flex items-center rounded-2xl border bg-white shadow-xs focus-within:ring-2 focus-within:ring-blue-500 focus-within:border-blue-500 transition-all overflow-hidden" style="border-color: #CBD5E1;">
+                            <div class="px-3.5 py-3 border-r bg-[#F1F5F9] text-xs font-extrabold text-[#1E1915] select-none flex items-center gap-1.5" style="border-color: #CBD5E1;">
+                                <span class="text-sm">🇵🇭</span>
+                                <span>+63</span>
+                            </div>
+                            <input type="text" 
+                                   x-model="modalGcashNumber" 
+                                   placeholder="0917 123 4567" 
+                                   class="w-full px-3.5 py-3 text-xs sm:text-sm font-bold text-[#1E1915] outline-none bg-transparent" 
+                                   maxlength="15">
+                        </div>
+                        <p class="text-[11px] text-stone-500">Enter your 11-digit GCash mobile number (e.g. 09171234567).</p>
+                    </div>
+
+                    {{-- GCash QR Code Upload Section --}}
+                    <div class="space-y-1.5">
+                        <label class="text-[11px] font-bold text-stone-700 uppercase tracking-wider block">
+                            GCash QR Code Image <span class="text-red-500">*</span>
+                        </label>
+
+                        <input type="file" 
+                               id="modal_gcash_qr_input_edit" 
+                               accept="image/*" 
+                               @change="previewModalQr('gcash', $event)" 
+                               class="hidden">
+
+                        {{-- Existing / Selected QR Code View --}}
+                        <template x-if="modalGcashQrPreview || paymentState.gcashQrUrl">
+                            <div class="p-3.5 rounded-2xl border bg-white flex items-center justify-between gap-3 shadow-xs" style="border-color: #CBD5E1;">
+                                <div class="flex items-center gap-3 min-w-0">
+                                    <div class="relative w-16 h-16 rounded-xl border overflow-hidden shrink-0 bg-[#F8FAFC] flex items-center justify-center group cursor-zoom-in shadow-xs" 
+                                         style="border-color: #E2E8F0;"
+                                         @click="openLightbox(modalGcashQrPreview || paymentState.gcashQrUrl)">
+                                        <img :src="modalGcashQrPreview || paymentState.gcashQrUrl" class="w-full h-full object-contain">
+                                        <div class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white">
+                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m0-3h3m-3 0H7"/></svg>
+                                        </div>
+                                    </div>
+                                    <div class="min-w-0">
+                                        <div class="flex items-center gap-1.5">
+                                            <span class="text-xs font-bold text-stone-800 truncate">GCash QR Code</span>
+                                            <span class="text-[9px] font-black text-green-600 bg-green-50 px-1.5 py-0.5 rounded-md border border-green-200">Uploaded</span>
+                                        </div>
+                                        <p class="text-[11px] text-stone-500 mt-0.5">Click thumbnail to inspect full size</p>
+                                    </div>
+                                </div>
+                                <div class="flex items-center gap-1.5 shrink-0">
+                                    <button type="button" 
+                                            @click="document.getElementById('modal_gcash_qr_input_edit').click()" 
+                                            class="px-3.5 py-2 rounded-xl text-xs font-bold text-blue-700 bg-blue-50 border border-blue-200 hover:bg-blue-100 transition-all cursor-pointer">
+                                        Replace
+                                    </button>
+                                </div>
+                            </div>
+                        </template>
+
+                        {{-- Empty State Dropzone --}}
+                        <template x-if="!modalGcashQrPreview && !paymentState.gcashQrUrl">
+                            <div @click="document.getElementById('modal_gcash_qr_input_edit').click()" 
+                                 class="p-6 rounded-2xl border-2 border-dashed flex flex-col items-center justify-center text-center cursor-pointer transition-all hover:bg-blue-50/50 hover:border-blue-400 bg-white" 
+                                 style="border-color: #CBD5E1;">
+                                <div class="w-11 h-11 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center mb-2.5 shadow-xs">
+                                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+                                </div>
+                                <p class="text-xs font-bold text-stone-800">Upload GCash QR Code Image</p>
+                                <p class="text-[11px] text-stone-500 mt-0.5">PNG, JPG, or WEBP up to 5MB</p>
+                                <span class="mt-3 px-3.5 py-1.5 rounded-xl bg-[#1E1915] text-white text-[11px] font-bold shadow-xs hover:bg-blue-600 transition-all">
+                                    Choose Image File
+                                </span>
+                            </div>
+                        </template>
+                    </div>
+
+                    {{-- Informational Notice --}}
+                    <div class="p-3.5 rounded-2xl bg-[#FFFBEB] border border-[#FDE68A] flex items-start gap-2.5">
+                        <svg class="w-4 h-4 text-amber-600 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                        <p class="text-[11px] text-amber-900 leading-relaxed font-medium">
+                            Both your <strong>GCash Mobile Number</strong> and <strong>QR Code Image</strong> are required so buyers can easily scan and complete transactions.
+                        </p>
+                    </div>
+                </div>
+
+                {{-- MAYA FORM ONLY --}}
+                <div x-show="activePaymentTab === 'maya'" class="space-y-4">
+                    {{-- Status Banner --}}
+                    <div class="flex items-center justify-between p-3.5 rounded-2xl bg-emerald-50/80 border border-emerald-200">
+                        <div class="flex items-center gap-2.5">
+                            <div class="w-8 h-8 rounded-xl bg-emerald-600 text-white flex items-center justify-center font-black text-xs shadow-xs">
+                                M
+                            </div>
+                            <div>
+                                <h4 class="text-xs font-bold text-emerald-950">Maya Direct Payment</h4>
+                                <p class="text-[11px] text-emerald-700">Receive instant customer payments</p>
+                            </div>
+                        </div>
+                        <template x-if="modalMayaNumber && (modalMayaQrPreview || paymentState.hasMayaQr)">
+                            <span class="inline-flex items-center gap-1 text-[10px] font-bold text-green-700 bg-green-100/90 px-2.5 py-1 rounded-full border border-green-300">
+                                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
+                                Ready
+                            </span>
+                        </template>
+                        <template x-if="!modalMayaNumber || (!modalMayaQrPreview && !paymentState.hasMayaQr)">
+                            <span class="inline-flex items-center gap-1 text-[10px] font-bold text-amber-800 bg-amber-100/90 px-2.5 py-1 rounded-full border border-amber-300">
+                                ⚠ Incomplete
+                            </span>
+                        </template>
+                    </div>
+
+                    {{-- Maya Account Number Input --}}
+                    <div class="space-y-1.5">
+                        <label class="text-[11px] font-bold text-stone-700 uppercase tracking-wider block">
+                            Maya Account Number <span class="text-red-500">*</span>
+                        </label>
+                        <div class="relative flex items-center rounded-2xl border bg-white shadow-xs focus-within:ring-2 focus-within:ring-emerald-500 focus-within:border-emerald-500 transition-all overflow-hidden" style="border-color: #CBD5E1;">
+                            <div class="px-3.5 py-3 border-r bg-[#F1F5F9] text-xs font-extrabold text-[#1E1915] select-none flex items-center gap-1.5" style="border-color: #CBD5E1;">
+                                <span class="text-sm">🇵🇭</span>
+                                <span>+63</span>
+                            </div>
+                            <input type="text" 
+                                   x-model="modalMayaNumber" 
+                                   placeholder="0918 123 4567" 
+                                   class="w-full px-3.5 py-3 text-xs sm:text-sm font-bold text-[#1E1915] outline-none bg-transparent" 
+                                   maxlength="15">
+                        </div>
+                        <p class="text-[11px] text-stone-500">Enter your Maya mobile or account number.</p>
+                    </div>
+
+                    {{-- Maya QR Code Upload Section --}}
+                    <div class="space-y-1.5">
+                        <label class="text-[11px] font-bold text-stone-700 uppercase tracking-wider block">
+                            Maya QR Code Image <span class="text-red-500">*</span>
+                        </label>
+
+                        <input type="file" 
+                               id="modal_maya_qr_input_edit" 
+                               accept="image/*" 
+                               @change="previewModalQr('maya', $event)" 
+                               class="hidden">
+
+                        {{-- Existing / Selected QR Code View --}}
+                        <template x-if="modalMayaQrPreview || paymentState.mayaQrUrl">
+                            <div class="p-3.5 rounded-2xl border bg-white flex items-center justify-between gap-3 shadow-xs" style="border-color: #CBD5E1;">
+                                <div class="flex items-center gap-3 min-w-0">
+                                    <div class="relative w-16 h-16 rounded-xl border overflow-hidden shrink-0 bg-[#F8FAFC] flex items-center justify-center group cursor-zoom-in shadow-xs" 
+                                         style="border-color: #E2E8F0;"
+                                         @click="openLightbox(modalMayaQrPreview || paymentState.mayaQrUrl)">
+                                        <img :src="modalMayaQrPreview || paymentState.mayaQrUrl" class="w-full h-full object-contain">
+                                        <div class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white">
+                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m0-3h3m-3 0H7"/></svg>
+                                        </div>
+                                    </div>
+                                    <div class="min-w-0">
+                                        <div class="flex items-center gap-1.5">
+                                            <span class="text-xs font-bold text-stone-800 truncate">Maya QR Code</span>
+                                            <span class="text-[9px] font-black text-green-600 bg-green-50 px-1.5 py-0.5 rounded-md border border-green-200">Uploaded</span>
+                                        </div>
+                                        <p class="text-[11px] text-stone-500 mt-0.5">Click thumbnail to inspect full size</p>
+                                    </div>
+                                </div>
+                                <div class="flex items-center gap-1.5 shrink-0">
+                                    <button type="button" 
+                                            @click="document.getElementById('modal_maya_qr_input_edit').click()" 
+                                            class="px-3.5 py-2 rounded-xl text-xs font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 hover:bg-emerald-100 transition-all cursor-pointer">
+                                        Replace
+                                    </button>
+                                </div>
+                            </div>
+                        </template>
+
+                        {{-- Empty State Dropzone --}}
+                        <template x-if="!modalMayaQrPreview && !paymentState.mayaQrUrl">
+                            <div @click="document.getElementById('modal_maya_qr_input_edit').click()" 
+                                 class="p-6 rounded-2xl border-2 border-dashed flex flex-col items-center justify-center text-center cursor-pointer transition-all hover:bg-emerald-50/50 hover:border-emerald-400 bg-white" 
+                                 style="border-color: #CBD5E1;">
+                                <div class="w-11 h-11 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center mb-2.5 shadow-xs">
+                                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+                                </div>
+                                <p class="text-xs font-bold text-stone-800">Upload Maya QR Code Image</p>
+                                <p class="text-[11px] text-stone-500 mt-0.5">PNG, JPG, or WEBP up to 5MB</p>
+                                <span class="mt-3 px-3.5 py-1.5 rounded-xl bg-[#1E1915] text-white text-[11px] font-bold shadow-xs hover:bg-emerald-600 transition-all">
+                                    Choose Image File
+                                </span>
+                            </div>
+                        </template>
+                    </div>
+
+                    {{-- Informational Notice --}}
+                    <div class="p-3.5 rounded-2xl bg-[#FFFBEB] border border-[#FDE68A] flex items-start gap-2.5">
+                        <svg class="w-4 h-4 text-amber-600 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                        <p class="text-[11px] text-amber-900 leading-relaxed font-medium">
+                            Both your <strong>Maya Account Number</strong> and <strong>QR Code Image</strong> are required so buyers can easily scan and complete transactions.
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            {{-- Footer Actions --}}
+            <div class="px-6 py-4 border-t flex items-center justify-end gap-3 shrink-0" style="border-color: #E8DECB; background: #FAF7F0;">
+                <button type="button" 
+                        @click="closePaymentModal()" 
+                        style="padding:10px 20px;border-radius:12px;border:1px solid #D6D3D1;background-color:#FFFFFF;color:#44403C;font-size:13px;font-weight:700;cursor:pointer;transition:all 0.15s;"
+                        onmouseover="this.style.backgroundColor='#F5F5F4';"
+                        onmouseout="this.style.backgroundColor='#FFFFFF';">
+                    Cancel
+                </button>
+                <button type="button" 
+                        @click="savePaymentSettings()" 
+                        :disabled="isSavingPayment" 
+                        style="padding:10px 24px;border-radius:12px;border:none;background-color:#1E1915;color:#FFFFFF;font-size:13px;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;gap:8px;box-shadow:0 2px 8px rgba(0,0,0,0.18);transition:all 0.15s;"
+                        onmouseover="this.style.backgroundColor='#C49520';"
+                        onmouseout="this.style.backgroundColor='#1E1915';"
+                        class="disabled:opacity-50">
+                    <span x-show="!isSavingPayment">Save Payment Configuration</span>
+                    <span x-show="isSavingPayment" class="inline-flex items-center gap-2" x-cloak>
+                        <svg class="animate-spin h-3.5 w-3.5 text-white" fill="none" viewBox="0 0 24 24">
+                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path>
+                        </svg>
+                        <span>Saving...</span>
+                    </span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    {{-- QR Lightbox Modal --}}
+    <div x-show="showQrLightbox" 
+         x-cloak 
+         style="display:none;" 
+         class="fixed inset-0 z-60 bg-black/80 backdrop-blur-md flex items-center justify-center p-4" 
+         @click="closeLightbox()" 
+         @keydown.escape.window="closeLightbox()">
+        <div class="relative max-w-sm w-full bg-white rounded-3xl p-6 shadow-2xl flex flex-col items-center gap-4" @click.stop>
+            <button type="button" @click="closeLightbox()" class="absolute top-4 right-4 w-8 h-8 rounded-full bg-stone-100 hover:bg-stone-200 text-stone-600 flex items-center justify-center font-bold text-sm cursor-pointer">✕</button>
+            <h3 class="text-sm font-extrabold text-stone-900 uppercase tracking-widest">Payment QR Code</h3>
+            <div class="w-64 h-64 rounded-2xl border border-stone-200 overflow-hidden bg-stone-50 flex items-center justify-center">
+                <img :src="lightboxImgUrl" class="w-full h-full object-contain">
+            </div>
+            <p class="text-[11px] text-stone-500 text-center">Scan to pay with banking or digital wallet app</p>
+        </div>
+    </div>
 
     {{-- Delete Confirmation Modal --}}
     <div x-show="deleteModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm" x-cloak>
@@ -530,11 +922,11 @@
                 @csrf
                 @method('DELETE')
                 <button type="button" @click="deleteModal = false"
-                    class="flex-1 py-3 rounded-xl border border-gray-200 text-[10px] font-bold uppercase tracking-widest text-gray-500 hover:bg-gray-50 transition-all">
+                    class="flex-1 py-3 rounded-xl border border-gray-200 text-[10px] font-bold uppercase tracking-widest text-gray-500 hover:bg-gray-50 transition-all cursor-pointer">
                     Keep Listing
                 </button>
                 <button type="submit"
-                    class="flex-1 py-3 rounded-xl bg-red-500 text-white text-[10px] font-bold uppercase tracking-widest hover:bg-red-600 transition-all">
+                    class="flex-1 py-3 rounded-xl bg-red-500 text-white text-[10px] font-bold uppercase tracking-widest hover:bg-red-600 transition-all cursor-pointer">
                     Yes, Delete
                 </button>
             </form>
@@ -565,6 +957,221 @@ function triggerAppModal(title, message, type = 'warning') {
             onConfirm: null
         }
     }));
+}
+
+function editProductManager() {
+    const initPayment = JSON.parse(document.getElementById('seller-payment-config')?.textContent || '{}');
+    return {
+        deleteModal: false,
+        deleteProductId: null,
+        deleteProductName: '',
+
+        showPaymentModal: false,
+        activePaymentTab: 'gcash',
+        isSavingPayment: false,
+        paymentModalError: '',
+        paymentModalSuccess: '',
+        modalGcashNumber: '{{ addslashes($product->gcash_number ?: ($seller->gcashNumber ?? '')) }}',
+        modalGcashQrFile: null,
+        modalGcashQrPreview: null,
+        modalMayaNumber: '{{ addslashes($product->maya_number ?: ($seller->mayaNumber ?? '')) }}',
+        modalMayaQrFile: null,
+        modalMayaQrPreview: null,
+        showQrLightbox: false,
+        lightboxImgUrl: '',
+
+        isGcashOn: {{ old('product_is_gcash_available', $product->is_gcash_available) ? 'true' : 'false' }},
+        isMayaOn: {{ old('product_is_maya_available', $product->is_maya_available) ? 'true' : 'false' }},
+
+        paymentState: {
+            hasGcashNumber: Boolean(initPayment.hasGcashNumber),
+            hasGcashQr: Boolean(initPayment.hasGcashQr),
+            gcashNumber: '{{ addslashes($product->gcash_number ?: ($seller->gcashNumber ?? '')) }}',
+            gcashQrUrl: '{{ $product->gcash_qr_code ? asset($product->gcash_qr_code) : ($seller->gcashQrCode ? asset($seller->gcashQrCode) : '') }}',
+            get isGcashComplete() { return Boolean(this.hasGcashNumber && this.hasGcashQr); },
+
+            hasMayaNumber: Boolean(initPayment.hasMayaNumber),
+            hasMayaQr: Boolean(initPayment.hasMayaQr),
+            mayaNumber: '{{ addslashes($product->maya_number ?: ($seller->mayaNumber ?? '')) }}',
+            mayaQrUrl: '{{ $product->maya_qr_code ? asset($product->maya_qr_code) : ($seller->mayaQrCode ? asset($seller->mayaQrCode) : '') }}',
+            get isMayaComplete() { return Boolean(this.hasMayaNumber && this.hasMayaQr); }
+        },
+
+        openPaymentModal(tab = 'gcash') {
+            this.activePaymentTab = tab;
+            this.paymentModalError = '';
+            this.paymentModalSuccess = '';
+            this.modalGcashNumber = this.paymentState.gcashNumber || '';
+            this.modalMayaNumber = this.paymentState.mayaNumber || '';
+            this.modalGcashQrFile = null;
+            this.modalMayaQrFile = null;
+            this.modalGcashQrPreview = null;
+            this.modalMayaQrPreview = null;
+            this.showPaymentModal = true;
+        },
+
+        closePaymentModal() {
+            this.showPaymentModal = false;
+            this.paymentModalError = '';
+            this.paymentModalSuccess = '';
+        },
+
+        previewModalQr(type, event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            if (file.size > 5 * 1024 * 1024) {
+                this.paymentModalError = 'QR Code image must not exceed 5MB.';
+                event.target.value = '';
+                return;
+            }
+            const reader = new FileReader();
+            if (type === 'gcash') {
+                this.modalGcashQrFile = file;
+                reader.onload = (e) => { this.modalGcashQrPreview = e.target.result; };
+                reader.readAsDataURL(file);
+            } else {
+                this.modalMayaQrFile = file;
+                reader.onload = (e) => { this.modalMayaQrPreview = e.target.result; };
+                reader.readAsDataURL(file);
+            }
+        },
+
+        openLightbox(url) {
+            if (!url) return;
+            this.lightboxImgUrl = url;
+            this.showQrLightbox = true;
+        },
+
+        closeLightbox() {
+            this.showQrLightbox = false;
+            this.lightboxImgUrl = '';
+        },
+
+        async savePaymentSettings() {
+            this.paymentModalError = '';
+            this.paymentModalSuccess = '';
+
+            const isGcash = this.activePaymentTab === 'gcash';
+            const isMaya = this.activePaymentTab === 'maya';
+
+            const gcashNum = (this.modalGcashNumber || '').trim();
+            const mayaNum = (this.modalMayaNumber || '').trim();
+            const gcashFile = this.modalGcashQrFile;
+            const mayaFile = this.modalMayaQrFile;
+            const hasExistingGcashQr = Boolean(this.paymentState.hasGcashQr);
+            const hasExistingMayaQr = Boolean(this.paymentState.hasMayaQr);
+
+            const errors = [];
+            if (isGcash) {
+                const hasQr = Boolean(gcashFile || hasExistingGcashQr);
+                if (!gcashNum || !hasQr) {
+                    if (!gcashNum && !hasQr) errors.push('Both GCash mobile number and QR code image are required.');
+                    else if (!gcashNum) errors.push('Please enter a GCash mobile number.');
+                    else if (!hasQr) errors.push('Please upload a GCash QR code image.');
+                }
+            } else if (isMaya) {
+                const hasQr = Boolean(mayaFile || hasExistingMayaQr);
+                if (!mayaNum || !hasQr) {
+                    if (!mayaNum && !hasQr) errors.push('Both Maya account number and QR code image are required.');
+                    else if (!mayaNum) errors.push('Please enter a Maya account number.');
+                    else if (!hasQr) errors.push('Please upload a Maya QR code image.');
+                }
+            }
+
+            if (errors.length > 0) {
+                this.paymentModalError = errors.join(' ');
+                return;
+            }
+
+            this.isSavingPayment = true;
+
+            try {
+                const formData = new FormData();
+                formData.append('_token', '{{ csrf_token() }}');
+                formData.append('_method', 'PUT');
+
+                if (isGcash) {
+                    formData.append('gcashNumber', gcashNum);
+                    if (gcashFile) formData.append('gcashQrCode', gcashFile);
+                } else if (isMaya) {
+                    formData.append('mayaNumber', mayaNum);
+                    if (mayaFile) formData.append('mayaQrCode', mayaFile);
+                }
+
+                const response = await fetch('{{ route("seller.profile.update") }}', {
+                    method: 'POST',
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'Accept': 'application/json'
+                    },
+                    body: formData
+                });
+
+                const data = await response.json();
+
+                if (response.ok && data.success) {
+                    const providerName = isGcash ? 'GCash' : 'Maya';
+                    this.paymentModalSuccess = `${providerName} settings saved successfully!`;
+
+                    if (data.user) {
+                        if (data.user.gcashNumber !== undefined) {
+                            this.paymentState.gcashNumber = data.user.gcashNumber || '';
+                            this.paymentState.gcashQrUrl = data.user.gcashQrUrl || null;
+                            this.paymentState.hasGcashNumber = Boolean(data.user.gcashNumber);
+                            this.paymentState.hasGcashQr = Boolean(data.user.gcashQrCode);
+                        }
+                        if (data.user.mayaNumber !== undefined) {
+                            this.paymentState.mayaNumber = data.user.mayaNumber || '';
+                            this.paymentState.mayaQrUrl = data.user.mayaQrUrl || null;
+                            this.paymentState.hasMayaNumber = Boolean(data.user.mayaNumber);
+                            this.paymentState.hasMayaQr = Boolean(data.user.mayaQrCode);
+                        }
+                    }
+
+                    const cfgEl = document.getElementById('seller-payment-config');
+                    if (cfgEl) {
+                        cfgEl.textContent = JSON.stringify({
+                            hasGcashNumber: this.paymentState.hasGcashNumber,
+                            hasGcashQr: this.paymentState.hasGcashQr,
+                            hasMayaNumber: this.paymentState.hasMayaNumber,
+                            hasMayaQr: this.paymentState.hasMayaQr
+                        });
+                    }
+
+                    const paymentCard = document.getElementById('payment-methods-card');
+                    if (paymentCard) paymentCard.classList.remove('border-red-500');
+
+                    setTimeout(() => {
+                        this.showPaymentModal = false;
+                        this.paymentModalSuccess = '';
+                    }, 800);
+                } else {
+                    this.paymentModalError = data.message || 'Failed to save payment settings. Please try again.';
+                }
+            } catch (err) {
+                console.error(err);
+                this.paymentModalError = 'An error occurred while saving. Please check your connection and try again.';
+            } finally {
+                this.isSavingPayment = false;
+            }
+        },
+
+        submitAsDraft() {
+            const form = document.querySelector('form[action*="products/"]');
+            const actionInput = document.getElementById('formActionInput');
+            if (actionInput) actionInput.value = 'draft';
+            const nameInput = document.querySelector('input[name="name"]');
+            if (!nameInput || !nameInput.value.trim()) {
+                alert('Please provide a Product Name to save your draft.');
+                if (nameInput) {
+                    nameInput.classList.add('border-red-500');
+                    nameInput.focus();
+                }
+                return;
+            }
+            if (form) form.submit();
+        }
+    };
 }
 
 function previewImages(input) {
@@ -641,7 +1248,7 @@ function renderEditImagePreviews() {
                     <div class="absolute top-2 left-2 px-2 py-0.5 bg-black/75 backdrop-blur-md rounded-full text-[9px] font-black text-white shadow-sm border border-white/10">
                         ${idx + 1}
                     </div>
-                    <button type="button" onclick="removeNewEditImageAt(${idx})" class="absolute top-2 right-2 w-7 h-7 bg-red-600/95 hover:bg-red-600 text-white rounded-full flex items-center justify-center text-xs font-black shadow-lg hover:scale-110 active:scale-95 transition-all z-10" title="Remove photo">✕</button>
+                    <button type="button" onclick="removeNewEditImageAt(${idx})" class="absolute top-2 right-2 w-7 h-7 bg-red-600/95 hover:bg-red-600 text-white rounded-full flex items-center justify-center text-xs font-black shadow-lg hover:scale-110 active:scale-95 transition-all z-10 cursor-pointer" title="Remove photo">✕</button>
                 `;
                 grid.appendChild(card);
             };
@@ -770,7 +1377,6 @@ function handleCategoryChange(select) {
         panel.classList.remove('hidden');
     } else {
         panel.classList.add('hidden');
-        // Reset discount state when switching away
         const toggle = document.getElementById('discountToggle');
         if (toggle) toggle.checked = false;
         toggleDiscount(toggle);
@@ -818,6 +1424,21 @@ function updateDiscountPreview() {
 }
 
 function validateProductForm(e, isEdit = true) {
+    const action = document.getElementById('formActionInput')?.value || 'publish';
+    if (action === 'draft') {
+        const nameInput = document.querySelector('input[name="name"]');
+        if (!nameInput || !nameInput.value.trim()) {
+            e.preventDefault();
+            alert('Please provide a Product Name to save your draft.');
+            if (nameInput) {
+                nameInput.classList.add('border-red-500');
+                nameInput.focus();
+            }
+            return false;
+        }
+        return true;
+    }
+
     const errors = [];
     
     // Clear previous error styles
@@ -934,11 +1555,11 @@ function validateProductForm(e, isEdit = true) {
     if (isGcashChecked) {
         if (!hasGcashNumber || !hasGcashQr) {
             if (!hasGcashNumber && !hasGcashQr) {
-                errors.push('GCash is enabled but not configured. Both Mobile Number and QR Code are required (Add in Settings).');
+                errors.push('GCash is enabled but not configured. Both Mobile Number and QR Code are required.');
             } else if (!hasGcashQr) {
-                errors.push('GCash is enabled but missing a QR Code. Both Mobile Number and QR Code are required (Upload in Settings).');
+                errors.push('GCash is enabled but missing a QR Code. Both Mobile Number and QR Code are required.');
             } else {
-                errors.push('GCash is enabled but missing a Mobile Number. Both Mobile Number and QR Code are required (Add in Settings).');
+                errors.push('GCash is enabled but missing a Mobile Number. Both Mobile Number and QR Code are required.');
             }
             if (paymentCard) paymentCard.classList.add('border-red-500');
         } else {
@@ -949,11 +1570,11 @@ function validateProductForm(e, isEdit = true) {
     if (isMayaChecked) {
         if (!hasMayaNumber || !hasMayaQr) {
             if (!hasMayaNumber && !hasMayaQr) {
-                errors.push('Maya is enabled but not configured. Both Account Number and QR Code are required (Add in Settings).');
+                errors.push('Maya is enabled but not configured. Both Account Number and QR Code are required.');
             } else if (!hasMayaQr) {
-                errors.push('Maya is enabled but missing a QR Code. Both Account Number and QR Code are required (Upload in Settings).');
+                errors.push('Maya is enabled but missing a QR Code. Both Account Number and QR Code are required.');
             } else {
-                errors.push('Maya is enabled but missing an Account Number. Both Account Number and QR Code are required (Add in Settings).');
+                errors.push('Maya is enabled but missing an Account Number. Both Account Number and QR Code are required.');
             }
             if (paymentCard) paymentCard.classList.add('border-red-500');
         } else {
@@ -983,7 +1604,6 @@ function validateProductForm(e, isEdit = true) {
     if (errors.length > 0) {
         e.preventDefault();
 
-        // Create floating error banner (Centered at top)
         const banner = document.createElement('div');
         banner.id = 'js-error-banner';
         banner.className = 'fixed top-8 left-1/2 -translate-x-1/2 z-50 w-[92%] max-w-md bg-white rounded-2xl shadow-2xl border border-red-200 p-4.5 flex items-start gap-3.5 transition-all';
@@ -999,13 +1619,11 @@ function validateProductForm(e, isEdit = true) {
         `;
         document.body.appendChild(banner);
 
-        // Auto remove banner after 8 seconds
         setTimeout(() => {
             const b = document.getElementById('js-error-banner');
             if (b) b.remove();
         }, 8000);
 
-        // Smooth scroll to first invalid field
         const firstError = document.querySelector('.border-red-500');
         if (firstError) {
             firstError.scrollIntoView({ behavior: 'smooth', block: 'center' });
@@ -1055,9 +1673,6 @@ function saveEditTemporaryFormData() {
                 fabric_type: document.querySelector('input[name="fabric_type"]')?.value || '',
                 shippingFee: document.querySelector('input[name="shippingFee"]')?.value || '',
                 shippingDays: document.querySelector('input[name="shippingDays"]')?.value || '',
-                embroidery_technique: document.querySelector('input[name="embroidery_technique"]')?.value || '',
-                delivery_notes: document.querySelector('textarea[name="delivery_notes"]')?.value || '',
-                customization_notes: document.querySelector('textarea[name="customization_notes"]')?.value || '',
                 isOnSale: document.getElementById('discountToggle')?.checked || false,
                 discountPercentage: document.getElementById('discountPercentage')?.value || ''
             };
@@ -1097,18 +1712,6 @@ function restoreEditTemporaryFormData() {
             const el = document.querySelector('input[name="shippingDays"]');
             if (el) el.value = data.shippingDays;
         }
-        if (data.embroidery_technique) {
-            const el = document.querySelector('input[name="embroidery_technique"]');
-            if (el) el.value = data.embroidery_technique;
-        }
-        if (data.delivery_notes) {
-            const el = document.querySelector('textarea[name="delivery_notes"]');
-            if (el) el.value = data.delivery_notes;
-        }
-        if (data.customization_notes) {
-            const el = document.querySelector('textarea[name="customization_notes"]');
-            if (el) el.value = data.customization_notes;
-        }
         if (data.isOnSale) {
             const toggle = document.getElementById('discountToggle');
             if (toggle) {
@@ -1124,7 +1727,6 @@ function restoreEditTemporaryFormData() {
     } catch (e) {}
 }
 
-// Update preview on page load and register event listeners
 document.addEventListener('DOMContentLoaded', function() {
     if (isEditPageReload()) {
         setTimeout(restoreEditTemporaryFormData, 200);
@@ -1147,11 +1749,9 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
 
-    // Auto-save on edits
     document.addEventListener('input', saveEditTemporaryFormData);
     document.addEventListener('change', saveEditTemporaryFormData);
 
-    // Clear on submit
     const form = document.querySelector('form[action*="products/"]');
     if (form) {
         form.addEventListener('submit', () => {
@@ -1160,7 +1760,6 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    // Clear on intentional navigation away
     document.addEventListener('click', (e) => {
         const anchor = e.target.closest('a[href]');
         if (!anchor) return;
