@@ -954,7 +954,7 @@
                         <div style="width:32px;height:32px;border-radius:50%;background-color:#FDF8EE;border:1px solid #EEDBBA;display:flex;align-items:center;justify-content:center;color:#7A5505;font-family:ui-serif,Georgia,serif;font-weight:700;font-size:13px;flex-shrink:0;">1</div>
                         <h3 style="font-family:ui-serif,Georgia,Cambria,serif;font-size:16px;font-weight:700;color:#1E1915;margin:0;">Payment Methods <span style="color:#DC2626;">*</span></h3>
                     </div>
-                    <button type="button" @click="openPaymentModal('all')" style="font-size:12px;font-weight:700;color:#7A5505;text-decoration:none;display:flex;align-items:center;gap:4px;background:none;border:none;cursor:pointer;" onmouseover="this.style.color='#C49520'" onmouseout="this.style.color='#7A5505'">
+                    <button type="button" @click="openPaymentModal('gcash')" style="font-size:12px;font-weight:700;color:#7A5505;text-decoration:none;display:flex;align-items:center;gap:4px;background:none;border:none;cursor:pointer;" onmouseover="this.style.color='#C49520'" onmouseout="this.style.color='#7A5505'">
                         Settings ↗
                     </button>
                 </div>
@@ -1261,133 +1261,314 @@
         
         {{-- Modal Card --}}
         <div @click.away="closePaymentModal()" 
-             class="w-full max-w-xl rounded-3xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh] transition-all" 
+             class="w-full max-w-lg rounded-3xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh] transition-all" 
              style="background: #FFFCF7; border: 1px solid #E8DECB;">
             
             {{-- Header --}}
-            <div class="flex items-center justify-between px-5 py-4 border-b shrink-0" style="border-color: #E8DECB; background: #FAF7F0;">
-                <div>
-                    <h2 class="font-serif text-base sm:text-lg font-bold tracking-wide" style="color: #1E1915;">Payment Methods Setting</h2>
-                    <p class="text-[11px] sm:text-xs" style="color: #78716C; margin: 2px 0 0 0;">Update GCash & Maya accounts directly without leaving this page</p>
+            <div class="px-6 pt-5 pb-4 border-b shrink-0" style="border-color: #E8DECB; background: #FAF7F0;">
+                <div class="flex items-start justify-between gap-3">
+                    <div>
+                        <div class="inline-flex items-center gap-2 mb-1">
+                            <template x-if="activePaymentTab === 'gcash'">
+                                <span class="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold uppercase tracking-wider text-white bg-[#2563EB] shadow-xs">GCash Account</span>
+                            </template>
+                            <template x-if="activePaymentTab === 'maya'">
+                                <span class="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold uppercase tracking-wider text-white bg-[#059669] shadow-xs">Maya Account</span>
+                            </template>
+                            <span class="text-[11px] font-bold text-gray-500">Payout Configuration</span>
+                        </div>
+                        <h2 class="font-serif text-lg sm:text-xl font-bold tracking-wide" style="color: #1E1915;">
+                            <span x-text="activePaymentTab === 'gcash' ? 'GCash Setting' : 'Maya Setting'"></span>
+                        </h2>
+                        <p class="text-xs text-stone-500 mt-0.5">
+                            <span x-text="activePaymentTab === 'gcash' ? 'Configure your GCash mobile number & payment QR code' : 'Configure your Maya account number & payment QR code'"></span>
+                        </p>
+                    </div>
+                    <button type="button" @click="closePaymentModal()" class="w-8 h-8 rounded-xl flex items-center justify-center transition-all cursor-pointer hover:bg-black/5 shrink-0" style="background: #FDF8EE; color: #766C60; border: 1px solid #E8DECB;">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                    </button>
                 </div>
-                <button type="button" @click="closePaymentModal()" class="w-8 h-8 rounded-xl flex items-center justify-center transition-all cursor-pointer hover:bg-black/5" style="background: #FDF8EE; color: #766C60; border: 1px solid #E8DECB;">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
-                </button>
+
+                {{-- Provider Switcher Tabs (Allows easy switching between GCash and Maya) --}}
+                <div class="mt-4 flex items-center p-1 rounded-2xl bg-[#F0EBE1] border border-[#E8DECB]/80 gap-1">
+                    <button type="button" 
+                            @click="activePaymentTab = 'gcash'; paymentModalError = ''; paymentModalSuccess = '';" 
+                            :class="activePaymentTab === 'gcash' ? 'bg-[#2563EB] text-white shadow-sm font-bold' : 'text-[#766C60] hover:text-[#1E1915] font-semibold bg-transparent'"
+                            class="flex-1 py-2 px-3 rounded-xl text-xs flex items-center justify-center gap-2 transition-all cursor-pointer">
+                        <span class="w-2 h-2 rounded-full" :class="activePaymentTab === 'gcash' ? 'bg-white' : (paymentState.isGcashComplete ? 'bg-green-500' : 'bg-amber-400')"></span>
+                        <span>GCash</span>
+                        <template x-if="paymentState.isGcashComplete">
+                            <span class="text-[10px] opacity-90">✓</span>
+                        </template>
+                    </button>
+                    <button type="button" 
+                            @click="activePaymentTab = 'maya'; paymentModalError = ''; paymentModalSuccess = '';" 
+                            :class="activePaymentTab === 'maya' ? 'bg-[#059669] text-white shadow-sm font-bold' : 'text-[#766C60] hover:text-[#1E1915] font-semibold bg-transparent'"
+                            class="flex-1 py-2 px-3 rounded-xl text-xs flex items-center justify-center gap-2 transition-all cursor-pointer">
+                        <span class="w-2 h-2 rounded-full" :class="activePaymentTab === 'maya' ? 'bg-white' : (paymentState.isMayaComplete ? 'bg-green-500' : 'bg-amber-400')"></span>
+                        <span>Maya</span>
+                        <template x-if="paymentState.isMayaComplete">
+                            <span class="text-[10px] opacity-90">✓</span>
+                        </template>
+                    </button>
+                </div>
             </div>
 
             {{-- Body --}}
-            <div class="overflow-y-auto flex-1 p-5 space-y-4">
+            <div class="overflow-y-auto flex-1 p-6 space-y-5">
                 {{-- Error banner if any --}}
-                <div x-show="paymentModalError" x-cloak class="p-3.5 rounded-2xl bg-red-50 border border-red-200 text-xs text-red-700 flex items-start gap-2.5">
+                <div x-show="paymentModalError" x-cloak class="p-3.5 rounded-2xl bg-red-50 border border-red-200 text-xs text-red-700 flex items-start gap-2.5 shadow-xs">
                     <svg class="w-4 h-4 text-red-500 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-                    <span x-text="paymentModalError" class="font-medium"></span>
+                    <span x-text="paymentModalError" class="font-semibold leading-relaxed"></span>
                 </div>
 
                 {{-- Success banner if any --}}
-                <div x-show="paymentModalSuccess" x-cloak class="p-3.5 rounded-2xl bg-green-50 border border-green-200 text-xs text-green-700 flex items-start gap-2.5">
+                <div x-show="paymentModalSuccess" x-cloak class="p-3.5 rounded-2xl bg-green-50 border border-green-200 text-xs text-green-700 flex items-start gap-2.5 shadow-xs">
                     <svg class="w-4 h-4 text-green-500 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
-                    <span x-text="paymentModalSuccess" class="font-bold"></span>
+                    <span x-text="paymentModalSuccess" class="font-bold leading-relaxed"></span>
                 </div>
 
-                {{-- GCash Section --}}
-                <div class="p-4 rounded-2xl space-y-3" style="background: #FFFFFF; border: 1px solid #BFDBFE;">
-                    <div class="flex items-center justify-between">
-                        <div class="inline-flex items-center gap-2">
-                            <span class="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold uppercase tracking-wider text-white bg-[#2563EB]">GCash</span>
-                            <span class="text-xs font-bold text-gray-800">GCash Configuration</span>
+                {{-- ======================================================== --}}
+                {{-- GCASH FORM ONLY                                          --}}
+                {{-- ======================================================== --}}
+                <div x-show="activePaymentTab === 'gcash'" class="space-y-4">
+                    {{-- Status Banner --}}
+                    <div class="flex items-center justify-between p-3.5 rounded-2xl bg-blue-50/70 border border-blue-200/80">
+                        <div class="flex items-center gap-2.5">
+                            <div class="w-8 h-8 rounded-xl bg-blue-600 text-white flex items-center justify-center font-black text-xs shadow-xs">
+                                G
+                            </div>
+                            <div>
+                                <h4 class="text-xs font-bold text-blue-950">GCash Direct Payment</h4>
+                                <p class="text-[11px] text-blue-700">Receive instant customer payments</p>
+                            </div>
                         </div>
                         <template x-if="modalGcashNumber && (modalGcashQrPreview || paymentState.hasGcashQr)">
-                            <span class="text-[10px] font-bold text-green-600 bg-green-50 px-2 py-0.5 rounded-full border border-green-200">✓ Complete</span>
+                            <span class="inline-flex items-center gap-1 text-[10px] font-bold text-green-700 bg-green-100/90 px-2.5 py-1 rounded-full border border-green-300">
+                                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
+                                Ready
+                            </span>
+                        </template>
+                        <template x-if="!modalGcashNumber || (!modalGcashQrPreview && !paymentState.hasGcashQr)">
+                            <span class="inline-flex items-center gap-1 text-[10px] font-bold text-amber-800 bg-amber-100/90 px-2.5 py-1 rounded-full border border-amber-300">
+                                ⚠ Incomplete
+                            </span>
                         </template>
                     </div>
 
-                    <div class="space-y-1">
-                        <label class="text-[10px] font-bold uppercase tracking-wider" style="color: #766C60;">GCash Mobile Number</label>
-                        <input type="text" 
-                               x-model="modalGcashNumber" 
-                               placeholder="e.g. 0917 123 4567" 
-                               class="w-full px-3.5 py-2.5 rounded-xl text-xs font-bold outline-none bg-white border focus:border-blue-500 focus:ring-1 focus:ring-blue-500" 
-                               style="border-color: #CBD5E1;">
+                    {{-- GCash Mobile Number Input --}}
+                    <div class="space-y-1.5">
+                        <label class="text-[11px] font-bold text-stone-700 uppercase tracking-wider block">
+                            GCash Mobile Number <span class="text-red-500">*</span>
+                        </label>
+                        <div class="relative flex items-center rounded-2xl border bg-white shadow-xs focus-within:ring-2 focus-within:ring-blue-500 focus-within:border-blue-500 transition-all" style="border-color: #CBD5E1;">
+                            <div class="px-3.5 py-3 border-r bg-[#F8FAFC] rounded-l-2xl text-xs font-black text-stone-600 select-none flex items-center gap-1.5" style="border-color: #CBD5E1;">
+                                <span class="text-sm">🇵🇭</span>
+                                <span>+63</span>
+                            </div>
+                            <input type="text" 
+                                   x-model="modalGcashNumber" 
+                                   placeholder="0917 123 4567" 
+                                   class="w-full px-3.5 py-3 text-xs sm:text-sm font-bold text-stone-900 outline-none bg-transparent" 
+                                   maxlength="15">
+                        </div>
+                        <p class="text-[11px] text-stone-500">Enter your 11-digit GCash mobile number (e.g. 09171234567).</p>
                     </div>
 
+                    {{-- GCash QR Code Upload Section --}}
                     <div class="space-y-1.5">
-                        <label class="text-[10px] font-bold uppercase tracking-wider" style="color: #766C60;">GCash QR Code Image</label>
-                        <div class="flex items-center gap-3">
-                            {{-- QR Thumbnail Preview --}}
-                            <div class="w-16 h-16 rounded-xl border flex items-center justify-center overflow-hidden shrink-0 bg-[#F8FAFC]" style="border-color: #CBD5E1;">
-                                <template x-if="modalGcashQrPreview">
-                                    <img :src="modalGcashQrPreview" class="w-full h-full object-contain cursor-zoom-in" @click="openLightbox(modalGcashQrPreview)" title="Click to view">
-                                </template>
-                                <template x-if="!modalGcashQrPreview">
-                                    <div class="text-[9px] font-bold text-gray-400 uppercase text-center leading-tight">No QR</div>
-                                </template>
+                        <label class="text-[11px] font-bold text-stone-700 uppercase tracking-wider block">
+                            GCash QR Code Image <span class="text-red-500">*</span>
+                        </label>
+
+                        {{-- Hidden native file input --}}
+                        <input type="file" 
+                               id="modal_gcash_qr_input" 
+                               accept="image/*" 
+                               @change="previewModalQr('gcash', $event)" 
+                               class="hidden">
+
+                        {{-- Existing / Selected QR Code View --}}
+                        <template x-if="modalGcashQrPreview || paymentState.gcashQrUrl">
+                            <div class="p-3.5 rounded-2xl border bg-white flex items-center justify-between gap-3 shadow-xs" style="border-color: #CBD5E1;">
+                                <div class="flex items-center gap-3 min-w-0">
+                                    <div class="relative w-16 h-16 rounded-xl border overflow-hidden shrink-0 bg-[#F8FAFC] flex items-center justify-center group cursor-zoom-in shadow-xs" 
+                                         style="border-color: #E2E8F0;"
+                                         @click="openLightbox(modalGcashQrPreview || paymentState.gcashQrUrl)">
+                                        <img :src="modalGcashQrPreview || paymentState.gcashQrUrl" class="w-full h-full object-contain">
+                                        <div class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white">
+                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m0-3h3m-3 0H7"/></svg>
+                                        </div>
+                                    </div>
+                                    <div class="min-w-0">
+                                        <div class="flex items-center gap-1.5">
+                                            <span class="text-xs font-bold text-stone-800 truncate">GCash QR Code</span>
+                                            <span class="text-[9px] font-black text-green-600 bg-green-50 px-1.5 py-0.5 rounded-md border border-green-200">Uploaded</span>
+                                        </div>
+                                        <p class="text-[11px] text-stone-500 mt-0.5">Click thumbnail to inspect full size</p>
+                                    </div>
+                                </div>
+                                <div class="flex items-center gap-1.5 shrink-0">
+                                    <button type="button" 
+                                            @click="document.getElementById('modal_gcash_qr_input').click()" 
+                                            class="px-3 py-2 rounded-xl text-xs font-bold text-blue-700 bg-blue-50 border border-blue-200 hover:bg-blue-100 transition-all cursor-pointer">
+                                        Replace
+                                    </button>
+                                </div>
                             </div>
-                            <div class="flex-1 min-w-0">
-                                <input type="file" 
-                                       id="modal_gcash_qr_input" 
-                                       accept="image/*" 
-                                       @change="previewModalQr('gcash', $event)" 
-                                       class="w-full text-xs text-gray-500 file:mr-3 file:py-1.5 file:px-3 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-[#1E1915] file:text-white file:cursor-pointer">
-                                <p class="text-[10px] text-gray-400 mt-1">PNG, JPG, or WEBP (Max 5MB)</p>
+                        </template>
+
+                        {{-- Empty State Dropzone --}}
+                        <template x-if="!modalGcashQrPreview && !paymentState.gcashQrUrl">
+                            <div @click="document.getElementById('modal_gcash_qr_input').click()" 
+                                 class="p-6 rounded-2xl border-2 border-dashed flex flex-col items-center justify-center text-center cursor-pointer transition-all hover:bg-blue-50/50 hover:border-blue-400 bg-white" 
+                                 style="border-color: #CBD5E1;">
+                                <div class="w-11 h-11 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center mb-2.5 shadow-xs">
+                                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+                                </div>
+                                <p class="text-xs font-bold text-stone-800">Upload GCash QR Code Image</p>
+                                <p class="text-[11px] text-stone-500 mt-0.5">PNG, JPG, or WEBP up to 5MB</p>
+                                <span class="mt-3 px-3.5 py-1.5 rounded-xl bg-stone-900 text-white text-[11px] font-bold shadow-xs hover:bg-blue-600 transition-all">
+                                    Choose Image File
+                                </span>
                             </div>
-                        </div>
+                        </template>
+                    </div>
+
+                    {{-- Informational Notice --}}
+                    <div class="p-3.5 rounded-2xl bg-[#FAF7F0] border border-[#E8DECB] flex items-start gap-2.5">
+                        <svg class="w-4 h-4 text-amber-600 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                        <p class="text-[11px] text-stone-600 leading-relaxed">
+                            Both your <strong>GCash Mobile Number</strong> and <strong>QR Code Image</strong> are required so buyers can easily scan and complete transactions.
+                        </p>
                     </div>
                 </div>
 
-                {{-- Maya Section --}}
-                <div class="p-4 rounded-2xl space-y-3" style="background: #FFFFFF; border: 1px solid #A7F3D0;">
-                    <div class="flex items-center justify-between">
-                        <div class="inline-flex items-center gap-2">
-                            <span class="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold uppercase tracking-wider text-white bg-[#059669]">Maya</span>
-                            <span class="text-xs font-bold text-gray-800">Maya Configuration</span>
+                {{-- ======================================================== --}}
+                {{-- MAYA FORM ONLY                                           --}}
+                {{-- ======================================================== --}}
+                <div x-show="activePaymentTab === 'maya'" class="space-y-4">
+                    {{-- Status Banner --}}
+                    <div class="flex items-center justify-between p-3.5 rounded-2xl bg-emerald-50/70 border border-emerald-200/80">
+                        <div class="flex items-center gap-2.5">
+                            <div class="w-8 h-8 rounded-xl bg-emerald-600 text-white flex items-center justify-center font-black text-xs shadow-xs">
+                                M
+                            </div>
+                            <div>
+                                <h4 class="text-xs font-bold text-emerald-950">Maya Direct Payment</h4>
+                                <p class="text-[11px] text-emerald-700">Receive instant customer payments</p>
+                            </div>
                         </div>
                         <template x-if="modalMayaNumber && (modalMayaQrPreview || paymentState.hasMayaQr)">
-                            <span class="text-[10px] font-bold text-green-600 bg-green-50 px-2 py-0.5 rounded-full border border-green-200">✓ Complete</span>
+                            <span class="inline-flex items-center gap-1 text-[10px] font-bold text-green-700 bg-green-100/90 px-2.5 py-1 rounded-full border border-green-300">
+                                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
+                                Ready
+                            </span>
+                        </template>
+                        <template x-if="!modalMayaNumber || (!modalMayaQrPreview && !paymentState.hasMayaQr)">
+                            <span class="inline-flex items-center gap-1 text-[10px] font-bold text-amber-800 bg-amber-100/90 px-2.5 py-1 rounded-full border border-amber-300">
+                                ⚠ Incomplete
+                            </span>
                         </template>
                     </div>
 
-                    <div class="space-y-1">
-                        <label class="text-[10px] font-bold uppercase tracking-wider" style="color: #766C60;">Maya Mobile / Account Number</label>
-                        <input type="text" 
-                               x-model="modalMayaNumber" 
-                               placeholder="e.g. 0918 123 4567" 
-                               class="w-full px-3.5 py-2.5 rounded-xl text-xs font-bold outline-none bg-white border focus:border-green-500 focus:ring-1 focus:ring-green-500" 
-                               style="border-color: #CBD5E1;">
+                    {{-- Maya Mobile / Account Number Input --}}
+                    <div class="space-y-1.5">
+                        <label class="text-[11px] font-bold text-stone-700 uppercase tracking-wider block">
+                            Maya Mobile / Account Number <span class="text-red-500">*</span>
+                        </label>
+                        <div class="relative flex items-center rounded-2xl border bg-white shadow-xs focus-within:ring-2 focus-within:ring-emerald-500 focus-within:border-emerald-500 transition-all" style="border-color: #CBD5E1;">
+                            <div class="px-3.5 py-3 border-r bg-[#F8FAFC] rounded-l-2xl text-xs font-black text-stone-600 select-none flex items-center gap-1.5" style="border-color: #CBD5E1;">
+                                <span class="text-sm">🇵🇭</span>
+                                <span>+63</span>
+                            </div>
+                            <input type="text" 
+                                   x-model="modalMayaNumber" 
+                                   placeholder="0918 123 4567" 
+                                   class="w-full px-3.5 py-3 text-xs sm:text-sm font-bold text-stone-900 outline-none bg-transparent" 
+                                   maxlength="15">
+                        </div>
+                        <p class="text-[11px] text-stone-500">Enter your Maya registered mobile or account number.</p>
                     </div>
 
+                    {{-- Maya QR Code Upload Section --}}
                     <div class="space-y-1.5">
-                        <label class="text-[10px] font-bold uppercase tracking-wider" style="color: #766C60;">Maya QR Code Image</label>
-                        <div class="flex items-center gap-3">
-                            {{-- QR Thumbnail Preview --}}
-                            <div class="w-16 h-16 rounded-xl border flex items-center justify-center overflow-hidden shrink-0 bg-[#F8FAFC]" style="border-color: #CBD5E1;">
-                                <template x-if="modalMayaQrPreview">
-                                    <img :src="modalMayaQrPreview" class="w-full h-full object-contain cursor-zoom-in" @click="openLightbox(modalMayaQrPreview)" title="Click to view">
-                                </template>
-                                <template x-if="!modalMayaQrPreview">
-                                    <div class="text-[9px] font-bold text-gray-400 uppercase text-center leading-tight">No QR</div>
-                                </template>
+                        <label class="text-[11px] font-bold text-stone-700 uppercase tracking-wider block">
+                            Maya QR Code Image <span class="text-red-500">*</span>
+                        </label>
+
+                        {{-- Hidden native file input --}}
+                        <input type="file" 
+                               id="modal_maya_qr_input" 
+                               accept="image/*" 
+                               @change="previewModalQr('maya', $event)" 
+                               class="hidden">
+
+                        {{-- Existing / Selected QR Code View --}}
+                        <template x-if="modalMayaQrPreview || paymentState.mayaQrUrl">
+                            <div class="p-3.5 rounded-2xl border bg-white flex items-center justify-between gap-3 shadow-xs" style="border-color: #CBD5E1;">
+                                <div class="flex items-center gap-3 min-w-0">
+                                    <div class="relative w-16 h-16 rounded-xl border overflow-hidden shrink-0 bg-[#F8FAFC] flex items-center justify-center group cursor-zoom-in shadow-xs" 
+                                         style="border-color: #E2E8F0;"
+                                         @click="openLightbox(modalMayaQrPreview || paymentState.mayaQrUrl)">
+                                        <img :src="modalMayaQrPreview || paymentState.mayaQrUrl" class="w-full h-full object-contain">
+                                        <div class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white">
+                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m0-3h3m-3 0H7"/></svg>
+                                        </div>
+                                    </div>
+                                    <div class="min-w-0">
+                                        <div class="flex items-center gap-1.5">
+                                            <span class="text-xs font-bold text-stone-800 truncate">Maya QR Code</span>
+                                            <span class="text-[9px] font-black text-green-600 bg-green-50 px-1.5 py-0.5 rounded-md border border-green-200">Uploaded</span>
+                                        </div>
+                                        <p class="text-[11px] text-stone-500 mt-0.5">Click thumbnail to inspect full size</p>
+                                    </div>
+                                </div>
+                                <div class="flex items-center gap-1.5 shrink-0">
+                                    <button type="button" 
+                                            @click="document.getElementById('modal_maya_qr_input').click()" 
+                                            class="px-3 py-2 rounded-xl text-xs font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 hover:bg-emerald-100 transition-all cursor-pointer">
+                                        Replace
+                                    </button>
+                                </div>
                             </div>
-                            <div class="flex-1 min-w-0">
-                                <input type="file" 
-                                       id="modal_maya_qr_input" 
-                                       accept="image/*" 
-                                       @change="previewModalQr('maya', $event)" 
-                                       class="w-full text-xs text-gray-500 file:mr-3 file:py-1.5 file:px-3 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-[#1E1915] file:text-white file:cursor-pointer">
-                                <p class="text-[10px] text-gray-400 mt-1">PNG, JPG, or WEBP (Max 5MB)</p>
+                        </template>
+
+                        {{-- Empty State Dropzone --}}
+                        <template x-if="!modalMayaQrPreview && !paymentState.mayaQrUrl">
+                            <div @click="document.getElementById('modal_maya_qr_input').click()" 
+                                 class="p-6 rounded-2xl border-2 border-dashed flex flex-col items-center justify-center text-center cursor-pointer transition-all hover:bg-emerald-50/50 hover:border-emerald-400 bg-white" 
+                                 style="border-color: #CBD5E1;">
+                                <div class="w-11 h-11 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center mb-2.5 shadow-xs">
+                                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+                                </div>
+                                <p class="text-xs font-bold text-stone-800">Upload Maya QR Code Image</p>
+                                <p class="text-[11px] text-stone-500 mt-0.5">PNG, JPG, or WEBP up to 5MB</p>
+                                <span class="mt-3 px-3.5 py-1.5 rounded-xl bg-stone-900 text-white text-[11px] font-bold shadow-xs hover:bg-emerald-600 transition-all">
+                                    Choose Image File
+                                </span>
                             </div>
-                        </div>
+                        </template>
+                    </div>
+
+                    {{-- Informational Notice --}}
+                    <div class="p-3.5 rounded-2xl bg-[#FAF7F0] border border-[#E8DECB] flex items-start gap-2.5">
+                        <svg class="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                        <p class="text-[11px] text-stone-600 leading-relaxed">
+                            Both your <strong>Maya Mobile/Account Number</strong> and <strong>QR Code Image</strong> are required so buyers can easily scan and complete transactions.
+                        </p>
                     </div>
                 </div>
             </div>
 
             {{-- Footer --}}
-            <div class="px-5 py-4 border-t shrink-0 flex items-center gap-3" style="border-color: #E8DECB; background: #FAF7F0;">
+            <div class="px-6 py-4 border-t shrink-0 flex items-center gap-3" style="border-color: #E8DECB; background: #FAF7F0;">
                 <button type="button" 
                         @click="savePaymentSettings()" 
                         :disabled="isSavingPayment"
-                        class="flex-1 py-3 text-white rounded-xl text-xs font-bold uppercase tracking-wider shadow-md cursor-pointer flex items-center justify-center gap-2 hover:opacity-90 active:scale-98 disabled:opacity-50" 
-                        style="background: #1E1915;">
-                    <span x-show="!isSavingPayment">Save Payment Settings</span>
+                        :class="activePaymentTab === 'gcash' ? 'bg-[#2563EB] hover:bg-blue-700' : 'bg-[#059669] hover:bg-emerald-700'"
+                        class="flex-1 py-3 text-white rounded-xl text-xs font-bold uppercase tracking-wider shadow-md cursor-pointer flex items-center justify-center gap-2 active:scale-98 disabled:opacity-50 transition-all">
+                    <span x-show="!isSavingPayment" x-text="activePaymentTab === 'gcash' ? 'Save GCash Setting' : 'Save Maya Setting'"></span>
                     <span x-show="isSavingPayment" style="display:none;" class="flex items-center gap-2">
                         <svg class="animate-spin h-3.5 w-3.5 text-white" fill="none" viewBox="0 0 24 24">
                             <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
@@ -1399,7 +1580,7 @@
                 <button type="button" 
                         @click="closePaymentModal()" 
                         :disabled="isSavingPayment"
-                        class="px-5 py-3 rounded-xl text-xs font-bold uppercase tracking-wider cursor-pointer hover:bg-amber-50" 
+                        class="px-5 py-3 rounded-xl text-xs font-bold uppercase tracking-wider cursor-pointer hover:bg-stone-200/60 transition-all" 
                         style="background: #FDF8EE; border: 1px solid #E8DECB; color: #766C60;">
                     Cancel
                 </button>
@@ -1594,8 +1775,8 @@ function addProductManager() {
         lightboxImgUrl: '',
         showQrLightbox: false,
 
-        openPaymentModal(tab = 'all') {
-            this.activePaymentTab = tab;
+        openPaymentModal(tab = 'gcash') {
+            this.activePaymentTab = (tab === 'maya') ? 'maya' : 'gcash';
             this.modalGcashNumber = this.paymentState.gcashNumber || '';
             this.modalMayaNumber = this.paymentState.mayaNumber || '';
             this.modalGcashQrPreview = this.paymentState.gcashQrUrl || null;
@@ -1657,6 +1838,9 @@ function addProductManager() {
             this.paymentModalError = '';
             this.paymentModalSuccess = '';
 
+            const isGcash = this.activePaymentTab === 'gcash';
+            const isMaya = this.activePaymentTab === 'maya';
+
             const gcashNum = (this.modalGcashNumber || '').trim();
             const mayaNum = (this.modalMayaNumber || '').trim();
             const gcashFile = this.modalGcashQrFile;
@@ -1665,18 +1849,19 @@ function addProductManager() {
             const hasExistingMayaQr = Boolean(this.paymentState.hasMayaQr);
 
             const errors = [];
-            if (gcashNum || gcashFile) {
+            if (isGcash) {
                 const hasQr = Boolean(gcashFile || hasExistingGcashQr);
                 if (!gcashNum || !hasQr) {
-                    if (!gcashNum) errors.push('Please enter a GCash mobile number.');
-                    if (!hasQr) errors.push('Please upload a GCash QR Code image.');
+                    if (!gcashNum && !hasQr) errors.push('Both GCash mobile number and QR code image are required.');
+                    else if (!gcashNum) errors.push('Please enter a GCash mobile number.');
+                    else if (!hasQr) errors.push('Please upload a GCash QR code image.');
                 }
-            }
-            if (mayaNum || mayaFile) {
+            } else if (isMaya) {
                 const hasQr = Boolean(mayaFile || hasExistingMayaQr);
                 if (!mayaNum || !hasQr) {
-                    if (!mayaNum) errors.push('Please enter a Maya account number.');
-                    if (!hasQr) errors.push('Please upload a Maya QR Code image.');
+                    if (!mayaNum && !hasQr) errors.push('Both Maya account number and QR code image are required.');
+                    else if (!mayaNum) errors.push('Please enter a Maya account number.');
+                    else if (!hasQr) errors.push('Please upload a Maya QR code image.');
                 }
             }
 
@@ -1691,13 +1876,13 @@ function addProductManager() {
                 const formData = new FormData();
                 formData.append('_token', initData.csrfToken || document.querySelector('input[name="_token"]')?.value || '');
                 formData.append('_method', 'PUT');
-                formData.append('gcashNumber', gcashNum);
-                formData.append('mayaNumber', mayaNum);
-                if (gcashFile) {
-                    formData.append('gcashQrCode', gcashFile);
-                }
-                if (mayaFile) {
-                    formData.append('mayaQrCode', mayaFile);
+
+                if (isGcash) {
+                    formData.append('gcashNumber', gcashNum);
+                    if (gcashFile) formData.append('gcashQrCode', gcashFile);
+                } else if (isMaya) {
+                    formData.append('mayaNumber', mayaNum);
+                    if (mayaFile) formData.append('mayaQrCode', mayaFile);
                 }
 
                 const url = initData.paymentUpdateUrl || '/seller/profile';
@@ -1713,17 +1898,23 @@ function addProductManager() {
                 const data = await response.json();
 
                 if (response.ok && data.success) {
-                    this.paymentModalSuccess = 'Payment settings saved successfully!';
+                    const providerName = isGcash ? 'GCash' : 'Maya';
+                    this.paymentModalSuccess = `${providerName} settings saved successfully!`;
 
-                    this.paymentState.gcashNumber = data.user.gcashNumber || '';
-                    this.paymentState.gcashQrUrl = data.user.gcashQrUrl || null;
-                    this.paymentState.hasGcashNumber = Boolean(data.user.gcashNumber);
-                    this.paymentState.hasGcashQr = Boolean(data.user.gcashQrCode);
-
-                    this.paymentState.mayaNumber = data.user.mayaNumber || '';
-                    this.paymentState.mayaQrUrl = data.user.mayaQrUrl || null;
-                    this.paymentState.hasMayaNumber = Boolean(data.user.mayaNumber);
-                    this.paymentState.hasMayaQr = Boolean(data.user.mayaQrCode);
+                    if (data.user) {
+                        if (data.user.gcashNumber !== undefined) {
+                            this.paymentState.gcashNumber = data.user.gcashNumber || '';
+                            this.paymentState.gcashQrUrl = data.user.gcashQrUrl || null;
+                            this.paymentState.hasGcashNumber = Boolean(data.user.gcashNumber);
+                            this.paymentState.hasGcashQr = Boolean(data.user.gcashQrCode);
+                        }
+                        if (data.user.mayaNumber !== undefined) {
+                            this.paymentState.mayaNumber = data.user.mayaNumber || '';
+                            this.paymentState.mayaQrUrl = data.user.mayaQrUrl || null;
+                            this.paymentState.hasMayaNumber = Boolean(data.user.mayaNumber);
+                            this.paymentState.hasMayaQr = Boolean(data.user.mayaQrCode);
+                        }
+                    }
 
                     window._currentPaymentState = {
                         hasGcashNumber: this.paymentState.hasGcashNumber,
@@ -1738,7 +1929,7 @@ function addProductManager() {
                     setTimeout(() => {
                         this.showPaymentModal = false;
                         this.paymentModalSuccess = '';
-                    }, 900);
+                    }, 800);
                 } else {
                     this.paymentModalError = data.message || 'Failed to save payment settings. Please try again.';
                 }
