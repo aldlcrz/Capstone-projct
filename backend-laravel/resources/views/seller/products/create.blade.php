@@ -954,34 +954,12 @@
                         <div style="width:32px;height:32px;border-radius:50%;background-color:#FDF8EE;border:1px solid #EEDBBA;display:flex;align-items:center;justify-content:center;color:#7A5505;font-family:ui-serif,Georgia,serif;font-weight:700;font-size:13px;flex-shrink:0;">1</div>
                         <h3 style="font-family:ui-serif,Georgia,Cambria,serif;font-size:16px;font-weight:700;color:#1E1915;margin:0;">Payment Methods <span style="color:#DC2626;">*</span></h3>
                     </div>
-                    <a href="{{ route('seller.profile') }}?open_payment=1#payment-methods" target="_blank" style="font-size:12px;font-weight:700;color:#7A5505;text-decoration:none;display:flex;align-items:center;gap:4px;">
+                    <button type="button" @click="openPaymentModal('all')" style="font-size:12px;font-weight:700;color:#7A5505;text-decoration:none;display:flex;align-items:center;gap:4px;background:none;border:none;cursor:pointer;" onmouseover="this.style.color='#C49520'" onmouseout="this.style.color='#7A5505'">
                         Settings ↗
-                    </a>
+                    </button>
                 </div>
 
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-1">
-                    {{-- GCash --}}
-                    @php 
-                        $user = auth()->user(); 
-                        $getPaymentImgUrl = function($path) {
-                            if (empty($path)) return null;
-                            if (str_starts_with($path, 'http://') || str_starts_with($path, 'https://')) return $path;
-                            $clean = ltrim($path, '/');
-                            if (str_starts_with($clean, 'uploads/')) return asset($clean);
-                            return asset('storage/' . $clean);
-                        };
-
-                        $hasGcashNumber = !empty($user?->gcashNumber);
-                        $hasGcashQr = !empty($user?->gcashQrCode);
-                        $isGcashComplete = $hasGcashNumber && $hasGcashQr;
-                        $gcashQrUrl = $hasGcashQr ? $getPaymentImgUrl($user->gcashQrCode) : null;
-
-                        $hasMayaNumber = !empty($user?->mayaNumber);
-                        $hasMayaQr = !empty($user?->mayaQrCode);
-                        $isMayaComplete = $hasMayaNumber && $hasMayaQr;
-                        $mayaQrUrl = $hasMayaQr ? $getPaymentImgUrl($user->mayaQrCode) : null;
-                    @endphp
-
                     {{-- GCash Card --}}
                     <div x-data="{ isGcashOn: {{ old('product_is_gcash_available', true) ? 'true' : 'false' }} }" 
                          style="border-radius:20px;border:1px solid #E2D9C8;background:#FFFFFF;box-shadow:0 2px 8px rgba(0,0,0,0.02);overflow:hidden;transition:all 0.2s;"
@@ -995,11 +973,14 @@
                                     <span>GCash</span>
                                 </div>
                                 <template x-if="isGcashOn">
-                                    @if($isGcashComplete)
-                                        <span style="font-size:10px;font-weight:700;padding:3px 8px;border-radius:9999px;background:#ECFDF5;color:#16A34A;border:1px solid #BBF7D0;">✓ Configured</span>
-                                    @else
-                                        <span style="font-size:10px;font-weight:700;padding:3px 8px;border-radius:9999px;background:#FFFBEB;color:#D97706;border:1px solid #FDE68A;">⚠ Setup Needed</span>
-                                    @endif
+                                    <span>
+                                        <template x-if="paymentState.isGcashComplete">
+                                            <span style="font-size:10px;font-weight:700;padding:3px 8px;border-radius:9999px;background:#ECFDF5;color:#16A34A;border:1px solid #BBF7D0;">✓ Configured</span>
+                                        </template>
+                                        <template x-if="!paymentState.isGcashComplete">
+                                            <span style="font-size:10px;font-weight:700;padding:3px 8px;border-radius:9999px;background:#FFFBEB;color:#D97706;border:1px solid #FDE68A;">⚠ Setup Needed</span>
+                                        </template>
+                                    </span>
                                 </template>
                                 <template x-if="!isGcashOn">
                                     <span style="font-size:10px;font-weight:600;padding:3px 8px;border-radius:9999px;background:#F3F4F6;color:#6B7280;border:1px solid #E5E7EB;">○ Disabled</span>
@@ -1022,42 +1003,53 @@
                         <div style="padding:16px;">
                             <template x-if="isGcashOn">
                                 <div>
-                                    @if($isGcashComplete)
+                                    <template x-if="paymentState.isGcashComplete">
                                         <div style="display:flex;align-items:center;gap:14px;">
-                                            @if($gcashQrUrl)
-                                                <div style="position:relative;width:56px;height:56px;border-radius:12px;border:1px solid #BFDBFE;background:#EFF6FF;padding:3px;flex-shrink:0;overflow:hidden;">
-                                                    <img src="{{ $gcashQrUrl }}" alt="GCash QR" style="width:100%;height:100%;object-fit:contain;border-radius:8px;">
+                                            <template x-if="paymentState.gcashQrUrl">
+                                                <div @click="openLightbox(paymentState.gcashQrUrl)"
+                                                     title="Click to view full size"
+                                                     style="position:relative;width:56px;height:56px;border-radius:12px;border:1px solid #BFDBFE;background:#EFF6FF;padding:3px;flex-shrink:0;overflow:hidden;cursor:pointer;">
+                                                    <img :src="paymentState.gcashQrUrl" alt="GCash QR" style="width:100%;height:100%;object-fit:contain;border-radius:8px;">
                                                 </div>
-                                            @endif
+                                            </template>
                                             <div style="min-width:0;flex:1;">
-                                                <label style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.04em;color:#64748B;display:block;">GCash Mobile Number</label>
-                                                <div style="font-size:14.5px;font-weight:800;color:#1E1915;letter-spacing:0.02em;margin-top:2px;">{{ $user->gcashNumber }}</div>
+                                                <div style="display:flex;align-items:center;justify-content:space-between;gap:6px;">
+                                                    <label style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.04em;color:#64748B;display:block;">GCash Mobile Number</label>
+                                                    <button type="button" @click="openPaymentModal('gcash')" style="font-size:11px;font-weight:700;color:#2563EB;background:none;border:none;cursor:pointer;padding:0;" onmouseover="this.style.textDecoration='underline'" onmouseout="this.style.textDecoration='none'">
+                                                        GCash Setting
+                                                    </button>
+                                                </div>
+                                                <div style="font-size:14.5px;font-weight:800;color:#1E1915;letter-spacing:0.02em;margin-top:2px;" x-text="paymentState.gcashNumber"></div>
                                                 <p style="font-size:10px;color:#16A34A;font-weight:700;margin:3px 0 0 0;">✓ Ready to receive direct payments</p>
                                             </div>
                                         </div>
-                                    @else
+                                    </template>
+
+                                    <template x-if="!paymentState.isGcashComplete">
                                         <div style="padding:12px;border-radius:14px;background:#FFFBEB;border:1px solid #FDE68A;">
                                             <div style="display:flex;align-items:flex-start;gap:8px;">
                                                 <svg style="width:16px;height:16px;color:#D97706;flex-shrink:0;margin-top:1px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
                                                 <div style="flex:1;min-width:0;">
                                                     <div style="font-size:12px;font-weight:800;color:#92400E;">Incomplete GCash Setup</div>
                                                     <p style="font-size:11px;color:#B45309;margin:2px 0 8px 0;line-height:1.4;">
-                                                        @if(!$hasGcashNumber && !$hasGcashQr)
-                                                            Both your GCash mobile number and QR code must be configured.
-                                                        @elseif(!$hasGcashQr)
-                                                            Your GCash QR code image has not been uploaded yet.
-                                                        @else
-                                                            Your GCash mobile number is missing.
-                                                        @endif
+                                                        <template x-if="!paymentState.hasGcashNumber && !paymentState.hasGcashQr">
+                                                            <span>Both your GCash mobile number and QR code must be configured.</span>
+                                                        </template>
+                                                        <template x-if="paymentState.hasGcashNumber && !paymentState.hasGcashQr">
+                                                            <span>Your GCash QR code image has not been uploaded yet.</span>
+                                                        </template>
+                                                        <template x-if="!paymentState.hasGcashNumber && paymentState.hasGcashQr">
+                                                            <span>Your GCash mobile number is missing.</span>
+                                                        </template>
                                                     </p>
-                                                    <a href="{{ route('seller.profile') }}?open_payment=1#payment-methods" target="_blank" style="display:inline-flex;align-items:center;gap:4px;font-size:11.5px;font-weight:700;color:#2563EB;text-decoration:none;" onmouseover="this.style.textDecoration='underline';" onmouseout="this.style.textDecoration='none';">
-                                                        <span>Configure GCash in Settings</span>
+                                                    <button type="button" @click="openPaymentModal('gcash')" style="display:inline-flex;align-items:center;gap:4px;font-size:11.5px;font-weight:700;color:#2563EB;text-decoration:none;background:none;border:none;cursor:pointer;padding:0;" onmouseover="this.style.textDecoration='underline';" onmouseout="this.style.textDecoration='none';">
+                                                        <span>GCash Setting</span>
                                                         <svg width="11" height="11" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
-                                                    </a>
+                                                    </button>
                                                 </div>
                                             </div>
                                         </div>
-                                    @endif
+                                    </template>
                                 </div>
                             </template>
 
@@ -1082,11 +1074,14 @@
                                     <span>Maya</span>
                                 </div>
                                 <template x-if="isMayaOn">
-                                    @if($isMayaComplete)
-                                        <span style="font-size:10px;font-weight:700;padding:3px 8px;border-radius:9999px;background:#ECFDF5;color:#16A34A;border:1px solid #BBF7D0;">✓ Configured</span>
-                                    @else
-                                        <span style="font-size:10px;font-weight:700;padding:3px 8px;border-radius:9999px;background:#FFFBEB;color:#D97706;border:1px solid #FDE68A;">⚠ Setup Needed</span>
-                                    @endif
+                                    <span>
+                                        <template x-if="paymentState.isMayaComplete">
+                                            <span style="font-size:10px;font-weight:700;padding:3px 8px;border-radius:9999px;background:#ECFDF5;color:#16A34A;border:1px solid #BBF7D0;">✓ Configured</span>
+                                        </template>
+                                        <template x-if="!paymentState.isMayaComplete">
+                                            <span style="font-size:10px;font-weight:700;padding:3px 8px;border-radius:9999px;background:#FFFBEB;color:#D97706;border:1px solid #FDE68A;">⚠ Setup Needed</span>
+                                        </template>
+                                    </span>
                                 </template>
                                 <template x-if="!isMayaOn">
                                     <span style="font-size:10px;font-weight:600;padding:3px 8px;border-radius:9999px;background:#F3F4F6;color:#6B7280;border:1px solid #E5E7EB;">○ Disabled</span>
@@ -1109,42 +1104,53 @@
                         <div style="padding:16px;">
                             <template x-if="isMayaOn">
                                 <div>
-                                    @if($isMayaComplete)
+                                    <template x-if="paymentState.isMayaComplete">
                                         <div style="display:flex;align-items:center;gap:14px;">
-                                            @if($mayaQrUrl)
-                                                <div style="position:relative;width:56px;height:56px;border-radius:12px;border:1px solid #A7F3D0;background:#ECFDF5;padding:3px;flex-shrink:0;overflow:hidden;">
-                                                    <img src="{{ $mayaQrUrl }}" alt="Maya QR" style="width:100%;height:100%;object-fit:contain;border-radius:8px;">
+                                            <template x-if="paymentState.mayaQrUrl">
+                                                <div @click="openLightbox(paymentState.mayaQrUrl)"
+                                                     title="Click to view full size"
+                                                     style="position:relative;width:56px;height:56px;border-radius:12px;border:1px solid #A7F3D0;background:#ECFDF5;padding:3px;flex-shrink:0;overflow:hidden;cursor:pointer;">
+                                                    <img :src="paymentState.mayaQrUrl" alt="Maya QR" style="width:100%;height:100%;object-fit:contain;border-radius:8px;">
                                                 </div>
-                                            @endif
+                                            </template>
                                             <div style="min-width:0;flex:1;">
-                                                <label style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.04em;color:#64748B;display:block;">Maya Account Number</label>
-                                                <div style="font-size:14.5px;font-weight:800;color:#1E1915;letter-spacing:0.02em;margin-top:2px;">{{ $user->mayaNumber }}</div>
+                                                <div style="display:flex;align-items:center;justify-content:space-between;gap:6px;">
+                                                    <label style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.04em;color:#64748B;display:block;">Maya Account Number</label>
+                                                    <button type="button" @click="openPaymentModal('maya')" style="font-size:11px;font-weight:700;color:#059669;background:none;border:none;cursor:pointer;padding:0;" onmouseover="this.style.textDecoration='underline'" onmouseout="this.style.textDecoration='none'">
+                                                        Maya Setting
+                                                    </button>
+                                                </div>
+                                                <div style="font-size:14.5px;font-weight:800;color:#1E1915;letter-spacing:0.02em;margin-top:2px;" x-text="paymentState.mayaNumber"></div>
                                                 <p style="font-size:10px;color:#16A34A;font-weight:700;margin:3px 0 0 0;">✓ Ready to receive direct payments</p>
                                             </div>
                                         </div>
-                                    @else
+                                    </template>
+
+                                    <template x-if="!paymentState.isMayaComplete">
                                         <div style="padding:12px;border-radius:14px;background:#FFFBEB;border:1px solid #FDE68A;">
                                             <div style="display:flex;align-items:flex-start;gap:8px;">
                                                 <svg style="width:16px;height:16px;color:#D97706;flex-shrink:0;margin-top:1px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
                                                 <div style="flex:1;min-width:0;">
                                                     <div style="font-size:12px;font-weight:800;color:#92400E;">Incomplete Maya Setup</div>
                                                     <p style="font-size:11px;color:#B45309;margin:2px 0 8px 0;line-height:1.4;">
-                                                        @if(!$hasMayaNumber && !$hasMayaQr)
-                                                            Both your Maya account number and QR code must be configured.
-                                                        @elseif(!$hasMayaQr)
-                                                            Your Maya QR code image has not been uploaded yet.
-                                                        @else
-                                                            Your Maya account number is missing.
-                                                        @endif
+                                                        <template x-if="!paymentState.hasMayaNumber && !paymentState.hasMayaQr">
+                                                            <span>Both your Maya account number and QR code must be configured.</span>
+                                                        </template>
+                                                        <template x-if="paymentState.hasMayaNumber && !paymentState.hasMayaQr">
+                                                            <span>Your Maya QR code image has not been uploaded yet.</span>
+                                                        </template>
+                                                        <template x-if="!paymentState.hasMayaNumber && paymentState.hasMayaQr">
+                                                            <span>Your Maya account number is missing.</span>
+                                                        </template>
                                                     </p>
-                                                    <a href="{{ route('seller.profile') }}?open_payment=1#payment-methods" target="_blank" style="display:inline-flex;align-items:center;gap:4px;font-size:11.5px;font-weight:700;color:#059669;text-decoration:none;" onmouseover="this.style.textDecoration='underline';" onmouseout="this.style.textDecoration='none';">
-                                                        <span>Configure Maya in Settings</span>
+                                                    <button type="button" @click="openPaymentModal('maya')" style="display:inline-flex;align-items:center;gap:4px;font-size:11.5px;font-weight:700;color:#059669;text-decoration:none;background:none;border:none;cursor:pointer;padding:0;" onmouseover="this.style.textDecoration='underline';" onmouseout="this.style.textDecoration='none';">
+                                                        <span>Maya Setting</span>
                                                         <svg width="11" height="11" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
-                                                    </a>
+                                                    </button>
                                                 </div>
                                             </div>
                                         </div>
-                                    @endif
+                                    </template>
                                 </div>
                             </template>
 
@@ -1243,6 +1249,182 @@
         </div>
 
     </form>
+
+    {{-- ================================================================ --}}
+    {{-- PAYMENT METHODS CONFIGURATION MODAL (IN-PAGE POPUP)               --}}
+    {{-- ================================================================ --}}
+    <div x-show="showPaymentModal" 
+         x-cloak 
+         style="display:none;" 
+         class="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-3 sm:p-5"
+         @keydown.escape.window="closePaymentModal()">
+        
+        {{-- Modal Card --}}
+        <div @click.away="closePaymentModal()" 
+             class="w-full max-w-xl rounded-3xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh] transition-all" 
+             style="background: #FFFCF7; border: 1px solid #E8DECB;">
+            
+            {{-- Header --}}
+            <div class="flex items-center justify-between px-5 py-4 border-b shrink-0" style="border-color: #E8DECB; background: #FAF7F0;">
+                <div>
+                    <h2 class="font-serif text-base sm:text-lg font-bold tracking-wide" style="color: #1E1915;">Payment Methods Setting</h2>
+                    <p class="text-[11px] sm:text-xs" style="color: #78716C; margin: 2px 0 0 0;">Update GCash & Maya accounts directly without leaving this page</p>
+                </div>
+                <button type="button" @click="closePaymentModal()" class="w-8 h-8 rounded-xl flex items-center justify-center transition-all cursor-pointer hover:bg-black/5" style="background: #FDF8EE; color: #766C60; border: 1px solid #E8DECB;">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                </button>
+            </div>
+
+            {{-- Body --}}
+            <div class="overflow-y-auto flex-1 p-5 space-y-4">
+                {{-- Error banner if any --}}
+                <div x-show="paymentModalError" x-cloak class="p-3.5 rounded-2xl bg-red-50 border border-red-200 text-xs text-red-700 flex items-start gap-2.5">
+                    <svg class="w-4 h-4 text-red-500 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                    <span x-text="paymentModalError" class="font-medium"></span>
+                </div>
+
+                {{-- Success banner if any --}}
+                <div x-show="paymentModalSuccess" x-cloak class="p-3.5 rounded-2xl bg-green-50 border border-green-200 text-xs text-green-700 flex items-start gap-2.5">
+                    <svg class="w-4 h-4 text-green-500 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                    <span x-text="paymentModalSuccess" class="font-bold"></span>
+                </div>
+
+                {{-- GCash Section --}}
+                <div class="p-4 rounded-2xl space-y-3" style="background: #FFFFFF; border: 1px solid #BFDBFE;">
+                    <div class="flex items-center justify-between">
+                        <div class="inline-flex items-center gap-2">
+                            <span class="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold uppercase tracking-wider text-white bg-[#2563EB]">GCash</span>
+                            <span class="text-xs font-bold text-gray-800">GCash Configuration</span>
+                        </div>
+                        <template x-if="modalGcashNumber && (modalGcashQrPreview || paymentState.hasGcashQr)">
+                            <span class="text-[10px] font-bold text-green-600 bg-green-50 px-2 py-0.5 rounded-full border border-green-200">✓ Complete</span>
+                        </template>
+                    </div>
+
+                    <div class="space-y-1">
+                        <label class="text-[10px] font-bold uppercase tracking-wider" style="color: #766C60;">GCash Mobile Number</label>
+                        <input type="text" 
+                               x-model="modalGcashNumber" 
+                               placeholder="e.g. 0917 123 4567" 
+                               class="w-full px-3.5 py-2.5 rounded-xl text-xs font-bold outline-none bg-white border focus:border-blue-500 focus:ring-1 focus:ring-blue-500" 
+                               style="border-color: #CBD5E1;">
+                    </div>
+
+                    <div class="space-y-1.5">
+                        <label class="text-[10px] font-bold uppercase tracking-wider" style="color: #766C60;">GCash QR Code Image</label>
+                        <div class="flex items-center gap-3">
+                            {{-- QR Thumbnail Preview --}}
+                            <div class="w-16 h-16 rounded-xl border flex items-center justify-center overflow-hidden shrink-0 bg-[#F8FAFC]" style="border-color: #CBD5E1;">
+                                <template x-if="modalGcashQrPreview">
+                                    <img :src="modalGcashQrPreview" class="w-full h-full object-contain cursor-zoom-in" @click="openLightbox(modalGcashQrPreview)" title="Click to view">
+                                </template>
+                                <template x-if="!modalGcashQrPreview">
+                                    <div class="text-[9px] font-bold text-gray-400 uppercase text-center leading-tight">No QR</div>
+                                </template>
+                            </div>
+                            <div class="flex-1 min-w-0">
+                                <input type="file" 
+                                       id="modal_gcash_qr_input" 
+                                       accept="image/*" 
+                                       @change="previewModalQr('gcash', $event)" 
+                                       class="w-full text-xs text-gray-500 file:mr-3 file:py-1.5 file:px-3 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-[#1E1915] file:text-white file:cursor-pointer">
+                                <p class="text-[10px] text-gray-400 mt-1">PNG, JPG, or WEBP (Max 5MB)</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                {{-- Maya Section --}}
+                <div class="p-4 rounded-2xl space-y-3" style="background: #FFFFFF; border: 1px solid #A7F3D0;">
+                    <div class="flex items-center justify-between">
+                        <div class="inline-flex items-center gap-2">
+                            <span class="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold uppercase tracking-wider text-white bg-[#059669]">Maya</span>
+                            <span class="text-xs font-bold text-gray-800">Maya Configuration</span>
+                        </div>
+                        <template x-if="modalMayaNumber && (modalMayaQrPreview || paymentState.hasMayaQr)">
+                            <span class="text-[10px] font-bold text-green-600 bg-green-50 px-2 py-0.5 rounded-full border border-green-200">✓ Complete</span>
+                        </template>
+                    </div>
+
+                    <div class="space-y-1">
+                        <label class="text-[10px] font-bold uppercase tracking-wider" style="color: #766C60;">Maya Mobile / Account Number</label>
+                        <input type="text" 
+                               x-model="modalMayaNumber" 
+                               placeholder="e.g. 0918 123 4567" 
+                               class="w-full px-3.5 py-2.5 rounded-xl text-xs font-bold outline-none bg-white border focus:border-green-500 focus:ring-1 focus:ring-green-500" 
+                               style="border-color: #CBD5E1;">
+                    </div>
+
+                    <div class="space-y-1.5">
+                        <label class="text-[10px] font-bold uppercase tracking-wider" style="color: #766C60;">Maya QR Code Image</label>
+                        <div class="flex items-center gap-3">
+                            {{-- QR Thumbnail Preview --}}
+                            <div class="w-16 h-16 rounded-xl border flex items-center justify-center overflow-hidden shrink-0 bg-[#F8FAFC]" style="border-color: #CBD5E1;">
+                                <template x-if="modalMayaQrPreview">
+                                    <img :src="modalMayaQrPreview" class="w-full h-full object-contain cursor-zoom-in" @click="openLightbox(modalMayaQrPreview)" title="Click to view">
+                                </template>
+                                <template x-if="!modalMayaQrPreview">
+                                    <div class="text-[9px] font-bold text-gray-400 uppercase text-center leading-tight">No QR</div>
+                                </template>
+                            </div>
+                            <div class="flex-1 min-w-0">
+                                <input type="file" 
+                                       id="modal_maya_qr_input" 
+                                       accept="image/*" 
+                                       @change="previewModalQr('maya', $event)" 
+                                       class="w-full text-xs text-gray-500 file:mr-3 file:py-1.5 file:px-3 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-[#1E1915] file:text-white file:cursor-pointer">
+                                <p class="text-[10px] text-gray-400 mt-1">PNG, JPG, or WEBP (Max 5MB)</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {{-- Footer --}}
+            <div class="px-5 py-4 border-t shrink-0 flex items-center gap-3" style="border-color: #E8DECB; background: #FAF7F0;">
+                <button type="button" 
+                        @click="savePaymentSettings()" 
+                        :disabled="isSavingPayment"
+                        class="flex-1 py-3 text-white rounded-xl text-xs font-bold uppercase tracking-wider shadow-md cursor-pointer flex items-center justify-center gap-2 hover:opacity-90 active:scale-98 disabled:opacity-50" 
+                        style="background: #1E1915;">
+                    <span x-show="!isSavingPayment">Save Payment Settings</span>
+                    <span x-show="isSavingPayment" style="display:none;" class="flex items-center gap-2">
+                        <svg class="animate-spin h-3.5 w-3.5 text-white" fill="none" viewBox="0 0 24 24">
+                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path>
+                        </svg>
+                        Saving...
+                    </span>
+                </button>
+                <button type="button" 
+                        @click="closePaymentModal()" 
+                        :disabled="isSavingPayment"
+                        class="px-5 py-3 rounded-xl text-xs font-bold uppercase tracking-wider cursor-pointer hover:bg-amber-50" 
+                        style="background: #FDF8EE; border: 1px solid #E8DECB; color: #766C60;">
+                    Cancel
+                </button>
+            </div>
+        </div>
+    </div>
+
+    {{-- QR Code Lightbox --}}
+    <div x-show="showQrLightbox" 
+         x-cloak 
+         style="display:none;" 
+         class="fixed inset-0 z-200 bg-black/80 backdrop-blur-xs flex items-center justify-center p-6"
+         @click="closeLightbox()"
+         @keydown.escape.window="closeLightbox()">
+        <div class="relative rounded-3xl p-4 shadow-2xl max-w-xs w-full flex flex-col items-center gap-4" style="background: #FFFCF7; border: 1px solid #E8DECB;" @click.stop>
+            <button type="button" 
+                    @click="closeLightbox()"
+                    class="absolute top-3 right-3 w-8 h-8 rounded-xl flex items-center justify-center transition-all cursor-pointer"
+                    style="background: #FDF8EE; color: #766C60;">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+            </button>
+            <p class="text-[9px] font-bold uppercase tracking-widest" style="color: #766C60;">QR Code Preview</p>
+            <img :src="lightboxImgUrl" class="w-full max-w-60 h-auto object-contain rounded-2xl border shadow-xs" style="background: #FFF; border-color: #E8DECB;">
+        </div>
+    </div>
 </div>
 
 @php
@@ -1265,6 +1447,14 @@
     })->values();
 
     $currentUser = auth()->user();
+    $getPaymentImgUrl = function($path) {
+        if (empty($path)) return null;
+        if (str_starts_with($path, 'http://') || str_starts_with($path, 'https://')) return $path;
+        $clean = ltrim($path, '/');
+        if (str_starts_with($clean, 'uploads/')) return asset($clean);
+        return asset('storage/' . $clean);
+    };
+
     $productInitData = [
         'name'             => (string) old('name', ''),
         'categoryId'       => (string) old('CategoryId', ''),
@@ -1278,8 +1468,13 @@
         'csrfToken'        => (string) csrf_token(),
         'aiSuggestUrl'     => (string) route('ai.seller.suggest'),
         'aiDescriptionUrl' => (string) route('ai.seller.description'),
+        'paymentUpdateUrl' => (string) route('seller.profile.update'),
+        'gcashNumber'      => (string) ($currentUser?->gcashNumber ?? ''),
+        'gcashQrUrl'       => $currentUser?->gcashQrCode ? $getPaymentImgUrl($currentUser->gcashQrCode) : null,
         'hasGcashNumber'   => !empty($currentUser?->gcashNumber),
         'hasGcashQr'       => !empty($currentUser?->gcashQrCode),
+        'mayaNumber'       => (string) ($currentUser?->mayaNumber ?? ''),
+        'mayaQrUrl'        => $currentUser?->mayaQrCode ? $getPaymentImgUrl($currentUser->mayaQrCode) : null,
         'hasMayaNumber'    => !empty($currentUser?->mayaNumber),
         'hasMayaQr'        => !empty($currentUser?->mayaQrCode),
     ];
@@ -1365,6 +1560,195 @@ function addProductManager() {
         hasRestoredDraft: false,
         hasValidSizing: false,
         draftSaveTimer: null,
+
+        // Payment Methods Reactive State
+        paymentState: {
+            gcashNumber: initData.gcashNumber || '',
+            gcashQrUrl: initData.gcashQrUrl || null,
+            hasGcashNumber: Boolean(initData.hasGcashNumber),
+            hasGcashQr: Boolean(initData.hasGcashQr),
+            get isGcashComplete() {
+                return Boolean(this.hasGcashNumber && this.hasGcashQr);
+            },
+            mayaNumber: initData.mayaNumber || '',
+            mayaQrUrl: initData.mayaQrUrl || null,
+            hasMayaNumber: Boolean(initData.hasMayaNumber),
+            hasMayaQr: Boolean(initData.hasMayaQr),
+            get isMayaComplete() {
+                return Boolean(this.hasMayaNumber && this.hasMayaQr);
+            }
+        },
+
+        // Payment Methods Modal State
+        showPaymentModal: false,
+        activePaymentTab: 'all',
+        modalGcashNumber: initData.gcashNumber || '',
+        modalMayaNumber: initData.mayaNumber || '',
+        modalGcashQrPreview: initData.gcashQrUrl || null,
+        modalMayaQrPreview: initData.mayaQrUrl || null,
+        modalGcashQrFile: null,
+        modalMayaQrFile: null,
+        isSavingPayment: false,
+        paymentModalError: '',
+        paymentModalSuccess: '',
+        lightboxImgUrl: '',
+        showQrLightbox: false,
+
+        openPaymentModal(tab = 'all') {
+            this.activePaymentTab = tab;
+            this.modalGcashNumber = this.paymentState.gcashNumber || '';
+            this.modalMayaNumber = this.paymentState.mayaNumber || '';
+            this.modalGcashQrPreview = this.paymentState.gcashQrUrl || null;
+            this.modalMayaQrPreview = this.paymentState.mayaQrUrl || null;
+            this.modalGcashQrFile = null;
+            this.modalMayaQrFile = null;
+            this.paymentModalError = '';
+            this.paymentModalSuccess = '';
+            const gInput = document.getElementById('modal_gcash_qr_input');
+            if (gInput) gInput.value = '';
+            const mInput = document.getElementById('modal_maya_qr_input');
+            if (mInput) mInput.value = '';
+            this.showPaymentModal = true;
+        },
+
+        closePaymentModal() {
+            this.showPaymentModal = false;
+            this.paymentModalError = '';
+            this.paymentModalSuccess = '';
+        },
+
+        previewModalQr(type, event) {
+            const file = event.target.files && event.target.files[0];
+            if (!file) return;
+            if (file.size > 5 * 1024 * 1024) {
+                this.paymentModalError = 'QR Code image must be 5MB or less.';
+                event.target.value = '';
+                return;
+            }
+            if (type === 'gcash') {
+                this.modalGcashQrFile = file;
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    this.modalGcashQrPreview = e.target.result;
+                };
+                reader.readAsDataURL(file);
+            } else if (type === 'maya') {
+                this.modalMayaQrFile = file;
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    this.modalMayaQrPreview = e.target.result;
+                };
+                reader.readAsDataURL(file);
+            }
+        },
+
+        openLightbox(url) {
+            if (!url) return;
+            this.lightboxImgUrl = url;
+            this.showQrLightbox = true;
+        },
+
+        closeLightbox() {
+            this.showQrLightbox = false;
+            this.lightboxImgUrl = '';
+        },
+
+        async savePaymentSettings() {
+            this.paymentModalError = '';
+            this.paymentModalSuccess = '';
+
+            const gcashNum = (this.modalGcashNumber || '').trim();
+            const mayaNum = (this.modalMayaNumber || '').trim();
+            const gcashFile = this.modalGcashQrFile;
+            const mayaFile = this.modalMayaQrFile;
+            const hasExistingGcashQr = Boolean(this.paymentState.hasGcashQr);
+            const hasExistingMayaQr = Boolean(this.paymentState.hasMayaQr);
+
+            const errors = [];
+            if (gcashNum || gcashFile) {
+                const hasQr = Boolean(gcashFile || hasExistingGcashQr);
+                if (!gcashNum || !hasQr) {
+                    if (!gcashNum) errors.push('Please enter a GCash mobile number.');
+                    if (!hasQr) errors.push('Please upload a GCash QR Code image.');
+                }
+            }
+            if (mayaNum || mayaFile) {
+                const hasQr = Boolean(mayaFile || hasExistingMayaQr);
+                if (!mayaNum || !hasQr) {
+                    if (!mayaNum) errors.push('Please enter a Maya account number.');
+                    if (!hasQr) errors.push('Please upload a Maya QR Code image.');
+                }
+            }
+
+            if (errors.length > 0) {
+                this.paymentModalError = errors.join(' ');
+                return;
+            }
+
+            this.isSavingPayment = true;
+
+            try {
+                const formData = new FormData();
+                formData.append('_token', initData.csrfToken || document.querySelector('input[name="_token"]')?.value || '');
+                formData.append('_method', 'PUT');
+                formData.append('gcashNumber', gcashNum);
+                formData.append('mayaNumber', mayaNum);
+                if (gcashFile) {
+                    formData.append('gcashQrCode', gcashFile);
+                }
+                if (mayaFile) {
+                    formData.append('mayaQrCode', mayaFile);
+                }
+
+                const url = initData.paymentUpdateUrl || '/seller/profile';
+                const response = await fetch(url, {
+                    method: 'POST',
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'Accept': 'application/json'
+                    },
+                    body: formData
+                });
+
+                const data = await response.json();
+
+                if (response.ok && data.success) {
+                    this.paymentModalSuccess = 'Payment settings saved successfully!';
+
+                    this.paymentState.gcashNumber = data.user.gcashNumber || '';
+                    this.paymentState.gcashQrUrl = data.user.gcashQrUrl || null;
+                    this.paymentState.hasGcashNumber = Boolean(data.user.gcashNumber);
+                    this.paymentState.hasGcashQr = Boolean(data.user.gcashQrCode);
+
+                    this.paymentState.mayaNumber = data.user.mayaNumber || '';
+                    this.paymentState.mayaQrUrl = data.user.mayaQrUrl || null;
+                    this.paymentState.hasMayaNumber = Boolean(data.user.mayaNumber);
+                    this.paymentState.hasMayaQr = Boolean(data.user.mayaQrCode);
+
+                    window._currentPaymentState = {
+                        hasGcashNumber: this.paymentState.hasGcashNumber,
+                        hasGcashQr: this.paymentState.hasGcashQr,
+                        hasMayaNumber: this.paymentState.hasMayaNumber,
+                        hasMayaQr: this.paymentState.hasMayaQr
+                    };
+
+                    const paymentCard = document.getElementById('payment-methods-card');
+                    if (paymentCard) paymentCard.classList.remove('border-red-500');
+
+                    setTimeout(() => {
+                        this.showPaymentModal = false;
+                        this.paymentModalSuccess = '';
+                    }, 900);
+                } else {
+                    this.paymentModalError = data.message || 'Failed to save payment settings. Please try again.';
+                }
+            } catch (err) {
+                console.error(err);
+                this.paymentModalError = 'An error occurred while saving. Please check your connection and try again.';
+            } finally {
+                this.isSavingPayment = false;
+            }
+        },
 
         get isPricingComplete() {
             const hasPrice = Boolean(this.price && parseFloat(this.price) >= 1 && parseFloat(this.price) <= 10000);
@@ -2227,10 +2611,10 @@ function validateProductForm(e, isEdit = false) {
     const isMayaChecked = mayaToggle ? mayaToggle.checked : false;
 
     const initData = getProductInitData();
-    const hasGcashNumber = Boolean(initData.hasGcashNumber);
-    const hasGcashQr = Boolean(initData.hasGcashQr);
-    const hasMayaNumber = Boolean(initData.hasMayaNumber);
-    const hasMayaQr = Boolean(initData.hasMayaQr);
+    const hasGcashNumber = Boolean(window._currentPaymentState ? window._currentPaymentState.hasGcashNumber : initData.hasGcashNumber);
+    const hasGcashQr = Boolean(window._currentPaymentState ? window._currentPaymentState.hasGcashQr : initData.hasGcashQr);
+    const hasMayaNumber = Boolean(window._currentPaymentState ? window._currentPaymentState.hasMayaNumber : initData.hasMayaNumber);
+    const hasMayaQr = Boolean(window._currentPaymentState ? window._currentPaymentState.hasMayaQr : initData.hasMayaQr);
 
     let hasAnyCompleteEnabled = false;
 

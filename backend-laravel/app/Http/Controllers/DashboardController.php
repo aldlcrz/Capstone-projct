@@ -744,6 +744,12 @@ class DashboardController extends Controller
             $hasGcashNumber = $request->filled('gcashNumber');
             $hasGcashQr = $request->hasFile('gcashQrCode') || !empty($user->gcashQrCode);
             if (!$hasGcashNumber || !$hasGcashQr) {
+                if ($request->expectsJson() || $request->ajax() || $request->wantsJson()) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'GCash requires both a mobile number and a QR code image.'
+                    ], 422);
+                }
                 return redirect()->back()->withInput()->with('error', 'GCash requires both a mobile number and a QR code image.');
             }
         }
@@ -753,20 +759,26 @@ class DashboardController extends Controller
             $hasMayaNumber = $request->filled('mayaNumber');
             $hasMayaQr = $request->hasFile('mayaQrCode') || !empty($user->mayaQrCode);
             if (!$hasMayaNumber || !$hasMayaQr) {
+                if ($request->expectsJson() || $request->ajax() || $request->wantsJson()) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'Maya requires both an account number and a QR code image.'
+                    ], 422);
+                }
                 return redirect()->back()->withInput()->with('error', 'Maya requires both an account number and a QR code image.');
             }
         }
 
-        $user->name                = $request->name;
-        $user->mobileNumber        = $request->mobileNumber;
-        $user->shopName            = $request->shopName ?? $request->name;
-        $user->shopDescription     = $request->shopDescription;
-        $user->cancellation_policy = $request->cancellation_policy;
-        $user->refund_policy       = $request->refund_policy;
-        $user->gcashNumber         = $request->gcashNumber;
-        $user->mayaNumber          = $request->mayaNumber;
-        $user->isGcashAvailable    = $request->has('isGcashAvailable');
-        $user->isMayaAvailable     = $request->has('isMayaAvailable');
+        $user->name                = $request->name ?? $user->name;
+        if ($request->has('mobileNumber')) $user->mobileNumber = $request->mobileNumber;
+        if ($request->has('shopName')) $user->shopName = $request->shopName ?? $user->shopName ?? $user->name;
+        if ($request->has('shopDescription')) $user->shopDescription = $request->shopDescription;
+        if ($request->has('cancellation_policy')) $user->cancellation_policy = $request->cancellation_policy;
+        if ($request->has('refund_policy')) $user->refund_policy = $request->refund_policy;
+        if ($request->has('gcashNumber')) $user->gcashNumber = $request->gcashNumber;
+        if ($request->has('mayaNumber')) $user->mayaNumber = $request->mayaNumber;
+        if ($request->has('isGcashAvailable')) $user->isGcashAvailable = $request->boolean('isGcashAvailable');
+        if ($request->has('isMayaAvailable')) $user->isMayaAvailable = $request->boolean('isMayaAvailable');
 
         if ($request->hasFile('profilePhoto')) {
             $file = $request->file('profilePhoto');
@@ -799,6 +811,36 @@ class DashboardController extends Controller
         }
 
         $user->save();
+
+        if ($request->expectsJson() || $request->ajax() || $request->wantsJson()) {
+            $getImg = function($path) {
+                if (empty($path)) return null;
+                if (str_starts_with($path, 'http://') || str_starts_with($path, 'https://')) return $path;
+                $clean = ltrim($path, '/');
+                if (str_starts_with($clean, 'uploads/')) return asset($clean);
+                return asset('storage/' . $clean);
+            };
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Payment methods updated successfully.',
+                'user' => [
+                    'gcashNumber'     => $user->gcashNumber,
+                    'gcashQrCode'     => $user->gcashQrCode,
+                    'gcashQrUrl'      => $getImg($user->gcashQrCode),
+                    'hasGcashNumber'  => !empty($user->gcashNumber),
+                    'hasGcashQr'      => !empty($user->gcashQrCode),
+                    'isGcashComplete' => !empty($user->gcashNumber) && !empty($user->gcashQrCode),
+                    'mayaNumber'      => $user->mayaNumber,
+                    'mayaQrCode'      => $user->mayaQrCode,
+                    'mayaQrUrl'       => $getImg($user->mayaQrCode),
+                    'hasMayaNumber'   => !empty($user->mayaNumber),
+                    'hasMayaQr'       => !empty($user->mayaQrCode),
+                    'isMayaComplete'  => !empty($user->mayaNumber) && !empty($user->mayaQrCode),
+                ]
+            ]);
+        }
+
         return redirect()->route('seller.profile')->with('success', 'Profile updated successfully.');
     }
 
