@@ -397,12 +397,44 @@ class ProductManagementController extends Controller
     {
         $product = Product::where('id', $id)->where('sellerId', Auth::id())->firstOrFail();
         $categories = \App\Models\Category::orderBy('name', 'asc')->get();
+        if ($categories->isEmpty()) {
+            try {
+                (new \Database\Seeders\CategorySeeder())->run();
+                $categories = \App\Models\Category::orderBy('name', 'asc')->get();
+            } catch (\Throwable $e) {}
+        }
+        foreach ($categories as $cat) {
+            $tg = $cat->target_group;
+            if (is_string($tg)) {
+                $decoded = json_decode($tg, true);
+                $tg = is_array($decoded) ? $decoded : (in_array($tg, ['Men', 'Women', 'Kids']) ? [$tg] : []);
+            }
+            if (empty($tg) || !is_array($tg)) {
+                $nameLower = strtolower($cat->name);
+                if (str_contains($nameLower, 'boy') || str_contains($nameLower, 'girl') || str_contains($nameLower, 'kid')) {
+                    $tg = ['Kids'];
+                } elseif (str_contains($nameLower, 'gown') || str_contains($nameLower, 'terno') || str_contains($nameLower, 'lady') || (str_contains($nameLower, 'filipiniana') && !str_contains($nameLower, 'girl')) || str_contains($nameLower, 'dress') || str_contains($nameLower, 'blouse')) {
+                    $tg = ['Women'];
+                } elseif (str_contains($nameLower, 'barong') || str_contains($nameLower, 'camisa') || str_contains($nameLower, 'polo') || str_contains($nameLower, 'men') || str_contains($nameLower, 'coat')) {
+                    $tg = ['Men'];
+                } else {
+                    $tg = ['Men', 'Women'];
+                }
+            }
+            $cat->target_group = $tg;
+        }
         return view('seller.products.edit', compact('product', 'categories'));
     }
 
     public function update(Request $request, string $id)
     {
         $product = Product::where('id', $id)->where('sellerId', Auth::id())->firstOrFail();
+
+        // Merge CategoryId from category_ids if needed
+        if (!$request->filled('CategoryId') && $request->filled('category_ids') && is_array($request->category_ids)) {
+            $request->merge(['CategoryId' => $request->category_ids[0]]);
+        }
+
         $isDraftAction = $request->input('action') === 'draft';
 
         if ($isDraftAction) {
@@ -411,6 +443,8 @@ class ProductManagementController extends Controller
                 'description'         => 'nullable|string|max:500',
                 'price'               => 'nullable|numeric|min:0|max:10000',
                 'CategoryId'          => 'nullable|exists:categories,id',
+                'category_ids'        => 'nullable|array',
+                'category_ids.*'      => 'exists:categories,id',
                 'target_group'        => 'nullable|string|in:Men,Women,Kids',
                 'images.*'            => 'nullable|image|mimes:jpeg,png,jpg,webp|max:5120',
                 'size_guide_image'    => 'nullable|image|mimes:jpeg,png,jpg,webp|max:5120',
@@ -428,6 +462,19 @@ class ProductManagementController extends Controller
                 'name'                => 'required|string|max:100',
                 'description'         => 'required|string|min:10|max:500',
                 'price'               => 'required|numeric|min:1|max:10000',
+                'CategoryId'          => 'required|exists:categories,id',
+                'category_ids'        => 'nullable|array',
+                'category_ids.*'      => 'exists:categories,id',
+                'target_group'        => 'required|string|in:Men,Women,Kids',
+                'images.*'            => 'nullable|image|mimes:jpeg,png,jpg,webp|max:5120',
+                'size_guide_image'    => 'nullable|image|mimes:jpeg,png,jpg,webp|max:5120',
+                'sizes'               => 'required|array|min:1',
+                'sizes.*'             => 'string',
+                'size_stocks.*'       => 'nullable|integer|min:0|max:10000',
+                'shippingFee'         => 'required|numeric|min:1|max:500',
+                'shippingDays'        => 'required|integer|min:1|max:30',
+                'discount_percentage' => 'nullable|numeric|min:1|max:99',
+            ], [
                 'CategoryId'          => 'required|exists:categories,id',
                 'target_group'        => 'required|string|in:Men,Women,Kids',
                 'images.*'            => 'nullable|image|mimes:jpeg,png,jpg,webp|max:5120',

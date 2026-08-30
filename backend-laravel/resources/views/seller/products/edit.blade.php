@@ -14,6 +14,84 @@
         'mayaQrUrl'      => $product->maya_qr_code ? (str_starts_with($product->maya_qr_code, 'http') ? $product->maya_qr_code : asset($product->maya_qr_code)) : ($seller->mayaQrCode ? (str_starts_with($seller->mayaQrCode, 'http') ? $seller->mayaQrCode : asset($seller->mayaQrCode)) : null),
     ];
 @endphp
+<style>
+    /* Target Group Pills */
+    .target-pill {
+        height: 38px;
+        padding: 0 20px;
+        border-radius: 9999px;
+        font-size: 13px;
+        letter-spacing: 0.01em;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 6px;
+        transition: all 180ms ease;
+        cursor: pointer;
+        box-sizing: border-box;
+        border: 1px solid #E2D9C8;
+        background-color: #FCFAF6;
+        color: #221F1C;
+        font-weight: 600;
+        user-select: none;
+    }
+    .target-pill:hover:not(.target-pill-selected) {
+        background-color: #F5ECD8;
+        border-color: #C8AC70;
+    }
+    .target-pill-selected {
+        background-color: #1E1915 !important;
+        color: #FCFAF6 !important;
+        border-color: #C49520 !important;
+        box-shadow: 0 4px 14px rgba(34,31,28,0.18), 0 1px 3px rgba(0,0,0,0.06) !important;
+        font-weight: 700 !important;
+    }
+    .target-checkmark { color: #C49520; font-size: 13px; font-weight: 800; }
+
+    /* Category Pills */
+    .cat-pill {
+        width: 100%;
+        min-height: 42px;
+        padding: 8px 12px;
+        border-radius: 12px;
+        font-size: 12.5px;
+        font-weight: 600;
+        letter-spacing: 0.01em;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+        gap: 6px;
+        position: relative;
+        transition: all 180ms ease;
+        cursor: pointer;
+        box-sizing: border-box;
+        border: 1px solid #E2D9C8;
+        background-color: #FFFFFF;
+        color: #221F1C;
+        user-select: none;
+    }
+    .cat-pill:hover:not(.cat-pill-selected) {
+        background-color: #F5ECD8;
+        border-color: #C8AC70;
+    }
+    .cat-pill-selected {
+        background-color: #1E1915 !important;
+        color: #FCFAF6 !important;
+        border-color: #C49520 !important;
+        box-shadow: 0 3px 10px rgba(34,31,28,0.15) !important;
+        font-weight: 700 !important;
+    }
+    .cat-checkmark {
+        position: absolute;
+        right: 10px;
+        top: 50%;
+        transform: translateY(-50%);
+        color: #C49520;
+        font-size: 12px;
+        font-weight: 800;
+    }
+</style>
 <div class="max-w-350 mx-auto pb-36 sm:pb-28 lg:pb-12 px-2.5 sm:px-6" x-data="editProductManager()">
     <div class="mb-3 sm:mb-10 pb-4 border-b" style="border-color: #E8DECB;">
         <div class="flex items-center gap-2 mb-1">
@@ -197,38 +275,86 @@
             </div>
 
             {{-- 4. Category & Sale Configuration --}}
-            <div class="rounded-2xl border p-4 sm:p-6 shadow-xs" style="background: #FFFCF7; border-color: #E8DECB;"  space-y-4">
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <div class="space-y-1.5">
-                        <label class="text-[10px] font-bold uppercase tracking-widest text-gray-400">Product Category</label>
-                        <select name="CategoryId" id="categorySelect" required
-                            class="w-full px-4 py-2.5 bg-gray-50/50 border border-gray-200/80 rounded-xl outline-none focus:border-[#C49520] transition-all font-bold text-xs appearance-none">
-                            <option value="" disabled>Select a category</option>
-                            @foreach($categories as $category)
-                                @php
-                                    $tags = is_array($category->target_group) ? $category->target_group : (is_string($category->target_group) ? json_decode($category->target_group, true) ?? [] : []);
-                                    $tagStr = !empty($tags) ? implode(', ', $tags) : 'All';
-                                @endphp
-                                <option value="{{ $category->id }}" data-tags="{{ implode(',', $tags) }}" data-name="{{ strtolower($category->name) }}" {{ $product->CategoryId == $category->id ? 'selected' : '' }}>
-                                    {{ $category->name }} ({{ $tagStr }})
-                                </option>
-                            @endforeach
-                        </select>
+            <div class="rounded-2xl border p-4 sm:p-6 shadow-xs space-y-4" style="background: #FFFCF7; border-color: #E8DECB;">
+                {{-- Target Group / Tag --}}
+                <div id="target-group-container" class="space-y-2">
+                    <div class="flex items-center justify-between">
+                        <label class="text-[10px] font-bold uppercase tracking-widest text-gray-500">
+                            Who is this for? (Tag) <span class="text-[#C49520]">*</span>
+                        </label>
+                        <span class="text-[11px] text-stone-500 font-semibold" x-text="'Tag: ' + targetGroup"></span>
+                    </div>
+                    <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+                        @foreach(['Men', 'Women', 'Kids'] as $group)
+                            <label class="cursor-pointer select-none" @click="onTargetGroupChange('{{ $group }}')">
+                                <input type="radio" 
+                                       name="target_group" 
+                                       value="{{ $group }}" 
+                                       x-model="targetGroup" 
+                                       class="hidden target-group-radio">
+                                <div class="target-pill" :class="targetGroup === '{{ $group }}' ? 'target-pill-selected' : ''">
+                                    <span>{{ $group }}</span>
+                                    <span class="target-checkmark" x-show="targetGroup === '{{ $group }}'">✓</span>
+                                </div>
+                            </label>
+                        @endforeach
+                    </div>
+                </div>
+
+                {{-- Product Category for Selected Tag --}}
+                <div class="space-y-2.5 pt-3 border-t border-stone-200/70">
+                    <div class="flex items-center justify-between flex-wrap gap-2">
+                        <label class="text-[10px] font-bold uppercase tracking-widest text-gray-500">
+                            Product Category for <span class="text-[#1E1915] font-black" x-text="targetGroup"></span> <span class="text-[#C49520]">*</span>
+                        </label>
+                        <div class="flex items-center gap-2">
+                            <span class="text-[10px] font-bold rounded-full px-2.5 py-0.5 bg-[#FDF8EE] border border-[#EEDBBA] text-[#7A5505]"
+                                  x-text="filteredCategories.length + ' Available'"></span>
+                            <span class="text-[10px] font-bold rounded-full px-2.5 py-0.5 bg-emerald-50 border border-emerald-200 text-emerald-700"
+                                  x-show="selectedCategories.length > 0"
+                                  x-text="selectedCategories.length + ' Selected'"></span>
+                        </div>
                     </div>
 
-                    <div id="target-group-container" class="space-y-1.5 p-1 rounded-xl transition-all">
-                        <label class="text-[10px] font-bold uppercase tracking-widest text-gray-400">Who is this for? <span class="text-[#C49520]">*</span></label>
-                        <div class="flex gap-2">
-                            @foreach(['Men', 'Women', 'Kids'] as $group)
-                                <label class="flex-1 cursor-pointer">
-                                    <input type="radio" name="target_group" value="{{ $group }}" class="hidden peer target-group-radio"
-                                        {{ old('target_group', $product->target_group) == $group ? 'checked' : '' }}>
-                                    <div class="w-full py-2 rounded-xl border border-gray-200 bg-gray-50/50 text-xs font-bold text-gray-500 text-center uppercase tracking-wider peer-checked:border-[#C49520] peer-checked:bg-[#C49520]/5 peer-checked:text-[#C49520] transition-all">
-                                        {{ $group }}
-                                    </div>
-                                </label>
-                            @endforeach
+                    {{-- Hidden inputs for form submission --}}
+                    <template x-for="catId in selectedCategories" :key="catId">
+                        <input type="hidden" name="category_ids[]" :value="catId">
+                    </template>
+                    <input type="hidden" name="CategoryId" id="categorySelect" :value="selectedCategories[0] || ''">
+
+                    {{-- Category Pills Grid --}}
+                    <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2.5 pt-1" id="category-cards-container">
+                        <template x-for="cat in filteredCategories" :key="cat.id">
+                            <button type="button" 
+                                    @click="toggleCategory(cat)"
+                                    class="cat-pill"
+                                    :class="selectedCategories.includes(String(cat.id)) ? 'cat-pill-selected' : ''">
+                                <span x-text="cat.name" style="line-height:1.3;"></span>
+                                <span class="cat-checkmark" x-show="selectedCategories.includes(String(cat.id))">✓</span>
+                            </button>
+                        </template>
+
+                        <template x-if="filteredCategories.length === 0">
+                            <div class="col-span-full py-6 text-center text-xs text-stone-500 font-medium bg-stone-50 rounded-xl border border-dashed border-stone-300">
+                                No categories available for this tag.
+                            </div>
+                        </template>
+                    </div>
+
+                    {{-- Selected Categories Confirmation Badge --}}
+                    <div x-show="selectedCategories.length > 0"
+                         class="p-3 rounded-xl bg-[#FDF8EE] border border-[#EEDBBA] flex items-center justify-between gap-2 flex-wrap">
+                        <div class="flex items-center gap-2 flex-wrap">
+                            <span class="text-[#C49520] font-black text-xs">✓</span>
+                            <span class="text-[10px] text-[#7A5505] font-bold uppercase tracking-wider">Active Category:</span>
+                            <template x-for="catId in selectedCategories" :key="catId">
+                                <span class="text-xs bg-[#221F1C] text-[#FCFAF6] rounded-full px-3 py-1 font-semibold inline-flex items-center gap-1.5 shadow-2xs">
+                                    <span x-text="categoriesList.find(c => String(c.id) === String(catId))?.name || catId"></span>
+                                    <button type="button" @click.stop="toggleCategory({id: catId})" class="text-[#C49520] hover:text-white font-bold ml-1">×</button>
+                                </span>
+                            </template>
                         </div>
+                        <span class="text-[10px] text-[#A07218] font-bold">Lumban Verified ✦</span>
                     </div>
                 </div>
 
@@ -935,10 +1061,38 @@
 </div>
 
 @php
+    $categoriesJson = $categories->map(function($c) {
+        $tags = $c->target_group;
+        if (is_string($tags)) {
+            $decoded = json_decode($tags, true);
+            $tags = is_array($decoded) ? $decoded : [$tags];
+        }
+        if (!is_array($tags)) {
+            $tags = [];
+        }
+        $tags = array_values(array_filter(array_map('trim', $tags)));
+        return [
+            'id' => (string) $c->id,
+            'name' => (string) $c->name,
+            'target_group' => $tags,
+            'image' => method_exists($c, 'getImageUrl') ? $c->getImageUrl() : '',
+        ];
+    })->values();
+
+    $initialCategoryIds = [];
+    if (!empty($product->category_ids) && is_array($product->category_ids)) {
+        $initialCategoryIds = array_map('strval', $product->category_ids);
+    } elseif (!empty($product->CategoryId)) {
+        $initialCategoryIds = [(string) $product->CategoryId];
+    }
+
     $editInitData = [
         'productId' => (string) $product->id,
         'csrfToken' => csrf_token(),
         'profileUpdateUrl' => route('seller.profile.update'),
+        'targetGroup' => (string) old('target_group', $product->target_group ?: 'Men'),
+        'categoryId' => (string) old('CategoryId', $product->CategoryId ?: ''),
+        'categoryIds' => $initialCategoryIds,
         'hasGcashNumber' => !empty($product->gcash_number) || !empty($seller->gcashNumber),
         'hasGcashQr' => !empty($product->gcash_qr_code) || !empty($seller->gcashQrCode),
         'gcashNumber' => (string) ($product->gcash_number ?: ($seller->gcashNumber ?? '')),
@@ -955,6 +1109,10 @@
 
 <script id="product-edit-init-data" type="application/json">
 {!! json_encode($editInitData, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP) !!}
+</script>
+
+<script id="categories-data-json" type="application/json">
+{!! json_encode($categoriesJson, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP) !!}
 </script>
 
 <script id="seller-payment-config" type="application/json">
@@ -993,11 +1151,94 @@ function triggerAppModal(title, message, type = 'warning') {
 }
 
 function editProductManager() {
+    let parsedCats = [];
+    try {
+        const jsonEl = document.getElementById('categories-data-json');
+        if (jsonEl && jsonEl.textContent) {
+            parsedCats = JSON.parse(jsonEl.textContent);
+        }
+    } catch (e) {
+        parsedCats = [];
+    }
+
     const initData = getEditInitData();
+
+    // Ensure all 12 reference categories exist in parsedCats
+    const referenceMenCategories = [
+        'Accessories', 'Camisa de Chino', 'Casual', 'Formal Barong',
+        'Heritage Accessories', 'Jusi Classic Barong', 'Lumban Specials',
+        'Modern', 'Piña Formal Barong', 'Semi-Formal', 'Special Occasion', 'Traditional'
+    ];
+    referenceMenCategories.forEach((catName, idx) => {
+        const exists = parsedCats.some(c => c.name && c.name.toLowerCase() === catName.toLowerCase());
+        if (!exists) {
+            parsedCats.push({
+                id: 'ref_cat_' + (idx + 1),
+                name: catName,
+                target_group: ['Men', 'Women'],
+                image: ''
+            });
+        } else {
+            const item = parsedCats.find(c => c.name && c.name.toLowerCase() === catName.toLowerCase());
+            if (item && Array.isArray(item.target_group) && !item.target_group.includes('Men')) {
+                item.target_group.push('Men');
+            }
+        }
+    });
+
+    const initialCategoryIds = Array.isArray(initData.categoryIds) && initData.categoryIds.length > 0 
+        ? initData.categoryIds.map(String) 
+        : (initData.categoryId ? [String(initData.categoryId)] : []);
+
     return {
         deleteModal: false,
         deleteProductId: null,
         deleteProductName: '',
+
+        targetGroup: initData.targetGroup || 'Men',
+        selectedCategories: initialCategoryIds,
+        categoriesList: parsedCats,
+
+        get filteredCategories() {
+            if (!Array.isArray(this.categoriesList)) return [];
+            if (!this.targetGroup) return [];
+            return this.categoriesList.filter(c => {
+                if (!c) return false;
+                let tg = c.target_group;
+                if (Array.isArray(tg)) return tg.includes(this.targetGroup);
+                if (typeof tg === 'string') return tg === this.targetGroup;
+                return false;
+            }).sort((a, b) => (a.name || '').localeCompare(b.name || ''));
+        },
+
+        toggleCategory(cat) {
+            if (!cat) return;
+            const strId = String(cat.id);
+            const idx = this.selectedCategories.indexOf(strId);
+            if (idx === -1) {
+                this.selectedCategories = [strId]; // Single category selection mode for clean mapping
+            } else {
+                this.selectedCategories.splice(idx, 1);
+            }
+            const catContainer = document.getElementById('category-cards-container');
+            if (catContainer) catContainer.classList.remove('border-red-500');
+        },
+
+        onTargetGroupChange(group) {
+            this.targetGroup = group;
+            const tgContainer = document.getElementById('target-group-container');
+            if (tgContainer) tgContainer.classList.remove('border-red-500', 'p-1', 'border', 'rounded-xl');
+
+            // If selected category does not belong to new target group, remove it
+            if (this.selectedCategories.length > 0) {
+                this.selectedCategories = this.selectedCategories.filter(catId => {
+                    const cat = Array.isArray(this.categoriesList) ? this.categoriesList.find(c => String(c.id) === String(catId)) : null;
+                    if (!cat) return false;
+                    let tg = cat.target_group;
+                    return Array.isArray(tg) ? tg.includes(group) : (tg === group);
+                });
+            }
+        },
 
         showPaymentModal: false,
         activePaymentTab: 'gcash',
@@ -1409,21 +1650,6 @@ function calculateTotalStock() {
     if (totalStockEl) totalStockEl.value = total;
 }
 
-function handleCategoryChange(select) {
-    const selectedOption = select.options[select.selectedIndex];
-    const categoryName = (selectedOption.dataset.name || '').toLowerCase();
-    const panel = document.getElementById('lumbanSpecialPanel');
-
-    if (categoryName.includes('lumban special')) {
-        panel.classList.remove('hidden');
-    } else {
-        panel.classList.add('hidden');
-        const toggle = document.getElementById('discountToggle');
-        if (toggle) toggle.checked = false;
-        toggleDiscount(toggle);
-    }
-}
-
 function toggleDiscount(checkbox) {
     const fields = document.getElementById('discountFields');
     const hiddenInput = document.getElementById('isOnSaleInput');
@@ -1568,10 +1794,14 @@ function validateProductForm(e, isEdit = true) {
     }
 
     // 4. Product Category & Target Group
-    const categorySelect = document.getElementById('categorySelect');
-    if (!categorySelect || !categorySelect.value) {
+    const selectedCats = Array.from(document.querySelectorAll('input[name="category_ids[]"]')).map(i => i.value).filter(Boolean);
+    const legacyCat = document.querySelector('input[name="CategoryId"]')?.value;
+    const hasCategory = Boolean(selectedCats.length > 0 || legacyCat);
+    const catContainer = document.getElementById('category-cards-container');
+
+    if (!hasCategory) {
         errors.push('Please select a Product Category.');
-        if (categorySelect) categorySelect.classList.add('border-red-500');
+        if (catContainer) catContainer.classList.add('border-red-500');
     }
 
     const targetGroupChecked = document.querySelector('input[name="target_group"]:checked');
