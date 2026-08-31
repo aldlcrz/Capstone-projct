@@ -112,11 +112,15 @@ class WebController extends Controller
                 ->orderBy('createdAt', 'desc');
             } elseif ($request->sort === 'newest') {
                 $query->orderBy('createdAt', 'desc');
+            } elseif ($request->sort === 'price_asc' || $request->sort === 'price_low') {
+                $query->orderBy('price', 'asc');
+            } elseif ($request->sort === 'price_desc' || $request->sort === 'price_high') {
+                $query->orderBy('price', 'desc');
             } else {
-                $query->orderBy('seller_is_premium', 'desc')->orderBy('createdAt', 'desc');
+                $query->inRandomOrder();
             }
         } else {
-            $query->orderBy('seller_is_premium', 'desc')->orderBy('createdAt', 'desc');
+            $query->inRandomOrder();
         }
 
         $products = $query->paginate(100);

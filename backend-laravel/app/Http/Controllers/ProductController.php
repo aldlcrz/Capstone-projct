@@ -114,7 +114,17 @@ class ProductController extends Controller
             $query->where('sellerId', $request->seller);
         }
 
-        $products = $query->orderBy('createdAt', 'desc')->get();
+        if ($request->has('sort') && $request->sort === 'newest') {
+            $query->orderBy('createdAt', 'desc');
+        } elseif ($request->has('sort') && in_array($request->sort, ['price_asc', 'price_low'])) {
+            $query->orderBy('price', 'asc');
+        } elseif ($request->has('sort') && in_array($request->sort, ['price_desc', 'price_high'])) {
+            $query->orderBy('price', 'desc');
+        } else {
+            $query->inRandomOrder();
+        }
+
+        $products = $query->get();
 
         return response()->json($products->map(fn($p) => $this->serializeProduct($request, $p)));
     }
