@@ -698,7 +698,10 @@
                     Delete
                 </button>
             </div>
-        {{-- Change Email Address 2-Step Verification Modal --}}
+        </div>
+    </div>
+
+    {{-- Change Email Address 2-Step Verification Modal --}}
         <div x-show="showChangeEmailModal"
              x-cloak
              style="display:none;"
