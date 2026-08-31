@@ -1382,7 +1382,7 @@ class WebAuthController extends Controller
         // Apply email update
         $oldEmail = $user->email;
         $user->email = $pendingNewEmail;
-        $user->isEmailVerified = true;
+        $user->isVerified = true;
         $user->email_verified_at = now();
         $user->save();
 
