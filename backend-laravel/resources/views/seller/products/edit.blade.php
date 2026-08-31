@@ -426,19 +426,22 @@
                         @foreach($images as $i => $img)
                             <div class="relative group aspect-3/4 rounded-xl overflow-hidden border transition-all shadow-xs"
                                  x-data="{ marked: false }"
-                                 :class="marked ? 'border-red-500 ring-2 ring-red-400 opacity-60 scale-95' : 'border-gray-200 hover:border-gray-300'">
-                                <img src="{{ $product->getImageUrl($img) }}" onerror="this.src='/uploads/products/default.jpg'" class="w-full h-full object-cover">
+                                 :class="marked ? 'border-red-400 opacity-70' : 'border-gray-200 hover:border-gray-300'">
+                                <img src="{{ $product->getImageUrl($img) }}" onerror="this.src='/uploads/products/default.jpg'" class="w-full h-full object-cover transition-all" :class="marked ? 'scale-105 grayscale' : ''">
                                 <input type="checkbox" name="remove_images[]" value="{{ $img }}" :checked="marked" class="hidden">
-                                
+
+                                {{-- Toggle remove button --}}
                                 <button type="button" @click="marked = !marked"
                                     class="absolute top-1.5 right-1.5 w-6 h-6 rounded-full text-[10px] font-black flex items-center justify-center shadow-md transition-all z-10 cursor-pointer"
-                                    :class="marked ? 'bg-red-600 text-white' : 'bg-black/70 text-white hover:bg-red-600'"
-                                    :title="marked ? 'Undo photo removal' : 'Remove photo'">
+                                    :class="marked ? 'bg-red-500 text-white' : 'bg-black/60 text-white hover:bg-red-500'"
+                                    :title="marked ? 'Undo removal' : 'Remove photo'">
                                     <span x-show="!marked">✕</span>
                                     <span x-show="marked">↩</span>
                                 </button>
-                                <div x-show="marked" class="absolute inset-0 bg-red-900/40 flex items-center justify-center p-1 pointer-events-none">
-                                    <span class="text-[9px] font-bold uppercase tracking-wider text-white bg-red-600 px-2 py-0.5 rounded shadow">Removing</span>
+
+                                {{-- Subtle bottom label when marked --}}
+                                <div x-show="marked" class="absolute bottom-0 inset-x-0 bg-red-600/90 py-1 flex items-center justify-center pointer-events-none">
+                                    <span class="text-[8px] font-black uppercase tracking-widest text-white">Marked for removal</span>
                                 </div>
                             </div>
                         @endforeach
