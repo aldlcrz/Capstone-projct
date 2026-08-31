@@ -215,7 +215,7 @@
                     </div>
                     
                     <!-- Profile Dropdown -->
-                    <div x-data="{ open: false }" class="relative" @mouseenter="open = true" @mouseleave="open = false" @click.away="open = false">
+                    <div x-data="{ open: false }" class="relative" @click.away="open = false">
                         @auth
                             <button type="button" @click="open = !open" class="w-9 h-9 sm:w-11 sm:h-11 rounded-full border border-gray-100 flex items-center justify-center overflow-hidden bg-white hover:border-gray-400 transition-all shadow-sm cursor-pointer">
                                 @if(Auth::user()->profile_photo_url)
@@ -292,9 +292,9 @@
                                 </form>
                             </div>
                         @else
-                            <a href="/login" class="w-9 h-9 sm:w-11 sm:h-11 rounded-full border border-gray-100 flex items-center justify-center text-gray-800 hover:border-gray-400 bg-white transition-all shadow-sm">
+                            <button type="button" @click="open = !open" class="w-9 h-9 sm:w-11 sm:h-11 rounded-full border border-gray-100 flex items-center justify-center text-gray-800 hover:border-gray-400 bg-white transition-all shadow-sm cursor-pointer" aria-label="User Account Menu">
                                 <svg class="w-4.5 h-4.5 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg>
-                            </a>
+                            </button>
                             <div x-show="open" 
                                  x-transition:enter="transition ease-out duration-200"
                                  x-transition:enter-start="opacity-0 translate-y-1"
