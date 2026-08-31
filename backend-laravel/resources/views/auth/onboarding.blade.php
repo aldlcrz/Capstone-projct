@@ -22,28 +22,12 @@
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
     
     <style>
-        body { font-family: 'Inter', sans-serif; background: #F7F3EE; transition: background 0.3s, color 0.3s; }
+        body { font-family: 'Inter', sans-serif; background: #F7F3EE; }
         .font-serif { font-family: 'Playfair Display', serif; }
         [x-cloak] { display: none !important; }
         
         .no-scrollbar::-webkit-scrollbar { display: none; }
         .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
-
-        /* Dark Mode Theme Styles */
-        body.dark { background-color: #121212 !important; color: #f3f4f6 !important; }
-        body.dark .onboarding-card { background-color: #1c1c1e !important; border-color: #2f2f32 !important; box-shadow: 0 20px 60px rgba(0,0,0,0.5) !important; }
-        body.dark .section-panel { background-color: #242426 !important; border-color: #333336 !important; }
-        body.dark .field-input { background-color: #2c2c2e !important; color: #ffffff !important; border-color: #3e3e42 !important; }
-        body.dark .field-input::placeholder { color: #8e8e93 !important; }
-        body.dark .field-input:focus { background-color: #333336 !important; border-color: #C0422A !important; }
-        body.dark .text-heading { color: #ffffff !important; }
-        body.dark .text-sub { color: #a1a1aa !important; }
-        body.dark .back-btn { background-color: #2c2c2e !important; color: #d4d4d8 !important; border-color: #3e3e42 !important; }
-        body.dark .location-dropdown-panel { background-color: #222224 !important; border-color: #3a3a3d !important; color: #ffffff !important; }
-        body.dark .location-tab-header { background-color: #18181a !important; border-color: #2a2a2d !important; }
-        body.dark .detected-bar { background-color: #242426 !important; border-color: #333336 !important; }
-        body.dark .map-btn-secondary { background-color: #2a2a2d !important; border-color: #3e3e42 !important; color: #e4e4e7 !important; }
-        body.dark .location-list-item:hover { background-color: #2c2c30 !important; color: #ffffff !important; }
 
         /* Leaflet custom pin styling */
         .lumbarong-pin-icon {
@@ -58,32 +42,20 @@
     <div class="absolute top-0 right-0 w-80 sm:w-140 h-80 sm:h-140 rounded-full -translate-y-1/2 translate-x-1/3 blur-3xl opacity-[0.06] pointer-events-none bg-[#C0422A]"></div>
     <div class="absolute bottom-0 left-0 w-72 sm:w-110 h-72 sm:h-110 rounded-full translate-y-1/2 -translate-x-1/3 blur-3xl opacity-[0.12] pointer-events-none bg-[#D4B896]"></div>
 
-    <div class="onboarding-card w-full max-w-xl bg-white rounded-3xl sm:rounded-[2.5rem] border border-[#E5DDD5] p-4 sm:p-7 shadow-[0_20px_60px_rgba(60,40,20,0.08)] relative z-10 my-2 sm:my-6 transition-all duration-300" 
+    <div class="w-full max-w-xl bg-white rounded-3xl sm:rounded-[2.5rem] border border-[#E5DDD5] p-4 sm:p-7 shadow-[0_20px_60px_rgba(60,40,20,0.08)] relative z-10 my-2 sm:my-6 transition-all duration-300" 
          x-data="onboardingSetup()" 
          x-init="init()">
         
-        {{-- Top Navigation & Theme Toggle --}}
+        {{-- Top Navigation --}}
         <div class="flex items-center justify-between mb-3 sm:mb-4">
-            <a href="/" class="back-btn w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-[#FAF7F2] border border-[#E8DFC8] flex items-center justify-center text-gray-600 hover:text-[#C0422A] hover:bg-[#F3ECE0] transition-all shadow-2xs" title="Back to Home">
+            <a href="/" class="w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-[#FAF7F2] border border-[#E8DFC8] flex items-center justify-center text-gray-600 hover:text-[#C0422A] hover:bg-[#F3ECE0] transition-all shadow-2xs" title="Back to Home">
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
                 </svg>
             </a>
-
-            <!-- Dark / Light Mode Toggle -->
-            <button id="dark-mode-toggle"
-                    type="button"
-                    onclick="toggleDarkMode()"
-                    title="Toggle dark / light mode"
-                    class="back-btn w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-[#FAF7F2] border border-[#E8DFC8] flex items-center justify-center text-gray-500 hover:text-[#C0422A] hover:bg-[#F3ECE0] transition-all shadow-2xs"
-                    aria-label="Toggle dark mode">
-                <svg id="icon-sun" class="w-4 h-4 hidden text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364-6.364l-.707.707M6.343 17.657l-.707.707M17.657 17.657l-.707-.707M6.343 6.343l-.707-.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"/>
-                </svg>
-                <svg id="icon-moon" class="w-4 h-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"/>
-                </svg>
-            </button>
+            <div class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">
+                Account Setup
+            </div>
         </div>
 
         {{-- Header & Branding --}}
@@ -97,22 +69,22 @@
             <div class="inline-flex items-center gap-1.5 px-3 py-0.5 rounded-full bg-[#C0422A]/10 text-[#C0422A] text-[10px] font-extrabold uppercase tracking-wider mb-1.5 border border-[#C0422A]/20">
                 <span>Welcome to LumBarong</span>
             </div>
-            <h1 class="font-serif text-2xl sm:text-3xl font-black italic tracking-tight text-heading text-gray-900 mb-1">
+            <h1 class="font-serif text-2xl sm:text-3xl font-black italic tracking-tight text-gray-900 mb-1">
                 Set Up Your Profile
             </h1>
-            <p class="text-xs text-sub text-gray-600 dark:text-gray-400 font-medium max-w-md mx-auto leading-relaxed px-1">
+            <p class="text-xs text-gray-600 font-medium max-w-md mx-auto leading-relaxed px-1">
                 Add your details to personalize your authentic Lumban artisan experience and expedite delivery checkout. You can also skip and update these anytime.
             </p>
         </div>
 
         {{-- Error Summary Alert --}}
         @if ($errors->any())
-            <div class="mb-4 p-3.5 rounded-2xl bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-800 text-red-900 dark:text-red-200 text-xs shadow-2xs animate-fade-in">
+            <div class="mb-4 p-3.5 rounded-2xl bg-red-50 border border-red-200 text-red-900 text-xs shadow-2xs animate-fade-in">
                 <div class="flex items-center gap-2 font-bold mb-1">
                     <svg class="w-4 h-4 text-red-600 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
                     <span>Please review the highlighted details:</span>
                 </div>
-                <ul class="list-disc list-inside space-y-0.5 text-red-700 dark:text-red-300 font-medium">
+                <ul class="list-disc list-inside space-y-0.5 text-red-700 font-medium">
                     @foreach ($errors->all() as $err)
                         <li>{{ $err }}</li>
                     @endforeach
@@ -133,11 +105,11 @@
             <input type="hidden" name="barangay" :value="addressForm.barangay || ''">
 
             {{-- 1. BASIC INFORMATION SECTION --}}
-            <div class="section-panel bg-[#FAF8F5] border border-[#ECE3D2] rounded-2xl sm:rounded-3xl p-3.5 sm:p-5 space-y-3.5">
+            <div class="bg-[#FAF8F5] border border-[#ECE3D2] rounded-2xl sm:rounded-3xl p-3.5 sm:p-5 space-y-3.5">
                 <div class="flex items-center justify-between border-b border-[#ECE3D2] pb-2">
                     <div class="flex items-center gap-2">
                         <span class="w-5 h-5 rounded-full bg-[#C0422A] text-white flex items-center justify-center text-[10px] font-bold shadow-xs">1</span>
-                        <h2 class="text-xs font-black uppercase tracking-wider text-heading text-[#1E1915] dark:text-white">Basic Information</h2>
+                        <h2 class="text-xs font-black uppercase tracking-wider text-[#1E1915]">Basic Information</h2>
                     </div>
                     <span class="text-[9.5px] font-extrabold text-[#C0422A] bg-[#C0422A]/10 border border-[#C0422A]/20 px-2 py-0.5 rounded-full uppercase tracking-wider">Required</span>
                 </div>
@@ -145,7 +117,7 @@
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     {{-- Full Name --}}
                     <div>
-                        <label for="name" class="block text-[11px] font-bold text-gray-800 dark:text-gray-200 uppercase tracking-wider mb-1">
+                        <label for="name" class="block text-[11px] font-bold text-gray-800 uppercase tracking-wider mb-1">
                             Full Name <span class="text-[#C0422A]">*</span>
                         </label>
                         <input type="text" 
@@ -154,12 +126,12 @@
                                value="{{ old('name', Auth::user()->name) }}" 
                                required
                                placeholder="e.g. Maria Santos" 
-                               class="field-input w-full h-11 px-3.5 bg-white border {{ $errors->has('name') ? 'border-red-400 bg-red-50/50' : 'border-[#D8CEBE]' }} rounded-xl text-xs font-semibold text-gray-900 outline-none focus:border-[#C0422A] focus:ring-2 focus:ring-[#C0422A]/15 transition-all shadow-2xs">
+                               class="w-full h-11 px-3.5 bg-white border {{ $errors->has('name') ? 'border-red-400 bg-red-50/50' : 'border-[#D8CEBE]' }} rounded-xl text-xs font-semibold text-gray-900 outline-none focus:border-[#C0422A] focus:ring-2 focus:ring-[#C0422A]/15 transition-all shadow-2xs">
                     </div>
 
                     {{-- Preferred Username --}}
                     <div>
-                        <label for="username" class="block text-[11px] font-bold text-gray-800 dark:text-gray-200 uppercase tracking-wider mb-1">
+                        <label for="username" class="block text-[11px] font-bold text-gray-800 uppercase tracking-wider mb-1">
                             Preferred Username <span class="text-[#C0422A]">*</span>
                         </label>
                         <input type="text" 
@@ -168,16 +140,16 @@
                                value="{{ old('username', Auth::user()->username) }}" 
                                required
                                placeholder="e.g. mariasantos" 
-                               class="field-input w-full h-11 px-3.5 bg-white border {{ $errors->has('username') ? 'border-red-400 bg-red-50/50' : 'border-[#D8CEBE]' }} rounded-xl text-xs font-semibold text-gray-900 outline-none focus:border-[#C0422A] focus:ring-2 focus:ring-[#C0422A]/15 transition-all shadow-2xs">
+                               class="w-full h-11 px-3.5 bg-white border {{ $errors->has('username') ? 'border-red-400 bg-red-50/50' : 'border-[#D8CEBE]' }} rounded-xl text-xs font-semibold text-gray-900 outline-none focus:border-[#C0422A] focus:ring-2 focus:ring-[#C0422A]/15 transition-all shadow-2xs">
                     </div>
 
                     {{-- Phone Number (Fixed Flex Prefix Group - Zero Overlap) --}}
                     <div class="sm:col-span-2">
-                        <label for="mobileNumber" class="block text-[11px] font-bold text-gray-800 dark:text-gray-200 uppercase tracking-wider mb-1">
+                        <label for="mobileNumber" class="block text-[11px] font-bold text-gray-800 uppercase tracking-wider mb-1">
                             Mobile Phone Number <span class="text-gray-400 font-normal text-[10px] lowercase">(e.g. 09171234567)</span>
                         </label>
-                        <div class="flex items-center rounded-xl bg-white dark:bg-[#2c2c2e] border {{ $errors->has('mobileNumber') ? 'border-red-400 bg-red-50/50' : 'border-[#D8CEBE] dark:border-[#3e3e42]' }} overflow-hidden focus-within:border-[#C0422A] focus-within:ring-2 focus-within:ring-[#C0422A]/15 transition-all shadow-2xs">
-                            <div class="flex items-center gap-1.5 px-3 py-2.5 bg-[#FAF7F2] dark:bg-[#242426] border-r border-[#D8CEBE] dark:border-[#3e3e42] text-xs font-bold text-gray-700 dark:text-gray-200 select-none shrink-0">
+                        <div class="flex items-center rounded-xl bg-white border {{ $errors->has('mobileNumber') ? 'border-red-400 bg-red-50/50' : 'border-[#D8CEBE]' }} overflow-hidden focus-within:border-[#C0422A] focus-within:ring-2 focus-within:ring-[#C0422A]/15 transition-all shadow-2xs">
+                            <div class="flex items-center gap-1.5 px-3 py-2.5 bg-[#FAF7F2] border-r border-[#D8CEBE] text-xs font-bold text-gray-700 select-none shrink-0">
                                 <span>🇵🇭</span>
                                 <span>+63</span>
                             </div>
@@ -186,33 +158,33 @@
                                    name="mobileNumber" 
                                    value="{{ old('mobileNumber', Auth::user()->mobileNumber) }}" 
                                    placeholder="917 123 4567" 
-                                   class="w-full h-11 px-3 bg-transparent text-xs font-semibold text-gray-900 dark:text-white outline-none placeholder:text-gray-400">
+                                   class="w-full h-11 px-3 bg-transparent text-xs font-semibold text-gray-900 outline-none placeholder:text-gray-400">
                         </div>
                     </div>
                 </div>
             </div>
 
             {{-- 2. PRIMARY DELIVERY ADDRESS SECTION (CUSTOMER PROFILE INTERACTIVE UI) --}}
-            <div class="section-panel bg-[#FAF8F5] border border-[#ECE3D2] rounded-2xl sm:rounded-3xl p-3.5 sm:p-5 space-y-3.5">
+            <div class="bg-[#FAF8F5] border border-[#ECE3D2] rounded-2xl sm:rounded-3xl p-3.5 sm:p-5 space-y-3.5">
                 <div class="flex items-center justify-between border-b border-[#ECE3D2] pb-2">
                     <div class="flex items-center gap-2">
                         <span class="w-5 h-5 rounded-full bg-[#C0422A] text-white flex items-center justify-center text-[10px] font-bold shadow-xs">2</span>
-                        <h2 class="text-xs font-black uppercase tracking-wider text-heading text-[#1E1915] dark:text-white">Primary Delivery Address</h2>
+                        <h2 class="text-xs font-black uppercase tracking-wider text-[#1E1915]">Primary Delivery Address</h2>
                     </div>
-                    <span class="text-[9.5px] font-extrabold text-amber-800 dark:text-amber-300 bg-amber-100/80 dark:bg-amber-950/40 border border-amber-300/50 dark:border-amber-700/50 px-2 py-0.5 rounded-full uppercase tracking-wider">Optional for now</span>
+                    <span class="text-[9.5px] font-extrabold text-amber-800 bg-amber-100/80 border border-amber-300/50 px-2 py-0.5 rounded-full uppercase tracking-wider">Optional for now</span>
                 </div>
 
                 {{-- Interactive Map Pinpointer Container --}}
                 <div class="space-y-2 pb-1">
                     <div class="flex items-center justify-between gap-2">
-                        <label class="text-[11px] font-bold uppercase tracking-wider text-[#8C6212] dark:text-[#DFC97A] flex items-center gap-1">
+                        <label class="text-[11px] font-bold uppercase tracking-wider text-[#8C6212] flex items-center gap-1">
                             <svg class="w-3.5 h-3.5 text-[#C0422A]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
                             <span>Pin Delivery Location</span>
                         </label>
                         <button type="button"
                                 @click="locateUserGps()"
                                 :disabled="isLocatingGps"
-                                class="map-btn-secondary bg-[#FAF5EA] border border-[#E6D8BA] text-[#8C6212] hover:bg-[#EAE2D2] px-2.5 py-1 rounded-xl text-[10px] sm:text-[11px] font-bold inline-flex items-center gap-1.5 cursor-pointer transition-all shadow-2xs disabled:opacity-50 shrink-0">
+                                class="bg-[#FAF5EA] border border-[#E6D8BA] text-[#8C6212] hover:bg-[#EAE2D2] px-2.5 py-1 rounded-xl text-[10px] sm:text-[11px] font-bold inline-flex items-center gap-1.5 cursor-pointer transition-all shadow-2xs disabled:opacity-50 shrink-0">
                             <template x-if="isLocatingGps">
                                 <svg class="w-3.5 h-3.5 animate-spin text-[#8C6212]" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
                             </template>
@@ -232,7 +204,7 @@
                                x-model="mapSearchQuery"
                                @keydown.enter.prevent="searchMapLocation()"
                                placeholder="Search street, barangay, or landmark..."
-                               class="field-input w-full h-10 pl-9 pr-20 bg-white border border-[#D8CEBE] rounded-xl text-xs text-gray-900 outline-none focus:border-[#996515] transition-all shadow-2xs">
+                               class="w-full h-10 pl-9 pr-20 bg-white border border-[#D8CEBE] rounded-xl text-xs text-gray-900 outline-none focus:border-[#996515] transition-all shadow-2xs">
                         <button type="button"
                                 @click="searchMapLocation()"
                                 :disabled="pinSearching"
@@ -246,10 +218,10 @@
                          x-ref="addressMapContainer"></div>
 
                     {{-- Detected Location Bar --}}
-                    <div class="detected-bar p-2.5 bg-white dark:bg-[#242426] border border-[#ECE3D2] dark:border-[#333336] rounded-xl flex items-center justify-between gap-2 text-[10.5px]">
+                    <div class="p-2.5 bg-white border border-[#ECE3D2] rounded-xl flex items-center justify-between gap-2 text-[10.5px]">
                         <div class="flex items-center gap-1.5 min-w-0">
                             <span class="w-2 h-2 rounded-full bg-emerald-500 shrink-0 animate-pulse"></span>
-                            <span class="text-[#78716C] dark:text-gray-300 font-medium truncate" x-text="detectedLocationName || 'Drag pin or tap on map to lock coordinates'"></span>
+                            <span class="text-[#78716C] font-medium truncate" x-text="detectedLocationName || 'Drag pin or tap on map to lock coordinates'"></span>
                         </div>
                         <span class="shrink-0 px-2 py-0.5 bg-[#1E1915] text-[#DFC97A] text-[9px] font-black rounded-md uppercase tracking-wider shadow-2xs"
                               x-text="addressForm.latitude && addressForm.longitude ? 'Pin Locked' : 'Set Pin'"></span>
@@ -258,13 +230,13 @@
 
                 {{-- 4-Tier Philippine Location Dropdown Selector (PSGC) --}}
                 <div class="relative">
-                    <label class="block text-[11px] font-bold text-gray-800 dark:text-gray-200 uppercase tracking-wider mb-1">
+                    <label class="block text-[11px] font-bold text-gray-800 uppercase tracking-wider mb-1">
                         Region, Province, City, Barangay
                     </label>
                     <div @click="toggleLocationDropdown()"
-                         class="field-input w-full h-11 px-3.5 bg-white border border-[#D8CEBE] rounded-xl flex items-center justify-between cursor-pointer transition-all shadow-2xs hover:border-[#C0422A]">
+                         class="w-full h-11 px-3.5 bg-white border border-[#D8CEBE] rounded-xl flex items-center justify-between cursor-pointer transition-all shadow-2xs hover:border-[#C0422A]">
                         <span class="truncate text-xs" 
-                              :class="getLocationSummary() ? 'text-gray-900 dark:text-white font-bold' : 'text-gray-400 font-medium'" 
+                              :class="getLocationSummary() ? 'text-gray-900 font-bold' : 'text-gray-400 font-medium'" 
                               x-text="getLocationSummary() || 'Select Region, Province, City, Barangay'"></span>
                         <svg class="w-4 h-4 text-gray-400 transition-transform duration-200 shrink-0" 
                              :class="locationDropdownOpen ? 'rotate-180' : ''" 
@@ -276,11 +248,11 @@
                     {{-- Dropdown Tab Menu Panel --}}
                     <div x-show="locationDropdownOpen" 
                          @click.away="locationDropdownOpen = false"
-                         class="location-dropdown-panel absolute left-0 right-0 z-50 mt-1.5 bg-white border border-[#ECE3D2] rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-64 animate-fade-in" 
+                         class="absolute left-0 right-0 z-50 mt-1.5 bg-white border border-[#ECE3D2] rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-64 animate-fade-in" 
                          x-cloak>
                         
                         {{-- Tabs Navigation --}}
-                        <div class="location-tab-header flex border-b border-gray-100 bg-[#FAF8F5] text-[10px] font-bold text-gray-500">
+                        <div class="flex border-b border-gray-100 bg-[#FAF8F5] text-[10px] font-bold text-gray-500">
                             <button @click="activeTab = 'region'" type="button" 
                                     :class="activeTab === 'region' ? 'text-[#996515] bg-white border-b-2 border-[#996515] font-extrabold' : ''" 
                                     class="flex-1 py-2 text-center transition-colors">Region</button>
@@ -299,15 +271,15 @@
                         </div>
 
                         {{-- Search Field for active tab --}}
-                        <div class="p-2 border-b border-gray-100 bg-gray-50/70 dark:bg-gray-800/40">
+                        <div class="p-2 border-b border-gray-100 bg-gray-50/70">
                             <input type="text" 
                                    x-model="locationSearch" 
                                    :placeholder="'Search ' + activeTab + '...'" 
-                                   class="field-input w-full h-8 px-2.5 bg-white border border-gray-200 rounded-lg text-xs outline-none focus:border-[#996515]">
+                                   class="w-full h-8 px-2.5 bg-white border border-gray-200 rounded-lg text-xs outline-none focus:border-[#996515]">
                         </div>
 
                         {{-- List of Geographic Options --}}
-                        <div class="flex-1 overflow-y-auto max-h-40 divide-y divide-gray-50 dark:divide-gray-800 text-xs">
+                        <div class="flex-1 overflow-y-auto max-h-40 divide-y divide-gray-50 text-xs">
                             <template x-if="loadingGeoData">
                                 <div class="p-4 text-center text-xs text-gray-400 flex items-center justify-center gap-2">
                                     <svg class="animate-spin h-3.5 w-3.5 text-[#996515]" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
@@ -318,28 +290,28 @@
                             <template x-if="activeTab === 'region' && !loadingGeoData">
                                 <div>
                                     <template x-for="reg in filteredGeoList(regionsList)" :key="reg.code">
-                                        <button type="button" @click="selectRegion(reg)" class="location-list-item w-full text-left px-3.5 py-2 hover:bg-amber-50/50 block truncate text-gray-800 dark:text-gray-200 transition-colors" x-text="reg.name"></button>
+                                        <button type="button" @click="selectRegion(reg)" class="w-full text-left px-3.5 py-2 hover:bg-amber-50/50 block truncate text-gray-800 transition-colors" x-text="reg.name"></button>
                                     </template>
                                 </div>
                             </template>
                             <template x-if="activeTab === 'province' && !loadingGeoData">
                                 <div>
                                     <template x-for="prov in filteredGeoList(provincesList)" :key="prov.code">
-                                        <button type="button" @click="selectProvince(prov)" class="location-list-item w-full text-left px-3.5 py-2 hover:bg-amber-50/50 block truncate text-gray-800 dark:text-gray-200 transition-colors" x-text="prov.name"></button>
+                                        <button type="button" @click="selectProvince(prov)" class="w-full text-left px-3.5 py-2 hover:bg-amber-50/50 block truncate text-gray-800 transition-colors" x-text="prov.name"></button>
                                     </template>
                                 </div>
                             </template>
                             <template x-if="activeTab === 'city' && !loadingGeoData">
                                 <div>
                                     <template x-for="ct in filteredGeoList(citiesList)" :key="ct.code">
-                                        <button type="button" @click="selectCity(ct)" class="location-list-item w-full text-left px-3.5 py-2 hover:bg-amber-50/50 block truncate text-gray-800 dark:text-gray-200 transition-colors" x-text="ct.name"></button>
+                                        <button type="button" @click="selectCity(ct)" class="w-full text-left px-3.5 py-2 hover:bg-amber-50/50 block truncate text-gray-800 transition-colors" x-text="ct.name"></button>
                                     </template>
                                 </div>
                             </template>
                             <template x-if="activeTab === 'barangay' && !loadingGeoData">
                                 <div>
                                     <template x-for="bgy in filteredGeoList(barangaysList)" :key="bgy.code">
-                                        <button type="button" @click="selectBarangay(bgy)" class="location-list-item w-full text-left px-3.5 py-2 hover:bg-amber-50/50 block truncate text-gray-800 dark:text-gray-200 transition-colors" x-text="bgy.name"></button>
+                                        <button type="button" @click="selectBarangay(bgy)" class="w-full text-left px-3.5 py-2 hover:bg-amber-50/50 block truncate text-gray-800 transition-colors" x-text="bgy.name"></button>
                                     </template>
                                 </div>
                             </template>
@@ -351,7 +323,7 @@
                 <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
                     {{-- House No / Street --}}
                     <div class="sm:col-span-2">
-                        <label for="houseNo" class="block text-[11px] font-bold text-gray-800 dark:text-gray-200 uppercase tracking-wider mb-1">
+                        <label for="houseNo" class="block text-[11px] font-bold text-gray-800 uppercase tracking-wider mb-1">
                             Street Name, Building, House No.
                         </label>
                         <input type="text" 
@@ -360,12 +332,12 @@
                                x-model="addressForm.houseNo"
                                value="{{ old('houseNo') }}" 
                                placeholder="e.g. Unit 402, Sunset Bldg, Rizal St." 
-                               class="field-input w-full h-11 px-3.5 bg-white border border-[#D8CEBE] rounded-xl text-xs font-semibold text-gray-900 outline-none focus:border-[#C0422A] focus:ring-2 focus:ring-[#C0422A]/15 transition-all shadow-2xs">
+                               class="w-full h-11 px-3.5 bg-white border border-[#D8CEBE] rounded-xl text-xs font-semibold text-gray-900 outline-none focus:border-[#C0422A] focus:ring-2 focus:ring-[#C0422A]/15 transition-all shadow-2xs">
                     </div>
 
                     {{-- Postal Code --}}
                     <div class="sm:col-span-1">
-                        <label for="postalCode" class="block text-[11px] font-bold text-gray-800 dark:text-gray-200 uppercase tracking-wider mb-1">
+                        <label for="postalCode" class="block text-[11px] font-bold text-gray-800 uppercase tracking-wider mb-1">
                             Postal Code
                         </label>
                         <input type="text" 
@@ -376,7 +348,7 @@
                                value="{{ old('postalCode') }}" 
                                maxlength="4"
                                placeholder="e.g. 4014" 
-                               class="field-input w-full h-11 px-3.5 bg-white border border-[#D8CEBE] rounded-xl text-xs font-semibold text-gray-900 outline-none focus:border-[#C0422A] focus:ring-2 focus:ring-[#C0422A]/15 transition-all shadow-2xs">
+                               class="w-full h-11 px-3.5 bg-white border border-[#D8CEBE] rounded-xl text-xs font-semibold text-gray-900 outline-none focus:border-[#C0422A] focus:ring-2 focus:ring-[#C0422A]/15 transition-all shadow-2xs">
                     </div>
                 </div>
             </div>
@@ -402,62 +374,20 @@
         <form action="{{ route('onboarding.skip') }}" method="POST" class="mt-2.5 text-center">
             @csrf
             <button type="submit" 
-                    class="text-xs font-bold text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 transition-colors py-1.5 px-3.5 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-800 inline-flex items-center gap-1.5 cursor-pointer">
+                    class="text-xs font-bold text-gray-400 hover:text-gray-700 transition-colors py-1.5 px-3.5 rounded-xl hover:bg-gray-100 inline-flex items-center gap-1.5 cursor-pointer">
                 <span>Skip for Now</span>
                 <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
             </button>
         </form>
 
         {{-- Trust & Privacy Footer --}}
-        <p class="text-center text-[10px] text-gray-400 dark:text-gray-500 mt-3 leading-relaxed">
+        <p class="text-center text-[10px] text-gray-400 mt-3 leading-relaxed">
             🔒 Your personal information is encrypted & never shared with third parties.
         </p>
     </div>
 
-    {{-- Dark Mode & Alpine State Script --}}
+    {{-- Alpine State Script --}}
     <script>
-        function safeGetStorage(key) {
-            try { return localStorage.getItem(key); } catch(e) { return null; }
-        }
-        function safeSetStorage(key, val) {
-            try { localStorage.setItem(key, val); } catch(e) {}
-        }
-
-        // Initialize Theme from localStorage
-        (function() {
-            const savedTheme = safeGetStorage('lumbarong_theme');
-            if (savedTheme === 'dark') {
-                document.body.classList.add('dark');
-            } else if (!savedTheme && window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
-                document.body.classList.add('dark');
-            }
-            document.addEventListener('DOMContentLoaded', () => {
-                const isDark = document.body.classList.contains('dark');
-                const sun = document.getElementById('icon-sun');
-                const moon = document.getElementById('icon-moon');
-                if (isDark) {
-                    if (sun) sun.classList.remove('hidden');
-                    if (moon) moon.classList.add('hidden');
-                }
-            });
-        })();
-
-        function toggleDarkMode() {
-            const body = document.body;
-            const isDark = body.classList.toggle('dark');
-            const sun = document.getElementById('icon-sun');
-            const moon = document.getElementById('icon-moon');
-            if (isDark) {
-                if (sun) sun.classList.remove('hidden');
-                if (moon) moon.classList.add('hidden');
-                safeSetStorage('lumbarong_theme', 'dark');
-            } else {
-                if (sun) sun.classList.add('hidden');
-                if (moon) moon.classList.remove('hidden');
-                safeSetStorage('lumbarong_theme', 'light');
-            }
-        }
-
         function onboardingSetup() {
             return {
                 isSubmitting: false,
