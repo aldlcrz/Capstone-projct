@@ -33,12 +33,6 @@ class ProductManagementController extends Controller
     {
         /** @var \App\Models\User $user */
         $user = Auth::user();
-        if (!$user->isPremiumActive()) {
-            $productCount = Product::where('sellerId', $user->id)->count();
-            if ($productCount >= 10) {
-                return redirect()->route('seller.products.index')->with('error', 'Free accounts are limited to 10 product listings. Upgrade to Premium for unlimited listings!');
-            }
-        }
 
         // Ensure all default Lumban heritage categories are present in database
         \Database\Seeders\CategorySeeder::ensureDefaultCategories();
@@ -71,12 +65,6 @@ class ProductManagementController extends Controller
     {
         /** @var \App\Models\User $user */
         $user = Auth::user();
-        if (!$user->isPremiumActive()) {
-            $productCount = Product::where('sellerId', $user->id)->count();
-            if ($productCount >= 10) {
-                return redirect()->route('seller.products.index')->with('error', 'Free accounts are limited to 10 product listings. Upgrade to Premium for unlimited listings!');
-            }
-        }
 
         // Normalization: Ensure $request->files has 'images' if files were submitted via variant inputs
         if (!$request->hasFile('images')) {
