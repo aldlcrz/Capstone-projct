@@ -182,7 +182,7 @@ class User extends Authenticatable
             }
 
             $photo = trim($this->profilePhoto);
-            if ($photo === '') {
+            if ($photo === '' || str_contains($photo, 'default.jpg')) {
                 return null;
             }
 

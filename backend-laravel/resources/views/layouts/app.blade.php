@@ -219,9 +219,9 @@
                         @auth
                             <button type="button" @click="open = !open" class="w-9 h-9 sm:w-11 sm:h-11 rounded-full border border-gray-100 flex items-center justify-center overflow-hidden bg-white hover:border-gray-400 transition-all shadow-sm cursor-pointer">
                                 @if(Auth::user()->profile_photo_url)
-                                    <img src="{{ Auth::user()->profile_photo_url }}" alt="{{ Auth::user()->name }}" class="w-full h-full object-cover rounded-full">
+                                    <img src="{{ Auth::user()->profile_photo_url }}" alt="{{ Auth::user()->username ?? Auth::user()->name }}" class="w-full h-full object-cover rounded-full">
                                 @else
-                                    <span class="font-bold text-gray-700 text-xs sm:text-sm">{{ strtoupper(substr(Auth::user()->name, 0, 1)) }}</span>
+                                    <span class="font-bold text-gray-700 text-xs sm:text-sm">{{ strtoupper(substr(Auth::user()->username ?: Auth::user()->name, 0, 1)) }}</span>
                                 @endif
                             </button>
                             <div x-show="open" 
@@ -237,9 +237,9 @@
                                 <div class="px-4 py-3 border-b border-gray-50 bg-gray-50/50 flex items-center gap-3">
                                     <div class="w-9 h-9 rounded-full overflow-hidden shrink-0 border border-gray-200 flex items-center justify-center bg-stone-100">
                                         @if(Auth::user()->profile_photo_url)
-                                            <img src="{{ Auth::user()->profile_photo_url }}" alt="{{ Auth::user()->name }}" class="w-full h-full object-cover">
+                                            <img src="{{ Auth::user()->profile_photo_url }}" alt="{{ Auth::user()->username ?? Auth::user()->name }}" class="w-full h-full object-cover">
                                         @else
-                                            <span class="font-bold text-gray-700 text-xs">{{ strtoupper(substr(Auth::user()->name, 0, 1)) }}</span>
+                                            <span class="font-bold text-gray-700 text-xs">{{ strtoupper(substr(Auth::user()->username ?: Auth::user()->name, 0, 1)) }}</span>
                                         @endif
                                     </div>
                                     <div class="min-w-0">

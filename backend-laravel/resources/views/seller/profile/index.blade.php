@@ -387,9 +387,17 @@
                     <div class="text-center space-y-2">
                         <div style="width:84px;height:84px;border-radius:50%;padding:2.5px;background:linear-gradient(135deg,#996515,#E6CA65,#996515);margin:0 auto;" class="relative group cursor-pointer">
                             <div style="width:100%;height:100%;border-radius:50%;overflow:hidden;background:#FAF8F5;" class="relative">
-                                <img id="seller-modal-avatar-preview"
-                                     src="{{ $user->profile_photo_url ?: asset('uploads/products/default.jpg') }}"
-                                     class="w-full h-full object-cover">
+                                @if($user->profile_photo_url)
+                                    <img id="seller-modal-avatar-preview"
+                                         src="{{ $user->profile_photo_url }}"
+                                         class="w-full h-full object-cover">
+                                    <span id="seller-modal-initial-preview" class="hidden text-2xl font-black text-[#996515] uppercase">{{ strtoupper(substr($user->username ?? $user->name, 0, 1)) }}</span>
+                                @else
+                                    <img id="seller-modal-avatar-preview"
+                                         src=""
+                                         class="hidden w-full h-full object-cover">
+                                    <span id="seller-modal-initial-preview" class="text-2xl font-black text-[#996515] uppercase flex items-center justify-center h-full">{{ strtoupper(substr($user->username ?? $user->name, 0, 1)) }}</span>
+                                @endif
                                 <label class="absolute inset-0 bg-black/40 text-white opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center cursor-pointer">
                                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"/><circle cx="12" cy="13" r="4"/></svg>
                                     <span class="text-[8px] font-bold uppercase mt-0.5">Change</span>
@@ -801,5 +809,25 @@
             }
         });
     });
+
+    function previewSellerModalAvatar(input) {
+        if (input.files && input.files[0]) {
+            const reader = new FileReader();
+            reader.onload = e => {
+                const modalImg = document.getElementById('seller-modal-avatar-preview');
+                const modalInit = document.getElementById('seller-modal-initial-preview');
+                if (modalImg) {
+                    modalImg.src = e.target.result;
+                    modalImg.classList.remove('hidden');
+                    modalImg.style.display = 'block';
+                }
+                if (modalInit) {
+                    modalInit.classList.add('hidden');
+                    modalInit.style.display = 'none';
+                }
+            };
+            reader.readAsDataURL(input.files[0]);
+        }
+    }
     </script>
 @endsection

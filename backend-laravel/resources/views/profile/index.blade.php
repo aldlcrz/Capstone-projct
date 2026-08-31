@@ -50,13 +50,18 @@
             {{-- Floating Gold-Ringed Avatar --}}
             <div style="width:92px;height:92px;min-width:92px;max-width:92px;min-height:92px;max-height:92px;border-radius:50%;padding:2.5px;background:linear-gradient(135deg,#996515,#E6CA65,#996515);box-shadow:0 4px 14px rgba(0,0,0,0.12);margin:0 auto -46px auto;position:relative;z-index:10;display:block;">
                 <div style="width:100%;height:100%;border-radius:50%;overflow:hidden;background-color:#FAF8F5;display:flex;align-items:center;justify-content:center;">
-                    @if($user->profilePhoto)
+                    @if($user->profile_photo_url)
                         <img id="avatar-display" 
-                             src="{{ str_starts_with($user->profilePhoto, 'http') || str_starts_with($user->profilePhoto, '/') ? $user->profilePhoto : asset('storage/' . $user->profilePhoto) }}" 
+                             src="{{ $user->profile_photo_url }}" 
                              style="width:100%;height:100%;border-radius:50%;object-fit:cover;display:block;"
-                             alt="{{ $user->name }}">
+                             alt="{{ $user->username ?? $user->name }}">
+                        <span id="avatar-initial-display" style="display:none;font-size:32px;font-weight:800;color:#996515;">{{ strtoupper(substr($user->username ?? $user->name, 0, 1)) }}</span>
                     @else
-                        <span style="font-size:30px;font-weight:800;color:#996515;">{{ strtoupper(substr($user->name, 0, 1)) }}</span>
+                        <span id="avatar-initial-display" style="font-size:32px;font-weight:800;color:#996515;">{{ strtoupper(substr($user->username ?? $user->name, 0, 1)) }}</span>
+                        <img id="avatar-display" 
+                             src="" 
+                             style="width:100%;height:100%;border-radius:50%;object-fit:cover;display:none;"
+                             alt="{{ $user->username ?? $user->name }}">
                     @endif
                 </div>
             </div>
@@ -217,17 +222,26 @@
 
                 {{-- Profile Picture Preview & Upload --}}
                 <div class="text-center space-y-2">
-                    <div class="relative w-20 h-20 mx-auto rounded-full overflow-hidden border-2 border-gray-200 bg-gray-50 flex items-center justify-center group">
-                        <img id="modal-avatar-preview"
-                             src="{{ $user->profilePhoto ? (str_starts_with($user->profilePhoto, 'http') || str_starts_with($user->profilePhoto, '/') ? $user->profilePhoto : asset('storage/' . $user->profilePhoto)) : asset('uploads/products/default.jpg') }}"
-                             class="w-full h-full object-cover">
-                        <label class="absolute inset-0 bg-black/40 text-white opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center cursor-pointer">
-                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"/><circle cx="12" cy="13" r="4"/></svg>
-                            <span class="text-[9px] font-bold uppercase mt-0.5">Change</span>
+                    <div class="relative w-20 h-20 mx-auto rounded-full overflow-hidden border-2 border-[#E6D8BA] bg-[#FAF8F5] flex items-center justify-center group shadow-xs">
+                        @if($user->profile_photo_url)
+                            <img id="modal-avatar-preview"
+                                 src="{{ $user->profile_photo_url }}"
+                                 class="w-full h-full object-cover">
+                            <span id="modal-initial-preview" class="hidden text-2xl font-black text-[#996515] uppercase">{{ strtoupper(substr($user->username ?? $user->name, 0, 1)) }}</span>
+                        @else
+                            <img id="modal-avatar-preview"
+                                 src=""
+                                 class="hidden w-full h-full object-cover">
+                            <span id="modal-initial-preview" class="text-2xl font-black text-[#996515] uppercase">{{ strtoupper(substr($user->username ?? $user->name, 0, 1)) }}</span>
+                        @endif
+
+                        <label class="absolute inset-0 bg-black/45 text-white opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center cursor-pointer">
+                            <svg class="w-5 h-5 text-[#DFC97A]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"/><circle cx="12" cy="13" r="4"/></svg>
+                            <span class="text-[9px] font-extrabold uppercase mt-0.5 text-white">Change</span>
                             <input type="file" name="avatar" accept="image/*" class="hidden" onchange="previewModalAvatar(this)">
                         </label>
                     </div>
-                    <p class="text-[10px] text-gray-400 font-medium">Click photo to upload new picture</p>
+                    <p class="text-[10px] text-gray-500 font-medium">Click photo to upload new picture</p>
                 </div>
 
                 {{-- Username Input --}}
@@ -1289,9 +1303,27 @@ function previewModalAvatar(input) {
     if (input.files && input.files[0]) {
         const reader = new FileReader();
         reader.onload = e => {
-            document.getElementById('modal-avatar-preview').src = e.target.result;
+            const modalImg = document.getElementById('modal-avatar-preview');
+            const modalInit = document.getElementById('modal-initial-preview');
+            if (modalImg) {
+                modalImg.src = e.target.result;
+                modalImg.classList.remove('hidden');
+                modalImg.style.display = 'block';
+            }
+            if (modalInit) {
+                modalInit.classList.add('hidden');
+                modalInit.style.display = 'none';
+            }
+
             const topDisplay = document.getElementById('avatar-display');
-            if (topDisplay) topDisplay.src = e.target.result;
+            const topInit = document.getElementById('avatar-initial-display');
+            if (topDisplay) {
+                topDisplay.src = e.target.result;
+                topDisplay.style.display = 'block';
+            }
+            if (topInit) {
+                topInit.style.display = 'none';
+            }
         };
         reader.readAsDataURL(input.files[0]);
     }
