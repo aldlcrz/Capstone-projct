@@ -105,13 +105,11 @@ window.sellerProducts = function() {
         }
     };
 };
-if (window.Alpine) {
-    window.Alpine.data('sellerProducts', window.sellerProducts);
-} else {
-    document.addEventListener('alpine:init', () => {
-        Alpine.data('sellerProducts', window.sellerProducts);
-    });
-}
+// Alpine is loaded with defer — alpine:init fires before Alpine initializes components.
+// Register via alpine:init (always fires, even if script runs before Alpine loads).
+document.addEventListener('alpine:init', () => {
+    Alpine.data('sellerProducts', window.sellerProducts);
+});
 </script>
 
 <div class="space-y-6 sm:space-y-8" x-data="sellerProducts()">
