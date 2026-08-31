@@ -913,11 +913,12 @@ class WebAuthController extends Controller
         $user->save();
 
         // If address fields provided, create default Address record
-        if ($request->filled('city') || $request->filled('province') || $request->filled('houseNo')) {
+        if ($request->filled('city') || $request->filled('province') || $request->filled('houseNo') || $request->filled('region')) {
             try {
                 \App\Models\Address::create([
                     'userId'        => $user->id,
                     'recipientName' => $user->name,
+                    'region'        => trim($request->region ?? 'CALABARZON'),
                     'phone'         => $user->mobileNumber ?: '09000000000',
                     'houseNo'       => trim($request->houseNo ?? 'Unit'),
                     'street'        => trim($request->street ?? ''),
@@ -925,6 +926,8 @@ class WebAuthController extends Controller
                     'city'          => trim($request->city ?? 'Lumban'),
                     'province'      => trim($request->province ?? 'Laguna'),
                     'postalCode'    => trim($request->postalCode ?? '4014'),
+                    'latitude'      => $request->latitude ? floatval($request->latitude) : null,
+                    'longitude'     => $request->longitude ? floatval($request->longitude) : null,
                     'isDefault'     => true,
                 ]);
             } catch (\Throwable $e) {
