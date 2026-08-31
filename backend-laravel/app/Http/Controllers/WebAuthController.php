@@ -1383,7 +1383,6 @@ class WebAuthController extends Controller
         $oldEmail = $user->email;
         $user->email = $pendingNewEmail;
         $user->isVerified = true;
-        $user->email_verified_at = now();
         $user->save();
 
         // Clear session flags
