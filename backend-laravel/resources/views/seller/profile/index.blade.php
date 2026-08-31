@@ -15,6 +15,11 @@
             ->whereIn('status', ['Completed', 'Delivered', 'delivered', 'completed'])
             ->sum('totalAmount');
         $sellerAvgRating = \App\Models\Review::whereHas('product', fn($q) => $q->where('sellerId', $user->id))->avg('rating');
+        $attentionProductsCount = \App\Models\Product::where('sellerId', $user->id)
+            ->where(function($q) {
+                $q->where('stock', '<=', 5)->orWhere('status', 'pending');
+            })
+            ->count();
     @endphp
 
     <div class="min-h-[calc(100vh-120px)] px-3 py-4 sm:px-6 sm:py-8 pb-28 lg:pb-12" 
@@ -382,6 +387,57 @@
                             </svg>
                         </div>
                     </button>
+
+                    {{-- Products Catalogue (Mobile & Profile Link) --}}
+                    <a href="{{ route('seller.products.index') }}" 
+                       style="background-color:#FFFFFF;border:1px solid #ECE3D2;border-radius:16px;padding:14px 16px;display:flex;align-items:center;justify-content:space-between;box-shadow:0 2px 6px rgba(0,0,0,0.02);cursor:pointer;width:100%;text-decoration:none;transition:all 0.2s;"
+                       class="hover:border-[#C49520] hover:bg-[#FDFBF7] group">
+                        <div style="display:flex;align-items:center;gap:12px;">
+                            <div style="width:38px;height:38px;border-radius:11px;background-color:#FAF5EA;border:1px solid #E6D8BA;display:flex;align-items:center;justify-content:center;color:#B88728;flex-shrink:0;" class="group-hover:scale-105 transition-transform">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 11m8 4V4"/>
+                                </svg>
+                            </div>
+                            <div>
+                                <div style="display:flex;align-items:center;gap:7px;">
+                                    <div style="font-size:14px;font-weight:700;color:#1E1915;">Products</div>
+                                    @if($attentionProductsCount > 0)
+                                        <span style="font-size:10px;font-weight:800;background-color:#C49520;color:#FFFFFF;min-width:18px;height:18px;padding:0 5px;border-radius:9px;display:inline-flex;align-items:center;justify-content:center;box-shadow:0 1px 2px rgba(196,149,32,0.3);">{{ $attentionProductsCount }}</span>
+                                    @endif
+                                </div>
+                                <div style="font-size:11.5px;color:#8C827A;margin-top:1px;">Handcrafted creations, stock & draft catalogue</div>
+                            </div>
+                        </div>
+                        <div style="display:flex;align-items:center;gap:6px;">
+                            <span style="font-size:10px;font-weight:800;color:#996515;background-color:#FAF5EA;border:1px solid #E6D8BA;padding:2px 8px;border-radius:6px;text-transform:uppercase;letter-spacing:0.04em;">Manage</span>
+                            <svg width="16" height="16" fill="none" stroke="#8C827A" viewBox="0 0 24 24" stroke-width="2.2" class="group-hover:translate-x-0.5 transition-transform">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/>
+                            </svg>
+                        </div>
+                    </a>
+
+                    {{-- Customers Directory (Mobile & Profile Link) --}}
+                    <a href="{{ route('seller.customers') }}" 
+                       style="background-color:#FFFFFF;border:1px solid #ECE3D2;border-radius:16px;padding:14px 16px;display:flex;align-items:center;justify-content:space-between;box-shadow:0 2px 6px rgba(0,0,0,0.02);cursor:pointer;width:100%;text-decoration:none;transition:all 0.2s;"
+                       class="hover:border-[#C49520] hover:bg-[#FDFBF7] group">
+                        <div style="display:flex;align-items:center;gap:12px;">
+                            <div style="width:38px;height:38px;border-radius:11px;background-color:#FAF5EA;border:1px solid #E6D8BA;display:flex;align-items:center;justify-content:center;color:#B88728;flex-shrink:0;" class="group-hover:scale-105 transition-transform">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/>
+                                </svg>
+                            </div>
+                            <div>
+                                <div style="font-size:14px;font-weight:700;color:#1E1915;">Customers</div>
+                                <div style="font-size:11.5px;color:#8C827A;margin-top:1px;">Client directory, purchase history & patron insights</div>
+                            </div>
+                        </div>
+                        <div style="display:flex;align-items:center;gap:6px;">
+                            <span style="font-size:10px;font-weight:800;color:#996515;background-color:#FAF5EA;border:1px solid #E6D8BA;padding:2px 8px;border-radius:6px;text-transform:uppercase;letter-spacing:0.04em;">View</span>
+                            <svg width="16" height="16" fill="none" stroke="#8C827A" viewBox="0 0 24 24" stroke-width="2.2" class="group-hover:translate-x-0.5 transition-transform">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/>
+                            </svg>
+                        </div>
+                    </a>
 
                     {{-- Shop Analytics & Reports (Link) --}}
                     <a href="{{ route('seller.analytics') }}" 
