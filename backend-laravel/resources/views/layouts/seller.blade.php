@@ -304,6 +304,23 @@
                             </div>
                         </a>
 
+                        <!-- Mobile Logout Action -->
+                        <form x-ref="mobileHeaderLogoutForm" action="{{ route('logout') }}" method="POST" class="lg:hidden shrink-0">
+                            @csrf
+                            <button type="button"
+                                    @click="$dispatch('open-confirmation', {
+                                        title: 'Logout',
+                                        message: 'Are you sure you want to log out of your artisan workspace?',
+                                        confirmText: 'Logout',
+                                        type: 'danger',
+                                        onConfirm: () => $refs.mobileHeaderLogoutForm.submit()
+                                    })"
+                                    class="w-10 h-10 flex items-center justify-center rounded-2xl transition-all cursor-pointer shadow-2xs"
+                                    style="background: #FEF2F2; border: 1px solid #FECACA; color: #DC2626;"
+                                    title="Log Out">
+                                <svg class="w-4.5 h-4.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path></svg>
+                            </button>
+                        </form>
                     </div>
                 </div>
             </header>

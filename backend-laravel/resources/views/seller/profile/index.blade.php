@@ -23,6 +23,9 @@
              showEditModal: false,
              showPaymentModal: false,
              showLegalModal: false,
+             showDocPreview: false,
+             previewDocUrl: '',
+             previewDocTitle: '',
              paymentEditing: false,
              legalEditing: false,
              shopName: @js(old('name', $user->name ?? '')),
@@ -277,6 +280,38 @@
                 <svg width="120" height="70" viewBox="0 0 120 80" fill="#C49520" style="position:absolute;right:8px;bottom:-10px;opacity:0.18;pointer-events:none;">
                     <path d="M60 10C40 10 30 30 10 35C30 40 40 60 60 60C80 60 90 40 110 35C90 30 80 10 60 10ZM60 25C65 25 70 30 70 35C70 40 65 45 60 45C55 45 50 40 50 35C50 30 55 25 60 25Z"/>
                 </svg>
+            </div>
+
+            {{-- Logout Action (Visible on mobile & desktop) --}}
+            <div style="margin-top:14px;">
+                <form x-ref="sellerProfileLogoutForm" action="{{ route('logout') }}" method="POST">
+                    @csrf
+                    <button type="button"
+                            @click="$dispatch('open-confirmation', {
+                                title: 'Logout',
+                                message: 'Are you sure you want to log out of your artisan workspace?',
+                                confirmText: 'Logout',
+                                type: 'danger',
+                                onConfirm: () => $refs.sellerProfileLogoutForm.submit()
+                            })"
+                            style="background-color:#FEF2F2;border:1px solid #FECACA;border-radius:16px;padding:14px 16px;display:flex;align-items:center;justify-content:space-between;box-shadow:0 2px 6px rgba(0,0,0,0.02);cursor:pointer;width:100%;text-align:left;transition:all 0.2s;color:#DC2626;"
+                            class="hover:bg-red-600 hover:text-white hover:border-red-600 group">
+                        <div style="display:flex;align-items:center;gap:12px;">
+                            <div style="width:38px;height:38px;border-radius:11px;background-color:#FEE2E2;border:1px solid #FECACA;display:flex;align-items:center;justify-content:center;color:#DC2626;flex-shrink:0;" class="group-hover:bg-white group-hover:text-red-600 transition-colors">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/>
+                                </svg>
+                            </div>
+                            <div>
+                                <div style="font-size:14px;font-weight:700;">Log Out</div>
+                                <div style="font-size:11.5px;color:#991B1B;margin-top:1px;" class="group-hover:text-red-100">Exit your artisan workspace</div>
+                            </div>
+                        </div>
+                        <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.2" class="group-hover:translate-x-0.5 transition-transform">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/>
+                        </svg>
+                    </button>
+                </form>
             </div>
         </div>
 
@@ -714,7 +749,13 @@
                                 </div>
                             </div>
                             @if($user->{$doc['field']})
-                                <a href="{{ $getImgUrl($user->{$doc['field']}) }}" target="_blank" class="text-[10px] font-bold uppercase tracking-widest hover:underline" style="color: #C49520;">View ↗</a>
+                                <button type="button" 
+                                        @click="previewDocUrl = '{{ $getImgUrl($user->{$doc['field']}) }}'; previewDocTitle = '{{ $doc['label'] }}'; showDocPreview = true;" 
+                                        class="text-[10px] font-bold uppercase tracking-widest hover:underline cursor-pointer flex items-center gap-1" 
+                                        style="color: #C49520;">
+                                    <span>View</span>
+                                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+                                </button>
                             @endif
                         </div>
                         @endforeach
@@ -781,6 +822,53 @@
                 </button>
                 <p class="text-[9px] font-bold uppercase tracking-widest" style="color: #766C60;">QR Code Preview</p>
                 <img id="qr-lightbox-img" src="" class="w-full max-w-60 h-auto object-contain rounded-2xl border shadow-xs" style="background: #FFF; border-color: #E8DECB;">
+            </div>
+        </div>
+
+        {{-- Floating Document Preview Modal --}}
+        <div x-show="showDocPreview"
+             x-cloak
+             style="display:none;"
+             class="fixed inset-0 z-200 bg-black/80 backdrop-blur-xs flex items-center justify-center p-3 sm:p-6"
+             x-transition:enter="transition ease-out duration-200"
+             x-transition:enter-start="opacity-0 scale-95"
+             x-transition:enter-end="opacity-100 scale-100"
+             x-transition:leave="transition ease-in duration-150"
+             x-transition:leave-start="opacity-100 scale-100"
+             x-transition:leave-end="opacity-0 scale-95"
+             @keydown.escape.window="showDocPreview = false">
+            <div class="relative rounded-3xl p-4 sm:p-5 shadow-2xl max-w-xl w-full flex flex-col items-center gap-3 max-h-[90vh]" 
+                 style="background: #FFFCF7; border: 1px solid #E8DECB;"
+                 @click.away="showDocPreview = false">
+                <div class="w-full flex items-center justify-between pb-2 border-b" style="border-color: #E8DECB;">
+                    <div>
+                        <h4 class="font-serif text-sm sm:text-base font-bold text-[#1E1915]" x-text="previewDocTitle || 'Document Preview'"></h4>
+                        <p class="text-[10px] text-gray-500 font-medium">Uploaded Artisan Legal Document</p>
+                    </div>
+                    <button type="button" @click="showDocPreview = false"
+                            class="w-8 h-8 rounded-xl flex items-center justify-center transition-all cursor-pointer"
+                            style="background: #FDF8EE; color: #766C60;">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                    </button>
+                </div>
+                
+                <div class="w-full flex-1 overflow-auto rounded-2xl flex items-center justify-center bg-[#FAF8F5] border p-2 min-h-64 max-h-[65vh]" style="border-color: #E8DECB;">
+                    <template x-if="previewDocUrl && (previewDocUrl.endsWith('.pdf') || previewDocUrl.includes('.pdf?'))">
+                        <iframe :src="previewDocUrl" class="w-full h-96 rounded-xl border-0"></iframe>
+                    </template>
+                    <template x-if="previewDocUrl && (!previewDocUrl.endsWith('.pdf') && !previewDocUrl.includes('.pdf?'))">
+                        <img :src="previewDocUrl" :alt="previewDocTitle" class="max-w-full max-h-[60vh] object-contain rounded-xl shadow-xs">
+                    </template>
+                    <template x-if="!previewDocUrl">
+                        <span class="text-xs text-gray-400 font-medium italic">No document image loaded</span>
+                    </template>
+                </div>
+
+                <div class="w-full flex justify-end pt-1">
+                    <button type="button" @click="showDocPreview = false" class="px-5 py-2 rounded-xl text-xs font-bold uppercase tracking-widest cursor-pointer shadow-xs" style="background: #1E1915; color: #FFF;">
+                        Close Preview
+                    </button>
+                </div>
             </div>
         </div>
 
