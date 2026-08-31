@@ -717,7 +717,7 @@ document.addEventListener('alpine:init', () => {
                 </div>
             </div>
         @endif
-    </div>
+
 
     {{-- Size Guide Management Modal (Artisan Luxury Theme) --}}
     <div x-show="showSizeGuideModal" style="display: none;" class="fixed inset-0 bg-black/60 backdrop-blur-xs z-50 flex items-center justify-center p-4" x-transition>
@@ -1019,5 +1019,6 @@ document.addEventListener('alpine:init', () => {
             </form>
         </div>
     </div>
-</div>
+
+</div>{{-- end x-data="sellerProducts()" --}}
 @endsection
