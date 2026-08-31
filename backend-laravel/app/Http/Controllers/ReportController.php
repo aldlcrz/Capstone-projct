@@ -42,7 +42,7 @@ class ReportController extends Controller
                 '⚠️ Integrity Violation Notice',
                 "Your shop has received a report from a customer regarding \"{$validated['reason']}\". Our Trust & Safety team is reviewing the matter. Please ensure your shop listings and conduct adhere to platform guidelines.",
                 'warning',
-                '/seller/dashboard?view_report=' . $report->id,
+                '/seller/reports?view_report=' . $report->id,
                 'seller'
             );
 
@@ -115,5 +115,28 @@ class ReportController extends Controller
             ->orderBy('createdAt', 'desc')
             ->get();
         return response()->json($reports);
+    }
+
+    /**
+     * Seller web page: view all customer reports filed against the logged-in shop.
+     */
+    public function sellerReportsView(Request $request)
+    {
+        $sellerId = Auth::id();
+
+        $reports = Report::where('reportedId', $sellerId)
+            ->where('type', 'CustomerReportingSeller')
+            ->orderBy('createdAt', 'desc')
+            ->get();
+
+        $counts = [
+            'total'        => $reports->count(),
+            'pending'      => $reports->where('status', 'Pending')->count(),
+            'under_review' => $reports->where('status', 'Under Review')->count(),
+            'resolved'     => $reports->where('status', 'Resolved')->count(),
+            'dismissed'    => $reports->where('status', 'Dismissed')->count(),
+        ];
+
+        return view('seller.reports.index', compact('reports', 'counts'));
     }
 }

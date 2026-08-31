@@ -98,6 +98,7 @@
                         $unreadMsgCount = 0;
                         $pendingOrdersCount = 0;
                         $attentionProductsCount = 0;
+                        $pendingReportsCount = 0;
                         try {
                             $unreadMsgCount = \App\Models\Message::where('receiverId', $sellerAuthId)->where('read', false)->count();
                             $pendingOrdersCount = \App\Models\Order::where('sellerId', $sellerAuthId)
@@ -107,6 +108,10 @@
                                 ->where(function($q) {
                                     $q->where('stock', '<=', 5)->orWhere('status', 'pending');
                                 })
+                                ->count();
+                            $pendingReportsCount = \App\Models\Report::where('reportedId', $sellerAuthId)
+                                ->where('type', 'CustomerReportingSeller')
+                                ->whereIn('status', ['Pending', 'Under Review'])
                                 ->count();
                         } catch (\Throwable $e) {}
 
@@ -125,6 +130,7 @@
                                 ['label' => 'Pay Commission', 'path' => 'seller/commission', 'badge' => 0,                      'icon' => '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"></path>'],
                                 ['label' => 'Shop Policies',  'path' => 'seller/policies',  'badge' => 0,                      'icon' => '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>'],
                                 ['label' => 'Shop Profile',   'path' => 'seller/profile',   'badge' => 0,                      'icon' => '<path d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>'],
+                                ['label' => 'Reports & Concerns', 'path' => 'seller/reports', 'badge' => $pendingReportsCount, 'icon' => '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>'],
                             ],
                         ];
                     @endphp

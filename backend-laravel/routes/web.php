@@ -22,6 +22,7 @@ use App\Http\Controllers\AnalyticsController;
 use App\Http\Controllers\AiController;
 use App\Http\Controllers\ProductManagementController;
 use App\Http\Controllers\SuperAdminController;
+use App\Http\Controllers\ReportController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -279,6 +280,9 @@ Route::middleware(['auth', 'seller'])->prefix('seller')->group(function () {
     // Seller Notifications
     Route::get('/notifications', [DashboardController::class, 'notifications'])->name('seller.notifications.index');
     Route::post('/notifications/read-all', [DashboardController::class, 'readAllNotifications'])->name('seller.notifications.read-all');
+
+    // Seller Reports & Concerns
+    Route::get('/reports', [ReportController::class, 'sellerReportsView'])->name('seller.reports.index');
 });
 
 // ─── Super Admin Routes ────────────────────────────────────────────────────
@@ -430,7 +434,6 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/upload', [\App\Http\Controllers\UploadController::class, 'uploadImage']);
     Route::post('/reports', [\App\Http\Controllers\ReportController::class, 'createReport']);
     Route::get('/api/v1/seller/reports/{id?}', [\App\Http\Controllers\ReportController::class, 'getSellerReportDetail']);
-    Route::get('/seller/reports/{id?}', [\App\Http\Controllers\ReportController::class, 'getSellerReportDetail']);
 });
 
 
