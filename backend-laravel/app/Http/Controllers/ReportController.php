@@ -239,15 +239,18 @@ class ReportController extends Controller
      */
     public function getSellerReportDetail(Request $request, $id = null)
     {
-        $userId = Auth::id() ?? $request->user()?->id;
-        if (!$userId) {
+        $user = Auth::user() ?? $request->user();
+        if (!$user) {
             return response()->json(['message' => 'Unauthenticated'], 401);
         }
 
-        $query = Report::with(['product', 'timelineEvents.actor'])
-            ->where(function($q) use ($userId) {
-                $q->where('reportedId', $userId)->orWhere('reporterId', $userId);
+        $query = Report::with(['product', 'timelineEvents.actor', 'reported', 'reporter']);
+
+        if (!in_array($user->role, ['admin', 'superadmin'])) {
+            $query->where(function($q) use ($user) {
+                $q->where('reportedId', $user->id)->orWhere('reporterId', $user->id);
             });
+        }
 
         if ($id && $id !== 'latest') {
             $report = $query->where('id', $id)->first();
