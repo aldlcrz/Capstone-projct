@@ -152,7 +152,7 @@
                                    id="mobileNumber" 
                                    name="mobileNumber" 
                                    value="{{ old('mobileNumber', Auth::user()->mobileNumber) }}" 
-                                   placeholder="917 123 4567" 
+                                   placeholder="9123456789" 
                                    class="w-full h-full px-3.5 bg-transparent text-xs font-semibold text-gray-900 outline-none placeholder:text-gray-400">
                         </div>
                     </div>
