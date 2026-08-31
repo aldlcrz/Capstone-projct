@@ -61,9 +61,8 @@
         {{-- Header & Branding --}}
         <div class="text-center mb-5 sm:mb-7">
             <div class="flex justify-center mb-2.5">
-                <div class="relative group">
-                    <div class="absolute -inset-1.5 bg-gradient-to-r from-[#C0422A] to-[#D4B896] rounded-full blur-xs opacity-30 group-hover:opacity-60 transition duration-300"></div>
-                    <img src="{{ asset('images/logo-icon.png') }}" alt="LumBarong Logo" class="relative w-13 h-13 sm:w-16 sm:h-16 object-contain rounded-full shadow-md hover:scale-105 transition-transform bg-white">
+                <div class="w-14 h-14 sm:w-16 sm:h-16 rounded-full overflow-hidden shadow-md border-2 border-[#E8DFC8] bg-white p-0.5 shrink-0 flex items-center justify-center">
+                    <img src="{{ asset('images/logo-icon.png') }}" alt="LumBarong Logo" class="w-full h-full object-contain rounded-full">
                 </div>
             </div>
             <div class="inline-flex items-center gap-1.5 px-3 py-0.5 rounded-full bg-[#C0422A]/10 text-[#C0422A] text-[10px] font-extrabold uppercase tracking-wider mb-1.5 border border-[#C0422A]/20">
@@ -107,10 +106,7 @@
             {{-- 1. BASIC INFORMATION SECTION --}}
             <div class="bg-[#FAF8F5] border border-[#ECE3D2] rounded-2xl sm:rounded-3xl p-3.5 sm:p-5 space-y-3.5">
                 <div class="flex items-center justify-between border-b border-[#ECE3D2] pb-2">
-                    <div class="flex items-center gap-2">
-                        <span class="w-5 h-5 rounded-full bg-[#C0422A] text-white flex items-center justify-center text-[10px] font-bold shadow-xs">1</span>
-                        <h2 class="text-xs font-black uppercase tracking-wider text-[#1E1915]">Basic Information</h2>
-                    </div>
+                    <h2 class="text-xs font-black uppercase tracking-wider text-[#1E1915]">Basic Information</h2>
                     <span class="text-[9.5px] font-extrabold text-[#C0422A] bg-[#C0422A]/10 border border-[#C0422A]/20 px-2 py-0.5 rounded-full uppercase tracking-wider">Required</span>
                 </div>
 
@@ -143,14 +139,13 @@
                                class="w-full h-11 px-3.5 bg-white border {{ $errors->has('username') ? 'border-red-400 bg-red-50/50' : 'border-[#D8CEBE]' }} rounded-xl text-xs font-semibold text-gray-900 outline-none focus:border-[#C0422A] focus:ring-2 focus:ring-[#C0422A]/15 transition-all shadow-2xs">
                     </div>
 
-                    {{-- Phone Number (Fixed Flex Prefix Group - Zero Overlap) --}}
+                    {{-- Phone Number --}}
                     <div class="sm:col-span-2">
                         <label for="mobileNumber" class="block text-[11px] font-bold text-gray-800 uppercase tracking-wider mb-1">
-                            Mobile Phone Number <span class="text-gray-400 font-normal text-[10px] lowercase">(e.g. 09171234567)</span>
+                            Mobile Phone Number
                         </label>
-                        <div class="flex items-center rounded-xl bg-white border {{ $errors->has('mobileNumber') ? 'border-red-400 bg-red-50/50' : 'border-[#D8CEBE]' }} overflow-hidden focus-within:border-[#C0422A] focus-within:ring-2 focus-within:ring-[#C0422A]/15 transition-all shadow-2xs">
-                            <div class="flex items-center gap-1.5 px-3 py-2.5 bg-[#FAF7F2] border-r border-[#D8CEBE] text-xs font-bold text-gray-700 select-none shrink-0">
-                                <span>🇵🇭</span>
+                        <div class="flex items-center rounded-xl bg-white border {{ $errors->has('mobileNumber') ? 'border-red-400 bg-red-50/50' : 'border-[#D8CEBE]' }} overflow-hidden focus-within:border-[#C0422A] focus-within:ring-2 focus-within:ring-[#C0422A]/15 transition-all shadow-2xs h-11">
+                            <div class="flex items-center justify-center px-3.5 bg-[#FAF7F2] border-r border-[#D8CEBE] text-xs font-bold text-gray-700 select-none shrink-0 h-full">
                                 <span>+63</span>
                             </div>
                             <input type="text" 
@@ -158,7 +153,7 @@
                                    name="mobileNumber" 
                                    value="{{ old('mobileNumber', Auth::user()->mobileNumber) }}" 
                                    placeholder="917 123 4567" 
-                                   class="w-full h-11 px-3 bg-transparent text-xs font-semibold text-gray-900 outline-none placeholder:text-gray-400">
+                                   class="w-full h-full px-3.5 bg-transparent text-xs font-semibold text-gray-900 outline-none placeholder:text-gray-400">
                         </div>
                     </div>
                 </div>
@@ -167,10 +162,7 @@
             {{-- 2. PRIMARY DELIVERY ADDRESS SECTION (CUSTOMER PROFILE INTERACTIVE UI) --}}
             <div class="bg-[#FAF8F5] border border-[#ECE3D2] rounded-2xl sm:rounded-3xl p-3.5 sm:p-5 space-y-3.5">
                 <div class="flex items-center justify-between border-b border-[#ECE3D2] pb-2">
-                    <div class="flex items-center gap-2">
-                        <span class="w-5 h-5 rounded-full bg-[#C0422A] text-white flex items-center justify-center text-[10px] font-bold shadow-xs">2</span>
-                        <h2 class="text-xs font-black uppercase tracking-wider text-[#1E1915]">Primary Delivery Address</h2>
-                    </div>
+                    <h2 class="text-xs font-black uppercase tracking-wider text-[#1E1915]">Primary Delivery Address</h2>
                     <span class="text-[9.5px] font-extrabold text-amber-800 bg-amber-100/80 border border-amber-300/50 px-2 py-0.5 rounded-full uppercase tracking-wider">Optional for now</span>
                 </div>
 
@@ -200,14 +192,14 @@
                         <div class="absolute left-3 flex items-center pointer-events-none text-[#8C827A] z-5">
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
                         </div>
-                        <input type="text"
-                               x-model="mapSearchQuery"
-                               @keydown.enter.prevent="searchMapLocation()"
-                               placeholder="Search street, barangay, or landmark..."
+                        <input type="text" 
+                               x-model="mapSearchQuery" 
+                               @keydown.enter.prevent="searchMapLocation()" 
+                               placeholder="Search street, barangay, or landmark..." 
                                class="w-full h-10 pl-9 pr-20 bg-white border border-[#D8CEBE] rounded-xl text-xs text-gray-900 outline-none focus:border-[#996515] transition-all shadow-2xs">
-                        <button type="button"
-                                @click="searchMapLocation()"
-                                :disabled="pinSearching"
+                        <button type="button" 
+                                @click="searchMapLocation()" 
+                                :disabled="pinSearching" 
                                 class="absolute right-1.5 h-7 px-3 bg-[#1E1915] text-[#DFC97A] border-none rounded-lg text-[10px] font-extrabold uppercase tracking-wider hover:bg-black transition-all flex items-center justify-center disabled:opacity-50 cursor-pointer z-5">
                             <span x-text="pinSearching ? '...' : 'Search'"></span>
                         </button>
