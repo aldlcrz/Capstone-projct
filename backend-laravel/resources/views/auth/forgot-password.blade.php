@@ -29,7 +29,7 @@
             <div class="flex justify-center mb-3">
                 <img src="{{ asset('images/logo-icon.png') }}" alt="LumBarong Logo" class="w-14 h-14 object-contain rounded-full shadow-md hover:scale-105 transition-transform">
             </div>
-            <h1 class="font-serif text-2xl font-black italic tracking-tight text-[#C0422A] mb-1">LumBarong</h1>
+            <h1 class="font-serif text-2xl font-black tracking-tight text-gray-900 mb-1">LumBarong</h1>
             <p class="text-[11px] font-bold uppercase tracking-[0.3em] text-gray-400">Account Recovery</p>
         </div>
 
