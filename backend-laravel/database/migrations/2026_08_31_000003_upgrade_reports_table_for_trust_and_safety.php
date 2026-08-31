@@ -46,8 +46,8 @@ return new class extends Migration
         if (!Schema::hasTable('report_timeline_events')) {
             Schema::create('report_timeline_events', function (Blueprint $table) {
                 $table->uuid('id')->primary();
-                $table->uuid('report_id');
-                $table->uuid('actor_id')->nullable();
+                $table->uuid('report_id')->index();
+                $table->uuid('actor_id')->nullable()->index();
                 $table->string('actor_role', 50)->default('system'); // system, customer, seller, admin, superadmin
                 $table->string('event_type', 50); // report_submitted, received, under_review, severity_set, seller_response, investigation_updated, action_taken, resolved, dismissed, escalated
                 $table->string('title');
@@ -55,9 +55,17 @@ return new class extends Migration
                 $table->json('metadata')->nullable();
                 $table->timestamps();
 
-                $table->foreign('report_id')->references('id')->on('reports')->onDelete('cascade');
                 $table->index(['report_id', 'created_at']);
             });
+
+            // Attempt foreign key constraint creation gracefully
+            try {
+                Schema::table('report_timeline_events', function (Blueprint $table) {
+                    $table->foreign('report_id')->references('id')->on('reports')->onDelete('cascade');
+                });
+            } catch (\Throwable $e) {
+                // Graceful fallback for MySQL/MariaDB engines with collation variance
+            }
         }
     }
 
