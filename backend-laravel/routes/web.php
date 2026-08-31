@@ -89,6 +89,14 @@ Route::middleware('auth')->group(function () {
     Route::post('/profile/change-password/verify-code', [WebAuthController::class, 'verifyPasswordChangeCode'])->name('profile.change-password.verify-code');
     Route::post('/profile/change-password', [WebAuthController::class, 'changePassword'])->name('profile.change-password.submit');
 
+    // Secure 2-Step Email Address Change Routes
+    Route::post('/profile/email/initiate', [WebAuthController::class, 'initiateEmailChange'])->name('profile.email.initiate');
+    Route::post('/profile/email/verify-old', [WebAuthController::class, 'verifyOldEmailChangeCode'])->name('profile.email.verify-old');
+    Route::post('/profile/email/resend-old', [WebAuthController::class, 'resendOldEmailChangeCode'])->name('profile.email.resend-old');
+    Route::post('/profile/email/verify-new', [WebAuthController::class, 'verifyNewEmailChangeCode'])->name('profile.email.verify-new');
+    Route::post('/profile/email/resend-new', [WebAuthController::class, 'resendNewEmailChangeCode'])->name('profile.email.resend-new');
+    Route::post('/profile/email/cancel', [WebAuthController::class, 'cancelEmailChange'])->name('profile.email.cancel');
+
     // Cart
     Route::get('/cart', [CartController::class, 'index'])->name('cart.index');
     Route::post('/cart/add', [CartController::class, 'add'])->name('cart.add');

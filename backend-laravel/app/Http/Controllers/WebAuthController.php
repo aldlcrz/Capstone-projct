@@ -6,6 +6,8 @@ use App\Models\User;
 use App\Models\CommissionRecord;
 use App\Models\EmailVerification;
 use App\Mail\PasswordChangeVerificationMail;
+use App\Mail\EmailChangeOldVerificationMail;
+use App\Mail\EmailChangeNewVerificationMail;
 use App\Services\EmailNotificationService;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
@@ -1110,6 +1112,369 @@ class WebAuthController extends Controller
         session(['login_session_version' => $user->sessionVersion]);
 
         return redirect()->route('profile.change-password')->with('success', 'Password changed successfully! For your security, other active device sessions have been invalidated.');
+    }
+
+    /**
+     * Step 1: Initiate Email Change.
+     * Validates the new email address, ensures it's available, and sends OTP to the CURRENT registered email.
+     */
+    public function initiateEmailChange(Request $request)
+    {
+        /** @var User $user */
+        $user = Auth::user();
+        if (!$user) {
+            return response()->json(['status' => 'unauthenticated', 'message' => 'Please log in to proceed.'], 401);
+        }
+
+        $validator = Validator::make($request->all(), [
+            'new_email' => ['required', 'email', 'max:255'],
+        ], [
+            'new_email.required' => 'Please enter your new email address.',
+            'new_email.email'    => 'Please enter a valid email address format.',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'status'  => 'error',
+                'message' => $validator->errors()->first('new_email'),
+            ], 422);
+        }
+
+        $newEmail = strtolower(trim($request->input('new_email')));
+
+        if ($newEmail === strtolower($user->email)) {
+            return response()->json([
+                'status'  => 'error',
+                'message' => 'The new email address cannot be the same as your current registered email.',
+            ], 422);
+        }
+
+        // Ensure new email is not already taken
+        if (User::where('email', $newEmail)->where('id', '!=', $user->id)->exists()) {
+            return response()->json([
+                'status'  => 'error',
+                'message' => 'This email address is already registered to another account.',
+            ], 422);
+        }
+
+        // 60-second cooldown check on old email
+        $existing = EmailVerification::where('email', strtolower($user->email))
+            ->where('type', 'email_change_old')
+            ->first();
+
+        if ($existing && $existing->last_sent_at) {
+            $diff = $existing->last_sent_at->diffInSeconds(now());
+            if ($diff < 60) {
+                $remaining = 60 - $diff;
+                return response()->json([
+                    'status'    => 'cooldown',
+                    'message'   => "Please wait {$remaining} seconds before requesting a new code.",
+                    'remaining' => $remaining,
+                ], 429);
+            }
+        }
+
+        // Generate 6-digit OTP for the CURRENT/OLD email
+        $verification = EmailNotificationService::createVerificationCode($user->email, 'email_change_old');
+
+        // Store request in session
+        session([
+            'email_change_pending_new'    => $newEmail,
+            'email_change_old_verified'   => false,
+            'email_change_initiated_at'   => now()->timestamp,
+        ]);
+
+        // Send OTP to existing email
+        $mailable = new EmailChangeOldVerificationMail($user->name, $verification->code, $newEmail);
+        EmailNotificationService::sendNotification($user->email, $mailable, 'email_change_old', $user->id, 'User', $user->id);
+
+        Log::info("User ID {$user->id} ({$user->name}) initiated email change to {$newEmail}. Step 1 OTP sent to existing email {$user->email}.");
+
+        return response()->json([
+            'status'         => 'success',
+            'message'        => "We've sent a verification code to your existing email address (" . $user->email . ").",
+            'step'           => 2,
+            'cooldown'       => 60,
+            'existing_email' => $user->email,
+            'new_email'      => $newEmail,
+        ]);
+    }
+
+    /**
+     * Step 2: Verify Existing Email OTP.
+     * Once verified, immediately generates & sends second OTP to the NEW email address.
+     */
+    public function verifyOldEmailChangeCode(Request $request)
+    {
+        /** @var User $user */
+        $user = Auth::user();
+        if (!$user) {
+            return response()->json(['status' => 'unauthenticated', 'message' => 'Please log in to proceed.'], 401);
+        }
+
+        $pendingNewEmail = session('email_change_pending_new');
+        if (!$pendingNewEmail) {
+            return response()->json([
+                'status'  => 'error',
+                'message' => 'Your email change session has expired or was not initiated. Please start over.',
+            ], 422);
+        }
+
+        $code = trim($request->input('code', ''));
+        if (strlen($code) !== 6) {
+            return response()->json([
+                'status'  => 'incorrect_code',
+                'message' => 'Please enter the complete 6-digit verification code.',
+            ], 422);
+        }
+
+        $record = EmailVerification::where('email', strtolower($user->email))
+            ->where('type', 'email_change_old')
+            ->first();
+
+        if (!$record || $record->isExpired()) {
+            return response()->json([
+                'status'  => 'expired_code',
+                'message' => 'This verification code has expired. Please click Resend Code to receive a fresh code.',
+            ], 422);
+        }
+
+        $isValid = EmailNotificationService::verifyCode($user->email, $code, 'email_change_old');
+        if (!$isValid) {
+            $rem = max(0, 5 - ((int) ($record->failed_attempts ?? 0)));
+            return response()->json([
+                'status'  => 'incorrect_code',
+                'message' => "Incorrect verification code. Please check your existing email or request a new code. ({$rem} attempts remaining)",
+            ], 422);
+        }
+
+        // Consume old email OTP
+        EmailNotificationService::consumeCode($user->email, 'email_change_old');
+
+        // Mark existing email verified in session
+        session([
+            'email_change_old_verified' => true,
+            'email_change_old_at'       => now()->timestamp,
+        ]);
+
+        // Generate 6-digit OTP for NEW email
+        $verificationNew = EmailNotificationService::createVerificationCode($pendingNewEmail, 'email_change_new');
+
+        // Send OTP to NEW email
+        $mailable = new EmailChangeNewVerificationMail($user->name, $verificationNew->code);
+        EmailNotificationService::sendNotification($pendingNewEmail, $mailable, 'email_change_new', $user->id, 'User', $user->id);
+
+        Log::info("User ID {$user->id} verified old email. Step 2 OTP sent to new email {$pendingNewEmail}.");
+
+        return response()->json([
+            'status'    => 'success',
+            'message'   => "Existing email verified! We've sent a verification code to your new email address (" . $pendingNewEmail . ").",
+            'step'      => 3,
+            'cooldown'  => 60,
+            'new_email' => $pendingNewEmail,
+        ]);
+    }
+
+    /**
+     * Resend code to existing email (Step 2).
+     */
+    public function resendOldEmailChangeCode(Request $request)
+    {
+        /** @var User $user */
+        $user = Auth::user();
+        if (!$user) {
+            return response()->json(['status' => 'unauthenticated', 'message' => 'Please log in to proceed.'], 401);
+        }
+
+        $pendingNewEmail = session('email_change_pending_new');
+        if (!$pendingNewEmail) {
+            return response()->json(['status' => 'error', 'message' => 'Session expired. Please start over.'], 422);
+        }
+
+        $existing = EmailVerification::where('email', strtolower($user->email))
+            ->where('type', 'email_change_old')
+            ->first();
+
+        if ($existing && $existing->last_sent_at) {
+            $diff = $existing->last_sent_at->diffInSeconds(now());
+            if ($diff < 60) {
+                $remaining = 60 - $diff;
+                return response()->json([
+                    'status'    => 'cooldown',
+                    'message'   => "Please wait {$remaining} seconds before requesting a new code.",
+                    'remaining' => $remaining,
+                ], 429);
+            }
+        }
+
+        $verification = EmailNotificationService::createVerificationCode($user->email, 'email_change_old');
+        $mailable = new EmailChangeOldVerificationMail($user->name, $verification->code, $pendingNewEmail);
+        EmailNotificationService::sendNotification($user->email, $mailable, 'email_change_old', $user->id, 'User', $user->id);
+
+        return response()->json([
+            'status'   => 'success',
+            'message'  => 'A fresh 6-digit verification code has been sent to your existing email.',
+            'cooldown' => 60,
+        ]);
+    }
+
+    /**
+     * Step 3: Verify New Email OTP and Complete Email Change.
+     */
+    public function verifyNewEmailChangeCode(Request $request)
+    {
+        /** @var User $user */
+        $user = Auth::user();
+        if (!$user) {
+            return response()->json(['status' => 'unauthenticated', 'message' => 'Please log in to proceed.'], 401);
+        }
+
+        $pendingNewEmail = session('email_change_pending_new');
+        $oldVerified     = session('email_change_old_verified');
+
+        if (!$pendingNewEmail || !$oldVerified) {
+            return response()->json([
+                'status'  => 'error',
+                'message' => 'Security verification failed: Your existing email must be verified first before updating.',
+            ], 422);
+        }
+
+        $code = trim($request->input('code', ''));
+        if (strlen($code) !== 6) {
+            return response()->json([
+                'status'  => 'incorrect_code',
+                'message' => 'Please enter the complete 6-digit verification code.',
+            ], 422);
+        }
+
+        // Re-check uniqueness
+        if (User::where('email', $pendingNewEmail)->where('id', '!=', $user->id)->exists()) {
+            session()->forget(['email_change_pending_new', 'email_change_old_verified', 'email_change_old_at']);
+            return response()->json([
+                'status'  => 'error',
+                'message' => 'This email address was recently registered by another user. Email change cancelled.',
+            ], 422);
+        }
+
+        $record = EmailVerification::where('email', strtolower($pendingNewEmail))
+            ->where('type', 'email_change_new')
+            ->first();
+
+        if (!$record || $record->isExpired()) {
+            return response()->json([
+                'status'  => 'expired_code',
+                'message' => 'This verification code has expired. Please click Resend Code to receive a fresh code.',
+            ], 422);
+        }
+
+        $isValid = EmailNotificationService::verifyCode($pendingNewEmail, $code, 'email_change_new');
+        if (!$isValid) {
+            $rem = max(0, 5 - ((int) ($record->failed_attempts ?? 0)));
+            return response()->json([
+                'status'  => 'incorrect_code',
+                'message' => "Incorrect verification code. Please check your new email. ({$rem} attempts remaining)",
+            ], 422);
+        }
+
+        // Consume new email OTP
+        EmailNotificationService::consumeCode($pendingNewEmail, 'email_change_new');
+
+        // Apply email update
+        $oldEmail = $user->email;
+        $user->email = $pendingNewEmail;
+        $user->isEmailVerified = true;
+        $user->email_verified_at = now();
+        $user->save();
+
+        // Clear session flags
+        session()->forget([
+            'email_change_pending_new',
+            'email_change_old_verified',
+            'email_change_old_at',
+            'email_change_initiated_at',
+        ]);
+
+        Log::info("SUCCESSFUL SECURITY EVENT: User ID {$user->id} ({$user->name}) changed email address from [{$oldEmail}] to [{$pendingNewEmail}].");
+
+        return response()->json([
+            'status'    => 'success',
+            'message'   => 'Your email address has been successfully updated.',
+            'new_email' => $user->email,
+            'step'      => 4,
+        ]);
+    }
+
+    /**
+     * Resend code to new email (Step 3).
+     */
+    public function resendNewEmailChangeCode(Request $request)
+    {
+        /** @var User $user */
+        $user = Auth::user();
+        if (!$user) {
+            return response()->json(['status' => 'unauthenticated', 'message' => 'Please log in to proceed.'], 401);
+        }
+
+        $pendingNewEmail = session('email_change_pending_new');
+        $oldVerified     = session('email_change_old_verified');
+
+        if (!$pendingNewEmail || !$oldVerified) {
+            return response()->json(['status' => 'error', 'message' => 'Security check failed. Please restart the email change process.'], 422);
+        }
+
+        $existing = EmailVerification::where('email', strtolower($pendingNewEmail))
+            ->where('type', 'email_change_new')
+            ->first();
+
+        if ($existing && $existing->last_sent_at) {
+            $diff = $existing->last_sent_at->diffInSeconds(now());
+            if ($diff < 60) {
+                $remaining = 60 - $diff;
+                return response()->json([
+                    'status'    => 'cooldown',
+                    'message'   => "Please wait {$remaining} seconds before requesting a new code.",
+                    'remaining' => $remaining,
+                ], 429);
+            }
+        }
+
+        $verification = EmailNotificationService::createVerificationCode($pendingNewEmail, 'email_change_new');
+        $mailable = new EmailChangeNewVerificationMail($user->name, $verification->code);
+        EmailNotificationService::sendNotification($pendingNewEmail, $mailable, 'email_change_new', $user->id, 'User', $user->id);
+
+        return response()->json([
+            'status'   => 'success',
+            'message'  => 'A fresh 6-digit verification code has been sent to your new email address.',
+            'cooldown' => 60,
+        ]);
+    }
+
+    /**
+     * Cancel ongoing email change.
+     */
+    public function cancelEmailChange(Request $request)
+    {
+        /** @var User $user */
+        $user = Auth::user();
+        if ($user) {
+            $pendingNewEmail = session('email_change_pending_new');
+            EmailVerification::where('email', strtolower($user->email))->where('type', 'email_change_old')->delete();
+            if ($pendingNewEmail) {
+                EmailVerification::where('email', strtolower($pendingNewEmail))->where('type', 'email_change_new')->delete();
+            }
+        }
+
+        session()->forget([
+            'email_change_pending_new',
+            'email_change_old_verified',
+            'email_change_old_at',
+            'email_change_initiated_at',
+        ]);
+
+        return response()->json([
+            'status'  => 'cancelled',
+            'message' => 'Email change process cancelled.',
+        ]);
     }
 
     /**

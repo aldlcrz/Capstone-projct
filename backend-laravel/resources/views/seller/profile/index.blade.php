@@ -30,7 +30,186 @@
              legalEditing: false,
              shopName: @js(old('name', $user->name ?? '')),
              mobileNumber: @js(old('mobileNumber', $user->mobileNumber ?? '')),
-             shopDescription: @js(old('shopDescription', $user->shopDescription ?? ''))
+             shopDescription: @js(old('shopDescription', $user->shopDescription ?? '')),
+
+             // Secure Email Change Manager
+             showChangeEmailModal: false,
+             emailStep: 1,
+             currentEmailDisplay: @js($user->email),
+             newEmailInput: '',
+             oldEmailOtp: '',
+             newEmailOtp: '',
+             emailLoading: false,
+             emailError: '',
+             emailSuccessMsg: '',
+             emailCooldown: 0,
+             emailTimer: null,
+
+             openChangeEmailModal() {
+                 this.showAccountSettingsModal = false;
+                 this.showChangeEmailModal = true;
+                 this.emailStep = 1;
+                 this.newEmailInput = '';
+                 this.oldEmailOtp = '';
+                 this.newEmailOtp = '';
+                 this.emailError = '';
+                 this.emailSuccessMsg = '';
+                 this.emailLoading = false;
+             },
+
+             closeChangeEmailModal() {
+                 if (this.emailStep > 1 && this.emailStep < 4) {
+                     fetch('{{ route('profile.email.cancel') }}', {
+                         method: 'POST',
+                         headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': '{{ csrf_token() }}' }
+                     }).catch(() => {});
+                 }
+                 this.showChangeEmailModal = false;
+                 this.emailStep = 1;
+                 this.emailError = '';
+             },
+
+             startEmailCooldown(seconds) {
+                 this.emailCooldown = seconds;
+                 if (this.emailTimer) clearInterval(this.emailTimer);
+                 this.emailTimer = setInterval(() => {
+                     if (this.emailCooldown > 0) {
+                         this.emailCooldown--;
+                     } else {
+                         clearInterval(this.emailTimer);
+                     }
+                 }, 1000);
+             },
+
+             async submitNewEmail() {
+                 this.emailError = '';
+                 if (!this.newEmailInput || !this.newEmailInput.includes('@')) {
+                     this.emailError = 'Please enter a valid new email address.';
+                     return;
+                 }
+                 this.emailLoading = true;
+                 try {
+                     const res = await fetch('{{ route('profile.email.initiate') }}', {
+                         method: 'POST',
+                         headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': '{{ csrf_token() }}', 'Accept': 'application/json' },
+                         body: JSON.stringify({ new_email: this.newEmailInput })
+                     });
+                     const data = await res.json();
+                     if (res.ok && data.status === 'success') {
+                         this.emailStep = 2;
+                         this.emailSuccessMsg = data.message;
+                         this.startEmailCooldown(data.cooldown || 60);
+                     } else {
+                         this.emailError = data.message || 'Unable to initiate email change.';
+                     }
+                 } catch (err) {
+                     this.emailError = 'Network error. Please try again.';
+                 } finally {
+                     this.emailLoading = false;
+                 }
+             },
+
+             async verifyOldEmailOtp() {
+                 this.emailError = '';
+                 if (this.oldEmailOtp.length !== 6) {
+                     this.emailError = 'Please enter the complete 6-digit verification code.';
+                     return;
+                 }
+                 this.emailLoading = true;
+                 try {
+                     const res = await fetch('{{ route('profile.email.verify-old') }}', {
+                         method: 'POST',
+                         headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': '{{ csrf_token() }}', 'Accept': 'application/json' },
+                         body: JSON.stringify({ code: this.oldEmailOtp })
+                     });
+                     const data = await res.json();
+                     if (res.ok && data.status === 'success') {
+                         this.emailStep = 3;
+                         this.emailSuccessMsg = data.message;
+                         this.startEmailCooldown(data.cooldown || 60);
+                     } else {
+                         this.emailError = data.message || 'Incorrect or expired verification code.';
+                     }
+                 } catch (err) {
+                     this.emailError = 'Network error. Please try again.';
+                 } finally {
+                     this.emailLoading = false;
+                 }
+             },
+
+             async resendOldEmailOtp() {
+                 if (this.emailCooldown > 0) return;
+                 this.emailLoading = true;
+                 this.emailError = '';
+                 try {
+                     const res = await fetch('{{ route('profile.email.resend-old') }}', {
+                         method: 'POST',
+                         headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': '{{ csrf_token() }}', 'Accept': 'application/json' }
+                     });
+                     const data = await res.json();
+                     if (res.ok && data.status === 'success') {
+                         this.emailSuccessMsg = data.message;
+                         this.startEmailCooldown(data.cooldown || 60);
+                     } else {
+                         this.emailError = data.message || 'Unable to resend code.';
+                     }
+                 } catch (err) {
+                     this.emailError = 'Network error. Please try again.';
+                 } finally {
+                     this.emailLoading = false;
+                 }
+             },
+
+             async verifyNewEmailOtp() {
+                 this.emailError = '';
+                 if (this.newEmailOtp.length !== 6) {
+                     this.emailError = 'Please enter the complete 6-digit verification code.';
+                     return;
+                 }
+                 this.emailLoading = true;
+                 try {
+                     const res = await fetch('{{ route('profile.email.verify-new') }}', {
+                         method: 'POST',
+                         headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': '{{ csrf_token() }}', 'Accept': 'application/json' },
+                         body: JSON.stringify({ code: this.newEmailOtp })
+                     });
+                     const data = await res.json();
+                     if (res.ok && data.status === 'success') {
+                         this.emailStep = 4;
+                         this.currentEmailDisplay = data.new_email || this.newEmailInput;
+                         this.emailSuccessMsg = data.message;
+                     } else {
+                         this.emailError = data.message || 'Incorrect or expired verification code.';
+                     }
+                 } catch (err) {
+                     this.emailError = 'Network error. Please try again.';
+                 } finally {
+                     this.emailLoading = false;
+                 }
+             },
+
+             async resendNewEmailOtp() {
+                 if (this.emailCooldown > 0) return;
+                 this.emailLoading = true;
+                 this.emailError = '';
+                 try {
+                     const res = await fetch('{{ route('profile.email.resend-new') }}', {
+                         method: 'POST',
+                         headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': '{{ csrf_token() }}', 'Accept': 'application/json' }
+                     });
+                     const data = await res.json();
+                     if (res.ok && data.status === 'success') {
+                         this.emailSuccessMsg = data.message;
+                         this.startEmailCooldown(data.cooldown || 60);
+                     } else {
+                         this.emailError = data.message || 'Unable to resend code.';
+                     }
+                 } catch (err) {
+                     this.emailError = 'Network error. Please try again.';
+                 } finally {
+                     this.emailLoading = false;
+                 }
+             }
          }">
 
         {{-- Centered Artisan Profile Card --}}
@@ -354,19 +533,24 @@
                 {{-- Grouped Options Inside Account Setting --}}
                 <div style="display:flex;flex-direction:column;gap:10px;">
                     {{-- 1. Email Address --}}
-                    <div style="background-color:#FFFFFF;border:1px solid #ECE3D2;border-radius:16px;padding:14px 16px;display:flex;align-items:center;gap:12px;box-shadow:0 2px 6px rgba(0,0,0,0.02);">
-                        <div style="width:38px;height:38px;border-radius:11px;background-color:#FAF5EA;border:1px solid #E6D8BA;display:flex;align-items:center;justify-content:center;color:#B88728;flex-shrink:0;">
-                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
-                                <rect x="2" y="4" width="20" height="16" rx="2" stroke-linecap="round" stroke-linejoin="round"/>
-                                <path d="M22 7l-8.97 5.7a1.94 1.94 0 01-2.06 0L2 7" stroke-linecap="round" stroke-linejoin="round"/>
-                            </svg>
-                        </div>
-                        <div style="min-width:0;flex:1;">
-                            <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.06em;color:#8C827A;line-height:1.1;">Email Address</div>
-                            <div style="font-size:14px;font-weight:700;color:#1E1915;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin-top:2px;">
-                                {{ $user->email }}
+                    <div style="background-color:#FFFFFF;border:1px solid #ECE3D2;border-radius:16px;padding:14px 16px;display:flex;align-items:center;justify-content:space-between;box-shadow:0 2px 6px rgba(0,0,0,0.02);">
+                        <div style="display:flex;align-items:center;gap:12px;min-width:0;">
+                            <div style="width:38px;height:38px;border-radius:11px;background-color:#FAF5EA;border:1px solid #E6D8BA;display:flex;align-items:center;justify-content:center;color:#B88728;flex-shrink:0;">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                                    <rect x="2" y="4" width="20" height="16" rx="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                    <path d="M22 7l-8.97 5.7a1.94 1.94 0 01-2.06 0L2 7" stroke-linecap="round" stroke-linejoin="round"/>
+                                </svg>
+                            </div>
+                            <div style="min-width:0;">
+                                <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.06em;color:#8C827A;line-height:1.1;">Email Address</div>
+                                <div style="font-size:14px;font-weight:700;color:#1E1915;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin-top:2px;" x-text="currentEmailDisplay">
+                                    {{ $user->email }}
+                                </div>
                             </div>
                         </div>
+                        <button type="button" @click="openChangeEmailModal()" style="font-size:10px;font-weight:800;color:#996515;background-color:#FAF5EA;border:1px solid #E6D8BA;padding:3px 9px;border-radius:6px;text-transform:uppercase;letter-spacing:0.04em;cursor:pointer;">
+                            Change
+                        </button>
                     </div>
 
                     {{-- 2. Shop Story & Bio --}}
@@ -869,6 +1053,213 @@
                         Close Preview
                     </button>
                 </div>
+        {{-- Change Email Address 2-Step Verification Modal --}}
+        <div x-show="showChangeEmailModal"
+             x-cloak
+             style="display:none;"
+             class="fixed inset-0 z-200 bg-black/70 backdrop-blur-xs flex items-center justify-center p-4"
+             x-transition:enter="transition ease-out duration-200"
+             x-transition:enter-start="opacity-0 scale-95"
+             x-transition:enter-end="opacity-100 scale-100"
+             x-transition:leave="transition ease-in duration-150"
+             x-transition:leave-start="opacity-100 scale-100"
+             x-transition:leave-end="opacity-0 scale-95"
+             @keydown.escape.window="closeChangeEmailModal()">
+
+            <div class="relative w-full max-w-md rounded-3xl p-6 sm:p-7 shadow-2xl space-y-4"
+                 style="background: #FFFCF7; border: 1px solid #E8DECB;"
+                 @click.away="closeChangeEmailModal()">
+
+                {{-- Header --}}
+                <div class="flex items-center justify-between pb-3 border-b" style="border-color: #E8DECB;">
+                    <div class="flex items-center gap-3">
+                        <div style="width:38px;height:38px;border-radius:12px;background-color:#FAF5EA;border:1px solid #E6D8BA;display:flex;align-items:center;justify-content:center;color:#B88728;flex-shrink:0;">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                                <rect x="2" y="4" width="20" height="16" rx="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                <path d="M22 7l-8.97 5.7a1.94 1.94 0 01-2.06 0L2 7" stroke-linecap="round" stroke-linejoin="round"/>
+                            </svg>
+                        </div>
+                        <div>
+                            <h3 class="font-serif text-base sm:text-lg font-bold" style="color: #1E1915;">Change Email Address</h3>
+                            <p class="text-[10px] sm:text-xs" style="color: #766C60;">2-Step Security Verification</p>
+                        </div>
+                    </div>
+                    <button type="button" @click="closeChangeEmailModal()" class="w-8 h-8 rounded-xl flex items-center justify-center transition-colors cursor-pointer" style="background: #FDF8EE; color: #766C60;">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                    </button>
+                </div>
+
+                {{-- Stepper Indicator --}}
+                <div class="flex items-center justify-between px-2 pt-1 pb-1">
+                    <div class="flex items-center gap-1.5">
+                        <div class="w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold"
+                             :class="emailStep >= 1 ? 'bg-[#C49520] text-white' : 'bg-gray-200 text-gray-500'">1</div>
+                        <span class="text-[10px] font-bold" :class="emailStep === 1 ? 'text-[#1E1915]' : 'text-gray-400'">New Email</span>
+                    </div>
+                    <div class="h-0.5 w-6 bg-gray-200" :class="emailStep >= 2 ? 'bg-[#C49520]' : ''"></div>
+                    <div class="flex items-center gap-1.5">
+                        <div class="w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold"
+                             :class="emailStep >= 2 ? 'bg-[#C49520] text-white' : 'bg-gray-200 text-gray-500'">2</div>
+                        <span class="text-[10px] font-bold" :class="emailStep === 2 ? 'text-[#1E1915]' : 'text-gray-400'">Verify Old</span>
+                    </div>
+                    <div class="h-0.5 w-6 bg-gray-200" :class="emailStep >= 3 ? 'bg-[#C49520]' : ''"></div>
+                    <div class="flex items-center gap-1.5">
+                        <div class="w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold"
+                             :class="emailStep >= 3 ? 'bg-[#C49520] text-white' : 'bg-gray-200 text-gray-500'">3</div>
+                        <span class="text-[10px] font-bold" :class="emailStep === 3 ? 'text-[#1E1915]' : 'text-gray-400'">Verify New</span>
+                    </div>
+                </div>
+
+                {{-- Alert Messages --}}
+                <div x-show="emailError" x-cloak class="p-3 bg-red-50 border border-red-200 rounded-xl text-red-700 text-xs font-bold flex items-center gap-2">
+                    <svg class="w-4 h-4 text-red-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                    <span x-text="emailError"></span>
+                </div>
+
+                {{-- STEP 1: Enter New Email --}}
+                <div x-show="emailStep === 1" class="space-y-4">
+                    <div class="p-3.5 rounded-2xl space-y-1" style="background: #FDF8EE; border: 1px solid #E8DECB;">
+                        <div class="text-[10px] font-bold uppercase tracking-wider text-[#8C827A]">Current Registered Email</div>
+                        <div class="text-sm font-bold text-[#1E1915]" x-text="currentEmailDisplay"></div>
+                    </div>
+
+                    <div class="space-y-1.5">
+                        <label class="text-xs font-bold text-[#1E1915]">Enter New Email Address</label>
+                        <input type="email"
+                               x-model="newEmailInput"
+                               placeholder="e.g. yourname@example.com"
+                               class="w-full h-11 px-3.5 rounded-xl text-xs font-semibold outline-none transition-colors"
+                               style="background: #FFF; border: 1px solid #E8DECB; color: #1E1915;"
+                               @keydown.enter="submitNewEmail()">
+                        <p class="text-[10px] text-gray-500">A security verification code will be sent to your existing email first to verify your identity.</p>
+                    </div>
+
+                    <div class="pt-2 flex items-center gap-3">
+                        <button type="button"
+                                @click="submitNewEmail()"
+                                :disabled="emailLoading"
+                                class="flex-1 py-3 text-white rounded-xl text-xs font-bold uppercase tracking-widest shadow-md transition-all cursor-pointer flex items-center justify-center gap-2"
+                                style="background: #1E1915;">
+                            <span x-show="!emailLoading">Send Code to Existing Email →</span>
+                            <span x-show="emailLoading">Sending...</span>
+                        </button>
+                        <button type="button" @click="closeChangeEmailModal()" class="px-5 py-3 rounded-xl text-xs font-bold uppercase tracking-widest cursor-pointer" style="background: #FDF8EE; border: 1px solid #E8DECB; color: #766C60;">
+                            Cancel
+                        </button>
+                    </div>
+                </div>
+
+                {{-- STEP 2: Verify Existing Email --}}
+                <div x-show="emailStep === 2" class="space-y-4" style="display:none;" x-cloak>
+                    <div class="p-3.5 rounded-2xl space-y-1.5" style="background: #FDF8EE; border: 1px solid #E8DECB;">
+                        <div class="text-[10px] font-bold uppercase tracking-wider text-[#C49520]">Step 2: Confirm Your Identity</div>
+                        <p class="text-xs font-medium text-[#1E1915] leading-relaxed">
+                            We've sent a 6-digit verification code to your existing email address: <strong class="text-[#C49520]" x-text="currentEmailDisplay"></strong>.
+                        </p>
+                    </div>
+
+                    <div class="space-y-2 text-center">
+                        <label class="text-xs font-bold text-[#1E1915] block">Enter 6-Digit Code from Current Email</label>
+                        <input type="text"
+                               x-model="oldEmailOtp"
+                               maxlength="6"
+                               placeholder="123456"
+                               class="w-48 h-12 text-center text-xl font-mono font-bold tracking-widest rounded-xl outline-none border mx-auto block"
+                               style="background: #FFF; border-color: #E8DECB; color: #1E1915;"
+                               @keydown.enter="verifyOldEmailOtp()">
+                    </div>
+
+                    <div class="flex items-center justify-between text-xs pt-1">
+                        <button type="button"
+                                @click="resendOldEmailOtp()"
+                                :disabled="emailCooldown > 0 || emailLoading"
+                                class="font-bold text-[#C49520] hover:underline disabled:opacity-50 disabled:cursor-not-allowed">
+                            <span x-show="emailCooldown > 0" x-text="'Resend Code (' + emailCooldown + 's)'"></span>
+                            <span x-show="emailCooldown <= 0">Resend Code</span>
+                        </button>
+                        <span class="text-[10px] text-gray-400">Expires in 10 mins</span>
+                    </div>
+
+                    <div class="pt-2 flex items-center gap-3">
+                        <button type="button"
+                                @click="verifyOldEmailOtp()"
+                                :disabled="emailLoading"
+                                class="flex-1 py-3 text-white rounded-xl text-xs font-bold uppercase tracking-widest shadow-md transition-all cursor-pointer flex items-center justify-center gap-2"
+                                style="background: #1E1915;">
+                            <span x-show="!emailLoading">Verify Existing Email →</span>
+                            <span x-show="emailLoading">Verifying...</span>
+                        </button>
+                        <button type="button" @click="closeChangeEmailModal()" class="px-5 py-3 rounded-xl text-xs font-bold uppercase tracking-widest cursor-pointer" style="background: #FDF8EE; border: 1px solid #E8DECB; color: #766C60;">
+                            Cancel
+                        </button>
+                    </div>
+                </div>
+
+                {{-- STEP 3: Verify New Email --}}
+                <div x-show="emailStep === 3" class="space-y-4" style="display:none;" x-cloak>
+                    <div class="p-3.5 rounded-2xl space-y-1.5" style="background: #F0F9F0; border: 1px solid #C8E6C9;">
+                        <div class="text-[10px] font-bold uppercase tracking-wider text-emerald-800">Step 3: Confirm New Email Ownership</div>
+                        <p class="text-xs font-medium text-[#1E1915] leading-relaxed">
+                            Existing email verified! We've sent a verification code to your new email address: <strong class="text-emerald-800" x-text="newEmailInput"></strong>.
+                        </p>
+                    </div>
+
+                    <div class="space-y-2 text-center">
+                        <label class="text-xs font-bold text-[#1E1915] block">Enter 6-Digit Code from New Email</label>
+                        <input type="text"
+                               x-model="newEmailOtp"
+                               maxlength="6"
+                               placeholder="123456"
+                               class="w-48 h-12 text-center text-xl font-mono font-bold tracking-widest rounded-xl outline-none border mx-auto block"
+                               style="background: #FFF; border-color: #E8DECB; color: #1E1915;"
+                               @keydown.enter="verifyNewEmailOtp()">
+                    </div>
+
+                    <div class="flex items-center justify-between text-xs pt-1">
+                        <button type="button"
+                                @click="resendNewEmailOtp()"
+                                :disabled="emailCooldown > 0 || emailLoading"
+                                class="font-bold text-[#C49520] hover:underline disabled:opacity-50 disabled:cursor-not-allowed">
+                            <span x-show="emailCooldown > 0" x-text="'Resend Code (' + emailCooldown + 's)'"></span>
+                            <span x-show="emailCooldown <= 0">Resend Code</span>
+                        </button>
+                        <span class="text-[10px] text-gray-400">Expires in 10 mins</span>
+                    </div>
+
+                    <div class="pt-2 flex items-center gap-3">
+                        <button type="button"
+                                @click="verifyNewEmailOtp()"
+                                :disabled="emailLoading"
+                                class="flex-1 py-3 text-white rounded-xl text-xs font-bold uppercase tracking-widest shadow-md transition-all cursor-pointer flex items-center justify-center gap-2"
+                                style="background: #1E1915;">
+                            <span x-show="!emailLoading">Confirm & Update Email ✓</span>
+                            <span x-show="emailLoading">Updating...</span>
+                        </button>
+                        <button type="button" @click="closeChangeEmailModal()" class="px-5 py-3 rounded-xl text-xs font-bold uppercase tracking-widest cursor-pointer" style="background: #FDF8EE; border: 1px solid #E8DECB; color: #766C60;">
+                            Cancel
+                        </button>
+                    </div>
+                </div>
+
+                {{-- STEP 4: Success --}}
+                <div x-show="emailStep === 4" class="space-y-4 text-center py-2" style="display:none;" x-cloak>
+                    <div class="w-14 h-14 rounded-full flex items-center justify-center mx-auto bg-emerald-50 text-emerald-600 border border-emerald-200">
+                        <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
+                    </div>
+                    <div>
+                        <h4 class="font-serif text-lg font-bold text-[#1E1915]">Email Updated Successfully!</h4>
+                        <p class="text-xs text-gray-600 mt-1">Your email address has been successfully updated to <strong class="text-black" x-text="currentEmailDisplay"></strong>.</p>
+                    </div>
+                    <div class="pt-2">
+                        <button type="button"
+                                @click="showChangeEmailModal = false; emailStep = 1;"
+                                class="w-full py-3 text-white rounded-xl text-xs font-bold uppercase tracking-widest shadow-md cursor-pointer"
+                                style="background: #1E1915;">
+                            Done
+                        </button>
+                    </div>
+                </div>
+
             </div>
         </div>
 
