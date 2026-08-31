@@ -130,7 +130,7 @@
                                 <a href="/seller/products/{{ $product->id }}/edit" title="Resume Editing Draft" class="w-10 h-10 bg-white rounded-full flex items-center justify-center text-stone-900 transition-all shadow-xl" onmouseover="this.style.background='#C49520'; this.style.color='#FFF';" onmouseout="this.style.background='#FFF'; this.style.color='#1E1915';">
                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
                                 </a>
-                                <button type="button" @click="openDeleteModal('{{ $product->id }}', '{{ addslashes($product->name) }}')" title="Discard Draft" class="w-10 h-10 bg-white rounded-full flex items-center justify-center text-red-600 transition-all shadow-xl cursor-pointer" onmouseover="this.style.background='#DC2626'; this.style.color='#FFF';" onmouseout="this.style.background='#FFF'; this.style.color='#DC2626';">
+                                <button type="button" @click.stop="openDeleteModal('{{ $product->id }}', '{{ addslashes($product->name) }}', true)" title="Discard Draft" class="w-10 h-10 bg-white rounded-full flex items-center justify-center text-red-600 transition-all shadow-xl cursor-pointer" onmouseover="this.style.background='#DC2626'; this.style.color='#FFF';" onmouseout="this.style.background='#FFF'; this.style.color='#DC2626';">
                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-4v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
                                 </button>
                             </div>
@@ -153,12 +153,15 @@
                                 </div>
                             </div>
 
-                            <!-- Action Button to Resume Draft -->
-                            <div class="pt-2 border-t" style="border-color: #E8DECB;">
-                                <a href="/seller/products/{{ $product->id }}/edit" class="w-full py-2 rounded-xl text-[10px] font-bold uppercase tracking-wider text-center flex items-center justify-center gap-1.5 transition-all shadow-2xs" style="background: #1E1915; color: #FFFCF7;" onmouseover="this.style.background='#C49520';" onmouseout="this.style.background='#1E1915';">
+                            <!-- Action Buttons for Draft: Resume Editing + Discard Draft -->
+                            <div class="pt-2 border-t grid grid-cols-5 gap-2" style="border-color: #E8DECB;">
+                                <a href="/seller/products/{{ $product->id }}/edit" class="col-span-4 py-2 rounded-xl text-[10px] font-bold uppercase tracking-wider text-center flex items-center justify-center gap-1.5 transition-all shadow-2xs" style="background: #1E1915; color: #FFFCF7;" onmouseover="this.style.background='#C49520';" onmouseout="this.style.background='#1E1915';">
                                     <svg class="w-3.5 h-3.5" style="color: #C49520;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
                                     <span>Resume Editing</span>
                                 </a>
+                                <button type="button" @click.stop="openDeleteModal('{{ $product->id }}', '{{ addslashes($product->name) }}', true)" title="Discard Draft" class="col-span-1 py-2 rounded-xl flex items-center justify-center transition-all cursor-pointer shadow-2xs text-red-600 hover:text-white hover:bg-red-600" style="background: #FEF2F2; border: 1px solid #FECACA;">
+                                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-4v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                                </button>
                             </div>
                         </div>
                     </div>
@@ -220,7 +223,7 @@
                                 <a href="/seller/products/{{ $product->id }}/edit" title="Edit Product" class="w-10 h-10 bg-white rounded-full flex items-center justify-center text-stone-900 transition-all shadow-xl" onmouseover="this.style.background='#C49520'; this.style.color='#FFF';" onmouseout="this.style.background='#FFF'; this.style.color='#1E1915';">
                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
                                 </a>
-                                <button type="button" @click="openDeleteModal('{{ $product->id }}', '{{ addslashes($product->name) }}')" title="Delete Product" class="w-10 h-10 bg-white rounded-full flex items-center justify-center text-red-600 transition-all shadow-xl cursor-pointer" onmouseover="this.style.background='#DC2626'; this.style.color='#FFF';" onmouseout="this.style.background='#FFF'; this.style.color='#DC2626';">
+                                <button type="button" @click.stop="openDeleteModal('{{ $product->id }}', '{{ addslashes($product->name) }}', false)" title="Delete Product" class="w-10 h-10 bg-white rounded-full flex items-center justify-center text-red-600 transition-all shadow-xl cursor-pointer" onmouseover="this.style.background='#DC2626'; this.style.color='#FFF';" onmouseout="this.style.background='#FFF'; this.style.color='#DC2626';">
                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-4v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
                                 </button>
                             </div>
@@ -240,7 +243,7 @@
                                     </div>
                                     @if($product->reviews_count > 0)
                                         <button type="button" @click="openReviewsModal('{{ $product->id }}')" class="text-[9px] font-extrabold uppercase tracking-wider hover:underline cursor-pointer" style="color: #C49520;">
-                                            Reviews →
+                                             Reviews →
                                         </button>
                                     @endif
                                 </div>
@@ -263,7 +266,7 @@
                                     <svg class="w-3 h-3" style="color: #C49520;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
                                     Edit
                                 </a>
-                                <button type="button" @click="openDeleteModal('{{ $product->id }}', '{{ addslashes($product->name) }}')" class="w-full py-2 rounded-xl text-[9px] font-bold uppercase tracking-wider text-center flex items-center justify-center gap-1 cursor-pointer" style="background: #FEF2F2; border: 1px solid #FECACA; color: #DC2626;">
+                                <button type="button" @click.stop="openDeleteModal('{{ $product->id }}', '{{ addslashes($product->name) }}', false)" class="w-full py-2 rounded-xl text-[9px] font-bold uppercase tracking-wider text-center flex items-center justify-center gap-1 cursor-pointer" style="background: #FEF2F2; border: 1px solid #FECACA; color: #DC2626;">
                                     <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-4v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
                                     Delete
                                 </button>
@@ -328,7 +331,7 @@
                                 <a href="/seller/products/{{ $product->id }}/edit" title="Edit Product" class="w-10 h-10 bg-white rounded-full flex items-center justify-center text-stone-900 transition-all shadow-xl" onmouseover="this.style.background='#C49520'; this.style.color='#FFF';" onmouseout="this.style.background='#FFF'; this.style.color='#1E1915';">
                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
                                 </a>
-                                <button type="button" @click="openDeleteModal('{{ $product->id }}', '{{ addslashes($product->name) }}')" title="Delete Product" class="w-10 h-10 bg-white rounded-full flex items-center justify-center text-red-600 transition-all shadow-xl cursor-pointer" onmouseover="this.style.background='#DC2626'; this.style.color='#FFF';" onmouseout="this.style.background='#FFF'; this.style.color='#DC2626';">
+                                <button type="button" @click.stop="openDeleteModal('{{ $product->id }}', '{{ addslashes($product->name) }}', false)" title="Delete Product" class="w-10 h-10 bg-white rounded-full flex items-center justify-center text-red-600 transition-all shadow-xl cursor-pointer" onmouseover="this.style.background='#DC2626'; this.style.color='#FFF';" onmouseout="this.style.background='#FFF'; this.style.color='#DC2626';">
                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-4v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
                                 </button>
                             </div>
@@ -376,7 +379,7 @@
                                     <svg class="w-3 h-3" style="color: #C49520;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
                                     Edit
                                 </a>
-                                <button type="button" @click="openDeleteModal('{{ $product->id }}', '{{ addslashes($product->name) }}')" class="w-full py-2 rounded-xl text-[9px] font-bold uppercase tracking-wider text-center flex items-center justify-center gap-1 cursor-pointer" style="background: #FEF2F2; border: 1px solid #FECACA; color: #DC2626;">
+                                <button type="button" @click.stop="openDeleteModal('{{ $product->id }}', '{{ addslashes($product->name) }}', false)" class="w-full py-2 rounded-xl text-[9px] font-bold uppercase tracking-wider text-center flex items-center justify-center gap-1 cursor-pointer" style="background: #FEF2F2; border: 1px solid #FECACA; color: #DC2626;">
                                     <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-4v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
                                     Delete
                                 </button>
@@ -433,7 +436,7 @@
                                 <a href="/seller/products/{{ $product->id }}/edit" title="Edit & Fix Product" class="w-10 h-10 bg-white rounded-full flex items-center justify-center text-stone-900 transition-all shadow-xl" onmouseover="this.style.background='#C49520'; this.style.color='#FFF';" onmouseout="this.style.background='#FFF'; this.style.color='#1E1915';">
                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
                                 </a>
-                                <button type="button" @click="openDeleteModal('{{ $product->id }}', '{{ addslashes($product->name) }}')" title="Delete/Archive Product" class="w-10 h-10 bg-white rounded-full flex items-center justify-center text-red-600 transition-all shadow-xl cursor-pointer" onmouseover="this.style.background='#DC2626'; this.style.color='#FFF';" onmouseout="this.style.background='#FFF'; this.style.color='#DC2626';">
+                                <button type="button" @click.stop="openDeleteModal('{{ $product->id }}', '{{ addslashes($product->name) }}', false)" title="Delete/Archive Product" class="w-10 h-10 bg-white rounded-full flex items-center justify-center text-red-600 transition-all shadow-xl cursor-pointer" onmouseover="this.style.background='#DC2626'; this.style.color='#FFF';" onmouseout="this.style.background='#FFF'; this.style.color='#DC2626';">
                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-4v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
                                 </button>
                             </div>
@@ -469,7 +472,7 @@
                                         <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
                                         <span>Edit & Fix</span>
                                     </a>
-                                    <button type="button" @click="openDeleteModal('{{ $product->id }}', '{{ addslashes($product->name) }}')" class="w-full py-2 px-2 rounded-xl text-[10px] font-bold uppercase tracking-wider text-center flex items-center justify-center gap-1 cursor-pointer" style="background: #FEF2F2; border: 1px solid #FECACA; color: #DC2626;">
+                                    <button type="button" @click.stop="openDeleteModal('{{ $product->id }}', '{{ addslashes($product->name) }}', false)" class="w-full py-2 px-2 rounded-xl text-[10px] font-bold uppercase tracking-wider text-center flex items-center justify-center gap-1 cursor-pointer" style="background: #FEF2F2; border: 1px solid #FECACA; color: #DC2626;">
                                         <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-4v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
                                         <span>Archive</span>
                                     </button>
@@ -804,9 +807,24 @@
         </div>
     </div>
 
-    {{-- Delete Product Confirmation Modal --}}
-    <div x-show="showDeleteModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-xs" x-cloak>
-        <div class="rounded-3xl w-full max-w-md p-6 sm:p-7 shadow-2xl space-y-5" style="background: #FFFCF7; border: 1px solid #E8DECB;" @click.away="showDeleteModal = false">
+    {{-- Delete / Discard Product Confirmation Modal --}}
+    <div x-show="showDeleteModal" 
+         class="fixed inset-0 z-100 flex items-center justify-center p-4"
+         style="display: none;"
+         x-cloak
+         x-transition:enter="transition ease-out duration-200"
+         x-transition:enter-start="opacity-0 scale-95"
+         x-transition:enter-end="opacity-100 scale-100"
+         x-transition:leave="transition ease-in duration-150"
+         x-transition:leave-start="opacity-100 scale-100"
+         x-transition:leave-end="opacity-0 scale-95"
+         @keydown.escape.window="showDeleteModal = false">
+        
+        <!-- Backdrop -->
+        <div class="fixed inset-0 bg-black/60 backdrop-blur-xs" @click="showDeleteModal = false"></div>
+
+        <!-- Modal Box -->
+        <div class="relative rounded-3xl w-full max-w-md p-6 sm:p-7 shadow-2xl space-y-5 z-10" style="background: #FFFCF7; border: 1px solid #E8DECB;">
             <div class="flex items-start gap-3.5">
                 <div class="w-12 h-12 rounded-2xl flex items-center justify-center shrink-0" style="background: #FEF2F2; color: #DC2626; border: 1px solid #FECACA;">
                     <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -814,13 +832,17 @@
                     </svg>
                 </div>
                 <div class="min-w-0">
-                    <h3 class="font-serif text-base sm:text-lg font-bold leading-tight" style="color: #1E1915;">Archive Creation</h3>
-                    <p class="text-xs mt-1" style="color: #766C60;">Are you sure you want to remove <strong x-text="deletingProductName" class="text-stone-900"></strong> from your active catalogue?</p>
+                    <h3 class="font-serif text-base sm:text-lg font-bold leading-tight" style="color: #1E1915;" x-text="isDeletingDraft ? 'Discard Draft Creation' : 'Archive Creation'"></h3>
+                    <p class="text-xs mt-1" style="color: #766C60;">
+                        <span x-show="isDeletingDraft">Are you sure you want to discard and permanently delete draft <strong x-text="deletingProductName" class="text-stone-900"></strong>?</span>
+                        <span x-show="!isDeletingDraft">Are you sure you want to remove <strong x-text="deletingProductName" class="text-stone-900"></strong> from your active catalogue?</span>
+                    </p>
                 </div>
             </div>
 
             <p class="text-xs leading-relaxed p-3 rounded-2xl" style="background: #FDF8EE; border: 1px solid #E8DECB; color: #766C60;">
-                This product will be removed from customer display and archived in your historical ledger.
+                <span x-show="isDeletingDraft">This unpublished draft will be deleted immediately and removed from your saved drafts.</span>
+                <span x-show="!isDeletingDraft">This product will be removed from customer display and archived in your historical ledger.</span>
             </p>
 
             <form :action="'/seller/products/' + deletingProductId" method="POST" class="flex gap-3 pt-1">
@@ -829,8 +851,7 @@
                 <button type="button" @click="showDeleteModal = false" class="flex-1 py-2.5 text-xs font-bold rounded-xl transition-all cursor-pointer" style="background: #FDF8EE; border: 1px solid #E8DECB; color: #1E1915;">
                     Cancel
                 </button>
-                <button type="submit" class="flex-1 py-2.5 bg-red-600 hover:bg-red-700 text-white text-xs font-bold uppercase tracking-wider rounded-xl transition-all border-0 cursor-pointer shadow-xs">
-                    Archive Product
+                <button type="submit" class="flex-1 py-2.5 bg-red-600 hover:bg-red-700 text-white text-xs font-bold uppercase tracking-wider rounded-xl transition-all border-0 cursor-pointer shadow-xs" x-text="isDeletingDraft ? 'Discard Draft' : 'Archive Product'">
                 </button>
             </form>
         </div>
@@ -856,6 +877,7 @@ function sellerProducts() {
         showDeleteModal: false,
         deletingProductId: null,
         deletingProductName: '',
+        isDeletingDraft: false,
         selectedProduct: null,
         lightboxImage: null,
         productsData: (() => {
@@ -870,10 +892,17 @@ function sellerProducts() {
         replyText: '',
         isSubmittingReply: false,
         activeSGTab: 'Men',
-        sizeGuides: JSON.parse(document.getElementById('seller-sizeguides-data')?.textContent || '[]'),
-        openDeleteModal(id, name) {
+        sizeGuides: (() => {
+            try {
+                return JSON.parse(document.getElementById('seller-sizeguides-data')?.textContent || '[]');
+            } catch (e) {
+                return [];
+            }
+        })(),
+        openDeleteModal(id, name, isDraft = false) {
             this.deletingProductId = id;
             this.deletingProductName = name;
+            this.isDeletingDraft = !!isDraft;
             this.showDeleteModal = true;
         },
         matches(productName, productDesc, productStatus) {
