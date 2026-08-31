@@ -272,17 +272,17 @@ document.addEventListener('alpine:init', () => {
                             </div>
 
                             <!-- Action Buttons for Draft: Resume Editing + Discard Draft -->
-                            <div class="pt-2 border-t flex items-center gap-2" style="border-color: #E8DECB;">
-                                <a href="/seller/products/{{ $product->id }}/edit" class="flex-1 py-2 px-2.5 rounded-xl text-[10px] font-bold uppercase tracking-wider text-center flex items-center justify-center gap-1.5 transition-all shadow-2xs" style="background: #1E1915; color: #FFFCF7;" onmouseover="this.style.background='#C49520';" onmouseout="this.style.background='#1E1915';">
-                                    <svg class="w-3.5 h-3.5" style="color: #C49520;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
-                                    <span>Resume Editing</span>
+                            <div class="pt-2 border-t grid grid-cols-2 gap-2" style="border-color: #E8DECB;">
+                                <a href="/seller/products/{{ $product->id }}/edit" class="py-2 px-2.5 rounded-xl text-[10px] font-bold uppercase tracking-wider text-center flex items-center justify-center gap-1.5 transition-all shadow-2xs" style="background: #1E1915; color: #FFFCF7;" onmouseover="this.style.background='#C49520';" onmouseout="this.style.background='#1E1915';">
+                                    <svg class="w-3.5 h-3.5 shrink-0" style="color: #C49520;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
+                                    <span>Resume</span>
                                 </a>
                                 <button type="button" 
                                         data-product-id="{{ $product->id }}"
                                         data-product-name="{{ htmlspecialchars($product->name, ENT_QUOTES) }}"
                                         @click.stop="openDeleteModal($el.dataset.productId, $el.dataset.productName, true)" 
                                         title="Discard Draft" 
-                                        class="px-3.5 py-2 rounded-xl flex items-center justify-center gap-1.5 text-[10px] font-extrabold uppercase tracking-wider transition-all cursor-pointer shadow-2xs shrink-0" 
+                                        class="py-2 px-2.5 rounded-xl flex items-center justify-center gap-1.5 text-[10px] font-extrabold uppercase tracking-wider transition-all cursor-pointer shadow-2xs" 
                                         style="background-color: #FEF2F2; border: 1px solid #FECACA; color: #DC2626;"
                                         onmouseover="this.style.backgroundColor='#DC2626'; this.style.color='#FFFFFF'; this.style.borderColor='#DC2626';"
                                         onmouseout="this.style.backgroundColor='#FEF2F2'; this.style.color='#DC2626'; this.style.borderColor='#FECACA';">
