@@ -46,13 +46,8 @@
          x-data="onboardingSetup()" 
          x-init="init()">
         
-        {{-- Top Navigation --}}
-        <div class="flex items-center justify-between mb-3 sm:mb-4">
-            <a href="/" class="w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-[#FAF7F2] border border-[#E8DFC8] flex items-center justify-center text-gray-600 hover:text-[#C0422A] hover:bg-[#F3ECE0] transition-all shadow-2xs" title="Back to Home">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-                </svg>
-            </a>
+        {{-- Top Status --}}
+        <div class="flex items-center justify-end mb-2 sm:mb-3">
             <div class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">
                 Account Setup
             </div>
