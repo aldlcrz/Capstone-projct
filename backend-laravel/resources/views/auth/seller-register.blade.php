@@ -52,6 +52,10 @@
     </style>
 </head>
 <body class="min-h-screen flex items-center justify-center p-6 relative overflow-hidden">
+    @php
+        $googleSeller = session('google_seller_signup');
+    @endphp
+
     <!-- Subtle warm blobs identical to customer login -->
     <div class="absolute top-0 right-0 w-140 h-140 rounded-full -translate-y-1/2 translate-x-1/3 blur-3xl opacity-[0.04] pointer-events-none bg-[#C0422A]"></div>
     <div class="absolute bottom-0 left-0 w-95 h-95 rounded-full translate-y-1/2 -translate-x-1/3 blur-3xl opacity-[0.12] pointer-events-none bg-[#D4B896]"></div>
@@ -59,8 +63,8 @@
     <div class="login-card w-full max-w-md bg-white rounded-[2.5rem] border border-[#E5DDD5] p-8 shadow-[0_20px_60px_rgba(60,40,20,0.08)] relative z-10 max-h-[95vh] overflow-y-auto no-scrollbar" 
          x-data="{
              step: {{ $errors->has('mobileNumber') || $errors->has('residencyCertificate') || $errors->has('businessPermit') || $errors->has('birDocument') || $errors->has('terms_consent') ? 2 : 1 }},
-             name: '{{ old('name', $googleSeller['name'] ?? '') }}',
-             email: '{{ old('email', $googleSeller['email'] ?? '') }}',
+             name: @js(old('name', $googleSeller['name'] ?? '')),
+             email: @js(old('email', $googleSeller['email'] ?? '')),
              password: '',
              password_confirmation: '',
              showPass: false,
@@ -151,10 +155,6 @@
                 <p class="font-medium leading-relaxed">{{ session('warning') }}</p>
             </div>
         @endif
-
-        @php
-            $googleSeller = session('google_seller_signup');
-        @endphp
 
         @if($googleSeller)
             <div class="mb-6 p-4 rounded-2xl bg-blue-50 border border-blue-200 text-blue-900 text-xs flex items-center justify-between gap-3">
