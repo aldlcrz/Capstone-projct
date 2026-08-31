@@ -1071,45 +1071,24 @@ class AdminController extends Controller
 
         $this->sendNotification($product->sellerId, 'Product Approved', "Your product \"{$product->name}\" is now live!", 'product_approved', '/seller/products', 'seller');
 
-        // Email Seller
+        // Email Seller (single notification)
         if ($product->seller && $product->seller->email) {
-            $mailable = new \App\Mail\ProductApprovedMail($product->seller->name, $product->name, $product->id);
-            \App\Services\EmailNotificationService::sendNotification($product->seller->email, $mailable, 'product_approved', $product->sellerId, 'Product', $product->id);
-        }
-
-        // Email Active Customers about New Available Product or Discounted Product
-        $activeCustomers = User::where('role', 'customer')->where('status', 'active')->get();
-        $shopName = $product->seller->shopName ?? $product->seller->name ?? 'Artisan';
-
-        foreach ($activeCustomers as $customer) {
-            if ($customer->email) {
-                if ($product->is_on_sale && $product->discount_percentage > 0) {
-                    $salePrice = round((float) $product->price * (1 - ($product->discount_percentage / 100)), 2);
-                    $dMail = new \App\Mail\ProductDiscountMail(
-                        $customer->name,
-                        $product->name,
-                        $shopName,
-                        (float) $product->price,
-                        $salePrice,
-                        (float) $product->discount_percentage,
-                        $product->id
-                    );
-                    \App\Services\EmailNotificationService::sendNotification($customer->email, $dMail, 'product_discount_alert', $customer->id, 'Product', $product->id);
-                } else {
-                    $cMail = new \App\Mail\NewProductAvailableMail($customer->name, $product->name, $shopName, (float) $product->price, $product->id);
-                    \App\Services\EmailNotificationService::sendNotification($customer->email, $cMail, 'new_product_alert', $customer->id, 'Product', $product->id);
-                }
+            try {
+                $mailable = new \App\Mail\ProductApprovedMail($product->seller->name, $product->name, $product->id);
+                \App\Services\EmailNotificationService::sendNotification($product->seller->email, $mailable, 'product_approved', $product->sellerId, 'Product', $product->id);
+            } catch (\Throwable $e) {
+                Log::warning('Email sending failed for product approval: ' . $e->getMessage());
             }
         }
 
-        // Auto-add restocked wishlisted items to customer cart & send email notification
+        // Auto-add restocked wishlisted items to customer cart & send notification
         try {
             \App\Services\WishlistService::handleProductRestocked($product);
         } catch (\Throwable $we) {
             Log::warning('Wishlist restock handling error on approval: ' . $we->getMessage());
         }
 
-        return redirect()->back()->with('success', 'Product approved and notifications sent.');
+        return redirect()->back()->with('success', 'Product approved and published to live catalog.');
     }
 
     public function rejectProductWeb(Request $request, string $id)

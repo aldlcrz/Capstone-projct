@@ -4,6 +4,7 @@
 <div class="space-y-6" x-data="{
     // Approval State
     approveModal: false,
+    isApproving: false,
     approveProductId: null,
     approveProductName: '',
     approveProductSeller: '',
@@ -15,6 +16,7 @@
         this.approveProductSeller = (product.seller ? (product.seller.shopName || product.seller.name) : 'Artisan');
         this.approveProductPrice = parseFloat(product.price || 0).toLocaleString(undefined, {minimumFractionDigits: 2});
         this.approveProductImage = product.image ? (Array.isArray(product.image) ? product.image[0] : product.image) : '/uploads/products/default.jpg';
+        this.isApproving = false;
         this.approveModal = true;
     },
 
@@ -275,14 +277,15 @@
                 Upon approval, this product will be immediately discoverable in the marketplace and an email notification will be dispatched to the artisan.
             </p>
 
-            <form :action="'/admin/products/' + approveProductId + '/approve'" method="POST" class="flex gap-3 pt-2">
+            <form :action="'/admin/products/' + approveProductId + '/approve'" method="POST" @submit="isApproving = true" class="flex gap-3 pt-2">
                 @csrf
                 @method('PATCH')
-                <button type="button" @click="approveModal = false" class="flex-1 py-2.5 border border-gray-200 text-xs font-bold text-gray-600 rounded-xl hover:bg-gray-50 transition-all cursor-pointer">
+                <button type="button" :disabled="isApproving" @click="approveModal = false" class="flex-1 py-2.5 border border-gray-200 text-xs font-bold text-gray-600 rounded-xl hover:bg-gray-50 transition-all cursor-pointer disabled:opacity-50">
                     Cancel
                 </button>
-                <button type="submit" class="flex-1 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold uppercase tracking-wider rounded-xl transition-all shadow-sm cursor-pointer">
-                    Confirm &amp; Publish
+                <button type="submit" :disabled="isApproving" class="flex-1 py-2.5 bg-emerald-600 hover:bg-emerald-700 disabled:opacity-75 text-white text-xs font-bold uppercase tracking-wider rounded-xl transition-all shadow-sm cursor-pointer flex items-center justify-center gap-2">
+                    <svg x-show="isApproving" class="animate-spin h-4 w-4 text-white" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+                    <span x-text="isApproving ? 'Publishing...' : 'Confirm & Publish'"></span>
                 </button>
             </form>
         </div>
