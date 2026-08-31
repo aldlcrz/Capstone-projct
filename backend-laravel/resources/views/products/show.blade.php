@@ -751,7 +751,7 @@
                             @endif
                         </div>
                         
-                        <div class="mt-2 flex items-center gap-2">
+                        <div class="mt-2 flex items-center gap-2 flex-wrap">
                             <a href="/shops/{{ $product->sellerId }}" class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-stone-100 hover:bg-[#C0420A] text-[9px] font-black uppercase tracking-widest text-stone-700 hover:text-white rounded-lg border border-stone-200/60 transition-all shadow-sm">
                                 <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"></path></svg>
                                 View Shop
@@ -759,9 +759,17 @@
                             <button 
                                 type="button" 
                                 @click="chatWithSeller('{{ $product->sellerId }}', '{{ e($product->seller->shopName ?? $product->seller->name ?? 'Artisan') }}')"
-                                class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-amber-50 hover:bg-[#C0422A] text-[9px] font-black uppercase tracking-widest text-amber-900 hover:text-white rounded-lg border border-amber-200/60 transition-all shadow-sm"
+                                class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-amber-50 hover:bg-[#C0422A] text-[9px] font-black uppercase tracking-widest text-amber-900 hover:text-white rounded-lg border border-amber-200/60 transition-all shadow-sm cursor-pointer"
                             >
                                 💬 Chat with Seller
+                            </button>
+                            <button 
+                                type="button" 
+                                @click="window.dispatchEvent(new CustomEvent('open-report', { detail: { reportedId: '{{ $product->sellerId }}', reportedName: '{{ e($product->seller->shopName ?? $product->seller->name ?? 'Artisan') }}', productId: '{{ $product->id }}', productName: '{{ e($product->name) }}', reportType: 'product' } }))"
+                                class="inline-flex items-center gap-1 px-2.5 py-1.5 bg-gray-50 hover:bg-red-50 text-[9px] font-black uppercase tracking-widest text-gray-500 hover:text-red-600 rounded-lg border border-gray-200/80 hover:border-red-200 transition-all shadow-2xs cursor-pointer"
+                                title="Report this listing for policy violations"
+                            >
+                                🛡️ Report
                             </button>
                         </div>
                     </div>

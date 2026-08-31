@@ -1316,69 +1316,237 @@ class AdminController extends Controller
 
     public function reports(Request $request)
     {
-        $status = $request->status ?? 'Pending';
-        $reports = \App\Models\Report::with(['reporter', 'reported'])
-            ->when($status !== 'all', function($q) use ($status) {
-                return $q->where('status', $status);
-            })
-            ->orderBy('createdAt', 'desc')
-            ->paginate(15);
+        $status   = $request->query('status', 'Pending');
+        $type     = $request->query('type', 'all');
+        $severity = $request->query('severity', 'all');
+        $search   = trim($request->query('search', ''));
+
+        $query = \App\Models\Report::with(['reporter', 'reported', 'product', 'assignedAdmin', 'timelineEvents']);
+
+        if ($status !== 'all') {
+            $query->where('status', $status);
+        }
+
+        if ($type !== 'all') {
+            $query->where('reportType', $type);
+        }
+
+        if ($severity !== 'all') {
+            $query->where('severity', $severity);
+        }
+
+        if (!empty($search)) {
+            $query->where(function($q) use ($search) {
+                $q->where('id', 'like', "%{$search}%")
+                  ->orWhere('reason', 'like', "%{$search}%")
+                  ->orWhere('description', 'like', "%{$search}%")
+                  ->orWhereHas('reported', function($sq) use ($search) {
+                      $sq->where('name', 'like', "%{$search}%")
+                         ->orWhere('shopName', 'like', "%{$search}%")
+                         ->orWhere('email', 'like', "%{$search}%");
+                  })
+                  ->orWhereHas('reporter', function($sq) use ($search) {
+                      $sq->where('name', 'like', "%{$search}%")
+                         ->orWhere('email', 'like', "%{$search}%");
+                  })
+                  ->orWhereHas('product', function($sq) use ($search) {
+                      $sq->where('name', 'like', "%{$search}%");
+                  });
+            });
+        }
+
+        $reports = $query->orderBy('createdAt', 'desc')->paginate(15);
             
         $counts = [
-            'pending' => \App\Models\Report::where('status', 'Pending')->count(),
-            'resolved' => \App\Models\Report::where('status', 'Resolved')->count(),
+            'all'          => \App\Models\Report::count(),
+            'pending'      => \App\Models\Report::where('status', 'Pending')->count(),
+            'under_review' => \App\Models\Report::where('status', 'Under Review')->count(),
+            'resolved'     => \App\Models\Report::where('status', 'Resolved')->count(),
+            'dismissed'    => \App\Models\Report::where('status', 'Dismissed')->count(),
+            'critical'     => \App\Models\Report::where('severity', 'CRITICAL')->whereIn('status', ['Pending', 'Under Review'])->count(),
         ];
+
+        // Seller Risk Pattern Overview (Decision-Support Analytics)
+        $topReportedSellers = \App\Models\User::where('role', 'seller')
+            ->whereHas('reports', function($q) {
+                $q->where('createdAt', '>=', now()->subDays(30));
+            })
+            ->withCount([
+                'reports as recent_reports_count' => fn($q) => $q->where('createdAt', '>=', now()->subDays(30)),
+                'reports as confirmed_violations_count' => fn($q) => $q->where('investigationResult', 'Policy Violation Confirmed'),
+                'reports as pending_reports_count' => fn($q) => $q->whereIn('status', ['Pending', 'Under Review']),
+                'reports as dismissed_reports_count' => fn($q) => $q->where('status', 'Dismissed'),
+            ])
+            ->orderByDesc('recent_reports_count')
+            ->limit(5)
+            ->get()
+            ->map(function($seller) {
+                $score = ($seller->confirmed_violations_count * 3) + ($seller->pending_reports_count * 1.5) + ($seller->recent_reports_count * 0.5);
+                $riskLevel = match(true) {
+                    $score >= 8 => 'CRITICAL',
+                    $score >= 5 => 'HIGH',
+                    $score >= 2 => 'MEDIUM',
+                    default     => 'LOW',
+                };
+                $recommendation = match($riskLevel) {
+                    'CRITICAL' => 'Immediate investigation required. Review recent transactions and consider temporary restrictions.',
+                    'HIGH'     => 'High priority case review. Cross-examine customer evidence and request seller documentation.',
+                    'MEDIUM'   => 'Monitor store activity and review pending customer reports.',
+                    default    => 'Normal activity. Standard queue review.',
+                };
+                return [
+                    'seller'          => $seller,
+                    'recent_reports'  => $seller->recent_reports_count,
+                    'violations'      => $seller->confirmed_violations_count,
+                    'pending'         => $seller->pending_reports_count,
+                    'dismissed'       => $seller->dismissed_reports_count,
+                    'risk_level'      => $riskLevel,
+                    'recommendation'  => $recommendation,
+                ];
+            });
             
-        return view('admin.reports', compact('reports', 'counts', 'status'));
+        return view('admin.reports', compact('reports', 'counts', 'status', 'type', 'severity', 'search', 'topReportedSellers'));
     }
 
     public function resolveReport(Request $request, string $id)
     {
-        $report = \App\Models\Report::findOrFail($id);
-        $report->status = 'Resolved';
-        $report->adminNotes = $request->input('notes', '');
+        $report = \App\Models\Report::with(['reported', 'reporter', 'product'])->findOrFail($id);
         
-        $action = $request->input('action', 'Warning Sent');
-        
-        // Map friendly display names to fallback legacy enum values
-        $enumMap = [
-            'Warning Sent'        => 'Warning',
-            'User Blocked'        => 'Suspended',
-            'Product Removed'     => 'Restricted',
-            'No Action Necessary' => 'None',
-            'Other'               => 'None',
-        ];
-        
-        try {
-            $report->actionTaken = $action;
-            $report->save();
-        } catch (\Throwable $e) {
-            // Fallback in case table column is still restricted enum
-            $report->actionTaken = $enumMap[$action] ?? 'None';
-            $report->save();
-        }
+        $admin = Auth::user();
+        $status = $request->input('status', 'Resolved');
+        $severity = $request->input('severity', $report->severity ?? 'MEDIUM');
+        $investigationResult = $request->input('investigationResult', 'No Violation Found');
+        $action = $request->input('action', 'None');
+        $disciplinaryReason = $request->input('disciplinaryReason', '');
+        $adminNotes = $request->input('notes', '');
 
-        // Send confirmation notice to reported party if applicable
-        try {
-            if ($report->type === 'CustomerReportingSeller' && $report->reportedId) {
+        $report->status              = $status;
+        $report->severity            = $severity;
+        $report->investigationResult = $investigationResult;
+        $report->actionTaken         = $action;
+        $report->disciplinaryReason  = $disciplinaryReason;
+        $report->adminNotes          = $adminNotes;
+        $report->assignedAdminId     = $admin?->id;
+        $report->save();
+
+        // Disciplinary Enforcement on Reported User
+        $reportedUser = $report->reported;
+        if ($reportedUser && in_array($action, ['Suspend Account', 'Ban Account', 'Temporary Restriction', 'Warning'])) {
+            if (in_array($action, ['Suspend Account', 'Temporary Restriction'])) {
+                $reportedUser->status = 'suspended';
+                $reportedUser->violationReason = $disciplinaryReason ?: "Account suspended following Trust & Safety investigation: {$investigationResult}.";
+                $reportedUser->sessionVersion = ($reportedUser->sessionVersion ?? 1) + 1;
+                $reportedUser->save();
+
                 Notification::send(
-                    (string) $report->reportedId,
-                    '✓ Concern Reviewed & Resolved',
-                    "The concern regarding \"{$report->reason}\" has been reviewed and resolved by platform moderation.",
-                    'info',
+                    (string) $reportedUser->id,
+                    '⛔ Account Suspended - Policy Violation',
+                    "Your account has been suspended following a Trust & Safety investigation. Reason: " . ($disciplinaryReason ?: $investigationResult),
+                    'error',
+                    null,
+                    $reportedUser->role
+                );
+            } elseif ($action === 'Ban Account') {
+                $reportedUser->status = 'banned';
+                $reportedUser->violationReason = $disciplinaryReason ?: "Account permanently banned for severe policy violation: {$investigationResult}.";
+                $reportedUser->sessionVersion = ($reportedUser->sessionVersion ?? 1) + 1;
+                $reportedUser->save();
+
+                Notification::send(
+                    (string) $reportedUser->id,
+                    '🚫 Account Banned - Severe Violation',
+                    "Your account has been permanently banned from the platform for severe policy violation. Reason: " . ($disciplinaryReason ?: $investigationResult),
+                    'error',
+                    null,
+                    $reportedUser->role
+                );
+            } elseif ($action === 'Warning') {
+                Notification::send(
+                    (string) $reportedUser->id,
+                    '⚠️ Official Warning - Trust & Safety Notice',
+                    "An official warning has been recorded for your shop regarding: \"{$report->reason}\". Details: " . ($disciplinaryReason ?: 'Please review and adhere strictly to LumBarong seller community guidelines.'),
+                    'warning',
                     '/seller/reports',
                     'seller'
                 );
             }
-        } catch (\Throwable $e) {}
-        
-        return redirect()->route('admin.reports')->with('success', 'Report marked as resolved.');
+        }
+
+        // Add Case Timeline Event
+        $timelineTitle = match($status) {
+            'Resolved'     => 'Case Resolved',
+            'Dismissed'    => 'Case Dismissed',
+            'Under Review' => 'Investigation in Progress',
+            default        => 'Status Updated',
+        };
+
+        $timelineDesc = "Investigation Result: {$investigationResult} | Action: {$action}";
+        if (!empty($disciplinaryReason)) {
+            $timelineDesc .= " | Note: {$disciplinaryReason}";
+        }
+
+        $report->addTimelineEvent(
+            strtolower(str_replace(' ', '_', $status)),
+            $timelineTitle,
+            $timelineDesc,
+            $admin,
+            $admin->role ?? 'admin',
+            [
+                'investigation_result' => $investigationResult,
+                'action_taken'         => $action,
+                'severity'             => $severity,
+            ]
+        );
+
+        // Notify Reporter of Resolution (Without leaking confidential internal admin notes)
+        if ($report->reporterId) {
+            $reporterMsg = $status === 'Resolved'
+                ? "Your report ({$report->getReportCode()}) has been reviewed and resolved by our Trust & Safety team. Thank you for helping keep LumBarong safe."
+                : ($status === 'Dismissed'
+                    ? "Your report ({$report->getReportCode()}) was reviewed. Based on available evidence, no policy violation could be confirmed at this time."
+                    : "Your report ({$report->getReportCode()}) is currently under active investigation by our Trust & Safety team.");
+
+            Notification::send(
+                (string) $report->reporterId,
+                $status === 'Resolved' ? '✓ Report Resolved' : ($status === 'Dismissed' ? '🛡️ Report Reviewed' : '🔍 Report Under Review'),
+                $reporterMsg,
+                'info',
+                '/profile/reports',
+                'customer'
+            );
+        }
+
+        // Notify Reported Seller if status was resolved/dismissed
+        if ($report->reportedId && $reportedUser?->role === 'seller' && in_array($status, ['Resolved', 'Dismissed'])) {
+            $sellerNotice = $status === 'Resolved'
+                ? "The customer concern ({$report->getReportCode()}) regarding \"{$report->reason}\" has been marked resolved. Determination: {$investigationResult}."
+                : "The customer concern ({$report->getReportCode()}) regarding \"{$report->reason}\" has been dismissed with no violation found.";
+
+            Notification::send(
+                (string) $report->reportedId,
+                '🛡️ Case Closed - Trust & Safety',
+                $sellerNotice,
+                'info',
+                '/seller/reports',
+                'seller'
+            );
+        }
+
+        if ($request->expectsJson() || $request->is('api/*')) {
+            return response()->json([
+                'status'  => 'success',
+                'message' => "Report {$report->getReportCode()} successfully updated to {$status}.",
+                'report'  => $report,
+            ]);
+        }
+
+        return redirect()->route('admin.reports')->with('success', "Report {$report->getReportCode()} marked as {$status}.");
     }
 
     public function deleteReport(string $id)
     {
         \App\Models\Report::findOrFail($id)->delete();
-        return redirect()->back()->with('success', 'Report deleted.');
+        return redirect()->back()->with('success', 'Report permanently deleted.');
     }
 
     public function notifications()

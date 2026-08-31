@@ -98,6 +98,9 @@ Route::middleware('auth')->group(function () {
     Route::post('/profile/email/resend-new', [WebAuthController::class, 'resendNewEmailChangeCode'])->name('profile.email.resend-new');
     Route::post('/profile/email/cancel', [WebAuthController::class, 'cancelEmailChange'])->name('profile.email.cancel');
 
+    // Customer My Reports
+    Route::get('/profile/reports', [ReportController::class, 'customerReportsView'])->name('profile.reports');
+
     // Cart
     Route::get('/cart', [CartController::class, 'index'])->name('cart.index');
     Route::post('/cart/add', [CartController::class, 'add'])->name('cart.add');
@@ -283,6 +286,7 @@ Route::middleware(['auth', 'seller'])->prefix('seller')->group(function () {
 
     // Seller Reports & Concerns
     Route::get('/reports', [ReportController::class, 'sellerReportsView'])->name('seller.reports.index');
+    Route::post('/reports/{id}/response', [ReportController::class, 'submitSellerResponse'])->name('seller.reports.respond');
 });
 
 // ─── Super Admin Routes ────────────────────────────────────────────────────
@@ -299,6 +303,20 @@ Route::middleware(['auth', 'superadmin'])->prefix('superadmin')->group(function 
     Route::patch('/commissions/{sellerId}/mark-paid', [SuperAdminController::class, 'markPaid'])->name('superadmin.commissions.mark-paid');
     Route::patch('/shops/{id}/freeze',   [SuperAdminController::class, 'freezeShop'])->name('superadmin.shops.freeze');
     Route::patch('/shops/{id}/unfreeze', [SuperAdminController::class, 'unfreezeShop'])->name('superadmin.shops.unfreeze');
+    Route::patch('/shops/{id}/toggle-status', [SuperAdminController::class, 'toggleShopStatus'])->name('superadmin.shops.toggle-status');
+    Route::delete('/shops/{id}', [SuperAdminController::class, 'deleteShop'])->name('superadmin.shops.destroy');
+    Route::get('/payouts', [SuperAdminController::class, 'payouts'])->name('superadmin.payouts');
+    Route::patch('/payouts/{id}/release', [SuperAdminController::class, 'releasePayout'])->name('superadmin.payouts.release');
+    Route::get('/users', [SuperAdminController::class, 'users'])->name('superadmin.users');
+    Route::patch('/users/{id}/role', [SuperAdminController::class, 'changeRole'])->name('superadmin.users.role');
+    Route::patch('/users/{id}/toggle-status', [SuperAdminController::class, 'toggleStatus'])->name('superadmin.users.status');
+    Route::delete('/users/{id}', [SuperAdminController::class, 'deleteUser'])->name('superadmin.users.destroy');
+    Route::patch('/users/{id}/verify', [SuperAdminController::class, 'verifySeller'])->name('superadmin.users.verify');
+    Route::patch('/users/{id}/reject', [SuperAdminController::class, 'rejectSeller'])->name('superadmin.users.reject');
+    Route::get('/audit-logs', [SuperAdminController::class, 'auditLogs'])->name('superadmin.audit-logs');
+    Route::get('/orders', [SuperAdminController::class, 'orders'])->name('superadmin.orders');
+    Route::get('/system-health', [SuperAdminController::class, 'systemHealth'])->name('superadmin.system-health');
+    Route::post('/system-health/clear-cache', [SuperAdminController::class, 'clearSystemCache'])->name('superadmin.clear-cache');
 
     // Customer & Seller Management
     Route::get('/sellers', [SuperAdminController::class, 'sellers'])->name('superadmin.sellers');
@@ -433,6 +451,8 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/api/v1/reports', [\App\Http\Controllers\ReportController::class, 'createReport']);
     Route::post('/upload', [\App\Http\Controllers\UploadController::class, 'uploadImage']);
     Route::post('/reports', [\App\Http\Controllers\ReportController::class, 'createReport']);
+    Route::get('/api/v1/reports/{id?}', [\App\Http\Controllers\ReportController::class, 'getSellerReportDetail']);
+    Route::post('/api/v1/reports/{id}/response', [\App\Http\Controllers\ReportController::class, 'submitSellerResponse']);
     Route::get('/api/v1/seller/reports/{id?}', [\App\Http\Controllers\ReportController::class, 'getSellerReportDetail']);
 });
 
