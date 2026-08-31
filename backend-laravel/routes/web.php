@@ -254,7 +254,7 @@ Route::middleware(['auth', 'seller'])->prefix('seller')->group(function () {
     Route::get('/analytics', [AnalyticsController::class, 'sellerAnalytics'])->name('seller.analytics');
     Route::get('/export-report', [DashboardController::class, 'exportSellerReport'])->name('seller.export');
     Route::get('/profile', [DashboardController::class, 'sellerProfile'])->name('seller.profile');
-    Route::put('/profile', [DashboardController::class, 'updateSellerProfile'])->name('seller.profile.update');
+    Route::match(['post', 'put'], '/profile', [DashboardController::class, 'updateSellerProfile'])->name('seller.profile.update');
     Route::get('/policies', [DashboardController::class, 'sellerPolicies'])->name('seller.policies.index');
     Route::put('/policies', [DashboardController::class, 'updateSellerPolicies'])->name('seller.policies.update');
     Route::post('/policies/ai-assist', [AiController::class, 'assistPolicy'])->name('seller.policies.ai');
