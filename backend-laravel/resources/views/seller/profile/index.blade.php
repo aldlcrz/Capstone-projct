@@ -176,7 +176,7 @@
                      const res = await fetch('{{ route('profile.email.verify-new') }}', {
                          method: 'POST',
                          headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': '{{ csrf_token() }}', 'Accept': 'application/json' },
-                         body: JSON.stringify({ code: this.newEmailOtp })
+                         body: JSON.stringify({ code: this.newEmailOtp, new_email: this.newEmailInput })
                      });
                      const data = await res.json();
                      if (res.ok && data.status === 'success') {
@@ -200,7 +200,8 @@
                  try {
                      const res = await fetch('{{ route('profile.email.resend-new') }}', {
                          method: 'POST',
-                         headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': '{{ csrf_token() }}', 'Accept': 'application/json' }
+                         headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': '{{ csrf_token() }}', 'Accept': 'application/json' },
+                         body: JSON.stringify({ new_email: this.newEmailInput })
                      });
                      const data = await res.json();
                      if (res.ok && data.status === 'success') {

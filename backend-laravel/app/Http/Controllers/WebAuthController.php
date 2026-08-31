@@ -1329,13 +1329,21 @@ class WebAuthController extends Controller
             return response()->json(['status' => 'unauthenticated', 'message' => 'Please log in to proceed.'], 401);
         }
 
-        $pendingNewEmail = session('email_change_pending_new');
+        $pendingNewEmail = strtolower(trim($request->input('new_email') ?: (session('email_change_pending_new') ?? '')));
         $oldVerified     = session('email_change_old_verified');
 
-        if (!$pendingNewEmail || !$oldVerified) {
+        // Check if there is an active valid email_change_new verification record in database for this email
+        $hasActiveNewVerification = false;
+        if ($pendingNewEmail) {
+            $hasActiveNewVerification = EmailVerification::where('email', $pendingNewEmail)
+                ->where('type', 'email_change_new')
+                ->exists();
+        }
+
+        if (!$pendingNewEmail || (!$oldVerified && !$hasActiveNewVerification)) {
             return response()->json([
                 'status'  => 'error',
-                'message' => 'Security verification failed: Your existing email must be verified first before updating.',
+                'message' => 'Security verification session expired. Please restart the email change process.',
             ], 422);
         }
 
@@ -1414,11 +1422,18 @@ class WebAuthController extends Controller
             return response()->json(['status' => 'unauthenticated', 'message' => 'Please log in to proceed.'], 401);
         }
 
-        $pendingNewEmail = session('email_change_pending_new');
+        $pendingNewEmail = strtolower(trim($request->input('new_email') ?: (session('email_change_pending_new') ?? '')));
         $oldVerified     = session('email_change_old_verified');
 
-        if (!$pendingNewEmail || !$oldVerified) {
-            return response()->json(['status' => 'error', 'message' => 'Security check failed. Please restart the email change process.'], 422);
+        $hasActiveNewVerification = false;
+        if ($pendingNewEmail) {
+            $hasActiveNewVerification = EmailVerification::where('email', $pendingNewEmail)
+                ->where('type', 'email_change_new')
+                ->exists();
+        }
+
+        if (!$pendingNewEmail || (!$oldVerified && !$hasActiveNewVerification)) {
+            return response()->json(['status' => 'error', 'message' => 'Session expired. Please start over.'], 422);
         }
 
         $existing = EmailVerification::where('email', strtolower($pendingNewEmail))
