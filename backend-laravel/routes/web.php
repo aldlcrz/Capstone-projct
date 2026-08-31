@@ -223,7 +223,7 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->group(function () {
     
     // Reports
     Route::get('/reports', [AdminController::class, 'reports'])->name('admin.reports');
-    Route::patch('/reports/{id}/resolve', [AdminController::class, 'resolveReport'])->name('admin.reports.resolve');
+    Route::match(['post', 'patch'], '/reports/{id}/resolve', [AdminController::class, 'resolveReport'])->name('admin.reports.resolve');
     Route::delete('/reports/{id}', [AdminController::class, 'deleteReport'])->name('admin.reports.delete');
 
     // Archive Hub

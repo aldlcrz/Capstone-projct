@@ -1336,11 +1336,43 @@ class AdminController extends Controller
     {
         $report = \App\Models\Report::findOrFail($id);
         $report->status = 'Resolved';
-        $report->adminNotes = $request->notes;
-        $report->actionTaken = $request->action;
-        $report->save();
+        $report->adminNotes = $request->input('notes', '');
         
-        return redirect()->back()->with('success', 'Report marked as resolved.');
+        $action = $request->input('action', 'Warning Sent');
+        
+        // Map friendly display names to fallback legacy enum values
+        $enumMap = [
+            'Warning Sent'        => 'Warning',
+            'User Blocked'        => 'Suspended',
+            'Product Removed'     => 'Restricted',
+            'No Action Necessary' => 'None',
+            'Other'               => 'None',
+        ];
+        
+        try {
+            $report->actionTaken = $action;
+            $report->save();
+        } catch (\Throwable $e) {
+            // Fallback in case table column is still restricted enum
+            $report->actionTaken = $enumMap[$action] ?? 'None';
+            $report->save();
+        }
+
+        // Send confirmation notice to reported party if applicable
+        try {
+            if ($report->type === 'CustomerReportingSeller' && $report->reportedId) {
+                Notification::send(
+                    (string) $report->reportedId,
+                    '✓ Concern Reviewed & Resolved',
+                    "The concern regarding \"{$report->reason}\" has been reviewed and resolved by platform moderation.",
+                    'info',
+                    '/seller/reports',
+                    'seller'
+                );
+            }
+        } catch (\Throwable $e) {}
+        
+        return redirect()->route('admin.reports')->with('success', 'Report marked as resolved.');
     }
 
     public function deleteReport(string $id)
