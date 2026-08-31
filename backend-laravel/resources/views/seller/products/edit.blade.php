@@ -424,24 +424,24 @@
                     <label class="text-[9px] font-bold uppercase tracking-widest text-gray-400">Current Photos</label>
                     <div class="grid grid-cols-3 gap-2">
                         @foreach($images as $i => $img)
-                            <div class="relative group aspect-3/4 rounded-xl overflow-hidden border transition-all shadow-xs"
-                                 x-data="{ marked: false }"
-                                 :class="marked ? 'border-red-400 opacity-70' : 'border-gray-200 hover:border-gray-300'">
-                                <img src="{{ $product->getImageUrl($img) }}" onerror="this.src='/uploads/products/default.jpg'" class="w-full h-full object-cover transition-all" :class="marked ? 'scale-105 grayscale' : ''">
-                                <input type="checkbox" name="remove_images[]" value="{{ $img }}" :checked="marked" class="hidden">
+                            {{-- Outer wrapper: always in DOM so checkbox submits correctly --}}
+                            <div x-data="{ removed: false }">
+                                {{-- Hidden checkbox: lives outside x-show so it's always submitted --}}
+                                <input type="checkbox" name="remove_images[]" value="{{ $img }}" :checked="removed" class="hidden">
 
-                                {{-- Toggle remove button --}}
-                                <button type="button" @click="marked = !marked"
-                                    class="absolute top-1.5 right-1.5 w-6 h-6 rounded-full text-[10px] font-black flex items-center justify-center shadow-md transition-all z-10 cursor-pointer"
-                                    :class="marked ? 'bg-red-500 text-white' : 'bg-black/60 text-white hover:bg-red-500'"
-                                    :title="marked ? 'Undo removal' : 'Remove photo'">
-                                    <span x-show="!marked">✕</span>
-                                    <span x-show="marked">↩</span>
-                                </button>
-
-                                {{-- Subtle bottom label when marked --}}
-                                <div x-show="marked" class="absolute bottom-0 inset-x-0 bg-red-600/90 py-1 flex items-center justify-center pointer-events-none">
-                                    <span class="text-[8px] font-black uppercase tracking-widest text-white">Marked for removal</span>
+                                {{-- Visual card: disappears instantly on click --}}
+                                <div class="relative group aspect-3/4 rounded-xl overflow-hidden border border-gray-200 shadow-xs transition-all"
+                                     x-show="!removed"
+                                     x-transition:leave="transition ease-in duration-200"
+                                     x-transition:leave-start="opacity-100 scale-100"
+                                     x-transition:leave-end="opacity-0 scale-75">
+                                    <img src="{{ $product->getImageUrl($img) }}" onerror="this.src='/uploads/products/default.jpg'" class="w-full h-full object-cover">
+                                    <button type="button"
+                                            @click="removed = true"
+                                            title="Remove photo"
+                                            class="absolute top-1.5 right-1.5 w-6 h-6 rounded-full bg-black/60 hover:bg-red-600 text-white text-[10px] font-black flex items-center justify-center shadow-md transition-all z-10 cursor-pointer">
+                                        ✕
+                                    </button>
                                 </div>
                             </div>
                         @endforeach
