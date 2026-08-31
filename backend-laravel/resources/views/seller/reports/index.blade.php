@@ -67,17 +67,17 @@
         <div class="flex items-center gap-2 overflow-x-auto no-scrollbar pb-2 border-b border-gray-100">
             <span class="text-[10px] font-black uppercase tracking-widest text-gray-400 shrink-0 mr-1">Type:</span>
             <button type="button" @click="typeFilter = 'all'"
-                :class="typeFilter === 'all' ? 'bg-[#1E1915] text-white border-[#1E1915]' : 'bg-gray-50 text-gray-700 border-gray-200 hover:bg-gray-100'"
+                :style="typeFilter === 'all' ? 'background-color: #1E1915 !important; color: #FFFFFF !important; border-color: #1E1915 !important;' : 'background-color: #F9FAFB !important; color: #374151 !important; border-color: #E5E7EB !important;'"
                 class="px-3.5 py-1.5 rounded-xl text-xs font-extrabold uppercase tracking-wider transition-all shrink-0 cursor-pointer border shadow-2xs">
                 All Reports ({{ $counts['total'] }})
             </button>
             <button type="button" @click="typeFilter = 'account'"
-                :class="typeFilter === 'account' ? 'bg-[#1E1915] text-white border-[#1E1915]' : 'bg-gray-50 text-gray-700 border-gray-200 hover:bg-gray-100'"
+                :style="typeFilter === 'account' ? 'background-color: #1E1915 !important; color: #FFFFFF !important; border-color: #1E1915 !important;' : 'background-color: #F9FAFB !important; color: #374151 !important; border-color: #E5E7EB !important;'"
                 class="px-3.5 py-1.5 rounded-xl text-xs font-extrabold uppercase tracking-wider transition-all shrink-0 cursor-pointer border shadow-2xs">
                 👤 Account Reports ({{ $counts['account_reports'] }})
             </button>
             <button type="button" @click="typeFilter = 'product'"
-                :class="typeFilter === 'product' ? 'bg-[#1E1915] text-white border-[#1E1915]' : 'bg-gray-50 text-gray-700 border-gray-200 hover:bg-gray-100'"
+                :style="typeFilter === 'product' ? 'background-color: #1E1915 !important; color: #FFFFFF !important; border-color: #1E1915 !important;' : 'background-color: #F9FAFB !important; color: #374151 !important; border-color: #E5E7EB !important;'"
                 class="px-3.5 py-1.5 rounded-xl text-xs font-extrabold uppercase tracking-wider transition-all shrink-0 cursor-pointer border shadow-2xs">
                 📦 Product Reports ({{ $counts['product_reports'] }})
             </button>
@@ -97,7 +97,7 @@
             @endphp
             @foreach($statusFilters as $val => $label)
                 <button type="button" @click="statusFilter = '{{ $val }}'"
-                    :class="statusFilter === '{{ $val }}' ? 'bg-[#C49520] text-white border-[#C49520]' : 'bg-gray-50 text-gray-600 border-gray-200 hover:bg-gray-100'"
+                    :style="statusFilter === '{{ $val }}' ? 'background-color: #C49520 !important; color: #FFFFFF !important; border-color: #C49520 !important;' : 'background-color: #F9FAFB !important; color: #4B5563 !important; border-color: #E5E7EB !important;'"
                     class="px-3 py-1 rounded-lg text-[10px] font-extrabold uppercase tracking-wider transition-all shrink-0 cursor-pointer border">
                     {{ $label }}
                 </button>
