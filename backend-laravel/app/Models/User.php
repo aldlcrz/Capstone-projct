@@ -225,6 +225,16 @@ class User extends Authenticatable
             : "Cancellation requests must be submitted prior to order processing and payment verification. Once payment is confirmed and artisan crafting has begun, cancellations may not be accepted.";
     }
 
+    public function reports()
+    {
+        return $this->hasMany(Report::class, 'reportedId');
+    }
+
+    public function filedReports()
+    {
+        return $this->hasMany(Report::class, 'reporterId');
+    }
+
     /**
      * Get custom refund policy or sensible artisan default.
      */

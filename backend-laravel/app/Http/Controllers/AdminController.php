@@ -1367,43 +1367,48 @@ class AdminController extends Controller
         ];
 
         // Seller Risk Pattern Overview (Decision-Support Analytics)
-        $topReportedSellers = \App\Models\User::where('role', 'seller')
-            ->whereHas('reports', function($q) {
-                $q->where('createdAt', '>=', now()->subDays(30));
-            })
-            ->withCount([
-                'reports as recent_reports_count' => fn($q) => $q->where('createdAt', '>=', now()->subDays(30)),
-                'reports as confirmed_violations_count' => fn($q) => $q->where('investigationResult', 'Policy Violation Confirmed'),
-                'reports as pending_reports_count' => fn($q) => $q->whereIn('status', ['Pending', 'Under Review']),
-                'reports as dismissed_reports_count' => fn($q) => $q->where('status', 'Dismissed'),
-            ])
-            ->orderByDesc('recent_reports_count')
-            ->limit(5)
-            ->get()
-            ->map(function($seller) {
-                $score = ($seller->confirmed_violations_count * 3) + ($seller->pending_reports_count * 1.5) + ($seller->recent_reports_count * 0.5);
-                $riskLevel = match(true) {
-                    $score >= 8 => 'CRITICAL',
-                    $score >= 5 => 'HIGH',
-                    $score >= 2 => 'MEDIUM',
-                    default     => 'LOW',
-                };
-                $recommendation = match($riskLevel) {
-                    'CRITICAL' => 'Immediate investigation required. Review recent transactions and consider temporary restrictions.',
-                    'HIGH'     => 'High priority case review. Cross-examine customer evidence and request seller documentation.',
-                    'MEDIUM'   => 'Monitor store activity and review pending customer reports.',
-                    default    => 'Normal activity. Standard queue review.',
-                };
-                return [
-                    'seller'          => $seller,
-                    'recent_reports'  => $seller->recent_reports_count,
-                    'violations'      => $seller->confirmed_violations_count,
-                    'pending'         => $seller->pending_reports_count,
-                    'dismissed'       => $seller->dismissed_reports_count,
-                    'risk_level'      => $riskLevel,
-                    'recommendation'  => $recommendation,
-                ];
-            });
+        $topReportedSellers = collect();
+        try {
+            $topReportedSellers = \App\Models\User::where('role', 'seller')
+                ->whereHas('reports', function($q) {
+                    $q->where('createdAt', '>=', now()->subDays(30));
+                })
+                ->withCount([
+                    'reports as recent_reports_count' => fn($q) => $q->where('createdAt', '>=', now()->subDays(30)),
+                    'reports as confirmed_violations_count' => fn($q) => $q->where('investigationResult', 'Policy Violation Confirmed'),
+                    'reports as pending_reports_count' => fn($q) => $q->whereIn('status', ['Pending', 'Under Review']),
+                    'reports as dismissed_reports_count' => fn($q) => $q->where('status', 'Dismissed'),
+                ])
+                ->orderByDesc('recent_reports_count')
+                ->limit(5)
+                ->get()
+                ->map(function($seller) {
+                    $score = ($seller->confirmed_violations_count * 3) + ($seller->pending_reports_count * 1.5) + ($seller->recent_reports_count * 0.5);
+                    $riskLevel = match(true) {
+                        $score >= 8 => 'CRITICAL',
+                        $score >= 5 => 'HIGH',
+                        $score >= 2 => 'MEDIUM',
+                        default     => 'LOW',
+                    };
+                    $recommendation = match($riskLevel) {
+                        'CRITICAL' => 'Immediate investigation required. Review recent transactions and consider temporary restrictions.',
+                        'HIGH'     => 'High priority case review. Cross-examine customer evidence and request seller documentation.',
+                        'MEDIUM'   => 'Monitor store activity and review pending customer reports.',
+                        default    => 'Normal activity. Standard queue review.',
+                    };
+                    return [
+                        'seller'          => $seller,
+                        'recent_reports'  => $seller->recent_reports_count,
+                        'violations'      => $seller->confirmed_violations_count,
+                        'pending'         => $seller->pending_reports_count,
+                        'dismissed'       => $seller->dismissed_reports_count,
+                        'risk_level'      => $riskLevel,
+                        'recommendation'  => $recommendation,
+                    ];
+                });
+        } catch (\Throwable $e) {
+            $topReportedSellers = collect();
+        }
             
         return view('admin.reports', compact('reports', 'counts', 'status', 'type', 'severity', 'search', 'topReportedSellers'));
     }
