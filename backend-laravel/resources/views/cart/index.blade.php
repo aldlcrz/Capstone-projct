@@ -416,14 +416,23 @@
         </div>
 
         {{-- Empty Cart view --}}
-        <div x-show="items.length === 0" style="display: none;" class="bg-white border border-[#ECE3D2] rounded-2xl p-12 text-center shadow-xs max-w-lg mx-auto my-8">
-            <div class="w-14 h-14 rounded-full bg-[#FAF8F5] border border-[#ECE3D2] flex items-center justify-center mx-auto mb-4 text-[#8C6212]">
-                <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/></svg>
+        <div x-show="items.length === 0" 
+             style="display: none; background-color: #FFFFFF; border: 1px solid #ECE3D2; border-radius: 24px; box-shadow: 0 10px 30px rgba(0,0,0,0.04); padding: 36px 20px;" 
+             class="text-center max-w-lg mx-auto my-6 sm:my-8">
+            <div style="width: 56px; height: 56px; border-radius: 50%; background-color: #FAF8F5; border: 1px solid #ECE3D2; display: flex; align-items: center; justify-content: center; margin: 0 auto 16px auto; color: #8C6212;">
+                <svg style="width: 26px; height: 26px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/></svg>
             </div>
-            <h3 style="font-family:ui-serif,Georgia,serif;" class="text-xl font-bold text-[#1E1915] mb-1.5">Your Shopping Bag is Empty</h3>
-            <p class="text-xs text-[#78716C] mb-6 leading-relaxed">Discover handcrafted Barong Tagalog & Filipiniana pieces created by authentic Lumban artisans.</p>
-            <a href="/" class="inline-flex items-center justify-center px-6 py-2.5 rounded-xl bg-[#1E1915] hover:bg-[#C0422A] text-white text-xs font-bold uppercase tracking-wider shadow-sm transition-all">
-                Explore Collection
+            <h3 style="font-family: ui-serif, Georgia, Cambria, serif; font-size: 20px; font-weight: 700; color: #1E1915; margin-bottom: 8px;">
+                Your Shopping Bag is Empty
+            </h3>
+            <p style="font-size: 13px; color: #78716C; margin-bottom: 24px; line-height: 1.5; max-width: 320px; margin-left: auto; margin-right: auto;">
+                Discover handcrafted Barong Tagalog & Filipiniana pieces created by authentic Lumban artisans.
+            </p>
+            <a href="/" 
+               style="display: inline-flex; align-items: center; justify-content: center; gap: 8px; padding: 12px 28px; border-radius: 14px; background-color: #1E1915; color: #FFFFFF !important; font-size: 12px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.08em; text-decoration: none; box-shadow: 0 4px 14px rgba(30, 25, 21, 0.2); transition: all 0.2s ease;"
+               class="hover:opacity-90 active:scale-95">
+                <span style="color: #FFFFFF !important; font-weight: 800;">Explore Collection</span>
+                <svg style="width: 14px; height: 14px; color: #DFC97A;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
             </a>
         </div>
 
