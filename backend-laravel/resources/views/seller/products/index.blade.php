@@ -1,6 +1,119 @@
 @extends('layouts.seller')
 
 @section('content')
+<script id="seller-products-data" type="application/json">
+    @json($products)
+</script>
+<script id="seller-sizeguides-data" type="application/json">
+    @json(Auth::user()->size_guides ?? [])
+</script>
+<script>
+window.sellerProducts = function() {
+    return {
+        search: '',
+        activeTab: 'all',
+        showSizeGuideModal: false,
+        showReviewsModal: false,
+        showDeleteModal: false,
+        deletingProductId: null,
+        deletingProductName: '',
+        isDeletingDraft: false,
+        selectedProduct: null,
+        lightboxImage: null,
+        productsData: (() => {
+            try {
+                const raw = JSON.parse(document.getElementById('seller-products-data')?.textContent || '[]');
+                return Array.isArray(raw) ? raw : (raw?.data || []);
+            } catch (e) {
+                return [];
+            }
+        })(),
+        replyingToRevId: null,
+        replyText: '',
+        isSubmittingReply: false,
+        activeSGTab: 'Men',
+        sizeGuides: (() => {
+            try {
+                return JSON.parse(document.getElementById('seller-sizeguides-data')?.textContent || '[]');
+            } catch (e) {
+                return [];
+            }
+        })(),
+        openDeleteModal(id, name, isDraft = false) {
+            this.deletingProductId = id;
+            this.deletingProductName = name;
+            this.isDeletingDraft = !!isDraft;
+            this.showDeleteModal = true;
+        },
+        matches(productName, productDesc, productStatus) {
+            const query = (this.search || '').toLowerCase().trim();
+            const matchesSearch = !query || (productName || '').toLowerCase().includes(query) || (productDesc || '').toLowerCase().includes(query);
+            const statusLower = (productStatus || '').toLowerCase();
+            const tabLower = this.activeTab.toLowerCase();
+            const matchesTab = this.activeTab === 'all' 
+                || statusLower === tabLower 
+                || (this.activeTab === 'drafts' && statusLower === 'draft')
+                || (this.activeTab === 'rejected' && statusLower === 'rejected');
+            return matchesSearch && matchesTab;
+        },
+        openReviewsModal(productId) {
+            this.selectedProduct = (this.productsData || []).find(p => String(p.id) === String(productId)) || null;
+            this.replyingToRevId = null;
+            this.replyText = '';
+            this.showReviewsModal = true;
+        },
+        startReply(rev) {
+            this.replyingToRevId = rev.id;
+            this.replyText = rev.seller_reply || '';
+        },
+        cancelReply() {
+            this.replyingToRevId = null;
+            this.replyText = '';
+        },
+        async submitReply(revId) {
+            if (!this.replyText.trim() || this.isSubmittingReply) return;
+            this.isSubmittingReply = true;
+            try {
+                const token = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
+                const res = await fetch(`/seller/reviews/${revId}/reply`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': token,
+                        'Accept': 'application/json'
+                    },
+                    body: JSON.stringify({ reply: this.replyText })
+                });
+                const data = await res.json();
+                if (res.ok) {
+                    if (this.selectedProduct && this.selectedProduct.reviews) {
+                        const targetRev = this.selectedProduct.reviews.find(r => String(r.id) === String(revId));
+                        if (targetRev) {
+                            targetRev.seller_reply = data.seller_reply;
+                            targetRev.seller_reply_at = data.seller_reply_at;
+                        }
+                    }
+                    this.cancelReply();
+                } else {
+                    alert(data.message || 'Failed to submit response.');
+                }
+            } catch(e) {
+                alert('An error occurred while submitting your reply. Please try again.');
+            } finally {
+                this.isSubmittingReply = false;
+            }
+        }
+    };
+};
+if (window.Alpine) {
+    window.Alpine.data('sellerProducts', window.sellerProducts);
+} else {
+    document.addEventListener('alpine:init', () => {
+        Alpine.data('sellerProducts', window.sellerProducts);
+    });
+}
+</script>
+
 <div class="space-y-6 sm:space-y-8" x-data="sellerProducts()">
     {{-- Header --}}
     <div class="flex flex-col sm:flex-row sm:items-end justify-between gap-4 pb-2 border-b" style="border-color: #E8DECB;">
@@ -154,13 +267,14 @@
                             </div>
 
                             <!-- Action Buttons for Draft: Resume Editing + Discard Draft -->
-                            <div class="pt-2 border-t grid grid-cols-5 gap-2" style="border-color: #E8DECB;">
-                                <a href="/seller/products/{{ $product->id }}/edit" class="col-span-4 py-2 rounded-xl text-[10px] font-bold uppercase tracking-wider text-center flex items-center justify-center gap-1.5 transition-all shadow-2xs" style="background: #1E1915; color: #FFFCF7;" onmouseover="this.style.background='#C49520';" onmouseout="this.style.background='#1E1915';">
+                            <div class="pt-2 border-t flex items-center gap-2" style="border-color: #E8DECB;">
+                                <a href="/seller/products/{{ $product->id }}/edit" class="flex-1 py-2 px-2.5 rounded-xl text-[10px] font-bold uppercase tracking-wider text-center flex items-center justify-center gap-1.5 transition-all shadow-2xs" style="background: #1E1915; color: #FFFCF7;" onmouseover="this.style.background='#C49520';" onmouseout="this.style.background='#1E1915';">
                                     <svg class="w-3.5 h-3.5" style="color: #C49520;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
                                     <span>Resume Editing</span>
                                 </a>
-                                <button type="button" @click.stop="openDeleteModal('{{ $product->id }}', '{{ addslashes($product->name) }}', true)" title="Discard Draft" class="col-span-1 py-2 rounded-xl flex items-center justify-center transition-all cursor-pointer shadow-2xs text-red-600 hover:text-white hover:bg-red-600" style="background: #FEF2F2; border: 1px solid #FECACA;">
+                                <button type="button" @click.stop="openDeleteModal('{{ $product->id }}', '{{ addslashes($product->name) }}', true)" title="Discard / Delete Draft" class="px-3 py-2 rounded-xl flex items-center justify-center gap-1 text-[10px] font-bold uppercase tracking-wider transition-all cursor-pointer shadow-2xs text-red-600 hover:text-white hover:bg-red-600" style="background: #FEF2F2; border: 1px solid #FECACA;">
                                     <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-4v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                                    <span>Delete</span>
                                 </button>
                             </div>
                         </div>
@@ -857,113 +971,4 @@
         </div>
     </div>
 </div>
-
-<script id="seller-products-data" type="application/json">
-    @json($products)
-</script>
-<script id="seller-sizeguides-data" type="application/json">
-    @json(Auth::user()->size_guides ?? [])
-</script>
 @endsection
-
-@push('scripts')
-<script>
-function sellerProducts() {
-    return {
-        search: '',
-        activeTab: 'all',
-        showSizeGuideModal: false,
-        showReviewsModal: false,
-        showDeleteModal: false,
-        deletingProductId: null,
-        deletingProductName: '',
-        isDeletingDraft: false,
-        selectedProduct: null,
-        lightboxImage: null,
-        productsData: (() => {
-            try {
-                const raw = JSON.parse(document.getElementById('seller-products-data')?.textContent || '[]');
-                return Array.isArray(raw) ? raw : (raw?.data || []);
-            } catch (e) {
-                return [];
-            }
-        })(),
-        replyingToRevId: null,
-        replyText: '',
-        isSubmittingReply: false,
-        activeSGTab: 'Men',
-        sizeGuides: (() => {
-            try {
-                return JSON.parse(document.getElementById('seller-sizeguides-data')?.textContent || '[]');
-            } catch (e) {
-                return [];
-            }
-        })(),
-        openDeleteModal(id, name, isDraft = false) {
-            this.deletingProductId = id;
-            this.deletingProductName = name;
-            this.isDeletingDraft = !!isDraft;
-            this.showDeleteModal = true;
-        },
-        matches(productName, productDesc, productStatus) {
-            const query = (this.search || '').toLowerCase().trim();
-            const matchesSearch = !query || (productName || '').toLowerCase().includes(query) || (productDesc || '').toLowerCase().includes(query);
-            const statusLower = (productStatus || '').toLowerCase();
-            const tabLower = this.activeTab.toLowerCase();
-            const matchesTab = this.activeTab === 'all' 
-                || statusLower === tabLower 
-                || (this.activeTab === 'drafts' && statusLower === 'draft')
-                || (this.activeTab === 'rejected' && statusLower === 'rejected');
-            return matchesSearch && matchesTab;
-        },
-        openReviewsModal(productId) {
-            this.selectedProduct = (this.productsData || []).find(p => String(p.id) === String(productId)) || null;
-            this.replyingToRevId = null;
-            this.replyText = '';
-            this.showReviewsModal = true;
-        },
-        startReply(rev) {
-            this.replyingToRevId = rev.id;
-            this.replyText = rev.seller_reply || '';
-        },
-        cancelReply() {
-            this.replyingToRevId = null;
-            this.replyText = '';
-        },
-        async submitReply(revId) {
-            if (!this.replyText.trim() || this.isSubmittingReply) return;
-            this.isSubmittingReply = true;
-            try {
-                const token = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
-                const res = await fetch(`/seller/reviews/${revId}/reply`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-CSRF-TOKEN': token,
-                        'Accept': 'application/json'
-                    },
-                    body: JSON.stringify({ reply: this.replyText })
-                });
-                const data = await res.json();
-                if (res.ok) {
-                    if (this.selectedProduct && this.selectedProduct.reviews) {
-                        const targetRev = this.selectedProduct.reviews.find(r => String(r.id) === String(revId));
-                        if (targetRev) {
-                            targetRev.seller_reply = data.seller_reply;
-                            targetRev.seller_reply_at = data.seller_reply_at;
-                        }
-                    }
-                    this.cancelReply();
-                } else {
-                    alert(data.message || 'Failed to submit response.');
-                }
-            } catch(e) {
-                alert('An error occurred while submitting your reply. Please try again.');
-            } finally {
-                this.isSubmittingReply = false;
-            }
-        }
-    };
-}
-</script>
-@endpush
