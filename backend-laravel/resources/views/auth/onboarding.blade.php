@@ -15,7 +15,7 @@
     <script src="https://cdn.tailwindcss.com"></script>
     
     <!-- Fonts -->
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Playfair+Display:wght@700;800;900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Playfair+Display:wght@700;800;900&display=swap" rel="stylesheet">
     
     <!-- Leaflet Map CSS & JS for Address Pinpointer -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin=""/>
@@ -58,13 +58,13 @@
     <div class="absolute top-0 right-0 w-80 sm:w-140 h-80 sm:h-140 rounded-full -translate-y-1/2 translate-x-1/3 blur-3xl opacity-[0.06] pointer-events-none bg-[#C0422A]"></div>
     <div class="absolute bottom-0 left-0 w-72 sm:w-110 h-72 sm:h-110 rounded-full translate-y-1/2 -translate-x-1/3 blur-3xl opacity-[0.12] pointer-events-none bg-[#D4B896]"></div>
 
-    <div class="onboarding-card w-full max-w-xl bg-white rounded-3xl sm:rounded-[2.5rem] border border-[#E5DDD5] p-4.5 sm:p-8 shadow-[0_20px_60px_rgba(60,40,20,0.08)] relative z-10 my-3 sm:my-8 transition-all duration-300" 
+    <div class="onboarding-card w-full max-w-xl bg-white rounded-3xl sm:rounded-[2.5rem] border border-[#E5DDD5] p-4 sm:p-7 shadow-[0_20px_60px_rgba(60,40,20,0.08)] relative z-10 my-2 sm:my-6 transition-all duration-300" 
          x-data="onboardingSetup()" 
          x-init="init()">
         
         {{-- Top Navigation & Theme Toggle --}}
-        <div class="flex items-center justify-between mb-4">
-            <a href="/" class="back-btn w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-[#FAF7F2] border border-[#E8DFC8] flex items-center justify-center text-gray-600 hover:text-[#C0422A] hover:bg-[#F3ECE0] transition-all shadow-xs" title="Back to Home">
+        <div class="flex items-center justify-between mb-3 sm:mb-4">
+            <a href="/" class="back-btn w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-[#FAF7F2] border border-[#E8DFC8] flex items-center justify-center text-gray-600 hover:text-[#C0422A] hover:bg-[#F3ECE0] transition-all shadow-2xs" title="Back to Home">
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
                 </svg>
@@ -75,7 +75,7 @@
                     type="button"
                     onclick="toggleDarkMode()"
                     title="Toggle dark / light mode"
-                    class="back-btn w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-[#FAF7F2] border border-[#E8DFC8] flex items-center justify-center text-gray-500 hover:text-[#C0422A] hover:bg-[#F3ECE0] transition-all shadow-xs"
+                    class="back-btn w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-[#FAF7F2] border border-[#E8DFC8] flex items-center justify-center text-gray-500 hover:text-[#C0422A] hover:bg-[#F3ECE0] transition-all shadow-2xs"
                     aria-label="Toggle dark mode">
                 <svg id="icon-sun" class="w-4 h-4 hidden text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364-6.364l-.707.707M6.343 17.657l-.707.707M17.657 17.657l-.707-.707M6.343 6.343l-.707-.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"/>
@@ -87,30 +87,30 @@
         </div>
 
         {{-- Header & Branding --}}
-        <div class="text-center mb-6 sm:mb-8">
-            <div class="flex justify-center mb-3">
+        <div class="text-center mb-5 sm:mb-7">
+            <div class="flex justify-center mb-2.5">
                 <div class="relative group">
                     <div class="absolute -inset-1.5 bg-gradient-to-r from-[#C0422A] to-[#D4B896] rounded-full blur-xs opacity-30 group-hover:opacity-60 transition duration-300"></div>
-                    <img src="{{ asset('images/logo-icon.png') }}" alt="LumBarong Logo" class="relative w-14 h-14 sm:w-16 sm:h-16 object-contain rounded-full shadow-md hover:scale-105 transition-transform bg-white">
+                    <img src="{{ asset('images/logo-icon.png') }}" alt="LumBarong Logo" class="relative w-13 h-13 sm:w-16 sm:h-16 object-contain rounded-full shadow-md hover:scale-105 transition-transform bg-white">
                 </div>
             </div>
-            <div class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#C0422A]/10 text-[#C0422A] text-[10px] font-extrabold uppercase tracking-wider mb-2 border border-[#C0422A]/20">
+            <div class="inline-flex items-center gap-1.5 px-3 py-0.5 rounded-full bg-[#C0422A]/10 text-[#C0422A] text-[10px] font-extrabold uppercase tracking-wider mb-1.5 border border-[#C0422A]/20">
                 <span>Welcome to LumBarong</span>
             </div>
-            <h1 class="font-serif text-2xl sm:text-3xl font-black italic tracking-tight text-heading text-gray-900 mb-1.5">
+            <h1 class="font-serif text-2xl sm:text-3xl font-black italic tracking-tight text-heading text-gray-900 mb-1">
                 Set Up Your Profile
             </h1>
-            <p class="text-xs text-sub text-gray-500 font-medium max-w-md mx-auto leading-relaxed px-2">
+            <p class="text-xs text-sub text-gray-600 dark:text-gray-400 font-medium max-w-md mx-auto leading-relaxed px-1">
                 Add your details to personalize your authentic Lumban artisan experience and expedite delivery checkout. You can also skip and update these anytime.
             </p>
         </div>
 
         {{-- Error Summary Alert --}}
         @if ($errors->any())
-            <div class="mb-5 p-3.5 sm:p-4 rounded-2xl bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-800 text-red-900 dark:text-red-200 text-xs shadow-xs animate-fade-in">
+            <div class="mb-4 p-3.5 rounded-2xl bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-800 text-red-900 dark:text-red-200 text-xs shadow-2xs animate-fade-in">
                 <div class="flex items-center gap-2 font-bold mb-1">
                     <svg class="w-4 h-4 text-red-600 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-                    <span>Please check the following details:</span>
+                    <span>Please review the highlighted details:</span>
                 </div>
                 <ul class="list-disc list-inside space-y-0.5 text-red-700 dark:text-red-300 font-medium">
                     @foreach ($errors->all() as $err)
@@ -121,7 +121,7 @@
         @endif
 
         {{-- Main Setup Form --}}
-        <form action="{{ route('onboarding.save') }}" method="POST" @submit="isSubmitting = true" class="space-y-6">
+        <form action="{{ route('onboarding.save') }}" method="POST" @submit="isSubmitting = true" class="space-y-4 sm:space-y-5">
             @csrf
 
             {{-- Hidden Geolocation & Address Components for Backend Persistence --}}
@@ -133,19 +133,19 @@
             <input type="hidden" name="barangay" :value="addressForm.barangay || ''">
 
             {{-- 1. BASIC INFORMATION SECTION --}}
-            <div class="section-panel bg-[#FAF8F5] border border-[#ECE3D2] rounded-2xl sm:rounded-3xl p-4 sm:p-5 space-y-4">
-                <div class="flex items-center justify-between border-b border-[#ECE3D2] pb-2.5">
+            <div class="section-panel bg-[#FAF8F5] border border-[#ECE3D2] rounded-2xl sm:rounded-3xl p-3.5 sm:p-5 space-y-3.5">
+                <div class="flex items-center justify-between border-b border-[#ECE3D2] pb-2">
                     <div class="flex items-center gap-2">
                         <span class="w-5 h-5 rounded-full bg-[#C0422A] text-white flex items-center justify-center text-[10px] font-bold shadow-xs">1</span>
-                        <h2 class="text-xs font-extrabold uppercase tracking-wider text-heading text-gray-800">Basic Information</h2>
+                        <h2 class="text-xs font-black uppercase tracking-wider text-heading text-[#1E1915] dark:text-white">Basic Information</h2>
                     </div>
-                    <span class="text-[10px] font-bold text-[#C0422A] bg-[#C0422A]/10 px-2 py-0.5 rounded-md uppercase tracking-wider">Required</span>
+                    <span class="text-[9.5px] font-extrabold text-[#C0422A] bg-[#C0422A]/10 border border-[#C0422A]/20 px-2 py-0.5 rounded-full uppercase tracking-wider">Required</span>
                 </div>
 
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     {{-- Full Name --}}
                     <div>
-                        <label for="name" class="block text-[11px] font-bold text-gray-700 dark:text-gray-300 uppercase tracking-wider mb-1">
+                        <label for="name" class="block text-[11px] font-bold text-gray-800 dark:text-gray-200 uppercase tracking-wider mb-1">
                             Full Name <span class="text-[#C0422A]">*</span>
                         </label>
                         <input type="text" 
@@ -159,7 +159,7 @@
 
                     {{-- Preferred Username --}}
                     <div>
-                        <label for="username" class="block text-[11px] font-bold text-gray-700 dark:text-gray-300 uppercase tracking-wider mb-1">
+                        <label for="username" class="block text-[11px] font-bold text-gray-800 dark:text-gray-200 uppercase tracking-wider mb-1">
                             Preferred Username <span class="text-[#C0422A]">*</span>
                         </label>
                         <input type="text" 
@@ -171,48 +171,48 @@
                                class="field-input w-full h-11 px-3.5 bg-white border {{ $errors->has('username') ? 'border-red-400 bg-red-50/50' : 'border-[#D8CEBE]' }} rounded-xl text-xs font-semibold text-gray-900 outline-none focus:border-[#C0422A] focus:ring-2 focus:ring-[#C0422A]/15 transition-all shadow-2xs">
                     </div>
 
-                    {{-- Phone Number --}}
+                    {{-- Phone Number (Fixed Flex Prefix Group - Zero Overlap) --}}
                     <div class="sm:col-span-2">
-                        <label for="mobileNumber" class="block text-[11px] font-bold text-gray-700 dark:text-gray-300 uppercase tracking-wider mb-1">
+                        <label for="mobileNumber" class="block text-[11px] font-bold text-gray-800 dark:text-gray-200 uppercase tracking-wider mb-1">
                             Mobile Phone Number <span class="text-gray-400 font-normal text-[10px] lowercase">(e.g. 09171234567)</span>
                         </label>
-                        <div class="relative flex items-center">
-                            <span class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 dark:text-gray-400 text-xs font-bold pointer-events-none select-none flex items-center gap-1">
+                        <div class="flex items-center rounded-xl bg-white dark:bg-[#2c2c2e] border {{ $errors->has('mobileNumber') ? 'border-red-400 bg-red-50/50' : 'border-[#D8CEBE] dark:border-[#3e3e42]' }} overflow-hidden focus-within:border-[#C0422A] focus-within:ring-2 focus-within:ring-[#C0422A]/15 transition-all shadow-2xs">
+                            <div class="flex items-center gap-1.5 px-3 py-2.5 bg-[#FAF7F2] dark:bg-[#242426] border-r border-[#D8CEBE] dark:border-[#3e3e42] text-xs font-bold text-gray-700 dark:text-gray-200 select-none shrink-0">
                                 <span>🇵🇭</span>
                                 <span>+63</span>
-                            </span>
+                            </div>
                             <input type="text" 
                                    id="mobileNumber" 
                                    name="mobileNumber" 
                                    value="{{ old('mobileNumber', Auth::user()->mobileNumber) }}" 
                                    placeholder="917 123 4567" 
-                                   class="field-input w-full h-11 pl-18 pr-3.5 bg-white border {{ $errors->has('mobileNumber') ? 'border-red-400 bg-red-50/50' : 'border-[#D8CEBE]' }} rounded-xl text-xs font-semibold text-gray-900 outline-none focus:border-[#C0422A] focus:ring-2 focus:ring-[#C0422A]/15 transition-all shadow-2xs">
+                                   class="w-full h-11 px-3 bg-transparent text-xs font-semibold text-gray-900 dark:text-white outline-none placeholder:text-gray-400">
                         </div>
                     </div>
                 </div>
             </div>
 
             {{-- 2. PRIMARY DELIVERY ADDRESS SECTION (CUSTOMER PROFILE INTERACTIVE UI) --}}
-            <div class="section-panel bg-[#FAF8F5] border border-[#ECE3D2] rounded-2xl sm:rounded-3xl p-4 sm:p-5 space-y-4">
-                <div class="flex items-center justify-between border-b border-[#ECE3D2] pb-2.5">
+            <div class="section-panel bg-[#FAF8F5] border border-[#ECE3D2] rounded-2xl sm:rounded-3xl p-3.5 sm:p-5 space-y-3.5">
+                <div class="flex items-center justify-between border-b border-[#ECE3D2] pb-2">
                     <div class="flex items-center gap-2">
                         <span class="w-5 h-5 rounded-full bg-[#C0422A] text-white flex items-center justify-center text-[10px] font-bold shadow-xs">2</span>
-                        <h2 class="text-xs font-extrabold uppercase tracking-wider text-heading text-gray-800">Primary Delivery Address</h2>
+                        <h2 class="text-xs font-black uppercase tracking-wider text-heading text-[#1E1915] dark:text-white">Primary Delivery Address</h2>
                     </div>
-                    <span class="text-[10px] font-bold text-gray-500 bg-gray-200/70 dark:bg-gray-800 dark:text-gray-400 px-2 py-0.5 rounded-md uppercase tracking-wider">Optional for now</span>
+                    <span class="text-[9.5px] font-extrabold text-amber-800 dark:text-amber-300 bg-amber-100/80 dark:bg-amber-950/40 border border-amber-300/50 dark:border-amber-700/50 px-2 py-0.5 rounded-full uppercase tracking-wider">Optional for now</span>
                 </div>
 
                 {{-- Interactive Map Pinpointer Container --}}
-                <div class="space-y-2.5 pb-2">
-                    <div class="flex flex-wrap items-center justify-between gap-2">
-                        <label class="text-[11px] font-bold uppercase tracking-wider text-[#996515] dark:text-[#DFC97A] flex items-center gap-1.5">
-                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
-                            <span>Pin Exact Delivery Location</span>
+                <div class="space-y-2 pb-1">
+                    <div class="flex items-center justify-between gap-2">
+                        <label class="text-[11px] font-bold uppercase tracking-wider text-[#8C6212] dark:text-[#DFC97A] flex items-center gap-1">
+                            <svg class="w-3.5 h-3.5 text-[#C0422A]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+                            <span>Pin Delivery Location</span>
                         </label>
                         <button type="button"
                                 @click="locateUserGps()"
                                 :disabled="isLocatingGps"
-                                class="map-btn-secondary bg-[#FAF5EA] border border-[#E6D8BA] text-[#8C6212] hover:bg-[#EAE2D2] px-2.5 py-1.5 rounded-xl text-[10px] sm:text-[11px] font-bold inline-flex items-center gap-1.5 cursor-pointer transition-all shadow-2xs disabled:opacity-50">
+                                class="map-btn-secondary bg-[#FAF5EA] border border-[#E6D8BA] text-[#8C6212] hover:bg-[#EAE2D2] px-2.5 py-1 rounded-xl text-[10px] sm:text-[11px] font-bold inline-flex items-center gap-1.5 cursor-pointer transition-all shadow-2xs disabled:opacity-50 shrink-0">
                             <template x-if="isLocatingGps">
                                 <svg class="w-3.5 h-3.5 animate-spin text-[#8C6212]" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
                             </template>
@@ -231,7 +231,7 @@
                         <input type="text"
                                x-model="mapSearchQuery"
                                @keydown.enter.prevent="searchMapLocation()"
-                               placeholder="Search street, barangay, or landmark to drop pin..."
+                               placeholder="Search street, barangay, or landmark..."
                                class="field-input w-full h-10 pl-9 pr-20 bg-white border border-[#D8CEBE] rounded-xl text-xs text-gray-900 outline-none focus:border-[#996515] transition-all shadow-2xs">
                         <button type="button"
                                 @click="searchMapLocation()"
@@ -242,29 +242,29 @@
                     </div>
 
                     {{-- Leaflet Map Container --}}
-                    <div class="h-44 sm:h-52 w-full rounded-xl overflow-hidden border border-[#ECE3D2] relative z-10 shadow-inner"
+                    <div class="h-40 sm:h-52 w-full rounded-xl overflow-hidden border border-[#ECE3D2] relative z-10 shadow-inner"
                          x-ref="addressMapContainer"></div>
 
                     {{-- Detected Location Bar --}}
-                    <div class="detected-bar p-2.5 bg-[#FAF8F5] border border-[#ECE3D2] rounded-xl flex items-center justify-between gap-2 text-[10px]">
+                    <div class="detected-bar p-2.5 bg-white dark:bg-[#242426] border border-[#ECE3D2] dark:border-[#333336] rounded-xl flex items-center justify-between gap-2 text-[10.5px]">
                         <div class="flex items-center gap-1.5 min-w-0">
                             <span class="w-2 h-2 rounded-full bg-emerald-500 shrink-0 animate-pulse"></span>
-                            <span class="text-[#78716C] dark:text-gray-400 font-medium truncate" x-text="detectedLocationName || 'Drag pin or tap on map to lock coordinates'"></span>
+                            <span class="text-[#78716C] dark:text-gray-300 font-medium truncate" x-text="detectedLocationName || 'Drag pin or tap on map to lock coordinates'"></span>
                         </div>
-                        <span class="shrink-0 px-2 py-0.5 bg-[#1E1915] text-[#DFC97A] text-[9px] font-black rounded-md uppercase tracking-wider"
+                        <span class="shrink-0 px-2 py-0.5 bg-[#1E1915] text-[#DFC97A] text-[9px] font-black rounded-md uppercase tracking-wider shadow-2xs"
                               x-text="addressForm.latitude && addressForm.longitude ? 'Pin Locked' : 'Set Pin'"></span>
                     </div>
                 </div>
 
                 {{-- 4-Tier Philippine Location Dropdown Selector (PSGC) --}}
                 <div class="relative">
-                    <label class="block text-[11px] font-bold text-gray-700 dark:text-gray-300 uppercase tracking-wider mb-1">
+                    <label class="block text-[11px] font-bold text-gray-800 dark:text-gray-200 uppercase tracking-wider mb-1">
                         Region, Province, City, Barangay
                     </label>
                     <div @click="toggleLocationDropdown()"
                          class="field-input w-full h-11 px-3.5 bg-white border border-[#D8CEBE] rounded-xl flex items-center justify-between cursor-pointer transition-all shadow-2xs hover:border-[#C0422A]">
-                        <span class="truncate text-xs font-semibold" 
-                              :class="getLocationSummary() ? 'text-gray-900 dark:text-white' : 'text-gray-400'" 
+                        <span class="truncate text-xs" 
+                              :class="getLocationSummary() ? 'text-gray-900 dark:text-white font-bold' : 'text-gray-400 font-medium'" 
                               x-text="getLocationSummary() || 'Select Region, Province, City, Barangay'"></span>
                         <svg class="w-4 h-4 text-gray-400 transition-transform duration-200 shrink-0" 
                              :class="locationDropdownOpen ? 'rotate-180' : ''" 
@@ -348,10 +348,10 @@
                 </div>
 
                 {{-- Street Address & Postal Code Grid --}}
-                <div class="grid grid-cols-1 sm:grid-cols-3 gap-3.5">
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
                     {{-- House No / Street --}}
                     <div class="sm:col-span-2">
-                        <label for="houseNo" class="block text-[11px] font-bold text-gray-700 dark:text-gray-300 uppercase tracking-wider mb-1">
+                        <label for="houseNo" class="block text-[11px] font-bold text-gray-800 dark:text-gray-200 uppercase tracking-wider mb-1">
                             Street Name, Building, House No.
                         </label>
                         <input type="text" 
@@ -365,7 +365,7 @@
 
                     {{-- Postal Code --}}
                     <div class="sm:col-span-1">
-                        <label for="postalCode" class="block text-[11px] font-bold text-gray-700 dark:text-gray-300 uppercase tracking-wider mb-1">
+                        <label for="postalCode" class="block text-[11px] font-bold text-gray-800 dark:text-gray-200 uppercase tracking-wider mb-1">
                             Postal Code
                         </label>
                         <input type="text" 
@@ -382,10 +382,10 @@
             </div>
 
             {{-- Submit Action Button --}}
-            <div class="pt-2">
+            <div class="pt-1.5">
                 <button type="submit" 
                         :disabled="isSubmitting"
-                        class="w-full h-12.5 sm:h-13 bg-gradient-to-r from-[#C0422A] via-[#B83D26] to-[#A3341E] hover:from-[#A3341E] hover:to-[#8B2C19] text-white rounded-2xl font-black uppercase tracking-wider text-xs transition-all shadow-lg shadow-[#C0422A]/25 hover:shadow-xl hover:shadow-[#C0422A]/35 hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.99] flex items-center justify-center gap-2 cursor-pointer disabled:opacity-60">
+                        class="w-full h-12 sm:h-13 bg-gradient-to-r from-[#C0422A] via-[#B83D26] to-[#A3341E] hover:from-[#A3341E] hover:to-[#8B2C19] text-white rounded-xl sm:rounded-2xl font-black uppercase tracking-wider text-xs sm:text-sm transition-all shadow-md shadow-[#C0422A]/20 hover:shadow-lg hover:shadow-[#C0422A]/30 active:scale-[0.99] flex items-center justify-center gap-2 cursor-pointer disabled:opacity-60">
                     <span x-show="!isSubmitting" class="flex items-center gap-2">
                         <span>Save & Continue to LumBarong</span>
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
@@ -399,17 +399,17 @@
         </form>
 
         {{-- Skip for Now Form (Secondary Action) --}}
-        <form action="{{ route('onboarding.skip') }}" method="POST" class="mt-3 text-center">
+        <form action="{{ route('onboarding.skip') }}" method="POST" class="mt-2.5 text-center">
             @csrf
             <button type="submit" 
-                    class="text-xs font-bold text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 transition-colors py-2 px-4 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-800 inline-flex items-center gap-1.5 cursor-pointer">
+                    class="text-xs font-bold text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 transition-colors py-1.5 px-3.5 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-800 inline-flex items-center gap-1.5 cursor-pointer">
                 <span>Skip for Now</span>
                 <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
             </button>
         </form>
 
         {{-- Trust & Privacy Footer --}}
-        <p class="text-center text-[10px] text-gray-400 dark:text-gray-500 mt-4 leading-relaxed">
+        <p class="text-center text-[10px] text-gray-400 dark:text-gray-500 mt-3 leading-relaxed">
             🔒 Your personal information is encrypted & never shared with third parties.
         </p>
     </div>
