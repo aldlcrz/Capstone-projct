@@ -56,7 +56,7 @@ class DashboardController extends Controller
 
             foreach ($orders as $order) {
                 $items = $order->items->map(function ($item) {
-                    $name = $item->product->name ?? 'Deleted Product';
+                    $name = $item->product_name;
                     return $name . ' x' . $item->quantity;
                 })->implode('; ');
 

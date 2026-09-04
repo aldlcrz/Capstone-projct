@@ -418,7 +418,7 @@ class OrderController extends Controller
                 fputcsv($handle, [
                     'ITEM',
                     '',
-                    "  > " . ($item->product->name ?? 'Deleted Product'),
+                    "  > " . ($item->product_name ?? ($item->product->name ?? 'Archived Heritage Piece')),
                     "Qty: {$item->quantity} @ " . number_format($item->price, 2),
                     number_format($item->quantity * $item->price, 2),
                     '',

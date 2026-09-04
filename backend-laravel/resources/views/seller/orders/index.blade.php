@@ -40,7 +40,7 @@ function printSellerOrder(order) {
     const itemsHtml = (order.items || []).map(function (item) {
         const variation = item.display_variation && item.display_variation !== 'Original' ? item.display_variation : '—';
         return '<tr>'
-            + '<td style="padding:8px;border-bottom:1px solid #eee;">' + (item.product?.name || 'Deleted Product') + '</td>'
+            + '<td style="padding:8px;border-bottom:1px solid #eee;">' + (item.product_name || item.product?.name || 'Archived Heritage Piece') + '</td>'
             + '<td style="padding:8px;border-bottom:1px solid #eee;">' + (item.size || '—') + '</td>'
             + '<td style="padding:8px;border-bottom:1px solid #eee;">' + variation + '</td>'
             + '<td style="padding:8px;border-bottom:1px solid #eee;text-align:center;">' + item.quantity + '</td>'
