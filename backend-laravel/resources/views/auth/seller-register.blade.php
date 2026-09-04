@@ -61,133 +61,14 @@
     <div class="absolute bottom-0 left-0 w-95 h-95 rounded-full translate-y-1/2 -translate-x-1/3 blur-3xl opacity-[0.12] pointer-events-none bg-[#D4B896]"></div>
 
     <div class="login-card w-full max-w-md bg-white rounded-4xl sm:rounded-[2.5rem] border border-[#E5DDD5] p-5 sm:p-8 shadow-[0_20px_60px_rgba(60,40,20,0.08)] relative z-10 max-h-[95vh] overflow-y-auto no-scrollbar" 
-         x-data="{
+         x-data="sellerRegisterApp({
              step: {{ ($errors->has('name') || $errors->has('email') || $errors->has('password') || $errors->has('password_confirmation')) ? 1 : ($errors->any() || old('mobileNumber') || old('shopName') ? 2 : 1) }},
-             name: @js(old('name', $googleSeller['name'] ?? '')) || (sessionStorage.getItem('seller_reg_name') || ''),
-             email: @js(old('email', $googleSeller['email'] ?? '')) || (sessionStorage.getItem('seller_reg_email') || ''),
-             password: sessionStorage.getItem('seller_reg_password') || '',
-             password_confirmation: sessionStorage.getItem('seller_reg_password_confirmation') || '',
-             shopName: @js(old('shopName', '')) || (sessionStorage.getItem('seller_reg_shopName') || ''),
-             mobileNumber: @js(old('mobileNumber', '')) || (sessionStorage.getItem('seller_reg_mobileNumber') || ''),
-             terms_consent: {{ old('terms_consent') ? 'true' : 'false' }} || (sessionStorage.getItem('seller_reg_terms_consent') === '1'),
-             showPass: false,
-             showConfirm: false,
-             errors: {},
-             docs: {
-                 residency: { name: '', size: '', error: '' },
-                 permit: { name: '', size: '', error: '' },
-                 bir: { name: '', size: '', error: '' }
-             },
-             init() {
-                 this.saveState();
-             },
-             saveState() {
-                 if (this.name) sessionStorage.setItem('seller_reg_name', this.name);
-                 if (this.email) sessionStorage.setItem('seller_reg_email', this.email);
-                 if (this.password) sessionStorage.setItem('seller_reg_password', this.password);
-                 if (this.password_confirmation) sessionStorage.setItem('seller_reg_password_confirmation', this.password_confirmation);
-                 if (this.shopName) sessionStorage.setItem('seller_reg_shopName', this.shopName);
-                 if (this.mobileNumber) sessionStorage.setItem('seller_reg_mobileNumber', this.mobileNumber);
-                 sessionStorage.setItem('seller_reg_terms_consent', this.terms_consent ? '1' : '0');
-             },
-             validateStep1() {
-                 this.errors = {};
-                 const nameVal = (this.name || '').trim();
-                 const emailVal = (this.email || '').trim();
-                 const passVal = this.password || '';
-                 const passConfVal = this.password_confirmation || '';
-
-                 if (!nameVal) {
-                     this.errors.name = 'Full Name is required to proceed.';
-                 }
-
-                 if (!emailVal) {
-                     this.errors.email = 'Email address is required.';
-                 } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailVal)) {
-                     this.errors.email = 'Please enter a valid email address.';
-                 }
-
-                 if (!passVal) {
-                     this.errors.password = 'Platform password is required.';
-                 } else if (passVal.length < 6) {
-                     this.errors.password = 'Password must be at least 6 characters.';
-                 }
-
-                 if (!passConfVal) {
-                     this.errors.password_confirmation = 'Please confirm your password.';
-                 } else if (passVal !== passConfVal) {
-                     this.errors.password_confirmation = 'Passwords do not match.';
-                 }
-
-                 if (Object.keys(this.errors).length === 0) {
-                     this.saveState();
-                     this.step = 2;
-                 }
-             },
-             handleFileChange(event, docKey) {
-                 const file = event.target.files[0];
-                 this.docs[docKey].error = '';
-                 if (!file) {
-                     this.docs[docKey].name = '';
-                     this.docs[docKey].size = '';
-                     return;
-                 }
-
-                 // 20MB limit in bytes: 20 * 1024 * 1024 = 20,971,520 bytes
-                 const maxBytes = 20 * 1024 * 1024;
-                 const allowedExts = ['jpg', 'jpeg', 'png', 'webp', 'pdf'];
-                 const fileExt = (file.name.split('.').pop() || '').toLowerCase();
-
-                 if (!allowedExts.includes(fileExt) && !file.type.match(/(image\/(jpeg|png|webp|jpg)|application\/pdf)/i)) {
-                     this.docs[docKey].error = 'File must be a JPG, PNG, WEBP, or PDF.';
-                     event.target.value = '';
-                     this.docs[docKey].name = '';
-                     this.docs[docKey].size = '';
-                     return;
-                 }
-
-                 if (file.size > maxBytes) {
-                     const sizeMB = (file.size / (1024 * 1024)).toFixed(1);
-                     this.docs[docKey].error = `Selected file is ${sizeMB}MB. Maximum limit is 20MB.`;
-                     event.target.value = '';
-                     this.docs[docKey].name = '';
-                     this.docs[docKey].size = '';
-                     return;
-                 }
-
-                 const sizeFormatted = file.size > 1024 * 1024 
-                     ? (file.size / (1024 * 1024)).toFixed(1) + ' MB' 
-                     : Math.round(file.size / 1024) + ' KB';
-
-                 this.docs[docKey].name = file.name;
-                 this.docs[docKey].size = sizeFormatted;
-             },
-             validateBeforeSubmit(event) {
-                 this.saveState();
-
-                 if (!this.password || this.password.length < 6) {
-                     event.preventDefault();
-                     this.step = 1;
-                     this.errors.password = 'Please re-enter your password to proceed.';
-                     return;
-                 }
-
-                 const resInput = document.querySelector('input[name=\"residencyCertificate\"]');
-                 const permitInput = document.querySelector('input[name=\"businessPermit\"]');
-                 const birInput = document.querySelector('input[name=\"birDocument\"]');
-
-                 let totalBytes = 0;
-                 if (resInput && resInput.files[0]) totalBytes += resInput.files[0].size;
-                 if (permitInput && permitInput.files[0]) totalBytes += permitInput.files[0].size;
-                 if (birInput && birInput.files[0]) totalBytes += birInput.files[0].size;
-
-                 if (totalBytes > 38 * 1024 * 1024) {
-                     event.preventDefault();
-                     alert('The total size of your uploaded documents exceeds 38MB. Please compress or select smaller files (under 20MB each) so the total fits within server limits.');
-                     return;
-                 }
-             }
-         }" x-cloak>
+             name: @js(old('name', $googleSeller['name'] ?? '')),
+             email: @js(old('email', $googleSeller['email'] ?? '')),
+             shopName: @js(old('shopName', '')),
+             mobileNumber: @js(old('mobileNumber', '')),
+             terms_consent: {{ old('terms_consent') ? 'true' : 'false' }}
+         })" x-cloak>
         
         <!-- Header -->
         <div class="relative mb-6 text-center">
@@ -584,6 +465,136 @@
     @endif
 
     <script>
+        function sellerRegisterApp(cfg) {
+            return {
+                step: cfg.step || 1,
+                name: cfg.name || (sessionStorage.getItem('seller_reg_name') || ''),
+                email: cfg.email || (sessionStorage.getItem('seller_reg_email') || ''),
+                password: sessionStorage.getItem('seller_reg_password') || '',
+                password_confirmation: sessionStorage.getItem('seller_reg_password_confirmation') || '',
+                shopName: cfg.shopName || (sessionStorage.getItem('seller_reg_shopName') || ''),
+                mobileNumber: cfg.mobileNumber || (sessionStorage.getItem('seller_reg_mobileNumber') || ''),
+                terms_consent: cfg.terms_consent || (sessionStorage.getItem('seller_reg_terms_consent') === '1'),
+                showPass: false,
+                showConfirm: false,
+                errors: {},
+                docs: {
+                    residency: { name: '', size: '', error: '' },
+                    permit: { name: '', size: '', error: '' },
+                    bir: { name: '', size: '', error: '' }
+                },
+                init() {
+                    this.saveState();
+                },
+                saveState() {
+                    if (this.name) sessionStorage.setItem('seller_reg_name', this.name);
+                    if (this.email) sessionStorage.setItem('seller_reg_email', this.email);
+                    if (this.password) sessionStorage.setItem('seller_reg_password', this.password);
+                    if (this.password_confirmation) sessionStorage.setItem('seller_reg_password_confirmation', this.password_confirmation);
+                    if (this.shopName) sessionStorage.setItem('seller_reg_shopName', this.shopName);
+                    if (this.mobileNumber) sessionStorage.setItem('seller_reg_mobileNumber', this.mobileNumber);
+                    sessionStorage.setItem('seller_reg_terms_consent', this.terms_consent ? '1' : '0');
+                },
+                validateStep1() {
+                    this.errors = {};
+                    const nameVal = (this.name || '').trim();
+                    const emailVal = (this.email || '').trim();
+                    const passVal = this.password || '';
+                    const passConfVal = this.password_confirmation || '';
+
+                    if (!nameVal) {
+                        this.errors.name = 'Full Name is required to proceed.';
+                    }
+
+                    if (!emailVal) {
+                        this.errors.email = 'Email address is required.';
+                    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailVal)) {
+                        this.errors.email = 'Please enter a valid email address.';
+                    }
+
+                    if (!passVal) {
+                        this.errors.password = 'Platform password is required.';
+                    } else if (passVal.length < 6) {
+                        this.errors.password = 'Password must be at least 6 characters.';
+                    }
+
+                    if (!passConfVal) {
+                        this.errors.password_confirmation = 'Please confirm your password.';
+                    } else if (passVal !== passConfVal) {
+                        this.errors.password_confirmation = 'Passwords do not match.';
+                    }
+
+                    if (Object.keys(this.errors).length === 0) {
+                        this.saveState();
+                        this.step = 2;
+                    }
+                },
+                handleFileChange(event, docKey) {
+                    const file = event.target.files[0];
+                    this.docs[docKey].error = '';
+                    if (!file) {
+                        this.docs[docKey].name = '';
+                        this.docs[docKey].size = '';
+                        return;
+                    }
+
+                    // 20MB limit in bytes: 20 * 1024 * 1024 = 20,971,520 bytes
+                    const maxBytes = 20 * 1024 * 1024;
+                    const allowedExts = ['jpg', 'jpeg', 'png', 'webp', 'pdf'];
+                    const fileExt = (file.name.split('.').pop() || '').toLowerCase();
+
+                    if (!allowedExts.includes(fileExt) && !file.type.match(/(image\/(jpeg|png|webp|jpg)|application\/pdf)/i)) {
+                        this.docs[docKey].error = 'File must be a JPG, PNG, WEBP, or PDF.';
+                        event.target.value = '';
+                        this.docs[docKey].name = '';
+                        this.docs[docKey].size = '';
+                        return;
+                    }
+
+                    if (file.size > maxBytes) {
+                        const sizeMB = (file.size / (1024 * 1024)).toFixed(1);
+                        this.docs[docKey].error = `Selected file is ${sizeMB}MB. Maximum limit is 20MB.`;
+                        event.target.value = '';
+                        this.docs[docKey].name = '';
+                        this.docs[docKey].size = '';
+                        return;
+                    }
+
+                    const sizeFormatted = file.size > 1024 * 1024 
+                        ? (file.size / (1024 * 1024)).toFixed(1) + ' MB' 
+                        : Math.round(file.size / 1024) + ' KB';
+
+                    this.docs[docKey].name = file.name;
+                    this.docs[docKey].size = sizeFormatted;
+                },
+                validateBeforeSubmit(event) {
+                    this.saveState();
+
+                    if (!this.password || this.password.length < 6) {
+                        event.preventDefault();
+                        this.step = 1;
+                        this.errors.password = 'Please re-enter your password to proceed.';
+                        return;
+                    }
+
+                    const resInput = document.querySelector('input[name="residencyCertificate"]');
+                    const permitInput = document.querySelector('input[name="businessPermit"]');
+                    const birInput = document.querySelector('input[name="birDocument"]');
+
+                    let totalBytes = 0;
+                    if (resInput && resInput.files[0]) totalBytes += resInput.files[0].size;
+                    if (permitInput && permitInput.files[0]) totalBytes += permitInput.files[0].size;
+                    if (birInput && birInput.files[0]) totalBytes += birInput.files[0].size;
+
+                    if (totalBytes > 38 * 1024 * 1024) {
+                        event.preventDefault();
+                        alert('The total size of your uploaded documents exceeds 38MB. Please compress or select smaller files (under 20MB each) so the total fits within server limits.');
+                        return;
+                    }
+                }
+            };
+        }
+
         // Auto-reload on Back/Forward navigation from bfcache to get fresh CSRF token
         window.addEventListener('pageshow', function(event) {
             if (event.persisted || (window.performance && window.performance.navigation && window.performance.navigation.type === 2)) {
