@@ -259,7 +259,7 @@ class DashboardController extends Controller
         }
 
         $conversionRate = $productViews > 0
-            ? number_format(($orderCount / $productViews) * 100, 1)
+            ? number_format(min(100.0, ($orderCount / $productViews) * 100), 1)
             : '0.0';
 
         // Customer List & Repeat Customers
@@ -292,6 +292,8 @@ class DashboardController extends Controller
             'outOfStock' => $outOfStockProducts->count(),
             'healthy' => max(0, $products->count() - $lowStockProducts->count() - $outOfStockProducts->count()),
         ];
+
+        $dateFilter['chart_label'] = ($from && $to) ? ($dateFilter['label'] ?? 'Custom Period') : 'Last 7 Days';
 
         return [
             'filters' => $dateFilter,
@@ -751,6 +753,20 @@ class DashboardController extends Controller
                     ], 422);
                 }
                 return redirect()->back()->withInput()->with('error', 'GCash requires both a mobile number and a QR code image.');
+            }
+
+            if ($request->filled('gcashNumber')) {
+                $duplicateSeller = User::where('role', 'seller')
+                    ->where('id', '!=', $user->id)
+                    ->where('gcashNumber', trim($request->gcashNumber))
+                    ->first();
+                if ($duplicateSeller) {
+                    $dupMsg = 'Notice: This GCash number is already registered to another artisan shop (' . ($duplicateSeller->shopName ?: $duplicateSeller->name) . '). Please use a unique GCash number.';
+                    if ($request->expectsJson() || $request->ajax() || $request->wantsJson()) {
+                        return response()->json(['success' => false, 'message' => $dupMsg], 422);
+                    }
+                    return redirect()->back()->withInput()->with('error', $dupMsg);
+                }
             }
         }
 

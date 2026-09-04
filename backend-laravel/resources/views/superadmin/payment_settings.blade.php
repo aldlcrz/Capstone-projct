@@ -75,8 +75,12 @@
                         <label class="block text-[10px] font-bold text-gray-500 uppercase tracking-widest">GCash QR Code Image</label>
                         <div class="flex items-center gap-4">
                             @if($gcashQr)
+                                @php
+                                    $cleanGcash = ltrim($gcashQr, '/');
+                                    $gcashUrl = str_starts_with($cleanGcash, 'uploads/') ? asset($cleanGcash) : (str_starts_with($cleanGcash, 'storage/') ? asset($cleanGcash) : asset('storage/' . $cleanGcash));
+                                @endphp
                                 <div class="shrink-0 text-center">
-                                    <img src="{{ asset('storage/' . $gcashQr) }}" class="w-20 h-20 object-cover rounded-xl border border-[#E5DDD5] shadow-sm bg-white p-1">
+                                    <img src="{{ $gcashUrl }}" class="w-20 h-20 object-cover rounded-xl border border-[#E5DDD5] shadow-sm bg-white p-1" alt="GCash QR">
                                     <span class="text-[9px] text-gray-400 block mt-1">Current QR</span>
                                 </div>
                             @endif
@@ -112,8 +116,12 @@
                         <label class="block text-[10px] font-bold text-gray-500 uppercase tracking-widest">Maya QR Code Image</label>
                         <div class="flex items-center gap-4">
                             @if($mayaQr)
+                                @php
+                                    $cleanMaya = ltrim($mayaQr, '/');
+                                    $mayaUrl = str_starts_with($cleanMaya, 'uploads/') ? asset($cleanMaya) : (str_starts_with($cleanMaya, 'storage/') ? asset($cleanMaya) : asset('storage/' . $cleanMaya));
+                                @endphp
                                 <div class="shrink-0 text-center">
-                                    <img src="{{ asset('storage/' . $mayaQr) }}" class="w-20 h-20 object-cover rounded-xl border border-[#E5DDD5] shadow-sm bg-white p-1">
+                                    <img src="{{ $mayaUrl }}" class="w-20 h-20 object-cover rounded-xl border border-[#E5DDD5] shadow-sm bg-white p-1" alt="Maya QR">
                                     <span class="text-[9px] text-gray-400 block mt-1">Current QR</span>
                                 </div>
                             @endif

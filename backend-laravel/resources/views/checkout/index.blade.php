@@ -87,18 +87,14 @@
 @php
     $resolveQrUrl = function ($qrPath) {
         if (empty($qrPath)) return null;
-        if (str_starts_with($qrPath, 'http')) return $qrPath;
+        if (str_starts_with($qrPath, 'http://') || str_starts_with($qrPath, 'https://')) return $qrPath;
         $clean = ltrim($qrPath, '/');
-        if (file_exists(public_path($clean))) {
-            return asset($clean);
+        while (str_starts_with($clean, 'storage/')) {
+            $clean = ltrim(substr($clean, 8), '/');
         }
-        if (file_exists(public_path('storage/' . $clean))) {
-            return asset('storage/' . $clean);
-        }
-        if (file_exists(storage_path('app/public/' . $clean))) {
-            return asset('storage/' . $clean);
-        }
-        return asset($clean);
+        if (str_starts_with($clean, 'uploads/')) return asset($clean);
+        if (file_exists(public_path($clean))) return asset($clean);
+        return asset('storage/' . $clean);
     };
     $gcashQrUrl = $paymentSource && !empty($paymentSource->gcashQrCode) ? $resolveQrUrl($paymentSource->gcashQrCode) : null;
     $mayaQrUrl  = $paymentSource && !empty($paymentSource->mayaQrCode) ? $resolveQrUrl($paymentSource->mayaQrCode) : null;
@@ -147,9 +143,9 @@
                                         </div>
                                         <div class="flex items-center justify-between mt-2.5 flex-wrap gap-1">
                                             <div class="flex items-center gap-2">
-                                                <span class="text-sm lg:text-base font-black text-[#C0422A]">₱{{ number_format($item['price']) }}</span>
+                                                <span class="text-sm lg:text-base font-black text-[#C0422A]">₱{{ number_format($item['price'], 2) }}</span>
                                                 @if(!empty($item['is_on_sale']) && ($item['discount_percentage'] ?? 0) > 0)
-                                                    <span class="text-[10px] lg:text-xs text-gray-400 line-through">₱{{ number_format($item['original_price'] ?? $item['price']) }}</span>
+                                                    <span class="text-[10px] lg:text-xs text-gray-400 line-through">₱{{ number_format($item['original_price'] ?? $item['price'], 2) }}</span>
                                                 @endif
                                             </div>
                                             <span class="text-xs lg:text-sm font-bold text-gray-600 bg-gray-100 px-2.5 py-0.5 rounded-md">Qty: {{ $item['quantity'] }}</span>
@@ -195,9 +191,13 @@
                     @php
                         $resolveQrUrl = function ($qrPath) {
                             if (empty($qrPath)) return null;
-                            if (str_starts_with($qrPath, 'http')) return $qrPath;
+                            if (str_starts_with($qrPath, 'http://') || str_starts_with($qrPath, 'https://')) return $qrPath;
                             $clean = ltrim($qrPath, '/');
+                            while (str_starts_with($clean, 'storage/')) {
+                                $clean = ltrim(substr($clean, 8), '/');
+                            }
                             if (str_starts_with($clean, 'uploads/')) return asset($clean);
+                            if (file_exists(public_path($clean))) return asset($clean);
                             return asset('storage/' . $clean);
                         };
 

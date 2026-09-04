@@ -138,10 +138,13 @@ class AdminController extends Controller
     /** Total platform user counts by role. */
     private function getUserCounts(): array
     {
+        $sevenDaysAgo = Carbon::now()->subDays(6)->startOfDay();
         return [
-            'customers' => User::where('role', 'customer')->count(),
-            'sellers'   => User::where('role', 'seller')->where('isVerified', true)->count(),
-            'admins'    => User::where('role', 'admin')->count(),
+            'customers'        => User::where('role', 'customer')->count(),
+            'sellers'          => User::where('role', 'seller')->where('isVerified', true)->count(),
+            'admins'           => User::where('role', 'admin')->count(),
+            'new_customers_7d' => User::where('role', 'customer')->where('createdAt', '>=', $sevenDaysAgo)->count(),
+            'new_sellers_7d'   => User::where('role', 'seller')->where('createdAt', '>=', $sevenDaysAgo)->count(),
         ];
     }
 
@@ -172,24 +175,28 @@ class AdminController extends Controller
             $startDate = $request->query('start_date');
             $endDate = $request->query('end_date');
 
-            $query = Order::query();
+            $baseOrderQuery = Order::query();
             $bounds = null;
 
             if ($preset && !in_array($preset, ['all', 'all_time'])) {
                 $bounds = $this->getRangeBounds($preset, $startDate, $endDate);
                 if (is_array($bounds)) {
-                    $query->whereBetween('createdAt', $bounds);
+                    $baseOrderQuery->whereBetween('createdAt', $bounds);
                 }
             }
 
-            $totalSalesValue = $query->whereNotIn('status', ['Cancelled'])->sum('totalAmount') ?: 0;
-            $totalOrdersCount = $query->count();
+            // Total orders across all statuses (matches breakdown sum and 'Incl. all statuses' subtitle)
+            $totalOrdersCount = (clone $baseOrderQuery)->count();
+
+            // Gross revenue excluding cancelled orders
+            $totalSalesValue = (clone $baseOrderQuery)->whereNotIn('status', ['Cancelled'])->sum('totalAmount') ?: 0;
             
             $totalCustomersCount = User::where('role', 'customer')
                 ->where('status', '!=', 'blocked')
                 ->count();
             
-            $totalProductsCount = Product::count();
+            // Only count live/active/approved products, excluding pending and rejected
+            $totalProductsCount = Product::whereIn('status', ['active', 'approved'])->count();
 
             // Calculate capital based on order items
             $capitalQuery = DB::table('order_items')
@@ -207,10 +214,10 @@ class AdminController extends Controller
             $totalProfit = $totalSalesValue - $totalCapital;
 
             return response()->json([
-                'totalSales' => '₱' . number_format($totalSalesValue),
-                'totalCapital' => '₱' . number_format($totalCapital),
-                'totalRevenue' => '₱' . number_format($totalSalesValue),
-                'totalProfit' => '₱' . number_format($totalProfit),
+                'totalSales' => '₱' . number_format($totalSalesValue, 2),
+                'totalCapital' => '₱' . number_format($totalCapital, 2),
+                'totalRevenue' => '₱' . number_format($totalSalesValue, 2),
+                'totalProfit' => '₱' . number_format($totalProfit, 2),
                 'totalOrders' => number_format($totalOrdersCount),
                 'activeCustomers' => number_format($totalCustomersCount),
                 'liveProducts' => number_format($totalProductsCount)

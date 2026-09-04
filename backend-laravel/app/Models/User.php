@@ -244,4 +244,19 @@ class User extends Authenticatable
             ? $this->refund_policy
             : "Refund requests are subject to shop evaluation. Custom tailored garments are crafted to provided measurements. Damaged or defective items upon arrival may be submitted for review through our return system.";
     }
+
+    public function getIsEmailVerifiedAttribute(): bool
+    {
+        return (bool) ($this->attributes['isVerified'] ?? false);
+    }
+
+    public function setIsEmailVerifiedAttribute($value): void
+    {
+        $this->attributes['isVerified'] = (bool) $value;
+    }
+
+    public function getEmailVerifiedAtAttribute()
+    {
+        return !empty($this->attributes['isVerified']) ? ($this->attributes['updated_at'] ?? now()) : null;
+    }
 }

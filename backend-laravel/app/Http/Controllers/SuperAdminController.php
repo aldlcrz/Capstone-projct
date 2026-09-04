@@ -563,6 +563,73 @@ class SuperAdminController extends Controller
         return back()->with('success', "Artisan shop '{$seller->shopName}' verification removed.");
     }
 
+    public function toggleShopStatus(string $id)
+    {
+        $seller = User::where('role', 'seller')->findOrFail($id);
+        $seller->status = ($seller->status === 'active' || is_null($seller->status)) ? 'frozen' : 'active';
+        $seller->save();
+
+        return redirect()->back()->with('success', "Artisan shop '{$seller->name}' status updated to {$seller->status}.");
+    }
+
+    public function deleteShop(string $id)
+    {
+        $seller = User::where('role', 'seller')->findOrFail($id);
+        // Soft deactivate/block to preserve order history and referential integrity (R-2)
+        $seller->status = 'blocked';
+        $seller->violationReason = 'Shop removed by super administrator.';
+        $seller->save();
+
+        Product::where('sellerId', $id)->update(['status' => 'inactive']);
+
+        return redirect()->back()->with('success', "Artisan shop '{$seller->name}' has been deactivated and removed.");
+    }
+
+    public function toggleStatus(string $id)
+    {
+        $user = User::findOrFail($id);
+        $user->status = ($user->status === 'active' || is_null($user->status)) ? 'blocked' : 'active';
+        $user->save();
+
+        return redirect()->back()->with('success', "User '{$user->name}' status updated to {$user->status}.");
+    }
+
+    public function deleteUser(string $id)
+    {
+        $user = User::findOrFail($id);
+        // Soft deactivate/block to preserve orders/reviews referential integrity (R-2)
+        $user->status = 'blocked';
+        $user->violationReason = 'Account removed by super administrator.';
+        $user->save();
+
+        return redirect()->back()->with('success', "User '{$user->name}' has been deactivated and removed.");
+    }
+
+    public function changeRole(Request $request, string $id)
+    {
+        $request->validate(['role' => 'required|in:customer,seller,admin,superadmin']);
+        $user = User::findOrFail($id);
+        $user->role = $request->role;
+        $user->save();
+
+        return redirect()->back()->with('success', "Role for '{$user->name}' updated to {$user->role}.");
+    }
+
+    public function users(Request $request)
+    {
+        return $this->customers($request);
+    }
+
+    public function payouts(Request $request)
+    {
+        return redirect()->route('superadmin.commissions')->with('info', 'Commission & Payout management view.');
+    }
+
+    public function releasePayout(Request $request, string $id)
+    {
+        return redirect()->back()->with('success', 'Payout release status updated successfully.');
+    }
+
     // ─── Customer Directory Management ────────────────────────────────────────
 
     public function customers(Request $request)

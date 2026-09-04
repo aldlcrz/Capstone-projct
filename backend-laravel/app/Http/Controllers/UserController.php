@@ -95,19 +95,23 @@ class UserController extends Controller
      */
     public function getSellerInfo($id)
     {
-        $seller = User::find($id);
+        $seller = User::where('id', $id)
+            ->orWhere('shopName', $id)
+            ->orWhere('shopName', urldecode($id))
+            ->first();
 
         if (!$seller) {
             return response()->json(['message' => 'Seller not found'], 404);
         }
 
-        $productCount = Product::where('sellerId', $id)->where('status', 'approved')->count();
+        $sellerId = $seller->id;
+        $productCount = Product::where('sellerId', $sellerId)->where('status', 'approved')->count();
         $avgRating = Review::join('products', 'reviews.productId', '=', 'products.id')
-            ->where('products.sellerId', $id)
+            ->where('products.sellerId', $sellerId)
             ->avg('rating') ?: 0;
         
         $reviewCount = Review::join('products', 'reviews.productId', '=', 'products.id')
-            ->where('products.sellerId', $id)
+            ->where('products.sellerId', $sellerId)
             ->count();
 
         $joined = $seller->createdAt ? $seller->createdAt->diffForHumans() : ($seller->created_at ? $seller->created_at->diffForHumans() : "Lumban Artisan");

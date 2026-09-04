@@ -147,8 +147,12 @@
                                 <div class="text-xs font-bold text-gray-500">Number</div>
                                 <div class="text-sm font-black text-black select-all tracking-wider mt-0.5">{{ $admin->gcashNumber }}</div>
                                 @if($admin->gcashQrCode)
-                                    <button type="button" @click="openZoom('{{ asset('storage/' . $admin->gcashQrCode) }}')" class="mt-3 group relative w-20 h-20 bg-white border border-gray-200 rounded-lg overflow-hidden shrink-0 transition-transform active:scale-95 cursor-zoom-in">
-                                        <img src="{{ asset('storage/' . $admin->gcashQrCode) }}" class="w-full h-full object-contain">
+                                    @php
+                                        $gClean = ltrim($admin->gcashQrCode, '/');
+                                        $gQrUrl = str_starts_with($gClean, 'uploads/') ? asset($gClean) : (str_starts_with($gClean, 'http') ? $admin->gcashQrCode : asset('storage/' . $gClean));
+                                    @endphp
+                                    <button type="button" @click="openZoom('{{ $gQrUrl }}')" class="mt-3 group relative w-20 h-20 bg-white border border-gray-200 rounded-lg overflow-hidden shrink-0 transition-transform active:scale-95 cursor-zoom-in">
+                                        <img src="{{ $gQrUrl }}" class="w-full h-full object-contain" alt="Admin GCash QR">
                                         <div class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center text-[8px] text-white font-bold uppercase tracking-wider transition-opacity">Zoom</div>
                                     </button>
                                 @endif
@@ -162,8 +166,12 @@
                                 <div class="text-xs font-bold text-gray-500">Number</div>
                                 <div class="text-sm font-black text-black select-all tracking-wider mt-0.5">{{ $admin->mayaNumber }}</div>
                                 @if($admin->mayaQrCode)
-                                    <button type="button" @click="openZoom('{{ asset('storage/' . $admin->mayaQrCode) }}')" class="mt-3 group relative w-20 h-20 bg-white border border-gray-200 rounded-lg overflow-hidden shrink-0 transition-transform active:scale-95 cursor-zoom-in">
-                                        <img src="{{ asset('storage/' . $admin->mayaQrCode) }}" class="w-full h-full object-contain">
+                                    @php
+                                        $mClean = ltrim($admin->mayaQrCode, '/');
+                                        $mQrUrl = str_starts_with($mClean, 'uploads/') ? asset($mClean) : (str_starts_with($mClean, 'http') ? $admin->mayaQrCode : asset('storage/' . $mClean));
+                                    @endphp
+                                    <button type="button" @click="openZoom('{{ $mQrUrl }}')" class="mt-3 group relative w-20 h-20 bg-white border border-gray-200 rounded-lg overflow-hidden shrink-0 transition-transform active:scale-95 cursor-zoom-in">
+                                        <img src="{{ $mQrUrl }}" class="w-full h-full object-contain" alt="Admin Maya QR">
                                         <div class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center text-[8px] text-white font-bold uppercase tracking-wider transition-opacity">Zoom</div>
                                     </button>
                                 @endif

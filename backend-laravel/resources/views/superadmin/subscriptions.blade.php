@@ -207,11 +207,13 @@
 
                 <div>
                     <label class="block text-[10px] font-black uppercase tracking-widest text-gray-500 mb-1.5">GCash QR Code Image</label>
-                    @if(!empty($admin->gcashQr))
+                        @php
+                            $adminQrClean = ltrim($admin->gcashQr, '/');
+                            $adminQrUrl = str_starts_with($adminQrClean, 'uploads/') ? asset($adminQrClean) : (str_starts_with($adminQrClean, 'http') ? $admin->gcashQr : asset('storage/' . $adminQrClean));
+                        @endphp
                         <div class="w-32 h-32 rounded-2xl overflow-hidden bg-gray-100 border border-gray-200 mb-3">
-                            <img src="{{ str_starts_with($admin->gcashQr, 'http') || str_starts_with($admin->gcashQr, '/') ? $admin->gcashQr : asset('storage/' . $admin->gcashQr) }}" class="w-full h-full object-cover">
+                            <img src="{{ $adminQrUrl }}" class="w-full h-full object-cover" alt="GCash QR">
                         </div>
-                    @endif
                     <input type="file" name="gcashQr" accept="image/*" class="text-xs text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-[#3D2B1F] file:text-white hover:file:bg-[#C0422A] file:cursor-pointer">
                 </div>
 

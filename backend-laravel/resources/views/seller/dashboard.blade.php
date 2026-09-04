@@ -220,7 +220,7 @@
                 <div class="flex items-center justify-between">
                     <div>
                         <h3 class="font-serif text-sm sm:text-base font-bold uppercase" style="color: #1E1915;">Revenue Trajectory</h3>
-                        <p class="text-[10px] font-bold uppercase tracking-widest mt-0.5" style="color: #C49520;">Period: {{ $filters['label'] ?? 'All Time' }}</p>
+                        <p class="text-[10px] font-bold uppercase tracking-widest mt-0.5" style="color: #C49520;">Period: {{ $filters['chart_label'] ?? ($filters['label'] ?? 'Last 7 Days') }}</p>
                     </div>
                 </div>
                 <div class="overflow-x-auto -mx-2 px-2 no-scrollbar">

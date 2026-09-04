@@ -256,10 +256,10 @@
                                                     {{-- Price Display --}}
                                                     <div class="text-left sm:text-right shrink-0 mt-1 sm:mt-0">
                                                         @if(!empty($item['is_on_sale']) && ($item['discount_percentage'] ?? 0) > 0)
-                                                            <div class="text-[#C0422A] font-black text-sm sm:text-base">₱{{ number_format($item['price']) }}</div>
-                                                            <div class="text-[10px] text-stone-400 line-through">₱{{ number_format($item['original_price'] ?? $item['price']) }}</div>
+                                                            <div class="text-[#C0422A] font-black text-sm sm:text-base">₱{{ number_format($item['price'], 2) }}</div>
+                                                            <div class="text-[10px] text-stone-400 line-through">₱{{ number_format($item['original_price'] ?? $item['price'], 2) }}</div>
                                                         @else
-                                                            <div class="text-[#1E1915] font-black text-sm sm:text-base">₱{{ number_format($item['price']) }}</div>
+                                                            <div class="text-[#1E1915] font-black text-sm sm:text-base">₱{{ number_format($item['price'], 2) }}</div>
                                                         @endif
                                                     </div>
                                                 </div>
@@ -325,13 +325,20 @@
                             <span>Estimated Shipping</span>
                             <span x-show="shipping > 0" class="font-bold text-[#1E1915]">₱<span x-text="shipping.toLocaleString('en-PH', {minimumFractionDigits:2,maximumFractionDigits:2})"></span></span>
                             <span x-show="shipping === 0" class="font-bold text-emerald-700">Free</span>
-                        </div>
-
-                        {{-- Total line --}}
+                                        {{-- Total line --}}
                         <div class="pt-3 border-t border-[#EAE2D2] flex justify-between items-baseline">
                             <span class="text-sm font-bold text-[#1E1915] uppercase tracking-wider">Total</span>
-                            <span class="text-2xl font-black text-[#C0422A]">₱<span x-text="(subtotal + shipping).toLocaleString('en-PH', {minimumFractionDigits:0,maximumFractionDigits:0})"></span></span>
+                            <span class="text-2xl font-black text-[#C0422A]">₱<span x-text="(subtotal + shipping).toLocaleString('en-PH', {minimumFractionDigits:2,maximumFractionDigits:2})"></span></span>
                         </div>
+                    </div>
+
+                    {{-- Multi-Shop Notice --}}
+                    <div x-show="selectedShopCount > 1" class="p-3.5 bg-amber-50 border border-amber-200/80 rounded-xl text-xs text-amber-900 space-y-1">
+                        <div class="font-bold flex items-center gap-1.5 text-amber-950">
+                            <svg class="w-4 h-4 text-amber-600 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+                            <span>Multiple Shops Selected</span>
+                        </div>
+                        <p class="text-[11px] leading-relaxed text-amber-800">Payments are made directly to each artisan's verified wallet. Please use <strong>"Checkout Shop"</strong> above to checkout one shop at a time.</p>
                     </div>
 
                     {{-- Checkout Form --}}
@@ -341,15 +348,16 @@
                             <input type="hidden" name="selected_keys[]" :value="key">
                         </template>
                         <button type="submit"
-                                :disabled="selected.length === 0"
-                                :style="selected.length === 0 
+                                :disabled="selected.length === 0 || selectedShopCount > 1"
+                                :style="(selected.length === 0 || selectedShopCount > 1)
                                     ? 'width:100%;background-color:#A8A29E;color:#FFFFFF;padding:14px;border-radius:14px;font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:0.14em;border:none;display:flex;align-items:center;justify-content:center;gap:6px;cursor:not-allowed;opacity:0.6;' 
                                     : 'width:100%;background-color:#1E1915;color:#FFFFFF;padding:14px;border-radius:14px;font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:0.14em;border:none;display:flex;align-items:center;justify-content:center;gap:6px;cursor:pointer;opacity:1;box-shadow:0 4px 14px rgba(0,0,0,0.15);transition:all 0.2s;'"
                                 style="width:100%;background-color:#1E1915;color:#FFFFFF;padding:14px;border-radius:14px;font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:0.14em;border:none;display:flex;align-items:center;justify-content:center;gap:6px;"
                                 onmouseover="if(this.getAttribute('disabled') === null) this.style.backgroundColor='#C0422A';"
                                 onmouseout="if(this.getAttribute('disabled') === null) this.style.backgroundColor='#1E1915';">
-                            <span style="color:#FFFFFF !important;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;">Proceed to Checkout</span>
-                            <span x-show="selected.length > 0" style="color:#DFC97A !important;font-weight:800;" x-text="'(' + selected.length + ')'"></span>
+                            <span x-show="selectedShopCount <= 1" style="color:#FFFFFF !important;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;">Proceed to Checkout</span>
+                            <span x-show="selectedShopCount > 1" style="color:#FFFFFF !important;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;">Checkout One Shop at a Time</span>
+                            <span x-show="selected.length > 0 && selectedShopCount <= 1" style="color:#DFC97A !important;font-weight:800;" x-text="'(' + selected.length + ')'"></span>
                         </button>
                     </form>
                 </div>
@@ -368,12 +376,15 @@
                      class="mb-2.5 p-3 bg-[#FAF8F5] rounded-xl border border-[#ECE3D2] text-xs space-y-1.5 shadow-xs">
                     <div class="flex justify-between text-[#78716C]">
                         <span>Subtotal (<span x-text="selected.length"></span> items)</span>
-                        <span class="font-bold text-[#1E1915]">₱<span x-text="subtotal.toLocaleString('en-PH', {minimumFractionDigits:0,maximumFractionDigits:0})"></span></span>
+                        <span class="font-bold text-[#1E1915]">₱<span x-text="subtotal.toLocaleString('en-PH', {minimumFractionDigits:2,maximumFractionDigits:2})"></span></span>
                     </div>
                     <div class="flex justify-between text-[#78716C]">
                         <span>Shipping Fee</span>
                         <span x-show="shipping > 0" class="font-bold text-[#1E1915]">₱<span x-text="shipping.toLocaleString('en-PH', {minimumFractionDigits:2,maximumFractionDigits:2})"></span></span>
                         <span x-show="shipping === 0" class="font-bold text-emerald-700">Free</span>
+                    </div>
+                    <div x-show="selectedShopCount > 1" class="pt-1.5 border-t border-[#ECE3D2] text-[10px] text-amber-700 font-medium">
+                        ⚠️ Items from multiple shops selected. Please use "Checkout Shop" to checkout one shop at a time.
                     </div>
                 </div>
 
@@ -381,9 +392,9 @@
                     {{-- Left: Select All Checkbox --}}
                     <label class="flex items-center gap-1.5 cursor-pointer select-none shrink-0">
                         <input type="checkbox"
-                               x-model="allSelected"
-                               @change="toggleAll()"
-                               class="w-4 h-4 rounded border-stone-300 text-[#1E1915] accent-[#1E1915] cursor-pointer shrink-0">
+                                x-model="allSelected"
+                                @change="toggleAll()"
+                                class="w-4 h-4 rounded border-stone-300 text-[#1E1915] accent-[#1E1915] cursor-pointer shrink-0">
                         <span class="text-xs font-bold text-[#1E1915] uppercase tracking-wider">All</span>
                     </label>
 
@@ -391,7 +402,7 @@
                     <div class="flex-1 text-right min-w-0 pr-1">
                         <button type="button" @click="showMobileBreakdown = !showMobileBreakdown" class="inline-flex items-center gap-1 text-xs font-bold text-[#1E1915] cursor-pointer">
                             <span>Total:</span>
-                            <span class="font-black text-[#C0422A]">₱<span x-text="(subtotal + shipping).toLocaleString('en-PH', {minimumFractionDigits:0,maximumFractionDigits:0})"></span></span>
+                            <span class="font-black text-[#C0422A]">₱<span x-text="(subtotal + shipping).toLocaleString('en-PH', {minimumFractionDigits:2,maximumFractionDigits:2})"></span></span>
                             <svg class="w-3.5 h-3.5 transition-transform text-stone-400" :class="showMobileBreakdown ? 'rotate-180' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7"/>
                             </svg>
@@ -401,17 +412,19 @@
                     {{-- Right: Checkout Button --}}
                     <button type="button"
                             @click="$refs.checkoutForm.submit()"
-                            :disabled="selected.length === 0"
-                            :style="selected.length === 0 
+                            :disabled="selected.length === 0 || selectedShopCount > 1"
+                            :style="(selected.length === 0 || selectedShopCount > 1) 
                                 ? 'background-color:#A8A29E;color:#FFFFFF;padding:10px 18px;border-radius:12px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;border:none;cursor:not-allowed;opacity:0.6;' 
                                 : 'background-color:#1E1915;color:#FFFFFF;padding:10px 18px;border-radius:12px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;border:none;cursor:pointer;opacity:1;box-shadow:0 2px 8px rgba(0,0,0,0.12);transition:all 0.2s;'"
                             style="background-color:#1E1915;color:#FFFFFF;padding:10px 18px;border-radius:12px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;border:none;"
                             class="shrink-0">
-                        <span style="color:#FFFFFF !important;font-weight:700;">Check Out</span>
-                        <span x-show="selected.length > 0" style="color:#DFC97A !important;font-weight:800;" x-text="'(' + selected.length + ')'"></span>
+                        <span x-show="selectedShopCount <= 1" style="color:#FFFFFF !important;font-weight:700;">Check Out</span>
+                        <span x-show="selectedShopCount > 1" style="color:#FFFFFF !important;font-weight:700;">1 Shop Only</span>
+                        <span x-show="selected.length > 0 && selectedShopCount <= 1" style="color:#DFC97A !important;font-weight:800;" x-text="'(' + selected.length + ')'"></span>
                     </button>
                 </div>
             </div>
+        </div>
 
         </div>
 
@@ -584,6 +597,12 @@ function cartApp() {
             this.allSelected = this.selected.length === this.items.length && this.items.length > 0;
         },
 
+        get selectedShopCount() {
+            const selectedItems = this.items.filter(i => this.selected.map(String).includes(String(i.key)));
+            const uniqueShops = new Set(selectedItems.map(i => i.sellerId || i.shop_name || 'default'));
+            return uniqueShops.size;
+        },
+
         get subtotal() {
             return this.items
                 .filter(i => this.selected.map(String).includes(String(i.key)))
@@ -591,10 +610,16 @@ function cartApp() {
         },
 
         get shipping() {
-            const fees = this.items
-                .filter(i => this.selected.map(String).includes(String(i.key)))
-                .map(i => i.shippingFee);
-            return fees.length > 0 ? Math.max(...fees) : 0;
+            const selectedItems = this.items.filter(i => this.selected.map(String).includes(String(i.key)));
+            const sellerShipping = {};
+            selectedItems.forEach(i => {
+                const sellerKey = i.sellerId || i.shop_name || 'default';
+                const fee = Number(i.shippingFee) || 0;
+                if (!sellerShipping[sellerKey] || fee > sellerShipping[sellerKey]) {
+                    sellerShipping[sellerKey] = fee;
+                }
+            });
+            return Object.values(sellerShipping).reduce((sum, f) => sum + f, 0);
         },
 
         async updateQty(key, newQty) {

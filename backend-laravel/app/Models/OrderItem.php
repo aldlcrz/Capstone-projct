@@ -20,6 +20,8 @@ class OrderItem extends Model
         'id',
         'orderId',
         'productId',
+        'product_name',
+        'product_image',
         'quantity',
         'price',
         'size',
@@ -99,6 +101,11 @@ class OrderItem extends Model
         return $this->belongsTo(Product::class, 'productId');
     }
 
+    public function getProductNameAttribute($value): string
+    {
+        return $value ?: ($this->product?->name ?? 'Heritage Piece');
+    }
+
     public function getDisplayVariationAttribute(): ?string
     {
         return VariationFormatter::label($this->variation, $this->product?->image);
@@ -106,6 +113,9 @@ class OrderItem extends Model
 
     public function getImageUrlAttribute(): string
     {
+        if (!empty($this->attributes['product_image'])) {
+            return $this->attributes['product_image'];
+        }
         return VariationFormatter::getImageForVariation($this->variation, $this->product)
             ?: ($this->product ? $this->product->getImageUrl() : asset('uploads/products/default.jpg'));
     }

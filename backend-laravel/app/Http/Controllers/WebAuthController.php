@@ -41,15 +41,9 @@ class WebAuthController extends Controller
         $email = strtolower(trim($request->email));
         $user = User::where('email', $email)->first();
 
-        if (!$user) {
+        if (!$user || !Hash::check($request->password, $user->password)) {
             return back()->withErrors([
-                'email' => 'This email is not registered yet.',
-            ])->onlyInput('email');
-        }
-
-        if (!Hash::check($request->password, $user->password)) {
-            return back()->withErrors([
-                'password' => 'Incorrect password. Please try again.',
+                'email' => 'Invalid email or password.',
             ])->onlyInput('email');
         }
 
@@ -288,6 +282,15 @@ class WebAuthController extends Controller
 
         if ($validator->fails()) {
             return back()->withErrors($validator)->withInput();
+        }
+
+        if ($request->filled('gcashNumber')) {
+            $existingSeller = User::where('role', 'seller')->where('gcashNumber', trim($request->gcashNumber))->first();
+            if ($existingSeller) {
+                return back()->withErrors([
+                    'gcashNumber' => 'This GCash number is already associated with another artisan shop (' . ($existingSeller->shopName ?: $existingSeller->name) . ').',
+                ])->withInput();
+            }
         }
 
         $email = strtolower(trim($request->email));

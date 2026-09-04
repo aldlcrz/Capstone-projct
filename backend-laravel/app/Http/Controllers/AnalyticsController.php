@@ -238,7 +238,7 @@ class AnalyticsController extends Controller
             }
 
             $wishlistCount = DB::table('wishlists')->where('product_id', $product->id)->count();
-            $conversionRate = $views > 0 ? round(($orderCount / $views) * 100, 1) : 0;
+            $conversionRate = $views > 0 ? min(100.0, round(($orderCount / $views) * 100, 1)) : 0;
 
             $rating = (float) DB::table('reviews')->where('productId', $product->id)->avg('rating') ?: 5.0;
 

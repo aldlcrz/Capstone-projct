@@ -157,9 +157,10 @@
                 <div class="text-[9px] font-black uppercase tracking-widest text-gray-400 mb-0.5">Last 7 Days</div>
                 <h3 class="text-base font-bold text-black">User Registrations</h3>
             </div>
-            <div class="flex items-center gap-4 text-[9px] font-bold uppercase tracking-widest">
-                <span class="text-gray-400">Customers: <span class="text-black">{{ $userCounts['customers'] }}</span></span>
-                <span class="text-gray-400">Sellers: <span class="text-black">{{ $userCounts['sellers'] }}</span></span>
+            <div class="flex items-center gap-4 text-[9px] font-bold uppercase tracking-widest flex-wrap">
+                <span class="text-gray-400">New (7d): <span class="text-black">{{ ($userCounts['new_customers_7d'] ?? 0) + ($userCounts['new_sellers_7d'] ?? 0) }}</span></span>
+                <span class="text-gray-400">Total Buyers: <span class="text-black">{{ $userCounts['customers'] }}</span></span>
+                <span class="text-gray-400">Total Artisans: <span class="text-black">{{ $userCounts['sellers'] }}</span></span>
             </div>
         </div>
         <canvas id="userChart" height="55"></canvas>
@@ -255,13 +256,13 @@
         {{-- Quick Action Panel --}}
         <div class="space-y-3">
             <div class="bg-[#3D2B1F] text-white rounded-3xl p-6">
-                <div class="text-[9px] font-black uppercase tracking-widest text-white/70 mb-1">Net Profit</div>
-                <div class="text-3xl font-black text-[#C0422A] mt-2">{{ $stats['totalProfit'] }}</div>
-                <div class="text-[10px] text-white/80 font-medium mt-1">Revenue: {{ $stats['totalRevenue'] }}</div>
-                <div class="text-[10px] text-white/80 font-medium">Capital: {{ $stats['totalCapital'] }}</div>
+                <div class="text-[9px] font-black uppercase tracking-widest text-white/70 mb-1">Financial Health & Margin</div>
+                <div class="text-3xl font-black text-[#DFC97A] mt-2">{{ $stats['totalProfit'] }}</div>
+                <div class="text-[10px] text-white/80 font-medium mt-1">Gross Revenue: {{ $stats['totalRevenue'] }}</div>
+                <div class="text-[10px] text-white/80 font-medium">Platform Capital: {{ $stats['totalCapital'] }}</div>
                 <div class="mt-4 pt-4 border-t border-white/10 flex items-center gap-1.5">
-                    <span class="text-[9px] text-green-400 font-black">↑ Healthy</span>
-                    <span class="text-[9px] text-white/60">vs platform cost</span>
+                    <span class="text-[9px] text-green-400 font-black">↑ Healthy Margin</span>
+                    <span class="text-[9px] text-white/60">Net artisan revenue balance</span>
                 </div>
             </div>
 

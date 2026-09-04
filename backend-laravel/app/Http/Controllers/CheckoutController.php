@@ -113,7 +113,19 @@ class CheckoutController extends Controller
         // If no product-level override, fall back to seller profile entirely
         $paymentSource = $resolvedPayment ?? $seller;
 
-        $sellerIds = collect($cart)->pluck('sellerId')->filter()->unique();
+        $sellerIds = collect($cart)->map(function ($item) {
+            $sId = $item['sellerId'] ?? null;
+            if (!$sId && !empty($item['id'])) {
+                $p = Product::find($item['id']);
+                $sId = $p?->sellerId;
+            }
+            return $sId;
+        })->filter()->unique();
+
+        if ($sellerIds->count() > 1) {
+            return redirect()->route('cart.index')->with('error', 'Orders are paid directly to each artisan\'s verified account. Please checkout one shop at a time.');
+        }
+
         $sellers = User::whereIn('id', $sellerIds)->get();
 
         return view('checkout.index', compact('cart', 'addresses', 'subtotal', 'mode', 'seller', 'sellers', 'paymentSource'));
@@ -137,6 +149,19 @@ class CheckoutController extends Controller
 
         if (empty($selectedCart)) {
             return redirect()->route('cart.index')->with('error', 'No valid items selected for checkout.');
+        }
+
+        $sellerIds = collect($selectedCart)->map(function ($item) {
+            $sId = $item['sellerId'] ?? null;
+            if (!$sId && !empty($item['id'])) {
+                $p = Product::find($item['id']);
+                $sId = $p?->sellerId;
+            }
+            return $sId;
+        })->filter()->unique();
+
+        if ($sellerIds->count() > 1) {
+            return redirect()->route('cart.index')->with('error', 'Orders are paid directly to each artisan\'s verified account. Please select items from one shop at a time to checkout.');
         }
 
         session()->put('checkout_cart', $selectedCart);
@@ -220,6 +245,10 @@ class CheckoutController extends Controller
                 if ($sellerId) {
                     $itemsBySeller[$sellerId][] = $item;
                 }
+            }
+
+            if (count($itemsBySeller) > 1) {
+                throw new \Exception('Cross-shop checkout in a single payment is not supported. Please checkout each shop separately to ensure direct payment to each artisan.');
             }
 
             foreach ($itemsBySeller as $sellerId => $items) {
@@ -316,6 +345,8 @@ class CheckoutController extends Controller
                         'id' => (string) Str::uuid(),
                         'orderId' => $orderId,
                         'productId' => $item['id'],
+                        'product_name' => $product?->name ?? ($item['name'] ?? 'Heritage Piece'),
+                        'product_image' => $product?->getImageUrl() ?? ($item['image'] ?? null),
                         'quantity' => $item['quantity'],
                         'price' => $item['price'],
                         'size' => $item['size'],
