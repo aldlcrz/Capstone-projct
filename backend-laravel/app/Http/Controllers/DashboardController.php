@@ -735,9 +735,9 @@ class DashboardController extends Controller
             'mayaNumber'           => 'nullable|string|max:20',
             'mayaQrCode'           => 'nullable|image|max:5120',
             'profilePhoto'         => 'nullable|image|max:5120',
-            'businessPermit'       => 'nullable|file|mimes:pdf,jpg,jpeg,png|max:5120',
-            'birDocument'          => 'nullable|file|mimes:pdf,jpg,jpeg,png|max:5120',
-            'residencyCertificate' => 'nullable|file|mimes:pdf,jpg,jpeg,png|max:5120',
+            'businessPermit'       => 'nullable|file|mimes:pdf,jpg,jpeg,png,webp|max:20480',
+            'birDocument'          => 'nullable|file|mimes:pdf,jpg,jpeg,png,webp|max:20480',
+            'residencyCertificate' => 'nullable|file|mimes:pdf,jpg,jpeg,png,webp|max:20480',
         ]);
         // Validate GCash: both number and QR required if configured
         if ($request->filled('gcashNumber') || $request->hasFile('gcashQrCode')) {

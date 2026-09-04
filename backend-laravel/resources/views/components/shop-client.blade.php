@@ -117,7 +117,7 @@
                 <svg class="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-stone-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
             </div>
 
-            <div class="no-scrollbar flex w-full max-w-xl gap-2 overflow-x-auto pb-1 text-[10px] sm:text-xs font-bold uppercase tracking-widest justify-center">
+            <div class="no-scrollbar flex w-full max-w-xl gap-2 overflow-x-auto pb-1 text-[10px] sm:text-xs font-bold uppercase tracking-widest justify-start sm:justify-center -mx-4 px-4 sm:mx-0 sm:px-0">
                 <button
                     @click="activeTab = 'all'"
                     :class="activeTab === 'all' ? 'bg-[#C0420A] text-white shadow-md' : 'bg-white text-stone-500 hover:text-[#C0420A]'"

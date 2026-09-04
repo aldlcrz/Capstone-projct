@@ -62,14 +62,34 @@
 
     <div class="login-card w-full max-w-md bg-white rounded-[2.5rem] border border-[#E5DDD5] p-8 shadow-[0_20px_60px_rgba(60,40,20,0.08)] relative z-10 max-h-[95vh] overflow-y-auto no-scrollbar" 
          x-data="{
-             step: {{ $errors->has('mobileNumber') || $errors->has('residencyCertificate') || $errors->has('businessPermit') || $errors->has('birDocument') || $errors->has('terms_consent') ? 2 : 1 }},
-             name: @js(old('name', $googleSeller['name'] ?? '')),
-             email: @js(old('email', $googleSeller['email'] ?? '')),
-             password: '',
-             password_confirmation: '',
+             step: {{ ($errors->has('name') || $errors->has('email') || $errors->has('password') || $errors->has('password_confirmation')) ? 1 : ($errors->any() || old('mobileNumber') || old('shopName') ? 2 : 1) }},
+             name: @js(old('name', $googleSeller['name'] ?? '')) || (sessionStorage.getItem('seller_reg_name') || ''),
+             email: @js(old('email', $googleSeller['email'] ?? '')) || (sessionStorage.getItem('seller_reg_email') || ''),
+             password: sessionStorage.getItem('seller_reg_password') || '',
+             password_confirmation: sessionStorage.getItem('seller_reg_password_confirmation') || '',
+             shopName: @js(old('shopName', '')) || (sessionStorage.getItem('seller_reg_shopName') || ''),
+             mobileNumber: @js(old('mobileNumber', '')) || (sessionStorage.getItem('seller_reg_mobileNumber') || ''),
+             terms_consent: {{ old('terms_consent') ? 'true' : 'false' }} || (sessionStorage.getItem('seller_reg_terms_consent') === '1'),
              showPass: false,
              showConfirm: false,
              errors: {},
+             docs: {
+                 residency: { name: '', size: '', error: '' },
+                 permit: { name: '', size: '', error: '' },
+                 bir: { name: '', size: '', error: '' }
+             },
+             init() {
+                 this.saveState();
+             },
+             saveState() {
+                 if (this.name) sessionStorage.setItem('seller_reg_name', this.name);
+                 if (this.email) sessionStorage.setItem('seller_reg_email', this.email);
+                 if (this.password) sessionStorage.setItem('seller_reg_password', this.password);
+                 if (this.password_confirmation) sessionStorage.setItem('seller_reg_password_confirmation', this.password_confirmation);
+                 if (this.shopName) sessionStorage.setItem('seller_reg_shopName', this.shopName);
+                 if (this.mobileNumber) sessionStorage.setItem('seller_reg_mobileNumber', this.mobileNumber);
+                 sessionStorage.setItem('seller_reg_terms_consent', this.terms_consent ? '1' : '0');
+             },
              validateStep1() {
                  this.errors = {};
                  const nameVal = (this.name || '').trim();
@@ -100,7 +120,71 @@
                  }
 
                  if (Object.keys(this.errors).length === 0) {
+                     this.saveState();
                      this.step = 2;
+                 }
+             },
+             handleFileChange(event, docKey) {
+                 const file = event.target.files[0];
+                 this.docs[docKey].error = '';
+                 if (!file) {
+                     this.docs[docKey].name = '';
+                     this.docs[docKey].size = '';
+                     return;
+                 }
+
+                 // 20MB limit in bytes: 20 * 1024 * 1024 = 20,971,520 bytes
+                 const maxBytes = 20 * 1024 * 1024;
+                 const allowedExts = ['jpg', 'jpeg', 'png', 'webp', 'pdf'];
+                 const fileExt = (file.name.split('.').pop() || '').toLowerCase();
+
+                 if (!allowedExts.includes(fileExt) && !file.type.match(/(image\/(jpeg|png|webp|jpg)|application\/pdf)/i)) {
+                     this.docs[docKey].error = 'File must be a JPG, PNG, WEBP, or PDF.';
+                     event.target.value = '';
+                     this.docs[docKey].name = '';
+                     this.docs[docKey].size = '';
+                     return;
+                 }
+
+                 if (file.size > maxBytes) {
+                     const sizeMB = (file.size / (1024 * 1024)).toFixed(1);
+                     this.docs[docKey].error = `Selected file is ${sizeMB}MB. Maximum limit is 20MB.`;
+                     event.target.value = '';
+                     this.docs[docKey].name = '';
+                     this.docs[docKey].size = '';
+                     return;
+                 }
+
+                 const sizeFormatted = file.size > 1024 * 1024 
+                     ? (file.size / (1024 * 1024)).toFixed(1) + ' MB' 
+                     : Math.round(file.size / 1024) + ' KB';
+
+                 this.docs[docKey].name = file.name;
+                 this.docs[docKey].size = sizeFormatted;
+             },
+             validateBeforeSubmit(event) {
+                 this.saveState();
+
+                 if (!this.password || this.password.length < 6) {
+                     event.preventDefault();
+                     this.step = 1;
+                     this.errors.password = 'Please re-enter your password to proceed.';
+                     return;
+                 }
+
+                 const resInput = document.querySelector('input[name=\"residencyCertificate\"]');
+                 const permitInput = document.querySelector('input[name=\"businessPermit\"]');
+                 const birInput = document.querySelector('input[name=\"birDocument\"]');
+
+                 let totalBytes = 0;
+                 if (resInput && resInput.files[0]) totalBytes += resInput.files[0].size;
+                 if (permitInput && permitInput.files[0]) totalBytes += permitInput.files[0].size;
+                 if (birInput && birInput.files[0]) totalBytes += birInput.files[0].size;
+
+                 if (totalBytes > 38 * 1024 * 1024) {
+                     event.preventDefault();
+                     alert('The total size of your uploaded documents exceeds 38MB. Please compress or select smaller files (under 20MB each) so the total fits within server limits.');
+                     return;
                  }
              }
          }" x-cloak>
@@ -173,7 +257,7 @@
             </div>
         @endif
 
-        <form action="{{ route('seller.register.submit') }}" method="POST" enctype="multipart/form-data">
+        <form action="{{ route('seller.register.submit') }}" method="POST" enctype="multipart/form-data" @submit="validateBeforeSubmit($event)">
             @csrf
             
             <!-- STEP 1 -->
@@ -186,7 +270,7 @@
                         type="text" 
                         name="name" 
                         x-model="name" 
-                        @input="delete errors.name" 
+                        @input="delete errors.name; saveState()" 
                         required 
                         placeholder="Your Full Name"
                         class="w-full h-14 bg-[#F9F6F2] rounded-full px-8 text-sm font-medium border-2 {{ $errors->has('name') ? 'border-red-400' : 'border-transparent' }} focus:border-[#C0422A] focus:bg-white outline-none transition-all"
@@ -205,7 +289,7 @@
                         type="email" 
                         name="email" 
                         x-model="email" 
-                        @input="delete errors.email" 
+                        @input="delete errors.email; saveState()" 
                         required 
                         placeholder="email@example.com"
                         class="w-full h-14 bg-[#F9F6F2] rounded-full px-8 text-sm font-medium border-2 {{ $errors->has('email') ? 'border-red-400' : 'border-transparent' }} focus:border-[#C0422A] focus:bg-white outline-none transition-all"
@@ -225,7 +309,7 @@
                             :type="showPass ? 'text' : 'password'" 
                             name="password" 
                             x-model="password" 
-                            @input="delete errors.password; delete errors.password_confirmation" 
+                            @input="delete errors.password; delete errors.password_confirmation; saveState()" 
                             required 
                             placeholder="••••••••••••"
                             class="w-full h-14 bg-[#F9F6F2] rounded-full px-8 pr-14 text-sm font-medium border-2 {{ $errors->has('password') ? 'border-red-400' : 'border-transparent' }} focus:border-[#C0422A] focus:bg-white outline-none transition-all"
@@ -255,7 +339,7 @@
                             :type="showConfirm ? 'text' : 'password'" 
                             name="password_confirmation" 
                             x-model="password_confirmation" 
-                            @input="delete errors.password_confirmation" 
+                            @input="delete errors.password_confirmation; saveState()" 
                             required 
                             placeholder="••••••••••••"
                             class="w-full h-14 bg-[#F9F6F2] rounded-full px-8 pr-14 text-sm font-medium border-2 {{ $errors->has('password_confirmation') ? 'border-red-400' : 'border-transparent' }} focus:border-[#C0422A] focus:bg-white outline-none transition-all"
@@ -323,7 +407,8 @@
                     <input 
                         type="text" 
                         name="shopName" 
-                        value="{{ old('shopName') }}" 
+                        x-model="shopName"
+                        @input="saveState()"
                         placeholder="e.g. Juan's Traditional Embroidery"
                         class="w-full h-14 bg-[#F9F6F2] rounded-full px-8 text-sm font-medium border-2 {{ $errors->has('shopName') ? 'border-red-400' : 'border-transparent' }} focus:border-[#C0422A] focus:bg-white outline-none transition-all"
                     >
@@ -338,7 +423,9 @@
                     <input 
                         type="text" 
                         name="mobileNumber" 
-                        value="{{ old('mobileNumber') }}" 
+                        x-model="mobileNumber"
+                        @input="saveState()"
+                        required
                         placeholder="09xx-xxx-xxxx"
                         class="w-full h-14 bg-[#F9F6F2] rounded-full px-8 text-sm font-medium border-2 {{ $errors->has('mobileNumber') ? 'border-red-400' : 'border-transparent' }} focus:border-[#C0422A] focus:bg-white outline-none transition-all"
                     >
@@ -349,35 +436,64 @@
 
                 {{-- Requirements Cards --}}
                 <div class="space-y-2">
-                    <label class="text-[10px] font-bold uppercase tracking-widest px-5 block text-gray-500">Requirements</label>
-                    <div class="grid grid-cols-3 gap-3">
+                    <div class="flex items-center justify-between px-5">
+                        <label class="text-[10px] font-bold uppercase tracking-widest block text-gray-500">Requirements</label>
+                        <span class="text-[9px] font-semibold text-[#C0422A]">Up to 20MB per file</span>
+                    </div>
+                    <div class="grid grid-cols-3 gap-2.5">
                         <!-- Residency -->
-                        <div class="relative" x-data="{ fileName: '' }">
-                            <input type="file" name="residencyCertificate" accept="image/*,application/pdf" @change="fileName = $event.target.files[0] ? $event.target.files[0].name : ''" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10" required>
-                            <div class="upload-card" :class="fileName ? 'has-file' : ''">
-                                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-[#C0422A] mb-1.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" /></svg>
-                                <span class="text-[8px] font-bold uppercase tracking-widest text-gray-500 text-center leading-tight line-clamp-2" x-text="fileName || 'Residency'"></span>
+                        <div class="relative min-w-0" :class="docs.residency.error ? 'ring-2 ring-red-400 rounded-[20px]' : ''">
+                            <input type="file" name="residencyCertificate" accept="image/*,application/pdf" @change="handleFileChange($event, 'residency')" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10" required>
+                            <div class="upload-card w-full overflow-hidden" :class="docs.residency.name ? 'has-file' : ''">
+                                <template x-if="!docs.residency.name">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-[#C0422A] mb-1.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" /></svg>
+                                </template>
+                                <template x-if="docs.residency.name">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-emerald-600 mb-1.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                                </template>
+                                <span class="text-[9px] font-bold uppercase tracking-wider text-gray-700 text-center leading-tight w-full max-w-full truncate px-1 block" :title="docs.residency.name || 'Residency Certificate'" x-text="docs.residency.name || 'Residency'"></span>
+                                <span x-show="docs.residency.size" class="text-[8px] font-semibold text-emerald-600 mt-0.5 truncate block w-full text-center" x-text="docs.residency.size"></span>
+                                <span x-show="!docs.residency.name" class="text-[7px] text-gray-400 font-medium mt-0.5">Max 20MB</span>
                             </div>
                         </div>
 
                         <!-- Business Permit -->
-                        <div class="relative" x-data="{ fileName: '' }">
-                            <input type="file" name="businessPermit" accept="image/*,application/pdf" @change="fileName = $event.target.files[0] ? $event.target.files[0].name : ''" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10" required>
-                            <div class="upload-card" :class="fileName ? 'has-file' : ''">
-                                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-[#C0422A] mb-1.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" /></svg>
-                                <span class="text-[8px] font-bold uppercase tracking-widest text-gray-500 text-center leading-tight line-clamp-2" x-text="fileName || 'Business Permit'"></span>
+                        <div class="relative min-w-0" :class="docs.permit.error ? 'ring-2 ring-red-400 rounded-[20px]' : ''">
+                            <input type="file" name="businessPermit" accept="image/*,application/pdf" @change="handleFileChange($event, 'permit')" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10" required>
+                            <div class="upload-card w-full overflow-hidden" :class="docs.permit.name ? 'has-file' : ''">
+                                <template x-if="!docs.permit.name">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-[#C0422A] mb-1.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" /></svg>
+                                </template>
+                                <template x-if="docs.permit.name">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-emerald-600 mb-1.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                                </template>
+                                <span class="text-[9px] font-bold uppercase tracking-wider text-gray-700 text-center leading-tight w-full max-w-full truncate px-1 block" :title="docs.permit.name || 'Business Permit'" x-text="docs.permit.name || 'Permit'"></span>
+                                <span x-show="docs.permit.size" class="text-[8px] font-semibold text-emerald-600 mt-0.5 truncate block w-full text-center" x-text="docs.permit.size"></span>
+                                <span x-show="!docs.permit.name" class="text-[7px] text-gray-400 font-medium mt-0.5">Max 20MB</span>
                             </div>
                         </div>
 
                         <!-- BIR Document -->
-                        <div class="relative" x-data="{ fileName: '' }">
-                            <input type="file" name="birDocument" accept="image/*,application/pdf" @change="fileName = $event.target.files[0] ? $event.target.files[0].name : ''" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10" required>
-                            <div class="upload-card" :class="fileName ? 'has-file' : ''">
-                                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-[#C0422A] mb-1.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" /></svg>
-                                <span class="text-[8px] font-bold uppercase tracking-widest text-gray-500 text-center leading-tight line-clamp-2" x-text="fileName || 'BIR Document'"></span>
+                        <div class="relative min-w-0" :class="docs.bir.error ? 'ring-2 ring-red-400 rounded-[20px]' : ''">
+                            <input type="file" name="birDocument" accept="image/*,application/pdf" @change="handleFileChange($event, 'bir')" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10" required>
+                            <div class="upload-card w-full overflow-hidden" :class="docs.bir.name ? 'has-file' : ''">
+                                <template x-if="!docs.bir.name">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-[#C0422A] mb-1.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" /></svg>
+                                </template>
+                                <template x-if="docs.bir.name">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-emerald-600 mb-1.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                                </template>
+                                <span class="text-[9px] font-bold uppercase tracking-wider text-gray-700 text-center leading-tight w-full max-w-full truncate px-1 block" :title="docs.bir.name || 'BIR Document'" x-text="docs.bir.name || 'BIR Doc'"></span>
+                                <span x-show="docs.bir.size" class="text-[8px] font-semibold text-emerald-600 mt-0.5 truncate block w-full text-center" x-text="docs.bir.size"></span>
+                                <span x-show="!docs.bir.name" class="text-[7px] text-gray-400 font-medium mt-0.5">Max 20MB</span>
                             </div>
                         </div>
                     </div>
+
+                    {{-- Dynamic file errors --}}
+                    <p x-show="docs.residency.error" x-text="'Residency: ' + docs.residency.error" class="text-xs font-bold text-red-500 px-5 mt-1" x-cloak></p>
+                    <p x-show="docs.permit.error" x-text="'Permit: ' + docs.permit.error" class="text-xs font-bold text-red-500 px-5 mt-1" x-cloak></p>
+                    <p x-show="docs.bir.error" x-text="'BIR: ' + docs.bir.error" class="text-xs font-bold text-red-500 px-5 mt-1" x-cloak></p>
                     @error('residencyCertificate')
                         <p class="text-xs font-bold text-red-500 px-5 mt-1">{{ $message }}</p>
                     @enderror
@@ -391,7 +507,16 @@
 
                 <div class="px-2 pt-2">
                     <div class="flex items-start gap-2.5">
-                        <input type="checkbox" name="terms_consent" id="seller_terms_consent" required class="mt-0.5 rounded text-[#C0422A] focus:ring-[#C0422A] cursor-pointer shrink-0 accent-[#C0422A]">
+                        <input 
+                            type="checkbox" 
+                            name="terms_consent" 
+                            id="seller_terms_consent" 
+                            x-model="terms_consent"
+                            @change="saveState()"
+                            required 
+                            class="mt-0.5 rounded text-[#C0422A] focus:ring-[#C0422A] cursor-pointer shrink-0 accent-[#C0422A]"
+                            {{ old('terms_consent') ? 'checked' : '' }}
+                        >
                         <label for="seller_terms_consent" class="text-xs text-gray-500 leading-snug select-none">
                             I have read and agree to the <button type="button" onclick="window.dispatchEvent(new CustomEvent('open-page-modal', { detail: { tab: 'terms' } }))" class="text-[#C0422A] font-bold hover:underline cursor-pointer">Terms and Conditions</button> and <button type="button" onclick="window.dispatchEvent(new CustomEvent('open-page-modal', { detail: { tab: 'privacy' } }))" class="text-[#C0422A] font-bold hover:underline cursor-pointer">Privacy Policy</button>.
                         </label>
@@ -446,6 +571,17 @@
     </div>
 
     <script>
+        // Clear saved registration fields upon success
+        @if(session('success'))
+            sessionStorage.removeItem('seller_reg_name');
+            sessionStorage.removeItem('seller_reg_email');
+            sessionStorage.removeItem('seller_reg_password');
+            sessionStorage.removeItem('seller_reg_password_confirmation');
+            sessionStorage.removeItem('seller_reg_shopName');
+            sessionStorage.removeItem('seller_reg_mobileNumber');
+            sessionStorage.removeItem('seller_reg_terms_consent');
+        @endif
+
         // Auto-reload on Back/Forward navigation from bfcache to get fresh CSRF token
         window.addEventListener('pageshow', function(event) {
             if (event.persisted || (window.performance && window.performance.navigation && window.performance.navigation.type === 2)) {
