@@ -319,7 +319,7 @@
                     <div x-show="selected.length > 0" class="space-y-3">
                         <div class="flex justify-between text-xs text-[#78716C]">
                             <span>Subtotal</span>
-                            <span class="font-bold text-[#1E1915]">₱<span x-text="subtotal.toLocaleString('en-PH', {minimumFractionDigits:0,maximumFractionDigits:0})"></span></span>
+                            <span class="font-bold text-[#1E1915]">₱<span x-text="subtotal.toLocaleString('en-PH', {minimumFractionDigits:2,maximumFractionDigits:2})"></span></span>
                         </div>
                         <div class="flex justify-between text-xs text-[#78716C]">
                             <span>Estimated Shipping</span>
