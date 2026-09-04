@@ -35,7 +35,7 @@
             border: none;
         }
     </style>
-    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.14.8/dist/cdn.min.js"></script>
 </head>
 <body class="min-h-screen flex items-center justify-center p-3 sm:p-6 relative overflow-x-hidden" id="auth-body">
     <!-- Subtle warm background gradients -->

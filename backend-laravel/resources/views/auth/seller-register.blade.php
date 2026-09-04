@@ -11,7 +11,7 @@
     <link rel="icon" type="image/x-icon" href="{{ asset('favicon.ico') }}">
     <link rel="apple-touch-icon" sizes="180x180" href="{{ asset('images/apple-touch-icon.png') }}">
     <script src="https://cdn.tailwindcss.com"></script>
-    <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.14.8/dist/cdn.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Playfair+Display:ital,wght@0,700;0,800;0,900;1,700;1,800;1,900&display=swap" rel="stylesheet">
     <style>
         body { font-family: 'Inter', sans-serif; background: #F7F3EE; }
@@ -51,7 +51,7 @@
         .upload-card.has-file { border-color: #10B981; border-style: solid; background: #F0FDF4; }
     </style>
 </head>
-<body class="min-h-screen flex items-center justify-center p-6 relative overflow-hidden">
+<body class="min-h-screen flex items-center justify-center p-3 sm:p-6 relative overflow-x-hidden overflow-y-auto">
     @php
         $googleSeller = session('google_seller_signup');
     @endphp
@@ -60,7 +60,7 @@
     <div class="absolute top-0 right-0 w-140 h-140 rounded-full -translate-y-1/2 translate-x-1/3 blur-3xl opacity-[0.04] pointer-events-none bg-[#C0422A]"></div>
     <div class="absolute bottom-0 left-0 w-95 h-95 rounded-full translate-y-1/2 -translate-x-1/3 blur-3xl opacity-[0.12] pointer-events-none bg-[#D4B896]"></div>
 
-    <div class="login-card w-full max-w-md bg-white rounded-[2.5rem] border border-[#E5DDD5] p-8 shadow-[0_20px_60px_rgba(60,40,20,0.08)] relative z-10 max-h-[95vh] overflow-y-auto no-scrollbar" 
+    <div class="login-card w-full max-w-md bg-white rounded-[2rem] sm:rounded-[2.5rem] border border-[#E5DDD5] p-5 sm:p-8 shadow-[0_20px_60px_rgba(60,40,20,0.08)] relative z-10 max-h-[95vh] overflow-y-auto no-scrollbar" 
          x-data="{
              step: {{ ($errors->has('name') || $errors->has('email') || $errors->has('password') || $errors->has('password_confirmation')) ? 1 : ($errors->any() || old('mobileNumber') || old('shopName') ? 2 : 1) }},
              name: @js(old('name', $googleSeller['name'] ?? '')) || (sessionStorage.getItem('seller_reg_name') || ''),
@@ -216,7 +216,7 @@
                 <span x-show="step > 1">✓</span>
                 <span x-show="step <= 1">1</span>
             </div>
-            <div class="h-px w-24 bg-[#E5DDD5]"></div>
+            <div class="h-px w-12 sm:w-24 bg-[#E5DDD5]"></div>
             <div class="step-indicator" :class="step === 2 ? 'step-active' : 'step-inactive'">2</div>
         </div>
 

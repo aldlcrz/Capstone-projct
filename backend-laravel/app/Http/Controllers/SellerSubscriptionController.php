@@ -38,6 +38,17 @@ class SellerSubscriptionController extends Controller
         ]);
 
         $user = Auth::user();
+        $ref = trim((string) $request->paymentReference);
+
+        // Security: Prevent duplicate reference reuse across subscriptions or orders (L-9)
+        $isDuplicateSub = SellerSubscription::where('paymentReference', $ref)
+            ->whereIn('status', ['pending', 'approved'])
+            ->exists();
+        $isDuplicateOrder = \App\Models\Order::where('paymentReference', $ref)->exists();
+
+        if ($isDuplicateSub || $isDuplicateOrder) {
+            return redirect()->back()->withInput()->with('error', 'This payment reference number has already been used. Please provide a new and unique transaction reference.');
+        }
 
         // If user already has a pending subscription, block them from spamming
         $pending = SellerSubscription::where('userId', $user->id)

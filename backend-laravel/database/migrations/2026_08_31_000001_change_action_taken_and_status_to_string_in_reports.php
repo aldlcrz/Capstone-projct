@@ -13,7 +13,7 @@ return new class extends Migration
     public function up(): void
     {
         try {
-            DB::statement("ALTER TABLE `reports` MODIFY `actionTaken` VARCHAR(100) NULL");
+            DB::statement("ALTER TABLE `reports` MODIFY `actionTaken` TEXT NULL");
         } catch (\Throwable $e) {}
 
         try {
