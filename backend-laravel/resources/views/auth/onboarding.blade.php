@@ -344,7 +344,8 @@
             <div class="pt-1.5">
                 <button type="submit" 
                         :disabled="isSubmitting"
-                        class="w-full h-12 sm:h-13 bg-gradient-to-r from-[#C0422A] via-[#B83D26] to-[#A3341E] hover:from-[#A3341E] hover:to-[#8B2C19] text-white rounded-xl sm:rounded-2xl font-black uppercase tracking-wider text-xs sm:text-sm transition-all shadow-md shadow-[#C0422A]/20 hover:shadow-lg hover:shadow-[#C0422A]/30 active:scale-[0.99] flex items-center justify-center gap-2 cursor-pointer disabled:opacity-60">
+                        style="background: linear-gradient(to right, #C0422A, #B83D26, #A3341E);"
+                        class="w-full h-12 sm:h-13 hover:opacity-95 text-white rounded-xl sm:rounded-2xl font-black uppercase tracking-wider text-xs sm:text-sm transition-all shadow-md shadow-[#C0422A]/20 hover:shadow-lg hover:shadow-[#C0422A]/30 active:scale-[0.99] flex items-center justify-center gap-2 cursor-pointer disabled:opacity-60">
                     <span x-show="!isSubmitting" class="flex items-center gap-2">
                         <span>Save & Continue to LumBarong</span>
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>

@@ -24,7 +24,7 @@
     <div class="absolute top-0 right-0 w-140 h-140 rounded-full -translate-y-1/2 translate-x-1/3 blur-3xl opacity-[0.04] pointer-events-none bg-[#C0422A]"></div>
     <div class="absolute bottom-0 left-0 w-95 h-95 rounded-full translate-y-1/2 -translate-x-1/3 blur-3xl opacity-[0.12] pointer-events-none bg-[#D4B896]"></div>
 
-    <div class="login-card w-full max-w-md bg-white rounded-[2rem] sm:rounded-[2.5rem] border border-[#E5DDD5] p-5 sm:p-8 shadow-[0_20px_60px_rgba(60,40,20,0.08)] relative z-10">
+    <div class="login-card w-full max-w-md bg-white rounded-4xl sm:rounded-[2.5rem] border border-[#E5DDD5] p-5 sm:p-8 shadow-[0_20px_60px_rgba(60,40,20,0.08)] relative z-10">
         <div class="relative mb-8 text-center">
             <!-- Back to Home -->
             <a href="/" class="back-btn absolute left-0 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-[#F9F6F2] flex items-center justify-center hover:bg-gray-100 text-gray-600 hover:text-[#C0422A] transition-all shadow-sm" title="Back to Home">

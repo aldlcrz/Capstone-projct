@@ -60,7 +60,7 @@
     <div class="absolute top-0 right-0 w-140 h-140 rounded-full -translate-y-1/2 translate-x-1/3 blur-3xl opacity-[0.04] pointer-events-none bg-[#C0422A]"></div>
     <div class="absolute bottom-0 left-0 w-95 h-95 rounded-full translate-y-1/2 -translate-x-1/3 blur-3xl opacity-[0.12] pointer-events-none bg-[#D4B896]"></div>
 
-    <div class="login-card w-full max-w-md bg-white rounded-[2rem] sm:rounded-[2.5rem] border border-[#E5DDD5] p-5 sm:p-8 shadow-[0_20px_60px_rgba(60,40,20,0.08)] relative z-10 max-h-[95vh] overflow-y-auto no-scrollbar" 
+    <div class="login-card w-full max-w-md bg-white rounded-4xl sm:rounded-[2.5rem] border border-[#E5DDD5] p-5 sm:p-8 shadow-[0_20px_60px_rgba(60,40,20,0.08)] relative z-10 max-h-[95vh] overflow-y-auto no-scrollbar" 
          x-data="{
              step: {{ ($errors->has('name') || $errors->has('email') || $errors->has('password') || $errors->has('password_confirmation')) ? 1 : ($errors->any() || old('mobileNumber') || old('shopName') ? 2 : 1) }},
              name: @js(old('name', $googleSeller['name'] ?? '')) || (sessionStorage.getItem('seller_reg_name') || ''),
@@ -570,18 +570,20 @@
         </div>
     </div>
 
+    @if(session('success'))
     <script>
         // Clear saved registration fields upon success
-        @if(session('success'))
-            sessionStorage.removeItem('seller_reg_name');
-            sessionStorage.removeItem('seller_reg_email');
-            sessionStorage.removeItem('seller_reg_password');
-            sessionStorage.removeItem('seller_reg_password_confirmation');
-            sessionStorage.removeItem('seller_reg_shopName');
-            sessionStorage.removeItem('seller_reg_mobileNumber');
-            sessionStorage.removeItem('seller_reg_terms_consent');
-        @endif
+        sessionStorage.removeItem('seller_reg_name');
+        sessionStorage.removeItem('seller_reg_email');
+        sessionStorage.removeItem('seller_reg_password');
+        sessionStorage.removeItem('seller_reg_password_confirmation');
+        sessionStorage.removeItem('seller_reg_shopName');
+        sessionStorage.removeItem('seller_reg_mobileNumber');
+        sessionStorage.removeItem('seller_reg_terms_consent');
+    </script>
+    @endif
 
+    <script>
         // Auto-reload on Back/Forward navigation from bfcache to get fresh CSRF token
         window.addEventListener('pageshow', function(event) {
             if (event.persisted || (window.performance && window.performance.navigation && window.performance.navigation.type === 2)) {

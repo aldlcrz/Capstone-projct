@@ -345,7 +345,7 @@
                     <div class="space-y-3 relative pl-4 border-l-2 border-[#C49520]/50 ml-2">
                         <template x-for="event in activeCase.timeline" :key="event.id">
                             <div class="relative space-y-0.5">
-                                <div class="absolute -left-[21px] top-1.5 w-2.5 h-2.5 rounded-full bg-[#C49520] border-2 border-white"></div>
+                                <div class="absolute top-1.5 w-2.5 h-2.5 rounded-full bg-[#C49520] border-2 border-white" style="left: -21px;"></div>
                                 <div class="flex items-center justify-between gap-2">
                                     <span class="text-xs font-bold text-gray-900" x-text="event.title"></span>
                                     <span class="text-[10px] font-semibold text-gray-500" x-text="event.date"></span>
