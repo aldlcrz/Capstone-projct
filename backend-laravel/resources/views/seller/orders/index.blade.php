@@ -867,7 +867,7 @@ function sellerOrdersManager() {
     {!! json_encode($orders, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_AMP | JSON_HEX_QUOT) !!}
 </script>
 
-<div class="space-y-4 sm:space-y-6 max-w-5xl pb-28 lg:pb-12 px-2 sm:px-6" x-data="sellerOrdersManager()">
+<div class="space-y-4 sm:space-y-6 w-full max-w-7xl pb-28 lg:pb-12" x-data="sellerOrdersManager()">
 
     {{-- Floating Toast Notification --}}
     <div x-show="toastMessage" x-transition:enter="transition ease-out duration-300 transform"
@@ -906,11 +906,11 @@ function sellerOrdersManager() {
     </div>
 
     {{-- Status Filter Tabs (Pill System) --}}
-    <div class="flex items-center gap-1.5 sm:gap-2 overflow-x-auto no-scrollbar pb-2 -mx-2 px-2 sm:mx-0 sm:px-0 scroll-smooth">
+    <div class="flex flex-wrap items-center gap-1.5 sm:gap-2 pb-2">
         @foreach(['all' => 'All', 'pending' => 'Pending', 'cancellation pending' => 'Cancellation Requests', 'to ship' => 'To Ship', 'shipped' => 'Shipped', 'in transit' => 'In Transit', 'delivered' => 'Delivered', 'completed' => 'Completed', 'cancelled' => 'Cancelled'] as $val => $label)
             <button @click="statusFilter = '{{ $val }}'"
                 :style="statusFilter === '{{ $val }}' ? 'background:#1E1915; color:#FFFCF7; border:1px solid #C49520;' : 'background:#FDF8EE; color:#1E1915; border:1px solid #E8DECB;'"
-                class="px-3 sm:px-4 py-1.5 sm:py-2 rounded-xl text-[9px] sm:text-[10px] font-extrabold uppercase tracking-wider whitespace-nowrap transition-all flex items-center gap-1.5 shrink-0 active:scale-95 cursor-pointer shadow-2xs">
+                class="px-2.5 sm:px-3.5 py-1.5 sm:py-2 rounded-xl text-[9px] sm:text-[10px] font-extrabold uppercase tracking-wider whitespace-nowrap transition-all flex items-center gap-1.5 shrink-0 active:scale-95 cursor-pointer shadow-2xs">
                 <span x-show="statusFilter === '{{ $val }}'" style="color:#C49520;">✓</span>
                 <span>{{ $label }}</span>
                 <span class="px-1.5 py-0.5 text-[8px] sm:text-[9px] rounded-full font-bold" 
