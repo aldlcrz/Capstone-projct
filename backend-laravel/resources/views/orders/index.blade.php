@@ -327,6 +327,14 @@
                                         <span>View Details</span>
                                         <svg class="w-3 h-3 text-stone-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
                                     </span>
+                                @elseif(in_array($statusLower, ['cancellation pending', 'cancellation requested']))
+                                    <span style="background:#FFF7ED;color:#C2410C;border:1px solid #FFEDD5;" class="inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-[9px] sm:text-[10px] font-black uppercase tracking-wider">
+                                        ⏳ Cancellation Pending
+                                    </span>
+                                    <span class="text-[9px] sm:text-[10px] font-bold text-[#8C827A] uppercase tracking-wider flex items-center gap-1">
+                                        <span>View Details</span>
+                                        <svg class="w-3 h-3 text-stone-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
+                                    </span>
                                 @elseif($statusLower === 'cancelled')
                                     <span style="background:#FEF2F2;color:#B91C1C;border:1px solid #FECACA;" class="inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-[9px] sm:text-[10px] font-black uppercase tracking-wider">
                                         ✕ Cancelled
@@ -404,6 +412,21 @@
             <div class="p-5 sm:p-6 overflow-y-auto flex-1 space-y-6" x-show="selectedOrder">
                 <template x-if="selectedOrder">
                     <div class="space-y-6">
+
+                        {{-- Cancellation Pending Notice Card --}}
+                        <div class="bg-orange-50 border border-orange-200 rounded-2xl p-4 space-y-1.5" x-show="selectedOrder && ['cancellation pending', 'cancellation requested'].includes((selectedOrder.status || '').toLowerCase())">
+                            <div class="flex items-center gap-2 text-orange-900 font-black text-xs uppercase tracking-wider">
+                                <span>⏳ Cancellation Request Pending</span>
+                            </div>
+                            <p class="text-xs text-orange-800">
+                                You have requested to cancel this order. It is currently awaiting review and approval by the artisan.
+                            </p>
+                            <template x-if="selectedOrder.cancellationReason">
+                                <p class="text-[11px] text-orange-700">
+                                    <span class="font-bold">Reason:</span> <span x-text="selectedOrder.cancellationReason"></span>
+                                </p>
+                            </template>
+                        </div>
 
                         {{-- Order Timeline Progress --}}
                         <div class="bg-gray-50/80 p-4 sm:p-6 rounded-2xl border border-gray-100" x-show="selectedOrder.status.toLowerCase() !== 'cancelled'">
@@ -888,8 +911,8 @@
                     ✕
                 </div>
                 <div>
-                    <h3 class="text-sm font-black text-black uppercase tracking-tight">Cancel Order</h3>
-                    <p class="text-[10px] text-gray-500 font-medium">Please select a reason for cancelling this order.</p>
+                    <h3 class="text-sm font-black text-black uppercase tracking-tight">Request Order Cancellation</h3>
+                    <p class="text-[10px] text-gray-500 font-medium">Please select a reason for requesting cancellation. Your request will be sent to the artisan for review.</p>
                 </div>
             </div>
 
@@ -913,8 +936,8 @@
                     </div>
                 </template>
 
-                <div class="p-3 bg-red-50 border border-red-200 rounded-xl text-[10px] text-red-700 leading-relaxed">
-                    <strong>Note:</strong> Cancellations and refunds are subject to the shop’s policy. Please contact the seller for assistance.
+                <div class="p-3 bg-amber-50 border border-amber-200 rounded-xl text-[10px] text-amber-800 leading-relaxed">
+                    <strong>Note:</strong> Cancellation requests require artisan confirmation. If approved, the order will be cancelled and items restocked.
                 </div>
 
                 <div class="flex gap-2.5 pt-2">
@@ -925,7 +948,7 @@
                         <template x-if="cancelLoading">
                             <svg class="w-3.5 h-3.5 animate-spin text-white" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"/></svg>
                         </template>
-                        <span x-text="cancelLoading ? 'Cancelling...' : 'Confirm Cancel'"></span>
+                        <span x-text="cancelLoading ? 'Submitting...' : 'Request Cancellation'"></span>
                     </button>
                 </div>
             </form>

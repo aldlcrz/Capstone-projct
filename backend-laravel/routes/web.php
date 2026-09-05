@@ -126,6 +126,8 @@ Route::middleware('auth')->group(function () {
     Route::post('/orders/{id}/cancel', [OrderController::class, 'cancelOrder'])->name('orders.cancel');
     Route::post('/api/orders/{id}/cancel', [OrderController::class, 'cancelOrder']);
     Route::post('/seller/api/orders/{id}/cancel', [OrderController::class, 'cancelOrder'])->name('orders.seller-cancel');
+    Route::post('/seller/api/orders/{id}/approve-cancellation', [OrderController::class, 'approveCancellation'])->name('orders.approve-cancellation');
+    Route::post('/seller/api/orders/{id}/reject-cancellation', [OrderController::class, 'rejectCancellation'])->name('orders.reject-cancellation');
     Route::post('/seller/api/orders/{id}/reject-payment', [OrderController::class, 'rejectPayment'])->name('orders.reject-payment');
     Route::post('/api/orders/{id}/resubmit-payment', [OrderController::class, 'resubmitPayment'])->name('orders.resubmit-payment');
     Route::post('/seller/api/orders/{id}/packing-proof', [OrderController::class, 'uploadPackingProof'])->name('orders.packing-proof');

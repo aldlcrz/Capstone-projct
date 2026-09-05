@@ -146,6 +146,16 @@ function sellerOrdersManager() {
         sellerCustomCancelReason: '',
         sellerCancelLoading: false,
         sellerCancelError: '',
+        showApproveCancellationModal: false,
+        approveCancellationTarget: null,
+        approveCancellationLoading: false,
+        approveCancellationError: '',
+        showDeclineCancellationModal: false,
+        declineCancellationTarget: null,
+        declineCancellationReason: 'Order has already been prepared / fabric cut',
+        declineCancellationCustomReason: '',
+        declineCancellationLoading: false,
+        declineCancellationError: '',
         receiptModal: false,
         receiptUrl: '',
         rejectReason: 'Reference number does not match',
@@ -279,6 +289,104 @@ function sellerOrdersManager() {
                 this.sellerCancelError = 'Network error while cancelling order.';
             } finally {
                 this.sellerCancelLoading = false;
+            }
+        },
+
+        openApproveCancellationModal(order) {
+            this.approveCancellationTarget = order || this.detailsOrder;
+            this.approveCancellationError = '';
+            this.approveCancellationLoading = false;
+            this.showApproveCancellationModal = true;
+        },
+
+        async executeApproveCancellation() {
+            if (!this.approveCancellationTarget || this.approveCancellationLoading) return;
+            this.approveCancellationLoading = true;
+            this.approveCancellationError = '';
+            const target = this.approveCancellationTarget;
+            try {
+                const token = document.querySelector('meta[name="csrf-token"]')?.content || document.querySelector('input[name="_token"]')?.value || '';
+                const res = await fetch('/seller/api/orders/' + target.id + '/approve-cancellation', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json',
+                        'X-CSRF-TOKEN': token
+                    }
+                });
+                const data = await res.json();
+                if (res.ok) {
+                    const idx = this.orders.findIndex(o => o.id === target.id);
+                    if (idx !== -1) {
+                        this.orders.splice(idx, 1, data.order || data);
+                        this.orders = [...this.orders];
+                        if (this.detailsOrder && this.detailsOrder.id === target.id) {
+                            this.detailsOrder = data.order || data;
+                        }
+                    }
+                    this.showToast('✓ Cancellation approved. Order cancelled and stock restored.');
+                    this.showApproveCancellationModal = false;
+                    this.detailsModal = false;
+                } else {
+                    this.approveCancellationError = data.message || 'Failed to approve cancellation.';
+                }
+            } catch(e) {
+                this.approveCancellationError = 'Network error while approving cancellation.';
+            } finally {
+                this.approveCancellationLoading = false;
+            }
+        },
+
+        openDeclineCancellationModal(order) {
+            this.declineCancellationTarget = order || this.detailsOrder;
+            this.declineCancellationReason = 'Order has already been prepared / fabric cut';
+            this.declineCancellationCustomReason = '';
+            this.declineCancellationError = '';
+            this.declineCancellationLoading = false;
+            this.showDeclineCancellationModal = true;
+        },
+
+        async executeDeclineCancellation() {
+            if (!this.declineCancellationTarget || this.declineCancellationLoading) return;
+            const finalReason = this.declineCancellationReason === 'Other' ? this.declineCancellationCustomReason.trim() : this.declineCancellationReason;
+            if (!finalReason) {
+                this.declineCancellationError = 'Please provide a reason for declining the cancellation.';
+                return;
+            }
+            this.declineCancellationLoading = true;
+            this.declineCancellationError = '';
+            const target = this.declineCancellationTarget;
+            try {
+                const token = document.querySelector('meta[name="csrf-token"]')?.content || document.querySelector('input[name="_token"]')?.value || '';
+                const res = await fetch('/seller/api/orders/' + target.id + '/reject-cancellation', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json',
+                        'X-CSRF-TOKEN': token
+                    },
+                    body: JSON.stringify({ reason: finalReason })
+                });
+                const data = await res.json();
+                if (res.ok) {
+                    const idx = this.orders.findIndex(o => o.id === target.id);
+                    if (idx !== -1) {
+                        this.orders.splice(idx, 1, data.order || data);
+                        this.orders = [...this.orders];
+                        if (this.detailsOrder && this.detailsOrder.id === target.id) {
+                            this.detailsOrder = data.order || data;
+                        }
+                    }
+                    this.showToast('✓ Cancellation request declined. Order returned to Pending.');
+                    this.showDeclineCancellationModal = false;
+                    this.detailsModal = false;
+                } else {
+                    this.declineCancellationError = data.message || 'Failed to decline cancellation.';
+                }
+            } catch(e) {
+                this.declineCancellationError = 'Network error while declining cancellation.';
+            } finally {
+                this.declineCancellationLoading = false;
             }
         },
 
@@ -615,8 +723,14 @@ function sellerOrdersManager() {
                 let s = this.normalizeStatus(o.status);
                 if (s === 'processing' || s === 'ready to ship' || s === 'ready_to_ship') s = 'to ship';
                 const f = this.normalizeStatus(this.statusFilter);
-                const matchStatus = f === 'all' || s === f;
-                return matchSearch && matchStatus;
+                if (f === 'all') return matchSearch;
+                if (f === 'cancellation pending' || f === 'cancellation requested' || f === 'cancellation requests') {
+                    return matchSearch && (s === 'cancellation pending' || s === 'cancellation requested');
+                }
+                if (f === 'pending') {
+                    return matchSearch && (s === 'pending' || s === 'cancellation pending' || s === 'cancellation requested');
+                }
+                return matchSearch && (s === f);
             });
         },
 
@@ -633,8 +747,8 @@ function sellerOrdersManager() {
                 'delivered': 'bg-[#F0F4EF] text-[#4A6741] border-[#C5D9B8]',
                 'completed': 'bg-[#F0F4EF] text-[#4A6741] border-[#C5D9B8]',
                 'cancelled': 'bg-[#FEF2F2] text-[#DC2626] border-[#FECACA]',
-                'cancellation pending': 'bg-[#FEF2F2] text-[#DC2626] border-[#FECACA]',
-                'cancellation requested': 'bg-[#FEF2F2] text-[#DC2626] border-[#FECACA]',
+                'cancellation pending': 'bg-[#FFF7ED] text-[#C2410C] border-[#FFEDD5]',
+                'cancellation requested': 'bg-[#FFF7ED] text-[#C2410C] border-[#FFEDD5]',
             };
             return m[norm] || 'bg-[#FDF8EE] text-[#766C60] border-[#E8DECB]';
         },
@@ -663,6 +777,12 @@ function sellerOrdersManager() {
             return this.orders.filter(o => {
                 let s = this.normalizeStatus(o.status);
                 if (s === 'processing' || s === 'ready to ship' || s === 'ready_to_ship') s = 'to ship';
+                if (normKey === 'cancellation pending' || normKey === 'cancellation requested' || normKey === 'cancellation requests') {
+                    return s === 'cancellation pending' || s === 'cancellation requested';
+                }
+                if (normKey === 'pending') {
+                    return s === 'pending' || s === 'cancellation pending' || s === 'cancellation requested';
+                }
                 return s === normKey;
             }).length;
         },
@@ -787,7 +907,7 @@ function sellerOrdersManager() {
 
     {{-- Status Filter Tabs (Pill System) --}}
     <div class="flex items-center gap-1.5 sm:gap-2 overflow-x-auto no-scrollbar pb-2 -mx-2 px-2 sm:mx-0 sm:px-0 scroll-smooth">
-        @foreach(['all' => 'All', 'pending' => 'Pending', 'to ship' => 'To Ship', 'shipped' => 'Shipped', 'in transit' => 'In Transit', 'delivered' => 'Delivered', 'completed' => 'Completed', 'cancelled' => 'Cancelled'] as $val => $label)
+        @foreach(['all' => 'All', 'pending' => 'Pending', 'cancellation pending' => 'Cancellation Requests', 'to ship' => 'To Ship', 'shipped' => 'Shipped', 'in transit' => 'In Transit', 'delivered' => 'Delivered', 'completed' => 'Completed', 'cancelled' => 'Cancelled'] as $val => $label)
             <button @click="statusFilter = '{{ $val }}'"
                 :style="statusFilter === '{{ $val }}' ? 'background:#1E1915; color:#FFFCF7; border:1px solid #C49520;' : 'background:#FDF8EE; color:#1E1915; border:1px solid #E8DECB;'"
                 class="px-3 sm:px-4 py-1.5 sm:py-2 rounded-xl text-[9px] sm:text-[10px] font-extrabold uppercase tracking-wider whitespace-nowrap transition-all flex items-center gap-1.5 shrink-0 active:scale-95 cursor-pointer shadow-2xs">
@@ -911,6 +1031,22 @@ function sellerOrdersManager() {
                         {{-- Shipping Error Alert --}}
                         <template x-if="shippingError">
                             <div class="p-2.5 bg-red-50 border border-red-200 rounded-xl text-[10px] font-bold text-red-600 leading-tight" x-text="shippingError"></div>
+                        </template>
+
+                        {{-- Cancellation Request Banner --}}
+                        <template x-if="detailsOrder && (normalizeStatus(detailsOrder.status) === 'cancellation pending' || normalizeStatus(detailsOrder.status) === 'cancellation requested')">
+                            <div class="p-4 bg-orange-50 border border-orange-200 rounded-2xl space-y-1.5 shadow-2xs">
+                                <div class="flex items-center gap-2 text-orange-950 font-black text-xs uppercase tracking-wider">
+                                    <span>⏳ Buyer Requested Order Cancellation</span>
+                                </div>
+                                <p class="text-xs text-orange-900 leading-relaxed">
+                                    <span class="font-bold">Reason: </span>
+                                    <span x-text="detailsOrder.cancellationReason || 'No explanation provided by buyer.'"></span>
+                                </p>
+                                <p class="text-[11px] text-orange-800">
+                                    Please review and choose to either approve (which cancels the order and replenishes inventory) or decline this request to proceed with crafting/fulfillment.
+                                </p>
+                            </div>
                         </template>
 
                         {{-- PACKING PROOF UPLOAD CARD — shown when To Ship --}}
@@ -1206,6 +1342,26 @@ function sellerOrdersManager() {
                         class="px-5 sm:px-6 py-2.5 sm:py-3 rounded-full border border-gray-300 bg-white text-[10px] font-black uppercase tracking-widest text-gray-700 hover:bg-gray-100 hover:border-gray-400 transition-all cursor-pointer shrink-0 text-center order-last sm:order-first">
                         Close
                     </button>
+
+                    {{-- Cancellation Pending Actions: Decline OR Approve --}}
+                    <template x-if="detailsOrder && (normalizeStatus(detailsOrder.status) === 'cancellation pending' || normalizeStatus(detailsOrder.status) === 'cancellation requested')">
+                        <div class="flex-1 flex flex-wrap sm:flex-nowrap items-center justify-end gap-2">
+                            <button type="button" 
+                                @click="openDeclineCancellationModal(detailsOrder)"
+                                :disabled="approveCancellationLoading || declineCancellationLoading"
+                                class="px-4 py-2.5 sm:py-3 border border-gray-300 hover:bg-gray-100 text-gray-700 rounded-full text-[10px] font-black uppercase tracking-wider whitespace-nowrap transition-all cursor-pointer shrink-0 flex items-center justify-center gap-1.5">
+                                <span>✕</span> Decline Cancellation
+                            </button>
+                            <button type="button" 
+                                @click="openApproveCancellationModal(detailsOrder)"
+                                :disabled="approveCancellationLoading || declineCancellationLoading"
+                                style="background-color: #DC2626; color: #ffffff;"
+                                class="flex-1 sm:flex-none px-6 py-2.5 sm:py-3 bg-red-600 hover:bg-red-700 disabled:opacity-50 text-white text-[10px] font-black uppercase tracking-wider whitespace-nowrap rounded-full transition-all flex items-center justify-center gap-1.5 shadow-sm cursor-pointer shrink-0">
+                                <svg class="w-3.5 h-3.5 text-white shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
+                                <span>Approve Cancellation</span>
+                            </button>
+                        </div>
+                    </template>
 
                     {{-- Pending Order Actions: Reject Payment (counts as Cancel) OR Verify & Accept --}}
                     <template x-if="detailsOrder && normalizeStatus(detailsOrder.status) === 'pending'">
@@ -1763,6 +1919,139 @@ function sellerOrdersManager() {
                         <svg class="w-3.5 h-3.5 animate-spin text-white" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"/></svg>
                     </template>
                     <span x-text="sellerCancelLoading ? 'Cancelling...' : 'Confirm Cancellation'"></span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    {{-- Approve Order Cancellation Modal --}}
+    <div x-show="showApproveCancellationModal" 
+         x-transition:enter="transition ease-out duration-300"
+         x-transition:enter-start="opacity-0"
+         x-transition:enter-end="opacity-100"
+         x-transition:leave="transition ease-in duration-200"
+         x-transition:leave-start="opacity-100"
+         x-transition:leave-end="opacity-0"
+         class="fixed inset-0 bg-black/70 backdrop-blur-sm z-9999 flex items-center justify-center p-4"
+         @click.self="showApproveCancellationModal = false"
+         x-cloak
+         style="display: none;">
+        <div class="w-full max-w-md bg-white rounded-3xl shadow-2xl p-6 space-y-4 border border-gray-100 relative overflow-hidden">
+            <div class="h-1.5 w-full bg-red-600 absolute top-0 left-0"></div>
+
+            <div class="flex items-center gap-3 border-b border-gray-100 pb-3">
+                <div class="w-10 h-10 rounded-full bg-red-100 text-red-600 flex items-center justify-center font-bold text-lg shrink-0">
+                    ✕
+                </div>
+                <div>
+                    <h3 class="text-sm font-black text-black uppercase tracking-tight">Approve Order Cancellation</h3>
+                    <p class="text-[10px] text-gray-500 font-medium">Cancel this order as requested by the buyer.</p>
+                </div>
+            </div>
+
+            <div class="space-y-3 text-xs">
+                <template x-if="approveCancellationError">
+                    <div class="p-2.5 bg-red-50 border border-red-200 rounded-xl text-[10px] font-bold text-red-600" x-text="approveCancellationError"></div>
+                </template>
+
+                <div class="p-3 bg-gray-50 rounded-2xl border border-gray-100 space-y-1">
+                    <span class="text-[9px] font-black uppercase tracking-wider text-gray-400">Buyer Cancellation Reason</span>
+                    <p class="text-xs font-semibold text-gray-800" x-text="approveCancellationTarget?.cancellationReason || 'No specific explanation provided.'"></p>
+                </div>
+
+                <div class="p-3 bg-red-50 border border-red-200 rounded-2xl text-[10px] text-red-700 leading-relaxed">
+                    <strong>Notice:</strong> Approving will immediately cancel order <span class="font-bold font-mono" x-text="approveCancellationTarget ? '#LB-' + approveCancellationTarget.id.slice(-8).toUpperCase() : ''"></span>, restore product and size stock back into your active inventory, and notify the customer.
+                </div>
+            </div>
+
+            <div class="flex gap-3 pt-2">
+                <button type="button" 
+                    @click="showApproveCancellationModal = false"
+                    :disabled="approveCancellationLoading"
+                    class="flex-1 py-3 rounded-full border border-gray-200 text-[10px] font-black uppercase tracking-widest text-gray-500 hover:bg-gray-50 transition-all cursor-pointer">
+                    Keep Request
+                </button>
+                <button type="button" 
+                    @click="executeApproveCancellation()"
+                    :disabled="approveCancellationLoading"
+                    class="flex-1 py-3 rounded-full bg-red-600 hover:bg-red-700 text-white text-[10px] font-black uppercase tracking-widest shadow-md transition-all flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-50">
+                    <template x-if="approveCancellationLoading">
+                        <svg class="w-3.5 h-3.5 animate-spin text-white" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"/></svg>
+                    </template>
+                    <span x-text="approveCancellationLoading ? 'Approving...' : '✓ Approve Cancellation'"></span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    {{-- Decline Order Cancellation Modal --}}
+    <div x-show="showDeclineCancellationModal" 
+         x-transition:enter="transition ease-out duration-300"
+         x-transition:enter-start="opacity-0"
+         x-transition:enter-end="opacity-100"
+         x-transition:leave="transition ease-in duration-200"
+         x-transition:leave-start="opacity-100"
+         x-transition:leave-end="opacity-0"
+         class="fixed inset-0 bg-black/70 backdrop-blur-sm z-9999 flex items-center justify-center p-4"
+         @click.self="showDeclineCancellationModal = false"
+         x-cloak
+         style="display: none;">
+        <div class="w-full max-w-md bg-white rounded-3xl shadow-2xl p-6 space-y-4 border border-gray-100 relative overflow-hidden">
+            <div class="h-1.5 w-full bg-amber-500 absolute top-0 left-0"></div>
+
+            <div class="flex items-center gap-3 border-b border-gray-100 pb-3">
+                <div class="w-10 h-10 rounded-full bg-amber-100 text-amber-700 flex items-center justify-center font-bold text-lg shrink-0">
+                    !
+                </div>
+                <div>
+                    <h3 class="text-sm font-black text-black uppercase tracking-tight">Decline Cancellation Request</h3>
+                    <p class="text-[10px] text-gray-500 font-medium">Return this order to active pending status for fulfillment.</p>
+                </div>
+            </div>
+
+            <div class="space-y-3 text-xs">
+                <template x-if="declineCancellationError">
+                    <div class="p-2.5 bg-red-50 border border-red-200 rounded-xl text-[10px] font-bold text-red-600" x-text="declineCancellationError"></div>
+                </template>
+
+                <div class="space-y-1.5">
+                    <label class="text-[10px] font-black uppercase tracking-widest text-gray-500">Reason for Declining <span class="text-red-500">*</span></label>
+                    <select x-model="declineCancellationReason" class="w-full px-3.5 py-2.5 bg-gray-50 border border-gray-200 rounded-2xl text-xs font-bold text-gray-800 outline-none focus:border-amber-500 focus:bg-white transition-all">
+                        <option value="Order has already been prepared / fabric cut">Order has already been prepared / fabric cut</option>
+                        <option value="Bespoke customization in progress">Bespoke customization in progress</option>
+                        <option value="Item already packed and queued for courier">Item already packed and queued for courier</option>
+                        <option value="Cancellation policy period expired">Cancellation policy period expired</option>
+                        <option value="Other">Other / Custom explanation</option>
+                    </select>
+                </div>
+
+                <template x-if="declineCancellationReason === 'Other'">
+                    <div class="space-y-1">
+                        <label class="text-[10px] font-black uppercase tracking-widest text-gray-500">Custom Explanation <span class="text-red-500">*</span></label>
+                        <textarea x-model="declineCancellationCustomReason" rows="3" placeholder="Provide reason for declining to the buyer..." class="w-full px-3.5 py-2.5 bg-gray-50 border border-gray-200 rounded-2xl text-xs font-medium outline-none focus:border-amber-500 focus:bg-white resize-none"></textarea>
+                    </div>
+                </template>
+
+                <div class="p-3 bg-amber-50 border border-amber-200 rounded-2xl text-[10px] text-amber-800 leading-relaxed">
+                    <strong>Notice:</strong> Declining will revert the order to <span class="font-bold">Pending</span> status. Inventory stock remains reserved and the customer will be notified of your reason.
+                </div>
+            </div>
+
+            <div class="flex gap-3 pt-2">
+                <button type="button" 
+                    @click="showDeclineCancellationModal = false"
+                    :disabled="declineCancellationLoading"
+                    class="flex-1 py-3 rounded-full border border-gray-200 text-[10px] font-black uppercase tracking-widest text-gray-500 hover:bg-gray-50 transition-all cursor-pointer">
+                    Back
+                </button>
+                <button type="button" 
+                    @click="executeDeclineCancellation()"
+                    :disabled="declineCancellationLoading"
+                    class="flex-1 py-3 rounded-full bg-[#1E1915] hover:bg-black text-white text-[10px] font-black uppercase tracking-widest shadow-md transition-all flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-50">
+                    <template x-if="declineCancellationLoading">
+                        <svg class="w-3.5 h-3.5 animate-spin text-white" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"/></svg>
+                    </template>
+                    <span x-text="declineCancellationLoading ? 'Submitting...' : '✕ Confirm Decline'"></span>
                 </button>
             </div>
         </div>

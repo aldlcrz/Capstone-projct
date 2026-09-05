@@ -72,6 +72,7 @@
                 'delivered' => 'Delivered',
                 'in transit', 'in_transit', 'to receive', 'out for delivery', 'out_for_delivery' => 'To Receive',
                 'to ship', 'ready to ship', 'ready_to_ship', 'processing', 'shipped' => 'To Ship',
+                'cancellation pending', 'cancellation requested' => 'Cancellation Pending',
                 'cancelled' => 'Cancelled',
                 default => 'Order Placed',
             };
@@ -80,6 +81,7 @@
                 'Delivered' => 'bg-teal-50 text-teal-700 border border-teal-200',
                 'To Receive' => 'bg-purple-50 text-purple-700 border border-purple-200',
                 'To Ship' => 'bg-sky-50 text-sky-700 border border-sky-200',
+                'Cancellation Pending' => 'bg-orange-50 text-orange-700 border border-orange-200',
                 'Cancelled' => 'bg-red-50 text-red-700 border border-red-200',
                 default => 'bg-amber-50 text-amber-700 border border-amber-200',
             };
@@ -115,6 +117,10 @@
                         <svg class="w-3 h-3 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
                         <span>Cancel Order</span>
                     </button>
+                @elseif(in_array($statusLower, ['cancellation pending', 'cancellation requested']))
+                    <span class="inline-flex items-center gap-1 px-3.5 py-1.5 bg-orange-50 text-orange-700 border border-orange-200 text-[10px] sm:text-[11px] font-bold tracking-wider uppercase rounded-full shadow-2xs">
+                        <span>⏳ Cancellation Pending</span>
+                    </span>
                 @endif
                 <span class="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-[10px] sm:text-[11px] font-black tracking-wider uppercase shadow-2xs {{ $statusPillClass }}">
                     <span>{{ $customerStatusDisplay }}</span>
@@ -146,10 +152,13 @@
                 'delivered'        => 3,
                 'completed'        => 3,
                 'cancelled'        => -1,
+                'cancellation pending'   => 0,
+                'cancellation requested' => 0,
             ];
 
             $currentStep = $statusRanks[$statusLower] ?? 0;
             $isCancelled = $statusLower === 'cancelled';
+            $isCancellationPending = in_array($statusLower, ['cancellation pending', 'cancellation requested']);
 
             // Map status history timestamps
             $historyDates = [];
@@ -160,7 +169,32 @@
             }
         @endphp
 
-        @if(!$isCancelled)
+        @if($isCancellationPending)
+        <div style="background-color:#FFF7ED;border:1px solid #FED7AA;border-radius:20px;padding:16px 20px;" class="flex items-center gap-3">
+            <div class="w-9 h-9 rounded-xl bg-orange-100 text-orange-600 flex items-center justify-center shrink-0">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+            </div>
+            <div>
+                <div class="text-xs font-black text-orange-800 uppercase tracking-wider">Cancellation Request Pending</div>
+                <p class="text-xs text-orange-700 mt-0.5">Your request to cancel this order has been submitted and is currently awaiting approval from the artisan.</p>
+                @if($order->cancellationReason)
+                    <p class="text-xs text-orange-800 font-semibold mt-0.5">Reason: {{ $order->cancellationReason }}</p>
+                @endif
+            </div>
+        </div>
+        @elseif($isCancelled)
+        <div style="background-color:#FEF2F2;border:1px solid #FECACA;border-radius:20px;padding:16px 20px;" class="flex items-center gap-3">
+            <div class="w-9 h-9 rounded-xl bg-red-100 text-red-600 flex items-center justify-center shrink-0">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12"></path></svg>
+            </div>
+            <div>
+                <div class="text-xs font-black text-red-700 uppercase tracking-wider">Order Cancelled</div>
+                @if($order->cancellationReason)
+                    <p class="text-xs text-red-600 mt-0.5">Reason: {{ $order->cancellationReason }}</p>
+                @endif
+            </div>
+        </div>
+        @else
         <div style="background-color:#FDFBF7;border:1px solid #EAE2D2;border-radius:22px;box-shadow:0 4px 16px rgba(0,0,0,0.03);padding:18px 22px;">
             <div class="flex items-center justify-between mb-4 pb-2.5" style="border-bottom:1px solid #EAE1D0;">
                 <div class="flex items-center gap-2">
@@ -202,18 +236,6 @@
                         </div>
                     </div>
                 @endforeach
-            </div>
-        </div>
-        @else
-        <div style="background-color:#FEF2F2;border:1px solid #FECACA;border-radius:20px;padding:16px 20px;" class="flex items-center gap-3">
-            <div class="w-9 h-9 rounded-xl bg-red-100 text-red-600 flex items-center justify-center shrink-0">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12"></path></svg>
-            </div>
-            <div>
-                <div class="text-xs font-black text-red-700 uppercase tracking-wider">Order Cancelled</div>
-                @if($order->cancellationReason)
-                    <p class="text-xs text-red-600 mt-0.5">Reason: {{ $order->cancellationReason }}</p>
-                @endif
             </div>
         </div>
         @endif
@@ -979,8 +1001,8 @@
                     ✕
                 </div>
                 <div>
-                    <h3 class="text-sm font-black text-[#1E1915] uppercase tracking-tight">Cancel Order</h3>
-                    <p class="text-[10px] text-[#78716C] font-medium">Please select a reason for cancelling this order.</p>
+                    <h3 class="text-sm font-black text-[#1E1915] uppercase tracking-tight">Request Order Cancellation</h3>
+                    <p class="text-[10px] text-[#78716C] font-medium">Please select a reason for requesting cancellation. Your request will be sent to the artisan for review.</p>
                 </div>
             </div>
 
@@ -1004,8 +1026,8 @@
                     </div>
                 </template>
 
-                <div class="p-3 bg-red-50 border border-red-200 rounded-xl text-[10px] text-red-700 leading-relaxed">
-                    <strong>Note:</strong> Cancellations and refunds are subject to the shop’s policy. Please contact the seller for assistance.
+                <div class="p-3 bg-amber-50 border border-amber-200 rounded-xl text-[10px] text-amber-800 leading-relaxed">
+                    <strong>Note:</strong> Cancellation requests require artisan confirmation. If approved, the order will be cancelled and items restocked.
                 </div>
 
                 <div class="flex gap-2.5 pt-2">
@@ -1016,7 +1038,7 @@
                         <template x-if="cancelLoading">
                             <svg class="w-3.5 h-3.5 animate-spin text-white" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"/></svg>
                         </template>
-                        <span x-text="cancelLoading ? 'Cancelling...' : 'Confirm Cancel'"></span>
+                        <span x-text="cancelLoading ? 'Submitting...' : 'Request Cancellation'"></span>
                     </button>
                 </div>
             </form>

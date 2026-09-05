@@ -404,13 +404,13 @@ class WebController extends Controller
         // Filter by status tab
         $tab = strtolower($request->input('tab', 'all'));
         $statusGroupMap = [
-            'pending'    => ['Pending', 'pending', 'Order Placed', 'order placed', 'order_placed'],
+            'pending'    => ['Pending', 'pending', 'Order Placed', 'order placed', 'order_placed', 'Cancellation Pending', 'cancellation pending', 'cancellation requested'],
             'to ship'    => ['Processing', 'processing', 'To Ship', 'to ship', 'to_ship', 'Ready to Ship', 'ready_to_ship', 'Shipped', 'shipped'],
             'to receive' => ['In Transit', 'in_transit', 'To Receive', 'to receive', 'Out for Delivery', 'out_for_delivery'],
             'in transit' => ['In Transit', 'in_transit', 'Out for Delivery', 'out_for_delivery'],
             'delivered'  => ['Delivered', 'delivered'],
             'completed'  => ['Completed', 'completed'],
-            'cancelled'  => ['Cancelled', 'cancelled'],
+            'cancelled'  => ['Cancelled', 'cancelled', 'Cancellation Pending', 'cancellation pending', 'cancellation requested'],
         ];
 
         if ($tab !== 'all' && isset($statusGroupMap[$tab])) {
@@ -434,12 +434,12 @@ class WebController extends Controller
         $allCustomerOrders = Order::where('customerId', Auth::id())->select('id', 'status')->get();
         $counts = [
             'ALL'        => $allCustomerOrders->count(),
-            'PENDING'    => $allCustomerOrders->filter(fn($o) => in_array(strtolower(trim($o->status ?? '')), ['pending', 'order placed', 'order_placed']))->count(),
+            'PENDING'    => $allCustomerOrders->filter(fn($o) => in_array(strtolower(trim($o->status ?? '')), ['pending', 'order placed', 'order_placed', 'cancellation pending', 'cancellation requested']))->count(),
             'TO SHIP'    => $allCustomerOrders->filter(fn($o) => in_array(strtolower(trim(str_replace('_', ' ', $o->status ?? ''))), ['processing', 'to ship', 'ready to ship', 'shipped']))->count(),
             'TO RECEIVE' => $allCustomerOrders->filter(fn($o) => in_array(strtolower(trim(str_replace('_', ' ', $o->status ?? ''))), ['in transit', 'to receive', 'out for delivery']))->count(),
             'DELIVERED'  => $allCustomerOrders->filter(fn($o) => in_array(strtolower(trim($o->status ?? '')), ['delivered']))->count(),
             'COMPLETED'  => $allCustomerOrders->filter(fn($o) => in_array(strtolower(trim($o->status ?? '')), ['completed']))->count(),
-            'CANCELLED'  => $allCustomerOrders->filter(fn($o) => in_array(strtolower(trim($o->status ?? '')), ['cancelled']))->count(),
+            'CANCELLED'  => $allCustomerOrders->filter(fn($o) => in_array(strtolower(trim($o->status ?? '')), ['cancelled', 'cancellation pending', 'cancellation requested']))->count(),
         ];
 
         return view('orders.index', compact('orders', 'counts'));
