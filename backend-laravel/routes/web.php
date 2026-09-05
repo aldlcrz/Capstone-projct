@@ -23,6 +23,7 @@ use App\Http\Controllers\AiController;
 use App\Http\Controllers\ProductManagementController;
 use App\Http\Controllers\SuperAdminController;
 use App\Http\Controllers\ReportController;
+use App\Http\Controllers\UploadController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -449,13 +450,13 @@ Route::prefix('ai')->group(function () {
 
 // Web Upload & Report Routes (For Session-Authenticated Users)
 Route::middleware(['auth'])->group(function () {
-    Route::post('/api/v1/upload', [\App\Http\Controllers\UploadController::class, 'uploadImage']);
-    Route::post('/api/v1/reports', [\App\Http\Controllers\ReportController::class, 'createReport']);
-    Route::post('/upload', [\App\Http\Controllers\UploadController::class, 'uploadImage']);
-    Route::post('/reports', [\App\Http\Controllers\ReportController::class, 'createReport']);
-    Route::get('/api/v1/reports/{id?}', [\App\Http\Controllers\ReportController::class, 'getSellerReportDetail']);
-    Route::post('/api/v1/reports/{id}/response', [\App\Http\Controllers\ReportController::class, 'submitSellerResponse']);
-    Route::get('/api/v1/seller/reports/{id?}', [\App\Http\Controllers\ReportController::class, 'getSellerReportDetail']);
+    Route::post('/api/v1/upload', [UploadController::class, 'uploadImage']);
+    Route::post('/api/v1/reports', [ReportController::class, 'createReport']);
+    Route::post('/upload', [UploadController::class, 'uploadImage']);
+    Route::post('/reports', [ReportController::class, 'createReport']);
+    Route::get('/api/v1/reports/{id?}', [ReportController::class, 'getSellerReportDetail']);
+    Route::post('/api/v1/reports/{id}/response', [ReportController::class, 'submitSellerResponse']);
+    Route::get('/api/v1/seller/reports/{id?}', [ReportController::class, 'getSellerReportDetail']);
 });
 
 
