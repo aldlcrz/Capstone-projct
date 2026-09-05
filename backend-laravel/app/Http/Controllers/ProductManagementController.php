@@ -66,23 +66,27 @@ class ProductManagementController extends Controller
         /** @var \App\Models\User $user */
         $user = Auth::user();
 
-        // Normalization: Ensure $request->files has 'images' if files were submitted via variant inputs
-        if (!$request->hasFile('images')) {
-            $gatheredImages = [];
-            if ($request->hasFile('variant_image_0')) {
-                $gatheredImages[] = $request->file('variant_image_0');
-            }
-            if ($request->hasFile('variant_images')) {
-                foreach ((array)$request->file('variant_images') as $vImg) {
-                    if ($vImg) $gatheredImages[] = $vImg;
+        $isDraft = $request->input('action') === 'draft';
+
+        // Check whether at least one product image was uploaded
+        $hasImage = $request->hasFile('variant_image_0')
+            || ($request->hasFile('images') && !empty(array_filter((array)$request->file('images'), fn($f) => $f && $f->isValid())))
+            || ($request->hasFile('variant_images') && !empty(array_filter((array)$request->file('variant_images'), fn($f) => $f && $f->isValid())));
+
+        if (!$hasImage) {
+            foreach ($request->allFiles() as $k => $f) {
+                if (str_starts_with($k, 'variant_image_') && $f && $f->isValid()) {
+                    $hasImage = true;
+                    break;
                 }
-            }
-            if (!empty($gatheredImages)) {
-                $request->files->set('images', $gatheredImages);
             }
         }
 
-        $isDraft = $request->input('action') === 'draft';
+        if (!$isDraft && !$hasImage) {
+            return redirect()->back()->withInput()->withErrors([
+                'images' => 'Please upload at least one product image (Cover Photo for Variant 1).',
+            ])->with('error', 'Please upload at least one product image (Cover Photo for Variant 1).');
+        }
 
         if ($isDraft) {
             $request->validate([
@@ -90,6 +94,7 @@ class ProductManagementController extends Controller
                 'description'         => 'nullable|string|max:500',
                 'price'               => 'nullable|numeric|min:0|max:10000',
                 'images.*'            => 'nullable|image|mimes:jpeg,png,jpg,webp|max:5120',
+                'variant_image_0'     => 'nullable|image|mimes:jpeg,png,jpg,webp|max:5120',
                 'CategoryId'          => 'nullable|exists:categories,id',
                 'category_ids'        => 'nullable|array',
                 'category_ids.*'      => 'exists:categories,id',
@@ -97,7 +102,7 @@ class ProductManagementController extends Controller
                 'name.required' => 'Product Name is required to save a draft.',
             ]);
         } else {
-            $request->validate([
+            $rules = [
                 'name'                => 'required|string|max:100',
                 'description'         => 'required|string|min:10|max:500',
                 'price'               => 'required|numeric|min:1|max:10000',
@@ -107,13 +112,22 @@ class ProductManagementController extends Controller
                 'category_ids.*'      => 'exists:categories,id',
                 'CategoryId'          => 'nullable|exists:categories,id',
                 'target_group'        => 'required|string|in:Men,Women,Kids',
-                'images'              => 'required|array|min:1',
-                'images.*'            => 'image|mimes:jpeg,png,jpg,webp|max:5120',
+                'variant_image_0'     => 'nullable|image|mimes:jpeg,png,jpg,webp|max:5120',
+                'images'              => 'nullable|array',
+                'images.*'            => 'nullable|image|mimes:jpeg,png,jpg,webp|max:5120',
                 'sizes'               => 'required|array|min:1',
                 'sizes.*'             => 'string',
                 'size_stocks.*'       => 'nullable|integer|min:0|max:10000',
                 'discount_percentage' => 'nullable|numeric|min:1|max:99',
-            ], [
+            ];
+
+            foreach ($request->allFiles() as $fileKey => $fileVal) {
+                if (str_starts_with($fileKey, 'variant_image_')) {
+                    $rules[$fileKey] = 'nullable|image|mimes:jpeg,png,jpg,webp|max:5120';
+                }
+            }
+
+            $request->validate($rules, [
                 'name.required'           => 'Product Name is required.',
                 'description.required'    => 'Artisan Description is required.',
                 'description.min'         => 'Artisan Description must be at least 10 characters.',
@@ -129,7 +143,6 @@ class ProductManagementController extends Controller
                 'category_ids.required'   => 'Please select at least one Product Category.',
                 'category_ids.min'        => 'Please select at least one Product Category.',
                 'target_group.required'   => 'Please select who this product is for (Men, Women, or Kids).',
-                'images.required'         => 'Please upload at least one product image.',
                 'sizes.required'          => 'Please select at least one Heritage Size (e.g. S, M, L, XL, XXL, Custom).',
                 'sizes.min'               => 'Please select at least one Heritage Size (e.g. S, M, L, XL, XXL, Custom).',
                 'size_stocks.*.max'       => 'Size stock quantity cannot exceed 10,000 units.',
@@ -285,6 +298,13 @@ class ProductManagementController extends Controller
                 $v1File = $request->file('variant_images.0');
             } elseif ($request->hasFile('images') && is_array($request->file('images')) && count($request->file('images')) > 0 && $request->file('images')[0]->isValid()) {
                 $v1File = $request->file('images')[0];
+            } else {
+                foreach ($request->allFiles() as $k => $f) {
+                    if (str_starts_with($k, 'variant_image_') && $f && $f->isValid()) {
+                        $v1File = $f;
+                        break;
+                    }
+                }
             }
 
             if ($v1File) {

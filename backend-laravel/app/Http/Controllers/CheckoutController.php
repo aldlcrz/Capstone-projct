@@ -338,21 +338,34 @@ class CheckoutController extends Controller
                     $order->save();
                 }
 
+                // Ensure snapshot columns exist in order_items table on database
+                OrderItem::ensureSnapshotColumnsExist();
+
+                $hasProductNameCol = \Illuminate\Support\Facades\Schema::hasColumn('order_items', 'product_name');
+                $hasProductImageCol = \Illuminate\Support\Facades\Schema::hasColumn('order_items', 'product_image');
+
                 foreach ($items as $item) {
                     $product = Product::find($item['id']);
 
-                    OrderItem::create([
+                    $orderItemData = [
                         'id' => (string) Str::uuid(),
                         'orderId' => $orderId,
                         'productId' => $item['id'],
-                        'product_name' => $product?->name ?? ($item['name'] ?? 'Heritage Piece'),
-                        'product_image' => $product?->getImageUrl() ?? ($item['image'] ?? null),
                         'quantity' => $item['quantity'],
                         'price' => $item['price'],
                         'size' => $item['size'],
                         'variation' => VariationFormatter::label($item['variation'] ?? null, $product?->image)
                             ?? ($item['variation'] ?? 'Original'),
-                    ]);
+                    ];
+
+                    if ($hasProductNameCol) {
+                        $orderItemData['product_name'] = $product?->name ?? ($item['name'] ?? 'Heritage Piece');
+                    }
+                    if ($hasProductImageCol) {
+                        $orderItemData['product_image'] = $product?->getImageUrl() ?? ($item['image'] ?? null);
+                    }
+
+                    OrderItem::create($orderItemData);
 
                     // Update stock
                     if ($product) {

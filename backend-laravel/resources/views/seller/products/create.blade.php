@@ -2127,16 +2127,25 @@ function addProductManager() {
 
                 this.hasRestoredDraft = true;
                 this.calculateFillRate();
+
+                this.$nextTick(() => {
+                    this.variants.forEach((v, idx) => {
+                        if (v.file && typeof DataTransfer !== 'undefined') {
+                            const dt = new DataTransfer();
+                            dt.items.add(v.file);
+                            const fileInput = document.getElementById('variant_file_' + idx);
+                            if (fileInput) fileInput.files = dt.files;
+                        }
+                    });
+                    this.syncGalleryFileInput();
+                });
             } catch (e) {
                 console.warn('Could not restore draft:', e);
             }
         },
 
         clearDraftAndReset() {
-            try {
-                const sellerId = initData.sellerId || 'guest';
-                localStorage.removeItem('lumbarong_seller_product_draft_' + sellerId);
-            } catch(e) {}
+            clearProductDraft();
             this.hasRestoredDraft = false;
             window.location.href = window.location.pathname;
         },
@@ -2171,6 +2180,20 @@ function addProductManager() {
             this.scheduleDraftSave();
         },
 
+        syncGalleryFileInput() {
+            try {
+                if (typeof DataTransfer === 'undefined') return;
+                const dt = new DataTransfer();
+                this.galleryImages.forEach(g => {
+                    if (g.file) dt.items.add(g.file);
+                });
+                const input = document.getElementById('gallery_files_input');
+                if (input) input.files = dt.files;
+            } catch(e) {
+                console.warn('Could not sync gallery input:', e);
+            }
+        },
+
         handleGalleryFilesUpload(event) {
             const files = Array.from(event.target.files);
             if (!files.length) return;
@@ -2184,6 +2207,7 @@ function addProductManager() {
                             file: file,
                             preview: e.target.result
                         });
+                        this.syncGalleryFileInput();
                         this.calculateFillRate();
                         this.scheduleDraftSave();
                     }
@@ -2195,6 +2219,7 @@ function addProductManager() {
         removeGalleryImage(index) {
             if (index >= 0 && index < this.galleryImages.length) {
                 this.galleryImages.splice(index, 1);
+                this.syncGalleryFileInput();
                 this.calculateFillRate();
                 this.scheduleDraftSave();
             }
@@ -2756,9 +2781,39 @@ function validateProductForm(e, isEdit = false) {
 
     // 5. Product Imagery (Variant 1 is required)
     if (!isEdit) {
+        // Pre-sync any Alpine variant/gallery files to DOM inputs
+        try {
+            const alpineEl = document.querySelector('[x-data="addProductManager()"]');
+            const alpineData = alpineEl && window.Alpine ? Alpine.$data(alpineEl) : null;
+            if (alpineData && Array.isArray(alpineData.variants)) {
+                alpineData.variants.forEach((v, idx) => {
+                    const el = document.getElementById('variant_file_' + idx);
+                    if (el && (!el.files || el.files.length === 0) && v.file && typeof DataTransfer !== 'undefined') {
+                        const dt = new DataTransfer();
+                        dt.items.add(v.file);
+                        el.files = dt.files;
+                    }
+                });
+                if (typeof alpineData.syncGalleryFileInput === 'function') {
+                    alpineData.syncGalleryFileInput();
+                }
+            }
+        } catch (syncErr) {
+            console.warn('Pre-submit file sync warning:', syncErr);
+        }
+
         const v1FileInput = document.getElementById('variant_file_0');
         const hasV1File = Boolean(v1FileInput && v1FileInput.files && v1FileInput.files.length > 0);
-        if (!hasV1File) {
+        
+        let hasAnyVariantFile = false;
+        document.querySelectorAll('input[name^="variant_image_"]').forEach(inp => {
+            if (inp.files && inp.files.length > 0) hasAnyVariantFile = true;
+        });
+
+        const galleryInput = document.getElementById('gallery_files_input');
+        const hasGalleryFiles = Boolean(galleryInput && galleryInput.files && galleryInput.files.length > 0);
+
+        if (!hasV1File && !hasAnyVariantFile && !hasGalleryFiles) {
             errors.push('Please upload the main product photo for Variant 1 (Cover Photo).');
             const v1Box = document.getElementById('variant_upload_box_0');
             if (v1Box) v1Box.classList.add('border-red-500');
