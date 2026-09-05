@@ -1125,8 +1125,8 @@ function sellerOrdersManager() {
                             </template>
                         </div>
 
-                        {{-- COURIER & SHIPPING CARD — hidden when Pending or To Ship --}}
-                        <div x-show="normalizeStatus(detailsOrder.status) !== 'pending' && normalizeStatus(detailsOrder.status) !== 'to ship'" x-transition class="bg-indigo-50/50 p-4 rounded-2xl border border-indigo-100/70 space-y-3">
+                        {{-- COURIER & SHIPPING CARD — hidden when Pending, To Ship, or Cancellation Pending --}}
+                        <div x-show="normalizeStatus(detailsOrder.status) !== 'pending' && normalizeStatus(detailsOrder.status) !== 'to ship' && normalizeStatus(detailsOrder.status) !== 'cancellation pending' && normalizeStatus(detailsOrder.status) !== 'cancellation requested'" x-transition class="bg-indigo-50/50 p-4 rounded-2xl border border-indigo-100/70 space-y-3">
                             <div class="flex items-center justify-between">
                                 <div class="text-[9px] font-black uppercase tracking-widest text-indigo-900 flex items-center gap-1.5">
                                     <span>🚚 Courier & Shipping Information</span>
