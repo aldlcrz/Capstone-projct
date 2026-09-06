@@ -213,6 +213,38 @@
             </svg>
         </div>
 
+        {{-- Logout Action (Visible on mobile & desktop) --}}
+        <div style="margin-top:14px;">
+            <form x-ref="customerProfileLogoutForm" action="{{ route('logout') }}" method="POST">
+                @csrf
+                <button type="button"
+                        @click="$dispatch('open-confirmation', {
+                            title: 'Logout',
+                            message: 'Are you sure you want to log out of your LumBarong account?',
+                            confirmText: 'Logout',
+                            type: 'danger',
+                            onConfirm: () => $refs.customerProfileLogoutForm.submit()
+                        })"
+                        style="background-color:#FEF2F2;border:1px solid #FECACA;border-radius:16px;padding:14px 16px;display:flex;align-items:center;justify-content:space-between;box-shadow:0 2px 6px rgba(0,0,0,0.02);cursor:pointer;width:100%;text-align:left;transition:all 0.2s;color:#DC2626;"
+                        class="hover:bg-red-600 hover:text-white hover:border-red-600 group">
+                    <div style="display:flex;align-items:center;gap:12px;">
+                        <div style="width:38px;height:38px;border-radius:11px;background-color:#FEE2E2;border:1px solid #FECACA;display:flex;align-items:center;justify-content:center;color:#DC2626;flex-shrink:0;" class="group-hover:bg-white group-hover:text-red-600 transition-colors">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/>
+                            </svg>
+                        </div>
+                        <div>
+                            <div style="font-size:14px;font-weight:700;">Log Out</div>
+                            <div style="font-size:11.5px;color:#991B1B;margin-top:1px;" class="group-hover:text-red-100">Sign out of your account</div>
+                        </div>
+                    </div>
+                    <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.2" class="group-hover:translate-x-0.5 transition-transform">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/>
+                    </svg>
+                </button>
+            </form>
+        </div>
+
     </div>
 
     {{-- Edit Profile Modal --}}
