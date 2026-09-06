@@ -231,11 +231,18 @@
                                 @endif
                             </button>
 
+                            <!-- Mobile Backdrop -->
+                            <div x-show="open"
+                                 @click="open = false"
+                                 class="fixed inset-0 z-40 bg-black/20 backdrop-blur-2xs sm:hidden"
+                                 style="display:none;"
+                                 x-cloak></div>
+
                             <!-- Dropdown -->
                             <div x-show="open"
                                  x-transition:enter="transition ease-out duration-200" x-transition:enter-start="opacity-0 translate-y-1" x-transition:enter-end="opacity-100 translate-y-0"
                                  x-transition:leave="transition ease-in duration-150" x-transition:leave-start="opacity-100 translate-y-0" x-transition:leave-end="opacity-0 translate-y-1"
-                                 class="absolute right-0 mt-2 w-72 sm:w-80 rounded-2xl shadow-2xl z-50 overflow-hidden"
+                                 class="fixed sm:absolute left-3.5 right-3.5 sm:left-auto sm:right-0 top-20 sm:top-full mt-2 sm:w-80 max-w-sm sm:max-w-none mx-auto sm:mx-0 rounded-2xl shadow-2xl z-50 overflow-hidden"
                                  style="display:none; background: #FFFCF7; border: 1px solid #E8DECB;" x-cloak>
                                 <div class="px-4 py-3 flex items-center justify-between" style="background: #FDF8EE; border-bottom: 1px solid #E8DECB;">
                                     <span class="text-[10px] font-bold uppercase tracking-widest" style="color: #766C60;">Shop Notifications</span>
