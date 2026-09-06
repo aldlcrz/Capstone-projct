@@ -4,6 +4,20 @@
 @php
     use App\Support\VariationFormatter;
     $productVariations = VariationFormatter::buildVariations($product->image, $product);
+    $isAdminUser = Auth::check() && in_array(Auth::user()->role, ['admin', 'superadmin']);
+    $isProductOwner = Auth::check() && Auth::user()->role === 'seller' && Auth::id() === $product->sellerId;
+    $productStatus = strtolower($product->status ?? 'pending');
+    $adminCatalogUrl = Auth::check() && Auth::user()->role === 'superadmin' ? route('superadmin.products') : route('admin.products');
+    $statusBadgeClass = match($productStatus) {
+        'approved' => 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30',
+        'rejected' => 'bg-rose-500/20 text-rose-300 border border-rose-500/30',
+        default    => 'bg-amber-500/20 text-amber-300 border border-amber-500/30',
+    };
+    $cardStatusBadgeClass = match($productStatus) {
+        'approved' => 'bg-emerald-100 text-emerald-800',
+        'rejected' => 'bg-rose-100 text-rose-800',
+        default    => 'bg-amber-100 text-amber-800',
+    };
 @endphp
 {{-- Alpine productDetail component MUST be registered here (before the x-data div below).
      Alpine.js loads with `defer`, which means `alpine:init` fires during DOM parse before
@@ -67,6 +81,16 @@
             variations: variations || [],
             selectedVariation: 0,
             showSizeGuide: false,
+            adminRejectModal: false,
+            adminRejectReason: '',
+            openAdminReject() {
+                this.adminRejectReason = '';
+                this.adminRejectModal = true;
+            },
+            closeAdminReject() {
+                this.adminRejectModal = false;
+                this.adminRejectReason = '';
+            },
             
             // ─── Shopee-Style Hover Zoom Inspection State ───
             showZoomModal: false,
@@ -271,6 +295,64 @@
     }
 </script>
 <div class="max-w-6xl mx-auto py-4 lg:py-6" x-data="productDetail({{ (int)($product->stock ?? 1) }}, @js($product->size_stocks ?? (object)[]), @js($productVariations))">
+    @if($isAdminUser)
+    <!-- Admin Moderation & Inspection Banner -->
+    <div class="mb-5 p-4 sm:p-5 rounded-2xl bg-[#1E1915] text-white shadow-xl border border-amber-900/40 flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div class="flex items-start sm:items-center gap-3.5">
+            <div class="w-10 h-10 rounded-xl bg-amber-500/20 border border-amber-500/30 flex items-center justify-center shrink-0 text-amber-400">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>
+                </svg>
+            </div>
+            <div>
+                <div class="flex items-center gap-2 flex-wrap">
+                    <span class="text-xs font-bold uppercase tracking-widest text-amber-400">Admin Moderation Mode</span>
+                    <span class="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider {{ $statusBadgeClass }}">
+                        Status: {{ ucfirst($productStatus) }}
+                    </span>
+                    @if($product->stock <= 0)
+                        <span class="px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-red-500/20 text-red-300 border border-red-500/30">Out of Stock</span>
+                    @endif
+                </div>
+                <p class="text-xs text-stone-300 mt-1 font-normal">
+                    You are viewing this product with administrative oversight. Customer checkout and purchase actions are disabled.
+                </p>
+                @if($productStatus === 'rejected' && $product->rejectionReason)
+                    <div class="mt-2 text-xs text-rose-300 bg-rose-950/50 border border-rose-800/60 rounded-xl px-3 py-1.5 inline-block">
+                        <strong>Rejection Reason:</strong> {{ $product->rejectionReason }}
+                    </div>
+                @endif
+            </div>
+        </div>
+
+        <div class="flex items-center gap-2 shrink-0 flex-wrap">
+            <a href="{{ $adminCatalogUrl }}" class="px-3.5 py-2 rounded-xl bg-white/10 hover:bg-white/20 text-white text-xs font-bold uppercase tracking-wider transition-all flex items-center gap-1.5">
+                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/></svg>
+                <span>Back to Catalog</span>
+            </a>
+
+            @if(Auth::user()->role === 'admin')
+                @if($productStatus === 'pending' || $productStatus === 'rejected')
+                    <form action="{{ route('admin.products.approve', $product->id) }}" method="POST" class="inline">
+                        @csrf
+                        <button type="submit" onclick="return confirm('Approve this product and publish it live to the marketplace?')" class="px-3.5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold uppercase tracking-wider transition-all shadow-sm flex items-center gap-1.5 cursor-pointer">
+                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                            <span>Approve</span>
+                        </button>
+                    </form>
+                @endif
+
+                @if($productStatus === 'pending' || $productStatus === 'approved')
+                    <button type="button" @click="openAdminReject()" class="px-3.5 py-2 rounded-xl bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold uppercase tracking-wider transition-all shadow-sm flex items-center gap-1.5 cursor-pointer">
+                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                        <span>{{ $productStatus === 'approved' ? 'Revoke' : 'Reject' }}</span>
+                    </button>
+                @endif
+            @endif
+        </div>
+    </div>
+    @endif
+
     <!-- Breadcrumb Navigation -->
     <nav class="flex items-center gap-2 text-xs font-semibold text-gray-500 mb-5">
         <a href="/" class="hover:text-black transition-colors">Home</a>
@@ -505,6 +587,14 @@
                         </div>
                     </div>
 
+                    @if($isAdminUser || $isProductOwner)
+                        <div class="flex items-center gap-2.5 mb-6 text-xs text-gray-700">
+                            <span class="font-bold">Total Stock Inventory:</span>
+                            <span class="px-3 py-1 rounded-xl bg-stone-100 font-extrabold text-stone-900 border border-stone-200">
+                                {{ $product->stock > 0 ? $product->stock . ' pieces available' : 'Out of Stock' }}
+                            </span>
+                        </div>
+                    @else
                     <!-- Quantity Stepper -->
                     <div class="flex items-center gap-4 mb-6">
                         <span class="text-xs font-bold text-gray-900">Quantity:</span>
@@ -535,8 +625,78 @@
                             (<span x-text="stock > 0 ? stock + ' pieces available' : 'Out of Stock'"></span>)
                         </span>
                     </div>
+                    @endif
 
                     <!-- Action Buttons -->
+                    @if($isAdminUser)
+                        <!-- Admin Moderation Actions Panel (Replaces Add to Cart / Buy Now) -->
+                        <div class="space-y-3.5 p-5 rounded-2xl bg-stone-50 border border-stone-200">
+                            <div class="flex items-center justify-between gap-2 pb-3 border-b border-stone-200/80">
+                                <span class="text-xs font-bold uppercase tracking-wider text-stone-800 flex items-center gap-1.5">
+                                    <svg class="w-4 h-4 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                                    Admin Moderation Controls
+                                </span>
+                                <span class="px-2 py-0.5 rounded text-[10px] font-black uppercase tracking-wider {{ $cardStatusBadgeClass }}">
+                                    {{ $productStatus }}
+                                </span>
+                            </div>
+
+                            <p class="text-xs text-stone-500 leading-relaxed">
+                                Customer purchasing, cart additions, and checkout are disabled while viewing this listing as an administrator.
+                            </p>
+
+                            <div class="flex flex-col sm:flex-row gap-2.5 pt-1">
+                                @if(Auth::user()->role === 'admin')
+                                    @if($productStatus === 'pending' || $productStatus === 'rejected')
+                                        <form action="{{ route('admin.products.approve', $product->id) }}" method="POST" class="flex-1">
+                                            @csrf
+                                            <button type="submit" onclick="return confirm('Approve this product and make it live in the catalog?')"
+                                                    class="w-full h-11 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs uppercase tracking-wider transition-colors shadow-sm flex items-center justify-center gap-2 cursor-pointer">
+                                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                                                <span>Approve Product</span>
+                                            </button>
+                                        </form>
+                                    @endif
+
+                                    @if($productStatus === 'pending' || $productStatus === 'approved')
+                                        <button type="button" @click="openAdminReject()"
+                                                class="flex-1 h-11 rounded-xl bg-rose-600 hover:bg-rose-700 text-white font-bold text-xs uppercase tracking-wider transition-colors shadow-sm flex items-center justify-center gap-2 cursor-pointer">
+                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                                            <span>{{ $productStatus === 'approved' ? 'Revoke Approval' : 'Reject Product' }}</span>
+                                        </button>
+                                    @endif
+                                @endif
+
+                                <a href="{{ $adminCatalogUrl }}" class="flex-1 h-11 rounded-xl bg-stone-200 hover:bg-stone-300 text-stone-800 font-bold text-xs uppercase tracking-wider transition-colors flex items-center justify-center gap-1.5 text-center">
+                                    <span>Manage in Catalog</span>
+                                </a>
+                            </div>
+                        </div>
+                    @elseif($isProductOwner)
+                        <!-- Artisan Owner Notice (Replaces Add to Cart / Buy Now) -->
+                        <div class="space-y-3.5 p-5 rounded-2xl bg-amber-50 border border-amber-200">
+                            <div class="flex items-center justify-between gap-2 pb-3 border-b border-amber-200/80">
+                                <span class="text-xs font-bold uppercase tracking-wider text-amber-900 flex items-center gap-1.5">
+                                    🏪 Artisan Owner Preview
+                                </span>
+                                <span class="px-2 py-0.5 rounded text-[10px] font-black uppercase tracking-wider bg-amber-100 text-amber-800">
+                                    Your Creation
+                                </span>
+                            </div>
+                            <p class="text-xs text-amber-800 leading-relaxed">
+                                This is how your product appears to customers in the marketplace. You cannot purchase your own item.
+                            </p>
+                            <div class="flex gap-2.5 pt-1">
+                                <a href="/seller/products/{{ $product->id }}/edit" class="flex-1 h-11 rounded-xl bg-[#C0422A] hover:bg-black text-white font-bold text-xs uppercase tracking-wider transition-colors shadow-sm flex items-center justify-center gap-2">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
+                                    <span>Edit Product</span>
+                                </a>
+                                <a href="/seller/products" class="flex-1 h-11 rounded-xl bg-white border border-amber-200 hover:bg-amber-100/50 text-amber-900 font-bold text-xs uppercase tracking-wider transition-colors flex items-center justify-center gap-1.5 text-center">
+                                    <span>My Catalog</span>
+                                </a>
+                            </div>
+                        </div>
+                    @else
                     <form action="/cart/add" method="POST" @submit.prevent="submitAddToCart($event)" class="space-y-3">
                         @csrf
                         <input type="hidden" name="productId" value="{{ $product->id }}">
@@ -610,6 +770,7 @@
                             </button>
                         </div>
                     </form>
+                    @endif
                 </div>
             </div>
         </div>
@@ -763,6 +924,7 @@
                             >
                                 💬 Chat with Seller
                             </button>
+                            @if(!$isAdminUser)
                             <button 
                                 type="button" 
                                 @click="window.dispatchEvent(new CustomEvent('open-report', { detail: { reportedId: '{{ $product->sellerId }}', reportedName: '{{ e($product->seller->shopName ?? $product->seller->name ?? 'Artisan') }}', productId: '{{ $product->id }}', productName: '{{ e($product->name) }}', reportType: 'product' } }))"
@@ -771,6 +933,7 @@
                             >
                                 🛡️ Report
                             </button>
+                            @endif
                         </div>
                     </div>
                 </div>
@@ -1599,8 +1762,47 @@
 
             </div>
     </div>
-    <!-- ========================================= -->
+    @if($isAdminUser)
+    {{-- Admin Rejection Modal --}}
+    <div x-show="adminRejectModal"
+         x-cloak
+         style="display: none;"
+         class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm"
+         @keydown.escape.window="closeAdminReject()">
+        <div class="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl border border-gray-100 text-left space-y-4"
+             @click.away="closeAdminReject()">
+            <div class="flex items-center justify-between pb-3 border-b border-gray-100">
+                <div class="flex items-center gap-2 text-rose-600 font-bold text-sm">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+                    <span>Reject Product / Revoke Approval</span>
+                </div>
+                <button type="button" @click="closeAdminReject()" class="text-gray-400 hover:text-black text-sm font-bold cursor-pointer">✕</button>
+            </div>
 
+            <p class="text-xs text-gray-600 leading-relaxed">
+                Provide a clear reason for rejecting <strong>"{{ $product->name }}"</strong>. This explanation will be delivered directly to the artisan.
+            </p>
+
+            <form action="{{ route('admin.products.reject', $product->id) }}" method="POST" class="space-y-4">
+                @csrf
+                <div>
+                    <label class="block text-[11px] font-bold text-gray-700 uppercase tracking-wider mb-1.5">Rejection Reason *</label>
+                    <textarea name="reason" rows="3" required placeholder="e.g. Photo resolution is too low, missing accurate size measurements, policy violation..."
+                              class="w-full px-3.5 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-xs text-gray-900 focus:bg-white focus:border-rose-500 outline-none transition-colors resize-none"></textarea>
+                </div>
+
+                <div class="flex items-center justify-end gap-2 pt-2">
+                    <button type="button" @click="closeAdminReject()" class="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 text-xs font-bold rounded-xl transition-all cursor-pointer">
+                        Cancel
+                    </button>
+                    <button type="submit" class="px-4 py-2 bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold rounded-xl transition-all shadow-sm cursor-pointer">
+                        Confirm Rejection
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+    @endif
 </div>
 
 <script>

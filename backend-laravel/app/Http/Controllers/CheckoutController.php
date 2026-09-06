@@ -17,12 +17,24 @@ class CheckoutController extends Controller
 {
     public function index(Request $request)
     {
+        // Guard: Administrators cannot checkout or place orders
+        if (Auth::check() && in_array(Auth::user()->role, ['admin', 'superadmin'])) {
+            return redirect()->route(Auth::user()->role === 'superadmin' ? 'superadmin.dashboard' : 'admin.dashboard')
+                ->with('error', 'Administrators cannot place orders or access checkout.');
+        }
+
         $mode = $request->query('mode', 'cart');
         $cart = [];
 
         // Handle direct buy from product page
         if ($request->has('productId')) {
             $product = Product::findOrFail($request->productId);
+
+            // Guard: Seller cannot buy own product
+            if (Auth::check() && Auth::user()->role === 'seller' && Auth::id() === $product->sellerId) {
+                return redirect()->route('products.show', $product->id)
+                    ->with('error', 'Sellers cannot purchase their own products.');
+            }
             $variation = VariationFormatter::label($request->input('variation'), $product->image)
                 ?? $request->input('variation');
             $image = VariationFormatter::getImageForVariation($variation, $product) ?: $product->getImageUrl();
@@ -133,6 +145,12 @@ class CheckoutController extends Controller
 
     public function fromSelected(Request $request)
     {
+        // Guard: Administrators cannot checkout or place orders
+        if (Auth::check() && in_array(Auth::user()->role, ['admin', 'superadmin'])) {
+            return redirect()->route(Auth::user()->role === 'superadmin' ? 'superadmin.dashboard' : 'admin.dashboard')
+                ->with('error', 'Administrators cannot place orders or access checkout.');
+        }
+
         $request->validate([
             'selected_keys' => 'required|array|min:1',
             'selected_keys.*' => 'required|string',
@@ -172,6 +190,12 @@ class CheckoutController extends Controller
 
     public function store(Request $request)
     {
+        // Guard: Administrators cannot place orders
+        if (Auth::check() && in_array(Auth::user()->role, ['admin', 'superadmin'])) {
+            return redirect()->route(Auth::user()->role === 'superadmin' ? 'superadmin.dashboard' : 'admin.dashboard')
+                ->with('error', 'Administrators cannot place orders.');
+        }
+
         $paymentMethod = trim($request->input('paymentMethod', 'GCash'));
         $isGcash = strcasecmp($paymentMethod, 'GCash') === 0;
         $isMaya  = strcasecmp($paymentMethod, 'Maya') === 0;
@@ -207,7 +231,7 @@ class CheckoutController extends Controller
                     }
 
                     // Security: Reject already-used payment reference numbers
-                    $isDuplicate = \App\Models\Order::where('paymentReference', $raw)->exists();
+                    $isDuplicate = Order::where('paymentReference', $raw)->exists();
                     if ($isDuplicate) {
                         $fail('This payment reference number has already been used in another order. Please provide a new and unique payment reference.');
                         return;

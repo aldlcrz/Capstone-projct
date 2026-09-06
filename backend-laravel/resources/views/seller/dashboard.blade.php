@@ -230,7 +230,7 @@
                                 <div class="w-full flex items-end justify-center h-28">
                                     @php $barHeightPct = $maxChartRevenue > 0 ? max(8, ($day['revenue'] / $maxChartRevenue) * 100) : 8; @endphp
                                     <div class="h-full w-full max-w-10 rounded-t-lg relative group flex items-end justify-center" style="background: #FDF8EE; border: 1px solid rgba(232,222,203,0.5);">
-                                        <div class="w-full rounded-t-lg transition-all duration-300" style="height: {{ $barHeightPct }}%; background: #B5870F;" onmouseover="this.style.background='#A16D19';" onmouseout="this.style.background='#B5870F';"></div>
+                                        <div class="w-full rounded-t-lg transition-all duration-300" style="<?php echo 'height: ' . $barHeightPct . '%; background: #B5870F;'; ?>" onmouseover="this.style.background='#A16D19';" onmouseout="this.style.background='#B5870F';"></div>
                                     </div>
                                 </div>
                                 <div class="text-center">

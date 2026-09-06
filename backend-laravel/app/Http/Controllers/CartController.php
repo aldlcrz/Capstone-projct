@@ -12,6 +12,11 @@ class CartController extends Controller
 {
     public function index()
     {
+        if (Auth::check() && in_array(Auth::user()->role, ['admin', 'superadmin'])) {
+            return redirect()->route(Auth::user()->role === 'superadmin' ? 'superadmin.dashboard' : 'admin.dashboard')
+                ->with('info', 'Administrators do not have a customer shopping cart.');
+        }
+
         $cart = session()->get('cart', []);
         $updated = false;
 
@@ -110,6 +115,28 @@ class CartController extends Controller
         $quantity = (int) $request->input('quantity', 1);
         $size = $request->input('size');
         $product = Product::with('seller')->findOrFail($productId);
+
+        // Guard: Administrators cannot purchase or add items to cart
+        if (Auth::check() && in_array(Auth::user()->role, ['admin', 'superadmin'])) {
+            if ($request->wantsJson() || $request->ajax()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Administrators cannot add products to cart or make purchases.'
+                ], 403);
+            }
+            return redirect()->back()->with('error', 'Administrators cannot add products to cart or make purchases.');
+        }
+
+        // Guard: Sellers cannot purchase their own products
+        if (Auth::check() && Auth::user()->role === 'seller' && Auth::id() === $product->sellerId) {
+            if ($request->wantsJson() || $request->ajax()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Sellers cannot purchase their own products.'
+                ], 403);
+            }
+            return redirect()->back()->with('error', 'Sellers cannot purchase their own products.');
+        }
 
         // Check if seller is frozen
         if ($product->seller && $product->seller->status === 'frozen') {

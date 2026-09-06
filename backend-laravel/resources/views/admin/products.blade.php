@@ -201,6 +201,13 @@
                         {{-- Action Buttons --}}
                         <div class="pt-2 border-t border-gray-100 flex items-center gap-1.5">
                             @if($productStatus === 'pending')
+                                {{-- Inspect Button --}}
+                                <a href="{{ url('/products/' . $product->id) }}" target="_blank"
+                                    title="Inspect full product details and sizing"
+                                    class="px-2.5 py-2 bg-stone-100 hover:bg-stone-200 text-stone-700 text-[10px] font-bold uppercase tracking-wider rounded-xl transition-all text-center">
+                                    Inspect ↗
+                                </a>
+
                                 {{-- Modal-Triggered Approve Button --}}
                                 <button type="button" @click="openApprove({{ json_encode($product) }})"
                                     class="flex-1 py-2 bg-stone-900 hover:bg-emerald-600 text-white text-[10px] font-bold uppercase tracking-wider rounded-xl transition-all cursor-pointer text-center">
@@ -222,6 +229,11 @@
                                     Revoke
                                 </button>
                             @elseif($productStatus === 'rejected')
+                                <a href="{{ url('/products/' . $product->id) }}" target="_blank"
+                                    title="Inspect product details"
+                                    class="px-2.5 py-2 bg-stone-100 hover:bg-stone-200 text-stone-700 text-[10px] font-bold uppercase tracking-wider rounded-xl transition-all text-center">
+                                    Inspect ↗
+                                </a>
                                 <button type="button" @click="openApprove({{ json_encode($product) }})"
                                     class="flex-1 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-[10px] font-bold uppercase tracking-wider rounded-xl transition-all cursor-pointer text-center">
                                     Re-Approve
