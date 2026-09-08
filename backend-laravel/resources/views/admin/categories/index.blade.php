@@ -57,7 +57,7 @@
     }
 }">
     {{-- ═══ PAGE HEADER ═══ --}}
-    <div class="flex flex-col sm:flex-row sm:items-start sm:items-center justify-between gap-4">
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div class="space-y-1">
             <div class="inline-flex items-center gap-2">
                 <span class="text-[9px] font-black uppercase tracking-[0.25em] text-[#C0422A]">Catalog Architecture</span>
@@ -69,7 +69,7 @@
             </h1>
             <p class="text-[11px] text-gray-400 font-medium">Define product categories and audience targeting groups</p>
         </div>
-        <div class="flex items-center gap-2 flex-shrink-0">
+        <div class="flex items-center gap-2 shrink-0">
             <form action="{{ route('admin.categories.initialize') }}" method="POST">
                 @csrf
                 <button type="submit" class="flex items-center gap-2 px-4 py-2.5 bg-gray-100 text-gray-600 rounded-xl text-[9px] font-bold uppercase tracking-widest hover:bg-gray-200 transition-all cursor-pointer border border-gray-200">

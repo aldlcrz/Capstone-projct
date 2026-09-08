@@ -341,7 +341,7 @@
         {{-- Table card --}}
         <div class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
             <div class="overflow-x-auto no-scrollbar">
-                <table class="w-full text-left min-w-[620px]">
+                <table class="w-full text-left min-w-155">
                     <thead>
                         <tr class="border-b border-gray-100 bg-gray-50/60">
                             <th class="px-5 py-2.5 text-[9px] font-black uppercase tracking-widest text-gray-400 w-[36%]">Seller &amp; Shop</th>
