@@ -249,16 +249,6 @@
                             Personal information &amp; artisan shop settings
                         </p>
                     </div>
-                </div>
-
-                {{-- Home Button (Hidden on mobile screens, visible on large screens aligned with title) --}}
-                <a href="{{ route('home') }}"
-                   class="hidden sm:inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-[#FAF6EE] border border-[#E2D9C8] text-[#78716C] hover:bg-[#1E1915] hover:text-[#DFC97A] hover:border-[#1E1915] font-bold text-[11px] uppercase tracking-wider transition-all shadow-2xs no-underline shrink-0">
-                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/>
-                    </svg>
-                    <span>Home</span>
-                </a>
             </div>
 
             {{-- Star Divider --}}
@@ -607,8 +597,8 @@
                         </svg>
                     </a>
 
-                    {{-- Logout Action --}}
-                    <div>
+                    {{-- Logout Action (Hidden on large screens for balanced 3x3 layout) --}}
+                    <div class="lg:hidden">
                         <form x-ref="sellerProfileLogoutForm" action="{{ route('logout') }}" method="POST">
                             @csrf
                             <button type="button"
