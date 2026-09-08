@@ -217,7 +217,7 @@
     {{-- ═══ ARCHIVE TABLE ═══ --}}
     <div class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
         <div class="overflow-x-auto no-scrollbar">
-            <table class="w-full text-left min-w-155">
+            <table class="w-full text-left min-w-[640px]">
                 <thead>
                     <tr class="border-b border-gray-100 bg-gray-50/60">
                         <th class="px-5 py-2.5 text-[9px] font-black uppercase tracking-widest text-gray-400 w-[36%]">Record &amp; Identifier</th>
@@ -237,7 +237,7 @@
                                 'seller'   => ['dot' => 'bg-amber-500',   'badge' => 'bg-amber-50 text-amber-700 border-amber-200/60',     'icon' => 'bg-amber-50 text-amber-600',    'emoji' => '🏪'],
                             ];
                             $tc = $typeConfig[$record->item_type] ?? ['dot' => 'bg-gray-400', 'badge' => 'bg-gray-50 text-gray-700 border-gray-200', 'icon' => 'bg-gray-50 text-gray-600', 'emoji' => '📄'];
-                            $daysOld = $record->created_at->diffInDays(now());
+                            $daysOld = (int) floor(abs($record->created_at->diffInDays(now())));
                             $daysLeft = max(0, 30 - $daysOld);
                             $expiryClass = $daysLeft <= 7 ? 'bg-red-50 text-red-700 border-red-200/80 font-black' : 'bg-gray-50 text-gray-600 border-gray-200/80 font-bold';
                         @endphp
@@ -245,7 +245,8 @@
                             {{-- Record & Identifier --}}
                             <td class="px-5 py-2">
                                 <div class="flex items-center gap-2.5">
-                                    <div class="w-8.5 h-8.5 rounded-xl {{ $tc['icon'] }} border border-gray-100 flex items-center justify-center font-bold text-xs shrink-0 overflow-hidden shadow-2xs">
+                                    <div class="w-8 h-8 rounded-xl {{ $tc['icon'] }} border border-gray-100 flex items-center justify-center font-bold text-xs shrink-0 overflow-hidden shadow-2xs"
+                                         style="width: 32px; height: 32px; min-width: 32px; min-height: 32px; max-width: 32px; max-height: 32px;">
                                         @if($record->item_type === 'product' && !empty($record->metadata['image']))
                                             @php
                                                 $rawImg = $record->metadata['image'];
@@ -254,13 +255,28 @@
                                                     $imgUrl = '/storage/' . ltrim($imgUrl, '/');
                                                 }
                                             @endphp
-                                            <img src="{{ $imgUrl }}" class="w-full h-full object-cover" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex'">
-                                            <span class="hidden w-full h-full items-center justify-center text-sm">{{ $tc['emoji'] }}</span>
+                                            <img src="{{ $imgUrl }}" class="w-full h-full object-cover" style="width: 32px; height: 32px; min-width: 32px; min-height: 32px; max-width: 32px; max-height: 32px; object-fit: cover;" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex'">
+                                            <span class="hidden w-full h-full items-center justify-center text-xs">{{ $tc['emoji'] }}</span>
                                         @elseif($record->item_type === 'category' && !empty($record->metadata['image']))
-                                            <img src="{{ $record->metadata['image'] }}" class="w-full h-full object-cover" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex'">
-                                            <span class="hidden w-full h-full items-center justify-center text-sm">{{ $tc['emoji'] }}</span>
+                                            @php
+                                                $catImg = $record->metadata['image'];
+                                                if ($catImg && !str_starts_with($catImg, 'http') && !str_starts_with($catImg, '/')) {
+                                                    $catImg = '/' . ltrim($catImg, '/');
+                                                }
+                                            @endphp
+                                            <img src="{{ $catImg }}" class="w-full h-full object-cover" style="width: 32px; height: 32px; min-width: 32px; min-height: 32px; max-width: 32px; max-height: 32px; object-fit: cover;" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex'">
+                                            <span class="hidden w-full h-full items-center justify-center text-xs">{{ $tc['emoji'] }}</span>
+                                        @elseif(($record->item_type === 'customer' || $record->item_type === 'seller') && !empty($record->metadata['profilePhoto']))
+                                            @php
+                                                $profImg = $record->metadata['profilePhoto'];
+                                                if ($profImg && !str_starts_with($profImg, 'http') && !str_starts_with($profImg, '/')) {
+                                                    $profImg = '/storage/' . ltrim($profImg, '/');
+                                                }
+                                            @endphp
+                                            <img src="{{ $profImg }}" class="w-full h-full object-cover" style="width: 32px; height: 32px; min-width: 32px; min-height: 32px; max-width: 32px; max-height: 32px; object-fit: cover;" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex'">
+                                            <span class="hidden w-full h-full items-center justify-center text-xs">{{ $tc['emoji'] }}</span>
                                         @else
-                                            <span class="text-sm">{{ $tc['emoji'] }}</span>
+                                            <span class="text-xs">{{ $tc['emoji'] }}</span>
                                         @endif
                                     </div>
                                     <div class="min-w-0">
@@ -289,7 +305,7 @@
                             {{-- Archived Info --}}
                             <td class="px-4 py-2 hidden md:table-cell">
                                 <div class="text-[11px] text-gray-600 font-medium leading-tight">
-                                    <span>Deleted <strong class="text-gray-900 font-bold">{{ $daysOld }}d ago</strong></span>
+                                    <span>Deleted <strong class="text-gray-900 font-bold">{{ $daysOld === 0 ? 'today' : $daysOld . 'd ago' }}</strong></span>
                                     <span class="text-gray-300">·</span>
                                     <span class="text-gray-500">{{ $record->archived_by ?: 'Admin' }}</span>
                                 </div>

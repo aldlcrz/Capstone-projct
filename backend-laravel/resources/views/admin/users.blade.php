@@ -73,7 +73,7 @@
         <a href="{{ request()->fullUrlWithQuery(['status' => null, 'page' => 1]) }}"
            class="group relative rounded-2xl px-4 py-3 flex items-center justify-between border transition-all duration-200 cursor-pointer {{ $isTotal ? 'bg-white border-gray-900 ring-2 ring-gray-900/15 shadow-sm -translate-y-0.5' : 'bg-white border-gray-100 hover:border-gray-300 hover:shadow-sm hover:-translate-y-0.5' }}">
             <div class="flex items-center gap-3">
-                <div class="w-8.5 h-8.5 rounded-xl flex items-center justify-center shrink-0 transition-colors {{ $isTotal ? 'bg-gray-900 text-white' : 'bg-gray-100 text-gray-500 group-hover:bg-gray-200' }}">
+                <div class="w-8 h-8 rounded-xl flex items-center justify-center shrink-0 transition-colors {{ $isTotal ? 'bg-gray-900 text-white' : 'bg-gray-100 text-gray-500 group-hover:bg-gray-200' }}">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
                 </div>
                 <div>
@@ -92,7 +92,7 @@
         <a href="{{ request()->fullUrlWithQuery(['status' => 'active', 'page' => 1]) }}"
            class="group relative rounded-2xl px-4 py-3 flex items-center justify-between border transition-all duration-200 cursor-pointer {{ $isActive ? 'bg-emerald-50/50 border-emerald-600 ring-2 ring-emerald-600/20 shadow-sm -translate-y-0.5' : 'bg-white border-green-100 hover:border-emerald-300 hover:shadow-sm hover:-translate-y-0.5' }}">
             <div class="flex items-center gap-3">
-                <div class="w-8.5 h-8.5 rounded-xl flex items-center justify-center shrink-0 transition-colors {{ $isActive ? 'bg-emerald-600 text-white' : 'bg-green-50 text-green-600 group-hover:bg-green-100' }}">
+                <div class="w-8 h-8 rounded-xl flex items-center justify-center shrink-0 transition-colors {{ $isActive ? 'bg-emerald-600 text-white' : 'bg-green-50 text-green-600 group-hover:bg-green-100' }}">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
                 </div>
                 <div>
@@ -111,7 +111,7 @@
         <a href="{{ request()->fullUrlWithQuery(['status' => 'blocked', 'page' => 1]) }}"
            class="group relative rounded-2xl px-4 py-3 flex items-center justify-between border transition-all duration-200 cursor-pointer {{ $isBlocked ? 'bg-red-50/50 border-red-600 ring-2 ring-red-600/20 shadow-sm -translate-y-0.5' : 'bg-white border-red-100 hover:border-red-300 hover:shadow-sm hover:-translate-y-0.5' }}">
             <div class="flex items-center gap-3">
-                <div class="w-8.5 h-8.5 rounded-xl flex items-center justify-center shrink-0 transition-colors {{ $isBlocked ? 'bg-red-600 text-white' : 'bg-red-50 text-red-500 group-hover:bg-red-100' }}">
+                <div class="w-8 h-8 rounded-xl flex items-center justify-center shrink-0 transition-colors {{ $isBlocked ? 'bg-red-600 text-white' : 'bg-red-50 text-red-500 group-hover:bg-red-100' }}">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"/></svg>
                 </div>
                 <div>
@@ -130,7 +130,7 @@
         <a href="{{ request()->fullUrlWithQuery(['status' => 'frozen', 'page' => 1]) }}"
            class="group relative rounded-2xl px-4 py-3 flex items-center justify-between border transition-all duration-200 cursor-pointer {{ $isFrozen ? 'bg-amber-50/50 border-amber-500 ring-2 ring-amber-500/20 shadow-sm -translate-y-0.5' : 'bg-white border-amber-100 hover:border-amber-300 hover:shadow-sm hover:-translate-y-0.5' }}">
             <div class="flex items-center gap-3">
-                <div class="w-8.5 h-8.5 rounded-xl flex items-center justify-center shrink-0 transition-colors {{ $isFrozen ? 'bg-amber-500 text-white' : 'bg-amber-50 text-amber-500 group-hover:bg-amber-100' }}">
+                <div class="w-8 h-8 rounded-xl flex items-center justify-center shrink-0 transition-colors {{ $isFrozen ? 'bg-amber-500 text-white' : 'bg-amber-50 text-amber-500 group-hover:bg-amber-100' }}">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/></svg>
                 </div>
                 <div>
@@ -164,7 +164,7 @@
         {{-- Table card --}}
         <div class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
             <div class="overflow-x-auto no-scrollbar">
-                <table class="w-full text-left min-w-145">
+                <table class="w-full text-left min-w-[580px]">
                     <thead>
                         <tr class="border-b border-gray-100 bg-gray-50/60">
                             <th class="px-5 py-2.5 text-[9px] font-black uppercase tracking-widest text-gray-400 w-[38%]">Customer</th>
@@ -187,9 +187,12 @@
                                 {{-- Customer Identity --}}
                                 <td class="px-5 py-2">
                                     <div class="flex items-center gap-2.5">
-                                        <div class="w-8 h-8 rounded-full bg-gray-100 ring-2 {{ $sc['ring'] }} flex items-center justify-center font-bold text-xs text-gray-700 shrink-0 overflow-hidden transition-all shadow-xs">
+                                        <div class="w-8 h-8 rounded-full bg-gray-100 ring-2 {{ $sc['ring'] }} flex items-center justify-center font-bold text-xs text-gray-700 shrink-0 overflow-hidden transition-all shadow-xs"
+                                             style="width: 32px; height: 32px; min-width: 32px; min-height: 32px; max-width: 32px; max-height: 32px;">
                                             @if($user->profilePhoto)
-                                                <img src="{{ str_starts_with($user->profilePhoto, 'http') || str_starts_with($user->profilePhoto, '/') ? $user->profilePhoto : asset('storage/' . $user->profilePhoto) }}" class="w-full h-full object-cover">
+                                                <img src="{{ str_starts_with($user->profilePhoto, 'http') || str_starts_with($user->profilePhoto, '/') ? $user->profilePhoto : asset('storage/' . $user->profilePhoto) }}"
+                                                     class="w-full h-full object-cover"
+                                                     style="width: 32px; height: 32px; min-width: 32px; min-height: 32px; max-width: 32px; max-height: 32px; object-fit: cover;">
                                             @else
                                                 <span class="text-xs font-bold text-gray-600">{{ strtoupper(substr($user->name, 0, 1)) }}</span>
                                             @endif
