@@ -9,57 +9,132 @@
 })">
 
     {{-- Page Header --}}
-    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+    <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-            <div class="text-[10px] font-bold text-[#C0422A] uppercase tracking-[0.2em] mb-1">Content Management</div>
-            <h1 class="font-serif text-2xl sm:text-3xl font-bold text-black">Homepage <span class="text-[#C0420A] font-light italic">Promotions</span></h1>
-            <p class="text-xs text-gray-500 mt-1">Feature artisan products, shops, and seasonal hero campaigns on the marketplace homepage.</p>
+            <div class="text-[9px] font-black tracking-widest text-[#C0422A] uppercase flex items-center gap-1.5 mb-1.5">
+                <span>PROMOTIONS & HERO</span>
+                <span class="text-gray-300">·</span>
+                <span>ADMIN CENTER</span>
+            </div>
+            <h1 class="font-serif text-2xl sm:text-3xl font-bold text-gray-900">
+                Homepage <span class="text-[#C0422A] font-light italic">Promotions</span>
+            </h1>
+            <p class="text-[11px] text-gray-500 mt-1 font-medium">Curate artisan spotlights, seasonal hero campaigns, and banner sequence across the marketplace homepage.</p>
         </div>
-        <div class="flex items-center gap-2.5">
+        <div class="flex items-center gap-3">
             <button @click="openAddModal()"
-                class="flex items-center gap-2 px-5 sm:px-6 py-2.5 sm:py-3 bg-[#3D2B1F] text-white rounded-xl text-[9px] sm:text-[10px] font-bold uppercase tracking-widest hover:bg-[#C0422A] shadow-sm transition-all cursor-pointer">
+                class="inline-flex items-center gap-2 px-5 py-2.5 bg-[#3D2B1F] text-white rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-[#C0422A] shadow-xs hover:shadow-md transition-all cursor-pointer">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"/>
                 </svg>
-                Add Promotion
+                New Campaign
             </button>
+        </div>
+    </div>
+
+    @php
+        $totalBanners = $banners->count();
+        $liveBanners = $banners->filter(fn($b) => $b->isCurrentlyLive())->count();
+        $nowTime = now();
+        $scheduledBanners = $banners->filter(fn($b) => $b->is_active && $b->start_date && $b->start_date > $nowTime)->count();
+        $inactiveBanners = $banners->filter(fn($b) => !$b->is_active || ($b->end_date && $b->end_date < $nowTime))->count();
+    @endphp
+
+    {{-- 4-Metric Stats Bar --}}
+    <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+        <div class="bg-white rounded-2xl border border-gray-100 shadow-xs px-4 py-3.5 flex items-center gap-3 hover:shadow-md transition-all">
+            <div class="w-9 h-9 rounded-xl bg-gray-50 border border-gray-100 flex items-center justify-center shrink-0">
+                <svg class="w-4 h-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                </svg>
+            </div>
+            <div>
+                <div class="text-lg font-black text-gray-900 leading-tight">{{ $totalBanners }}</div>
+                <div class="text-[9px] font-bold uppercase tracking-wider text-gray-400">Total Campaigns</div>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-2xl border border-emerald-100 shadow-xs px-4 py-3.5 flex items-center gap-3 hover:shadow-md transition-all">
+            <div class="w-9 h-9 rounded-xl bg-emerald-50 border border-emerald-100 flex items-center justify-center shrink-0">
+                <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse"></span>
+            </div>
+            <div>
+                <div class="text-lg font-black text-emerald-700 leading-tight">{{ $liveBanners }}</div>
+                <div class="text-[9px] font-bold uppercase tracking-wider text-emerald-500">Currently Live</div>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-2xl border border-sky-100 shadow-xs px-4 py-3.5 flex items-center gap-3 hover:shadow-md transition-all">
+            <div class="w-9 h-9 rounded-xl bg-sky-50 border border-sky-100 flex items-center justify-center shrink-0">
+                <svg class="w-4 h-4 text-sky-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                </svg>
+            </div>
+            <div>
+                <div class="text-lg font-black text-sky-700 leading-tight">{{ $scheduledBanners }}</div>
+                <div class="text-[9px] font-bold uppercase tracking-wider text-sky-500">Upcoming / Queued</div>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-2xl border border-amber-100 shadow-xs px-4 py-3.5 flex items-center gap-3 hover:shadow-md transition-all">
+            <div class="w-9 h-9 rounded-xl bg-amber-50 border border-amber-100 flex items-center justify-center shrink-0">
+                <svg class="w-4 h-4 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l18 18"/>
+                </svg>
+            </div>
+            <div>
+                <div class="text-lg font-black text-amber-700 leading-tight">{{ $inactiveBanners }}</div>
+                <div class="text-[9px] font-bold uppercase tracking-wider text-amber-500">Offline / Expired</div>
+            </div>
+        </div>
+    </div>
+
+    {{-- Hero Carousel Priority Notice --}}
+    <div class="bg-linear-to-r from-amber-50/80 via-orange-50/40 to-amber-50/80 rounded-2xl border border-amber-200/70 p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-xs">
+        <div class="flex items-center gap-3">
+            <div class="w-9 h-9 rounded-xl bg-amber-100 flex items-center justify-center shrink-0 text-[#C0422A]">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                </svg>
+            </div>
+            <div>
+                <div class="text-xs font-bold text-amber-950">Hero Carousel Priority Sequence</div>
+                <p class="text-[11px] text-amber-800/80">Order <strong>#1</strong> appears first on the marketplace homepage. Use arrow buttons to reorder active slides in real time.</p>
+            </div>
+        </div>
+        <div class="flex items-center gap-1.5 self-end sm:self-auto text-[10px] font-black uppercase tracking-wider text-amber-800 bg-white/80 px-3 py-1.5 rounded-xl border border-amber-200/60 shadow-xs">
+            <span class="w-1.5 h-1.5 rounded-full bg-amber-500"></span>
+            <span>Instant Reordering</span>
         </div>
     </div>
 
     {{-- ── ALL PROMOTIONS ── --}}
     <div class="space-y-4">
         @if($banners->isEmpty())
-            <div class="bg-white rounded-3xl border border-gray-100 p-16 text-center shadow-sm">
-                <div class="w-16 h-16 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-4 border border-gray-100">
+            <div class="bg-white rounded-3xl border border-gray-100 p-16 text-center shadow-xs">
+                <div class="w-16 h-16 bg-gray-50 rounded-2xl flex items-center justify-center mx-auto mb-4 border border-gray-100">
                     <svg class="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/>
                     </svg>
                 </div>
-                <h3 class="text-sm font-bold text-black uppercase tracking-widest mb-1">No Promotions Created</h3>
-                <p class="text-xs text-gray-500 max-w-sm mx-auto mb-6">Quickly feature products from shops or upload custom banner campaigns.</p>
-                <button @click="openAddModal()" class="px-6 py-2.5 bg-[#3D2B1F] text-white rounded-xl text-xs font-bold uppercase tracking-widest hover:bg-[#C0422A] transition-all cursor-pointer">
+                <h3 class="text-sm font-bold text-gray-900 uppercase tracking-wider mb-1">No Promotions Created</h3>
+                <p class="text-xs text-gray-500 max-w-sm mx-auto mb-6">Quickly feature products from verified shops or upload custom banner campaigns for the homepage.</p>
+                <button @click="openAddModal()" class="px-6 py-2.5 bg-[#3D2B1F] text-white rounded-xl text-xs font-bold uppercase tracking-widest hover:bg-[#C0422A] transition-all cursor-pointer shadow-xs">
                     Feature First Product / Promotion
                 </button>
             </div>
         @else
-            <div class="bg-white rounded-3xl border border-gray-100 overflow-hidden shadow-sm">
-                <div class="p-4 bg-amber-50/40 border-b border-amber-100/60 flex items-center justify-between text-xs text-amber-900">
-                    <div class="flex items-center gap-2">
-                        <svg class="w-4 h-4 text-[#C0422A]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-                        <span><strong>Hero Carousel Order:</strong> Order <strong>#1</strong> appears first on the homepage. Use arrow buttons to reorder.</span>
-                    </div>
-                </div>
-
+            <div class="bg-white rounded-3xl border border-gray-100 overflow-hidden shadow-xs">
                 <div class="overflow-x-auto">
                     <table class="w-full text-left border-collapse">
                         <thead>
-                            <tr class="bg-gray-50/50">
-                                <th class="px-5 py-4 text-[10px] font-black text-gray-700 uppercase tracking-widest text-center w-24">Order</th>
-                                <th class="px-5 py-4 text-[10px] font-black text-gray-700 uppercase tracking-widest w-40">Preview</th>
-                                <th class="px-5 py-4 text-[10px] font-black text-gray-700 uppercase tracking-widest">Promotion Details</th>
-                                <th class="px-5 py-4 text-[10px] font-black text-gray-700 uppercase tracking-widest w-44">Schedule</th>
-                                <th class="px-5 py-4 text-[10px] font-black text-gray-700 uppercase tracking-widest text-center w-28">Status</th>
-                                <th class="px-5 py-4 text-[10px] font-black text-gray-700 uppercase tracking-widest text-right w-32">Actions</th>
+                            <tr class="bg-gray-50/60 border-b border-gray-100">
+                                <th class="px-5 py-4 text-[10px] font-black text-gray-500 uppercase tracking-widest text-center w-24">Order</th>
+                                <th class="px-5 py-4 text-[10px] font-black text-gray-500 uppercase tracking-widest w-44">Preview</th>
+                                <th class="px-5 py-4 text-[10px] font-black text-gray-500 uppercase tracking-widest">Promotion Details</th>
+                                <th class="px-5 py-4 text-[10px] font-black text-gray-500 uppercase tracking-widest w-48">Schedule</th>
+                                <th class="px-5 py-4 text-[10px] font-black text-gray-500 uppercase tracking-widest text-center w-32">Status</th>
+                                <th class="px-5 py-4 text-[10px] font-black text-gray-500 uppercase tracking-widest text-right w-36">Actions</th>
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-gray-50">
@@ -70,21 +145,21 @@
                                     $isScheduled = $banner->is_active && $banner->start_date && $banner->start_date > $now;
                                     $isExpired = $banner->is_active && $banner->end_date && $banner->end_date < $now;
                                 @endphp
-                                <tr class="hover:bg-gray-50/60 transition-colors group">
+                                <tr class="hover:bg-gray-50/50 transition-colors group">
                                     {{-- Order Controls --}}
                                     <td class="px-5 py-4 text-center">
                                         <div class="flex items-center justify-center gap-1.5">
-                                            <span class="w-6 h-6 rounded-lg bg-gray-100 text-gray-800 font-mono text-xs font-bold flex items-center justify-center">
+                                            <span class="w-7 h-7 rounded-xl bg-gray-100 border border-gray-200/80 text-gray-800 font-mono text-xs font-black flex items-center justify-center shadow-xs">
                                                 {{ $banner->order_index }}
                                             </span>
                                             <div class="flex flex-col gap-0.5">
                                                 @if($index > 0)
-                                                    <button type="button" @click="moveBanner({{ $index }}, 'up')" class="p-0.5 text-gray-400 hover:text-black transition-colors" title="Move Up">
+                                                    <button type="button" @click="moveBanner({{ $index }}, 'up')" class="p-1 rounded-md text-gray-400 hover:text-[#C0422A] hover:bg-orange-50 transition-colors cursor-pointer" title="Move Up">
                                                         <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 15l7-7 7 7"/></svg>
                                                     </button>
                                                 @endif
                                                 @if($index < count($banners) - 1)
-                                                    <button type="button" @click="moveBanner({{ $index }}, 'down')" class="p-0.5 text-gray-400 hover:text-black transition-colors" title="Move Down">
+                                                    <button type="button" @click="moveBanner({{ $index }}, 'down')" class="p-1 rounded-md text-gray-400 hover:text-[#C0422A] hover:bg-orange-50 transition-colors cursor-pointer" title="Move Down">
                                                         <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7"/></svg>
                                                     </button>
                                                 @endif
@@ -94,30 +169,37 @@
 
                                     {{-- Preview Image --}}
                                     <td class="px-5 py-4">
-                                        <div class="w-36 aspect-video rounded-xl overflow-hidden bg-gray-900 border border-gray-100 shadow-xs relative">
-                                            <img src="{{ $banner->getImageUrl() }}" class="w-full h-full object-cover" alt="Banner">
-                                            <div class="absolute inset-0 bg-linear-to-r from-black/60 to-transparent"></div>
+                                        <div class="w-40 aspect-video rounded-xl overflow-hidden bg-gray-950 border border-gray-200/80 shadow-xs relative group/img">
+                                            <img src="{{ $banner->getImageUrl() }}" class="w-full h-full object-cover transition-transform duration-300 group-hover/img:scale-105" alt="Banner">
+                                            <div class="absolute inset-0 bg-linear-to-t from-black/60 via-transparent to-transparent"></div>
                                         </div>
                                     </td>
 
                                     {{-- Details --}}
                                     <td class="px-5 py-4">
-                                        <div class="space-y-1">
+                                        <div class="space-y-1.5">
                                             @if($banner->subtitle)
-                                                <div class="text-[9px] font-bold text-amber-600 uppercase tracking-widest">{{ $banner->subtitle }}</div>
+                                                <div class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-amber-50 border border-amber-200/60 text-[9px] font-black text-amber-700 uppercase tracking-widest">
+                                                    {{ $banner->subtitle }}
+                                                </div>
                                             @endif
-                                            <div class="text-sm font-extrabold text-gray-900">{{ $banner->title ?: 'Untitled Promotion' }}</div>
+                                            <div class="text-sm font-bold text-gray-900">{{ $banner->title ?: 'Untitled Promotion' }}</div>
                                             
                                             <div class="flex items-center gap-2 flex-wrap pt-0.5">
                                                 @if($banner->button_text_1 && $banner->button_url_1)
-                                                    <span class="inline-flex items-center gap-1 px-2 py-0.5 bg-gray-100 text-gray-700 rounded text-[9px] font-bold">
+                                                    <span class="inline-flex items-center gap-1.5 px-2.5 py-1 bg-gray-50 border border-gray-200/60 text-gray-700 rounded-lg text-[9px] font-bold">
                                                         <span class="w-1.5 h-1.5 rounded-full bg-[#C0422A]"></span>
-                                                        {{ $banner->button_text_1 }} → <span class="text-gray-500 font-normal font-mono">{{ Str::limit($banner->button_url_1, 28) }}</span>
+                                                        {{ $banner->button_text_1 }}
+                                                        <span class="text-gray-400 font-normal">→</span>
+                                                        <span class="text-gray-500 font-mono font-normal">{{ Str::limit($banner->button_url_1, 26) }}</span>
                                                     </span>
                                                 @endif
                                                 @if($banner->button_text_2 && $banner->button_url_2)
-                                                    <span class="inline-flex items-center gap-1 px-2 py-0.5 bg-gray-100 text-gray-700 rounded text-[9px] font-bold">
-                                                        {{ $banner->button_text_2 }} → <span class="text-gray-500 font-normal font-mono">{{ Str::limit($banner->button_url_2, 28) }}</span>
+                                                    <span class="inline-flex items-center gap-1.5 px-2.5 py-1 bg-gray-50 border border-gray-200/60 text-gray-700 rounded-lg text-[9px] font-bold">
+                                                        <span class="w-1.5 h-1.5 rounded-full bg-gray-400"></span>
+                                                        {{ $banner->button_text_2 }}
+                                                        <span class="text-gray-400 font-normal">→</span>
+                                                        <span class="text-gray-500 font-mono font-normal">{{ Str::limit($banner->button_url_2, 26) }}</span>
                                                     </span>
                                                 @endif
                                             </div>
@@ -125,18 +207,29 @@
                                     </td>
 
                                     {{-- Schedule info --}}
-                                    <td class="px-5 py-4 text-xs text-gray-600">
+                                    <td class="px-5 py-4">
                                         @if($banner->start_date || $banner->end_date)
-                                            <div class="space-y-0.5 text-[10px]">
+                                            <div class="space-y-1 text-[10px] bg-gray-50/80 border border-gray-100 rounded-xl p-2.5">
                                                 @if($banner->start_date)
-                                                    <div><span class="text-gray-400 font-medium">Start:</span> {{ $banner->start_date->format('M d, Y h:i A') }}</div>
+                                                    <div class="flex items-center gap-1.5 text-gray-600">
+                                                        <span class="text-gray-400 font-semibold uppercase text-[8px] w-8">From</span>
+                                                        <span class="font-medium text-gray-800">{{ $banner->start_date->format('M d, Y') }}</span>
+                                                        <span class="text-gray-400">{{ $banner->start_date->format('h:i A') }}</span>
+                                                    </div>
                                                 @endif
                                                 @if($banner->end_date)
-                                                    <div><span class="text-gray-400 font-medium">End:</span> {{ $banner->end_date->format('M d, Y h:i A') }}</div>
+                                                    <div class="flex items-center gap-1.5 text-gray-600">
+                                                        <span class="text-gray-400 font-semibold uppercase text-[8px] w-8">Until</span>
+                                                        <span class="font-medium text-gray-800">{{ $banner->end_date->format('M d, Y') }}</span>
+                                                        <span class="text-gray-400">{{ $banner->end_date->format('h:i A') }}</span>
+                                                    </div>
                                                 @endif
                                             </div>
                                         @else
-                                            <span class="text-[10px] text-gray-400 italic">Always active</span>
+                                            <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-[10px] font-semibold text-gray-400 italic bg-gray-50 border border-gray-100">
+                                                <svg class="w-3 h-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                                                Always active
+                                            </span>
                                         @endif
                                     </td>
 
@@ -147,16 +240,16 @@
                                                 Hidden
                                             </span>
                                         @elseif($isLive)
-                                            <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[9px] font-black uppercase tracking-wider bg-green-50 text-green-700 border border-green-200">
-                                                <span class="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse"></span>
+                                            <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-wider bg-emerald-50 text-emerald-700 border border-emerald-200/80 shadow-xs">
+                                                <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
                                                 Live Now
                                             </span>
                                         @elseif($isScheduled)
-                                            <span class="inline-flex items-center px-2.5 py-1 rounded-full text-[9px] font-black uppercase tracking-wider bg-blue-50 text-blue-700 border border-blue-200">
+                                            <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[9px] font-black uppercase tracking-wider bg-sky-50 text-sky-700 border border-sky-200/80 shadow-xs">
                                                 Scheduled
                                             </span>
                                         @elseif($isExpired)
-                                            <span class="inline-flex items-center px-2.5 py-1 rounded-full text-[9px] font-black uppercase tracking-wider bg-amber-50 text-amber-700 border border-amber-200">
+                                            <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[9px] font-black uppercase tracking-wider bg-amber-50 text-amber-700 border border-amber-200/80 shadow-xs">
                                                 Expired
                                             </span>
                                         @endif
@@ -164,21 +257,24 @@
 
                                     {{-- Actions --}}
                                     <td class="px-5 py-4 text-right">
-                                        <div class="flex items-center justify-end gap-1">
+                                        <div class="flex items-center justify-end gap-1.5">
                                             <form action="{{ route('admin.banners.toggle', $banner->id) }}" method="POST" class="inline">
                                                 @csrf @method('PATCH')
-                                                <button type="submit" class="p-2 text-gray-400 hover:text-black transition-colors" title="{{ $banner->is_active ? 'Hide Promotion' : 'Show Promotion' }}">
+                                                <button type="submit" 
+                                                    class="w-8 h-8 rounded-xl border border-gray-200/80 bg-white hover:bg-gray-50 flex items-center justify-center text-gray-500 hover:text-gray-900 transition-all cursor-pointer shadow-2xs" 
+                                                    title="{{ $banner->is_active ? 'Hide Promotion' : 'Show Promotion' }}">
                                                     @if($banner->is_active)
-                                                        <svg class="w-4 h-4 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+                                                        <svg class="w-4 h-4 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
                                                     @else
-                                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l18 18"/></svg>
+                                                        <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l18 18"/></svg>
                                                     @endif
                                                 </button>
                                             </form>
 
                                             <button @click="openEditModal({{ Js::from($banner) }})"
-                                                class="p-2 text-gray-500 hover:text-black transition-colors cursor-pointer" title="Edit Promotion">
-                                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                class="w-8 h-8 rounded-xl border border-gray-200/80 bg-white hover:bg-gray-50 flex items-center justify-center text-gray-500 hover:text-gray-900 transition-all cursor-pointer shadow-2xs" 
+                                                title="Edit Promotion">
+                                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/>
                                                 </svg>
                                             </button>
@@ -186,8 +282,10 @@
                                             <form action="{{ route('admin.banners.destroy', $banner->id) }}" method="POST" class="inline"
                                                 onsubmit="return confirm('Are you sure you want to delete this promotion?')">
                                                 @csrf @method('DELETE')
-                                                <button type="submit" class="p-2 text-gray-400 hover:text-red-600 transition-colors cursor-pointer" title="Delete Promotion">
-                                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <button type="submit" 
+                                                    class="w-8 h-8 rounded-xl border border-red-100 bg-white hover:bg-red-50 flex items-center justify-center text-red-500 hover:text-red-700 transition-all cursor-pointer shadow-2xs" 
+                                                    title="Delete Promotion">
+                                                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
                                                     </svg>
                                                 </button>
