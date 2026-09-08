@@ -12,16 +12,16 @@
     <div class="w-full max-w-125 lg:max-w-5xl mx-auto transition-all duration-300"
          style="background-color:#FDFBF7;border:1px solid #EAE2D2;border-radius:28px;box-shadow:0 20px 50px rgba(0,0,0,0.06);padding:26px 24px;color:#1E1915;">
 
-        {{-- Navigation Back Button --}}
-        <div style="margin-bottom:16px;display:flex;align-items:center;justify-content:space-between;">
-            <button type="button" 
-                    onclick="if(window.history.length > 1) { window.history.back(); } else { window.location.href='/'; }"
-                    style="display:inline-flex;align-items:center;gap:6px;background-color:#FAF6EE;border:1px solid #E2D9C8;color:#78716C;padding:6px 14px;border-radius:12px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.05em;cursor:pointer;transition:all 0.2s;"
-                    class="hover:bg-[#1E1915] hover:text-[#DFC97A] hover:border-[#1E1915] shadow-2xs">
-                <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.2"><path stroke-linecap="round" stroke-linejoin="round" d="M10 19l-7-7m0 0l7-7m-7 7h18"/></svg>
-                <span>Back</span>
-            </button>
-            <span style="font-size:10px;font-weight:800;color:#996515;letter-spacing:0.12em;text-transform:uppercase;">Customer Profile</span>
+        {{-- Navigation Home Button (Hidden on mobile screens, visible on large screens) --}}
+        <div class="mb-4 flex items-center justify-between">
+            <a href="{{ route('home') }}"
+               class="hidden sm:inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-[#FAF6EE] border border-[#E2D9C8] text-[#78716C] hover:bg-[#1E1915] hover:text-[#DFC97A] hover:border-[#1E1915] font-bold text-[11px] uppercase tracking-wider transition-all shadow-2xs no-underline">
+                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/>
+                </svg>
+                <span>Home</span>
+            </a>
+            <span class="text-[10px] font-extrabold text-[#996515] uppercase tracking-widest ml-auto">Customer Profile</span>
         </div>
 
         {{-- Top Header with Heraldic Laurel Wreath --}}
