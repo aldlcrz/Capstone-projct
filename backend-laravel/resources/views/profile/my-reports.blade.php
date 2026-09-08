@@ -6,14 +6,14 @@
 
     <div class="w-full max-w-3xl mx-auto bg-[#FDFBF7] border border-[#EAE2D2] rounded-2xl sm:rounded-[28px] shadow-[0_12px_40px_rgba(0,0,0,0.05)] p-4 sm:p-7 text-[#1E1915]">
 
-        {{-- Top Navigation Bar --}}
+        {{-- Top Navigation Bar (Back button hidden on mobile screens) --}}
         <div class="flex items-center justify-between gap-3 pb-3 sm:pb-4 border-b border-[#EAE1D0]">
             <a href="{{ route('profile') }}"
-               class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-[#FAF6EE] border border-[#E2D9C8] text-[#78716C] hover:bg-[#1E1915] hover:text-[#DFC97A] hover:border-[#1E1915] font-bold text-[11px] uppercase tracking-wider transition-all shadow-2xs no-underline">
+               class="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-[#FAF6EE] border border-[#E2D9C8] text-[#78716C] hover:bg-[#1E1915] hover:text-[#DFC97A] hover:border-[#1E1915] font-bold text-[11px] uppercase tracking-wider transition-all shadow-2xs no-underline">
                 <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.2"><path stroke-linecap="round" stroke-linejoin="round" d="M10 19l-7-7m0 0l7-7m-7 7h18"/></svg>
                 <span>Back to Profile</span>
             </a>
-            <span class="text-[9.5px] font-black uppercase tracking-widest text-[#996515]">Trust &amp; Safety</span>
+            <span class="text-[9.5px] font-black uppercase tracking-widest text-[#996515] ml-auto">Trust &amp; Safety</span>
         </div>
 
         {{-- Header Section --}}
@@ -53,61 +53,54 @@
                     $rType = $report->reportType ?? (!empty($report->productId) ? 'product' : 'account');
                 @endphp
 
-                {{-- Compact Report Pill --}}
+                {{-- Compact Report Pill (Optimized for mobile without truncation or wrapping issues) --}}
                 <div @click="activeReportId = '{{ $report->id }}'"
-                     class="p-3 sm:p-4 rounded-2xl bg-white border border-[#E8DECB] shadow-2xs hover:border-[#C49520] hover:shadow-md hover:bg-[#FAF8F5] transition-all cursor-pointer flex items-center justify-between gap-3 group">
+                     class="p-3.5 sm:p-4 rounded-2xl bg-white border border-[#E8DECB] shadow-2xs hover:border-[#C49520] hover:shadow-md hover:bg-[#FAF8F5] transition-all cursor-pointer space-y-2 group">
                     
-                    {{-- Left Details --}}
-                    <div class="flex items-center gap-3 min-w-0">
-                        {{-- Shield Medallion Icon --}}
-                        <div class="w-9 h-9 sm:w-10 sm:h-10 rounded-xl flex items-center justify-center shrink-0 border border-[#E6D8BA] bg-[#FAF5EA] text-[#B88728] group-hover:scale-105 group-hover:bg-[#1E1915] group-hover:text-[#DFC97A] group-hover:border-[#1E1915] transition-all">
-                            <svg class="w-4.5 h-4.5 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>
-                            </svg>
+                    {{-- Top Row: Code & Tag on left, Status Pill on right --}}
+                    <div class="flex items-center justify-between gap-2">
+                        <div class="flex items-center gap-1.5 flex-wrap">
+                            <span class="font-mono text-xs font-black text-[#1E1915] bg-[#FAF6EE] border border-[#E8DECB] px-2 py-0.5 rounded-md tracking-tight">
+                                {{ $report->getReportCode() }}
+                            </span>
+                            <span class="text-[9.5px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-md {{ $rType === 'product' ? 'bg-blue-50 text-blue-700 border border-blue-200' : 'bg-amber-50 text-amber-800 border border-amber-200' }}">
+                                {{ $rType === 'product' ? '📦 Product' : '👤 Account' }}
+                            </span>
                         </div>
-
-                        {{-- Code, Reason & Target --}}
-                        <div class="min-w-0 flex-1">
-                            <div class="flex items-center gap-1.5 flex-wrap">
-                                <span class="font-mono text-[11px] sm:text-xs font-black text-[#1E1915] bg-[#FAF6EE] border border-[#E8DECB] px-2 py-0.5 rounded-md">
-                                    {{ $report->getReportCode() }}
-                                </span>
-                                <span class="text-[9px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-md {{ $rType === 'product' ? 'bg-blue-50 text-blue-700 border border-blue-200' : 'bg-amber-50 text-amber-800 border border-amber-200' }}">
-                                    {{ $rType === 'product' ? '📦 Product' : '👤 Account' }}
-                                </span>
-                            </div>
-
-                            <div class="text-xs sm:text-sm font-bold text-[#1E1915] truncate mt-1 group-hover:text-[#996515] transition-colors">
-                                {{ $report->reason }}
-                            </div>
-
-                            <div class="text-[11px] text-[#766C60] truncate mt-0.5">
-                                @if($report->product)
-                                    <span>Product: <strong>{{ $report->product->name }}</strong></span>
-                                @elseif($report->reported)
-                                    <span>Shop: <strong>{{ $report->reported->shopName ?: $report->reported->name }}</strong></span>
-                                @endif
-                                <span class="mx-1 text-[#D8CEBE]">&bull;</span>
-                                <span>{{ $report->createdAt->format('M d, Y') }}</span>
-                            </div>
-                        </div>
-                    </div>
-
-                    {{-- Right Status Pill & Navigation Chevron --}}
-                    <div class="flex items-center gap-2 shrink-0">
-                        <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-extrabold uppercase tracking-wider border {{ $statusConfig['class'] }}">
+                        <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-extrabold uppercase tracking-wider border shrink-0 {{ $statusConfig['class'] }}">
                             {{ $statusConfig['label'] }}
                         </span>
-                        <svg class="w-4 h-4 text-[#8C827A] group-hover:text-[#1E1915] group-hover:translate-x-0.5 transition-all hidden sm:block" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.2">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/>
-                        </svg>
+                    </div>
+
+                    {{-- Bottom Row: Reason & Target on left, Open Chevron on right --}}
+                    <div class="flex items-center justify-between gap-2 pt-0.5">
+                        <div class="min-w-0 flex-1">
+                            <div class="text-sm font-bold text-[#1E1915] truncate group-hover:text-[#996515] transition-colors">
+                                {{ $report->reason }}
+                            </div>
+                            <div class="text-[11px] text-[#766C60] truncate mt-0.5 flex items-center gap-1.5">
+                                @if($report->product)
+                                    <span class="truncate">Product: <strong class="text-[#1E1915]">{{ $report->product->name }}</strong></span>
+                                @elseif($report->reported)
+                                    <span class="truncate">Shop: <strong class="text-[#1E1915]">{{ $report->reported->shopName ?: $report->reported->name }}</strong></span>
+                                @endif
+                                <span class="text-[#D8CEBE] shrink-0">&bull;</span>
+                                <span class="shrink-0">{{ $report->createdAt->format('M d, Y') }}</span>
+                            </div>
+                        </div>
+
+                        <div class="w-7 h-7 rounded-lg bg-[#FAF6EE] border border-[#E2D9C8] flex items-center justify-center text-[#78716C] group-hover:bg-[#1E1915] group-hover:text-[#DFC97A] group-hover:border-[#1E1915] transition-all shrink-0">
+                            <svg class="w-3.5 h-3.5 group-hover:translate-x-0.5 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.2">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/>
+                            </svg>
+                        </div>
                     </div>
                 </div>
             @empty
                 <div class="py-12 sm:py-16 text-center rounded-2xl border-2 border-dashed border-[#E8DECB] bg-white p-6">
                     <div class="text-3xl mb-2">🛡️</div>
                     <h3 class="font-serif text-base sm:text-lg font-bold text-[#1E1915] m-0">No Reports Filed</h3>
-                    <p class="text-xs text-[#766C60] mt-1.5 max-w-sm mx-auto leading-relaxed">
+                    <p class="text-xs text-[#78716C] mt-1.5 max-w-sm mx-auto leading-relaxed">
                         You have not submitted any trust &amp; safety reports. When you report concerns regarding shops or products, they will appear here with live tracking.
                     </p>
                 </div>
@@ -135,7 +128,7 @@
          x-transition:leave-end="opacity-0 scale-95"
          @keydown.escape.window="activeReportId = null">
 
-        <div class="relative w-full max-w-lg bg-[#FDFBF7] border border-[#EAE2D2] rounded-2xl sm:rounded-3xl p-5 sm:p-6 shadow-2xl max-h-[90vh] overflow-y-auto text-[#1E1915]"
+        <div class="relative w-full max-w-lg bg-[#FDFBF7] border border-[#EAE2D2] rounded-2xl sm:rounded-3xl p-4 sm:p-6 shadow-2xl max-h-[90vh] overflow-y-auto text-[#1E1915]"
              @click.away="activeReportId = null">
 
             @foreach($reports as $report)
@@ -186,14 +179,14 @@
                     </div>
 
                     {{-- Reason & Customer Statement --}}
-                    <div class="bg-white border border-[#E8DECB] p-4 rounded-xl shadow-2xs space-y-2">
+                    <div class="bg-white border border-[#E8DECB] p-3.5 sm:p-4 rounded-xl shadow-2xs space-y-2">
                         <div class="text-xs font-bold uppercase tracking-wider text-[#A09585]">Reported Concern</div>
                         <div class="text-sm sm:text-base font-bold text-[#1E1915]">
                             {{ $report->reason }}
                         </div>
 
                         @if($report->description)
-                            <div class="mt-3 p-3 rounded-xl bg-[#FAF8F5] border border-[#ECE3D2] text-xs text-[#59514A] leading-relaxed">
+                            <div class="mt-2.5 p-3 rounded-xl bg-[#FAF8F5] border border-[#ECE3D2] text-xs text-[#59514A] leading-relaxed">
                                 <span class="text-[9.5px] font-bold uppercase tracking-wider text-[#996515] block mb-1">Your Submitted Statement:</span>
                                 <p class="m-0 wrap-break-word whitespace-pre-line">{{ $report->description }}</p>
                             </div>
@@ -201,7 +194,7 @@
                     </div>
 
                     {{-- Reported Subject --}}
-                    <div class="bg-white border border-[#E8DECB] p-4 rounded-xl shadow-2xs space-y-1.5">
+                    <div class="bg-white border border-[#E8DECB] p-3.5 sm:p-4 rounded-xl shadow-2xs space-y-1.5">
                         <div class="text-xs font-bold uppercase tracking-wider text-[#A09585]">Reported Target</div>
                         @if($report->product)
                             <div class="flex items-center gap-3 pt-1">
@@ -228,8 +221,8 @@
                         @endif
                     </div>
 
-                    {{-- Investigation Timeline --}}
-                    <div class="bg-white border border-[#E8DECB] p-4 rounded-xl shadow-2xs space-y-3">
+                    {{-- Investigation Timeline (Clean flex structure with NO overlapping dots) --}}
+                    <div class="bg-white border border-[#E8DECB] p-3.5 sm:p-4 rounded-xl shadow-2xs space-y-3">
                         <div class="text-xs font-bold uppercase tracking-wider text-[#996515] flex items-center gap-1.5">
                             <svg class="w-3.5 h-3.5 text-[#C49520]" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5">
                                 <circle cx="12" cy="12" r="9"/>
@@ -239,17 +232,31 @@
                         </div>
 
                         @if($report->timelineEvents->isNotEmpty())
-                            <div class="space-y-3 relative pl-4 border-l-2 border-[#E6D8BA] ml-1.5">
+                            <div class="space-y-0">
                                 @foreach($report->timelineEvents as $tEvent)
-                                    <div class="relative text-xs">
-                                        <div class="absolute -left-[21px] top-1 w-2.5 h-2.5 rounded-full bg-[#C49520] border-2 border-white shadow-2xs"></div>
-                                        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-0.5 sm:gap-2">
-                                            <span class="font-bold text-[#1E1915] text-xs leading-snug">{{ $tEvent->title }}</span>
-                                            <span class="text-[10px] text-[#8C827A] shrink-0">{{ $tEvent->created_at->format('M d, Y • g:i A') }}</span>
+                                    <div class="flex gap-3 relative">
+                                        {{-- Isolated Indicator Column: Dot + Continuous Connecting Line --}}
+                                        <div class="flex flex-col items-center shrink-0 w-4">
+                                            <div class="w-3.5 h-3.5 rounded-full bg-[#FAF5EA] border-2 border-[#C49520] flex items-center justify-center shrink-0 mt-0.5 z-10 shadow-2xs">
+                                                <span class="w-1.5 h-1.5 rounded-full bg-[#C49520]"></span>
+                                            </div>
+                                            @if(!$loop->last)
+                                                <div class="w-0.5 bg-[#E6D8BA] flex-1 my-1"></div>
+                                            @endif
                                         </div>
-                                        @if($tEvent->description)
-                                            <p class="text-[11px] text-[#766C60] mt-0.5 mb-0 leading-relaxed">{{ $tEvent->description }}</p>
-                                        @endif
+
+                                        {{-- Event Details Column --}}
+                                        <div class="min-w-0 flex-1 {{ !$loop->last ? 'pb-4' : 'pb-0.5' }}">
+                                            <div class="flex flex-col sm:flex-row sm:items-baseline justify-between gap-0.5 sm:gap-2">
+                                                <span class="font-bold text-[#1E1915] text-xs leading-snug">{{ $tEvent->title }}</span>
+                                                <span class="text-[10px] text-[#8C827A] shrink-0">{{ $tEvent->created_at->format('M d, Y • g:i A') }}</span>
+                                            </div>
+                                            @if($tEvent->description)
+                                                <div class="mt-1.5 p-2.5 rounded-lg bg-[#FAF8F5] border border-[#ECE3D2] text-[11px] text-[#59514A] leading-relaxed">
+                                                    {{ $tEvent->description }}
+                                                </div>
+                                            @endif
+                                        </div>
                                     </div>
                                 @endforeach
                             </div>
