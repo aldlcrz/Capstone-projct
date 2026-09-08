@@ -992,8 +992,8 @@ function checkoutApp(initialAddress, initialAddresses, defaultPaymentMethod) {
         addressStepError: '',
         editForm: {
             id: null,
-            recipientName: '',
-            phone: '',
+            recipientName: @json(auth()->user()->name ?? ''),
+            phone: @json(auth()->user()->mobileNumber ?? ''),
             houseNo: '',
             street: '',
             barangay: '',
@@ -1200,8 +1200,8 @@ function checkoutApp(initialAddress, initialAddresses, defaultPaymentMethod) {
             const target = addr || this.address || {};
             this.editForm = {
                 id: target.id || null,
-                recipientName: target.recipientName || '',
-                phone: target.phone || '',
+                recipientName: target.recipientName || @json(auth()->user()->name ?? ''),
+                phone: target.phone || @json(auth()->user()->mobileNumber ?? ''),
                 houseNo: target.houseNo || '',
                 street: target.street || '',
                 barangay: target.barangay || '',

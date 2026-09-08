@@ -325,7 +325,7 @@ function addressManager() {
         saving: false,
         editId: null,
         formError: '',
-        form: { recipientName:'', phone:'', houseNo:'', street:'', barangay:'', city:'', province:'', region:'', postalCode:'', isDefault: false },
+        form: { recipientName: @json($user->name ?? ''), phone: @json($user->mobileNumber ?? ''), houseNo:'', street:'', barangay:'', city:'', province:'', region:'', postalCode:'', isDefault: false },
 
         // Location picker variables
         locationDropdownOpen: false,
@@ -632,7 +632,7 @@ function addressManager() {
 
         openAdd() {
             this.editId = null;
-            this.form = { recipientName:'', phone:'', houseNo:'', street:'', barangay:'', city:'', province:'', region:'', postalCode:'', isDefault: false };
+            this.form = { recipientName: @json($user->name ?? ''), phone: @json($user->mobileNumber ?? ''), houseNo:'', street:'', barangay:'', city:'', province:'', region:'', postalCode:'', isDefault: false };
             this.formError = '';
 
             this.selectedRegion = null;
