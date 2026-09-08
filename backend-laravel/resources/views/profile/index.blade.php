@@ -1160,7 +1160,7 @@ function profileApp() {
         editAddressId: null,
         addressFormError: '',
         fieldErrors: { recipientName: '', phone: '', location: '', houseNo: '', postalCode: '' },
-        addressForm: { recipientName: @json($user->name ?? ''), phone: @json($user->mobileNumber ?? ''), houseNo:'', street:'', barangay:'', city:'', province:'', region:'', postalCode:'', latitude: 14.2952, longitude: 121.4647, isDefault: false },
+        addressForm: { recipientName: "{{ addslashes($user->name ?? '') }}", phone: "{{ addslashes($user->mobileNumber ?? '') }}", houseNo:'', street:'', barangay:'', city:'', province:'', region:'', postalCode:'', latitude: 14.2952, longitude: 121.4647, isDefault: false },
 
         // Real-Time Map Location Picker state
         map: null,
@@ -1222,8 +1222,8 @@ function profileApp() {
         openAddAddress() {
             this.editAddressId = null;
             this.addressForm = { 
-                recipientName: @json($user->name ?? ''), 
-                phone: @json($user->mobileNumber ?? ''), 
+                recipientName: "{{ addslashes($user->name ?? '') }}", 
+                phone: "{{ addslashes($user->mobileNumber ?? '') }}", 
                 houseNo:'', 
                 street:'', 
                 barangay:'', 

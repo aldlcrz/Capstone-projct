@@ -165,8 +165,8 @@ function addressManager() {
         },
         handleAddNew() {
             this.editingAddress = {
-                recipientName: @json(auth()->user()->name ?? ''),
-                phone: @json(auth()->user()->mobileNumber ?? ''),
+                recipientName: "{{ addslashes(auth()->user()->name ?? '') }}",
+                phone: "{{ addslashes(auth()->user()->mobileNumber ?? '') }}",
                 region: '',
                 province: '',
                 city: '',
