@@ -706,7 +706,11 @@ class WebAuthController extends Controller
     public function profile()
     {
         $user = Auth::user();
-        return view('profile.index', compact('user'));
+        return response()
+            ->view('profile.index', compact('user'))
+            ->header('Cache-Control', 'no-cache, no-store, max-age=0, must-revalidate')
+            ->header('Pragma', 'no-cache')
+            ->header('Expires', 'Sun, 02 Jan 1990 00:00:00 GMT');
     }
 
     public function forgotPassword(Request $request)
