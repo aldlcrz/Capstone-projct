@@ -1,7 +1,7 @@
 @extends('layouts.admin')
 
 @section('content')
-<div class="space-y-8" x-data="{
+<div class="space-y-4" x-data="{
     suspendModal: false,
     suspendSellerId: null,
     suspendSellerName: '',
@@ -140,108 +140,138 @@
         return '/storage/' + path.replace(/^\//, '');
     }
 }">
-    {{-- ═══ PAGE HEADER ═══ --}}
-    <div class="text-center space-y-1.5 pb-2">
-        <div class="inline-flex items-center gap-2">
-            <span class="text-[9px] font-black uppercase tracking-[0.25em] text-[#C0422A]">Artisan Registry</span>
-            <span class="text-gray-300 text-xs">·</span>
-            <span class="text-[9px] font-bold uppercase tracking-[0.2em] text-gray-400">Admin Center</span>
+    {{-- ═══ PAGE HEADER + SEARCH BAR ═══ --}}
+    <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+        {{-- Left: Title & Subtitle --}}
+        <div class="text-left space-y-0.5 shrink-0">
+            <div class="inline-flex items-center gap-2">
+                <span class="text-[9px] font-black uppercase tracking-[0.25em] text-[#C0422A]">Artisan Registry</span>
+                <span class="text-gray-300 text-xs">·</span>
+                <span class="text-[9px] font-bold uppercase tracking-[0.2em] text-gray-400">Admin Center</span>
+            </div>
+            <h1 class="font-serif text-2xl sm:text-3xl font-bold text-gray-900 leading-tight">
+                Seller <span class="text-[#C0420A] font-light italic">Management</span>
+            </h1>
+            <p class="text-[11px] text-gray-400 font-medium">Review applications, monitor shops, and manage seller accounts</p>
         </div>
-        <h1 class="font-serif text-2xl sm:text-3xl font-bold text-gray-900 leading-tight">
-            Seller <span class="text-[#C0420A] font-light italic">Management</span>
-        </h1>
-        <p class="text-[11px] text-gray-400 font-medium">Review applications, monitor shops, and manage seller accounts</p>
+
+        {{-- Larger Search Bar in front of Seller Management --}}
+        <div class="flex-1 max-w-xl lg:max-w-2xl w-full">
+            <form method="GET" class="flex items-center gap-2 w-full">
+                @if(request('filter'))
+                    <input type="hidden" name="filter" value="{{ request('filter') }}">
+                @endif
+                <div class="relative w-full">
+                    <input type="text" name="search" value="{{ request('search') }}"
+                           placeholder="Search sellers by name, email, shop..."
+                           class="w-full pl-11 pr-5 py-2.5 bg-white border border-gray-200 rounded-full text-sm text-gray-800 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-[#C0422A]/20 focus:border-[#C0422A] shadow-xs transition-all">
+                    <svg class="w-5 h-5 text-gray-400 absolute left-4 top-1/2 -translate-y-1/2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+                </div>
+                @if(request('search'))
+                    <a href="{{ request()->fullUrlWithQuery(['search' => null, 'page' => 1]) }}" class="px-4 py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-600 rounded-full text-xs font-bold transition-all shrink-0">Clear</a>
+                @endif
+            </form>
+        </div>
     </div>
 
-    {{-- ═══ STATS BAR ═══ --}}
+    {{-- ═══ STATS BAR / STATUS FILTERS ═══ --}}
+    @php
+        $currentFilter = request('filter');
+        $isAll       = $currentFilter === 'all';
+        $isApproved  = empty($currentFilter) || $currentFilter === 'verified';
+        $isPending   = $currentFilter === 'pending';
+        $isSuspended = $currentFilter === 'suspended';
+    @endphp
     <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
-        <div class="bg-white rounded-2xl border border-gray-100 shadow-xs px-4 py-3.5 flex items-center gap-3 hover:-translate-y-0.5 transition-all">
-            <div class="w-9 h-9 rounded-xl bg-gray-100 flex items-center justify-center shrink-0">
-                <svg class="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+        {{-- Total / All --}}
+        <a href="{{ request()->fullUrlWithQuery(['filter' => 'all', 'page' => 1]) }}"
+           class="group relative rounded-2xl px-4 py-3 flex items-center justify-between border transition-all duration-200 cursor-pointer {{ $isAll ? 'bg-white border-gray-900 ring-2 ring-gray-900/15 shadow-sm -translate-y-0.5' : 'bg-white border-gray-100 hover:border-gray-300 hover:shadow-sm hover:-translate-y-0.5' }}">
+            <div class="flex items-center gap-3">
+                <div class="w-8.5 h-8.5 rounded-xl flex items-center justify-center shrink-0 transition-colors {{ $isAll ? 'bg-gray-900 text-white' : 'bg-gray-100 text-gray-500 group-hover:bg-gray-200' }}">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+                </div>
+                <div>
+                    <div class="text-base sm:text-lg font-black text-gray-900 leading-none">{{ $counts['all'] ?? 0 }}</div>
+                    <div class="text-[9px] font-bold uppercase tracking-wider text-gray-400 mt-0.5">Total</div>
+                </div>
             </div>
-            <div>
-                <div class="text-lg font-black text-gray-900 leading-none">{{ $counts['all'] ?? 0 }}</div>
-                <div class="text-[9px] font-bold uppercase tracking-wider text-gray-400 mt-0.5">Total</div>
+            @if($isAll)
+                <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[8px] font-black uppercase tracking-wider bg-gray-900 text-white shadow-xs">
+                    <span class="w-1 h-1 rounded-full bg-emerald-400"></span> Active
+                </span>
+            @endif
+        </a>
+
+        {{-- Approved (Default) --}}
+        <a href="{{ request()->fullUrlWithQuery(['filter' => null, 'page' => 1]) }}"
+           class="group relative rounded-2xl px-4 py-3 flex items-center justify-between border transition-all duration-200 cursor-pointer {{ $isApproved ? 'bg-emerald-50/50 border-emerald-600 ring-2 ring-emerald-600/20 shadow-sm -translate-y-0.5' : 'bg-white border-green-100 hover:border-emerald-300 hover:shadow-sm hover:-translate-y-0.5' }}">
+            <div class="flex items-center gap-3">
+                <div class="w-8.5 h-8.5 rounded-xl flex items-center justify-center shrink-0 transition-colors {{ $isApproved ? 'bg-emerald-600 text-white' : 'bg-green-50 text-green-600 group-hover:bg-green-100' }}">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                </div>
+                <div>
+                    <div class="text-base sm:text-lg font-black text-gray-900 leading-none">{{ $counts['verified'] ?? 0 }}</div>
+                    <div class="text-[9px] font-bold uppercase tracking-wider text-green-600 mt-0.5">Approved</div>
+                </div>
             </div>
-        </div>
-        <div class="bg-white rounded-2xl border border-green-100 shadow-xs px-4 py-3.5 flex items-center gap-3 hover:-translate-y-0.5 transition-all">
-            <div class="w-9 h-9 rounded-xl bg-green-50 flex items-center justify-center shrink-0">
-                <svg class="w-4 h-4 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+            @if($isApproved)
+                <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[8px] font-black uppercase tracking-wider bg-emerald-600 text-white shadow-xs">
+                    <span class="w-1 h-1 rounded-full bg-emerald-200"></span> Active
+                </span>
+            @endif
+        </a>
+
+        {{-- Pending --}}
+        <a href="{{ request()->fullUrlWithQuery(['filter' => 'pending', 'page' => 1]) }}"
+           class="group relative rounded-2xl px-4 py-3 flex items-center justify-between border transition-all duration-200 cursor-pointer {{ $isPending ? 'bg-amber-50/50 border-amber-500 ring-2 ring-amber-500/20 shadow-sm -translate-y-0.5' : 'bg-white border-amber-100 hover:border-amber-300 hover:shadow-sm hover:-translate-y-0.5' }}">
+            <div class="flex items-center gap-3">
+                <div class="w-8.5 h-8.5 rounded-xl flex items-center justify-center shrink-0 transition-colors {{ $isPending ? 'bg-amber-500 text-white' : 'bg-amber-50 text-amber-500 group-hover:bg-amber-100' }}">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                </div>
+                <div>
+                    <div class="text-base sm:text-lg font-black text-gray-900 leading-none">{{ $counts['pending'] ?? 0 }}</div>
+                    <div class="text-[9px] font-bold uppercase tracking-wider text-amber-500 mt-0.5">Pending</div>
+                </div>
             </div>
-            <div>
-                <div class="text-lg font-black text-gray-900 leading-none">{{ $counts['verified'] ?? 0 }}</div>
-                <div class="text-[9px] font-bold uppercase tracking-wider text-green-500 mt-0.5">Approved</div>
+            @if($isPending)
+                <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[8px] font-black uppercase tracking-wider bg-amber-500 text-white shadow-xs">
+                    <span class="w-1 h-1 rounded-full bg-amber-200"></span> Active
+                </span>
+            @endif
+        </a>
+
+        {{-- Suspended --}}
+        <a href="{{ request()->fullUrlWithQuery(['filter' => 'suspended', 'page' => 1]) }}"
+           class="group relative rounded-2xl px-4 py-3 flex items-center justify-between border transition-all duration-200 cursor-pointer {{ $isSuspended ? 'bg-red-50/50 border-red-600 ring-2 ring-red-600/20 shadow-sm -translate-y-0.5' : 'bg-white border-red-100 hover:border-red-300 hover:shadow-sm hover:-translate-y-0.5' }}">
+            <div class="flex items-center gap-3">
+                <div class="w-8.5 h-8.5 rounded-xl flex items-center justify-center shrink-0 transition-colors {{ $isSuspended ? 'bg-red-600 text-white' : 'bg-red-50 text-red-500 group-hover:bg-red-100' }}">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"/></svg>
+                </div>
+                <div>
+                    <div class="text-base sm:text-lg font-black text-gray-900 leading-none">{{ $counts['suspended'] ?? 0 }}</div>
+                    <div class="text-[9px] font-bold uppercase tracking-wider text-red-500 mt-0.5">Suspended</div>
+                </div>
             </div>
-        </div>
-        <div class="bg-white rounded-2xl border border-amber-100 shadow-xs px-4 py-3.5 flex items-center gap-3 hover:-translate-y-0.5 transition-all">
-            <div class="w-9 h-9 rounded-xl bg-amber-50 flex items-center justify-center shrink-0">
-                <svg class="w-4 h-4 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-            </div>
-            <div>
-                <div class="text-lg font-black text-gray-900 leading-none">{{ $counts['pending'] ?? 0 }}</div>
-                <div class="text-[9px] font-bold uppercase tracking-wider text-amber-500 mt-0.5">Pending</div>
-            </div>
-        </div>
-        <div class="bg-white rounded-2xl border border-red-100 shadow-xs px-4 py-3.5 flex items-center gap-3 hover:-translate-y-0.5 transition-all">
-            <div class="w-9 h-9 rounded-xl bg-red-50 flex items-center justify-center shrink-0">
-                <svg class="w-4 h-4 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"/></svg>
-            </div>
-            <div>
-                <div class="text-lg font-black text-gray-900 leading-none">{{ $counts['suspended'] ?? 0 }}</div>
-                <div class="text-[9px] font-bold uppercase tracking-wider text-red-400 mt-0.5">Suspended</div>
-            </div>
-        </div>
+            @if($isSuspended)
+                <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[8px] font-black uppercase tracking-wider bg-red-600 text-white shadow-xs">
+                    <span class="w-1 h-1 rounded-full bg-red-200"></span> Active
+                </span>
+            @endif
+        </a>
     </div>
 
-    {{-- ═══ SEARCH + FILTERS ═══ --}}
-    <div class="space-y-3">
-        <form method="GET" class="flex items-center justify-center gap-2 max-w-sm sm:max-w-md mx-auto">
-            @if(request('filter'))
-                <input type="hidden" name="filter" value="{{ request('filter') }}">
-            @endif
-            <div class="relative w-full">
-                <input type="text" name="search" value="{{ request('search') }}" placeholder="Search sellers, shops..."
-                       class="w-full pl-9 pr-4 py-2.5 bg-white border border-gray-200 rounded-full text-xs text-gray-800 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-[#C0422A]/20 focus:border-[#C0422A] shadow-xs transition-all">
-                <svg class="w-4 h-4 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
-            </div>
-            @if(request('search'))
-                <a href="{{ request()->fullUrlWithQuery(['search' => null, 'page' => 1]) }}" class="px-3 py-2 bg-gray-100 hover:bg-gray-200 text-gray-600 rounded-full text-[10px] font-bold transition-all">Clear</a>
-            @endif
-        </form>
-
-        @php $currentFilter = request('filter'); @endphp
-        <div class="flex items-center justify-center gap-2 overflow-x-auto no-scrollbar">
-            <a href="{{ request()->fullUrlWithQuery(['filter' => 'all', 'page' => 1]) }}"
-               class="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-wider transition-all whitespace-nowrap {{ $currentFilter === 'all' ? 'bg-gray-900 text-white shadow-sm' : 'bg-white text-gray-600 border border-gray-200 hover:bg-gray-50' }}">
-                All <span class="px-1.5 py-0.5 rounded-full text-[9px] font-black {{ $currentFilter === 'all' ? 'bg-white/20' : 'bg-gray-100 text-gray-500' }}">{{ $counts['all'] }}</span>
-            </a>
-            <a href="{{ request()->fullUrlWithQuery(['filter' => null, 'page' => 1]) }}"
-               class="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-wider transition-all whitespace-nowrap {{ empty($currentFilter) || $currentFilter === 'verified' ? 'bg-green-700 text-white shadow-sm' : 'bg-white text-gray-600 border border-gray-200 hover:border-green-200 hover:bg-green-50' }}">
-                <span class="w-1.5 h-1.5 rounded-full {{ empty($currentFilter) || $currentFilter === 'verified' ? 'bg-green-200' : 'bg-green-400' }}"></span>
-                Approved <span class="px-1.5 py-0.5 rounded-full text-[9px] font-black {{ empty($currentFilter) || $currentFilter === 'verified' ? 'bg-white/20' : 'bg-gray-100 text-gray-500' }}">{{ $counts['verified'] }}</span>
-            </a>
-            <a href="{{ request()->fullUrlWithQuery(['filter' => 'pending', 'page' => 1]) }}"
-               class="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-wider transition-all whitespace-nowrap {{ $currentFilter === 'pending' ? 'bg-amber-600 text-white shadow-sm' : 'bg-white text-gray-600 border border-gray-200 hover:border-amber-200 hover:bg-amber-50' }}">
-                <span class="w-1.5 h-1.5 rounded-full {{ $currentFilter === 'pending' ? 'bg-amber-200' : 'bg-amber-400' }}"></span>
-                Pending <span class="px-1.5 py-0.5 rounded-full text-[9px] font-black {{ $currentFilter === 'pending' ? 'bg-white/20' : 'bg-gray-100 text-gray-500' }}">{{ $counts['pending'] }}</span>
-            </a>
-            <a href="{{ request()->fullUrlWithQuery(['filter' => 'suspended', 'page' => 1]) }}"
-               class="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-wider transition-all whitespace-nowrap {{ $currentFilter === 'suspended' ? 'bg-red-700 text-white shadow-sm' : 'bg-white text-gray-600 border border-gray-200 hover:border-red-200 hover:bg-red-50' }}">
-                <span class="w-1.5 h-1.5 rounded-full {{ $currentFilter === 'suspended' ? 'bg-red-200' : 'bg-red-400' }}"></span>
-                Suspended <span class="px-1.5 py-0.5 rounded-full text-[9px] font-black {{ $currentFilter === 'suspended' ? 'bg-white/20' : 'bg-gray-100 text-gray-500' }}">{{ $counts['suspended'] }}</span>
-            </a>
+    {{-- Pending Verification Alert Strip --}}
+    @if($pendingSellers->count() > 0 && $currentFilter !== 'pending')
+    <div class="bg-amber-50/70 border border-amber-200/80 rounded-2xl p-3 sm:p-3.5 space-y-2">
+        <div class="flex items-center justify-between">
+            <h3 class="text-[10px] font-black uppercase tracking-widest text-amber-900 flex items-center gap-2">
+                <span class="w-2 h-2 rounded-full bg-amber-500 animate-pulse"></span>
+                Awaiting Verification ({{ $pendingSellers->count() }})
+            </h3>
+            <a href="{{ request()->fullUrlWithQuery(['filter' => 'pending', 'page' => 1]) }}" class="text-[10px] font-bold text-amber-800 hover:text-amber-950 underline">View all pending</a>
         </div>
-    </div>
-
-    {{-- Pending Verification (Compact Pill Row Style) --}}
-    @if($pendingSellers->count() > 0)
-    <div class="bg-amber-50/70 border border-amber-200/80 rounded-2xl p-3.5 sm:p-4 space-y-2.5">
-        <h3 class="text-[11px] font-black uppercase tracking-widest text-amber-900 flex items-center gap-2">
-            <span class="w-2 h-2 rounded-full bg-amber-500 animate-pulse"></span>
-            Awaiting Verification ({{ $pendingSellers->count() }})
-        </h3>
-        <div class="space-y-2">
-            @foreach($pendingSellers as $seller)
+        <div class="space-y-1.5">
+            @foreach($pendingSellers->take(3) as $seller)
             @php
                 $pData = [
                     'id' => $seller->id,
@@ -261,23 +291,28 @@
                     'orders_count' => $seller->orders_count ?? 0,
                 ];
             @endphp
-            <div class="bg-white rounded-xl p-2.5 sm:p-3 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2.5 shadow-xs hover:shadow-sm transition-all border border-amber-100">
+            <div class="bg-white rounded-xl p-2 sm:p-2.5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 shadow-xs border border-amber-100/80">
                 <div class="flex items-center gap-2.5 min-w-0">
-                    <div class="w-8 h-8 rounded-lg bg-amber-100 text-amber-800 flex items-center justify-center font-black text-xs shrink-0">
+                    <div class="w-7 h-7 rounded-full bg-amber-100 text-amber-800 flex items-center justify-center font-bold text-xs shrink-0">
                         {{ strtoupper(substr($seller->name, 0, 1)) }}
                     </div>
                     <div class="min-w-0">
-                        <div class="text-xs font-bold text-black truncate">{{ $seller->name }}</div>
-                        <div class="text-[10px] text-gray-500 font-medium truncate">{{ $seller->email }} • <button type="button" @click="openShopPreview('{{ $seller->id }}', '{{ addslashes($seller->shopName ?? 'Workshop') }}')" class="text-[#C0422A] font-semibold hover:underline cursor-pointer inline-flex items-center gap-0.5" title="Preview Artisan Shop">{{ $seller->shopName ?? 'Workshop' }} <svg class="w-2.5 h-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg></button></div>
+                        <div class="text-xs font-bold text-gray-900 truncate leading-tight">{{ $seller->name }}</div>
+                        <div class="text-[10px] text-gray-400 font-medium truncate leading-tight mt-0.5">
+                            {{ $seller->email }}
+                            @if($seller->shopName)
+                                <span class="text-gray-300">·</span>
+                                <button type="button" @click="openShopPreview('{{ $seller->id }}', '{{ addslashes($seller->shopName) }}')" class="text-[#C0422A] font-semibold hover:underline cursor-pointer">{{ $seller->shopName }}</button>
+                            @endif
+                        </div>
                     </div>
                 </div>
                 <div class="flex items-center gap-1.5 shrink-0">
-                    <button type="button" @click="openReview({{ json_encode($pData) }})" class="px-3 py-1.5 bg-green-600 text-white rounded-lg text-[9px] font-black uppercase tracking-widest hover:bg-green-700 transition-all cursor-pointer shadow-xs flex items-center gap-1">
-                        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                    <button type="button" @click="openReview({{ json_encode($pData) }})" class="px-2.5 py-1 bg-emerald-600 text-white rounded-lg text-[9px] font-black uppercase tracking-wider hover:bg-emerald-700 transition-all cursor-pointer shadow-xs">
                         Approve &amp; Verify
                     </button>
-                    <button type="button" @click="openSuspend('{{ $seller->id }}', '{{ addslashes($seller->name) }}')" class="px-2.5 py-1.5 bg-red-50 text-red-700 rounded-lg text-[9px] font-black uppercase tracking-widest hover:bg-red-500 hover:text-white transition-all cursor-pointer">
-                        Reject / Suspend
+                    <button type="button" @click="openSuspend('{{ $seller->id }}', '{{ addslashes($seller->name) }}')" class="px-2 py-1 bg-rose-50 text-rose-700 rounded-lg text-[9px] font-black uppercase tracking-wider hover:bg-rose-500 hover:text-white transition-all cursor-pointer">
+                        Reject
                     </button>
                 </div>
             </div>
@@ -286,128 +321,181 @@
     </div>
     @endif
 
-    {{-- ═══ SELLERS CARD LIST ═══ --}}
-    <div class="bg-white rounded-3xl border border-gray-100 shadow-sm overflow-hidden">
-        <div class="px-6 py-4 border-b border-gray-50 flex items-center justify-between">
-            <h3 class="text-[11px] font-black uppercase tracking-widest text-gray-600">
-                @if($currentFilter === 'pending') Pending Sellers &mdash; Awaiting Verification
-                @elseif($currentFilter === 'suspended') Suspended Sellers
-                @elseif($currentFilter === 'all') All Sellers Registry
-                @else Approved Sellers
+    {{-- ═══ RESULTS & SELLER TABLE ═══ --}}
+    <div class="space-y-2">
+        {{-- Results count bar --}}
+        <div class="flex items-center justify-between px-1">
+            <div class="text-[11px] font-bold text-gray-400">
+                Showing <span class="text-gray-900 font-black">{{ $sellers->total() }}</span> {{ $sellers->total() === 1 ? 'artisan seller' : 'artisan sellers' }}
+                @if($currentFilter)
+                    <span class="text-gray-400">· Filtered by <span class="capitalize font-black text-gray-700">{{ $currentFilter }}</span></span>
+                @else
+                    <span class="text-gray-400">· Filtered by <span class="font-black text-gray-700">Approved</span></span>
                 @endif
-            </h3>
-            <span class="text-[9px] font-bold text-gray-400">{{ $sellers->total() }} records</span>
-        </div>
-        <div class="divide-y divide-gray-50">
-            @forelse($sellers as $seller)
-            @php
-                $sData = [
-                    'id' => $seller->id,
-                    'name' => $seller->name,
-                    'email' => $seller->email,
-                    'mobileNumber' => $seller->mobileNumber ?? 'Not Provided',
-                    'gcashNumber' => $seller->gcashNumber ?? 'Not Provided',
-                    'shopName' => $seller->shopName ?? ($seller->name . "'s Workshop"),
-                    'shopAddress' => $seller->shopAddress ?? 'Not Provided',
-                    'residencyCertificate' => $seller->residencyCertificate ? asset($seller->residencyCertificate) : null,
-                    'businessPermit' => $seller->businessPermit ? asset($seller->businessPermit) : null,
-                    'birDocument' => $seller->birDocument ? asset($seller->birDocument) : null,
-                    'createdAt' => $seller->createdAt ? $seller->createdAt->format('M d, Y h:i A') : '—',
-                    'isVerified' => (bool)$seller->isVerified,
-                    'status' => $seller->status,
-                    'products_count' => $seller->products_count ?? 0,
-                    'orders_count' => $seller->orders_count ?? 0,
-                ];
-                $statusClass = match(true) {
-                    $seller->status === 'blocked' => 'bg-red-50 text-red-700 border-red-200',
-                    $seller->status === 'frozen'  => 'bg-amber-50 text-amber-700 border-amber-200',
-                    !$seller->isVerified          => 'bg-blue-50 text-blue-700 border-blue-200',
-                    default                       => 'bg-green-50 text-green-700 border-green-200',
-                };
-                $statusLabel = match(true) {
-                    $seller->status === 'blocked' => 'Suspended',
-                    $seller->status === 'frozen'  => 'Frozen',
-                    !$seller->isVerified          => 'Pending',
-                    default                       => 'Active',
-                };
-                $avatarBg = match(true) {
-                    $seller->status === 'blocked' => 'bg-red-200 text-red-900',
-                    !$seller->isVerified          => 'bg-amber-200 text-amber-900',
-                    default                       => 'bg-[#C0422A] text-white',
-                };
-            @endphp
-            <div class="px-5 py-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4 hover:bg-gray-50/40 transition-all group">
-                {{-- Left: Avatar + Info --}}
-                <div class="flex items-center gap-4 min-w-0">
-                    <div class="w-10 h-10 rounded-2xl {{ $avatarBg }} flex items-center justify-center font-black text-sm shrink-0 ring-2 ring-white shadow-sm">
-                        {{ strtoupper(substr($seller->name, 0, 1)) }}
-                    </div>
-                    <div class="min-w-0">
-                        <div class="flex items-center gap-2 flex-wrap">
-                            <span class="text-sm font-bold text-gray-900 truncate">{{ $seller->name }}</span>
-                            @if($seller->isVerified)
-                                <span class="text-[8px] font-black text-green-600 bg-green-50 border border-green-200 px-1.5 py-0.5 rounded-md uppercase tracking-widest">✓ Verified</span>
-                            @endif
-                            <span class="px-2 py-0.5 rounded-md text-[8px] font-black uppercase tracking-widest border {{ $statusClass }}">{{ $statusLabel }}</span>
-                        </div>
-                        <div class="text-[10px] text-gray-400 truncate mt-0.5">{{ $seller->email }}
-                            @if($seller->shopName)
-                                &nbsp;&bull;&nbsp;<button type="button" @click="openShopPreview('{{ $seller->id }}', '{{ addslashes($seller->shopName) }}')" class="text-[#C0422A] hover:underline cursor-pointer font-semibold">{{ $seller->shopName }}</button>
-                            @endif
-                        </div>
-                        <div class="flex items-center gap-3 mt-1.5">
-                            <span class="text-[9px] text-gray-400"><strong class="text-gray-600">{{ $seller->products_count ?? 0 }}</strong> products</span>
-                            <span class="text-[9px] text-gray-400"><strong class="text-gray-600">{{ $seller->orders_count ?? 0 }}</strong> orders</span>
-                            <span class="text-[9px] text-gray-400">Joined <strong class="text-gray-600">{{ $seller->createdAt ? $seller->createdAt->format('M d, Y') : '—' }}</strong></span>
-                        </div>
-                    </div>
-                </div>
-
-                {{-- Right: Actions --}}
-                <div class="flex items-center gap-1.5 shrink-0">
-                    @if(!$seller->isVerified && $seller->status !== 'blocked')
-                        <button type="button" @click="openReview({{ json_encode($sData) }})" class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-green-50 border border-green-200 text-green-700 rounded-xl text-[9px] font-black uppercase tracking-widest hover:bg-green-600 hover:text-white hover:border-green-600 transition-all cursor-pointer">
-                            <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-                            Verify
-                        </button>
-                    @else
-                        <button type="button" @click="openReview({{ json_encode($sData) }})" class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-gray-50 border border-gray-200 text-gray-600 rounded-xl text-[9px] font-black uppercase tracking-widest hover:bg-gray-100 transition-all cursor-pointer">
-                            <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
-                            Docs
-                        </button>
-                    @endif
-
-                    @if($seller->status !== 'blocked')
-                        <button type="button" @click="openSuspend('{{ $seller->id }}', '{{ addslashes($seller->name) }}')" class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-red-50 border border-red-100 text-red-600 rounded-xl text-[9px] font-black uppercase tracking-widest hover:bg-red-600 hover:text-white hover:border-red-600 transition-all cursor-pointer">
-                            <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"/></svg>
-                            Suspend
-                        </button>
-                    @else
-                        <form action="{{ route('admin.sellers.unsuspend', $seller->id) }}" method="POST">
-                            @csrf @method('PATCH')
-                            <button type="submit" class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-emerald-50 border border-emerald-100 text-emerald-700 rounded-xl text-[9px] font-black uppercase tracking-widest hover:bg-emerald-600 hover:text-white hover:border-emerald-600 transition-all cursor-pointer">
-                                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
-                                Restore
-                            </button>
-                        </form>
-                    @endif
-
-                    <button type="button" @click="openDelete('{{ $seller->id }}', '{{ addslashes($seller->name) }}')" class="w-8 h-8 rounded-xl bg-gray-50 border border-gray-200 text-gray-400 hover:bg-red-50 hover:border-red-100 hover:text-red-500 flex items-center justify-center transition-all cursor-pointer" title="Delete Seller">
-                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
-                    </button>
-                </div>
+                @if(request('search'))
+                    <span class="text-gray-400">· Matching "<span class="font-bold text-gray-700">{{ request('search') }}</span>"</span>
+                @endif
             </div>
-            @empty
-            <div class="py-16 text-center">
-                <div class="w-14 h-14 bg-gray-50 rounded-2xl flex items-center justify-center mx-auto mb-3 border border-gray-100">
-                    <svg class="w-6 h-6 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
-                </div>
-                <p class="text-sm font-bold text-gray-400 uppercase tracking-widest">No seller accounts found</p>
-            </div>
-            @endforelse
         </div>
-        <div class="px-6 py-4 border-t border-gray-50">
-            {{ $sellers->links() }}
+
+        {{-- Table card --}}
+        <div class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+            <div class="overflow-x-auto no-scrollbar">
+                <table class="w-full text-left min-w-[620px]">
+                    <thead>
+                        <tr class="border-b border-gray-100 bg-gray-50/60">
+                            <th class="px-5 py-2.5 text-[9px] font-black uppercase tracking-widest text-gray-400 w-[36%]">Seller &amp; Shop</th>
+                            <th class="px-4 py-2.5 text-[9px] font-black uppercase tracking-widest text-gray-400 w-[18%] hidden md:table-cell">Inventory</th>
+                            <th class="px-4 py-2.5 text-[9px] font-black uppercase tracking-widest text-gray-400 w-[16%] hidden lg:table-cell">Joined</th>
+                            <th class="px-4 py-2.5 text-[9px] font-black uppercase tracking-widest text-gray-400 w-[14%]">Status</th>
+                            <th class="px-5 py-2.5 text-[9px] font-black uppercase tracking-widest text-gray-400 w-[16%] text-right">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-gray-50">
+                        @forelse($sellers as $seller)
+                            @php
+                                $sData = [
+                                    'id' => $seller->id,
+                                    'name' => $seller->name,
+                                    'email' => $seller->email,
+                                    'mobileNumber' => $seller->mobileNumber ?? 'Not Provided',
+                                    'gcashNumber' => $seller->gcashNumber ?? 'Not Provided',
+                                    'shopName' => $seller->shopName ?? ($seller->name . "'s Workshop"),
+                                    'shopAddress' => $seller->shopAddress ?? 'Not Provided',
+                                    'residencyCertificate' => $seller->residencyCertificate ? asset($seller->residencyCertificate) : null,
+                                    'businessPermit' => $seller->businessPermit ? asset($seller->businessPermit) : null,
+                                    'birDocument' => $seller->birDocument ? asset($seller->birDocument) : null,
+                                    'createdAt' => $seller->createdAt ? $seller->createdAt->format('M d, Y h:i A') : '—',
+                                    'isVerified' => (bool)$seller->isVerified,
+                                    'status' => $seller->status,
+                                    'products_count' => $seller->products_count ?? 0,
+                                    'orders_count' => $seller->orders_count ?? 0,
+                                ];
+                                $statusClass = match(true) {
+                                    $seller->status === 'blocked' => 'bg-rose-50 text-rose-700 border border-rose-200/60',
+                                    $seller->status === 'frozen'  => 'bg-amber-50 text-amber-700 border border-amber-200/60',
+                                    !$seller->isVerified          => 'bg-blue-50 text-blue-700 border border-blue-200/60',
+                                    default                       => 'bg-emerald-50 text-emerald-700 border border-emerald-200/60',
+                                };
+                                $statusDot = match(true) {
+                                    $seller->status === 'blocked' => 'bg-rose-500',
+                                    $seller->status === 'frozen'  => 'bg-amber-500',
+                                    !$seller->isVerified          => 'bg-blue-500',
+                                    default                       => 'bg-emerald-500',
+                                };
+                                $statusLabel = match(true) {
+                                    $seller->status === 'blocked' => 'Suspended',
+                                    $seller->status === 'frozen'  => 'Frozen',
+                                    !$seller->isVerified          => 'Pending',
+                                    default                       => 'Active',
+                                };
+                            @endphp
+                            <tr class="hover:bg-gray-50/50 transition-colors group">
+                                {{-- Seller & Shop --}}
+                                <td class="px-5 py-2">
+                                    <div class="flex items-center gap-2.5">
+                                        <div class="w-8 h-8 rounded-full bg-gray-100 ring-2 ring-gray-200 flex items-center justify-center font-bold text-xs text-[#C0422A] shrink-0 overflow-hidden transition-all shadow-xs">
+                                            {{ strtoupper(substr($seller->name, 0, 1)) }}
+                                        </div>
+                                        <div class="min-w-0">
+                                            <div class="flex items-center gap-1.5 flex-wrap">
+                                                <span class="text-xs font-bold text-gray-900 truncate leading-tight">{{ $seller->name }}</span>
+                                                @if($seller->isVerified)
+                                                    <span class="text-[8px] font-black text-emerald-600 bg-emerald-50 border border-emerald-200/80 px-1 py-0.2 rounded uppercase">✓</span>
+                                                @endif
+                                            </div>
+                                            <div class="text-[10px] text-gray-400 font-medium truncate leading-tight mt-0.5">
+                                                <span>{{ $seller->email }}</span>
+                                                @if($seller->shopName)
+                                                    <span class="text-gray-300">·</span>
+                                                    <button type="button" @click="openShopPreview('{{ $seller->id }}', '{{ addslashes($seller->shopName) }}')" class="text-[#C0422A] hover:underline cursor-pointer font-semibold">
+                                                        {{ $seller->shopName }}
+                                                    </button>
+                                                @endif
+                                            </div>
+                                        </div>
+                                    </div>
+                                </td>
+
+                                {{-- Inventory --}}
+                                <td class="px-4 py-2 hidden md:table-cell">
+                                    <div class="text-[11px] text-gray-600 font-medium">
+                                        <strong class="text-gray-900 font-bold">{{ $seller->products_count ?? 0 }}</strong> prods
+                                        <span class="text-gray-300">·</span>
+                                        <strong class="text-gray-900 font-bold">{{ $seller->orders_count ?? 0 }}</strong> orders
+                                    </div>
+                                </td>
+
+                                {{-- Joined Date --}}
+                                <td class="px-4 py-2 hidden lg:table-cell">
+                                    <span class="text-[11px] text-gray-500 font-medium whitespace-nowrap">{{ $seller->createdAt ? $seller->createdAt->format('M d, Y') : '—' }}</span>
+                                </td>
+
+                                {{-- Status --}}
+                                <td class="px-4 py-2">
+                                    <span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] font-bold capitalize {{ $statusClass }}">
+                                        <span class="w-1.5 h-1.5 rounded-full {{ $statusDot }}"></span>
+                                        {{ $statusLabel }}
+                                    </span>
+                                </td>
+
+                                {{-- Actions --}}
+                                <td class="px-5 py-2">
+                                    <div class="flex items-center justify-end gap-1.5">
+                                        @if(!$seller->isVerified && $seller->status !== 'blocked')
+                                            <button type="button" @click="openReview({{ json_encode($sData) }})"
+                                                class="px-2.5 py-1 bg-emerald-50 text-emerald-700 border border-emerald-200/80 rounded-lg text-[10px] font-bold uppercase tracking-wider hover:bg-emerald-600 hover:text-white transition-all cursor-pointer">
+                                                Verify
+                                            </button>
+                                        @else
+                                            <button type="button" @click="openReview({{ json_encode($sData) }})"
+                                                class="px-2.5 py-1 bg-gray-50 text-gray-600 border border-gray-200/80 rounded-lg text-[10px] font-bold uppercase tracking-wider hover:bg-gray-200 transition-all cursor-pointer">
+                                                Docs
+                                            </button>
+                                        @endif
+
+                                        @if($seller->status !== 'blocked')
+                                            <button type="button" @click="openSuspend('{{ $seller->id }}', '{{ addslashes($seller->name) }}')"
+                                                class="px-2.5 py-1 bg-rose-50 text-rose-600 border border-rose-200/80 rounded-lg text-[10px] font-bold uppercase tracking-wider hover:bg-rose-600 hover:text-white transition-all cursor-pointer">
+                                                Suspend
+                                            </button>
+                                        @else
+                                            <form action="{{ route('admin.sellers.unsuspend', $seller->id) }}" method="POST" class="inline">
+                                                @csrf @method('PATCH')
+                                                <button type="submit"
+                                                    class="px-2.5 py-1 bg-emerald-50 text-emerald-700 border border-emerald-200/80 rounded-lg text-[10px] font-bold uppercase tracking-wider hover:bg-emerald-600 hover:text-white transition-all cursor-pointer">
+                                                    Restore
+                                                </button>
+                                            </form>
+                                        @endif
+
+                                        <button type="button" @click="openDelete('{{ $seller->id }}', '{{ addslashes($seller->name) }}')"
+                                            class="px-2.5 py-1 bg-gray-50 text-gray-500 border border-gray-200/80 rounded-lg text-[10px] font-bold uppercase tracking-wider hover:bg-rose-600 hover:text-white hover:border-rose-600 transition-all cursor-pointer" title="Delete Seller">
+                                            Delete
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                        @empty
+                            <tr>
+                                <td colspan="5">
+                                    <div class="py-10 text-center">
+                                        <div class="w-12 h-12 bg-gray-50 rounded-2xl flex items-center justify-center mx-auto mb-2.5 border border-gray-100">
+                                            <svg class="w-5 h-5 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+                                        </div>
+                                        <p class="text-xs font-bold text-gray-400 uppercase tracking-widest">No seller accounts found</p>
+                                        <p class="text-[10px] text-gray-300 mt-0.5">Try adjusting your search or filter criteria</p>
+                                    </div>
+                                </td>
+                            </tr>
+                        @endforelse
+                    </tbody>
+                </table>
+            </div>
+            {{-- Pagination --}}
+            <div class="px-5 py-2.5 border-t border-gray-50 bg-gray-50/30">
+                {{ $sellers->withQueryString()->links() }}
+            </div>
         </div>
     </div>
 
