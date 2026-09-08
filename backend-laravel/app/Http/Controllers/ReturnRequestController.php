@@ -16,7 +16,7 @@ class ReturnRequestController extends Controller
     /**
      * Create a new return request.
      */
-    public function store(Request $request, $id = null)
+    public function store(Request $request, ?string $id = null)
     {
         if (!$request->filled('orderId') && $id) {
             $request->merge(['orderId' => $id]);
@@ -187,7 +187,7 @@ class ReturnRequestController extends Controller
     /**
      * Seller approves a customer return request.
      */
-    public function sellerApproveReturn(Request $request, $orderId, $returnId)
+    public function sellerApproveReturn(Request $request, string $orderId, string $returnId)
     {
         $seller = Auth::user();
         if (!$seller || $seller->role !== 'seller') {
@@ -253,7 +253,7 @@ class ReturnRequestController extends Controller
     /**
      * Seller rejects a customer return request.
      */
-    public function sellerRejectReturn(Request $request, $orderId, $returnId)
+    public function sellerRejectReturn(Request $request, string $orderId, string $returnId)
     {
         $seller = Auth::user();
         if (!$seller || $seller->role !== 'seller') {

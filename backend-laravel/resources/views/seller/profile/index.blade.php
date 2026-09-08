@@ -219,7 +219,7 @@
          }">
 
         {{-- Main Container: Compact card on mobile, wide 3-column dashboard on large screens --}}
-        <div class="w-full max-w-[660px] lg:max-w-5xl mx-auto transition-all duration-300"
+        <div class="w-full max-w-165 lg:max-w-5xl mx-auto transition-all duration-300"
              style="background-color:#FDFBF7;border:1px solid #EAE2D2;border-radius:28px;box-shadow:0 20px 50px rgba(0,0,0,0.06);padding:28px 24px;color:#1E1915;">
 
             {{-- Top Header with Heraldic Laurel Wreath & Home Link --}}
