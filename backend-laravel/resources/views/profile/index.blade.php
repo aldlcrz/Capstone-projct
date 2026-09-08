@@ -9,7 +9,8 @@
      style="min-height:calc(100vh - 80px);background-color:#FAF8F5;padding:32px 16px;" 
      x-data="profileApp()" 
      x-init="init()">
-    <div style="max-width:500px;margin:0 auto;background-color:#FDFBF7;border:1px solid #EAE2D2;border-radius:28px;box-shadow:0 20px 50px rgba(0,0,0,0.06);padding:26px 24px;color:#1E1915;">
+    <div class="w-full max-w-[500px] lg:max-w-5xl mx-auto transition-all duration-300"
+         style="background-color:#FDFBF7;border:1px solid #EAE2D2;border-radius:28px;box-shadow:0 20px 50px rgba(0,0,0,0.06);padding:26px 24px;color:#1E1915;">
 
         {{-- Navigation Back Button --}}
         <div style="margin-bottom:16px;display:flex;align-items:center;justify-content:space-between;">
@@ -43,10 +44,10 @@
             </div>
             <div>
                 <h1 style="font-family:ui-serif,Georgia,Cambria,serif;font-size:22px;font-weight:700;color:#1E1915;letter-spacing:-0.01em;line-height:1.2;margin:0;">
-                    My Profile & Account
+                    My Profile &amp; Account
                 </h1>
                 <p style="font-size:12.5px;color:#78716C;margin-top:3px;margin-bottom:0;">
-                    Personal information & account settings
+                    Personal information &amp; account settings
                 </p>
             </div>
         </div>
@@ -57,8 +58,51 @@
             <span style="position:absolute;background-color:#FDFBF7;padding:0 12px;color:#C49520;font-size:12px;">✦</span>
         </div>
 
-        {{-- Profile Avatar & User Card --}}
-        <div style="position:relative;padding-top:10px;margin-bottom:20px;">
+        {{-- DESKTOP HERO BANNER (Visible on lg screens >= 1024px) --}}
+        <div class="hidden lg:flex items-center justify-between gap-6 p-6 bg-white border border-[#ECE3D2] rounded-2xl shadow-xs mb-6">
+            <div class="flex items-center gap-5 min-w-0">
+                {{-- Gold-Ringed Avatar --}}
+                <div class="w-20 h-20 min-w-20 rounded-full p-[2.5px] bg-gradient-to-br from-[#996515] via-[#E6CA65] to-[#996515] shadow-md shrink-0">
+                    <div class="w-full h-full rounded-full overflow-hidden bg-[#FAF8F5] flex items-center justify-center">
+                        @if($user->profile_photo_url)
+                            <img src="{{ $user->profile_photo_url }}" class="w-full h-full object-cover" alt="{{ $user->name }}">
+                        @else
+                            <span class="text-3xl font-extrabold text-[#996515]">{{ strtoupper(substr($user->name, 0, 1)) }}</span>
+                        @endif
+                    </div>
+                </div>
+
+                {{-- Name & Status --}}
+                <div class="min-w-0">
+                    <div class="flex items-center gap-3 flex-wrap">
+                        <h2 class="font-serif text-2xl font-bold text-[#1E1915] tracking-tight m-0 truncate">
+                            {{ $user->name }}
+                        </h2>
+                        <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#FAF5EA] border border-[#E6D8BA] text-[#996515] text-[11px] font-extrabold uppercase tracking-wider shrink-0">
+                            <svg class="w-3.5 h-3.5 text-[#C49520]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+                            <span>Verified LumBarong Account</span>
+                        </span>
+                    </div>
+                    <p class="text-xs text-[#78716C] mt-1.5 mb-0">
+                        Customer Account &bull; {{ $user->email }}
+                    </p>
+                </div>
+            </div>
+
+            {{-- Edit Profile Button --}}
+            <button type="button"
+                    @click="showEditModal = true"
+                    class="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-[#FAF6EE] border border-[#E2D9C8] text-[#78716C] hover:bg-[#1E1915] hover:text-[#DFC97A] hover:border-[#1E1915] font-bold text-xs uppercase tracking-wider transition-all shadow-2xs shrink-0 cursor-pointer">
+                <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/>
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                </svg>
+                <span>Edit Profile</span>
+            </button>
+        </div>
+
+        {{-- MOBILE PROFILE USER CARD (Visible on screens < lg) --}}
+        <div class="lg:hidden" style="position:relative;padding-top:10px;margin-bottom:20px;">
             {{-- Floating Gold-Ringed Avatar --}}
             <div style="width:92px;height:92px;min-width:92px;max-width:92px;min-height:92px;max-height:92px;border-radius:50%;padding:2.5px;background:linear-gradient(135deg,#996515,#E6CA65,#996515);box-shadow:0 4px 14px rgba(0,0,0,0.12);margin:0 auto -46px auto;position:relative;z-index:10;display:block;">
                 <div style="width:100%;height:100%;border-radius:50%;overflow:hidden;background-color:#FAF8F5;display:flex;align-items:center;justify-content:center;">
@@ -85,7 +129,7 @@
                         {{ $user->name }}
                     </h2>
                     <p style="font-size:12px;color:#78716C;margin:3px 0 0 0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">
-                        Customer Account • {{ $user->email }}
+                        Customer Account &bull; {{ $user->email }}
                     </p>
                 </div>
 
@@ -102,15 +146,18 @@
             </div>
         </div>
 
-        {{-- Account Settings Section --}}
-        <div>
-            <h3 style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.14em;color:#996515;margin:0 0 12px 2px;">
-                Account Settings
-            </h3>
+        {{-- 3-COLUMN ACTION GRID (Stacks on mobile, 3 columns on lg screens) --}}
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-4 lg:gap-5">
 
-            <div style="display:flex;flex-direction:column;gap:10px;">
-                {{-- Email --}}
-                <div style="background-color:#FFFFFF;border:1px solid #ECE3D2;border-radius:16px;padding:14px 16px;display:flex;align-items:center;justify-content:space-between;box-shadow:0 2px 6px rgba(0,0,0,0.02);">
+            {{-- COLUMN 1: Account & Security --}}
+            <div class="flex flex-col gap-3">
+                <h3 style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.14em;color:#996515;margin:0 0 4px 2px;">
+                    Account &amp; Security
+                </h3>
+
+                {{-- Email Address --}}
+                <div style="background-color:#FFFFFF;border:1px solid #ECE3D2;border-radius:16px;padding:14px 16px;display:flex;align-items:center;justify-content:space-between;box-shadow:0 2px 6px rgba(0,0,0,0.02);"
+                     class="hover:border-[#C49520] transition-all">
                     <div style="display:flex;align-items:center;gap:12px;min-width:0;">
                         <div style="width:38px;height:38px;border-radius:11px;background-color:#FAF5EA;border:1px solid #E6D8BA;display:flex;align-items:center;justify-content:center;color:#B88728;flex-shrink:0;">
                             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
@@ -119,16 +166,44 @@
                             </svg>
                         </div>
                         <div style="min-width:0;flex:1;">
-                            <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.06em;color:#8C827A;line-height:1.1;">Email Address</div>
-                            <div style="font-size:13.5px;font-weight:700;color:#1E1915;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin-top:2px;" x-text="currentEmailDisplay">
+                            <div style="font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:0.06em;color:#8C827A;line-height:1.1;">Email Address</div>
+                            <div style="font-size:13px;font-weight:700;color:#1E1915;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin-top:2px;" x-text="currentEmailDisplay">
                                 {{ $user->email }}
                             </div>
                         </div>
                     </div>
-                    <button type="button" @click="openChangeEmailModal()" style="font-size:10px;font-weight:800;color:#996515;background-color:#FAF5EA;border:1px solid #E6D8BA;padding:3px 9px;border-radius:6px;text-transform:uppercase;letter-spacing:0.04em;cursor:pointer;">
+                    <button type="button" @click="openChangeEmailModal()" style="font-size:10px;font-weight:800;color:#996515;background-color:#FAF5EA;border:1px solid #E6D8BA;padding:3px 9px;border-radius:6px;text-transform:uppercase;letter-spacing:0.04em;cursor:pointer;flex-shrink:0;" class="hover:bg-[#1E1915] hover:text-[#DFC97A] transition-all">
                         Change
                     </button>
                 </div>
+
+                {{-- Change Password --}}
+                <a href="{{ route('profile.change-password') }}"
+                   style="background-color:#FFFFFF;border:1px solid #ECE3D2;border-radius:16px;padding:14px 16px;display:flex;align-items:center;justify-content:space-between;box-shadow:0 2px 6px rgba(0,0,0,0.02);cursor:pointer;width:100%;text-align:left;transition:all 0.2s;text-decoration:none;"
+                   class="hover:border-[#C49520] hover:bg-[#FDFBF7] group">
+                    <div style="display:flex;align-items:center;gap:12px;">
+                        <div style="width:38px;height:38px;border-radius:11px;background-color:#FAF5EA;border:1px solid #E6D8BA;display:flex;align-items:center;justify-content:center;color:#B88728;flex-shrink:0;" class="group-hover:scale-105 transition-transform">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                                <rect x="3" y="11" width="18" height="11" rx="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                <path d="M7 11V7a5 5 0 0110 0v4" stroke-linecap="round" stroke-linejoin="round"/>
+                            </svg>
+                        </div>
+                        <div>
+                            <span style="font-size:13.5px;font-weight:700;color:#1E1915;display:block;">Change Password</span>
+                            <span style="font-size:11px;color:#8C827A;display:block;margin-top:1px;">Update account security</span>
+                        </div>
+                    </div>
+                    <svg width="16" height="16" fill="none" stroke="#8C827A" viewBox="0 0 24 24" stroke-width="2.2" class="group-hover:translate-x-0.5 transition-transform">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/>
+                    </svg>
+                </a>
+            </div>
+
+            {{-- COLUMN 2: Shipping & Delivery --}}
+            <div class="flex flex-col gap-3">
+                <h3 style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.14em;color:#996515;margin:0 0 4px 2px;">
+                    Shipping &amp; Delivery
+                </h3>
 
                 {{-- Saved Address (Opens Modal) --}}
                 <button type="button"
@@ -143,11 +218,13 @@
                             </svg>
                         </div>
                         <div>
-                            <div style="font-size:14px;font-weight:700;color:#1E1915;">Shipping Addresses</div>
-                            <div style="font-size:11px;color:#8C827A;margin-top:1px;">Manage delivery destinations & GPS pinpoint</div>
+                            <div style="font-size:13.5px;font-weight:700;color:#1E1915;">Shipping Addresses</div>
+                            <div style="font-size:11px;color:#8C827A;margin-top:1px;" x-text="addresses.length ? addresses.length + ' saved address(es)' : 'Manage delivery destinations'">
+                                Manage delivery destinations &amp; GPS
+                            </div>
                         </div>
                     </div>
-                    <div style="display:flex;align-items:center;gap:6px;">
+                    <div style="display:flex;align-items:center;gap:6px;flex-shrink:0;">
                         <span style="font-size:10px;font-weight:800;color:#996515;background-color:#FAF5EA;border:1px solid #E6D8BA;padding:2px 8px;border-radius:6px;text-transform:uppercase;letter-spacing:0.04em;">Manage</span>
                         <svg width="16" height="16" fill="none" stroke="#8C827A" viewBox="0 0 24 24" stroke-width="2.2" class="group-hover:translate-x-0.5 transition-transform">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/>
@@ -155,106 +232,105 @@
                     </div>
                 </button>
 
+                {{-- Verified & Trusted Customer Banner --}}
+                <div style="padding:14px 16px;border-radius:16px;background:linear-gradient(90deg,#F6F0E4 0%,#F2EADA 50%,#EAE0CD 100%);border:1px solid #E2D6C0;display:flex;align-items:center;justify-content:space-between;gap:12px;position:relative;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,0.03);">
+                    <div style="display:flex;align-items:center;gap:12px;position:relative;z-index:10;">
+                        <div style="width:32px;height:32px;border-radius:50%;border:2px solid #B88728;background-color:#FAF4EA;display:flex;align-items:center;justify-content:center;color:#B88728;flex-shrink:0;box-shadow:0 1px 2px rgba(0,0,0,0.05);">
+                            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/>
+                            </svg>
+                        </div>
+                        <div>
+                            <h5 style="font-size:12.5px;font-weight:700;color:#1E1915;margin:0;line-height:1.2;">Verified LumBarong Account</h5>
+                            <p style="font-size:10.5px;color:#78716C;margin:2px 0 0 0;">Authentic Filipino artisan craft.</p>
+                        </div>
+                    </div>
+                    <!-- Background Embroidery Flourish Watermark -->
+                    <svg width="100" height="60" viewBox="0 0 120 80" fill="#C49520" style="position:absolute;right:4px;bottom:-10px;opacity:0.18;pointer-events:none;">
+                        <path d="M60 10C40 10 30 30 10 35C30 40 40 60 60 60C80 60 90 40 110 35C90 30 80 10 60 10ZM60 25C65 25 70 30 70 35C70 40 65 45 60 45C55 45 50 40 50 35C50 30 55 25 60 25Z"/>
+                    </svg>
+                </div>
+            </div>
+
+            {{-- COLUMN 3: Orders & Support --}}
+            <div class="flex flex-col gap-3">
+                <h3 style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.14em;color:#996515;margin:0 0 4px 2px;">
+                    Orders &amp; Support
+                </h3>
+
                 {{-- Orders --}}
                 <a href="{{ route('orders') }}" 
-                   style="background-color:#FFFFFF;border:1px solid #ECE3D2;border-radius:16px;padding:14px 16px;display:flex;align-items:center;justify-content:space-between;box-shadow:0 2px 6px rgba(0,0,0,0.02);cursor:pointer;width:100%;text-decoration:none;transition:background-color 0.2s;">
+                   style="background-color:#FFFFFF;border:1px solid #ECE3D2;border-radius:16px;padding:14px 16px;display:flex;align-items:center;justify-content:space-between;box-shadow:0 2px 6px rgba(0,0,0,0.02);cursor:pointer;width:100%;text-decoration:none;transition:all 0.2s;"
+                   class="hover:border-[#C49520] hover:bg-[#FDFBF7] group">
                     <div style="display:flex;align-items:center;gap:12px;">
-                        <div style="width:38px;height:38px;border-radius:11px;background-color:#FAF5EA;border:1px solid #E6D8BA;display:flex;align-items:center;justify-content:center;color:#B88728;flex-shrink:0;">
+                        <div style="width:38px;height:38px;border-radius:11px;background-color:#FAF5EA;border:1px solid #E6D8BA;display:flex;align-items:center;justify-content:center;color:#B88728;flex-shrink:0;" class="group-hover:scale-105 transition-transform">
                             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
                                 <path stroke-linecap="round" stroke-linejoin="round" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/>
                             </svg>
                         </div>
-                        <span style="font-size:14px;font-weight:700;color:#1E1915;">Orders</span>
-                    </div>
-                    <svg width="16" height="16" fill="none" stroke="#8C827A" viewBox="0 0 24 24" stroke-width="2.2">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/>
-                    </svg>
-                </a>
-
-                {{-- Change Password --}}
-                <a href="{{ route('profile.change-password') }}"
-                   style="background-color:#FFFFFF;border:1px solid #ECE3D2;border-radius:16px;padding:14px 16px;display:flex;align-items:center;justify-content:space-between;box-shadow:0 2px 6px rgba(0,0,0,0.02);cursor:pointer;width:100%;text-align:left;transition:background-color 0.2s;text-decoration:none;">
-                    <div style="display:flex;align-items:center;gap:12px;">
-                        <div style="width:38px;height:38px;border-radius:11px;background-color:#FAF5EA;border:1px solid #E6D8BA;display:flex;align-items:center;justify-content:center;color:#B88728;flex-shrink:0;">
-                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
-                                <rect x="3" y="11" width="18" height="11" rx="2" stroke-linecap="round" stroke-linejoin="round"/>
-                                <path d="M7 11V7a5 5 0 0110 0v4" stroke-linecap="round" stroke-linejoin="round"/>
-                            </svg>
+                        <div>
+                            <span style="font-size:13.5px;font-weight:700;color:#1E1915;display:block;">Orders</span>
+                            <span style="font-size:11px;color:#8C827A;display:block;margin-top:1px;">Track purchases &amp; deliveries</span>
                         </div>
-                        <span style="font-size:14px;font-weight:700;color:#1E1915;">Change Password</span>
                     </div>
-                    <svg width="16" height="16" fill="none" stroke="#8C827A" viewBox="0 0 24 24" stroke-width="2.2">
+                    <svg width="16" height="16" fill="none" stroke="#8C827A" viewBox="0 0 24 24" stroke-width="2.2" class="group-hover:translate-x-0.5 transition-transform">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/>
                     </svg>
                 </a>
 
                 {{-- My Reports & Concerns --}}
                 <a href="{{ route('profile.reports') }}"
-                   style="background-color:#FFFFFF;border:1px solid #ECE3D2;border-radius:16px;padding:14px 16px;display:flex;align-items:center;justify-content:space-between;box-shadow:0 2px 6px rgba(0,0,0,0.02);cursor:pointer;width:100%;text-align:left;transition:background-color 0.2s;text-decoration:none;">
+                   style="background-color:#FFFFFF;border:1px solid #ECE3D2;border-radius:16px;padding:14px 16px;display:flex;align-items:center;justify-content:space-between;box-shadow:0 2px 6px rgba(0,0,0,0.02);cursor:pointer;width:100%;text-align:left;transition:all 0.2s;text-decoration:none;"
+                   class="hover:border-[#C49520] hover:bg-[#FDFBF7] group">
                     <div style="display:flex;align-items:center;gap:12px;">
-                        <div style="width:38px;height:38px;border-radius:11px;background-color:#FAF5EA;border:1px solid #E6D8BA;display:flex;align-items:center;justify-content:center;color:#B88728;flex-shrink:0;">
+                        <div style="width:38px;height:38px;border-radius:11px;background-color:#FAF5EA;border:1px solid #E6D8BA;display:flex;align-items:center;justify-content:center;color:#B88728;flex-shrink:0;" class="group-hover:scale-105 transition-transform">
                             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
                                 <path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>
                             </svg>
                         </div>
-                        <span style="font-size:14px;font-weight:700;color:#1E1915;">My Reports &amp; Concerns</span>
+                        <div>
+                            <span style="font-size:13.5px;font-weight:700;color:#1E1915;display:block;">My Reports &amp; Concerns</span>
+                            <span style="font-size:11px;color:#8C827A;display:block;margin-top:1px;">Help center &amp; inquiries</span>
+                        </div>
                     </div>
-                    <svg width="16" height="16" fill="none" stroke="#8C827A" viewBox="0 0 24 24" stroke-width="2.2">
+                    <svg width="16" height="16" fill="none" stroke="#8C827A" viewBox="0 0 24 24" stroke-width="2.2" class="group-hover:translate-x-0.5 transition-transform">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/>
                     </svg>
                 </a>
-            </div>
-        </div>
 
-        {{-- Verified & Trusted Customer Footer Banner --}}
-        <div style="margin-top:18px;padding:14px 18px;border-radius:18px;background:linear-gradient(90deg,#F6F0E4 0%,#F2EADA 50%,#EAE0CD 100%);border:1px solid #E2D6C0;display:flex;align-items:center;justify-content:space-between;gap:12px;position:relative;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,0.03);">
-            <div style="display:flex;align-items:center;gap:12px;position:relative;z-index:10;">
-                <div style="width:32px;height:32px;border-radius:50%;border:2px solid #B88728;background-color:#FAF4EA;display:flex;align-items:center;justify-content:center;color:#B88728;flex-shrink:0;box-shadow:0 1px 2px rgba(0,0,0,0.05);">
-                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/>
-                    </svg>
-                </div>
+                {{-- Logout Action --}}
                 <div>
-                    <h5 style="font-size:13px;font-weight:700;color:#1E1915;margin:0;line-height:1.2;">Verified LumBarong Account</h5>
-                    <p style="font-size:11px;color:#78716C;margin:2px 0 0 0;">Quality craftsmanship. Authentic Filipino heritage.</p>
+                    <form x-ref="customerProfileLogoutForm" action="{{ route('logout') }}" method="POST">
+                        @csrf
+                        <button type="button"
+                                @click="$dispatch('open-confirmation', {
+                                    title: 'Logout',
+                                    message: 'Are you sure you want to log out of your LumBarong account?',
+                                    confirmText: 'Logout',
+                                    type: 'danger',
+                                    onConfirm: () => $refs.customerProfileLogoutForm.submit()
+                                })"
+                                style="background-color:#FEF2F2;border:1px solid #FECACA;border-radius:16px;padding:12px 16px;display:flex;align-items:center;justify-content:space-between;box-shadow:0 2px 6px rgba(0,0,0,0.02);cursor:pointer;width:100%;text-align:left;transition:all 0.2s;color:#DC2626;"
+                                class="hover:bg-red-600 hover:text-white hover:border-red-600 group">
+                            <div style="display:flex;align-items:center;gap:12px;">
+                                <div style="width:34px;height:34px;border-radius:10px;background-color:#FEE2E2;border:1px solid #FECACA;display:flex;align-items:center;justify-content:center;color:#DC2626;flex-shrink:0;" class="group-hover:bg-white group-hover:text-red-600 transition-colors">
+                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/>
+                                    </svg>
+                                </div>
+                                <div>
+                                    <div style="font-size:13px;font-weight:700;">Log Out</div>
+                                    <div style="font-size:11px;color:#991B1B;margin-top:1px;" class="group-hover:text-red-100">Sign out of account</div>
+                                </div>
+                            </div>
+                            <svg width="15" height="15" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.2" class="group-hover:translate-x-0.5 transition-transform">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/>
+                            </svg>
+                        </button>
+                    </form>
                 </div>
             </div>
-            <!-- Background Embroidery Flourish Watermark -->
-            <svg width="120" height="70" viewBox="0 0 120 80" fill="#C49520" style="position:absolute;right:8px;bottom:-10px;opacity:0.18;pointer-events:none;">
-                <path d="M60 10C40 10 30 30 10 35C30 40 40 60 60 60C80 60 90 40 110 35C90 30 80 10 60 10ZM60 25C65 25 70 30 70 35C70 40 65 45 60 45C55 45 50 40 50 35C50 30 55 25 60 25Z"/>
-            </svg>
-        </div>
 
-        {{-- Logout Action (Visible on mobile & desktop) --}}
-        <div style="margin-top:14px;">
-            <form x-ref="customerProfileLogoutForm" action="{{ route('logout') }}" method="POST">
-                @csrf
-                <button type="button"
-                        @click="$dispatch('open-confirmation', {
-                            title: 'Logout',
-                            message: 'Are you sure you want to log out of your LumBarong account?',
-                            confirmText: 'Logout',
-                            type: 'danger',
-                            onConfirm: () => $refs.customerProfileLogoutForm.submit()
-                        })"
-                        style="background-color:#FEF2F2;border:1px solid #FECACA;border-radius:16px;padding:14px 16px;display:flex;align-items:center;justify-content:space-between;box-shadow:0 2px 6px rgba(0,0,0,0.02);cursor:pointer;width:100%;text-align:left;transition:all 0.2s;color:#DC2626;"
-                        class="hover:bg-red-600 hover:text-white hover:border-red-600 group">
-                    <div style="display:flex;align-items:center;gap:12px;">
-                        <div style="width:38px;height:38px;border-radius:11px;background-color:#FEE2E2;border:1px solid #FECACA;display:flex;align-items:center;justify-content:center;color:#DC2626;flex-shrink:0;" class="group-hover:bg-white group-hover:text-red-600 transition-colors">
-                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/>
-                            </svg>
-                        </div>
-                        <div>
-                            <div style="font-size:14px;font-weight:700;">Log Out</div>
-                            <div style="font-size:11.5px;color:#991B1B;margin-top:1px;" class="group-hover:text-red-100">Sign out of your account</div>
-                        </div>
-                    </div>
-                    <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.2" class="group-hover:translate-x-0.5 transition-transform">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/>
-                    </svg>
-                </button>
-            </form>
         </div>
 
     </div>
