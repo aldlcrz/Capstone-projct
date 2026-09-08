@@ -26,7 +26,7 @@
     }
 }">
     {{-- Page Header & Search Bar --}}
-    <div class="space-y-3.5">
+    <div class="space-y-3.5 text-center">
         <div>
             <div class="text-[10px] font-bold text-[#C0422A] uppercase tracking-[0.2em] mb-1">User Registry</div>
             <h1 class="font-serif text-2xl sm:text-3xl font-bold text-black">
@@ -35,7 +35,7 @@
         </div>
 
         {{-- Search Input (Below title) --}}
-        <form method="GET" class="flex items-center gap-2 max-w-sm sm:max-w-md">
+        <form method="GET" class="flex items-center justify-center gap-2 max-w-sm sm:max-w-md mx-auto">
             @if(request('status'))
                 <input type="hidden" name="status" value="{{ request('status') }}">
             @endif
@@ -55,7 +55,7 @@
     @endphp
 
     {{-- Filter Pills --}}
-    <div class="flex items-center gap-2 overflow-x-auto no-scrollbar pt-1">
+    <div class="flex items-center justify-center gap-2 overflow-x-auto no-scrollbar pt-1">
         {{-- ALL --}}
         <a href="{{ request()->fullUrlWithQuery(['status' => null, 'page' => 1]) }}"
            class="inline-flex items-center gap-2 px-4 py-2 rounded-full text-[10px] sm:text-[11px] font-black uppercase tracking-wider transition-all {{ empty($currentStatus) ? 'bg-black text-white shadow-sm' : 'bg-white text-gray-700 border border-gray-200 hover:bg-gray-50' }}">
