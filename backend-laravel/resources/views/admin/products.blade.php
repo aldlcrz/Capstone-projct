@@ -1,7 +1,14 @@
 @extends('layouts.admin')
 
 @section('content')
-<div class="space-y-6" x-data="{
+<div class="space-y-4" x-data="{
+    // View Mode (Table or Grid)
+    viewMode: localStorage.getItem('admin_product_view') || 'table',
+    setViewMode(mode) {
+        this.viewMode = mode;
+        localStorage.setItem('admin_product_view', mode);
+    },
+
     // Product Inspection Modal State
     inspectModal: false,
     inspectProduct: null,
@@ -131,286 +138,440 @@
     }
 }">
 
-    {{-- Page Header --}}
-    <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div>
-            <div class="text-[9px] font-black tracking-widest text-[#C0422A] uppercase flex items-center gap-1.5 mb-1.5">
-                <span>CATALOG &amp; INVENTORY</span>
-                <span class="text-gray-300">·</span>
-                <span>MODERATION</span>
-                <span class="text-gray-300">·</span>
-                <span>ADMIN CENTER</span>
+    {{-- ═══ PAGE HEADER + SEARCH BAR ═══ --}}
+    <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+        {{-- Left: Title & Subtitle --}}
+        <div class="text-left space-y-0.5 shrink-0">
+            <div class="inline-flex items-center gap-2">
+                <span class="text-[9px] font-black uppercase tracking-[0.25em] text-[#C0422A]">Marketplace Catalog</span>
+                <span class="text-gray-300 text-xs">·</span>
+                <span class="text-[9px] font-bold uppercase tracking-[0.2em] text-gray-400">Admin Center</span>
             </div>
-            <h1 class="font-serif text-2xl sm:text-3xl font-bold text-gray-900">
-                Product <span class="text-[#C0422A] font-light italic">Catalog &amp; Moderation</span>
+            <h1 class="font-serif text-2xl sm:text-3xl font-bold text-gray-900 leading-tight">
+                Product <span class="text-[#C0420A] font-light italic">Catalog &amp; Moderation</span>
             </h1>
-            <p class="text-[11px] text-gray-500 mt-1 font-medium">Review artisan submissions, verify craftsmanship standards, and oversee marketplace catalog inventory.</p>
+            <p class="text-[11px] text-gray-400 font-medium">Review artisan submissions, verify craftsmanship standards, and oversee catalog inventory</p>
         </div>
 
-        {{-- Search Input (Right Aligned in Header) --}}
-        <form method="GET" class="flex items-center gap-2 max-w-sm w-full">
-            @if(request('status'))
-                <input type="hidden" name="status" value="{{ request('status') }}">
-            @endif
-            <div class="relative w-full">
-                <input type="text" name="search" value="{{ request('search') }}" placeholder="Search products, artisans, fabrics..." 
-                       class="w-full pl-9 pr-4 py-2.5 bg-white border border-gray-200 rounded-2xl text-xs text-gray-900 placeholder:text-gray-400 focus:outline-none focus:border-[#C0422A] shadow-xs transition-all">
-                <svg class="w-4 h-4 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
-            </div>
-            @if(request('search'))
-                <a href="{{ request()->fullUrlWithQuery(['search' => null, 'page' => 1]) }}" class="px-3.5 py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-600 rounded-2xl text-[10px] font-black uppercase tracking-wider transition-colors shrink-0">Clear</a>
-            @endif
-        </form>
-    </div>
-
-    {{-- 4-Metric Stats Bar --}}
-    <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
-        <div class="bg-white rounded-2xl border border-gray-100 shadow-xs px-4 py-3.5 flex items-center gap-3 hover:shadow-md transition-all">
-            <div class="w-9 h-9 rounded-xl bg-gray-50 border border-gray-100 flex items-center justify-center shrink-0">
-                <svg class="w-4 h-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/>
-                </svg>
-            </div>
-            <div>
-                <div class="text-lg font-black text-gray-900 leading-tight">{{ $counts['all'] }}</div>
-                <div class="text-[9px] font-bold uppercase tracking-wider text-gray-400">Total Submissions</div>
-            </div>
-        </div>
-
-        <div class="bg-white rounded-2xl border border-amber-100 shadow-xs px-4 py-3.5 flex items-center gap-3 hover:shadow-md transition-all">
-            <div class="w-9 h-9 rounded-xl bg-amber-50 border border-amber-100 flex items-center justify-center shrink-0">
-                <svg class="w-4 h-4 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                </svg>
-            </div>
-            <div>
-                <div class="text-lg font-black text-amber-700 leading-tight">{{ $counts['pending'] }}</div>
-                <div class="text-[9px] font-bold uppercase tracking-wider text-amber-500">Pending Approval</div>
-            </div>
-        </div>
-
-        <div class="bg-white rounded-2xl border border-emerald-100 shadow-xs px-4 py-3.5 flex items-center gap-3 hover:shadow-md transition-all">
-            <div class="w-9 h-9 rounded-xl bg-emerald-50 border border-emerald-100 flex items-center justify-center shrink-0">
-                <svg class="w-4 h-4 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                </svg>
-            </div>
-            <div>
-                <div class="text-lg font-black text-emerald-700 leading-tight">{{ $counts['approved'] }}</div>
-                <div class="text-[9px] font-bold uppercase tracking-wider text-emerald-500">Live In Catalog</div>
-            </div>
-        </div>
-
-        <div class="bg-white rounded-2xl border border-rose-100 shadow-xs px-4 py-3.5 flex items-center gap-3 hover:shadow-md transition-all">
-            <div class="w-9 h-9 rounded-xl bg-rose-50 border border-rose-100 flex items-center justify-center shrink-0">
-                <svg class="w-4 h-4 text-rose-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                </svg>
-            </div>
-            <div>
-                <div class="text-lg font-black text-rose-700 leading-tight">{{ $counts['rejected'] }}</div>
-                <div class="text-[9px] font-bold uppercase tracking-wider text-rose-500">Flagged / Rejected</div>
-            </div>
+        {{-- Larger Search Bar in front of Header --}}
+        <div class="flex-1 max-w-xl lg:max-w-2xl w-full">
+            <form method="GET" class="flex items-center gap-2 w-full">
+                @if(request('status'))
+                    <input type="hidden" name="status" value="{{ request('status') }}">
+                @endif
+                <div class="relative w-full">
+                    <input type="text" name="search" value="{{ request('search') }}"
+                           placeholder="Search products, artisans, fabrics..."
+                           class="w-full pl-11 pr-5 py-2.5 bg-white border border-gray-200 rounded-full text-sm text-gray-800 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-[#C0422A]/20 focus:border-[#C0422A] shadow-xs transition-all">
+                    <svg class="w-5 h-5 text-gray-400 absolute left-4 top-1/2 -translate-y-1/2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+                </div>
+                @if(request('search'))
+                    <a href="{{ request()->fullUrlWithQuery(['search' => null, 'page' => 1]) }}" class="px-4 py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-600 rounded-full text-xs font-bold transition-all shrink-0">Clear</a>
+                @endif
+            </form>
         </div>
     </div>
 
+    {{-- ═══ STATS BAR / STATUS FILTERS ═══ --}}
     @php
         $currentStatus = request('status', 'pending');
+        $isPending   = empty($currentStatus) || $currentStatus === 'pending';
+        $isApproved  = $currentStatus === 'approved';
+        $isRejected  = $currentStatus === 'rejected';
+        $isAll       = $currentStatus === 'all';
     @endphp
-
-    {{-- Filter Pills --}}
-    <div class="flex items-center gap-2 overflow-x-auto no-scrollbar py-1">
-        {{-- ALL --}}
-        <a href="{{ request()->fullUrlWithQuery(['status' => null, 'page' => 1]) }}"
-           class="inline-flex items-center gap-2 px-4 py-2 rounded-full text-[10px] font-black uppercase tracking-wider transition-all {{ empty($currentStatus) || $currentStatus === 'all' ? 'bg-[#3D2B1F] text-white shadow-xs' : 'bg-white text-gray-700 border border-gray-200 hover:border-gray-300' }}">
-            <span>ALL PRODUCTS</span>
-            <span class="px-2 py-0.5 rounded-full text-[9px] font-black {{ empty($currentStatus) || $currentStatus === 'all' ? 'bg-white/20 text-white' : 'bg-gray-100 text-gray-600' }}">{{ $counts['all'] }}</span>
+    <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+        {{-- Total / All --}}
+        <a href="{{ request()->fullUrlWithQuery(['status' => 'all', 'page' => 1]) }}"
+           class="group relative rounded-2xl px-4 py-3 flex items-center justify-between border transition-all duration-200 cursor-pointer {{ $isAll ? 'bg-white border-gray-900 ring-2 ring-gray-900/15 shadow-sm -translate-y-0.5' : 'bg-white border-gray-100 hover:border-gray-300 hover:shadow-sm hover:-translate-y-0.5' }}">
+            <div class="flex items-center gap-3">
+                <div class="w-8.5 h-8.5 rounded-xl flex items-center justify-center shrink-0 transition-colors {{ $isAll ? 'bg-gray-900 text-white' : 'bg-gray-100 text-gray-500 group-hover:bg-gray-200' }}">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>
+                </div>
+                <div>
+                    <div class="text-base sm:text-lg font-black text-gray-900 leading-none">{{ $counts['all'] ?? 0 }}</div>
+                    <div class="text-[9px] font-bold uppercase tracking-wider text-gray-400 mt-0.5">Total</div>
+                </div>
+            </div>
+            @if($isAll)
+                <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[8px] font-black uppercase tracking-wider bg-gray-900 text-white shadow-xs">
+                    <span class="w-1 h-1 rounded-full bg-emerald-400"></span> Active
+                </span>
+            @endif
         </a>
 
-        {{-- PENDING --}}
+        {{-- Pending Approval (Default) --}}
         <a href="{{ request()->fullUrlWithQuery(['status' => 'pending', 'page' => 1]) }}"
-           class="inline-flex items-center gap-2 px-4 py-2 rounded-full text-[10px] font-black uppercase tracking-wider transition-all {{ $currentStatus === 'pending' ? 'bg-amber-600 text-white shadow-xs' : 'bg-white text-gray-700 border border-gray-200 hover:border-amber-300' }}">
-            <span class="w-1.5 h-1.5 rounded-full {{ $currentStatus === 'pending' ? 'bg-white' : 'bg-amber-500' }}"></span>
-            <span>PENDING APPROVAL</span>
-            <span class="px-2 py-0.5 rounded-full text-[9px] font-black {{ $currentStatus === 'pending' ? 'bg-white/20 text-white' : 'bg-gray-100 text-gray-600' }}">{{ $counts['pending'] }}</span>
+           class="group relative rounded-2xl px-4 py-3 flex items-center justify-between border transition-all duration-200 cursor-pointer {{ $isPending ? 'bg-amber-50/50 border-amber-500 ring-2 ring-amber-500/20 shadow-sm -translate-y-0.5' : 'bg-white border-amber-100 hover:border-amber-300 hover:shadow-sm hover:-translate-y-0.5' }}">
+            <div class="flex items-center gap-3">
+                <div class="w-8.5 h-8.5 rounded-xl flex items-center justify-center shrink-0 transition-colors {{ $isPending ? 'bg-amber-500 text-white' : 'bg-amber-50 text-amber-500 group-hover:bg-amber-100' }}">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                </div>
+                <div>
+                    <div class="text-base sm:text-lg font-black text-gray-900 leading-none">{{ $counts['pending'] ?? 0 }}</div>
+                    <div class="text-[9px] font-bold uppercase tracking-wider text-amber-500 mt-0.5">Pending</div>
+                </div>
+            </div>
+            @if($isPending)
+                <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[8px] font-black uppercase tracking-wider bg-amber-500 text-white shadow-xs">
+                    <span class="w-1 h-1 rounded-full bg-amber-200"></span> Active
+                </span>
+            @endif
         </a>
 
-        {{-- APPROVED --}}
+        {{-- Approved / Live in Catalog --}}
         <a href="{{ request()->fullUrlWithQuery(['status' => 'approved', 'page' => 1]) }}"
-           class="inline-flex items-center gap-2 px-4 py-2 rounded-full text-[10px] font-black uppercase tracking-wider transition-all {{ $currentStatus === 'approved' ? 'bg-emerald-600 text-white shadow-xs' : 'bg-white text-gray-700 border border-gray-200 hover:border-emerald-300' }}">
-            <span class="w-1.5 h-1.5 rounded-full {{ $currentStatus === 'approved' ? 'bg-white' : 'bg-emerald-500' }}"></span>
-            <span>APPROVED</span>
-            <span class="px-2 py-0.5 rounded-full text-[9px] font-black {{ $currentStatus === 'approved' ? 'bg-white/20 text-white' : 'bg-gray-100 text-gray-600' }}">{{ $counts['approved'] }}</span>
+           class="group relative rounded-2xl px-4 py-3 flex items-center justify-between border transition-all duration-200 cursor-pointer {{ $isApproved ? 'bg-emerald-50/50 border-emerald-600 ring-2 ring-emerald-600/20 shadow-sm -translate-y-0.5' : 'bg-white border-green-100 hover:border-emerald-300 hover:shadow-sm hover:-translate-y-0.5' }}">
+            <div class="flex items-center gap-3">
+                <div class="w-8.5 h-8.5 rounded-xl flex items-center justify-center shrink-0 transition-colors {{ $isApproved ? 'bg-emerald-600 text-white' : 'bg-green-50 text-green-600 group-hover:bg-green-100' }}">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                </div>
+                <div>
+                    <div class="text-base sm:text-lg font-black text-gray-900 leading-none">{{ $counts['approved'] ?? 0 }}</div>
+                    <div class="text-[9px] font-bold uppercase tracking-wider text-green-600 mt-0.5">Live in Catalog</div>
+                </div>
+            </div>
+            @if($isApproved)
+                <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[8px] font-black uppercase tracking-wider bg-emerald-600 text-white shadow-xs">
+                    <span class="w-1 h-1 rounded-full bg-emerald-200"></span> Active
+                </span>
+            @endif
         </a>
 
-        {{-- REJECTED --}}
+        {{-- Flagged / Rejected --}}
         <a href="{{ request()->fullUrlWithQuery(['status' => 'rejected', 'page' => 1]) }}"
-           class="inline-flex items-center gap-2 px-4 py-2 rounded-full text-[10px] font-black uppercase tracking-wider transition-all {{ $currentStatus === 'rejected' ? 'bg-rose-600 text-white shadow-xs' : 'bg-white text-gray-700 border border-gray-200 hover:border-rose-300' }}">
-            <span class="w-1.5 h-1.5 rounded-full {{ $currentStatus === 'rejected' ? 'bg-white' : 'bg-rose-500' }}"></span>
-            <span>REJECTED</span>
-            <span class="px-2 py-0.5 rounded-full text-[9px] font-black {{ $currentStatus === 'rejected' ? 'bg-white/20 text-white' : 'bg-gray-100 text-gray-600' }}">{{ $counts['rejected'] }}</span>
+           class="group relative rounded-2xl px-4 py-3 flex items-center justify-between border transition-all duration-200 cursor-pointer {{ $isRejected ? 'bg-red-50/50 border-red-600 ring-2 ring-red-600/20 shadow-sm -translate-y-0.5' : 'bg-white border-red-100 hover:border-red-300 hover:shadow-sm hover:-translate-y-0.5' }}">
+            <div class="flex items-center gap-3">
+                <div class="w-8.5 h-8.5 rounded-xl flex items-center justify-center shrink-0 transition-colors {{ $isRejected ? 'bg-red-600 text-white' : 'bg-red-50 text-red-500 group-hover:bg-red-100' }}">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                </div>
+                <div>
+                    <div class="text-base sm:text-lg font-black text-gray-900 leading-none">{{ $counts['rejected'] ?? 0 }}</div>
+                    <div class="text-[9px] font-bold uppercase tracking-wider text-red-500 mt-0.5">Rejected</div>
+                </div>
+            </div>
+            @if($isRejected)
+                <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[8px] font-black uppercase tracking-wider bg-red-600 text-white shadow-xs">
+                    <span class="w-1 h-1 rounded-full bg-red-200"></span> Active
+                </span>
+            @endif
         </a>
     </div>
 
-    {{-- Product Grid --}}
-    @if($products->isEmpty())
-        <div class="text-center py-20 bg-white rounded-3xl border border-dashed border-gray-200 shadow-xs p-8">
-            <div class="w-14 h-14 bg-gray-50 rounded-2xl flex items-center justify-center mx-auto mb-3 text-gray-400 border border-gray-100">
-                <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/>
-                </svg>
-            </div>
-            <h3 class="text-sm font-bold text-gray-800 uppercase tracking-wider">No Products Found</h3>
-            <p class="text-xs text-gray-400 mt-1">There are currently no artisan pieces matching this filter or search query.</p>
+    {{-- ═══ RESULTS COUNT & VIEW TOGGLE ═══ --}}
+    <div class="flex items-center justify-between px-1">
+        <div class="text-[11px] font-bold text-gray-400">
+            Showing <span class="text-gray-900 font-black">{{ $products->total() }}</span> {{ $products->total() === 1 ? 'artisan piece' : 'artisan pieces' }}
+            <span class="text-gray-400">· Filtered by <span class="capitalize font-black text-gray-700">{{ $isPending ? 'Pending' : ($isApproved ? 'Live In Catalog' : ($isRejected ? 'Rejected' : 'All')) }}</span></span>
+            @if(request('search'))
+                <span class="text-gray-400">· Matching "<span class="font-bold text-gray-700">{{ request('search') }}</span>"</span>
+            @endif
         </div>
-    @else
-        <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-5">
-            @foreach($products as $product)
-                @php
-                    $productStatus = strtolower($product->status ?? 'pending');
-                    $statusBadgeStyles = [
-                        'pending'  => 'bg-amber-50 text-amber-800 border-amber-200/80 shadow-2xs',
-                        'approved' => 'bg-emerald-50 text-emerald-800 border-emerald-200/80 shadow-2xs',
-                        'rejected' => 'bg-rose-50 text-rose-800 border-rose-200/80 shadow-2xs',
-                    ];
-                @endphp
-                <div class="bg-white border border-gray-100 rounded-3xl shadow-xs hover:shadow-xl transition-all duration-300 overflow-hidden flex flex-col group">
-                    
-                    {{-- Compact Scaled Product Image --}}
-                    <div class="relative w-full h-48 sm:h-52 bg-stone-100 overflow-hidden shrink-0 border-b border-gray-100 cursor-pointer group/img"
-                         @click="openInspect(@js($product))"
-                         title="Click to inspect product details">
-                        <img src="{{ $product->getImageUrl() }}" 
-                             onerror="this.src='/uploads/products/default.jpg'"
-                             class="w-full h-full object-cover object-top group-hover/img:scale-105 transition-transform duration-500">
-                        
-                        {{-- Top Badge Overlays --}}
-                        <div class="absolute top-3 left-3 right-3 flex items-center justify-between pointer-events-none gap-2">
-                            <span class="px-2.5 py-1 bg-black/75 backdrop-blur-md rounded-xl text-[9px] font-bold text-white uppercase tracking-wider truncate max-w-[55%] shadow-xs">
-                                {{ $product->category->name ?? 'Artisan Piece' }}
-                            </span>
-                            <span class="inline-flex items-center gap-1 px-2.5 py-1 border rounded-full text-[9px] font-black uppercase tracking-wider backdrop-blur-md {{ $statusBadgeStyles[$productStatus] ?? 'bg-gray-100 text-gray-700' }}">
-                                @if($productStatus === 'pending')
-                                    <span class="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse"></span>
-                                @elseif($productStatus === 'approved')
-                                    <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
-                                @elseif($productStatus === 'rejected')
-                                    <span class="w-1.5 h-1.5 rounded-full bg-rose-500"></span>
-                                @endif
-                                {{ $productStatus }}
-                            </span>
-                        </div>
 
-                        @if($product->is_on_sale && (float)($product->discount_percentage ?? 0) > 0)
-                            <div class="absolute bottom-3 left-3 px-2.5 py-1 bg-[#C0422A] text-white rounded-lg text-[9px] font-black uppercase tracking-wider shadow-xs">
-                                {{ round($product->discount_percentage) }}% OFF
-                            </div>
-                        @endif
+        {{-- View Switcher: Table vs Grid --}}
+        <div class="flex items-center gap-1 bg-gray-100 p-0.5 rounded-xl border border-gray-200/60 shadow-2xs">
+            <button type="button" @click="setViewMode('table')"
+                    :class="viewMode === 'table' ? 'bg-white text-gray-900 shadow-xs font-bold' : 'text-gray-400 hover:text-gray-700 font-medium'"
+                    class="flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[10px] transition-all cursor-pointer">
+                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h16M4 14h16M4 18h16"/></svg>
+                <span class="hidden sm:inline">Table</span>
+            </button>
+            <button type="button" @click="setViewMode('grid')"
+                    :class="viewMode === 'grid' ? 'bg-white text-gray-900 shadow-xs font-bold' : 'text-gray-400 hover:text-gray-700 font-medium'"
+                    class="flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[10px] transition-all cursor-pointer">
+                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"/></svg>
+                <span class="hidden sm:inline">Grid</span>
+            </button>
+        </div>
+    </div>
 
-                        {{-- Hover Inspect Overlay Hint --}}
-                        <div class="absolute inset-0 bg-black/35 opacity-0 group-hover/img:opacity-100 transition-opacity flex items-center justify-center">
-                            <span class="px-3.5 py-1.5 bg-white/95 backdrop-blur-xs text-gray-900 text-xs font-bold rounded-xl shadow-lg flex items-center gap-1.5 transform translate-y-1 group-hover/img:translate-y-0 transition-transform">
-                                <svg class="w-3.5 h-3.5 text-[#C0422A]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
-                                <span>Quick Inspect</span>
-                            </span>
-                        </div>
-                    </div>
+    {{-- ═══ 1. TABLE VIEW (Default) ═══ --}}
+    <div x-show="viewMode === 'table'" class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+        <div class="overflow-x-auto no-scrollbar">
+            <table class="w-full text-left min-w-155">
+                <thead>
+                    <tr class="border-b border-gray-100 bg-gray-50/60">
+                        <th class="px-5 py-2.5 text-[9px] font-black uppercase tracking-widest text-gray-400 w-[36%]">Product Piece</th>
+                        <th class="px-4 py-2.5 text-[9px] font-black uppercase tracking-widest text-gray-400 w-[20%] hidden md:table-cell">Artisan &amp; Shop</th>
+                        <th class="px-4 py-2.5 text-[9px] font-black uppercase tracking-widest text-gray-400 w-[14%]">Price</th>
+                        <th class="px-4 py-2.5 text-[9px] font-black uppercase tracking-widest text-gray-400 w-[14%]">Status</th>
+                        <th class="px-5 py-2.5 text-[9px] font-black uppercase tracking-widest text-gray-400 w-[16%] text-right">Actions</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-gray-50">
+                    @forelse($products as $product)
+                        @php
+                            $productStatus = strtolower($product->status ?? 'pending');
+                            $statusClass = match($productStatus) {
+                                'approved' => 'bg-emerald-50 text-emerald-700 border border-emerald-200/60',
+                                'rejected' => 'bg-rose-50 text-rose-700 border border-rose-200/60',
+                                default    => 'bg-amber-50 text-amber-700 border border-amber-200/60',
+                            };
+                            $statusDot = match($productStatus) {
+                                'approved' => 'bg-emerald-500',
+                                'rejected' => 'bg-rose-500',
+                                default    => 'bg-amber-500 animate-pulse',
+                            };
+                            $statusLabel = match($productStatus) {
+                                'approved' => 'Live',
+                                'rejected' => 'Rejected',
+                                default    => 'Pending',
+                            };
+                        @endphp
+                        <tr class="hover:bg-gray-50/50 transition-colors group">
+                            {{-- Product Thumbnail & Title --}}
+                            <td class="px-5 py-2">
+                                <div class="flex items-center gap-2.5">
+                                    <div class="w-9 h-9 rounded-xl bg-stone-100 border border-gray-100 overflow-hidden shrink-0 cursor-pointer shadow-2xs group-hover:ring-2 group-hover:ring-[#C0422A]/20 transition-all"
+                                         @click="openInspect(@js($product))"
+                                         title="Quick Inspect">
+                                        <img src="{{ $product->getImageUrl() }}"
+                                             onerror="this.src='/uploads/products/default.jpg'"
+                                             class="w-full h-full object-cover object-top">
+                                    </div>
+                                    <div class="min-w-0">
+                                        <div class="flex items-center gap-1.5 flex-wrap">
+                                            <span class="text-xs font-bold text-gray-900 truncate leading-tight hover:text-[#C0422A] cursor-pointer"
+                                                  @click="openInspect(@js($product))"
+                                                  title="{{ $product->name }}">
+                                                {{ $product->name }}
+                                            </span>
+                                            @if($product->is_on_sale && (float)($product->discount_percentage ?? 0) > 0)
+                                                <span class="text-[8px] font-black text-rose-600 bg-rose-50 border border-rose-200/80 px-1 py-0.2 rounded uppercase">
+                                                    {{ round($product->discount_percentage) }}% OFF
+                                                </span>
+                                            @endif
+                                        </div>
+                                        <div class="text-[10px] text-gray-400 font-medium truncate leading-tight mt-0.5 flex items-center gap-1">
+                                            <span class="px-1.5 py-0.2 rounded bg-stone-100 text-stone-600 text-[9px] font-semibold">
+                                                {{ $product->category->name ?? 'Barong' }}
+                                            </span>
+                                            <span class="text-gray-300">·</span>
+                                            <span class="truncate">{{ $product->createdAt ? $product->createdAt->format('M d, Y') : '—' }}</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </td>
 
-                    {{-- Product Info --}}
-                    <div class="p-4 sm:p-5 flex-1 flex flex-col justify-between space-y-3">
-                        <div class="space-y-1.5">
-                            <div class="flex justify-between items-start gap-2">
-                                <h3 class="font-serif font-bold text-sm text-gray-900 line-clamp-1 leading-snug cursor-pointer hover:text-[#C0422A] transition-colors" 
-                                    @click="openInspect(@js($product))"
-                                    title="Inspect: {{ $product->name }}">
-                                    {{ $product->name }}
-                                </h3>
-                                <div class="text-xs font-black text-[#C0422A] shrink-0">
+                            {{-- Artisan & Shop --}}
+                            <td class="px-4 py-2 hidden md:table-cell">
+                                <div class="min-w-0">
+                                    <div class="text-[11px] font-bold text-gray-800 truncate leading-tight">
+                                        {{ $product->seller->shopName ?? $product->seller->name ?? 'Artisan' }}
+                                    </div>
+                                    <div class="text-[10px] text-gray-400 truncate leading-tight mt-0.5">
+                                        {{ $product->seller->email ?? 'Artisan Partner' }}
+                                    </div>
+                                </div>
+                            </td>
+
+                            {{-- Price --}}
+                            <td class="px-4 py-2">
+                                <div class="text-xs font-black text-[#C0422A] leading-tight">
                                     ₱{{ number_format((float) $product->price, 2) }}
                                 </div>
-                            </div>
-                            
-                            <p class="text-[11px] text-gray-500 font-medium line-clamp-1 flex items-center gap-1">
-                                <span class="text-gray-400">By</span>
-                                <strong class="text-gray-800">{{ $product->seller->shopName ?? $product->seller->name ?? 'Artisan' }}</strong>
-                            </p>
+                            </td>
 
-                            <p class="text-[11px] text-gray-500 line-clamp-2 leading-relaxed font-normal">
-                                {{ $product->description ?: 'No description provided.' }}
-                            </p>
-                        </div>
+                            {{-- Status --}}
+                            <td class="px-4 py-2">
+                                <span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] font-bold capitalize {{ $statusClass }}">
+                                    <span class="w-1.5 h-1.5 rounded-full {{ $statusDot }}"></span>
+                                    {{ $statusLabel }}
+                                </span>
+                            </td>
 
-                        {{-- If Rejected, show reason box --}}
-                        @if($productStatus === 'rejected' && $product->rejectionReason)
-                            <div class="p-2.5 bg-rose-50 border border-rose-200/80 rounded-2xl text-[10px] text-rose-900 leading-snug">
-                                <span class="font-bold uppercase tracking-wider text-[8px] text-rose-700 block mb-0.5">Rejection Reason:</span>
-                                <span class="italic font-medium">{{ $product->rejectionReason }}</span>
-                            </div>
-                        @endif
+                            {{-- Actions --}}
+                            <td class="px-5 py-2">
+                                <div class="flex items-center justify-end gap-1.5">
+                                    <button type="button" @click="openInspect(@js($product))"
+                                        class="px-2.5 py-1 bg-stone-50 text-stone-700 border border-stone-200/80 rounded-lg text-[10px] font-bold uppercase tracking-wider hover:bg-stone-200 transition-all cursor-pointer"
+                                        title="Inspect Details">
+                                        Inspect
+                                    </button>
 
-                        {{-- Action Buttons --}}
-                        <div class="pt-2 border-t border-gray-100 flex items-center gap-1.5">
-                            @if($productStatus === 'pending')
-                                {{-- Inspect Modal Trigger --}}
-                                <button type="button" @click="openInspect(@js($product))"
-                                    title="Inspect full product details and sizing"
-                                    class="px-2.5 py-2 bg-stone-100 hover:bg-stone-200 text-stone-700 text-[10px] font-bold uppercase tracking-wider rounded-xl transition-all cursor-pointer text-center flex items-center gap-1 shadow-2xs">
-                                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
-                                    <span>Inspect</span>
-                                </button>
+                                    @if($productStatus === 'pending')
+                                        <button type="button" @click="openApprove(@js($product))"
+                                            class="px-2.5 py-1 bg-emerald-50 text-emerald-700 border border-emerald-200/80 rounded-lg text-[10px] font-bold uppercase tracking-wider hover:bg-emerald-600 hover:text-white transition-all cursor-pointer">
+                                            Approve
+                                        </button>
+                                        <button type="button" @click="openReject(@js($product))"
+                                            class="px-2.5 py-1 bg-rose-50 text-rose-600 border border-rose-200/80 rounded-lg text-[10px] font-bold uppercase tracking-wider hover:bg-rose-600 hover:text-white transition-all cursor-pointer">
+                                            Reject
+                                        </button>
+                                    @elseif($productStatus === 'approved')
+                                        <button type="button" @click="openReject(@js($product))"
+                                            class="px-2.5 py-1 bg-amber-50 text-amber-700 border border-amber-200/80 rounded-lg text-[10px] font-bold uppercase tracking-wider hover:bg-amber-600 hover:text-white transition-all cursor-pointer">
+                                            Revoke
+                                        </button>
+                                    @elseif($productStatus === 'rejected')
+                                        <button type="button" @click="openApprove(@js($product))"
+                                            class="px-2.5 py-1 bg-emerald-50 text-emerald-700 border border-emerald-200/80 rounded-lg text-[10px] font-bold uppercase tracking-wider hover:bg-emerald-600 hover:text-white transition-all cursor-pointer">
+                                            Re-Approve
+                                        </button>
+                                    @endif
 
-                                {{-- Modal-Triggered Approve Button --}}
-                                <button type="button" @click="openApprove(@js($product))"
-                                    class="flex-1 py-2 bg-[#3D2B1F] hover:bg-emerald-600 text-white text-[10px] font-black uppercase tracking-wider rounded-xl transition-all cursor-pointer text-center shadow-2xs">
-                                    Approve
-                                </button>
-                                
-                                {{-- Modal-Triggered Reject Button --}}
-                                <button type="button" @click="openReject(@js($product))"
-                                    class="flex-1 py-2 bg-white border border-rose-200 hover:bg-rose-50 text-rose-600 text-[10px] font-black uppercase tracking-wider rounded-xl transition-all cursor-pointer text-center shadow-2xs">
-                                    Reject
-                                </button>
-                            @elseif($productStatus === 'approved')
-                                <button type="button" @click="openInspect(@js($product))"
-                                    class="flex-1 py-2 bg-stone-100 hover:bg-stone-200 text-stone-700 text-[10px] font-bold uppercase tracking-wider rounded-xl transition-all cursor-pointer text-center flex items-center justify-center gap-1 shadow-2xs">
-                                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
-                                    <span>Inspect</span>
-                                </button>
-                                <button type="button" @click="openReject(@js($product))"
-                                    class="px-3 py-2 bg-white border border-amber-200 hover:bg-amber-50 text-amber-700 text-[10px] font-black uppercase tracking-wider rounded-xl transition-all cursor-pointer shadow-2xs">
-                                    Revoke
-                                </button>
-                            @elseif($productStatus === 'rejected')
-                                <button type="button" @click="openInspect(@js($product))"
-                                    title="Inspect product details"
-                                    class="px-2.5 py-2 bg-stone-100 hover:bg-stone-200 text-stone-700 text-[10px] font-bold uppercase tracking-wider rounded-xl transition-all cursor-pointer text-center flex items-center gap-1 shadow-2xs">
-                                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
-                                    <span>Inspect</span>
-                                </button>
-                                <button type="button" @click="openApprove(@js($product))"
-                                    class="flex-1 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-[10px] font-black uppercase tracking-wider rounded-xl transition-all cursor-pointer text-center shadow-2xs">
-                                    Re-Approve
-                                </button>
-                            @endif
-
-                            {{-- Delete Product with Reason Trigger --}}
-                            <button type="button" @click="openDelete(@js($product))"
-                                title="Permanently Delete Product"
-                                class="w-8 h-8 rounded-xl border border-red-100 bg-white hover:bg-red-50 text-red-500 hover:text-red-700 flex items-center justify-center transition-all cursor-pointer shrink-0 shadow-2xs">
-                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
-                            </button>
-                        </div>
-
-                    </div>
-                </div>
-            @endforeach
+                                    <button type="button" @click="openDelete(@js($product))"
+                                        class="px-2 py-1 bg-gray-50 text-gray-500 border border-gray-200/80 rounded-lg text-[10px] font-bold uppercase tracking-wider hover:bg-rose-600 hover:text-white hover:border-rose-600 transition-all cursor-pointer"
+                                        title="Delete Product">
+                                        Delete
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                    @empty
+                        <tr>
+                            <td colspan="5">
+                                <div class="py-10 text-center">
+                                    <div class="w-12 h-12 bg-gray-50 rounded-2xl flex items-center justify-center mx-auto mb-2.5 border border-gray-100">
+                                        <svg class="w-5 h-5 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>
+                                    </div>
+                                    <p class="text-xs font-bold text-gray-400 uppercase tracking-widest">No products found</p>
+                                    <p class="text-[10px] text-gray-300 mt-0.5">Try adjusting your search or filter criteria</p>
+                                </div>
+                            </td>
+                        </tr>
+                    @endforelse
+                </tbody>
+            </table>
         </div>
-
-        {{-- Pagination --}}
-        <div class="pt-4">
+        {{-- Pagination in table footer --}}
+        <div class="px-5 py-2.5 border-t border-gray-50 bg-gray-50/30">
             {{ $products->withQueryString()->links() }}
         </div>
-    @endif
+    </div>
+
+    {{-- ═══ 2. GRID VIEW (Optional Visual Inspection) ═══ --}}
+    <div x-show="viewMode === 'grid'" class="space-y-4">
+        @if($products->isEmpty())
+            <div class="text-center py-16 bg-white rounded-3xl border border-dashed border-gray-200 shadow-xs p-8">
+                <div class="w-12 h-12 bg-gray-50 rounded-2xl flex items-center justify-center mx-auto mb-2.5 text-gray-400 border border-gray-100">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>
+                </div>
+                <h3 class="text-xs font-bold text-gray-800 uppercase tracking-wider">No Products Found</h3>
+                <p class="text-[11px] text-gray-400 mt-0.5">There are currently no artisan pieces matching this filter or search query.</p>
+            </div>
+        @else
+            <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4">
+                @foreach($products as $product)
+                    @php
+                        $productStatus = strtolower($product->status ?? 'pending');
+                        $statusBadgeStyles = [
+                            'pending'  => 'bg-amber-50 text-amber-800 border-amber-200/80 shadow-2xs',
+                            'approved' => 'bg-emerald-50 text-emerald-800 border-emerald-200/80 shadow-2xs',
+                            'rejected' => 'bg-rose-50 text-rose-800 border-rose-200/80 shadow-2xs',
+                        ];
+                    @endphp
+                    <div class="bg-white border border-gray-100 rounded-2xl shadow-xs hover:shadow-md transition-all duration-300 overflow-hidden flex flex-col group">
+                        {{-- Scaled Product Image --}}
+                        <div class="relative w-full h-44 sm:h-48 bg-stone-100 overflow-hidden shrink-0 border-b border-gray-100 cursor-pointer group/img"
+                             @click="openInspect(@js($product))"
+                             title="Click to inspect product details">
+                            <img src="{{ $product->getImageUrl() }}" 
+                                 onerror="this.src='/uploads/products/default.jpg'"
+                                 class="w-full h-full object-cover object-top group-hover/img:scale-105 transition-transform duration-500">
+                            
+                            {{-- Top Badge Overlays --}}
+                            <div class="absolute top-2.5 left-2.5 right-2.5 flex items-center justify-between pointer-events-none gap-2">
+                                <span class="px-2 py-0.5 bg-black/75 backdrop-blur-md rounded-lg text-[9px] font-bold text-white uppercase tracking-wider truncate max-w-[55%] shadow-xs">
+                                    {{ $product->category->name ?? 'Artisan Piece' }}
+                                </span>
+                                <span class="inline-flex items-center gap-1 px-2 py-0.5 border rounded-full text-[9px] font-black uppercase tracking-wider backdrop-blur-md {{ $statusBadgeStyles[$productStatus] ?? 'bg-gray-100 text-gray-700' }}">
+                                    @if($productStatus === 'pending')
+                                        <span class="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse"></span>
+                                    @elseif($productStatus === 'approved')
+                                        <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+                                    @elseif($productStatus === 'rejected')
+                                        <span class="w-1.5 h-1.5 rounded-full bg-rose-500"></span>
+                                    @endif
+                                    {{ $productStatus }}
+                                </span>
+                            </div>
+
+                            @if($product->is_on_sale && (float)($product->discount_percentage ?? 0) > 0)
+                                <div class="absolute bottom-2.5 left-2.5 px-2 py-0.5 bg-[#C0422A] text-white rounded-md text-[8px] font-black uppercase tracking-wider shadow-xs">
+                                    {{ round($product->discount_percentage) }}% OFF
+                                </div>
+                            @endif
+
+                            {{-- Hover Inspect Overlay Hint --}}
+                            <div class="absolute inset-0 bg-black/30 opacity-0 group-hover/img:opacity-100 transition-opacity flex items-center justify-center">
+                                <span class="px-3 py-1 bg-white/95 backdrop-blur-xs text-gray-900 text-xs font-bold rounded-xl shadow-md flex items-center gap-1.5 transform translate-y-1 group-hover/img:translate-y-0 transition-transform">
+                                    <svg class="w-3.5 h-3.5 text-[#C0422A]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+                                    <span>Quick Inspect</span>
+                                </span>
+                            </div>
+                        </div>
+
+                        {{-- Product Info --}}
+                        <div class="p-3.5 sm:p-4 flex-1 flex flex-col justify-between space-y-2.5">
+                            <div class="space-y-1">
+                                <div class="flex justify-between items-start gap-2">
+                                    <h3 class="font-serif font-bold text-xs sm:text-sm text-gray-900 line-clamp-1 leading-snug cursor-pointer hover:text-[#C0422A] transition-colors" 
+                                        @click="openInspect(@js($product))"
+                                        title="{{ $product->name }}">
+                                        {{ $product->name }}
+                                    </h3>
+                                    <div class="text-xs font-black text-[#C0422A] shrink-0">
+                                        ₱{{ number_format((float) $product->price, 2) }}
+                                    </div>
+                                </div>
+                                <p class="text-[10px] text-gray-500 font-medium line-clamp-1">
+                                    By <strong class="text-gray-800">{{ $product->seller->shopName ?? $product->seller->name ?? 'Artisan' }}</strong>
+                                </p>
+                            </div>
+
+                            {{-- Action Buttons --}}
+                            <div class="pt-2 border-t border-gray-100 flex items-center gap-1.5">
+                                @if($productStatus === 'pending')
+                                    <button type="button" @click="openInspect(@js($product))"
+                                        title="Inspect Details"
+                                        class="px-2 py-1.5 bg-stone-100 hover:bg-stone-200 text-stone-700 text-[9px] font-bold uppercase tracking-wider rounded-lg transition-all cursor-pointer">
+                                        Inspect
+                                    </button>
+                                    <button type="button" @click="openApprove(@js($product))"
+                                        class="flex-1 py-1.5 bg-[#3D2B1F] hover:bg-emerald-600 text-white text-[9px] font-black uppercase tracking-wider rounded-lg transition-all cursor-pointer text-center">
+                                        Approve
+                                    </button>
+                                    <button type="button" @click="openReject(@js($product))"
+                                        class="flex-1 py-1.5 bg-white border border-rose-200 hover:bg-rose-50 text-rose-600 text-[9px] font-black uppercase tracking-wider rounded-lg transition-all cursor-pointer text-center">
+                                        Reject
+                                    </button>
+                                @elseif($productStatus === 'approved')
+                                    <button type="button" @click="openInspect(@js($product))"
+                                        class="flex-1 py-1.5 bg-stone-100 hover:bg-stone-200 text-stone-700 text-[9px] font-bold uppercase tracking-wider rounded-lg transition-all cursor-pointer text-center">
+                                        Inspect
+                                    </button>
+                                    <button type="button" @click="openReject(@js($product))"
+                                        class="px-2.5 py-1.5 bg-white border border-amber-200 hover:bg-amber-50 text-amber-700 text-[9px] font-black uppercase tracking-wider rounded-lg transition-all cursor-pointer">
+                                        Revoke
+                                    </button>
+                                @elseif($productStatus === 'rejected')
+                                    <button type="button" @click="openInspect(@js($product))"
+                                        class="px-2 py-1.5 bg-stone-100 hover:bg-stone-200 text-stone-700 text-[9px] font-bold uppercase tracking-wider rounded-lg transition-all cursor-pointer">
+                                        Inspect
+                                    </button>
+                                    <button type="button" @click="openApprove(@js($product))"
+                                        class="flex-1 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white text-[9px] font-black uppercase tracking-wider rounded-lg transition-all cursor-pointer text-center">
+                                        Re-Approve
+                                    </button>
+                                @endif
+
+                                <button type="button" @click="openDelete(@js($product))"
+                                    title="Delete Product"
+                                    class="w-7 h-7 rounded-lg border border-red-100 bg-white hover:bg-red-50 text-red-500 hover:text-red-700 flex items-center justify-center transition-all cursor-pointer shrink-0">
+                                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                @endforeach
+            </div>
+            {{-- Pagination in grid footer --}}
+            <div class="pt-2">
+                {{ $products->withQueryString()->links() }}
+            </div>
+        @endif
+    </div>
 
     {{-- ─── Inspect Product Details Modal ─── --}}
     <div x-show="inspectModal" 
