@@ -56,20 +56,29 @@
         }
     }
 }">
-    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-        <div>
-            <div class="text-[10px] font-bold text-[#C0422A] uppercase tracking-[0.2em] mb-1">Catalog Management</div>
-            <h1 class="font-serif text-2xl sm:text-3xl font-bold text-black">Product <span class="text-[#C0420A] font-light italic">Categories</span></h1>
+    {{-- ═══ PAGE HEADER ═══ --}}
+    <div class="flex flex-col sm:flex-row sm:items-start sm:items-center justify-between gap-4">
+        <div class="space-y-1">
+            <div class="inline-flex items-center gap-2">
+                <span class="text-[9px] font-black uppercase tracking-[0.25em] text-[#C0422A]">Catalog Architecture</span>
+                <span class="text-gray-300 text-xs">·</span>
+                <span class="text-[9px] font-bold uppercase tracking-[0.2em] text-gray-400">Admin Center</span>
+            </div>
+            <h1 class="font-serif text-2xl sm:text-3xl font-bold text-gray-900 leading-tight">
+                Product <span class="text-[#C0420A] font-light italic">Categories</span>
+            </h1>
+            <p class="text-[11px] text-gray-400 font-medium">Define product categories and audience targeting groups</p>
         </div>
-        <div class="flex items-center gap-2 flex-wrap">
+        <div class="flex items-center gap-2 flex-shrink-0">
             <form action="{{ route('admin.categories.initialize') }}" method="POST">
                 @csrf
-                <button type="submit" class="flex items-center gap-2 px-4 sm:px-6 py-2.5 sm:py-3 bg-gray-100 text-gray-700 rounded-xl text-[9px] sm:text-[10px] font-bold uppercase tracking-widest hover:bg-gray-200 transition-all cursor-pointer">
+                <button type="submit" class="flex items-center gap-2 px-4 py-2.5 bg-gray-100 text-gray-600 rounded-xl text-[9px] font-bold uppercase tracking-widest hover:bg-gray-200 transition-all cursor-pointer border border-gray-200">
                     Initialize Defaults
                 </button>
             </form>
-            <button @click="showAddModal = true; addPreview = null; addName = ''; addTags = []; addSubmitted = false;" class="flex items-center gap-2 px-4 sm:px-6 py-2.5 sm:py-3 bg-[#3D2B1F] text-white rounded-xl text-[9px] sm:text-[10px] font-bold uppercase tracking-widest hover:bg-[#C0422A] transition-all cursor-pointer">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
+            <button @click="showAddModal = true; addPreview = null; addName = ''; addTags = []; addSubmitted = false;"
+                class="flex items-center gap-2 px-5 py-2.5 bg-[#3D2B1F] text-white rounded-xl text-[9px] font-bold uppercase tracking-widest hover:bg-[#C0422A] transition-all cursor-pointer shadow-sm">
+                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"></path></svg>
                 Add Category
             </button>
         </div>
@@ -89,82 +98,93 @@
     </div>
     @endif
 
-    <div class="bg-white rounded-3xl border border-gray-100 overflow-hidden shadow-sm">
-        <div class="overflow-x-auto no-scrollbar">
-            <table class="w-full text-left border-collapse min-w-137.5">
-            <thead>
-                <tr class="bg-gray-50/50">
-                    <th class="px-6 py-4 text-[10px] font-black text-gray-700 uppercase tracking-widest">Image</th>
-                    <th class="px-6 py-4 text-[10px] font-black text-gray-700 uppercase tracking-widest">Name</th>
-                    <th class="px-6 py-4 text-[10px] font-black text-gray-700 uppercase tracking-widest">Description</th>
-                    <th class="px-6 py-4 text-[10px] font-black text-gray-700 uppercase tracking-widest">Target</th>
-                    <th class="px-6 py-4 text-[10px] font-black text-gray-700 uppercase tracking-widest text-center">Products</th>
-                    <th class="px-6 py-4 text-[10px] font-black text-gray-700 uppercase tracking-widest text-right">Actions</th>
-                </tr>
-            </thead>
-            <tbody class="divide-y divide-gray-50">
-                @forelse($categories as $category)
-                <tr class="hover:bg-gray-50/50 transition-colors group">
-                    <td class="px-6 py-4">
-                        <div class="w-12 h-12 rounded-full overflow-hidden bg-gray-100 border border-gray-200 shadow-xs shrink-0">
-                            <img src="{{ $category->getImageUrl() }}" 
-                                 onerror="this.src='/uploads/categories/pina_formal.png'" 
-                                 class="w-full h-full object-cover" 
-                                 alt="{{ $category->name }}">
-                        </div>
-                    </td>
-                    <td class="px-6 py-4">
-                        <div class="text-sm font-bold text-black">{{ $category->name }}</div>
-                    </td>
-                    <td class="px-6 py-4">
-                        <div class="text-[11px] text-gray-500 max-w-md truncate">{{ $category->description ?: 'No description' }}</div>
-                    </td>
-                    <td class="px-6 py-4">
-                        <div class="flex flex-wrap gap-1">
-                            @if(is_array($category->target_group) && count($category->target_group) > 0)
-                                @foreach($category->target_group as $group)
-                                    <span class="px-2 py-0.5 bg-{{ $group == 'Men' ? 'blue' : ($group == 'Women' ? 'pink' : ($group == 'Kids' ? 'green' : 'gray')) }}-50 text-{{ $group == 'Men' ? 'blue' : ($group == 'Women' ? 'pink' : ($group == 'Kids' ? 'green' : 'gray')) }}-600 rounded text-[8px] font-black uppercase tracking-widest">
-                                        {{ $group }}
-                                    </span>
-                                @endforeach
-                            @else
-                                <span class="px-2 py-0.5 bg-gray-50 text-gray-400 rounded text-[8px] font-black uppercase tracking-widest">
-                                    Universal
-                                </span>
-                            @endif
-                        </div>
-                    </td>
-                    <td class="px-6 py-4 text-center">
-                        <span class="px-3 py-1 bg-gray-100 text-gray-600 rounded-full text-[10px] font-bold">
-                            {{ $category->products_count }} Products
-                        </span>
-                    </td>
-                    <td class="px-6 py-4 text-right">
-                            <button
-                                @click="editingCategory = JSON.parse($el.dataset.category); originalEditName = editingCategory.name; editPreview = null; editSubmitted = false; showEditModal = true"
-                                data-category="{{ json_encode(['id' => $category->id, 'name' => $category->name, 'description' => $category->description, 'target_group' => $category->target_group ?? [], 'image' => $category->getImageUrl()]) }}"
-                                class="p-2 text-gray-400 hover:text-black transition-colors cursor-pointer" title="Edit Category">
-                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg>
-                            </button>
-                            <button type="button"
-                                    @click="openDeleteModal({{ json_encode(['id' => $category->id, 'name' => $category->name, 'products_count' => $category->products_count ?? 0]) }})"
-                                    class="p-2 text-gray-400 hover:text-red-600 transition-colors cursor-pointer" title="Delete Category">
-                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
-                            </button>
-                        </div>
-                    </td>
-                </tr>
-                @empty
-                <tr>
-                    <td colspan="6" class="px-6 py-12 text-center">
-                        <div class="text-gray-400 text-sm italic">No categories found.</div>
-                    </td>
-                </tr>
-                @endforelse
-            </tbody>
-        </table>
+    {{-- ═══ CATEGORY TILE GRID ═══ --}}
+    @forelse($categories as $category)
+        @if($loop->first)
+        <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
+        @endif
+
+        <div class="bg-white rounded-3xl border border-gray-100 shadow-sm overflow-hidden flex flex-col hover:shadow-lg hover:-translate-y-1 transition-all duration-200 group">
+            {{-- Category Image --}}
+            <div class="aspect-square overflow-hidden bg-gray-100 relative">
+                <img src="{{ $category->getImageUrl() }}"
+                     onerror="this.src='/uploads/categories/pina_formal.png'"
+                     class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                     alt="{{ $category->name }}">
+                {{-- Product count badge overlay --}}
+                <div class="absolute top-2 right-2">
+                    <span class="px-2 py-1 bg-black/60 backdrop-blur-sm text-white rounded-lg text-[9px] font-black tracking-widest">
+                        {{ $category->products_count ?? 0 }} items
+                    </span>
+                </div>
+            </div>
+
+            {{-- Card Body --}}
+            <div class="p-3.5 flex flex-col gap-2 flex-1">
+                {{-- Name --}}
+                <div class="text-sm font-bold text-gray-900 leading-tight truncate">{{ $category->name }}</div>
+
+                {{-- Description --}}
+                @if($category->description)
+                    <div class="text-[10px] text-gray-400 leading-snug line-clamp-2">{{ $category->description }}</div>
+                @endif
+
+                {{-- Target Group Chips --}}
+                <div class="flex flex-wrap gap-1 mt-auto pt-1">
+                    @if(is_array($category->target_group) && count($category->target_group) > 0)
+                        @foreach($category->target_group as $group)
+                            @php
+                                $chipClass = match($group) {
+                                    'Men'   => 'bg-blue-50 text-blue-600 border-blue-100',
+                                    'Women' => 'bg-pink-50 text-pink-600 border-pink-100',
+                                    'Kids'  => 'bg-green-50 text-green-600 border-green-100',
+                                    default => 'bg-gray-50 text-gray-500 border-gray-200',
+                                };
+                            @endphp
+                            <span class="inline-flex items-center px-2 py-0.5 rounded-md text-[8px] font-black uppercase tracking-widest border {{ $chipClass }}">{{ $group }}</span>
+                        @endforeach
+                    @else
+                        <span class="inline-flex items-center px-2 py-0.5 rounded-md text-[8px] font-black uppercase tracking-widest bg-gray-50 text-gray-400 border border-gray-200">Universal</span>
+                    @endif
+                </div>
+
+                {{-- Divider + Actions --}}
+                <div class="flex items-center justify-end gap-1 pt-2 border-t border-gray-50 mt-1">
+                    <button
+                        @click="editingCategory = JSON.parse($el.dataset.category); originalEditName = editingCategory.name; editPreview = null; editSubmitted = false; showEditModal = true"
+                        data-category="{{ json_encode(['id' => $category->id, 'name' => $category->name, 'description' => $category->description, 'target_group' => $category->target_group ?? [], 'image' => $category->getImageUrl()]) }}"
+                        class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[9px] font-black uppercase tracking-widest text-gray-500 hover:bg-gray-100 hover:text-gray-900 transition-all cursor-pointer"
+                        title="Edit Category">
+                        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg>
+                        Edit
+                    </button>
+                    <button type="button"
+                        @click="openDeleteModal({{ json_encode(['id' => $category->id, 'name' => $category->name, 'products_count' => $category->products_count ?? 0]) }})"
+                        class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[9px] font-black uppercase tracking-widest text-gray-400 hover:bg-red-50 hover:text-red-600 transition-all cursor-pointer"
+                        title="Delete Category">
+                        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                        Delete
+                    </button>
+                </div>
+            </div>
         </div>
-    </div>
+
+        @if($loop->last)
+        </div>
+        @endif
+    @empty
+        <div class="bg-white rounded-3xl border border-gray-100 shadow-sm p-16 text-center">
+            <div class="w-16 h-16 bg-gray-50 rounded-2xl flex items-center justify-center mx-auto mb-4 border border-gray-100">
+                <svg class="w-7 h-7 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"/></svg>
+            </div>
+            <p class="text-sm font-bold text-gray-400 uppercase tracking-widest">No categories yet</p>
+            <p class="text-xs text-gray-300 mt-1 mb-6">Add your first category or initialize the defaults</p>
+            <button @click="showAddModal = true; addPreview = null; addName = ''; addTags = []; addSubmitted = false;"
+                class="px-6 py-2.5 bg-[#3D2B1F] text-white rounded-xl text-[10px] font-bold uppercase tracking-widest hover:bg-[#C0422A] transition-all cursor-pointer">
+                Add First Category
+            </button>
+        </div>
+    @endforelse
 
     <!-- Add Modal -->
     <div x-show="showAddModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm" x-cloak>
