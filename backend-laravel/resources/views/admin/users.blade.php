@@ -26,34 +26,17 @@
     }
 }">
 
-    {{-- ═══ PAGE HEADER + SEARCH BAR ═══ --}}
-    <div class="flex flex-col sm:flex-row sm:items-end justify-between gap-4 pb-1">
-        <div class="text-left space-y-1">
-            <div class="inline-flex items-center gap-2">
-                <span class="text-[9px] font-black uppercase tracking-[0.25em] text-[#C0422A]">User Registry</span>
-                <span class="text-gray-300 text-xs">·</span>
-                <span class="text-[9px] font-bold uppercase tracking-[0.2em] text-gray-400">Admin Center</span>
-            </div>
-            <h1 class="font-serif text-2xl sm:text-3xl font-bold text-gray-900 leading-tight">
-                Customer <span class="text-[#C0420A] font-light italic">Management</span>
-            </h1>
-            <p class="text-[11px] text-gray-400 font-medium">Manage registered marketplace buyers and their account status</p>
+    {{-- ═══ PAGE HEADER ═══ --}}
+    <div class="text-left space-y-1 pb-1">
+        <div class="inline-flex items-center gap-2">
+            <span class="text-[9px] font-black uppercase tracking-[0.25em] text-[#C0422A]">User Registry</span>
+            <span class="text-gray-300 text-xs">·</span>
+            <span class="text-[9px] font-bold uppercase tracking-[0.2em] text-gray-400">Admin Center</span>
         </div>
-
-        {{-- Search Input (Right side of header text) --}}
-        <form method="GET" class="flex items-center gap-2 max-w-sm sm:max-w-md w-full">
-            @if(request('status'))
-                <input type="hidden" name="status" value="{{ request('status') }}">
-            @endif
-            <div class="relative w-full">
-                <input type="text" name="search" value="{{ request('search') }}" placeholder="Search customers by name, email..."
-                       class="w-full pl-9 pr-4 py-2.5 bg-white border border-gray-200 rounded-full text-xs text-gray-800 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-[#C0422A]/20 focus:border-[#C0422A] shadow-xs transition-all">
-                <svg class="w-4 h-4 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
-            </div>
-            @if(request('search'))
-                <a href="{{ request()->fullUrlWithQuery(['search' => null, 'page' => 1]) }}" class="px-3 py-2 bg-gray-100 hover:bg-gray-200 text-gray-600 rounded-full text-[10px] font-bold transition-all shrink-0">Clear</a>
-            @endif
-        </form>
+        <h1 class="font-serif text-2xl sm:text-3xl font-bold text-gray-900 leading-tight">
+            Customer <span class="text-[#C0420A] font-light italic">Management</span>
+        </h1>
+        <p class="text-[11px] text-gray-400 font-medium">Manage registered marketplace buyers and their account status</p>
     </div>
 
     {{-- ═══ STATS BAR / STATUS FILTERS ═══ --}}
@@ -142,9 +125,23 @@
         </a>
     </div>
 
-    {{-- ═══ RESULTS COUNT BAR ═══ --}}
-    <div class="flex items-center justify-between px-1">
-        <div class="text-[11px] font-bold text-gray-400">
+    {{-- ═══ SEARCH BAR (CENTERED AT MIDDLE) ═══ --}}
+    <div class="space-y-2 py-1">
+        <form method="GET" class="flex items-center justify-center gap-2 max-w-sm sm:max-w-md mx-auto w-full">
+            @if(request('status'))
+                <input type="hidden" name="status" value="{{ request('status') }}">
+            @endif
+            <div class="relative w-full">
+                <input type="text" name="search" value="{{ request('search') }}" placeholder="Search customers by name, email..."
+                       class="w-full pl-9 pr-4 py-2.5 bg-white border border-gray-200 rounded-full text-xs text-gray-800 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-[#C0422A]/20 focus:border-[#C0422A] shadow-xs transition-all">
+                <svg class="w-4 h-4 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+            </div>
+            @if(request('search'))
+                <a href="{{ request()->fullUrlWithQuery(['search' => null, 'page' => 1]) }}" class="px-3 py-2 bg-gray-100 hover:bg-gray-200 text-gray-600 rounded-full text-[10px] font-bold transition-all shrink-0">Clear</a>
+            @endif
+        </form>
+
+        <div class="text-center text-[11px] font-bold text-gray-400">
             Showing <span class="text-gray-900 font-black">{{ $users->total() }}</span> {{ $users->total() === 1 ? 'customer' : 'customers' }}
             @if(request('status'))
                 <span class="text-gray-400">· Filtered by <span class="capitalize font-black text-gray-700">{{ request('status') }}</span></span>
