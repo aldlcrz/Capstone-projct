@@ -249,6 +249,7 @@
                             Personal information &amp; artisan shop settings
                         </p>
                     </div>
+                </div>
             </div>
 
             {{-- Star Divider --}}
