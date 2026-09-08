@@ -27,7 +27,7 @@
 }">
 
     {{-- ═══ PAGE HEADER + SEARCH BAR ═══ --}}
-    <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-6 pb-2">
+    <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
         {{-- Left: Title & Subtitle --}}
         <div class="text-left space-y-1 shrink-0">
             <div class="inline-flex items-center gap-2">
@@ -146,115 +146,118 @@
         </a>
     </div>
 
-    {{-- ═══ RESULTS COUNT BAR ═══ --}}
-    <div class="flex items-center justify-between px-1">
-        <div class="text-[11px] font-bold text-gray-400">
-            Showing <span class="text-gray-900 font-black">{{ $users->total() }}</span> {{ $users->total() === 1 ? 'customer' : 'customers' }}
-            @if(request('status'))
-                <span class="text-gray-400">· Filtered by <span class="capitalize font-black text-gray-700">{{ request('status') }}</span></span>
-            @endif
-            @if(request('search'))
-                <span class="text-gray-400">· Matching "<span class="font-bold text-gray-700">{{ request('search') }}</span>"</span>
-            @endif
+    {{-- ═══ RESULTS & USER TABLE ═══ --}}
+    <div class="space-y-2.5">
+        {{-- Results count bar --}}
+        <div class="flex items-center justify-between px-1">
+            <div class="text-[11px] font-bold text-gray-400">
+                Showing <span class="text-gray-900 font-black">{{ $users->total() }}</span> {{ $users->total() === 1 ? 'customer' : 'customers' }}
+                @if(request('status'))
+                    <span class="text-gray-400">· Filtered by <span class="capitalize font-black text-gray-700">{{ request('status') }}</span></span>
+                @endif
+                @if(request('search'))
+                    <span class="text-gray-400">· Matching "<span class="font-bold text-gray-700">{{ request('search') }}</span>"</span>
+                @endif
+            </div>
         </div>
-    </div>
 
-    {{-- ═══ USER TABLE ═══ --}}
-    <div class="bg-white rounded-3xl border border-gray-100 shadow-sm overflow-hidden">
-        <div class="overflow-x-auto no-scrollbar">
-            <table class="w-full text-left min-w-[600px]">
-                <thead>
-                    <tr class="border-b border-gray-100">
-                        <th class="px-6 py-4 text-[9px] font-black uppercase tracking-widest text-gray-400 bg-gray-50/60">Customer</th>
-                        <th class="px-6 py-4 text-[9px] font-black uppercase tracking-widest text-gray-400 bg-gray-50/60 hidden lg:table-cell">Joined</th>
-                        <th class="px-6 py-4 text-[9px] font-black uppercase tracking-widest text-gray-400 bg-gray-50/60">Status</th>
-                        <th class="px-6 py-4 text-[9px] font-black uppercase tracking-widest text-gray-400 bg-gray-50/60 text-right">Actions</th>
-                    </tr>
-                </thead>
-                <tbody class="divide-y divide-gray-50">
-                    @forelse($users as $user)
-                        @php
-                            $statusConfig = [
-                                'active'  => ['dot' => 'bg-green-400', 'pill' => 'bg-green-50 text-green-700 border border-green-200',  'ring' => 'ring-green-200'],
-                                'blocked' => ['dot' => 'bg-red-400',   'pill' => 'bg-red-50 text-red-700 border border-red-200',        'ring' => 'ring-red-200'],
-                                'frozen'  => ['dot' => 'bg-amber-400', 'pill' => 'bg-amber-50 text-amber-700 border border-amber-200',  'ring' => 'ring-amber-200'],
-                            ];
-                            $sc = $statusConfig[$user->status] ?? ['dot' => 'bg-gray-300', 'pill' => 'bg-gray-50 text-gray-600 border border-gray-200', 'ring' => 'ring-gray-200'];
-                        @endphp
-                        <tr class="hover:bg-gray-50/60 transition-colors group">
-                            {{-- Customer Identity --}}
-                            <td class="px-6 py-4">
-                                <div class="flex items-center gap-3.5">
-                                    <div class="w-10 h-10 rounded-2xl bg-gray-100 ring-2 {{ $sc['ring'] }} flex items-center justify-center font-black text-sm text-gray-700 shrink-0 overflow-hidden transition-all">
-                                        @if($user->profilePhoto)
-                                            <img src="{{ str_starts_with($user->profilePhoto, 'http') || str_starts_with($user->profilePhoto, '/') ? $user->profilePhoto : asset('storage/' . $user->profilePhoto) }}" class="w-full h-full object-cover">
-                                        @else
-                                            <span class="text-sm font-black text-gray-600">{{ strtoupper(substr($user->name, 0, 1)) }}</span>
-                                        @endif
+        {{-- Table card --}}
+        <div class="bg-white rounded-3xl border border-gray-100 shadow-sm overflow-hidden">
+            <div class="overflow-x-auto no-scrollbar">
+                <table class="w-full text-left min-w-[600px]">
+                    <thead>
+                        <tr class="border-b border-gray-100 bg-gray-50/60">
+                            <th class="px-5 py-3 text-[9px] font-black uppercase tracking-widest text-gray-400 w-[42%]">Customer</th>
+                            <th class="px-5 py-3 text-[9px] font-black uppercase tracking-widest text-gray-400 w-[20%] hidden lg:table-cell">Joined</th>
+                            <th class="px-5 py-3 text-[9px] font-black uppercase tracking-widest text-gray-400 w-[18%]">Status</th>
+                            <th class="px-5 py-3 text-[9px] font-black uppercase tracking-widest text-gray-400 w-[20%] text-right">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-gray-50">
+                        @forelse($users as $user)
+                            @php
+                                $statusConfig = [
+                                    'active'  => ['dot' => 'bg-green-400', 'pill' => 'bg-green-50 text-green-700 border border-green-200',  'ring' => 'ring-green-200'],
+                                    'blocked' => ['dot' => 'bg-red-400',   'pill' => 'bg-red-50 text-red-700 border border-red-200',        'ring' => 'ring-red-200'],
+                                    'frozen'  => ['dot' => 'bg-amber-400', 'pill' => 'bg-amber-50 text-amber-700 border border-amber-200',  'ring' => 'ring-amber-200'],
+                                ];
+                                $sc = $statusConfig[$user->status] ?? ['dot' => 'bg-gray-300', 'pill' => 'bg-gray-50 text-gray-600 border border-gray-200', 'ring' => 'ring-gray-200'];
+                            @endphp
+                            <tr class="hover:bg-gray-50/60 transition-colors group">
+                                {{-- Customer Identity --}}
+                                <td class="px-5 py-3">
+                                    <div class="flex items-center gap-3">
+                                        <div class="w-9 h-9 rounded-2xl bg-gray-100 ring-2 {{ $sc['ring'] }} flex items-center justify-center font-black text-xs text-gray-700 shrink-0 overflow-hidden transition-all">
+                                            @if($user->profilePhoto)
+                                                <img src="{{ str_starts_with($user->profilePhoto, 'http') || str_starts_with($user->profilePhoto, '/') ? $user->profilePhoto : asset('storage/' . $user->profilePhoto) }}" class="w-full h-full object-cover">
+                                            @else
+                                                <span class="text-xs font-black text-gray-600">{{ strtoupper(substr($user->name, 0, 1)) }}</span>
+                                            @endif
+                                        </div>
+                                        <div class="min-w-0">
+                                            <div class="text-xs sm:text-sm font-bold text-gray-900 truncate leading-snug">{{ $user->name }}</div>
+                                            <div class="text-[10px] text-gray-400 font-medium truncate">{{ $user->email }}</div>
+                                        </div>
                                     </div>
-                                    <div class="min-w-0">
-                                        <div class="text-sm font-bold text-gray-900 truncate">{{ $user->name }}</div>
-                                        <div class="text-[10px] text-gray-400 font-medium truncate">{{ $user->email }}</div>
+                                </td>
+                                {{-- Joined Date --}}
+                                <td class="px-5 py-3 hidden lg:table-cell">
+                                    <span class="text-[11px] text-gray-500 font-medium">{{ $user->createdAt ? $user->createdAt->format('M d, Y') : 'N/A' }}</span>
+                                </td>
+                                {{-- Status --}}
+                                <td class="px-5 py-3">
+                                    <div class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[9px] font-black uppercase tracking-widest {{ $sc['pill'] }}">
+                                        <span class="w-1.5 h-1.5 rounded-full {{ $sc['dot'] }}"></span>
+                                        {{ $user->status }}
                                     </div>
-                                </div>
-                            </td>
-                            {{-- Joined Date --}}
-                            <td class="px-6 py-4 hidden lg:table-cell">
-                                <span class="text-[11px] text-gray-500 font-medium">{{ $user->createdAt ? $user->createdAt->format('M d, Y') : 'N/A' }}</span>
-                            </td>
-                            {{-- Status --}}
-                            <td class="px-6 py-4">
-                                <div class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[9px] font-black uppercase tracking-widest {{ $sc['pill'] }}">
-                                    <span class="w-1.5 h-1.5 rounded-full {{ $sc['dot'] }}"></span>
-                                    {{ $user->status }}
-                                </div>
-                            </td>
-                            {{-- Actions --}}
-                            <td class="px-6 py-4">
-                                <div class="flex items-center justify-end gap-2">
-                                    @if($user->status === 'active')
-                                        <button type="button" @click="openBan({{ json_encode($user) }})"
-                                            class="inline-flex items-center gap-1.5 px-3.5 py-2 bg-red-50 text-red-600 border border-red-100 rounded-xl text-[9px] font-black uppercase tracking-widest hover:bg-red-600 hover:text-white hover:border-red-600 transition-all cursor-pointer shadow-xs">
-                                            <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"/></svg>
-                                            Ban
-                                        </button>
-                                    @else
-                                        <form action="/admin/users/{{ $user->id }}/unban" method="POST">
-                                            @csrf @method('PATCH')
-                                            <button type="submit"
-                                                class="inline-flex items-center gap-1.5 px-3.5 py-2 bg-green-50 text-green-700 border border-green-100 rounded-xl text-[9px] font-black uppercase tracking-widest hover:bg-green-600 hover:text-white hover:border-green-600 transition-all cursor-pointer shadow-xs">
-                                                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
-                                                Restore
+                                </td>
+                                {{-- Actions --}}
+                                <td class="px-5 py-3">
+                                    <div class="flex items-center justify-end gap-1.5">
+                                        @if($user->status === 'active')
+                                            <button type="button" @click="openBan({{ json_encode($user) }})"
+                                                class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-red-50 text-red-600 border border-red-100 rounded-xl text-[9px] font-black uppercase tracking-widest hover:bg-red-600 hover:text-white hover:border-red-600 transition-all cursor-pointer shadow-xs">
+                                                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"/></svg>
+                                                Ban
                                             </button>
-                                        </form>
-                                    @endif
-                                    <button type="button" @click="openDelete({{ json_encode($user) }})"
-                                        class="inline-flex items-center gap-1.5 px-3.5 py-2 bg-gray-50 text-gray-500 border border-gray-100 rounded-xl text-[9px] font-black uppercase tracking-widest hover:bg-red-600 hover:text-white hover:border-red-600 transition-all cursor-pointer shadow-xs">
-                                        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
-                                        Delete
-                                    </button>
-                                </div>
-                            </td>
-                        </tr>
-                    @empty
-                        <tr>
-                            <td colspan="4">
-                                <div class="py-20 text-center">
-                                    <div class="w-16 h-16 bg-gray-50 rounded-2xl flex items-center justify-center mx-auto mb-4 border border-gray-100">
-                                        <svg class="w-7 h-7 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+                                        @else
+                                            <form action="/admin/users/{{ $user->id }}/unban" method="POST">
+                                                @csrf @method('PATCH')
+                                                <button type="submit"
+                                                    class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-green-50 text-green-700 border border-green-100 rounded-xl text-[9px] font-black uppercase tracking-widest hover:bg-green-600 hover:text-white hover:border-green-600 transition-all cursor-pointer shadow-xs">
+                                                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+                                                    Restore
+                                                </button>
+                                            </form>
+                                        @endif
+                                        <button type="button" @click="openDelete({{ json_encode($user) }})"
+                                            class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-gray-50 text-gray-500 border border-gray-100 rounded-xl text-[9px] font-black uppercase tracking-widest hover:bg-red-600 hover:text-white hover:border-red-600 transition-all cursor-pointer shadow-xs">
+                                            <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+                                            Delete
+                                        </button>
                                     </div>
-                                    <p class="text-sm font-bold text-gray-400 uppercase tracking-widest">No customers found</p>
-                                    <p class="text-xs text-gray-300 mt-1">Try adjusting your search or filter criteria</p>
-                                </div>
-                            </td>
-                        </tr>
-                    @endforelse
-                </tbody>
-            </table>
-        </div>
-        {{-- Pagination --}}
-        <div class="px-6 py-4 border-t border-gray-50 bg-gray-50/30">
-            {{ $users->withQueryString()->links() }}
+                                </td>
+                            </tr>
+                        @empty
+                            <tr>
+                                <td colspan="4">
+                                    <div class="py-14 text-center">
+                                        <div class="w-14 h-14 bg-gray-50 rounded-2xl flex items-center justify-center mx-auto mb-3 border border-gray-100">
+                                            <svg class="w-6 h-6 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+                                        </div>
+                                        <p class="text-xs font-bold text-gray-400 uppercase tracking-widest">No customers found</p>
+                                        <p class="text-[11px] text-gray-300 mt-1">Try adjusting your search or filter criteria</p>
+                                    </div>
+                                </td>
+                            </tr>
+                        @endforelse
+                    </tbody>
+                </table>
+            </div>
+            {{-- Pagination --}}
+            <div class="px-5 py-3 border-t border-gray-50 bg-gray-50/30">
+                {{ $users->withQueryString()->links() }}
+            </div>
         </div>
     </div>
 
