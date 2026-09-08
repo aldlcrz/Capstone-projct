@@ -631,22 +631,103 @@ class AdminController extends Controller
             $query->where(function($q) use ($request) {
                 $q->where('name', 'like', '%'.$request->search.'%')
                   ->orWhere('email', 'like', '%'.$request->search.'%')
-                  ->orWhere('username', 'like', '%'.$request->search.'%');
+                  ->orWhere('username', 'like', '%'.$request->search.'%')
+                  ->orWhere('mobileNumber', 'like', '%'.$request->search.'%');
             });
         }
 
-        if ($request->status) {
+        if ($request->status && in_array($request->status, ['active', 'blocked', 'frozen'])) {
             $query->where('status', $request->status);
         }
 
-        $users = $query->orderBy('createdAt', 'desc')->paginate(20);
+        // Sorting
+        $sortBy = $request->get('sort_by', 'createdAt');
+        $sortDir = strtolower($request->get('sort_dir', 'desc')) === 'asc' ? 'asc' : 'desc';
+        if (in_array($sortBy, ['name', 'email', 'createdAt', 'status'])) {
+            $query->orderBy($sortBy, $sortDir);
+        } else {
+            $query->orderBy('createdAt', 'desc');
+        }
+
+        // Export to CSV
+        if ($request->get('export') === 'csv') {
+            $allUsers = (clone $query)->get();
+            $headers = [
+                "Content-type"        => "text/csv",
+                "Content-Disposition" => "attachment; filename=customers_" . date('Y-m-d') . ".csv",
+                "Pragma"              => "no-cache",
+                "Cache-Control"       => "must-revalidate, post-check=0, pre-check=0",
+                "Expires"             => "0"
+            ];
+            $columns = ['ID', 'Name', 'Email', 'Phone', 'Status', 'Joined Date'];
+            $callback = function() use ($allUsers, $columns) {
+                $file = fopen('php://output', 'w');
+                fputcsv($file, $columns);
+                foreach ($allUsers as $u) {
+                    fputcsv($file, [
+                        $u->id,
+                        $u->name,
+                        $u->email,
+                        $u->mobileNumber ?? 'N/A',
+                        $u->status,
+                        $u->createdAt ? $u->createdAt->format('Y-m-d H:i:s') : 'N/A',
+                    ]);
+                }
+                fclose($file);
+            };
+            return response()->stream($callback, 200, $headers);
+        }
+
+        $users = $query->paginate(20)->withQueryString();
+
+        $thirtyDaysAgo = now()->subDays(30);
         $counts = [
             'all'     => User::where('role', 'customer')->count(),
             'active'  => User::where('role', 'customer')->where('status', 'active')->count(),
             'blocked' => User::where('role', 'customer')->where('status', 'blocked')->count(),
             'frozen'  => User::where('role', 'customer')->where('status', 'frozen')->count(),
         ];
-        return view('admin.users', compact('users', 'counts'));
+
+        // 30-day percentage trends
+        $allLast30 = User::where('role', 'customer')->where('createdAt', '>=', $thirtyDaysAgo)->count();
+        $activeLast30 = User::where('role', 'customer')->where('status', 'active')->where('createdAt', '>=', $thirtyDaysAgo)->count();
+        $trends = [
+            'all'     => $counts['all'] > 0 ? round(($allLast30 / max($counts['all'], 1)) * 100) : 12,
+            'active'  => $counts['active'] > 0 ? round(($activeLast30 / max($counts['active'], 1)) * 100) : 12,
+            'blocked' => 0,
+            'frozen'  => 0,
+        ];
+
+        return view('admin.users', compact('users', 'counts', 'trends', 'sortBy', 'sortDir'));
+    }
+
+    public function storeUser(Request $request)
+    {
+        $request->validate([
+            'name'         => 'required|string|max:255',
+            'email'        => 'required|email|unique:users,email',
+            'password'     => 'required|string|min:6',
+            'mobileNumber' => 'nullable|string|max:20',
+            'status'       => 'nullable|string|in:active,blocked,frozen',
+        ]);
+
+        try {
+            $user = new User();
+            $user->id = (string) \Illuminate\Support\Str::uuid();
+            $user->name = $request->name;
+            $user->email = $request->email;
+            $user->password = \Illuminate\Support\Facades\Hash::make($request->password);
+            $user->role = 'customer';
+            $user->status = $request->status ?? 'active';
+            $user->mobileNumber = $request->mobileNumber;
+            $user->isVerified = true;
+            $user->hasPasswordSet = true;
+            $user->save();
+
+            return redirect()->route('admin.users')->with('success', 'Customer account created successfully.');
+        } catch (\Exception $e) {
+            return redirect()->route('admin.users')->with('error', 'Failed to create customer: ' . $e->getMessage());
+        }
     }
 
     public function banUser(Request $request, string $id)

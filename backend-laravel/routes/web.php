@@ -191,6 +191,7 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->group(function () {
     Route::get('/dashboard', [AdminController::class, 'dashboard'])->name('admin.dashboard');
     Route::get('/export-global-report', [AdminController::class, 'exportGlobalReport'])->name('admin.export');
     Route::get('/users', [AdminController::class, 'users'])->name('admin.users');
+    Route::post('/users', [AdminController::class, 'storeUser'])->name('admin.users.store');
     Route::match(['post', 'patch'], '/users/{id}/ban', [AdminController::class, 'banUser'])->name('admin.users.ban');
     Route::get('/users/{id}/ban', function() { return redirect()->route('admin.users'); });
     Route::match(['post', 'patch'], '/users/{id}/unban', [AdminController::class, 'unbanUser'])->name('admin.users.unban');
