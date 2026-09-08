@@ -13,47 +13,99 @@ class ReturnRequestController extends Controller
     /**
      * Create a new return request.
      */
-    public function store(Request $request)
+    /**
+     * Create a new return request.
+     */
+    public function store(Request $request, $id = null)
     {
+        if (!$request->filled('orderId') && $id) {
+            $request->merge(['orderId' => $id]);
+        }
+
         $request->validate([
-            'orderId' => 'required|exists:orders,id',
-            'reason' => 'required|string',
-            'proofImages' => 'nullable|array',
+            'orderId'     => 'required|exists:orders,id',
+            'reason'      => 'required|string',
+            'message'     => 'nullable|string',
+            'proofImages' => 'nullable',
+            'proof_files.*' => 'nullable|file|image|max:10240',
         ]);
 
         $userId = Auth::id();
         $order = Order::findOrFail($request->orderId);
 
         if ($order->customerId !== $userId) {
-            return response()->json(['message' => 'You can only request returns for your own orders'], 403);
+            if ($request->wantsJson()) {
+                return response()->json(['message' => 'You can only request returns for your own orders'], 403);
+            }
+            return back()->with('error', 'You can only request returns for your own orders.');
         }
 
-        if ($order->status !== 'Delivered') {
-            return response()->json(['message' => 'Only delivered orders can be returned'], 400);
+        $allowedStatuses = ['delivered', 'completed', 'received by buyer'];
+        if (!in_array(strtolower(trim($order->status)), $allowedStatuses, true)) {
+            if ($request->wantsJson()) {
+                return response()->json(['message' => 'Only delivered or completed orders can be returned'], 400);
+            }
+            return back()->with('error', 'Only delivered or completed orders can be returned.');
+        }
+
+        $existing = ReturnRequest::where('orderId', $order->id)
+            ->whereIn('status', ['Pending', 'Approved'])
+            ->first();
+        if ($existing) {
+            if ($request->wantsJson()) {
+                return response()->json(['message' => 'A return request is already pending or approved for this order.'], 400);
+            }
+            return back()->with('error', 'A return request has already been submitted for this order.');
+        }
+
+        $proofPaths = [];
+        if ($request->hasFile('proof_files')) {
+            $dest = public_path('uploads/returns');
+            if (!file_exists($dest)) {
+                @mkdir($dest, 0777, true);
+            }
+            foreach ($request->file('proof_files') as $file) {
+                if ($file->isValid()) {
+                    $filename = time() . '_' . uniqid() . '.' . $file->getClientOriginalExtension();
+                    $file->move($dest, $filename);
+                    $proofPaths[] = '/uploads/returns/' . $filename;
+                }
+            }
+        } elseif (is_array($request->proofImages)) {
+            $proofPaths = $request->proofImages;
+        }
+
+        $reasonText = trim($request->reason);
+        if ($request->filled('message')) {
+            $reasonText .= " - " . trim($request->message);
         }
 
         $returnRequest = ReturnRequest::create([
-            'orderId' => $request->orderId,
-            'reason' => $request->reason,
-            'proofImages' => json_encode($request->proofImages ?: []),
-            'status' => 'Pending'
+            'orderId'     => $order->id,
+            'reason'      => $reasonText,
+            'proofImages' => json_encode($proofPaths),
+            'status'      => 'Pending',
         ]);
 
         // Notify seller
         Notification::create([
-            'userId' => $order->sellerId,
-            'title' => 'New Return Request',
-            'message' => "A customer has requested a return for order #{$order->id}",
+            'userId'     => $order->sellerId,
+            'title'      => 'New Return Request',
+            'message'    => "Customer has requested a return for order #LB-OR-" . strtoupper(substr($order->id, -8)),
             'targetRole' => 'seller',
         ]);
 
         $sellerUser = \App\Models\User::find($order->sellerId);
         if ($sellerUser && $sellerUser->email) {
-            $mailable = new \App\Mail\ReturnRefundRequestMail($sellerUser->name, $order->id, $request->reason, 'Return');
+            $mailable = new \App\Mail\ReturnRefundRequestMail($sellerUser->name, $order->id, $reasonText, 'Return');
             \App\Services\EmailNotificationService::sendNotification($sellerUser->email, $mailable, 'return_refund_request', $sellerUser->id, 'Order', $order->id);
         }
 
-        return response()->json($returnRequest, 201);
+        if ($request->wantsJson()) {
+            return response()->json($returnRequest, 201);
+        }
+
+        return back()->with('success', 'Your return request has been submitted to the artisan for review.');
     }
 
     /**

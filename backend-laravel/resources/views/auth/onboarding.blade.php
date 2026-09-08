@@ -120,16 +120,15 @@
                                class="w-full h-11 px-3.5 bg-white border {{ $errors->has('name') ? 'border-red-400 bg-red-50/50' : 'border-[#D8CEBE]' }} rounded-xl text-xs font-semibold text-gray-900 outline-none focus:border-[#C0422A] focus:ring-2 focus:ring-[#C0422A]/15 transition-all shadow-2xs">
                     </div>
 
-                    {{-- Preferred Username --}}
+                    {{-- Preferred Username (Optional) --}}
                     <div>
                         <label for="username" class="block text-[11px] font-bold text-gray-800 uppercase tracking-wider mb-1">
-                            Preferred Username <span class="text-[#C0422A]">*</span>
+                            Preferred Handle <span class="text-gray-400 font-normal text-[10px] lowercase">(optional)</span>
                         </label>
                         <input type="text" 
                                id="username" 
                                name="username" 
                                value="{{ old('username', Auth::user()->username) }}" 
-                               required
                                placeholder="e.g. mariasantos" 
                                class="w-full h-11 px-3.5 bg-white border {{ $errors->has('username') ? 'border-red-400 bg-red-50/50' : 'border-[#D8CEBE]' }} rounded-xl text-xs font-semibold text-gray-900 outline-none focus:border-[#C0422A] focus:ring-2 focus:ring-[#C0422A]/15 transition-all shadow-2xs">
                     </div>
@@ -404,13 +403,13 @@
                 selectedBarangay: null,
 
                 addressForm: {
-                    houseNo: @json(old('houseNo', '')),
-                    street: @json(old('street', '')),
-                    barangay: @json(old('barangay', '')),
-                    city: @json(old('city', '')),
-                    province: @json(old('province', '')),
-                    region: @json(old('region', '')),
-                    postalCode: @json(old('postalCode', '')),
+                    houseNo: "{{ addslashes(old('houseNo', '')) }}",
+                    street: "{{ addslashes(old('street', '')) }}",
+                    barangay: "{{ addslashes(old('barangay', '')) }}",
+                    city: "{{ addslashes(old('city', '')) }}",
+                    province: "{{ addslashes(old('province', '')) }}",
+                    region: "{{ addslashes(old('region', '')) }}",
+                    postalCode: "{{ addslashes(old('postalCode', '')) }}",
                     latitude: null,
                     longitude: null
                 },
@@ -554,20 +553,26 @@
 
                 async autoFillFromGeocode(addr) {
                     if (!addr) return;
+
+                    const rawProvince = addr.province || (addr.state && addr.state.toLowerCase() !== (addr.region || '').toLowerCase() ? addr.state : '') || addr.state_district || addr.county || '';
                     const rawRegion = addr.region || addr.state || '';
-                    const rawProvince = addr.province || addr.state_district || addr.county || '';
-                    const rawCity = addr.city || addr.town || addr.municipality || addr.city_district || '';
-                    const rawBarangay = addr.village || addr.suburb || addr.neighbourhood || addr.quarter || addr.residential || '';
+                    const rawCity = addr.city || addr.town || addr.municipality || addr.city_district || addr.suburb || '';
+                    const rawBarangay = addr.quarter || addr.village || addr.suburb || addr.neighbourhood || addr.residential || '';
+                    const rawStreet = [addr.house_number, addr.road || addr.pedestrian || addr.highway].filter(Boolean).join(' ');
                     const rawPostal = addr.postcode || '';
+
+                    if (rawStreet && !this.addressForm.houseNo) {
+                        this.addressForm.houseNo = rawStreet;
+                    }
 
                     if (rawPostal && /^\d{4}$/.test(rawPostal)) {
                         this.addressForm.postalCode = rawPostal;
                     }
 
+                    if (rawRegion) this.addressForm.region = rawRegion;
                     if (rawProvince) this.addressForm.province = rawProvince;
                     if (rawCity) this.addressForm.city = rawCity;
                     if (rawBarangay) this.addressForm.barangay = rawBarangay;
-                    if (rawRegion) this.addressForm.region = rawRegion;
 
                     try {
                         if (!this.regionsList || this.regionsList.length === 0) {
@@ -577,17 +582,22 @@
                         const normalize = (str) => (str || '').toLowerCase().replace(/[^a-z0-9]/g, '');
                         const normRegion = normalize(rawRegion);
                         const normProv = normalize(rawProvince);
-                        const normCity = normalize(rawCity);
-                        const normBgy = normalize(rawBarangay);
+                        const normCity = normalize(rawCity).replace(/^(cityof|municipalityof)/, '');
+                        const normBgy = normalize(rawBarangay).replace(/^(barangay|brgy)/, '');
 
                         let matchedRegion = this.regionsList.find(r => {
                             const nr = normalize(r.name);
-                            return (normRegion && (nr.includes(normRegion) || normRegion.includes(nr))) ||
-                                   (normProv && nr.includes(normProv));
+                            const nRegName = normalize(r.regionName || '');
+                            return (normRegion && (nr.includes(normRegion) || normRegion.includes(nr) || nRegName.includes(normRegion) || normRegion.includes(nRegName))) ||
+                                   (normProv && (nr.includes(normProv) || normProv.includes(nr)));
                         });
 
                         if (!matchedRegion && (normRegion.includes('ncr') || normRegion.includes('metromanila') || normRegion.includes('nationalcapital') || normProv.includes('metromanila') || normCity.includes('manila') || normCity.includes('quezoncity'))) {
                             matchedRegion = this.regionsList.find(r => r.code === '130000000');
+                        }
+
+                        if (!matchedRegion && normProv) {
+                            matchedRegion = this.regionsList.find(r => normalize(r.name).includes(normProv));
                         }
 
                         if (matchedRegion) {
@@ -611,12 +621,31 @@
                                     this.selectedProvince = matchedProv;
                                     this.addressForm.province = matchedProv.name;
                                     await this.loadCities(matchedProv.code);
+                                } else if (this.provincesList.length > 0 && normCity) {
+                                    for (const prov of this.provincesList) {
+                                        try {
+                                            const res = await fetch(`https://psgc.gitlab.io/api/provinces/${prov.code}/cities-municipalities/`);
+                                            if (res.ok) {
+                                                const cList = await res.json();
+                                                const cMatch = cList.find(c => {
+                                                    const nc = normalize(c.name).replace(/^(cityof|municipalityof)/, '');
+                                                    return normCity && (nc.includes(normCity) || normCity.includes(nc));
+                                                });
+                                                if (cMatch) {
+                                                    this.selectedProvince = prov;
+                                                    this.addressForm.province = prov.name;
+                                                    this.citiesList = cList;
+                                                    break;
+                                                }
+                                            }
+                                        } catch(e) {}
+                                    }
                                 }
                             }
 
                             if (this.citiesList && this.citiesList.length > 0) {
                                 let matchedCity = this.citiesList.find(c => {
-                                    const nc = normalize(c.name);
+                                    const nc = normalize(c.name).replace(/^(cityof|municipalityof)/, '');
                                     return normCity && (nc.includes(normCity) || normCity.includes(nc));
                                 });
                                 if (matchedCity) {
@@ -626,7 +655,7 @@
 
                                     if (this.barangaysList && this.barangaysList.length > 0) {
                                         let matchedBgy = this.barangaysList.find(b => {
-                                            const nb = normalize(b.name);
+                                            const nb = normalize(b.name).replace(/^(barangay|brgy)/, '');
                                             return normBgy && (nb.includes(normBgy) || normBgy.includes(nb));
                                         });
                                         if (matchedBgy) {

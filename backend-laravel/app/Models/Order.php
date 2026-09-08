@@ -214,4 +214,12 @@ class Order extends Model
     {
         return $this->hasMany(OrderStatusHistory::class, 'orderId')->orderBy('createdAt', 'asc');
     }
+
+    /**
+     * Get the return requests for the order.
+     */
+    public function returnRequests()
+    {
+        return $this->hasMany(ReturnRequest::class, 'orderId')->orderBy('createdAt', 'desc');
+    }
 }

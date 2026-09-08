@@ -104,18 +104,18 @@
 
             <input type="hidden" name="pending_intent" id="hidden_pending_intent" value="{{ json_encode(session('pending_intent')) }}">
             
-            {{-- Username Field --}}
+            {{-- Full Name Field --}}
             <div class="space-y-1">
-                <label class="text-[10px] font-bold uppercase tracking-widest px-5 block text-gray-500">Username</label>
+                <label class="text-[10px] font-bold uppercase tracking-widest px-5 block text-gray-500">Full Name</label>
                 <input 
                     type="text" 
-                    name="username" 
-                    value="{{ old('username', session('google_signup.name') ? \Illuminate\Support\Str::slug(session('google_signup.name'), '') : '') }}"
+                    name="name" 
+                    value="{{ old('name', session('google_signup.name')) }}"
                     required 
-                    placeholder="Choose a username"
-                    class="w-full h-12 bg-[#F9F6F2] rounded-full px-8 text-sm font-medium border-2 {{ $errors->has('username') ? 'border-red-400' : 'border-transparent' }} focus:border-[#C0422A] focus:bg-white outline-none transition-all"
+                    placeholder="Enter your full name (e.g. Juan Dela Cruz)"
+                    class="w-full h-12 bg-[#F9F6F2] rounded-full px-8 text-sm font-medium border-2 {{ $errors->has('name') ? 'border-red-400' : 'border-transparent' }} focus:border-[#C0422A] focus:bg-white outline-none transition-all"
                 >
-                @error('username')
+                @error('name')
                     <p class="text-xs font-bold text-red-500 px-5 mt-1">{{ $message }}</p>
                 @enderror
             </div>

@@ -398,7 +398,7 @@ class WebController extends Controller
     public function orders(Request $request)
     {
         $query = Order::where('customerId', Auth::id())
-            ->with(['items.product', 'seller', 'reviews', 'statusHistories'])
+            ->with(['items.product', 'seller', 'reviews', 'statusHistories', 'returnRequests'])
             ->orderBy('createdAt', 'desc');
 
         // Filter by status tab
@@ -452,7 +452,7 @@ class WebController extends Controller
     {
         $order = Order::where('id', $id)
             ->where('customerId', Auth::id())
-            ->with(['items.product', 'seller', 'reviews', 'statusHistories'])
+            ->with(['items.product', 'seller', 'reviews', 'statusHistories', 'returnRequests'])
             ->firstOrFail();
 
         $recommended = $this->getRecommendedProductsForOrder($order);

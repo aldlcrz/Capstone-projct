@@ -15,6 +15,11 @@
         reviewOrderItemId: '',
         reviewProductName: '',
         reviewProductImage: '',
+        returnModal: false,
+        returnOrderId: '',
+        returnReason: 'Damaged / Defective item',
+        returnMessage: '',
+        returnLoading: false,
         cancelModal: false,
         cancelOrderId: null,
         cancellationReason: 'Need to change shipping address / details',
@@ -291,9 +296,10 @@
                                     });
                                     $firstReview = $order->reviews ? $order->reviews->first() : null;
                                 }
+                                $activeReturn = $order->returnRequests ? $order->returnRequests->first() : null;
                             @endphp
 
-                            <div class="flex items-center gap-2">
+                            <div class="flex flex-wrap items-center gap-2">
                                 @if($isDelivered)
                                     <button type="button"
                                             onclick="event.stopPropagation();"
@@ -303,18 +309,47 @@
                                         <span>Confirm Received</span>
                                     </button>
                                 @elseif($isCompleted)
+                                    {{-- 1. Rate Now Button --}}
                                     @if($unreviewedItem)
                                         <button type="button"
                                                 onclick="event.stopPropagation();"
                                                 @click.stop="reviewModal = true; reviewProductId = '{{ $unreviewedItem->productId }}'; reviewOrderId = '{{ $order->id }}'; reviewOrderItemId = '{{ $unreviewedItem->id }}'; reviewProductName = '{{ addslashes($unreviewedItem->product->name ?? 'Product') }}'; reviewProductImage = '{{ $unreviewedItem->product ? $unreviewedItem->product->getImageUrl() : asset('uploads/products/default.jpg') }}'"
                                                 style="background-color:#1E1915;color:#FFFFFF;border:1px solid #1E1915;"
-                                                class="px-5 sm:px-6 py-2.5 rounded-full hover:bg-[#C0422A] text-[9px] sm:text-[10px] font-black uppercase tracking-widest transition-all whitespace-nowrap shadow-sm active:scale-95 flex items-center gap-1.5 cursor-pointer">
-                                            <span>⭐ Rate Product</span>
+                                                class="px-4 sm:px-5 py-2.5 rounded-full hover:bg-[#C0422A] hover:border-[#C0422A] text-[9px] sm:text-[10px] font-black uppercase tracking-widest transition-all whitespace-nowrap shadow-sm active:scale-95 flex items-center gap-1.5 cursor-pointer">
+                                            <span>⭐ Rate Now</span>
                                         </button>
                                     @else
-                                        <span onclick="event.stopPropagation();" style="background:#ECFDF5;color:#047857;border:1px solid #A7F3D0;" class="inline-flex items-center gap-1 px-4 py-2 rounded-full text-[9px] sm:text-[10px] font-black uppercase tracking-wider">
+                                        <span onclick="event.stopPropagation();" style="background:#ECFDF5;color:#047857;border:1px solid #A7F3D0;" class="inline-flex items-center gap-1 px-3.5 py-2 rounded-full text-[9px] sm:text-[10px] font-black uppercase tracking-wider">
                                             ★ {{ $firstReview ? $firstReview->rating . '/5 ' : '' }}Reviewed
                                         </span>
+                                    @endif
+
+                                    {{-- 2. Request Return Button or Return Status Badge --}}
+                                    @if($activeReturn)
+                                        @php
+                                            $retStatus = strtolower(trim($activeReturn->status ?? 'pending'));
+                                        @endphp
+                                        @if($retStatus === 'approved')
+                                            <span onclick="event.stopPropagation();" style="background:#EFF6FF;color:#1D4ED8;border:1px solid #BFDBFE;" class="inline-flex items-center gap-1 px-3.5 py-2 rounded-full text-[9px] sm:text-[10px] font-black uppercase tracking-wider">
+                                                ✓ Return Approved
+                                            </span>
+                                        @elseif($retStatus === 'rejected')
+                                            <span onclick="event.stopPropagation();" style="background:#FEF2F2;color:#991B1B;border:1px solid #FECACA;" class="inline-flex items-center gap-1 px-3.5 py-2 rounded-full text-[9px] sm:text-[10px] font-black uppercase tracking-wider">
+                                                ✕ Return Rejected
+                                            </span>
+                                        @else
+                                            <span onclick="event.stopPropagation();" style="background:#FFFBEB;color:#B45309;border:1px solid #FDE68A;" class="inline-flex items-center gap-1 px-3.5 py-2 rounded-full text-[9px] sm:text-[10px] font-black uppercase tracking-wider">
+                                                ⏳ Return Pending
+                                            </span>
+                                        @endif
+                                    @else
+                                        <button type="button"
+                                                onclick="event.stopPropagation();"
+                                                @click.stop="returnOrderId = '{{ $order->id }}'; returnModal = true;"
+                                                class="px-4 sm:px-5 py-2.5 rounded-full bg-white hover:bg-stone-50 text-stone-700 border border-stone-300 text-[9px] sm:text-[10px] font-black uppercase tracking-widest transition-all whitespace-nowrap shadow-sm active:scale-95 flex items-center gap-1.5 cursor-pointer">
+                                            <svg class="w-3.5 h-3.5 text-stone-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6"/></svg>
+                                            <span>Request Return</span>
+                                        </button>
                                     @endif
                                 @elseif($statusLower === 'pending')
                                     <button type="button"
@@ -949,6 +984,66 @@
                             <svg class="w-3.5 h-3.5 animate-spin text-white" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"/></svg>
                         </template>
                         <span x-text="cancelLoading ? 'Submitting...' : 'Request Cancellation'"></span>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    {{-- Request Return Modal --}}
+    <div x-show="returnModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm" x-cloak style="display: none;">
+        <div @click.away="returnModal = false" class="bg-white border border-gray-150 rounded-2xl shadow-2xl w-full max-w-md p-6 space-y-4 text-gray-900">
+            <div class="flex items-center gap-3 pb-3 border-b border-gray-100">
+                <div class="w-10 h-10 rounded-full bg-stone-100 text-stone-700 flex items-center justify-center font-bold text-base shrink-0">
+                    ↩
+                </div>
+                <div>
+                    <h3 class="text-sm font-black text-black uppercase tracking-tight">Request Item Return</h3>
+                    <p class="text-[10px] text-gray-500 font-medium">Submit a return request to the artisan. Please specify the reason and attach photo evidence if applicable.</p>
+                </div>
+            </div>
+
+            <form :action="'/orders/' + returnOrderId + '/return'" method="POST" enctype="multipart/form-data" class="space-y-3.5" @submit="returnLoading = true">
+                @csrf
+                <input type="hidden" name="orderId" :value="returnOrderId">
+                <div class="space-y-1.5">
+                    <label class="text-[10px] font-black uppercase tracking-widest text-gray-500">Reason for Return <span class="text-red-500">*</span></label>
+                    <select name="reason" x-model="returnReason" class="w-full px-3.5 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-xs font-semibold text-gray-800 outline-none focus:border-[#C0420A] focus:bg-white transition-all">
+                        <option value="Damaged / Defective item">Damaged / Defective item</option>
+                        <option value="Item does not match description / pictures">Item does not match description / pictures</option>
+                        <option value="Wrong size or incorrect fitting">Wrong size or incorrect fitting</option>
+                        <option value="Incomplete item or missing parts">Incomplete item or missing parts</option>
+                        <option value="Received wrong item">Received wrong item</option>
+                        <option value="Other">Other reason</option>
+                    </select>
+                </div>
+
+                <div class="space-y-1">
+                    <label class="text-[10px] font-black uppercase tracking-widest text-gray-500">Details / Explanation</label>
+                    <textarea name="message" x-model="returnMessage" rows="3" placeholder="Explain the issue in detail to help the artisan assess your return request..." class="w-full px-3.5 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-xs font-medium outline-none focus:border-[#C0420A] focus:bg-white resize-none"></textarea>
+                </div>
+
+                <div class="space-y-1">
+                    <label class="text-[10px] font-black uppercase tracking-widest text-gray-500 flex items-center justify-between">
+                        <span>Photo / Evidence (Optional)</span>
+                        <span class="text-gray-400 font-normal">Max 10MB</span>
+                    </label>
+                    <input type="file" name="proof_files[]" multiple accept="image/*" class="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-xl text-xs text-gray-600 file:mr-3 file:py-1 file:px-2.5 file:rounded-md file:border-0 file:text-[10px] file:font-bold file:bg-[#1E1915] file:text-white hover:file:bg-[#C0420A] cursor-pointer">
+                </div>
+
+                <div class="p-3 bg-amber-50 border border-amber-200 rounded-xl text-[10px] text-amber-800 leading-relaxed">
+                    <strong>Artisan Return Policy:</strong> Returned items must be unworn and in original condition with tags intact. The artisan will inspect your request and respond promptly.
+                </div>
+
+                <div class="flex gap-2.5 pt-2">
+                    <button type="button" @click="returnModal = false" :disabled="returnLoading" class="flex-1 py-2.5 rounded-full border border-gray-200 text-xs font-bold text-gray-600 hover:bg-gray-50 transition-all cursor-pointer">
+                        Cancel
+                    </button>
+                    <button type="submit" :disabled="returnLoading" class="flex-1 py-2.5 rounded-full bg-[#1E1915] hover:bg-[#C0420A] text-white text-xs font-bold uppercase tracking-wider shadow-sm transition-all flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-50">
+                        <template x-if="returnLoading">
+                            <svg class="w-3.5 h-3.5 animate-spin text-white" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"/></svg>
+                        </template>
+                        <span x-text="returnLoading ? 'Submitting...' : 'Submit Request'"></span>
                     </button>
                 </div>
             </form>

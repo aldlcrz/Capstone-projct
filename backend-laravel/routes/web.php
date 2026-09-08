@@ -182,6 +182,7 @@ Route::middleware('auth')->group(function () {
     Route::post('/api/refunds', [RefundController::class, 'store']);
     Route::get('/api/refunds/customer', [RefundController::class, 'customerIndex']);
     Route::post('/api/returns', [ReturnRequestController::class, 'store']);
+    Route::post('/orders/{id}/return', [ReturnRequestController::class, 'store'])->name('orders.return');
     Route::get('/api/returns', [ReturnRequestController::class, 'index']);
 });
 

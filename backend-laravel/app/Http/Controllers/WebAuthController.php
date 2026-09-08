@@ -87,16 +87,16 @@ class WebAuthController extends Controller
                 Auth::logout();
                 session(['verify_email' => $user->email]);
 
-                $existing = \App\Models\EmailVerification::where('email', $user->email)->where('type', 'registration')->first();
+                $existing = EmailVerification::where('email', $user->email)->where('type', 'registration')->first();
                 $shouldSend = true;
                 if ($existing && $existing->last_sent_at && $existing->last_sent_at->diffInSeconds(now()) < 60) {
                     $shouldSend = false;
                 }
 
                 if ($shouldSend) {
-                    $verification = \App\Services\EmailNotificationService::createVerificationCode($user->email, 'registration');
+                    $verification = EmailNotificationService::createVerificationCode($user->email, 'registration');
                     $mailable = new \App\Mail\VerificationCodeMail($user->name, $verification->code);
-                    \App\Services\EmailNotificationService::sendNotification($user->email, $mailable, 'email_verification', $user->id, 'User', $user->id);
+                    EmailNotificationService::sendNotification($user->email, $mailable, 'email_verification', $user->id, 'User', $user->id);
                     return redirect()->route('verify.email')->with('success', 'A 6-digit verification code has been sent to your Gmail. Please enter it below to activate your account.');
                 }
 
@@ -166,7 +166,7 @@ class WebAuthController extends Controller
     public function register(Request $request)
     {
         $email = strtolower(trim($request->email));
-        $username = trim($request->username);
+        $name = trim($request->name);
 
         // Delete any stale unverified user record with this email so it doesn't block re-registering
         $staleUser = User::where('email', $email)->where('isVerified', false)->first();
@@ -175,7 +175,7 @@ class WebAuthController extends Controller
         }
 
         $validator = Validator::make($request->all(), [
-            'username'      => 'required|string|min:3|max:50|unique:users,username',
+            'name'          => ['required', 'string', 'min:2', 'max:100', 'regex:/^[a-zA-Z\x{00C0}-\x{024F}\s\.\'\-]+$/u'],
             'email'         => 'required|string|email|max:255|unique:users,email',
             'password'      => [
                 'required',
@@ -186,9 +186,9 @@ class WebAuthController extends Controller
             ],
             'terms_consent' => 'required|accepted',
         ], [
-            'username.required'      => 'Please choose a username.',
-            'username.min'           => 'Username must be at least 3 characters.',
-            'username.unique'        => 'This username is already taken.',
+            'name.required'          => 'Please enter your full name.',
+            'name.min'               => 'Name must be at least 2 characters.',
+            'name.regex'             => 'Full name may only contain letters, spaces, hyphens, periods, and apostrophes.',
             'email.required'         => 'Please enter your email address.',
             'email.email'            => 'Please enter a valid email address.',
             'email.unique'           => 'This email is already in use. Please log in instead.',
@@ -215,8 +215,8 @@ class WebAuthController extends Controller
         // Account is NOT created in DB until verification code is entered!
         session([
             'pending_registration' => [
-                'name'              => $request->name ?: ($googleSignup['name'] ?? $username),
-                'username'          => $username,
+                'name'              => $name,
+                'username'          => null,
                 'email'             => $email,
                 'password'          => Hash::make($request->password),
                 'role'              => 'customer',
@@ -231,9 +231,9 @@ class WebAuthController extends Controller
         session()->forget('google_signup');
 
         // Generate verification code and send email
-        $verification = \App\Services\EmailNotificationService::createVerificationCode($email, 'registration');
-        $mailable = new \App\Mail\VerificationCodeMail($username, $verification->code);
-        $sent = \App\Services\EmailNotificationService::sendNotification($email, $mailable, 'email_verification');
+        $verification = EmailNotificationService::createVerificationCode($email, 'registration');
+        $mailable = new \App\Mail\VerificationCodeMail($name, $verification->code);
+        $sent = EmailNotificationService::sendNotification($email, $mailable, 'email_verification');
 
         if (!$sent) {
             return redirect()->route('verify.email')->with('warning', 'Verification code created, but sending email may be delayed. Please check your Gmail or click Resend.');
@@ -336,9 +336,9 @@ class WebAuthController extends Controller
         session()->forget('google_seller_signup');
 
         // Generate verification code and send email
-        $verification = \App\Services\EmailNotificationService::createVerificationCode($email, 'registration');
+        $verification = EmailNotificationService::createVerificationCode($email, 'registration');
         $mailable = new \App\Mail\VerificationCodeMail($user->name, $verification->code);
-        \App\Services\EmailNotificationService::sendNotification($email, $mailable, 'email_verification', $user->id, 'User', $user->id);
+        EmailNotificationService::sendNotification($email, $mailable, 'email_verification', $user->id, 'User', $user->id);
 
         \App\Models\Notification::sendToAdmins(
             'New Seller Application',
@@ -373,7 +373,7 @@ class WebAuthController extends Controller
                 'code' => 'required|string|size:6',
             ]);
 
-            $isValid = \App\Services\EmailNotificationService::verifyCode($email, $request->code, 'registration');
+            $isValid = EmailNotificationService::verifyCode($email, $request->code, 'registration');
 
             if (!$isValid) {
                 return back()->withErrors(['code' => 'Invalid or expired verification code. Please request a new code if expired.']);
@@ -395,7 +395,7 @@ class WebAuthController extends Controller
                         $user->status     = 'active';
                         $user->save();
 
-                        \App\Services\EmailNotificationService::consumeCode($email, 'registration');
+                        EmailNotificationService::consumeCode($email, 'registration');
                         Auth::logout();
                         session()->forget('verify_email');
                         session()->forget('pending_registration');
@@ -409,7 +409,7 @@ class WebAuthController extends Controller
             }
 
             if ($user) {
-                \App\Services\EmailNotificationService::consumeCode($email, 'registration');
+                EmailNotificationService::consumeCode($email, 'registration');
                 Auth::login($user);
                 $request->session()->regenerate();
                 $user->sessionVersion = ((int) ($user->sessionVersion ?? 1)) + 1;
@@ -453,15 +453,15 @@ class WebAuthController extends Controller
             return back()->withErrors(['email' => 'No pending registration found for this Gmail address. Please register first.']);
         }
 
-        $existing = \App\Models\EmailVerification::where('email', $email)->where('type', 'registration')->first();
+        $existing = EmailVerification::where('email', $email)->where('type', 'registration')->first();
         if ($existing && $existing->last_sent_at && $existing->last_sent_at->diffInSeconds(now()) < 60) {
             $secondsLeft = 60 - $existing->last_sent_at->diffInSeconds(now());
             return back()->withErrors(['code' => "Please wait {$secondsLeft} seconds before requesting a new code."]);
         }
 
-        $verification = \App\Services\EmailNotificationService::createVerificationCode($email, 'registration');
+        $verification = EmailNotificationService::createVerificationCode($email, 'registration');
         $mailable = new \App\Mail\VerificationCodeMail($userName, $verification->code);
-        $sent = \App\Services\EmailNotificationService::sendNotification($email, $mailable, 'email_verification', $userId, 'User', $userId);
+        $sent = EmailNotificationService::sendNotification($email, $mailable, 'email_verification', $userId, 'User', $userId);
 
         if (!$sent) {
             return back()->withErrors(['code' => 'Unable to send verification code to your Gmail address at this time. Please try again.']);
@@ -561,16 +561,16 @@ class WebAuthController extends Controller
             if (!$user->isVerified) {
                 session(['verify_email' => $user->email]);
 
-                $existing = \App\Models\EmailVerification::where('email', $user->email)->where('type', 'registration')->first();
+                $existing = EmailVerification::where('email', $user->email)->where('type', 'registration')->first();
                 $shouldSend = true;
                 if ($existing && $existing->last_sent_at && $existing->last_sent_at->diffInSeconds(now()) < 60) {
                     $shouldSend = false;
                 }
 
                 if ($shouldSend) {
-                    $verification = \App\Services\EmailNotificationService::createVerificationCode($user->email, 'registration');
+                    $verification = EmailNotificationService::createVerificationCode($user->email, 'registration');
                     $mailable = new \App\Mail\VerificationCodeMail($user->name, $verification->code);
-                    \App\Services\EmailNotificationService::sendNotification($user->email, $mailable, 'email_verification', $user->id, 'User', $user->id);
+                    EmailNotificationService::sendNotification($user->email, $mailable, 'email_verification', $user->id, 'User', $user->id);
                     return redirect()->route('verify.email')->with('success', 'A 6-digit verification code has been sent to your Gmail. Please enter it below to activate your account.');
                 }
 
@@ -645,7 +645,7 @@ class WebAuthController extends Controller
                 ]
             ]);
 
-            return redirect()->route('register')->with('success', 'Google account connected! Please choose your username and password below to finish creating your account.');
+            return redirect()->route('register')->with('success', 'Google account connected! Please set your password below to finish creating your account.');
         } catch (\Exception $e) {
             Log::error('Google Signup Error: ' . $e->getMessage());
             return back()->withErrors(['email' => 'An error occurred during Google authentication. Please try again.']);
@@ -720,16 +720,16 @@ class WebAuthController extends Controller
         }
 
         // Throttle resend if a code was recently sent within 60 seconds
-        $existing = \App\Models\EmailVerification::where('email', $email)->where('type', 'password_reset')->first();
+        $existing = EmailVerification::where('email', $email)->where('type', 'password_reset')->first();
         if ($existing && $existing->last_sent_at && $existing->last_sent_at->diffInSeconds(now()) < 60) {
             $secondsLeft = 60 - $existing->last_sent_at->diffInSeconds(now());
             session(['reset_email' => $email]);
             return redirect()->route('password.verify.code')->withErrors(['code' => "A code was recently sent. Please wait {$secondsLeft} seconds before requesting another code."]);
         }
 
-        $verification = \App\Services\EmailNotificationService::createVerificationCode($email, 'password_reset');
+        $verification = EmailNotificationService::createVerificationCode($email, 'password_reset');
         $mailable = new \App\Mail\PasswordResetCodeMail($user->name, $verification->code);
-        $sent = \App\Services\EmailNotificationService::sendNotification($email, $mailable, 'forgot_password', $user->id, 'User', $user->id);
+        $sent = EmailNotificationService::sendNotification($email, $mailable, 'forgot_password', $user->id, 'User', $user->id);
 
         if (!$sent) {
             return back()->withErrors(['email' => 'We were unable to deliver the reset code to your Gmail address at this time. Please check your connection and try again.'])->withInput();
@@ -757,7 +757,7 @@ class WebAuthController extends Controller
         ]);
 
         $email = strtolower(trim($request->email));
-        $isValid = \App\Services\EmailNotificationService::verifyCode($email, $request->code, 'password_reset');
+        $isValid = EmailNotificationService::verifyCode($email, $request->code, 'password_reset');
 
         if (!$isValid) {
             return back()->withErrors(['code' => 'Invalid or expired password reset code (maximum 5 attempts allowed per code).']);
@@ -799,7 +799,7 @@ class WebAuthController extends Controller
         $user->password = Hash::make($request->password);
         $user->save();
 
-        \App\Services\EmailNotificationService::consumeCode($email, 'password_reset');
+        EmailNotificationService::consumeCode($email, 'password_reset');
         session()->forget(['reset_email', 'validated_reset_email']);
 
         return redirect()->route('login')->with('success', 'Password updated successfully! Please log in with your new password.');
@@ -811,13 +811,15 @@ class WebAuthController extends Controller
         $user = Auth::user();
         $request->validate([
             'name'         => 'required|string|max:255',
-            'username'     => 'required|string|max:255|unique:users,username,' . $user->id,
+            'username'     => 'nullable|string|max:255|unique:users,username,' . $user->id,
             'avatar'       => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:5120',
             'profilePhoto' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:5120',
         ]);
 
-        $user->name     = $request->name;
-        $user->username = $request->username;
+        $user->name = trim($request->name);
+        if ($request->filled('username')) {
+            $user->username = trim($request->username);
+        }
 
         if ($request->hasFile('avatar')) {
             $file = $request->file('avatar');
@@ -899,7 +901,7 @@ class WebAuthController extends Controller
 
         $request->validate([
             'name'         => 'required|string|max:255',
-            'username'     => 'required|string|min:3|max:50|unique:users,username,' . $user->id,
+            'username'     => 'nullable|string|min:3|max:50|unique:users,username,' . $user->id,
             'mobileNumber' => ['nullable', 'string', 'regex:/^(09|\+639|9)\d{9}$/'],
             'postalCode'   => ['nullable', 'string', 'regex:/^\d{4}$/'],
         ], [
@@ -916,7 +918,9 @@ class WebAuthController extends Controller
         }
 
         $user->name = trim($request->name);
-        $user->username = trim($request->username);
+        if ($request->filled('username')) {
+            $user->username = trim($request->username);
+        }
         if ($cleanMobile) {
             $user->mobileNumber = $cleanMobile;
         }

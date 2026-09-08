@@ -10,10 +10,22 @@ class ReturnRequest extends Model
 {
     use HasFactory;
 
-    protected $table = 'return_requests';
+    protected $table = 'returnrequests';
     protected $fillable = ['id', 'orderId', 'reason', 'proofImages', 'status', 'adminComment'];
     public $incrementing = false;
     protected $keyType = 'string';
+
+    public function __construct(array $attributes = [])
+    {
+        parent::__construct($attributes);
+        try {
+            if (\Illuminate\Support\Facades\Schema::hasTable('returnrequests')) {
+                $this->setTable('returnrequests');
+            } elseif (\Illuminate\Support\Facades\Schema::hasTable('return_requests')) {
+                $this->setTable('return_requests');
+            }
+        } catch (\Throwable $e) {}
+    }
 
     const CREATED_AT = 'createdAt';
     const UPDATED_AT = 'updatedAt';

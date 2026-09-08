@@ -11,6 +11,18 @@
      x-init="init()">
     <div style="max-width:500px;margin:0 auto;background-color:#FDFBF7;border:1px solid #EAE2D2;border-radius:28px;box-shadow:0 20px 50px rgba(0,0,0,0.06);padding:26px 24px;color:#1E1915;">
 
+        {{-- Navigation Back Button --}}
+        <div style="margin-bottom:16px;display:flex;align-items:center;justify-content:space-between;">
+            <button type="button" 
+                    onclick="if(window.history.length > 1) { window.history.back(); } else { window.location.href='/'; }"
+                    style="display:inline-flex;align-items:center;gap:6px;background-color:#FAF6EE;border:1px solid #E2D9C8;color:#78716C;padding:6px 14px;border-radius:12px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.05em;cursor:pointer;transition:all 0.2s;"
+                    class="hover:bg-[#1E1915] hover:text-[#DFC97A] hover:border-[#1E1915] shadow-2xs">
+                <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.2"><path stroke-linecap="round" stroke-linejoin="round" d="M10 19l-7-7m0 0l7-7m-7 7h18"/></svg>
+                <span>Back</span>
+            </button>
+            <span style="font-size:10px;font-weight:800;color:#996515;letter-spacing:0.12em;text-transform:uppercase;">Customer Profile</span>
+        </div>
+
         {{-- Top Header with Heraldic Laurel Wreath --}}
         <div style="display:flex;align-items:center;gap:14px;flex-shrink:0;">
             <div style="width:48px;height:48px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
@@ -54,14 +66,14 @@
                         <img id="avatar-display" 
                              src="{{ $user->profile_photo_url }}" 
                              style="width:100%;height:100%;border-radius:50%;object-fit:cover;display:block;"
-                             alt="{{ $user->username ?? $user->name }}">
-                        <span id="avatar-initial-display" style="display:none;font-size:32px;font-weight:800;color:#996515;">{{ strtoupper(substr($user->username ?? $user->name, 0, 1)) }}</span>
+                             alt="{{ $user->name }}">
+                        <span id="avatar-initial-display" style="display:none;font-size:32px;font-weight:800;color:#996515;">{{ strtoupper(substr($user->name, 0, 1)) }}</span>
                     @else
-                        <span id="avatar-initial-display" style="font-size:32px;font-weight:800;color:#996515;">{{ strtoupper(substr($user->username ?? $user->name, 0, 1)) }}</span>
+                        <span id="avatar-initial-display" style="font-size:32px;font-weight:800;color:#996515;">{{ strtoupper(substr($user->name, 0, 1)) }}</span>
                         <img id="avatar-display" 
                              src="" 
                              style="width:100%;height:100%;border-radius:50%;object-fit:cover;display:none;"
-                             alt="{{ $user->username ?? $user->name }}">
+                             alt="{{ $user->name }}">
                     @endif
                 </div>
             </div>
@@ -70,10 +82,10 @@
             <div style="background-color:#FFFFFF;border:1px solid #ECE3D2;border-radius:20px;padding:56px 20px 18px 20px;box-shadow:0 2px 8px rgba(0,0,0,0.03);display:flex;align-items:center;justify-content:space-between;position:relative;">
                 <div style="text-align:left;min-width:0;padding-right:10px;">
                     <h2 style="font-family:ui-serif,Georgia,serif;font-size:19px;font-weight:700;color:#1E1915;letter-spacing:-0.01em;line-height:1.2;margin:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">
-                        {{ $user->username ?? $user->name }}
+                        {{ $user->name }}
                     </h2>
                     <p style="font-size:12px;color:#78716C;margin:3px 0 0 0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">
-                        {{ $user->name }} • Customer
+                        Customer Account • {{ $user->email }}
                     </p>
                 </div>
 
@@ -297,18 +309,7 @@
                     <p class="text-[10px] text-gray-500 font-medium">Click photo to upload new picture</p>
                 </div>
 
-                {{-- Username Input --}}
-                <div class="space-y-1">
-                    <label class="text-xs font-bold text-gray-700" for="modal-username">Username</label>
-                    <input id="modal-username"
-                           type="text"
-                           name="username"
-                           value="{{ old('username', $user->username ?? $user->name) }}"
-                           required
-                           class="w-full h-10 px-3.5 bg-gray-50 border border-gray-200 rounded-xl text-xs font-medium outline-none focus:border-[#C0422A] focus:bg-white transition-colors">
-                </div>
-
-                {{-- Name Input --}}
+                {{-- Full Name Input --}}
                 <div class="space-y-1">
                     <label class="text-xs font-bold text-gray-700" for="modal-name">Full Name</label>
                     <input id="modal-name"
@@ -316,8 +317,11 @@
                            name="name"
                            value="{{ old('name', $user->name) }}"
                            required
+                           placeholder="Enter your full name"
                            class="w-full h-10 px-3.5 bg-gray-50 border border-gray-200 rounded-xl text-xs font-medium outline-none focus:border-[#C0422A] focus:bg-white transition-colors">
                 </div>
+
+                <input type="hidden" name="username" value="{{ old('username', $user->username ?? '') }}">
 
                 {{-- Actions --}}
                 <div class="flex items-center gap-3 pt-2">
@@ -974,7 +978,7 @@ function profileApp() {
         // Secure Email Change Manager
         showChangeEmailModal: false,
         emailStep: 1,
-        currentEmailDisplay: @js($user->email),
+        currentEmailDisplay: "{{ addslashes($user->email ?? '') }}",
         newEmailInput: '',
         oldEmailOtp: '',
         newEmailOtp: '',
@@ -997,7 +1001,7 @@ function profileApp() {
 
         closeChangeEmailModal() {
             if (this.emailStep > 1 && this.emailStep < 4) {
-                fetch('{{ route('profile.email.cancel') }}', {
+                fetch("{{ route('profile.email.cancel') }}", {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': '{{ csrf_token() }}' }
                 }).catch(() => {});
@@ -1027,7 +1031,7 @@ function profileApp() {
             }
             this.emailLoading = true;
             try {
-                const res = await fetch('{{ route('profile.email.initiate') }}', {
+                const res = await fetch("{{ route('profile.email.initiate') }}", {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': '{{ csrf_token() }}', 'Accept': 'application/json' },
                     body: JSON.stringify({ new_email: this.newEmailInput })
@@ -1055,7 +1059,7 @@ function profileApp() {
             }
             this.emailLoading = true;
             try {
-                const res = await fetch('{{ route('profile.email.verify-old') }}', {
+                const res = await fetch("{{ route('profile.email.verify-old') }}", {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': '{{ csrf_token() }}', 'Accept': 'application/json' },
                     body: JSON.stringify({ code: this.oldEmailOtp })
@@ -1080,7 +1084,7 @@ function profileApp() {
             this.emailLoading = true;
             this.emailError = '';
             try {
-                const res = await fetch('{{ route('profile.email.resend-old') }}', {
+                const res = await fetch("{{ route('profile.email.resend-old') }}", {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': '{{ csrf_token() }}', 'Accept': 'application/json' }
                 });
@@ -1106,7 +1110,7 @@ function profileApp() {
             }
             this.emailLoading = true;
             try {
-                const res = await fetch('{{ route('profile.email.verify-new') }}', {
+                const res = await fetch("{{ route('profile.email.verify-new') }}", {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': '{{ csrf_token() }}', 'Accept': 'application/json' },
                     body: JSON.stringify({ code: this.newEmailOtp, new_email: this.newEmailInput })
@@ -1131,7 +1135,7 @@ function profileApp() {
             this.emailLoading = true;
             this.emailError = '';
             try {
-                const res = await fetch('{{ route('profile.email.resend-new') }}', {
+                const res = await fetch("{{ route('profile.email.resend-new') }}", {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': '{{ csrf_token() }}', 'Accept': 'application/json' },
                     body: JSON.stringify({ new_email: this.newEmailInput })
@@ -1615,12 +1619,20 @@ function profileApp() {
         async autoFillFromGeocode(addr) {
             if (!addr) return;
 
+            // In the Philippines, OpenStreetMap Nominatim usually returns Province in 'state' or 'province'
+            // and Region in 'region' (e.g. state: "Laguna", region: "Calabarzon", or state: "Metro Manila").
+            const rawProvince = addr.province || (addr.state && addr.state.toLowerCase() !== (addr.region || '').toLowerCase() ? addr.state : '') || addr.state_district || addr.county || '';
             const rawRegion = addr.region || addr.state || '';
-            const rawProvince = addr.province || addr.state_district || addr.county || '';
-            const rawCity = addr.city || addr.town || addr.municipality || addr.city_district || '';
-            const rawBarangay = addr.village || addr.suburb || addr.neighbourhood || addr.quarter || addr.residential || '';
+            const rawCity = addr.city || addr.town || addr.municipality || addr.city_district || addr.suburb || '';
+            const rawBarangay = addr.quarter || addr.village || addr.suburb || addr.neighbourhood || addr.residential || '';
             const rawStreet = [addr.house_number, addr.road || addr.pedestrian || addr.highway].filter(Boolean).join(' ');
             const rawPostal = addr.postcode || '';
+
+            // Auto-fill Street/House if empty
+            if (rawStreet && !this.addressForm.houseNo) {
+                this.addressForm.houseNo = rawStreet;
+                this.fieldErrors.houseNo = '';
+            }
 
             // Auto-fill Postal code
             if (rawPostal && /^\d{4}$/.test(rawPostal)) {
@@ -1628,11 +1640,12 @@ function profileApp() {
                 this.fieldErrors.postalCode = '';
             }
 
-            // Direct fallback fill first
+            // Immediate fallback direct assignment so fields are immediately available
+            if (rawRegion) this.addressForm.region = rawRegion;
             if (rawProvince) this.addressForm.province = rawProvince;
             if (rawCity) this.addressForm.city = rawCity;
             if (rawBarangay) this.addressForm.barangay = rawBarangay;
-            if (rawRegion) this.addressForm.region = rawRegion;
+            this.fieldErrors.location = '';
 
             // Match with official PSGC data
             try {
@@ -1644,19 +1657,25 @@ function profileApp() {
 
                 const normRegion = normalize(rawRegion);
                 const normProv = normalize(rawProvince);
-                const normCity = normalize(rawCity);
-                const normBgy = normalize(rawBarangay);
+                const normCity = normalize(rawCity).replace(/^(cityof|municipalityof)/, '');
+                const normBgy = normalize(rawBarangay).replace(/^(barangay|brgy)/, '');
 
                 // Match Region
                 let matchedRegion = this.regionsList.find(r => {
                     const nr = normalize(r.name);
-                    return (normRegion && (nr.includes(normRegion) || normRegion.includes(nr))) ||
-                           (normProv && nr.includes(normProv));
+                    const nRegName = normalize(r.regionName || '');
+                    return (normRegion && (nr.includes(normRegion) || normRegion.includes(nr) || nRegName.includes(normRegion) || normRegion.includes(nRegName))) ||
+                           (normProv && (nr.includes(normProv) || normProv.includes(nr)));
                 });
 
                 // Special handling for NCR / Metro Manila
                 if (!matchedRegion && (normRegion.includes('ncr') || normRegion.includes('metromanila') || normRegion.includes('nationalcapital') || normProv.includes('metromanila') || normCity.includes('manila') || normCity.includes('quezoncity'))) {
                     matchedRegion = this.regionsList.find(r => r.code === '130000000');
+                }
+
+                // If region still not matched but province is known, try finding the province in regions
+                if (!matchedRegion && normProv) {
+                    matchedRegion = this.regionsList.find(r => normalize(r.name).includes(normProv));
                 }
 
                 if (matchedRegion) {
@@ -1677,17 +1696,38 @@ function profileApp() {
                             const np = normalize(p.name);
                             return normProv && (np.includes(normProv) || normProv.includes(np));
                         });
+
                         if (matchedProv) {
                             this.selectedProvince = matchedProv;
                             this.addressForm.province = matchedProv.name;
                             await this.loadCities(matchedProv.code);
+                        } else if (this.provincesList.length > 0 && normCity) {
+                            // If province not directly matched, check if any province in the region contains this city
+                            for (const prov of this.provincesList) {
+                                try {
+                                    const res = await fetch(`https://psgc.gitlab.io/api/provinces/${prov.code}/cities-municipalities/`);
+                                    if (res.ok) {
+                                        const cList = await res.json();
+                                        const cMatch = cList.find(c => {
+                                            const nc = normalize(c.name).replace(/^(cityof|municipalityof)/, '');
+                                            return normCity && (nc.includes(normCity) || normCity.includes(nc));
+                                        });
+                                        if (cMatch) {
+                                            this.selectedProvince = prov;
+                                            this.addressForm.province = prov.name;
+                                            this.citiesList = cList;
+                                            break;
+                                        }
+                                    }
+                                } catch(e) {}
+                            }
                         }
                     }
 
                     // Match City
                     if (this.citiesList && this.citiesList.length > 0) {
                         let matchedCity = this.citiesList.find(c => {
-                            const nc = normalize(c.name);
+                            const nc = normalize(c.name).replace(/^(cityof|municipalityof)/, '');
                             return normCity && (nc.includes(normCity) || normCity.includes(nc));
                         });
                         if (matchedCity) {
@@ -1698,7 +1738,7 @@ function profileApp() {
                             // Match Barangay
                             if (this.barangaysList && this.barangaysList.length > 0) {
                                 let matchedBgy = this.barangaysList.find(b => {
-                                    const nb = normalize(b.name);
+                                    const nb = normalize(b.name).replace(/^(barangay|brgy)/, '');
                                     return normBgy && (nb.includes(normBgy) || normBgy.includes(nb));
                                 });
                                 if (matchedBgy) {
