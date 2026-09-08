@@ -218,35 +218,47 @@
              }
          }">
 
-        {{-- Centered Artisan Profile Card --}}
-        <div style="max-width:660px;margin:0 auto;background-color:#FDFBF7;border:1px solid #EAE2D2;border-radius:28px;box-shadow:0 20px 50px rgba(0,0,0,0.06);padding:28px 24px;color:#1E1915;">
+        {{-- Main Container: Compact card on mobile, wide 3-column dashboard on large screens --}}
+        <div class="w-full max-w-[660px] lg:max-w-5xl mx-auto transition-all duration-300"
+             style="background-color:#FDFBF7;border:1px solid #EAE2D2;border-radius:28px;box-shadow:0 20px 50px rgba(0,0,0,0.06);padding:28px 24px;color:#1E1915;">
 
-            {{-- Top Header with Heraldic Laurel Wreath --}}
-            <div style="display:flex;align-items:center;gap:14px;flex-shrink:0;">
-                <div style="width:48px;height:48px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
-                    <svg width="46" height="46" viewBox="0 0 48 48" fill="none">
-                        <!-- Central Medallion -->
-                        <circle cx="24" cy="23" r="10.5" stroke="#C49520" stroke-width="1" stroke-dasharray="2 1.5"/>
-                        <circle cx="24" cy="23" r="8.5" stroke="#C49520" stroke-width="0.8"/>
-                        <path d="M24 17.5l1.6 3.4 3.7.5-2.7 2.6.6 3.7-3.2-1.7-3.2 1.7.6-3.7-2.7-2.6 3.7-.5L24 17.5z" fill="#C49520"/>
-                        <!-- Laurel Wreath Left -->
-                        <path d="M15 32.5c-4-3.5-6-8.5-6-14 0-3.5 1-6.5 2.5-9" stroke="#C49520" stroke-width="1.3" stroke-linecap="round"/>
-                        <path d="M10 12c1.8 1.2 3.5 2.8 4 4.5M8 17.5c2 .6 3.8 1.8 4.8 3.5M8 23.5c2 0 3.8.6 5 2M9.5 29.5c2-.8 3.8-.8 5.2 0M12.5 34c1.8-1.2 3.6-1.5 5-.8" stroke="#C49520" stroke-width="1.2" stroke-linecap="round"/>
-                        <!-- Laurel Wreath Right -->
-                        <path d="M33 32.5c4-3.5 6-8.5 6-14 0-3.5-1-6.5-2.5-9" stroke="#C49520" stroke-width="1.3" stroke-linecap="round"/>
-                        <path d="M38 12c-1.8 1.2-3.5 2.8-4 4.5M40 17.5c-2 .6-3.8 1.8-4.8 3.5M40 23.5c-2 0-3.8.6-5 2M38.5 29.5c-2-.8-3.8-.8-5.2 0M35.5 34c-1.8-1.2-3.6-1.5-5-.8" stroke="#C49520" stroke-width="1.2" stroke-linecap="round"/>
-                        <!-- Base Ribbon -->
-                        <path d="M19 36c3 1.2 7 1.2 10 0" stroke="#C49520" stroke-width="1.3" stroke-linecap="round"/>
+            {{-- Top Header with Heraldic Laurel Wreath & Home Link --}}
+            <div class="flex items-center justify-between gap-4">
+                <div class="flex items-center gap-3.5 min-w-0">
+                    <div style="width:48px;height:48px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+                        <svg width="46" height="46" viewBox="0 0 48 48" fill="none">
+                            <!-- Central Medallion -->
+                            <circle cx="24" cy="23" r="10.5" stroke="#C49520" stroke-width="1" stroke-dasharray="2 1.5"/>
+                            <circle cx="24" cy="23" r="8.5" stroke="#C49520" stroke-width="0.8"/>
+                            <path d="M24 17.5l1.6 3.4 3.7.5-2.7 2.6.6 3.7-3.2-1.7-3.2 1.7.6-3.7-2.7-2.6 3.7-.5L24 17.5z" fill="#C49520"/>
+                            <!-- Laurel Wreath Left -->
+                            <path d="M15 32.5c-4-3.5-6-8.5-6-14 0-3.5 1-6.5 2.5-9" stroke="#C49520" stroke-width="1.3" stroke-linecap="round"/>
+                            <path d="M10 12c1.8 1.2 3.5 2.8 4 4.5M8 17.5c2 .6 3.8 1.8 4.8 3.5M8 23.5c2 0 3.8.6 5 2M9.5 29.5c2-.8 3.8-.8 5.2 0M12.5 34c1.8-1.2 3.6-1.5 5-.8" stroke="#C49520" stroke-width="1.2" stroke-linecap="round"/>
+                            <!-- Laurel Wreath Right -->
+                            <path d="M33 32.5c4-3.5 6-8.5 6-14 0-3.5-1-6.5-2.5-9" stroke="#C49520" stroke-width="1.3" stroke-linecap="round"/>
+                            <path d="M38 12c-1.8 1.2-3.5 2.8-4 4.5M40 17.5c-2 .6-3.8 1.8-4.8 3.5M40 23.5c-2 0-3.8.6-5 2M38.5 29.5c-2-.8-3.8-.8-5.2 0M35.5 34c-1.8-1.2-3.6-1.5-5-.8" stroke="#C49520" stroke-width="1.2" stroke-linecap="round"/>
+                            <!-- Base Ribbon -->
+                            <path d="M19 36c3 1.2 7 1.2 10 0" stroke="#C49520" stroke-width="1.3" stroke-linecap="round"/>
+                        </svg>
+                    </div>
+                    <div>
+                        <h1 style="font-family:ui-serif,Georgia,Cambria,serif;font-size:23px;font-weight:700;color:#1E1915;letter-spacing:-0.01em;line-height:1.2;margin:0;">
+                            My Profile &amp; Account
+                        </h1>
+                        <p style="font-size:13px;color:#78716C;margin-top:3px;margin-bottom:0;">
+                            Personal information &amp; artisan shop settings
+                        </p>
+                    </div>
+                </div>
+
+                {{-- Home Button (Hidden on mobile screens, visible on large screens aligned with title) --}}
+                <a href="{{ route('home') }}"
+                   class="hidden sm:inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-[#FAF6EE] border border-[#E2D9C8] text-[#78716C] hover:bg-[#1E1915] hover:text-[#DFC97A] hover:border-[#1E1915] font-bold text-[11px] uppercase tracking-wider transition-all shadow-2xs no-underline shrink-0">
+                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/>
                     </svg>
-                </div>
-                <div>
-                    <h1 style="font-family:ui-serif,Georgia,Cambria,serif;font-size:23px;font-weight:700;color:#1E1915;letter-spacing:-0.01em;line-height:1.2;margin:0;">
-                        My Profile & Account
-                    </h1>
-                    <p style="font-size:13px;color:#78716C;margin-top:3px;margin-bottom:0;">
-                        Personal information & artisan shop settings
-                    </p>
-                </div>
+                    <span>Home</span>
+                </a>
             </div>
 
             {{-- Star Divider --}}
@@ -270,8 +282,52 @@
                 </div>
             @endif
 
-            {{-- Profile Avatar & User Card --}}
-            <div style="position:relative;padding-top:10px;margin-bottom:20px;">
+            {{-- DESKTOP HERO BANNER (Visible only on lg screens >= 1024px) --}}
+            <div class="hidden lg:flex items-center justify-between gap-6 p-6 bg-white border border-[#ECE3D2] rounded-2xl shadow-xs mb-6">
+                <div class="flex items-center gap-5 min-w-0">
+                    {{-- Gold-Ringed Avatar --}}
+                    <div class="w-20 h-20 min-w-20 rounded-full p-[2.5px] bg-linear-to-br from-[#996515] via-[#E6CA65] to-[#996515] shadow-md shrink-0">
+                        <div class="w-full h-full rounded-full overflow-hidden bg-[#FAF8F5] flex items-center justify-center">
+                            @if($user->profile_photo_url)
+                                <img src="{{ $user->profile_photo_url }}" class="w-full h-full object-cover" alt="{{ $user->name }}">
+                            @else
+                                <span class="text-3xl font-extrabold text-[#996515]">{{ strtoupper(substr($user->name, 0, 1)) }}</span>
+                            @endif
+                        </div>
+                    </div>
+
+                    {{-- Name & Status --}}
+                    <div class="min-w-0">
+                        <div class="flex items-center gap-3 flex-wrap">
+                            <h2 class="font-serif text-2xl font-bold text-[#1E1915] tracking-tight m-0 truncate">
+                                {{ $user->name }}
+                            </h2>
+                            <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#FAF5EA] border border-[#E6D8BA] text-[#996515] text-[11px] font-extrabold uppercase tracking-wider shrink-0">
+                                <svg class="w-3.5 h-3.5 text-[#C49520]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+                                <span>Verified Artisan Shop</span>
+                            </span>
+                        </div>
+                        <p class="text-xs text-[#78716C] mt-1.5 mb-0">
+                            {{ $user->email }} &bull; <span class="text-[#A16D19] font-semibold">Artisan Shop</span>
+                            @if($user->phone_number) &bull; {{ $user->phone_number }} @endif
+                        </p>
+                    </div>
+                </div>
+
+                {{-- Edit Profile Button --}}
+                <button type="button"
+                        @click="showEditModal = true"
+                        class="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-[#FAF6EE] border border-[#E2D9C8] text-[#78716C] hover:bg-[#1E1915] hover:text-[#DFC97A] hover:border-[#1E1915] font-bold text-xs uppercase tracking-wider transition-all shadow-2xs shrink-0 cursor-pointer">
+                    <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/>
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                    </svg>
+                    <span>Edit Profile</span>
+                </button>
+            </div>
+
+            {{-- MOBILE PROFILE USER CARD (Visible on screens < lg) --}}
+            <div class="lg:hidden" style="position:relative;padding-top:10px;margin-bottom:20px;">
                 {{-- Floating Gold-Ringed Avatar (Strict fixed square to prevent distortion) --}}
                 <div style="width:96px;height:96px;min-width:96px;max-width:96px;min-height:96px;max-height:96px;border-radius:50%;padding:2.5px;background:linear-gradient(135deg,#996515,#E6CA65,#996515);box-shadow:0 4px 14px rgba(0,0,0,0.12);margin:0 auto -48px auto;position:relative;z-index:10;display:block;flex-shrink:0;">
                     <div style="width:100%;height:100%;border-radius:50%;overflow:hidden;background-color:#FAF8F5;display:flex;align-items:center;justify-content:center;position:relative;">
@@ -292,7 +348,7 @@
                             {{ $user->name }}
                         </h2>
                         <p style="font-size:13px;color:#78716C;margin:3px 0 0 0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">
-                            {{ $user->email }} • <span style="color:#A16D19;font-weight:600;">Artisan Shop</span>
+                            {{ $user->email }} &bull; <span style="color:#A16D19;font-weight:600;">Artisan Shop</span>
                         </p>
                     </div>
 
@@ -312,7 +368,7 @@
             </div>
 
             {{-- Artisan Quick Metrics Row --}}
-            <div style="display:grid;grid-template-columns:repeat(4, 1fr);gap:10px;margin-bottom:22px;">
+            <div class="grid grid-cols-2 sm:grid-cols-4 gap-2.5 sm:gap-3 mb-6">
                 <a href="{{ route('seller.products.index') }}" style="text-decoration:none;background-color:#FFFFFF;border:1px solid #ECE3D2;border-radius:15px;padding:12px 6px;text-align:center;box-shadow:0 1px 4px rgba(0,0,0,0.02);display:block;transition:all 0.2s;" class="hover:border-[#C49520] hover:scale-102">
                     <div style="font-size:16px;font-weight:800;color:#C49520;" class="font-sans">{{ $sellerListingCount }}</div>
                     <div style="font-size:8.5px;font-weight:700;color:#8C827A;text-transform:uppercase;letter-spacing:0.04em;margin-top:2px;">Creations</div>
@@ -331,14 +387,16 @@
                 </a>
             </div>
 
-            {{-- Account Settings Section --}}
-            <div>
-                <h3 style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.14em;color:#996515;margin:0 0 12px 2px;">
-                    Account & Shop Settings
-                </h3>
+            {{-- 3-COLUMN ACTION GRID (Stacks on mobile, 3 columns on lg screens) --}}
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-4 lg:gap-5">
 
-                <div style="display:flex;flex-direction:column;gap:10px;">
-                    {{-- Account Setting (Opens dedicated Account Settings Modal/Panel) --}}
+                {{-- COLUMN 1: Account & Shop Settings --}}
+                <div class="flex flex-col gap-3">
+                    <h3 style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.14em;color:#996515;margin:0 0 4px 2px;">
+                        Account &amp; Settings
+                    </h3>
+
+                    {{-- Account Setting --}}
                     <button type="button"
                             @click="showAccountSettingsModal = true"
                             style="background-color:#FFFFFF;border:1px solid #ECE3D2;border-radius:16px;padding:14px 16px;display:flex;align-items:center;justify-content:space-between;box-shadow:0 2px 6px rgba(0,0,0,0.02);cursor:pointer;width:100%;text-align:left;transition:all 0.2s;"
@@ -352,7 +410,7 @@
                             </div>
                             <div>
                                 <div style="font-size:14px;font-weight:700;color:#1E1915;">Account Setting</div>
-                                <div style="font-size:11.5px;color:#8C827A;margin-top:1px;">Email, shop story & bio, legal documents, password</div>
+                                <div style="font-size:11.5px;color:#8C827A;margin-top:1px;">Email, shop story &amp; bio, documents</div>
                             </div>
                         </div>
                         <div style="display:flex;align-items:center;gap:6px;">
@@ -376,9 +434,7 @@
                             </div>
                             <div>
                                 <div style="font-size:14px;font-weight:700;color:#1E1915;">Payment Methods</div>
-                                <div style="font-size:11.5px;color:#8C827A;margin-top:1px;">
-                                    GCash & Maya accounts & QR codes
-                                </div>
+                                <div style="font-size:11.5px;color:#8C827A;margin-top:1px;">GCash &amp; Maya accounts &amp; QR</div>
                             </div>
                         </div>
                         <div style="display:flex;align-items:center;gap:6px;">
@@ -389,7 +445,35 @@
                         </div>
                     </button>
 
-                    {{-- Products Catalogue (Mobile & Profile Link) --}}
+                    {{-- Change Password --}}
+                    <a href="{{ route('profile.change-password') }}"
+                       style="background-color:#FFFFFF;border:1px solid #ECE3D2;border-radius:16px;padding:14px 16px;display:flex;align-items:center;justify-content:space-between;box-shadow:0 2px 6px rgba(0,0,0,0.02);cursor:pointer;width:100%;text-align:left;transition:all 0.2s;text-decoration:none;"
+                       class="hover:border-[#C49520] hover:bg-[#FDFBF7] group">
+                        <div style="display:flex;align-items:center;gap:12px;">
+                            <div style="width:38px;height:38px;border-radius:11px;background-color:#FAF5EA;border:1px solid #E6D8BA;display:flex;align-items:center;justify-content:center;color:#B88728;flex-shrink:0;" class="group-hover:scale-105 transition-transform">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                                    <rect x="3" y="11" width="18" height="11" rx="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                    <path d="M7 11V7a5 5 0 0110 0v4" stroke-linecap="round" stroke-linejoin="round"/>
+                                </svg>
+                            </div>
+                            <div>
+                                <span style="font-size:14px;font-weight:700;color:#1E1915;display:block;">Change Password</span>
+                                <span style="font-size:11.5px;color:#8C827A;display:block;margin-top:1px;">Update account security</span>
+                            </div>
+                        </div>
+                        <svg width="16" height="16" fill="none" stroke="#8C827A" viewBox="0 0 24 24" stroke-width="2.2" class="group-hover:translate-x-0.5 transition-transform">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/>
+                        </svg>
+                    </a>
+                </div>
+
+                {{-- COLUMN 2: Creations & Operations --}}
+                <div class="flex flex-col gap-3">
+                    <h3 style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.14em;color:#996515;margin:0 0 4px 2px;">
+                        Creations &amp; Operations
+                    </h3>
+
+                    {{-- Products Catalogue --}}
                     <a href="{{ route('seller.products.index') }}" 
                        style="background-color:#FFFFFF;border:1px solid #ECE3D2;border-radius:16px;padding:14px 16px;display:flex;align-items:center;justify-content:space-between;box-shadow:0 2px 6px rgba(0,0,0,0.02);cursor:pointer;width:100%;text-decoration:none;transition:all 0.2s;"
                        class="hover:border-[#C49520] hover:bg-[#FDFBF7] group">
@@ -401,12 +485,12 @@
                             </div>
                             <div>
                                 <div style="display:flex;align-items:center;gap:7px;">
-                                    <div style="font-size:14px;font-weight:700;color:#1E1915;">Products</div>
+                                    <div style="font-size:14px;font-weight:700;color:#1E1915;">Products Catalogue</div>
                                     @if($attentionProductsCount > 0)
                                         <span style="font-size:10px;font-weight:800;background-color:#C49520;color:#FFFFFF;min-width:18px;height:18px;padding:0 5px;border-radius:9px;display:inline-flex;align-items:center;justify-content:center;box-shadow:0 1px 2px rgba(196,149,32,0.3);">{{ $attentionProductsCount }}</span>
                                     @endif
                                 </div>
-                                <div style="font-size:11.5px;color:#8C827A;margin-top:1px;">Handcrafted creations, stock & draft catalogue</div>
+                                <div style="font-size:11.5px;color:#8C827A;margin-top:1px;">Handcrafted creations, stock &amp; drafts</div>
                             </div>
                         </div>
                         <div style="display:flex;align-items:center;gap:6px;">
@@ -417,7 +501,50 @@
                         </div>
                     </a>
 
-                    {{-- Customers Directory (Mobile & Profile Link) --}}
+                    {{-- Orders & Dispatch --}}
+                    <a href="{{ route('seller.orders') }}" 
+                       style="background-color:#FFFFFF;border:1px solid #ECE3D2;border-radius:16px;padding:14px 16px;display:flex;align-items:center;justify-content:space-between;box-shadow:0 2px 6px rgba(0,0,0,0.02);cursor:pointer;width:100%;text-decoration:none;transition:all 0.2s;"
+                       class="hover:border-[#C49520] hover:bg-[#FDFBF7] group">
+                        <div style="display:flex;align-items:center;gap:12px;">
+                            <div style="width:38px;height:38px;border-radius:11px;background-color:#FAF5EA;border:1px solid #E6D8BA;display:flex;align-items:center;justify-content:center;color:#B88728;flex-shrink:0;" class="group-hover:scale-105 transition-transform">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/>
+                                </svg>
+                            </div>
+                            <span style="font-size:14px;font-weight:700;color:#1E1915;">Orders &amp; Dispatch</span>
+                        </div>
+                        <svg width="16" height="16" fill="none" stroke="#8C827A" viewBox="0 0 24 24" stroke-width="2.2" class="group-hover:translate-x-0.5 transition-transform">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/>
+                        </svg>
+                    </a>
+
+                    {{-- Verified LumBarong Artisan Shop Banner --}}
+                    <div style="padding:14px 16px;border-radius:16px;background:linear-gradient(90deg,#F6F0E4 0%,#F2EADA 50%,#EAE0CD 100%);border:1px solid #E2D6C0;display:flex;align-items:center;justify-content:space-between;gap:12px;position:relative;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,0.03);">
+                        <div style="display:flex;align-items:center;gap:12px;position:relative;z-index:10;">
+                            <div style="width:32px;height:32px;border-radius:50%;border:2px solid #B88728;background-color:#FAF4EA;display:flex;align-items:center;justify-content:center;color:#B88728;flex-shrink:0;box-shadow:0 1px 2px rgba(0,0,0,0.05);">
+                                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/>
+                                </svg>
+                            </div>
+                            <div>
+                                <h5 style="font-size:12.5px;font-weight:700;color:#1E1915;margin:0;line-height:1.2;">Verified Artisan Shop</h5>
+                                <p style="font-size:10.5px;color:#78716C;margin:2px 0 0 0;">Quality craft &amp; Filipino heritage.</p>
+                            </div>
+                        </div>
+                        <!-- Background Flourish Watermark -->
+                        <svg width="100" height="60" viewBox="0 0 120 80" fill="#C49520" style="position:absolute;right:4px;bottom:-10px;opacity:0.18;pointer-events:none;">
+                            <path d="M60 10C40 10 30 30 10 35C30 40 40 60 60 60C80 60 90 40 110 35C90 30 80 10 60 10ZM60 25C65 25 70 30 70 35C70 40 65 45 60 45C55 45 50 40 50 35C50 30 55 25 60 25Z"/>
+                        </svg>
+                    </div>
+                </div>
+
+                {{-- COLUMN 3: Insights & Store --}}
+                <div class="flex flex-col gap-3">
+                    <h3 style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.14em;color:#996515;margin:0 0 4px 2px;">
+                        Insights &amp; Store
+                    </h3>
+
+                    {{-- Customers Directory --}}
                     <a href="{{ route('seller.customers') }}" 
                        style="background-color:#FFFFFF;border:1px solid #ECE3D2;border-radius:16px;padding:14px 16px;display:flex;align-items:center;justify-content:space-between;box-shadow:0 2px 6px rgba(0,0,0,0.02);cursor:pointer;width:100%;text-decoration:none;transition:all 0.2s;"
                        class="hover:border-[#C49520] hover:bg-[#FDFBF7] group">
@@ -429,7 +556,7 @@
                             </div>
                             <div>
                                 <div style="font-size:14px;font-weight:700;color:#1E1915;">Customers</div>
-                                <div style="font-size:11.5px;color:#8C827A;margin-top:1px;">Client directory, purchase history & patron insights</div>
+                                <div style="font-size:11.5px;color:#8C827A;margin-top:1px;">Client directory &amp; purchase history</div>
                             </div>
                         </div>
                         <div style="display:flex;align-items:center;gap:6px;">
@@ -440,7 +567,7 @@
                         </div>
                     </a>
 
-                    {{-- Shop Analytics & Reports (Link) --}}
+                    {{-- Shop Analytics & Reports --}}
                     <a href="{{ route('seller.analytics') }}" 
                        style="background-color:#FFFFFF;border:1px solid #ECE3D2;border-radius:16px;padding:14px 16px;display:flex;align-items:center;justify-content:space-between;box-shadow:0 2px 6px rgba(0,0,0,0.02);cursor:pointer;width:100%;text-decoration:none;transition:all 0.2s;"
                        class="hover:border-[#C49520] hover:bg-[#FDFBF7] group">
@@ -451,8 +578,8 @@
                                 </svg>
                             </div>
                             <div>
-                                <div style="font-size:14px;font-weight:700;color:#1E1915;">Shop Analytics & Reports</div>
-                                <div style="font-size:11.5px;color:#8C827A;margin-top:1px;">Sales trends, conversion rate & client metrics</div>
+                                <div style="font-size:14px;font-weight:700;color:#1E1915;">Shop Analytics &amp; Reports</div>
+                                <div style="font-size:11.5px;color:#8C827A;margin-top:1px;">Sales trends, revenue &amp; client metrics</div>
                             </div>
                         </div>
                         <div style="display:flex;align-items:center;gap:6px;">
@@ -463,7 +590,7 @@
                         </div>
                     </a>
 
-                    {{-- Shop Policies (Link) --}}
+                    {{-- Shop Policies --}}
                     <a href="{{ route('seller.policies.index') }}" 
                        style="background-color:#FFFFFF;border:1px solid #ECE3D2;border-radius:16px;padding:14px 16px;display:flex;align-items:center;justify-content:space-between;box-shadow:0 2px 6px rgba(0,0,0,0.02);cursor:pointer;width:100%;text-decoration:none;transition:all 0.2s;"
                        class="hover:border-[#C49520] hover:bg-[#FDFBF7] group">
@@ -473,81 +600,47 @@
                                     <path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>
                                 </svg>
                             </div>
-                            <span style="font-size:14px;font-weight:700;color:#1E1915;">Shop Policies (Cancellation & Refund)</span>
+                            <span style="font-size:14px;font-weight:700;color:#1E1915;">Shop Policies</span>
                         </div>
                         <svg width="16" height="16" fill="none" stroke="#8C827A" viewBox="0 0 24 24" stroke-width="2.2" class="group-hover:translate-x-0.5 transition-transform">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/>
                         </svg>
                     </a>
 
-                    {{-- Orders Ledger Link --}}
-                    <a href="{{ route('seller.orders') }}" 
-                       style="background-color:#FFFFFF;border:1px solid #ECE3D2;border-radius:16px;padding:14px 16px;display:flex;align-items:center;justify-content:space-between;box-shadow:0 2px 6px rgba(0,0,0,0.02);cursor:pointer;width:100%;text-decoration:none;transition:all 0.2s;"
-                       class="hover:border-[#C49520] hover:bg-[#FDFBF7] group">
-                        <div style="display:flex;align-items:center;gap:12px;">
-                            <div style="width:38px;height:38px;border-radius:11px;background-color:#FAF5EA;border:1px solid #E6D8BA;display:flex;align-items:center;justify-content:center;color:#B88728;flex-shrink:0;" class="group-hover:scale-105 transition-transform">
-                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
-                                    <path stroke-linecap="round" stroke-linejoin="round" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/>
-                                </svg>
-                            </div>
-                            <span style="font-size:14px;font-weight:700;color:#1E1915;">Orders & Dispatch</span>
-                        </div>
-                        <svg width="16" height="16" fill="none" stroke="#8C827A" viewBox="0 0 24 24" stroke-width="2.2" class="group-hover:translate-x-0.5 transition-transform">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/>
-                        </svg>
-                    </a>
-                </div>
-            </div>
-
-            {{-- Verified & Trusted LumBarong Account Footer Banner --}}
-            <div style="margin-top:18px;padding:14px 18px;border-radius:18px;background:linear-gradient(90deg,#F6F0E4 0%,#F2EADA 50%,#EAE0CD 100%);border:1px solid #E2D6C0;display:flex;align-items:center;justify-content:space-between;gap:12px;position:relative;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,0.03);">
-                <div style="display:flex;align-items:center;gap:12px;position:relative;z-index:10;">
-                    <div style="width:32px;height:32px;border-radius:50%;border:2px solid #B88728;background-color:#FAF4EA;display:flex;align-items:center;justify-content:center;color:#B88728;flex-shrink:0;box-shadow:0 1px 2px rgba(0,0,0,0.05);">
-                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/>
-                        </svg>
-                    </div>
+                    {{-- Logout Action --}}
                     <div>
-                        <h5 style="font-size:13px;font-weight:700;color:#1E1915;margin:0;line-height:1.2;">Verified LumBarong Artisan Shop</h5>
-                        <p style="font-size:11px;color:#78716C;margin:2px 0 0 0;">Quality craftsmanship. Authentic Filipino heritage.</p>
-                    </div>
-                </div>
-                <!-- Background Embroidery Flourish Watermark -->
-                <svg width="120" height="70" viewBox="0 0 120 80" fill="#C49520" style="position:absolute;right:8px;bottom:-10px;opacity:0.18;pointer-events:none;">
-                    <path d="M60 10C40 10 30 30 10 35C30 40 40 60 60 60C80 60 90 40 110 35C90 30 80 10 60 10ZM60 25C65 25 70 30 70 35C70 40 65 45 60 45C55 45 50 40 50 35C50 30 55 25 60 25Z"/>
-                </svg>
-            </div>
-
-            {{-- Logout Action (Visible on mobile & desktop) --}}
-            <div style="margin-top:14px;">
-                <form x-ref="sellerProfileLogoutForm" action="{{ route('logout') }}" method="POST">
-                    @csrf
-                    <button type="button"
-                            @click="$dispatch('open-confirmation', {
-                                title: 'Logout',
-                                message: 'Are you sure you want to log out of your artisan workspace?',
-                                confirmText: 'Logout',
-                                type: 'danger',
-                                onConfirm: () => $refs.sellerProfileLogoutForm.submit()
-                            })"
-                            style="background-color:#FEF2F2;border:1px solid #FECACA;border-radius:16px;padding:14px 16px;display:flex;align-items:center;justify-content:space-between;box-shadow:0 2px 6px rgba(0,0,0,0.02);cursor:pointer;width:100%;text-align:left;transition:all 0.2s;color:#DC2626;"
-                            class="hover:bg-red-600 hover:text-white hover:border-red-600 group">
-                        <div style="display:flex;align-items:center;gap:12px;">
-                            <div style="width:38px;height:38px;border-radius:11px;background-color:#FEE2E2;border:1px solid #FECACA;display:flex;align-items:center;justify-content:center;color:#DC2626;flex-shrink:0;" class="group-hover:bg-white group-hover:text-red-600 transition-colors">
-                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
-                                    <path stroke-linecap="round" stroke-linejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/>
+                        <form x-ref="sellerProfileLogoutForm" action="{{ route('logout') }}" method="POST">
+                            @csrf
+                            <button type="button"
+                                    @click="$dispatch('open-confirmation', {
+                                        title: 'Logout',
+                                        message: 'Are you sure you want to log out of your artisan workspace?',
+                                        confirmText: 'Logout',
+                                        type: 'danger',
+                                        onConfirm: () => $refs.sellerProfileLogoutForm.submit()
+                                    })"
+                                    style="background-color:#FEF2F2;border:1px solid #FECACA;border-radius:16px;padding:12px 16px;display:flex;align-items:center;justify-content:space-between;box-shadow:0 2px 6px rgba(0,0,0,0.02);cursor:pointer;width:100%;text-align:left;transition:all 0.2s;color:#DC2626;"
+                                    class="hover:bg-red-600 hover:text-white hover:border-red-600 group">
+                                <div style="display:flex;align-items:center;gap:12px;">
+                                    <div style="width:34px;height:34px;border-radius:10px;background-color:#FEE2E2;border:1px solid #FECACA;display:flex;align-items:center;justify-content:center;color:#DC2626;flex-shrink:0;" class="group-hover:bg-white group-hover:text-red-600 transition-colors">
+                                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/>
+                                        </svg>
+                                    </div>
+                                    <div>
+                                        <div style="font-size:13px;font-weight:700;">Log Out</div>
+                                        <div style="font-size:11px;color:#991B1B;margin-top:1px;" class="group-hover:text-red-100">Exit artisan workspace</div>
+                                    </div>
+                                </div>
+                                <svg width="15" height="15" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.2" class="group-hover:translate-x-0.5 transition-transform">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/>
                                 </svg>
-                            </div>
-                            <div>
-                                <div style="font-size:14px;font-weight:700;">Log Out</div>
-                                <div style="font-size:11.5px;color:#991B1B;margin-top:1px;" class="group-hover:text-red-100">Exit your artisan workspace</div>
-                            </div>
-                        </div>
-                        <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.2" class="group-hover:translate-x-0.5 transition-transform">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/>
-                        </svg>
-                    </button>
-                </form>
+                            </button>
+                        </form>
+                    </div>
+
+                </div>
+
             </div>
         </div>
 
