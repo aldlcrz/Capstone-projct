@@ -905,21 +905,37 @@ function sellerOrdersManager() {
         </div>
     </div>
 
-    {{-- Status Filter Tabs (Pill System) --}}
-    <div class="flex flex-wrap items-center gap-1.5 sm:gap-2 pb-2">
-        @foreach(['all' => 'All', 'pending' => 'Pending', 'cancellation pending' => 'Cancellation Requests', 'to ship' => 'To Ship', 'shipped' => 'Shipped', 'in transit' => 'In Transit', 'delivered' => 'Delivered', 'completed' => 'Completed', 'cancelled' => 'Cancelled'] as $val => $label)
-            <button @click="statusFilter = '{{ $val }}'"
-                :style="statusFilter === '{{ $val }}' ? 'background:#1E1915; color:#FFFCF7; border:1px solid #C49520;' : 'background:#FDF8EE; color:#1E1915; border:1px solid #E8DECB;'"
-                class="px-2.5 sm:px-3.5 py-1.5 sm:py-2 rounded-xl text-[9px] sm:text-[10px] font-extrabold uppercase tracking-wider whitespace-nowrap transition-all flex items-center gap-1.5 shrink-0 active:scale-95 cursor-pointer shadow-2xs">
-                <span x-show="statusFilter === '{{ $val }}'" style="color:#C49520;">✓</span>
-                <span>{{ $label }}</span>
-                <span class="px-1.5 py-0.5 text-[8px] sm:text-[9px] rounded-full font-bold" 
-                      :style="statusFilter === '{{ $val }}' ? 'background:rgba(196,149,32,0.25); color:#FFFCF7;' : 'background:#E8DECB; color:#766C60;'"
-                      x-text="countForStatus('{{ $val }}')">
-                    {{ $counts[$val] ?? 0 }}
-                </span>
-            </button>
-        @endforeach
+    {{-- Status Filter Tabs (Interactive Module Tabs like Analytics) --}}
+    <div class="overflow-x-auto no-scrollbar -mx-4 px-4 sm:mx-0 sm:px-0">
+        <div class="flex items-center gap-2 border-b pb-3 min-w-max" style="border-color: #E8DECB;">
+            @php
+                $statusTabs = [
+                    'all' => ['label' => 'All Orders', 'icon' => '📋'],
+                    'pending' => ['label' => 'Pending', 'icon' => '⏳'],
+                    'cancellation pending' => ['label' => 'Cancellation Requests', 'icon' => '⚠️'],
+                    'to ship' => ['label' => 'To Ship', 'icon' => '📦'],
+                    'shipped' => ['label' => 'Shipped', 'icon' => '🚚'],
+                    'in transit' => ['label' => 'In Transit', 'icon' => '🛣️'],
+                    'delivered' => ['label' => 'Delivered', 'icon' => '📬'],
+                    'completed' => ['label' => 'Completed', 'icon' => '✅'],
+                    'cancelled' => ['label' => 'Cancelled', 'icon' => '❌'],
+                ];
+            @endphp
+            @foreach($statusTabs as $val => $tab)
+                <button @click="statusFilter = '{{ $val }}'"
+                        class="px-4 py-2.5 rounded-xl text-xs font-bold transition-all flex items-center gap-2 cursor-pointer font-sans shrink-0 active:scale-95 hover:border-[#C49520]"
+                        :style="statusFilter === '{{ $val }}' 
+                            ? 'background: #1E1915; color: #FFFCF7; box-shadow: 0 2px 8px rgba(30,25,21,0.12); border: 1px solid #1E1915;' 
+                            : 'background: #FFFFFF; color: #6C6256; border: 1px solid #ECE3D2;'">
+                    <span>{{ $tab['icon'] }} {{ $tab['label'] }}</span>
+                    <span class="px-2 py-0.5 text-[10px] rounded-full font-bold transition-colors ml-0.5" 
+                          :style="statusFilter === '{{ $val }}' ? 'background: rgba(196,149,32,0.28); color: #DFC97A;' : 'background: #F4EFE6; color: #766C60;'"
+                          x-text="countForStatus('{{ $val }}')">
+                        {{ $counts[$val] ?? 0 }}
+                    </span>
+                </button>
+            @endforeach
+        </div>
     </div>
 
     {{-- Order Capsule List --}}
