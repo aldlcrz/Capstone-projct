@@ -69,10 +69,10 @@
         <div class="p-3.5 sm:p-4 rounded-2xl transition-all" 
              style="background: #FFFFFF; border: 1px solid #ECE3D2; box-shadow: 0 1px 4px rgba(30,25,21,0.03);">
             <div class="flex items-center justify-between gap-1 mb-1">
-                <span class="text-[9px] font-black uppercase tracking-widest" style="color: {{ $counts['confirmed_violations'] > 0 ? '#DC2626' : '#766C60' }};">Violations</span>
+                <span class="text-[9px] font-black uppercase tracking-widest {{ $counts['confirmed_violations'] > 0 ? 'text-red-600' : 'text-[#766C60]' }}">Violations</span>
                 <span class="text-xs">🛡️</span>
             </div>
-            <div class="text-xl sm:text-2xl font-black font-sans" style="color: {{ $counts['confirmed_violations'] > 0 ? '#DC2626' : '#4A6741' }};">
+            <div class="text-xl sm:text-2xl font-black font-sans {{ $counts['confirmed_violations'] > 0 ? 'text-red-600' : 'text-[#4A6741]' }}">
                 {{ $counts['confirmed_violations'] }}
             </div>
             <div class="text-[10px] font-medium mt-0.5" style="color: #9E9182;">Confirmed strikes</div>
@@ -178,12 +178,12 @@
                     $evidenceCount = count($evidenceList);
                     $reportType = $report->reportType ?? (!empty($report->productId) ? 'product' : 'account');
 
-                    $statusBadgeStyle = match($report->status) {
-                        'Pending'      => 'background: #FFFBEB; color: #B45309; border: 1px solid #FDE68A;',
-                        'Under Review' => 'background: #EFF6FF; color: #1D4ED8; border: 1px solid #BFDBFE;',
-                        'Resolved'     => 'background: #F0F4EF; color: #4A6741; border: 1px solid #C5D9B8;',
-                        'Dismissed'    => 'background: #F4EFE6; color: #766C60; border: 1px solid #E8DECB;',
-                        default        => 'background: #FDF8EE; color: #766C60; border: 1px solid #E8DECB;',
+                    $statusBadgeClass = match($report->status) {
+                        'Pending'      => 'bg-[#FFFBEB] text-[#B45309] border border-[#FDE68A]',
+                        'Under Review' => 'bg-[#EFF6FF] text-[#1D4ED8] border border-[#BFDBFE]',
+                        'Resolved'     => 'bg-[#F0F4EF] text-[#4A6741] border border-[#C5D9B8]',
+                        'Dismissed'    => 'bg-[#F4EFE6] text-[#766C60] border border-[#E8DECB]',
+                        default        => 'bg-[#FDF8EE] text-[#766C60] border border-[#E8DECB]',
                     };
 
                     $statusIcon = match($report->status) {
@@ -225,8 +225,7 @@
                                     ✓ Responded
                                 </span>
                             @endif
-                            <span class="px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-wider flex items-center gap-1 shrink-0"
-                                  style="{{ $statusBadgeStyle }}">
+                            <span class="px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-wider flex items-center gap-1 shrink-0 {{ $statusBadgeClass }}">
                                 <span>{{ $statusIcon }}</span>
                                 <span>{{ $report->status }}</span>
                             </span>
@@ -269,7 +268,7 @@
                             <span style="color: #E8DECB;">•</span>
                             <div class="flex items-center gap-1.5">
                                 <svg class="w-3.5 h-3.5 {{ $evidenceCount > 0 ? 'text-[#C49520]' : 'text-gray-400' }}" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13"/></svg>
-                                <span class="{{ $evidenceCount > 0 ? 'font-bold' : '' }}" style="{{ $evidenceCount > 0 ? 'color: #A16D19;' : '' }}">
+                                <span class="{{ $evidenceCount > 0 ? 'font-bold text-[#A16D19]' : '' }}">
                                     {{ $evidenceCount > 0 ? $evidenceCount . ' Evidence File' . ($evidenceCount > 1 ? 's' : '') : 'No Evidence' }}
                                 </span>
                             </div>
