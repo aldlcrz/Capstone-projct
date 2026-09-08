@@ -63,192 +63,204 @@
     }
 }">
 
-    {{-- Page Header & Search Bar --}}
-    <div class="space-y-3.5 text-center">
-        <div>
-            <div class="text-[10px] font-bold text-[#C0422A] uppercase tracking-[0.2em] mb-1">System Governance</div>
-            <h1 class="font-serif text-2xl sm:text-3xl font-bold text-black">
-                Archive <span class="text-[#C0420A] font-light italic">Hub &amp; Deleted Registry</span>
-            </h1>
+    {{-- ═══ PAGE HEADER ═══ --}}
+    <div class="text-center space-y-1.5 pb-2">
+        <div class="inline-flex items-center gap-2">
+            <span class="text-[9px] font-black uppercase tracking-[0.25em] text-[#C0422A]">Archive Hub</span>
+            <span class="text-gray-300 text-xs">·</span>
+            <span class="text-[9px] font-bold uppercase tracking-[0.2em] text-gray-400">System Governance</span>
         </div>
+        <h1 class="font-serif text-2xl sm:text-3xl font-bold text-gray-900 leading-tight">
+            Deleted <span class="text-[#C0420A] font-light italic">Registry</span>
+        </h1>
+        <p class="text-[11px] text-gray-400 font-medium">Soft-deleted records — eligible for restoration or permanent purge</p>
+    </div>
 
-        {{-- Search Input (Below title) --}}
+    {{-- ═══ STATS BAR ═══ --}}
+    <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+        <div class="bg-white rounded-2xl border border-gray-100 shadow-xs px-4 py-3.5 flex items-center gap-3 hover:-translate-y-0.5 transition-all">
+            <div class="w-9 h-9 rounded-xl bg-gray-100 flex items-center justify-center shrink-0">
+                <svg class="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4"/></svg>
+            </div>
+            <div>
+                <div class="text-lg font-black text-gray-900 leading-none">{{ $counts['all'] ?? 0 }}</div>
+                <div class="text-[9px] font-bold uppercase tracking-wider text-gray-400 mt-0.5">Total</div>
+            </div>
+        </div>
+        <div class="bg-white rounded-2xl border border-purple-100 shadow-xs px-4 py-3.5 flex items-center gap-3 hover:-translate-y-0.5 transition-all">
+            <div class="w-9 h-9 rounded-xl bg-purple-50 flex items-center justify-center shrink-0">
+                <svg class="w-4 h-4 text-purple-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>
+            </div>
+            <div>
+                <div class="text-lg font-black text-gray-900 leading-none">{{ $counts['product'] ?? 0 }}</div>
+                <div class="text-[9px] font-bold uppercase tracking-wider text-purple-400 mt-0.5">Products</div>
+            </div>
+        </div>
+        <div class="bg-white rounded-2xl border border-emerald-100 shadow-xs px-4 py-3.5 flex items-center gap-3 hover:-translate-y-0.5 transition-all">
+            <div class="w-9 h-9 rounded-xl bg-emerald-50 flex items-center justify-center shrink-0">
+                <svg class="w-4 h-4 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+            </div>
+            <div>
+                <div class="text-lg font-black text-gray-900 leading-none">{{ $counts['customer'] ?? 0 }}</div>
+                <div class="text-[9px] font-bold uppercase tracking-wider text-emerald-500 mt-0.5">Customers</div>
+            </div>
+        </div>
+        <div class="bg-white rounded-2xl border border-amber-100 shadow-xs px-4 py-3.5 flex items-center gap-3 hover:-translate-y-0.5 transition-all">
+            <div class="w-9 h-9 rounded-xl bg-amber-50 flex items-center justify-center shrink-0">
+                <svg class="w-4 h-4 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
+            </div>
+            <div>
+                <div class="text-lg font-black text-gray-900 leading-none">{{ $counts['seller'] ?? 0 }}</div>
+                <div class="text-[9px] font-bold uppercase tracking-wider text-amber-500 mt-0.5">Sellers</div>
+            </div>
+        </div>
+    </div>
+
+    {{-- ═══ SEARCH + FILTERS ═══ --}}
+    <div class="space-y-3">
         <form method="GET" class="flex items-center justify-center gap-2 max-w-sm sm:max-w-md mx-auto">
             @if(request('type'))
                 <input type="hidden" name="type" value="{{ request('type') }}">
             @endif
             <div class="relative w-full">
-                <input type="text" name="search" value="{{ request('search') }}" placeholder="Search by name, email, reason, or admin..." 
-                       class="w-full pl-9 pr-4 py-2.5 bg-white border border-gray-200 rounded-full text-xs text-gray-800 placeholder:text-gray-400 focus:outline-none focus:border-[#C0422A] shadow-xs">
+                <input type="text" name="search" value="{{ request('search') }}" placeholder="Search by name, email, reason, or admin..."
+                       class="w-full pl-9 pr-4 py-2.5 bg-white border border-gray-200 rounded-full text-xs text-gray-800 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-[#C0422A]/20 focus:border-[#C0422A] shadow-xs transition-all">
                 <svg class="w-4 h-4 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
             </div>
             @if(request('search'))
-                <a href="{{ request()->fullUrlWithQuery(['search' => null, 'page' => 1]) }}" class="px-3 py-2 bg-gray-100 hover:bg-gray-200 text-gray-600 rounded-full text-[10px] font-bold">Clear</a>
+                <a href="{{ request()->fullUrlWithQuery(['search' => null, 'page' => 1]) }}" class="px-3 py-2 bg-gray-100 hover:bg-gray-200 text-gray-600 rounded-full text-[10px] font-bold transition-all">Clear</a>
             @endif
         </form>
+
+        @php $currentType = request('type', 'all'); @endphp
+        <div class="flex items-center justify-center gap-2 overflow-x-auto no-scrollbar">
+            <a href="{{ request()->fullUrlWithQuery(['type' => 'all', 'page' => 1]) }}"
+               class="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-wider transition-all whitespace-nowrap {{ $currentType === 'all' || empty($currentType) ? 'bg-gray-900 text-white shadow-sm' : 'bg-white text-gray-600 border border-gray-200 hover:bg-gray-50' }}">
+                All <span class="px-1.5 py-0.5 rounded-full text-[9px] font-black {{ $currentType === 'all' || empty($currentType) ? 'bg-white/20' : 'bg-gray-100 text-gray-500' }}">{{ $counts['all'] }}</span>
+            </a>
+            <a href="{{ request()->fullUrlWithQuery(['type' => 'product', 'page' => 1]) }}"
+               class="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-wider transition-all whitespace-nowrap {{ $currentType === 'product' ? 'bg-purple-700 text-white shadow-sm' : 'bg-white text-gray-600 border border-gray-200 hover:border-purple-200 hover:bg-purple-50' }}">
+                <span class="w-1.5 h-1.5 rounded-full {{ $currentType === 'product' ? 'bg-purple-200' : 'bg-purple-400' }}"></span>
+                Products <span class="px-1.5 py-0.5 rounded-full text-[9px] font-black {{ $currentType === 'product' ? 'bg-white/20' : 'bg-gray-100 text-gray-500' }}">{{ $counts['product'] }}</span>
+            </a>
+            <a href="{{ request()->fullUrlWithQuery(['type' => 'category', 'page' => 1]) }}"
+               class="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-wider transition-all whitespace-nowrap {{ $currentType === 'category' ? 'bg-blue-700 text-white shadow-sm' : 'bg-white text-gray-600 border border-gray-200 hover:border-blue-200 hover:bg-blue-50' }}">
+                <span class="w-1.5 h-1.5 rounded-full {{ $currentType === 'category' ? 'bg-blue-200' : 'bg-blue-400' }}"></span>
+                Categories <span class="px-1.5 py-0.5 rounded-full text-[9px] font-black {{ $currentType === 'category' ? 'bg-white/20' : 'bg-gray-100 text-gray-500' }}">{{ $counts['category'] }}</span>
+            </a>
+            <a href="{{ request()->fullUrlWithQuery(['type' => 'customer', 'page' => 1]) }}"
+               class="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-wider transition-all whitespace-nowrap {{ $currentType === 'customer' ? 'bg-emerald-700 text-white shadow-sm' : 'bg-white text-gray-600 border border-gray-200 hover:border-emerald-200 hover:bg-emerald-50' }}">
+                <span class="w-1.5 h-1.5 rounded-full {{ $currentType === 'customer' ? 'bg-emerald-200' : 'bg-emerald-400' }}"></span>
+                Customers <span class="px-1.5 py-0.5 rounded-full text-[9px] font-black {{ $currentType === 'customer' ? 'bg-white/20' : 'bg-gray-100 text-gray-500' }}">{{ $counts['customer'] }}</span>
+            </a>
+            <a href="{{ request()->fullUrlWithQuery(['type' => 'seller', 'page' => 1]) }}"
+               class="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-wider transition-all whitespace-nowrap {{ $currentType === 'seller' ? 'bg-amber-600 text-white shadow-sm' : 'bg-white text-gray-600 border border-gray-200 hover:border-amber-200 hover:bg-amber-50' }}">
+                <span class="w-1.5 h-1.5 rounded-full {{ $currentType === 'seller' ? 'bg-amber-200' : 'bg-amber-400' }}"></span>
+                Sellers <span class="px-1.5 py-0.5 rounded-full text-[9px] font-black {{ $currentType === 'seller' ? 'bg-white/20' : 'bg-gray-100 text-gray-500' }}">{{ $counts['seller'] }}</span>
+            </a>
+        </div>
     </div>
 
-    @php
-        $currentType = request('type', 'all');
-    @endphp
-
-    {{-- Filter Pills Sorted by Category --}}
-    <div class="flex items-center justify-center gap-2 overflow-x-auto no-scrollbar pt-1">
-        {{-- ALL --}}
-        <a href="{{ request()->fullUrlWithQuery(['type' => 'all', 'page' => 1]) }}"
-           class="inline-flex items-center gap-2 px-4 py-2 rounded-full text-[10px] sm:text-[11px] font-black uppercase tracking-wider transition-all {{ empty($currentType) || $currentType === 'all' ? 'bg-black text-white shadow-sm' : 'bg-white text-gray-700 border border-gray-200 hover:bg-gray-50' }}">
-            <span>ALL</span>
-            <span class="px-2 py-0.5 rounded-full text-[9px] font-black {{ empty($currentType) || $currentType === 'all' ? 'bg-white/20 text-white' : 'bg-gray-100 text-gray-600' }}">{{ $counts['all'] }}</span>
-        </a>
-
-        {{-- PRODUCTS --}}
-        <a href="{{ request()->fullUrlWithQuery(['type' => 'product', 'page' => 1]) }}"
-           class="inline-flex items-center gap-2 px-4 py-2 rounded-full text-[10px] sm:text-[11px] font-black uppercase tracking-wider transition-all {{ $currentType === 'product' ? 'bg-black text-white shadow-sm' : 'bg-white text-gray-700 border border-gray-200 hover:bg-gray-50' }}">
-            <span>PRODUCTS</span>
-            <span class="px-2 py-0.5 rounded-full text-[9px] font-black {{ $currentType === 'product' ? 'bg-white/20 text-white' : 'bg-gray-100 text-gray-600' }}">{{ $counts['product'] }}</span>
-        </a>
-
-        {{-- CATEGORIES --}}
-        <a href="{{ request()->fullUrlWithQuery(['type' => 'category', 'page' => 1]) }}"
-           class="inline-flex items-center gap-2 px-4 py-2 rounded-full text-[10px] sm:text-[11px] font-black uppercase tracking-wider transition-all {{ $currentType === 'category' ? 'bg-black text-white shadow-sm' : 'bg-white text-gray-700 border border-gray-200 hover:bg-gray-50' }}">
-            <span>CATEGORIES</span>
-            <span class="px-2 py-0.5 rounded-full text-[9px] font-black {{ $currentType === 'category' ? 'bg-white/20 text-white' : 'bg-gray-100 text-gray-600' }}">{{ $counts['category'] }}</span>
-        </a>
-
-        {{-- CUSTOMERS --}}
-        <a href="{{ request()->fullUrlWithQuery(['type' => 'customer', 'page' => 1]) }}"
-           class="inline-flex items-center gap-2 px-4 py-2 rounded-full text-[10px] sm:text-[11px] font-black uppercase tracking-wider transition-all {{ $currentType === 'customer' ? 'bg-black text-white shadow-sm' : 'bg-white text-gray-700 border border-gray-200 hover:bg-gray-50' }}">
-            <span>CUSTOMERS</span>
-            <span class="px-2 py-0.5 rounded-full text-[9px] font-black {{ $currentType === 'customer' ? 'bg-white/20 text-white' : 'bg-gray-100 text-gray-600' }}">{{ $counts['customer'] }}</span>
-        </a>
-
-        {{-- SELLERS --}}
-        <a href="{{ request()->fullUrlWithQuery(['type' => 'seller', 'page' => 1]) }}"
-           class="inline-flex items-center gap-2 px-4 py-2 rounded-full text-[10px] sm:text-[11px] font-black uppercase tracking-wider transition-all {{ $currentType === 'seller' ? 'bg-black text-white shadow-sm' : 'bg-white text-gray-700 border border-gray-200 hover:bg-gray-50' }}">
-            <span>SELLERS</span>
-            <span class="px-2 py-0.5 rounded-full text-[9px] font-black {{ $currentType === 'seller' ? 'bg-white/20 text-white' : 'bg-gray-100 text-gray-600' }}">{{ $counts['seller'] }}</span>
-        </a>
-    </div>
-
-    {{-- Main Archive Table --}}
+    {{-- ═══ ARCHIVE RECORDS ═══ --}}
     @if($archives->isEmpty())
-        <div class="text-center py-20 bg-white rounded-3xl border border-dashed border-gray-200 shadow-sm p-8">
-            <svg class="w-12 h-12 mx-auto mb-3 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4"/>
-            </svg>
-            <h3 class="text-sm font-bold text-gray-700 uppercase tracking-wider">Archive Registry is Empty</h3>
-            <p class="text-xs text-gray-400 mt-1">There are no archived items found under this filter criteria.</p>
+        <div class="bg-white rounded-3xl border border-gray-100 shadow-sm p-16 text-center">
+            <div class="w-16 h-16 bg-gray-50 rounded-2xl flex items-center justify-center mx-auto mb-4 border border-gray-100">
+                <svg class="w-7 h-7 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4"/></svg>
+            </div>
+            <p class="text-sm font-bold text-gray-400 uppercase tracking-widest">Archive Registry is Empty</p>
+            <p class="text-xs text-gray-300 mt-1">No archived records found under the current filter</p>
         </div>
     @else
-        <div class="bg-white rounded-3xl border border-gray-100 shadow-sm overflow-hidden">
-            <div class="overflow-x-auto no-scrollbar">
-                <table class="w-full text-left border-collapse min-w-175">
-                    <thead>
-                        <tr class="bg-gray-50/50 border-b border-gray-100">
-                            <th class="px-6 py-4 text-[10px] font-black text-gray-700 uppercase tracking-widest">Type</th>
-                            <th class="px-6 py-4 text-[10px] font-black text-gray-700 uppercase tracking-widest">Archived Entity</th>
-                            <th class="px-6 py-4 text-[10px] font-black text-gray-700 uppercase tracking-widest">Deletion Reason</th>
-                            <th class="px-6 py-4 text-[10px] font-black text-gray-700 uppercase tracking-widest">Archived Info</th>
-                            <th class="px-6 py-4 text-[10px] font-black text-gray-700 uppercase tracking-widest text-right">Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody class="divide-y divide-gray-50">
-                        @foreach($archives as $record)
-                            @php
-                                $typeStyles = [
-                                    'product'  => 'bg-purple-100 text-purple-800 border-purple-200',
-                                    'category' => 'bg-blue-100 text-blue-800 border-blue-200',
-                                    'customer' => 'bg-emerald-100 text-emerald-800 border-emerald-200',
-                                    'seller'   => 'bg-amber-100 text-amber-800 border-amber-200',
-                                ];
-                            @endphp
-                            <tr class="hover:bg-gray-50/60 transition-colors">
-                                {{-- Item Type --}}
-                                <td class="px-6 py-4">
-                                    <span class="px-2.5 py-1 rounded-md text-[9px] font-black uppercase tracking-wider border {{ $typeStyles[$record->item_type] ?? 'bg-gray-100 text-gray-700 border-gray-200' }}">
-                                        {{ $record->item_type }}
-                                    </span>
-                                </td>
+        <div class="space-y-3">
+            @foreach($archives as $record)
+                @php
+                    $typeConfig = [
+                        'product'  => ['border' => 'border-l-purple-400',  'badge' => 'bg-purple-100 text-purple-800 border-purple-200',  'icon' => 'bg-purple-50',  'emoji' => '📦'],
+                        'category' => ['border' => 'border-l-blue-400',    'badge' => 'bg-blue-100 text-blue-800 border-blue-200',        'icon' => 'bg-blue-50',    'emoji' => '🏷️'],
+                        'customer' => ['border' => 'border-l-emerald-400', 'badge' => 'bg-emerald-100 text-emerald-800 border-emerald-200','icon' => 'bg-emerald-50', 'emoji' => '🧑'],
+                        'seller'   => ['border' => 'border-l-amber-400',   'badge' => 'bg-amber-100 text-amber-800 border-amber-200',     'icon' => 'bg-amber-50',   'emoji' => '🏪'],
+                    ];
+                    $tc = $typeConfig[$record->item_type] ?? ['border' => 'border-l-gray-300', 'badge' => 'bg-gray-100 text-gray-700 border-gray-200', 'icon' => 'bg-gray-50', 'emoji' => '📄'];
+                    $daysOld = $record->created_at->diffInDays(now());
+                    $daysLeft = max(0, 30 - $daysOld);
+                    $expiryClass = $daysLeft <= 7 ? 'bg-red-50 text-red-600 border-red-200' : 'bg-gray-50 text-gray-500 border-gray-200';
+                @endphp
+                <div class="bg-white rounded-2xl border border-gray-100 border-l-4 {{ $tc['border'] }} shadow-sm hover:shadow-md transition-all">
+                    <div class="p-4 sm:p-5">
+                        <div class="flex items-start gap-4">
+                            {{-- Type Icon / Thumbnail --}}
+                            <div class="w-12 h-12 rounded-xl {{ $tc['icon'] }} border border-gray-100 flex items-center justify-center font-bold text-sm text-gray-600 shrink-0 overflow-hidden">
+                                @if($record->item_type === 'product' && !empty($record->metadata['image']))
+                                    @php
+                                        $rawImg = $record->metadata['image'];
+                                        $imgUrl = is_array($rawImg) ? ($rawImg[0]['url'] ?? $rawImg[0] ?? '') : $rawImg;
+                                        if ($imgUrl && !str_starts_with($imgUrl, 'http') && !str_starts_with($imgUrl, '/')) {
+                                            $imgUrl = '/storage/' . ltrim($imgUrl, '/');
+                                        }
+                                    @endphp
+                                    <img src="{{ $imgUrl }}" class="w-full h-full object-cover" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex'">
+                                    <span class="hidden w-full h-full items-center justify-center text-lg">{{ $tc['emoji'] }}</span>
+                                @elseif($record->item_type === 'category' && !empty($record->metadata['image']))
+                                    <img src="{{ $record->metadata['image'] }}" class="w-full h-full object-cover" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex'">
+                                    <span class="hidden w-full h-full items-center justify-center text-lg">{{ $tc['emoji'] }}</span>
+                                @else
+                                    <span class="text-lg">{{ $tc['emoji'] }}</span>
+                                @endif
+                            </div>
 
-                                {{-- Entity Details --}}
-                                <td class="px-6 py-4">
-                                    <div class="flex items-center gap-3">
-                                        <div class="w-10 h-10 rounded-xl bg-stone-100 border border-gray-200 flex items-center justify-center font-bold text-xs text-gray-600 shrink-0 overflow-hidden">
-                                            @if($record->item_type === 'product' && !empty($record->metadata['image']))
-                                                @php
-                                                    $rawImg = $record->metadata['image'];
-                                                    $imgUrl = is_array($rawImg) ? ($rawImg[0]['url'] ?? $rawImg[0] ?? '') : $rawImg;
-                                                    if ($imgUrl && !str_starts_with($imgUrl, 'http') && !str_starts_with($imgUrl, '/')) {
-                                                        $imgUrl = '/storage/' . ltrim($imgUrl, '/');
-                                                    }
-                                                @endphp
-                                                <img src="{{ $imgUrl }}" class="w-full h-full object-cover" onerror="this.style.display='none'">
-                                            @elseif($record->item_type === 'category' && !empty($record->metadata['image']))
-                                                <img src="{{ $record->metadata['image'] }}" class="w-full h-full object-cover" onerror="this.style.display='none'">
-                                            @else
-                                                <span>{{ strtoupper(substr($record->name, 0, 1)) }}</span>
-                                            @endif
+                            {{-- Main Info --}}
+                            <div class="flex-1 min-w-0">
+                                <div class="flex items-start justify-between gap-3 flex-wrap">
+                                    <div class="min-w-0">
+                                        <div class="flex items-center gap-2 flex-wrap mb-1">
+                                            <span class="px-2 py-0.5 rounded-md text-[8px] font-black uppercase tracking-widest border {{ $tc['badge'] }}">{{ $record->item_type }}</span>
+                                            <span class="px-2 py-0.5 rounded-md text-[8px] font-black uppercase tracking-widest border {{ $expiryClass }}">⏱ {{ $daysLeft }} days left</span>
                                         </div>
-                                        <div class="min-w-0">
-                                            <div class="text-xs font-bold text-gray-900 truncate">{{ $record->name }}</div>
-                                            @if($record->identifier)
-                                                <div class="text-[10px] text-gray-500 truncate">{{ $record->identifier }}</div>
-                                            @endif
-                                            @if($record->item_type === 'product' && isset($record->metadata['price']))
-                                                <div class="text-[10px] font-bold text-[#C0422A]">₱{{ number_format((float)$record->metadata['price'], 2) }}</div>
-                                            @endif
-                                        </div>
+                                        <div class="text-sm font-bold text-gray-900 truncate">{{ $record->name }}</div>
+                                        @if($record->identifier)
+                                            <div class="text-[10px] text-gray-400 truncate">{{ $record->identifier }}</div>
+                                        @endif
+                                        @if($record->item_type === 'product' && isset($record->metadata['price']))
+                                            <div class="text-[11px] font-bold text-[#C0422A] mt-0.5">₱{{ number_format((float)$record->metadata['price'], 2) }}</div>
+                                        @endif
                                     </div>
-                                </td>
-
-                                {{-- Reason --}}
-                                <td class="px-6 py-4">
-                                    <div class="max-w-xs">
-                                        <span class="text-xs text-gray-700 font-medium line-clamp-2 leading-relaxed bg-gray-50 p-2 rounded-xl border border-gray-100 block">
-                                            {{ $record->reason ?: 'Administrative deletion' }}
-                                        </span>
-                                    </div>
-                                </td>
-
-                                {{-- Archive Meta --}}
-                                <td class="px-6 py-4">
-                                    <div class="space-y-0.5">
-                                        <div class="text-[11px] font-bold text-gray-800">{{ $record->created_at->format('M d, Y • h:i A') }}</div>
-                                        <div class="text-[10px] text-gray-400">By <strong class="text-gray-600">{{ $record->archived_by ?: 'Admin' }}</strong></div>
-                                    </div>
-                                </td>
-
-                                {{-- Actions --}}
-                                <td class="px-6 py-4 text-right">
-                                    <div class="flex items-center justify-end gap-1.5">
-                                        {{-- Inspect Snapshot --}}
+                                    {{-- Actions --}}
+                                    <div class="flex items-center gap-1.5 shrink-0">
                                         <button type="button" @click="openSnapshot({{ json_encode($record) }})"
-                                            class="px-2.5 py-1.5 bg-stone-100 hover:bg-stone-200 text-stone-700 rounded-xl text-[10px] font-bold uppercase tracking-wider transition-all cursor-pointer" title="View Snapshot Data">
+                                            class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-gray-50 border border-gray-200 text-gray-600 rounded-xl text-[9px] font-black uppercase tracking-widest hover:bg-gray-100 transition-all cursor-pointer">
+                                            <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
                                             Inspect
                                         </button>
-
-                                        {{-- Restore --}}
                                         <button type="button" @click="openRestore({{ json_encode($record) }})"
-                                            class="px-2.5 py-1.5 bg-emerald-50 hover:bg-emerald-600 text-emerald-700 hover:text-white rounded-xl text-[10px] font-bold uppercase tracking-wider transition-all cursor-pointer" title="Restore Entity">
+                                            class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-emerald-50 border border-emerald-100 text-emerald-700 rounded-xl text-[9px] font-black uppercase tracking-widest hover:bg-emerald-600 hover:text-white hover:border-emerald-600 transition-all cursor-pointer">
+                                            <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
                                             Restore
                                         </button>
-
-                                        {{-- Purge --}}
                                         <button type="button" @click="openPurge({{ json_encode($record) }})"
-                                            class="w-8 h-8 rounded-xl bg-red-50 hover:bg-red-600 text-red-600 hover:text-white flex items-center justify-center transition-all cursor-pointer shrink-0" title="Permanently Purge">
-                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+                                            class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-red-50 border border-red-100 text-red-600 rounded-xl text-[9px] font-black uppercase tracking-widest hover:bg-red-600 hover:text-white hover:border-red-600 transition-all cursor-pointer">
+                                            <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+                                            Purge
                                         </button>
                                     </div>
-                                </td>
-                            </tr>
-                        @endforeach
-                    </tbody>
-                </table>
-            </div>
+                                </div>
+
+                                {{-- Meta Row --}}
+                                <div class="flex items-center gap-4 mt-2 pt-2 border-t border-gray-50">
+                                    <span class="text-[10px] text-gray-400">Deleted <strong class="text-gray-600">{{ $daysOld }}d ago</strong></span>
+                                    <span class="text-[10px] text-gray-400">By <strong class="text-gray-600">{{ $record->archived_by ?: 'Admin' }}</strong></span>
+                                    @if($record->reason)
+                                        <span class="text-[10px] text-gray-400 truncate hidden sm:block">"{{ Str::limit($record->reason, 60) }}"</span>
+                                    @endif
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            @endforeach
         </div>
 
         {{-- Pagination --}}
-        <div class="pt-4">
+        <div class="pt-2">
             {{ $archives->withQueryString()->links() }}
         </div>
     @endif
