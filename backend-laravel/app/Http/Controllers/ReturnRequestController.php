@@ -23,11 +23,17 @@ class ReturnRequestController extends Controller
         }
 
         $request->validate([
-            'orderId'     => 'required|exists:orders,id',
-            'reason'      => 'required|string',
-            'message'     => 'nullable|string',
-            'proofImages' => 'nullable',
-            'proof_files.*' => 'nullable|file|image|max:10240',
+            'orderId'       => 'required|exists:orders,id',
+            'reason'        => 'required|string',
+            'message'       => 'nullable|string',
+            'proofImages'   => 'nullable',
+            'proof_files'   => 'required_without:proofImages|array|min:1',
+            'proof_files.*' => 'file|image|max:10240',
+        ], [
+            'proof_files.required_without' => 'Please attach at least one photo as proof for your return request.',
+            'proof_files.min'              => 'Please attach at least one photo as proof for your return request.',
+            'proof_files.*.image'          => 'Attached proof must be a valid image file.',
+            'proof_files.*.max'            => 'Each proof image must not exceed 10MB.',
         ]);
 
         $userId = Auth::id();
@@ -73,6 +79,15 @@ class ReturnRequestController extends Controller
             }
         } elseif (is_array($request->proofImages)) {
             $proofPaths = $request->proofImages;
+        } elseif (!empty($request->proofImages)) {
+            $proofPaths = [$request->proofImages];
+        }
+
+        if (empty($proofPaths)) {
+            if ($request->wantsJson()) {
+                return response()->json(['message' => 'Please attach at least one photo as proof for your return request.'], 422);
+            }
+            return back()->with('error', 'Please attach at least one photo as proof for your return request.')->withInput();
         }
 
         $reasonText = trim($request->reason);

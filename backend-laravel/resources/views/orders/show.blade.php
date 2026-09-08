@@ -1142,7 +1142,7 @@
                 </div>
                 <div>
                     <h3 class="text-sm font-black text-[#1E1915] uppercase tracking-tight">Request Item Return</h3>
-                    <p class="text-[10px] text-[#78716C] font-medium">Submit a return request to the artisan. Please specify the reason and attach photo evidence if applicable.</p>
+                    <p class="text-[10px] text-[#78716C] font-medium">Submit a return request to the artisan. Please specify the reason and attach photo evidence of the item.</p>
                 </div>
             </div>
 
@@ -1168,10 +1168,11 @@
 
                 <div class="space-y-1">
                     <label class="text-[10px] font-black uppercase tracking-widest text-[#78716C] flex items-center justify-between">
-                        <span>Photo / Evidence (Optional)</span>
+                        <span>Photo / Evidence <span class="text-red-500">*</span></span>
                         <span class="text-stone-400 font-normal">Max 10MB</span>
                     </label>
-                    <input type="file" name="proof_files[]" multiple accept="image/*" class="w-full px-3 py-2 bg-[#FAF8F5] border border-[#ECE3D2] rounded-xl text-xs text-stone-600 file:mr-3 file:py-1 file:px-2.5 file:rounded-md file:border-0 file:text-[10px] file:font-bold file:bg-[#1E1915] file:text-white hover:file:bg-[#C0420A] cursor-pointer">
+                    <input type="file" name="proof_files[]" multiple required accept="image/*" class="w-full px-3 py-2 bg-[#FAF8F5] border border-[#ECE3D2] rounded-xl text-xs text-stone-600 file:mr-3 file:py-1 file:px-2.5 file:rounded-md file:border-0 file:text-[10px] file:font-bold file:bg-[#1E1915] file:text-white hover:file:bg-[#C0420A] cursor-pointer">
+                    <p class="text-[9px] text-[#78716C] font-medium">Please attach at least one clear photo of the item, defect, or tag as proof for the artisan.</p>
                 </div>
 
                 <div class="p-3 bg-amber-50 border border-amber-200 rounded-xl text-[10px] text-amber-800 leading-relaxed">
