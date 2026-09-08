@@ -6,18 +6,17 @@
 
         {{-- Top Navigation Bar --}}
         <div class="flex items-center justify-between gap-3 pb-3 sm:pb-4 border-b border-[#EAE1D0]">
-            <button type="button"
-                    onclick="if(window.history.length > 1) { window.history.back(); } else { window.location.href='{{ route('profile') }}'; }"
-                    class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-[#FAF6EE] border border-[#E2D9C8] text-[#78716C] hover:bg-[#1E1915] hover:text-[#DFC97A] hover:border-[#1E1915] font-bold text-[11px] uppercase tracking-wider transition-all shadow-2xs cursor-pointer">
+            <a href="{{ route('profile') }}"
+               class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-[#FAF6EE] border border-[#E2D9C8] text-[#78716C] hover:bg-[#1E1915] hover:text-[#DFC97A] hover:border-[#1E1915] font-bold text-[11px] uppercase tracking-wider transition-all shadow-2xs no-underline">
                 <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.2"><path stroke-linecap="round" stroke-linejoin="round" d="M10 19l-7-7m0 0l7-7m-7 7h18"/></svg>
                 <span>Back to Profile</span>
-            </button>
+            </a>
             <span class="text-[9.5px] font-black uppercase tracking-widest text-[#996515]">Trust &amp; Safety</span>
         </div>
 
         {{-- Header Section --}}
         <div class="flex items-center gap-3.5 pt-3 sm:pt-4">
-            <div class="w-10 h-10 sm:w-11 sm:h-11 rounded-2xl flex items-center justify-center shrink-0 shadow-xs" style="background:#1E1915;color:#C49520;">
+            <div class="w-10 h-10 sm:w-11 sm:h-11 rounded-2xl flex items-center justify-center shrink-0 shadow-xs bg-[#1E1915] text-[#C49520]">
                 <svg class="w-5 h-5 sm:w-6 sm:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>
                 </svg>
@@ -43,11 +42,11 @@
             @forelse($reports as $report)
                 @php
                     $statusConfig = match($report->status) {
-                        'Pending'      => ['bg' => '#FEF9EE', 'border' => '#F6DFA0', 'text' => '#A16D19', 'label' => '⏳ Pending Review'],
-                        'Under Review' => ['bg' => '#EEF3FE', 'border' => '#B8CEFA', 'text' => '#2E5FCA', 'label' => '🔍 Under Investigation'],
-                        'Resolved'     => ['bg' => '#F0F4EF', 'border' => '#C5D9B8', 'text' => '#4A6741', 'label' => '✓ Resolved'],
-                        'Dismissed'    => ['bg' => '#F7F4EC', 'border' => '#E0D9CC', 'text' => '#766C60', 'label' => '— Dismissed'],
-                        default        => ['bg' => '#FDF8EE', 'border' => '#E8DECB', 'text' => '#766C60', 'label' => $report->status],
+                        'Pending'      => ['class' => 'bg-[#FEF9EE] border-[#F6DFA0] text-[#A16D19]', 'label' => '⏳ Pending Review'],
+                        'Under Review' => ['class' => 'bg-[#EEF3FE] border-[#B8CEFA] text-[#2E5FCA]', 'label' => '🔍 Under Investigation'],
+                        'Resolved'     => ['class' => 'bg-[#F0F4EF] border-[#C5D9B8] text-[#4A6741]', 'label' => '✓ Resolved'],
+                        'Dismissed'    => ['class' => 'bg-[#F7F4EC] border-[#E0D9CC] text-[#766C60]', 'label' => '— Dismissed'],
+                        default        => ['class' => 'bg-[#FDF8EE] border-[#E8DECB] text-[#766C60]', 'label' => $report->status],
                     };
                     $rType = $report->reportType ?? (!empty($report->productId) ? 'product' : 'account');
                 @endphp
@@ -63,8 +62,7 @@
                                 {{ $rType === 'product' ? '📦 Product' : '👤 Account' }}
                             </span>
                         </div>
-                        <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-extrabold uppercase tracking-wider shrink-0"
-                              style="background: {{ $statusConfig['bg'] }}; color: {{ $statusConfig['text'] }}; border: 1px solid {{ $statusConfig['border'] }};">
+                        <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-extrabold uppercase tracking-wider shrink-0 border {{ $statusConfig['class'] }}">
                             {{ $statusConfig['label'] }}
                         </span>
                     </div>
@@ -77,7 +75,7 @@
                         @if($report->description)
                             <div class="mt-2 p-2.5 sm:p-3 rounded-xl bg-[#FAF8F5] border border-[#ECE3D2] text-xs text-[#59514A] leading-relaxed">
                                 <span class="text-[9px] font-bold uppercase tracking-wider text-[#A09585] block mb-0.5">Your Statement:</span>
-                                <p class="m-0 break-words whitespace-pre-line">{{ $report->description }}</p>
+                                <p class="m-0 wrap-break-word whitespace-pre-line">{{ $report->description }}</p>
                             </div>
                         @endif
                     </div>
@@ -116,7 +114,7 @@
                             <div class="space-y-2 relative pl-3.5 border-l-2 border-[#E6D8BA] ml-1.5">
                                 @foreach($report->timelineEvents as $tEvent)
                                     <div class="relative text-xs">
-                                        <div class="absolute -left-[18px] top-1 w-2 h-2 rounded-full bg-[#C49520] border-2 border-white shadow-2xs"></div>
+                                        <div class="absolute -left-4.5 top-1 w-2 h-2 rounded-full bg-[#C49520] border-2 border-white shadow-2xs"></div>
                                         <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-0.5 sm:gap-2">
                                             <span class="font-bold text-[#1E1915] text-xs leading-snug">{{ $tEvent->title }}</span>
                                             <span class="text-[10px] text-[#8C827A] shrink-0">{{ $tEvent->created_at->format('M d, Y • g:i A') }}</span>

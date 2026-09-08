@@ -9,7 +9,7 @@
      style="min-height:calc(100vh - 80px);background-color:#FAF8F5;padding:32px 16px;" 
      x-data="profileApp()" 
      x-init="init()">
-    <div class="w-full max-w-[500px] lg:max-w-5xl mx-auto transition-all duration-300"
+    <div class="w-full max-w-125 lg:max-w-5xl mx-auto transition-all duration-300"
          style="background-color:#FDFBF7;border:1px solid #EAE2D2;border-radius:28px;box-shadow:0 20px 50px rgba(0,0,0,0.06);padding:26px 24px;color:#1E1915;">
 
         {{-- Navigation Back Button --}}
@@ -62,7 +62,7 @@
         <div class="hidden lg:flex items-center justify-between gap-6 p-6 bg-white border border-[#ECE3D2] rounded-2xl shadow-xs mb-6">
             <div class="flex items-center gap-5 min-w-0">
                 {{-- Gold-Ringed Avatar --}}
-                <div class="w-20 h-20 min-w-20 rounded-full p-[2.5px] bg-gradient-to-br from-[#996515] via-[#E6CA65] to-[#996515] shadow-md shrink-0">
+                <div class="w-20 h-20 min-w-20 rounded-full p-[2.5px] bg-linear-to-br from-[#996515] via-[#E6CA65] to-[#996515] shadow-md shrink-0">
                     <div class="w-full h-full rounded-full overflow-hidden bg-[#FAF8F5] flex items-center justify-center">
                         @if($user->profile_photo_url)
                             <img src="{{ $user->profile_photo_url }}" class="w-full h-full object-cover" alt="{{ $user->name }}">
