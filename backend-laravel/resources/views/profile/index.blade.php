@@ -292,12 +292,12 @@
                             <img id="modal-avatar-preview"
                                  src="{{ $user->profile_photo_url }}"
                                  class="w-full h-full object-cover">
-                            <span id="modal-initial-preview" class="hidden text-2xl font-black text-[#996515] uppercase">{{ strtoupper(substr($user->username ?? $user->name, 0, 1)) }}</span>
+                            <span id="modal-initial-preview" class="hidden text-2xl font-black text-[#996515] uppercase">{{ strtoupper(substr($user->name, 0, 1)) }}</span>
                         @else
                             <img id="modal-avatar-preview"
                                  src=""
                                  class="hidden w-full h-full object-cover">
-                            <span id="modal-initial-preview" class="text-2xl font-black text-[#996515] uppercase">{{ strtoupper(substr($user->username ?? $user->name, 0, 1)) }}</span>
+                            <span id="modal-initial-preview" class="text-2xl font-black text-[#996515] uppercase">{{ strtoupper(substr($user->name, 0, 1)) }}</span>
                         @endif
 
                         <label class="absolute inset-0 bg-black/45 text-white opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center cursor-pointer">
@@ -320,8 +320,6 @@
                            placeholder="Enter your full name"
                            class="w-full h-10 px-3.5 bg-gray-50 border border-gray-200 rounded-xl text-xs font-medium outline-none focus:border-[#C0422A] focus:bg-white transition-colors">
                 </div>
-
-                <input type="hidden" name="username" value="{{ old('username', $user->username ?? '') }}">
 
                 {{-- Actions --}}
                 <div class="flex items-center gap-3 pt-2">

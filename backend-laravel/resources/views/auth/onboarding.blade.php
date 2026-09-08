@@ -107,7 +107,7 @@
 
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     {{-- Full Name --}}
-                    <div>
+                    <div class="sm:col-span-2">
                         <label for="name" class="block text-[11px] font-bold text-gray-800 uppercase tracking-wider mb-1">
                             Full Name <span class="text-[#C0422A]">*</span>
                         </label>
@@ -118,19 +118,6 @@
                                required
                                placeholder="e.g. Maria Santos" 
                                class="w-full h-11 px-3.5 bg-white border {{ $errors->has('name') ? 'border-red-400 bg-red-50/50' : 'border-[#D8CEBE]' }} rounded-xl text-xs font-semibold text-gray-900 outline-none focus:border-[#C0422A] focus:ring-2 focus:ring-[#C0422A]/15 transition-all shadow-2xs">
-                    </div>
-
-                    {{-- Preferred Username (Optional) --}}
-                    <div>
-                        <label for="username" class="block text-[11px] font-bold text-gray-800 uppercase tracking-wider mb-1">
-                            Preferred Handle <span class="text-gray-400 font-normal text-[10px] lowercase">(optional)</span>
-                        </label>
-                        <input type="text" 
-                               id="username" 
-                               name="username" 
-                               value="{{ old('username', Auth::user()->username) }}" 
-                               placeholder="e.g. mariasantos" 
-                               class="w-full h-11 px-3.5 bg-white border {{ $errors->has('username') ? 'border-red-400 bg-red-50/50' : 'border-[#D8CEBE]' }} rounded-xl text-xs font-semibold text-gray-900 outline-none focus:border-[#C0422A] focus:ring-2 focus:ring-[#C0422A]/15 transition-all shadow-2xs">
                     </div>
 
                     {{-- Phone Number --}}
