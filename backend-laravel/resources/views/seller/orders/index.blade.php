@@ -156,6 +156,19 @@ function sellerOrdersManager() {
         declineCancellationCustomReason: '',
         declineCancellationLoading: false,
         declineCancellationError: '',
+        showApproveReturnModal: false,
+        approveReturnTarget: null,
+        approveReturnInstructions: '',
+        approveReturnLoading: false,
+        approveReturnError: '',
+        showRejectReturnModal: false,
+        rejectReturnTarget: null,
+        rejectReturnReason: 'Item is not in original condition / beyond return window',
+        rejectReturnCustomReason: '',
+        rejectReturnLoading: false,
+        rejectReturnError: '',
+        showProofLightboxModal: false,
+        activeProofImage: '',
         receiptModal: false,
         receiptUrl: '',
         rejectReason: 'Reference number does not match',
@@ -388,6 +401,195 @@ function sellerOrdersManager() {
             } finally {
                 this.declineCancellationLoading = false;
             }
+        },
+
+        getReturnRequest(order) {
+            if (!order) return null;
+            const reqs = order.return_requests || order.returnRequests || [];
+            if (Array.isArray(reqs) && reqs.length > 0) {
+                return reqs[0];
+            }
+            if (reqs && typeof reqs === 'object' && reqs.id) {
+                return reqs;
+            }
+            return null;
+        },
+
+        hasPendingReturn(order) {
+            const req = this.getReturnRequest(order);
+            if (!req) return false;
+            const s = String(req.status || '').toLowerCase().trim();
+            return s === 'pending' || s === 'requested';
+        },
+
+        getProofImages(returnReq) {
+            if (!returnReq || !returnReq.proofImages) return [];
+            let images = returnReq.proofImages;
+            if (typeof images === 'string') {
+                try {
+                    images = JSON.parse(images);
+                } catch (e) {
+                    images = [images];
+                }
+            }
+            if (!Array.isArray(images)) {
+                images = [images];
+            }
+            return images.filter(Boolean).map(img => {
+                if (typeof img !== 'string') return '';
+                const clean = img.trim();
+                if (clean.startsWith('http://') || clean.startsWith('https://') || clean.startsWith('/')) {
+                    return clean;
+                }
+                return '/storage/' + clean;
+            }).filter(Boolean);
+        },
+
+        openApproveReturnModal(order) {
+            this.approveReturnTarget = order || this.detailsOrder;
+            this.approveReturnInstructions = '';
+            this.approveReturnLoading = false;
+            this.approveReturnError = '';
+            this.showApproveReturnModal = true;
+        },
+
+        async executeApproveReturn() {
+            if (!this.approveReturnTarget || this.approveReturnLoading) return;
+            const returnReq = this.getReturnRequest(this.approveReturnTarget);
+            if (!returnReq) {
+                this.approveReturnError = 'No return request found for this order.';
+                return;
+            }
+            this.approveReturnLoading = true;
+            this.approveReturnError = '';
+
+            try {
+                const token = document.querySelector('meta[name="csrf-token"]')?.content || document.querySelector('input[name="_token"]')?.value || '';
+                const res = await fetch('/seller/orders/' + this.approveReturnTarget.id + '/returns/' + returnReq.id + '/approve', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json',
+                        'X-CSRF-TOKEN': token
+                    },
+                    body: JSON.stringify({
+                        comment: this.approveReturnInstructions.trim(),
+                        seller_notes: this.approveReturnInstructions.trim()
+                    })
+                });
+                const data = await res.json();
+                if (res.ok && (data.success || data.returnRequest)) {
+                    const updatedReturn = data.returnRequest || data.return_request;
+                    const targetId = this.approveReturnTarget.id;
+                    const idx = this.orders.findIndex(o => o.id === targetId);
+                    if (idx !== -1) {
+                        const updatedOrder = { ...this.orders[idx] };
+                        const reqs = [...(updatedOrder.return_requests || updatedOrder.returnRequests || [])];
+                        const rIdx = reqs.findIndex(r => String(r.id) === String(returnReq.id));
+                        if (rIdx !== -1) {
+                            reqs[rIdx] = updatedReturn;
+                        } else {
+                            reqs.unshift(updatedReturn);
+                        }
+                        updatedOrder.return_requests = reqs;
+                        updatedOrder.returnRequests = reqs;
+                        this.orders.splice(idx, 1, updatedOrder);
+                        this.orders = [...this.orders];
+                        if (this.detailsOrder && this.detailsOrder.id === targetId) {
+                            this.detailsOrder = updatedOrder;
+                        }
+                    }
+                    this.showToast('✓ Return request approved. Customer has been notified.');
+                    this.showApproveReturnModal = false;
+                } else {
+                    this.approveReturnError = data.message || 'Failed to approve return request.';
+                }
+            } catch(e) {
+                this.approveReturnError = 'Network error while approving return request.';
+            } finally {
+                this.approveReturnLoading = false;
+            }
+        },
+
+        openRejectReturnModal(order) {
+            this.rejectReturnTarget = order || this.detailsOrder;
+            this.rejectReturnReason = 'Item is not in original condition / beyond return window';
+            this.rejectReturnCustomReason = '';
+            this.rejectReturnLoading = false;
+            this.rejectReturnError = '';
+            this.showRejectReturnModal = true;
+        },
+
+        async executeRejectReturn() {
+            if (!this.rejectReturnTarget || this.rejectReturnLoading) return;
+            const returnReq = this.getReturnRequest(this.rejectReturnTarget);
+            if (!returnReq) {
+                this.rejectReturnError = 'No return request found for this order.';
+                return;
+            }
+            const finalReason = this.rejectReturnReason === 'Other' ? this.rejectReturnCustomReason.trim() : this.rejectReturnReason;
+            if (!finalReason) {
+                this.rejectReturnError = 'Please provide an explanation for declining the return request.';
+                return;
+            }
+            this.rejectReturnLoading = true;
+            this.rejectReturnError = '';
+
+            try {
+                const token = document.querySelector('meta[name="csrf-token"]')?.content || document.querySelector('input[name="_token"]')?.value || '';
+                const res = await fetch('/seller/orders/' + this.rejectReturnTarget.id + '/returns/' + returnReq.id + '/reject', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json',
+                        'X-CSRF-TOKEN': token
+                    },
+                    body: JSON.stringify({
+                        reason: finalReason
+                    })
+                });
+                const data = await res.json();
+                if (res.ok && (data.success || data.returnRequest)) {
+                    const updatedReturn = data.returnRequest || data.return_request;
+                    const targetId = this.rejectReturnTarget.id;
+                    const idx = this.orders.findIndex(o => o.id === targetId);
+                    if (idx !== -1) {
+                        const updatedOrder = { ...this.orders[idx] };
+                        const reqs = [...(updatedOrder.return_requests || updatedOrder.returnRequests || [])];
+                        const rIdx = reqs.findIndex(r => String(r.id) === String(returnReq.id));
+                        if (rIdx !== -1) {
+                            reqs[rIdx] = updatedReturn;
+                        } else {
+                            reqs.unshift(updatedReturn);
+                        }
+                        updatedOrder.return_requests = reqs;
+                        updatedOrder.returnRequests = reqs;
+                        this.orders.splice(idx, 1, updatedOrder);
+                        this.orders = [...this.orders];
+                        if (this.detailsOrder && this.detailsOrder.id === targetId) {
+                            this.detailsOrder = updatedOrder;
+                        }
+                    }
+                    this.showToast('Return request declined. Customer has been notified.');
+                    this.showRejectReturnModal = false;
+                } else {
+                    this.rejectReturnError = data.message || 'Failed to decline return request.';
+                }
+            } catch(e) {
+                this.rejectReturnError = 'Network error while declining return request.';
+            } finally {
+                this.rejectReturnLoading = false;
+            }
+        },
+
+        openProofLightbox(imgUrl) {
+            this.activeProofImage = imgUrl;
+            this.showProofLightboxModal = true;
+        },
+
+        closeProofLightbox() {
+            this.showProofLightboxModal = false;
+            this.activeProofImage = '';
         },
 
         confirmMarkAsDelivered(order) {
@@ -727,6 +929,9 @@ function sellerOrdersManager() {
                 if (f === 'cancellation pending' || f === 'cancellation requested' || f === 'cancellation requests') {
                     return matchSearch && (s === 'cancellation pending' || s === 'cancellation requested');
                 }
+                if (f === 'return requests' || f === 'return requested' || f === 'return pending' || f === 'returns') {
+                    return matchSearch && this.hasPendingReturn(o);
+                }
                 if (f === 'pending') {
                     return matchSearch && (s === 'pending' || s === 'cancellation pending' || s === 'cancellation requested');
                 }
@@ -749,6 +954,8 @@ function sellerOrdersManager() {
                 'cancelled': 'bg-[#FEF2F2] text-[#DC2626] border-[#FECACA]',
                 'cancellation pending': 'bg-[#FFF7ED] text-[#C2410C] border-[#FFEDD5]',
                 'cancellation requested': 'bg-[#FFF7ED] text-[#C2410C] border-[#FFEDD5]',
+                'return requested': 'bg-[#FFFBEB] text-[#B45309] border-[#FDE68A]',
+                'return requests': 'bg-[#FFFBEB] text-[#B45309] border-[#FDE68A]',
             };
             return m[norm] || 'bg-[#FDF8EE] text-[#766C60] border-[#E8DECB]';
         },
@@ -779,6 +986,9 @@ function sellerOrdersManager() {
                 if (s === 'processing' || s === 'ready to ship' || s === 'ready_to_ship') s = 'to ship';
                 if (normKey === 'cancellation pending' || normKey === 'cancellation requested' || normKey === 'cancellation requests') {
                     return s === 'cancellation pending' || s === 'cancellation requested';
+                }
+                if (normKey === 'return requests' || normKey === 'return requested' || normKey === 'return pending' || normKey === 'returns') {
+                    return this.hasPendingReturn(o);
                 }
                 if (normKey === 'pending') {
                     return s === 'pending' || s === 'cancellation pending' || s === 'cancellation requested';
@@ -913,6 +1123,7 @@ function sellerOrdersManager() {
                     'all' => ['label' => 'All Orders', 'icon' => '📋'],
                     'pending' => ['label' => 'Pending', 'icon' => '⏳'],
                     'cancellation pending' => ['label' => 'Cancellation Requests', 'icon' => '⚠️'],
+                    'return requests' => ['label' => 'Return Requests', 'icon' => '↩️'],
                     'to ship' => ['label' => 'To Ship', 'icon' => '📦'],
                     'shipped' => ['label' => 'Shipped', 'icon' => '🚚'],
                     'in transit' => ['label' => 'In Transit', 'icon' => '🛣️'],
@@ -975,6 +1186,27 @@ function sellerOrdersManager() {
                             <span class="px-2.5 py-0.5 rounded-full border text-[8px] sm:text-[9px] font-black uppercase tracking-wider shrink-0"
                                   :class="statusColor(order.status)"
                                   x-text="normalizeStatus(order.status) === 'to ship' ? 'To Ship' : order.status"></span>
+                            <template x-if="hasPendingReturn(order)">
+                                <span class="px-2.5 py-0.5 rounded-full text-[8px] sm:text-[9px] font-black uppercase tracking-wider flex items-center gap-1 shrink-0 animate-pulse"
+                                      style="background: #FFFBEB; color: #B45309; border: 1px solid #FDE68A;">
+                                    <span>↩️</span>
+                                    <span>Return Requested</span>
+                                </span>
+                            </template>
+                            <template x-if="!hasPendingReturn(order) && getReturnRequest(order) && getReturnRequest(order).status === 'Approved'">
+                                <span class="px-2.5 py-0.5 rounded-full text-[8px] sm:text-[9px] font-black uppercase tracking-wider flex items-center gap-1 shrink-0"
+                                      style="background: #EFF6FF; color: #1D4ED8; border: 1px solid #BFDBFE;">
+                                    <span>✓</span>
+                                    <span>Return Approved</span>
+                                </span>
+                            </template>
+                            <template x-if="!hasPendingReturn(order) && getReturnRequest(order) && getReturnRequest(order).status === 'Rejected'">
+                                <span class="px-2.5 py-0.5 rounded-full text-[8px] sm:text-[9px] font-black uppercase tracking-wider flex items-center gap-1 shrink-0"
+                                      style="background: #FEF2F2; color: #991B1B; border: 1px solid #FECACA;">
+                                    <span>✕</span>
+                                    <span>Return Declined</span>
+                                </span>
+                            </template>
                             <template x-if="order.reviews && order.reviews.length > 0">
                                 <span class="px-2 py-0.5 rounded-full text-[8px] sm:text-[9px] font-bold uppercase tracking-wider flex items-center gap-1 shrink-0" style="background: #FDF8EE; color: #A16D19; border: 1px solid #E8DECB;">
                                     <span style="color: #C49520;">★</span>
@@ -1062,6 +1294,96 @@ function sellerOrdersManager() {
                                 <p class="text-[11px] text-orange-800">
                                     Please review and choose to either approve (which cancels the order and replenishes inventory) or decline this request to proceed with crafting/fulfillment.
                                 </p>
+                            </div>
+                        </template>
+
+                        {{-- Return Request Details Banner --}}
+                        <template x-if="detailsOrder && getReturnRequest(detailsOrder)">
+                            <div class="rounded-2xl border p-4 space-y-3 shadow-2xs transition-all"
+                                 :class="{
+                                     'bg-amber-50/90 border-amber-200': hasPendingReturn(detailsOrder),
+                                     'bg-blue-50/90 border-blue-200': !hasPendingReturn(detailsOrder) && getReturnRequest(detailsOrder).status === 'Approved',
+                                     'bg-red-50/90 border-red-200': !hasPendingReturn(detailsOrder) && getReturnRequest(detailsOrder).status === 'Rejected'
+                                 }">
+                                <div class="flex items-center justify-between gap-2">
+                                    <div class="flex items-center gap-2">
+                                        <span class="text-base" x-text="hasPendingReturn(detailsOrder) ? '↩️' : (getReturnRequest(detailsOrder).status === 'Approved' ? '✓' : '✕')"></span>
+                                        <span class="font-black text-xs uppercase tracking-wider"
+                                              :class="{
+                                                  'text-amber-950': hasPendingReturn(detailsOrder),
+                                                  'text-blue-950': !hasPendingReturn(detailsOrder) && getReturnRequest(detailsOrder).status === 'Approved',
+                                                  'text-red-950': !hasPendingReturn(detailsOrder) && getReturnRequest(detailsOrder).status === 'Rejected'
+                                              }"
+                                              x-text="hasPendingReturn(detailsOrder) ? 'Buyer Requested Return / Refund' : ('Return Request ' + getReturnRequest(detailsOrder).status)">
+                                        </span>
+                                    </div>
+                                    <span class="px-2.5 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider"
+                                          :class="{
+                                              'bg-amber-100 text-amber-800 border border-amber-200': hasPendingReturn(detailsOrder),
+                                              'bg-blue-100 text-blue-800 border border-blue-200': !hasPendingReturn(detailsOrder) && getReturnRequest(detailsOrder).status === 'Approved',
+                                              'bg-red-100 text-red-800 border border-red-200': !hasPendingReturn(detailsOrder) && getReturnRequest(detailsOrder).status === 'Rejected'
+                                          }"
+                                          x-text="getReturnRequest(detailsOrder).status">
+                                    </span>
+                                </div>
+
+                                {{-- Customer Reason --}}
+                                <div class="text-xs space-y-1"
+                                     :class="{
+                                         'text-amber-900': hasPendingReturn(detailsOrder),
+                                         'text-blue-900': !hasPendingReturn(detailsOrder) && getReturnRequest(detailsOrder).status === 'Approved',
+                                         'text-red-900': !hasPendingReturn(detailsOrder) && getReturnRequest(detailsOrder).status === 'Rejected'
+                                     }">
+                                    <div class="flex items-start gap-1">
+                                        <span class="font-bold shrink-0">Reason:</span>
+                                        <span class="font-medium" x-text="getReturnRequest(detailsOrder).reason || 'No description provided.'"></span>
+                                    </div>
+                                </div>
+
+                                {{-- Seller Instructions / Note (if approved or rejected) --}}
+                                <template x-if="getReturnRequest(detailsOrder).adminComment">
+                                    <div class="p-2.5 rounded-xl bg-white/80 border border-black/5 text-[11px] space-y-0.5">
+                                        <span class="font-bold text-[10px] uppercase tracking-wider text-gray-600 block">Artisan Note:</span>
+                                        <span class="text-gray-800 font-medium" x-text="getReturnRequest(detailsOrder).adminComment"></span>
+                                    </div>
+                                </template>
+
+                                {{-- Attached Proof Photos --}}
+                                <template x-if="getProofImages(getReturnRequest(detailsOrder)).length > 0">
+                                    <div class="space-y-1.5 pt-1">
+                                        <div class="text-[10px] font-black uppercase tracking-widest text-gray-600 flex items-center gap-1.5">
+                                            <span>📷 Attached Proof Photos</span>
+                                            <span class="text-[9px] font-medium text-gray-500">(Click photo to zoom)</span>
+                                        </div>
+                                        <div class="flex items-center gap-2 overflow-x-auto pb-1">
+                                            <template x-for="(img, pIdx) in getProofImages(getReturnRequest(detailsOrder))" :key="pIdx">
+                                                <button type="button" 
+                                                        @click="openProofLightbox(img)"
+                                                        class="w-16 h-16 rounded-xl overflow-hidden border-2 border-white shadow-xs hover:scale-105 transition-all shrink-0 bg-gray-100 cursor-pointer">
+                                                    <img :src="img" class="w-full h-full object-cover" alt="Proof Photo">
+                                                </button>
+                                            </template>
+                                        </div>
+                                    </div>
+                                </template>
+
+                                {{-- Quick action buttons inside banner when pending --}}
+                                <template x-if="hasPendingReturn(detailsOrder)">
+                                    <div class="pt-2 border-t border-amber-200/80 flex items-center justify-end gap-2">
+                                        <button type="button" 
+                                                @click="openRejectReturnModal(detailsOrder)"
+                                                :disabled="approveReturnLoading || rejectReturnLoading"
+                                                class="px-3.5 py-1.5 rounded-full border border-red-200 text-red-700 bg-white hover:bg-red-50 text-[10px] font-black uppercase tracking-wider transition-all cursor-pointer">
+                                            ✕ Decline Return
+                                        </button>
+                                        <button type="button" 
+                                                @click="openApproveReturnModal(detailsOrder)"
+                                                :disabled="approveReturnLoading || rejectReturnLoading"
+                                                class="px-4 py-1.5 rounded-full bg-[#C49520] hover:bg-[#B38519] text-white text-[10px] font-black uppercase tracking-wider shadow-xs transition-all cursor-pointer flex items-center gap-1">
+                                            <span>✓</span> Approve Return
+                                        </button>
+                                    </div>
+                                </template>
                             </div>
                         </template>
 
@@ -1359,8 +1681,28 @@ function sellerOrdersManager() {
                         Close
                     </button>
 
+                    {{-- Return Request Actions: Decline Return OR Approve Return --}}
+                    <template x-if="detailsOrder && hasPendingReturn(detailsOrder)">
+                        <div class="flex-1 flex flex-wrap sm:flex-nowrap items-center justify-end gap-2">
+                            <button type="button" 
+                                @click="openRejectReturnModal(detailsOrder)"
+                                :disabled="approveReturnLoading || rejectReturnLoading"
+                                class="px-4 py-2.5 sm:py-3 border border-red-200 hover:bg-red-50 text-red-600 rounded-full text-[10px] font-black uppercase tracking-wider whitespace-nowrap transition-all cursor-pointer shrink-0 flex items-center justify-center gap-1.5">
+                                <span>✕</span> Decline Return
+                            </button>
+                            <button type="button" 
+                                @click="openApproveReturnModal(detailsOrder)"
+                                :disabled="approveReturnLoading || rejectReturnLoading"
+                                style="background-color: #C49520; color: #ffffff;"
+                                class="flex-1 sm:flex-none px-6 py-2.5 sm:py-3 bg-[#C49520] hover:bg-[#B38519] disabled:opacity-50 text-white text-[10px] font-black uppercase tracking-wider whitespace-nowrap rounded-full transition-all flex items-center justify-center gap-1.5 shadow-sm cursor-pointer shrink-0">
+                                <svg class="w-3.5 h-3.5 text-white shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
+                                <span>Approve Return</span>
+                            </button>
+                        </div>
+                    </template>
+
                     {{-- Cancellation Pending Actions: Decline OR Approve --}}
-                    <template x-if="detailsOrder && (normalizeStatus(detailsOrder.status) === 'cancellation pending' || normalizeStatus(detailsOrder.status) === 'cancellation requested')">
+                    <template x-if="detailsOrder && !hasPendingReturn(detailsOrder) && (normalizeStatus(detailsOrder.status) === 'cancellation pending' || normalizeStatus(detailsOrder.status) === 'cancellation requested')">
                         <div class="flex-1 flex flex-wrap sm:flex-nowrap items-center justify-end gap-2">
                             <button type="button" 
                                 @click="openDeclineCancellationModal(detailsOrder)"
@@ -1380,7 +1722,7 @@ function sellerOrdersManager() {
                     </template>
 
                     {{-- Pending Order Actions: Reject Payment (counts as Cancel) OR Verify & Accept --}}
-                    <template x-if="detailsOrder && normalizeStatus(detailsOrder.status) === 'pending'">
+                    <template x-if="detailsOrder && !hasPendingReturn(detailsOrder) && normalizeStatus(detailsOrder.status) === 'pending'">
                         <div class="flex-1 flex flex-wrap sm:flex-nowrap items-center justify-end gap-2">
                             <button type="button" 
                                 @click="openRejectPaymentModal(detailsOrder)"
@@ -1400,7 +1742,7 @@ function sellerOrdersManager() {
                     </template>
 
                     {{-- Button for To Ship status: Upload Packing Proof & Confirm Shipment --}}
-                    <template x-if="detailsOrder && normalizeStatus(detailsOrder.status) === 'to ship'">
+                    <template x-if="detailsOrder && !hasPendingReturn(detailsOrder) && normalizeStatus(detailsOrder.status) === 'to ship'">
                         <div class="flex-1 flex justify-end">
                             <button type="button"
                                 @click="if (!packingPhotoFile && !packingUploadSuccess && !detailsOrder.packingProof) { packingUploadError = 'Please upload or capture a packing proof photo before confirming shipment.'; } else if (packingPhotoFile && !packingUploadSuccess && !detailsOrder.packingProof) { uploadPackingProof().then(() => updateStatus(detailsOrder, 'Shipped')); } else { updateStatus(detailsOrder, 'Shipped'); }"
@@ -1419,7 +1761,7 @@ function sellerOrdersManager() {
                     </template>
 
                     {{-- Button for Shipped status: Mark In Transit (requires seller to input tracking number) --}}
-                    <template x-if="detailsOrder && normalizeStatus(detailsOrder.status) === 'shipped'">
+                    <template x-if="detailsOrder && !hasPendingReturn(detailsOrder) && normalizeStatus(detailsOrder.status) === 'shipped'">
                         <div class="flex-1 flex justify-end">
                             <button type="button"
                                 @click="if (!trackingNumber || !trackingNumber.trim()) { shippingError = 'Please enter the official courier tracking number in the field above before moving to In Transit.'; } else { updateStatus(detailsOrder, 'In Transit'); }"
@@ -1438,7 +1780,7 @@ function sellerOrdersManager() {
                     </template>
 
                     {{-- Button for In Transit status: Mark as Delivered --}}
-                    <template x-if="detailsOrder && normalizeStatus(detailsOrder.status) === 'in transit'">
+                    <template x-if="detailsOrder && !hasPendingReturn(detailsOrder) && normalizeStatus(detailsOrder.status) === 'in transit'">
                         <div class="flex-1 flex justify-end">
                             <button type="button"
                                 @click="confirmMarkAsDelivered(detailsOrder)"
@@ -1451,20 +1793,20 @@ function sellerOrdersManager() {
                                 <template x-if="!statusUpdating">
                                     <svg class="w-3.5 h-3.5 text-white shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
                                 </template>
-                                <span x-text="statusUpdating ? 'Updating...' : 'Mark as Delivered ➔'"></span>
+                                <span x-text="statusUpdating ? 'Mark as Delivered ➔' : 'Mark as Delivered ➔'"></span>
                             </button>
                         </div>
                     </template>
 
                     {{-- Status notice for Delivered status --}}
-                    <template x-if="detailsOrder && normalizeStatus(detailsOrder.status) === 'delivered'">
+                    <template x-if="detailsOrder && !hasPendingReturn(detailsOrder) && normalizeStatus(detailsOrder.status) === 'delivered'">
                         <div class="flex-1 py-2.5 sm:py-3 px-4 bg-teal-50 border border-teal-200 text-teal-800 text-[10px] font-black uppercase tracking-wider rounded-full flex items-center justify-center gap-2 text-center">
                             <span>📦 Delivered — Awaiting Customer Receipt Confirmation</span>
                         </div>
                     </template>
 
                     {{-- Status notice for Completed status --}}
-                    <template x-if="detailsOrder && normalizeStatus(detailsOrder.status) === 'completed'">
+                    <template x-if="detailsOrder && !hasPendingReturn(detailsOrder) && normalizeStatus(detailsOrder.status) === 'completed'">
                         <div class="flex-1 py-2.5 sm:py-3 px-4 bg-emerald-50 border border-emerald-200 text-emerald-800 text-[10px] font-black uppercase tracking-wider rounded-full flex items-center justify-center gap-2 text-center">
                             <span>✓ Order Completed by Customer</span>
                         </div>
@@ -2069,6 +2411,180 @@ function sellerOrdersManager() {
                     </template>
                     <span x-text="declineCancellationLoading ? 'Submitting...' : '✕ Confirm Decline'"></span>
                 </button>
+            </div>
+        </div>
+    </div>
+
+    {{-- Approve Return Modal --}}
+    <div x-show="showApproveReturnModal" 
+         x-transition:enter="transition ease-out duration-300"
+         x-transition:enter-start="opacity-0"
+         x-transition:enter-end="opacity-100"
+         x-transition:leave="transition ease-in duration-200"
+         x-transition:leave-start="opacity-100"
+         x-transition:leave-end="opacity-0"
+         class="fixed inset-0 bg-black/70 backdrop-blur-sm z-9999 flex items-center justify-center p-4"
+         @click.self="showApproveReturnModal = false"
+         x-cloak
+         style="display: none;">
+        <div class="w-full max-w-md bg-white rounded-3xl shadow-2xl p-6 space-y-4 border border-gray-100 relative overflow-hidden">
+            <div class="h-1.5 w-full bg-[#C49520] absolute top-0 left-0"></div>
+
+            <div class="flex items-center gap-3 border-b border-gray-100 pb-3">
+                <div class="w-10 h-10 rounded-full bg-amber-100 text-[#C49520] flex items-center justify-center font-bold text-lg shrink-0">
+                    ↩️
+                </div>
+                <div>
+                    <h3 class="text-sm font-black text-black uppercase tracking-tight">Approve Return Request</h3>
+                    <p class="text-[10px] text-gray-500 font-medium" x-text="approveReturnTarget ? '#LB-' + approveReturnTarget.id.slice(-8).toUpperCase() + ' · ' + (approveReturnTarget.customer?.name || 'Customer') : ''"></p>
+                </div>
+            </div>
+
+            <div class="space-y-3 text-xs">
+                <template x-if="approveReturnError">
+                    <div class="p-2.5 bg-red-50 border border-red-200 rounded-xl text-[10px] font-bold text-red-600" x-text="approveReturnError"></div>
+                </template>
+
+                <div class="p-3 bg-amber-50/70 border border-amber-200/80 rounded-2xl space-y-1 text-amber-900">
+                    <span class="font-bold text-[10px] uppercase tracking-wider text-amber-950 block">Customer's Stated Reason:</span>
+                    <p class="text-xs font-medium" x-text="getReturnRequest(approveReturnTarget)?.reason || 'No description provided.'"></p>
+                </div>
+
+                <div class="space-y-1.5">
+                    <label class="text-[10px] font-black uppercase tracking-widest text-gray-500">
+                        Return Instructions / Return Address <span class="text-gray-400 font-normal">(Optional)</span>
+                    </label>
+                    <textarea x-model="approveReturnInstructions" rows="3" 
+                              placeholder="e.g. Please ship back via J&T to [Your Studio Address]. Ensure item is carefully packed in original dust bag."
+                              class="w-full px-3.5 py-2.5 bg-gray-50 border border-gray-200 rounded-2xl text-xs font-medium outline-none focus:border-[#C49520] focus:bg-white resize-none"></textarea>
+                    <p class="text-[9px] text-gray-400">These instructions will be emailed and displayed in the customer's order tracker.</p>
+                </div>
+
+                <div class="p-3 bg-blue-50 border border-blue-200 rounded-2xl text-[10px] text-blue-900 leading-relaxed">
+                    <strong>Notice:</strong> Once approved, the customer will receive step-by-step instructions to dispatch the item back to your workshop or drop-off location.
+                </div>
+            </div>
+
+            <div class="flex gap-3 pt-2">
+                <button type="button" 
+                    @click="showApproveReturnModal = false"
+                    :disabled="approveReturnLoading"
+                    class="flex-1 py-3 rounded-full border border-gray-200 text-[10px] font-black uppercase tracking-widest text-gray-500 hover:bg-gray-50 transition-all cursor-pointer">
+                    Cancel
+                </button>
+                <button type="button" 
+                    @click="executeApproveReturn()"
+                    :disabled="approveReturnLoading"
+                    class="flex-1 py-3 rounded-full bg-[#C49520] hover:bg-[#B38519] text-white text-[10px] font-black uppercase tracking-widest shadow-md transition-all flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-50">
+                    <template x-if="approveReturnLoading">
+                        <svg class="w-3.5 h-3.5 animate-spin text-white" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"/></svg>
+                    </template>
+                    <span x-text="approveReturnLoading ? 'Approving...' : '✓ Confirm Approval'"></span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    {{-- Reject / Decline Return Modal --}}
+    <div x-show="showRejectReturnModal" 
+         x-transition:enter="transition ease-out duration-300"
+         x-transition:enter-start="opacity-0"
+         x-transition:enter-end="opacity-100"
+         x-transition:leave="transition ease-in duration-200"
+         x-transition:leave-start="opacity-100"
+         x-transition:leave-end="opacity-0"
+         class="fixed inset-0 bg-black/70 backdrop-blur-sm z-9999 flex items-center justify-center p-4"
+         @click.self="showRejectReturnModal = false"
+         x-cloak
+         style="display: none;">
+        <div class="w-full max-w-md bg-white rounded-3xl shadow-2xl p-6 space-y-4 border border-gray-100 relative overflow-hidden">
+            <div class="h-1.5 w-full bg-red-500 absolute top-0 left-0"></div>
+
+            <div class="flex items-center gap-3 border-b border-gray-100 pb-3">
+                <div class="w-10 h-10 rounded-full bg-red-100 text-red-700 flex items-center justify-center font-bold text-lg shrink-0">
+                    ✕
+                </div>
+                <div>
+                    <h3 class="text-sm font-black text-black uppercase tracking-tight">Decline Return Request</h3>
+                    <p class="text-[10px] text-gray-500 font-medium" x-text="rejectReturnTarget ? '#LB-' + rejectReturnTarget.id.slice(-8).toUpperCase() + ' · ' + (rejectReturnTarget.customer?.name || 'Customer') : ''"></p>
+                </div>
+            </div>
+
+            <div class="space-y-3 text-xs">
+                <template x-if="rejectReturnError">
+                    <div class="p-2.5 bg-red-50 border border-red-200 rounded-xl text-[10px] font-bold text-red-600" x-text="rejectReturnError"></div>
+                </template>
+
+                <div class="space-y-1.5">
+                    <label class="text-[10px] font-black uppercase tracking-widest text-gray-500">Reason for Declining <span class="text-red-500">*</span></label>
+                    <select x-model="rejectReturnReason" class="w-full px-3.5 py-2.5 bg-gray-50 border border-gray-200 rounded-2xl text-xs font-bold text-gray-800 outline-none focus:border-red-500 focus:bg-white transition-all">
+                        <option value="Item is not in original condition / beyond return window">Item is not in original condition / beyond return window</option>
+                        <option value="Product matches specifications and description">Product matches specifications and description</option>
+                        <option value="Damage appears caused by misuse or mishandling">Damage appears caused by misuse or mishandling</option>
+                        <option value="Missing original tags, packaging, or accessories">Missing original tags, packaging, or accessories</option>
+                        <option value="Custom tailored / bespoke sizing non-returnable">Custom tailored / bespoke sizing non-returnable</option>
+                        <option value="Other">Other / Custom explanation</option>
+                    </select>
+                </div>
+
+                <template x-if="rejectReturnReason === 'Other'">
+                    <div class="space-y-1">
+                        <label class="text-[10px] font-black uppercase tracking-widest text-gray-500">Custom Explanation <span class="text-red-500">*</span></label>
+                        <textarea x-model="rejectReturnCustomReason" rows="3" placeholder="Provide clear explanation for declining the return to the buyer..." class="w-full px-3.5 py-2.5 bg-gray-50 border border-gray-200 rounded-2xl text-xs font-medium outline-none focus:border-red-500 focus:bg-white resize-none"></textarea>
+                    </div>
+                </template>
+
+                <div class="p-3 bg-red-50 border border-red-200 rounded-2xl text-[10px] text-red-800 leading-relaxed">
+                    <strong>Notice:</strong> Declining will notify the customer with your stated explanation. The return request will be marked as Declined.
+                </div>
+            </div>
+
+            <div class="flex gap-3 pt-2">
+                <button type="button" 
+                    @click="showRejectReturnModal = false"
+                    :disabled="rejectReturnLoading"
+                    class="flex-1 py-3 rounded-full border border-gray-200 text-[10px] font-black uppercase tracking-widest text-gray-500 hover:bg-gray-50 transition-all cursor-pointer">
+                    Back
+                </button>
+                <button type="button" 
+                    @click="executeRejectReturn()"
+                    :disabled="rejectReturnLoading"
+                    class="flex-1 py-3 rounded-full bg-red-600 hover:bg-red-700 text-white text-[10px] font-black uppercase tracking-widest shadow-md transition-all flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-50">
+                    <template x-if="rejectReturnLoading">
+                        <svg class="w-3.5 h-3.5 animate-spin text-white" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"/></svg>
+                    </template>
+                    <span x-text="rejectReturnLoading ? 'Declining...' : '✕ Confirm Decline'"></span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    {{-- Proof Image Zoom Lightbox Modal --}}
+    <div x-show="showProofLightboxModal" 
+         x-transition:enter="transition ease-out duration-200"
+         x-transition:enter-start="opacity-0 scale-95"
+         x-transition:enter-end="opacity-100 scale-100"
+         x-transition:leave="transition ease-in duration-150"
+         x-transition:leave-start="opacity-100 scale-100"
+         x-transition:leave-end="opacity-0 scale-95"
+         class="fixed inset-0 bg-black/90 backdrop-blur-md z-9999 flex items-center justify-center p-4"
+         @click.self="closeProofLightbox()"
+         @keydown.escape.window="closeProofLightbox()"
+         x-cloak
+         style="display: none;">
+        <div class="relative max-w-4xl max-h-[90vh] flex flex-col items-center">
+            <button type="button" 
+                    @click="closeProofLightbox()" 
+                    class="absolute -top-12 right-0 w-10 h-10 rounded-full bg-white/20 hover:bg-white/30 text-white flex items-center justify-center transition-all cursor-pointer">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12"/></svg>
+            </button>
+            <div class="rounded-2xl overflow-hidden bg-black shadow-2xl border border-white/10 max-h-[82vh] flex items-center justify-center">
+                <img :src="activeProofImage" class="max-h-[82vh] w-auto object-contain" alt="Enlarged Proof Photo">
+            </div>
+            <div class="mt-3 flex items-center gap-3">
+                <a :href="activeProofImage" target="_blank" class="px-4 py-2 rounded-full bg-white/20 hover:bg-white/30 text-white text-[11px] font-bold flex items-center gap-1.5 transition-all">
+                    <span>↗ Open Original</span>
+                </a>
             </div>
         </div>
     </div>

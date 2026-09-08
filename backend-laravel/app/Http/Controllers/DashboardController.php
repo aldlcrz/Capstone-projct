@@ -620,7 +620,7 @@ class DashboardController extends Controller
             $sellerId = $user->id;
 
             $query = Order::where('sellerId', $sellerId)
-                ->with(['customer', 'items.product', 'reviews.customer']);
+                ->with(['customer', 'items.product', 'reviews.customer', 'returnRequests']);
 
             $status = strtolower($request->input('status', 'all'));
             if ($status && $status !== 'all') {
@@ -634,6 +634,8 @@ class DashboardController extends Controller
                     $query->whereIn(DB::raw('LOWER(status)'), ['completed']);
                 } elseif ($status === 'cancellation pending' || $status === 'cancellation_pending' || $status === 'cancellation requested') {
                     $query->whereIn(DB::raw('LOWER(status)'), ['cancellation pending', 'cancellation requested']);
+                } elseif ($status === 'return requests' || $status === 'return_requests' || $status === 'return requested') {
+                    $query->whereHas('returnRequests', fn($q) => $q->where(DB::raw('LOWER(status)'), 'pending'));
                 } elseif ($status === 'cancelled') {
                     $query->whereIn(DB::raw('LOWER(status)'), ['cancelled']);
                 } elseif ($status === 'pending') {
@@ -668,11 +670,12 @@ class DashboardController extends Controller
 
             $orders = $query->orderBy('createdAt', 'desc')->get();
 
-            $allOrders = Order::where('sellerId', $sellerId)->get();
+            $allOrders = Order::where('sellerId', $sellerId)->with('returnRequests')->get();
             $counts = [
                 'all'                  => $allOrders->count(),
                 'pending'              => $allOrders->filter(fn($o) => in_array(strtolower($o->status ?? ''), ['pending', 'cancellation pending', 'cancellation requested']))->count(),
                 'cancellation pending' => $allOrders->filter(fn($o) => in_array(strtolower($o->status ?? ''), ['cancellation pending', 'cancellation requested']))->count(),
+                'return requests'      => $allOrders->filter(fn($o) => $o->returnRequests && $o->returnRequests->contains(fn($r) => strtolower($r->status ?? '') === 'pending'))->count(),
                 'to ship'              => $allOrders->filter(fn($o) => in_array(strtolower($o->status ?? ''), ['to ship', 'to_ship', 'processing', 'ready to ship', 'ready_to_ship']))->count(),
                 'shipped'              => $allOrders->filter(fn($o) => strtolower($o->status ?? '') === 'shipped')->count(),
                 'in transit'           => $allOrders->filter(fn($o) => in_array(strtolower($o->status ?? ''), ['in transit', 'in_transit']))->count(),
@@ -686,8 +689,8 @@ class DashboardController extends Controller
             \Illuminate\Support\Facades\Log::error('Error in sellerOrders: ' . $e->getMessage());
             $orders = collect([]);
             $counts = [
-                'all' => 0, 'pending' => 0, 'cancellation pending' => 0, 'to ship' => 0, 'shipped' => 0,
-                'in transit' => 0, 'delivered' => 0, 'completed' => 0, 'cancelled' => 0
+                'all' => 0, 'pending' => 0, 'cancellation pending' => 0, 'return requests' => 0, 'to ship' => 0,
+                'shipped' => 0, 'in transit' => 0, 'delivered' => 0, 'completed' => 0, 'cancelled' => 0
             ];
             $status = 'all';
             return view('seller.orders.index', compact('orders', 'counts', 'status'));

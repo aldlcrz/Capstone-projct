@@ -263,6 +263,8 @@ Route::middleware(['auth', 'seller'])->prefix('seller')->group(function () {
     Route::put('/policies', [DashboardController::class, 'updateSellerPolicies'])->name('seller.policies.update');
     Route::post('/policies/ai-assist', [AiController::class, 'assistPolicy'])->name('seller.policies.ai');
     Route::get('/orders', [DashboardController::class, 'sellerOrders'])->name('seller.orders');
+    Route::post('/orders/{id}/returns/{returnId}/approve', [ReturnRequestController::class, 'sellerApproveReturn'])->name('seller.orders.return.approve');
+    Route::post('/orders/{id}/returns/{returnId}/reject', [ReturnRequestController::class, 'sellerRejectReturn'])->name('seller.orders.return.reject');
     Route::get('/customers', [DashboardController::class, 'sellerCustomers'])->name('seller.customers');
     Route::get('/commission', [DashboardController::class, 'sellerCommission'])->name('seller.commission');
     Route::post('/commission', [DashboardController::class, 'submitCommissionPayment'])->name('seller.commission.submit');
