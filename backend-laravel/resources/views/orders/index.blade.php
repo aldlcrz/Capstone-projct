@@ -65,6 +65,17 @@
 
         {{-- Top Header with Heraldic Laurel Wreath --}}
         <div style="background-color:#FDFBF7;border:1px solid #EAE2D2;border-radius:24px;box-shadow:0 10px 30px rgba(0,0,0,0.04);padding:24px 28px;">
+            {{-- Navigation Home Button (Hidden on mobile screens, visible on large screens) --}}
+            <div class="hidden sm:flex items-center mb-4">
+                <a href="{{ route('home') }}"
+                   class="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-[#FAF6EE] border border-[#E2D9C8] text-[#78716C] hover:bg-[#1E1915] hover:text-[#DFC97A] hover:border-[#1E1915] font-bold text-[11px] uppercase tracking-wider transition-all shadow-2xs no-underline">
+                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/>
+                    </svg>
+                    <span>Home</span>
+                </a>
+            </div>
+
             <div style="display:flex;align-items:center;gap:14px;">
                 <!-- Heraldic Laurel Wreath + Star Emblem -->
                 <div style="width:48px;height:48px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">

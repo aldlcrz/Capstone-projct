@@ -59,12 +59,21 @@
     <div class="max-w-4xl mx-auto space-y-5 sm:space-y-6">
 
         {{-- Top Navigation --}}
-        <div>
+        <div class="flex items-center justify-between gap-3">
             <a href="/orders/my-orders" class="inline-flex items-center gap-2 text-xs font-bold text-[#78716C] hover:text-[#C0422A] transition-colors group">
                 <div style="background-color:#FFFFFF;border:1px solid #ECE3D2;box-shadow:0 1px 3px rgba(0,0,0,0.04);" class="w-7 h-7 rounded-full flex items-center justify-center group-hover:border-[#C49520] group-hover:bg-[#1E1915] group-hover:text-white transition-all">
                     <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 19l-7-7 7-7"/></svg>
                 </div>
                 <span class="tracking-wide">Back to my orders</span>
+            </a>
+
+            {{-- Home Button (Hidden on mobile screens, visible on large screens) --}}
+            <a href="{{ route('home') }}"
+               class="hidden sm:inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-[#FAF6EE] border border-[#E2D9C8] text-[#78716C] hover:bg-[#1E1915] hover:text-[#DFC97A] hover:border-[#1E1915] font-bold text-[11px] uppercase tracking-wider transition-all shadow-2xs no-underline">
+                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/>
+                </svg>
+                <span>Home</span>
             </a>
         </div>
 
