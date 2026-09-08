@@ -60,6 +60,40 @@
             return '/storage/' + path.replace(/^\//, '');
         }
         return null;
+    },
+
+    showRawMetadata: false,
+    formatDate(str) {
+        if (!str) return '—';
+        try {
+            const d = new Date(str);
+            if (isNaN(d.getTime())) return str;
+            return d.toLocaleString('en-US', {
+                month: 'short',
+                day: 'numeric',
+                year: 'numeric',
+                hour: 'numeric',
+                minute: '2-digit',
+                hour12: true
+            });
+        } catch (e) {
+            return str;
+        }
+    },
+    formatPrice(val) {
+        if (val === undefined || val === null || val === '' || isNaN(val)) return '—';
+        return '₱' + Number(val).toLocaleString('en-PH', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    },
+    getMetadataEntries(meta) {
+        if (!meta || typeof meta !== 'object') return [];
+        const ignored = ['password', 'remember_token', 'two_factor_secret', 'two_factor_recovery_codes'];
+        return Object.entries(meta).filter(([k]) => !ignored.includes(k));
+    },
+    formatMetaVal(val) {
+        if (val === null || val === undefined) return 'null';
+        if (typeof val === 'boolean') return val ? 'true' : 'false';
+        if (typeof val === 'object') return JSON.stringify(val);
+        return String(val);
     }
 }">
 
@@ -366,30 +400,303 @@
     </div>
 
     {{-- ─── Snapshot Inspection Modal ─── --}}
-    <div x-show="snapshotModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm" x-cloak>
-        <div class="bg-white rounded-3xl w-full max-w-xl p-6 sm:p-7 shadow-2xl space-y-5 border border-gray-100 max-h-[85vh] flex flex-col" @click.away="snapshotModal = false">
-            <div class="flex items-start justify-between gap-3 border-b border-gray-100 pb-4 shrink-0">
-                <div class="min-w-0">
-                    <span class="text-[9px] font-black uppercase tracking-wider px-2 py-0.5 rounded bg-black text-white" x-text="inspectRecord?.item_type"></span>
-                    <h3 class="text-lg font-bold text-gray-900 mt-1 truncate" x-text="inspectRecord?.name"></h3>
-                    <p class="text-xs text-gray-400" x-text="'Archived ' + (inspectRecord?.created_at ? new Date(inspectRecord.created_at).toLocaleString() : '') + ' by ' + (inspectRecord?.archived_by || 'Admin')"></p>
+    <div x-show="snapshotModal" 
+         x-cloak 
+         class="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/60 backdrop-blur-sm"
+         @keydown.escape.window="snapshotModal = false">
+        <div class="relative bg-white rounded-3xl shadow-2xl w-full max-w-2xl max-h-[90vh] flex flex-col overflow-hidden border border-gray-100 text-left"
+             @click.away="snapshotModal = false">
+            
+            {{-- Modal Header --}}
+            <div class="px-6 py-4 border-b border-gray-100 flex items-center justify-between gap-3 shrink-0"
+                 style="background-color: #FAF7F2;">
+                <div class="flex items-center gap-2.5 flex-wrap min-w-0">
+                    <span class="text-xs font-bold uppercase tracking-wider text-gray-900">
+                        Archive Snapshot
+                    </span>
+                    <span class="text-gray-300">•</span>
+                    <span class="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider shadow-2xs"
+                          :class="{
+                              'bg-purple-100 text-purple-800 border border-purple-200': inspectRecord?.item_type === 'product',
+                              'bg-blue-100 text-blue-800 border border-blue-200': inspectRecord?.item_type === 'category',
+                              'bg-emerald-100 text-emerald-800 border border-emerald-200': inspectRecord?.item_type === 'customer',
+                              'bg-amber-100 text-amber-800 border border-amber-200': inspectRecord?.item_type === 'seller',
+                              'bg-gray-100 text-gray-800 border border-gray-200': !['product', 'category', 'customer', 'seller'].includes(inspectRecord?.item_type)
+                          }"
+                          x-text="(inspectRecord?.item_type || 'record').toUpperCase()">
+                    </span>
+                    <template x-if="inspectRecord?.identifier">
+                        <span class="text-[11px] text-gray-500 font-medium truncate" x-text="inspectRecord.identifier"></span>
+                    </template>
                 </div>
-                <button type="button" @click="snapshotModal = false" class="text-gray-400 hover:text-black">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+
+                <button type="button" @click="snapshotModal = false" 
+                        class="w-8 h-8 rounded-full bg-stone-100 hover:bg-stone-200 text-gray-500 hover:text-black flex items-center justify-center transition-colors cursor-pointer shrink-0">
+                    ✕
                 </button>
             </div>
 
-            <div class="overflow-y-auto space-y-4 pr-1 text-xs">
-                <div>
-                    <span class="font-bold text-gray-500 uppercase tracking-widest text-[9px] block mb-1">Recorded Deletion Reason</span>
-                    <div class="p-3.5 bg-red-50 text-red-900 rounded-2xl font-medium leading-relaxed border border-red-100" x-text="inspectRecord?.reason || 'None specified'"></div>
+            {{-- Modal Body (Scrollable) --}}
+            <div class="p-5 sm:p-6 overflow-y-auto flex-1 space-y-5" x-show="inspectRecord">
+                
+                {{-- Title & Meta Header Card --}}
+                <div class="flex items-start gap-4">
+                    {{-- Media preview if available --}}
+                    <template x-if="getRecordImage(inspectRecord)">
+                        <div class="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl bg-stone-100 border border-gray-200/80 overflow-hidden shrink-0 shadow-xs"
+                             style="width: 72px; height: 72px; min-width: 72px; min-height: 72px; max-width: 72px; max-height: 72px;">
+                            <img :src="getRecordImage(inspectRecord)" 
+                                 class="w-full h-full object-cover" 
+                                 style="width: 72px; height: 72px; min-width: 72px; min-height: 72px; max-width: 72px; max-height: 72px; object-fit: cover;"
+                                 onerror="this.style.display='none'">
+                        </div>
+                    </template>
+                    <div class="min-w-0 flex-1">
+                        <h2 class="font-serif text-lg sm:text-xl font-bold text-gray-900 leading-snug break-words" x-text="inspectRecord?.name"></h2>
+                        <div class="flex flex-wrap items-center gap-x-2 gap-y-1 text-[11px] text-gray-500 mt-1">
+                            <span>Archived <strong class="text-gray-700" x-text="formatDate(inspectRecord?.created_at)"></strong></span>
+                            <span class="text-gray-300">·</span>
+                            <span>By <strong class="text-gray-700" x-text="inspectRecord?.archived_by || 'Admin'"></strong></span>
+                            <template x-if="inspectRecord?.item_id">
+                                <span class="text-gray-400 text-[10px]" x-text="'(Orig ID: #' + inspectRecord.item_id + ')'"></span>
+                            </template>
+                        </div>
+                    </div>
                 </div>
+
+                {{-- Recorded Deletion Reason --}}
+                <div class="p-3.5 bg-rose-50/70 text-rose-950 rounded-2xl border border-rose-200/80 space-y-1">
+                    <div class="flex items-center gap-1.5 text-rose-700 text-[10px] font-black uppercase tracking-wider">
+                        <svg class="w-3.5 h-3.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+                        <span>Recorded Deletion Reason</span>
+                    </div>
+                    <p class="text-xs font-medium leading-relaxed" x-text="inspectRecord?.reason || 'None specified'"></p>
+                </div>
+
+                {{-- TYPE 1: PRODUCT SNAPSHOT DETAILS --}}
+                <template x-if="inspectRecord?.item_type === 'product'">
+                    <div class="space-y-4">
+                        <h3 class="text-xs font-black uppercase tracking-wider text-gray-400 flex items-center gap-2">
+                            <span>Product Snapshot Data</span>
+                            <span class="flex-1 h-px bg-gray-100"></span>
+                        </h3>
+
+                        {{-- Metric Tiles --}}
+                        <div class="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
+                            <div class="p-3 rounded-xl bg-stone-50 border border-stone-200/60">
+                                <div class="text-[10px] font-bold uppercase text-stone-500">Price</div>
+                                <div class="text-base font-black text-[#C0422A] mt-0.5" x-text="formatPrice(inspectRecord?.metadata?.price)"></div>
+                            </div>
+                            <div class="p-3 rounded-xl bg-stone-50 border border-stone-200/60">
+                                <div class="text-[10px] font-bold uppercase text-stone-500">Stock Qty</div>
+                                <div class="text-base font-black text-gray-900 mt-0.5" x-text="inspectRecord?.metadata?.stock ?? '0'"></div>
+                            </div>
+                            <div class="p-3 rounded-xl bg-stone-50 border border-stone-200/60">
+                                <div class="text-[10px] font-bold uppercase text-stone-500">SKU</div>
+                                <div class="text-xs font-bold text-gray-800 mt-1 truncate" x-text="inspectRecord?.metadata?.sku || inspectRecord?.identifier || '—'"></div>
+                            </div>
+                            <div class="p-3 rounded-xl bg-stone-50 border border-stone-200/60">
+                                <div class="text-[10px] font-bold uppercase text-stone-500">Status</div>
+                                <div class="text-xs font-bold capitalize mt-1" 
+                                     :class="(inspectRecord?.metadata?.status || '') === 'approved' ? 'text-emerald-700' : 'text-gray-700'"
+                                     x-text="inspectRecord?.metadata?.status || 'Active'"></div>
+                            </div>
+                        </div>
+
+                        {{-- Description --}}
+                        <div class="p-3.5 rounded-xl bg-gray-50 border border-gray-100 space-y-1">
+                            <span class="text-[10px] font-bold uppercase tracking-wider text-gray-400 block">Product Description</span>
+                            <p class="text-xs text-gray-700 leading-relaxed whitespace-pre-line" 
+                               x-text="inspectRecord?.metadata?.description || 'No description was provided for this product.'"></p>
+                        </div>
+
+                        {{-- Additional Relationships / Attributes --}}
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5 text-xs">
+                            <div class="p-3 rounded-xl bg-white border border-gray-200/80 flex items-center justify-between">
+                                <span class="text-gray-500 font-medium">Category ID</span>
+                                <span class="font-bold text-gray-900" x-text="inspectRecord?.metadata?.category_id || '—'"></span>
+                            </div>
+                            <div class="p-3 rounded-xl bg-white border border-gray-200/80 flex items-center justify-between">
+                                <span class="text-gray-500 font-medium">Seller ID</span>
+                                <span class="font-bold text-gray-900" x-text="inspectRecord?.metadata?.seller_id || '—'"></span>
+                            </div>
+                            <template x-if="inspectRecord?.metadata?.is_on_sale">
+                                <div class="p-3 rounded-xl bg-rose-50 border border-rose-200/70 flex items-center justify-between col-span-full">
+                                    <span class="text-rose-700 font-bold">On Sale Promotion</span>
+                                    <span class="font-black text-rose-800" x-text="(inspectRecord?.metadata?.discount_percentage || 0) + '% Discount'"></span>
+                                </div>
+                            </template>
+                        </div>
+                    </div>
+                </template>
+
+                {{-- TYPE 2: CATEGORY SNAPSHOT DETAILS --}}
+                <template x-if="inspectRecord?.item_type === 'category'">
+                    <div class="space-y-4">
+                        <h3 class="text-xs font-black uppercase tracking-wider text-gray-400 flex items-center gap-2">
+                            <span>Category Snapshot Data</span>
+                            <span class="flex-1 h-px bg-gray-100"></span>
+                        </h3>
+
+                        {{-- Attributes --}}
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+                            <div class="p-3 rounded-xl bg-stone-50 border border-stone-200/60">
+                                <span class="text-[10px] font-bold uppercase text-stone-500 block">Category Name</span>
+                                <span class="text-sm font-bold text-gray-900 mt-0.5 block" x-text="inspectRecord?.metadata?.name || inspectRecord?.name"></span>
+                            </div>
+                            <div class="p-3 rounded-xl bg-stone-50 border border-stone-200/60">
+                                <span class="text-[10px] font-bold uppercase text-stone-500 block">Slug / Target Group</span>
+                                <span class="text-xs font-bold text-gray-800 mt-1 block" x-text="Array.isArray(inspectRecord?.metadata?.target_group) ? inspectRecord.metadata.target_group.join(', ') : (inspectRecord?.identifier || 'General')"></span>
+                            </div>
+                        </div>
+
+                        {{-- Description --}}
+                        <div class="p-3.5 rounded-xl bg-gray-50 border border-gray-100 space-y-1">
+                            <span class="text-[10px] font-bold uppercase tracking-wider text-gray-400 block">Description</span>
+                            <p class="text-xs text-gray-700 leading-relaxed" 
+                               x-text="inspectRecord?.metadata?.description || 'No description was recorded for this category.'"></p>
+                        </div>
+                    </div>
+                </template>
+
+                {{-- TYPE 3: CUSTOMER SNAPSHOT DETAILS --}}
+                <template x-if="inspectRecord?.item_type === 'customer'">
+                    <div class="space-y-4">
+                        <h3 class="text-xs font-black uppercase tracking-wider text-gray-400 flex items-center gap-2">
+                            <span>Customer Snapshot Data</span>
+                            <span class="flex-1 h-px bg-gray-100"></span>
+                        </h3>
+
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5 text-xs">
+                            <div class="p-3 rounded-xl bg-white border border-gray-200/80">
+                                <span class="text-[10px] font-bold uppercase text-gray-400 block">Full Name</span>
+                                <span class="font-bold text-gray-900 text-sm mt-0.5 block" x-text="inspectRecord?.metadata?.name || inspectRecord?.name"></span>
+                            </div>
+                            <div class="p-3 rounded-xl bg-white border border-gray-200/80">
+                                <span class="text-[10px] font-bold uppercase text-gray-400 block">Email Address</span>
+                                <span class="font-bold text-gray-900 mt-0.5 block truncate" x-text="inspectRecord?.metadata?.email || inspectRecord?.identifier"></span>
+                            </div>
+                            <div class="p-3 rounded-xl bg-white border border-gray-200/80">
+                                <span class="text-[10px] font-bold uppercase text-gray-400 block">Phone Number</span>
+                                <span class="font-bold text-gray-900 mt-0.5 block" x-text="inspectRecord?.metadata?.mobileNumber || 'Not provided'"></span>
+                            </div>
+                            <div class="p-3 rounded-xl bg-white border border-gray-200/80">
+                                <span class="text-[10px] font-bold uppercase text-gray-400 block">Account Status at Deletion</span>
+                                <span class="font-bold capitalize mt-0.5 block" 
+                                      :class="(inspectRecord?.metadata?.status || '') === 'active' ? 'text-emerald-600' : 'text-rose-600'"
+                                      x-text="inspectRecord?.metadata?.status || 'Active'"></span>
+                            </div>
+                            <template x-if="inspectRecord?.metadata?.created_at">
+                                <div class="p-3 rounded-xl bg-white border border-gray-200/80 col-span-full">
+                                    <span class="text-[10px] font-bold uppercase text-gray-400 block">Account Registration Date</span>
+                                    <span class="font-bold text-gray-700 mt-0.5 block" x-text="formatDate(inspectRecord.metadata.created_at)"></span>
+                                </div>
+                            </template>
+                        </div>
+                    </div>
+                </template>
+
+                {{-- TYPE 4: SELLER SNAPSHOT DETAILS --}}
+                <template x-if="inspectRecord?.item_type === 'seller'">
+                    <div class="space-y-4">
+                        <h3 class="text-xs font-black uppercase tracking-wider text-gray-400 flex items-center gap-2">
+                            <span>Artisan / Seller Snapshot Data</span>
+                            <span class="flex-1 h-px bg-gray-100"></span>
+                        </h3>
+
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5 text-xs">
+                            <div class="p-3 rounded-xl bg-white border border-gray-200/80">
+                                <span class="text-[10px] font-bold uppercase text-gray-400 block">Shop / Business Name</span>
+                                <span class="font-bold text-gray-900 text-sm mt-0.5 block" x-text="inspectRecord?.metadata?.shopName || inspectRecord?.name"></span>
+                            </div>
+                            <div class="p-3 rounded-xl bg-white border border-gray-200/80">
+                                <span class="text-[10px] font-bold uppercase text-gray-400 block">Owner / Contact Name</span>
+                                <span class="font-bold text-gray-900 mt-0.5 block" x-text="inspectRecord?.metadata?.name || '—'"></span>
+                            </div>
+                            <div class="p-3 rounded-xl bg-white border border-gray-200/80">
+                                <span class="text-[10px] font-bold uppercase text-gray-400 block">Email Address</span>
+                                <span class="font-bold text-gray-900 mt-0.5 block truncate" x-text="inspectRecord?.metadata?.email || inspectRecord?.identifier"></span>
+                            </div>
+                            <div class="p-3 rounded-xl bg-white border border-gray-200/80">
+                                <span class="text-[10px] font-bold uppercase text-gray-400 block">Phone / Mobile</span>
+                                <span class="font-bold text-gray-900 mt-0.5 block" x-text="inspectRecord?.metadata?.mobileNumber || 'Not provided'"></span>
+                            </div>
+                            <div class="p-3 rounded-xl bg-white border border-gray-200/80">
+                                <span class="text-[10px] font-bold uppercase text-gray-400 block">GCash Account</span>
+                                <span class="font-bold text-gray-900 mt-0.5 block" x-text="inspectRecord?.metadata?.gcashNumber || 'Not provided'"></span>
+                            </div>
+                            <div class="p-3 rounded-xl bg-white border border-gray-200/80">
+                                <span class="text-[10px] font-bold uppercase text-gray-400 block">Verification Status</span>
+                                <span class="font-bold mt-0.5 block" 
+                                      :class="inspectRecord?.metadata?.isVerified ? 'text-emerald-600' : 'text-amber-600'"
+                                      x-text="inspectRecord?.metadata?.isVerified ? 'Verified Artisan' : 'Pending Verification'"></span>
+                            </div>
+                            <template x-if="inspectRecord?.metadata?.shopAddress">
+                                <div class="p-3 rounded-xl bg-white border border-gray-200/80 col-span-full">
+                                    <span class="text-[10px] font-bold uppercase text-gray-400 block">Workshop / Shop Address</span>
+                                    <span class="font-medium text-gray-800 mt-0.5 block" x-text="inspectRecord.metadata.shopAddress"></span>
+                                </div>
+                            </template>
+                        </div>
+                    </div>
+                </template>
+
+                {{-- ALL METADATA KEY-VALUE TABLE (EXPANDABLE) --}}
+                <div class="pt-2 border-t border-gray-100">
+                    <button type="button" 
+                            @click="showRawMetadata = !showRawMetadata"
+                            class="flex items-center justify-between w-full p-2.5 rounded-xl bg-stone-50 hover:bg-stone-100 transition-colors text-xs font-bold text-stone-700 cursor-pointer">
+                        <span class="flex items-center gap-1.5">
+                            <span>🔍 Complete Raw Snapshot Attributes</span>
+                            <span class="text-[10px] font-normal text-stone-500" x-text="'(' + getMetadataEntries(inspectRecord?.metadata).length + ' fields)'"></span>
+                        </span>
+                        <svg class="w-4 h-4 transition-transform text-stone-500" :class="{ 'rotate-180': showRawMetadata }" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                        </svg>
+                    </button>
+
+                    <div x-show="showRawMetadata" x-transition class="mt-2.5 rounded-2xl border border-gray-200/80 overflow-hidden text-xs">
+                        <div class="max-h-60 overflow-y-auto divide-y divide-gray-100 bg-white">
+                            <template x-for="[k, v] in getMetadataEntries(inspectRecord?.metadata)" :key="k">
+                                <div class="px-3.5 py-2 flex items-start justify-between gap-3 hover:bg-stone-50/50">
+                                    <span class="font-mono text-[11px] font-bold text-gray-600 shrink-0 select-all" x-text="k"></span>
+                                    <span class="font-mono text-[11px] text-gray-900 text-right break-all max-w-[65%] select-all" x-text="formatMetaVal(v)"></span>
+                                </div>
+                            </template>
+                            <template x-if="getMetadataEntries(inspectRecord?.metadata).length === 0">
+                                <div class="p-4 text-center text-gray-400 text-xs">No extra metadata attributes recorded.</div>
+                            </template>
+                        </div>
+                    </div>
+                </div>
+
             </div>
 
-            <div class="pt-2 border-t border-gray-100 flex justify-end shrink-0">
-                <button type="button" @click="snapshotModal = false" class="px-5 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-xl text-xs font-bold uppercase tracking-wider">
-                    Close
-                </button>
+            {{-- Modal Footer --}}
+            <div class="px-6 py-3.5 border-t border-gray-100 flex flex-wrap items-center justify-between gap-2.5 shrink-0"
+                 style="background-color: #FAF7F2;">
+                <div class="text-[11px] text-gray-400 font-medium">
+                    Eligible for 30-day restore cycle
+                </div>
+                <div class="flex items-center gap-2">
+                    <button type="button" 
+                            @click="snapshotModal = false; openRestore(inspectRecord)" 
+                            class="px-3.5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold uppercase tracking-wider transition-all shadow-xs cursor-pointer flex items-center gap-1.5">
+                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+                        <span>Restore Record</span>
+                    </button>
+                    <button type="button" 
+                            @click="snapshotModal = false; openPurge(inspectRecord)" 
+                            class="px-3.5 py-2 bg-rose-50 hover:bg-rose-600 text-rose-600 hover:text-white border border-rose-200/80 rounded-xl text-xs font-bold uppercase tracking-wider transition-all cursor-pointer flex items-center gap-1.5">
+                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+                        <span>Purge</span>
+                    </button>
+                    <button type="button" 
+                            @click="snapshotModal = false" 
+                            class="px-4 py-2 bg-white hover:bg-gray-100 text-gray-700 border border-gray-200 rounded-xl text-xs font-bold uppercase tracking-wider transition-all cursor-pointer">
+                        Close
+                    </button>
+                </div>
             </div>
         </div>
     </div>
