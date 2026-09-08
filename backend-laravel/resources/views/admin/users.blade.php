@@ -27,7 +27,7 @@
 }">
 
     {{-- ═══ PAGE HEADER ═══ --}}
-    <div class="text-center space-y-1.5 pb-2">
+    <div class="text-left space-y-1 pb-1">
         <div class="inline-flex items-center gap-2">
             <span class="text-[9px] font-black uppercase tracking-[0.25em] text-[#C0422A]">User Registry</span>
             <span class="text-gray-300 text-xs">·</span>
@@ -39,50 +39,95 @@
         <p class="text-[11px] text-gray-400 font-medium">Manage registered marketplace buyers and their account status</p>
     </div>
 
-    {{-- ═══ STATS BAR ═══ --}}
+    {{-- ═══ STATS BAR / STATUS FILTERS ═══ --}}
+    @php
+        $currentStatus = request('status');
+        $isTotal   = empty($currentStatus) || $currentStatus === 'all';
+        $isActive  = $currentStatus === 'active';
+        $isBlocked = $currentStatus === 'blocked';
+        $isFrozen  = $currentStatus === 'frozen';
+    @endphp
     <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
-        <div class="bg-white rounded-2xl border border-gray-100 shadow-xs px-4 py-3.5 flex items-center gap-3 hover:-translate-y-0.5 transition-all">
-            <div class="w-9 h-9 rounded-xl bg-gray-100 flex items-center justify-center shrink-0">
-                <svg class="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+        {{-- Total --}}
+        <a href="{{ request()->fullUrlWithQuery(['status' => null, 'page' => 1]) }}"
+           class="group relative rounded-2xl px-4 py-3.5 flex items-center justify-between border transition-all duration-200 cursor-pointer {{ $isTotal ? 'bg-white border-gray-900 ring-2 ring-gray-900/15 shadow-sm -translate-y-0.5' : 'bg-white border-gray-100 hover:border-gray-300 hover:shadow-sm hover:-translate-y-0.5' }}">
+            <div class="flex items-center gap-3">
+                <div class="w-9 h-9 rounded-xl flex items-center justify-center shrink-0 transition-colors {{ $isTotal ? 'bg-gray-900 text-white' : 'bg-gray-100 text-gray-500 group-hover:bg-gray-200' }}">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+                </div>
+                <div>
+                    <div class="text-lg font-black text-gray-900 leading-none">{{ $counts['all'] ?? $users->total() }}</div>
+                    <div class="text-[9px] font-bold uppercase tracking-wider text-gray-400 mt-0.5">Total</div>
+                </div>
             </div>
-            <div>
-                <div class="text-lg font-black text-gray-900 leading-none">{{ $counts['all'] ?? $users->total() }}</div>
-                <div class="text-[9px] font-bold uppercase tracking-wider text-gray-400 mt-0.5">Total</div>
+            @if($isTotal)
+                <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[8px] font-black uppercase tracking-wider bg-gray-900 text-white shadow-xs">
+                    <span class="w-1 h-1 rounded-full bg-emerald-400"></span> Active
+                </span>
+            @endif
+        </a>
+
+        {{-- Active --}}
+        <a href="{{ request()->fullUrlWithQuery(['status' => 'active', 'page' => 1]) }}"
+           class="group relative rounded-2xl px-4 py-3.5 flex items-center justify-between border transition-all duration-200 cursor-pointer {{ $isActive ? 'bg-emerald-50/50 border-emerald-600 ring-2 ring-emerald-600/20 shadow-sm -translate-y-0.5' : 'bg-white border-green-100 hover:border-emerald-300 hover:shadow-sm hover:-translate-y-0.5' }}">
+            <div class="flex items-center gap-3">
+                <div class="w-9 h-9 rounded-xl flex items-center justify-center shrink-0 transition-colors {{ $isActive ? 'bg-emerald-600 text-white' : 'bg-green-50 text-green-600 group-hover:bg-green-100' }}">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                </div>
+                <div>
+                    <div class="text-lg font-black text-gray-900 leading-none">{{ $counts['active'] ?? 0 }}</div>
+                    <div class="text-[9px] font-bold uppercase tracking-wider text-green-600 mt-0.5">Active</div>
+                </div>
             </div>
-        </div>
-        <div class="bg-white rounded-2xl border border-green-100 shadow-xs px-4 py-3.5 flex items-center gap-3 hover:-translate-y-0.5 transition-all">
-            <div class="w-9 h-9 rounded-xl bg-green-50 flex items-center justify-center shrink-0">
-                <svg class="w-4 h-4 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+            @if($isActive)
+                <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[8px] font-black uppercase tracking-wider bg-emerald-600 text-white shadow-xs">
+                    <span class="w-1 h-1 rounded-full bg-emerald-200"></span> Active
+                </span>
+            @endif
+        </a>
+
+        {{-- Blocked --}}
+        <a href="{{ request()->fullUrlWithQuery(['status' => 'blocked', 'page' => 1]) }}"
+           class="group relative rounded-2xl px-4 py-3.5 flex items-center justify-between border transition-all duration-200 cursor-pointer {{ $isBlocked ? 'bg-red-50/50 border-red-600 ring-2 ring-red-600/20 shadow-sm -translate-y-0.5' : 'bg-white border-red-100 hover:border-red-300 hover:shadow-sm hover:-translate-y-0.5' }}">
+            <div class="flex items-center gap-3">
+                <div class="w-9 h-9 rounded-xl flex items-center justify-center shrink-0 transition-colors {{ $isBlocked ? 'bg-red-600 text-white' : 'bg-red-50 text-red-500 group-hover:bg-red-100' }}">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"/></svg>
+                </div>
+                <div>
+                    <div class="text-lg font-black text-gray-900 leading-none">{{ $counts['blocked'] ?? 0 }}</div>
+                    <div class="text-[9px] font-bold uppercase tracking-wider text-red-500 mt-0.5">Blocked</div>
+                </div>
             </div>
-            <div>
-                <div class="text-lg font-black text-gray-900 leading-none">{{ $counts['active'] ?? 0 }}</div>
-                <div class="text-[9px] font-bold uppercase tracking-wider text-green-500 mt-0.5">Active</div>
+            @if($isBlocked)
+                <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[8px] font-black uppercase tracking-wider bg-red-600 text-white shadow-xs">
+                    <span class="w-1 h-1 rounded-full bg-red-200"></span> Active
+                </span>
+            @endif
+        </a>
+
+        {{-- Frozen --}}
+        <a href="{{ request()->fullUrlWithQuery(['status' => 'frozen', 'page' => 1]) }}"
+           class="group relative rounded-2xl px-4 py-3.5 flex items-center justify-between border transition-all duration-200 cursor-pointer {{ $isFrozen ? 'bg-amber-50/50 border-amber-500 ring-2 ring-amber-500/20 shadow-sm -translate-y-0.5' : 'bg-white border-amber-100 hover:border-amber-300 hover:shadow-sm hover:-translate-y-0.5' }}">
+            <div class="flex items-center gap-3">
+                <div class="w-9 h-9 rounded-xl flex items-center justify-center shrink-0 transition-colors {{ $isFrozen ? 'bg-amber-500 text-white' : 'bg-amber-50 text-amber-500 group-hover:bg-amber-100' }}">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/></svg>
+                </div>
+                <div>
+                    <div class="text-lg font-black text-gray-900 leading-none">{{ $counts['frozen'] ?? 0 }}</div>
+                    <div class="text-[9px] font-bold uppercase tracking-wider text-amber-500 mt-0.5">Frozen</div>
+                </div>
             </div>
-        </div>
-        <div class="bg-white rounded-2xl border border-red-100 shadow-xs px-4 py-3.5 flex items-center gap-3 hover:-translate-y-0.5 transition-all">
-            <div class="w-9 h-9 rounded-xl bg-red-50 flex items-center justify-center shrink-0">
-                <svg class="w-4 h-4 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"/></svg>
-            </div>
-            <div>
-                <div class="text-lg font-black text-gray-900 leading-none">{{ $counts['blocked'] ?? 0 }}</div>
-                <div class="text-[9px] font-bold uppercase tracking-wider text-red-400 mt-0.5">Blocked</div>
-            </div>
-        </div>
-        <div class="bg-white rounded-2xl border border-amber-100 shadow-xs px-4 py-3.5 flex items-center gap-3 hover:-translate-y-0.5 transition-all">
-            <div class="w-9 h-9 rounded-xl bg-amber-50 flex items-center justify-center shrink-0">
-                <svg class="w-4 h-4 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/></svg>
-            </div>
-            <div>
-                <div class="text-lg font-black text-gray-900 leading-none">{{ $counts['frozen'] ?? 0 }}</div>
-                <div class="text-[9px] font-bold uppercase tracking-wider text-amber-500 mt-0.5">Frozen</div>
-            </div>
-        </div>
+            @if($isFrozen)
+                <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[8px] font-black uppercase tracking-wider bg-amber-500 text-white shadow-xs">
+                    <span class="w-1 h-1 rounded-full bg-amber-200"></span> Active
+                </span>
+            @endif
+        </a>
     </div>
 
-    {{-- ═══ SEARCH + FILTERS ═══ --}}
-    <div class="space-y-3">
-        {{-- Search --}}
-        <form method="GET" class="flex items-center justify-center gap-2 max-w-sm sm:max-w-md mx-auto">
+    {{-- ═══ SEARCH BAR & RESULTS ═══ --}}
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-1">
+        <form method="GET" class="flex items-center gap-2 max-w-sm sm:max-w-md w-full">
             @if(request('status'))
                 <input type="hidden" name="status" value="{{ request('status') }}">
             @endif
@@ -92,36 +137,15 @@
                 <svg class="w-4 h-4 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
             </div>
             @if(request('search'))
-                <a href="{{ request()->fullUrlWithQuery(['search' => null, 'page' => 1]) }}" class="px-3 py-2 bg-gray-100 hover:bg-gray-200 text-gray-600 rounded-full text-[10px] font-bold transition-all">Clear</a>
+                <a href="{{ request()->fullUrlWithQuery(['search' => null, 'page' => 1]) }}" class="px-3 py-2 bg-gray-100 hover:bg-gray-200 text-gray-600 rounded-full text-[10px] font-bold transition-all shrink-0">Clear</a>
             @endif
         </form>
 
-        {{-- Filter Pills --}}
-        @php $currentStatus = request('status'); @endphp
-        <div class="flex items-center justify-center gap-2 overflow-x-auto no-scrollbar">
-            <a href="{{ request()->fullUrlWithQuery(['status' => null, 'page' => 1]) }}"
-               class="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full text-[10px] sm:text-[11px] font-black uppercase tracking-wider transition-all whitespace-nowrap {{ empty($currentStatus) ? 'bg-gray-900 text-white shadow-sm' : 'bg-white text-gray-600 border border-gray-200 hover:border-gray-300 hover:bg-gray-50' }}">
-                <span>All</span>
-                <span class="px-1.5 py-0.5 rounded-full text-[9px] font-black {{ empty($currentStatus) ? 'bg-white/20 text-white' : 'bg-gray-100 text-gray-500' }}">{{ $counts['all'] ?? $users->total() }}</span>
-            </a>
-            <a href="{{ request()->fullUrlWithQuery(['status' => 'active', 'page' => 1]) }}"
-               class="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full text-[10px] sm:text-[11px] font-black uppercase tracking-wider transition-all whitespace-nowrap {{ $currentStatus === 'active' ? 'bg-green-700 text-white shadow-sm' : 'bg-white text-gray-600 border border-gray-200 hover:border-green-200 hover:bg-green-50' }}">
-                <span class="w-1.5 h-1.5 rounded-full {{ $currentStatus === 'active' ? 'bg-green-200' : 'bg-green-400' }}"></span>
-                <span>Active</span>
-                <span class="px-1.5 py-0.5 rounded-full text-[9px] font-black {{ $currentStatus === 'active' ? 'bg-white/20 text-white' : 'bg-gray-100 text-gray-500' }}">{{ $counts['active'] ?? 0 }}</span>
-            </a>
-            <a href="{{ request()->fullUrlWithQuery(['status' => 'blocked', 'page' => 1]) }}"
-               class="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full text-[10px] sm:text-[11px] font-black uppercase tracking-wider transition-all whitespace-nowrap {{ $currentStatus === 'blocked' ? 'bg-red-600 text-white shadow-sm' : 'bg-white text-gray-600 border border-gray-200 hover:border-red-200 hover:bg-red-50' }}">
-                <span class="w-1.5 h-1.5 rounded-full {{ $currentStatus === 'blocked' ? 'bg-red-200' : 'bg-red-400' }}"></span>
-                <span>Blocked</span>
-                <span class="px-1.5 py-0.5 rounded-full text-[9px] font-black {{ $currentStatus === 'blocked' ? 'bg-white/20 text-white' : 'bg-gray-100 text-gray-500' }}">{{ $counts['blocked'] ?? 0 }}</span>
-            </a>
-            <a href="{{ request()->fullUrlWithQuery(['status' => 'frozen', 'page' => 1]) }}"
-               class="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full text-[10px] sm:text-[11px] font-black uppercase tracking-wider transition-all whitespace-nowrap {{ $currentStatus === 'frozen' ? 'bg-amber-600 text-white shadow-sm' : 'bg-white text-gray-600 border border-gray-200 hover:border-amber-200 hover:bg-amber-50' }}">
-                <span class="w-1.5 h-1.5 rounded-full {{ $currentStatus === 'frozen' ? 'bg-amber-200' : 'bg-amber-400' }}"></span>
-                <span>Frozen</span>
-                <span class="px-1.5 py-0.5 rounded-full text-[9px] font-black {{ $currentStatus === 'frozen' ? 'bg-white/20 text-white' : 'bg-gray-100 text-gray-500' }}">{{ $counts['frozen'] ?? 0 }}</span>
-            </a>
+        <div class="text-[11px] font-bold text-gray-400 px-1">
+            Showing <span class="text-gray-900 font-black">{{ $users->total() }}</span> {{ $users->total() === 1 ? 'customer' : 'customers' }}
+            @if(request('status'))
+                <span class="text-gray-400">· Filtered by <span class="capitalize font-black text-gray-700">{{ request('status') }}</span></span>
+            @endif
         </div>
     </div>
 
