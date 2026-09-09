@@ -62,11 +62,10 @@
 
     <div class="login-card w-full max-w-md bg-white rounded-4xl sm:rounded-[2.5rem] border border-[#E5DDD5] p-5 sm:p-8 shadow-[0_20px_60px_rgba(60,40,20,0.08)] relative z-10 max-h-[95vh] overflow-y-auto no-scrollbar" 
          x-data="sellerRegisterApp({
-             step: {{ ($errors->has('name') || $errors->has('email') || $errors->has('password') || $errors->has('password_confirmation')) ? 1 : ($errors->any() || old('mobileNumber') || old('shopName') ? 2 : 1) }},
+             step: {{ ($errors->has('name') || $errors->has('email') || $errors->has('password') || $errors->has('password_confirmation')) ? 1 : ($errors->any() || old('shopName') ? 2 : 1) }},
              name: @js(old('name', $googleSeller['name'] ?? '')),
              email: @js(old('email', $googleSeller['email'] ?? '')),
              shopName: @js(old('shopName', '')),
-             mobileNumber: @js(old('mobileNumber', '')),
              terms_consent: {{ old('terms_consent') ? 'true' : 'false' }}
          })" x-cloak>
         
@@ -282,35 +281,21 @@
                     <p class="text-[10px] text-gray-400 italic">Please provide your details for account verification.</p>
                 </div>
 
-                {{-- Shop Name --}}
+                {{-- Shop Name (Required) --}}
                 <div class="space-y-2">
-                    <label class="text-[10px] font-bold uppercase tracking-widest px-5 block text-gray-500">Shop / Workshop Name (Optional)</label>
+                    <label class="text-[10px] font-bold uppercase tracking-widest px-5 block text-gray-500">Shop / Workshop Name <span class="text-[#C0422A]">*</span></label>
                     <input 
                         type="text" 
                         name="shopName" 
                         x-model="shopName"
-                        @input="saveState()"
+                        @input="delete errors.shopName; saveState()"
+                        required
                         placeholder="e.g. Juan's Traditional Embroidery"
                         class="w-full h-14 bg-[#F9F6F2] rounded-full px-8 text-sm font-medium border-2 {{ $errors->has('shopName') ? 'border-red-400' : 'border-transparent' }} focus:border-[#C0422A] focus:bg-white outline-none transition-all"
+                        :class="errors.shopName ? 'border-red-400!' : ''"
                     >
+                    <p x-show="errors.shopName" x-text="errors.shopName" class="text-xs font-bold text-red-500 px-5 mt-1" x-cloak></p>
                     @error('shopName')
-                        <p class="text-xs font-bold text-red-500 px-5 mt-1">{{ $message }}</p>
-                    @enderror
-                </div>
-
-                {{-- Mobile Number --}}
-                <div class="space-y-2">
-                    <label class="text-[10px] font-bold uppercase tracking-widest px-5 block text-gray-500">Mobile Number</label>
-                    <input 
-                        type="text" 
-                        name="mobileNumber" 
-                        x-model="mobileNumber"
-                        @input="saveState()"
-                        required
-                        placeholder="09xx-xxx-xxxx"
-                        class="w-full h-14 bg-[#F9F6F2] rounded-full px-8 text-sm font-medium border-2 {{ $errors->has('mobileNumber') ? 'border-red-400' : 'border-transparent' }} focus:border-[#C0422A] focus:bg-white outline-none transition-all"
-                    >
-                    @error('mobileNumber')
                         <p class="text-xs font-bold text-red-500 px-5 mt-1">{{ $message }}</p>
                     @enderror
                 </div>
@@ -459,7 +444,6 @@
         sessionStorage.removeItem('seller_reg_password');
         sessionStorage.removeItem('seller_reg_password_confirmation');
         sessionStorage.removeItem('seller_reg_shopName');
-        sessionStorage.removeItem('seller_reg_mobileNumber');
         sessionStorage.removeItem('seller_reg_terms_consent');
     </script>
     @endif
@@ -473,7 +457,6 @@
                 password: sessionStorage.getItem('seller_reg_password') || '',
                 password_confirmation: sessionStorage.getItem('seller_reg_password_confirmation') || '',
                 shopName: cfg.shopName || (sessionStorage.getItem('seller_reg_shopName') || ''),
-                mobileNumber: cfg.mobileNumber || (sessionStorage.getItem('seller_reg_mobileNumber') || ''),
                 terms_consent: cfg.terms_consent || (sessionStorage.getItem('seller_reg_terms_consent') === '1'),
                 showPass: false,
                 showConfirm: false,
@@ -492,7 +475,6 @@
                     if (this.password) sessionStorage.setItem('seller_reg_password', this.password);
                     if (this.password_confirmation) sessionStorage.setItem('seller_reg_password_confirmation', this.password_confirmation);
                     if (this.shopName) sessionStorage.setItem('seller_reg_shopName', this.shopName);
-                    if (this.mobileNumber) sessionStorage.setItem('seller_reg_mobileNumber', this.mobileNumber);
                     sessionStorage.setItem('seller_reg_terms_consent', this.terms_consent ? '1' : '0');
                 },
                 validateStep1() {
@@ -574,6 +556,14 @@
                         event.preventDefault();
                         this.step = 1;
                         this.errors.password = 'Please re-enter your password to proceed.';
+                        return;
+                    }
+
+                    const shopNameVal = (this.shopName || '').trim();
+                    if (!shopNameVal) {
+                        event.preventDefault();
+                        this.step = 2;
+                        this.errors.shopName = 'Please provide your official artisan shop name.';
                         return;
                     }
 
