@@ -1130,9 +1130,35 @@ function sellerOrdersManager() {
         </div>
     </div>
 
-    {{-- Status Filter Tabs (Interactive Module Tabs like Analytics) --}}
-    <div class="overflow-x-auto no-scrollbar -mx-4 px-4 sm:mx-0 sm:px-0 lg:overflow-visible">
-        <div class="flex items-center gap-2 border-b pb-3 min-w-max lg:min-w-0 lg:flex-wrap" style="border-color: #E8DECB;">
+    {{-- Status Filter Tabs (Responsive: Single swipe track on mobile, graceful wrap on desktop so all 10 statuses are fully visible) --}}
+    <style>
+        .seller-order-tabs-container {
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+        .seller-order-tabs-track {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            min-width: max-content;
+            flex-wrap: nowrap;
+        }
+        @media (min-width: 1024px) {
+            .seller-order-tabs-container {
+                overflow: visible !important;
+                overflow-x: visible !important;
+            }
+            .seller-order-tabs-track {
+                min-width: 0 !important;
+                width: 100% !important;
+                flex-wrap: wrap !important;
+                row-gap: 0.625rem !important;
+                column-gap: 0.5rem !important;
+            }
+        }
+    </style>
+    <div class="seller-order-tabs-container no-scrollbar -mx-4 px-4 sm:mx-0 sm:px-0">
+        <div class="seller-order-tabs-track border-b pb-3" style="border-color: #E8DECB;">
             @php
                 $statusTabs = [
                     'all' => ['label' => 'All Orders', 'icon' => '📋'],
@@ -1150,7 +1176,7 @@ function sellerOrdersManager() {
             @foreach($statusTabs as $val => $tab)
                 <button type="button"
                         @click="statusFilter = '{{ $val }}'"
-                        class="px-4 py-2.5 lg:px-3 lg:py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 sm:gap-2 cursor-pointer font-sans shrink-0 active:scale-95 hover:border-[#C49520]"
+                        class="px-3.5 py-2 lg:px-3 lg:py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 sm:gap-2 cursor-pointer font-sans shrink-0 active:scale-95 hover:border-[#C49520]"
                         :style="statusFilter === '{{ $val }}' 
                             ? 'background: #1E1915; color: #FFFCF7; box-shadow: 0 2px 8px rgba(30,25,21,0.12); border: 1px solid #1E1915;' 
                             : 'background: #FFFFFF; color: #6C6256; border: 1px solid #ECE3D2;'">
