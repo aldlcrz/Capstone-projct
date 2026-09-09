@@ -109,6 +109,17 @@ function sellerOrdersManager() {
 
         init() {
             const urlParams = new URLSearchParams(window.location.search);
+            const statusParam = urlParams.get('status');
+            if (statusParam) {
+                const normParam = this.normalizeStatus(statusParam);
+                if (normParam === 'cancellation pending' || normParam === 'cancellation requests') {
+                    this.statusFilter = 'cancellation pending';
+                } else if (normParam === 'return requests' || normParam === 'return requested' || normParam === 'returns') {
+                    this.statusFilter = 'return requests';
+                } else if (['all', 'pending', 'to ship', 'shipped', 'in transit', 'delivered', 'completed', 'cancelled'].includes(normParam)) {
+                    this.statusFilter = normParam;
+                }
+            }
             const orderId = urlParams.get('order_id') || urlParams.get('orderId') || urlParams.get('order');
             if (orderId) {
                 const target = this.orders.find(o => String(o.id) === String(orderId) || String(o.id).toLowerCase().endsWith(String(orderId).toLowerCase()));
@@ -866,7 +877,12 @@ function sellerOrdersManager() {
         normalizeStatus(statusStr) {
             if (!statusStr) return '';
             let s = String(statusStr).toLowerCase().trim().replace(/_/g, ' ');
-            if (s === 'processing') return 'to ship';
+            if (s === 'processing' || s === 'ready to ship' || s === 'confirmed' || s === 'packed') return 'to ship';
+            if (s === 'to receive') return 'shipped';
+            if (s === 'out for delivery') return 'in transit';
+            if (s === 'received by buyer') return 'completed';
+            if (s === 'canceled') return 'cancelled';
+            if (s === 'cancellation requested' || s === 'cancellation_pending') return 'cancellation pending';
             return s;
         },
 
@@ -920,13 +936,13 @@ function sellerOrdersManager() {
         get filtered() {
             return this.orders.filter(o => {
                 const matchSearch = !this.searchTerm ||
-                    o.id.toLowerCase().includes(this.searchTerm.toLowerCase()) ||
-                    (o.customer?.name || '').toLowerCase().includes(this.searchTerm.toLowerCase());
-                let s = this.normalizeStatus(o.status);
-                if (s === 'processing' || s === 'ready to ship' || s === 'ready_to_ship') s = 'to ship';
+                    (o.id && String(o.id).toLowerCase().includes(this.searchTerm.toLowerCase())) ||
+                    (o.customer?.name || '').toLowerCase().includes(this.searchTerm.toLowerCase()) ||
+                    (o.trackingNumber || '').toLowerCase().includes(this.searchTerm.toLowerCase());
+                const s = this.normalizeStatus(o.status);
                 const f = this.normalizeStatus(this.statusFilter);
                 if (f === 'all') return matchSearch;
-                if (f === 'cancellation pending' || f === 'cancellation requested' || f === 'cancellation requests') {
+                if (f === 'cancellation pending' || f === 'cancellation requests') {
                     return matchSearch && (s === 'cancellation pending' || s === 'cancellation requested');
                 }
                 if (f === 'return requests' || f === 'return requested' || f === 'return pending' || f === 'returns') {
@@ -982,9 +998,8 @@ function sellerOrdersManager() {
             if (statusKey === 'all') return this.orders.length;
             const normKey = this.normalizeStatus(statusKey);
             return this.orders.filter(o => {
-                let s = this.normalizeStatus(o.status);
-                if (s === 'processing' || s === 'ready to ship' || s === 'ready_to_ship') s = 'to ship';
-                if (normKey === 'cancellation pending' || normKey === 'cancellation requested' || normKey === 'cancellation requests') {
+                const s = this.normalizeStatus(o.status);
+                if (normKey === 'cancellation pending' || normKey === 'cancellation requests') {
                     return s === 'cancellation pending' || s === 'cancellation requested';
                 }
                 if (normKey === 'return requests' || normKey === 'return requested' || normKey === 'return pending' || normKey === 'returns') {
@@ -1115,26 +1130,27 @@ function sellerOrdersManager() {
         </div>
     </div>
 
-    {{-- Status Filter Tabs (Interactive Module Tabs like Analytics) --}}
-    <div class="overflow-x-auto no-scrollbar -mx-4 px-4 sm:mx-0 sm:px-0">
-        <div class="flex items-center gap-2 border-b pb-3 min-w-max" style="border-color: #E8DECB;">
+    {{-- Status Filter Tabs (Interactive Module Tabs with Wrapping) --}}
+    <div class="border-b pb-3" style="border-color: #E8DECB;">
+        <div class="flex flex-wrap items-center gap-1.5 sm:gap-2">
             @php
                 $statusTabs = [
                     'all' => ['label' => 'All Orders', 'icon' => '📋'],
                     'pending' => ['label' => 'Pending', 'icon' => '⏳'],
-                    'cancellation pending' => ['label' => 'Cancellation Requests', 'icon' => '⚠️'],
-                    'return requests' => ['label' => 'Return Requests', 'icon' => '↩️'],
                     'to ship' => ['label' => 'To Ship', 'icon' => '📦'],
                     'shipped' => ['label' => 'Shipped', 'icon' => '🚚'],
                     'in transit' => ['label' => 'In Transit', 'icon' => '🛣️'],
                     'delivered' => ['label' => 'Delivered', 'icon' => '📬'],
                     'completed' => ['label' => 'Completed', 'icon' => '✅'],
                     'cancelled' => ['label' => 'Cancelled', 'icon' => '❌'],
+                    'cancellation pending' => ['label' => 'Cancellation Requests', 'icon' => '⚠️'],
+                    'return requests' => ['label' => 'Return Requests', 'icon' => '↩️'],
                 ];
             @endphp
             @foreach($statusTabs as $val => $tab)
-                <button @click="statusFilter = '{{ $val }}'"
-                        class="px-4 py-2.5 rounded-xl text-xs font-bold transition-all flex items-center gap-2 cursor-pointer font-sans shrink-0 active:scale-95 hover:border-[#C49520]"
+                <button type="button"
+                        @click="statusFilter = '{{ $val }}'"
+                        class="px-3 sm:px-3.5 py-2 sm:py-2.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 sm:gap-2 cursor-pointer font-sans shrink-0 active:scale-95 hover:border-[#C49520]"
                         :style="statusFilter === '{{ $val }}' 
                             ? 'background: #1E1915; color: #FFFCF7; box-shadow: 0 2px 8px rgba(30,25,21,0.12); border: 1px solid #1E1915;' 
                             : 'background: #FFFFFF; color: #6C6256; border: 1px solid #ECE3D2;'">
