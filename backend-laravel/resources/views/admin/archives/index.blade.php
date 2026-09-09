@@ -251,7 +251,7 @@
     {{-- ═══ ARCHIVE TABLE ═══ --}}
     <div class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
         <div class="overflow-x-auto no-scrollbar">
-            <table class="w-full text-left min-w-[640px]">
+            <table class="w-full text-left min-w-160">
                 <thead>
                     <tr class="border-b border-gray-100 bg-gray-50/60">
                         <th class="px-5 py-2.5 text-[9px] font-black uppercase tracking-widest text-gray-400 w-[36%]">Record &amp; Identifier</th>
@@ -452,7 +452,7 @@
                         </div>
                     </template>
                     <div class="min-w-0 flex-1">
-                        <h2 class="font-serif text-lg sm:text-xl font-bold text-gray-900 leading-snug break-words" x-text="inspectRecord?.name"></h2>
+                        <h2 class="font-serif text-lg sm:text-xl font-bold text-gray-900 leading-snug wrap-break-word" x-text="inspectRecord?.name"></h2>
                         <div class="flex flex-wrap items-center gap-x-2 gap-y-1 text-[11px] text-gray-500 mt-1">
                             <span>Archived <strong class="text-gray-700" x-text="formatDate(inspectRecord?.created_at)"></strong></span>
                             <span class="text-gray-300">·</span>
