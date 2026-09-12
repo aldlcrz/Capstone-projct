@@ -55,13 +55,19 @@ class WebAuthController extends Controller
 
             if ($user->status === 'frozen') {
                 Auth::logout();
-                $overdue = CommissionRecord::where('sellerId', $user->id)
+                $unpaidRecords = CommissionRecord::where('sellerId', $user->id)
                     ->where('status', 'unpaid')
                     ->orderByDesc('period')
-                    ->first();
-                $amount = $overdue ? number_format($overdue->commissionAmount, 2) : '0.00';
-                $period = $overdue ? $overdue->period : 'current';
-                $msg = "Your shop is temporarily frozen due to an unpaid monthly commission of ₱{$amount} for {$period}. Please settle your outstanding commission to restore access.";
+                    ->get();
+                $totalUnpaid = $unpaidRecords->sum('commissionAmount');
+                $latestPeriod = $unpaidRecords->first()?->period;
+
+                if ($totalUnpaid > 0 && $latestPeriod) {
+                    $amount = number_format($totalUnpaid, 2);
+                    $msg = "Your shop is temporarily frozen due to an unpaid monthly commission of ₱{$amount} for {$latestPeriod}. Please settle your outstanding commission to restore access.";
+                } else {
+                    $msg = "Your shop is temporarily frozen due to an outstanding commission settlement requirement. Please settle your outstanding commission to restore access.";
+                }
                 return back()->withErrors([
                     'email' => $msg,
                 ])->onlyInput('email');
