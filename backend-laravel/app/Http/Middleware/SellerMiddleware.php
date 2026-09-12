@@ -55,8 +55,8 @@ class SellerMiddleware
                     return redirect('/login')->withErrors(['email' => $msg]);
                 }
 
-                if (!$user->isVerified || $user->status === 'pending') {
-                    // Allow pending sellers to access the dedicated document re-upload & verification portal
+                if (!$user->isVerified || $user->status === 'pending' || $user->status === 'rejected') {
+                    // Allow pending/rejected sellers to access the dedicated document re-upload & verification portal
                     if ($request->is('seller/verification-pending*') || $request->is('api/seller/verification-pending*')) {
                         return $next($request);
                     }

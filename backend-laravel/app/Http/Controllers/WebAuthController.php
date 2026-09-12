@@ -79,20 +79,20 @@ class WebAuthController extends Controller
                     ])->onlyInput('email');
             }
 
-            if ($user->status === 'rejected') {
-                Auth::logout();
-                return back()->withErrors([
-                    'email' => 'Your application has been rejected. Reason: ' . ($user->rejectionReason ?? 'Did not meet requirements'),
-                ])->onlyInput('email');
-            }
-
-            // Seller whose application is awaiting admin verification: allow login directly into document portal
-            if ($user->role === 'seller' && !$user->isVerified) {
+            // Seller whose application is awaiting admin verification or correction: allow login directly into document portal
+            if ($user->role === 'seller' && (!$user->isVerified || $user->status === 'pending' || $user->status === 'rejected')) {
                 $request->session()->regenerate();
                 $user->sessionVersion = ((int) ($user->sessionVersion ?? 1)) + 1;
                 $user->save();
                 session(['login_session_version' => $user->sessionVersion]);
                 return redirect()->route('seller.verification-pending');
+            }
+
+            if ($user->status === 'rejected') {
+                Auth::logout();
+                return back()->withErrors([
+                    'email' => 'Your application has been rejected. Reason: ' . ($user->rejectionReason ?? 'Did not meet requirements'),
+                ])->onlyInput('email');
             }
 
             if (!$user->isVerified) {
@@ -580,16 +580,16 @@ class WebAuthController extends Controller
                     ->withErrors(['email' => $notice]);
             }
 
-            if ($user->status === 'rejected') {
-                return back()->withErrors(['email' => 'Your account has been rejected. Reason: ' . ($user->rejectionReason ?? 'Did not meet requirements')]);
-            }
-
-            if ($user->role === 'seller' && !$user->isVerified) {
+            if ($user->role === 'seller' && (!$user->isVerified || $user->status === 'pending' || $user->status === 'rejected')) {
                 Auth::login($user);
                 $user->sessionVersion = ((int) ($user->sessionVersion ?? 1)) + 1;
                 $user->save();
                 session(['login_session_version' => $user->sessionVersion]);
                 return redirect()->route('seller.verification-pending');
+            }
+
+            if ($user->status === 'rejected') {
+                return redirect()->route('login')->withErrors(['email' => 'Your account has been rejected. Reason: ' . ($user->rejectionReason ?? 'Did not meet requirements')]);
             }
 
             if (!$user->isVerified) {
