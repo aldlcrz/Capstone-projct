@@ -24,12 +24,6 @@
                 @if(request('status') && request('status') !== 'Pending')
                     <input type="hidden" name="status" value="{{ request('status') }}">
                 @endif
-                @if(request('type') && request('type') !== 'all')
-                    <input type="hidden" name="type" value="{{ request('type') }}">
-                @endif
-                @if(request('severity') && request('severity') !== 'all')
-                    <input type="hidden" name="severity" value="{{ request('severity') }}">
-                @endif
 
                 <div class="relative w-full">
                     <input type="text" name="search" value="{{ request('search') }}"
@@ -165,48 +159,15 @@
         </a>
     </div>
 
-    {{-- ═══ RESULTS COUNT & SECONDARY DROPDOWN FILTERS ═══ --}}
-    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 px-1">
-        {{-- Results Counter --}}
+    {{-- ═══ RESULTS COUNT BAR (Matching Archive Hub) ═══ --}}
+    <div class="flex items-center justify-between px-1">
         <div class="text-[11px] font-bold text-gray-400">
             Showing <span class="text-gray-900 font-black">{{ $reports->total() }}</span> {{ $reports->total() === 1 ? 'report record' : 'report records' }}
-            <span class="text-gray-400">· Status: <span class="capitalize font-black text-gray-700">{{ $currentStatus === 'all' ? 'All Status' : $currentStatus }}</span></span>
-            @if(request('type') && request('type') !== 'all')
-                <span class="text-gray-400">· Type: <span class="capitalize font-black text-gray-700">{{ request('type') }}</span></span>
-            @endif
-            @if(request('severity') && request('severity') !== 'all')
-                <span class="text-gray-400">· Severity: <span class="capitalize font-black text-gray-700">{{ request('severity') }}</span></span>
-            @endif
+            <span class="text-gray-400">· Filtered by <span class="capitalize font-black text-gray-700">{{ $currentStatus === 'all' ? 'All Status' : $currentStatus }}</span></span>
             @if(request('search'))
                 <span class="text-gray-400">· Matching "<span class="font-bold text-gray-700">{{ request('search') }}</span>"</span>
             @endif
         </div>
-
-        {{-- Mini Filter Controls --}}
-        <form method="GET" action="{{ route('admin.reports') }}" class="flex items-center gap-2 shrink-0">
-            @if(request('status') && request('status') !== 'Pending')
-                <input type="hidden" name="status" value="{{ request('status') }}">
-            @endif
-            @if(request('search'))
-                <input type="hidden" name="search" value="{{ request('search') }}">
-            @endif
-
-            <select name="type" onchange="this.form.submit()" 
-                    class="px-3 py-1.5 bg-white border border-gray-200 rounded-xl text-xs font-bold text-gray-700 outline-none focus:border-[#C0422A] cursor-pointer shadow-2xs">
-                <option value="all" {{ request('type', 'all') == 'all' ? 'selected' : '' }}>All Types</option>
-                <option value="account" {{ request('type') == 'account' ? 'selected' : '' }}>👤 Account Reports</option>
-                <option value="product" {{ request('type') == 'product' ? 'selected' : '' }}>📦 Product Reports</option>
-            </select>
-
-            <select name="severity" onchange="this.form.submit()" 
-                    class="px-3 py-1.5 bg-white border border-gray-200 rounded-xl text-xs font-bold text-gray-700 outline-none focus:border-[#C0422A] cursor-pointer shadow-2xs">
-                <option value="all" {{ request('severity', 'all') == 'all' ? 'selected' : '' }}>All Severities</option>
-                <option value="LOW" {{ request('severity') == 'LOW' ? 'selected' : '' }}>🟢 Low</option>
-                <option value="MEDIUM" {{ request('severity') == 'MEDIUM' ? 'selected' : '' }}>🟡 Medium</option>
-                <option value="HIGH" {{ request('severity') == 'HIGH' ? 'selected' : '' }}>🟠 High</option>
-                <option value="CRITICAL" {{ request('severity') == 'CRITICAL' ? 'selected' : '' }}>🔴 Critical</option>
-            </select>
-        </form>
     </div>
 
     {{-- ══ SELLER RISK PATTERN OVERVIEW (DECISION-SUPPORT ANALYTICS) ══ --}}
