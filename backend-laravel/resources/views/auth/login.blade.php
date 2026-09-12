@@ -129,6 +129,24 @@
                         <p class="text-xs font-bold text-red-500 px-5 mt-1">{{ $message }}</p>
                     @endif
                 @enderror
+
+                @if($isFrozenErr)
+                    <div class="mt-3 p-4 bg-amber-50/90 border border-amber-200 rounded-2xl text-xs text-amber-950 space-y-2.5 text-left shadow-xs">
+                        <div class="flex items-center gap-2 text-amber-800 font-bold text-xs uppercase tracking-wider">
+                            <span class="text-base">💳</span>
+                            <span>Overdue Commission Settle Portal</span>
+                        </div>
+                        <p class="text-[11px] text-amber-900 leading-relaxed font-medium">
+                            Your shop is frozen due to unpaid marketplace commission. Settle the balance via GCash or Maya and submit your receipt to restore access.
+                        </p>
+                        <button type="button" 
+                                onclick="window.dispatchEvent(new CustomEvent('open-frozen-modal'))" 
+                                class="w-full py-2.5 bg-[#3D2B1F] hover:bg-[#C0422A] text-white rounded-xl font-bold uppercase tracking-wider text-[10px] transition-all cursor-pointer shadow-sm flex items-center justify-center gap-2">
+                            <span>Open GCash / Maya Payment Portal</span>
+                            <span>→</span>
+                        </button>
+                    </div>
+                @endif
             </div>
 
             <div class="space-y-2" x-data="{ show: false }">
@@ -250,7 +268,8 @@
     @if(session('payment_submitted'))
     <!-- Payment Submitted Success Modal -->
     <div x-data="{ show: true }" x-show="show"
-         class="fixed inset-0 z-99999 flex items-center justify-center p-4 bg-black/60 backdrop-blur-md"
+         class="fixed inset-0 flex items-center justify-center p-4 bg-black/70 backdrop-blur-md"
+         style="z-index: 99999 !important;"
          x-cloak>
         <div @click.away="show = false" class="w-full max-w-md bg-white rounded-4xl p-6 lg:p-8 shadow-2xl border border-gray-100 text-center space-y-4">
             <div class="w-14 h-14 rounded-2xl bg-green-50 text-green-600 border border-green-200 flex items-center justify-center mx-auto shadow-sm">
@@ -258,7 +277,7 @@
             </div>
             <h3 class="font-serif text-xl font-bold text-gray-900">Payment Submitted!</h3>
             <p class="text-xs text-gray-600 leading-relaxed">{{ session('payment_submitted') }}</p>
-            <button type="button" @click="show = false" class="w-full py-3 bg-[#3D2B1F] text-white rounded-full font-bold uppercase tracking-widest text-[10px] hover:bg-[#C0422A] transition-all">
+            <button type="button" @click="show = false" class="w-full py-3 bg-[#3D2B1F] text-white rounded-full font-bold uppercase tracking-widest text-[10px] hover:bg-[#C0422A] transition-all cursor-pointer">
                 Close
             </button>
         </div>
@@ -269,34 +288,36 @@
     <div 
         x-data="{ show: true, activeTab: 'gcash' }"
         x-show="show"
+        @open-frozen-modal.window="show = true"
         x-transition:enter="transition ease-out duration-300"
         x-transition:enter-start="opacity-0 scale-95"
         x-transition:enter-end="opacity-100 scale-100"
         x-transition:leave="transition ease-in duration-200"
         x-transition:leave-start="opacity-100 scale-100"
         x-transition:leave-end="opacity-0 scale-95"
-        class="fixed inset-0 z-9999 flex items-center justify-center p-4 bg-black/60 backdrop-blur-md overflow-y-auto"
+        class="fixed inset-0 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md overflow-y-auto"
+        style="z-index: 99999 !important;"
         x-cloak
         @keydown.escape.window="show = false"
     >
         <!-- Account Frozen Payment Modal -->
-        <div @click.away="show = false" class="w-full max-w-lg bg-white rounded-[2.5rem] p-6 lg:p-8 shadow-2xl border border-gray-100 text-center relative space-y-6 max-h-[90vh] overflow-y-auto no-scrollbar my-auto">
-            <button @click="show = false" class="absolute top-5 right-5 text-gray-400 hover:text-gray-600 transition-colors">
+        <div @click.away="show = false" class="w-full max-w-lg bg-white rounded-[2.5rem] p-6 lg:p-8 shadow-2xl border border-gray-100 text-center relative space-y-6 max-h-[92vh] overflow-y-auto no-scrollbar my-auto">
+            <button type="button" @click="show = false" class="absolute top-5 right-5 text-gray-400 hover:text-gray-600 transition-colors p-1 rounded-full hover:bg-gray-100 cursor-pointer" title="Close">
                 <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
             </button>
 
             <!-- Icon & Header -->
             <div class="space-y-2 pt-2">
-                <div class="w-14 h-14 rounded-2xl bg-red-50 text-red-600 border border-red-100 flex items-center justify-center mx-auto shadow-sm">
+                <div class="w-14 h-14 rounded-2xl bg-amber-50 text-amber-600 border border-amber-200 flex items-center justify-center mx-auto shadow-sm">
                     <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
                     </svg>
                 </div>
                 <div>
-                    <span class="inline-block px-3 py-1 bg-red-50 text-red-600 border border-red-100 rounded-full text-[10px] font-black uppercase tracking-widest mb-1">Account Suspended</span>
-                    <h3 class="font-serif text-2xl font-bold text-gray-900">Pay Commission to Continue</h3>
-                    <p class="text-xs text-gray-500 max-w-sm mx-auto mt-1 leading-relaxed">
-                        Your shop account has been frozen due to overdue commission fees. Please send your payment and submit your reference details below to unfreeze your account.
+                    <span class="inline-block px-3 py-1 bg-amber-50 text-amber-800 border border-amber-200 rounded-full text-[10px] font-black uppercase tracking-widest mb-1">Financial Lock: Account Frozen</span>
+                    <h3 class="font-serif text-2xl font-bold text-gray-900">Settle Overdue Commission</h3>
+                    <p class="text-xs text-gray-600 max-w-sm mx-auto mt-1 leading-relaxed">
+                        Your shop account has been temporarily frozen due to an unpaid monthly marketplace commission. Please send your payment below and submit your reference proof to request unfreezing.
                     </p>
                 </div>
             </div>
@@ -305,12 +326,12 @@
             <div class="bg-[#F9F6F2] p-1.5 rounded-2xl flex gap-2 border border-[#E5DDD5]">
                 <button type="button" @click="activeTab = 'gcash'" 
                         :class="activeTab === 'gcash' ? 'bg-white text-blue-600 shadow-sm border border-blue-100 font-black' : 'text-gray-500 font-bold hover:text-gray-800'"
-                        class="flex-1 py-2.5 rounded-xl text-xs uppercase tracking-wider transition-all flex items-center justify-center gap-2">
+                        class="flex-1 py-2.5 rounded-xl text-xs uppercase tracking-wider transition-all flex items-center justify-center gap-2 cursor-pointer">
                     <span class="w-2.5 h-2.5 rounded-full bg-blue-500"></span> GCash
                 </button>
                 <button type="button" @click="activeTab = 'maya'" 
                         :class="activeTab === 'maya' ? 'bg-white text-emerald-600 shadow-sm border border-emerald-100 font-black' : 'text-gray-500 font-bold hover:text-gray-800'"
-                        class="flex-1 py-2.5 rounded-xl text-xs uppercase tracking-wider transition-all flex items-center justify-center gap-2">
+                        class="flex-1 py-2.5 rounded-xl text-xs uppercase tracking-wider transition-all flex items-center justify-center gap-2 cursor-pointer">
                     <span class="w-2.5 h-2.5 rounded-full bg-emerald-500"></span> Maya
                 </button>
             </div>
@@ -332,7 +353,7 @@
                         </div>
                         <button type="button" 
                                 @click="navigator.clipboard.writeText('{{ $gcashNumber }}'); copied = true; setTimeout(() => copied = false, 2500)"
-                                class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold uppercase tracking-wider transition-all shadow-sm flex items-center gap-1.5">
+                                class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold uppercase tracking-wider transition-all shadow-sm flex items-center gap-1.5 cursor-pointer">
                             <span x-text="copied ? 'Copied! ✓' : 'Copy Number'">Copy Number</span>
                         </button>
                     </div>
@@ -360,7 +381,7 @@
                         </div>
                         <button type="button" 
                                 @click="navigator.clipboard.writeText('{{ $mayaNumber }}'); copied = true; setTimeout(() => copied = false, 2500)"
-                                class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold uppercase tracking-wider transition-all shadow-sm flex items-center gap-1.5">
+                                class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold uppercase tracking-wider transition-all shadow-sm flex items-center gap-1.5 cursor-pointer">
                             <span x-text="copied ? 'Copied! ✓' : 'Copy Number'">Copy Number</span>
                         </button>
                     </div>
@@ -390,7 +411,7 @@
                     <label class="text-[10px] font-bold text-gray-500 uppercase tracking-widest block mb-1">Notes / Remarks (Optional)</label>
                     <textarea name="notes" rows="2" placeholder="Any additional details..." class="w-full p-3 bg-white rounded-xl text-xs font-medium border border-gray-200 focus:border-[#C0422A] outline-none resize-none"></textarea>
                 </div>
-                <button type="submit" class="w-full py-3.5 bg-green-600 hover:bg-green-700 text-white rounded-xl font-bold uppercase tracking-wider text-[10px] transition-all shadow-md">
+                <button type="submit" class="w-full py-3.5 bg-green-600 hover:bg-green-700 text-white rounded-xl font-bold uppercase tracking-wider text-[10px] transition-all shadow-md cursor-pointer">
                     Submit Payment Proof
                 </button>
             </form>
