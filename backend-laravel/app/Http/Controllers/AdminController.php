@@ -644,7 +644,6 @@ class AdminController extends Controller
             'all'     => User::where('role', 'customer')->count(),
             'active'  => User::where('role', 'customer')->where('status', 'active')->count(),
             'blocked' => User::where('role', 'customer')->where('status', 'blocked')->count(),
-            'frozen'  => User::where('role', 'customer')->where('status', 'frozen')->count(),
         ];
         return view('admin.users', compact('users', 'counts'));
     }

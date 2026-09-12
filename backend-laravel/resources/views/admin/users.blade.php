@@ -66,9 +66,8 @@
         $isTotal   = empty($currentStatus) || $currentStatus === 'all';
         $isActive  = $currentStatus === 'active';
         $isBlocked = $currentStatus === 'blocked';
-        $isFrozen  = $currentStatus === 'frozen';
     @endphp
-    <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+    <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
         {{-- Total --}}
         <a href="{{ request()->fullUrlWithQuery(['status' => null, 'page' => 1]) }}"
            class="group relative rounded-2xl px-4 py-3 flex items-center justify-between border transition-all duration-200 cursor-pointer {{ $isTotal ? 'bg-white border-gray-900 ring-2 ring-gray-900/15 shadow-sm -translate-y-0.5' : 'bg-white border-gray-100 hover:border-gray-300 hover:shadow-sm hover:-translate-y-0.5' }}">
@@ -122,25 +121,6 @@
             @if($isBlocked)
                 <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[8px] font-black uppercase tracking-wider bg-red-600 text-white shadow-xs">
                     <span class="w-1 h-1 rounded-full bg-red-200"></span> Active
-                </span>
-            @endif
-        </a>
-
-        {{-- Frozen --}}
-        <a href="{{ request()->fullUrlWithQuery(['status' => 'frozen', 'page' => 1]) }}"
-           class="group relative rounded-2xl px-4 py-3 flex items-center justify-between border transition-all duration-200 cursor-pointer {{ $isFrozen ? 'bg-amber-50/50 border-amber-500 ring-2 ring-amber-500/20 shadow-sm -translate-y-0.5' : 'bg-white border-amber-100 hover:border-amber-300 hover:shadow-sm hover:-translate-y-0.5' }}">
-            <div class="flex items-center gap-3">
-                <div class="w-8 h-8 rounded-xl flex items-center justify-center shrink-0 transition-colors {{ $isFrozen ? 'bg-amber-500 text-white' : 'bg-amber-50 text-amber-500 group-hover:bg-amber-100' }}">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/></svg>
-                </div>
-                <div>
-                    <div class="text-base sm:text-lg font-black text-gray-900 leading-none">{{ $counts['frozen'] ?? 0 }}</div>
-                    <div class="text-[9px] font-bold uppercase tracking-wider text-amber-500 mt-0.5">Frozen</div>
-                </div>
-            </div>
-            @if($isFrozen)
-                <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[8px] font-black uppercase tracking-wider bg-amber-500 text-white shadow-xs">
-                    <span class="w-1 h-1 rounded-full bg-amber-200"></span> Active
                 </span>
             @endif
         </a>
