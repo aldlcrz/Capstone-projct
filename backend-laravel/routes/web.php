@@ -250,15 +250,6 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->group(function () {
     // Admin Notifications
     Route::get('/notifications', [AdminController::class, 'notifications'])->name('admin.notifications.index');
     Route::post('/notifications/read-all', [AdminController::class, 'readAllNotifications'])->name('admin.notifications.read-all');
-
-    // Settings Pages
-    Route::get('/settings',    [AdminSettingsController::class, 'index'])->name('admin.settings');
-    Route::post('/settings',   [AdminSettingsController::class, 'update'])->name('admin.settings.update');
-    Route::get('/maintenance', [AdminSettingsController::class, 'maintenance'])->name('admin.maintenance');
-    Route::post('/maintenance/toggle', [AdminSettingsController::class, 'toggleMaintenance'])->name('admin.maintenance.toggle');
-    Route::get('/audit-logs',  [AdminSettingsController::class, 'auditLogs'])->name('admin.audit-logs');
-    Route::get('/email-logs',  [AdminController::class, 'emailLogs'])->name('admin.email-logs');
-    Route::get('/platform',    [AdminSettingsController::class, 'platform'])->name('admin.platform');
 });
 
 // Seller Routes
