@@ -424,7 +424,7 @@
                                     $seller->status === 'blocked' || $seller->status === 'suspended' => 'suspended',
                                     $seller->status === 'rejected' => 'rejected',
                                     $seller->status === 'frozen'   => 'frozen',
-                                    $seller->isVerified || $seller->status === 'active' => 'active',
+                                    $seller->isVerified && $seller->status === 'active' => 'active',
                                     default => 'pending',
                                 };
 

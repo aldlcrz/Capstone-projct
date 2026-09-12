@@ -853,7 +853,7 @@ class AdminController extends Controller
         if ($raw === 'frozen') {
             return 'frozen';
         }
-        if ($seller->isVerified || $raw === 'active') {
+        if ($seller->isVerified && $raw === 'active') {
             return 'active';
         }
         return 'pending';

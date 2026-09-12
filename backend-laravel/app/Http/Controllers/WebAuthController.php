@@ -339,7 +339,7 @@ class WebAuthController extends Controller
             'shopName'     => trim($request->shopName),
             'shopAddress'  => $request->shopAddress ?? 'Not Provided',
             'role'         => 'seller',
-            'status'       => 'active',
+            'status'       => 'pending',
             'isVerified'   => false, // Requires Gmail verification & admin approval
             'googleId'     => $googleId,
             'profilePhoto' => $profilePhoto,
