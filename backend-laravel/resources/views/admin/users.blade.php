@@ -185,37 +185,37 @@
                             @endphp
                             <tr class="hover:bg-gray-50/50 transition-colors group">
                                 {{-- Customer Identity --}}
-                                <td class="px-5 py-2">
-                                    <div class="flex items-center gap-2.5">
-                                        <div class="w-8 h-8 rounded-full bg-gray-100 ring-2 {{ $sc['ring'] }} flex items-center justify-center font-bold text-xs text-gray-700 shrink-0 overflow-hidden transition-all shadow-xs"
-                                             style="width: 32px; height: 32px; min-width: 32px; min-height: 32px; max-width: 32px; max-height: 32px;">
+                                <td class="px-5 py-3.5">
+                                    <div class="flex items-center gap-3.5">
+                                        <div class="w-9 h-9 rounded-full bg-gray-100 ring-2 {{ $sc['ring'] }} flex items-center justify-center font-bold text-xs text-gray-700 shrink-0 overflow-hidden transition-all shadow-xs"
+                                             style="width: 36px; height: 36px; min-width: 36px; min-height: 36px; max-width: 36px; max-height: 36px;">
                                             @if($user->profilePhoto)
                                                 <img src="{{ str_starts_with($user->profilePhoto, 'http') || str_starts_with($user->profilePhoto, '/') ? $user->profilePhoto : asset('storage/' . $user->profilePhoto) }}"
                                                      class="w-full h-full object-cover"
-                                                     style="width: 32px; height: 32px; min-width: 32px; min-height: 32px; max-width: 32px; max-height: 32px; object-fit: cover;">
+                                                     style="width: 36px; height: 36px; min-width: 36px; min-height: 36px; max-width: 36px; max-height: 36px; object-fit: cover;">
                                             @else
                                                 <span class="text-xs font-bold text-gray-600">{{ strtoupper(substr($user->name, 0, 1)) }}</span>
                                             @endif
                                         </div>
                                         <div class="min-w-0">
-                                            <div class="text-xs font-bold text-gray-900 truncate leading-tight">{{ $user->name }}</div>
-                                            <div class="text-[10px] text-gray-400 font-medium truncate leading-tight mt-0.5">{{ $user->email }}</div>
+                                            <div class="text-xs font-bold text-gray-900 truncate leading-snug">{{ $user->name }}</div>
+                                            <div class="text-[10px] text-gray-400 font-medium truncate leading-tight mt-1">{{ $user->email }}</div>
                                         </div>
                                     </div>
                                 </td>
                                 {{-- Joined Date --}}
-                                <td class="px-4 py-2 hidden lg:table-cell">
+                                <td class="px-4 py-3.5 hidden lg:table-cell">
                                     <span class="text-[11px] text-gray-500 font-medium whitespace-nowrap">{{ $user->createdAt ? $user->createdAt->format('M d, Y') : 'N/A' }}</span>
                                 </td>
                                 {{-- Status --}}
-                                <td class="px-4 py-2">
-                                    <span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] font-bold capitalize {{ $sc['pill'] }}">
+                                <td class="px-4 py-3.5">
+                                    <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold capitalize {{ $sc['pill'] }}">
                                         <span class="w-1.5 h-1.5 rounded-full {{ $sc['dot'] }}"></span>
                                         {{ $user->status }}
                                     </span>
                                 </td>
                                 {{-- Actions --}}
-                                <td class="px-5 py-2">
+                                <td class="px-5 py-3.5">
                                     <div class="flex items-center justify-end gap-1.5">
                                         @if($user->status === 'active')
                                             <button type="button" @click="openBan({{ json_encode($user) }})"

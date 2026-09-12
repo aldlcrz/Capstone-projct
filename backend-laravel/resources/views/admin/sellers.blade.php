@@ -442,30 +442,30 @@
                             @endphp
                             <tr class="hover:bg-gray-50/50 transition-colors group">
                                 {{-- Seller & Shop --}}
-                                <td class="px-5 py-2">
-                                    <div class="flex items-center gap-2.5">
-                                        <div class="w-8 h-8 rounded-full bg-gray-100 ring-2 ring-gray-200 flex items-center justify-center font-bold text-xs text-[#C0422A] shrink-0 overflow-hidden transition-all shadow-xs"
-                                             style="width: 32px; height: 32px; min-width: 32px; min-height: 32px; max-width: 32px; max-height: 32px;">
+                                <td class="px-5 py-3.5">
+                                    <div class="flex items-center gap-3.5">
+                                        <div class="w-9 h-9 rounded-full bg-gray-100 ring-2 ring-gray-200 flex items-center justify-center font-bold text-xs text-[#C0422A] shrink-0 overflow-hidden transition-all shadow-xs"
+                                             style="width: 36px; height: 36px; min-width: 36px; min-height: 36px; max-width: 36px; max-height: 36px;">
                                             {{ strtoupper(substr($seller->name, 0, 1)) }}
                                         </div>
                                         <div class="min-w-0">
-                                            <div class="flex items-center gap-1.5 flex-wrap">
-                                                <span class="text-xs font-bold text-gray-900 truncate leading-tight">{{ $seller->name }}</span>
+                                            <div class="flex items-center gap-2 flex-wrap">
+                                                <span class="text-xs font-bold text-gray-900 truncate leading-snug">{{ $seller->name }}</span>
                                                 @if($seller->isVerified)
-                                                    <span class="text-[8px] font-black text-emerald-600 bg-emerald-50 border border-emerald-200/80 px-1 py-0.2 rounded uppercase">✓</span>
+                                                    <span class="text-[8px] font-black text-emerald-600 bg-emerald-50 border border-emerald-200/80 px-1.5 py-0.5 rounded uppercase leading-none">✓</span>
                                                 @endif
                                             </div>
-                                            <div class="text-[10px] text-gray-400 font-medium truncate leading-tight mt-0.5">
+                                            <div class="text-[10px] text-gray-400 font-medium truncate leading-tight mt-1">
                                                 <span>{{ $seller->email }}</span>
                                                 @if($seller->shopName)
-                                                    <span class="text-gray-300">·</span>
+                                                    <span class="text-gray-300 mx-1">·</span>
                                                     <button type="button" @click="openShopPreview('{{ $seller->id }}', '{{ addslashes($seller->shopName) }}')" class="text-[#C0422A] hover:underline cursor-pointer font-semibold">
                                                         {{ $seller->shopName }}
                                                     </button>
                                                 @endif
                                             </div>
                                             @if($normStatus === 'suspended' && $seller->violationReason)
-                                                <div class="text-[9px] text-red-600 font-semibold truncate max-w-xs mt-0.5" title="{{ $seller->violationReason }}">
+                                                <div class="text-[9px] text-red-600 font-semibold truncate max-w-xs mt-1" title="{{ $seller->violationReason }}">
                                                     Violation: {{ $seller->violationReason }}
                                                 </div>
                                             @elseif($normStatus === 'frozen')
@@ -473,7 +473,7 @@
                                                     $unpaidRec = $seller->commissionRecords ? $seller->commissionRecords->first() : null;
                                                 @endphp
                                                 @if($unpaidRec)
-                                                    <div class="text-[9px] text-orange-600 font-semibold truncate max-w-xs mt-0.5">
+                                                    <div class="text-[9px] text-orange-600 font-semibold truncate max-w-xs mt-1">
                                                         Overdue: ₱{{ number_format($unpaidRec->commissionAmount, 2) }} ({{ $unpaidRec->period }})
                                                     </div>
                                                 @endif
@@ -483,29 +483,29 @@
                                 </td>
 
                                 {{-- Inventory --}}
-                                <td class="px-4 py-2 hidden md:table-cell">
+                                <td class="px-4 py-3.5 hidden md:table-cell">
                                     <div class="text-[11px] text-gray-600 font-medium">
                                         <strong class="text-gray-900 font-bold">{{ $seller->products_count ?? 0 }}</strong> prods
-                                        <span class="text-gray-300">·</span>
+                                        <span class="text-gray-300 mx-1">·</span>
                                         <strong class="text-gray-900 font-bold">{{ $seller->orders_count ?? 0 }}</strong> orders
                                     </div>
                                 </td>
 
                                 {{-- Joined Date --}}
-                                <td class="px-4 py-2 hidden lg:table-cell">
+                                <td class="px-4 py-3.5 hidden lg:table-cell">
                                     <span class="text-[11px] text-gray-500 font-medium whitespace-nowrap">{{ $seller->createdAt ? $seller->createdAt->format('M d, Y') : '—' }}</span>
                                 </td>
 
                                 {{-- Status --}}
-                                <td class="px-4 py-2">
-                                    <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-bold {{ $statusClass }}">
+                                <td class="px-4 py-3.5">
+                                    <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold {{ $statusClass }}">
                                         <span class="w-1.5 h-1.5 rounded-full {{ $statusDot }}"></span>
                                         {{ $statusLabel }}
                                     </span>
                                 </td>
 
                                 {{-- Actions --}}
-                                <td class="px-5 py-2">
+                                <td class="px-5 py-3.5">
                                     <div class="flex items-center justify-end gap-1.5">
                                         @if($normStatus === 'pending')
                                             <button type="button" @click="openReview({{ json_encode($sData) }})"
