@@ -208,6 +208,10 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->group(function () {
     Route::get('/sellers/{id}/suspend', function() { return redirect()->route('admin.sellers'); });
     Route::match(['post', 'patch'], '/sellers/{id}/unsuspend', [AdminController::class, 'unsuspendSeller'])->name('admin.sellers.unsuspend');
     Route::get('/sellers/{id}/unsuspend', function() { return redirect()->route('admin.sellers'); });
+    Route::match(['post', 'patch'], '/sellers/{id}/freeze', [AdminController::class, 'freezeSeller'])->name('admin.sellers.freeze');
+    Route::get('/sellers/{id}/freeze', function() { return redirect()->route('admin.sellers'); });
+    Route::match(['post', 'patch'], '/sellers/{id}/unfreeze', [AdminController::class, 'unfreezeSeller'])->name('admin.sellers.unfreeze');
+    Route::get('/sellers/{id}/unfreeze', function() { return redirect()->route('admin.sellers'); });
     Route::delete('/sellers/{id}', [AdminController::class, 'deleteSeller'])->name('admin.sellers.delete');
     Route::get('/products', [AdminController::class, 'products'])->name('admin.products');
     Route::match(['post', 'patch'], '/products/{id}/approve', [AdminController::class, 'approveProductWeb'])->name('admin.products.approve');

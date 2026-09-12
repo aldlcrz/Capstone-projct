@@ -71,20 +71,28 @@
         @endif
 
         @if (session('banned_reason') || ($errors->has('email') && (str_contains(strtolower($errors->first('email')), 'suspended') || str_contains(strtolower($errors->first('email')), 'blocked') || str_contains(strtolower($errors->first('email')), 'banned'))))
-            <div class="mb-6 p-4 rounded-2xl bg-red-50 border border-red-200 text-red-950 text-xs shadow-xs space-y-2.5 animate-fade-in">
-                <div class="flex items-center gap-2 text-red-600 font-bold text-sm">
-                    <svg class="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"/></svg>
-                    <span>Account Suspended / Banned</span>
+            <div class="mb-6 p-4.5 rounded-2xl bg-red-50/90 border border-red-200 text-red-950 text-xs shadow-xs space-y-3 animate-fade-in">
+                <div class="flex items-center gap-2 text-red-700 font-bold text-sm">
+                    <svg class="w-5 h-5 shrink-0 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"/></svg>
+                    <span>Suspended Due to Policy Violation</span>
                 </div>
-                <p class="text-gray-700 leading-relaxed font-medium">
-                    Your account has been suspended by Administration. Active sessions have been terminated.
+                
+                <p class="text-gray-800 leading-relaxed font-semibold">
+                    You have been suspended for <span class="text-red-700 font-black underline decoration-red-300">1 month</span> due to a violation of LumBarong platform policies.
                 </p>
+
                 <div class="p-3 bg-white border border-red-200 rounded-xl text-red-900 font-mono text-[11px] font-semibold leading-relaxed shadow-2xs">
-                    <span class="text-gray-500 font-sans block text-[9px] uppercase tracking-wider mb-0.5 font-bold">Reason:</span>
-                    {{ session('banned_reason') ?? preg_replace('/^Your account has been (suspended|blocked|banned)\.\s*(Reason:\s*)?/i', '', $errors->first('email')) }}
+                    <span class="text-gray-500 font-sans block text-[9px] uppercase tracking-wider mb-0.5 font-bold">Specific Violation:</span>
+                    {{ session('banned_reason') ?? (preg_match('/Reason:\s*([^.]+)/i', $errors->first('email'), $m) ? trim($m[1]) : 'Violation of platform seller policies') }}
                 </div>
+
+                <div class="p-2.5 bg-amber-50 border border-amber-200/80 rounded-xl text-amber-950 text-[11px] flex items-start gap-2 leading-relaxed">
+                    <span class="text-amber-600 font-bold text-sm shrink-0">⚠️</span>
+                    <span><strong>Important:</strong> Repeated or continued violations could result in a <strong>permanent ban</strong> from LumBarong.</span>
+                </div>
+
                 <p class="text-[10px] text-gray-500 pt-0.5">
-                    If you believe this is an error or wish to appeal, please contact <a href="mailto:lumbarongsupport@gmail.com" class="text-[#C0422A] underline font-bold">lumbarongsupport@gmail.com</a>.
+                    If you believe this is an error or wish to submit an appeal, please contact <a href="mailto:lumbarongsupport@gmail.com" class="text-[#C0422A] underline font-bold">lumbarongsupport@gmail.com</a>.
                 </p>
             </div>
         @endif

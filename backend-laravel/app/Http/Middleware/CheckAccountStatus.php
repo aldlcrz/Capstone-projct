@@ -23,7 +23,8 @@ class CheckAccountStatus
             if ($user && in_array(strtolower($user->status ?? ''), ['blocked', 'banned', 'suspended'])) {
                 $reason = !empty($user->violationReason)
                     ? $user->violationReason
-                    : 'Your account has been suspended by an administrator for policy violations.';
+                    : 'Violation of platform seller policies';
+                $notice = "Your account has been suspended for 1 month due to a policy violation. Reason: {$reason}. Repeated violations could result in a permanent ban from LumBarong.";
 
                 // Force logout and destroy active session safely
                 Auth::guard('web')->logout();
@@ -35,18 +36,20 @@ class CheckAccountStatus
 
                 if ($request->expectsJson() || $request->is('api/*')) {
                     return response()->json([
-                        'message'       => "Your account has been suspended. Reason: {$reason}",
-                        'error'         => 'account_suspended',
-                        'banned_reason' => $reason,
-                        'redirect'      => route('login'),
+                        'message'           => $notice,
+                        'error'             => 'account_suspended',
+                        'banned_reason'     => $reason,
+                        'suspension_notice' => $notice,
+                        'redirect'          => route('login'),
                     ], 403);
                 }
 
                 if ($request->hasSession()) {
                     return redirect()->route('login')
                         ->with('banned_reason', $reason)
+                        ->with('suspension_notice', $notice)
                         ->withErrors([
-                            'email' => "Your account has been suspended. Reason: {$reason}",
+                            'email' => $notice,
                         ]);
                 }
 

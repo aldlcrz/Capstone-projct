@@ -453,8 +453,9 @@ class PlatformUpdatesTest extends TestCase
         ]);
 
         $responseSuspended->assertSessionHasErrors(['email']);
-        $this->assertStringContainsString('suspended for a policy violation', session('errors')->first('email'));
+        $this->assertStringContainsString('suspended for 1 month', session('errors')->first('email'));
         $this->assertStringContainsString('Listed prohibited non-barong merchandise', session('errors')->first('email'));
+        $this->assertStringContainsString('permanent ban', session('errors')->first('email'));
 
         /** @var User $frozenSeller */
         $frozenSeller = User::factory()->create([
@@ -484,5 +485,40 @@ class PlatformUpdatesTest extends TestCase
         $this->assertStringContainsString('temporarily frozen due to an unpaid monthly commission', session('errors')->first('email'));
         $this->assertStringContainsString('1,000.00', session('errors')->first('email'));
         $this->assertStringContainsString('2026-08', session('errors')->first('email'));
+    }
+
+    public function test_admin_can_manually_freeze_and_unfreeze_seller(): void
+    {
+        /** @var User $admin */
+        $admin = User::factory()->create([
+            'email' => 'admin_freeze_test@test.com',
+            'role' => 'admin',
+            'isVerified' => true,
+            'status' => 'active',
+        ]);
+
+        /** @var User $seller */
+        $seller = User::factory()->create([
+            'email' => 'active_to_freeze@test.com',
+            'role' => 'seller',
+            'isVerified' => true,
+            'status' => 'active',
+        ]);
+
+        // Freeze seller manually
+        $freezeResponse = $this->actingAs($admin)->patch("/admin/sellers/{$seller->id}/freeze", [
+            'reason' => 'Administrative shop hold / Pending audit',
+        ]);
+        $freezeResponse->assertRedirect(route('admin.sellers'));
+
+        $seller->refresh();
+        $this->assertEquals('frozen', $seller->status);
+
+        // Unfreeze seller manually
+        $unfreezeResponse = $this->actingAs($admin)->patch("/admin/sellers/{$seller->id}/unfreeze");
+        $unfreezeResponse->assertRedirect(route('admin.sellers'));
+
+        $seller->refresh();
+        $this->assertEquals('active', $seller->status);
     }
 }

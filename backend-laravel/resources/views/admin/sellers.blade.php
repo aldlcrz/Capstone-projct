@@ -10,6 +10,10 @@
     suspendSellerId: null,
     suspendSellerName: '',
     suspendReason: '',
+    freezeModal: false,
+    freezeSellerId: null,
+    freezeSellerName: '',
+    freezeReason: '',
     deleteModal: false,
     deleteSellerId: null,
     deleteSellerName: '',
@@ -63,6 +67,12 @@
         this.suspendSellerName = name;
         this.suspendReason = 'Violation of platform seller policies';
         this.suspendModal = true;
+    },
+    openFreeze(id, name) {
+        this.freezeSellerId = id;
+        this.freezeSellerName = name;
+        this.freezeReason = 'Administrative shop hold / Pending monthly commission settlement';
+        this.freezeModal = true;
     },
     deleteModal: false,
     deleteSellerId: null,
@@ -521,8 +531,12 @@
                                                 class="px-2.5 py-1 bg-gray-50 text-gray-600 border border-gray-200/80 rounded-lg text-[10px] font-bold uppercase tracking-wider hover:bg-gray-200 transition-all cursor-pointer">
                                                 Docs
                                             </button>
+                                            <button type="button" @click="openFreeze('{{ $seller->id }}', '{{ addslashes($seller->name) }}')"
+                                                class="px-2.5 py-1 bg-orange-50 text-orange-700 border border-orange-200/80 rounded-lg text-[10px] font-bold uppercase tracking-wider hover:bg-orange-500 hover:text-white transition-all cursor-pointer" title="Freeze Account (Commission / Hold)">
+                                                Freeze
+                                            </button>
                                             <button type="button" @click="openSuspend('{{ $seller->id }}', '{{ addslashes($seller->name) }}')"
-                                                class="px-2.5 py-1 bg-red-50 text-red-600 border border-red-200/80 rounded-lg text-[10px] font-bold uppercase tracking-wider hover:bg-red-600 hover:text-white transition-all cursor-pointer">
+                                                class="px-2.5 py-1 bg-red-50 text-red-600 border border-red-200/80 rounded-lg text-[10px] font-bold uppercase tracking-wider hover:bg-red-600 hover:text-white transition-all cursor-pointer" title="Suspend Account (Policy Violation)">
                                                 Suspend
                                             </button>
                                         @elseif($normStatus === 'frozen')
@@ -530,6 +544,13 @@
                                                 class="px-2.5 py-1 bg-gray-50 text-gray-600 border border-gray-200/80 rounded-lg text-[10px] font-bold uppercase tracking-wider hover:bg-gray-200 transition-all cursor-pointer">
                                                 Docs
                                             </button>
+                                            <form action="{{ route('admin.sellers.unfreeze', $seller->id) }}" method="POST" class="inline">
+                                                @csrf @method('PATCH')
+                                                <button type="submit" onclick="return confirm('Unfreeze and restore this seller to active status?')"
+                                                    class="px-2.5 py-1 bg-emerald-50 text-emerald-700 border border-emerald-200/80 rounded-lg text-[10px] font-bold uppercase tracking-wider hover:bg-emerald-600 hover:text-white transition-all cursor-pointer" title="Unfreeze Shop">
+                                                    Unfreeze
+                                                </button>
+                                            </form>
                                             <a href="{{ url('/superadmin/commissions') }}"
                                                 class="px-2.5 py-1 bg-orange-50 text-orange-700 border border-orange-200/80 rounded-lg text-[10px] font-bold uppercase tracking-wider hover:bg-orange-500 hover:text-white transition-all cursor-pointer" title="Manage Overdue Commission">
                                                 Commission
@@ -939,6 +960,49 @@
                 <div class="flex gap-3 pt-2">
                     <button type="button" @click="suspendModal = false" class="flex-1 py-2.5 border border-gray-200 text-xs font-semibold text-gray-500 rounded-xl hover:bg-gray-50 cursor-pointer">Cancel</button>
                     <button type="submit" class="flex-1 py-2.5 bg-red-600 text-white text-xs font-bold uppercase tracking-wider rounded-xl hover:bg-red-700 cursor-pointer shadow-sm">Confirm Suspension</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    {{-- Freeze Account Confirmation Modal --}}
+    <div x-show="freezeModal" class="fixed inset-0 z-50 flex items-center justify-center p-4" x-cloak>
+        <div class="absolute inset-0 bg-black/40 backdrop-blur-sm" @click="freezeModal = false"></div>
+        <div class="relative bg-white rounded-2xl shadow-2xl w-full max-w-md p-6 space-y-4 z-10 border border-orange-100">
+            <div class="flex items-start gap-3">
+                <div class="w-10 h-10 rounded-xl bg-orange-100 flex items-center justify-center text-orange-600 shrink-0 font-black">🔒</div>
+                <div>
+                    <h3 class="text-lg font-bold text-gray-900">Freeze Seller Shop</h3>
+                    <p class="text-xs text-gray-500 leading-relaxed mt-0.5">
+                        Place a temporary shop freeze on artisan <strong x-text="freezeSellerName" class="text-black"></strong>.
+                    </p>
+                </div>
+            </div>
+            <form :action="'/admin/sellers/' + freezeSellerId + '/freeze'" method="POST" class="space-y-4">
+                @csrf @method('PATCH')
+                <div>
+                    <label class="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-1.5 block">Quick Presets</label>
+                    <div class="flex flex-wrap gap-1.5 mb-3">
+                        <button type="button" @click="freezeReason = 'Overdue monthly platform commission settlement'"
+                            class="px-2.5 py-1 rounded-lg text-[10px] font-semibold bg-gray-100 hover:bg-gray-200 text-gray-700 transition-colors">
+                            Overdue Commission
+                        </button>
+                        <button type="button" @click="freezeReason = 'Pending administrative commission audit & verification'"
+                            class="px-2.5 py-1 rounded-lg text-[10px] font-semibold bg-gray-100 hover:bg-gray-200 text-gray-700 transition-colors">
+                            Commission Audit
+                        </button>
+                        <button type="button" @click="freezeReason = 'Temporary administrative shop hold requested by artisan'"
+                            class="px-2.5 py-1 rounded-lg text-[10px] font-semibold bg-gray-100 hover:bg-gray-200 text-gray-700 transition-colors">
+                            Artisan Request
+                        </button>
+                    </div>
+
+                    <label class="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-1 block">Freeze Reason (Sent to seller notice) *</label>
+                    <textarea name="reason" x-model="freezeReason" required rows="3" placeholder="Provide the reason for freezing shop account..." class="w-full p-3 bg-gray-50 border border-gray-200 rounded-xl text-xs outline-none focus:border-orange-500"></textarea>
+                </div>
+                <div class="flex gap-3 pt-2">
+                    <button type="button" @click="freezeModal = false" class="flex-1 py-2.5 border border-gray-200 text-xs font-semibold text-gray-500 rounded-xl hover:bg-gray-50 cursor-pointer">Cancel</button>
+                    <button type="submit" class="flex-1 py-2.5 bg-orange-600 text-white text-xs font-bold uppercase tracking-wider rounded-xl hover:bg-orange-700 cursor-pointer shadow-sm">Confirm Freeze</button>
                 </div>
             </form>
         </div>

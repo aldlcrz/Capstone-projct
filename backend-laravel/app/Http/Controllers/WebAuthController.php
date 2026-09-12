@@ -70,10 +70,12 @@ class WebAuthController extends Controller
             if (in_array(strtolower($user->status ?? ''), ['blocked', 'banned', 'suspended'])) {
                 Auth::logout();
                 $reason = !empty($user->violationReason) ? $user->violationReason : 'Violation of platform seller policies';
+                $notice = "Your account has been suspended for 1 month due to a policy violation. Reason: {$reason}. Repeated violations could result in a permanent ban from LumBarong.";
                 return back()
                     ->with('banned_reason', $reason)
+                    ->with('suspension_notice', $notice)
                     ->withErrors([
-                        'email' => "Your account has been suspended for a policy violation. Reason: {$reason}",
+                        'email' => $notice,
                     ])->onlyInput('email');
             }
 
@@ -566,9 +568,11 @@ class WebAuthController extends Controller
 
             if (in_array(strtolower($user->status ?? ''), ['blocked', 'banned', 'suspended'])) {
                 $reason = !empty($user->violationReason) ? $user->violationReason : 'Violation of community terms and policies';
+                $notice = "Your account has been suspended for 1 month due to a policy violation. Reason: {$reason}. Repeated violations could result in a permanent ban from LumBarong.";
                 return redirect()->route('login')
                     ->with('banned_reason', $reason)
-                    ->withErrors(['email' => "Your account has been suspended. Reason: {$reason}"]);
+                    ->with('suspension_notice', $notice)
+                    ->withErrors(['email' => $notice]);
             }
 
             if ($user->status === 'rejected') {
