@@ -25,9 +25,20 @@
 <body class="min-h-screen flex items-center justify-center p-3 sm:p-6 relative overflow-x-hidden overflow-y-auto" id="auth-body">
     @php
         $gcashNumber = \App\Models\SystemSetting::where('key', 'superadmin_gcash_number')->value('value') ?? '';
-        $gcashQr     = \App\Models\SystemSetting::where('key', 'superadmin_gcash_qr')->value('value') ?? '';
+        $gcashQrRaw  = \App\Models\SystemSetting::where('key', 'superadmin_gcash_qr')->value('value') ?? '';
         $mayaNumber  = \App\Models\SystemSetting::where('key', 'superadmin_maya_number')->value('value') ?? '';
-        $mayaQr      = \App\Models\SystemSetting::where('key', 'superadmin_maya_qr')->value('value') ?? '';
+        $mayaQrRaw   = \App\Models\SystemSetting::where('key', 'superadmin_maya_qr')->value('value') ?? '';
+        
+        $resolveQr = function($path) {
+            if (empty($path)) return null;
+            if (str_starts_with($path, 'http://') || str_starts_with($path, 'https://')) return $path;
+            if (str_starts_with($path, '/uploads/') || str_starts_with($path, 'uploads/')) return asset(ltrim($path, '/'));
+            if (str_starts_with($path, '/storage/') || str_starts_with($path, 'storage/')) return asset(ltrim($path, '/'));
+            return asset('storage/' . ltrim($path, '/'));
+        };
+
+        $gcashQr     = $resolveQr($gcashQrRaw);
+        $mayaQr      = $resolveQr($mayaQrRaw);
         $errMsg      = $errors->first();
         $isFrozenErr = $errors->any() && (
             str_contains(strtolower((string)$errMsg), 'commission') || 
@@ -295,124 +306,130 @@
         x-transition:leave="transition ease-in duration-200"
         x-transition:leave-start="opacity-100 scale-100"
         x-transition:leave-end="opacity-0 scale-95"
-        class="fixed inset-0 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md overflow-y-auto"
+        class="fixed inset-0 flex items-center justify-center p-2.5 sm:p-4 bg-black/80 backdrop-blur-md overflow-y-auto"
         style="z-index: 99999 !important;"
         x-cloak
         @keydown.escape.window="show = false"
     >
         <!-- Account Frozen Payment Modal -->
-        <div @click.away="show = false" class="w-full max-w-lg bg-white rounded-[2.5rem] p-6 lg:p-8 shadow-2xl border border-gray-100 text-center relative space-y-6 max-h-[92vh] overflow-y-auto no-scrollbar my-auto">
-            <button type="button" @click="show = false" class="absolute top-5 right-5 text-gray-400 hover:text-gray-600 transition-colors p-1 rounded-full hover:bg-gray-100 cursor-pointer" title="Close">
-                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+        <div @click.away="show = false" class="w-full max-w-lg bg-white rounded-3xl sm:rounded-[2.5rem] p-4 sm:p-7 shadow-2xl border border-gray-100 text-center relative space-y-4 sm:space-y-5 max-h-[94vh] overflow-y-auto no-scrollbar my-auto">
+            <!-- Close Button -->
+            <button type="button" @click="show = false" class="absolute top-3.5 right-3.5 sm:top-5 sm:right-5 text-gray-400 hover:text-gray-700 transition-colors w-8 h-8 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center cursor-pointer shadow-2xs" title="Close">
+                <svg class="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12"></path></svg>
             </button>
 
-            <!-- Icon & Header -->
-            <div class="space-y-2 pt-2">
-                <div class="w-14 h-14 rounded-2xl bg-amber-50 text-amber-600 border border-amber-200 flex items-center justify-center mx-auto shadow-sm">
-                    <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <!-- Header -->
+            <div class="space-y-1.5 pt-1 sm:pt-2">
+                <div class="w-10 h-10 sm:w-12 sm:h-12 rounded-2xl bg-amber-50 text-amber-600 border border-amber-200 flex items-center justify-center mx-auto shadow-2xs">
+                    <svg class="w-5 h-5 sm:w-6 sm:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
                     </svg>
                 </div>
                 <div>
-                    <span class="inline-block px-3 py-1 bg-amber-50 text-amber-800 border border-amber-200 rounded-full text-[10px] font-black uppercase tracking-widest mb-1">Financial Lock: Account Frozen</span>
-                    <h3 class="font-serif text-2xl font-bold text-gray-900">Settle Overdue Commission</h3>
-                    <p class="text-xs text-gray-600 max-w-sm mx-auto mt-1 leading-relaxed">
-                        Your shop account has been temporarily frozen due to an unpaid monthly marketplace commission. Please send your payment below and submit your reference proof to request unfreezing.
+                    <span class="inline-block px-2.5 py-0.5 bg-amber-50 text-amber-800 border border-amber-200 rounded-full text-[9px] sm:text-[10px] font-black uppercase tracking-wider mb-1">Financial Lock: Account Frozen</span>
+                    <h3 class="font-serif text-xl sm:text-2xl font-bold text-gray-900 leading-tight">Settle Overdue Commission</h3>
+                    <p class="text-[11px] sm:text-xs text-gray-600 max-w-sm mx-auto mt-1 leading-relaxed">
+                        Your shop is frozen due to unpaid marketplace commission. Scan the QR code or copy the account number below to settle and upload your receipt.
                     </p>
                 </div>
             </div>
 
             <!-- Payment Method Selector Tabs -->
-            <div class="bg-[#F9F6F2] p-1.5 rounded-2xl flex gap-2 border border-[#E5DDD5]">
+            <div class="bg-[#F9F6F2] p-1 rounded-xl sm:rounded-2xl flex gap-1.5 border border-[#E5DDD5]">
                 <button type="button" @click="activeTab = 'gcash'" 
                         :class="activeTab === 'gcash' ? 'bg-white text-blue-600 shadow-sm border border-blue-100 font-black' : 'text-gray-500 font-bold hover:text-gray-800'"
-                        class="flex-1 py-2.5 rounded-xl text-xs uppercase tracking-wider transition-all flex items-center justify-center gap-2 cursor-pointer">
-                    <span class="w-2.5 h-2.5 rounded-full bg-blue-500"></span> GCash
+                        class="flex-1 py-2 sm:py-2.5 rounded-lg sm:rounded-xl text-[11px] sm:text-xs uppercase tracking-wider transition-all flex items-center justify-center gap-1.5 cursor-pointer active:scale-98">
+                    <span class="w-2 h-2 sm:w-2.5 sm:h-2.5 rounded-full bg-blue-500"></span> GCash
                 </button>
                 <button type="button" @click="activeTab = 'maya'" 
                         :class="activeTab === 'maya' ? 'bg-white text-emerald-600 shadow-sm border border-emerald-100 font-black' : 'text-gray-500 font-bold hover:text-gray-800'"
-                        class="flex-1 py-2.5 rounded-xl text-xs uppercase tracking-wider transition-all flex items-center justify-center gap-2 cursor-pointer">
-                    <span class="w-2.5 h-2.5 rounded-full bg-emerald-500"></span> Maya
+                        class="flex-1 py-2 sm:py-2.5 rounded-lg sm:rounded-xl text-[11px] sm:text-xs uppercase tracking-wider transition-all flex items-center justify-center gap-1.5 cursor-pointer active:scale-98">
+                    <span class="w-2 h-2 sm:w-2.5 sm:h-2.5 rounded-full bg-emerald-500"></span> Maya
                 </button>
             </div>
 
             <!-- GCash Details Container -->
-            <div x-show="activeTab === 'gcash'" class="space-y-4" x-transition:enter="transition ease-out duration-200">
+            <div x-show="activeTab === 'gcash'" class="space-y-3 sm:space-y-4" x-transition:enter="transition ease-out duration-200">
                 @if($gcashQr)
-                    <div class="bg-gray-50 border border-gray-200 rounded-2xl p-4 flex flex-col items-center">
-                        <img src="{{ asset('storage/' . $gcashQr) }}" class="w-44 h-44 object-contain rounded-xl border border-gray-200 bg-white p-2 shadow-sm" alt="GCash QR Code">
-                        <span class="text-[10px] font-bold text-gray-400 uppercase tracking-widest mt-2">Scan QR Code via GCash App</span>
+                    <div class="qr-box bg-gray-50 border border-gray-200 rounded-2xl p-3 sm:p-4 flex flex-col items-center">
+                        <img src="{{ $gcashQr }}" class="w-36 h-36 sm:w-44 sm:h-44 object-contain rounded-xl border border-gray-200 bg-white p-2 shadow-sm" alt="GCash QR Code" onerror="this.closest('.qr-box').style.display='none'">
+                        <span class="text-[9px] sm:text-[10px] font-bold text-gray-400 uppercase tracking-widest mt-1.5">Scan QR Code via GCash App</span>
                     </div>
                 @endif
 
                 @if($gcashNumber)
-                    <div x-data="{ copied: false }" class="bg-blue-50/70 border border-blue-100 rounded-2xl p-4 flex items-center justify-between">
-                        <div class="text-left">
-                            <span class="text-[10px] font-bold text-blue-600 uppercase tracking-widest block">GCash Account Number</span>
-                            <span class="text-base font-black text-gray-900 font-mono tracking-wider">{{ $gcashNumber }}</span>
+                    <div x-data="{ copied: false }" class="bg-blue-50/80 border border-blue-100 rounded-2xl p-3 sm:p-3.5 flex items-center justify-between gap-2">
+                        <div class="text-left min-w-0">
+                            <span class="text-[9px] font-bold text-blue-600 uppercase tracking-widest block truncate">GCash Account Number</span>
+                            <span class="text-sm sm:text-base font-black text-gray-900 font-mono tracking-wider">{{ $gcashNumber }}</span>
                         </div>
                         <button type="button" 
                                 @click="navigator.clipboard.writeText('{{ $gcashNumber }}'); copied = true; setTimeout(() => copied = false, 2500)"
-                                class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold uppercase tracking-wider transition-all shadow-sm flex items-center gap-1.5 cursor-pointer">
-                            <span x-text="copied ? 'Copied! ✓' : 'Copy Number'">Copy Number</span>
+                                class="px-3 sm:px-4 py-2 bg-blue-600 hover:bg-blue-700 active:scale-95 text-white rounded-xl text-[10px] sm:text-xs font-bold uppercase tracking-wider transition-all shadow-xs flex items-center gap-1 shrink-0 cursor-pointer">
+                            <span x-text="copied ? 'Copied! ✓' : 'Copy'">Copy</span>
                         </button>
                     </div>
                 @elseif(!$gcashQr)
-                    <div class="p-4 rounded-2xl bg-gray-50 border border-dashed border-gray-200 text-xs text-gray-400 font-medium">
+                    <div class="p-3.5 rounded-2xl bg-gray-50 border border-dashed border-gray-200 text-xs text-gray-400 font-medium">
                         GCash payment info has not been configured yet.
                     </div>
                 @endif
             </div>
 
             <!-- Maya Details Container -->
-            <div x-show="activeTab === 'maya'" class="space-y-4" x-transition:enter="transition ease-out duration-200" style="display: none;">
+            <div x-show="activeTab === 'maya'" class="space-y-3 sm:space-y-4" x-transition:enter="transition ease-out duration-200" style="display: none;">
                 @if($mayaQr)
-                    <div class="bg-gray-50 border border-gray-200 rounded-2xl p-4 flex flex-col items-center">
-                        <img src="{{ asset('storage/' . $mayaQr) }}" class="w-44 h-44 object-contain rounded-xl border border-gray-200 bg-white p-2 shadow-sm" alt="Maya QR Code">
-                        <span class="text-[10px] font-bold text-gray-400 uppercase tracking-widest mt-2">Scan QR Code via Maya App</span>
+                    <div class="qr-box bg-gray-50 border border-gray-200 rounded-2xl p-3 sm:p-4 flex flex-col items-center">
+                        <img src="{{ $mayaQr }}" class="w-36 h-36 sm:w-44 sm:h-44 object-contain rounded-xl border border-gray-200 bg-white p-2 shadow-sm" alt="Maya QR Code" onerror="this.closest('.qr-box').style.display='none'">
+                        <span class="text-[9px] sm:text-[10px] font-bold text-gray-400 uppercase tracking-widest mt-1.5">Scan QR Code via Maya App</span>
                     </div>
                 @endif
 
                 @if($mayaNumber)
-                    <div x-data="{ copied: false }" class="bg-emerald-50/70 border border-emerald-100 rounded-2xl p-4 flex items-center justify-between">
-                        <div class="text-left">
-                            <span class="text-[10px] font-bold text-emerald-600 uppercase tracking-widest block">Maya Account Number</span>
-                            <span class="text-base font-black text-gray-900 font-mono tracking-wider">{{ $mayaNumber }}</span>
+                    <div x-data="{ copied: false }" class="bg-emerald-50/80 border border-emerald-100 rounded-2xl p-3 sm:p-3.5 flex items-center justify-between gap-2">
+                        <div class="text-left min-w-0">
+                            <span class="text-[9px] font-bold text-emerald-600 uppercase tracking-widest block truncate">Maya Account Number</span>
+                            <span class="text-sm sm:text-base font-black text-gray-900 font-mono tracking-wider">{{ $mayaNumber }}</span>
                         </div>
                         <button type="button" 
                                 @click="navigator.clipboard.writeText('{{ $mayaNumber }}'); copied = true; setTimeout(() => copied = false, 2500)"
-                                class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold uppercase tracking-wider transition-all shadow-sm flex items-center gap-1.5 cursor-pointer">
-                            <span x-text="copied ? 'Copied! ✓' : 'Copy Number'">Copy Number</span>
+                                class="px-3 sm:px-4 py-2 bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white rounded-xl text-[10px] sm:text-xs font-bold uppercase tracking-wider transition-all shadow-xs flex items-center gap-1 shrink-0 cursor-pointer">
+                            <span x-text="copied ? 'Copied! ✓' : 'Copy'">Copy</span>
                         </button>
                     </div>
                 @elseif(!$mayaQr)
-                    <div class="p-4 rounded-2xl bg-gray-50 border border-dashed border-gray-200 text-xs text-gray-400 font-medium">
+                    <div class="p-3.5 rounded-2xl bg-gray-50 border border-dashed border-gray-200 text-xs text-gray-400 font-medium">
                         Maya payment info has not been configured yet.
                     </div>
                 @endif
             </div>
 
             <!-- Submit Payment Proof Form -->
-            <form action="{{ route('commission.submit-payment') }}" method="POST" enctype="multipart/form-data" class="bg-[#F9F6F2] border border-[#E5DDD5] rounded-2xl p-5 text-left space-y-4">
+            <form action="{{ route('commission.submit-payment') }}" method="POST" enctype="multipart/form-data" class="bg-[#F9F6F2] border border-[#E5DDD5] rounded-2xl sm:rounded-3xl p-3.5 sm:p-5 text-left space-y-3">
                 @csrf
-                <div>
-                    <label class="text-[10px] font-bold text-gray-500 uppercase tracking-widest block mb-1">Your Email</label>
-                    <input type="email" name="email" value="{{ old('email') }}" required placeholder="your.email@gmail.com" class="w-full h-11 bg-white rounded-xl px-4 text-xs font-medium border border-gray-200 focus:border-[#C0422A] outline-none">
+                <div class="pb-1 border-b border-gray-200 flex items-center justify-between">
+                    <span class="text-[10px] font-black uppercase tracking-wider text-gray-700">Submit Payment Proof</span>
+                    <span class="text-[9px] text-gray-400 font-medium">* Required fields</span>
                 </div>
                 <div>
-                    <label class="text-[10px] font-bold text-gray-500 uppercase tracking-widest block mb-1">Reference Number / Transaction ID *</label>
-                    <input type="text" name="reference_number" required placeholder="e.g. 100234859384" class="w-full h-11 bg-white rounded-xl px-4 text-xs font-medium border border-gray-200 focus:border-[#C0422A] outline-none">
+                    <label class="text-[9px] sm:text-[10px] font-bold text-gray-500 uppercase tracking-widest block mb-1">Your Email *</label>
+                    <input type="email" name="email" value="{{ old('email') }}" required placeholder="your.email@gmail.com" class="w-full h-10 sm:h-11 bg-white rounded-xl px-3.5 text-xs font-medium border border-gray-200 focus:border-[#C0422A] outline-none shadow-2xs">
                 </div>
                 <div>
-                    <label class="text-[10px] font-bold text-gray-500 uppercase tracking-widest block mb-1">Payment Proof (Screenshot) *</label>
-                    <input type="file" name="payment_proof" accept="image/*" required class="w-full text-xs text-gray-500 file:mr-3 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-[10px] file:font-bold file:uppercase file:tracking-widest file:bg-gray-100 file:text-gray-700 hover:file:bg-gray-200 cursor-pointer">
+                    <label class="text-[9px] sm:text-[10px] font-bold text-gray-500 uppercase tracking-widest block mb-1">Reference Number / Transaction ID *</label>
+                    <input type="text" name="reference_number" required placeholder="e.g. 100234859384" class="w-full h-10 sm:h-11 bg-white rounded-xl px-3.5 text-xs font-medium border border-gray-200 focus:border-[#C0422A] outline-none shadow-2xs">
                 </div>
                 <div>
-                    <label class="text-[10px] font-bold text-gray-500 uppercase tracking-widest block mb-1">Notes / Remarks (Optional)</label>
-                    <textarea name="notes" rows="2" placeholder="Any additional details..." class="w-full p-3 bg-white rounded-xl text-xs font-medium border border-gray-200 focus:border-[#C0422A] outline-none resize-none"></textarea>
+                    <label class="text-[9px] sm:text-[10px] font-bold text-gray-500 uppercase tracking-widest block mb-1">Payment Proof (Screenshot) *</label>
+                    <input type="file" name="payment_proof" accept="image/*" required class="w-full text-xs text-gray-500 file:mr-2.5 file:py-1.5 file:px-3 file:rounded-xl file:border-0 file:text-[9px] sm:file:text-[10px] file:font-bold file:uppercase file:tracking-wider file:bg-gray-200 file:text-gray-700 hover:file:bg-gray-300 cursor-pointer">
                 </div>
-                <button type="submit" class="w-full py-3.5 bg-green-600 hover:bg-green-700 text-white rounded-xl font-bold uppercase tracking-wider text-[10px] transition-all shadow-md cursor-pointer">
-                    Submit Payment Proof
+                <div>
+                    <label class="text-[9px] sm:text-[10px] font-bold text-gray-500 uppercase tracking-widest block mb-1">Notes / Remarks (Optional)</label>
+                    <textarea name="notes" rows="2" placeholder="Any additional payment details..." class="w-full p-2.5 sm:p-3 bg-white rounded-xl text-xs font-medium border border-gray-200 focus:border-[#C0422A] outline-none resize-none shadow-2xs"></textarea>
+                </div>
+                <button type="submit" class="w-full py-3 sm:py-3.5 bg-green-600 hover:bg-green-700 active:scale-98 text-white rounded-xl font-bold uppercase tracking-wider text-[10px] sm:text-xs transition-all shadow-md flex items-center justify-center gap-1.5 cursor-pointer">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
+                    <span>Submit Payment Proof</span>
                 </button>
             </form>
         </div>
