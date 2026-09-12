@@ -1,102 +1,217 @@
 @extends('layouts.admin')
 
 @section('content')
-<div class="space-y-8" x-data="adminReportsManagement()">
+<div class="space-y-6" x-data="adminReportsManagement()">
     
-    {{-- Header --}}
-    <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div>
-            <div class="text-[9px] font-black tracking-widest text-[#C0422A] uppercase flex items-center gap-1.5 mb-1.5">
-                <span>TRUST &amp; SAFETY</span>
-                <span class="text-gray-300">·</span>
-                <span>MODERATION CONSOLE</span>
-                <span class="text-gray-300">·</span>
-                <span>ADMIN CENTER</span>
+    {{-- ═══ PAGE HEADER + SEARCH BAR ═══ --}}
+    <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+        {{-- Left: Title & Subtitle --}}
+        <div class="text-left space-y-0.5 shrink-0">
+            <div class="inline-flex items-center gap-2">
+                <span class="text-[9px] font-black uppercase tracking-[0.25em] text-[#C0422A]">Compliance &amp; Reports</span>
+                <span class="text-gray-300 text-xs">·</span>
+                <span class="text-[9px] font-bold uppercase tracking-[0.2em] text-gray-400">System Governance</span>
             </div>
-            <h1 class="font-serif text-2xl sm:text-3xl font-bold text-gray-900">
-                Compliance &amp; <span class="text-[#C0422A] font-light italic">Reports</span>
+            <h1 class="font-serif text-2xl sm:text-3xl font-bold text-gray-900 leading-tight">
+                Compliance &amp; <span class="text-[#C0420A] font-light italic">Reports</span>
             </h1>
-            <p class="text-[11px] text-gray-500 mt-1 font-medium">Review consumer inquiries, investigate reported violations, and enforce marketplace trust &amp; safety standards.</p>
+            <p class="text-[11px] text-gray-400 font-medium">Review consumer inquiries, investigate reported violations, and enforce marketplace trust &amp; safety standards</p>
         </div>
 
-        {{-- Quick Status Filter Pills --}}
-        <div class="flex items-center gap-2 flex-wrap">
-            <a href="{{ route('admin.reports', ['status' => 'Pending']) }}" 
-               class="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-[10px] font-black uppercase tracking-wider transition-all {{ $status == 'Pending' ? 'bg-amber-600 text-white shadow-xs' : 'bg-white text-gray-600 border border-gray-200 hover:border-amber-300' }}">
-                <span class="w-1.5 h-1.5 rounded-full {{ $status == 'Pending' ? 'bg-white' : 'bg-amber-500' }}"></span>
-                Pending ({{ $counts['pending'] }})
-            </a>
-            <a href="{{ route('admin.reports', ['status' => 'Under Review']) }}" 
-               class="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-[10px] font-black uppercase tracking-wider transition-all {{ $status == 'Under Review' ? 'bg-sky-600 text-white shadow-xs' : 'bg-white text-gray-600 border border-gray-200 hover:border-sky-300' }}">
-                <span class="w-1.5 h-1.5 rounded-full {{ $status == 'Under Review' ? 'bg-white' : 'bg-sky-500' }}"></span>
-                Under Review ({{ $counts['under_review'] }})
-            </a>
-            <a href="{{ route('admin.reports', ['status' => 'Resolved']) }}" 
-               class="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-[10px] font-black uppercase tracking-wider transition-all {{ $status == 'Resolved' ? 'bg-emerald-600 text-white shadow-xs' : 'bg-white text-gray-600 border border-gray-200 hover:border-emerald-300' }}">
-                <span class="w-1.5 h-1.5 rounded-full {{ $status == 'Resolved' ? 'bg-white' : 'bg-emerald-500' }}"></span>
-                Resolved ({{ $counts['resolved'] }})
-            </a>
-            <a href="{{ route('admin.reports', ['status' => 'all']) }}" 
-               class="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-[10px] font-black uppercase tracking-wider transition-all {{ $status == 'all' ? 'bg-[#3D2B1F] text-white shadow-xs' : 'bg-white text-gray-600 border border-gray-200 hover:border-gray-300' }}">
-                All ({{ $counts['all'] }})
-            </a>
+        {{-- Larger Search Bar matching Archive Hub --}}
+        <div class="flex-1 max-w-xl lg:max-w-2xl w-full">
+            <form method="GET" action="{{ route('admin.reports') }}" class="flex items-center gap-2 w-full">
+                @if(request('status') && request('status') !== 'Pending')
+                    <input type="hidden" name="status" value="{{ request('status') }}">
+                @endif
+                @if(request('type') && request('type') !== 'all')
+                    <input type="hidden" name="type" value="{{ request('type') }}">
+                @endif
+                @if(request('severity') && request('severity') !== 'all')
+                    <input type="hidden" name="severity" value="{{ request('severity') }}">
+                @endif
+
+                <div class="relative w-full">
+                    <input type="text" name="search" value="{{ request('search') }}"
+                           placeholder="Search case ID, reason, seller, customer, or product..."
+                           class="w-full pl-11 pr-5 py-2.5 bg-white border border-gray-200 rounded-full text-sm text-gray-800 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-[#C0422A]/20 focus:border-[#C0422A] shadow-xs transition-all">
+                    <svg class="w-5 h-5 text-gray-400 absolute left-4 top-1/2 -translate-y-1/2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                    </svg>
+                </div>
+                @if(request('search'))
+                    <a href="{{ request()->fullUrlWithQuery(['search' => null, 'page' => 1]) }}" 
+                       class="px-4 py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-600 rounded-full text-xs font-bold transition-all shrink-0">
+                        Clear
+                    </a>
+                @endif
+            </form>
         </div>
     </div>
 
-    {{-- 4-Metric Stats Bar --}}
-    <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
-        <div class="bg-white rounded-2xl border border-amber-100 shadow-xs px-4 py-3.5 flex items-center gap-3 hover:shadow-md transition-all">
-            <div class="w-9 h-9 rounded-xl bg-amber-50 border border-amber-100 flex items-center justify-center shrink-0">
-                <svg class="w-4 h-4 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                </svg>
+    {{-- ═══ STATS BAR / STATUS FILTERS (Unified Interactive Cards matching Archive Hub) ═══ --}}
+    @php
+        $currentStatus = request('status', 'Pending');
+        $isAll         = $currentStatus === 'all';
+        $isPending     = $currentStatus === 'Pending';
+        $isUnderReview = $currentStatus === 'Under Review';
+        $isResolved    = $currentStatus === 'Resolved';
+        $isDismissed   = $currentStatus === 'Dismissed';
+    @endphp
+    <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
+        {{-- Total / All --}}
+        <a href="{{ request()->fullUrlWithQuery(['status' => 'all', 'page' => 1]) }}"
+           class="group relative rounded-2xl px-3.5 py-3 flex items-center justify-between border transition-all duration-200 cursor-pointer {{ $isAll ? 'bg-white border-gray-900 ring-2 ring-gray-900/15 shadow-sm -translate-y-0.5' : 'bg-white border-gray-100 hover:border-gray-300 hover:shadow-sm hover:-translate-y-0.5' }}">
+            <div class="flex items-center gap-2.5 min-w-0">
+                <div class="w-8 h-8 rounded-xl flex items-center justify-center shrink-0 transition-colors {{ $isAll ? 'bg-gray-900 text-white' : 'bg-gray-100 text-gray-500 group-hover:bg-gray-200' }}">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                    </svg>
+                </div>
+                <div class="min-w-0">
+                    <div class="text-base sm:text-lg font-black text-gray-900 leading-none">{{ $counts['all'] ?? 0 }}</div>
+                    <div class="text-[9px] font-bold uppercase tracking-wider text-gray-400 mt-0.5 truncate">Total Logged</div>
+                </div>
             </div>
-            <div>
-                <div class="text-lg font-black text-amber-700 leading-tight">{{ $counts['pending'] }}</div>
-                <div class="text-[9px] font-bold uppercase tracking-wider text-amber-500">Pending Review</div>
+            @if($isAll)
+                <span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[8px] font-black uppercase tracking-wider bg-gray-900 text-white shadow-xs shrink-0">
+                    <span class="w-1 h-1 rounded-full bg-emerald-400"></span> Active
+                </span>
+            @endif
+        </a>
+
+        {{-- Pending Review --}}
+        <a href="{{ request()->fullUrlWithQuery(['status' => 'Pending', 'page' => 1]) }}"
+           class="group relative rounded-2xl px-3.5 py-3 flex items-center justify-between border transition-all duration-200 cursor-pointer {{ $isPending ? 'bg-amber-50/50 border-amber-500 ring-2 ring-amber-500/20 shadow-sm -translate-y-0.5' : 'bg-white border-amber-100 hover:border-amber-300 hover:shadow-sm hover:-translate-y-0.5' }}">
+            <div class="flex items-center gap-2.5 min-w-0">
+                <div class="w-8 h-8 rounded-xl flex items-center justify-center shrink-0 transition-colors {{ $isPending ? 'bg-amber-500 text-white' : 'bg-amber-50 text-amber-600 group-hover:bg-amber-100' }}">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                    </svg>
+                </div>
+                <div class="min-w-0">
+                    <div class="text-base sm:text-lg font-black text-gray-900 leading-none">{{ $counts['pending'] ?? 0 }}</div>
+                    <div class="text-[9px] font-bold uppercase tracking-wider text-amber-500 mt-0.5 truncate">Pending Review</div>
+                </div>
             </div>
+            @if($isPending)
+                <span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[8px] font-black uppercase tracking-wider bg-amber-500 text-white shadow-xs shrink-0">
+                    <span class="w-1 h-1 rounded-full bg-amber-200"></span> Active
+                </span>
+            @endif
+        </a>
+
+        {{-- In Investigation (Under Review) --}}
+        <a href="{{ request()->fullUrlWithQuery(['status' => 'Under Review', 'page' => 1]) }}"
+           class="group relative rounded-2xl px-3.5 py-3 flex items-center justify-between border transition-all duration-200 cursor-pointer {{ $isUnderReview ? 'bg-sky-50/50 border-sky-600 ring-2 ring-sky-600/20 shadow-sm -translate-y-0.5' : 'bg-white border-sky-100 hover:border-sky-300 hover:shadow-sm hover:-translate-y-0.5' }}">
+            <div class="flex items-center gap-2.5 min-w-0">
+                <div class="w-8 h-8 rounded-xl flex items-center justify-center shrink-0 transition-colors {{ $isUnderReview ? 'bg-sky-600 text-white' : 'bg-sky-50 text-sky-600 group-hover:bg-sky-100' }}">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                    </svg>
+                </div>
+                <div class="min-w-0">
+                    <div class="text-base sm:text-lg font-black text-gray-900 leading-none">{{ $counts['under_review'] ?? 0 }}</div>
+                    <div class="text-[9px] font-bold uppercase tracking-wider text-sky-500 mt-0.5 truncate">In Investigation</div>
+                </div>
+            </div>
+            @if($isUnderReview)
+                <span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[8px] font-black uppercase tracking-wider bg-sky-600 text-white shadow-xs shrink-0">
+                    <span class="w-1 h-1 rounded-full bg-sky-200"></span> Active
+                </span>
+            @endif
+        </a>
+
+        {{-- Resolved Cases --}}
+        <a href="{{ request()->fullUrlWithQuery(['status' => 'Resolved', 'page' => 1]) }}"
+           class="group relative rounded-2xl px-3.5 py-3 flex items-center justify-between border transition-all duration-200 cursor-pointer {{ $isResolved ? 'bg-emerald-50/50 border-emerald-600 ring-2 ring-emerald-600/20 shadow-sm -translate-y-0.5' : 'bg-white border-emerald-100 hover:border-emerald-300 hover:shadow-sm hover:-translate-y-0.5' }}">
+            <div class="flex items-center gap-2.5 min-w-0">
+                <div class="w-8 h-8 rounded-xl flex items-center justify-center shrink-0 transition-colors {{ $isResolved ? 'bg-emerald-600 text-white' : 'bg-emerald-50 text-emerald-600 group-hover:bg-emerald-100' }}">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                    </svg>
+                </div>
+                <div class="min-w-0">
+                    <div class="text-base sm:text-lg font-black text-gray-900 leading-none">{{ $counts['resolved'] ?? 0 }}</div>
+                    <div class="text-[9px] font-bold uppercase tracking-wider text-emerald-500 mt-0.5 truncate">Resolved Cases</div>
+                </div>
+            </div>
+            @if($isResolved)
+                <span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[8px] font-black uppercase tracking-wider bg-emerald-600 text-white shadow-xs shrink-0">
+                    <span class="w-1 h-1 rounded-full bg-emerald-200"></span> Active
+                </span>
+            @endif
+        </a>
+
+        {{-- Dismissed --}}
+        <a href="{{ request()->fullUrlWithQuery(['status' => 'Dismissed', 'page' => 1]) }}"
+           class="group relative rounded-2xl px-3.5 py-3 flex items-center justify-between border transition-all duration-200 cursor-pointer {{ $isDismissed ? 'bg-purple-50/50 border-purple-600 ring-2 ring-purple-600/20 shadow-sm -translate-y-0.5' : 'bg-white border-purple-100 hover:border-purple-300 hover:shadow-sm hover:-translate-y-0.5' }}">
+            <div class="flex items-center gap-2.5 min-w-0">
+                <div class="w-8 h-8 rounded-xl flex items-center justify-center shrink-0 transition-colors {{ $isDismissed ? 'bg-purple-600 text-white' : 'bg-purple-50 text-purple-600 group-hover:bg-purple-100' }}">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"/>
+                    </svg>
+                </div>
+                <div class="min-w-0">
+                    <div class="text-base sm:text-lg font-black text-gray-900 leading-none">{{ $counts['dismissed'] ?? 0 }}</div>
+                    <div class="text-[9px] font-bold uppercase tracking-wider text-purple-500 mt-0.5 truncate">Dismissed</div>
+                </div>
+            </div>
+            @if($isDismissed)
+                <span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[8px] font-black uppercase tracking-wider bg-purple-600 text-white shadow-xs shrink-0">
+                    <span class="w-1 h-1 rounded-full bg-purple-200"></span> Active
+                </span>
+            @endif
+        </a>
+    </div>
+
+    {{-- ═══ RESULTS COUNT & SECONDARY DROPDOWN FILTERS ═══ --}}
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 px-1">
+        {{-- Results Counter --}}
+        <div class="text-[11px] font-bold text-gray-400">
+            Showing <span class="text-gray-900 font-black">{{ $reports->total() }}</span> {{ $reports->total() === 1 ? 'report record' : 'report records' }}
+            <span class="text-gray-400">· Status: <span class="capitalize font-black text-gray-700">{{ $currentStatus === 'all' ? 'All Status' : $currentStatus }}</span></span>
+            @if(request('type') && request('type') !== 'all')
+                <span class="text-gray-400">· Type: <span class="capitalize font-black text-gray-700">{{ request('type') }}</span></span>
+            @endif
+            @if(request('severity') && request('severity') !== 'all')
+                <span class="text-gray-400">· Severity: <span class="capitalize font-black text-gray-700">{{ request('severity') }}</span></span>
+            @endif
+            @if(request('search'))
+                <span class="text-gray-400">· Matching "<span class="font-bold text-gray-700">{{ request('search') }}</span>"</span>
+            @endif
         </div>
 
-        <div class="bg-white rounded-2xl border border-sky-100 shadow-xs px-4 py-3.5 flex items-center gap-3 hover:shadow-md transition-all">
-            <div class="w-9 h-9 rounded-xl bg-sky-50 border border-sky-100 flex items-center justify-center shrink-0">
-                <svg class="w-4 h-4 text-sky-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
-                </svg>
-            </div>
-            <div>
-                <div class="text-lg font-black text-sky-700 leading-tight">{{ $counts['under_review'] }}</div>
-                <div class="text-[9px] font-bold uppercase tracking-wider text-sky-500">In Investigation</div>
-            </div>
-        </div>
+        {{-- Mini Filter Controls --}}
+        <form method="GET" action="{{ route('admin.reports') }}" class="flex items-center gap-2 shrink-0">
+            @if(request('status') && request('status') !== 'Pending')
+                <input type="hidden" name="status" value="{{ request('status') }}">
+            @endif
+            @if(request('search'))
+                <input type="hidden" name="search" value="{{ request('search') }}">
+            @endif
 
-        <div class="bg-white rounded-2xl border border-emerald-100 shadow-xs px-4 py-3.5 flex items-center gap-3 hover:shadow-md transition-all">
-            <div class="w-9 h-9 rounded-xl bg-emerald-50 border border-emerald-100 flex items-center justify-center shrink-0">
-                <svg class="w-4 h-4 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                </svg>
-            </div>
-            <div>
-                <div class="text-lg font-black text-emerald-700 leading-tight">{{ $counts['resolved'] }}</div>
-                <div class="text-[9px] font-bold uppercase tracking-wider text-emerald-500">Resolved Cases</div>
-            </div>
-        </div>
+            <select name="type" onchange="this.form.submit()" 
+                    class="px-3 py-1.5 bg-white border border-gray-200 rounded-xl text-xs font-bold text-gray-700 outline-none focus:border-[#C0422A] cursor-pointer shadow-2xs">
+                <option value="all" {{ request('type', 'all') == 'all' ? 'selected' : '' }}>All Types</option>
+                <option value="account" {{ request('type') == 'account' ? 'selected' : '' }}>👤 Account Reports</option>
+                <option value="product" {{ request('type') == 'product' ? 'selected' : '' }}>📦 Product Reports</option>
+            </select>
 
-        <div class="bg-white rounded-2xl border border-gray-100 shadow-xs px-4 py-3.5 flex items-center gap-3 hover:shadow-md transition-all">
-            <div class="w-9 h-9 rounded-xl bg-gray-50 border border-gray-100 flex items-center justify-center shrink-0">
-                <svg class="w-4 h-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>
-                </svg>
-            </div>
-            <div>
-                <div class="text-lg font-black text-gray-900 leading-tight">{{ $counts['all'] }}</div>
-                <div class="text-[9px] font-bold uppercase tracking-wider text-gray-400">Total Logged</div>
-            </div>
-        </div>
+            <select name="severity" onchange="this.form.submit()" 
+                    class="px-3 py-1.5 bg-white border border-gray-200 rounded-xl text-xs font-bold text-gray-700 outline-none focus:border-[#C0422A] cursor-pointer shadow-2xs">
+                <option value="all" {{ request('severity', 'all') == 'all' ? 'selected' : '' }}>All Severities</option>
+                <option value="LOW" {{ request('severity') == 'LOW' ? 'selected' : '' }}>🟢 Low</option>
+                <option value="MEDIUM" {{ request('severity') == 'MEDIUM' ? 'selected' : '' }}>🟡 Medium</option>
+                <option value="HIGH" {{ request('severity') == 'HIGH' ? 'selected' : '' }}>🟠 High</option>
+                <option value="CRITICAL" {{ request('severity') == 'CRITICAL' ? 'selected' : '' }}>🔴 Critical</option>
+            </select>
+        </form>
     </div>
 
     {{-- ══ SELLER RISK PATTERN OVERVIEW (DECISION-SUPPORT ANALYTICS) ══ --}}
     @if(isset($topReportedSellers) && count($topReportedSellers) > 0)
-    <div class="bg-white border border-gray-100 rounded-3xl p-5 sm:p-6 shadow-xs space-y-4">
+    <div class="bg-white border border-gray-100 rounded-2xl p-5 sm:p-6 shadow-sm space-y-4">
         <div class="flex items-center justify-between">
             <div class="flex items-center gap-2.5">
                 <div class="w-8 h-8 rounded-xl bg-orange-50 border border-orange-100 flex items-center justify-center text-[#C0422A]">
@@ -169,179 +284,156 @@
     </div>
     @endif
 
-    {{-- Search & Filter Controls --}}
-    <form method="GET" action="{{ route('admin.reports') }}" class="bg-white border border-gray-100 p-3.5 sm:p-4 rounded-3xl shadow-xs flex flex-col lg:flex-row items-stretch lg:items-center gap-3">
-        <div class="relative flex-1">
-            <input type="text" name="search" value="{{ request('search') }}" 
-                   placeholder="Search case ID, concern reason, shop name, customer, or product..." 
-                   class="w-full pl-10 pr-4 py-2.5 bg-gray-50/80 border border-gray-200/80 rounded-2xl text-xs text-gray-900 placeholder-gray-400 outline-none focus:border-[#C0422A] focus:bg-white transition-all">
-            <svg class="w-4 h-4 text-gray-400 absolute left-3.5 top-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
-            </svg>
-        </div>
-
-        <div class="flex items-center gap-2 flex-wrap sm:flex-nowrap">
-            <select name="type" onchange="this.form.submit()" class="px-3 py-2.5 bg-gray-50 border border-gray-200/80 rounded-2xl text-xs font-bold text-gray-700 outline-none focus:border-[#C0422A] cursor-pointer">
-                <option value="all" {{ request('type') == 'all' ? 'selected' : '' }}>All Types</option>
-                <option value="account" {{ request('type') == 'account' ? 'selected' : '' }}>👤 Account Reports</option>
-                <option value="product" {{ request('type') == 'product' ? 'selected' : '' }}>📦 Product Reports</option>
-            </select>
-
-            <select name="severity" onchange="this.form.submit()" class="px-3 py-2.5 bg-gray-50 border border-gray-200/80 rounded-2xl text-xs font-bold text-gray-700 outline-none focus:border-[#C0422A] cursor-pointer">
-                <option value="all" {{ request('severity') == 'all' ? 'selected' : '' }}>All Severities</option>
-                <option value="LOW" {{ request('severity') == 'LOW' ? 'selected' : '' }}>🟢 Low</option>
-                <option value="MEDIUM" {{ request('severity') == 'MEDIUM' ? 'selected' : '' }}>🟡 Medium</option>
-                <option value="HIGH" {{ request('severity') == 'HIGH' ? 'selected' : '' }}>🟠 High</option>
-                <option value="CRITICAL" {{ request('severity') == 'CRITICAL' ? 'selected' : '' }}>🔴 Critical</option>
-            </select>
-
-            <select name="status" onchange="this.form.submit()" class="px-3 py-2.5 bg-gray-50 border border-gray-200/80 rounded-2xl text-xs font-bold text-gray-700 outline-none focus:border-[#C0422A] cursor-pointer">
-                <option value="all" {{ request('status') == 'all' ? 'selected' : '' }}>All Status</option>
-                <option value="Pending" {{ request('status', 'Pending') == 'Pending' ? 'selected' : '' }}>Pending</option>
-                <option value="Under Review" {{ request('status') == 'Under Review' ? 'selected' : '' }}>Under Review</option>
-                <option value="Resolved" {{ request('status') == 'Resolved' ? 'selected' : '' }}>Resolved</option>
-                <option value="Dismissed" {{ request('status') == 'Dismissed' ? 'selected' : '' }}>Dismissed</option>
-            </select>
-
-            <button type="submit" class="px-5 py-2.5 bg-[#3D2B1F] text-white rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-[#C0422A] transition-all shrink-0 cursor-pointer shadow-xs">
-                Filter
-            </button>
-        </div>
-    </form>
-
-    {{-- Reports List Table --}}
-    <div class="bg-white border border-gray-100 rounded-3xl overflow-hidden shadow-xs">
+    {{-- ═══ REPORTS TABLE (Matching Archive Hub Table Design) ═══ --}}
+    <div class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
         <div class="overflow-x-auto no-scrollbar">
-            <table class="w-full text-left border-collapse min-w-180">
+            <table class="w-full text-left min-w-180">
                 <thead>
-                    <tr class="bg-gray-50/60 border-b border-gray-100">
-                        <th class="px-6 py-4 text-[10px] font-black text-gray-500 uppercase tracking-widest">Case ID &amp; Type</th>
-                        <th class="px-6 py-4 text-[10px] font-black text-gray-500 uppercase tracking-widest">Reporter</th>
-                        <th class="px-6 py-4 text-[10px] font-black text-gray-500 uppercase tracking-widest">Reported Party / Product</th>
-                        <th class="px-6 py-4 text-[10px] font-black text-gray-500 uppercase tracking-widest">Concern Reason</th>
-                        <th class="px-6 py-4 text-[10px] font-black text-gray-500 uppercase tracking-widest text-center">Severity</th>
-                        <th class="px-6 py-4 text-[10px] font-black text-gray-500 uppercase tracking-widest text-center">Status</th>
-                        <th class="px-6 py-4 text-[10px] font-black text-gray-500 uppercase tracking-widest text-right">Actions</th>
+                    <tr class="border-b border-gray-100 bg-gray-50/60">
+                        <th class="px-5 py-2.5 text-[9px] font-black uppercase tracking-widest text-gray-400 w-[20%]">Case &amp; Identifier</th>
+                        <th class="px-4 py-2.5 text-[9px] font-black uppercase tracking-widest text-gray-400 w-[18%]">Reporter</th>
+                        <th class="px-4 py-2.5 text-[9px] font-black uppercase tracking-widest text-gray-400 w-[20%]">Reported Party / Product</th>
+                        <th class="px-4 py-2.5 text-[9px] font-black uppercase tracking-widest text-gray-400 w-[20%]">Concern Reason</th>
+                        <th class="px-3 py-2.5 text-[9px] font-black uppercase tracking-widest text-gray-400 w-[8%] text-center">Severity</th>
+                        <th class="px-3 py-2.5 text-[9px] font-black uppercase tracking-widest text-gray-400 w-[8%] text-center">Status</th>
+                        <th class="px-5 py-2.5 text-[9px] font-black uppercase tracking-widest text-gray-400 w-[6%] text-right">Actions</th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-gray-50">
                     @forelse($reports as $report)
-                    @php
-                        $sevBadge = match(strtoupper($report->severity ?? 'MEDIUM')) {
-                            'CRITICAL' => 'bg-red-50 text-red-700 border-red-200/80',
-                            'HIGH'     => 'bg-orange-50 text-orange-700 border-orange-200/80',
-                            'MEDIUM'   => 'bg-amber-50 text-amber-800 border-amber-200/80',
-                            default    => 'bg-emerald-50 text-emerald-700 border-emerald-200/80',
-                        };
+                        @php
+                            $rType = $report->reportType ?? (!empty($report->productId) ? 'product' : 'account');
+                            $typeIcon = $rType === 'product' ? 'bg-sky-50 text-sky-600' : 'bg-amber-50 text-amber-600';
+                            $typeEmoji = $rType === 'product' ? '📦' : '👤';
 
-                        $statusBadge = match($report->status) {
-                            'Pending'      => 'bg-amber-50 text-amber-800 border-amber-200/80',
-                            'Under Review' => 'bg-sky-50 text-sky-800 border-sky-200/80',
-                            'Resolved'     => 'bg-emerald-50 text-emerald-800 border-emerald-200/80',
-                            'Dismissed'    => 'bg-gray-100 text-gray-700 border-gray-200/80',
-                            default        => 'bg-gray-100 text-gray-700 border-gray-200/80',
-                        };
+                            $sevBadge = match(strtoupper($report->severity ?? 'MEDIUM')) {
+                                'CRITICAL' => 'bg-red-50 text-red-700 border-red-200/80',
+                                'HIGH'     => 'bg-orange-50 text-orange-700 border-orange-200/80',
+                                'MEDIUM'   => 'bg-amber-50 text-amber-800 border-amber-200/80',
+                                default    => 'bg-emerald-50 text-emerald-700 border-emerald-200/80',
+                            };
 
-                        $rType = $report->reportType ?? (!empty($report->productId) ? 'product' : 'account');
-                    @endphp
-                    <tr class="group hover:bg-gray-50/60 transition-colors">
-                        {{-- Case ID & Type --}}
-                        <td class="px-6 py-4">
-                            <div class="font-mono text-xs font-black text-gray-900">{{ $report->getReportCode() }}</div>
-                            <span class="text-[8px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full inline-flex items-center gap-1 mt-1 border {{ $rType === 'product' ? 'bg-sky-50 text-sky-700 border-sky-200/80' : 'bg-amber-50 text-amber-800 border-amber-200/80' }}">
-                                {{ $rType === 'product' ? '📦 PRODUCT' : '👤 ACCOUNT' }}
-                            </span>
-                        </td>
-
-                        {{-- Reporter --}}
-                        <td class="px-6 py-4">
-                            <div class="flex items-center gap-2.5">
-                                <div class="w-7 h-7 rounded-xl bg-gray-100 border border-gray-200/80 flex items-center justify-center text-[10px] font-black text-gray-600 shrink-0">
-                                    {{ strtoupper(substr($report->reporter->name ?? 'A', 0, 1)) }}
+                            $statusBadge = match($report->status) {
+                                'Pending'      => ['badge' => 'bg-amber-50 text-amber-800 border-amber-200/80', 'dot' => 'bg-amber-500'],
+                                'Under Review' => ['badge' => 'bg-sky-50 text-sky-800 border-sky-200/80',       'dot' => 'bg-sky-500'],
+                                'Resolved'     => ['badge' => 'bg-emerald-50 text-emerald-800 border-emerald-200/80', 'dot' => 'bg-emerald-500'],
+                                'Dismissed'    => ['badge' => 'bg-gray-100 text-gray-700 border-gray-200/80',    'dot' => 'bg-gray-400'],
+                                default        => ['badge' => 'bg-gray-100 text-gray-700 border-gray-200/80',    'dot' => 'bg-gray-400'],
+                            };
+                        @endphp
+                        <tr class="hover:bg-gray-50/50 transition-colors group">
+                            {{-- Case & Identifier --}}
+                            <td class="px-5 py-2.5">
+                                <div class="flex items-center gap-2.5">
+                                    <div class="w-8 h-8 rounded-xl {{ $typeIcon }} border border-gray-100 flex items-center justify-center font-bold text-xs shrink-0 shadow-2xs"
+                                         style="width: 32px; height: 32px; min-width: 32px; min-height: 32px;">
+                                        <span>{{ $typeEmoji }}</span>
+                                    </div>
+                                    <div class="min-w-0">
+                                        <div class="text-xs font-black font-mono text-gray-900 truncate leading-tight">{{ $report->getReportCode() }}</div>
+                                        <div class="mt-0.5">
+                                            <span class="inline-flex items-center gap-1 text-[8px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded-full border {{ $rType === 'product' ? 'bg-sky-50 text-sky-700 border-sky-200/60' : 'bg-amber-50 text-amber-700 border-amber-200/60' }}">
+                                                <span class="w-1 h-1 rounded-full {{ $rType === 'product' ? 'bg-sky-500' : 'bg-amber-500' }}"></span>
+                                                {{ $rType === 'product' ? 'PRODUCT' : 'ACCOUNT' }}
+                                            </span>
+                                        </div>
+                                    </div>
                                 </div>
+                            </td>
+
+                            {{-- Reporter --}}
+                            <td class="px-4 py-2.5">
+                                <div class="flex items-center gap-2">
+                                    <div class="w-7 h-7 rounded-xl bg-gray-100 border border-gray-200/80 flex items-center justify-center text-[10px] font-black text-gray-600 shrink-0">
+                                        {{ strtoupper(substr($report->reporter->name ?? 'A', 0, 1)) }}
+                                    </div>
+                                    <div class="min-w-0">
+                                        <div class="text-xs font-bold text-gray-900 truncate leading-tight">{{ $report->reporter->name ?? 'Anonymous' }}</div>
+                                        <div class="text-[10px] text-gray-400 font-medium truncate leading-tight mt-0.5">{{ $report->reporter->email ?? '—' }}</div>
+                                    </div>
+                                </div>
+                            </td>
+
+                            {{-- Reported Party / Product --}}
+                            <td class="px-4 py-2.5">
                                 <div class="min-w-0">
-                                    <div class="text-xs font-bold text-gray-900 truncate">{{ $report->reporter->name ?? 'Anonymous' }}</div>
-                                    <div class="text-[10px] text-gray-400 font-medium truncate">{{ $report->reporter->email ?? '—' }}</div>
+                                    <div class="text-xs font-bold text-gray-900 truncate leading-tight">
+                                        {{ $report->reported->shopName ?: ($report->reported->name ?? 'Deleted Account') }}
+                                    </div>
+                                    @if($report->product)
+                                        <div class="inline-flex items-center gap-1 text-[10px] text-[#C0422A] font-bold truncate max-w-xs mt-0.5">
+                                            <span class="w-1 h-1 rounded-full bg-[#C0422A] shrink-0"></span>
+                                            <span class="truncate">Product: {{ $report->product->name }}</span>
+                                        </div>
+                                    @else
+                                        <div class="text-[10px] text-gray-400 font-mono mt-0.5">ID: {{ substr($report->reportedId, 0, 8) }}...</div>
+                                    @endif
                                 </div>
-                            </div>
-                        </td>
+                            </td>
 
-                        {{-- Reported Party / Product --}}
-                        <td class="px-6 py-4">
-                            <div class="text-xs font-bold text-gray-900">
-                                {{ $report->reported->shopName ?: ($report->reported->name ?? 'Deleted Account') }}
-                            </div>
-                            @if($report->product)
-                                <div class="inline-flex items-center gap-1 text-[10px] text-[#C0422A] font-bold truncate max-w-xs mt-0.5">
-                                    <span class="w-1 h-1 rounded-full bg-[#C0422A]"></span>
-                                    <span>Product: {{ $report->product->name }}</span>
-                                </div>
-                            @else
-                                <div class="text-[10px] text-gray-400 font-mono mt-0.5">Seller ID: {{ substr($report->reportedId, 0, 8) }}...</div>
-                            @endif
-                        </td>
-
-                        {{-- Concern Reason --}}
-                        <td class="px-6 py-4 max-w-xs">
-                            <div class="text-xs font-bold text-gray-900">{{ $report->reason }}</div>
-                            <div class="text-[11px] text-gray-500 mt-0.5 line-clamp-1 italic">"{{ $report->description }}"</div>
-                            @if($report->sellerResponse)
-                                <span class="inline-flex items-center gap-1 text-[8px] font-bold text-purple-700 bg-purple-50 px-2 py-0.5 rounded-md border border-purple-200 mt-1">
-                                    ✓ Seller Responded
-                                </span>
-                            @endif
-                        </td>
-
-                        {{-- Severity --}}
-                        <td class="px-6 py-4 text-center">
-                            <span class="inline-flex items-center gap-1 text-[9px] font-black uppercase tracking-wider px-2.5 py-1 rounded-full border {{ $sevBadge }} shadow-2xs">
-                                @if(in_array(strtoupper($report->severity ?? ''), ['CRITICAL', 'HIGH']))
-                                    <span class="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse"></span>
+                            {{-- Concern Reason --}}
+                            <td class="px-4 py-2.5 max-w-xs">
+                                <div class="text-xs font-bold text-gray-900 truncate leading-tight">{{ $report->reason }}</div>
+                                <div class="text-[10px] text-gray-400 truncate leading-tight mt-0.5 italic">"{{ $report->description }}"</div>
+                                @if($report->sellerResponse)
+                                    <span class="inline-flex items-center gap-1 text-[8px] font-bold text-purple-700 bg-purple-50 px-1.5 py-0.2 rounded border border-purple-200 mt-1">
+                                        ✓ Responded
+                                    </span>
                                 @endif
-                                {{ $report->severity ?? 'MEDIUM' }}
-                            </span>
-                        </td>
+                            </td>
 
-                        {{-- Status --}}
-                        <td class="px-6 py-4 text-center">
-                            <span class="inline-flex items-center text-[9px] font-black uppercase tracking-wider px-2.5 py-1 rounded-full border {{ $statusBadge }} shadow-2xs">
-                                {{ $report->status }}
-                            </span>
-                        </td>
+                            {{-- Severity --}}
+                            <td class="px-3 py-2.5 text-center">
+                                <span class="inline-flex items-center gap-1 text-[8px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full border {{ $sevBadge }} shadow-2xs">
+                                    @if(in_array(strtoupper($report->severity ?? ''), ['CRITICAL', 'HIGH']))
+                                        <span class="w-1 h-1 rounded-full bg-red-500 animate-pulse"></span>
+                                    @endif
+                                    {{ $report->severity ?? 'MEDIUM' }}
+                                </span>
+                            </td>
 
-                        {{-- Actions --}}
-                        <td class="px-6 py-4 text-right">
-                            <div class="flex items-center justify-end gap-1.5">
-                                <button type="button" @click="openModerationModal('{{ $report->id }}')" 
-                                        class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-[#3D2B1F] text-white rounded-xl text-[10px] font-black uppercase tracking-wider hover:bg-[#C0422A] transition-all cursor-pointer shadow-2xs">
-                                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 6l3 1m0 0l-3 9a5.002 5.002 0 006.001 0M6 7l3 9M6 7l6-2m6 2l3-1m-3 1l-3 9a5.002 5.002 0 006.001 0M18 7l3 9m-3-9l-6-2m0-2v2m0 16V5m0 16H9m3 0h3"/></svg>
-                                    <span>Moderate</span>
-                                </button>
+                            {{-- Status --}}
+                            <td class="px-3 py-2.5 text-center">
+                                <span class="inline-flex items-center gap-1 text-[8px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full border {{ $statusBadge['badge'] }} shadow-2xs">
+                                    <span class="w-1 h-1 rounded-full {{ $statusBadge['dot'] }}"></span>
+                                    {{ $report->status }}
+                                </span>
+                            </td>
 
-                                <form action="{{ route('admin.reports.delete', $report->id) }}" method="POST" onsubmit="return confirm('Permanently delete this report record?')">
-                                    @csrf
-                                    @method('DELETE')
-                                    <button type="submit" 
-                                        class="w-8 h-8 rounded-xl border border-red-100 bg-white hover:bg-red-50 flex items-center justify-center text-red-500 hover:text-red-700 transition-all cursor-pointer shadow-2xs" 
-                                        title="Delete">
-                                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+                            {{-- Actions --}}
+                            <td class="px-5 py-2.5 text-right">
+                                <div class="flex items-center justify-end gap-1.5">
+                                    <button type="button" @click="openModerationModal('{{ $report->id }}')" 
+                                            class="inline-flex items-center gap-1 px-2.5 py-1 bg-white hover:bg-gray-100 text-gray-700 border border-gray-200 rounded-lg text-[10px] font-bold uppercase tracking-wider transition-all cursor-pointer shadow-2xs">
+                                        <span>Moderate</span>
                                     </button>
-                                </form>
-                            </div>
-                        </td>
-                    </tr>
-                    @empty
-                    <tr>
-                        <td colspan="7" class="px-6 py-16 text-center text-gray-400">
-                            <div class="flex flex-col items-center gap-2">
-                                <div class="w-12 h-12 rounded-2xl bg-gray-50 border border-gray-100 flex items-center justify-center text-gray-400">
-                                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+
+                                    <form action="{{ route('admin.reports.delete', $report->id) }}" method="POST" onsubmit="return confirm('Permanently delete this report record?')">
+                                        @csrf
+                                        @method('DELETE')
+                                        <button type="submit" 
+                                            class="w-7 h-7 rounded-lg border border-red-100 bg-white hover:bg-red-50 flex items-center justify-center text-red-500 hover:text-red-700 transition-all cursor-pointer shadow-2xs" 
+                                            title="Delete">
+                                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                                            </svg>
+                                        </button>
+                                    </form>
                                 </div>
-                                <p class="text-xs font-bold uppercase tracking-widest text-gray-700 mt-1">No Reports Found</p>
-                                <p class="text-[11px] text-gray-400">All consumer inquiries and violation flags have been addressed.</p>
-                            </div>
-                        </td>
-                    </tr>
+                            </td>
+                        </tr>
+                    @empty
+                        <tr>
+                            <td colspan="7" class="px-6 py-16 text-center text-gray-400">
+                                <div class="flex flex-col items-center gap-2">
+                                    <div class="w-12 h-12 rounded-2xl bg-gray-50 border border-gray-100 flex items-center justify-center text-gray-400">
+                                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                                    </div>
+                                    <p class="text-xs font-bold uppercase tracking-widest text-gray-700 mt-1">No Reports Found</p>
+                                    <p class="text-[11px] text-gray-400">All consumer inquiries and violation flags have been addressed.</p>
+                                </div>
+                            </td>
+                        </tr>
                     @endforelse
                 </tbody>
             </table>
@@ -349,7 +441,7 @@
     </div>
 
     {{-- Pagination --}}
-    <div class="mt-6">
+    <div class="mt-4">
         {{ $reports->appends(request()->query())->links() }}
     </div>
 
@@ -364,7 +456,7 @@
         <div @click="showModModal = false" class="fixed inset-0 bg-black/70 backdrop-blur-sm"></div>
 
         <!-- Modal Dialog (Crisp Solid White) -->
-        <div class="relative bg-white w-full max-w-4xl rounded-3xl sm:rounded-4xl p-6 sm:p-8 shadow-2xl overflow-y-auto max-h-[92vh] border border-gray-200 flex flex-col z-10"
+        <div class="relative bg-white w-full max-w-4xl rounded-3xl p-6 sm:p-8 shadow-2xl overflow-y-auto max-h-[92vh] border border-gray-200 flex flex-col z-10"
              style="background-color: #FFFFFF !important; color: #1E1915 !important;"
              @click.stop>
             
