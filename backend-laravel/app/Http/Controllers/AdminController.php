@@ -811,34 +811,76 @@ class AdminController extends Controller
         $filter = $request->filter;
 
         if ($filter === 'pending') {
-            $query->where('isVerified', false)->where('status', '!=', 'blocked');
+            $query->where('isVerified', false)->whereNotIn('status', ['blocked', 'suspended', 'rejected']);
+        } elseif ($filter === 'rejected') {
+            $query->where('status', 'rejected');
         } elseif ($filter === 'suspended') {
-            $query->where('status', 'blocked');
+            $query->whereIn('status', ['blocked', 'suspended']);
+        } elseif ($filter === 'frozen') {
+            $query->where('status', 'frozen');
         } elseif ($filter === 'all') {
             // all sellers
         } else {
-            // Default view (Approved Sellers): strictly only verified/approved sellers
-            $query->where('isVerified', true)->where('status', '!=', 'blocked');
+            // Default view (Approved Sellers): strictly only verified active sellers
+            $query->where('isVerified', true)->where('status', 'active');
         }
 
-        $sellers = $query->orderBy('createdAt', 'desc')->paginate(20);
-        $pendingSellers = User::where('role', 'seller')->where('isVerified', false)->where('status', '!=', 'blocked')->get();
+        $sellers = $query->with(['commissionRecords' => function($q) {
+            $q->where('status', 'unpaid')->orderBy('period', 'desc');
+        }])->orderBy('createdAt', 'desc')->paginate(20);
+
+        $pendingSellers = User::where('role', 'seller')->where('isVerified', false)->whereNotIn('status', ['blocked', 'suspended', 'rejected', 'frozen'])->get();
         $counts = [
             'all'       => User::where('role', 'seller')->count(),
-            'verified'  => User::where('role', 'seller')->where('isVerified', true)->where('status', '!=', 'blocked')->count(),
-            'pending'   => User::where('role', 'seller')->where('isVerified', false)->where('status', '!=', 'blocked')->count(),
-            'suspended' => User::where('role', 'seller')->where('status', 'blocked')->count(),
+            'verified'  => User::where('role', 'seller')->where('isVerified', true)->where('status', 'active')->count(),
+            'pending'   => User::where('role', 'seller')->where('isVerified', false)->whereNotIn('status', ['blocked', 'suspended', 'rejected', 'frozen'])->count(),
+            'suspended' => User::where('role', 'seller')->whereIn('status', ['blocked', 'suspended'])->count(),
+            'frozen'    => User::where('role', 'seller')->where('status', 'frozen')->count(),
+            'rejected'  => User::where('role', 'seller')->where('status', 'rejected')->count(),
         ];
         return view('admin.sellers', compact('sellers', 'pendingSellers', 'counts'));
+    }
+
+    private function getNormalizedSellerStatus(User $seller): string
+    {
+        $raw = strtolower(trim((string)($seller->status ?? '')));
+        if ($raw === 'blocked' || $raw === 'suspended') {
+            return 'suspended';
+        }
+        if ($raw === 'rejected') {
+            return 'rejected';
+        }
+        if ($raw === 'frozen') {
+            return 'frozen';
+        }
+        if ($seller->isVerified || $raw === 'active') {
+            return 'active';
+        }
+        return 'pending';
     }
 
     public function verifySellerWeb(string $id)
     {
         try {
             $user = User::findOrFail($id);
+            $currentStatus = $this->getNormalizedSellerStatus($user);
+
+            if ($currentStatus !== 'pending') {
+                return redirect()->route('admin.sellers')->with('error', "Cannot approve seller with status '{$currentStatus}'. Only pending applications can be approved.");
+            }
+
             $user->isVerified = true;
             $user->status     = 'active';
+            $user->rejection_reason = null;
             $user->save();
+
+            \App\Models\SellerStatusAudit::create([
+                'seller_id'       => $user->id,
+                'admin_id'        => Auth::id(),
+                'previous_status' => $currentStatus,
+                'new_status'      => 'active',
+                'reason'          => 'Application approved by administrator',
+            ]);
             
             $this->sendNotification($user->id, 'Seller Verified', 'Your artisan workshop is now verified!', 'system', '/seller/dashboard', 'seller');
 
@@ -865,13 +907,112 @@ class AdminController extends Controller
         }
     }
 
+    public function rejectSellerWeb(Request $request, string $id)
+    {
+        try {
+            $user = User::findOrFail($id);
+            $currentStatus = $this->getNormalizedSellerStatus($user);
+
+            if ($currentStatus !== 'pending') {
+                return redirect()->route('admin.sellers')->with('error', "Cannot reject seller with status '{$currentStatus}'. Rejection is only for pending applications.");
+            }
+
+            $reason = trim((string)$request->input('reason', 'Application did not meet seller verification standards'));
+            $user->isVerified       = false;
+            $user->status           = 'rejected';
+            $user->rejection_reason = $reason;
+            $user->save();
+
+            \App\Models\SellerStatusAudit::create([
+                'seller_id'       => $user->id,
+                'admin_id'        => Auth::id(),
+                'previous_status' => $currentStatus,
+                'new_status'      => 'rejected',
+                'reason'          => $reason,
+            ]);
+
+            try {
+                $this->sendNotification(
+                    $user->id,
+                    'Application Rejected',
+                    "Your seller application was not approved. Reason: {$reason}",
+                    'system',
+                    null,
+                    'seller'
+                );
+            } catch (\Throwable $e) {
+                Log::warning('Notification error on rejectSeller: ' . $e->getMessage());
+            }
+
+            if ($user->email) {
+                try {
+                    $mailable = new \App\Mail\SellerRejectedMail($user->name, $user->shopName, $reason);
+                    \App\Services\EmailNotificationService::sendNotification(
+                        $user->email,
+                        $mailable,
+                        'seller_rejected',
+                        $user->id,
+                        'User',
+                        $user->id
+                    );
+                } catch (\Throwable $me) {
+                    Log::warning('Email sending failed for seller rejection: ' . $me->getMessage());
+                }
+            }
+
+            return redirect()->route('admin.sellers')->with('success', 'Seller application rejected. Notification sent.');
+        } catch (\Throwable $e) {
+            return redirect()->route('admin.sellers')->with('error', 'Error rejecting seller: ' . $e->getMessage());
+        }
+    }
+
+    public function reopenSellerWeb(string $id)
+    {
+        try {
+            $user = User::findOrFail($id);
+            $currentStatus = $this->getNormalizedSellerStatus($user);
+
+            if ($currentStatus !== 'rejected') {
+                return redirect()->route('admin.sellers')->with('error', "Only rejected seller applications can be re-opened for review.");
+            }
+
+            $user->isVerified       = false;
+            $user->status           = 'pending';
+            $user->rejection_reason = null;
+            $user->save();
+
+            \App\Models\SellerStatusAudit::create([
+                'seller_id'       => $user->id,
+                'admin_id'        => Auth::id(),
+                'previous_status' => $currentStatus,
+                'new_status'      => 'pending',
+                'reason'          => 'Application re-opened for evaluation by admin',
+            ]);
+
+            $this->sendNotification($user->id, 'Application Re-opened', 'Your seller application has been re-opened for review.', 'system', null, 'seller');
+
+            return redirect()->route('admin.sellers')->with('success', 'Seller moved back to Pending for re-evaluation.');
+        } catch (\Throwable $e) {
+            return redirect()->route('admin.sellers')->with('error', 'Error reopening seller: ' . $e->getMessage());
+        }
+    }
+
     public function unverifySellerWeb(string $id)
     {
         try {
             $user = User::findOrFail($id);
             $user->isVerified = false;
-            $user->status     = 'active';
+            $user->status     = 'pending';
             $user->save();
+
+            \App\Models\SellerStatusAudit::create([
+                'seller_id'       => $user->id,
+                'admin_id'        => Auth::id(),
+                'previous_status' => 'active',
+                'new_status'      => 'pending',
+                'reason'          => 'Verification revoked by administrator',
+            ]);
+
             $this->sendNotification($user->id, 'Verification Revoked', 'Your artisan workshop verification has been revoked by an administrator.', 'system', '/profile', 'seller');
             return redirect()->route('admin.sellers')->with('success', 'Seller verification revoked. Account moved back to Pending.');
         } catch (\Throwable $e) {
@@ -883,10 +1024,24 @@ class AdminController extends Controller
     {
         try {
             $user = User::findOrFail($id);
-            $reason = $request->input('reason', 'Violation of platform seller policies');
-            $user->status          = 'blocked';
-            $user->violationReason = $reason;
+            $currentStatus = $this->getNormalizedSellerStatus($user);
+
+            if ($currentStatus !== 'active' && $currentStatus !== 'frozen') {
+                return redirect()->route('admin.sellers')->with('error', "Cannot suspend seller with status '{$currentStatus}'. Only active sellers can be suspended.");
+            }
+
+            $reason = trim((string)$request->input('reason', 'Violation of platform seller policies'));
+            $user->status             = 'suspended';
+            $user->suspension_reason   = $reason;
             $user->save();
+
+            \App\Models\SellerStatusAudit::create([
+                'seller_id'       => $user->id,
+                'admin_id'        => Auth::id(),
+                'previous_status' => $currentStatus,
+                'new_status'      => 'suspended',
+                'reason'          => $reason,
+            ]);
 
             // In-app notification to seller
             try {
@@ -942,9 +1097,24 @@ class AdminController extends Controller
     {
         try {
             $user = User::findOrFail($id);
-            $user->status          = 'active';
-            $user->violationReason = null;
+            $currentStatus = $this->getNormalizedSellerStatus($user);
+
+            if ($currentStatus !== 'suspended') {
+                return redirect()->route('admin.sellers')->with('error', "Only suspended accounts can be unsuspended.");
+            }
+
+            $user->status             = 'active';
+            $user->suspension_reason   = null;
+            $user->isVerified         = true;
             $user->save();
+
+            \App\Models\SellerStatusAudit::create([
+                'seller_id'       => $user->id,
+                'admin_id'        => Auth::id(),
+                'previous_status' => $currentStatus,
+                'new_status'      => 'active',
+                'reason'          => 'Account unsuspended / reinstated by administrator',
+            ]);
 
             try {
                 $this->sendNotification(
@@ -972,11 +1142,11 @@ class AdminController extends Controller
                         $user->id
                     );
                 } catch (\Throwable $me) {
-                    Log::warning('Email sending failed for seller restore: ' . $me->getMessage());
+                    Log::warning('Email sending failed for seller restoration: ' . $me->getMessage());
                 }
             }
 
-            return redirect()->route('admin.sellers')->with('success', 'Seller account restored and notification sent.');
+            return redirect()->route('admin.sellers')->with('success', 'Seller account restored to active status.');
         } catch (\Throwable $e) {
             return redirect()->route('admin.sellers')->with('error', 'Error restoring seller: ' . $e->getMessage());
         }
@@ -1355,7 +1525,7 @@ class AdminController extends Controller
         // Seller Risk Pattern Overview (Decision-Support Analytics)
         $topReportedSellers = collect();
         try {
-            $topReportedSellers = \App\Models\User::where('role', 'seller')
+            $topReportedSellers = User::where('role', 'seller')
                 ->whereHas('reports', function($q) {
                     $q->where('createdAt', '>=', now()->subDays(30));
                 })

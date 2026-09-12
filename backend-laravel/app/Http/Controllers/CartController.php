@@ -138,15 +138,22 @@ class CartController extends Controller
             return redirect()->back()->with('error', 'Sellers cannot purchase their own products.');
         }
 
-        // Check if seller is frozen
-        if ($product->seller && $product->seller->status === 'frozen') {
-            if ($request->wantsJson() || $request->ajax()) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'This shop is currently frozen due to pending requirements and cannot accept new orders at this time.'
-                ], 403);
+        // Check if seller is suspended or frozen
+        if ($product->seller) {
+            if (in_array($product->seller->status, ['blocked', 'suspended'])) {
+                $msg = 'This shop is currently suspended due to policy review and cannot accept orders at this time.';
+                if ($request->wantsJson() || $request->ajax()) {
+                    return response()->json(['success' => false, 'message' => $msg], 403);
+                }
+                return redirect()->back()->with('error', $msg);
             }
-            return redirect()->back()->with('error', 'This shop is currently frozen due to pending requirements and cannot accept new orders at this time.');
+            if ($product->seller->status === 'frozen') {
+                $msg = 'This shop is temporarily unavailable due to administrative billing maintenance and cannot accept new orders at this time.';
+                if ($request->wantsJson() || $request->ajax()) {
+                    return response()->json(['success' => false, 'message' => $msg], 403);
+                }
+                return redirect()->back()->with('error', $msg);
+            }
         }
 
         $variation = VariationFormatter::label($request->input('variation'), $product->image)

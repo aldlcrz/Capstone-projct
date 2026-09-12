@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
@@ -10,7 +11,7 @@ use Illuminate\Support\Str;
 
 class User extends Authenticatable
 {
-    use HasApiTokens, HasFactory, Notifiable;
+    use HasApiTokens, HasFactory, Notifiable, SoftDeletes;
 
     /**
      * The attributes that are mass assignable.
@@ -25,11 +26,12 @@ class User extends Authenticatable
         'youtubeLink', 'socialLinks', 'shopHouseNo', 'shopStreet', 'shopAddress',
         'shopBarangay', 'shopCity', 'shopProvince', 'shopPostalCode', 'shopLatitude',
         'shopLongitude', 'isAdult', 'fcmToken', 'followers', 'following', 'status',
-        'violationReason', 'rejectionReason', 'sessionVersion', 'googleId',
+        'violationReason', 'rejectionReason', 'suspension_reason', 'rejection_reason',
+        'sessionVersion', 'googleId',
         'hasPasswordSet', 'loginAttempts', 'loginLockedUntil', 'bio', 'username',
         'gender', 'birthday', 'resetPasswordToken', 'resetPasswordExpires',
         'shopName', 'shopDescription', 'cancellation_policy', 'refund_policy', 'businessPermit', 'cart',
-        'isPremium', 'premiumEndsAt', 'is_onboarded',
+        'isPremium', 'premiumEndsAt', 'is_onboarded', 'deleted_at',
     ];
 
 
@@ -146,6 +148,11 @@ class User extends Authenticatable
         return $this->hasMany(SellerSubscription::class, 'userId')->orderByDesc('createdAt');
     }
 
+    public function commissionRecords()
+    {
+        return $this->hasMany(CommissionRecord::class, 'sellerId');
+    }
+
     /**
      * Check if the seller has an active premium subscription.
      * Integrates self-healing automatic expiry.
@@ -245,12 +252,37 @@ class User extends Authenticatable
             : "Refund requests are subject to shop evaluation. Custom tailored garments are crafted to provided measurements. Damaged or defective items upon arrival may be submitted for review through our return system.";
     }
 
+    public function statusAudits()
+    {
+        return $this->hasMany(SellerStatusAudit::class, 'seller_id')->orderBy('created_at', 'desc');
+    }
+
+    public function getRejectionReasonAttribute()
+    {
+        return $this->attributes['rejectionReason'] ?? null;
+    }
+
+    public function setRejectionReasonAttribute(?string $value): void
+    {
+        $this->attributes['rejectionReason'] = $value;
+    }
+
+    public function getSuspensionReasonAttribute()
+    {
+        return $this->attributes['violationReason'] ?? null;
+    }
+
+    public function setSuspensionReasonAttribute(?string $value): void
+    {
+        $this->attributes['violationReason'] = $value;
+    }
+
     public function getIsEmailVerifiedAttribute(): bool
     {
         return (bool) ($this->attributes['isVerified'] ?? false);
     }
 
-    public function setIsEmailVerifiedAttribute($value): void
+    public function setIsEmailVerifiedAttribute(mixed $value): void
     {
         $this->attributes['isVerified'] = (bool) $value;
     }

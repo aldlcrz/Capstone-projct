@@ -1,13 +1,9 @@
 @extends('emails.layout')
 
 @section('content')
-<div class="greeting">⚠️ New Return / Refund Request</div>
-<span class="badge badge-warning">Order #{{ $orderId }}</span>
-<p>Hello {{ $sellerName }},</p>
-<p>A customer has submitted a {{ $requestType ?? 'Return/Refund' }} request for Order <strong>#{{ $orderId }}</strong>.</p>
-<p><strong>Reason provided:</strong> {{ $reason }}</p>
-
-<div class="button-wrapper">
-    <a href="{{ url('/seller/orders') }}" class="btn-primary">Review Request</a>
-</div>
+<div class="greeting">Mabuhay, {{ $sellerName }}!</div>
+<span class="badge badge-warning">Return / Refund Request</span>
+<p>A customer has filed a return/refund request for Order <strong>#{{ $orderId }}</strong>.</p>
+<p><strong>Reason:</strong> {{ $reason }}</p>
+<p style="margin-top: 14px; font-size: 13px; color: #475569;">Please log in to your Seller Control Panel to inspect the return details and provide an artisan resolution.</p>
 @endsection

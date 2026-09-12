@@ -277,9 +277,14 @@ class CheckoutController extends Controller
 
             foreach ($itemsBySeller as $sellerId => $items) {
                 $sellerUser = User::find($sellerId);
-                if ($sellerUser && $sellerUser->status === 'frozen') {
+                if ($sellerUser) {
                     $shopName = $sellerUser->shopName ?: $sellerUser->name;
-                    throw new \Exception("The shop '{$shopName}' is currently frozen and cannot process orders at this time.");
+                    if (in_array($sellerUser->status, ['blocked', 'suspended'])) {
+                        throw new \Exception("The shop '{$shopName}' is currently suspended and cannot process orders at this time.");
+                    }
+                    if ($sellerUser->status === 'frozen') {
+                        throw new \Exception("The shop '{$shopName}' is currently frozen due to overdue monthly commission and cannot process orders at this time.");
+                    }
                 }
 
                 $sellerSubtotal = 0;

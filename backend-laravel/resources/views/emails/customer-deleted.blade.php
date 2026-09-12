@@ -1,19 +1,17 @@
 @extends('emails.layout')
 
 @section('content')
-<div class="greeting">Account Deletion Notice</div>
-<span class="badge badge-danger">Account Removed</span>
-<p>Hello {{ $customerName }},</p>
-<p>This is to confirm that your customer account on LumBarong has been permanently removed by an administrator.</p>
+<div class="greeting">Notice: Account Closed</div>
+<span class="badge badge-danger">🛑 Account Deactivated</span>
+<p>Hello <strong>{{ $customerName }}</strong>,</p>
+<p>This is a formal confirmation that your LumBarong customer account has been deactivated and safely archived (soft-deleted).</p>
 
-<div style="background-color: #f4f4f5; border-left: 4px solid #71717a; padding: 16px; border-radius: 8px; margin: 20px 0;">
-    <p style="margin: 0 0 6px 0; font-weight: 700; color: #27272a; font-size: 13px; text-transform: uppercase;">Recorded Reason:</p>
-    <p style="margin: 0; color: #3f3f46; font-weight: 600; font-size: 14px;">{{ $reason }}</p>
+@if(!empty($reason))
+<div style="background: #fee2e2; border-left: 4px solid #ef4444; padding: 14px 16px; border-radius: 8px; margin: 18px 0;">
+    <div style="font-weight: 800; font-size: 11px; text-transform: uppercase; color: #991b1b; letter-spacing: 0.5px; margin-bottom: 4px;">Reason:</div>
+    <div style="font-size: 13px; color: #7f1d1d; font-weight: 500;">{{ $reason }}</div>
 </div>
+@endif
 
-<p>Your profile and personal records have been permanently cleared from our system. If you have questions regarding this deletion, you may reach out to our platform support desk at <a href="mailto:lumbarongsupport@gmail.com" style="color: #c0420a; font-weight: bold; text-decoration: underline;">lumbarongsupport@gmail.com</a>.</p>
-
-<div class="button-wrapper">
-    <a href="mailto:lumbarongsupport@gmail.com?subject=Account%20Deletion%20Inquiry%20-%20{{ urlencode($customerName) }}" class="btn-primary">Email Support (lumbarongsupport@gmail.com)</a>
-</div>
+<p style="font-size: 13px; color: #475569;">You are welcome to register again in the future using this email address anytime.</p>
 @endsection

@@ -679,7 +679,12 @@ class DashboardController extends Controller
     public function sellerProfile(Request $request)
     {
         $user = $request->user();
-        return view('seller.profile.index', compact('user'));
+        $recentPayments = Order::where('sellerId', $user->id)
+            ->whereNotNull('paymentReference')
+            ->orderBy('createdAt', 'desc')
+            ->take(25)
+            ->get();
+        return view('seller.profile.index', compact('user', 'recentPayments'));
     }
 
     public function sellerPolicies(Request $request)
@@ -706,6 +711,17 @@ class DashboardController extends Controller
     public function updateSellerProfile(Request $request)
     {
         $user = $request->user();
+
+        // Guard: Prevent modifying payment method credentials when account is frozen or suspended
+        if (in_array($user->status, ['frozen', 'suspended']) && ($request->filled('gcashNumber') || $request->hasFile('gcashQrCode') || $request->filled('mayaNumber') || $request->hasFile('mayaQrCode'))) {
+            if ($request->expectsJson() || $request->ajax() || $request->wantsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Payment settings cannot be modified while your account is frozen or suspended.'
+                ], 403);
+            }
+            return redirect()->back()->with('error', 'Payment settings cannot be modified while your account is frozen or suspended.');
+        }
 
         if (!$request->filled('name') && $user->name) {
             $request->merge(['name' => $user->name]);

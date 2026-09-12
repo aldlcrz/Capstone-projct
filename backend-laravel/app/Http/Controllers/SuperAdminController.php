@@ -302,20 +302,26 @@ class SuperAdminController extends Controller
             ]
         );
 
-        // If seller was frozen for commission, unfreeze them
+        // If seller was frozen for commission, check if all overdue commission periods are settled
         if ($seller->status === 'frozen') {
-            $seller->status = 'active';
-            $seller->violationReason = null;
-            $seller->save();
+            $hasOtherOverdue = CommissionRecord::where('sellerId', $sellerId)
+                ->where('status', 'unpaid')
+                ->where('period', '!=', $request->period)
+                ->exists();
 
-            $this->sendNotification(
-                $seller->id,
-                '✅ Account Unfrozen',
-                "Your commission for {$request->period} has been received. Your account is now active again.",
-                'system',
-                '/seller/dashboard',
-                'seller'
-            );
+            if (!$hasOtherOverdue) {
+                $seller->status = 'active';
+                $seller->save();
+
+                $this->sendNotification(
+                    $seller->id,
+                    '✅ Account Unfrozen',
+                    "Your commission for {$request->period} has been verified and settled. Your shop account is now fully active.",
+                    'system',
+                    '/seller/dashboard',
+                    'seller'
+                );
+            }
         }
 
         return redirect()->back()->with('success', "Commission marked as paid for {$seller->name}.");
@@ -329,8 +335,8 @@ class SuperAdminController extends Controller
         $period = $request->period ?: date('Y-m');
         $reason = $request->reason ?: "Commission for period {$period} is overdue and unpaid.";
 
+        // Financial restriction: set status to frozen without modifying policy violationReason
         $seller->status = 'frozen';
-        $seller->violationReason = $reason;
         $seller->save();
 
         // Mark freeze notification sent
@@ -341,20 +347,19 @@ class SuperAdminController extends Controller
         $this->sendNotification(
             $seller->id,
             '🔒 Account Frozen — Commission Overdue',
-            "Your shop has been frozen due to unpaid commission for {$period}. Please settle your balance to restore access. Reason: {$reason}",
+            "Your shop has been frozen due to unpaid monthly commission for {$period}. Please settle your balance to restore access.",
             'system',
             '/seller/subscription',
             'seller'
         );
 
-        return redirect()->back()->with('success', "Shop '{$seller->name}' has been frozen.");
+        return redirect()->back()->with('success', "Shop '{$seller->name}' has been frozen for unpaid commission.");
     }
 
     public function unfreezeShop(string $id)
     {
         $seller = User::findOrFail($id);
         $seller->status = 'active';
-        $seller->violationReason = null;
         $seller->save();
 
         // Automatically mark unpaid commission records for this seller as paid upon unfreezing
@@ -434,7 +439,7 @@ class SuperAdminController extends Controller
             $this->sendNotification(
                 $seller->id,
                 '⚠️ Commission Due in 7 Days',
-                "Your monthly commission of ₱" . number_format($commissionAmount, 2) . " for {$period} is due on " . $dueDate->format('F d, Y') . ". Please settle to avoid account suspension.",
+                "Your monthly commission of ₱" . number_format($commissionAmount, 2) . " for {$period} is due on " . $dueDate->format('F d, Y') . ". Please settle to avoid account restriction.",
                 'system',
                 '/seller/subscription',
                 'seller'
@@ -463,12 +468,12 @@ class SuperAdminController extends Controller
 
         foreach ($overdueRecords as $record) {
             $seller = $record->seller;
-            if (!$seller || $seller->status === 'frozen' || $seller->status === 'blocked') {
+            if (!$seller || $seller->status === 'frozen' || $seller->status === 'suspended') {
                 continue;
             }
 
+            // Financial freeze: set status to frozen without modifying disciplinary violationReason
             $seller->status = 'frozen';
-            $seller->violationReason = "Auto-frozen: Commission for {$overduePeriod} is overdue.";
             $seller->save();
 
             $record->freezeNotified = true;
@@ -477,13 +482,13 @@ class SuperAdminController extends Controller
             $this->sendNotification(
                 $seller->id,
                 '🔒 Account Auto-Frozen — Overdue Commission',
-                "Your account has been automatically frozen because your commission of ₱" . number_format($record->commissionAmount, 2) . " for {$overduePeriod} was not paid by the due date. Please contact admin to settle.",
+                "Your account has been automatically frozen because your monthly commission of ₱" . number_format($record->commissionAmount, 2) . " for {$overduePeriod} was not paid by the due date. Please settle your outstanding commission to restore access.",
                 'system',
                 '/seller/subscription',
                 'seller'
             );
 
-            Log::info("[SuperAdmin] Auto-frozen seller: {$seller->name} ({$seller->id}) for period {$overduePeriod}");
+            Log::info("[SuperAdmin] Auto-frozen seller: {$seller->name} ({$seller->id}) for overdue commission period {$overduePeriod}");
         }
     }
 
@@ -548,17 +553,62 @@ class SuperAdminController extends Controller
     public function verifySeller(string $id)
     {
         $seller = User::where('role', 'seller')->findOrFail($id);
+        $prevStatus = $seller->status ?? ($seller->isVerified ? 'active' : 'pending');
+
         $seller->isVerified = true;
+        $seller->status     = 'active';
+        $seller->rejection_reason = null;
         $seller->save();
 
+        \App\Models\SellerStatusAudit::create([
+            'seller_id'       => $seller->id,
+            'admin_id'        => Auth::id(),
+            'previous_status' => $prevStatus,
+            'new_status'      => 'active',
+            'reason'          => 'Verified and approved by Super Admin',
+        ]);
+
         return back()->with('success', "Artisan shop '{$seller->shopName}' is now verified.");
+    }
+
+    public function rejectSeller(Request $request, string $id)
+    {
+        $seller = User::where('role', 'seller')->findOrFail($id);
+        $prevStatus = $seller->status ?? ($seller->isVerified ? 'active' : 'pending');
+        $reason = $request->input('reason', 'Application did not meet requirements');
+
+        $seller->isVerified       = false;
+        $seller->status           = 'rejected';
+        $seller->rejection_reason = $reason;
+        $seller->save();
+
+        \App\Models\SellerStatusAudit::create([
+            'seller_id'       => $seller->id,
+            'admin_id'        => Auth::id(),
+            'previous_status' => $prevStatus,
+            'new_status'      => 'rejected',
+            'reason'          => $reason,
+        ]);
+
+        return back()->with('success', "Artisan shop '{$seller->shopName}' registration has been rejected.");
     }
 
     public function unverifySeller(string $id)
     {
         $seller = User::where('role', 'seller')->findOrFail($id);
+        $prevStatus = $seller->status ?? 'active';
+
         $seller->isVerified = false;
+        $seller->status     = 'pending';
         $seller->save();
+
+        \App\Models\SellerStatusAudit::create([
+            'seller_id'       => $seller->id,
+            'admin_id'        => Auth::id(),
+            'previous_status' => $prevStatus,
+            'new_status'      => 'pending',
+            'reason'          => 'Verification revoked by Super Admin',
+        ]);
 
         return back()->with('success', "Artisan shop '{$seller->shopName}' verification removed.");
     }
@@ -566,8 +616,18 @@ class SuperAdminController extends Controller
     public function toggleShopStatus(string $id)
     {
         $seller = User::where('role', 'seller')->findOrFail($id);
-        $seller->status = ($seller->status === 'active' || is_null($seller->status)) ? 'frozen' : 'active';
+        $prevStatus = $seller->status ?? 'active';
+        $newStatus = ($prevStatus === 'active') ? 'frozen' : 'active';
+        $seller->status = $newStatus;
         $seller->save();
+
+        \App\Models\SellerStatusAudit::create([
+            'seller_id'       => $seller->id,
+            'admin_id'        => Auth::id(),
+            'previous_status' => $prevStatus,
+            'new_status'      => $newStatus,
+            'reason'          => 'Shop freeze status toggled by Super Admin',
+        ]);
 
         return redirect()->back()->with('success', "Artisan shop '{$seller->name}' status updated to {$seller->status}.");
     }
@@ -575,14 +635,13 @@ class SuperAdminController extends Controller
     public function deleteShop(string $id)
     {
         $seller = User::where('role', 'seller')->findOrFail($id);
-        // Soft deactivate/block to preserve order history and referential integrity (R-2)
-        $seller->status = 'blocked';
+        $seller->status = 'suspended';
         $seller->violationReason = 'Shop removed by super administrator.';
-        $seller->save();
+        $seller->delete(); // Soft delete via SoftDeletes
 
         Product::where('sellerId', $id)->update(['status' => 'inactive']);
 
-        return redirect()->back()->with('success', "Artisan shop '{$seller->name}' has been deactivated and removed.");
+        return redirect()->back()->with('success', "Artisan shop '{$seller->name}' has been deactivated and soft-deleted.");
     }
 
     public function toggleStatus(string $id)

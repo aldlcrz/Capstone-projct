@@ -1,20 +1,16 @@
 @extends('emails.layout')
 
 @section('content')
-<div class="greeting">⚠️ Account Status Notification</div>
-<span class="badge badge-danger">Account Suspended</span>
-<p>Hello {{ $sellerName }},</p>
-<p>This is an official notice that your artisan account and shop <strong>"{{ $shopName }}"</strong> have been suspended by the platform administrator.</p>
+<div class="greeting">Notice: Workshop Status Update</div>
+<span class="badge badge-danger">⚠️ Account Suspended</span>
+<p>Hello <strong>{{ $userName }}</strong>,</p>
+<p>This is a formal notification that your artisan workshop <strong>{{ $shopName }}</strong> has been temporarily suspended from the LumBarong platform.</p>
 
-<div style="background-color: #fff1f2; border-left: 4px solid #e11d48; padding: 16px; border-radius: 8px; margin: 20px 0;">
-    <p style="margin: 0 0 6px 0; font-weight: 700; color: #9f1239; font-size: 13px; text-transform: uppercase;">Reason for Suspension:</p>
-    <p style="margin: 0; color: #881337; font-weight: 600; font-size: 14px;">{{ $reason }}</p>
+<div style="background: #fee2e2; border-left: 4px solid #ef4444; padding: 14px 16px; border-radius: 8px; margin: 18px 0;">
+    <div style="font-weight: 800; font-size: 11px; text-transform: uppercase; color: #991b1b; letter-spacing: 0.5px; margin-bottom: 4px;">Reason for Suspension:</div>
+    <div style="font-size: 13px; color: #7f1d1d; font-weight: 500;">{{ $reason }}</div>
 </div>
 
-<p>While your account is suspended, your product listings are hidden from the marketplace catalog, and access to seller tools is temporarily paused.</p>
-<p>If you believe this was done in error or would like to submit an appeal with additional verification documents, please email our support team directly at <a href="mailto:lumbarongsupport@gmail.com" style="color: #c0420a; font-weight: bold; text-decoration: underline;">lumbarongsupport@gmail.com</a>.</p>
-
-<div class="button-wrapper">
-    <a href="mailto:lumbarongsupport@gmail.com?subject=Artisan%20Account%20Appeal%20-%20{{ urlencode($shopName) }}" class="btn-primary">Email Support (lumbarongsupport@gmail.com)</a>
-</div>
+<p>While suspended, your products will be hidden from public search, and new customer purchases and payment modifications are restricted.</p>
+<p style="font-size: 12px; color: #64748b;">If you believe this action was taken in error or would like to submit clarification, you may contact the LumBarong support team.</p>
 @endsection

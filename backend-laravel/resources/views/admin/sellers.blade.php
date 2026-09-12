@@ -2,6 +2,10 @@
 
 @section('content')
 <div class="space-y-4" x-data="{
+    rejectModal: false,
+    rejectSellerId: null,
+    rejectSellerName: '',
+    rejectReason: '',
     suspendModal: false,
     suspendSellerId: null,
     suspendSellerName: '',
@@ -47,6 +51,12 @@
         this.previewUrl = url;
         this.previewTitle = title;
         this.previewModal = true;
+    },
+    openReject(id, name) {
+        this.rejectSellerId = id;
+        this.rejectSellerName = name;
+        this.rejectReason = 'Application did not meet seller verification standards';
+        this.rejectModal = true;
     },
     openSuspend(id, name) {
         this.suspendSellerId = id;
@@ -180,82 +190,110 @@
         $isAll       = $currentFilter === 'all';
         $isApproved  = empty($currentFilter) || $currentFilter === 'verified';
         $isPending   = $currentFilter === 'pending';
+        $isRejected  = $currentFilter === 'rejected';
         $isSuspended = $currentFilter === 'suspended';
+        $isFrozen    = $currentFilter === 'frozen';
     @endphp
-    <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+    <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
         {{-- Total / All --}}
         <a href="{{ request()->fullUrlWithQuery(['filter' => 'all', 'page' => 1]) }}"
-           class="group relative rounded-2xl px-4 py-3 flex items-center justify-between border transition-all duration-200 cursor-pointer {{ $isAll ? 'bg-white border-gray-900 ring-2 ring-gray-900/15 shadow-sm -translate-y-0.5' : 'bg-white border-gray-100 hover:border-gray-300 hover:shadow-sm hover:-translate-y-0.5' }}">
-            <div class="flex items-center gap-3">
-                <div class="w-8 h-8 rounded-xl flex items-center justify-center shrink-0 transition-colors {{ $isAll ? 'bg-gray-900 text-white' : 'bg-gray-100 text-gray-500 group-hover:bg-gray-200' }}">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+           class="group relative rounded-2xl px-3.5 py-3 flex items-center justify-between border transition-all duration-200 cursor-pointer {{ $isAll ? 'bg-white border-gray-900 ring-2 ring-gray-900/15 shadow-sm -translate-y-0.5' : 'bg-white border-gray-100 hover:border-gray-300 hover:shadow-sm hover:-translate-y-0.5' }}">
+            <div class="flex items-center gap-2.5">
+                <div class="w-7 h-7 rounded-xl flex items-center justify-center shrink-0 transition-colors {{ $isAll ? 'bg-gray-900 text-white' : 'bg-gray-100 text-gray-500 group-hover:bg-gray-200' }}">
+                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
                 </div>
                 <div>
-                    <div class="text-base sm:text-lg font-black text-gray-900 leading-none">{{ $counts['all'] ?? 0 }}</div>
+                    <div class="text-sm sm:text-base font-black text-gray-900 leading-none">{{ $counts['all'] ?? 0 }}</div>
                     <div class="text-[9px] font-bold uppercase tracking-wider text-gray-400 mt-0.5">Total</div>
                 </div>
             </div>
             @if($isAll)
-                <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[8px] font-black uppercase tracking-wider bg-gray-900 text-white shadow-xs">
-                    <span class="w-1 h-1 rounded-full bg-emerald-400"></span> Active
-                </span>
+                <span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[8px] font-black uppercase tracking-wider bg-gray-900 text-white shadow-xs">Active</span>
             @endif
         </a>
 
         {{-- Approved (Default) --}}
         <a href="{{ request()->fullUrlWithQuery(['filter' => null, 'page' => 1]) }}"
-           class="group relative rounded-2xl px-4 py-3 flex items-center justify-between border transition-all duration-200 cursor-pointer {{ $isApproved ? 'bg-emerald-50/50 border-emerald-600 ring-2 ring-emerald-600/20 shadow-sm -translate-y-0.5' : 'bg-white border-green-100 hover:border-emerald-300 hover:shadow-sm hover:-translate-y-0.5' }}">
-            <div class="flex items-center gap-3">
-                <div class="w-8 h-8 rounded-xl flex items-center justify-center shrink-0 transition-colors {{ $isApproved ? 'bg-emerald-600 text-white' : 'bg-green-50 text-green-600 group-hover:bg-green-100' }}">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+           class="group relative rounded-2xl px-3.5 py-3 flex items-center justify-between border transition-all duration-200 cursor-pointer {{ $isApproved ? 'bg-emerald-50/50 border-emerald-600 ring-2 ring-emerald-600/20 shadow-sm -translate-y-0.5' : 'bg-white border-green-100 hover:border-emerald-300 hover:shadow-sm hover:-translate-y-0.5' }}">
+            <div class="flex items-center gap-2.5">
+                <div class="w-7 h-7 rounded-xl flex items-center justify-center shrink-0 transition-colors {{ $isApproved ? 'bg-emerald-600 text-white' : 'bg-green-50 text-green-600 group-hover:bg-green-100' }}">
+                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
                 </div>
                 <div>
-                    <div class="text-base sm:text-lg font-black text-gray-900 leading-none">{{ $counts['verified'] ?? 0 }}</div>
-                    <div class="text-[9px] font-bold uppercase tracking-wider text-green-600 mt-0.5">Approved</div>
+                    <div class="text-sm sm:text-base font-black text-gray-900 leading-none">{{ $counts['verified'] ?? 0 }}</div>
+                    <div class="text-[9px] font-bold uppercase tracking-wider text-green-600 mt-0.5">Active</div>
                 </div>
             </div>
             @if($isApproved)
-                <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[8px] font-black uppercase tracking-wider bg-emerald-600 text-white shadow-xs">
-                    <span class="w-1 h-1 rounded-full bg-emerald-200"></span> Active
-                </span>
+                <span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[8px] font-black uppercase tracking-wider bg-emerald-600 text-white shadow-xs">Active</span>
             @endif
         </a>
 
         {{-- Pending --}}
         <a href="{{ request()->fullUrlWithQuery(['filter' => 'pending', 'page' => 1]) }}"
-           class="group relative rounded-2xl px-4 py-3 flex items-center justify-between border transition-all duration-200 cursor-pointer {{ $isPending ? 'bg-amber-50/50 border-amber-500 ring-2 ring-amber-500/20 shadow-sm -translate-y-0.5' : 'bg-white border-amber-100 hover:border-amber-300 hover:shadow-sm hover:-translate-y-0.5' }}">
-            <div class="flex items-center gap-3">
-                <div class="w-8 h-8 rounded-xl flex items-center justify-center shrink-0 transition-colors {{ $isPending ? 'bg-amber-500 text-white' : 'bg-amber-50 text-amber-500 group-hover:bg-amber-100' }}">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+           class="group relative rounded-2xl px-3.5 py-3 flex items-center justify-between border transition-all duration-200 cursor-pointer {{ $isPending ? 'bg-amber-50/50 border-amber-500 ring-2 ring-amber-500/20 shadow-sm -translate-y-0.5' : 'bg-white border-amber-100 hover:border-amber-300 hover:shadow-sm hover:-translate-y-0.5' }}">
+            <div class="flex items-center gap-2.5">
+                <div class="w-7 h-7 rounded-xl flex items-center justify-center shrink-0 transition-colors {{ $isPending ? 'bg-amber-500 text-white' : 'bg-amber-50 text-amber-500 group-hover:bg-amber-100' }}">
+                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
                 </div>
                 <div>
-                    <div class="text-base sm:text-lg font-black text-gray-900 leading-none">{{ $counts['pending'] ?? 0 }}</div>
+                    <div class="text-sm sm:text-base font-black text-gray-900 leading-none">{{ $counts['pending'] ?? 0 }}</div>
                     <div class="text-[9px] font-bold uppercase tracking-wider text-amber-500 mt-0.5">Pending</div>
                 </div>
             </div>
             @if($isPending)
-                <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[8px] font-black uppercase tracking-wider bg-amber-500 text-white shadow-xs">
-                    <span class="w-1 h-1 rounded-full bg-amber-200"></span> Active
-                </span>
+                <span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[8px] font-black uppercase tracking-wider bg-amber-500 text-white shadow-xs">Active</span>
             @endif
         </a>
 
-        {{-- Suspended --}}
+        {{-- Suspended (Policy Violation) --}}
         <a href="{{ request()->fullUrlWithQuery(['filter' => 'suspended', 'page' => 1]) }}"
-           class="group relative rounded-2xl px-4 py-3 flex items-center justify-between border transition-all duration-200 cursor-pointer {{ $isSuspended ? 'bg-red-50/50 border-red-600 ring-2 ring-red-600/20 shadow-sm -translate-y-0.5' : 'bg-white border-red-100 hover:border-red-300 hover:shadow-sm hover:-translate-y-0.5' }}">
-            <div class="flex items-center gap-3">
-                <div class="w-8 h-8 rounded-xl flex items-center justify-center shrink-0 transition-colors {{ $isSuspended ? 'bg-red-600 text-white' : 'bg-red-50 text-red-500 group-hover:bg-red-100' }}">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"/></svg>
+           class="group relative rounded-2xl px-3.5 py-3 flex items-center justify-between border transition-all duration-200 cursor-pointer {{ $isSuspended ? 'bg-red-50/50 border-red-600 ring-2 ring-red-600/20 shadow-sm -translate-y-0.5' : 'bg-white border-red-100 hover:border-red-300 hover:shadow-sm hover:-translate-y-0.5' }}">
+            <div class="flex items-center gap-2.5">
+                <div class="w-7 h-7 rounded-xl flex items-center justify-center shrink-0 transition-colors {{ $isSuspended ? 'bg-red-600 text-white' : 'bg-red-50 text-red-500 group-hover:bg-red-100' }}">
+                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"/></svg>
                 </div>
                 <div>
-                    <div class="text-base sm:text-lg font-black text-gray-900 leading-none">{{ $counts['suspended'] ?? 0 }}</div>
-                    <div class="text-[9px] font-bold uppercase tracking-wider text-red-500 mt-0.5">Suspended</div>
+                    <div class="text-sm sm:text-base font-black text-gray-900 leading-none">{{ $counts['suspended'] ?? 0 }}</div>
+                    <div class="text-[9px] font-bold uppercase tracking-wider text-red-600 mt-0.5">Suspended</div>
                 </div>
             </div>
             @if($isSuspended)
-                <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[8px] font-black uppercase tracking-wider bg-red-600 text-white shadow-xs">
-                    <span class="w-1 h-1 rounded-full bg-red-200"></span> Active
-                </span>
+                <span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[8px] font-black uppercase tracking-wider bg-red-600 text-white shadow-xs">Active</span>
+            @endif
+        </a>
+
+        {{-- Frozen (Unpaid Commission) --}}
+        <a href="{{ request()->fullUrlWithQuery(['filter' => 'frozen', 'page' => 1]) }}"
+           class="group relative rounded-2xl px-3.5 py-3 flex items-center justify-between border transition-all duration-200 cursor-pointer {{ $isFrozen ? 'bg-orange-50/50 border-orange-500 ring-2 ring-orange-500/20 shadow-sm -translate-y-0.5' : 'bg-white border-orange-100 hover:border-orange-300 hover:shadow-sm hover:-translate-y-0.5' }}">
+            <div class="flex items-center gap-2.5">
+                <div class="w-7 h-7 rounded-xl flex items-center justify-center shrink-0 transition-colors {{ $isFrozen ? 'bg-orange-500 text-white' : 'bg-orange-50 text-orange-500 group-hover:bg-orange-100' }}">
+                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
+                </div>
+                <div>
+                    <div class="text-sm sm:text-base font-black text-gray-900 leading-none">{{ $counts['frozen'] ?? 0 }}</div>
+                    <div class="text-[9px] font-bold uppercase tracking-wider text-orange-500 mt-0.5">Frozen</div>
+                </div>
+            </div>
+            @if($isFrozen)
+                <span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[8px] font-black uppercase tracking-wider bg-orange-500 text-white shadow-xs">Active</span>
+            @endif
+        </a>
+
+        {{-- Rejected --}}
+        <a href="{{ request()->fullUrlWithQuery(['filter' => 'rejected', 'page' => 1]) }}"
+           class="group relative rounded-2xl px-3.5 py-3 flex items-center justify-between border transition-all duration-200 cursor-pointer {{ $isRejected ? 'bg-rose-50/50 border-rose-500 ring-2 ring-rose-500/20 shadow-sm -translate-y-0.5' : 'bg-white border-rose-100 hover:border-rose-300 hover:shadow-sm hover:-translate-y-0.5' }}">
+            <div class="flex items-center gap-2.5">
+                <div class="w-7 h-7 rounded-xl flex items-center justify-center shrink-0 transition-colors {{ $isRejected ? 'bg-rose-500 text-white' : 'bg-rose-50 text-rose-500 group-hover:bg-rose-100' }}">
+                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                </div>
+                <div>
+                    <div class="text-sm sm:text-base font-black text-gray-900 leading-none">{{ $counts['rejected'] ?? 0 }}</div>
+                    <div class="text-[9px] font-bold uppercase tracking-wider text-rose-500 mt-0.5">Rejected</div>
+                </div>
+            </div>
+            @if($isRejected)
+                <span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[8px] font-black uppercase tracking-wider bg-rose-500 text-white shadow-xs">Active</span>
             @endif
         </a>
     </div>
@@ -311,7 +349,7 @@
                     <button type="button" @click="openReview({{ json_encode($pData) }})" class="px-2.5 py-1 bg-emerald-600 text-white rounded-lg text-[9px] font-black uppercase tracking-wider hover:bg-emerald-700 transition-all cursor-pointer shadow-xs">
                         Approve &amp; Verify
                     </button>
-                    <button type="button" @click="openSuspend('{{ $seller->id }}', '{{ addslashes($seller->name) }}')" class="px-2 py-1 bg-rose-50 text-rose-700 rounded-lg text-[9px] font-black uppercase tracking-wider hover:bg-rose-500 hover:text-white transition-all cursor-pointer">
+                    <button type="button" @click="openReject('{{ $seller->id }}', '{{ addslashes($seller->name) }}')" class="px-2.5 py-1 bg-rose-50 text-rose-700 rounded-lg text-[9px] font-black uppercase tracking-wider hover:bg-rose-500 hover:text-white transition-all cursor-pointer">
                         Reject
                     </button>
                 </div>
@@ -371,23 +409,35 @@
                                     'products_count' => $seller->products_count ?? 0,
                                     'orders_count' => $seller->orders_count ?? 0,
                                 ];
-                                $statusClass = match(true) {
-                                    $seller->status === 'blocked' => 'bg-rose-50 text-rose-700 border border-rose-200/60',
-                                    $seller->status === 'frozen'  => 'bg-amber-50 text-amber-700 border border-amber-200/60',
-                                    !$seller->isVerified          => 'bg-blue-50 text-blue-700 border border-blue-200/60',
-                                    default                       => 'bg-emerald-50 text-emerald-700 border border-emerald-200/60',
+                                
+                                $normStatus = match(true) {
+                                    $seller->status === 'blocked' || $seller->status === 'suspended' => 'suspended',
+                                    $seller->status === 'rejected' => 'rejected',
+                                    $seller->status === 'frozen'   => 'frozen',
+                                    $seller->isVerified || $seller->status === 'active' => 'active',
+                                    default => 'pending',
                                 };
-                                $statusDot = match(true) {
-                                    $seller->status === 'blocked' => 'bg-rose-500',
-                                    $seller->status === 'frozen'  => 'bg-amber-500',
-                                    !$seller->isVerified          => 'bg-blue-500',
-                                    default                       => 'bg-emerald-500',
+
+                                $statusClass = match($normStatus) {
+                                    'suspended' => 'bg-red-50 text-red-700 border border-red-200/80',
+                                    'rejected'  => 'bg-rose-50 text-rose-700 border border-rose-200/80',
+                                    'frozen'    => 'bg-orange-50 text-orange-700 border border-orange-200/80',
+                                    'pending'   => 'bg-amber-50 text-amber-800 border border-amber-200/80',
+                                    default     => 'bg-emerald-50 text-emerald-700 border border-emerald-200/80',
                                 };
-                                $statusLabel = match(true) {
-                                    $seller->status === 'blocked' => 'Suspended',
-                                    $seller->status === 'frozen'  => 'Frozen',
-                                    !$seller->isVerified          => 'Pending',
-                                    default                       => 'Active',
+                                $statusDot = match($normStatus) {
+                                    'suspended' => 'bg-red-500',
+                                    'rejected'  => 'bg-rose-500',
+                                    'frozen'    => 'bg-orange-500',
+                                    'pending'   => 'bg-amber-500',
+                                    default     => 'bg-emerald-500',
+                                };
+                                $statusLabel = match($normStatus) {
+                                    'suspended' => 'Suspended — Policy Violation',
+                                    'rejected'  => 'Rejected Application',
+                                    'frozen'    => 'Frozen — Unpaid Commission',
+                                    'pending'   => 'Pending Approval',
+                                    default     => 'Active / Approved',
                                 };
                             @endphp
                             <tr class="hover:bg-gray-50/50 transition-colors group">
@@ -414,6 +464,20 @@
                                                     </button>
                                                 @endif
                                             </div>
+                                            @if($normStatus === 'suspended' && $seller->violationReason)
+                                                <div class="text-[9px] text-red-600 font-semibold truncate max-w-xs mt-0.5" title="{{ $seller->violationReason }}">
+                                                    Violation: {{ $seller->violationReason }}
+                                                </div>
+                                            @elseif($normStatus === 'frozen')
+                                                @php
+                                                    $unpaidRec = $seller->commissionRecords ? $seller->commissionRecords->first() : null;
+                                                @endphp
+                                                @if($unpaidRec)
+                                                    <div class="text-[9px] text-orange-600 font-semibold truncate max-w-xs mt-0.5">
+                                                        Overdue: ₱{{ number_format($unpaidRec->commissionAmount, 2) }} ({{ $unpaidRec->period }})
+                                                    </div>
+                                                @endif
+                                            @endif
                                         </div>
                                     </div>
                                 </td>
@@ -434,7 +498,7 @@
 
                                 {{-- Status --}}
                                 <td class="px-4 py-2">
-                                    <span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] font-bold capitalize {{ $statusClass }}">
+                                    <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-bold {{ $statusClass }}">
                                         <span class="w-1.5 h-1.5 rounded-full {{ $statusDot }}"></span>
                                         {{ $statusLabel }}
                                     </span>
@@ -443,29 +507,55 @@
                                 {{-- Actions --}}
                                 <td class="px-5 py-2">
                                     <div class="flex items-center justify-end gap-1.5">
-                                        @if(!$seller->isVerified && $seller->status !== 'blocked')
+                                        @if($normStatus === 'pending')
                                             <button type="button" @click="openReview({{ json_encode($sData) }})"
                                                 class="px-2.5 py-1 bg-emerald-50 text-emerald-700 border border-emerald-200/80 rounded-lg text-[10px] font-bold uppercase tracking-wider hover:bg-emerald-600 hover:text-white transition-all cursor-pointer">
                                                 Verify
                                             </button>
-                                        @else
+                                            <button type="button" @click="openReject('{{ $seller->id }}', '{{ addslashes($seller->name) }}')"
+                                                class="px-2.5 py-1 bg-rose-50 text-rose-700 border border-rose-200/80 rounded-lg text-[10px] font-bold uppercase tracking-wider hover:bg-rose-600 hover:text-white transition-all cursor-pointer">
+                                                Reject
+                                            </button>
+                                        @elseif($normStatus === 'active')
                                             <button type="button" @click="openReview({{ json_encode($sData) }})"
                                                 class="px-2.5 py-1 bg-gray-50 text-gray-600 border border-gray-200/80 rounded-lg text-[10px] font-bold uppercase tracking-wider hover:bg-gray-200 transition-all cursor-pointer">
                                                 Docs
                                             </button>
-                                        @endif
-
-                                        @if($seller->status !== 'blocked')
                                             <button type="button" @click="openSuspend('{{ $seller->id }}', '{{ addslashes($seller->name) }}')"
-                                                class="px-2.5 py-1 bg-rose-50 text-rose-600 border border-rose-200/80 rounded-lg text-[10px] font-bold uppercase tracking-wider hover:bg-rose-600 hover:text-white transition-all cursor-pointer">
+                                                class="px-2.5 py-1 bg-red-50 text-red-600 border border-red-200/80 rounded-lg text-[10px] font-bold uppercase tracking-wider hover:bg-red-600 hover:text-white transition-all cursor-pointer">
                                                 Suspend
                                             </button>
-                                        @else
+                                        @elseif($normStatus === 'frozen')
+                                            <button type="button" @click="openReview({{ json_encode($sData) }})"
+                                                class="px-2.5 py-1 bg-gray-50 text-gray-600 border border-gray-200/80 rounded-lg text-[10px] font-bold uppercase tracking-wider hover:bg-gray-200 transition-all cursor-pointer">
+                                                Docs
+                                            </button>
+                                            <a href="{{ url('/superadmin/commissions') }}"
+                                                class="px-2.5 py-1 bg-orange-50 text-orange-700 border border-orange-200/80 rounded-lg text-[10px] font-bold uppercase tracking-wider hover:bg-orange-500 hover:text-white transition-all cursor-pointer" title="Manage Overdue Commission">
+                                                Commission
+                                            </a>
+                                        @elseif($normStatus === 'suspended')
+                                            <button type="button" @click="openReview({{ json_encode($sData) }})"
+                                                class="px-2.5 py-1 bg-gray-50 text-gray-600 border border-gray-200/80 rounded-lg text-[10px] font-bold uppercase tracking-wider hover:bg-gray-200 transition-all cursor-pointer">
+                                                Docs
+                                            </button>
                                             <form action="{{ route('admin.sellers.unsuspend', $seller->id) }}" method="POST" class="inline">
                                                 @csrf @method('PATCH')
                                                 <button type="submit"
                                                     class="px-2.5 py-1 bg-emerald-50 text-emerald-700 border border-emerald-200/80 rounded-lg text-[10px] font-bold uppercase tracking-wider hover:bg-emerald-600 hover:text-white transition-all cursor-pointer">
-                                                    Restore
+                                                    Unsuspend
+                                                </button>
+                                            </form>
+                                        @elseif($normStatus === 'rejected')
+                                            <button type="button" @click="openReview({{ json_encode($sData) }})"
+                                                class="px-2.5 py-1 bg-gray-50 text-gray-600 border border-gray-200/80 rounded-lg text-[10px] font-bold uppercase tracking-wider hover:bg-gray-200 transition-all cursor-pointer">
+                                                Docs
+                                            </button>
+                                            <form action="{{ route('admin.sellers.reopen', $seller->id) }}" method="POST" class="inline">
+                                                @csrf @method('PATCH')
+                                                <button type="submit"
+                                                    class="px-2.5 py-1 bg-amber-50 text-amber-800 border border-amber-200/80 rounded-lg text-[10px] font-bold uppercase tracking-wider hover:bg-amber-500 hover:text-white transition-all cursor-pointer" title="Reopen Application for Review">
+                                                    Reopen
                                                 </button>
                                             </form>
                                         @endif
@@ -514,8 +604,10 @@
                     <div>
                         <h3 class="text-base sm:text-lg font-black text-gray-900 leading-tight flex items-center gap-2">
                             <span x-text="selectedSeller.name"></span>
-                            <span x-show="selectedSeller.isVerified" class="text-green-600 text-xs font-bold bg-green-50 px-2 py-0.5 rounded-md border border-green-200">Verified</span>
-                            <span x-show="!selectedSeller.isVerified" class="text-blue-600 text-xs font-bold bg-blue-50 px-2 py-0.5 rounded-md border border-blue-200">Pending Review</span>
+                            <span x-show="selectedSeller.isVerified && selectedSeller.status !== 'blocked' && selectedSeller.status !== 'suspended'" class="text-green-600 text-xs font-bold bg-green-50 px-2 py-0.5 rounded-md border border-green-200">Active</span>
+                            <span x-show="!selectedSeller.isVerified && selectedSeller.status !== 'rejected'" class="text-blue-600 text-xs font-bold bg-blue-50 px-2 py-0.5 rounded-md border border-blue-200">Pending Review</span>
+                            <span x-show="selectedSeller.status === 'rejected'" class="text-rose-600 text-xs font-bold bg-rose-50 px-2 py-0.5 rounded-md border border-rose-200">Rejected</span>
+                            <span x-show="selectedSeller.status === 'blocked' || selectedSeller.status === 'suspended'" class="text-red-600 text-xs font-bold bg-red-50 px-2 py-0.5 rounded-md border border-red-200">Suspended</span>
                         </h3>
                         <p class="text-xs text-gray-500">Inspect credentials &amp; requirements before verification</p>
                     </div>
@@ -694,10 +786,10 @@
                     Close
                 </button>
                 <div class="flex items-center gap-2 w-full sm:w-auto">
-                    <template x-if="!selectedSeller.isVerified && selectedSeller.status !== 'blocked'">
+                    <template x-if="!selectedSeller.isVerified && selectedSeller.status !== 'blocked' && selectedSeller.status !== 'suspended' && selectedSeller.status !== 'rejected'">
                         <div class="flex items-center gap-2 w-full sm:w-auto">
-                            <button type="button" @click="reviewModal = false; openSuspend(selectedSeller.id, selectedSeller.name)" class="flex-1 sm:flex-initial px-5 py-2.5 bg-red-50 text-red-700 hover:bg-red-500 hover:text-white rounded-xl text-xs font-black uppercase tracking-wider transition-all cursor-pointer">
-                                Reject / Suspend
+                            <button type="button" @click="reviewModal = false; openReject(selectedSeller.id, selectedSeller.name)" class="flex-1 sm:flex-initial px-5 py-2.5 bg-rose-50 text-rose-700 hover:bg-rose-500 hover:text-white rounded-xl text-xs font-black uppercase tracking-wider transition-all cursor-pointer">
+                                Reject Application
                             </button>
                             <form :action="'/admin/sellers/' + selectedSeller.id + '/verify'" method="POST" class="flex-1 sm:flex-initial">
                                 @csrf @method('PATCH')
@@ -708,7 +800,7 @@
                             </form>
                         </div>
                     </template>
-                    <template x-if="selectedSeller.isVerified && selectedSeller.status !== 'blocked'">
+                    <template x-if="selectedSeller.isVerified && selectedSeller.status !== 'blocked' && selectedSeller.status !== 'suspended'">
                         <div class="flex items-center gap-2 w-full sm:w-auto">
                             <form :action="'/admin/sellers/' + selectedSeller.id + '/unverify'" method="POST" class="flex-1 sm:flex-initial">
                                 @csrf @method('PATCH')
@@ -719,6 +811,16 @@
                             <button type="button" @click="reviewModal = false; openSuspend(selectedSeller.id, selectedSeller.name)" class="flex-1 sm:flex-initial px-5 py-2.5 bg-red-50 text-red-700 hover:bg-red-500 hover:text-white rounded-xl text-xs font-black uppercase tracking-wider transition-all cursor-pointer">
                                 Suspend Account
                             </button>
+                        </div>
+                    </template>
+                    <template x-if="selectedSeller.status === 'rejected'">
+                        <div class="flex items-center gap-2 w-full sm:w-auto">
+                            <form :action="'/admin/sellers/' + selectedSeller.id + '/reopen'" method="POST" class="flex-1 sm:flex-initial">
+                                @csrf @method('PATCH')
+                                <button type="submit" class="w-full px-5 py-2.5 bg-amber-50 text-amber-800 hover:bg-amber-500 hover:text-white rounded-xl text-xs font-black uppercase tracking-wider transition-all cursor-pointer">
+                                    Re-open for Review
+                                </button>
+                            </form>
                         </div>
                     </template>
                 </div>
@@ -756,43 +858,87 @@
         </div>
     </div>
 
+    {{-- Reject Application Confirmation Modal --}}
+    <div x-show="rejectModal" class="fixed inset-0 z-50 flex items-center justify-center p-4" x-cloak>
+        <div class="absolute inset-0 bg-black/40 backdrop-blur-sm" @click="rejectModal = false"></div>
+        <div class="relative bg-white rounded-2xl shadow-2xl w-full max-w-md p-6 space-y-4 z-10">
+            <div class="flex items-start gap-3">
+                <div class="w-10 h-10 rounded-xl bg-rose-100 flex items-center justify-center text-rose-600 shrink-0 font-black">✕</div>
+                <div>
+                    <h3 class="text-lg font-bold text-gray-900">Reject Seller Application</h3>
+                    <p class="text-xs text-gray-500 leading-relaxed mt-0.5">
+                        Decline registration for applicant <strong x-text="rejectSellerName" class="text-black"></strong>.
+                    </p>
+                </div>
+            </div>
+            <form :action="'/admin/sellers/' + rejectSellerId + '/reject'" method="POST" class="space-y-4">
+                @csrf @method('PATCH')
+                <div>
+                    <label class="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-1.5 block">Quick Reason Presets</label>
+                    <div class="flex flex-wrap gap-1.5 mb-3">
+                        <button type="button" @click="rejectReason = 'Submitted documents are incomplete or unreadable'"
+                            class="px-2.5 py-1 rounded-lg text-[10px] font-semibold bg-gray-100 hover:bg-gray-200 text-gray-700 transition-colors">
+                            Incomplete Docs
+                        </button>
+                        <button type="button" @click="rejectReason = 'Invalid or expired Barangay Residency Certificate'"
+                            class="px-2.5 py-1 rounded-lg text-[10px] font-semibold bg-gray-100 hover:bg-gray-200 text-gray-700 transition-colors">
+                            Invalid Residency
+                        </button>
+                        <button type="button" @click="rejectReason = 'Shop or product category outside LumBarong heritage scope'"
+                            class="px-2.5 py-1 rounded-lg text-[10px] font-semibold bg-gray-100 hover:bg-gray-200 text-gray-700 transition-colors">
+                            Out of Scope
+                        </button>
+                    </div>
+
+                    <label class="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-1 block">Rejection Reason (Sent to applicant email) *</label>
+                    <textarea name="reason" x-model="rejectReason" required rows="3" placeholder="Provide the reason for rejecting application..." class="w-full p-3 bg-gray-50 border border-gray-200 rounded-xl text-xs outline-none focus:border-rose-500"></textarea>
+                </div>
+                <div class="flex gap-3 pt-2">
+                    <button type="button" @click="rejectModal = false" class="flex-1 py-2.5 border border-gray-200 text-xs font-semibold text-gray-500 rounded-xl hover:bg-gray-50 cursor-pointer">Cancel</button>
+                    <button type="submit" class="flex-1 py-2.5 bg-rose-600 text-white text-xs font-bold uppercase tracking-wider rounded-xl hover:bg-rose-700 cursor-pointer shadow-sm">Confirm Rejection</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
     {{-- Suspend Confirmation Modal --}}
     <div x-show="suspendModal" class="fixed inset-0 z-50 flex items-center justify-center p-4" x-cloak>
         <div class="absolute inset-0 bg-black/40 backdrop-blur-sm" @click="suspendModal = false"></div>
         <div class="relative bg-white rounded-2xl shadow-2xl w-full max-w-md p-6 space-y-4 z-10">
-            <h3 class="text-lg font-bold text-gray-900">Suspend / Reject Seller Account</h3>
-            <p class="text-xs text-gray-500 leading-relaxed">
-                Are you sure you want to suspend or reject seller <strong x-text="suspendSellerName" class="text-black"></strong>? Please enter an explanation or reason.
-            </p>
+            <div class="flex items-start gap-3">
+                <div class="w-10 h-10 rounded-xl bg-red-100 flex items-center justify-center text-red-600 shrink-0 font-black">⚠️</div>
+                <div>
+                    <h3 class="text-lg font-bold text-gray-900">Suspend Seller Account</h3>
+                    <p class="text-xs text-gray-500 leading-relaxed mt-0.5">
+                        Restrict access and freeze listings for seller <strong x-text="suspendSellerName" class="text-black"></strong>.
+                    </p>
+                </div>
+            </div>
             <form :action="'/admin/sellers/' + suspendSellerId + '/suspend'" method="POST" class="space-y-4">
                 @csrf @method('PATCH')
                 <div>
                     <label class="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-1.5 block">Quick Presets</label>
                     <div class="flex flex-wrap gap-1.5 mb-3">
-                        <button type="button" @click="suspendReason = 'Submitted application documents are incomplete or illegible'"
-                            class="px-2.5 py-1 rounded-lg text-[10px] font-semibold bg-gray-100 hover:bg-gray-200 text-gray-700 transition-colors">
-                            Incomplete Docs
-                        </button>
-                        <button type="button" @click="suspendReason = 'Invalid or expired Business Permit / DTI Registration'"
-                            class="px-2.5 py-1 rounded-lg text-[10px] font-semibold bg-gray-100 hover:bg-gray-200 text-gray-700 transition-colors">
-                            Invalid Permit
-                        </button>
                         <button type="button" @click="suspendReason = 'Policy violation / counterfeit or prohibited listings'"
                             class="px-2.5 py-1 rounded-lg text-[10px] font-semibold bg-gray-100 hover:bg-gray-200 text-gray-700 transition-colors">
                             Policy Violation
                         </button>
-                        <button type="button" @click="suspendReason = 'Administrative review in progress'"
+                        <button type="button" @click="suspendReason = 'Multiple unresolved customer complaints or fraud reports'"
                             class="px-2.5 py-1 rounded-lg text-[10px] font-semibold bg-gray-100 hover:bg-gray-200 text-gray-700 transition-colors">
-                            Admin Review
+                            Customer Complaints
+                        </button>
+                        <button type="button" @click="suspendReason = 'Non-payment of platform commissions past grace period'"
+                            class="px-2.5 py-1 rounded-lg text-[10px] font-semibold bg-gray-100 hover:bg-gray-200 text-gray-700 transition-colors">
+                            Commission Default
                         </button>
                     </div>
 
-                    <label class="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-1 block">Explanation / Reason (Shown to seller upon login) *</label>
-                    <textarea name="reason" x-model="suspendReason" required rows="3" placeholder="Provide the reason for account suspension/rejection..." class="w-full p-3 bg-gray-50 border border-gray-200 rounded-xl text-xs outline-none focus:border-red-500"></textarea>
+                    <label class="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-1 block">Suspension Reason (Shown to seller upon login) *</label>
+                    <textarea name="reason" x-model="suspendReason" required rows="3" placeholder="Provide the reason for account suspension..." class="w-full p-3 bg-gray-50 border border-gray-200 rounded-xl text-xs outline-none focus:border-red-500"></textarea>
                 </div>
                 <div class="flex gap-3 pt-2">
                     <button type="button" @click="suspendModal = false" class="flex-1 py-2.5 border border-gray-200 text-xs font-semibold text-gray-500 rounded-xl hover:bg-gray-50 cursor-pointer">Cancel</button>
-                    <button type="submit" class="flex-1 py-2.5 bg-red-600 text-white text-xs font-bold uppercase tracking-wider rounded-xl hover:bg-red-700 cursor-pointer shadow-sm">Confirm Action</button>
+                    <button type="submit" class="flex-1 py-2.5 bg-red-600 text-white text-xs font-bold uppercase tracking-wider rounded-xl hover:bg-red-700 cursor-pointer shadow-sm">Confirm Suspension</button>
                 </div>
             </form>
         </div>

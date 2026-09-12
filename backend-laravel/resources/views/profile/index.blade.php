@@ -328,10 +328,96 @@
                         </button>
                     </form>
                 </div>
+
+                {{-- Delete Account Action (Soft Delete) --}}
+                <div class="pt-2 border-t border-[#EAE1D0]">
+                    <button type="button"
+                            @click="showDeleteAccountModal = true"
+                            style="background-color:#FFF5F5;border:1px solid #FED7D7;border-radius:16px;padding:12px 16px;display:flex;align-items:center;justify-content:space-between;box-shadow:0 2px 6px rgba(0,0,0,0.02);cursor:pointer;width:100%;text-align:left;transition:all 0.2s;color:#9B2C2C;"
+                            class="hover:bg-red-700 hover:text-white hover:border-red-700 group">
+                        <div style="display:flex;align-items:center;gap:12px;">
+                            <div style="width:34px;height:34px;border-radius:10px;background-color:#FED7D7;border:1px solid #FEB2B2;display:flex;align-items:center;justify-content:center;color:#9B2C2C;flex-shrink:0;" class="group-hover:bg-white group-hover:text-red-700 transition-colors">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                                </svg>
+                            </div>
+                            <div>
+                                <div style="font-size:13px;font-weight:700;">Delete Account</div>
+                                <div style="font-size:11px;color:#C53030;margin-top:1px;" class="group-hover:text-red-100">Permanently close account (Soft Delete)</div>
+                            </div>
+                        </div>
+                        <svg width="15" height="15" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.2" class="group-hover:translate-x-0.5 transition-transform">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/>
+                        </svg>
+                    </button>
+                </div>
             </div>
 
         </div>
 
+    </div>
+
+    {{-- Delete Account Confirmation Modal --}}
+    <div x-show="showDeleteAccountModal"
+         x-cloak
+         class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs"
+         x-transition:enter="transition ease-out duration-200"
+         x-transition:enter-start="opacity-0 scale-95"
+         x-transition:enter-end="opacity-100 scale-100"
+         x-transition:leave="transition ease-in duration-150"
+         x-transition:leave-start="opacity-100 scale-100"
+         x-transition:leave-end="opacity-0 scale-95"
+         @keydown.escape.window="showDeleteAccountModal = false">
+
+        <div class="relative w-full max-w-md bg-white rounded-3xl p-6 sm:p-7 shadow-2xl border border-gray-100 space-y-5"
+             @click.away="showDeleteAccountModal = false">
+
+            <div class="flex items-center justify-between pb-3 border-b border-gray-100">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-2xl bg-red-50 text-red-600 flex items-center justify-center text-lg">
+                        ⚠️
+                    </div>
+                    <div>
+                        <h3 class="text-base font-extrabold text-gray-900">Delete Your Account</h3>
+                        <p class="text-[10px] text-gray-400 font-medium">Safe soft-delete process</p>
+                    </div>
+                </div>
+                <button type="button" @click="showDeleteAccountModal = false" class="text-gray-400 hover:text-black transition-colors p-1">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                </button>
+            </div>
+
+            <div class="bg-amber-50/80 border border-amber-200 rounded-2xl p-4 text-left space-y-2">
+                <p class="text-xs text-amber-950 font-medium leading-relaxed">
+                    <strong>Notice:</strong> Are you sure you want to delete your account, <strong>{{ $user->name }}</strong>?
+                </p>
+                <ul class="text-[11px] text-amber-900 space-y-1 list-disc pl-4 font-normal">
+                    <li>Your profile and active sessions will be deactivated immediately.</li>
+                    <li>Account records are archived safely using <strong>soft-delete</strong>.</li>
+                    <li>You will be permitted to register again anytime in the future using this same Gmail address: <strong>{{ $user->email }}</strong>.</li>
+                </ul>
+            </div>
+
+            <form action="{{ route('profile.delete-account') }}" method="POST" class="space-y-4">
+                @csrf
+                <div class="space-y-1.5">
+                    <label class="text-[10px] font-bold text-gray-500 uppercase tracking-wider block">Reason for leaving (Optional)</label>
+                    <textarea name="reason" rows="2" placeholder="Tell us why you are deleting your account..." class="w-full px-3.5 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-xs font-medium outline-none focus:border-red-500 focus:bg-white transition-colors"></textarea>
+                </div>
+
+                <div class="flex items-center gap-3 pt-2">
+                    <button type="button"
+                            @click="showDeleteAccountModal = false"
+                            class="flex-1 py-2.5 px-4 rounded-xl border border-gray-200 text-gray-700 text-xs font-bold uppercase tracking-wider hover:bg-gray-50 transition-all cursor-pointer">
+                        Cancel
+                    </button>
+                    <button type="submit"
+                            class="flex-1 py-2.5 px-4 rounded-xl bg-red-600 hover:bg-red-700 text-white text-xs font-bold uppercase tracking-wider shadow-md active:scale-95 transition-all cursor-pointer">
+                        Confirm Delete
+                    </button>
+                </div>
+            </form>
+        </div>
     </div>
 
     {{-- Edit Profile Modal --}}
@@ -1045,6 +1131,7 @@ function profileApp() {
         showEditModal: false,
         showAddressModal: false,
         showDeleteConfirmModal: false,
+        showDeleteAccountModal: false,
         showPasswordModal: document.getElementById('profile-root')?.dataset?.showPassword === 'true',
         pendingDeleteAddressId: null,
 

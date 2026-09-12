@@ -12,9 +12,11 @@ use App\Services\EmailNotificationService;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Validation\Rule;
 
 class WebAuthController extends Controller
 {
@@ -53,18 +55,25 @@ class WebAuthController extends Controller
 
             if ($user->status === 'frozen') {
                 Auth::logout();
+                $overdue = CommissionRecord::where('sellerId', $user->id)
+                    ->where('status', 'unpaid')
+                    ->orderByDesc('period')
+                    ->first();
+                $amount = $overdue ? number_format($overdue->commissionAmount, 2) : '0.00';
+                $period = $overdue ? $overdue->period : 'current';
+                $msg = "Your shop is temporarily frozen due to an unpaid monthly commission of ₱{$amount} for {$period}. Please settle your outstanding commission to restore access.";
                 return back()->withErrors([
-                    'email' => 'Pay commission to continue',
+                    'email' => $msg,
                 ])->onlyInput('email');
             }
 
             if (in_array(strtolower($user->status ?? ''), ['blocked', 'banned', 'suspended'])) {
                 Auth::logout();
-                $reason = !empty($user->violationReason) ? $user->violationReason : 'Violation of community terms and policies';
+                $reason = !empty($user->violationReason) ? $user->violationReason : 'Violation of platform seller policies';
                 return back()
                     ->with('banned_reason', $reason)
                     ->withErrors([
-                        'email' => "Your account has been suspended. Reason: {$reason}",
+                        'email' => "Your account has been suspended for a policy violation. Reason: {$reason}",
                     ])->onlyInput('email');
             }
 
@@ -176,7 +185,13 @@ class WebAuthController extends Controller
 
         $validator = Validator::make($request->all(), [
             'name'          => ['required', 'string', 'min:2', 'max:100', 'regex:/^[a-zA-Z\x{00C0}-\x{024F}\s\.\'\-]+$/u'],
-            'email'         => 'required|string|email|max:255|unique:users,email',
+            'email'         => [
+                'required',
+                'string',
+                'email',
+                'max:255',
+                Rule::unique('users', 'email')->whereNull('deleted_at')
+            ],
             'password'      => [
                 'required',
                 'string',
@@ -255,7 +270,13 @@ class WebAuthController extends Controller
     {
         $validator = Validator::make($request->all(), [
             'name'                 => 'required|string|max:255',
-            'email'                => 'required|string|email|max:255|unique:users,email',
+            'email'                => [
+                'required',
+                'string',
+                'email',
+                'max:255',
+                Rule::unique('users', 'email')->whereNull('deleted_at')
+            ],
             'password'             => 'required|string|min:6|confirmed',
             'gcashNumber'          => 'nullable|string|max:20',
             'residencyCertificate' => 'required|file|mimes:jpg,jpeg,png,pdf,webp|max:20480',
@@ -1620,6 +1641,68 @@ class WebAuthController extends Controller
         }
 
         return null;
+    }
+
+    /**
+     * Customer & User Self-Requested Account Deletion (Soft Delete Only).
+     */
+    public function deleteAccount(Request $request)
+    {
+        /** @var User $user */
+        $user = Auth::user();
+        if (!$user) {
+            return redirect()->route('login');
+        }
+
+        $userId = $user->id;
+        $userName = $user->name;
+        $userEmail = $user->email;
+        $reason = $request->input('reason', 'User self-requested account deletion');
+
+        // Send notification email before deletion
+        if ($userEmail) {
+            try {
+                $mailable = new \App\Mail\CustomerDeletedMail($userName, $reason);
+                EmailNotificationService::sendNotification(
+                    $userEmail,
+                    $mailable,
+                    'customer_deleted',
+                    $userId,
+                    'User',
+                    $userId
+                );
+            } catch (\Throwable $e) {
+                Log::warning('Email sending failed on user self-delete: ' . $e->getMessage());
+            }
+        }
+
+        // Clean up active sessions & tokens
+        try {
+            if (method_exists($user, 'tokens')) {
+                $user->tokens()->delete();
+            }
+            if (\Illuminate\Support\Facades\Schema::hasTable('sessions')) {
+                DB::table('sessions')->where('user_id', $userId)->delete();
+            }
+        } catch (\Throwable $e) {
+            Log::warning('Session cleanup on self-delete: ' . $e->getMessage());
+        }
+
+        // Archive before soft-delete
+        try {
+            \App\Models\ArchivedRecord::archive('customer', $user, $reason);
+        } catch (\Throwable $ae) {
+            Log::warning('Archive error on self-delete: ' . $ae->getMessage());
+        }
+
+        // Perform Soft Delete (populates deleted_at, keeps record safe)
+        $user->delete();
+
+        Auth::logout();
+        $request->session()->invalidate();
+        $request->session()->regenerateToken();
+
+        return redirect()->route('home')->with('success', 'Your account has been successfully deleted. You can re-register anytime with your email address.');
     }
 }
 

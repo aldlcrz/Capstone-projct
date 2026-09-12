@@ -293,7 +293,15 @@
                         <div class="space-y-4">
                             <div class="space-y-1.5">
                                 <div class="flex items-center justify-between flex-wrap gap-1">
-                                    <label class="text-[9px] lg:text-[10px] font-bold text-gray-500 uppercase tracking-widest block">Payment Reference Number <span class="text-[#C0422A]">*</span></label>
+                                    <div class="flex items-center gap-2">
+                                        <label class="text-[9px] lg:text-[10px] font-bold text-gray-500 uppercase tracking-widest block">Payment Reference Number <span class="text-[#C0422A]">*</span></label>
+                                        <template x-if="ocrExtracted">
+                                            <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[9px] font-extrabold bg-blue-50 text-blue-700 border border-blue-200">
+                                                <svg class="w-3 h-3 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+                                                OCR Auto-Extracted (Editable)
+                                            </span>
+                                        </template>
+                                    </div>
                                     <span class="text-[9px] font-bold text-gray-400" x-text="paymentMethod === 'GCash' ? 'GCash requirement: 13 digits' : 'Maya requirement: 12 digits'"></span>
                                 </div>
                                 <input type="text"
@@ -1007,6 +1015,7 @@ function checkoutApp(initialAddress, initialAddresses, defaultPaymentMethod) {
         zoomImage: '',
         showZoomModal: false,
         paymentRef: '',
+        ocrExtracted: false,
         refError: '',
         isRefDuplicate: false,
         refCheckTimer: null,
@@ -1027,6 +1036,7 @@ function checkoutApp(initialAddress, initialAddresses, defaultPaymentMethod) {
         },
 
         handleRefInput() {
+            this.ocrExtracted = false;
             if (this.paymentRef) {
                 const isValidFormat = this.validateRef();
                 if (isValidFormat) {
@@ -1165,6 +1175,14 @@ function checkoutApp(initialAddress, initialAddresses, defaultPaymentMethod) {
             .then(res => res.json())
             .then(data => {
                 this.aiVerificationResult = data;
+                if (data.detected_ref && !this.paymentRef) {
+                    this.paymentRef = data.detected_ref;
+                    this.ocrExtracted = true;
+                    this.validateRef();
+                    this.checkServerReference();
+                } else if (data.detected_ref && this.paymentRef === data.detected_ref) {
+                    this.ocrExtracted = true;
+                }
                 if (data.is_receipt === false) {
                     this.screenshotError = data.message || 'Attached file is not a valid receipt.';
                 } else {

@@ -892,6 +892,34 @@
 
                 {{-- Modal Body --}}
                 <div class="overflow-y-auto flex-1 p-5 space-y-4">
+                    {{-- Frozen / Suspended Account Notice Banner --}}
+                    @if($user->status === 'frozen')
+                        <div class="p-3.5 bg-orange-50 border border-orange-200 rounded-2xl flex items-start justify-between gap-3 text-orange-900 text-xs">
+                            <div class="flex items-start gap-3">
+                                <span class="text-base shrink-0">🔒</span>
+                                <div class="space-y-0.5">
+                                    <div class="font-extrabold uppercase text-[10px] tracking-wider text-orange-800">Account Frozen — Overdue Monthly Commission</div>
+                                    <p class="text-[11px] text-orange-700 leading-relaxed">
+                                        Your shop account is currently frozen due to an unpaid monthly commission. Modifying payout credentials is restricted until your balance is settled.
+                                    </p>
+                                </div>
+                            </div>
+                            <a href="{{ url('/seller/subscription') }}" class="shrink-0 px-2.5 py-1 bg-orange-600 text-white rounded-lg text-[10px] font-bold uppercase tracking-wider hover:bg-orange-700 transition-all">
+                                Settle Now
+                            </a>
+                        </div>
+                    @elseif(in_array($user->status, ['blocked', 'suspended']))
+                        <div class="p-3.5 bg-red-50 border border-red-200 rounded-2xl flex items-start gap-3 text-red-900 text-xs">
+                            <span class="text-base shrink-0">🚫</span>
+                            <div class="space-y-0.5">
+                                <div class="font-extrabold uppercase text-[10px] tracking-wider text-red-800">Account Suspended — Policy Violation</div>
+                                <p class="text-[11px] text-red-700 leading-relaxed">
+                                    Your account has been suspended for a policy violation. Reason: <strong>{{ $user->violationReason ?: 'Violation of seller terms and policies' }}</strong>.
+                                </p>
+                            </div>
+                        </div>
+                    @endif
+
                     {{-- View Mode --}}
                     <div x-show="!paymentEditing" class="space-y-3">
                         {{-- GCash Card --}}
@@ -976,6 +1004,7 @@
                     </div>
 
                     {{-- Edit Mode Form --}}
+                    @if(!in_array($user->status, ['frozen', 'suspended']))
                     <div x-show="paymentEditing" style="display: none;">
                         <form action="{{ route('seller.profile.update') }}" method="POST" enctype="multipart/form-data" class="space-y-4" onsubmit="return validatePaymentModalForm(event, this)">
                             @csrf
@@ -1020,15 +1049,102 @@
                             </div>
                         </form>
                     </div>
+                    @endif
                 </div>
 
                 {{-- View Mode Footer --}}
-                <div x-show="!paymentEditing" class="px-5 py-4 border-t shrink-0 flex items-center gap-3" style="border-color: #E8DECB;">
-                    <button @click="paymentEditing = true" class="flex-1 py-2.5 text-white rounded-xl text-xs font-bold uppercase tracking-widest shadow-md flex items-center justify-center gap-2 cursor-pointer" style="background: #1E1915;">
-                        Edit Accounts & QR Codes
+                <div x-show="!paymentEditing" class="px-5 py-4 border-t shrink-0 flex flex-wrap items-center gap-2 sm:gap-3" style="border-color: #E8DECB;">
+                    <button type="button" @click="showPaymentHistoryModal = true" class="flex-1 py-2.5 px-3 rounded-xl text-xs font-bold uppercase tracking-wider bg-[#FAF6EE] text-[#78716C] hover:bg-[#1E1915] hover:text-[#DFC97A] border border-[#E2D9C8] transition-all flex items-center justify-center gap-1.5 cursor-pointer">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"/></svg>
+                        <span>Payment History</span>
                     </button>
-                    <button @click="showPaymentModal = false" class="px-5 py-2.5 rounded-xl text-xs font-bold uppercase tracking-widest cursor-pointer" style="background: #FDF8EE; border: 1px solid #E8DECB; color: #766C60;">
+                    @if(!in_array($user->status, ['frozen', 'suspended']))
+                        <button @click="paymentEditing = true" class="flex-1 py-2.5 px-3 text-white rounded-xl text-xs font-bold uppercase tracking-widest shadow-md flex items-center justify-center gap-1.5 cursor-pointer" style="background: #1E1915;">
+                            <span>Edit Accounts</span>
+                        </button>
+                    @endif
+                    <button @click="showPaymentModal = false" class="px-4 py-2.5 rounded-xl text-xs font-bold uppercase tracking-widest cursor-pointer" style="background: #FDF8EE; border: 1px solid #E8DECB; color: #766C60;">
                         Close
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        {{-- Seller Payment History Modal (Requirement 4) --}}
+        <div x-show="showPaymentHistoryModal" 
+             x-cloak 
+             style="display: none;" 
+             class="fixed inset-0 bg-black/60 backdrop-blur-xs z-55 flex items-end sm:items-center justify-center p-0 sm:p-4">
+            <div class="w-full sm:max-w-2xl rounded-t-3xl sm:rounded-3xl shadow-2xl overflow-hidden flex flex-col max-h-[85vh]" style="background: #FFFCF7; border: 1px solid #E8DECB;">
+                <div class="flex items-center justify-between px-5 py-4 border-b shrink-0" style="border-color: #E8DECB;">
+                    <div class="flex items-center gap-3">
+                        <div class="w-9 h-9 rounded-xl bg-amber-50 text-[#C49520] border border-amber-200/60 flex items-center justify-center text-sm font-bold">
+                            💳
+                        </div>
+                        <div>
+                            <h2 class="font-serif text-sm sm:text-base font-bold uppercase tracking-wider" style="color: #1E1915;">Seller Payment History</h2>
+                            <p class="text-[10px] sm:text-xs" style="color: #766C60;">Recent customer payment verifications &amp; transactions</p>
+                        </div>
+                    </div>
+                    <button @click="showPaymentHistoryModal = false" class="w-8 h-8 rounded-xl flex items-center justify-center transition-all cursor-pointer" style="background: #FDF8EE; color: #766C60;">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                    </button>
+                </div>
+
+                {{-- Table Body --}}
+                <div class="overflow-y-auto flex-1 p-5">
+                    @if(isset($recentPayments) && count($recentPayments) > 0)
+                        <div class="border rounded-2xl overflow-hidden shadow-xs" style="border-color: #E8DECB;">
+                            <table class="w-full text-left border-collapse text-xs">
+                                <thead>
+                                    <tr style="background: #1E1915; color: #FFFCF7;" class="text-[9px] uppercase tracking-widest">
+                                        <th class="py-3 px-3.5">Order ID</th>
+                                        <th class="py-3 px-3.5">Date</th>
+                                        <th class="py-3 px-3.5">Method</th>
+                                        <th class="py-3 px-3.5">Reference #</th>
+                                        <th class="py-3 px-3.5">Amount</th>
+                                        <th class="py-3 px-3.5">Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="divide-y" style="border-color: #E8DECB;">
+                                    @foreach($recentPayments as $payment)
+                                        <tr class="hover:bg-[#FAF6EE] transition-colors">
+                                            <td class="py-3 px-3.5 font-mono font-bold text-gray-900">#{{ substr($payment->id, 0, 8) }}</td>
+                                            <td class="py-3 px-3.5 text-gray-600">{{ \Carbon\Carbon::parse($payment->createdAt)->format('M d, Y') }}</td>
+                                            <td class="py-3 px-3.5 font-bold">{{ $payment->paymentMethod ?? 'GCash' }}</td>
+                                            <td class="py-3 px-3.5 font-mono font-semibold text-gray-700 select-all">{{ $payment->paymentReference ?? 'N/A' }}</td>
+                                            <td class="py-3 px-3.5 font-extrabold text-[#C0422A]">₱{{ number_format($payment->totalAmount ?? 0, 2) }}</td>
+                                            <td class="py-3 px-3.5">
+                                                @php
+                                                    $st = strtolower($payment->status ?? 'pending');
+                                                @endphp
+                                                @if(in_array($st, ['completed', 'delivered', 'shipped', 'ready_to_ship']))
+                                                    <span class="px-2 py-0.5 rounded-full text-[9px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200 uppercase">Paid / Confirmed</span>
+                                                @elseif($st === 'cancelled')
+                                                    <span class="px-2 py-0.5 rounded-full text-[9px] font-bold bg-red-50 text-red-700 border border-red-200 uppercase">Cancelled</span>
+                                                @else
+                                                    <span class="px-2 py-0.5 rounded-full text-[9px] font-bold bg-amber-50 text-amber-700 border border-amber-200 uppercase">{{ ucfirst($st) }}</span>
+                                                @endif
+                                            </td>
+                                        </tr>
+                                    @endforeach
+                                </tbody>
+                            </table>
+                        </div>
+                    @else
+                        <div class="py-12 text-center space-y-2">
+                            <div class="w-12 h-12 rounded-2xl bg-gray-100 text-gray-400 mx-auto flex items-center justify-center text-lg">
+                                📋
+                            </div>
+                            <p class="text-xs font-bold text-gray-700">No payment transaction records found</p>
+                            <p class="text-[11px] text-gray-500">Payments from completed customer orders will appear here automatically.</p>
+                        </div>
+                    @endif
+                </div>
+
+                <div class="px-5 py-3 border-t shrink-0 flex justify-end" style="border-color: #E8DECB; background: #FAF8F5;">
+                    <button type="button" @click="showPaymentHistoryModal = false" class="px-5 py-2 rounded-xl text-xs font-bold uppercase tracking-wider bg-[#1E1915] text-white hover:bg-[#C0422A] transition-all cursor-pointer">
+                        Done
                     </button>
                 </div>
             </div>

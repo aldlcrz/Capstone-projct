@@ -1,19 +1,15 @@
 @extends('emails.layout')
 
 @section('content')
-<div class="greeting">Product Listing Notice</div>
-<span class="badge badge-danger">Listing Removed</span>
-<p>Hello {{ $sellerName }},</p>
-<p>This is to inform you that your product listing <strong>"{{ $productName }}"</strong> has been permanently removed from the LumBarong marketplace by a platform administrator.</p>
+<div class="greeting">Notice: Product Listing Removed</div>
+<span class="badge badge-danger">Product Archived</span>
+<p>Hello <strong>{{ $sellerName }}</strong>,</p>
+<p>Your product listing <strong>{{ $productName }}</strong> has been removed and archived from your shop catalog.</p>
 
-<div style="background-color: #f4f4f5; border-left: 4px solid #71717a; padding: 16px; border-radius: 8px; margin: 20px 0;">
-    <p style="margin: 0 0 6px 0; font-weight: 700; color: #27272a; font-size: 13px; text-transform: uppercase;">Recorded Deletion Reason:</p>
-    <p style="margin: 0; color: #3f3f46; font-weight: 600; font-size: 14px;">{{ $reason }}</p>
+<div style="background: #fee2e2; border-left: 4px solid #ef4444; padding: 14px 16px; border-radius: 8px; margin: 18px 0;">
+    <div style="font-weight: 800; font-size: 11px; text-transform: uppercase; color: #991b1b; letter-spacing: 0.5px; margin-bottom: 4px;">Reason:</div>
+    <div style="font-size: 13px; color: #7f1d1d; font-weight: 500;">{{ $reason }}</div>
 </div>
 
-<p>This product is no longer active in your artisan catalog or visible to customers. If you have any inquiries, please contact our support team at <a href="mailto:lumbarongsupport@gmail.com" style="color: #c0420a; font-weight: bold; text-decoration: underline;">lumbarongsupport@gmail.com</a>.</p>
-
-<div class="button-wrapper">
-    <a href="mailto:lumbarongsupport@gmail.com?subject=Product%20Deletion%20Inquiry%20-%20{{ urlencode($productName) }}" class="btn-primary">Email Support (lumbarongsupport@gmail.com)</a>
-</div>
+<p style="font-size: 13px; color: #475569;">This product is no longer active in your catalog or visible to customers on the marketplace.</p>
 @endsection

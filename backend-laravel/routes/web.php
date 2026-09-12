@@ -102,6 +102,9 @@ Route::middleware('auth')->group(function () {
     // Customer My Reports
     Route::get('/profile/reports', [ReportController::class, 'customerReportsView'])->name('profile.reports');
 
+    // Account Self-Deletion (Soft Delete)
+    Route::post('/profile/delete-account', [WebAuthController::class, 'deleteAccount'])->name('profile.delete-account');
+
     // Cart
     Route::get('/cart', [CartController::class, 'index'])->name('cart.index');
     Route::post('/cart/add', [CartController::class, 'add'])->name('cart.add');
@@ -198,6 +201,8 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->group(function () {
     Route::delete('/users/{id}', [AdminController::class, 'deleteUser'])->name('admin.users.delete');
     Route::get('/sellers', [AdminController::class, 'sellers'])->name('admin.sellers');
     Route::match(['post', 'patch'], '/sellers/{id}/verify', [AdminController::class, 'verifySellerWeb'])->name('admin.sellers.verify');
+    Route::match(['post', 'patch'], '/sellers/{id}/reject', [AdminController::class, 'rejectSellerWeb'])->name('admin.sellers.reject');
+    Route::match(['post', 'patch'], '/sellers/{id}/reopen', [AdminController::class, 'reopenSellerWeb'])->name('admin.sellers.reopen');
     Route::match(['post', 'patch'], '/sellers/{id}/unverify', [AdminController::class, 'unverifySellerWeb'])->name('admin.sellers.unverify');
     Route::match(['post', 'patch'], '/sellers/{id}/suspend', [AdminController::class, 'suspendSeller'])->name('admin.sellers.suspend');
     Route::get('/sellers/{id}/suspend', function() { return redirect()->route('admin.sellers'); });

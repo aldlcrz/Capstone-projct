@@ -46,6 +46,22 @@
         lightboxModal: false,
         lightboxType: 'image',
         lightboxUrl: '',
+        searchQuery: '',
+        init() {
+            const params = new URLSearchParams(window.location.search);
+            const tracking = params.get('tracking') || params.get('search') || params.get('order_id');
+            if (tracking) {
+                this.searchQuery = tracking.trim();
+            }
+        },
+        matchesSearch(id, shortId, trackingNumber) {
+            if (!this.searchQuery || !this.searchQuery.trim()) return true;
+            const q = this.searchQuery.toLowerCase().trim();
+            return (id && id.toLowerCase().includes(q)) ||
+                   (shortId && shortId.toLowerCase().includes(q)) ||
+                   (trackingNumber && trackingNumber.toLowerCase().includes(q)) ||
+                   ('lb-or-' + (shortId || '').toLowerCase()).includes(q);
+        },
         openLightbox(type, url) {
             if (!url) return;
             this.lightboxType = type;
@@ -102,6 +118,21 @@
                 <div style="width:100%;border-top:1px solid #EAE1D0;"></div>
                 <span style="position:absolute;background-color:#FDFBF7;padding:0 12px;color:#C49520;font-size:11px;">✦</span>
             </div>
+        </div>
+
+        {{-- Search by Order ID or Tracking Number --}}
+        <div style="background-color:#FFFFFF;border:1px solid #ECE3D2;border-radius:20px;box-shadow:0 4px 14px rgba(0,0,0,0.02);padding:12px 18px;" class="flex items-center gap-3">
+            <svg class="w-4 h-4 text-[#8C827A] shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+            <input type="text"
+                   x-model="searchQuery"
+                   placeholder="Search by Order ID (e.g. LB-OR-XXXX) or Tracking Number..."
+                   class="w-full text-xs sm:text-sm font-semibold text-[#1E1915] placeholder-[#A8A29E] bg-transparent outline-none border-none p-0 focus:ring-0">
+            <button type="button"
+                    x-show="searchQuery"
+                    @click="searchQuery = ''"
+                    class="text-xs text-[#8C827A] hover:text-[#C0422A] font-bold px-2 py-1 rounded-lg shrink-0">
+                Clear
+            </button>
         </div>
 
         {{-- Filter Capsule Tabs (Horizontally scrollable on mobile, single row) --}}
@@ -202,6 +233,8 @@
 
                 <div style="background-color:#FFFFFF;border:1px solid #ECE3D2;border-radius:22px;box-shadow:0 4px 16px rgba(0,0,0,0.03);overflow:hidden;transition:all 0.25s;"
                      class="group cursor-pointer hover:border-[#DFC97A] hover:shadow-md"
+                     x-show="matchesSearch('{{ $order->id }}', '{{ $orderData['shortId'] }}', '{{ addslashes($order->trackingNumber ?? '') }}')"
+                     x-transition
                      onclick="window.location.href='/orders/{{ $order->id }}'">
 
                     {{-- Card Header --}}

@@ -24,12 +24,35 @@ class SellerMiddleware
 
             // For sellers, verify status and verification state
             if ($user->role === 'seller') {
-                if ($user->status === 'frozen') {
+                if (in_array(strtolower($user->status ?? ''), ['blocked', 'banned', 'suspended'])) {
+                    $reason = !empty($user->violationReason) ? $user->violationReason : 'Violation of platform seller policies.';
+                    $msg = "Your account has been suspended for a policy violation. Reason: {$reason}";
                     Auth::logout();
                     if ($request->expectsJson() || $request->is('api/*') || $request->ajax()) {
-                        return response()->json(['message' => 'Pay commission to continue'], 403);
+                        return response()->json(['message' => $msg], 403);
                     }
-                    return redirect('/login')->withErrors(['email' => 'Pay commission to continue']);
+                    return redirect('/login')->withErrors(['email' => $msg]);
+                }
+
+                if ($user->status === 'frozen') {
+                    // Allow frozen sellers to access subscription/commission payment settlement routes
+                    if ($request->is('seller/subscription*') || $request->is('seller/commissions*') || $request->is('api/seller/subscription*') || $request->is('api/seller/commissions*')) {
+                        return $next($request);
+                    }
+
+                    $overdue = \App\Models\CommissionRecord::where('sellerId', $user->id)
+                        ->where('status', 'unpaid')
+                        ->orderByDesc('period')
+                        ->first();
+                    $amount = $overdue ? number_format($overdue->commissionAmount, 2) : '0.00';
+                    $period = $overdue ? $overdue->period : 'current';
+                    $msg = "Your shop is temporarily frozen due to an unpaid monthly commission of ₱{$amount} for {$period}. Please settle your outstanding commission to restore access.";
+
+                    Auth::logout();
+                    if ($request->expectsJson() || $request->is('api/*') || $request->ajax()) {
+                        return response()->json(['message' => $msg], 403);
+                    }
+                    return redirect('/login')->withErrors(['email' => $msg]);
                 }
 
                 if (!$user->isVerified) {

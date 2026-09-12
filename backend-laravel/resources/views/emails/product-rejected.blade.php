@@ -1,19 +1,14 @@
 @extends('emails.layout')
 
 @section('content')
-<div class="greeting">⚠️ Product Submission Update</div>
-<span class="badge badge-danger">Needs Revision</span>
-<p>Hello {{ $sellerName }},</p>
-<p>Your product listing submission for <strong>"{{ $productName }}"</strong> was reviewed and requires corrections before it can be published.</p>
+<div class="greeting">Mabuhay, {{ $sellerName }}!</div>
+<span class="badge badge-warning">⚠️ Product Listing Update</span>
+<p>Your product listing <strong>{{ $productName }}</strong> was not approved for publication.</p>
 
-<div style="background-color: #fff1f2; border-left: 4px solid #e11d48; padding: 16px; border-radius: 8px; margin: 20px 0;">
-    <p style="margin: 0 0 6px 0; font-weight: 700; color: #9f1239; font-size: 13px; text-transform: uppercase;">Specific Reason for Rejection:</p>
-    <p style="margin: 0; color: #881337; font-weight: 600;">{{ $rejectionReason ?? 'Listing does not adhere to LumBarong quality guidelines.' }}</p>
+<div style="background: #fef3c7; border-left: 4px solid #f59e0b; padding: 14px 16px; border-radius: 8px; margin: 18px 0;">
+    <div style="font-weight: 800; font-size: 11px; text-transform: uppercase; color: #92400e; letter-spacing: 0.5px; margin-bottom: 4px;">Reason for Rejection:</div>
+    <div style="font-size: 13px; color: #78350f; font-weight: 500;">{{ $reason }}</div>
 </div>
 
-<p>Please log in to your Seller Center to revise and resubmit your product for approval.</p>
-
-<div class="button-wrapper">
-    <a href="{{ url('/seller/products/' . $productId . '/edit') }}" class="btn-primary">Edit and Resubmit Product</a>
-</div>
+<p style="font-size: 13px; color: #475569;">Please log in to your Seller Control Panel to edit your product listing details, photos, or descriptions according to the feedback, and resubmit for approval.</p>
 @endsection

@@ -44,10 +44,25 @@ class AuthController extends Controller
         }
 
         if ($user->status === 'frozen') {
+            $overdue = \App\Models\CommissionRecord::where('sellerId', $user->id)
+                ->where('status', 'unpaid')
+                ->orderByDesc('period')
+                ->first();
+            $amount = $overdue ? number_format($overdue->commissionAmount, 2) : '0.00';
+            $period = $overdue ? $overdue->period : 'current';
             return response()->json([
-                'message' => 'Account Frozen',
-                'reason' => $user->violationReason ?? 'Account suspended for policy violations.',
+                'message' => 'Account Frozen — Overdue Commission',
+                'reason' => "Your shop is temporarily frozen due to an unpaid monthly commission of ₱{$amount} for {$period}. Please settle your outstanding commission to restore access.",
                 'status' => 'frozen'
+            ], 403);
+        }
+
+        if ($user->status === 'suspended' || $user->status === 'blocked') {
+            $reason = !empty($user->violationReason) ? $user->violationReason : 'Account suspended for a policy violation.';
+            return response()->json([
+                'message' => 'Account Suspended — Policy Violation',
+                'reason' => $reason,
+                'status' => 'suspended'
             ], 403);
         }
 
@@ -97,7 +112,13 @@ class AuthController extends Controller
     {
         $validator = Validator::make($request->all(), [
             'name' => 'required|string|max:255',
-            'email' => 'required|string|email|max:255|unique:users',
+            'email' => [
+                'required',
+                'string',
+                'email',
+                'max:255',
+                \Illuminate\Validation\Rule::unique('users', 'email')->whereNull('deleted_at')
+            ],
             'password' => 'required|string|min:6',
             'role' => 'nullable|string|in:customer,seller,admin',
             'mobileNumber' => 'required_if:role,seller|string',

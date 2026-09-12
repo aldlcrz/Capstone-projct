@@ -1,13 +1,9 @@
 @extends('emails.layout')
 
 @section('content')
-<div class="greeting">🎉 You Have a New Order!</div>
-<span class="badge badge-success">New Order #{{ $orderId }}</span>
-<p>Hello {{ $sellerName }},</p>
-<p>A customer has placed a new order in your shop! Total Order Amount: <strong>₱{{ number_format($totalAmount, 2) }}</strong>.</p>
-<p>Please log in to your LumBarong Seller Center to review and process the order.</p>
-
-<div class="button-wrapper">
-    <a href="{{ url('/seller/orders') }}" class="btn-primary">Manage Seller Orders</a>
-</div>
+<div class="greeting">Mabuhay, {{ $sellerName }}! 🎉</div>
+<span class="badge badge-success">New Order Received</span>
+<p>You have received a new customer order <strong>#{{ $orderId }}</strong> for <strong>₱{{ number_format($totalAmount, 2) }}</strong>.</p>
+<p>Customer Name: <strong>{{ $customerName }}</strong></p>
+<p style="margin-top: 14px; font-size: 13px; color: #475569;">Please log in to your Seller Control Panel to review the order items, verify the payment receipt, and begin artisan preparation.</p>
 @endsection

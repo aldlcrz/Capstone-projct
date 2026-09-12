@@ -56,21 +56,22 @@
             background: #f8fafc;
             border: 2px dashed #cbd5e1;
             border-radius: 12px;
-            padding: 20px;
+            padding: 24px 20px;
             text-align: center;
             margin: 24px 0;
         }
         .code-number {
-            font-size: 32px;
+            font-size: 36px;
             font-weight: 900;
-            letter-spacing: 6px;
+            letter-spacing: 8px;
             color: #C0420A;
-            font-family: monospace;
+            font-family: 'Courier New', Courier, monospace;
         }
         .code-expiry {
             font-size: 12px;
             color: #64748b;
-            margin-top: 6px;
+            margin-top: 8px;
+            font-weight: 600;
         }
         .badge {
             display: inline-block;
@@ -86,22 +87,6 @@
         .badge-danger { background: #fee2e2; color: #b91c1c; }
         .badge-success { background: #dcfce7; color: #15803d; }
 
-        .button-wrapper {
-            text-align: center;
-            margin: 28px 0;
-        }
-        .btn-primary {
-            display: inline-block;
-            background-color: #C0420A;
-            color: #ffffff !important;
-            text-decoration: none;
-            padding: 14px 32px;
-            border-radius: 12px;
-            font-weight: 700;
-            font-size: 14px;
-            transition: all 0.2s ease;
-            box-shadow: 0 4px 12px rgba(192, 66, 10, 0.25);
-        }
         .footer {
             background-color: #f8fafc;
             padding: 24px 32px;
@@ -138,7 +123,7 @@
             <div class="footer-no-reply">
                 ⛔ Automated Notification — Do Not Reply Directly
             </div>
-            <p>This is an automated system email from LumBarong. Please do not reply directly to this email address.</p>
+            <p>This is an automated notification from LumBarong. No direct email replies are accepted.</p>
             <p>&copy; {{ date('Y') }} LumBarong. All rights reserved.</p>
         </div>
     </div>
