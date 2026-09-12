@@ -1,171 +1,7 @@
 @extends('layouts.admin')
 
 @section('content')
-<div class="space-y-4" x-data="{
-    rejectModal: false,
-    rejectSellerId: null,
-    rejectSellerName: '',
-    rejectType: 'document_correction',
-    rejectReason: '',
-    suspendModal: false,
-    suspendSellerId: null,
-    suspendSellerName: '',
-    suspendReason: '',
-    freezeModal: false,
-    freezeSellerId: null,
-    freezeSellerName: '',
-    freezeReason: '',
-    deleteModal: false,
-    deleteSellerId: null,
-    deleteSellerName: '',
-    reviewModal: false,
-    previewModal: false,
-    previewUrl: '',
-    previewTitle: '',
-    selectedSeller: {
-        id: '',
-        name: '',
-        email: '',
-        mobileNumber: '',
-        gcashNumber: '',
-        shopName: '',
-        shopAddress: '',
-        residencyCertificate: null,
-        businessPermit: null,
-        birDocument: null,
-        createdAt: '',
-        isVerified: false,
-        status: '',
-        rejection_type: 'document_correction',
-        rejection_reason: '',
-        products_count: 0,
-        orders_count: 0
-    },
-    shopPreviewModal: false,
-    shopLoading: false,
-    shopSeller: null,
-    shopProducts: [],
-    shopActiveTab: 'all',
-    shopSearchQuery: '',
-    selectedProductPreview: null,
-    productPreviewModal: false,
-    productActiveImage: 0,
-    openReview(seller) {
-        this.selectedSeller = seller;
-        this.reviewModal = true;
-    },
-    openPreview(url, title) {
-        this.previewUrl = url;
-        this.previewTitle = title;
-        this.previewModal = true;
-    },
-    openReject(id, name, defaultType = 'document_correction') {
-        this.rejectSellerId = id;
-        this.rejectSellerName = name;
-        this.rejectType = defaultType;
-        this.rejectReason = defaultType === 'ineligible'
-            ? "Your application cannot be approved because you do not meet LumBarong's Lumban residency requirement."
-            : "Your submitted document is blurry or unreadable. Please upload a clear, high-resolution photo or PDF.";
-        this.rejectModal = true;
-    },
-    openSuspend(id, name) {
-        this.suspendSellerId = id;
-        this.suspendSellerName = name;
-        this.suspendReason = 'Violation of platform seller policies';
-        this.suspendModal = true;
-    },
-    openFreeze(id, name) {
-        this.freezeSellerId = id;
-        this.freezeSellerName = name;
-        this.freezeReason = 'Administrative shop hold / Pending monthly commission settlement';
-        this.freezeModal = true;
-    },
-    deleteModal: false,
-    deleteSellerId: null,
-    deleteSellerName: '',
-    deleteReason: '',
-    deleteConfirmChecked: false,
-    openDelete(id, name) {
-        this.deleteSellerId = id;
-        this.deleteSellerName = name;
-        this.deleteReason = '';
-        this.deleteConfirmChecked = false;
-        this.deleteModal = true;
-    },
-    async openShopPreview(sellerId, fallbackShopName) {
-        this.shopPreviewModal = true;
-        this.shopLoading = true;
-        this.shopSeller = {
-            id: sellerId,
-            shopName: fallbackShopName || 'Artisan Workshop',
-            name: '',
-            location: 'Lumban, Laguna',
-            isVerified: false,
-            isPremium: false,
-            rating: '0.0',
-            productCount: 0,
-            joined: '—',
-            cancellation_policy: '',
-            refund_policy: ''
-        };
-        this.shopProducts = [];
-        this.shopActiveTab = 'all';
-        this.shopSearchQuery = '';
-        this.selectedProductPreview = null;
-        
-        try {
-            const ts = Date.now();
-            const [sRes, pRes] = await Promise.all([
-                fetch(`/api/v1/user/seller/${sellerId}?t=${ts}`, { cache: 'no-store' }),
-                fetch(`/api/v1/products?seller=${sellerId}&t=${ts}`, { cache: 'no-store' })
-            ]);
-            if (sRes.ok) {
-                this.shopSeller = await sRes.json();
-            }
-            if (pRes.ok) {
-                this.shopProducts = await pRes.json();
-            }
-        } catch (e) {
-            console.error('Error loading shop preview:', e);
-        } finally {
-            this.shopLoading = false;
-        }
-    },
-    get displayedShopProducts() {
-        let p = [...this.shopProducts];
-        if (this.shopActiveTab === 'rated') {
-            p.sort((a, b) => (Number(b.rating) || 0) - (Number(a.rating) || 0));
-        } else if (this.shopActiveTab === 'sale') {
-            p = p.filter(item => item.is_on_sale);
-        }
-        if (this.shopSearchQuery && this.shopSearchQuery.trim()) {
-            const q = this.shopSearchQuery.toLowerCase();
-            p = p.filter(item => (item.name || '').toLowerCase().includes(q) || (item.description || '').toLowerCase().includes(q));
-        }
-        return p;
-    },
-    openProductPreview(product) {
-        this.selectedProductPreview = product;
-        this.productActiveImage = 0;
-        this.productPreviewModal = true;
-    },
-    getProductImage(img) {
-        if (!img) return '/uploads/products/default.jpg';
-        let path = '';
-        if (Array.isArray(img)) {
-            path = img.length > 0 ? (typeof img[0] === 'object' ? (img[0].url || '') : img[0]) : '';
-        } else if (typeof img === 'string') {
-            path = img;
-        }
-        if (!path) return '/uploads/products/default.jpg';
-        if (path.startsWith('http') || path.startsWith('data:')) return path;
-        if (path.startsWith('/storage/')) return path;
-        if (path.startsWith('storage/')) return '/' + path;
-        if (path.startsWith('/uploads/')) return path;
-        if (path.startsWith('uploads/')) return '/' + path;
-        return '/storage/' + path.replace(/^\//, '');
-    }
-}">
+<div class="space-y-4" x-data="sellerManager()">
     {{-- ═══ PAGE HEADER + SEARCH BAR ═══ --}}
     <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
         {{-- Left: Title & Subtitle --}}
@@ -1460,4 +1296,171 @@
         </div>
     </div>
 </div>
+
+<script>
+function sellerManager() {
+    return {
+        rejectModal: false,
+        rejectSellerId: null,
+        rejectSellerName: '',
+        rejectType: 'document_correction',
+        rejectReason: '',
+        suspendModal: false,
+        suspendSellerId: null,
+        suspendSellerName: '',
+        suspendReason: '',
+        freezeModal: false,
+        freezeSellerId: null,
+        freezeSellerName: '',
+        freezeReason: '',
+        deleteModal: false,
+        deleteSellerId: null,
+        deleteSellerName: '',
+        deleteReason: '',
+        deleteConfirmChecked: false,
+        reviewModal: false,
+        previewModal: false,
+        previewUrl: '',
+        previewTitle: '',
+        selectedSeller: {
+            id: '',
+            name: '',
+            email: '',
+            mobileNumber: '',
+            gcashNumber: '',
+            shopName: '',
+            shopAddress: '',
+            residencyCertificate: null,
+            businessPermit: null,
+            birDocument: null,
+            createdAt: '',
+            isVerified: false,
+            status: '',
+            rejection_type: 'document_correction',
+            rejection_reason: '',
+            products_count: 0,
+            orders_count: 0
+        },
+        shopPreviewModal: false,
+        shopLoading: false,
+        shopSeller: null,
+        shopProducts: [],
+        shopActiveTab: 'all',
+        shopSearchQuery: '',
+        selectedProductPreview: null,
+        productPreviewModal: false,
+        productActiveImage: 0,
+        openReview(seller) {
+            this.selectedSeller = seller;
+            this.reviewModal = true;
+        },
+        openPreview(url, title) {
+            this.previewUrl = url;
+            this.previewTitle = title;
+            this.previewModal = true;
+        },
+        openReject(id, name, defaultType = 'document_correction') {
+            this.rejectSellerId = id;
+            this.rejectSellerName = name;
+            this.rejectType = defaultType;
+            this.rejectReason = defaultType === 'ineligible'
+                ? "Your application cannot be approved because you do not meet LumBarong's Lumban residency requirement."
+                : "Your submitted document is blurry or unreadable. Please upload a clear, high-resolution photo or PDF.";
+            this.rejectModal = true;
+        },
+        openSuspend(id, name) {
+            this.suspendSellerId = id;
+            this.suspendSellerName = name;
+            this.suspendReason = 'Violation of platform seller policies';
+            this.suspendModal = true;
+        },
+        openFreeze(id, name) {
+            this.freezeSellerId = id;
+            this.freezeSellerName = name;
+            this.freezeReason = 'Administrative shop hold / Pending monthly commission settlement';
+            this.freezeModal = true;
+        },
+        openDelete(id, name) {
+            this.deleteSellerId = id;
+            this.deleteSellerName = name;
+            this.deleteReason = '';
+            this.deleteConfirmChecked = false;
+            this.deleteModal = true;
+        },
+        async openShopPreview(sellerId, fallbackShopName) {
+            this.shopPreviewModal = true;
+            this.shopLoading = true;
+            this.shopSeller = {
+                id: sellerId,
+                shopName: fallbackShopName || 'Artisan Workshop',
+                name: '',
+                location: 'Lumban, Laguna',
+                isVerified: false,
+                isPremium: false,
+                rating: '0.0',
+                productCount: 0,
+                joined: '—',
+                cancellation_policy: '',
+                refund_policy: ''
+            };
+            this.shopProducts = [];
+            this.shopActiveTab = 'all';
+            this.shopSearchQuery = '';
+            this.selectedProductPreview = null;
+            
+            try {
+                const ts = Date.now();
+                const [sRes, pRes] = await Promise.all([
+                    fetch(`/api/v1/user/seller/${sellerId}?t=${ts}`, { cache: 'no-store' }),
+                    fetch(`/api/v1/products?seller=${sellerId}&t=${ts}`, { cache: 'no-store' })
+                ]);
+                if (sRes.ok) {
+                    this.shopSeller = await sRes.json();
+                }
+                if (pRes.ok) {
+                    this.shopProducts = await pRes.json();
+                }
+            } catch (e) {
+                console.error('Error loading shop preview:', e);
+            } finally {
+                this.shopLoading = false;
+            }
+        },
+        get displayedShopProducts() {
+            let p = [...this.shopProducts];
+            if (this.shopActiveTab === 'rated') {
+                p.sort((a, b) => (Number(b.rating) || 0) - (Number(a.rating) || 0));
+            } else if (this.shopActiveTab === 'sale') {
+                p = p.filter(item => item.is_on_sale);
+            }
+            if (this.shopSearchQuery && this.shopSearchQuery.trim()) {
+                const q = this.shopSearchQuery.toLowerCase();
+                p = p.filter(item => (item.name || '').toLowerCase().includes(q) || (item.description || '').toLowerCase().includes(q));
+            }
+            return p;
+        },
+        openProductPreview(product) {
+            this.selectedProductPreview = product;
+            this.productActiveImage = 0;
+            this.productPreviewModal = true;
+        },
+        getProductImage(img) {
+            if (!img) return '/uploads/products/default.jpg';
+            let path = '';
+            if (Array.isArray(img)) {
+                path = img.length > 0 ? (typeof img[0] === 'object' ? (img[0].url || '') : img[0]) : '';
+            } else if (typeof img === 'string') {
+                path = img;
+            }
+            if (!path) return '/uploads/products/default.jpg';
+            if (path.startsWith('http') || path.startsWith('data:')) return path;
+            if (path.startsWith('/storage/')) return path;
+            if (path.startsWith('storage/')) return '/' + path;
+            if (path.startsWith('/uploads/')) return path;
+            if (path.startsWith('uploads/')) return '/' + path;
+            return '/storage/' + path.replace(/^\//, '');
+        }
+    };
+}
+</script>
 @endsection
