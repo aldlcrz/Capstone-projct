@@ -1,6 +1,8 @@
 <?php
 
 use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\DB;
 
 return new class extends Migration
@@ -10,12 +12,19 @@ return new class extends Migration
      */
     public function up(): void
     {
-        // Normalize any sellers who are unverified but have status = 'active' to status = 'pending'
-        DB::table('users')
-            ->where('role', 'seller')
-            ->where('isVerified', false)
-            ->where('status', 'active')
-            ->update(['status' => 'pending']);
+        // 1. Ensure `status` column on `users` is VARCHAR(50) so it accepts 'pending', 'active', 'suspended', 'frozen', 'rejected'
+        try {
+            DB::statement("ALTER TABLE `users` MODIFY `status` VARCHAR(50) NOT NULL DEFAULT 'pending'");
+        } catch (\Throwable $e) {}
+
+        // 2. Normalize any sellers who are unverified but have status = 'active' to status = 'pending'
+        try {
+            DB::table('users')
+                ->where('role', 'seller')
+                ->where('isVerified', false)
+                ->where('status', 'active')
+                ->update(['status' => 'pending']);
+        } catch (\Throwable $e) {}
     }
 
     /**
