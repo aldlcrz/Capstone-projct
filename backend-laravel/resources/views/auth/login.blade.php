@@ -407,6 +407,7 @@
             <!-- Submit Payment Proof Form -->
             <form action="{{ route('commission.submit-payment') }}" method="POST" enctype="multipart/form-data" class="bg-[#F9F6F2] border border-[#E5DDD5] rounded-2xl sm:rounded-3xl p-3.5 sm:p-5 text-left space-y-3">
                 @csrf
+                <input type="hidden" name="payment_method" :value="activeTab === 'gcash' ? 'GCash' : 'Maya'">
                 <div class="pb-1 border-b border-gray-200 flex items-center justify-between">
                     <span class="text-[10px] font-black uppercase tracking-wider text-gray-700">Submit Payment Proof</span>
                     <span class="text-[9px] text-gray-400 font-medium">* Required fields</span>

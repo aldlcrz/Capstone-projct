@@ -886,30 +886,72 @@ class WebAuthController extends Controller
     {
         $request->validate([
             'email'            => 'required|email',
-            'payment_method'   => 'required|string|in:GCash,Maya',
+            'payment_method'   => 'nullable|string',
             'reference_number' => 'required|string|max:100',
-            'proof_image'      => 'required|image|max:5000',
+            'payment_proof'    => 'nullable|file|mimes:jpg,jpeg,png,webp,jfif,gif,pdf|max:20480',
+            'proof_image'      => 'nullable|file|mimes:jpg,jpeg,png,webp,jfif,gif,pdf|max:20480',
+            'notes'            => 'nullable|string|max:1000',
         ]);
 
-        $user = User::where('email', strtolower($request->email))->first();
+        $file = $request->file('payment_proof') ?? $request->file('proof_image');
+        if (!$file) {
+            return back()->withErrors(['payment_proof' => 'Please upload a screenshot or image of your payment proof receipt.'])->withInput();
+        }
+
+        $user = User::where('email', strtolower(trim($request->email)))->first();
 
         if (!$user) {
             return back()->withErrors(['email' => 'User account not found.'])->withInput();
         }
 
-        $proofPath = $request->file('proof_image')->store('payment_proofs', 'public');
-        $currentPeriod = date('Y-m');
+        $paymentMethod = $request->filled('payment_method') ? ucfirst(trim($request->payment_method)) : 'GCash';
+        $proofPath = $file->store('commission_proofs', 'public');
+        $reference = trim($request->reference_number);
 
-        CommissionRecord::updateOrCreate(
-            ['sellerId' => $user->id, 'period' => $currentPeriod],
-            [
-                'paymentMethod'   => $request->payment_method,
-                'referenceNumber' => $request->reference_number,
-                'paymentProof'    => $proofPath,
-            ]
-        );
+        // Find overdue or unpaid commission records for this seller
+        $unpaidRecords = CommissionRecord::where('sellerId', $user->id)
+            ->where('status', '!=', 'paid')
+            ->orderBy('dueDate', 'asc')
+            ->get();
 
-        return back()->with('payment_submitted', 'Your payment proof and reference number have been submitted successfully! Super Admin will verify and unfreeze your account soon.');
+        if ($unpaidRecords->isNotEmpty()) {
+            foreach ($unpaidRecords as $record) {
+                $record->paymentMethod   = $paymentMethod;
+                $record->referenceNumber = $reference;
+                $record->paymentProof    = $proofPath;
+                if ($request->filled('notes')) {
+                    $record->notes = trim($request->notes);
+                }
+                $record->save();
+            }
+        } else {
+            $currentPeriod = date('Y-m');
+            CommissionRecord::updateOrCreate(
+                ['sellerId' => $user->id, 'period' => $currentPeriod],
+                [
+                    'paymentMethod'   => $paymentMethod,
+                    'referenceNumber' => $reference,
+                    'paymentProof'    => $proofPath,
+                    'notes'           => $request->notes ? trim($request->notes) : null,
+                ]
+            );
+        }
+
+        // Send Super Admin Notification
+        try {
+            \App\Models\Notification::sendToAdmins(
+                'Commission Payment Submitted',
+                "Artisan {$user->name} ({$user->shopName}) submitted payment proof via {$paymentMethod} (Ref: {$reference}).",
+                'commission',
+                '/admin/commissions'
+            );
+        } catch (\Throwable $e) {
+            Log::warning('Failed to dispatch admin notification for commission payment: ' . $e->getMessage());
+        }
+
+        return back()
+            ->with('payment_submitted', 'Your payment proof and reference number have been submitted successfully! Super Admin will verify and restore access soon.')
+            ->with('success', 'Payment proof submitted successfully!');
     }
 
     public function sessionHeartbeat(Request $request)
