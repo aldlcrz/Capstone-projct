@@ -359,13 +359,17 @@ class SuperAdminController extends Controller
     public function unfreezeShop(string $id)
     {
         $seller = User::findOrFail($id);
+        $prevStatus = $seller->status;
         $seller->status = 'active';
         $seller->save();
 
-        // Automatically mark unpaid commission records for this seller as paid upon unfreezing
-        CommissionRecord::where('sellerId', $id)->where('status', 'unpaid')->update([
-            'status' => 'paid',
-            'paidAt' => now(),
+        // Note: Manual unfreeze restores the shop to active without altering unpaid commission records (financial override)
+        \App\Models\SellerStatusAudit::create([
+            'seller_id'       => $seller->id,
+            'admin_id'        => Auth::id(),
+            'previous_status' => $prevStatus,
+            'new_status'      => 'active',
+            'reason'          => 'Administrative financial override: Shop manually unfrozen by Super Admin',
         ]);
 
         $this->sendNotification(
@@ -377,7 +381,7 @@ class SuperAdminController extends Controller
             'seller'
         );
 
-        return redirect()->back()->with('success', "Shop '{$seller->name}' has been unfrozen and overdue commission set to paid.");
+        return redirect()->back()->with('success', "Shop '{$seller->name}' has been unfrozen and restored to active status.");
     }
 
     // ─── Scheduled Jobs ──────────────────────────────────────────────────────

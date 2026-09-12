@@ -57,14 +57,14 @@ class WebAuthController extends Controller
                 Auth::logout();
                 $unpaidRecords = CommissionRecord::where('sellerId', $user->id)
                     ->where('status', 'unpaid')
-                    ->orderByDesc('period')
+                    ->orderBy('period', 'asc')
                     ->get();
                 $totalUnpaid = $unpaidRecords->sum('commissionAmount');
-                $latestPeriod = $unpaidRecords->first()?->period;
+                $periods = $unpaidRecords->pluck('period')->filter()->unique()->implode(', ');
 
-                if ($totalUnpaid > 0 && $latestPeriod) {
+                if ($totalUnpaid > 0 && !empty($periods)) {
                     $amount = number_format($totalUnpaid, 2);
-                    $msg = "Your shop is temporarily frozen due to an unpaid monthly commission of ₱{$amount} for {$latestPeriod}. Please settle your outstanding commission to restore access.";
+                    $msg = "Your shop is temporarily frozen due to an unpaid monthly commission of ₱{$amount} for {$periods}. Please settle your outstanding commission to restore access.";
                 } else {
                     $msg = "Your shop is temporarily frozen due to an outstanding commission settlement requirement. Please settle your outstanding commission to restore access.";
                 }
