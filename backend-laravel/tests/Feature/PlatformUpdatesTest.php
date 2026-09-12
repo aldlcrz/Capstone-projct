@@ -562,6 +562,12 @@ class PlatformUpdatesTest extends TestCase
         $pendingSeller->refresh();
         $this->assertNotNull($pendingSeller->residencyCertificate);
         $this->assertEquals('pending', $pendingSeller->status);
+
+        // 5. Subsequent visit to portal displays Under Review and locks re-upload
+        $reviewedPortalResponse = $this->actingAs($pendingSeller)->get(route('seller.verification-pending'));
+        $reviewedPortalResponse->assertStatus(200);
+        $reviewedPortalResponse->assertSee('Under Review');
+        $reviewedPortalResponse->assertSee('Submitted Credentials on File');
     }
 
     public function test_admin_can_reject_seller_with_correction_required_and_ineligible_types(): void
