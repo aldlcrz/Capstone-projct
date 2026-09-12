@@ -9,6 +9,7 @@ use App\Models\SellerFunnelEvent;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 use Carbon\Carbon;
@@ -1037,5 +1038,84 @@ class DashboardController extends Controller
         })->values();
 
         return view('seller.customers.index', compact('customerList'));
+    }
+
+    /**
+     * Show dedicated verification pending & document re-upload portal
+     */
+    public function showSellerVerificationPending()
+    {
+        $seller = Auth::user();
+        if (!$seller) {
+            return redirect()->route('login');
+        }
+
+        // If already active and verified, redirect to seller dashboard
+        if ($seller->isVerified && $seller->status === 'active') {
+            return redirect()->route('seller.dashboard');
+        }
+
+        $latestAudit = \App\Models\SellerStatusAudit::where('seller_id', $seller->id)
+            ->latest('id')
+            ->first();
+
+        return response()
+            ->view('seller.verification-pending', compact('seller', 'latestAudit'))
+            ->header('Cache-Control', 'no-cache, no-store, max-age=0, must-revalidate')
+            ->header('Pragma', 'no-cache')
+            ->header('Expires', 'Sun, 02 Jan 1990 00:00:00 GMT');
+    }
+
+    /**
+     * Handle document re-upload submission from verification-pending portal
+     */
+    public function submitPendingDocuments(Request $request)
+    {
+        $seller = Auth::user();
+        if (!$seller || $seller->role !== 'seller') {
+            return redirect()->route('login');
+        }
+
+        $request->validate([
+            'residencyCertificate' => 'nullable|file|mimes:pdf,jpg,jpeg,png,webp|max:20480',
+            'businessPermit'       => 'nullable|file|mimes:pdf,jpg,jpeg,png,webp|max:20480',
+            'birDocument'          => 'nullable|file|mimes:pdf,jpg,jpeg,png,webp|max:20480',
+        ], [
+            'residencyCertificate.max'   => 'The residency certificate must not exceed 20MB.',
+            'residencyCertificate.mimes' => 'The residency certificate must be a JPG, PNG, WEBP, or PDF file.',
+            'businessPermit.max'         => 'The business permit must not exceed 20MB.',
+            'businessPermit.mimes'       => 'The business permit must be a JPG, PNG, WEBP, or PDF file.',
+            'birDocument.max'            => 'The BIR document must not exceed 20MB.',
+            'birDocument.mimes'          => 'The BIR document must be a JPG, PNG, WEBP, or PDF file.',
+        ]);
+
+        $uploadedAny = false;
+        foreach (['residencyCertificate', 'businessPermit', 'birDocument'] as $docField) {
+            if ($request->hasFile($docField)) {
+                $file = $request->file($docField);
+                $filename = time() . '_' . $docField . '_' . \Illuminate\Support\Str::random(8) . '.' . $file->getClientOriginalExtension();
+                $file->move(public_path('uploads/requirements'), $filename);
+                $seller->{$docField} = '/uploads/requirements/' . $filename;
+                $uploadedAny = true;
+            }
+        }
+
+        if (!$uploadedAny && empty($seller->residencyCertificate)) {
+            return redirect()->back()->with('error', 'Please attach a valid Barangay Residency Certificate before submitting.');
+        }
+
+        $seller->status = 'pending';
+        $seller->isVerified = false;
+        $seller->save();
+
+        \App\Models\SellerStatusAudit::create([
+            'seller_id'       => $seller->id,
+            'admin_id'        => null,
+            'previous_status' => 'pending',
+            'new_status'      => 'pending',
+            'reason'          => 'Updated verification documents submitted by artisan',
+        ]);
+
+        return redirect()->back()->with('success', 'Your verification documents have been submitted successfully! Our admin team will review your application shortly.');
     }
 }

@@ -55,12 +55,20 @@ class SellerMiddleware
                     return redirect('/login')->withErrors(['email' => $msg]);
                 }
 
-                if (!$user->isVerified) {
-                    Auth::logout();
-                    if ($request->expectsJson() || $request->is('api/*') || $request->ajax()) {
-                        return response()->json(['message' => 'Your artisan application is still awaiting approval.'], 403);
+                if (!$user->isVerified || $user->status === 'pending') {
+                    // Allow pending sellers to access the dedicated document re-upload & verification portal
+                    if ($request->is('seller/verification-pending*') || $request->is('api/seller/verification-pending*')) {
+                        return $next($request);
                     }
-                    return redirect('/login')->withErrors(['email' => 'Your artisan application is still awaiting approval. You will be notified once it is reviewed.']);
+
+                    if ($request->expectsJson() || $request->is('api/*') || $request->ajax()) {
+                        return response()->json([
+                            'message'  => 'Your artisan application is awaiting document verification.',
+                            'redirect' => route('seller.verification-pending'),
+                        ], 403);
+                    }
+
+                    return redirect()->route('seller.verification-pending');
                 }
 
                 return $next($request);

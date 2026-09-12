@@ -263,6 +263,8 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->group(function () {
 
 // Seller Routes
 Route::middleware(['auth', 'seller'])->prefix('seller')->group(function () {
+    Route::get('/verification-pending', [DashboardController::class, 'showSellerVerificationPending'])->name('seller.verification-pending');
+    Route::post('/verification-pending/upload', [DashboardController::class, 'submitPendingDocuments'])->name('seller.verification-pending.upload');
     Route::get('/dashboard', [DashboardController::class, 'sellerDashboard'])->name('seller.dashboard');
     Route::get('/analytics', [AnalyticsController::class, 'sellerAnalytics'])->name('seller.analytics');
     Route::get('/export-report', [DashboardController::class, 'exportSellerReport'])->name('seller.export');

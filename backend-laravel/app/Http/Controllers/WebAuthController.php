@@ -86,12 +86,13 @@ class WebAuthController extends Controller
                 ])->onlyInput('email');
             }
 
-            // Seller whose email is verified but still awaiting admin approval
+            // Seller whose application is awaiting admin verification: allow login directly into document portal
             if ($user->role === 'seller' && !$user->isVerified) {
-                Auth::logout();
-                return back()->withErrors([
-                    'email' => 'Your artisan application is still awaiting admin approval. You will be notified once it is reviewed.',
-                ])->onlyInput('email');
+                $request->session()->regenerate();
+                $user->sessionVersion = ((int) ($user->sessionVersion ?? 1)) + 1;
+                $user->save();
+                session(['login_session_version' => $user->sessionVersion]);
+                return redirect()->route('seller.verification-pending');
             }
 
             if (!$user->isVerified) {
@@ -146,7 +147,11 @@ class WebAuthController extends Controller
 
             if ($user->role === 'superadmin') return redirect()->route('superadmin.dashboard');
             if ($user->role === 'admin') return redirect()->route('admin.dashboard');
-            if ($user->role === 'seller') return redirect()->route('seller.dashboard');
+            if ($user->role === 'seller') {
+                return $user->isVerified 
+                    ? redirect()->route('seller.dashboard') 
+                    : redirect()->route('seller.verification-pending');
+            }
 
             // Newly created customer accounts prompt for profile setup
             if ($user->role === 'customer' && !$user->isOnboarded()) {
@@ -580,7 +585,11 @@ class WebAuthController extends Controller
             }
 
             if ($user->role === 'seller' && !$user->isVerified) {
-                return back()->withErrors(['email' => 'Your artisan application is still awaiting admin approval. You will be notified once it is reviewed.']);
+                Auth::login($user);
+                $user->sessionVersion = ((int) ($user->sessionVersion ?? 1)) + 1;
+                $user->save();
+                session(['login_session_version' => $user->sessionVersion]);
+                return redirect()->route('seller.verification-pending');
             }
 
             if (!$user->isVerified) {

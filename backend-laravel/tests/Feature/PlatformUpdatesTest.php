@@ -521,4 +521,46 @@ class PlatformUpdatesTest extends TestCase
         $seller->refresh();
         $this->assertEquals('active', $seller->status);
     }
+
+    public function test_revoked_or_pending_seller_redirects_to_verification_pending_portal_and_can_upload_documents(): void
+    {
+        /** @var User $pendingSeller */
+        $pendingSeller = User::factory()->create([
+            'email' => 'revoked_artisan@test.com',
+            'password' => Hash::make('Password123!'),
+            'role' => 'seller',
+            'isVerified' => false,
+            'status' => 'pending',
+        ]);
+
+        // 1. Logging in redirects directly to verification-pending portal
+        $loginResponse = $this->post('/login', [
+            'email' => 'revoked_artisan@test.com',
+            'password' => 'Password123!',
+        ]);
+        $loginResponse->assertRedirect(route('seller.verification-pending'));
+
+        // 2. Pending seller can view the verification-pending page
+        $portalResponse = $this->actingAs($pendingSeller)->get(route('seller.verification-pending'));
+        $portalResponse->assertStatus(200);
+        $portalResponse->assertSee('Pending Verification');
+        $portalResponse->assertSee('Barangay Residency Certificate');
+
+        // 3. Attempting to access protected seller routes redirects to verification-pending
+        $dashboardResponse = $this->actingAs($pendingSeller)->get('/seller/dashboard');
+        $dashboardResponse->assertRedirect(route('seller.verification-pending'));
+
+        // 4. Seller can upload updated verification documents
+        \Illuminate\Support\Facades\Storage::fake('public');
+        $file = \Illuminate\Http\UploadedFile::fake()->create('barangay_cert.pdf', 150, 'application/pdf');
+
+        $uploadResponse = $this->actingAs($pendingSeller)->post(route('seller.verification-pending.upload'), [
+            'residencyCertificate' => $file,
+        ]);
+        $uploadResponse->assertSessionHas('success');
+
+        $pendingSeller->refresh();
+        $this->assertNotNull($pendingSeller->residencyCertificate);
+        $this->assertEquals('pending', $pendingSeller->status);
+    }
 }
