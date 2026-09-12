@@ -1076,6 +1076,10 @@ class DashboardController extends Controller
             return redirect()->route('login');
         }
 
+        if ($seller->status === 'rejected' && $seller->rejection_type === 'ineligible') {
+            return redirect()->back()->with('error', 'This application was marked ineligible and cannot accept document resubmissions. Please contact lumbarongsupport@gmail.com if you have questions.');
+        }
+
         $request->validate([
             'residencyCertificate' => 'nullable|file|mimes:pdf,jpg,jpeg,png,webp|max:20480',
             'businessPermit'       => 'nullable|file|mimes:pdf,jpg,jpeg,png,webp|max:20480',
@@ -1106,6 +1110,8 @@ class DashboardController extends Controller
 
         $seller->status = 'pending';
         $seller->isVerified = false;
+        $seller->rejection_type = null;
+        $seller->rejectionReason = null;
         $seller->save();
 
         \App\Models\SellerStatusAudit::create([

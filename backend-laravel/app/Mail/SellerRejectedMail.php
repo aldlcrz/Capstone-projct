@@ -13,13 +13,17 @@ class SellerRejectedMail extends Mailable
     public string $sellerName;
     public string $shopName;
     public string $reason;
+    public string $rejectionType;
 
-    public function __construct(string $sellerName, ?string $shopName = null, ?string $reason = null)
+    public function __construct(string $sellerName, ?string $shopName = null, ?string $reason = null, string $rejectionType = 'document_correction')
     {
-        $this->sellerName = $sellerName;
-        $this->shopName   = $shopName ?? 'Artisan Workshop';
-        $this->reason     = $reason ?? 'Application did not meet seller verification standards.';
-        $this->subject    = "Notice Regarding Your Artisan Application - LumBarong";
+        $this->sellerName    = $sellerName;
+        $this->shopName      = $shopName ?? 'Artisan Workshop';
+        $this->reason        = $reason ?? 'Application did not meet seller verification standards.';
+        $this->rejectionType = $rejectionType;
+        $this->subject       = $rejectionType === 'ineligible'
+            ? "Important Notice: Artisan Application Ineligibility - LumBarong"
+            : "Action Required: Update Verification Documents - LumBarong";
     }
 
     public function build()

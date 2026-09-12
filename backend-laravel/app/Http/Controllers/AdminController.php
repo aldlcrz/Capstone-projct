@@ -917,9 +917,15 @@ class AdminController extends Controller
                 return redirect()->route('admin.sellers')->with('error', "Cannot reject seller with status '{$currentStatus}'. Rejection is only for pending applications.");
             }
 
+            $rejectionType = $request->input('rejection_type', 'document_correction');
+            if (!in_array($rejectionType, ['document_correction', 'ineligible'])) {
+                $rejectionType = 'document_correction';
+            }
+
             $reason = trim((string)$request->input('reason', 'Application did not meet seller verification standards'));
             $user->isVerified       = false;
             $user->status           = 'rejected';
+            $user->rejection_type   = $rejectionType;
             $user->rejection_reason = $reason;
             $user->save();
 
@@ -929,12 +935,14 @@ class AdminController extends Controller
                 'previous_status' => $currentStatus,
                 'new_status'      => 'rejected',
                 'reason'          => $reason,
+                'rejection_type'  => $rejectionType,
             ]);
 
             try {
+                $title = $rejectionType === 'ineligible' ? 'Application Ineligible' : 'Document Correction Required';
                 $this->sendNotification(
                     $user->id,
-                    'Application Rejected',
+                    $title,
                     "Your seller application was not approved. Reason: {$reason}",
                     'system',
                     null,
@@ -946,7 +954,7 @@ class AdminController extends Controller
 
             if ($user->email) {
                 try {
-                    $mailable = new \App\Mail\SellerRejectedMail($user->name, $user->shopName, $reason);
+                    $mailable = new \App\Mail\SellerRejectedMail($user->name, $user->shopName, $reason, $rejectionType);
                     \App\Services\EmailNotificationService::sendNotification(
                         $user->email,
                         $mailable,
@@ -979,6 +987,7 @@ class AdminController extends Controller
             $user->isVerified       = false;
             $user->status           = 'pending';
             $user->rejection_reason = null;
+            $user->rejection_type   = null;
             $user->save();
 
             \App\Models\SellerStatusAudit::create([

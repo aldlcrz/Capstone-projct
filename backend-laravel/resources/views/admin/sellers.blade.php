@@ -5,6 +5,7 @@
     rejectModal: false,
     rejectSellerId: null,
     rejectSellerName: '',
+    rejectType: 'document_correction',
     rejectReason: '',
     suspendModal: false,
     suspendSellerId: null,
@@ -35,6 +36,8 @@
         createdAt: '',
         isVerified: false,
         status: '',
+        rejection_type: 'document_correction',
+        rejection_reason: '',
         products_count: 0,
         orders_count: 0
     },
@@ -56,10 +59,13 @@
         this.previewTitle = title;
         this.previewModal = true;
     },
-    openReject(id, name) {
+    openReject(id, name, defaultType = 'document_correction') {
         this.rejectSellerId = id;
         this.rejectSellerName = name;
-        this.rejectReason = 'Application did not meet seller verification standards';
+        this.rejectType = defaultType;
+        this.rejectReason = defaultType === 'ineligible'
+            ? "Your application cannot be approved because you do not meet LumBarong's Lumban residency requirement."
+            : "Your submitted document is blurry or unreadable. Please upload a clear, high-resolution photo or PDF.";
         this.rejectModal = true;
     },
     openSuspend(id, name) {
@@ -416,6 +422,8 @@
                                     'createdAt' => $seller->createdAt ? $seller->createdAt->format('M d, Y h:i A') : '—',
                                     'isVerified' => (bool)$seller->isVerified,
                                     'status' => $seller->status,
+                                    'rejection_type' => $seller->rejection_type ?? 'document_correction',
+                                    'rejection_reason' => $seller->rejection_reason ?: ($seller->rejectionReason ?: ''),
                                     'products_count' => $seller->products_count ?? 0,
                                     'orders_count' => $seller->orders_count ?? 0,
                                 ];
@@ -444,7 +452,7 @@
                                 };
                                 $statusLabel = match($normStatus) {
                                     'suspended' => 'Suspended — Policy Violation',
-                                    'rejected'  => 'Rejected Application',
+                                    'rejected'  => ($seller->rejection_type === 'ineligible' ? 'Rejected — Ineligible' : 'Rejected — Correction Required'),
                                     'frozen'    => 'Frozen — Unpaid Commission',
                                     'pending'   => 'Pending Approval',
                                     default     => 'Active / Approved',
@@ -882,41 +890,105 @@
     {{-- Reject Application Confirmation Modal --}}
     <div x-show="rejectModal" class="fixed inset-0 z-50 flex items-center justify-center p-4" x-cloak>
         <div class="absolute inset-0 bg-black/40 backdrop-blur-sm" @click="rejectModal = false"></div>
-        <div class="relative bg-white rounded-2xl shadow-2xl w-full max-w-md p-6 space-y-4 z-10">
-            <div class="flex items-start gap-3">
-                <div class="w-10 h-10 rounded-xl bg-rose-100 flex items-center justify-center text-rose-600 shrink-0 font-black">✕</div>
-                <div>
-                    <h3 class="text-lg font-bold text-gray-900">Reject Seller Application</h3>
+        <div class="relative bg-white rounded-3xl shadow-2xl w-full max-w-lg p-6 sm:p-7 space-y-5 z-10 border border-gray-100">
+            <div class="flex items-start gap-3.5">
+                <div class="w-11 h-11 rounded-2xl bg-rose-100/80 flex items-center justify-center text-rose-600 shrink-0 font-black text-lg">✕</div>
+                <div class="flex-1">
+                    <h3 class="text-lg font-bold text-gray-900 leading-snug">Reject Seller Application</h3>
                     <p class="text-xs text-gray-500 leading-relaxed mt-0.5">
-                        Decline registration for applicant <strong x-text="rejectSellerName" class="text-black"></strong>.
+                        Decline registration for applicant <strong x-text="rejectSellerName" class="text-gray-900 font-bold"></strong>.
                     </p>
                 </div>
             </div>
+
             <form :action="'/admin/sellers/' + rejectSellerId + '/reject'" method="POST" class="space-y-4">
                 @csrf @method('PATCH')
-                <div>
-                    <label class="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-1.5 block">Quick Reason Presets</label>
-                    <div class="flex flex-wrap gap-1.5 mb-3">
-                        <button type="button" @click="rejectReason = 'Submitted documents are incomplete or unreadable'"
-                            class="px-2.5 py-1 rounded-lg text-[10px] font-semibold bg-gray-100 hover:bg-gray-200 text-gray-700 transition-colors">
-                            Incomplete Docs
+                <input type="hidden" name="rejection_type" :value="rejectType">
+
+                {{-- Rejection Outcome Selector --}}
+                <div class="space-y-2">
+                    <label class="text-[10px] font-black text-gray-400 uppercase tracking-wider block">1. Select Rejection Outcome *</label>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                        <button type="button" @click="rejectType = 'document_correction'; rejectReason = 'Your submitted document is blurry or unreadable. Please upload a clear, high-resolution photo or PDF.'"
+                            :class="rejectType === 'document_correction' ? 'border-amber-500 bg-amber-50/80 text-amber-950 ring-2 ring-amber-500/20 shadow-xs' : 'border-gray-200 bg-gray-50/60 text-gray-600 hover:bg-gray-100'"
+                            class="p-3.5 rounded-2xl border text-left transition-all cursor-pointer">
+                            <div class="flex items-center gap-2 mb-1">
+                                <span class="text-sm">📄</span>
+                                <span class="text-xs font-bold text-gray-900">Correction Required</span>
+                            </div>
+                            <p class="text-[10px] text-gray-500 leading-relaxed">Allows seller to fix documents &amp; re-upload on the portal.</p>
                         </button>
-                        <button type="button" @click="rejectReason = 'Invalid or expired Barangay Residency Certificate'"
-                            class="px-2.5 py-1 rounded-lg text-[10px] font-semibold bg-gray-100 hover:bg-gray-200 text-gray-700 transition-colors">
-                            Invalid Residency
+
+                        <button type="button" @click="rejectType = 'ineligible'; rejectReason = 'Your application cannot be approved because you do not meet LumBarong\'s Lumban residency requirement.'"
+                            :class="rejectType === 'ineligible' ? 'border-rose-500 bg-rose-50/80 text-rose-950 ring-2 ring-rose-500/20 shadow-xs' : 'border-gray-200 bg-gray-50/60 text-gray-600 hover:bg-gray-100'"
+                            class="p-3.5 rounded-2xl border text-left transition-all cursor-pointer">
+                            <div class="flex items-center gap-2 mb-1">
+                                <span class="text-sm">🚫</span>
+                                <span class="text-xs font-bold text-gray-900">Permanent Ineligible</span>
+                            </div>
+                            <p class="text-[10px] text-gray-500 leading-relaxed">Non-Lumban resident or out-of-scope. No re-upload.</p>
                         </button>
-                        <button type="button" @click="rejectReason = 'Shop or product category outside LumBarong heritage scope'"
-                            class="px-2.5 py-1 rounded-lg text-[10px] font-semibold bg-gray-100 hover:bg-gray-200 text-gray-700 transition-colors">
-                            Out of Scope
+                    </div>
+                </div>
+
+                {{-- Presets & Reason Box --}}
+                <div class="space-y-2">
+                    <div class="flex items-center justify-between">
+                        <label class="text-[10px] font-black text-gray-400 uppercase tracking-wider block">2. Quick Reason Presets</label>
+                        <span class="text-[10px] font-semibold text-gray-400" x-text="rejectType === 'document_correction' ? 'Document Presets' : 'Eligibility Presets'"></span>
+                    </div>
+
+                    {{-- Document Correction Presets --}}
+                    <div x-show="rejectType === 'document_correction'" class="flex flex-wrap gap-1.5">
+                        <button type="button" @click="rejectReason = 'Your submitted document is blurry or unreadable. Please upload a clear, high-resolution photo or PDF.'"
+                            class="px-2.5 py-1 rounded-lg text-[10px] font-semibold bg-gray-100 hover:bg-amber-100 hover:text-amber-900 text-gray-700 transition-colors">
+                            Blurry / Unreadable
+                        </button>
+                        <button type="button" @click="rejectReason = 'Your Barangay Residency Certificate has expired. Please obtain an updated certificate and upload it again.'"
+                            class="px-2.5 py-1 rounded-lg text-[10px] font-semibold bg-gray-100 hover:bg-amber-100 hover:text-amber-900 text-gray-700 transition-colors">
+                            Expired Document
+                        </button>
+                        <button type="button" @click="rejectReason = 'One or more required verification documents are missing. Please upload the missing document(s) before resubmitting.'"
+                            class="px-2.5 py-1 rounded-lg text-[10px] font-semibold bg-gray-100 hover:bg-amber-100 hover:text-amber-900 text-gray-700 transition-colors">
+                            Missing Document
+                        </button>
+                        <button type="button" @click="rejectReason = 'The submitted document does not meet the verification requirements. Please upload the correct document.'"
+                            class="px-2.5 py-1 rounded-lg text-[10px] font-semibold bg-gray-100 hover:bg-amber-100 hover:text-amber-900 text-gray-700 transition-colors">
+                            Incorrect Document
+                        </button>
+                        <button type="button" @click="rejectReason = 'The information on the submitted document does not match your seller application. Please review your information and submit the correct document.'"
+                            class="px-2.5 py-1 rounded-lg text-[10px] font-semibold bg-gray-100 hover:bg-amber-100 hover:text-amber-900 text-gray-700 transition-colors">
+                            Document Mismatch
                         </button>
                     </div>
 
-                    <label class="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-1 block">Rejection Reason (Sent to applicant email) *</label>
-                    <textarea name="reason" x-model="rejectReason" required rows="3" placeholder="Provide the reason for rejecting application..." class="w-full p-3 bg-gray-50 border border-gray-200 rounded-xl text-xs outline-none focus:border-rose-500"></textarea>
+                    {{-- Ineligible Presets --}}
+                    <div x-show="rejectType === 'ineligible'" class="flex flex-wrap gap-1.5">
+                        <button type="button" @click="rejectReason = 'Your application cannot be approved because you do not meet LumBarong\'s Lumban residency requirement.'"
+                            class="px-2.5 py-1 rounded-lg text-[10px] font-semibold bg-gray-100 hover:bg-rose-100 hover:text-rose-900 text-gray-700 transition-colors">
+                            Non-Lumban Resident
+                        </button>
+                        <button type="button" @click="rejectReason = 'Your products do not fall within LumBarong\'s approved Lumban Barong, traditional embroidery, or heritage craft categories.'"
+                            class="px-2.5 py-1 rounded-lg text-[10px] font-semibold bg-gray-100 hover:bg-rose-100 hover:text-rose-900 text-gray-700 transition-colors">
+                            Outside Heritage Scope
+                        </button>
+                        <button type="button" @click="rejectReason = 'Your application does not meet LumBarong\'s eligibility requirements for registered local artisans or workshops.'"
+                            class="px-2.5 py-1 rounded-lg text-[10px] font-semibold bg-gray-100 hover:bg-rose-100 hover:text-rose-900 text-gray-700 transition-colors">
+                            Not Eligible Artisan
+                        </button>
+                    </div>
+
+                    <div class="pt-2">
+                        <label class="text-[10px] font-black text-gray-400 uppercase tracking-wider mb-1 block">3. Detailed Reason (Sent via Email &amp; Portal) *</label>
+                        <textarea name="reason" x-model="rejectReason" required rows="3" placeholder="Enter explanation for applicant..." class="w-full p-3 bg-gray-50 border border-gray-200 rounded-2xl text-xs outline-none focus:border-rose-500 transition-all font-medium leading-relaxed"></textarea>
+                    </div>
                 </div>
+
                 <div class="flex gap-3 pt-2">
-                    <button type="button" @click="rejectModal = false" class="flex-1 py-2.5 border border-gray-200 text-xs font-semibold text-gray-500 rounded-xl hover:bg-gray-50 cursor-pointer">Cancel</button>
-                    <button type="submit" class="flex-1 py-2.5 bg-rose-600 text-white text-xs font-bold uppercase tracking-wider rounded-xl hover:bg-rose-700 cursor-pointer shadow-sm">Confirm Rejection</button>
+                    <button type="button" @click="rejectModal = false" class="flex-1 py-3 border border-gray-200 text-xs font-bold text-gray-600 rounded-2xl hover:bg-gray-50 cursor-pointer transition-all">Cancel</button>
+                    <button type="submit" class="flex-1 py-3 bg-rose-600 hover:bg-rose-700 text-white text-xs font-black uppercase tracking-wider rounded-2xl cursor-pointer shadow-md transition-all flex items-center justify-center gap-1.5">
+                        <span>Confirm Rejection</span>
+                    </button>
                 </div>
             </form>
         </div>

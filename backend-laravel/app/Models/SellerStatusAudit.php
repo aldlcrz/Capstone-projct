@@ -21,6 +21,7 @@ class SellerStatusAudit extends Model
         'previous_status',
         'new_status',
         'reason',
+        'rejection_type',
     ];
 
     protected static function boot()

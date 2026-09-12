@@ -26,7 +26,7 @@ class User extends Authenticatable
         'youtubeLink', 'socialLinks', 'shopHouseNo', 'shopStreet', 'shopAddress',
         'shopBarangay', 'shopCity', 'shopProvince', 'shopPostalCode', 'shopLatitude',
         'shopLongitude', 'isAdult', 'fcmToken', 'followers', 'following', 'status',
-        'violationReason', 'rejectionReason', 'suspension_reason', 'rejection_reason',
+        'violationReason', 'rejectionReason', 'suspension_reason', 'rejection_reason', 'rejection_type',
         'sessionVersion', 'googleId',
         'hasPasswordSet', 'loginAttempts', 'loginLockedUntil', 'bio', 'username',
         'gender', 'birthday', 'resetPasswordToken', 'resetPasswordExpires',

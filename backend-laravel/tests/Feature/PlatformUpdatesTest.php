@@ -563,4 +563,78 @@ class PlatformUpdatesTest extends TestCase
         $this->assertNotNull($pendingSeller->residencyCertificate);
         $this->assertEquals('pending', $pendingSeller->status);
     }
+
+    public function test_admin_can_reject_seller_with_correction_required_and_ineligible_types(): void
+    {
+        /** @var User $admin */
+        $admin = User::factory()->create([
+            'role' => 'admin',
+            'status' => 'active',
+            'isVerified' => true,
+        ]);
+
+        /** @var User $sellerDocIssue */
+        $sellerDocIssue = User::factory()->create([
+            'role' => 'seller',
+            'status' => 'pending',
+            'isVerified' => false,
+        ]);
+
+        /** @var User $sellerIneligible */
+        $sellerIneligible = User::factory()->create([
+            'role' => 'seller',
+            'status' => 'pending',
+            'isVerified' => false,
+        ]);
+
+        // 1. Reject with document correction
+        $res1 = $this->actingAs($admin)->patch("/admin/sellers/{$sellerDocIssue->id}/reject", [
+            'rejection_type' => 'document_correction',
+            'reason' => 'Blurry residency certificate',
+        ]);
+        $res1->assertSessionHas('success');
+
+        $sellerDocIssue->refresh();
+        $this->assertEquals('rejected', $sellerDocIssue->status);
+        $this->assertEquals('document_correction', $sellerDocIssue->rejection_type);
+        $this->assertEquals('Blurry residency certificate', $sellerDocIssue->rejectionReason);
+
+        // 2. Reject with permanent ineligible
+        $res2 = $this->actingAs($admin)->patch("/admin/sellers/{$sellerIneligible->id}/reject", [
+            'rejection_type' => 'ineligible',
+            'reason' => 'Not a resident of Lumban, Laguna',
+        ]);
+        $res2->assertSessionHas('success');
+
+        $sellerIneligible->refresh();
+        $this->assertEquals('rejected', $sellerIneligible->status);
+        $this->assertEquals('ineligible', $sellerIneligible->rejection_type);
+        $this->assertEquals('Not a resident of Lumban, Laguna', $sellerIneligible->rejectionReason);
+    }
+
+    public function test_ineligible_seller_portal_shows_ineligibility_notice_and_blocks_reupload(): void
+    {
+        /** @var User $ineligibleSeller */
+        $ineligibleSeller = User::factory()->create([
+            'role' => 'seller',
+            'status' => 'rejected',
+            'rejection_type' => 'ineligible',
+            'rejectionReason' => 'Applicant lives outside Lumban municipality',
+            'isVerified' => false,
+        ]);
+
+        // 1. Ineligible seller visits portal -> sees ineligibility notice & no form
+        $portalResponse = $this->actingAs($ineligibleSeller)->get(route('seller.verification-pending'));
+        $portalResponse->assertStatus(200);
+        $portalResponse->assertSee('Application Ineligible');
+        $portalResponse->assertSee('Applicant lives outside Lumban municipality');
+        $portalResponse->assertSee('Application Closed');
+
+        // 2. Upload attempts are blocked
+        $file = \Illuminate\Http\UploadedFile::fake()->create('cert.pdf', 100, 'application/pdf');
+        $uploadResponse = $this->actingAs($ineligibleSeller)->post(route('seller.verification-pending.upload'), [
+            'residencyCertificate' => $file,
+        ]);
+        $uploadResponse->assertSessionHas('error');
+    }
 }
