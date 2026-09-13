@@ -24,6 +24,11 @@
 
     <div class="min-h-[calc(100vh-120px)] px-3 py-4 sm:px-6 sm:py-8 pb-28 lg:pb-12" 
          @open-payment-modal.window="showPaymentModal = true"
+         x-init="
+             if (new URLSearchParams(window.location.search).get('open_payment') === '1' || window.location.hash === '#payment-methods') {
+                 showPaymentModal = true;
+             }
+         "
          x-data="{ 
              showAccountSettingsModal: false,
              showEditModal: false,
@@ -1584,24 +1589,6 @@
     }
 
     document.addEventListener('DOMContentLoaded', function() {
-        const urlParams = new URLSearchParams(window.location.search);
-        if (urlParams.get('open_payment') === '1' || window.location.hash === '#payment-methods') {
-            // Use a short delay to allow Alpine to fully initialize
-            setTimeout(function() {
-                const root = document.querySelector('[x-data]');
-                if (root) {
-                    // Alpine 3 approach: dispatch a custom event or use __x
-                    if (root._x_dataStack && root._x_dataStack[0]) {
-                        root._x_dataStack[0].showPaymentModal = true;
-                    } else if (root.__x && root.__x.$data) {
-                        root.__x.$data.showPaymentModal = true;
-                    } else {
-                        // Fallback: dispatch event
-                        root.dispatchEvent(new CustomEvent('open-payment-modal'));
-                    }
-                }
-            }, 150);
-        }
         document.addEventListener('keydown', function(e) {
             if (e.key === 'Escape') {
                 document.getElementById('qr-lightbox').style.display = 'none';
