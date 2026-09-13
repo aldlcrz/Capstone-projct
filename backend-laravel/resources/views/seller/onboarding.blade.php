@@ -77,11 +77,12 @@
                 </div>
             </div>
             
-            <div class="inline-flex items-center gap-1.5 px-3.5 py-1 rounded-full bg-[#C0422A]/10 text-[#C0422A] text-[10px] font-black uppercase tracking-widest mb-2 border border-[#C0422A]/20">
+            <div class="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-[#FAF0ED] text-[#C0422A] text-[10px] font-black uppercase tracking-[0.2em] mb-2.5 border border-[#C0422A]/20 shadow-2xs">
+                <span class="w-1.5 h-1.5 rounded-full bg-[#C0422A]"></span>
                 <span>Welcome, {{ $user->shopName ?: $user->name }}</span>
             </div>
             
-            <h1 class="font-serif text-2xl sm:text-3xl lg:text-[2rem] font-black italic tracking-tight text-gray-900 mb-2 leading-tight">
+            <h1 class="font-serif text-2xl sm:text-3xl lg:text-[2.1rem] font-bold tracking-tight text-[#1E1915] mb-2 leading-tight">
                 Set Up Your Artisan Store
             </h1>
             <p class="text-xs sm:text-[13px] text-gray-600 font-medium max-w-md mx-auto leading-relaxed">
@@ -365,19 +366,19 @@
                     <div class="absolute -top-10 -right-10 w-40 h-40 rounded-full bg-[#C0422A]/5 pointer-events-none blur-xl"></div>
                     <div class="absolute -bottom-10 -left-10 w-40 h-40 rounded-full bg-[#D4B896]/15 pointer-events-none blur-xl"></div>
 
-                    {{-- Elegant Artisan Badge --}}
-                    <div class="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-emerald-50 border border-emerald-200/80 text-emerald-800 text-[10px] font-black uppercase tracking-widest mb-4 shadow-2xs">
-                        <svg class="w-3.5 h-3.5 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
-                        <span>Step 3 of 3: Store Launch</span>
+                    {{-- Elegant Artisan Heritage Badge --}}
+                    <div class="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-[#FAF0ED] border border-[#C0422A]/20 text-[#C0422A] text-[10px] font-black uppercase tracking-[0.2em] mb-4 shadow-2xs">
+                        <span class="w-1.5 h-1.5 rounded-full bg-[#C0422A]"></span>
+                        <span>Store Setup Complete</span>
                     </div>
 
                     {{-- Main Title --}}
-                    <h2 class="font-serif text-2xl sm:text-3xl lg:text-[2.15rem] font-black italic tracking-tight text-gray-900 mb-2.5 leading-tight">
-                        Your Artisan Store is Ready
+                    <h2 class="font-serif text-2xl sm:text-3xl lg:text-[2rem] font-bold tracking-tight text-[#1E1915] mb-2 leading-tight">
+                        Ready to Showcase Your Craft
                     </h2>
                     
-                    <p class="text-xs sm:text-[13.5px] text-gray-600 font-medium max-w-lg mx-auto leading-relaxed mb-6">
-                        Your payment routing and store policies have been successfully configured. Proceed to the <strong>Product Studio</strong> to publish your first Barong Tagalog or explore your shop dashboard.
+                    <p class="text-xs sm:text-[13px] text-gray-600 font-medium max-w-md mx-auto leading-relaxed mb-6">
+                        Your payment routing and store policies are configured. Launch the <strong>Product Studio</strong> to list your first creation or enter your artisan workspace.
                     </p>
 
                     {{-- Feature Highlight Grid --}}
