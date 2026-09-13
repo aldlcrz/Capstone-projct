@@ -726,4 +726,34 @@ class PlatformUpdatesTest extends TestCase
         $seller->refresh();
         $this->assertTrue((bool)$seller->is_onboarded);
     }
+
+    public function test_seller_with_no_setup_is_reminded_on_login_until_configured(): void
+    {
+        /** @var User $seller */
+        $seller = User::factory()->create([
+            'role' => 'seller',
+            'status' => 'active',
+            'isVerified' => true,
+            'password' => Hash::make('password123'),
+        ]);
+
+        // 1. Initial login with 0 setup -> redirected to onboarding
+        $response = $this->post('/login', [
+            'email' => $seller->email,
+            'password' => 'password123',
+        ]);
+        $response->assertRedirect(route('seller.onboarding'));
+
+        // 2. Seller configures GCash payout
+        $seller->update(['gcashNumber' => '09171234567']);
+        $this->assertTrue($seller->isOnboarded());
+
+        // 3. Next login -> redirected directly to dashboard
+        Auth::logout();
+        $response2 = $this->post('/login', [
+            'email' => $seller->email,
+            'password' => 'password123',
+        ]);
+        $response2->assertRedirect(route('seller.dashboard'));
+    }
 }

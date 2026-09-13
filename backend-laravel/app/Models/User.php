@@ -114,11 +114,21 @@ class User extends Authenticatable
     }
 
     /**
-     * Determine if user has completed or skipped initial profile onboarding.
+     * Determine if user has completed initial profile onboarding.
+     * For sellers, checks if they have configured GCash, custom policies, or listed products.
      */
     public function isOnboarded(): bool
     {
         try {
+            if ($this->role === 'seller') {
+                $hasGcash    = !empty($this->gcashNumber) || !empty($this->gcashQrCode);
+                $hasProducts = $this->products()->count() > 0;
+                $hasPolicy   = !empty($this->refund_policy) || !empty($this->cancellation_policy);
+
+                // If seller has configured GCash, policies, or products, they are onboarded
+                return $hasGcash || $hasProducts || $hasPolicy;
+            }
+
             if (\Illuminate\Support\Facades\Schema::hasColumn('users', 'is_onboarded')) {
                 return (bool) $this->is_onboarded;
             }
