@@ -38,12 +38,17 @@
         };
 
         $gcashQr     = $resolveQr($gcashQrRaw);
-        $mayaQr      = $resolveQr($mayaQrRaw);
-        $errMsg      = $errors->first();
+        $errMsg          = $errors->first();
+        $isFrozenPending = session('commission_payment_pending') || (
+            $errors->any() && (
+                str_contains(strtolower((string)$errMsg), 'pending verification') ||
+                str_contains(strtolower((string)$errMsg), 'proof has been submitted')
+            )
+        );
         $isFrozenErr = $errors->any() && (
             str_contains(strtolower((string)$errMsg), 'commission') || 
             str_contains(strtolower((string)$errMsg), 'frozen')
-        );
+        ) && !$isFrozenPending;
     @endphp
 
     <!-- Subtle warm blobs -->
@@ -141,7 +146,17 @@
                     @endif
                 @enderror
 
-                @if($isFrozenErr)
+                @if($isFrozenPending)
+                    <div class="mt-3 p-4 bg-blue-50/90 border border-blue-200 rounded-2xl text-xs text-blue-950 space-y-2.5 text-left shadow-xs">
+                        <div class="flex items-center gap-2 text-blue-700 font-bold text-xs uppercase tracking-wider">
+                            <span class="text-base">⏳</span>
+                            <span>Payment Verification in Progress</span>
+                        </div>
+                        <p class="text-[11px] text-blue-900 leading-relaxed font-medium">
+                            Your payment proof {{ session('pending_reference_number') ? '(Ref: ' . session('pending_reference_number') . ')' : '' }} has been submitted and is currently being verified by Super Admin. You do not need to make another payment. Access will be restored automatically once approved.
+                        </p>
+                    </div>
+                @elseif($isFrozenErr)
                     <div class="mt-3 p-4 bg-amber-50/90 border border-amber-200 rounded-2xl text-xs text-amber-950 space-y-2.5 text-left shadow-xs">
                         <div class="flex items-center gap-2 text-amber-800 font-bold text-xs uppercase tracking-wider">
                             <span class="text-base">💳</span>

@@ -62,6 +62,23 @@ class WebAuthController extends Controller
                 $totalUnpaid = $unpaidRecords->sum('commissionAmount');
                 $periods = $unpaidRecords->pluck('period')->filter()->unique()->implode(', ');
 
+                $pendingProofRecord = $unpaidRecords->first(function($rec) {
+                    return !empty($rec->paymentProof) || !empty($rec->referenceNumber);
+                });
+
+                if ($pendingProofRecord) {
+                    $ref = $pendingProofRecord->referenceNumber ?: 'Submitted';
+                    $msg = "Your commission payment proof (Ref: {$ref}) has been submitted and is currently pending verification by Super Admin. Your shop will be restored once approved.";
+                    return back()
+                        ->with('commission_payment_pending', true)
+                        ->with('pending_reference_number', $pendingProofRecord->referenceNumber)
+                        ->with('pending_payment_method', $pendingProofRecord->paymentMethod)
+                        ->with('pending_payment_proof', $pendingProofRecord->paymentProof)
+                        ->withErrors([
+                            'email' => $msg,
+                        ])->onlyInput('email');
+                }
+
                 if ($totalUnpaid > 0 && !empty($periods)) {
                     $amount = number_format($totalUnpaid, 2);
                     $msg = "Your shop is temporarily frozen due to an unpaid monthly commission of ₱{$amount} for {$periods}. Please settle your outstanding commission to restore access.";
@@ -594,7 +611,35 @@ class WebAuthController extends Controller
             }
 
             if ($user->status === 'frozen') {
-                return back()->withErrors(['email' => 'Pay commission to continue']);
+                $unpaidRecords = CommissionRecord::where('sellerId', $user->id)
+                    ->where('status', 'unpaid')
+                    ->orderBy('period', 'asc')
+                    ->get();
+                $totalUnpaid = $unpaidRecords->sum('commissionAmount');
+                $periods = $unpaidRecords->pluck('period')->filter()->unique()->implode(', ');
+
+                $pendingProofRecord = $unpaidRecords->first(function($rec) {
+                    return !empty($rec->paymentProof) || !empty($rec->referenceNumber);
+                });
+
+                if ($pendingProofRecord) {
+                    $ref = $pendingProofRecord->referenceNumber ?: 'Submitted';
+                    $msg = "Your commission payment proof (Ref: {$ref}) has been submitted and is currently pending verification by Super Admin. Your shop will be restored once approved.";
+                    return redirect()->route('login')
+                        ->with('commission_payment_pending', true)
+                        ->with('pending_reference_number', $pendingProofRecord->referenceNumber)
+                        ->with('pending_payment_method', $pendingProofRecord->paymentMethod)
+                        ->with('pending_payment_proof', $pendingProofRecord->paymentProof)
+                        ->withErrors(['email' => $msg]);
+                }
+
+                if ($totalUnpaid > 0 && !empty($periods)) {
+                    $amount = number_format($totalUnpaid, 2);
+                    $msg = "Your shop is temporarily frozen due to an unpaid monthly commission of ₱{$amount} for {$periods}. Please settle your outstanding commission to restore access.";
+                } else {
+                    $msg = "Your shop is temporarily frozen due to an outstanding commission settlement requirement. Please settle your outstanding commission to restore access.";
+                }
+                return redirect()->route('login')->withErrors(['email' => $msg]);
             }
 
             if (in_array(strtolower($user->status ?? ''), ['blocked', 'banned', 'suspended'])) {
