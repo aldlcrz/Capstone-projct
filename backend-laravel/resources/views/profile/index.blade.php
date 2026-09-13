@@ -1349,6 +1349,19 @@ function profileApp() {
 
         async init() {
             await this.fetchAddresses();
+
+            // Auto-open Address modal if directed via add_address=1 or manage_addresses=1
+            const urlParams = new URLSearchParams(window.location.search);
+            if (urlParams.get('add_address') === '1' || window.location.hash === '#add-address') {
+                this.$nextTick(() => {
+                    this.openAddAddress();
+                });
+            } else if (urlParams.get('manage_addresses') === '1' || window.location.hash === '#addresses') {
+                this.$nextTick(() => {
+                    this.openSavedAddresses();
+                });
+            }
+
             // Centralised ESC handler — respects modal priority
             window.addEventListener('keydown', (e) => {
                 if (e.key !== 'Escape') return;
@@ -1382,6 +1395,7 @@ function profileApp() {
         },
 
         openAddAddress() {
+            this.showAddressModal = true;
             this.editAddressId = null;
             this.addressForm = { 
                 recipientName: "{{ addslashes($user->name ?? '') }}", 

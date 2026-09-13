@@ -13,6 +13,11 @@
         body { font-family: 'Inter', sans-serif; background: #F7F3EE; }
         .font-serif { font-family: 'Playfair Display', serif; }
         [x-cloak] { display: none !important; }
+        /* Disable native browser password reveal icon to prevent duplicate eye icon */
+        input::-ms-reveal,
+        input::-ms-clear {
+            display: none !important;
+        }
     </style>
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.14.8/dist/cdn.min.js"></script>
 </head>

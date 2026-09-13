@@ -19,6 +19,11 @@
         .no-scrollbar::-webkit-scrollbar { display: none; }
         .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
         [x-cloak] { display: none !important; }
+        /* Disable native browser password reveal icon to prevent duplicate eye icon */
+        input::-ms-reveal,
+        input::-ms-clear {
+            display: none !important;
+        }
 
         .step-indicator {
             width: 38px;

@@ -1089,27 +1089,10 @@ class WebAuthController extends Controller
         }
         $user->save();
 
-        // If address fields provided, create default Address record
-        if ($request->filled('city') || $request->filled('province') || $request->filled('houseNo') || $request->filled('region')) {
-            try {
-                \App\Models\Address::create([
-                    'userId'        => $user->id,
-                    'recipientName' => $user->name,
-                    'region'        => trim($request->region ?? 'CALABARZON'),
-                    'phone'         => $user->mobileNumber ?: '09000000000',
-                    'houseNo'       => trim($request->houseNo ?? 'Unit'),
-                    'street'        => trim($request->street ?? ''),
-                    'barangay'      => trim($request->barangay ?? ''),
-                    'city'          => trim($request->city ?? 'Lumban'),
-                    'province'      => trim($request->province ?? 'Laguna'),
-                    'postalCode'    => trim($request->postalCode ?? '4014'),
-                    'latitude'      => $request->latitude ? floatval($request->latitude) : null,
-                    'longitude'     => $request->longitude ? floatval($request->longitude) : null,
-                    'isDefault'     => true,
-                ]);
-            } catch (\Throwable $e) {
-                Log::warning('Could not create default address during onboarding: ' . $e->getMessage());
-            }
+        // If user requested to add an address, redirect directly to profile with add_address=1
+        if ($request->input('action') === 'add_address' || $request->input('redirect_to') === 'profile_add_address') {
+            return redirect()->route('profile', ['add_address' => 1])
+                ->with('success', 'Profile details saved! You can now add your delivery address.');
         }
 
         return redirect('/')->with('success', 'Welcome to LumBarong, ' . $user->name . '! Your profile setup is complete.');

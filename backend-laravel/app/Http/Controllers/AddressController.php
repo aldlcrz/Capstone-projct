@@ -13,6 +13,18 @@ class AddressController extends Controller
      */
     public function index()
     {
+        // Purge any legacy dummy auto-generated addresses from previous onboarding bug
+        try {
+            Address::where('userId', Auth::id())
+                ->where('phone', '09000000000')
+                ->where(function($q) {
+                    $q->whereIn('houseNo', ['National Highway', 'Unit', ''])
+                      ->orWhere('street', 'National Highway')
+                      ->orWhere('city', 'Lumban');
+                })
+                ->delete();
+        } catch (\Throwable $e) {}
+
         $addresses = Address::where('userId', Auth::id())
             ->orderBy('isDefault', 'desc')
             ->orderBy('createdAt', 'desc')

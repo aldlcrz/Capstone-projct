@@ -28,6 +28,11 @@
         .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
         /* Prevent Alpine.js x-cloak elements from flashing before initialization */
         [x-cloak] { display: none !important; }
+        /* Disable native browser password reveal icon to prevent duplicate eye icon */
+        input::-ms-reveal,
+        input::-ms-clear {
+            display: none !important;
+        }
         /* Mobile chat widget: sit above bottom nav (64px) + toggle button */
         @media (max-width: 1023px) {
             .chat-widget-panel {
