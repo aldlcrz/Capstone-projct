@@ -1145,10 +1145,12 @@ class WebAuthController extends Controller
             return redirect()->route('seller.dashboard');
         }
 
-        $categories = Category::orderBy('name')->get();
+        $hasGcash = !empty($user->gcashNumber) || !empty($user->gcashQrCode);
+        $hasPolicies = !empty($user->refund_policy) || !empty($user->cancellation_policy);
+        $productsCount = $user->products()->count();
 
         return response()
-            ->view('seller.onboarding', compact('user', 'categories'))
+            ->view('seller.onboarding', compact('user', 'hasGcash', 'hasPolicies', 'productsCount'))
             ->header('Cache-Control', 'no-cache, no-store, max-age=0, must-revalidate')
             ->header('Pragma', 'no-cache')
             ->header('Expires', 'Sun, 02 Jan 1990 00:00:00 GMT');

@@ -666,8 +666,8 @@ class PlatformUpdatesTest extends TestCase
         $onboardingPage->assertStatus(200);
         $onboardingPage->assertSee('Artisan Onboarding');
         $onboardingPage->assertSee('GCash Payout');
-        $onboardingPage->assertSee('Shop Policy');
-        $onboardingPage->assertSee('First Product');
+        $onboardingPage->assertSee('Policies');
+        $onboardingPage->assertSee('Barong');
     }
 
     public function test_seller_can_save_onboarding_with_gcash_and_policies(): void
