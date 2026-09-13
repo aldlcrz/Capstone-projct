@@ -297,7 +297,7 @@
 
     @if($isFrozenErr)
     <div 
-        x-data="{ show: true, activeTab: 'gcash' }"
+        x-data="{ show: false, activeTab: 'gcash' }"
         x-show="show"
         @open-frozen-modal.window="show = true"
         x-transition:enter="transition ease-out duration-300"
