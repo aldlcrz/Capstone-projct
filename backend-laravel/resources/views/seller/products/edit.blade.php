@@ -286,23 +286,20 @@
                     </div>
                     <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
                         @foreach(['Men', 'Women', 'Kids'] as $group)
-                            <label class="cursor-pointer select-none" @click="onTargetGroupChange('{{ $group }}')">
-                                <input type="radio" 
-                                       name="target_group" 
-                                       value="{{ $group }}" 
-                                       x-model="targetGroup" 
-                                       class="hidden target-group-radio">
-                                <div class="target-pill" :class="targetGroup === '{{ $group }}' ? 'target-pill-selected' : ''">
-                                    <span>{{ $group }}</span>
-                                    <span class="target-checkmark" x-show="targetGroup === '{{ $group }}'">✓</span>
-                                </div>
-                            </label>
+                            <button type="button" 
+                                    @click="onTargetGroupChange('{{ $group }}')"
+                                    class="target-pill" 
+                                    :class="targetGroup === '{{ $group }}' ? 'target-pill-selected' : ''">
+                                <span>{{ $group }}</span>
+                                <span class="target-checkmark" x-show="targetGroup === '{{ $group }}'">✓</span>
+                            </button>
                         @endforeach
+                        <input type="hidden" name="target_group" id="targetGroupInput" :value="targetGroup">
                     </div>
                 </div>
 
                 {{-- Product Category for Selected Tag --}}
-                <div class="space-y-2.5 pt-3 border-t border-stone-200/70">
+                <div class="space-y-2.5 pt-3 border-t border-stone-200/70" x-show="targetGroup" x-transition:enter="transition ease-out duration-200" x-transition:enter-start="opacity-0 -translate-y-1" x-transition:enter-end="opacity-100 translate-y-0">
                     <div class="flex items-center justify-between flex-wrap gap-2">
                         <label class="text-[10px] font-bold uppercase tracking-widest text-gray-500">
                             Product Category for <span class="text-[#1E1915] font-black" x-text="targetGroup"></span> <span class="text-[#C49520]">*</span>
@@ -1195,11 +1192,16 @@ function editProductManager() {
         get filteredCategories() {
             if (!Array.isArray(this.categoriesList)) return [];
             if (!this.targetGroup) return [];
+            const target = String(this.targetGroup).trim().toLowerCase();
             return this.categoriesList.filter(c => {
                 if (!c) return false;
                 let tg = c.target_group;
-                if (Array.isArray(tg)) return tg.includes(this.targetGroup);
-                if (typeof tg === 'string') return tg === this.targetGroup;
+                if (Array.isArray(tg)) {
+                    return tg.some(t => String(t).trim().toLowerCase() === target);
+                }
+                if (typeof tg === 'string') {
+                    return tg.trim().toLowerCase() === target;
+                }
                 return false;
             }).sort((a, b) => (a.name || '').localeCompare(b.name || ''));
         },
@@ -1223,12 +1225,19 @@ function editProductManager() {
             if (tgContainer) tgContainer.classList.remove('border-red-500', 'p-1', 'border', 'rounded-xl');
 
             // If selected category does not belong to new target group, remove it
+            const target = String(group || '').trim().toLowerCase();
             if (this.selectedCategories.length > 0) {
                 this.selectedCategories = this.selectedCategories.filter(catId => {
                     const cat = Array.isArray(this.categoriesList) ? this.categoriesList.find(c => String(c.id) === String(catId)) : null;
                     if (!cat) return false;
                     let tg = cat.target_group;
-                    return Array.isArray(tg) ? tg.includes(group) : (tg === group);
+                    if (Array.isArray(tg)) {
+                        return tg.some(t => String(t).trim().toLowerCase() === target);
+                    }
+                    if (typeof tg === 'string') {
+                        return tg.trim().toLowerCase() === target;
+                    }
+                    return false;
                 });
             }
         },

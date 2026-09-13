@@ -488,6 +488,7 @@
                             2. Who is this for? (Target Tag) <span style="color:#DC2626;">*</span>
                         </h2>
                         <span style="font-size:11px;font-weight:700;border-radius:20px;padding:3px 12px;background-color:#E8F5E9;border:1px solid #A5D6A7;color:#2E7D32;transition:all 0.2s;"
+                              x-show="targetGroup"
                               x-text="'✓ ' + targetGroup + ' selected'"></span>
                     </div>
 
@@ -574,23 +575,20 @@
                     </style>
                     <div id="target-group-container" style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;padding-top:4px;">
                         @foreach(['Men', 'Women', 'Kids'] as $group)
-                            <label class="cursor-pointer select-none" @click="onTargetGroupChange('{{ $group }}')">
-                                <input type="radio" 
-                                       name="target_group" 
-                                       value="{{ $group }}" 
-                                       x-model="targetGroup" 
-                                       class="hidden">
-                                <div class="target-pill" :class="targetGroup === '{{ $group }}' ? 'target-pill-selected' : ''">
-                                    <span>{{ $group }}</span>
-                                    <span class="target-checkmark" x-show="targetGroup === '{{ $group }}'">✓</span>
-                                </div>
-                            </label>
+                            <button type="button" 
+                                    @click="onTargetGroupChange('{{ $group }}')"
+                                    class="target-pill" 
+                                    :class="targetGroup === '{{ $group }}' ? 'target-pill-selected' : ''">
+                                <span>{{ $group }}</span>
+                                <span class="target-checkmark" x-show="targetGroup === '{{ $group }}'">✓</span>
+                            </button>
                         @endforeach
+                        <input type="hidden" name="target_group" id="targetGroupInput" :value="targetGroup">
                     </div>
                 </div>
 
-                {{-- Product Category for Selected Tag --}}
-                <div class="space-y-2.5 pt-2">
+                {{-- Product Category for Selected Tag — only shown after a tag is picked --}}
+                <div class="space-y-2.5 pt-2" x-show="targetGroup" x-transition:enter="transition ease-out duration-200" x-transition:enter-start="opacity-0 -translate-y-1" x-transition:enter-end="opacity-100 translate-y-0">
                     <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;">
                         <h3 style="font-family:ui-serif,Georgia,serif;font-size:15px;font-weight:700;color:#1E1915;margin:0;">
                             Product Category for <span x-text="targetGroup"></span> <span style="color:#DC2626;">*</span>
@@ -1620,7 +1618,7 @@
     $productInitData = [
         'name'             => (string) old('name', ''),
         'categoryId'       => (string) old('CategoryId', ''),
-        'targetGroup'      => (string) old('target_group', 'Men'),
+        'targetGroup'      => (string) old('target_group', ''),
         'fabricType'       => (string) old('fabric_type', '100% Piña'),
         'price'            => (string) old('price', ''),
         'shippingFee'      => (string) old('shippingFee', ''),
@@ -1701,7 +1699,7 @@ function addProductManager() {
         step: 1,
         productName: initData.name || '',
         selectedCategories: initData.categoryIds || [],
-        targetGroup: initData.targetGroup || 'Men',
+        targetGroup: initData.targetGroup || '',
         fabricType: initData.fabricType || '100% Piña',
         price: initData.price || '',
         shippingFee: initData.shippingFee || '',
@@ -1949,7 +1947,7 @@ function addProductManager() {
         saveDraftState() {
             try {
                 const sellerId = initData.sellerId || 'guest';
-                const DRAFT_KEY = 'lumbarong_seller_product_draft_' + sellerId;
+                const DRAFT_KEY = 'lumbarong_seller_product_draft_v2_' + sellerId;
 
                 const hasAnyData = Boolean(
                     (this.productName && this.productName.trim()) ||
@@ -1975,7 +1973,7 @@ function addProductManager() {
                     step: this.step || 1,
                     productName: this.productName || '',
                     selectedCategories: this.selectedCategories || [],
-                    targetGroup: this.targetGroup || 'Men',
+                    targetGroup: this.targetGroup || '',
                     fabricType: this.fabricType || '100% Piña',
                     price: this.price || '',
                     description: this.description || '',
@@ -2010,7 +2008,12 @@ function addProductManager() {
         restoreDraftState() {
             try {
                 const sellerId = initData.sellerId || 'guest';
-                const DRAFT_KEY = 'lumbarong_seller_product_draft_' + sellerId;
+                // Clean up any legacy draft that had targetGroup hardcoded to 'Men'
+                try {
+                    localStorage.removeItem('lumbarong_seller_product_draft_' + sellerId);
+                } catch (err) {}
+
+                const DRAFT_KEY = 'lumbarong_seller_product_draft_v2_' + sellerId;
                 const raw = localStorage.getItem(DRAFT_KEY);
                 if (!raw) return;
 
@@ -2028,7 +2031,9 @@ function addProductManager() {
                 if (!hasContent) return;
 
                 if (draft.productName) this.productName = draft.productName;
-                if (draft.targetGroup) this.targetGroup = draft.targetGroup;
+                if (draft.targetGroup && ['Men', 'Women', 'Kids'].includes(draft.targetGroup)) {
+                    this.targetGroup = draft.targetGroup;
+                }
                 if (draft.fabricType) this.fabricType = draft.fabricType;
                 if (draft.price) this.price = draft.price;
                 if (draft.description) this.description = draft.description;
@@ -2284,11 +2289,16 @@ function addProductManager() {
         get filteredCategories() {
             if (!Array.isArray(this.categoriesList)) return [];
             if (!this.targetGroup) return [];
+            const target = String(this.targetGroup).trim().toLowerCase();
             return this.categoriesList.filter(c => {
                 if (!c) return false;
                 let tg = c.target_group;
-                if (Array.isArray(tg)) return tg.includes(this.targetGroup);
-                if (typeof tg === 'string') return tg === this.targetGroup;
+                if (Array.isArray(tg)) {
+                    return tg.some(t => String(t).trim().toLowerCase() === target);
+                }
+                if (typeof tg === 'string') {
+                    return tg.trim().toLowerCase() === target;
+                }
                 return false;
             }).sort((a, b) => a.name.localeCompare(b.name));
         },
@@ -2313,12 +2323,19 @@ function addProductManager() {
             if (tgContainer) tgContainer.classList.remove('border-red-500', 'p-1', 'border', 'rounded-xl');
 
             // Filter out categories that don't belong to the new target group
+            const target = String(group || '').trim().toLowerCase();
             if (this.selectedCategories.length > 0) {
                 this.selectedCategories = this.selectedCategories.filter(catId => {
                     const cat = Array.isArray(this.categoriesList) ? this.categoriesList.find(c => String(c.id) === String(catId)) : null;
                     if (!cat) return false;
                     let tg = cat.target_group;
-                    return Array.isArray(tg) ? tg.includes(group) : (tg === group);
+                    if (Array.isArray(tg)) {
+                        return tg.some(t => String(t).trim().toLowerCase() === target);
+                    }
+                    if (typeof tg === 'string') {
+                        return tg.trim().toLowerCase() === target;
+                    }
+                    return false;
                 });
             }
 
@@ -2499,7 +2516,7 @@ function addProductManager() {
                         name: this.productName || '',
                         category: selectedCatName,
                         category_id: firstCatId,
-                        target_group: this.targetGroup || 'Men',
+                        target_group: this.targetGroup || '',
                         fabric: this.fabricType || '100% Piña',
                         variants: variantNames,
                         theme: 'Wedding & Cultural Heritage'
@@ -2553,6 +2570,7 @@ function clearProductDraft() {
     try {
         const sellerId = '{{ Auth::id() }}';
         localStorage.removeItem('lumbarong_seller_product_draft_' + sellerId);
+        localStorage.removeItem('lumbarong_seller_product_draft_v2_' + sellerId);
     } catch(e) {}
 }
 
@@ -2988,6 +3006,7 @@ function clearProductDraft() {
     try {
         const sellerId = '{{ Auth::id() }}' || (typeof getProductInitData === 'function' ? getProductInitData().sellerId : null) || 'guest';
         localStorage.removeItem('lumbarong_seller_product_draft_' + sellerId);
+        localStorage.removeItem('lumbarong_seller_product_draft_v2_' + sellerId);
     } catch (e) {}
 }
 
