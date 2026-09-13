@@ -184,11 +184,6 @@ class WebAuthController extends Controller
                 return redirect()->route('seller.dashboard');
             }
 
-            // Newly created customer accounts prompt for profile setup
-            if ($user->role === 'customer' && !$user->isOnboarded()) {
-                return redirect()->route('onboarding.profile');
-            }
-
             // Restore guest customer pending context (Add to cart / Buy now / Wishlist / Checkout restoration)
             $contextRedirect = $this->restorePendingContext($user, $request);
             if ($contextRedirect) return $contextRedirect;
@@ -693,10 +688,6 @@ class WebAuthController extends Controller
                     return redirect()->route('seller.onboarding');
                 }
                 return redirect()->route('seller.dashboard');
-            }
-
-            if ($user->role === 'customer' && !$user->isOnboarded()) {
-                return redirect()->route('onboarding.profile');
             }
 
             $contextRedirect = $this->restorePendingContext($user, $request);
