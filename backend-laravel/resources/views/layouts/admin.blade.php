@@ -52,18 +52,18 @@
         [x-cloak] { display: none !important; }
     </style>
 </head>
-<body class="antialiased text-(--charcoal)">
+<body class="antialiased text-[#1F2937]">
     <div x-data="{ isMobileMenuOpen: false }" class="flex h-screen overflow-hidden">
         
         <!-- Desktop Sidebar -->
-        <aside class="hidden lg:flex flex-col w-70 h-full bg-white border-r border-(--border) overflow-hidden">
+        <aside class="hidden lg:flex flex-col w-70 h-full bg-white border-r border-gray-200 overflow-hidden">
             <div class="p-8 flex flex-col h-full">
                 <div class="mb-10 shrink-0">
                     <a href="/admin/dashboard" class="flex items-center gap-3 group">
                         <img src="{{ asset('images/logo-icon.png') }}" alt="LumBarong Logo" class="w-9 h-9 object-contain rounded-full shadow-xs group-hover:scale-105 transition-transform">
                         <div>
-                            <span class="font-serif text-lg font-bold text-(--charcoal) tracking-tight">LUMBARONG</span>
-                            <div class="flex items-center gap-1.5 px-0.5 text-(--rust) font-bold tracking-widest text-[9px]">
+                            <span class="font-serif text-lg font-bold text-[#1F2937] tracking-tight">LUMBARONG</span>
+                            <div class="flex items-center gap-1.5 px-0.5 text-[#C0420A] font-bold tracking-widest text-[9px]">
                                 <svg class="w-2.5 h-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path></svg>
                                 CONTROL PANEL
                             </div>
@@ -102,15 +102,15 @@
 
                     @foreach($sidebarGroups as $group => $items)
                         @if(!$loop->first)
-                            <div class="border-t border-(--border)"></div>
+                            <div class="border-t border-gray-200"></div>
                         @endif
                         <div class="space-y-1">
                             <div class="text-[10px] font-black text-gray-500 tracking-widest uppercase px-3 mb-2">{{ $group }}</div>
                             @foreach($items as $item)
                                 <a href="/{{ $item['path'] }}"
-                                    class="flex items-center justify-between px-4 py-3.5 rounded-xl transition-all duration-300 group tracking-wide text-sm font-medium {{ request()->is($item['path'] . '*') ? 'bg-[rgba(192,66,42,0.08)] text-(--rust) border-l-4 border-(--rust)' : 'text-(--charcoal) hover:bg-(--cream) hover:text-(--rust)' }}">
+                                    class="flex items-center justify-between px-4 py-3.5 rounded-xl transition-all duration-300 group tracking-wide text-sm font-medium {{ request()->is($item['path'] . '*') ? 'bg-[rgba(192,66,42,0.08)] text-[#C0420A] border-l-4 border-[#C0420A]' : 'text-[#1F2937] hover:bg-[#F8F7F4] hover:text-[#C0420A]' }}">
                                     <div class="flex items-center gap-3">
-                                        <svg class="w-5 h-5 {{ request()->is($item['path'] . '*') ? 'text-(--rust)' : 'text-gray-500 group-hover:text-(--rust)' }}" fill="none" stroke="currentColor" viewBox="0 0 24 24">{!! $item['icon'] !!}</svg>
+                                        <svg class="w-5 h-5 {{ request()->is($item['path'] . '*') ? 'text-[#C0422A]' : 'text-gray-500 group-hover:text-[#C0420A]' }}" fill="none" stroke="currentColor" viewBox="0 0 24 24">{!! $item['icon'] !!}</svg>
                                         {{ $item['label'] }}
                                     </div>
                                     @if(isset($item['badge']) && $item['badge'] > 0)
@@ -122,26 +122,26 @@
                     @endforeach
                 </nav>
 
-                <div class="mt-6 pt-6 border-t border-(--border) shrink-0 space-y-3">
+                <div class="mt-6 pt-6 border-t border-gray-200 shrink-0 space-y-3">
                     {{-- User card --}}
                     <div class="flex items-center gap-3 px-2">
-                        <div class="w-10 h-10 rounded-xl bg-(--charcoal) text-white flex items-center justify-center font-bold">
+                        <div class="w-10 h-10 rounded-xl bg-[#1F2937] text-white flex items-center justify-center font-bold">
                             {{ strtoupper(substr(in_array(Auth::user()->name, ['Super Admin', 'LumBarong Admin']) ? 'LumBarong' : Auth::user()->name, 0, 1)) }}
                         </div>
                         <div>
                             <div class="text-sm font-bold">{{ in_array(Auth::user()->name, ['Super Admin', 'LumBarong Admin']) ? 'LumBarong' : Auth::user()->name }}</div>
-                            <div class="text-[10px] text-(--muted) font-bold uppercase tracking-widest leading-none">Administrator</div>
+                            <div class="text-[10px] text-[#4B5563] font-bold uppercase tracking-widest leading-none">Administrator</div>
                         </div>
                     </div>
                     <form x-ref="logoutForm" action="{{ route('logout') }}" method="POST">
                         @csrf
                         <button type="button" 
                                 @click="$dispatch('open-confirmation', { 
-                                    title: 'Logout', 
-                                    message: 'Are you sure you want to logout?', 
-                                    confirmText: 'Logout', 
-                                    type: 'danger', 
-                                    onConfirm: () => $refs.logoutForm.submit() 
+                                     title: 'Logout', 
+                                     message: 'Are you sure you want to logout?', 
+                                     confirmText: 'Logout', 
+                                     type: 'danger', 
+                                     onConfirm: () => $refs.logoutForm.submit() 
                                 })" 
                                 class="flex items-center gap-3 w-full px-4 py-3.5 bg-red-50 text-red-600 rounded-xl hover:bg-red-100 transition-all font-bold text-xs tracking-widest uppercase shadow-none border-0 cursor-pointer">
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path></svg>
@@ -155,7 +155,7 @@
         <!-- Main Content Area -->
         <div class="flex-1 flex flex-col h-full relative overflow-hidden">
             <!-- Header -->
-            <header class="sticky top-0 z-40 bg-white border-b border-(--border) h-16 lg:h-18 flex items-center shrink-0 px-4 lg:px-10 justify-between">
+            <header class="sticky top-0 z-40 bg-white border-b border-gray-200 h-16 lg:h-18 flex items-center shrink-0 px-4 lg:px-10 justify-between">
                 <div class="flex items-center gap-2">
                     <a href="/admin/dashboard" class="lg:hidden flex items-center gap-2">
                         <img src="{{ asset('images/logo-icon.png') }}" alt="LumBarong" class="w-7 h-7 object-contain rounded-full shadow-xs">
@@ -178,7 +178,7 @@
                                 ->limit(5)
                                 ->get();
                         @endphp
-                        <button class="relative w-10 h-10 flex items-center justify-center rounded-xl bg-(--cream) text-(--muted) hover:text-(--rust) transition-all border border-(--border)">
+                        <button class="relative w-10 h-10 flex items-center justify-center rounded-xl bg-[#F8F7F4] text-[#4B5563] hover:text-[#C0420A] transition-all border border-gray-200">
                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"></path>
                             </svg>

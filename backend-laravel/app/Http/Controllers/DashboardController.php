@@ -865,13 +865,13 @@ class DashboardController extends Controller
 
     public function notifications()
     {
-        $notifications = \App\Models\Notification::where('userId', \Illuminate\Support\Facades\Auth::id())
+        $notifications = \App\Models\Notification::where('userId', Auth::id())
             ->where('targetRole', 'seller')
             ->orderBy('createdAt', 'desc')
             ->paginate(15);
 
         // Mark all as read when visiting
-        \App\Models\Notification::where('userId', \Illuminate\Support\Facades\Auth::id())
+        \App\Models\Notification::where('userId', Auth::id())
             ->where('targetRole', 'seller')
             ->where('isRead', false)
             ->update(['isRead' => true]);
@@ -881,7 +881,7 @@ class DashboardController extends Controller
 
     public function readAllNotifications()
     {
-        \App\Models\Notification::where('userId', \Illuminate\Support\Facades\Auth::id())
+        \App\Models\Notification::where('userId', Auth::id())
             ->where('targetRole', 'seller')
             ->where('isRead', false)
             ->update(['isRead' => true]);

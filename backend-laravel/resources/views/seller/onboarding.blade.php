@@ -66,7 +66,7 @@
         {{-- Branding & Greeting Header --}}
         <div class="text-center mb-6 sm:mb-8">
             <div class="flex justify-center mb-3">
-                <div class="w-14 h-14 sm:w-16 sm:h-16 rounded-full p-0.5 bg-gradient-to-tr from-[#C0422A] to-[#D4B896] shadow-sm">
+                <div class="w-14 h-14 sm:w-16 sm:h-16 rounded-full p-0.5 bg-[linear-gradient(to_top_right,#C0422A,#D4B896)] shadow-sm">
                     <div class="w-full h-full rounded-full bg-white p-1 flex items-center justify-center">
                         <img src="{{ asset('images/logo-icon.png') }}" alt="LumBarong Logo" class="w-full h-full object-contain rounded-full">
                     </div>
@@ -163,7 +163,7 @@
                     {{-- Section Header with GCash Branding --}}
                     <div class="flex items-center justify-between border-b border-[#ECE3D2] pb-4">
                         <div class="flex items-center gap-3">
-                            <div class="w-9 h-9 rounded-xl bg-gradient-to-tr from-blue-600 to-sky-400 flex items-center justify-center text-white font-black text-xs shadow-xs shrink-0">
+                            <div class="w-9 h-9 rounded-xl bg-[linear-gradient(to_top_right,#2563eb,#38bdf8)] flex items-center justify-center text-white font-black text-xs shadow-xs shrink-0">
                                 ₱
                             </div>
                             <div>
@@ -260,7 +260,7 @@
                     {{-- Section Header --}}
                     <div class="flex items-center justify-between border-b border-[#ECE3D2] pb-4">
                         <div class="flex items-center gap-3">
-                            <div class="w-9 h-9 rounded-xl bg-gradient-to-tr from-amber-700 to-amber-500 flex items-center justify-center text-white font-black text-xs shadow-xs shrink-0">
+                            <div class="w-9 h-9 rounded-xl bg-[linear-gradient(to_top_right,#b45309,#f59e0b)] flex items-center justify-center text-white font-black text-xs shadow-xs shrink-0">
                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
                             </div>
                             <div>
@@ -344,7 +344,7 @@
             <div x-show="currentStep === 3" x-transition:enter="transition ease-out duration-250" x-transition:enter-start="opacity-0 translate-y-3" x-transition:enter-end="opacity-100 translate-y-0" class="space-y-6">
                 
                 {{-- Hero Celebration Card --}}
-                <div class="relative overflow-hidden bg-gradient-to-b from-[#FAF7F2] to-white border border-[#E8DFC8] rounded-3xl p-6 sm:p-9 text-center shadow-xs">
+                <div class="relative overflow-hidden bg-[linear-gradient(to_bottom,#FAF7F2,#ffffff)] border border-[#E8DFC8] rounded-3xl p-6 sm:p-9 text-center shadow-xs">
                     
                     {{-- Decorative Top Watermark Pattern --}}
                     <div class="absolute -top-10 -right-10 w-40 h-40 rounded-full bg-[#C0422A]/5 pointer-events-none blur-xl"></div>

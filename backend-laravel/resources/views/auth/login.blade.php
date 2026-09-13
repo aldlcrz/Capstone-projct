@@ -149,7 +149,7 @@
                 @if($isFrozenPending)
                     <div class="mt-4 p-5 bg-[#FAF7F2] border border-[#E5DDD5] rounded-3xl text-left space-y-4 shadow-[0_4px_20px_rgba(61,43,31,0.04)] relative overflow-hidden">
                         <!-- Top Accent Line -->
-                        <div class="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-[#D4AF37] via-[#C0422A] to-[#3D2B1F]"></div>
+                        <div class="absolute top-0 left-0 right-0 h-1 bg-[linear-gradient(to_right,#D4AF37,#C0422A,#3D2B1F)]"></div>
 
                         <!-- Header -->
                         <div class="flex items-center justify-between pt-0.5">
