@@ -190,10 +190,10 @@ class WebAuthController extends Controller
         $email = strtolower(trim($request->email));
         $name = trim($request->name);
 
-        // Delete any stale unverified user record with this email so it doesn't block re-registering
+        // Delete any stale unverified active user record with this email so it doesn't block re-registering
         $staleUser = User::where('email', $email)->where('isVerified', false)->first();
         if ($staleUser) {
-            $staleUser->delete();
+            $staleUser->forceDelete();
         }
 
         $validator = Validator::make($request->all(), [
@@ -328,6 +328,11 @@ class WebAuthController extends Controller
         }
 
         $email = strtolower(trim($request->email));
+
+        $staleSeller = User::withTrashed()->where('email', $email)->first();
+        if ($staleSeller && (!$staleSeller->isVerified || $staleSeller->trashed())) {
+            $staleSeller->forceDelete();
+        }
         $googleSignup = session('google_seller_signup');
         $googleId = null;
         $profilePhoto = null;
@@ -413,33 +418,48 @@ class WebAuthController extends Controller
                 return back()->withErrors(['code' => 'Invalid or expired verification code. Please request a new code if expired.']);
             }
 
-            // 1. Create account from session if pending registration exists
+            // 1. Check if an active user already exists in DB (e.g. unverified registration or seller application)
+            $existingUser = User::where('email', $email)->first();
             $pending = session('pending_registration');
             $user = null;
-            if ($pending && isset($pending['email']) && strtolower($pending['email']) === $email) {
-                $user = User::create($pending);
-                session()->forget('pending_registration');
-            } else {
-                // 2. Fallback to existing unverified user record (e.g. seller registration)
-                $user = User::where('email', $email)->first();
-                if ($user) {
-                    if ($user->role === 'seller') {
-                        // Seller email verified — keep isVerified=false until admin approves
-                        $user->isVerified = false;
-                        $user->status     = 'active';
-                        $user->save();
 
-                        EmailNotificationService::consumeCode($email, 'registration');
-                        Auth::logout();
-                        session()->forget('verify_email');
-                        session()->forget('pending_registration');
+            if ($existingUser) {
+                if ($pending && isset($pending['email']) && strtolower($pending['email']) === $email) {
+                    $existingUser->fill($pending);
+                }
 
-                        return redirect()->route('login')->with('info', 'Your email address has been verified! Your artisan application is now submitted and is awaiting admin approval.');
+                if ($existingUser->role === 'seller') {
+                    $existingUser->isVerified = false;
+                    $existingUser->status     = 'active';
+                    $existingUser->save();
+
+                    EmailNotificationService::consumeCode($email, 'registration');
+                    Auth::logout();
+                    session()->forget('verify_email');
+                    session()->forget('pending_registration');
+
+                    return redirect()->route('login')->with('info', 'Your email address has been verified! Your artisan application is now submitted and is awaiting admin approval.');
+                } else {
+                    $existingUser->isVerified = true;
+                    $existingUser->status     = 'active';
+                    $existingUser->save();
+                    $user = $existingUser;
+                    session()->forget('pending_registration');
+                }
+            } elseif ($pending && isset($pending['email']) && strtolower($pending['email']) === $email) {
+                try {
+                    $user = User::create($pending);
+                } catch (\Throwable $e) {
+                    // Fallback for environments with legacy unique constraints on trashed rows
+                    $trashed = User::onlyTrashed()->where('email', $email)->first();
+                    if ($trashed) {
+                        $trashed->forceDelete();
+                        $user = User::create($pending);
                     } else {
-                        $user->isVerified = true;
-                        $user->save();
+                        throw $e;
                     }
                 }
+                session()->forget('pending_registration');
             }
 
             if ($user) {
