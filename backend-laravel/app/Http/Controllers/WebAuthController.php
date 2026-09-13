@@ -924,54 +924,59 @@ class WebAuthController extends Controller
             return back()->withErrors(['email' => 'User account not found.'])->withInput();
         }
 
-        $paymentMethod = $request->filled('payment_method') ? ucfirst(trim($request->payment_method)) : 'GCash';
-        $proofPath = $file->store('commission_proofs', 'public');
-        $reference = trim($request->reference_number);
-
-        // Find overdue or unpaid commission records for this seller
-        $unpaidRecords = CommissionRecord::where('sellerId', $user->id)
-            ->where('status', '!=', 'paid')
-            ->orderBy('dueDate', 'asc')
-            ->get();
-
-        if ($unpaidRecords->isNotEmpty()) {
-            foreach ($unpaidRecords as $record) {
-                $record->paymentMethod   = $paymentMethod;
-                $record->referenceNumber = $reference;
-                $record->paymentProof    = $proofPath;
-                if ($request->filled('notes')) {
-                    $record->notes = trim($request->notes);
-                }
-                $record->save();
-            }
-        } else {
-            $currentPeriod = date('Y-m');
-            CommissionRecord::updateOrCreate(
-                ['sellerId' => $user->id, 'period' => $currentPeriod],
-                [
-                    'paymentMethod'   => $paymentMethod,
-                    'referenceNumber' => $reference,
-                    'paymentProof'    => $proofPath,
-                    'notes'           => $request->notes ? trim($request->notes) : null,
-                ]
-            );
-        }
-
-        // Send Super Admin Notification
         try {
-            \App\Models\Notification::sendToAdmins(
-                'Commission Payment Submitted',
-                "Artisan {$user->name} ({$user->shopName}) submitted payment proof via {$paymentMethod} (Ref: {$reference}).",
-                'commission',
-                '/admin/commissions'
-            );
-        } catch (\Throwable $e) {
-            Log::warning('Failed to dispatch admin notification for commission payment: ' . $e->getMessage());
-        }
+            $paymentMethod = $request->filled('payment_method') ? ucfirst(trim($request->payment_method)) : 'GCash';
+            $proofPath = $file->store('commission_proofs', 'public');
+            $reference = trim($request->reference_number);
 
-        return back()
-            ->with('payment_submitted', 'Your payment proof and reference number have been submitted successfully! Super Admin will verify and restore access soon.')
-            ->with('success', 'Payment proof submitted successfully!');
+            // Find overdue or unpaid commission records for this seller
+            $unpaidRecords = CommissionRecord::where('sellerId', $user->id)
+                ->where('status', '!=', 'paid')
+                ->orderBy('dueDate', 'asc')
+                ->get();
+
+            if ($unpaidRecords->isNotEmpty()) {
+                foreach ($unpaidRecords as $record) {
+                    $record->paymentMethod   = $paymentMethod;
+                    $record->referenceNumber = $reference;
+                    $record->paymentProof    = $proofPath;
+                    if ($request->filled('notes')) {
+                        $record->notes = trim($request->notes);
+                    }
+                    $record->save();
+                }
+            } else {
+                $currentPeriod = date('Y-m');
+                CommissionRecord::updateOrCreate(
+                    ['sellerId' => $user->id, 'period' => $currentPeriod],
+                    [
+                        'paymentMethod'   => $paymentMethod,
+                        'referenceNumber' => $reference,
+                        'paymentProof'    => $proofPath,
+                        'notes'           => $request->notes ? trim($request->notes) : null,
+                    ]
+                );
+            }
+
+            // Send Super Admin Notification
+            try {
+                \App\Models\Notification::sendToAdmins(
+                    'Commission Payment Submitted',
+                    "Artisan {$user->name} ({$user->shopName}) submitted payment proof via {$paymentMethod} (Ref: {$reference}).",
+                    'commission',
+                    '/admin/commissions'
+                );
+            } catch (\Throwable $e) {
+                Log::warning('Failed to dispatch admin notification for commission payment: ' . $e->getMessage());
+            }
+
+            return back()
+                ->with('payment_submitted', 'Your payment proof and reference number have been submitted successfully! Super Admin will verify and restore access soon.')
+                ->with('success', 'Payment proof submitted successfully!');
+        } catch (\Throwable $e) {
+            Log::error('Commission payment submission error: ' . $e->getMessage() . ' at ' . $e->getFile() . ':' . $e->getLine());
+            return back()->withErrors(['email' => 'Failed to submit payment: ' . $e->getMessage()])->withInput();
+        }
     }
 
     public function sessionHeartbeat(Request $request)
