@@ -2528,6 +2528,7 @@ function addProductManager() {
         },
 
         submitAsDraft() {
+            _leaveAllowed = true;
             clearProductDraft();
             document.getElementById('formActionInput').value = 'draft';
             document.getElementById('productForm').submit();
@@ -2917,6 +2918,8 @@ function validateProductForm(e, isEdit = false) {
         return false;
     }
 
+    _leaveAllowed = true;
+    clearProductDraft();
     return true;
 }
 </script>
@@ -2924,26 +2927,49 @@ function validateProductForm(e, isEdit = false) {
 {{-- ================================================================ --}}
 {{-- LEAVE PAGE CONFIRMATION MODAL                                     --}}
 {{-- ================================================================ --}}
-<div id="leave-page-modal" style="display:none;position:fixed;inset:0;z-index:9999;">
+<style>
+    @keyframes leaveModalPop {
+        0% { opacity: 0; transform: scale(0.94) translateY(10px); }
+        100% { opacity: 1; transform: scale(1) translateY(0); }
+    }
+    .leave-modal-card {
+        animation: leaveModalPop 0.22s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    }
+</style>
+<div id="leave-page-modal" style="display:none;position:fixed;inset:0;z-index:99999;align-items:center;justify-content:center;padding:16px;">
     {{-- Backdrop --}}
-    <div id="leave-modal-backdrop" style="position:absolute;inset:0;background:rgba(15,10,5,0.6);backdrop-filter:blur(4px);" onclick="closeLeaveModal()"></div>
+    <div id="leave-modal-backdrop" style="position:fixed;inset:0;background:rgba(20,15,10,0.65);backdrop-filter:blur(6px);transition:opacity 0.2s;" onclick="closeLeaveModal()"></div>
+    
     {{-- Modal Card --}}
-    <div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:calc(100% - 40px);max-width:440px;background:#FFFCF7;border:1px solid #E8DECB;border-radius:24px;padding:32px 28px;box-shadow:0 20px 60px rgba(0,0,0,0.15);">
-        {{-- Icon --}}
-        <div style="width:50px;height:50px;border-radius:50%;background:#FEF2F2;border:1px solid #FECACA;display:flex;align-items:center;justify-content:center;margin-bottom:20px;color:#DC2626;">
-            <svg width="24" height="24" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+    <div class="leave-modal-card" style="position:relative;width:100%;max-width:440px;background:#FFFCF7;border:1px solid #E8DECB;border-radius:26px;padding:30px 26px;box-shadow:0 24px 60px rgba(0,0,0,0.22);z-index:10;">
+        {{-- Warning Icon Badge --}}
+        <div style="width:52px;height:52px;border-radius:18px;background:#FEF2F2;border:1.5px solid #FECACA;display:flex;align-items:center;justify-content:center;margin-bottom:18px;color:#DC2626;box-shadow:0 4px 12px rgba(220,38,38,0.12);">
+            <svg width="26" height="26" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
             </svg>
         </div>
-        <h3 style="font-family:ui-serif,Georgia,serif;font-size:20px;font-weight:700;color:#1E1915;margin:0 0 10px 0;">Discard product & leave?</h3>
-        <p style="font-size:13.5px;color:#78716C;line-height:1.6;margin:0 0 26px 0;">
-            You have unsaved product information. If you leave this page, <strong>all entered details, descriptions, prices, images, and variants will be completely erased</strong>.
+
+        <h3 style="font-family:ui-serif,Georgia,serif;font-size:21px;font-weight:800;color:#1E1915;margin:0 0 10px 0;line-height:1.25;">
+            Leave this page?
+        </h3>
+
+        {{-- Quote Banner with exact warning --}}
+        <div style="background:#FFF5F5;border:1px solid #FED7D7;border-radius:14px;padding:12px 14px;margin-bottom:14px;display:flex;align-items:flex-start;gap:10px;">
+            <span style="font-size:16px;line-height:1;margin-top:1px;">⚠️</span>
+            <p style="font-size:13px;font-weight:700;color:#9B2C2C;margin:0;line-height:1.45;">
+                When you leave this page, the data you entered will be gone.
+            </p>
+        </div>
+
+        <p style="font-size:13px;color:#78716C;line-height:1.6;margin:0 0 24px 0;">
+            You have unsaved product information. If you leave or refresh now, all entered details, images, prices, variants, and descriptions will be lost.
         </p>
+
         <div style="display:flex;flex-direction:column;gap:10px;">
-            <button onclick="closeLeaveModal()" style="width:100%;padding:13px;border-radius:14px;background:#1E1915;color:#FFFCF7;font-size:13.5px;font-weight:700;border:none;cursor:pointer;transition:all 0.2s;" onmouseover="this.style.background='#C49520'" onmouseout="this.style.background='#1E1915'">
+            <button type="button" onclick="closeLeaveModal()" style="width:100%;padding:13px;border-radius:14px;background:#1E1915;color:#FFFCF7;font-size:13.5px;font-weight:700;border:none;cursor:pointer;transition:all 0.2s;box-shadow:0 3px 10px rgba(0,0,0,0.1);" onmouseover="this.style.background='#C49520'" onmouseout="this.style.background='#1E1915'">
                 Stay and Continue Editing
             </button>
-            <button onclick="confirmLeave()" style="width:100%;padding:13px;border-radius:14px;background:#FEF2F2;color:#DC2626;font-size:13.5px;font-weight:700;border:1px solid #FECACA;cursor:pointer;transition:all 0.2s;" onmouseover="this.style.background='#DC2626';this.style.color='#FFFFFF';this.style.borderColor='#DC2626';" onmouseout="this.style.background='#FEF2F2';this.style.color='#DC2626';this.style.borderColor='#FECACA';">
+            <button type="button" onclick="confirmLeave()" style="width:100%;padding:13px;border-radius:14px;background:#FEF2F2;color:#DC2626;font-size:13.5px;font-weight:700;border:1px solid #FECACA;cursor:pointer;transition:all 0.2s;" onmouseover="this.style.background='#DC2626';this.style.color='#FFFFFF';this.style.borderColor='#DC2626';" onmouseout="this.style.background='#FEF2F2';this.style.color='#DC2626';this.style.borderColor='#FECACA';">
                 Discard & Leave Page
             </button>
         </div>
@@ -2956,36 +2982,82 @@ function validateProductForm(e, isEdit = false) {
 // ================================================================
 let _pendingLeaveUrl = null;
 let _leaveAllowed = false;
+window._isProductFormDirty = false;
 
 function clearProductDraft() {
     try {
-        const sellerId = getProductInitData().sellerId || 'guest';
+        const sellerId = '{{ Auth::id() }}' || (typeof getProductInitData === 'function' ? getProductInitData().sellerId : null) || 'guest';
         localStorage.removeItem('lumbarong_seller_product_draft_' + sellerId);
     } catch (e) {}
 }
 
 function hasUnsavedData() {
+    if (_leaveAllowed) return false;
+
+    // 1. Direct check: dirty flag
+    if (window._isProductFormDirty) return true;
+
+    // 2. Direct check: Live form inputs on the page
     try {
-        const sellerId = getProductInitData().sellerId || 'guest';
+        const form = document.getElementById('productForm');
+        if (form) {
+            const nameInput = document.getElementById('productNameInput') || form.querySelector('input[name="name"]');
+            if (nameInput && nameInput.value && nameInput.value.trim().length > 0) return true;
+
+            const priceInput = document.getElementById('priceInput') || form.querySelector('input[name="price"]');
+            if (priceInput && priceInput.value && parseFloat(priceInput.value) > 0) return true;
+
+            const descInput = document.getElementById('artisanDescription') || form.querySelector('textarea[name="description"]');
+            if (descInput && descInput.value && descInput.value.trim().length > 0) return true;
+
+            // Categories
+            const checkedCats = form.querySelectorAll('input[name="category_ids[]"]');
+            if (checkedCats && checkedCats.length > 0) return true;
+
+            // Checked sizes
+            const checkedSizes = form.querySelectorAll('.size-checkbox:checked');
+            if (checkedSizes && checkedSizes.length > 0) return true;
+
+            // Variant 1 cover photo
+            const v1File = document.getElementById('variant_file_0');
+            if (v1File && v1File.files && v1File.files.length > 0) return true;
+
+            // Gallery images
+            const galleryFiles = document.getElementById('gallery_files_input');
+            if (galleryFiles && galleryFiles.files && galleryFiles.files.length > 0) return true;
+
+            // Image previews
+            const v0Preview = document.getElementById('variant_preview_img_0');
+            if (v0Preview && v0Preview.getAttribute('src') && v0Preview.getAttribute('src').startsWith('data:image')) return true;
+        }
+    } catch (e) {}
+
+    // 3. Direct check: localStorage saved draft
+    try {
+        const sellerId = '{{ Auth::id() }}' || (typeof getProductInitData === 'function' ? getProductInitData().sellerId : null) || 'guest';
         const raw = localStorage.getItem('lumbarong_seller_product_draft_' + sellerId);
-        if (!raw) return false;
-        const draft = JSON.parse(raw);
-        return Boolean(
-            (draft.productName && draft.productName.trim()) ||
-            (draft.selectedCategories && draft.selectedCategories.length) ||
-            (draft.price && parseFloat(draft.price) > 0) ||
-            (draft.variants && draft.variants[0] && draft.variants[0].imagePreview)
-        );
-    } catch(e) {
-        return false;
-    }
+        if (raw) {
+            const draft = JSON.parse(raw);
+            if (
+                (draft.productName && draft.productName.trim()) ||
+                (draft.selectedCategories && draft.selectedCategories.length) ||
+                (draft.price && parseFloat(draft.price) > 0) ||
+                (draft.description && draft.description.trim()) ||
+                (draft.variants && draft.variants[0] && draft.variants[0].imagePreview)
+            ) {
+                return true;
+            }
+        }
+    } catch(e) {}
+
+    return false;
 }
 
 function showLeaveModal(href) {
-    _pendingLeaveUrl = href;
+    _pendingLeaveUrl = href || null;
     const modal = document.getElementById('leave-page-modal');
     if (modal) {
-        modal.style.display = 'block';
+        modal.style.display = 'flex';
         document.body.style.overflow = 'hidden';
     }
 }
@@ -3014,33 +3086,66 @@ function confirmLeave() {
     }
 }
 
-document.addEventListener('DOMContentLoaded', () => {
-    // Intercept back / leave clicks
-    document.addEventListener('click', (e) => {
-        const anchor = e.target.closest('a[href]');
-        if (!anchor) return;
-        const href = anchor.getAttribute('href');
-        if (!href || href.startsWith('#') || href.startsWith('javascript:')) return;
-        
-        const currentPath = window.location.pathname;
-        let destUrl;
-        try {
-            destUrl = new URL(href, window.location.origin);
-        } catch (err) {
-            return;
-        }
+// Mark form as dirty on any input, change, or paste event
+function initDirtyTracking() {
+    const form = document.getElementById('productForm');
+    if (form) {
+        ['input', 'change', 'keyup', 'paste'].forEach(evt => {
+            form.addEventListener(evt, () => {
+                window._isProductFormDirty = true;
+            }, { passive: true });
+        });
+    }
+}
 
-        if (destUrl.pathname === currentPath && destUrl.search === window.location.search) return;
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initDirtyTracking);
+} else {
+    initDirtyTracking();
+}
 
-        if (!hasUnsavedData() || _leaveAllowed) {
-            return;
-        }
-
+// Intercept browser reload / tab close
+window.addEventListener('beforeunload', (e) => {
+    if (!_leaveAllowed && hasUnsavedData()) {
         e.preventDefault();
-        showLeaveModal(href);
-    });
+        e.returnValue = '';
+        return '';
+    }
+});
 
-    // Clean up draft on successful form submit
+// Intercept link clicks across the entire page (sidebar, top nav, back link, logo, etc.)
+document.addEventListener('click', (e) => {
+    if (_leaveAllowed) return;
+
+    const anchor = e.target.closest('a[href]');
+    if (!anchor) return;
+
+    // Ignore anchors inside modal itself, target=_blank, download, hash, javascript
+    if (anchor.closest('#leave-page-modal')) return;
+    if (anchor.target === '_blank' || anchor.hasAttribute('download')) return;
+
+    const href = anchor.getAttribute('href');
+    if (!href || href.startsWith('#') || href.startsWith('javascript:')) return;
+
+    const currentPath = window.location.pathname;
+    let destUrl;
+    try {
+        destUrl = new URL(href, window.location.origin);
+    } catch (err) {
+        return;
+    }
+
+    if (destUrl.pathname === currentPath && destUrl.search === window.location.search) return;
+
+    if (hasUnsavedData()) {
+        e.preventDefault();
+        e.stopPropagation();
+        showLeaveModal(href);
+    }
+}, true); // Capture phase to intercept reliably
+
+// Also ensure form submission sets _leaveAllowed
+document.addEventListener('DOMContentLoaded', () => {
     const form = document.getElementById('productForm');
     if (form) {
         form.addEventListener('submit', () => {
