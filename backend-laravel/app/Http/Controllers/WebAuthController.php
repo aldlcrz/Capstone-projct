@@ -1238,6 +1238,10 @@ class WebAuthController extends Controller
             }
         }
 
+        if ($request->input('redirect_to') === 'add_product') {
+            return redirect()->route('seller.products.create')->with('success', 'Store setup saved! You can now publish your first product to your catalogue.');
+        }
+
         return redirect()->route('seller.dashboard')->with('success', 'Welcome to LumBarong, ' . ($user->shopName ?: $user->name) . '! Your artisan shop is set up and ready.');
     }
 

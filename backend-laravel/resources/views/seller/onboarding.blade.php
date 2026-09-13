@@ -85,7 +85,7 @@
                 Set Up Your Artisan Store
             </h1>
             <p class="text-xs sm:text-[13px] text-gray-600 font-medium max-w-md mx-auto leading-relaxed">
-                Configure your payout destination, return terms, and showcase your authentic Lumban craftsmanship.
+                Configure your payout destination, return terms, and prepare to publish your handcrafted creations.
             </p>
         </div>
 
@@ -132,13 +132,10 @@
                         class="flex items-center justify-center sm:justify-start gap-2 py-2 px-2.5 sm:px-3 rounded-xl transition-all duration-200 cursor-pointer"
                         :class="currentStep === 3 ? 'bg-white shadow-xs border border-[#E5DDD5]' : 'hover:bg-white/60'">
                     <span class="w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-black shrink-0 transition-colors"
-                          :class="currentStep === 3 ? 'bg-[#C0422A] text-white shadow-xs' : (hasProduct ? 'bg-emerald-600 text-white' : 'bg-[#EAE2D5] text-gray-600')">
-                        <template x-if="hasProduct && currentStep !== 3">✓</template>
-                        <template x-if="!hasProduct || currentStep === 3">3</template>
-                    </span>
+                          :class="currentStep === 3 ? 'bg-[#C0422A] text-white shadow-xs' : 'bg-[#EAE2D5] text-gray-600'">3</span>
                     <div class="text-left hidden sm:block">
-                        <div class="text-[11px] font-bold leading-tight" :class="currentStep === 3 ? 'text-gray-900' : 'text-gray-600'">First Product</div>
-                        <div class="text-[9.5px] font-semibold text-gray-400">Catalogue Item</div>
+                        <div class="text-[11px] font-bold leading-tight" :class="currentStep === 3 ? 'text-gray-900' : 'text-gray-600'">Add Product</div>
+                        <div class="text-[9.5px] font-semibold text-gray-400">Store Catalogue</div>
                     </div>
                     <span class="sm:hidden text-[10.5px] font-bold" :class="currentStep === 3 ? 'text-[#C0422A]' : 'text-gray-600'">Product</span>
                 </button>
@@ -163,6 +160,7 @@
         {{-- Main Setup Wizard Form --}}
         <form action="{{ route('seller.onboarding.save') }}" method="POST" enctype="multipart/form-data" class="space-y-6">
             @csrf
+            <input type="hidden" name="redirect_to" x-model="redirectTo">
 
             {{-- ======================================================== --}}
             {{-- STEP 1: GCASH & PAYOUT SETUP                              --}}
@@ -349,152 +347,73 @@
                     <button type="button" 
                             @click="currentStep = 3" 
                             class="h-12 px-7 rounded-xl bg-gradient-to-r from-[#C0422A] via-[#9B2C16] to-[#7D1E0C] hover:from-[#A83520] hover:to-[#6C1708] text-white text-xs font-black uppercase tracking-wider shadow-[0_8px_20px_rgba(192,66,42,0.25)] hover:shadow-[0_12px_28px_rgba(192,66,42,0.35)] hover:-translate-y-0.5 active:translate-y-0 transition-all duration-200 flex items-center gap-2 cursor-pointer">
-                        <span>Continue to First Product</span>
+                        <span>Next: Add Product</span>
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
                     </button>
                 </div>
             </div>
 
             {{-- ======================================================== --}}
-            {{-- STEP 3: QUICK ADD FIRST PRODUCT (OPTIONAL)                --}}
+            {{-- STEP 3: DIRECT TO SELLER ADD PRODUCT                      --}}
             {{-- ======================================================== --}}
             <div x-show="currentStep === 3" x-transition:enter="transition ease-out duration-250" x-transition:enter-start="opacity-0 translate-y-3" x-transition:enter-end="opacity-100 translate-y-0" class="space-y-5">
-                <div class="bg-[#FAF8F5] border border-[#ECE3D2] rounded-2xl sm:rounded-3xl p-5 sm:p-7 space-y-5 shadow-xs">
-                    {{-- Section Header --}}
-                    <div class="flex items-center justify-between border-b border-[#ECE3D2] pb-4">
-                        <div class="flex items-center gap-3">
-                            <div class="w-9 h-9 rounded-xl bg-gradient-to-tr from-rose-800 to-rose-600 flex items-center justify-center text-white font-black text-xs shadow-xs shrink-0">
-                                👔
-                            </div>
-                            <div>
-                                <h2 class="text-xs font-black uppercase tracking-wider text-gray-900">3. Showcase Your First Product</h2>
-                                <p class="text-[11px] text-gray-500 font-medium">Add your first Barong Tagalog or artisan piece (You can add more anytime in your catalogue).</p>
-                            </div>
+                <div class="bg-[#FAF8F5] border border-[#ECE3D2] rounded-2xl sm:rounded-3xl p-6 sm:p-9 text-center space-y-6 shadow-xs">
+                    
+                    {{-- Premium Icon Badge --}}
+                    <div class="w-16 h-16 sm:w-20 sm:h-20 mx-auto rounded-3xl bg-gradient-to-tr from-[#C0422A] to-[#D4B896] p-0.5 shadow-lg">
+                        <div class="w-full h-full rounded-[1.4rem] bg-white flex items-center justify-center text-2xl sm:text-3xl">
+                            👔
                         </div>
-                        <span class="text-[9.5px] font-extrabold text-amber-800 bg-amber-100/90 border border-amber-300/60 px-2.5 py-0.5 rounded-full uppercase tracking-wider shrink-0">Optional</span>
                     </div>
 
-                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                        {{-- Product Name --}}
-                        <div class="sm:col-span-2">
-                            <label for="product_name" class="block text-[11px] font-bold text-gray-800 uppercase tracking-wider mb-1.5">
-                                Product Title / Model
-                            </label>
-                            <input type="text" 
-                                   id="product_name" 
-                                   name="product_name" 
-                                   x-model="productName"
-                                   value="{{ old('product_name') }}" 
-                                   placeholder="e.g. Traditional Piña Cocoon Barong Tagalog" 
-                                   class="w-full h-12 px-4 bg-white border border-[#D8CEBE] rounded-xl text-xs font-semibold text-gray-900 outline-none focus:border-[#C0422A] focus:ring-2 focus:ring-[#C0422A]/15 transition-all shadow-xs">
-                        </div>
+                    {{-- Title & Highlights --}}
+                    <div class="space-y-2 max-w-lg mx-auto">
+                        <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-50 text-emerald-800 text-[10.5px] font-black uppercase tracking-widest border border-emerald-200">
+                            ✓ Store Setup Ready
+                        </span>
+                        <h2 class="font-serif text-2xl sm:text-3xl font-black italic tracking-tight text-gray-900">
+                            Ready to Publish Your First Creation
+                        </h2>
+                        <p class="text-xs sm:text-[13px] text-gray-600 font-medium leading-relaxed">
+                            Your payment and store policies are configured! Next, launch the <strong>Product Creation Studio</strong> to configure sizes, embroidery options, target groups, and high-resolution photo galleries.
+                        </p>
+                    </div>
 
-                        {{-- Product Category --}}
-                        <div>
-                            <label for="product_category_id" class="block text-[11px] font-bold text-gray-800 uppercase tracking-wider mb-1.5">
-                                Artisan Category
-                            </label>
-                            <div class="relative">
-                                <select id="product_category_id" 
-                                        name="product_category_id" 
-                                        class="w-full h-12 px-4 bg-white border border-[#D8CEBE] rounded-xl text-xs font-semibold text-gray-900 outline-none focus:border-[#C0422A] focus:ring-2 focus:ring-[#C0422A]/15 transition-all shadow-xs appearance-none">
-                                    <option value="">Select Category</option>
-                                    @foreach ($categories as $cat)
-                                        <option value="{{ $cat->id }}">{{ $cat->name }}</option>
-                                    @endforeach
-                                </select>
-                                <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3.5 text-gray-500">
-                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
-                                </div>
-                            </div>
-                        </div>
+                    {{-- Feature Highlight Pill Chips --}}
+                    <div class="flex flex-wrap justify-center gap-2 pt-1 pb-2">
+                        <span class="text-[11px] font-bold text-gray-700 bg-white border border-[#E0D7C8] px-3 py-1.5 rounded-xl shadow-2xs">
+                            ✨ Multi-Size Variations
+                        </span>
+                        <span class="text-[11px] font-bold text-gray-700 bg-white border border-[#E0D7C8] px-3 py-1.5 rounded-xl shadow-2xs">
+                            📐 Custom Size Guides
+                        </span>
+                        <span class="text-[11px] font-bold text-gray-700 bg-white border border-[#E0D7C8] px-3 py-1.5 rounded-xl shadow-2xs">
+                            🖼️ High-Res Photo Gallery
+                        </span>
+                    </div>
 
-                        {{-- Product Price & Stock in Dual Columns --}}
-                        <div class="grid grid-cols-2 gap-2.5">
-                            <div>
-                                <label for="product_price" class="block text-[11px] font-bold text-gray-800 uppercase tracking-wider mb-1.5">
-                                    Price (₱)
-                                </label>
-                                <input type="number" 
-                                       id="product_price" 
-                                       name="product_price" 
-                                       x-model="productPrice"
-                                       step="0.01" 
-                                       min="1" 
-                                       placeholder="2500.00" 
-                                       class="w-full h-12 px-3.5 bg-white border border-[#D8CEBE] rounded-xl text-xs font-semibold text-gray-900 outline-none focus:border-[#C0422A] focus:ring-2 focus:ring-[#C0422A]/15 transition-all shadow-xs">
-                            </div>
-                            <div>
-                                <label for="product_stock" class="block text-[11px] font-bold text-gray-800 uppercase tracking-wider mb-1.5">
-                                    Initial Stock
-                                </label>
-                                <input type="number" 
-                                       id="product_stock" 
-                                       name="product_stock" 
-                                       min="0" 
-                                       value="1" 
-                                       class="w-full h-12 px-3.5 bg-white border border-[#D8CEBE] rounded-xl text-xs font-semibold text-gray-900 outline-none focus:border-[#C0422A] focus:ring-2 focus:ring-[#C0422A]/15 transition-all shadow-xs">
-                            </div>
-                        </div>
+                    {{-- Action CTA Buttons --}}
+                    <div class="pt-2 flex flex-col sm:flex-row items-center justify-center gap-3">
+                        <button type="submit" 
+                                @click="redirectTo = 'add_product'"
+                                class="w-full sm:w-auto h-13 px-8 rounded-2xl bg-gradient-to-r from-[#C0422A] via-[#9B2C16] to-[#7D1E0C] hover:from-[#A83520] hover:to-[#6C1708] text-white text-xs font-black uppercase tracking-wider shadow-[0_10px_25px_rgba(192,66,42,0.3)] hover:shadow-[0_14px_32px_rgba(192,66,42,0.4)] hover:-translate-y-0.5 active:translate-y-0 transition-all duration-200 flex items-center justify-center gap-2.5 cursor-pointer">
+                            <span>Add First Product</span>
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+                        </button>
 
-                        {{-- Product Description --}}
-                        <div class="sm:col-span-2">
-                            <label for="product_description" class="block text-[11px] font-bold text-gray-800 uppercase tracking-wider mb-1.5">
-                                Artisan Description & Highlights
-                            </label>
-                            <textarea id="product_description" 
-                                      name="product_description" 
-                                      rows="2" 
-                                      placeholder="Authentic handcrafted Lumban embroidery with premium hand-woven quality..." 
-                                      class="w-full p-3.5 bg-white border border-[#D8CEBE] rounded-xl text-xs text-gray-900 outline-none focus:border-[#C0422A] focus:ring-2 focus:ring-[#C0422A]/15 transition-all shadow-xs leading-relaxed"></textarea>
-                        </div>
-
-                        {{-- Product Primary Photo --}}
-                        <div class="sm:col-span-2">
-                            <label class="block text-[11px] font-bold text-gray-800 uppercase tracking-wider mb-1.5">
-                                Product Cover Photo
-                            </label>
-                            <div class="border-2 border-dashed border-[#D8CEBE] hover:border-[#C0422A] rounded-2xl p-5 bg-white hover:bg-[#FAF8F5] transition-all text-center cursor-pointer relative group shadow-xs">
-                                <input type="file" 
-                                       name="product_image" 
-                                       accept="image/png,image/jpeg,image/webp" 
-                                       @change="previewProduct($event)" 
-                                       class="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10">
-                                
-                                <template x-if="!productPreview">
-                                    <div class="space-y-1.5 py-2">
-                                        <div class="w-11 h-11 mx-auto rounded-2xl bg-[#FAF7F2] group-hover:bg-[#FAF0ED] flex items-center justify-center text-gray-500 group-hover:text-[#C0422A] border border-[#ECE3D2] transition-colors shadow-2xs">
-                                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
-                                        </div>
-                                        <div>
-                                            <p class="text-xs font-bold text-gray-800 group-hover:text-[#C0422A] transition-colors">Click or drag product photo</p>
-                                            <p class="text-[10.5px] text-gray-400 font-medium mt-0.5">JPG, PNG, or WEBP up to 5MB</p>
-                                        </div>
-                                    </div>
-                                </template>
-
-                                <template x-if="productPreview">
-                                    <div class="py-1 space-y-2">
-                                        <img :src="productPreview" alt="Product Photo" class="w-28 h-28 object-cover rounded-xl border border-gray-200 mx-auto shadow-md">
-                                        <span class="inline-flex items-center gap-1.5 text-[10.5px] font-bold text-emerald-800 bg-emerald-50 px-3 py-0.5 rounded-full border border-emerald-200">
-                                            ✓ Photo Attached (Click to change)
-                                        </span>
-                                    </div>
-                                </template>
-                            </div>
-                        </div>
+                        <button type="submit" 
+                                @click="redirectTo = 'dashboard'"
+                                class="w-full sm:w-auto h-13 px-7 rounded-2xl bg-white hover:bg-gray-50 border border-[#D8CEBE] hover:border-gray-400 text-gray-700 text-xs font-bold transition-all shadow-xs flex items-center justify-center gap-2 cursor-pointer">
+                            <span>Go to Dashboard</span>
+                            <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
+                        </button>
                     </div>
                 </div>
 
-                {{-- Step 3 Footer Navigation (Complete Action) --}}
-                <div class="flex items-center justify-between pt-2">
-                    <button type="button" @click="currentStep = 2" class="h-12 px-6 rounded-xl border border-gray-300 hover:bg-gray-100 text-gray-700 text-xs font-bold transition-all cursor-pointer">
-                        ← Back
-                    </button>
-                    <button type="submit" 
-                            class="h-12 px-8 rounded-xl bg-gradient-to-r from-[#C0422A] via-[#9B2C16] to-[#7D1E0C] hover:from-[#A83520] hover:to-[#6C1708] text-white text-xs font-black uppercase tracking-wider shadow-[0_10px_25px_rgba(192,66,42,0.3)] hover:shadow-[0_14px_32px_rgba(192,66,42,0.4)] hover:-translate-y-0.5 active:translate-y-0 transition-all duration-200 flex items-center gap-2 cursor-pointer">
-                        <span>Complete Setup & Open Shop</span>
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                {{-- Step 3 Footer Navigation --}}
+                <div class="flex items-center justify-start pt-1">
+                    <button type="button" @click="currentStep = 2" class="h-11 px-5 rounded-xl border border-gray-300 hover:bg-gray-100 text-gray-700 text-xs font-bold transition-all cursor-pointer">
+                        ← Back to Policies
                     </button>
                 </div>
             </div>
@@ -507,11 +426,9 @@
             return {
                 currentStep: 1,
                 isSkipping: false,
+                redirectTo: 'add_product',
                 gcashNumber: '{{ old("gcashNumber", $user->gcashNumber) }}',
                 qrPreview: '{{ $user->gcashQrCode ? asset(ltrim($user->gcashQrCode, "/")) : "" }}',
-                productName: '{{ old("product_name") }}',
-                productPrice: '{{ old("product_price") }}',
-                productPreview: '',
                 refundPolicy: `{!! addslashes($user->refund_policy ?: "Items may be returned or replaced within 7 days of delivery if there is a verified defect in fabric or hand-embroidery. Items must be unwashed, unworn, and in original artisan packaging.") !!}`,
                 cancellationPolicy: `{!! addslashes($user->cancellation_policy ?: "Orders may be cancelled within 24 hours of placement prior to production commencement. Customized or bespoke orders cannot be cancelled once cutting and embroidery begins.") !!}`,
 
@@ -521,10 +438,6 @@
 
                 get hasPolicy() {
                     return this.refundPolicy && this.refundPolicy.trim().length > 10;
-                },
-
-                get hasProduct() {
-                    return this.productName && this.productName.trim().length > 0;
                 },
 
                 submitSkip() {
@@ -539,13 +452,6 @@
                     const file = event.target.files[0];
                     if (file) {
                         this.qrPreview = URL.createObjectURL(file);
-                    }
-                },
-
-                previewProduct(event) {
-                    const file = event.target.files[0];
-                    if (file) {
-                        this.productPreview = URL.createObjectURL(file);
                     }
                 },
 
