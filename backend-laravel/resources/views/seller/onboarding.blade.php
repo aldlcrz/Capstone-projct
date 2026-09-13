@@ -23,14 +23,6 @@
         [x-cloak] { display: none !important; }
         .no-scrollbar::-webkit-scrollbar { display: none; }
         .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
-
-        @keyframes pulse-subtle {
-            0%, 100% { opacity: 1; transform: scale(1); }
-            50% { opacity: 0.85; transform: scale(1.03); }
-        }
-        .animate-pulse-subtle {
-            animation: pulse-subtle 3s ease-in-out infinite;
-        }
     </style>
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.14.8/dist/cdn.min.js"></script>
 </head>
@@ -38,6 +30,11 @@
     <!-- Ambient Heritage Glow Orbs -->
     <div class="absolute top-0 right-0 w-96 sm:w-160 h-96 sm:h-160 rounded-full -translate-y-1/3 translate-x-1/4 blur-3xl opacity-[0.07] pointer-events-none bg-[#C0422A]"></div>
     <div class="absolute bottom-0 left-0 w-80 sm:w-130 h-80 sm:h-130 rounded-full translate-y-1/3 -translate-x-1/4 blur-3xl opacity-[0.14] pointer-events-none bg-[#D4B896]"></div>
+
+    <!-- Standalone Global Skip Form (Ensures reliable 1-click execution without form nesting) -->
+    <form id="seller-skip-form" action="{{ route('seller.onboarding.skip') }}" method="POST" class="hidden">
+        @csrf
+    </form>
 
     <!-- Main Container Card -->
     <div class="w-full max-w-2xl bg-white rounded-3xl sm:rounded-[2.5rem] border border-[#E5DDD5] p-5 sm:p-8 lg:p-10 shadow-[0_25px_70px_rgba(60,40,20,0.08)] relative z-10 my-4 sm:my-8 transition-all duration-300"
@@ -51,13 +48,23 @@
                 <span class="text-[10.5px] font-black uppercase tracking-[0.2em] text-gray-400">Artisan Onboarding</span>
             </div>
             
-            <form action="{{ route('seller.onboarding.skip') }}" method="POST" class="inline">
-                @csrf
-                <button type="submit" class="group inline-flex items-center gap-1.5 text-xs font-bold text-gray-500 hover:text-[#C0422A] transition-all py-1.5 px-3 rounded-full hover:bg-[#FAF7F2] border border-transparent hover:border-[#E8DFC8]">
-                    <span>Skip setup for now</span>
-                    <svg class="w-3.5 h-3.5 transition-transform group-hover:translate-x-0.5 text-gray-400 group-hover:text-[#C0422A]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
-                </button>
-            </form>
+            <button type="button" 
+                    @click="submitSkip()"
+                    :disabled="isSkipping"
+                    class="group inline-flex items-center gap-1.5 text-xs font-bold text-gray-500 hover:text-[#C0422A] transition-all py-1.5 px-3.5 rounded-full hover:bg-[#FAF7F2] border border-[#E8DFC8] hover:border-[#C0422A]/30 cursor-pointer shadow-2xs">
+                <template x-if="!isSkipping">
+                    <span class="inline-flex items-center gap-1.5">
+                        <span>Skip setup for now</span>
+                        <svg class="w-3.5 h-3.5 transition-transform group-hover:translate-x-0.5 text-gray-400 group-hover:text-[#C0422A]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
+                    </span>
+                </template>
+                <template x-if="isSkipping">
+                    <span class="inline-flex items-center gap-1.5 text-[#C0422A]">
+                        <svg class="animate-spin w-3.5 h-3.5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+                        <span>Opening Dashboard...</span>
+                    </span>
+                </template>
+            </button>
         </div>
 
         {{-- Branding & Greeting Header --}}
@@ -241,12 +248,18 @@
 
                 {{-- Step 1 Footer Navigation --}}
                 <div class="flex items-center justify-between pt-2">
-                    <form action="{{ route('seller.onboarding.skip') }}" method="POST">
-                        @csrf
-                        <button type="submit" class="text-xs font-bold text-gray-500 hover:text-gray-800 transition-colors py-2 px-1">
-                            Skip this step
-                        </button>
-                    </form>
+                    <button type="button" 
+                            @click="submitSkip()"
+                            :disabled="isSkipping"
+                            class="text-xs font-bold text-gray-500 hover:text-[#C0422A] transition-colors py-2 px-1 cursor-pointer flex items-center gap-1.5">
+                        <template x-if="!isSkipping">
+                            <span>Skip setup & go to Dashboard</span>
+                        </template>
+                        <template x-if="isSkipping">
+                            <span class="text-[#C0422A]">Opening Dashboard...</span>
+                        </template>
+                    </button>
+
                     <button type="button" 
                             @click="currentStep = 2" 
                             class="h-12 px-7 rounded-xl bg-gradient-to-r from-[#C0422A] via-[#9B2C16] to-[#7D1E0C] hover:from-[#A83520] hover:to-[#6C1708] text-white text-xs font-black uppercase tracking-wider shadow-[0_8px_20px_rgba(192,66,42,0.25)] hover:shadow-[0_12px_28px_rgba(192,66,42,0.35)] hover:-translate-y-0.5 active:translate-y-0 transition-all duration-200 flex items-center gap-2 cursor-pointer">
@@ -493,6 +506,7 @@
         function sellerOnboarding() {
             return {
                 currentStep: 1,
+                isSkipping: false,
                 gcashNumber: '{{ old("gcashNumber", $user->gcashNumber) }}',
                 qrPreview: '{{ $user->gcashQrCode ? asset(ltrim($user->gcashQrCode, "/")) : "" }}',
                 productName: '{{ old("product_name") }}',
@@ -511,6 +525,14 @@
 
                 get hasProduct() {
                     return this.productName && this.productName.trim().length > 0;
+                },
+
+                submitSkip() {
+                    this.isSkipping = true;
+                    const skipForm = document.getElementById('seller-skip-form');
+                    if (skipForm) {
+                        skipForm.submit();
+                    }
                 },
 
                 previewQr(event) {
