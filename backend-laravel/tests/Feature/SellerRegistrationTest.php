@@ -28,10 +28,11 @@ class SellerRegistrationTest extends TestCase
             'email' => $testEmail,
             'password' => 'password123',
             'password_confirmation' => 'password123',
-            'mobileNumber' => '09876543210',
+            'shopName' => 'Test Artisan Haven',
             'residencyCertificate' => UploadedFile::fake()->create('residency.pdf', 100),
             'businessPermit' => UploadedFile::fake()->create('permit.jpg', 100),
             'birDocument' => UploadedFile::fake()->create('bir.pdf', 100),
+            'terms_consent' => '1',
         ]);
 
         // Assert it redirects (e.g. to login)

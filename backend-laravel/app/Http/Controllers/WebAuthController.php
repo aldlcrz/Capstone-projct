@@ -308,11 +308,9 @@ class WebAuthController extends Controller
                 Rule::unique('users', 'email')->whereNull('deleted_at')
             ],
             'password'             => 'required|string|min:6|confirmed',
-            'gcashNumber'          => 'nullable|string|max:20',
             'residencyCertificate' => 'required|file|mimes:jpg,jpeg,png,pdf,webp|max:20480',
             'birDocument'          => 'required|file|mimes:jpg,jpeg,png,pdf,webp|max:20480',
             'shopName'             => 'required|string|max:255',
-            'shopAddress'          => 'nullable|string|max:1000',
             'businessPermit'       => 'required|file|mimes:jpg,jpeg,png,pdf,webp|max:20480',
             'terms_consent'        => 'required|accepted',
         ], [
@@ -335,15 +333,6 @@ class WebAuthController extends Controller
             return back()->withErrors($validator)->withInput();
         }
 
-        if ($request->filled('gcashNumber')) {
-            $existingSeller = User::where('role', 'seller')->where('gcashNumber', trim($request->gcashNumber))->first();
-            if ($existingSeller) {
-                return back()->withErrors([
-                    'gcashNumber' => 'This GCash number is already associated with another artisan shop (' . ($existingSeller->shopName ?: $existingSeller->name) . ').',
-                ])->withInput();
-            }
-        }
-
         $email = strtolower(trim($request->email));
 
         $staleSeller = User::withTrashed()->where('email', $email)->first();
@@ -363,9 +352,9 @@ class WebAuthController extends Controller
             'email'        => $email,
             'password'     => Hash::make($request->password),
             'mobileNumber' => null,
-            'gcashNumber'  => $request->gcashNumber,
+            'gcashNumber'  => null,
             'shopName'     => trim($request->shopName),
-            'shopAddress'  => $request->shopAddress ?? 'Not Provided',
+            'shopAddress'  => null,
             'role'         => 'seller',
             'status'       => 'pending',
             'isVerified'   => false, // Requires Gmail verification & admin approval
