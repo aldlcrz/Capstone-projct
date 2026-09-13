@@ -204,12 +204,7 @@
         </div>
 
         {{-- Form Actions Bar --}}
-        <div class="flex flex-col sm:flex-row items-center justify-between gap-4 pt-2">
-            <a href="{{ route('seller.profile') }}" class="text-xs font-bold text-gray-500 hover:text-gray-800 uppercase tracking-widest transition-colors flex items-center gap-1.5">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/></svg>
-                Return to Account Settings
-            </a>
-
+        <div class="flex items-center justify-end gap-3 pt-2">
             <div class="flex items-center gap-3 w-full sm:w-auto">
                 <button type="button" @click="revertAll()" x-show="hasChanges()" class="px-5 py-3 rounded-xl bg-gray-100 text-gray-700 hover:bg-gray-200 text-xs font-black uppercase tracking-widest transition-all cursor-pointer">
                     Revert
@@ -223,6 +218,7 @@
                 </button>
             </div>
         </div>
+
     </form>
 
     {{-- Live Buyer Preview Modal --}}
