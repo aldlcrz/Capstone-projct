@@ -3,6 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\Models\User;
+use App\Models\Product;
+use App\Models\Category;
 use App\Models\CommissionRecord;
 use App\Models\EmailVerification;
 use App\Mail\PasswordChangeVerificationMail;
@@ -16,6 +18,8 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 
 class WebAuthController extends Controller
@@ -171,9 +175,13 @@ class WebAuthController extends Controller
             if ($user->role === 'superadmin') return redirect()->route('superadmin.dashboard');
             if ($user->role === 'admin') return redirect()->route('admin.dashboard');
             if ($user->role === 'seller') {
-                return $user->isVerified 
-                    ? redirect()->route('seller.dashboard') 
-                    : redirect()->route('seller.verification-pending');
+                if (!$user->isVerified) {
+                    return redirect()->route('seller.verification-pending');
+                }
+                if (!$user->isOnboarded()) {
+                    return redirect()->route('seller.onboarding');
+                }
+                return redirect()->route('seller.dashboard');
             }
 
             // Newly created customer accounts prompt for profile setup
@@ -677,9 +685,15 @@ class WebAuthController extends Controller
             $user->save();
             session(['login_session_version' => $user->sessionVersion]);
 
-            if ($user->role === 'superadmin') return redirect()->route('superadmin.dashboard');
-            if ($user->role === 'admin') return redirect()->route('admin.dashboard');
-            if ($user->role === 'seller') return redirect()->route('seller.dashboard');
+            if ($user->role === 'seller') {
+                if (!$user->isVerified) {
+                    return redirect()->route('seller.verification-pending');
+                }
+                if (!$user->isOnboarded()) {
+                    return redirect()->route('seller.onboarding');
+                }
+                return redirect()->route('seller.dashboard');
+            }
 
             if ($user->role === 'customer' && !$user->isOnboarded()) {
                 return redirect()->route('onboarding.profile');
@@ -1113,6 +1127,132 @@ class WebAuthController extends Controller
         }
 
         return redirect('/')->with('info', 'You can complete your profile and address anytime in your account settings.');
+    }
+
+    public function showSellerOnboarding()
+    {
+        /** @var User $user */
+        $user = Auth::user();
+        if (!$user || $user->role !== 'seller') {
+            return redirect()->route('login');
+        }
+
+        if (!$user->isVerified || $user->status !== 'active') {
+            return redirect()->route('seller.verification-pending');
+        }
+
+        if ($user->isOnboarded()) {
+            return redirect()->route('seller.dashboard');
+        }
+
+        $categories = Category::orderBy('name')->get();
+
+        return response()
+            ->view('seller.onboarding', compact('user', 'categories'))
+            ->header('Cache-Control', 'no-cache, no-store, max-age=0, must-revalidate')
+            ->header('Pragma', 'no-cache')
+            ->header('Expires', 'Sun, 02 Jan 1990 00:00:00 GMT');
+    }
+
+    public function saveSellerOnboarding(Request $request)
+    {
+        /** @var User $user */
+        $user = Auth::user();
+        if (!$user || $user->role !== 'seller') {
+            return redirect()->route('login');
+        }
+
+        $request->validate([
+            'gcashNumber'         => 'nullable|string|max:20',
+            'gcashQrCode'         => 'nullable|image|mimes:jpeg,png,jpg,webp|max:5120',
+            'refund_policy'       => 'nullable|string|max:2000',
+            'cancellation_policy' => 'nullable|string|max:2000',
+            'product_name'        => 'nullable|string|max:100',
+            'product_category_id' => 'nullable|exists:categories,id',
+            'product_price'       => 'nullable|numeric|min:1|max:50000',
+            'product_stock'       => 'nullable|integer|min:0|max:10000',
+            'product_description' => 'nullable|string|max:1000',
+            'product_image'       => 'nullable|image|mimes:jpeg,png,jpg,webp|max:5120',
+        ]);
+
+        // 1. GCash Settings
+        if ($request->filled('gcashNumber')) {
+            $user->gcashNumber = trim($request->gcashNumber);
+            $user->isGcashAvailable = true;
+        }
+
+        if ($request->hasFile('gcashQrCode')) {
+            $file = $request->file('gcashQrCode');
+            $filename = time() . '_gcash_' . Str::random(8) . '.' . $file->getClientOriginalExtension();
+            $file->move(public_path('uploads/qrcodes'), $filename);
+            $user->gcashQrCode = '/uploads/qrcodes/' . $filename;
+            $user->isGcashAvailable = true;
+        }
+
+        // 2. Policies
+        if ($request->filled('refund_policy')) {
+            $user->refund_policy = trim($request->refund_policy);
+        }
+        if ($request->filled('cancellation_policy')) {
+            $user->cancellation_policy = trim($request->cancellation_policy);
+        }
+
+        // Mark as onboarded
+        if (Schema::hasColumn('users', 'is_onboarded')) {
+            $user->is_onboarded = true;
+        }
+        $user->save();
+
+        // 3. Optional First Product
+        if ($request->filled('product_name') && $request->filled('product_price')) {
+            try {
+                $imagePath = null;
+                if ($request->hasFile('product_image')) {
+                    $img = $request->file('product_image');
+                    $imgName = time() . '_prod_' . Str::random(8) . '.' . $img->getClientOriginalExtension();
+                    $img->move(public_path('uploads/products'), $imgName);
+                    $imagePath = '/uploads/products/' . $imgName;
+                }
+
+                $imgArray = $imagePath ? [$imagePath] : [];
+                $categoryId = $request->product_category_id;
+                $categoryName = $categoryId ? (Category::find($categoryId)?->name ?? 'Barong Tagalog') : 'Barong Tagalog';
+
+                $prod = new Product();
+                $prod->sellerId     = $user->id;
+                $prod->name         = trim($request->product_name);
+                $prod->description  = trim($request->product_description ?: 'Handcrafted authentic artisan creation from Lumban, Laguna.');
+                $prod->price        = (float) $request->product_price;
+                $prod->stock        = (int) ($request->product_stock ?? 1);
+                $prod->CategoryId   = $categoryId;
+                $prod->categories   = [$categoryName];
+                $prod->image        = $imgArray;
+                $prod->status       = 'pending';
+                $prod->shippingFee  = 0;
+                $prod->shippingDays = 3;
+                $prod->target_group = 'Men';
+                $prod->sizes        = ['S', 'M', 'L', 'XL'];
+                $prod->save();
+            } catch (\Throwable $e) {
+                Log::warning('Could not create initial onboarding product: ' . $e->getMessage());
+            }
+        }
+
+        return redirect()->route('seller.dashboard')->with('success', 'Welcome to LumBarong, ' . ($user->shopName ?: $user->name) . '! Your artisan shop is set up and ready.');
+    }
+
+    public function skipSellerOnboarding()
+    {
+        /** @var User $user */
+        $user = Auth::user();
+        if ($user) {
+            if (Schema::hasColumn('users', 'is_onboarded')) {
+                $user->is_onboarded = true;
+                $user->save();
+            }
+        }
+
+        return redirect()->route('seller.dashboard')->with('info', 'You can complete your GCash setup, policies, and products anytime in your shop settings.');
     }
 
     public function addresses()

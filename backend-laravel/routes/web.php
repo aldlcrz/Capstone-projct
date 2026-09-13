@@ -254,6 +254,9 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->group(function () {
 
 // Seller Routes
 Route::middleware(['auth', 'seller'])->prefix('seller')->group(function () {
+    Route::get('/onboarding', [WebAuthController::class, 'showSellerOnboarding'])->name('seller.onboarding');
+    Route::post('/onboarding/save', [WebAuthController::class, 'saveSellerOnboarding'])->name('seller.onboarding.save');
+    Route::post('/onboarding/skip', [WebAuthController::class, 'skipSellerOnboarding'])->name('seller.onboarding.skip');
     Route::get('/verification-pending', [DashboardController::class, 'showSellerVerificationPending'])->name('seller.verification-pending');
     Route::post('/verification-pending/upload', [DashboardController::class, 'submitPendingDocuments'])->name('seller.verification-pending.upload');
     Route::get('/dashboard', [DashboardController::class, 'sellerDashboard'])->name('seller.dashboard');

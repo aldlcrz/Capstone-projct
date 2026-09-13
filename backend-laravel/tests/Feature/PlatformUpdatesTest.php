@@ -643,4 +643,87 @@ class PlatformUpdatesTest extends TestCase
         ]);
         $uploadResponse->assertSessionHas('error');
     }
+
+    public function test_approved_seller_redirected_to_onboarding_if_not_onboarded(): void
+    {
+        /** @var User $seller */
+        $seller = User::factory()->create([
+            'role' => 'seller',
+            'status' => 'active',
+            'isVerified' => true,
+            'is_onboarded' => false,
+            'password' => Hash::make('password123'),
+        ]);
+
+        $response = $this->post('/login', [
+            'email' => $seller->email,
+            'password' => 'password123',
+        ]);
+
+        $response->assertRedirect(route('seller.onboarding'));
+
+        $onboardingPage = $this->actingAs($seller)->get(route('seller.onboarding'));
+        $onboardingPage->assertStatus(200);
+        $onboardingPage->assertSee('Artisan Onboarding');
+        $onboardingPage->assertSee('GCash Payout');
+        $onboardingPage->assertSee('Shop Policy');
+        $onboardingPage->assertSee('First Product');
+    }
+
+    public function test_seller_can_save_onboarding_with_gcash_and_policies(): void
+    {
+        /** @var User $seller */
+        $seller = User::factory()->create([
+            'role' => 'seller',
+            'status' => 'active',
+            'isVerified' => true,
+            'is_onboarded' => false,
+        ]);
+
+        $category = \App\Models\Category::create([
+            'name' => 'Barong Tagalog',
+        ]);
+
+        $response = $this->actingAs($seller)->post(route('seller.onboarding.save'), [
+            'gcashNumber' => '09171234567',
+            'refund_policy' => '7 days replacement for fabric defects.',
+            'cancellation_policy' => '24 hours cancellation before embroidery.',
+            'product_name' => 'Classic Piña Silk Barong',
+            'product_category_id' => $category->id,
+            'product_price' => 3500,
+            'product_stock' => 5,
+        ]);
+
+        $response->assertRedirect(route('seller.dashboard'));
+        $response->assertSessionHas('success');
+
+        $seller->refresh();
+        $this->assertTrue((bool)$seller->is_onboarded);
+        $this->assertEquals('09171234567', $seller->gcashNumber);
+        $this->assertEquals('7 days replacement for fabric defects.', $seller->refund_policy);
+        $this->assertEquals('24 hours cancellation before embroidery.', $seller->cancellation_policy);
+
+        $product = \App\Models\Product::where('sellerId', $seller->id)->first();
+        $this->assertNotNull($product);
+        $this->assertEquals('Classic Piña Silk Barong', $product->name);
+        $this->assertEquals(3500, $product->price);
+    }
+
+    public function test_seller_can_skip_onboarding(): void
+    {
+        /** @var User $seller */
+        $seller = User::factory()->create([
+            'role' => 'seller',
+            'status' => 'active',
+            'isVerified' => true,
+            'is_onboarded' => false,
+        ]);
+
+        $response = $this->actingAs($seller)->post(route('seller.onboarding.skip'));
+        $response->assertRedirect(route('seller.dashboard'));
+        $response->assertSessionHas('info');
+
+        $seller->refresh();
+        $this->assertTrue((bool)$seller->is_onboarded);
+    }
 }
