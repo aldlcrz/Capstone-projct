@@ -138,23 +138,58 @@
                     value="{{ old('email') }}"
                     required 
                     placeholder="Enter your email address"
-                    class="w-full h-14 bg-[#F9F6F2] rounded-full px-8 text-sm font-medium border-2 {{ $errors->has('email') ? 'border-red-400' : 'border-transparent' }} focus:border-[#C0422A] focus:bg-white outline-none transition-all"
+                    class="w-full h-14 bg-[#F9F6F2] rounded-full px-8 text-sm font-medium border-2 {{ $isFrozenPending ? 'border-blue-300 focus:border-blue-500' : ($errors->has('email') ? 'border-red-400 focus:border-[#C0422A]' : 'border-transparent focus:border-[#C0422A]') }} focus:bg-white outline-none transition-all"
                 >
                 @error('email')
-                    @if (!str_contains(strtolower($message), 'suspended') && !str_contains(strtolower($message), 'blocked'))
+                    @if (!str_contains(strtolower($message), 'suspended') && !str_contains(strtolower($message), 'blocked') && !$isFrozenPending && !$isFrozenErr)
                         <p class="text-xs font-bold text-red-500 px-5 mt-1">{{ $message }}</p>
                     @endif
                 @enderror
 
                 @if($isFrozenPending)
-                    <div class="mt-3 p-4 bg-blue-50/90 border border-blue-200 rounded-2xl text-xs text-blue-950 space-y-2.5 text-left shadow-xs">
-                        <div class="flex items-center gap-2 text-blue-700 font-bold text-xs uppercase tracking-wider">
-                            <span class="text-base">⏳</span>
-                            <span>Payment Verification in Progress</span>
+                    <div class="mt-3 p-4 sm:p-5 bg-gradient-to-br from-blue-50/95 to-indigo-50/70 border border-blue-200/80 rounded-2xl text-xs text-blue-950 space-y-3.5 text-left shadow-xs">
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center gap-2 text-blue-700 font-bold text-xs uppercase tracking-wider">
+                                <span class="text-base animate-pulse">⏳</span>
+                                <span>Verification in Progress</span>
+                            </div>
+                            <span class="text-[9px] font-black uppercase px-2 py-0.5 rounded-full bg-blue-100 text-blue-800 border border-blue-200">Under Review</span>
                         </div>
-                        <p class="text-[11px] text-blue-900 leading-relaxed font-medium">
-                            Your payment proof {{ session('pending_reference_number') ? '(Ref: ' . session('pending_reference_number') . ')' : '' }} has been submitted and is currently being verified by Super Admin. You do not need to make another payment. Access will be restored automatically once approved.
-                        </p>
+
+                        <!-- Progress Step Track -->
+                        <div class="grid grid-cols-3 gap-1.5 py-1 text-center font-bold text-[9px] uppercase tracking-wider">
+                            <div class="bg-white/90 border border-blue-200 text-emerald-700 py-1.5 px-1 rounded-xl flex flex-col items-center justify-center gap-0.5 shadow-2xs">
+                                <span class="text-[11px]">✓</span>
+                                <span>Proof Sent</span>
+                            </div>
+                            <div class="bg-blue-600 text-white py-1.5 px-1 rounded-xl flex flex-col items-center justify-center gap-0.5 shadow-xs">
+                                <span class="text-[11px] animate-bounce">⏳</span>
+                                <span>Admin Review</span>
+                            </div>
+                            <div class="bg-white/60 border border-gray-200/70 text-gray-400 py-1.5 px-1 rounded-xl flex flex-col items-center justify-center gap-0.5">
+                                <span class="text-[11px]">🔒</span>
+                                <span>Restored</span>
+                            </div>
+                        </div>
+
+                        <div class="space-y-2 text-[11px] text-blue-900 leading-relaxed font-medium">
+                            <p>
+                                We received your payment proof and transaction reference. Super Admin is currently validating the transaction.
+                            </p>
+                            @php
+                                $refNumber = session('pending_reference_number') ?? (preg_match('/Ref:\s*([a-zA-Z0-9]+)/i', $errors->first('email'), $m) ? $m[1] : null);
+                            @endphp
+                            @if($refNumber)
+                                <div class="p-2.5 bg-white/90 border border-blue-200/80 rounded-xl flex items-center justify-between gap-2 shadow-2xs">
+                                    <span class="text-[10px] text-gray-500 uppercase tracking-widest font-bold">Reference No.</span>
+                                    <span class="font-mono text-xs font-black text-gray-900 tracking-wider truncate max-w-[200px]">{{ $refNumber }}</span>
+                                </div>
+                            @endif
+                            <p class="text-[10px] text-blue-700/80 pt-0.5 flex items-center gap-1">
+                                <span>ℹ️</span>
+                                <span>No further action needed. Your shop will reactivate automatically.</span>
+                            </p>
+                        </div>
                     </div>
                 @elseif($isFrozenErr)
                     <div class="mt-3 p-4 bg-amber-50/90 border border-amber-200 rounded-2xl text-xs text-amber-950 space-y-2.5 text-left shadow-xs">
