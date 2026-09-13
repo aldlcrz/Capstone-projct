@@ -1146,11 +1146,12 @@ class WebAuthController extends Controller
         }
 
         $hasGcash = !empty($user->gcashNumber) || !empty($user->gcashQrCode);
+        $hasMaya = !empty($user->mayaNumber) || !empty($user->mayaQrCode);
         $hasPolicies = !empty($user->refund_policy) || !empty($user->cancellation_policy);
         $productsCount = $user->products()->count();
 
         return response()
-            ->view('seller.onboarding', compact('user', 'hasGcash', 'hasPolicies', 'productsCount'))
+            ->view('seller.onboarding', compact('user', 'hasGcash', 'hasMaya', 'hasPolicies', 'productsCount'))
             ->header('Cache-Control', 'no-cache, no-store, max-age=0, must-revalidate')
             ->header('Pragma', 'no-cache')
             ->header('Expires', 'Sun, 02 Jan 1990 00:00:00 GMT');

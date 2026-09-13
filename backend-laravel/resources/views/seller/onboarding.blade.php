@@ -89,7 +89,7 @@
         {{-- 3-Item Direct Action Setup Cards --}}
         <div class="space-y-4 mb-8">
             
-            {{-- Card 1: GCash Payout Setup --}}
+            {{-- Card 1: Payment Method (GCash & Maya) Setup --}}
             <div class="p-5 sm:p-6 rounded-2xl bg-[#FAF8F5] border border-[#ECE3D2] hover:border-[#C0422A]/50 transition-all duration-200 shadow-2xs group flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <div class="flex items-start gap-4">
                     <div class="w-11 h-11 rounded-2xl bg-[linear-gradient(to_top_right,#2563eb,#38bdf8)] flex items-center justify-center text-white font-black text-sm shadow-xs shrink-0 mt-0.5">
@@ -97,22 +97,22 @@
                     </div>
                     <div class="space-y-1">
                         <div class="flex items-center gap-2">
-                            <h2 class="text-sm font-bold text-gray-900">1. GCash Payout Account</h2>
-                            @if($hasGcash)
+                            <h2 class="text-sm font-bold text-gray-900">1. Payment Method <span class="font-medium text-gray-500">(GCash & Maya)</span></h2>
+                            @if($hasGcash || $hasMaya)
                                 <span class="text-[9.5px] font-extrabold text-emerald-800 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-full">✓ Configured</span>
                             @else
                                 <span class="text-[9.5px] font-extrabold text-amber-800 bg-amber-50 border border-amber-200 px-2 py-0.5 rounded-full">Pending Setup</span>
                             @endif
                         </div>
                         <p class="text-[11.5px] text-gray-600 leading-relaxed max-w-md">
-                            Upload your GCash QR code and mobile number so customer payments can be routed directly to you.
+                            Link your GCash or Maya account so customer payments are routed directly to you.
                         </p>
                     </div>
                 </div>
                 <div class="shrink-0 sm:pl-2">
-                    <a href="{{ route('seller.profile') }}" 
+                    <a href="{{ route('seller.profile') }}?open_payment=1" 
                        class="inline-flex items-center justify-center gap-2 h-11 px-5 rounded-full bg-white hover:bg-[#3D2B1F] text-[#3D2B1F] hover:text-white border border-[#D8CEBE] hover:border-[#3D2B1F] text-xs font-bold transition-all duration-200 shadow-2xs group-hover:shadow-xs w-full sm:w-auto cursor-pointer">
-                        <span>{{ $hasGcash ? 'Manage Payout' : 'Configure GCash' }}</span>
+                        <span>{{ ($hasGcash || $hasMaya) ? 'Manage Payout' : 'Add Payment Method' }}</span>
                         <svg class="w-3.5 h-3.5 text-gray-400 group-hover:text-white transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
                     </a>
                 </div>

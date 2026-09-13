@@ -61,6 +61,11 @@ class SellerMiddleware
                         return $next($request);
                     }
 
+                    // Also allow access to the onboarding setup hub
+                    if ($request->is('seller/onboarding*')) {
+                        return $next($request);
+                    }
+
                     if ($request->expectsJson() || $request->is('api/*') || $request->ajax()) {
                         return response()->json([
                             'message'  => 'Your artisan application is awaiting document verification.',

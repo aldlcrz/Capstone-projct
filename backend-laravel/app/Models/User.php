@@ -122,10 +122,11 @@ class User extends Authenticatable
         try {
             if ($this->role === 'seller') {
                 $hasGcash    = !empty($this->gcashNumber) || !empty($this->gcashQrCode);
+                $hasMaya     = !empty($this->mayaNumber)  || !empty($this->mayaQrCode);
                 $hasProducts = $this->products()->count() > 0;
 
-                // An artisan is considered fully setup once they have configured their payout OR published a product
-                return $hasGcash || $hasProducts;
+                // An artisan is considered fully setup once they have configured a payout method OR published a product
+                return $hasGcash || $hasMaya || $hasProducts;
             }
 
             if (\Illuminate\Support\Facades\Schema::hasColumn('users', 'is_onboarded')) {
