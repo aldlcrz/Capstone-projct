@@ -92,8 +92,9 @@
             {{-- Card 1: Payment Method (GCash & Maya) Setup --}}
             <div class="p-5 sm:p-6 rounded-2xl bg-[#FAF8F5] border border-[#ECE3D2] hover:border-[#C0422A]/50 transition-all duration-200 shadow-2xs group flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <div class="flex items-start gap-4">
-                    <div class="w-11 h-11 rounded-2xl bg-[linear-gradient(to_top_right,#2563eb,#38bdf8)] flex items-center justify-center text-white font-black text-sm shadow-xs shrink-0 mt-0.5">
-                        ₱
+                    <div class="w-11 h-11 rounded-2xl bg-[linear-gradient(to_bottom_right,#1d4ed8,#0ea5e9)] flex items-center justify-center text-white shadow-sm shrink-0 mt-0.5">
+                        {{-- Wallet icon --}}
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.75"><path stroke-linecap="round" stroke-linejoin="round" d="M21 12V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2h14a2 2 0 002-2v-2"/><path stroke-linecap="round" stroke-linejoin="round" d="M16 12a2 2 0 000 4h5v-4h-5z"/></svg>
                     </div>
                     <div class="space-y-1">
                         <div class="flex items-center gap-2">
@@ -121,8 +122,9 @@
             {{-- Card 2: Store Policies & Terms --}}
             <div class="p-5 sm:p-6 rounded-2xl bg-[#FAF8F5] border border-[#ECE3D2] hover:border-[#C0422A]/50 transition-all duration-200 shadow-2xs group flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <div class="flex items-start gap-4">
-                    <div class="w-11 h-11 rounded-2xl bg-[linear-gradient(to_top_right,#b45309,#f59e0b)] flex items-center justify-center text-white font-black text-sm shadow-xs shrink-0 mt-0.5">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                    <div class="w-11 h-11 rounded-2xl bg-[linear-gradient(to_bottom_right,#92400e,#f59e0b)] flex items-center justify-center text-white shadow-sm shrink-0 mt-0.5">
+                        {{-- Shield check icon --}}
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.75"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
                     </div>
                     <div class="space-y-1">
                         <div class="flex items-center gap-2">
@@ -150,8 +152,9 @@
             {{-- Card 3: First Product Catalogue Item --}}
             <div class="p-5 sm:p-6 rounded-2xl bg-[#FAF8F5] border border-[#ECE3D2] hover:border-[#C0422A]/50 transition-all duration-200 shadow-2xs group flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <div class="flex items-start gap-4">
-                    <div class="w-11 h-11 rounded-2xl bg-[linear-gradient(to_top_right,#C0422A,#D4B896)] flex items-center justify-center text-white font-black text-sm shadow-xs shrink-0 mt-0.5">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+                    <div class="w-11 h-11 rounded-2xl bg-[linear-gradient(to_bottom_right,#9f1239,#C0422A)] flex items-center justify-center text-white shadow-sm shrink-0 mt-0.5">
+                        {{-- Price tag / product icon --}}
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.75"><path stroke-linecap="round" stroke-linejoin="round" d="M7 7h.01M3 3h7.5a1.5 1.5 0 011.06.44l8.5 8.5a1.5 1.5 0 010 2.12l-5.5 5.5a1.5 1.5 0 01-2.12 0l-8.5-8.5A1.5 1.5 0 013 10.5V3z"/></svg>
                     </div>
                     <div class="space-y-1">
                         <div class="flex items-center gap-2">
