@@ -234,18 +234,21 @@
                 </div>
 
                 {{-- Step 1 Footer Navigation --}}
-                <div class="flex items-center justify-between pt-2">
+                <div class="flex items-center justify-between pt-3 border-t border-[#ECE3D2]/70 mt-2">
                     <button type="button" 
                             @click="submitSkip()"
                             :disabled="isSkipping"
                             class="text-xs font-bold text-gray-500 hover:text-[#C0422A] transition-colors py-2 px-1 cursor-pointer flex items-center gap-1.5">
-                        <span x-show="!isSkipping">Skip setup & go to Dashboard</span>
+                        <span x-show="!isSkipping" class="inline-flex items-center gap-1.5">
+                            <span>Skip setup & go to Dashboard</span>
+                            <svg class="w-3.5 h-3.5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+                        </span>
                         <span x-show="isSkipping" class="text-[#C0422A]" style="display: none;">Opening Dashboard...</span>
                     </button>
 
                     <button type="button" 
                             @click="currentStep = 2" 
-                            class="h-13 px-8 rounded-full bg-[#3D2B1F] hover:bg-[#C0422A] text-white font-bold uppercase tracking-[0.18em] text-[10.5px] shadow-md hover:shadow-lg hover:-translate-y-0.5 active:translate-y-0 transition-all duration-300 flex items-center gap-2.5 cursor-pointer">
+                            class="h-12 px-7 rounded-full bg-[#3D2B1F] hover:bg-[#C0422A] text-white font-bold text-xs tracking-wider shadow-md hover:shadow-lg hover:-translate-y-0.5 active:translate-y-0 transition-all duration-200 flex items-center gap-2 cursor-pointer">
                         <span>Continue to Policies</span>
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
                     </button>
@@ -325,13 +328,16 @@
                 </div>
 
                 {{-- Step 2 Footer Navigation --}}
-                <div class="flex items-center justify-between pt-2">
-                    <button type="button" @click="currentStep = 1" class="h-13 px-6 rounded-full border border-gray-300 hover:bg-gray-100 text-gray-700 text-xs font-bold transition-all cursor-pointer">
-                        ← Back
+                <div class="flex items-center justify-between pt-3 border-t border-[#ECE3D2]/70 mt-2">
+                    <button type="button" 
+                            @click="currentStep = 1" 
+                            class="h-12 px-6 rounded-full bg-[#FAF7F2] hover:bg-[#F2ECE1] text-[#3D2B1F] border border-[#D8CEBE] hover:border-[#C0422A]/40 text-xs font-bold transition-all flex items-center gap-2 cursor-pointer shadow-2xs">
+                        <svg class="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/></svg>
+                        <span>Back</span>
                     </button>
                     <button type="button" 
                             @click="currentStep = 3" 
-                            class="h-13 px-8 rounded-full bg-[#3D2B1F] hover:bg-[#C0422A] text-white font-bold uppercase tracking-[0.18em] text-[10.5px] shadow-md hover:shadow-lg hover:-translate-y-0.5 active:translate-y-0 transition-all duration-300 flex items-center gap-2.5 cursor-pointer">
+                            class="h-12 px-7 rounded-full bg-[#3D2B1F] hover:bg-[#C0422A] text-white font-bold text-xs tracking-wider shadow-md hover:shadow-lg hover:-translate-y-0.5 active:translate-y-0 transition-all duration-200 flex items-center gap-2 cursor-pointer">
                         <span>Next: Catalogue Launch</span>
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
                     </button>
@@ -405,7 +411,7 @@
                     <div class="space-y-3 max-w-md mx-auto pt-1">
                         <button type="submit" 
                                 @click="redirectTo = 'add_product'"
-                                class="w-full h-14 bg-[#3D2B1F] hover:bg-[#C0422A] text-white font-bold uppercase tracking-[0.2em] text-[11px] rounded-full shadow-lg hover:shadow-xl hover:-translate-y-0.5 active:translate-y-0 transition-all duration-300 flex items-center justify-center gap-3 cursor-pointer">
+                                class="w-full h-14 bg-[#3D2B1F] hover:bg-[#C0422A] text-white font-bold text-xs tracking-wider rounded-full shadow-lg hover:shadow-xl hover:-translate-y-0.5 active:translate-y-0 transition-all duration-300 flex items-center justify-center gap-3 cursor-pointer">
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"/></svg>
                             <span>Add Your First Product</span>
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
@@ -413,7 +419,7 @@
 
                         <button type="submit" 
                                 @click="redirectTo = 'dashboard'"
-                                class="w-full h-12 bg-[#FAF7F2] hover:bg-[#F2ECE1] text-gray-700 hover:text-gray-900 font-bold uppercase tracking-[0.15em] text-[10.5px] rounded-full border border-[#D8CEBE] hover:border-[#C0422A]/40 transition-all duration-200 flex items-center justify-center gap-2 cursor-pointer">
+                                class="w-full h-12 bg-[#FAF7F2] hover:bg-[#F2ECE1] text-gray-700 hover:text-gray-900 font-bold text-xs tracking-wider rounded-full border border-[#D8CEBE] hover:border-[#C0422A]/40 transition-all duration-200 flex items-center justify-center gap-2 cursor-pointer">
                             <span>Go to Dashboard</span>
                             <svg class="w-3.5 h-3.5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
                         </button>
@@ -421,9 +427,12 @@
                 </div>
 
                 {{-- Step 3 Footer Navigation --}}
-                <div class="flex items-center justify-start pt-1">
-                    <button type="button" @click="currentStep = 2" class="h-11 px-5 rounded-full border border-gray-300 hover:bg-gray-100 text-gray-700 text-xs font-bold transition-all cursor-pointer">
-                        ← Back to Policies
+                <div class="flex items-center justify-start pt-3 border-t border-[#ECE3D2]/70 mt-2">
+                    <button type="button" 
+                            @click="currentStep = 2" 
+                            class="h-12 px-6 rounded-full bg-[#FAF7F2] hover:bg-[#F2ECE1] text-[#3D2B1F] border border-[#D8CEBE] hover:border-[#C0422A]/40 text-xs font-bold transition-all flex items-center gap-2 cursor-pointer shadow-2xs">
+                        <svg class="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/></svg>
+                        <span>Back to Policies</span>
                     </button>
                 </div>
             </div>
