@@ -15,10 +15,10 @@
     <script src="https://cdn.tailwindcss.com"></script>
     
     <!-- Fonts -->
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Playfair+Display:ital,wght@0,700;0,800;0,900;1,700;1,800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Playfair+Display:ital,wght@0,600;0,700;0,800;0,900;1,600;1,700;1,800&display=swap" rel="stylesheet">
     
     <style>
-        body { font-family: 'Inter', sans-serif; background: #F7F3EE; }
+        body { font-family: 'Inter', sans-serif; background: #F7F3EE; color: #1E1915; }
         .font-serif { font-family: 'Playfair Display', serif; }
         [x-cloak] { display: none !important; }
         .no-scrollbar::-webkit-scrollbar { display: none; }
@@ -28,24 +28,24 @@
 </head>
 <body class="min-h-screen flex items-center justify-center p-3 sm:p-6 lg:p-8 relative overflow-x-hidden" id="seller-onboarding-body">
     <!-- Ambient Heritage Glow Orbs -->
-    <div class="absolute top-0 right-0 w-96 sm:w-160 h-96 sm:h-160 rounded-full -translate-y-1/3 translate-x-1/4 blur-3xl opacity-[0.07] pointer-events-none bg-[#C0422A]"></div>
-    <div class="absolute bottom-0 left-0 w-80 sm:w-130 h-80 sm:h-130 rounded-full translate-y-1/3 -translate-x-1/4 blur-3xl opacity-[0.14] pointer-events-none bg-[#D4B896]"></div>
+    <div class="absolute top-0 right-0 w-96 sm:w-160 h-96 sm:h-160 rounded-full -translate-y-1/3 translate-x-1/4 blur-3xl opacity-[0.06] pointer-events-none bg-[#C0422A]"></div>
+    <div class="absolute bottom-0 left-0 w-80 sm:w-130 h-80 sm:h-130 rounded-full translate-y-1/3 -translate-x-1/4 blur-3xl opacity-[0.12] pointer-events-none bg-[#D4B896]"></div>
 
-    <!-- Standalone Global Skip Form (Ensures reliable 1-click execution without form nesting) -->
+    <!-- Standalone Global Skip Form -->
     <form id="seller-skip-form" action="{{ route('seller.onboarding.skip') }}" method="POST" class="hidden">
         @csrf
     </form>
 
     <!-- Main Container Card -->
-    <div class="w-full max-w-2xl bg-white rounded-3xl sm:rounded-[2.5rem] border border-[#E5DDD5] p-5 sm:p-8 lg:p-10 shadow-[0_25px_70px_rgba(60,40,20,0.08)] relative z-10 my-4 sm:my-8 transition-all duration-300"
+    <div class="w-full max-w-2xl bg-white rounded-3xl sm:rounded-[2.5rem] border border-[#E5DDD5] p-6 sm:p-9 lg:p-10 shadow-[0_25px_70px_rgba(60,40,20,0.07)] relative z-10 my-4 sm:my-8 transition-all duration-300"
          x-data="sellerOnboarding()"
          x-cloak>
         
-        {{-- Top Status Header & Skip Action --}}
+        {{-- Top Bar Header --}}
         <div class="flex items-center justify-between pb-4 sm:pb-5 border-b border-[#EFE8DC] mb-6 sm:mb-8">
             <div class="flex items-center gap-2.5">
-                <span class="w-2.5 h-2.5 rounded-full bg-[#C0422A] animate-ping"></span>
-                <span class="text-[10.5px] font-black uppercase tracking-[0.2em] text-gray-400">Artisan Onboarding</span>
+                <span class="w-2 h-2 rounded-full bg-[#C0422A]"></span>
+                <span class="text-[10px] font-black uppercase tracking-[0.25em] text-gray-400">Artisan Onboarding</span>
             </div>
             
             <button type="button" 
@@ -70,7 +70,7 @@
         {{-- Branding & Greeting Header --}}
         <div class="text-center mb-6 sm:mb-8">
             <div class="flex justify-center mb-3">
-                <div class="w-14 h-14 sm:w-16 sm:h-16 rounded-full p-0.5 bg-gradient-to-tr from-[#C0422A] to-[#D4B896] shadow-md">
+                <div class="w-14 h-14 sm:w-16 sm:h-16 rounded-full p-0.5 bg-gradient-to-tr from-[#C0422A] to-[#D4B896] shadow-sm">
                     <div class="w-full h-full rounded-full bg-white p-1 flex items-center justify-center">
                         <img src="{{ asset('images/logo-icon.png') }}" alt="LumBarong Logo" class="w-full h-full object-contain rounded-full">
                     </div>
@@ -85,12 +85,12 @@
                 Set Up Your Artisan Store
             </h1>
             <p class="text-xs sm:text-[13px] text-gray-600 font-medium max-w-md mx-auto leading-relaxed">
-                Configure your payout destination, return terms, and prepare to publish your handcrafted creations.
+                Configure your payout destination, return guidelines, and prepare to publish your handcrafted creations.
             </p>
         </div>
 
         {{-- Premium 3-Stage Progress Nav --}}
-        <div class="bg-[#FAF8F5] border border-[#ECE3D2] rounded-2xl p-2 sm:p-2.5 mb-6 sm:mb-8 shadow-xs">
+        <div class="bg-[#FAF8F5] border border-[#ECE3D2] rounded-2xl p-1.5 sm:p-2 mb-6 sm:mb-8 shadow-2xs">
             <div class="grid grid-cols-3 gap-1.5 sm:gap-2">
                 {{-- Step 1 Button --}}
                 <button type="button" 
@@ -135,7 +135,7 @@
                           :class="currentStep === 3 ? 'bg-[#C0422A] text-white shadow-xs' : 'bg-[#EAE2D5] text-gray-600'">3</span>
                     <div class="text-left hidden sm:block">
                         <div class="text-[11px] font-bold leading-tight" :class="currentStep === 3 ? 'text-gray-900' : 'text-gray-600'">Add Product</div>
-                        <div class="text-[9.5px] font-semibold text-gray-400">Store Catalogue</div>
+                        <div class="text-[9.5px] font-semibold text-gray-400">Catalogue Item</div>
                     </div>
                     <span class="sm:hidden text-[10.5px] font-bold" :class="currentStep === 3 ? 'text-[#C0422A]' : 'text-gray-600'">Product</span>
                 </button>
@@ -276,7 +276,7 @@
                     <div class="flex items-center justify-between border-b border-[#ECE3D2] pb-4">
                         <div class="flex items-center gap-3">
                             <div class="w-9 h-9 rounded-xl bg-gradient-to-tr from-amber-700 to-amber-500 flex items-center justify-center text-white font-black text-xs shadow-xs shrink-0">
-                                📜
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
                             </div>
                             <div>
                                 <h2 class="text-xs font-black uppercase tracking-wider text-gray-900">2. Shop Policies & Guidelines</h2>
@@ -289,10 +289,10 @@
                     {{-- 1-Click Lumban Artisan Presets --}}
                     <div>
                         <span class="block text-[10.5px] font-black text-gray-700 uppercase tracking-wider mb-2">Apply 1-Click Lumban Presets:</span>
-                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
                             <button type="button" 
                                     @click="applyStandardPolicy()" 
-                                    class="text-left p-3 rounded-xl bg-white border border-[#D8CEBE] hover:border-[#C0422A] transition-all shadow-2xs hover:shadow-xs group cursor-pointer">
+                                    class="text-left p-3.5 rounded-xl bg-white border border-[#D8CEBE] hover:border-[#C0422A] transition-all shadow-2xs hover:shadow-xs group cursor-pointer">
                                 <div class="flex items-center justify-between mb-1">
                                     <span class="text-xs font-bold text-gray-900 group-hover:text-[#C0422A] transition-colors">Standard 7-Day Inspection</span>
                                     <span class="text-[9px] font-extrabold text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-200">Recommended</span>
@@ -302,7 +302,7 @@
 
                             <button type="button" 
                                     @click="applyCustomBarongPolicy()" 
-                                    class="text-left p-3 rounded-xl bg-white border border-[#D8CEBE] hover:border-[#C0422A] transition-all shadow-2xs hover:shadow-xs group cursor-pointer">
+                                    class="text-left p-3.5 rounded-xl bg-white border border-[#D8CEBE] hover:border-[#C0422A] transition-all shadow-2xs hover:shadow-xs group cursor-pointer">
                                 <div class="flex items-center justify-between mb-1">
                                     <span class="text-xs font-bold text-gray-900 group-hover:text-[#C0422A] transition-colors">Bespoke Custom Barongs</span>
                                     <span class="text-[9px] font-extrabold text-amber-700 bg-amber-50 px-1.5 py-0.5 rounded border border-amber-200">Made-to-Order</span>
@@ -347,65 +347,89 @@
                     <button type="button" 
                             @click="currentStep = 3" 
                             class="h-12 px-7 rounded-xl bg-gradient-to-r from-[#C0422A] via-[#9B2C16] to-[#7D1E0C] hover:from-[#A83520] hover:to-[#6C1708] text-white text-xs font-black uppercase tracking-wider shadow-[0_8px_20px_rgba(192,66,42,0.25)] hover:shadow-[0_12px_28px_rgba(192,66,42,0.35)] hover:-translate-y-0.5 active:translate-y-0 transition-all duration-200 flex items-center gap-2 cursor-pointer">
-                        <span>Next: Add Product</span>
+                        <span>Next: Catalogue Launch</span>
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
                     </button>
                 </div>
             </div>
 
             {{-- ======================================================== --}}
-            {{-- STEP 3: DIRECT TO SELLER ADD PRODUCT                      --}}
+            {{-- STEP 3: HIGH-END ARTISAN CATALOGUE LAUNCH                 --}}
             {{-- ======================================================== --}}
-            <div x-show="currentStep === 3" x-transition:enter="transition ease-out duration-250" x-transition:enter-start="opacity-0 translate-y-3" x-transition:enter-end="opacity-100 translate-y-0" class="space-y-5">
-                <div class="bg-[#FAF8F5] border border-[#ECE3D2] rounded-2xl sm:rounded-3xl p-6 sm:p-9 text-center space-y-6 shadow-xs">
+            <div x-show="currentStep === 3" x-transition:enter="transition ease-out duration-250" x-transition:enter-start="opacity-0 translate-y-3" x-transition:enter-end="opacity-100 translate-y-0" class="space-y-6">
+                
+                {{-- Hero Celebration Card --}}
+                <div class="relative overflow-hidden bg-gradient-to-b from-[#FAF7F2] to-white border border-[#E8DFC8] rounded-3xl p-6 sm:p-9 text-center shadow-xs">
                     
-                    {{-- Premium Icon Badge --}}
-                    <div class="w-16 h-16 sm:w-20 sm:h-20 mx-auto rounded-3xl bg-gradient-to-tr from-[#C0422A] to-[#D4B896] p-0.5 shadow-lg">
-                        <div class="w-full h-full rounded-[1.4rem] bg-white flex items-center justify-center text-2xl sm:text-3xl">
-                            👔
+                    {{-- Decorative Top Watermark Pattern --}}
+                    <div class="absolute -top-10 -right-10 w-40 h-40 rounded-full bg-[#C0422A]/5 pointer-events-none blur-xl"></div>
+                    <div class="absolute -bottom-10 -left-10 w-40 h-40 rounded-full bg-[#D4B896]/15 pointer-events-none blur-xl"></div>
+
+                    {{-- Elegant Artisan Badge --}}
+                    <div class="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-emerald-50 border border-emerald-200/80 text-emerald-800 text-[10px] font-black uppercase tracking-widest mb-4 shadow-2xs">
+                        <svg class="w-3.5 h-3.5 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
+                        <span>Step 3 of 3: Store Launch</span>
+                    </div>
+
+                    {{-- Main Title --}}
+                    <h2 class="font-serif text-2xl sm:text-3xl lg:text-[2.15rem] font-black italic tracking-tight text-gray-900 mb-2.5 leading-tight">
+                        Your Artisan Store is Ready
+                    </h2>
+                    
+                    <p class="text-xs sm:text-[13.5px] text-gray-600 font-medium max-w-lg mx-auto leading-relaxed mb-6">
+                        Your payment routing and store policies have been successfully configured. Proceed to the <strong>Product Studio</strong> to publish your first Barong Tagalog or explore your shop dashboard.
+                    </p>
+
+                    {{-- Feature Highlight Grid (Luxury Icons instead of Emojis) --}}
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 max-w-xl mx-auto mb-8 text-left">
+                        {{-- Feature 1 --}}
+                        <div class="p-3.5 rounded-2xl bg-white border border-[#ECE3D2] shadow-2xs flex sm:flex-col items-center sm:items-start gap-3 sm:gap-2">
+                            <div class="w-8 h-8 rounded-xl bg-[#FAF7F2] border border-[#E0D7C8] flex items-center justify-center text-[#C0422A] shrink-0">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h16M4 14h16M4 18h16"/></svg>
+                            </div>
+                            <div>
+                                <h3 class="text-xs font-bold text-gray-900 leading-tight">Custom Sizing</h3>
+                                <p class="text-[10px] text-gray-500 font-medium">Bespoke measurements & standard fits</p>
+                            </div>
+                        </div>
+
+                        {{-- Feature 2 --}}
+                        <div class="p-3.5 rounded-2xl bg-white border border-[#ECE3D2] shadow-2xs flex sm:flex-col items-center sm:items-start gap-3 sm:gap-2">
+                            <div class="w-8 h-8 rounded-xl bg-[#FAF7F2] border border-[#E0D7C8] flex items-center justify-center text-[#C0422A] shrink-0">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                            </div>
+                            <div>
+                                <h3 class="text-xs font-bold text-gray-900 leading-tight">Embroidery Gallery</h3>
+                                <p class="text-[10px] text-gray-500 font-medium">Multi-photo high-res closeups</p>
+                            </div>
+                        </div>
+
+                        {{-- Feature 3 --}}
+                        <div class="p-3.5 rounded-2xl bg-white border border-[#ECE3D2] shadow-2xs flex sm:flex-col items-center sm:items-start gap-3 sm:gap-2">
+                            <div class="w-8 h-8 rounded-xl bg-[#FAF7F2] border border-[#E0D7C8] flex items-center justify-center text-[#C0422A] shrink-0">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                            </div>
+                            <div>
+                                <h3 class="text-xs font-bold text-gray-900 leading-tight">Stock & Discounts</h3>
+                                <p class="text-[10px] text-gray-500 font-medium">Real-time inventory control</p>
+                            </div>
                         </div>
                     </div>
 
-                    {{-- Title & Highlights --}}
-                    <div class="space-y-2 max-w-lg mx-auto">
-                        <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-50 text-emerald-800 text-[10.5px] font-black uppercase tracking-widest border border-emerald-200">
-                            ✓ Store Setup Ready
-                        </span>
-                        <h2 class="font-serif text-2xl sm:text-3xl font-black italic tracking-tight text-gray-900">
-                            Ready to Publish Your First Creation
-                        </h2>
-                        <p class="text-xs sm:text-[13px] text-gray-600 font-medium leading-relaxed">
-                            Your payment and store policies are configured! Next, launch the <strong>Product Creation Studio</strong> to configure sizes, embroidery options, target groups, and high-resolution photo galleries.
-                        </p>
-                    </div>
-
-                    {{-- Feature Highlight Pill Chips --}}
-                    <div class="flex flex-wrap justify-center gap-2 pt-1 pb-2">
-                        <span class="text-[11px] font-bold text-gray-700 bg-white border border-[#E0D7C8] px-3 py-1.5 rounded-xl shadow-2xs">
-                            ✨ Multi-Size Variations
-                        </span>
-                        <span class="text-[11px] font-bold text-gray-700 bg-white border border-[#E0D7C8] px-3 py-1.5 rounded-xl shadow-2xs">
-                            📐 Custom Size Guides
-                        </span>
-                        <span class="text-[11px] font-bold text-gray-700 bg-white border border-[#E0D7C8] px-3 py-1.5 rounded-xl shadow-2xs">
-                            🖼️ High-Res Photo Gallery
-                        </span>
-                    </div>
-
-                    {{-- Action CTA Buttons --}}
-                    <div class="pt-2 flex flex-col sm:flex-row items-center justify-center gap-3">
+                    {{-- Premium Action Buttons --}}
+                    <div class="flex flex-col sm:flex-row items-center justify-center gap-3">
                         <button type="submit" 
                                 @click="redirectTo = 'add_product'"
-                                class="w-full sm:w-auto h-13 px-8 rounded-2xl bg-gradient-to-r from-[#C0422A] via-[#9B2C16] to-[#7D1E0C] hover:from-[#A83520] hover:to-[#6C1708] text-white text-xs font-black uppercase tracking-wider shadow-[0_10px_25px_rgba(192,66,42,0.3)] hover:shadow-[0_14px_32px_rgba(192,66,42,0.4)] hover:-translate-y-0.5 active:translate-y-0 transition-all duration-200 flex items-center justify-center gap-2.5 cursor-pointer">
-                            <span>Add First Product</span>
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+                                class="w-full sm:w-auto h-12.5 px-8 rounded-2xl bg-gradient-to-r from-[#C0422A] via-[#9B2C16] to-[#7D1E0C] hover:from-[#A83520] hover:to-[#6C1708] text-white text-xs font-black uppercase tracking-wider shadow-[0_10px_25px_rgba(192,66,42,0.28)] hover:shadow-[0_14px_32px_rgba(192,66,42,0.38)] hover:-translate-y-0.5 active:translate-y-0 transition-all duration-200 flex items-center justify-center gap-2 cursor-pointer">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"/></svg>
+                            <span>Add Your First Product</span>
                         </button>
 
                         <button type="submit" 
                                 @click="redirectTo = 'dashboard'"
-                                class="w-full sm:w-auto h-13 px-7 rounded-2xl bg-white hover:bg-gray-50 border border-[#D8CEBE] hover:border-gray-400 text-gray-700 text-xs font-bold transition-all shadow-xs flex items-center justify-center gap-2 cursor-pointer">
+                                class="w-full sm:w-auto h-12.5 px-7 rounded-2xl bg-white hover:bg-[#FAF8F5] border border-[#D8CEBE] hover:border-gray-400 text-gray-700 text-xs font-bold transition-all shadow-2xs hover:shadow-xs flex items-center justify-center gap-2 cursor-pointer">
                             <span>Go to Dashboard</span>
-                            <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
+                            <svg class="w-3.5 h-3.5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
                         </button>
                     </div>
                 </div>
