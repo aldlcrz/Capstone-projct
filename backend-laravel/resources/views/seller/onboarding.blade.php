@@ -52,18 +52,14 @@
                     @click="submitSkip()"
                     :disabled="isSkipping"
                     class="group inline-flex items-center gap-1.5 text-xs font-bold text-gray-500 hover:text-[#C0422A] transition-all py-1.5 px-3.5 rounded-full hover:bg-[#FAF7F2] border border-[#E8DFC8] hover:border-[#C0422A]/30 cursor-pointer shadow-2xs">
-                <template x-if="!isSkipping">
-                    <span class="inline-flex items-center gap-1.5">
-                        <span>Skip setup for now</span>
-                        <svg class="w-3.5 h-3.5 transition-transform group-hover:translate-x-0.5 text-gray-400 group-hover:text-[#C0422A]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
-                    </span>
-                </template>
-                <template x-if="isSkipping">
-                    <span class="inline-flex items-center gap-1.5 text-[#C0422A]">
-                        <svg class="animate-spin w-3.5 h-3.5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
-                        <span>Opening Dashboard...</span>
-                    </span>
-                </template>
+                <span x-show="!isSkipping" class="inline-flex items-center gap-1.5">
+                    <span>Skip setup for now</span>
+                    <svg class="w-3.5 h-3.5 transition-transform group-hover:translate-x-0.5 text-gray-400 group-hover:text-[#C0422A]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
+                </span>
+                <span x-show="isSkipping" class="inline-flex items-center gap-1.5 text-[#C0422A]" style="display: none;">
+                    <svg class="animate-spin w-3.5 h-3.5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+                    <span>Opening Dashboard...</span>
+                </span>
             </button>
         </div>
 
@@ -99,10 +95,8 @@
                         class="flex items-center justify-center sm:justify-start gap-2 py-2 px-2.5 sm:px-3 rounded-xl transition-all duration-200 cursor-pointer"
                         :class="currentStep === 1 ? 'bg-white shadow-xs border border-[#E5DDD5]' : 'hover:bg-white/60'">
                     <span class="w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-black shrink-0 transition-colors"
-                          :class="currentStep === 1 ? 'bg-[#C0422A] text-white shadow-xs' : (hasGcash ? 'bg-emerald-600 text-white' : 'bg-[#EAE2D5] text-gray-600')">
-                        <template x-if="hasGcash && currentStep !== 1">✓</template>
-                        <template x-if="!hasGcash || currentStep === 1">1</template>
-                    </span>
+                          :class="currentStep === 1 ? 'bg-[#C0422A] text-white shadow-xs' : (hasGcash ? 'bg-emerald-600 text-white' : 'bg-[#EAE2D5] text-gray-600')"
+                          x-text="hasGcash && currentStep !== 1 ? '✓' : '1'"></span>
                     <div class="text-left hidden sm:block">
                         <div class="text-[11px] font-bold leading-tight" :class="currentStep === 1 ? 'text-gray-900' : 'text-gray-600'">GCash Payout</div>
                         <div class="text-[9.5px] font-semibold text-gray-400">Payment Setup</div>
@@ -116,10 +110,8 @@
                         class="flex items-center justify-center sm:justify-start gap-2 py-2 px-2.5 sm:px-3 rounded-xl transition-all duration-200 cursor-pointer"
                         :class="currentStep === 2 ? 'bg-white shadow-xs border border-[#E5DDD5]' : 'hover:bg-white/60'">
                     <span class="w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-black shrink-0 transition-colors"
-                          :class="currentStep === 2 ? 'bg-[#C0422A] text-white shadow-xs' : (hasPolicy ? 'bg-emerald-600 text-white' : 'bg-[#EAE2D5] text-gray-600')">
-                        <template x-if="hasPolicy && currentStep !== 2">✓</template>
-                        <template x-if="!hasPolicy || currentStep === 2">2</template>
-                    </span>
+                          :class="currentStep === 2 ? 'bg-[#C0422A] text-white shadow-xs' : (hasPolicy ? 'bg-emerald-600 text-white' : 'bg-[#EAE2D5] text-gray-600')"
+                          x-text="hasPolicy && currentStep !== 2 ? '✓' : '2'"></span>
                     <div class="text-left hidden sm:block">
                         <div class="text-[11px] font-bold leading-tight" :class="currentStep === 2 ? 'text-gray-900' : 'text-gray-600'">Shop Policy</div>
                         <div class="text-[9.5px] font-semibold text-gray-400">Return & Terms</div>
@@ -215,32 +207,28 @@
                                    class="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10">
                             
                             {{-- Placeholder state --}}
-                            <template x-if="!qrPreview">
-                                <div class="space-y-2 py-3">
-                                    <div class="w-12 h-12 mx-auto rounded-2xl bg-[#FAF7F2] group-hover:bg-[#FAF0ED] flex items-center justify-center text-gray-500 group-hover:text-[#C0422A] border border-[#ECE3D2] transition-colors shadow-2xs">
-                                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
-                                    </div>
-                                    <div>
-                                        <p class="text-xs font-bold text-gray-800 group-hover:text-[#C0422A] transition-colors">Click or drag your GCash QR code here</p>
-                                        <p class="text-[10.5px] text-gray-400 font-medium mt-0.5">Supports high-res PNG, JPG, or WEBP up to 5MB</p>
-                                    </div>
+                            <div x-show="!qrPreview" class="space-y-2 py-3">
+                                <div class="w-12 h-12 mx-auto rounded-2xl bg-[#FAF7F2] group-hover:bg-[#FAF0ED] flex items-center justify-center text-gray-500 group-hover:text-[#C0422A] border border-[#ECE3D2] transition-colors shadow-2xs">
+                                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
                                 </div>
-                            </template>
+                                <div>
+                                    <p class="text-xs font-bold text-gray-800 group-hover:text-[#C0422A] transition-colors">Click or drag your GCash QR code here</p>
+                                    <p class="text-[10.5px] text-gray-400 font-medium mt-0.5">Supports high-res PNG, JPG, or WEBP up to 5MB</p>
+                                </div>
+                            </div>
 
                             {{-- Active Preview State --}}
-                            <template x-if="qrPreview">
-                                <div class="py-2 space-y-2.5">
-                                    <div class="relative inline-block">
-                                        <img :src="qrPreview" alt="GCash QR Code" class="w-32 h-32 object-contain rounded-xl border border-gray-200 mx-auto shadow-md p-1 bg-white">
-                                    </div>
-                                    <div>
-                                        <span class="inline-flex items-center gap-1.5 text-[10.5px] font-bold text-emerald-800 bg-emerald-50 px-3 py-1 rounded-full border border-emerald-200 shadow-2xs">
-                                            <svg class="w-3.5 h-3.5 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
-                                            QR Code Attached (Click to change)
-                                        </span>
-                                    </div>
+                            <div x-show="qrPreview" class="py-2 space-y-2.5" style="display: none;">
+                                <div class="relative inline-block">
+                                    <img :src="qrPreview" alt="GCash QR Code" class="w-32 h-32 object-contain rounded-xl border border-gray-200 mx-auto shadow-md p-1 bg-white">
                                 </div>
-                            </template>
+                                <div>
+                                    <span class="inline-flex items-center gap-1.5 text-[10.5px] font-bold text-emerald-800 bg-emerald-50 px-3 py-1 rounded-full border border-emerald-200 shadow-2xs">
+                                        <svg class="w-3.5 h-3.5 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                                        QR Code Attached (Click to change)
+                                    </span>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -251,12 +239,8 @@
                             @click="submitSkip()"
                             :disabled="isSkipping"
                             class="text-xs font-bold text-gray-500 hover:text-[#C0422A] transition-colors py-2 px-1 cursor-pointer flex items-center gap-1.5">
-                        <template x-if="!isSkipping">
-                            <span>Skip setup & go to Dashboard</span>
-                        </template>
-                        <template x-if="isSkipping">
-                            <span class="text-[#C0422A]">Opening Dashboard...</span>
-                        </template>
+                        <span x-show="!isSkipping">Skip setup & go to Dashboard</span>
+                        <span x-show="isSkipping" class="text-[#C0422A]" style="display: none;">Opening Dashboard...</span>
                     </button>
 
                     <button type="button" 
