@@ -260,7 +260,7 @@
 
                     <button type="button" 
                             @click="currentStep = 2" 
-                            class="h-12 px-7 rounded-xl bg-gradient-to-r from-[#C0422A] via-[#9B2C16] to-[#7D1E0C] hover:from-[#A83520] hover:to-[#6C1708] text-white text-xs font-black uppercase tracking-wider shadow-[0_8px_20px_rgba(192,66,42,0.25)] hover:shadow-[0_12px_28px_rgba(192,66,42,0.35)] hover:-translate-y-0.5 active:translate-y-0 transition-all duration-200 flex items-center gap-2 cursor-pointer">
+                            class="h-13 px-8 rounded-full bg-[#3D2B1F] hover:bg-[#C0422A] text-white font-bold uppercase tracking-[0.18em] text-[10.5px] shadow-md hover:shadow-lg hover:-translate-y-0.5 active:translate-y-0 transition-all duration-300 flex items-center gap-2.5 cursor-pointer">
                         <span>Continue to Policies</span>
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
                     </button>
@@ -341,12 +341,12 @@
 
                 {{-- Step 2 Footer Navigation --}}
                 <div class="flex items-center justify-between pt-2">
-                    <button type="button" @click="currentStep = 1" class="h-12 px-6 rounded-xl border border-gray-300 hover:bg-gray-100 text-gray-700 text-xs font-bold transition-all cursor-pointer">
+                    <button type="button" @click="currentStep = 1" class="h-13 px-6 rounded-full border border-gray-300 hover:bg-gray-100 text-gray-700 text-xs font-bold transition-all cursor-pointer">
                         ← Back
                     </button>
                     <button type="button" 
                             @click="currentStep = 3" 
-                            class="h-12 px-7 rounded-xl bg-gradient-to-r from-[#C0422A] via-[#9B2C16] to-[#7D1E0C] hover:from-[#A83520] hover:to-[#6C1708] text-white text-xs font-black uppercase tracking-wider shadow-[0_8px_20px_rgba(192,66,42,0.25)] hover:shadow-[0_12px_28px_rgba(192,66,42,0.35)] hover:-translate-y-0.5 active:translate-y-0 transition-all duration-200 flex items-center gap-2 cursor-pointer">
+                            class="h-13 px-8 rounded-full bg-[#3D2B1F] hover:bg-[#C0422A] text-white font-bold uppercase tracking-[0.18em] text-[10.5px] shadow-md hover:shadow-lg hover:-translate-y-0.5 active:translate-y-0 transition-all duration-300 flex items-center gap-2.5 cursor-pointer">
                         <span>Next: Catalogue Launch</span>
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
                     </button>
@@ -380,7 +380,7 @@
                         Your payment routing and store policies have been successfully configured. Proceed to the <strong>Product Studio</strong> to publish your first Barong Tagalog or explore your shop dashboard.
                     </p>
 
-                    {{-- Feature Highlight Grid (Luxury Icons instead of Emojis) --}}
+                    {{-- Feature Highlight Grid --}}
                     <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 max-w-xl mx-auto mb-8 text-left">
                         {{-- Feature 1 --}}
                         <div class="p-3.5 rounded-2xl bg-white border border-[#ECE3D2] shadow-2xs flex sm:flex-col items-center sm:items-start gap-3 sm:gap-2">
@@ -416,18 +416,19 @@
                         </div>
                     </div>
 
-                    {{-- Premium Action Buttons --}}
-                    <div class="flex flex-col sm:flex-row items-center justify-center gap-3">
+                    {{-- Premium Stacked Action Deck --}}
+                    <div class="space-y-3 max-w-md mx-auto pt-1">
                         <button type="submit" 
                                 @click="redirectTo = 'add_product'"
-                                class="w-full sm:w-auto h-12.5 px-8 rounded-2xl bg-gradient-to-r from-[#C0422A] via-[#9B2C16] to-[#7D1E0C] hover:from-[#A83520] hover:to-[#6C1708] text-white text-xs font-black uppercase tracking-wider shadow-[0_10px_25px_rgba(192,66,42,0.28)] hover:shadow-[0_14px_32px_rgba(192,66,42,0.38)] hover:-translate-y-0.5 active:translate-y-0 transition-all duration-200 flex items-center justify-center gap-2 cursor-pointer">
+                                class="w-full h-14 bg-[#3D2B1F] hover:bg-[#C0422A] text-white font-bold uppercase tracking-[0.2em] text-[11px] rounded-full shadow-lg hover:shadow-xl hover:-translate-y-0.5 active:translate-y-0 transition-all duration-300 flex items-center justify-center gap-3 cursor-pointer">
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"/></svg>
                             <span>Add Your First Product</span>
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
                         </button>
 
                         <button type="submit" 
                                 @click="redirectTo = 'dashboard'"
-                                class="w-full sm:w-auto h-12.5 px-7 rounded-2xl bg-white hover:bg-[#FAF8F5] border border-[#D8CEBE] hover:border-gray-400 text-gray-700 text-xs font-bold transition-all shadow-2xs hover:shadow-xs flex items-center justify-center gap-2 cursor-pointer">
+                                class="w-full h-12 bg-[#FAF7F2] hover:bg-[#F2ECE1] text-gray-700 hover:text-gray-900 font-bold uppercase tracking-[0.15em] text-[10.5px] rounded-full border border-[#D8CEBE] hover:border-[#C0422A]/40 transition-all duration-200 flex items-center justify-center gap-2 cursor-pointer">
                             <span>Go to Dashboard</span>
                             <svg class="w-3.5 h-3.5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
                         </button>
@@ -436,7 +437,7 @@
 
                 {{-- Step 3 Footer Navigation --}}
                 <div class="flex items-center justify-start pt-1">
-                    <button type="button" @click="currentStep = 2" class="h-11 px-5 rounded-xl border border-gray-300 hover:bg-gray-100 text-gray-700 text-xs font-bold transition-all cursor-pointer">
+                    <button type="button" @click="currentStep = 2" class="h-11 px-5 rounded-full border border-gray-300 hover:bg-gray-100 text-gray-700 text-xs font-bold transition-all cursor-pointer">
                         ← Back to Policies
                     </button>
                 </div>
