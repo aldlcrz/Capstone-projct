@@ -58,9 +58,27 @@
                 startTour() {
                     if (!this.steps || this.steps.length === 0) return;
                     this.currentStepIndex = 0;
+                    
+                    // Pre-calculate target element rect synchronously so overlay immediately opens on the target
+                    const firstStep = this.steps[0];
+                    if (firstStep && firstStep.selector) {
+                        const el = document.querySelector(firstStep.selector);
+                        if (el) {
+                            const rect = el.getBoundingClientRect();
+                            this.targetRect = {
+                                x: Math.max(0, rect.left),
+                                y: Math.max(0, rect.top),
+                                width: rect.width,
+                                height: rect.height
+                            };
+                            this.updatePosition();
+                            el.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'center' });
+                        }
+                    }
+
                     this.isActive = true;
                     this.$nextTick(() => {
-                        this.goToStep(0);
+                        this.updatePosition();
                     });
                 },
 
@@ -103,11 +121,13 @@
                         return;
                     }
 
+                    // Update position immediately before scroll starts
+                    this.updatePosition();
                     el.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'center' });
 
-                    setTimeout(() => {
-                        this.updatePosition();
-                    }, 300);
+                    // Re-update as scrolling progresses and finishes
+                    setTimeout(() => { this.updatePosition(); }, 150);
+                    setTimeout(() => { this.updatePosition(); }, 350);
                 },
 
                 updatePosition() {
@@ -194,10 +214,10 @@
                         {{-- White fills everything (opaque mask) --}}
                         <rect x="0" y="0" width="100%" height="100%" fill="white" />
                         {{-- Black cutout removes mask over spotlight target --}}
-                        <rect :x="(targetRect.x || 0) - 8"
-                              :y="(targetRect.y || 0) - 8"
-                              :width="(targetRect.width || 0) + 16"
-                              :height="(targetRect.height || 0) + 16"
+                        <rect :x="targetRect.width > 0 ? ((targetRect.x || 0) - 8) : -9999"
+                              :y="targetRect.width > 0 ? ((targetRect.y || 0) - 8) : -9999"
+                              :width="targetRect.width > 0 ? ((targetRect.width || 0) + 16) : 0"
+                              :height="targetRect.width > 0 ? ((targetRect.height || 0) + 16) : 0"
                               rx="16" ry="16"
                               fill="black"
                               class="transition-all duration-300 ease-out" />
@@ -212,10 +232,10 @@
                       @click="nextStep()" />
 
                 {{-- Glowing Spotlight Stroke around Target --}}
-                <rect :x="(targetRect.x || 0) - 8"
-                      :y="(targetRect.y || 0) - 8"
-                      :width="(targetRect.width || 0) + 16"
-                      :height="(targetRect.height || 0) + 16"
+                <rect :x="targetRect.width > 0 ? ((targetRect.x || 0) - 8) : -9999"
+                      :y="targetRect.width > 0 ? ((targetRect.y || 0) - 8) : -9999"
+                      :width="targetRect.width > 0 ? ((targetRect.width || 0) + 16) : 0"
+                      :height="targetRect.width > 0 ? ((targetRect.height || 0) + 16) : 0"
                       rx="16" ry="16"
                       fill="none"
                       stroke="#FFFFFF"
@@ -225,6 +245,7 @@
 
                 {{-- Dotted Guide Arrow from Tooltip to Target --}}
                 <path :d="arrowCurvePath"
+                      x-show="targetRect.width > 0"
                       fill="none"
                       stroke="#FBF9F5"
                       stroke-width="2.5"
