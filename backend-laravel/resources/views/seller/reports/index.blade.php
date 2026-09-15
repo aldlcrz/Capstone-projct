@@ -11,38 +11,37 @@
                 <span class="text-xs" style="color: #E8DECB;">•</span>
                 <span class="text-[10px] font-semibold uppercase tracking-wider" style="color: #766C60;">Compliance &amp; Case Ledger</span>
             </div>
-            <h1 class="font-serif text-2xl sm:text-3xl font-bold tracking-tight" style="color: #1E1915;">
-                Reports &amp; <span class="italic font-normal" style="color: #766C60;">Concerns</span>
-            </h1>
+            <div class="flex items-center gap-3 flex-wrap">
+                <h1 class="font-serif text-2xl sm:text-3xl font-bold tracking-tight" style="color: #1E1915;">
+                    Reports &amp; <span class="italic font-normal" style="color: #766C60;">Concerns</span>
+                </h1>
+                {{-- Guide Button --}}
+                <button type="button" 
+                        onclick="window.startSpotlightTour('seller-reports-guide')"
+                        class="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-black uppercase tracking-wider transition-all shadow-xs cursor-pointer group shrink-0"
+                        style="background-color: #FDF8EE; color: #C49520; border: 1.5px solid #C49520;"
+                        onmouseover="this.style.backgroundColor='#C49520'; this.style.color='#FFFFFF';"
+                        onmouseout="this.style.backgroundColor='#FDF8EE'; this.style.color='#C49520';"
+                        title="Start Interactive Reports Guide">
+                    <svg class="w-4 h-4 transition-transform group-hover:rotate-12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                    </svg>
+                    <span>Reports Guide</span>
+                </button>
+            </div>
             <p class="text-xs font-medium mt-1" style="color: #766C60;">
                 Review concerns filed regarding your shop or listings. Transparent case investigation and response hub.
             </p>
         </div>
 
-        <div class="flex items-center gap-2.5 w-full sm:w-auto">
-            {{-- Search Bar --}}
-            <div class="relative w-full sm:w-72 shrink-0">
-                <input type="text" x-model="searchQuery" placeholder="Search case ID, reason, or topic..."
-                    class="w-full h-10 sm:h-11 pl-9 pr-4 rounded-xl text-xs font-semibold shadow-xs outline-none transition-all"
-                    style="background: #FDF8EE; border: 1px solid #E8DECB; color: #1E1915;"
-                    onfocus="this.style.borderColor='#C49520'; this.style.background='#FFF';"
-                    onblur="this.style.borderColor='#E8DECB'; this.style.background='#FDF8EE';">
-                <svg class="w-4 h-4 absolute left-3 top-3 sm:top-3.5" style="color: #766C60;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
-            </div>
-
-            {{-- Guide Button --}}
-            <button type="button" 
-                    onclick="window.startSpotlightTour('seller-reports-guide')"
-                    class="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-full text-xs font-black uppercase tracking-wider transition-all shadow-xs cursor-pointer group shrink-0"
-                    style="background-color: #FDF8EE; color: #C49520; border: 1.5px solid #C49520;"
-                    onmouseover="this.style.backgroundColor='#C49520'; this.style.color='#FFFFFF';"
-                    onmouseout="this.style.backgroundColor='#FDF8EE'; this.style.color='#C49520';"
-                    title="Start Interactive Reports Guide">
-                <svg class="w-4 h-4 transition-transform group-hover:rotate-12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                </svg>
-                <span>Reports Guide</span>
-            </button>
+        {{-- Search Bar --}}
+        <div class="relative w-full sm:w-72 shrink-0">
+            <input type="text" x-model="searchQuery" placeholder="Search case ID, reason, or topic..."
+                class="w-full h-10 sm:h-11 pl-9 pr-4 rounded-xl text-xs font-semibold shadow-xs outline-none transition-all"
+                style="background: #FDF8EE; border: 1px solid #E8DECB; color: #1E1915;"
+                onfocus="this.style.borderColor='#C49520'; this.style.background='#FFF';"
+                onblur="this.style.borderColor='#E8DECB'; this.style.background='#FDF8EE';">
+            <svg class="w-4 h-4 absolute left-3 top-3 sm:top-3.5" style="color: #766C60;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
         </div>
     </div>
 
