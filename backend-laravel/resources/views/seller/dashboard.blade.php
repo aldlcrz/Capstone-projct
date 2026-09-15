@@ -4,7 +4,7 @@
 <div class="space-y-6 sm:space-y-8">
     {{-- Header & Date Filter Toolbar --}}
     <div class="flex flex-col md:flex-row md:items-end justify-between gap-4 pb-2 border-b" style="border-color: #E8DECB;">
-        <div>
+        <div id="tour-seller-header-welcome">
             <div class="flex items-center gap-2 mb-1">
                 <span class="text-[9px] font-extrabold uppercase tracking-[0.25em]" style="color: #C49520;">✦ Shop Overview</span>
                 <span class="text-xs" style="color: #E8DECB;">•</span>
@@ -12,9 +12,26 @@
                     {{ auth()->user()->isPremiumActive() ? 'Premium Artisan' : 'Verified Artisan' }}
                 </span>
             </div>
-            <h1 class="font-serif text-2xl sm:text-3xl lg:text-4xl font-bold tracking-tight" style="color: #1E1915;">
-                Good day, <span class="italic font-normal" style="color: #766C60;">{{ auth()->user()->name }}</span>
-            </h1>
+            <div class="flex items-center gap-3 flex-wrap">
+                <h1 class="font-serif text-2xl sm:text-3xl lg:text-4xl font-bold tracking-tight" style="color: #1E1915;">
+                    Good day, <span class="italic font-normal" style="color: #766C60;">{{ auth()->user()->name }}</span>
+                </h1>
+                
+                {{-- Tour Guide Button directly to the right of the seller name --}}
+                <button type="button"
+                        id="tour-seller-guide-btn"
+                        @click="$dispatch('start-spotlight-tour', { tourId: 'seller' })"
+                        class="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-black uppercase tracking-wider transition-all shadow-xs cursor-pointer group"
+                        style="background-color: #FDF8EE; color: #C49520; border: 1.5px solid #C49520;"
+                        onmouseover="this.style.backgroundColor='#C49520'; this.style.color='#FFFFFF';"
+                        onmouseout="this.style.backgroundColor='#FDF8EE'; this.style.color='#C49520';"
+                        title="Start Interactive Dashboard Tour">
+                    <svg class="w-4 h-4 transition-transform group-hover:rotate-12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                    </svg>
+                    <span>Dashboard Guide</span>
+                </button>
+            </div>
             <p class="text-xs sm:text-sm font-medium mt-1" style="color: #766C60;">
                 Manage your handcrafted creations, orders, and shop performance.
             </p>
@@ -55,7 +72,7 @@
     </div>
 
     {{-- SECTION 1: QUICK ACTION ALERTS (Unified Artisan Style) --}}
-    <div class="space-y-3">
+    <div id="tour-seller-action-items" class="space-y-3">
         <div class="flex items-center justify-between">
             <h2 class="text-[10px] font-extrabold uppercase tracking-[0.2em] flex items-center gap-2" style="color: #766C60;">
                 <span class="w-1.5 h-1.5 rounded-full" style="background: #C49520;"></span>
@@ -129,7 +146,7 @@
     </div>
 
     {{-- SECTION 2: SALES SUMMARY --}}
-    <div class="space-y-4">
+    <div id="tour-seller-financials" class="space-y-4">
         <div class="flex items-center justify-between">
             <h2 class="text-[10px] font-extrabold uppercase tracking-[0.2em]" style="color: #766C60;">Financial Summary</h2>
         </div>
@@ -166,7 +183,7 @@
         </div>
 
         {{-- Order Pipeline Status Grid --}}
-        <div class="p-4 sm:p-6 rounded-2xl sm:rounded-3xl space-y-3" style="background: #FFFCF7; border: 1px solid #E8DECB; box-shadow: 0 2px 8px rgba(30,25,21,0.03);">
+        <div id="tour-seller-pipeline" class="p-4 sm:p-6 rounded-2xl sm:rounded-3xl space-y-3" style="background: #FFFCF7; border: 1px solid #E8DECB; box-shadow: 0 2px 8px rgba(30,25,21,0.03);">
             <div class="text-xs font-bold uppercase tracking-widest flex items-center justify-between" style="color: #1E1915;">
                 <span class="font-serif text-sm">Order Fulfillment Pipeline</span>
                 <a href="{{ route('seller.orders') }}" class="text-[10px] font-extrabold uppercase tracking-wider hover:underline" style="color: #C49520;">View All Orders &rarr;</a>
@@ -216,7 +233,7 @@
 
         <div class="grid grid-cols-1 lg:grid-cols-12 gap-4 sm:gap-6">
             <!-- Revenue Trend Chart (Amber bars) -->
-            <div class="lg:col-span-8 p-4 sm:p-6 rounded-2xl sm:rounded-3xl space-y-4" style="background: #FFFCF7; border: 1px solid #E8DECB; box-shadow: 0 2px 8px rgba(30,25,21,0.03);">
+            <div id="tour-seller-revenue-chart" class="lg:col-span-8 p-4 sm:p-6 rounded-2xl sm:rounded-3xl space-y-4" style="background: #FFFCF7; border: 1px solid #E8DECB; box-shadow: 0 2px 8px rgba(30,25,21,0.03);">
                 <div class="flex items-center justify-between">
                     <div>
                         <h3 class="font-serif text-sm sm:text-base font-bold uppercase" style="color: #1E1915;">Revenue Trajectory</h3>
@@ -244,7 +261,7 @@
             </div>
 
             <!-- Store Key Metrics Matrix -->
-            <div class="lg:col-span-4 p-4 sm:p-6 rounded-2xl sm:rounded-3xl space-y-3" style="background: #FFFCF7; border: 1px solid #E8DECB; box-shadow: 0 2px 8px rgba(30,25,21,0.03);">
+            <div id="tour-seller-benchmarks" class="lg:col-span-4 p-4 sm:p-6 rounded-2xl sm:rounded-3xl space-y-3" style="background: #FFFCF7; border: 1px solid #E8DECB; box-shadow: 0 2px 8px rgba(30,25,21,0.03);">
                 <h3 class="font-serif text-sm sm:text-base font-bold uppercase mb-1" style="color: #1E1915;">Shop Benchmark</h3>
                 
                 <div class="grid grid-cols-2 gap-3">
@@ -286,7 +303,7 @@
     </div>
 
     {{-- SECTION 4: BEST SELLING CREATIONS & RECENT TRANSACTIONS --}}
-    <div class="grid grid-cols-1 lg:grid-cols-12 gap-4 sm:gap-6">
+    <div id="tour-seller-signatures" class="grid grid-cols-1 lg:grid-cols-12 gap-4 sm:gap-6">
         <!-- Best Selling Products -->
         <div class="lg:col-span-7 p-4 sm:p-6 rounded-2xl sm:rounded-3xl space-y-4" style="background: #FFFCF7; border: 1px solid #E8DECB; box-shadow: 0 2px 8px rgba(30,25,21,0.03);">
             <div class="flex items-center justify-between">
