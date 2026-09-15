@@ -1131,18 +1131,47 @@ function sellerOrdersManager() {
                 <svg class="w-4 h-4 absolute left-3 top-3 sm:top-3.5" style="color: #766C60;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
             </div>
 
-            {{-- Guide Button --}}
+            {{-- Guide Button (Dynamic per active status tab) --}}
             <button type="button" 
-                    onclick="window.startSpotlightTour('seller-orders-guide')"
+                    @click="
+                        const slugMap = {
+                            'all': 'all',
+                            'pending': 'pending',
+                            'to ship': 'to-ship',
+                            'shipped': 'shipped',
+                            'in transit': 'in-transit',
+                            'delivered': 'delivered',
+                            'completed': 'completed',
+                            'cancelled': 'cancelled',
+                            'cancellation pending': 'cancellation-pending',
+                            'return requests': 'return-requests'
+                        };
+                        const activeSlug = slugMap[statusFilter] || 'all';
+                        window.startSpotlightTour('seller-orders-' + activeSlug);
+                    "
                     class="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-full text-xs font-black uppercase tracking-wider transition-all shadow-xs cursor-pointer group shrink-0"
                     style="background-color: #FDF8EE; color: #C49520; border: 1.5px solid #C49520;"
                     onmouseover="this.style.backgroundColor='#C49520'; this.style.color='#FFFFFF';"
                     onmouseout="this.style.backgroundColor='#FDF8EE'; this.style.color='#C49520';"
-                    title="Start Interactive Orders Guide">
+                    title="Start Interactive Guide for this Status">
                 <svg class="w-4 h-4 transition-transform group-hover:rotate-12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                 </svg>
-                <span>Orders Guide</span>
+                <span x-text="
+                    const labels = {
+                        'all': 'Orders Guide',
+                        'pending': 'Pending Guide',
+                        'to ship': 'To Ship Guide',
+                        'shipped': 'Shipped Guide',
+                        'in transit': 'In Transit Guide',
+                        'delivered': 'Delivered Guide',
+                        'completed': 'Completed Guide',
+                        'cancelled': 'Cancelled Guide',
+                        'cancellation pending': 'Cancellations Guide',
+                        'return requests': 'Returns Guide'
+                    };
+                    return labels[statusFilter] || 'Orders Guide';
+                ">Orders Guide</span>
             </button>
         </div>
     </div>
@@ -2648,51 +2677,223 @@ function sellerOrdersManager() {
         </div>
     </div>
 
-    {{-- Spotlight Tour Guide --}}
+    {{-- Contextual Spotlight Tours for Order Statuses --}}
     @php
-        $ordersTourSteps = [
-            [
-                'selector' => '#tour-orders-header',
-                'title' => '📦 Fulfillment Ledger & Orders',
-                'text' => 'Welcome to your Client Orders ledger! Here you manage every customer order from bespoke tailoring request through packaging, dispatch, delivery, and completion.',
-                'position' => 'bottom'
+        $statusTourSteps = [
+            'all' => [
+                [
+                    'selector' => '#tour-orders-header',
+                    'title' => '📋 All Orders Master Ledger',
+                    'text' => 'Welcome to your Client Orders ledger! Here you oversee all customer orders across every fulfillment stage from initial placement to completion.',
+                    'position' => 'bottom'
+                ],
+                [
+                    'selector' => '#tour-orders-search',
+                    'title' => '🔍 Instant Order Search',
+                    'text' => 'Rapidly find orders by typing the Order ID (e.g. #LB-XXXX), buyer name, or shipping courier tracking number.',
+                    'position' => 'bottom'
+                ],
+                [
+                    'selector' => '#tour-orders-tabs',
+                    'title' => '🏷️ Order Lifecycle Filter Tabs',
+                    'text' => 'Click any status tab to filter orders by stage: Pending, To Ship, Shipped, In Transit, Delivered, Completed, or Customer Requests.',
+                    'position' => 'bottom'
+                ],
+                [
+                    'selector' => '#tour-orders-list',
+                    'title' => '📦 Order Dossiers & Tracking',
+                    'text' => 'Each capsule displays the order code, status badge, customer avatar, items summary, and total amount. Click any order row to open its full management dossier!',
+                    'position' => 'top'
+                ]
             ],
-            [
-                'selector' => '#tour-orders-search',
-                'title' => '🔍 Instant Order Search',
-                'text' => 'Rapidly find orders by typing the Order ID (e.g. #LB-XXXX), buyer name, or shipping courier tracking number.',
-                'position' => 'bottom'
+            'pending' => [
+                [
+                    'selector' => '#tour-orders-tabs',
+                    'title' => '⏳ Pending Orders Stage',
+                    'text' => 'These are newly placed orders awaiting your verification, custom measurements review, or initial payment confirmation before production starts.',
+                    'position' => 'bottom'
+                ],
+                [
+                    'selector' => '#tour-orders-list',
+                    'title' => '✂️ Review & Accept Commission',
+                    'text' => 'Click on any pending order to review bespoke measurements, verify buyer notes, and advance the order into the "To Ship" (In Production) stage.',
+                    'position' => 'top'
+                ],
+                [
+                    'selector' => '#tour-orders-header',
+                    'title' => '⚠️ Cancellation Grace Window',
+                    'text' => 'Buyers may request cancellation while an order is still in Pending. Once you advance to tailoring, custom made-to-order policies take effect.',
+                    'position' => 'bottom'
+                ]
             ],
-            [
-                'selector' => '#tour-orders-tabs',
-                'title' => '🏷️ Order Lifecycle Filter Tabs',
-                'text' => 'Switch between order stages: Pending (awaiting artisan action), To Ship, Shipped, In Transit, Delivered, Completed, and Special Requests (Cancellation / Returns).',
-                'position' => 'bottom'
+            'to-ship' => [
+                [
+                    'selector' => '#tour-orders-tabs',
+                    'title' => '📦 To Ship & Production Stage',
+                    'text' => 'Orders in this stage have verified payment and are actively undergoing bespoke tailoring, embroidery, quality check, and packaging.',
+                    'position' => 'bottom'
+                ],
+                [
+                    'selector' => '#tour-orders-list',
+                    'title' => '📸 Live Packaging Photo Proof',
+                    'text' => 'Inside the order dossier, use your device camera or upload photo proof of the packaged garment and waybill before handing off to the courier.',
+                    'position' => 'top'
+                ],
+                [
+                    'selector' => '#tour-orders-search',
+                    'title' => '🚚 Courier Selection & Tracking Number',
+                    'text' => 'Select an accredited courier (J&T Express, LBC, Ninja Van, Flash Express, etc.) and enter the official tracking code to dispatch and mark as Shipped.',
+                    'position' => 'bottom'
+                ]
             ],
-            [
-                'selector' => '#tour-orders-list',
-                'title' => '📋 Order Dossiers & Tracking',
-                'text' => 'Each capsule displays the order code, status badge, customer avatar, items summary, and total amount. Click any order row to open its full management dossier!',
-                'position' => 'top'
+            'shipped' => [
+                [
+                    'selector' => '#tour-orders-tabs',
+                    'title' => '🚚 Shipped Orders Stage',
+                    'text' => 'Parcels that have been dropped off or picked up by your courier from your Lumban artisan workshop and are in the courier network.',
+                    'position' => 'bottom'
+                ],
+                [
+                    'selector' => '#tour-orders-list',
+                    'title' => '📲 Live Buyer Notification',
+                    'text' => 'The customer receives real-time SMS and dashboard notifications with their tracking number and courier details upon dispatch.',
+                    'position' => 'top'
+                ],
+                [
+                    'selector' => '#tour-orders-header',
+                    'title' => '🛣️ Transitioning to In Transit',
+                    'text' => 'Once the courier scans the parcel at the sorting facility, the package advances to "In Transit" as it travels to the destination city.',
+                    'position' => 'bottom'
+                ]
             ],
-            [
-                'title' => '🚚 Logistics, Courier & Tracking Setup',
-                'text' => 'Inside the order modal, you can select accredited couriers (J&T Express, LBC, Ninja Van, Flash, etc.), enter the tracking number, and transition fulfillment status.',
-                'position' => 'center'
+            'in-transit' => [
+                [
+                    'selector' => '#tour-orders-tabs',
+                    'title' => '🛣️ In Transit Logistics Tracking',
+                    'text' => 'Packages actively moving through courier delivery routes and regional hubs traveling to the buyer\'s destination address.',
+                    'position' => 'bottom'
+                ],
+                [
+                    'selector' => '#tour-orders-list',
+                    'title' => '🔎 Courier Tracking & Delivery ETA',
+                    'text' => 'Click on any order to view the direct courier tracking link and monitor live transit milestones and estimated delivery date.',
+                    'position' => 'top'
+                ],
+                [
+                    'selector' => '#tour-orders-header',
+                    'title' => '📬 Doorstep Delivery Confirmation',
+                    'text' => 'When the logistics courier completes delivery at the recipient\'s doorstep, transition the order state to "Delivered".',
+                    'position' => 'bottom'
+                ]
             ],
-            [
-                'title' => '📸 Live Packing Photo Proof',
-                'text' => 'Capture camera snapshots or upload photo proof of the packaged Lumban garment before dispatching to provide peace of mind and dispute protection.',
-                'position' => 'center'
+            'delivered' => [
+                [
+                    'selector' => '#tour-orders-tabs',
+                    'title' => '📬 Delivered Orders Stage',
+                    'text' => 'Handcrafted garments that have successfully reached the buyer\'s delivery address.',
+                    'position' => 'bottom'
+                ],
+                [
+                    'selector' => '#tour-orders-list',
+                    'title' => '🕒 Customer Inspection Grace Window',
+                    'text' => 'Buyers have a standard period to inspect the garment, verify custom sizing measurements, and confirm satisfaction.',
+                    'position' => 'top'
+                ],
+                [
+                    'selector' => '#tour-orders-header',
+                    'title' => '✅ Order Completion & Acceptance',
+                    'text' => 'Once the customer clicks "Order Received" or the inspection timer completes with no disputes, the order moves to "Completed".',
+                    'position' => 'bottom'
+                ]
             ],
-            [
-                'title' => '↩️ Cancellations & Return Requests',
-                'text' => 'Review buyer cancellation inquiries or inspection photos for return requests. You can approve with automatic stock recovery or decline with an artisan explanation.',
-                'position' => 'center'
+            'completed' => [
+                [
+                    'selector' => '#tour-orders-tabs',
+                    'title' => '✅ Completed Orders Ledger',
+                    'text' => 'Successfully fulfilled orders where the buyer confirmed receipt and satisfaction with their authentic Lumban creation.',
+                    'position' => 'bottom'
+                ],
+                [
+                    'selector' => '#tour-orders-list',
+                    'title' => '💵 Net Payout & Commission Calculation',
+                    'text' => 'Earnings from completed orders are finalized and credited toward your net seller balance, with the 10% platform commission itemized.',
+                    'position' => 'top'
+                ],
+                [
+                    'selector' => '#tour-orders-header',
+                    'title' => '⭐ Verified Buyer Reviews & Ratings',
+                    'text' => 'Completed orders allow customers to submit verified 5-star reviews and photos that showcase on your public artisan profile.',
+                    'position' => 'bottom'
+                ]
+            ],
+            'cancelled' => [
+                [
+                    'selector' => '#tour-orders-tabs',
+                    'title' => '❌ Cancelled Orders History',
+                    'text' => 'Orders that were terminated prior to completion due to mutual cancellation, buyer request, or inventory adjustments.',
+                    'position' => 'bottom'
+                ],
+                [
+                    'selector' => '#tour-orders-list',
+                    'title' => '🔄 Automatic Inventory Restock',
+                    'text' => 'When an order is cancelled, reserved pieces are automatically restored into your live catalog inventory.',
+                    'position' => 'top'
+                ],
+                [
+                    'selector' => '#tour-orders-search',
+                    'title' => '📝 Audit History & Reason Logs',
+                    'text' => 'Click any cancelled order to review the complete audit trail, timestamps, and recorded cancellation explanation.',
+                    'position' => 'bottom'
+                ]
+            ],
+            'cancellation-pending' => [
+                [
+                    'selector' => '#tour-orders-tabs',
+                    'title' => '⚠️ Cancellation Requests Hub',
+                    'text' => 'Buyers have submitted a cancellation request for an order that is currently in preparation.',
+                    'position' => 'bottom'
+                ],
+                [
+                    'selector' => '#tour-orders-list',
+                    'title' => '⚖️ Reviewing & Approving Requests',
+                    'text' => 'Open the order to review the buyer\'s reason. If fabric cutting and custom embroidery have not begun, you may Approve the cancellation.',
+                    'position' => 'top'
+                ],
+                [
+                    'selector' => '#tour-orders-header',
+                    'title' => '🛡️ Custom Made-to-Order Policy',
+                    'text' => 'If custom tailoring is already actively in progress, you may Decline with a polite explanation referencing your Shop Cancellation Policy.',
+                    'position' => 'bottom'
+                ]
+            ],
+            'return-requests' => [
+                [
+                    'selector' => '#tour-orders-tabs',
+                    'title' => '↩️ Return & Sizing Requests',
+                    'text' => 'Customer inquiries requesting a return, sizing adjustment, or refund after receiving their order.',
+                    'position' => 'bottom'
+                ],
+                [
+                    'selector' => '#tour-orders-list',
+                    'title' => '📸 Unboxing Proof & Evidence Inspection',
+                    'text' => 'Review the customer\'s uploaded photos, video proof, and reason description directly in the return review panel.',
+                    'position' => 'top'
+                ],
+                [
+                    'selector' => '#tour-orders-header',
+                    'title' => '🤝 Fair Dispute Resolution',
+                    'text' => 'Coordinate sizing alterations or return shipping according to your Shop Refund & Return Policies to protect artisan craftsmanship.',
+                    'position' => 'bottom'
+                ]
             ],
         ];
     @endphp
 
-    <x-spotlight-tour tourId="seller-orders-guide" :steps="$ordersTourSteps" :autoStart="false" />
+    @foreach($statusTourSteps as $slug => $steps)
+        <x-spotlight-tour tourId="seller-orders-{{ $slug }}" :steps="$steps" :autoStart="false" />
+    @endforeach
+
+    {{-- Fallback default alias --}}
+    <x-spotlight-tour tourId="seller-orders-guide" :steps="$statusTourSteps['all']" :autoStart="false" />
 </div>
 @endsection
