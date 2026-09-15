@@ -67,7 +67,7 @@
 
     <div class="login-card w-full max-w-md bg-white rounded-4xl sm:rounded-[2.5rem] border border-[#E5DDD5] p-5 sm:p-8 shadow-[0_20px_60px_rgba(60,40,20,0.08)] relative z-10 max-h-[95vh] overflow-y-auto no-scrollbar" 
          x-data="sellerRegisterApp({
-             step: {{ ($errors->has('name') || $errors->has('email') || $errors->has('password') || $errors->has('password_confirmation')) ? 1 : ($errors->any() || old('shopName') ? 2 : 1) }},
+             step: {{ (isset($errors) && ($errors->has('name') || $errors->has('email') || $errors->has('password') || $errors->has('password_confirmation'))) ? 1 : ((isset($errors) && $errors->any()) || old('shopName') ? 2 : 1) }},
              name: @js(old('name', $googleSeller['name'] ?? '')),
              email: @js(old('email', $googleSeller['email'] ?? '')),
              shopName: @js(old('shopName', '')),
