@@ -43,6 +43,11 @@
                     return 'lumbarong_tour_done_' + this.tourId + '_' + this.userId;
                 },
 
+                getSelector(step) {
+                    if (!step) return null;
+                    return step.selector || step.target || step.element || null;
+                },
+
                 initTour() {
                     const isDone = localStorage.getItem(this.storageKey);
                     if (!isDone && this.autoStart && this.steps.length > 0) {
@@ -64,10 +69,10 @@
                     if (!this.steps || this.steps.length === 0) return;
                     this.currentStepIndex = 0;
                     
-                    // Pre-calculate target element rect synchronously so overlay immediately opens on the target
                     const firstStep = this.steps[0];
-                    if (firstStep && firstStep.selector) {
-                        const el = document.querySelector(firstStep.selector);
+                    const sel = this.getSelector(firstStep);
+                    if (sel) {
+                        const el = document.querySelector(sel);
                         if (el) {
                             const rect = el.getBoundingClientRect();
                             this.targetRect = {
@@ -109,38 +114,50 @@
                 },
 
                 goToStep(index) {
-                    this.currentStepIndex = index;
-                    const step = this.steps[index];
-                    if (!step || !step.selector) {
+                    if (index < 0 || index >= this.steps.length) {
                         this.dismissTour();
                         return;
                     }
+                    this.currentStepIndex = index;
+                    const step = this.steps[index];
+                    const sel = this.getSelector(step);
 
-                    const el = document.querySelector(step.selector);
-                    if (!el) {
-                        if (index < this.steps.length - 1) {
-                            this.goToStep(index + 1);
-                        } else {
-                            this.dismissTour();
+                    if (sel) {
+                        const el = document.querySelector(sel);
+                        if (el) {
+                            this.updatePosition();
+                            el.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'center' });
+                            setTimeout(() => { this.updatePosition(); }, 150);
+                            setTimeout(() => { this.updatePosition(); }, 350);
+                            return;
                         }
-                        return;
                     }
 
-                    // Update position immediately before scroll starts
+                    // Centered fallback when element selector is not in viewport or missing
                     this.updatePosition();
-                    el.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'center' });
-
-                    // Re-update as scrolling progresses and finishes
-                    setTimeout(() => { this.updatePosition(); }, 150);
-                    setTimeout(() => { this.updatePosition(); }, 350);
                 },
 
                 updatePosition() {
                     const step = this.steps[this.currentStepIndex];
-                    if (!step || !step.selector) return;
+                    if (!step) return;
 
-                    const el = document.querySelector(step.selector);
-                    if (!el) return;
+                    const sel = this.getSelector(step);
+                    const el = sel ? document.querySelector(sel) : null;
+
+                    const tooltipWidth = Math.min(380, window.innerWidth - 32);
+                    const tooltipHeight = 190;
+                    const padding = 16;
+
+                    if (!el) {
+                        // Screen Center fallback
+                        this.targetRect = { x: 0, y: 0, width: 0, height: 0 };
+                        this.tooltipPos = {
+                            x: Math.max(16, (window.innerWidth - tooltipWidth) / 2),
+                            y: Math.max(16, (window.innerHeight - tooltipHeight) / 2)
+                        };
+                        this.arrowCurvePath = '';
+                        return;
+                    }
 
                     const rect = el.getBoundingClientRect();
                     this.targetRect = {
@@ -149,10 +166,6 @@
                         width: rect.width,
                         height: rect.height
                     };
-
-                    const tooltipWidth = Math.min(380, window.innerWidth - 32);
-                    const tooltipHeight = 180;
-                    const padding = 20;
 
                     let tooltipX = rect.left + (rect.width / 2) - (tooltipWidth / 2);
                     tooltipX = Math.max(16, Math.min(window.innerWidth - tooltipWidth - 16, tooltipX));
@@ -165,11 +178,11 @@
                     const spaceAbove = rect.top - 16;
 
                     if (spaceBelow >= tooltipHeight || spaceBelow > spaceAbove) {
-                        tooltipY = rect.bottom + padding + 12;
+                        tooltipY = Math.min(window.innerHeight - tooltipHeight - 16, rect.bottom + padding + 8);
                         arrowStart = { x: tooltipX + (tooltipWidth / 2), y: tooltipY };
                         arrowEnd = { x: rect.left + (rect.width / 2), y: rect.bottom + 8 };
                     } else {
-                        tooltipY = Math.max(16, rect.top - tooltipHeight - padding - 12);
+                        tooltipY = Math.max(16, rect.top - tooltipHeight - padding - 8);
                         arrowStart = { x: tooltipX + (tooltipWidth / 2), y: tooltipY + tooltipHeight };
                         arrowEnd = { x: rect.left + (rect.width / 2), y: rect.top - 8 };
                     }
@@ -288,7 +301,7 @@
                         <h4 class="font-serif text-base sm:text-lg font-bold text-gray-900 leading-snug"
                             x-text="currentStep.title || 'Feature Guide'"></h4>
                         <p class="text-xs sm:text-[13px] text-gray-600 leading-relaxed font-normal"
-                            x-text="currentStep.text || ''"></p>
+                            x-text="currentStep.text || currentStep.description || currentStep.content || ''"></p>
                     </div>
 
                     {{-- Action Controls (Previous / I Understand / Skip) --}}

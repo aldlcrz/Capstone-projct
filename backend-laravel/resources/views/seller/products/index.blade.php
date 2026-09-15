@@ -1042,37 +1042,37 @@ document.addEventListener('alpine:init', () => {
 @php
     $catalogueTourSteps = [
         [
-            'target' => '#tour-products-guide-btn',
+            'selector' => '#tour-products-guide-btn',
             'title' => '✨ Catalogue Management Guide',
-            'description' => 'Welcome to your Shop Catalogue! Here you can manage all your handcrafted Lumban garments, organize style variants, monitor verification statuses, and update inventory.'
+            'text' => 'Welcome to your Shop Catalogue! Here you can manage all your handcrafted Lumban garments, organize style variants, monitor verification statuses, and update inventory.'
         ],
         [
-            'target' => '#tour-products-action-bar',
+            'selector' => '#tour-products-action-bar',
             'title' => '⚡ Quick Catalogue Actions',
-            'description' => 'Access essential catalogue tools: configure your artisan Size Guides for standard buyer measurements, view your Archived items, or launch the Add Product wizard.'
+            'text' => 'Access essential catalogue tools: configure your artisan Size Guides for standard buyer measurements, view your Archived items, or launch the Add Product wizard.'
         ],
         [
-            'target' => '#tour-products-filter-tabs',
+            'selector' => '#tour-products-filter-tabs',
             'title' => '🏷️ Status Filter Tabs',
-            'description' => 'Easily filter creations by lifecycle status: Approved (live on marketplace), Pending Review (awaiting Lumban quality check), Drafts (saved work), or Needs Revision.'
+            'text' => 'Easily filter creations by lifecycle status: Approved (live on marketplace), Pending Review (awaiting Lumban quality check), Drafts (saved work), or Needs Revision.'
         ],
         [
-            'target' => '#tour-products-search-bar',
+            'selector' => '#tour-products-search-bar',
             'title' => '🔍 Real-Time Search',
-            'description' => 'Instantly filter your catalogue by garment name, embroidery style (Calado, Burda), or description keywords as you type.'
+            'text' => 'Instantly filter your catalogue by garment name, embroidery style (Calado, Burda), or description keywords as you type.'
         ],
         [
-            'target' => '#tour-products-grid',
+            'selector' => '#tour-products-grid',
             'title' => '📦 Product Inventory & Actions',
-            'description' => 'Manage individual creation cards: review current stock levels, view customer ratings and reply to buyer reviews, edit listing details, or archive items.'
+            'text' => 'Manage individual creation cards: review current stock levels, view customer ratings and reply to buyer reviews, edit listing details, or archive items.'
         ],
         [
-            'target' => '#tour-products-add-btn',
+            'selector' => '#tour-products-add-btn',
             'title' => '✨ Add New Heritage Piece',
-            'description' => 'Ready to list a new piece? Click Add Product anytime to open the 3-step listing creation wizard with media uploads, sizing matrix, and AI storytelling.'
+            'text' => 'Ready to list a new piece? Click Add Product anytime to open the 3-step listing creation wizard with media uploads, sizing matrix, and AI storytelling.'
         ]
     ];
 @endphp
 
-<x-spotlight-tour tour-id="seller-products" :steps="$catalogueTourSteps" />
+<x-spotlight-tour tour-id="seller-products" :auto-start="false" :steps="$catalogueTourSteps" />
 @endsection

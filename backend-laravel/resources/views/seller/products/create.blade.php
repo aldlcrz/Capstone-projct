@@ -3149,32 +3149,32 @@ document.addEventListener('DOMContentLoaded', () => {
 @php
     $createTourSteps = [
         [
-            'target' => '#tour-create-guide-btn',
+            'selector' => '#tour-create-guide-btn',
             'title' => '✨ Product Creation Guide',
-            'description' => 'Welcome to the Heritage Piece Listing Wizard! This step-by-step assistant guides you through creating, pricing, and publishing your handcrafted Lumban creations.'
+            'text' => 'Welcome to the Heritage Piece Listing Wizard! This step-by-step assistant guides you through creating, pricing, and publishing your handcrafted Lumban creations.'
         ],
         [
-            'target' => '#tour-create-stepper-card',
+            'selector' => '#tour-create-stepper-card',
             'title' => '🧭 3-Step Wizard Navigation',
-            'description' => 'The listing process is divided into 3 intuitive phases: 1) Media & Core Info, 2) Pricing & Sizing Matrix, and 3) Artisan Story & Direct Payouts.'
+            'text' => 'The listing process is divided into 3 intuitive phases: 1) Media & Core Info, 2) Pricing & Sizing Matrix, and 3) Artisan Story & Direct Payouts.'
         ],
         [
-            'target' => '#tour-create-media-variants',
+            'selector' => '#tour-create-media-variants',
             'title' => '📸 Cover Media & Style Variants',
-            'description' => 'Upload your primary 1:1 cover image and high-resolution embroidery detail photos. Click "+ Add Another Variant" to add multiple style or color options with their own photos and names under a single listing.'
+            'text' => 'Upload your primary 1:1 cover image and high-resolution embroidery detail photos. Click "+ Add Another Variant" to add multiple style or color options with their own photos and names under a single listing.'
         ],
         [
-            'target' => '#tour-create-target-category',
+            'selector' => '#tour-create-target-category',
             'title' => '👥 Target Audience & Categories',
-            'description' => 'Choose your target demographic (Men, Women, or Kids). Garment categories (such as Barong Tagalog, Filipiniana, or Bolero) will automatically adjust based on your selection.'
+            'text' => 'Choose your target demographic (Men, Women, or Kids). Garment categories (such as Barong Tagalog, Filipiniana, or Bolero) will automatically adjust based on your selection.'
         ],
         [
-            'target' => '#tour-create-step1-footer',
+            'selector' => '#tour-create-step1-footer',
             'title' => '🚀 Real-Time Validation & Next Steps',
-            'description' => 'Live validation tags confirm required inputs. Click "Save & Continue" to advance to Step 2 for Heritage Sizing & Pricing, or use "Save as Draft" in Step 3 to continue anytime!'
+            'text' => 'Live validation tags confirm required inputs. Click "Save & Continue" to advance to Step 2 for Heritage Sizing & Pricing, or use "Save as Draft" in Step 3 to continue anytime!'
         ]
     ];
 @endphp
 
-<x-spotlight-tour tour-id="seller-product-create" :steps="$createTourSteps" />
+<x-spotlight-tour tour-id="seller-product-create" :auto-start="false" :steps="$createTourSteps" />
 @endsection
