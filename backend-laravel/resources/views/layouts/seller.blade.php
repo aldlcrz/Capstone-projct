@@ -509,7 +509,6 @@
         :user-id="Auth::id()"
         :auto-start="true"
         :steps="[
-            ['selector' => '#tour-seller-header-welcome', 'title' => 'Artisan Welcome & Store Status',    'text' => 'Welcome to your shop dashboard! Here you can see your artisan greeting, store verification status, and launch this interactive tour guide anytime.'],
             ['selector' => '#tour-seller-header-filter',  'title' => 'Date Filter & Export Report',       'text' => 'Use the date preset dropdown to filter your dashboard metrics (Today, 7 Days, 30 Days, All Time) or click Export Report to download comprehensive financial sheets.'],
             ['selector' => '#tour-seller-action-items',   'title' => 'Shop Action Items & Inquiries',    'text' => 'Real-time alert indicators requiring immediate artisan attention: New orders placed in the last 24h, products with low inventory needing a restock, buyer reviews, and unread chat messages.'],
             ['selector' => '#tour-seller-financials',     'title' => 'Financial Revenue Summary',        'text' => 'Gives you clear breakdown of your earnings: Today\'s revenue, weekly 7-day revenue, monthly 30-day earnings, and cumulative total revenue across all completed client orders.'],
