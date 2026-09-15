@@ -545,7 +545,7 @@
                                                     <!-- Gold Ringed Circular Avatar -->
                                                     <div style="width:58px;height:58px;min-width:58px;max-width:58px;min-height:58px;max-height:58px;border-radius:50%;padding:2px;background:linear-gradient(135deg,#996515,#E6CA65,#996515);box-shadow:0 2px 6px rgba(0,0,0,0.08);flex-shrink:0;">
                                                         <img src="{{ $shop->avatar }}" 
-                                                             onerror="this.src='/uploads/products/default.jpg'" 
+                                                             onerror="this.onerror=null;this.src='/images/logo-icon.png';" 
                                                              style="width:100%;height:100%;border-radius:50%;object-fit:cover;background:#FAF8F5;display:block;"
                                                              alt="{{ $shop->name }}">
                                                     </div>
