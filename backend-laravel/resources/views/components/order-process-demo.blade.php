@@ -25,7 +25,7 @@
     $recipientPhone = $userAddress->phone ?? ($currentUser->mobileNumber ?? '+63 912 345 6789');
 
     // Format products JSON for Alpine
-    $productsArray = $realProducts->map(function($p) {
+    $productsArray = $realProducts->map(function(\App\Models\Product $p) {
         $seller = $p->seller;
         $sizes = is_array($p->sizes) && count($p->sizes) > 0 ? $p->sizes : ['S', 'M', 'L', 'XL', '2XL'];
         return [
@@ -33,7 +33,7 @@
             'name' => $p->name,
             'price' => (float)$p->price,
             'formatted_price' => '₱' . number_format($p->price, 2),
-            'image' => $p->getImageUrl(),
+            'image' => $p->image_url ?? $p->getImageUrl(),
             'sizes' => $sizes,
             'fabric' => $p->fabric_type ?: 'Piña-Seda / Heritage Weave',
             'seller_name' => $seller->shopName ?: ($seller->name ?? 'Lumban Master Tailor'),
@@ -111,7 +111,7 @@ window.__demoUserData = {
             {{-- Step Navigation Stepper --}}
             <div class="px-4 sm:px-6 py-3 border-b overflow-x-auto no-scrollbar"
                  style="background-color: #FDF8EE; border-color: #E8DECB;">
-                <div class="flex items-center justify-between min-w-[360px] gap-2">
+                <div class="flex items-center justify-between min-w-90 gap-2">
                     <template x-for="(s, index) in steps" :key="index">
                         <button type="button"
                                 @click="currentStep = index"
