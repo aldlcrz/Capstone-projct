@@ -5,23 +5,24 @@
     'userId' => Auth::id() ?? 'guest',
 ])
 
+<script type="application/json" id="spotlight-tour-data-{{ $tourId }}">
+{!! json_encode([
+    'tourId' => $tourId,
+    'userId' => (string)$userId,
+    'steps' => $steps,
+    'autoStart' => (bool)$autoStart
+]) !!}
+</script>
+
 <script>
 (function() {
-    window.__spotlightTours = window.__spotlightTours || {};
-    window.__spotlightTours['{{ $tourId }}'] = {
-        tourId: '{{ $tourId }}',
-        userId: '{{ $userId }}',
-        steps: @json($steps),
-        autoStart: {{ $autoStart ? 'true' : 'false' }}
-    };
-
     if (!window.spotlightTourEngine) {
         window.spotlightTourEngine = function(config) {
             return {
-                tourId: config ? config.tourId : 'default',
-                userId: config ? config.userId : 'guest',
+                tourId: (config && config.tourId) ? config.tourId : 'default',
+                userId: (config && config.userId) ? config.userId : 'guest',
                 steps: (config && Array.isArray(config.steps)) ? config.steps : [],
-                autoStart: config ? Boolean(config.autoStart) : true,
+                autoStart: (config && typeof config.autoStart !== 'undefined') ? Boolean(config.autoStart) : true,
                 
                 isActive: false,
                 currentStepIndex: 0,
@@ -194,7 +195,7 @@
 })();
 </script>
 
-<div x-data="spotlightTourEngine(window.__spotlightTours['{{ $tourId }}'])"
+<div x-data="spotlightTourEngine(JSON.parse(document.getElementById('spotlight-tour-data-{{ $tourId }}').textContent))"
      x-init="initTour()"
      @start-spotlight-tour.window="if (!$event.detail || $event.detail.tourId === '{{ $tourId }}' || !$event.detail.tourId) startTour()"
      x-cloak
@@ -283,7 +284,7 @@
                         <h4 class="font-serif text-base sm:text-lg font-bold text-gray-900 leading-snug"
                             x-text="currentStep.title || 'Feature Guide'"></h4>
                         <p class="text-xs sm:text-[13px] text-gray-600 leading-relaxed font-normal"
-                           x-text="currentStep.text || ''"></p>
+                            x-text="currentStep.text || ''"></p>
                     </div>
 
                     {{-- Action Controls (Previous / I Understand / Skip) --}}
