@@ -31,8 +31,8 @@
         return [
             'id' => $p->id,
             'name' => $p->name,
-            'price' => (float)$p->price,
-            'formatted_price' => '₱' . number_format($p->price, 2),
+            'price' => (float)($p->price ?? 0),
+            'formatted_price' => '₱' . number_format((float)($p->price ?? 0), 2),
             'image' => $p->image_url ?? $p->getImageUrl(),
             'sizes' => $sizes,
             'fabric' => $p->fabric_type ?: 'Piña-Seda / Heritage Weave',
@@ -44,14 +44,18 @@
     })->values()->toArray();
 @endphp
 
-<script>
-window.__realProductsDemo = @json($productsArray);
-window.__demoUserData = {
-    name: '{{ addslashes($recipientName) }}',
-    phone: '{{ addslashes($recipientPhone) }}',
-    address: '{{ addslashes($addressString) }}',
-    isLoggedIn: {{ Auth::check() ? 'true' : 'false' }}
-};
+{{-- Safe JSON Data Islands for Client-Side Scripting --}}
+<script type="application/json" id="real-products-demo-data">
+{!! json_encode($productsArray) !!}
+</script>
+
+<script type="application/json" id="real-demo-user-data">
+{!! json_encode([
+    'name' => $recipientName,
+    'phone' => $recipientPhone,
+    'address' => $addressString,
+    'isLoggedIn' => Auth::check(),
+]) !!}
 </script>
 
 {{-- Interactive Real-Time Ordering Process Demo Simulator --}}
@@ -510,23 +514,36 @@ function realtimeOrderDemoEngine() {
         isOpen: false,
         currentStep: 0,
         selectedProductIndex: 0,
-        products: Array.isArray(window.__realProductsDemo) && window.__realProductsDemo.length > 0 
-            ? window.__realProductsDemo 
-            : [{
-                name: 'Heritage Piña Barong',
-                price: 4850,
-                formatted_price: '₱4,850.00',
-                image: '/uploads/products/default.jpg',
-                sizes: ['S', 'M', 'L', 'XL'],
-                fabric: 'Piña-Seda Weave',
-                seller_name: 'Lumban Artisan Guild',
-                artisan_region: 'Lumban, Laguna'
-            }],
-        userData: window.__demoUserData || {
-            name: 'Juan Dela Cruz',
-            phone: '+63 912 345 6789',
-            address: 'Heritage Residences, Quezon City'
-        },
+        products: (() => {
+            try {
+                const el = document.getElementById('real-products-demo-data');
+                const data = el ? JSON.parse(el.textContent) : null;
+                return (Array.isArray(data) && data.length > 0) ? data : [{
+                    name: 'Heritage Piña Barong',
+                    price: 4850,
+                    formatted_price: '₱4,850.00',
+                    image: '/uploads/products/default.jpg',
+                    sizes: ['S', 'M', 'L', 'XL'],
+                    fabric: 'Piña-Seda Weave',
+                    seller_name: 'Lumban Artisan Guild',
+                    artisan_region: 'Lumban, Laguna'
+                }];
+            } catch(e) {
+                return [];
+            }
+        })(),
+        userData: (() => {
+            try {
+                const el = document.getElementById('real-demo-user-data');
+                return el ? JSON.parse(el.textContent) : {
+                    name: 'Juan Dela Cruz',
+                    phone: '+63 912 345 6789',
+                    address: 'Heritage Residences, Quezon City'
+                };
+            } catch(e) {
+                return { name: 'Juan Dela Cruz', phone: '+63 912 345 6789', address: 'Heritage Residences, Quezon City' };
+            }
+        })(),
         selectedSize: 'L',
         isCustomSize: false,
         selectedPayment: 'GCash',
