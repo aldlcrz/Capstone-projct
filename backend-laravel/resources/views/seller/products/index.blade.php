@@ -127,7 +127,7 @@ document.addEventListener('alpine:init', () => {
                 </h1>
                 <button type="button" 
                         id="tour-products-guide-btn" 
-                        onclick="window.startSpotlightTour('seller-products')"
+                        @click="$dispatch('start-spotlight-tour', { tourId: 'seller-products' })"
                         class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold transition-all shadow-xs cursor-pointer" 
                         style="background: #FAF5E6; border: 1px solid #D4AF37; color: #8C6D1F;"
                         onmouseover="this.style.background='#D4AF37'; this.style.color='#FFFFFF';"

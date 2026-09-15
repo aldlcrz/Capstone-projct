@@ -35,7 +35,7 @@
                         </h1>
                         <button type="button" 
                                 id="tour-create-guide-btn" 
-                                onclick="window.startSpotlightTour('seller-product-create')"
+                                @click="$dispatch('start-spotlight-tour', { tourId: 'seller-product-create' })"
                                 style="display:inline-flex;align-items:center;gap:6px;padding:4px 12px;border-radius:9999px;font-size:12px;font-weight:700;background:#FAF5E6;border:1px solid #D4AF37;color:#8C6D1F;cursor:pointer;transition:all 0.2s;"
                                 onmouseover="this.style.background='#D4AF37'; this.style.color='#FFFFFF';"
                                 onmouseout="this.style.background='#FAF5E6'; this.style.color='#8C6D1F';">

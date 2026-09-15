@@ -16,6 +16,10 @@
 
 <script>
 (function() {
+    window.startSpotlightTour = window.startSpotlightTour || function(tourId) {
+        window.dispatchEvent(new CustomEvent('start-spotlight-tour', { detail: { tourId: tourId } }));
+    };
+
     if (!window.spotlightTourEngine) {
         window.spotlightTourEngine = function(config) {
             return {
