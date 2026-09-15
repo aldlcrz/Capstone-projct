@@ -8,13 +8,30 @@
             <div class="mb-1">
                 <span class="text-[10px] font-bold uppercase tracking-[0.2em]" style="color: #A16D19;">✦ Deep Shop Insights</span>
             </div>
-            <h1 class="font-serif text-2xl sm:text-3xl font-bold uppercase" style="color: #1E1915;">
-                Seller <span class="italic lowercase" style="color: #C49520;">Analytics</span>
-            </h1>
+            <div class="flex items-center gap-3 flex-wrap">
+                <h1 class="font-serif text-2xl sm:text-3xl font-bold uppercase" style="color: #1E1915;">
+                    Seller <span class="italic lowercase" style="color: #C49520;">Analytics</span>
+                </h1>
+                
+                {{-- Analytics Guide Button directly next to the title --}}
+                <button type="button"
+                        id="tour-analytics-guide-btn"
+                        @click="$dispatch('start-spotlight-tour', { tourId: 'seller-analytics' })"
+                        class="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-black uppercase tracking-wider transition-all shadow-xs cursor-pointer group"
+                        style="background-color: #FDF8EE; color: #C49520; border: 1.5px solid #C49520;"
+                        onmouseover="this.style.backgroundColor='#C49520'; this.style.color='#FFFFFF';"
+                        onmouseout="this.style.backgroundColor='#FDF8EE'; this.style.color='#C49520';"
+                        title="Start Interactive Analytics Tour">
+                    <svg class="w-4 h-4 transition-transform group-hover:rotate-12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                    </svg>
+                    <span>Analytics Guide</span>
+                </button>
+            </div>
         </div>
 
         {{-- Date Filter Form --}}
-        <form method="GET" action="{{ route('seller.analytics') }}" x-data="{ selectedPreset: '{{ $filters['preset'] ?? 'all_time' }}' }" class="flex items-center gap-2">
+        <form method="GET" action="{{ route('seller.analytics') }}" id="tour-analytics-date-filter" x-data="{ selectedPreset: '{{ $filters['preset'] ?? 'all_time' }}' }" class="flex items-center gap-2">
             <div class="relative flex items-center rounded-2xl px-4 py-2 shadow-2xs transition-all" style="background: #FFFFFF; border: 1px solid #E8DECB;">
                 <svg class="w-4 h-4 shrink-0 mr-2" style="color: #A16D19;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
@@ -34,7 +51,7 @@
     </div>
 
     {{-- Interactive Module Tabs --}}
-    <div class="overflow-x-auto no-scrollbar -mx-4 px-4 sm:mx-0 sm:px-0">
+    <div id="tour-analytics-tabs" class="overflow-x-auto no-scrollbar -mx-4 px-4 sm:mx-0 sm:px-0">
         <div class="flex items-center gap-2 border-b pb-3 min-w-max" style="border-color: #E8DECB;">
             <button @click="activeTab = 'sales'" 
                     class="px-4 py-2.5 rounded-xl text-xs font-bold transition-all flex items-center gap-2 cursor-pointer font-sans"
@@ -76,7 +93,7 @@
 
     {{-- TAB 1: SALES ANALYTICS --}}
     <div x-show="activeTab === 'sales'" class="space-y-6">
-        <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6">
+        <div id="tour-analytics-sales-cards" class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6">
             <div class="p-4 sm:p-6 rounded-2xl shadow-2xs" style="background: #FFFFFF; border: 1px solid #ECE3D2;">
                 <div class="text-[9px] sm:text-[10px] font-bold uppercase tracking-widest mb-1" style="color: #8C827A;">Total Sales</div>
                 <div class="text-lg sm:text-2xl font-black font-sans" style="color: #C49520;">₱{{ number_format($salesAnalytics['totalSales'], 2) }}</div>
@@ -105,7 +122,7 @@
         </div>
 
         {{-- Sales Comparisons Matrix --}}
-        <div class="p-5 sm:p-6 rounded-3xl shadow-2xs space-y-4" style="background: #FFFFFF; border: 1px solid #ECE3D2;">
+        <div id="tour-analytics-sales-comparisons" class="p-5 sm:p-6 rounded-3xl shadow-2xs space-y-4" style="background: #FFFFFF; border: 1px solid #ECE3D2;">
             <h3 class="font-serif text-xs sm:text-sm font-bold uppercase tracking-wider" style="color: #1E1915;">Sales Period Comparisons</h3>
             
             <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
@@ -139,7 +156,7 @@
         </div>
 
         {{-- Sales Trend Visualizer Chart --}}
-        <div class="p-5 sm:p-6 rounded-3xl shadow-2xs space-y-4" style="background: #FFFFFF; border: 1px solid #ECE3D2;">
+        <div id="tour-analytics-sales-trend" class="p-5 sm:p-6 rounded-3xl shadow-2xs space-y-4" style="background: #FFFFFF; border: 1px solid #ECE3D2;">
             <div class="flex items-center justify-between">
                 <h3 class="font-serif text-xs sm:text-sm font-bold uppercase tracking-wider" style="color: #1E1915;">Sales Trend Overview</h3>
                 <span class="text-[10px] font-bold uppercase tracking-widest" style="color: #A16D19;">Revenue Trend (₱)</span>
@@ -524,6 +541,20 @@
         </div>
     </div>
 </div>
+
+<x-spotlight-tour
+    tour-id="seller-analytics"
+    :user-id="Auth::id()"
+    :auto-start="false"
+    :steps="[
+        ['selector' => '#tour-analytics-guide-btn',          'title' => 'Analytics Tour Guide',         'text' => 'Welcome to Deep Shop Insights! You can click this guide anytime to learn what each metrics module, chart, and financial statement calculates.'],
+        ['selector' => '#tour-analytics-date-filter',      'title' => 'Date Preset Filters',          'text' => 'Filter all analytical metrics across Today, 1 Week, 1 Month, 1 Year, or All Time to track seasonal performance.'],
+        ['selector' => '#tour-analytics-tabs',             'title' => '7 Specialized Analytics Hubs', 'text' => 'Click any tab to switch views: Sales Performance, Order Fulfillment, Product Conversion, Customer Retention Funnel, Category Demand, Net Payouts, and Promotions.'],
+        ['selector' => '#tour-analytics-sales-cards',      'title' => 'Core Sales KPIs',              'text' => 'Tracks Total Gross/Net Sales, Average Order Value (AOV) per client, total Barong pieces sold, and month-over-month growth rate %.'],
+        ['selector' => '#tour-analytics-sales-comparisons','title' => 'Period Growth Comparisons',    'text' => 'Compares current earnings directly against prior periods (Month vs Last Month, Week vs Last Week, Year vs Last Year) with real-time percentage indicators.'],
+        ['selector' => '#tour-analytics-sales-trend',      'title' => 'Revenue Trend Bar Graph',      'text' => 'Visualizes daily revenue velocity to highlight highest-earning days and identify buyer purchase patterns over time.'],
+    ]"
+/>
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
