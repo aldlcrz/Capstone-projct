@@ -2335,6 +2335,7 @@ function addProductManager() {
                     v1Box.classList.add('border-red-500', 'ring-2', 'ring-red-400');
                     v1Box.scrollIntoView({ behavior: 'smooth', block: 'center' });
                 }
+                triggerAppModal('Cover Photo Required', 'Please upload at least the primary product cover photo before proceeding to Step 2.', 'warning');
                 return;
             }
 
@@ -2345,6 +2346,7 @@ function addProductManager() {
                     nameInput.scrollIntoView({ behavior: 'smooth', block: 'center' });
                     nameInput.focus();
                 }
+                triggerAppModal('Product Name Required', 'Please provide a descriptive product name with at least 3 characters.', 'warning');
                 return;
             }
 
@@ -2354,6 +2356,7 @@ function addProductManager() {
                     tgContainer.classList.add('border-red-500', 'ring-2', 'ring-red-400');
                     tgContainer.scrollIntoView({ behavior: 'smooth', block: 'center' });
                 }
+                triggerAppModal('Target Audience Required', 'Please select whether this garment is tailored for Men, Women, or Kids.', 'warning');
                 return;
             }
 
@@ -2363,6 +2366,7 @@ function addProductManager() {
                     catContainer.classList.add('border-red-500', 'ring-2', 'ring-red-400');
                     catContainer.scrollIntoView({ behavior: 'smooth', block: 'center' });
                 }
+                triggerAppModal('Category Required', 'Please select at least one product category from the catalogue.', 'warning');
                 return;
             }
 
@@ -2376,23 +2380,24 @@ function addProductManager() {
 
         goToStep3() {
             // Remove previous Step 2 error highlights
-            document.querySelectorAll('#price-card, #priceInput, #shipping-fee-card, #shippingFeeInput, #shipping-days-card, #shippingDaysInput, #sizing-section, #stock-card').forEach(el => {
+            document.querySelectorAll('#price-card, #priceInput, #shipping-fee-card, #shippingFeeInput, #shipping-days-card, #shippingDaysInput, #tour-create-step2-sizing, #sizing-section, #stock-card').forEach(el => {
                 el.classList.remove('border-red-500', 'ring-2', 'ring-red-400');
             });
 
             const checkedSizes = document.querySelectorAll('.size-checkbox:checked');
             if (checkedSizes.length === 0) {
-                const sizeSec = document.getElementById('sizing-section');
+                const sizeSec = document.getElementById('tour-create-step2-sizing') || document.getElementById('sizing-section');
                 if (sizeSec) {
                     sizeSec.classList.add('border-red-500', 'ring-2', 'ring-red-400');
                     sizeSec.scrollIntoView({ behavior: 'smooth', block: 'center' });
                 }
+                triggerAppModal('Size Selection Required', 'Please check at least one Heritage Size (e.g. S, M, L, XL, XXL, Custom) and assign available stock to continue.', 'warning');
                 return;
             }
 
             const totalStock = parseInt(document.getElementById('total_stock')?.value || 0);
             if (totalStock <= 0) {
-                const sizeSec = document.getElementById('sizing-section');
+                const sizeSec = document.getElementById('tour-create-step2-sizing') || document.getElementById('sizing-section');
                 const stockCard = document.getElementById('stock-card');
                 if (sizeSec) sizeSec.classList.add('border-red-500', 'ring-2', 'ring-red-400');
                 if (stockCard) stockCard.classList.add('border-red-500', 'ring-2', 'ring-red-400');
@@ -2403,6 +2408,7 @@ function addProductManager() {
                 } else if (sizeSec) {
                     sizeSec.scrollIntoView({ behavior: 'smooth', block: 'center' });
                 }
+                triggerAppModal('Inventory Stock Required', 'Total stock must be greater than 0. Please enter available inventory quantities for your selected sizes.', 'warning');
                 return;
             }
 
@@ -2416,6 +2422,7 @@ function addProductManager() {
                     priceInput.focus();
                 }
                 if (priceCard) priceCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                triggerAppModal('Valid Price Required', 'Please enter a valid item price between ₱1.00 and ₱10,000.00.', 'warning');
                 return;
             }
 
@@ -2429,6 +2436,7 @@ function addProductManager() {
                     feeInput.focus();
                 }
                 if (feeCard) feeCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                triggerAppModal('Shipping Fee Required', 'Please enter a standard delivery shipping fee between ₱0.00 (Free shipping) and ₱500.00.', 'warning');
                 return;
             }
 
@@ -2442,6 +2450,7 @@ function addProductManager() {
                     daysInput.focus();
                 }
                 if (daysCard) daysCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                triggerAppModal('Shipping Days Required', 'Please specify estimated shipping days between 1 and 30 business days.', 'warning');
                 return;
             }
 
@@ -2569,6 +2578,7 @@ function toggleSizeStock(checkbox, size) {
         if (stockInput.value === '' || stockInput.value === '0') {
             stockInput.value = '5';
         }
+        document.getElementById('tour-create-step2-sizing')?.classList.remove('border-red-500', 'ring-2', 'ring-red-400');
         document.getElementById('sizing-section')?.classList.remove('border-red-500', 'ring-2', 'ring-red-400');
     } else {
         stockInput.value = '0';
@@ -2581,11 +2591,15 @@ function calculateTotalStock() {
     let total = 0;
     const inputs = document.querySelectorAll('.size-stock-input');
     const checkboxes = document.querySelectorAll('.size-checkbox');
+    let checkedCount = 0;
 
     checkboxes.forEach((cb, idx) => {
-        if (cb.checked && inputs[idx]) {
-            const val = parseInt(inputs[idx].value) || 0;
-            total += val;
+        if (cb.checked) {
+            checkedCount++;
+            if (inputs[idx]) {
+                const val = parseInt(inputs[idx].value) || 0;
+                total += val;
+            }
         }
     });
 
@@ -2593,7 +2607,18 @@ function calculateTotalStock() {
     if (totalStockEl) totalStockEl.value = total;
     if (total > 0) {
         document.getElementById('stock-card')?.classList.remove('border-red-500', 'ring-2', 'ring-red-400');
+        document.getElementById('tour-create-step2-sizing')?.classList.remove('border-red-500', 'ring-2', 'ring-red-400');
         document.getElementById('sizing-section')?.classList.remove('border-red-500', 'ring-2', 'ring-red-400');
+    }
+
+    const alpineEl = document.querySelector('[x-data="addProductManager()"]');
+    if (alpineEl && window.Alpine) {
+        try {
+            const alpineData = Alpine.$data(alpineEl);
+            if (alpineData) {
+                alpineData.hasValidSizing = (checkedCount > 0 && total > 0);
+            }
+        } catch(e) {}
     }
 }
 
@@ -2719,7 +2744,7 @@ function validateProductForm(e, isEdit = false) {
 
     // 3. Heritage Sizing & Stock
     const checkedSizes = document.querySelectorAll('.size-checkbox:checked');
-    const sizingSection = document.getElementById('sizing-section');
+    const sizingSection = document.getElementById('tour-create-step2-sizing') || document.getElementById('sizing-section');
     
     if (checkedSizes.length === 0) {
         errors.push('Please select at least one Heritage Size (e.g. S, M, L, XL, XXL, Custom).');
