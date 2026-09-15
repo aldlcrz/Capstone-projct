@@ -318,19 +318,6 @@
                             </div>
                         </a>
 
-                        <!-- Take System Tour Button -->
-                        <button type="button"
-                                @click="$dispatch('start-spotlight-tour', { tourId: 'seller' })"
-                                class="hidden lg:flex items-center gap-2 px-3.5 py-2 rounded-2xl transition-all text-xs font-bold shrink-0"
-                                style="background: #FDF8EE; border: 1px solid #E8DECB; color: #766C60;"
-                                onmouseover="this.style.borderColor='#C49520'; this.style.color='#C49520';"
-                                onmouseout="this.style.borderColor='#E8DECB'; this.style.color='#766C60';"
-                                title="Take System Tour">
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                            </svg>
-                            <span class="hidden xl:inline">Tour</span>
-                        </button>
 
                         <!-- Mobile Logout Action -->
                         <form x-ref="mobileHeaderLogoutForm" action="{{ route('logout') }}" method="POST" class="lg:hidden shrink-0">
