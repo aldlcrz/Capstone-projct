@@ -27,12 +27,15 @@
             {{-- Guide Button --}}
             <button type="button" 
                     onclick="window.startSpotlightTour('seller-customers-guide')"
-                    class="h-10 sm:h-11 px-3.5 rounded-xl text-xs font-extrabold tracking-wider uppercase transition-all shadow-xs flex items-center gap-1.5 cursor-pointer shrink-0"
-                    style="background: #FDF8EE; border: 1px solid #C49520; color: #7A5505;"
-                    onmouseover="this.style.background='#1E1915'; this.style.color='#DFC97A'; this.style.borderColor='#1E1915';"
-                    onmouseout="this.style.background='#FDF8EE'; this.style.color='#7A5505'; this.style.borderColor='#C49520';">
-                <span class="text-xs">✦</span>
-                <span class="hidden sm:inline">Guide</span>
+                    class="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-full text-xs font-black uppercase tracking-wider transition-all shadow-xs cursor-pointer group shrink-0"
+                    style="background-color: #FDF8EE; color: #C49520; border: 1.5px solid #C49520;"
+                    onmouseover="this.style.backgroundColor='#C49520'; this.style.color='#FFFFFF';"
+                    onmouseout="this.style.backgroundColor='#FDF8EE'; this.style.color='#C49520';"
+                    title="Start Interactive Directory Guide">
+                <svg class="w-4 h-4 transition-transform group-hover:rotate-12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                </svg>
+                <span>Directory Guide</span>
             </button>
         </div>
     </div>
