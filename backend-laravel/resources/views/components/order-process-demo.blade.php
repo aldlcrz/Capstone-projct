@@ -38,6 +38,8 @@
             'fabric' => $p->fabric_type ?: 'Piña-Seda / Heritage Weave',
             'seller_name' => $seller->shopName ?: ($seller->name ?? 'Lumban Master Tailor'),
             'seller_photo' => $seller->profilePhoto ? (str_starts_with($seller->profilePhoto, 'http') ? $seller->profilePhoto : url($seller->profilePhoto)) : null,
+            'seller_gcash' => $seller->gcashNumber ?: '09123456789',
+            'seller_maya'  => $seller->mayaNumber ?: '09987654321',
             'artisan_region' => $p->artisan_region ?: ($seller->shopCity ? $seller->shopCity . ', ' . $seller->shopProvince : 'Lumban, Laguna'),
             'shipping_fee' => (float)($p->shippingFee ?? 0),
         ];
@@ -138,7 +140,7 @@
             {{-- Step Content Area --}}
             <div class="p-5 sm:p-7 max-h-[70vh] overflow-y-auto" style="background-color: #FFFCF7;">
 
-                {{-- STEP 1: Select Real Product & Fit --}}
+                {{-- STEP 1: Select Real Product & Size --}}
                 <div x-show="currentStep === 0" x-transition class="space-y-5">
                     
                     {{-- Real Product Selector Bar (If multiple real products exist) --}}
@@ -169,7 +171,7 @@
                                 <img :src="currentProduct.image" :alt="currentProduct.name" class="w-full h-full object-cover">
                             </div>
                             <div class="min-w-0">
-                                <span class="text-[10px] font-extrabold uppercase tracking-widest" style="color: #C49520;">Step 1: Choose Fit & Style</span>
+                                <span class="text-[10px] font-extrabold uppercase tracking-widest" style="color: #C49520;">Step 1: Choose Fit & Size</span>
                                 <h3 class="font-serif text-lg sm:text-xl font-extrabold leading-tight mt-0.5 truncate" style="color: #1E1915;" x-text="currentProduct.name"></h3>
                                 <p class="text-xs mt-1 truncate" style="color: #5C5247;">
                                     Artisan: <strong style="color: #1E1915;" x-text="currentProduct.seller_name"></strong> • <span x-text="currentProduct.artisan_region"></span>
@@ -188,17 +190,15 @@
                         <div class="text-xs font-bold" style="color: #1E1915;" x-text="currentProduct.fabric"></div>
                     </div>
 
-                    {{-- Size Selector --}}
+                    {{-- Size Selector (Standard Product Sizes) --}}
                     <div class="space-y-2">
                         <div class="flex items-center justify-between">
-                            <label class="text-xs font-bold" style="color: #1E1915;">Available Sizing:</label>
-                            <button type="button" @click="isCustomSize = !isCustomSize" class="text-[11px] font-bold underline cursor-pointer" style="color: #C49520;">
-                                <span x-text="isCustomSize ? 'Switch to Standard Sizes' : 'Request Made-to-Measure (+₱0)'"></span>
-                            </button>
+                            <label class="text-xs font-bold" style="color: #1E1915;">Select Size:</label>
+                            <span class="text-[11px] font-bold" style="color: #C49520;">Standard Filipino Sizing</span>
                         </div>
 
                         {{-- Standard Sizes --}}
-                        <div x-show="!isCustomSize" class="flex flex-wrap gap-2">
+                        <div class="flex flex-wrap gap-2">
                             <template x-for="sz in (currentProduct.sizes || ['S', 'M', 'L', 'XL'])" :key="sz">
                                 <button type="button"
                                         @click="selectedSize = sz"
@@ -208,33 +208,11 @@
                                 </button>
                             </template>
                         </div>
-
-                        {{-- Made to Measure Input --}}
-                        <div x-show="isCustomSize" class="p-4 rounded-2xl border space-y-2.5" style="background-color: #FFFFFF; border-color: #E8DECB;">
-                            <div class="text-xs font-bold flex items-center gap-1.5" style="color: #1E1915;">
-                                <span>📐 Custom Sizing Specifications (Inches)</span>
-                            </div>
-                            <div class="grid grid-cols-3 gap-2">
-                                <div>
-                                    <label class="text-[10px] font-semibold" style="color: #5C5247;">Chest</label>
-                                    <input type="text" value="38 in" readonly class="w-full text-xs font-bold rounded-lg px-2.5 py-1.5 text-center" style="background-color: #FDF8EE; border: 1px solid #E8DECB; color: #1E1915;">
-                                </div>
-                                <div>
-                                    <label class="text-[10px] font-semibold" style="color: #5C5247;">Shoulder</label>
-                                    <input type="text" value="17.5 in" readonly class="w-full text-xs font-bold rounded-lg px-2.5 py-1.5 text-center" style="background-color: #FDF8EE; border: 1px solid #E8DECB; color: #1E1915;">
-                                </div>
-                                <div>
-                                    <label class="text-[10px] font-semibold" style="color: #5C5247;">Sleeve Length</label>
-                                    <input type="text" value="24.5 in" readonly class="w-full text-xs font-bold rounded-lg px-2.5 py-1.5 text-center" style="background-color: #FDF8EE; border: 1px solid #E8DECB; color: #1E1915;">
-                                </div>
-                            </div>
-                            <p class="text-[10px] text-gray-500 italic">Custom measurements will be submitted directly with this order to the artisan.</p>
-                        </div>
                     </div>
 
                     <div class="pt-3 border-t flex items-center justify-between" style="border-color: #E8DECB;">
                         <div class="text-xs" style="color: #5C5247;">
-                            Selected: <strong style="color: #1E1915;" x-text="isCustomSize ? 'Custom Made-to-Measure' : 'Size ' + selectedSize"></strong>
+                            Selected: <strong style="color: #1E1915;" x-text="'Size ' + selectedSize"></strong>
                         </div>
                         <button type="button"
                                 @click="goToStep(1)"
@@ -273,7 +251,7 @@
                             </div>
                             <div class="flex-1 min-w-0">
                                 <h4 class="text-xs font-bold truncate" style="color: #1E1915;" x-text="currentProduct.name"></h4>
-                                <div class="text-[11px]" style="color: #5C5247;" x-text="(isCustomSize ? 'Custom Fit' : 'Size: ' + selectedSize) + ' • ' + currentProduct.fabric"></div>
+                                <div class="text-[11px]" style="color: #5C5247;" x-text="'Size: ' + selectedSize + ' • ' + currentProduct.fabric"></div>
                                 <div class="text-xs font-extrabold mt-1" style="color: #1E1915;">
                                     <span x-text="currentProduct.formatted_price"></span> <span class="text-[10px] font-normal text-gray-500">× 1</span>
                                 </div>
@@ -316,12 +294,12 @@
                     </div>
                 </div>
 
-                {{-- STEP 3: Real Checkout Simulation --}}
+                {{-- STEP 3: Real Checkout Simulation (GCash & Maya) --}}
                 <div x-show="currentStep === 2" x-transition class="space-y-5">
                     <div>
                         <span class="text-[10px] font-extrabold uppercase tracking-widest" style="color: #C49520;">Step 3: Secure Artisan Checkout</span>
                         <h3 class="font-serif text-xl sm:text-2xl font-extrabold mt-0.5" style="color: #1E1915;">Delivery & Payment Verification</h3>
-                        <p class="text-xs mt-1" style="color: #5C5247;">In LumBarong, payments are sent directly to the artisan's verified account with reference verification.</p>
+                        <p class="text-xs mt-1" style="color: #5C5247;">In LumBarong, payments are sent directly to the artisan's verified GCash or Maya account with reference verification.</p>
                     </div>
 
                     {{-- Address Box --}}
@@ -338,45 +316,45 @@
                         </p>
                     </div>
 
-                    {{-- Payment Method Selection --}}
+                    {{-- Payment Method Selection (Only GCash and Maya) --}}
                     <div class="space-y-2">
-                        <label class="text-xs font-bold" style="color: #1E1915;">Payment Method:</label>
-                        <div class="grid grid-cols-3 gap-2">
+                        <label class="text-xs font-bold" style="color: #1E1915;">Select Verified Payment Gateway:</label>
+                        <div class="grid grid-cols-2 gap-3">
                             <button type="button"
                                     @click="selectedPayment = 'GCash'"
-                                    class="p-3 rounded-2xl border text-center transition-all flex flex-col items-center justify-center gap-1 cursor-pointer"
+                                    class="p-3.5 rounded-2xl border text-center transition-all flex flex-col items-center justify-center gap-1 cursor-pointer"
                                     :style="selectedPayment === 'GCash' ? 'background-color: #FFF9ED; border: 2px solid #C49520;' : 'background-color: #FFFFFF; border: 1px solid #E8DECB;'">
-                                <span class="text-xl">📱</span>
-                                <span class="text-xs font-bold" style="color: #1E1915;">GCash (13 Digits)</span>
+                                <span class="text-2xl">📱</span>
+                                <span class="text-xs font-extrabold" style="color: #1E1915;">GCash (13-Digit Ref)</span>
+                                <span class="text-[10px]" style="color: #766C60;" x-text="'Seller: ' + (currentProduct.seller_gcash || '09123456789')"></span>
                             </button>
                             <button type="button"
                                     @click="selectedPayment = 'Maya'"
-                                    class="p-3 rounded-2xl border text-center transition-all flex flex-col items-center justify-center gap-1 cursor-pointer"
+                                    class="p-3.5 rounded-2xl border text-center transition-all flex flex-col items-center justify-center gap-1 cursor-pointer"
                                     :style="selectedPayment === 'Maya' ? 'background-color: #FFF9ED; border: 2px solid #C49520;' : 'background-color: #FFFFFF; border: 1px solid #E8DECB;'">
-                                <span class="text-xl">💳</span>
-                                <span class="text-xs font-bold" style="color: #1E1915;">Maya (12 Digits)</span>
-                            </button>
-                            <button type="button"
-                                    @click="selectedPayment = 'COD'"
-                                    class="p-3 rounded-2xl border text-center transition-all flex flex-col items-center justify-center gap-1 cursor-pointer"
-                                    :style="selectedPayment === 'COD' ? 'background-color: #FFF9ED; border: 2px solid #C49520;' : 'background-color: #FFFFFF; border: 1px solid #E8DECB;'">
-                                <span class="text-xl">💵</span>
-                                <span class="text-xs font-bold" style="color: #1E1915;">Cash on Delivery</span>
+                                <span class="text-2xl">💳</span>
+                                <span class="text-xs font-extrabold" style="color: #1E1915;">Maya (12-Digit Ref)</span>
+                                <span class="text-[10px]" style="color: #766C60;" x-text="'Seller: ' + (currentProduct.seller_maya || '09987654321')"></span>
                             </button>
                         </div>
                     </div>
 
-                    {{-- Simulated Reference Number Input --}}
-                    <div x-show="selectedPayment !== 'COD'" class="p-3.5 rounded-2xl border space-y-1.5" style="background-color: #FDF8EE; border-color: #E8DECB;">
-                        <label class="text-[11px] font-bold" style="color: #1E1915;">
-                            Payment Reference Number (<span x-text="selectedPayment"></span> Verification):
-                        </label>
-                        <input type="text"
-                               :value="selectedPayment === 'GCash' ? '1002948291048' : '982740192837'"
-                               readonly
-                               class="w-full text-xs font-mono font-bold rounded-lg p-2.5"
-                               style="background-color: #FFFFFF; border: 1px solid #E8DECB; color: #1E1915;">
-                        <p class="text-[10px] text-gray-500 italic">In live ordering, upload your receipt screenshot and enter your transaction reference number.</p>
+                    {{-- Simulated Reference Number & Proof Upload --}}
+                    <div class="p-4 rounded-2xl border space-y-2.5" style="background-color: #FDF8EE; border-color: #E8DECB;">
+                        <div>
+                            <label class="text-[11px] font-bold" style="color: #1E1915;">
+                                Payment Reference Number (<span x-text="selectedPayment"></span> Verification):
+                            </label>
+                            <input type="text"
+                                   :value="selectedPayment === 'GCash' ? '1002948291048' : '982740192837'"
+                                   readonly
+                                   class="w-full text-xs font-mono font-bold rounded-lg p-2.5 mt-1"
+                                   style="background-color: #FFFFFF; border: 1px solid #E8DECB; color: #1E1915;">
+                        </div>
+                        <div class="flex items-center gap-2 text-xs font-bold text-emerald-800 bg-emerald-50 px-3 py-2 rounded-xl border border-emerald-200">
+                            <span>🧾</span>
+                            <span>Payment Screenshot Proof Attached (Simulation)</span>
+                        </div>
                     </div>
 
                     <div class="pt-3 border-t flex items-center justify-between" style="border-color: #E8DECB;">
@@ -545,7 +523,6 @@ function realtimeOrderDemoEngine() {
             }
         })(),
         selectedSize: 'L',
-        isCustomSize: false,
         selectedPayment: 'GCash',
         orderStatusStage: 1,
 
@@ -569,7 +546,7 @@ function realtimeOrderDemoEngine() {
                 },
                 2: {
                     title: 'Preparing / Packing Proof Uploaded',
-                    desc: `${seller} custom-tailors your ${this.currentProduct.name} and uploads a photo proof of the finished barong before dispatch.`
+                    desc: `${seller} packages your ${this.currentProduct.name} and uploads a photo proof of the finished barong before dispatch.`
                 },
                 3: {
                     title: 'Shipped (Courier In Transit)',
