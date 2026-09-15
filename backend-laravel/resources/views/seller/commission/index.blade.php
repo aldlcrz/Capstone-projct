@@ -6,23 +6,24 @@
     <div id="tour-commission-header" class="flex flex-col sm:flex-row sm:items-end justify-between gap-3 sm:gap-4 pb-2 border-b" style="border-color: #E8DECB;">
         <div>
             <div class="text-[10px] font-bold text-[#C49520] uppercase tracking-[0.2em] mb-1">✦ Financial Settlement</div>
-            <h1 class="font-serif text-2xl sm:text-3xl font-bold text-[#1E1915]">Seller <span class="text-[#766C60] font-light italic">Commission Payment</span></h1>
+            <div class="flex items-center gap-3 flex-wrap">
+                <h1 class="font-serif text-2xl sm:text-3xl font-bold text-[#1E1915]">Seller <span class="text-[#766C60] font-light italic">Commission Payment</span></h1>
+                {{-- Guide Button --}}
+                <button type="button" 
+                        onclick="window.startSpotlightTour('seller-commission-guide')"
+                        class="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-black uppercase tracking-wider transition-all shadow-xs cursor-pointer group shrink-0"
+                        style="background-color: #FDF8EE; color: #C49520; border: 1.5px solid #C49520;"
+                        onmouseover="this.style.backgroundColor='#C49520'; this.style.color='#FFFFFF';"
+                        onmouseout="this.style.backgroundColor='#FDF8EE'; this.style.color='#C49520';"
+                        title="Start Interactive Commission Guide">
+                    <svg class="w-4 h-4 transition-transform group-hover:rotate-12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                    </svg>
+                    <span>Commission Guide</span>
+                </button>
+            </div>
             <p class="text-xs text-[#766C60] mt-1 font-medium">Settle your monthly platform commission to maintain an active seller shop account.</p>
         </div>
-
-        {{-- Guide Button --}}
-        <button type="button" 
-                onclick="window.startSpotlightTour('seller-commission-guide')"
-                class="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-full text-xs font-black uppercase tracking-wider transition-all shadow-xs cursor-pointer group shrink-0 self-start sm:self-auto"
-                style="background-color: #FDF8EE; color: #C49520; border: 1.5px solid #C49520;"
-                onmouseover="this.style.backgroundColor='#C49520'; this.style.color='#FFFFFF';"
-                onmouseout="this.style.backgroundColor='#FDF8EE'; this.style.color='#C49520';"
-                title="Start Interactive Commission Guide">
-            <svg class="w-4 h-4 transition-transform group-hover:rotate-12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-            </svg>
-            <span>Commission Guide</span>
-        </button>
     </div>
 
     {{-- Monthly Summary Card --}}
