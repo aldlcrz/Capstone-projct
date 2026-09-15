@@ -119,16 +119,16 @@
                             'SHOP' => [
                                 ['label' => 'Dashboard',     'path' => 'seller/dashboard',  'badge' => 0,                       'icon' => '<path d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path>'],
                                 ['label' => 'Analytics',     'path' => 'seller/analytics',  'badge' => 0,                       'icon' => '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>'],
-                                ['label' => 'Products',      'path' => 'seller/products',   'badge' => $attentionProductsCount,  'icon' => '<path d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 11m8 4V4"></path>'],
+                                ['label' => 'Products',      'path' => 'seller/products',   'badge' => $attentionProductsCount,  'id' => 'tour-seller-add-product', 'icon' => '<path d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 11m8 4V4"></path>'],
                                 ['label' => 'Customers',     'path' => 'seller/customers',  'badge' => 0,                       'icon' => '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path>'],
                                 ['label' => 'Messages',      'path' => 'seller/messages',   'badge' => $unreadMsgCount,          'icon' => '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"></path>'],
                             ],
                             'SALES & ORDERS' => [
-                                ['label' => 'My Orders',      'path' => 'seller/orders',    'badge' => $pendingOrdersCount,     'icon' => '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"></path>'],
+                                ['label' => 'My Orders',      'path' => 'seller/orders',    'badge' => $pendingOrdersCount,     'id' => 'tour-seller-orders', 'icon' => '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"></path>'],
                             ],
                             'HERITAGE SHOP' => [
-                                ['label' => 'Pay Commission', 'path' => 'seller/commission', 'badge' => 0,                      'icon' => '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"></path>'],
-                                ['label' => 'Shop Policies',  'path' => 'seller/policies',  'badge' => 0,                      'icon' => '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>'],
+                                ['label' => 'Pay Commission', 'path' => 'seller/commission', 'badge' => 0,                      'id' => 'tour-seller-payout-config', 'icon' => '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"></path>'],
+                                ['label' => 'Shop Policies',  'path' => 'seller/policies',  'badge' => 0,                      'id' => 'tour-seller-policies',      'icon' => '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>'],
                                 ['label' => 'Shop Profile',   'path' => 'seller/profile',   'badge' => 0,                      'icon' => '<path d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>'],
                                 ['label' => 'Reports & Concerns', 'path' => 'seller/reports', 'badge' => $pendingReportsCount, 'icon' => '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>'],
                             ],
@@ -141,6 +141,7 @@
                             @foreach($items as $item)
                                 @php $isActive = request()->is($item['path'] . '*'); @endphp
                                 <a href="/{{ $item['path'] }}"
+                                   id="{{ $item['id'] ?? '' }}"
                                    class="flex items-center justify-between px-3.5 py-3 rounded-2xl transition-all duration-200 tracking-wide text-[13px] font-semibold {{ $isActive ? 'seller-nav-active' : 'seller-nav-inactive' }}"
                                    @if(!$isActive)
                                    onmouseover="this.style.color='#1E1915'; this.style.background='rgba(196,149,32,0.08)';"
@@ -317,6 +318,20 @@
                             </div>
                         </a>
 
+                        <!-- Take System Tour Button -->
+                        <button type="button"
+                                @click="$dispatch('start-spotlight-tour', { tourId: 'seller' })"
+                                class="hidden lg:flex items-center gap-2 px-3.5 py-2 rounded-2xl transition-all text-xs font-bold shrink-0"
+                                style="background: #FDF8EE; border: 1px solid #E8DECB; color: #766C60;"
+                                onmouseover="this.style.borderColor='#C49520'; this.style.color='#C49520';"
+                                onmouseout="this.style.borderColor='#E8DECB'; this.style.color='#766C60';"
+                                title="Take System Tour">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                            </svg>
+                            <span class="hidden xl:inline">Tour</span>
+                        </button>
+
                         <!-- Mobile Logout Action -->
                         <form x-ref="mobileHeaderLogoutForm" action="{{ route('logout') }}" method="POST" class="lg:hidden shrink-0">
                             @csrf
@@ -488,6 +503,18 @@
     <x-seller-report-modal />
     <x-confirmation-modal />
     <x-modal-scroll-lock />
+
+    <x-spotlight-tour
+        tour-id="seller"
+        :user-id="Auth::id()"
+        :auto-start="true"
+        :steps="[
+            ['selector' => '#tour-seller-add-product',   'title' => 'Add New Products',        'text' => 'List your handcrafted Barong Tagalog here. Add photos, sizes, pricing, and stock to make your products visible to customers.'],
+            ['selector' => '#tour-seller-orders',        'title' => 'Manage Your Orders',      'text' => 'Track incoming orders, update their status, and coordinate deliveries — all from the Orders section.'],
+            ['selector' => '#tour-seller-policies',      'title' => 'Set Shop Policies',       'text' => 'Define your return, refund, and shipping policies so customers know what to expect when shopping from your store.'],
+            ['selector' => '#tour-seller-payout-config', 'title' => 'Pay Commission',          'text' => 'Settle your platform commission here to keep your shop active and products listed on LumBarong.'],
+        ]"
+    />
     @stack('scripts')
 </body>
 </html>

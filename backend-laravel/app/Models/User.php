@@ -115,24 +115,9 @@ class User extends Authenticatable
 
     /**
      * Determine if user has completed initial profile onboarding.
-     * For sellers, checks if they have configured GCash payout or listed products.
      */
     public function isOnboarded(): bool
     {
-        try {
-            if ($this->role === 'seller') {
-                $hasGcash    = !empty($this->gcashNumber) || !empty($this->gcashQrCode);
-                $hasMaya     = !empty($this->mayaNumber)  || !empty($this->mayaQrCode);
-                $hasProducts = $this->products()->count() > 0;
-
-                // An artisan is considered fully setup once they have configured a payout method OR published a product
-                return $hasGcash || $hasMaya || $hasProducts;
-            }
-
-            if (\Illuminate\Support\Facades\Schema::hasColumn('users', 'is_onboarded')) {
-                return (bool) $this->is_onboarded;
-            }
-        } catch (\Throwable $e) {}
         return true;
     }
 

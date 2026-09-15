@@ -178,9 +178,6 @@ class WebAuthController extends Controller
                 if (!$user->isVerified) {
                     return redirect()->route('seller.verification-pending');
                 }
-                if (!$user->isOnboarded()) {
-                    return redirect()->route('seller.onboarding');
-                }
                 return redirect()->route('seller.dashboard');
             }
 
@@ -479,10 +476,6 @@ class WebAuthController extends Controller
                 $user->save();
                 session(['login_session_version' => $user->sessionVersion]);
 
-                if ($user->role === 'customer' && !$user->isOnboarded()) {
-                    return redirect()->route('onboarding.profile');
-                }
-
                 $contextRedirect = $this->restorePendingContext($user, $request);
                 if ($contextRedirect) return $contextRedirect;
 
@@ -683,9 +676,6 @@ class WebAuthController extends Controller
             if ($user->role === 'seller') {
                 if (!$user->isVerified) {
                     return redirect()->route('seller.verification-pending');
-                }
-                if (!$user->isOnboarded()) {
-                    return redirect()->route('seller.onboarding');
                 }
                 return redirect()->route('seller.dashboard');
             }
@@ -1028,17 +1018,7 @@ class WebAuthController extends Controller
 
     public function showOnboarding()
     {
-        /** @var User $user */
-        $user = Auth::user();
-        if (!$user) {
-            return redirect()->route('login');
-        }
-
-        if ($user->isOnboarded()) {
-            return redirect('/');
-        }
-
-        return view('auth.onboarding');
+        return redirect('/');
     }
 
     public function saveOnboarding(Request $request)
@@ -1105,30 +1085,7 @@ class WebAuthController extends Controller
 
     public function showSellerOnboarding()
     {
-        /** @var User $user */
-        $user = Auth::user();
-        if (!$user || $user->role !== 'seller') {
-            return redirect()->route('login');
-        }
-
-        if (!$user->isVerified || $user->status !== 'active') {
-            return redirect()->route('seller.verification-pending');
-        }
-
-        if ($user->isOnboarded()) {
-            return redirect()->route('seller.dashboard');
-        }
-
-        $hasGcash = !empty($user->gcashNumber) || !empty($user->gcashQrCode);
-        $hasMaya = !empty($user->mayaNumber) || !empty($user->mayaQrCode);
-        $hasPolicies = !empty($user->refund_policy) || !empty($user->cancellation_policy);
-        $productsCount = $user->products()->count();
-
-        return response()
-            ->view('seller.onboarding', compact('user', 'hasGcash', 'hasMaya', 'hasPolicies', 'productsCount'))
-            ->header('Cache-Control', 'no-cache, no-store, max-age=0, must-revalidate')
-            ->header('Pragma', 'no-cache')
-            ->header('Expires', 'Sun, 02 Jan 1990 00:00:00 GMT');
+        return redirect()->route('seller.dashboard');
     }
 
     public function saveSellerOnboarding(Request $request)

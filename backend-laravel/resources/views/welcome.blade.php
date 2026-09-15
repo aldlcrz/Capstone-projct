@@ -416,7 +416,7 @@
         </div>
 
         {{-- ====== Featured Sections ====== --}}
-        <div>
+        <div id="tour-artisan-shops">
             <div class="mb-4">
                 <h3 class="text-base sm:text-lg font-extrabold text-gray-900">Featured Sections</h3>
             </div>
