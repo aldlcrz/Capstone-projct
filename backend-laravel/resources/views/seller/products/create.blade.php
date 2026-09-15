@@ -35,7 +35,7 @@
                         </h1>
                         <button type="button" 
                                 id="tour-create-guide-btn" 
-                                @click="$dispatch('start-spotlight-tour', { tourId: 'seller-product-create' })"
+                                @click="$dispatch('start-spotlight-tour', { tourId: 'seller-product-create-step' + (step || 1) })"
                                 style="display:inline-flex;align-items:center;gap:6px;padding:4px 12px;border-radius:9999px;font-size:12px;font-weight:700;background:#FAF5E6;border:1px solid #D4AF37;color:#8C6D1F;cursor:pointer;transition:all 0.2s;"
                                 onmouseover="this.style.background='#D4AF37'; this.style.color='#FFFFFF';"
                                 onmouseout="this.style.background='#FAF5E6'; this.style.color='#8C6D1F';">
@@ -694,7 +694,7 @@
         {{-- ========================================================================= --}}
         <div x-show="step === 2" x-collapse class="space-y-6">
             {{-- 1. Fill Rate & Listing Health Bar --}}
-            <div style="background-color:#FFFFFF !important;border:1px solid #ECE3D2 !important;border-radius:24px !important;padding:20px 24px !important;box-shadow:0 4px 20px rgba(0,0,0,0.03) !important;" class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div id="tour-create-step2-completeness" style="background-color:#FFFFFF !important;border:1px solid #ECE3D2 !important;border-radius:24px !important;padding:20px 24px !important;box-shadow:0 4px 20px rgba(0,0,0,0.03) !important;" class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                 <div class="flex items-center gap-3">
                     <span style="font-family:ui-serif,Georgia,serif;font-size:14px;font-weight:700;color:#1E1915;">Listing Completeness</span>
                     <div style="width:160px;height:10px;background-color:#FAF8F5;border:1px solid #E2D9C8;border-radius:9999px;overflow:hidden;">
@@ -713,7 +713,7 @@
             <input type="hidden" name="fabric_type" :value="fabricType || '100% Piña'">
 
             {{-- 1. Heritage Sizing & Inventory Matrix --}}
-            <div id="sizing-section" style="background-color:#FFFFFF !important;border:1px solid #ECE3D2 !important;border-radius:24px !important;padding:24px !important;box-shadow:0 4px 20px rgba(0,0,0,0.03) !important;" class="space-y-4">
+            <div id="tour-create-step2-sizing" style="background-color:#FFFFFF !important;border:1px solid #ECE3D2 !important;border-radius:24px !important;padding:24px !important;box-shadow:0 4px 20px rgba(0,0,0,0.03) !important;" class="space-y-4">
                 <div style="display:flex;align-items:center;justify-content:space-between;padding-bottom:12px;border-bottom:1px solid #F2ECE1;">
                     <div style="display:flex;align-items:center;gap:12px;">
                         <div style="width:32px;height:32px;border-radius:50%;background-color:#FDF8EE;border:1px solid #EEDBBA;display:flex;align-items:center;justify-content:center;color:#7A5505;font-family:ui-serif,Georgia,serif;font-weight:700;font-size:13px;flex-shrink:0;">1</div>
@@ -759,7 +759,7 @@
             </div>
 
             {{-- 2. Pricing & Logistics Grid --}}
-            <div style="background-color:#FFFFFF !important;border:1px solid #ECE3D2 !important;border-radius:24px !important;padding:24px !important;box-shadow:0 4px 20px rgba(0,0,0,0.03) !important;" class="space-y-4">
+            <div id="tour-create-step2-pricing" style="background-color:#FFFFFF !important;border:1px solid #ECE3D2 !important;border-radius:24px !important;padding:24px !important;box-shadow:0 4px 20px rgba(0,0,0,0.03) !important;" class="space-y-4">
                 <div style="display:flex;align-items:center;justify-content:space-between;padding-bottom:12px;border-bottom:1px solid #F2ECE1;flex-wrap:wrap;gap:10px;">
                     <div style="display:flex;align-items:center;gap:12px;">
                         <div style="width:32px;height:32px;border-radius:50%;background-color:#FDF8EE;border:1px solid #EEDBBA;display:flex;align-items:center;justify-content:center;color:#7A5505;font-family:ui-serif,Georgia,serif;font-weight:700;font-size:13px;flex-shrink:0;">2</div>
@@ -889,7 +889,7 @@
             </div>
 
             {{-- Step 2 Navigation Actions --}}
-            <div class="pt-5 flex flex-col-reverse sm:flex-row items-stretch sm:items-center justify-between gap-3 sm:gap-4">
+            <div id="tour-create-step2-footer" class="pt-5 flex flex-col-reverse sm:flex-row items-stretch sm:items-center justify-between gap-3 sm:gap-4">
                 <button type="button" 
                         @click="step = 1; window.scrollTo({ top: 0, behavior: 'smooth' })"
                         style="padding:13px 24px;border-radius:9999px;border:1px solid #E2D9C8;background-color:#FFFFFF;color:#1E1915;font-size:13.5px;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:8px;box-shadow:0 1px 3px rgba(0,0,0,0.03);transition:all 0.2s;"
@@ -915,7 +915,7 @@
         {{-- ========================================================================= --}}
         <div x-show="step === 3" x-collapse class="space-y-6">
             {{-- 1. Payment Methods Card --}}
-            <div id="payment-methods-card" style="background-color:#FFFFFF !important;border:1px solid #ECE3D2 !important;border-radius:24px !important;padding:24px !important;box-shadow:0 4px 20px rgba(0,0,0,0.03) !important;" class="space-y-4">
+            <div id="tour-create-step3-payment" style="background-color:#FFFFFF !important;border:1px solid #ECE3D2 !important;border-radius:24px !important;padding:24px !important;box-shadow:0 4px 20px rgba(0,0,0,0.03) !important;" class="space-y-4">
                 <div style="display:flex;align-items:center;justify-content:space-between;padding-bottom:12px;border-bottom:1px solid #F2ECE1;">
                     <div style="display:flex;align-items:center;gap:12px;">
                         <div style="width:32px;height:32px;border-radius:50%;background-color:#FDF8EE;border:1px solid #EEDBBA;display:flex;align-items:center;justify-content:center;color:#7A5505;font-family:ui-serif,Georgia,serif;font-weight:700;font-size:13px;flex-shrink:0;">1</div>
@@ -1132,7 +1132,7 @@
             </div>
 
             {{-- 2. Artisan Description & Storytelling Card --}}
-            <div style="background-color:#FFFFFF !important;border:1px solid #ECE3D2 !important;border-radius:24px !important;padding:24px !important;box-shadow:0 4px 20px rgba(0,0,0,0.03) !important;" class="space-y-4">
+            <div id="tour-create-step3-story" style="background-color:#FFFFFF !important;border:1px solid #ECE3D2 !important;border-radius:24px !important;padding:24px !important;box-shadow:0 4px 20px rgba(0,0,0,0.03) !important;" class="space-y-4">
                 <div style="display:flex;align-items:center;justify-content:space-between;padding-bottom:12px;border-bottom:1px solid #F2ECE1;">
                     <div style="display:flex;align-items:center;gap:12px;">
                         <div style="width:32px;height:32px;border-radius:50%;background-color:#FDF8EE;border:1px solid #EEDBBA;display:flex;align-items:center;justify-content:center;color:#7A5505;font-family:ui-serif,Georgia,serif;font-weight:700;font-size:13px;flex-shrink:0;">2</div>
@@ -1183,7 +1183,7 @@
             </div>
 
             {{-- Step 3 Bottom Submission Actions --}}
-            <div class="pt-5 flex flex-col-reverse sm:flex-row items-stretch sm:items-center justify-between gap-3 sm:gap-4 border-t border-[#F2ECE1]">
+            <div id="tour-create-step3-footer" class="pt-5 flex flex-col-reverse sm:flex-row items-stretch sm:items-center justify-between gap-3 sm:gap-4 border-t border-[#F2ECE1]">
                 <button type="button" 
                         @click="step = 2; window.scrollTo({ top: 0, behavior: 'smooth' })"
                         style="padding:13px 24px;border-radius:9999px;border:1px solid #E2D9C8;background-color:#FFFFFF;color:#1E1915;font-size:13.5px;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:8px;box-shadow:0 1px 3px rgba(0,0,0,0.03);transition:all 0.2s;"
@@ -3145,13 +3145,13 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 </script>
 
-{{-- Spotlight Tour Guide for Product Creation Wizard --}}
+{{-- Contextual Step-Aware Spotlight Tours for Product Creation Wizard --}}
 @php
-    $createTourSteps = [
+    $createStep1TourSteps = [
         [
             'selector' => '#tour-create-guide-btn',
-            'title' => '✨ Product Creation Guide',
-            'text' => 'Welcome to the Heritage Piece Listing Wizard! This step-by-step assistant guides you through creating, pricing, and publishing your handcrafted Lumban creations.'
+            'title' => '✨ Step 1: Media & Core Info Guide',
+            'text' => 'Welcome to Step 1! Here you upload your product\'s primary cover image, add multiple style/color variants, and define the target demographic.'
         ],
         [
             'selector' => '#tour-create-stepper-card',
@@ -3170,11 +3170,72 @@ document.addEventListener('DOMContentLoaded', () => {
         ],
         [
             'selector' => '#tour-create-step1-footer',
-            'title' => '🚀 Real-Time Validation & Next Steps',
-            'text' => 'Live validation tags confirm required inputs. Click "Save & Continue" to advance to Step 2 for Heritage Sizing & Pricing, or use "Save as Draft" in Step 3 to continue anytime!'
+            'title' => '🚀 Step 1 Validation & Next',
+            'text' => 'Live validation tags confirm required inputs. Click "Save & Continue" to advance to Step 2 for Heritage Sizing & Pricing!'
+        ]
+    ];
+
+    $createStep2TourSteps = [
+        [
+            'selector' => '#tour-create-guide-btn',
+            'title' => '✨ Step 2: Pricing & Sizing Guide',
+            'text' => 'Welcome to Step 2! Configure available stock quantities for standard sizes (S, M, L, XL, XXL, Custom) and set fair artisan prices.'
+        ],
+        [
+            'selector' => '#tour-create-step2-completeness',
+            'title' => '📊 Listing Completeness Bar',
+            'text' => 'Tracks your listing quality score in real time as you complete pricing, stock, and shipping matrices.'
+        ],
+        [
+            'selector' => '#tour-create-step2-sizing',
+            'title' => '📐 Heritage Sizing & Inventory Matrix',
+            'text' => 'Check the sizes you offer (S to XXL or Custom) and specify current available inventory stock for each size. Stock is auto-calculated.'
+        ],
+        [
+            'selector' => '#tour-create-step2-pricing',
+            'title' => '💵 Pricing, Shipping & Discounts',
+            'text' => 'Set your base item price, shipping fees, delivery lead time, and optionally enable a promotional discount percentage with live price preview.'
+        ],
+        [
+            'selector' => '#tour-create-step2-footer',
+            'title' => '🚀 Proceed to Step 3',
+            'text' => 'Click "Continue to Step 3" to configure your artisan storytelling and direct payout options, or return to Step 1 anytime.'
+        ]
+    ];
+
+    $createStep3TourSteps = [
+        [
+            'selector' => '#tour-create-guide-btn',
+            'title' => '✨ Step 3: Story, Payouts & Publishing',
+            'text' => 'Welcome to the final step! Tell the handcrafted story behind this Lumban piece and configure your direct GCash/Maya customer payouts.'
+        ],
+        [
+            'selector' => '#tour-create-step3-payment',
+            'title' => '📱 Direct Payout Methods',
+            'text' => 'Enable GCash or Maya to receive direct customer payments. Click "Settings ↗" to configure your mobile number and payment QR code.'
+        ],
+        [
+            'selector' => '#tour-create-step3-story',
+            'title' => '✍️ Artisan Story & AI Auto-Write',
+            'text' => 'Highlight fabric provenance, embroidery techniques (Calado, Callado, Burda), and care guidelines. Click "✦ AI Auto-Write" to generate an authentic heritage story instantly!'
+        ],
+        [
+            'selector' => '#tour-create-step3-footer',
+            'title' => '🚀 Draft or Submit for Quality Review',
+            'text' => 'Click "Save as Draft" to keep working later, or click "Publish Heritage Piece" to submit for Lumban artisan registry verification!'
         ]
     ];
 @endphp
 
-<x-spotlight-tour tour-id="seller-product-create" :auto-start="false" :steps="$createTourSteps" />
+{{-- Step 1 Tour --}}
+<x-spotlight-tour tour-id="seller-product-create-step1" :auto-start="false" :steps="$createStep1TourSteps" />
+
+{{-- Step 2 Tour --}}
+<x-spotlight-tour tour-id="seller-product-create-step2" :auto-start="false" :steps="$createStep2TourSteps" />
+
+{{-- Step 3 Tour --}}
+<x-spotlight-tour tour-id="seller-product-create-step3" :auto-start="false" :steps="$createStep3TourSteps" />
+
+{{-- Fallback Tour --}}
+<x-spotlight-tour tour-id="seller-product-create" :auto-start="false" :steps="$createStep1TourSteps" />
 @endsection
