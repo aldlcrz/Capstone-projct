@@ -332,7 +332,7 @@
                 {{-- Delete Account Action (Soft Delete) --}}
                 <div class="pt-2 border-t border-[#EAE1D0]">
                     <button type="button"
-                            @click="showDeleteAccountModal = true"
+                            @click="deleteAccountConfirmation = ''; showDeleteAccountModal = true"
                             style="background-color:#FFF5F5;border:1px solid #FED7D7;border-radius:16px;padding:12px 16px;display:flex;align-items:center;justify-content:space-between;box-shadow:0 2px 6px rgba(0,0,0,0.02);cursor:pointer;width:100%;text-align:left;transition:all 0.2s;color:#9B2C2C;"
                             class="hover:bg-red-700 hover:text-white hover:border-red-700 group">
                         <div style="display:flex;align-items:center;gap:12px;">
@@ -367,10 +367,10 @@
          x-transition:leave="transition ease-in duration-150"
          x-transition:leave-start="opacity-100 scale-100"
          x-transition:leave-end="opacity-0 scale-95"
-         @keydown.escape.window="showDeleteAccountModal = false">
+         @keydown.escape.window="showDeleteAccountModal = false; deleteAccountConfirmation = ''">
 
         <div class="relative w-full max-w-md bg-white rounded-3xl p-6 sm:p-7 shadow-2xl border border-gray-100 space-y-5"
-             @click.away="showDeleteAccountModal = false">
+             @click.away="showDeleteAccountModal = false; deleteAccountConfirmation = ''">
 
             <div class="flex items-center justify-between pb-3 border-b border-gray-100">
                 <div class="flex items-center gap-3">
@@ -382,7 +382,7 @@
                         <p class="text-[10px] text-gray-400 font-medium">Safe soft-delete process</p>
                     </div>
                 </div>
-                <button type="button" @click="showDeleteAccountModal = false" class="text-gray-400 hover:text-black transition-colors p-1">
+                <button type="button" @click="showDeleteAccountModal = false; deleteAccountConfirmation = ''" class="text-gray-400 hover:text-black transition-colors p-1">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
                 </button>
             </div>
@@ -405,14 +405,27 @@
                     <textarea name="reason" rows="2" placeholder="Tell us why you are deleting your account..." class="w-full px-3.5 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-xs font-medium outline-none focus:border-red-500 focus:bg-white transition-colors"></textarea>
                 </div>
 
+                <div class="space-y-1.5">
+                    <label class="text-[10px] font-bold text-gray-700 uppercase tracking-wider block">
+                        To confirm deletion, type <span class="text-red-600 font-extrabold select-all">DELETE</span> below:
+                    </label>
+                    <input type="text"
+                           x-model="deleteAccountConfirmation"
+                           placeholder="Type DELETE to confirm"
+                           class="w-full px-3.5 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-xs font-bold outline-none focus:border-red-500 focus:bg-white transition-colors uppercase tracking-wider"
+                           autocomplete="off">
+                </div>
+
                 <div class="flex items-center gap-3 pt-2">
                     <button type="button"
-                            @click="showDeleteAccountModal = false"
+                            @click="showDeleteAccountModal = false; deleteAccountConfirmation = ''"
                             class="flex-1 py-2.5 px-4 rounded-xl border border-gray-200 text-gray-700 text-xs font-bold uppercase tracking-wider hover:bg-gray-50 transition-all cursor-pointer">
                         Cancel
                     </button>
                     <button type="submit"
-                            class="flex-1 py-2.5 px-4 rounded-xl bg-red-600 hover:bg-red-700 text-white text-xs font-bold uppercase tracking-wider shadow-md active:scale-95 transition-all cursor-pointer">
+                            :disabled="deleteAccountConfirmation.trim().toUpperCase() !== 'DELETE'"
+                            :class="deleteAccountConfirmation.trim().toUpperCase() === 'DELETE' ? 'bg-red-600 hover:bg-red-700 text-white shadow-md active:scale-95 cursor-pointer' : 'bg-gray-200 text-gray-400 cursor-not-allowed border border-gray-200'"
+                            class="flex-1 py-2.5 px-4 rounded-xl text-xs font-bold uppercase tracking-wider transition-all">
                         Confirm Delete
                     </button>
                 </div>
@@ -1132,6 +1145,7 @@ function profileApp() {
         showAddressModal: false,
         showDeleteConfirmModal: false,
         showDeleteAccountModal: false,
+        deleteAccountConfirmation: '',
         showPasswordModal: document.getElementById('profile-root')?.dataset?.showPassword === 'true',
         pendingDeleteAddressId: null,
 

@@ -466,6 +466,89 @@
                 </div>
             </div>
 
+            {{-- Product Style Variants --}}
+            <div class="rounded-2xl border p-4 sm:p-6 shadow-xs space-y-4" style="background: #FFFCF7; border-color: #E8DECB;">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <h3 class="text-xs sm:text-sm font-bold text-black uppercase tracking-widest">Product Variants</h3>
+                        <p class="text-[10px] text-stone-500 font-medium mt-0.5">Manage color, style, or fabric variations</p>
+                    </div>
+                    <span class="text-[10px] font-bold rounded-full px-2.5 py-0.5 bg-[#FDF8EE] border border-[#EEDBBA] text-[#7A5505]"
+                          x-text="variants.length + ' Style(s)'"></span>
+                </div>
+
+                {{-- Variant Rows --}}
+                <div class="space-y-3">
+                    <template x-for="(variant, index) in variants" :key="variant.id">
+                        <div class="p-3 bg-white rounded-xl border border-[#E8DECB] space-y-2 shadow-2xs">
+                            <div class="flex items-center justify-between pb-1 border-b border-gray-100">
+                                <div class="flex items-center gap-2">
+                                    <span class="w-5 h-5 rounded-full bg-[#9E6B15] text-white flex items-center justify-center text-[10px] font-bold" x-text="index + 1"></span>
+                                    <span class="text-xs font-bold text-stone-800" x-text="index === 0 ? 'Main Style' : 'Variant ' + (index + 1)"></span>
+                                </div>
+                                <button type="button" 
+                                        x-show="index > 0"
+                                        @click="removeVariantRow(index)" 
+                                        class="text-xs text-red-500 hover:text-red-700 font-bold flex items-center gap-1 cursor-pointer">
+                                    ✕ Remove
+                                </button>
+                            </div>
+
+                            <input type="hidden" name="variant_indexes[]" :value="index">
+
+                            <div class="flex items-center gap-3">
+                                {{-- Variant Image Preview / Input --}}
+                                <div class="w-14 h-14 relative shrink-0">
+                                    <label :for="'variant_file_' + index"
+                                           class="w-14 h-14 rounded-lg border-2 border-dashed border-gray-200 bg-gray-50 flex flex-col items-center justify-center cursor-pointer overflow-hidden hover:border-[#C49520] transition-colors relative">
+                                        <template x-if="variant.imagePreview">
+                                            <div class="w-full h-full relative">
+                                                <img :src="variant.imagePreview" class="w-full h-full object-cover">
+                                                <div class="absolute inset-0 bg-black/30 opacity-0 hover:opacity-100 transition-opacity flex items-center justify-center text-white text-[8px] font-bold uppercase">
+                                                    Change
+                                                </div>
+                                            </div>
+                                        </template>
+                                        <template x-if="!variant.imagePreview">
+                                            <div class="text-center">
+                                                <span class="text-base text-[#C49520] leading-none">+</span>
+                                                <span class="text-[8px] font-bold text-stone-500 block">Photo</span>
+                                            </div>
+                                        </template>
+                                        <input type="file" 
+                                               :id="'variant_file_' + index" 
+                                               :name="'variant_image_' + index" 
+                                               accept="image/jpeg,image/png,image/webp,image/jpg" 
+                                               class="hidden" 
+                                               @change="handleVariantFile($event, index)">
+                                    </label>
+                                </div>
+
+                                {{-- Variant Name Input --}}
+                                <div class="flex-1 min-w-0">
+                                    <label class="text-[9px] font-bold text-stone-600 uppercase tracking-wider block mb-1">
+                                        Variant Name
+                                    </label>
+                                    <input type="text" 
+                                           :name="'variant_names[' + index + ']'" 
+                                           x-model="variant.name" 
+                                           placeholder="e.g. Classic Ivory, Modern Black, Short Sleeve..." 
+                                           class="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-xs font-semibold outline-none focus:border-[#C49520] focus:bg-white transition-colors">
+                                </div>
+                            </div>
+                        </div>
+                    </template>
+                </div>
+
+                {{-- Add Variant Button --}}
+                <button type="button" 
+                        @click="addVariantRow()" 
+                        class="w-full py-2.5 px-4 rounded-xl border border-dashed border-[#C49520] bg-[#FDF8EE] hover:bg-[#F5ECD8] text-stone-900 text-xs font-bold flex items-center justify-center gap-2 transition-colors cursor-pointer">
+                    <span class="w-4 h-4 rounded-full bg-[#C49520] text-white flex items-center justify-center text-xs font-black">+</span>
+                    <span>Add New Variant</span>
+                </button>
+            </div>
+
             {{-- Payment Method Configuration --}}
             <div id="payment-methods-card" class="rounded-2xl border p-4 sm:p-6 shadow-xs space-y-3 transition-all" style="background: #FFFCF7; border-color: #E8DECB;">
                 <div class="flex items-center justify-between mb-1">
@@ -1086,13 +1169,22 @@
         $initialCategoryIds = [(string) $product->CategoryId];
     }
 
+    $productVariations = is_array($product->variations) ? $product->variations : (json_decode($product->variations ?? '[]', true) ?? []);
+    if (empty($productVariations)) {
+        $productVariations = [
+            ['name' => $product->name ?: 'Main Style', 'image' => is_array($product->image) ? ($product->image[0] ?? null) : $product->image]
+        ];
+    }
+
     $editInitData = [
         'productId' => (string) $product->id,
+        'name' => (string) $product->name,
         'csrfToken' => csrf_token(),
         'profileUpdateUrl' => route('seller.profile.update'),
         'targetGroup' => (string) old('target_group', $product->target_group ?: 'Men'),
         'categoryId' => (string) old('CategoryId', $product->CategoryId ?: ''),
         'categoryIds' => $initialCategoryIds,
+        'variations' => $productVariations,
         'hasGcashNumber' => !empty($product->gcash_number) || !empty($seller->gcashNumber),
         'hasGcashQr' => !empty($product->gcash_qr_code) || !empty($seller->gcashQrCode),
         'gcashNumber' => (string) ($product->gcash_number ?: ($seller->gcashNumber ?? '')),
@@ -1188,6 +1280,46 @@ function editProductManager() {
         targetGroup: initData.targetGroup || 'Men',
         selectedCategories: initialCategoryIds,
         categoriesList: parsedCats,
+
+        variants: Array.isArray(initData.variations) && initData.variations.length > 0 
+            ? initData.variations.map((v, idx) => ({
+                id: idx,
+                name: v.name || (idx === 0 ? (initData.name || 'Main Style') : ('Style ' + (idx + 1))),
+                imagePreview: v.image ? (v.image.startsWith('http') ? v.image : '/' + v.image.replace(/^\//, '')) : null
+            }))
+            : [{ id: 0, name: initData.name || 'Main Style', imagePreview: null }],
+
+        addVariantRow() {
+            const nextId = this.variants.length;
+            this.variants.push({ id: nextId, name: '', imagePreview: null });
+        },
+
+        removeVariantRow(index) {
+            if (index === 0) return;
+            this.variants.splice(index, 1);
+        },
+
+        handleVariantFile(event, index) {
+            const file = event.target.files[0];
+            if (file) {
+                if (file.size > 5 * 1024 * 1024) {
+                    triggerAppModal('Image Exceeds 5MB', 'Selected photo exceeds the 5MB size limit.', 'warning');
+                    event.target.value = '';
+                    return;
+                }
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    this.variants[index].imagePreview = e.target.result;
+                };
+                reader.readAsDataURL(file);
+            }
+        },
+
+        removeVariantImage(index) {
+            this.variants[index].imagePreview = null;
+            const fileInput = document.getElementById('variant_file_' + index);
+            if (fileInput) fileInput.value = '';
+        },
 
         get filteredCategories() {
             if (!Array.isArray(this.categoriesList)) return [];
@@ -1806,9 +1938,10 @@ function validateProductForm(e, isEdit = true) {
         if (catContainer) catContainer.classList.add('border-red-500');
     }
 
-    const targetGroupChecked = document.querySelector('input[name="target_group"]:checked');
+    const targetGroupInput = document.getElementById('targetGroupInput') || document.querySelector('input[name="target_group"]');
+    const targetGroupVal = targetGroupInput ? targetGroupInput.value : '';
     const targetGroupContainer = document.getElementById('target-group-container');
-    if (!targetGroupChecked) {
+    if (!targetGroupVal || !['Men', 'Women', 'Kids'].includes(targetGroupVal)) {
         errors.push('Please specify who this product is for (Men, Women, or Kids).');
         if (targetGroupContainer) targetGroupContainer.classList.add('border-red-500', 'border');
     }

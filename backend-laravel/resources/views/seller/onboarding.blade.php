@@ -98,7 +98,7 @@
                     </div>
                     <div class="space-y-1">
                         <div class="flex items-center gap-2">
-                            <h2 class="text-sm font-bold text-gray-900">1. Payment Method <span class="font-medium text-gray-500">(GCash & Maya)</span></h2>
+                            <h2 class="text-sm font-bold text-gray-900">1. Payment Method <span class="font-medium text-gray-500">(GCash Payout & Maya)</span></h2>
                             @if($hasGcash || $hasMaya)
                                 <span class="text-[9.5px] font-extrabold text-emerald-800 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-full">✓ Configured</span>
                             @else

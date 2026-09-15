@@ -284,19 +284,25 @@
                                 <div style="color:#C49520;font-size:12px;font-weight:900;z-index:6;">★</div>
                             </div>
 
-                            {{-- Slot 2: Additional Photo 2 --}}
-                            <div style="width:105px;height:140px;border-radius:18px;border:1px solid #ECE3D2;background-color:#FAF8F5;position:relative;flex-shrink:0;overflow:hidden;display:flex;flex-direction:column;align-items:center;justify-content:space-between;padding:8px 6px;">
-                                <template x-if="galleryImages[0]">
+                            {{-- Dynamic Uploaded Gallery Photos --}}
+                            <template x-for="(gImg, gIdx) in galleryImages" :key="gIdx">
+                                <div style="width:105px;height:140px;border-radius:18px;border:1px solid #ECE3D2;background-color:#FAF8F5;position:relative;flex-shrink:0;overflow:hidden;display:flex;flex-direction:column;align-items:center;justify-content:space-between;padding:8px 6px;">
                                     <div style="position:absolute;inset:0;z-index:5;">
-                                        <img :src="galleryImages[0].preview" style="width:100%;height:100%;object-fit:cover;">
+                                        <img :src="gImg.preview" style="width:100%;height:100%;object-fit:cover;">
                                         <button type="button" 
-                                                @click="removeGalleryImage(0)" 
-                                                style="position:absolute;top:4px;right:4px;width:18px;height:18px;background-color:#DC2626;color:#FFFFFF;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:900;border:none;cursor:pointer;z-index:10;">
+                                                @click="removeGalleryImage(gIdx)" 
+                                                style="position:absolute;top:4px;right:4px;width:18px;height:18px;background-color:#DC2626;color:#FFFFFF;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:900;border:none;cursor:pointer;z-index:10;"
+                                                title="Remove photo">
                                             ✕
                                         </button>
                                     </div>
-                                </template>
-                                <template x-if="!galleryImages[0]">
+                                    <span style="font-size:11px;font-weight:700;color:#A8A096;z-index:6;" x-text="gIdx + 2"></span>
+                                </div>
+                            </template>
+
+                            {{-- Empty Placeholder Slots (up to 3 minimum for mockup appearance) --}}
+                            <template x-for="pIdx in Math.max(0, 3 - galleryImages.length)" :key="'ph_' + pIdx">
+                                <div style="width:105px;height:140px;border-radius:18px;border:1px solid #ECE3D2;background-color:#FAF8F5;position:relative;flex-shrink:0;overflow:hidden;display:flex;flex-direction:column;align-items:center;justify-content:space-between;padding:8px 6px;">
                                     <div style="opacity:0.25;margin-top:auto;margin-bottom:auto;">
                                         <svg width="42" height="42" viewBox="0 0 48 48" fill="none">
                                             <circle cx="24" cy="23" r="8.5" stroke="#C49520" stroke-width="1"/>
@@ -305,61 +311,11 @@
                                             <path d="M33 32.5c4-3.5 6-8.5 6-14 0-3.5-1-6.5-2.5-9" stroke="#C49520" stroke-width="1.3" stroke-linecap="round"/>
                                         </svg>
                                     </div>
-                                </template>
-                                <span style="font-size:11px;font-weight:700;color:#A8A096;z-index:6;">2</span>
-                            </div>
+                                    <span style="font-size:11px;font-weight:700;color:#A8A096;z-index:6;" x-text="galleryImages.length + pIdx + 1"></span>
+                                </div>
+                            </template>
 
-                            {{-- Slot 3: Additional Photo 3 --}}
-                            <div style="width:105px;height:140px;border-radius:18px;border:1px solid #ECE3D2;background-color:#FAF8F5;position:relative;flex-shrink:0;overflow:hidden;display:flex;flex-direction:column;align-items:center;justify-content:space-between;padding:8px 6px;">
-                                <template x-if="galleryImages[1]">
-                                    <div style="position:absolute;inset:0;z-index:5;">
-                                        <img :src="galleryImages[1].preview" style="width:100%;height:100%;object-fit:cover;">
-                                        <button type="button" 
-                                                @click="removeGalleryImage(1)" 
-                                                style="position:absolute;top:4px;right:4px;width:18px;height:18px;background-color:#DC2626;color:#FFFFFF;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:900;border:none;cursor:pointer;z-index:10;">
-                                            ✕
-                                        </button>
-                                    </div>
-                                </template>
-                                <template x-if="!galleryImages[1]">
-                                    <div style="opacity:0.25;margin-top:auto;margin-bottom:auto;">
-                                        <svg width="42" height="42" viewBox="0 0 48 48" fill="none">
-                                            <circle cx="24" cy="23" r="8.5" stroke="#C49520" stroke-width="1"/>
-                                            <path d="M24 17.5l1.6 3.4 3.7.5-2.7 2.6.6 3.7-3.2-1.7-3.2 1.7.6-3.7-2.7-2.6 3.7-.5L24 17.5z" fill="#C49520"/>
-                                            <path d="M15 32.5c-4-3.5-6-8.5-6-14 0-3.5 1-6.5 2.5-9" stroke="#C49520" stroke-width="1.3" stroke-linecap="round"/>
-                                            <path d="M33 32.5c4-3.5 6-8.5 6-14 0-3.5-1-6.5-2.5-9" stroke="#C49520" stroke-width="1.3" stroke-linecap="round"/>
-                                        </svg>
-                                    </div>
-                                </template>
-                                <span style="font-size:11px;font-weight:700;color:#A8A096;z-index:6;">3</span>
-                            </div>
-
-                            {{-- Slot 4: Additional Photo 4 --}}
-                            <div style="width:105px;height:140px;border-radius:18px;border:1px solid #ECE3D2;background-color:#FAF8F5;position:relative;flex-shrink:0;overflow:hidden;display:flex;flex-direction:column;align-items:center;justify-content:space-between;padding:8px 6px;">
-                                <template x-if="galleryImages[2]">
-                                    <div style="position:absolute;inset:0;z-index:5;">
-                                        <img :src="galleryImages[2].preview" style="width:100%;height:100%;object-fit:cover;">
-                                        <button type="button" 
-                                                @click="removeGalleryImage(2)" 
-                                                style="position:absolute;top:4px;right:4px;width:18px;height:18px;background-color:#DC2626;color:#FFFFFF;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:900;border:none;cursor:pointer;z-index:10;">
-                                            ✕
-                                        </button>
-                                    </div>
-                                </template>
-                                <template x-if="!galleryImages[2]">
-                                    <div style="opacity:0.25;margin-top:auto;margin-bottom:auto;">
-                                        <svg width="42" height="42" viewBox="0 0 48 48" fill="none">
-                                            <circle cx="24" cy="23" r="8.5" stroke="#C49520" stroke-width="1"/>
-                                            <path d="M24 17.5l1.6 3.4 3.7.5-2.7 2.6.6 3.7-3.2-1.7-3.2 1.7.6-3.7-2.7-2.6 3.7-.5L24 17.5z" fill="#C49520"/>
-                                            <path d="M15 32.5c-4-3.5-6-8.5-6-14 0-3.5 1-6.5 2.5-9" stroke="#C49520" stroke-width="1.3" stroke-linecap="round"/>
-                                            <path d="M33 32.5c4-3.5 6-8.5 6-14 0-3.5-1-6.5-2.5-9" stroke="#C49520" stroke-width="1.3" stroke-linecap="round"/>
-                                        </svg>
-                                    </div>
-                                </template>
-                                <span style="font-size:11px;font-weight:700;color:#A8A096;z-index:6;">4</span>
-                            </div>
-
-                            {{-- Slot 5: Add More Button --}}
+                            {{-- Add More Button --}}
                             <label for="gallery_files_input" 
                                    style="width:105px;height:140px;border-radius:18px;border:1.5px dashed #E2D9C8;background-color:#FFFFFF;display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;transition:all 0.2s;padding:10px;"
                                    onmouseover="this.style.borderColor='#C49520';this.style.backgroundColor='#FAF8F5';"
@@ -1683,7 +1639,8 @@ function addProductManager() {
         'Piña Formal Barong',
         'Semi-Formal',
         'Special Occasion',
-        'Traditional'
+        'Traditional',
+        'Wedding Barong'
     ];
 
     referenceMenCategories.forEach((catName) => {
@@ -2207,7 +2164,7 @@ function addProductManager() {
                 if (file.size > 5 * 1024 * 1024) return;
                 const reader = new FileReader();
                 reader.onload = (e) => {
-                    if (this.galleryImages.length < 3) {
+                    if (this.galleryImages.length < 10) {
                         this.galleryImages.push({
                             file: file,
                             preview: e.target.result

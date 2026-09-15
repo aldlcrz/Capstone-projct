@@ -95,7 +95,6 @@
                         <select name="paymentMethod" required class="w-full h-11 px-4 rounded-xl text-xs font-bold outline-none font-sans" style="background: #FDF8EE; border: 1px solid #E8DECB; color: #1E1915;">
                             <option value="GCash">GCash</option>
                             <option value="Maya">Maya</option>
-                            <option value="Bank Transfer">Bank Transfer</option>
                         </select>
                     </div>
 

@@ -671,6 +671,42 @@ class ProductManagementController extends Controller
             $currentImages = array_merge($newImages, array_values($currentImages));
         }
 
+        // Process Variants / Variations
+        $existingVariations = is_array($product->variations) ? $product->variations : (json_decode($product->variations ?? '[]', true) ?? []);
+        $variantIndexes = $request->input('variant_indexes', []);
+        $updatedVariations = [];
+
+        if (!empty($variantIndexes) && is_array($variantIndexes)) {
+            foreach ($variantIndexes as $idx) {
+                $numIdx = (int)$idx;
+                $vName = trim($request->input("variant_names.{$numIdx}", $request->input("variant_name_{$numIdx}", '')));
+                if (empty($vName)) {
+                    $vName = ($numIdx === 0) ? ($product->name ?: 'Main Style') : ('Style ' . ($numIdx + 1));
+                }
+
+                $vImgPath = null;
+                if ($request->hasFile("variant_image_{$numIdx}") && $request->file("variant_image_{$numIdx}")->isValid()) {
+                    $vFile = $request->file("variant_image_{$numIdx}");
+                    $vFileName = time() . "_v{$numIdx}_" . Str::random(8) . '.' . $vFile->getClientOriginalExtension();
+                    $vFile->move(public_path('uploads/products'), $vFileName);
+                    $vImgPath = 'uploads/products/' . $vFileName;
+                    $currentImages[] = $vImgPath;
+                } elseif (isset($existingVariations[$numIdx]['image'])) {
+                    $vImgPath = $existingVariations[$numIdx]['image'];
+                }
+
+                $updatedVariations[] = [
+                    'name'  => $vName,
+                    'image' => $vImgPath,
+                ];
+            }
+        }
+
+        if (!empty($updatedVariations)) {
+            $product->variations = $updatedVariations;
+            $product->has_variants = count($updatedVariations) > 1;
+        }
+
         $product->image = !empty($currentImages) ? array_values($currentImages) : ['products/default.jpg'];
         $product->save();
 
