@@ -38,7 +38,7 @@
         </div>
 
         {{-- Filter Toolbar --}}
-        <form method="GET" action="{{ route('seller.dashboard') }}" x-data="{ selectedPreset: '{{ $filters['preset'] ?? 'all_time' }}' }" class="flex items-center gap-2.5 flex-wrap">
+        <form method="GET" action="{{ route('seller.dashboard') }}" id="tour-seller-header-filter" x-data="{ selectedPreset: '{{ $filters['preset'] ?? 'all_time' }}' }" class="flex items-center gap-2.5 flex-wrap">
             <div class="relative flex items-center rounded-xl px-3.5 py-2 transition-all shadow-xs" style="background: #FDF8EE; border: 1px solid #E8DECB;">
                 <svg class="w-4 h-4 shrink-0 mr-2.5" style="color: #C49520;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
