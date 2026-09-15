@@ -1475,6 +1475,8 @@ function sellerManager() {
             if (path.startsWith('uploads/')) return '/' + path;
             return '/storage/' + path.replace(/^\//, '');
         }
+    };
+}
 </script>
 
 <x-spotlight-tour

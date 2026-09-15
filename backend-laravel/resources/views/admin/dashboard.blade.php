@@ -3,6 +3,10 @@
 @section('content')
 @php
     $pendingTotal = array_sum($pendingActions);
+    $statusData   = $orderStatuses->values()->toArray();
+    $statusLabels = $orderStatuses->keys()->toArray();
+    $colorMap     = ['Completed'=>'#22c55e','Pending'=>'#f59e0b','Processing'=>'#3b82f6','Shipped'=>'#8b5cf6','Cancelled'=>'#ef4444','Delivered'=>'#10b981'];
+    $statusColorsList = array_map(fn($s) => $colorMap[$s] ?? '#9ca3af', $statusLabels);
 @endphp
 
 <div class="space-y-8">
@@ -149,13 +153,10 @@
                 <canvas id="statusChart" width="180" height="180"></canvas>
             </div>
             <div class="mt-4 space-y-1.5">
-                @php
-                $statusColors = ['Completed'=>'#22c55e','Pending'=>'#f59e0b','Processing'=>'#3b82f6','Shipped'=>'#8b5cf6','Cancelled'=>'#ef4444','Delivered'=>'#10b981'];
-                @endphp
                 @foreach($orderStatuses as $status => $count)
                 <div class="flex items-center justify-between">
                     <div class="flex items-center gap-2">
-                        <div class="w-2 h-2 rounded-full shrink-0" style="background:{{ $statusColors[$status] ?? '#9ca3af' }}"></div>
+                        <div class="w-2 h-2 rounded-full shrink-0" style="background-color: {{ $colorMap[$status] ?? '#9ca3af' }};"></div>
                         <span class="text-[9px] font-bold text-gray-600 uppercase tracking-wider">{{ $status }}</span>
                     </div>
                     <span class="text-[9px] font-black text-black">{{ $count }}</span>
@@ -205,7 +206,7 @@
                 </div>
                 @php $maxRev = $topSellers->first()->revenue ?: 1; @endphp
                 <div class="h-1 bg-gray-100 rounded-full overflow-hidden -mt-1">
-                    <div class="h-full bg-[#C0422A]/30 rounded-full" style="width:{{ round(($row->revenue / $maxRev) * 100) }}%"></div>
+                    <div class="h-full bg-[#C0422A]/30 rounded-full" style="width: {{ round(($row->revenue / $maxRev) * 100) }}%;"></div>
                 </div>
                 @endforeach
             </div>
@@ -233,7 +234,7 @@
                 </div>
                 @php $maxUnits = $topProducts->first()->units ?: 1; @endphp
                 <div class="h-1 bg-gray-100 rounded-full overflow-hidden -mt-1">
-                    <div class="h-full bg-blue-400/30 rounded-full" style="width:{{ round(($row->units / $maxUnits) * 100) }}%"></div>
+                    <div class="h-full bg-blue-400/30 rounded-full" style="width: {{ round(($row->units / $maxUnits) * 100) }}%;"></div>
                 </div>
                 @endforeach
             </div>
@@ -320,80 +321,111 @@
 />
 
 @push('scripts')
+<script type="application/json" id="admin-dashboard-chart-data">
+{!! json_encode([
+    'revenueLabels' => $revenueTrend->pluck('date'),
+    'revenueData'   => $revenueTrend->pluck('revenue'),
+    'statusLabels'  => $statusLabels,
+    'statusData'    => $statusData,
+    'statusColors'  => $statusColorsList,
+    'userLabels'    => $userTrend->pluck('date'),
+    'userData'      => $userTrend->pluck('count'),
+]) !!}
+</script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <script>
-const rust  = '#C0422A';
-const muted = '#e5e7eb';
+document.addEventListener('DOMContentLoaded', function() {
+    const rawData = document.getElementById('admin-dashboard-chart-data');
+    if (!rawData) return;
+    const chartData = JSON.parse(rawData.textContent || '{}');
+    const rust  = '#C0422A';
 
-// ── Revenue Chart ───────────────────────────────────────────────────────────
-new Chart(document.getElementById('revenueChart'), {
-    type: 'bar',
-    data: {
-        labels: {!! json_encode($revenueTrend->pluck('date')) !!},
-        datasets: [{
-            label: 'Revenue (₱)',
-            data: {!! json_encode($revenueTrend->pluck('revenue')) !!},
-            backgroundColor: 'rgba(192,66,42,0.12)',
-            borderColor: rust,
-            borderWidth: 2,
-            borderRadius: 8,
-            borderSkipped: false,
-        }]
-    },
-    options: {
-        responsive: true, maintainAspectRatio: true,
-        plugins: { legend: { display: false }, tooltip: { callbacks: { label: ctx => ' ₱' + ctx.parsed.y.toLocaleString() } } },
-        scales: {
-            x: { grid: { display: false }, ticks: { font: { size: 10, weight: '700' }, color: '#9ca3af' } },
-            y: { grid: { color: '#f3f4f6' }, ticks: { font: { size: 10 }, color: '#9ca3af', callback: v => '₱' + v.toLocaleString() }, beginAtZero: true }
-        }
+    // ── Revenue Chart ───────────────────────────────────────────────────────────
+    const revEl = document.getElementById('revenueChart');
+    if (revEl) {
+        new Chart(revEl, {
+            type: 'bar',
+            data: {
+                labels: chartData.revenueLabels || [],
+                datasets: [{
+                    label: 'Revenue (₱)',
+                    data: chartData.revenueData || [],
+                    backgroundColor: 'rgba(192,66,42,0.12)',
+                    borderColor: rust,
+                    borderWidth: 2,
+                    borderRadius: 8,
+                    borderSkipped: false,
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: true,
+                plugins: {
+                    legend: { display: false },
+                    tooltip: { callbacks: { label: function(ctx) { return ' ₱' + ctx.parsed.y.toLocaleString(); } } }
+                },
+                scales: {
+                    x: { grid: { display: false }, ticks: { font: { size: 10, weight: '700' }, color: '#9ca3af' } },
+                    y: { grid: { color: '#f3f4f6' }, ticks: { font: { size: 10 }, color: '#9ca3af', callback: function(v) { return '₱' + v.toLocaleString(); } }, beginAtZero: true }
+                }
+            }
+        });
     }
-});
 
-// ── Order Status Donut ──────────────────────────────────────────────────────
-@php
-$statusData   = $orderStatuses->values()->toArray();
-$statusLabels = $orderStatuses->keys()->toArray();
-$colorMap = ['Completed'=>'#22c55e','Pending'=>'#f59e0b','Processing'=>'#3b82f6','Shipped'=>'#8b5cf6','Cancelled'=>'#ef4444','Delivered'=>'#10b981'];
-$colors = array_map(fn($s) => $colorMap[$s] ?? '#9ca3af', $statusLabels);
-@endphp
-new Chart(document.getElementById('statusChart'), {
-    type: 'doughnut',
-    data: {
-        labels: {!! json_encode($statusLabels) !!},
-        datasets: [{ data: {!! json_encode($statusData) !!}, backgroundColor: {!! json_encode($colors) !!}, borderWidth: 0, hoverOffset: 4 }]
-    },
-    options: {
-        responsive: false,
-        plugins: { legend: { display: false }, tooltip: { callbacks: { label: ctx => ' ' + ctx.label + ': ' + ctx.parsed } } },
-        cutout: '72%'
+    // ── Order Status Donut ──────────────────────────────────────────────────────
+    const statusEl = document.getElementById('statusChart');
+    if (statusEl) {
+        new Chart(statusEl, {
+            type: 'doughnut',
+            data: {
+                labels: chartData.statusLabels || [],
+                datasets: [{
+                    data: chartData.statusData || [],
+                    backgroundColor: chartData.statusColors || [],
+                    borderWidth: 0,
+                    hoverOffset: 4
+                }]
+            },
+            options: {
+                responsive: false,
+                plugins: {
+                    legend: { display: false },
+                    tooltip: { callbacks: { label: function(ctx) { return ' ' + ctx.label + ': ' + ctx.parsed; } } }
+                },
+                cutout: '72%'
+            }
+        });
     }
-});
 
-// ── User Registrations Chart ────────────────────────────────────────────────
-new Chart(document.getElementById('userChart'), {
-    type: 'line',
-    data: {
-        labels: {!! json_encode($userTrend->pluck('date')) !!},
-        datasets: [{
-            label: 'New Users',
-            data: {!! json_encode($userTrend->pluck('count')) !!},
-            borderColor: '#3b82f6',
-            backgroundColor: 'rgba(59,130,246,0.06)',
-            borderWidth: 2,
-            pointRadius: 4,
-            pointBackgroundColor: '#3b82f6',
-            fill: true,
-            tension: 0.4,
-        }]
-    },
-    options: {
-        responsive: true, maintainAspectRatio: true,
-        plugins: { legend: { display: false } },
-        scales: {
-            x: { grid: { display: false }, ticks: { font: { size: 10, weight: '700' }, color: '#9ca3af' } },
-            y: { grid: { color: '#f3f4f6' }, ticks: { font: { size: 10 }, color: '#9ca3af', stepSize: 1 }, beginAtZero: true }
-        }
+    // ── User Registrations Chart ────────────────────────────────────────────────
+    const userEl = document.getElementById('userChart');
+    if (userEl) {
+        new Chart(userEl, {
+            type: 'line',
+            data: {
+                labels: chartData.userLabels || [],
+                datasets: [{
+                    label: 'New Users',
+                    data: chartData.userData || [],
+                    borderColor: '#3b82f6',
+                    backgroundColor: 'rgba(59,130,246,0.06)',
+                    borderWidth: 2,
+                    pointRadius: 4,
+                    pointBackgroundColor: '#3b82f6',
+                    fill: true,
+                    tension: 0.4,
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: true,
+                plugins: { legend: { display: false } },
+                scales: {
+                    x: { grid: { display: false }, ticks: { font: { size: 10, weight: '700' }, color: '#9ca3af' } },
+                    y: { grid: { color: '#f3f4f6' }, ticks: { font: { size: 10 }, color: '#9ca3af', stepSize: 1 }, beginAtZero: true }
+                }
+            }
+        });
     }
 });
 </script>
