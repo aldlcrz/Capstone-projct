@@ -275,6 +275,7 @@
                                 </div>
                             </div>
 
+                            <div class="py-1">
                                 <button type="button"
                                         @click="$dispatch('start-spotlight-tour', { tourId: 'admin' }); profileOpen = false;"
                                         class="flex items-center gap-2.5 px-4 py-2 w-full text-left text-xs font-semibold text-gray-700 hover:bg-gray-50 transition-all">
