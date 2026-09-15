@@ -128,10 +128,10 @@
     </div>
 
     {{-- ── Charts Row ── --}}
-    <div id="tour-admin-dash-charts" class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
 
         {{-- Revenue Sparkline (7 days) --}}
-        <div class="lg:col-span-2 bg-white rounded-3xl border border-gray-100 shadow-sm p-6">
+        <div id="tour-admin-dash-revenue-chart" class="lg:col-span-2 bg-white rounded-3xl border border-gray-100 shadow-sm p-6">
             <div class="flex items-center justify-between mb-6">
                 <div>
                     <div class="text-[9px] font-black uppercase tracking-widest text-gray-500 mb-0.5">Last 7 Days</div>
@@ -145,7 +145,7 @@
         </div>
 
         {{-- Order Status Donut --}}
-        <div class="bg-white rounded-3xl border border-gray-100 shadow-sm p-6 flex flex-col">
+        <div id="tour-admin-dash-status-chart" class="bg-white rounded-3xl border border-gray-100 shadow-sm p-6 flex flex-col">
             <div class="mb-6">
                 <div class="text-[9px] font-black uppercase tracking-widest text-gray-400 mb-0.5">Breakdown</div>
                 <h3 class="text-base font-bold text-black">Order Status</h3>
@@ -168,7 +168,7 @@
     </div>
 
     {{-- ── User Registrations Chart ── --}}
-    <div class="bg-white rounded-3xl border border-gray-100 shadow-sm p-6">
+    <div id="tour-admin-dash-users-chart" class="bg-white rounded-3xl border border-gray-100 shadow-sm p-6">
         <div class="flex items-center justify-between mb-6">
             <div>
                 <div class="text-[9px] font-black uppercase tracking-widest text-gray-400 mb-0.5">Last 7 Days</div>
@@ -187,7 +187,7 @@
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
 
         {{-- Top Sellers --}}
-        <div class="bg-white rounded-3xl border border-gray-100 shadow-sm p-6">
+        <div id="tour-admin-dash-top-sellers" class="bg-white rounded-3xl border border-gray-100 shadow-sm p-6">
             <div class="flex items-center justify-between mb-5">
                 <h3 class="text-sm font-bold text-black">Top Sellers</h3>
                 <a href="/admin/sellers" class="text-[9px] font-black uppercase tracking-widest text-[#C0422A] hover:underline">View All</a>
@@ -215,7 +215,7 @@
         </div>
 
         {{-- Top Products --}}
-        <div class="bg-white rounded-3xl border border-gray-100 shadow-sm p-6">
+        <div id="tour-admin-dash-top-products" class="bg-white rounded-3xl border border-gray-100 shadow-sm p-6">
             <div class="flex items-center justify-between mb-5">
                 <h3 class="text-sm font-bold text-black">Top Products</h3>
                 <a href="/admin/products" class="text-[9px] font-black uppercase tracking-widest text-[#C0422A] hover:underline">View All</a>
@@ -247,7 +247,7 @@
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
 
         {{-- Recent Activity Feed --}}
-        <div class="lg:col-span-2 bg-white rounded-3xl border border-gray-100 shadow-sm p-6">
+        <div id="tour-admin-dash-activity" class="lg:col-span-2 bg-white rounded-3xl border border-gray-100 shadow-sm p-6">
             <div class="flex items-center justify-between mb-5">
                 <h3 class="text-sm font-bold text-black">Recent Activity</h3>
                 <span class="text-[9px] font-black uppercase tracking-widest text-gray-500">Live Feed</span>
@@ -272,7 +272,7 @@
 
         {{-- Quick Action Panel --}}
         <div class="space-y-3">
-            <div class="bg-[#3D2B1F] text-white rounded-3xl p-6">
+            <div id="tour-admin-dash-financial-health" class="bg-[#3D2B1F] text-white rounded-3xl p-6">
                 <div class="text-[9px] font-black uppercase tracking-widest text-white/70 mb-1">Financial Health & Margin</div>
                 <div class="text-3xl font-black text-[#DFC97A] mt-2">{{ $stats['totalProfit'] }}</div>
                 <div class="text-[10px] text-white/80 font-medium mt-1">Gross Revenue: {{ $stats['totalRevenue'] }}</div>
@@ -283,7 +283,7 @@
                 </div>
             </div>
 
-            <div class="bg-white rounded-3xl border border-gray-100 shadow-sm p-5">
+            <div id="tour-admin-dash-quick-links" class="bg-white rounded-3xl border border-gray-100 shadow-sm p-5">
                 <div class="text-[9px] font-black uppercase tracking-widest text-gray-500 mb-3">Quick Links</div>
                 <div class="space-y-1.5">
                     @foreach([
@@ -312,12 +312,19 @@
     tourId="admin-dashboard-guide"
     :autoStart="false"
     :steps="[
-        ['selector' => '#tour-admin-dash-header',  'title' => 'Dashboard Insights',         'description' => 'Welcome to your executive command center. Get a complete bird\'s-eye view of revenue, metrics, and operations across LumBarong.'],
-        ['selector' => '#tour-admin-dash-export',  'title' => 'Export Global CSV',          'description' => 'Instantly download a platform-wide CSV audit report containing sales, active sellers, order logs, and system summaries.'],
-        ['selector' => '#tour-admin-dash-filters', 'title' => 'Date Range & Presets',       'description' => 'Analyze performance across specific intervals like Today, Last 7 Days, This Month, or custom date ranges.'],
-        ['selector' => '#tour-admin-dash-actions', 'title' => 'Pending Action Alerts',       'description' => 'Urgent action notifications requiring your moderation: pending products, new seller verification, or user reports.'],
-        ['selector' => '#tour-admin-dash-kpis',    'title' => 'Platform KPIs',              'description' => 'Key executive metrics tracking Gross Revenue, Net Profit, Order Volume, Average Order Value, and Active User counts.'],
-        ['selector' => '#tour-admin-dash-charts',  'title' => 'Visual Trends & Analytics',  'description' => 'Interactive visualizations tracking daily revenue velocity, fulfillment statuses, and customer/seller registration growth.']
+        ['selector' => '#tour-admin-dash-header',           'title' => 'Dashboard Insights',         'description' => 'Welcome to your executive command center. Monitor platform-wide transactions, sales performance, active sellers, and operational health in real time.'],
+        ['selector' => '#tour-admin-dash-export',           'title' => 'Export Global CSV Report',   'description' => 'Download comprehensive audit reports containing sales figures, order fulfillment logs, active artisan shops, and financial breakdowns.'],
+        ['selector' => '#tour-admin-dash-filters',          'title' => 'Date Filtering & Presets',   'description' => 'Filter all dashboard metrics and revenue figures across preset intervals (Today, Last 7 Days, This Month, Last Month) or pick custom date ranges.'],
+        ['selector' => '#tour-admin-dash-actions',          'title' => 'Pending Moderation Alerts',  'description' => 'Action badges requiring immediate admin attention: pending product listings, artisan seller applications, promotional banners, or customer reports.'],
+        ['selector' => '#tour-admin-dash-kpis',             'title' => 'Platform Metric Cards',      'description' => 'High-level executive metrics tracking Gross Revenue, Net Profit, Total Orders, Average Order Value (AOV), Active Customers, Verified Artisans, Live Listings, and Platform Capital.'],
+        ['selector' => '#tour-admin-dash-revenue-chart',    'title' => 'Daily Revenue Velocity',     'description' => 'Interactive 7-day bar chart displaying daily sales volume and platform gross revenue trends over time.'],
+        ['selector' => '#tour-admin-dash-status-chart',     'title' => 'Order Status Distribution',  'description' => 'Real-time donut breakdown of order fulfillment states: Completed, Pending, Processing, Shipped, Delivered, and Cancelled.'],
+        ['selector' => '#tour-admin-dash-users-chart',      'title' => 'User Registrations & Growth','description' => '7-day onboarding trendline tracking new registered buyers and verified artisan seller accounts.'],
+        ['selector' => '#tour-admin-dash-top-sellers',      'title' => 'Top Performing Artisan Sellers', 'description' => 'Leaderboard ranking the highest-performing artisan workshops by total gross sales, completed orders, and volume percentage share.'],
+        ['selector' => '#tour-admin-dash-top-products',     'title' => 'Top Selling Products',       'description' => 'Catalog rankings highlighting top-grossing barong garments, embroidery designs, and popular artisan items with unit sales.'],
+        ['selector' => '#tour-admin-dash-activity',         'title' => 'Live Activity Stream',       'description' => 'Real-time streaming log of user actions, new order placements, store updates, and platform events as they happen.'],
+        ['selector' => '#tour-admin-dash-financial-health', 'title' => 'Financial Health & Margin',  'description' => 'Executive financial summary displaying net profit balance, total gross revenue, and platform capital / cost of goods sold.'],
+        ['selector' => '#tour-admin-dash-quick-links',      'title' => 'Moderation Shortcuts & Queues', 'description' => 'Quick navigation links with live pending counter badges to jump directly into Products, Sellers, Promotions, or Open Reports.']
     ]"
 />
 
