@@ -180,7 +180,7 @@
                         </div>
                         <div class="text-right shrink-0">
                             <div class="text-xl font-black" style="color: #1E1915;" x-text="currentProduct.formatted_price"></div>
-                            <span class="inline-block text-[9px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">Free Shipping</span>
+                            <span class="inline-block text-[9px] font-bold text-amber-800 bg-amber-50 px-2 py-0.5 rounded border border-amber-200">Shipping depends on location</span>
                         </div>
                     </div>
 
@@ -265,16 +265,19 @@
                             <span>Subtotal (1 item)</span>
                             <span class="font-bold" style="color: #1E1915;" x-text="currentProduct.formatted_price"></span>
                         </div>
-                        <div class="flex justify-between" style="color: #5C5247;">
+                        <div class="flex justify-between items-center" style="color: #5C5247;">
                             <span>Shipping Fee</span>
-                            <span class="font-bold text-emerald-700">₱0.00 (Free)</span>
+                            <span class="font-bold text-[11px]" style="color: #1E1915;">Depends on location (₱150 - ₱250)</span>
                         </div>
                         <div class="flex justify-between" style="color: #5C5247;">
                             <span>Promo Voucher (LUMBARONGPROMO)</span>
                             <span class="font-bold" style="color: #C49520;">-₱200.00</span>
                         </div>
-                        <div class="pt-2 border-t flex justify-between text-sm font-extrabold" style="border-color: #E8DECB; color: #1E1915;">
-                            <span>Total Payable:</span>
+                        <div class="pt-2 border-t flex justify-between items-center text-sm font-extrabold" style="border-color: #E8DECB; color: #1E1915;">
+                            <div>
+                                <span>Total Payable:</span>
+                                <div class="text-[10px] font-normal text-gray-500 font-sans">+ Courier shipping fee based on destination</div>
+                            </div>
                             <span x-text="'₱' + (Math.max(0, currentProduct.price - 200)).toLocaleString('en-US', { minimumFractionDigits: 2 })"></span>
                         </div>
                     </div>
