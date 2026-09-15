@@ -16,7 +16,7 @@
                 {{-- Analytics Guide Button directly next to the title --}}
                 <button type="button"
                         id="tour-analytics-guide-btn"
-                        @click="$dispatch('start-spotlight-tour', { tourId: 'seller-analytics' })"
+                        @click="$dispatch('start-spotlight-tour', { tourId: 'seller-analytics-' + (activeTab || 'sales') })"
                         class="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-black uppercase tracking-wider transition-all shadow-xs cursor-pointer group"
                         style="background-color: #FDF8EE; color: #C49520; border: 1.5px solid #C49520;"
                         onmouseover="this.style.backgroundColor='#C49520'; this.style.color='#FFFFFF';"
@@ -187,7 +187,7 @@
 
     {{-- TAB 2: ORDER ANALYTICS --}}
     <div x-show="activeTab === 'orders'" class="space-y-6">
-        <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6">
+        <div id="tour-analytics-order-cards" class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6">
             <div class="p-4 sm:p-6 rounded-2xl shadow-2xs" style="background: #FFFFFF; border: 1px solid #ECE3D2;">
                 <div class="text-[9px] sm:text-[10px] font-bold uppercase tracking-widest mb-1" style="color: #8C827A;">Total Orders</div>
                 <div class="text-lg sm:text-2xl font-black font-sans" style="color: #1E1915;">{{ number_format($orderAnalytics['stats']['total']) }}</div>
@@ -210,7 +210,7 @@
         </div>
 
         {{-- Order Status Breakdown --}}
-        <div class="p-5 sm:p-6 rounded-3xl shadow-2xs space-y-4" style="background: #FFFFFF; border: 1px solid #ECE3D2;">
+        <div id="tour-analytics-order-distribution" class="p-5 sm:p-6 rounded-3xl shadow-2xs space-y-4" style="background: #FFFFFF; border: 1px solid #ECE3D2;">
             <h3 class="font-serif text-xs sm:text-sm font-bold uppercase tracking-wider" style="color: #1E1915;">Order Status Distribution</h3>
             <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
                 <div class="p-4 rounded-2xl" style="background: #FEF9EE; border: 1px solid #F6E6C2;">
@@ -240,7 +240,7 @@
     <div x-show="activeTab === 'products'" class="space-y-6">
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
             <!-- Best Selling Products -->
-            <div class="p-5 sm:p-6 rounded-3xl shadow-2xs space-y-4" style="background: #FFFFFF; border: 1px solid #ECE3D2;">
+            <div id="tour-analytics-product-bestselling" class="p-5 sm:p-6 rounded-3xl shadow-2xs space-y-4" style="background: #FFFFFF; border: 1px solid #ECE3D2;">
                 <div class="flex items-center justify-between">
                     <h3 class="font-serif text-xs sm:text-sm font-bold uppercase tracking-wider" style="color: #1E1915;">🔥 Best Selling Creations</h3>
                     <span class="text-[9px] font-bold uppercase tracking-wider" style="color: #C49520;">Top Revenue</span>
@@ -267,7 +267,7 @@
             </div>
 
             <!-- Most Viewed Products -->
-            <div class="p-5 sm:p-6 rounded-3xl shadow-2xs space-y-4" style="background: #FFFFFF; border: 1px solid #ECE3D2;">
+            <div id="tour-analytics-product-mostviewed" class="p-5 sm:p-6 rounded-3xl shadow-2xs space-y-4" style="background: #FFFFFF; border: 1px solid #ECE3D2;">
                 <div class="flex items-center justify-between">
                     <h3 class="font-serif text-xs sm:text-sm font-bold uppercase tracking-wider" style="color: #1E1915;">👁️ Most Viewed Creations</h3>
                     <span class="text-[9px] font-bold uppercase tracking-wider text-blue-600">High Traffic</span>
@@ -295,7 +295,7 @@
         </div>
 
         {{-- Granular Per-Product Performance Table --}}
-        <div class="p-5 sm:p-6 rounded-3xl shadow-2xs space-y-4" style="background: #FFFFFF; border: 1px solid #ECE3D2;">
+        <div id="tour-analytics-product-catalogue" class="p-5 sm:p-6 rounded-3xl shadow-2xs space-y-4" style="background: #FFFFFF; border: 1px solid #ECE3D2;">
             <h3 class="font-serif text-xs sm:text-sm font-bold uppercase tracking-wider" style="color: #1E1915;">Per-Product Performance Catalogue</h3>
             <div class="overflow-x-auto no-scrollbar">
                 <table class="w-full text-left border-collapse min-w-140">
@@ -335,7 +335,7 @@
 
     {{-- TAB 4: CUSTOMER ANALYTICS --}}
     <div x-show="activeTab === 'customers'" class="space-y-6">
-        <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6">
+        <div id="tour-analytics-customer-cards" class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6">
             <div class="p-4 sm:p-6 rounded-2xl shadow-2xs" style="background: #FFFFFF; border: 1px solid #ECE3D2;">
                 <div class="text-[9px] sm:text-[10px] font-bold uppercase tracking-widest mb-1" style="color: #8C827A;">Total Customers</div>
                 <div class="text-lg sm:text-2xl font-black font-sans" style="color: #1E1915;">{{ number_format($customerAnalytics['totalCustomers']) }}</div>
@@ -358,7 +358,7 @@
         </div>
 
         {{-- E-Commerce Customer Behavior Funnel --}}
-        <div class="p-5 sm:p-6 rounded-3xl shadow-2xs space-y-4" style="background: #FFFFFF; border: 1px solid #ECE3D2;">
+        <div id="tour-analytics-customer-funnel" class="p-5 sm:p-6 rounded-3xl shadow-2xs space-y-4" style="background: #FFFFFF; border: 1px solid #ECE3D2;">
             <h3 class="font-serif text-xs sm:text-sm font-bold uppercase tracking-wider" style="color: #1E1915;">Customer Conversion Funnel</h3>
             <div class="space-y-3.5">
                 <div>
@@ -414,7 +414,7 @@
         </div>
 
         {{-- Top Customer Lifetime Value Leaderboard --}}
-        <div class="p-5 sm:p-6 rounded-3xl shadow-2xs space-y-4" style="background: #FFFFFF; border: 1px solid #ECE3D2;">
+        <div id="tour-analytics-customer-top" class="p-5 sm:p-6 rounded-3xl shadow-2xs space-y-4" style="background: #FFFFFF; border: 1px solid #ECE3D2;">
             <h3 class="font-serif text-xs sm:text-sm font-bold uppercase tracking-wider" style="color: #1E1915;">Top Customers (Lifetime Value)</h3>
             <div class="overflow-x-auto no-scrollbar">
                 <table class="w-full text-left border-collapse min-w-100">
@@ -447,7 +447,7 @@
 
     {{-- TAB 5: SALES BY CATEGORY --}}
     <div x-show="activeTab === 'category'" class="space-y-6">
-        <div class="p-5 sm:p-6 rounded-3xl shadow-2xs space-y-4" style="background: #FFFFFF; border: 1px solid #ECE3D2;">
+        <div id="tour-analytics-category-demand" class="p-5 sm:p-6 rounded-3xl shadow-2xs space-y-4" style="background: #FFFFFF; border: 1px solid #ECE3D2;">
             <h3 class="font-serif text-xs sm:text-sm font-bold uppercase tracking-wider" style="color: #1E1915;">Barong & Filipiniana Category Demand</h3>
             
             <div class="space-y-4">
@@ -471,7 +471,7 @@
 
     {{-- TAB 6: FINANCIAL ANALYTICS --}}
     <div x-show="activeTab === 'financials'" class="space-y-6">
-        <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6">
+        <div id="tour-analytics-financial-cards" class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6">
             <div class="p-4 sm:p-6 rounded-2xl shadow-2xs" style="background: #FFFFFF; border: 1px solid #ECE3D2;">
                 <div class="text-[9px] sm:text-[10px] font-bold uppercase tracking-widest mb-1" style="color: #8C827A;">Gross Sales</div>
                 <div class="text-lg sm:text-2xl font-black font-sans" style="color: #1E1915;">₱{{ number_format($financialAnalytics['grossSales'], 2) }}</div>
@@ -494,7 +494,7 @@
         </div>
 
         {{-- Detailed Financial Settlement Statement --}}
-        <div class="p-5 sm:p-6 rounded-3xl shadow-2xs space-y-4" style="background: #FFFFFF; border: 1px solid #ECE3D2;">
+        <div id="tour-analytics-financial-statement" class="p-5 sm:p-6 rounded-3xl shadow-2xs space-y-4" style="background: #FFFFFF; border: 1px solid #ECE3D2;">
             <h3 class="font-serif text-xs sm:text-sm font-bold uppercase tracking-wider" style="color: #1E1915;">Financial Settlement Breakdown</h3>
             <div class="divide-y text-xs font-medium" style="border-color: #F0EAE1; color: #1E1915;">
                 <div class="py-3 flex justify-between font-sans">
@@ -523,7 +523,7 @@
 
     {{-- TAB 7: MARKETING ANALYTICS --}}
     <div x-show="activeTab === 'marketing'" class="space-y-6">
-        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <div id="tour-analytics-marketing-cards" class="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <div class="p-4 sm:p-6 rounded-2xl shadow-2xs" style="background: #FFFFFF; border: 1px solid #ECE3D2;">
                 <div class="text-[10px] font-bold uppercase tracking-widest mb-1" style="color: #8C827A;">Listings On Sale</div>
                 <div class="text-xl font-black font-sans" style="color: #1E1915;">{{ number_format($marketingAnalytics['discountedProductsCount']) }} products</div>
@@ -542,17 +542,96 @@
     </div>
 </div>
 
+{{-- Contextual Tab Tours for Seller Analytics --}}
 <x-spotlight-tour
-    tour-id="seller-analytics"
+    tour-id="seller-analytics-sales"
     :user-id="Auth::id()"
     :auto-start="false"
     :steps="[
-        ['selector' => '#tour-analytics-guide-btn',          'title' => 'Analytics Tour Guide',         'text' => 'Welcome to Deep Shop Insights! You can click this guide anytime to learn what each metrics module, chart, and financial statement calculates.'],
-        ['selector' => '#tour-analytics-date-filter',      'title' => 'Date Preset Filters',          'text' => 'Filter all analytical metrics across Today, 1 Week, 1 Month, 1 Year, or All Time to track seasonal performance.'],
-        ['selector' => '#tour-analytics-tabs',             'title' => '7 Specialized Analytics Hubs', 'text' => 'Click any tab to switch views: Sales Performance, Order Fulfillment, Product Conversion, Customer Retention Funnel, Category Demand, Net Payouts, and Promotions.'],
+        ['selector' => '#tour-analytics-guide-btn',          'title' => 'Sales Analytics Guide',        'text' => 'Welcome to Sales Insights! You can click this guide anytime to learn what each sales metric, growth rate, and trend graph calculates.'],
+        ['selector' => '#tour-analytics-date-filter',      'title' => 'Date Preset Filters',          'text' => 'Filter all sales data across Today, 1 Week, 1 Month, 1 Year, or All Time to track historical growth.'],
+        ['selector' => '#tour-analytics-tabs',             'title' => '7 Specialized Analytics Hubs', 'text' => 'Switch between tabs: Sales Performance, Order Turnaround, Product Conversions, Customer Funnel, Category Demand, Net Payouts, and Promotions.'],
         ['selector' => '#tour-analytics-sales-cards',      'title' => 'Core Sales KPIs',              'text' => 'Tracks Total Gross/Net Sales, Average Order Value (AOV) per client, total Barong pieces sold, and month-over-month growth rate %.'],
         ['selector' => '#tour-analytics-sales-comparisons','title' => 'Period Growth Comparisons',    'text' => 'Compares current earnings directly against prior periods (Month vs Last Month, Week vs Last Week, Year vs Last Year) with real-time percentage indicators.'],
         ['selector' => '#tour-analytics-sales-trend',      'title' => 'Revenue Trend Bar Graph',      'text' => 'Visualizes daily revenue velocity to highlight highest-earning days and identify buyer purchase patterns over time.'],
+    ]"
+/>
+
+<x-spotlight-tour
+    tour-id="seller-analytics-orders"
+    :user-id="Auth::id()"
+    :auto-start="false"
+    :steps="[
+        ['selector' => '#tour-analytics-guide-btn',          'title' => 'Order Analytics Guide',        'text' => 'Review your order fulfillment capacity, turnaround speeds, and customer order completion rates.'],
+        ['selector' => '#tour-analytics-date-filter',      'title' => 'Date Preset Filters',          'text' => 'Filter order metrics across specific time periods to analyze seasonal fulfillment volume.'],
+        ['selector' => '#tour-analytics-tabs',             'title' => 'Analytics Hubs',              'text' => 'Switch between any of the 7 analytics modules anytime.'],
+        ['selector' => '#tour-analytics-order-cards',      'title' => 'Order Volume & Turnaround',    'text' => 'Monitors Total Orders, Overall Completion Rate %, Current To-Ship pipeline, and average order processing time in hours.'],
+        ['selector' => '#tour-analytics-order-distribution','title' => 'Order Status Distribution',   'text' => 'Live breakdown of orders categorized by their stage: Pending, To Ship / In Transit, Delivered / Completed, and Cancelled.'],
+    ]"
+/>
+
+<x-spotlight-tour
+    tour-id="seller-analytics-products"
+    :user-id="Auth::id()"
+    :auto-start="false"
+    :steps="[
+        ['selector' => '#tour-analytics-guide-btn',          'title' => 'Product Analytics Guide',      'text' => 'Discover which handcrafted Barongs generate the highest revenues, traffic views, and customer checkout conversions.'],
+        ['selector' => '#tour-analytics-date-filter',      'title' => 'Date Preset Filters',          'text' => 'Filter product statistics across your preferred historical timeframe.'],
+        ['selector' => '#tour-analytics-tabs',             'title' => 'Analytics Hubs',              'text' => 'Switch between any of the 7 analytics modules anytime.'],
+        ['selector' => '#tour-analytics-product-bestselling','title' => '🔥 Best Selling Creations',   'text' => 'Highlights your top-performing Barong designs ranked by gross earnings, units sold, and stock inventory.'],
+        ['selector' => '#tour-analytics-product-mostviewed','title' => '👁️ Most Viewed Creations',   'text' => 'Shows creations receiving the highest customer discovery traffic alongside their conversion rates.'],
+        ['selector' => '#tour-analytics-product-catalogue','title' => 'Product Performance Matrix',   'text' => 'Granular catalog table showing product views, add-to-carts, wishlists, units sold, revenue, conversion %, and star reviews for each item.'],
+    ]"
+/>
+
+<x-spotlight-tour
+    tour-id="seller-analytics-customers"
+    :user-id="Auth::id()"
+    :auto-start="false"
+    :steps="[
+        ['selector' => '#tour-analytics-guide-btn',          'title' => 'Customer Analytics Guide',     'text' => 'Analyze customer loyalty, repeat purchase rates, and customer journey behavior funnels.'],
+        ['selector' => '#tour-analytics-date-filter',      'title' => 'Date Preset Filters',          'text' => 'Filter customer metrics across your chosen date intervals.'],
+        ['selector' => '#tour-analytics-tabs',             'title' => 'Analytics Hubs',              'text' => 'Switch between any of the 7 analytics modules anytime.'],
+        ['selector' => '#tour-analytics-customer-cards',   'title' => 'Customer Retention KPIs',      'text' => 'Tracks Total Customers, Repeat Purchase Rate %, Customer Retention Rate %, and Average Spend per client.'],
+        ['selector' => '#tour-analytics-customer-funnel',  'title' => 'Conversion Behavior Funnel',   'text' => 'Visualizes drop-off across 5 stages: Product Views ➔ Add to Cart ➔ Saved to Wishlist ➔ Checkout Initiated ➔ Completed Purchases.'],
+        ['selector' => '#tour-analytics-customer-top',     'title' => 'Top Customer Leaderboard',     'text' => 'Ranks your most valuable and loyal customers based on total lifetime orders and money spent in your boutique.'],
+    ]"
+/>
+
+<x-spotlight-tour
+    tour-id="seller-analytics-category"
+    :user-id="Auth::id()"
+    :auto-start="false"
+    :steps="[
+        ['selector' => '#tour-analytics-guide-btn',          'title' => 'Category Demand Guide',        'text' => 'See which Barong fabric styles, cuts, and garment categories have the highest customer demand.'],
+        ['selector' => '#tour-analytics-date-filter',      'title' => 'Date Preset Filters',          'text' => 'Filter category demand metrics by date range.'],
+        ['selector' => '#tour-analytics-tabs',             'title' => 'Analytics Hubs',              'text' => 'Switch between any of the 7 analytics modules anytime.'],
+        ['selector' => '#tour-analytics-category-demand',  'title' => 'Category Demand Share',        'text' => 'Visualizes percentage revenue share, total pieces sold, and gross sales generated per Barong category.'],
+    ]"
+/>
+
+<x-spotlight-tour
+    tour-id="seller-analytics-financials"
+    :user-id="Auth::id()"
+    :auto-start="false"
+    :steps="[
+        ['selector' => '#tour-analytics-guide-btn',          'title' => 'Financial Settlement Guide',   'text' => 'Review your marketplace earnings, platform commission breakdown, voucher deductions, and net payouts.'],
+        ['selector' => '#tour-analytics-date-filter',      'title' => 'Date Preset Filters',          'text' => 'Filter financial statements across your chosen billing periods.'],
+        ['selector' => '#tour-analytics-tabs',             'title' => 'Analytics Hubs',              'text' => 'Switch between any of the 7 analytics modules anytime.'],
+        ['selector' => '#tour-analytics-financial-cards',   'title' => 'Financial Breakdown Cards',    'text' => 'Compares Gross Sales, LumBarong 10% Platform Commission fee, Discounts/Refunds deductions, and your Net Seller Earnings.'],
+        ['selector' => '#tour-analytics-financial-statement','title' => 'Official Settlement Statement','text' => 'Itemized financial ledger displaying the exact payout calculation for your artisan boutique.'],
+    ]"
+/>
+
+<x-spotlight-tour
+    tour-id="seller-analytics-marketing"
+    :user-id="Auth::id()"
+    :auto-start="false"
+    :steps="[
+        ['selector' => '#tour-analytics-guide-btn',          'title' => 'Promotions Guide',             'text' => 'Monitor the sales impact and revenue performance of your discounted products and promotional campaigns.'],
+        ['selector' => '#tour-analytics-date-filter',      'title' => 'Date Preset Filters',          'text' => 'Filter promotional performance across historical date presets.'],
+        ['selector' => '#tour-analytics-tabs',             'title' => 'Analytics Hubs',              'text' => 'Switch between any of the 7 analytics modules anytime.'],
+        ['selector' => '#tour-analytics-marketing-cards',  'title' => 'Promotions Performance',       'text' => 'Tracks total listings currently discounted on sale, promotional items sold, and gross revenue generated from sales.'],
     ]"
 />
 
