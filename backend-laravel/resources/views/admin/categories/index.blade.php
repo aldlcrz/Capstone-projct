@@ -57,19 +57,34 @@
     }
 }">
     {{-- ═══ PAGE HEADER ═══ --}}
-    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+    <div id="tour-admin-categories-header" class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div class="space-y-1">
             <div class="inline-flex items-center gap-2">
                 <span class="text-[9px] font-black uppercase tracking-[0.25em] text-[#C0422A]">Catalog Architecture</span>
                 <span class="text-gray-300 text-xs">·</span>
                 <span class="text-[9px] font-bold uppercase tracking-[0.2em] text-gray-400">Admin Center</span>
             </div>
-            <h1 class="font-serif text-2xl sm:text-3xl font-bold text-gray-900 leading-tight">
-                Product <span class="text-[#C0420A] font-light italic">Categories</span>
-            </h1>
+            <div class="flex items-center gap-3 flex-wrap">
+                <h1 class="font-serif text-2xl sm:text-3xl font-bold text-gray-900 leading-tight">
+                    Product <span class="text-[#C0420A] font-light italic">Categories</span>
+                </h1>
+                {{-- Guide Button --}}
+                <button type="button" 
+                        onclick="window.startSpotlightTour('admin-categories-guide')"
+                        class="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-black uppercase tracking-wider transition-all shadow-xs cursor-pointer group shrink-0"
+                        style="background-color: #FFF5F2; color: #C0422A; border: 1.5px solid #C0422A;"
+                        onmouseover="this.style.backgroundColor='#C0422A'; this.style.color='#FFFFFF';"
+                        onmouseout="this.style.backgroundColor='#FFF5F2'; this.style.color='#C0422A';"
+                        title="Start Interactive Categories Guide">
+                    <svg class="w-4 h-4 transition-transform group-hover:rotate-12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                    </svg>
+                    <span>Categories Guide</span>
+                </button>
+            </div>
             <p class="text-[11px] text-gray-400 font-medium">Define product categories and audience targeting groups</p>
         </div>
-        <div class="flex items-center gap-2 shrink-0">
+        <div id="tour-admin-categories-actions" class="flex items-center gap-2 shrink-0">
             <form action="{{ route('admin.categories.initialize') }}" method="POST">
                 @csrf
                 <button type="submit" class="flex items-center gap-2 px-4 py-2.5 bg-gray-100 text-gray-600 rounded-xl text-[9px] font-bold uppercase tracking-widest hover:bg-gray-200 transition-all cursor-pointer border border-gray-200">
@@ -101,7 +116,7 @@
     {{-- ═══ CATEGORY TILE GRID ═══ --}}
     @forelse($categories as $category)
         @if($loop->first)
-        <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
+        <div id="tour-admin-categories-grid" class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
         @endif
 
         <div class="bg-white rounded-3xl border border-gray-100 shadow-sm overflow-hidden flex flex-col hover:shadow-lg hover:-translate-y-1 transition-all duration-200 group">
@@ -390,6 +405,16 @@
         </div>
     </div>
 </div>
+
+<x-spotlight-tour
+    tourId="admin-categories-guide"
+    :autoStart="false"
+    :steps="[
+        ['selector' => '#tour-admin-categories-header',  'title' => 'Product Categories',    'description' => 'Architect the marketplace taxonomy, organizing artisan pieces into intuitive buyer-facing classifications.'],
+        ['selector' => '#tour-admin-categories-actions', 'title' => 'Category Actions',       'description' => 'Add brand new custom categories with high-res cover photos and target audience groups, or seed standard default categories.'],
+        ['selector' => '#tour-admin-categories-grid',    'title' => 'Category Grid & Metrics','description' => 'Visual overview of all active categories displaying live item counts, target groups (Men, Women, Kids), and management buttons.']
+    ]"
+/>
 
 <style>
     [x-cloak] { display: none !important; }

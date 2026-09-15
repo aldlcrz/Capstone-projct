@@ -27,7 +27,7 @@
 }">
 
     {{-- ═══ PAGE HEADER + SEARCH BAR ═══ --}}
-    <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+    <div id="tour-admin-users-header" class="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
         {{-- Left: Title & Subtitle --}}
         <div class="text-left space-y-0.5 shrink-0">
             <div class="inline-flex items-center gap-2">
@@ -35,14 +35,29 @@
                 <span class="text-gray-300 text-xs">·</span>
                 <span class="text-[9px] font-bold uppercase tracking-[0.2em] text-gray-400">Admin Center</span>
             </div>
-            <h1 class="font-serif text-2xl sm:text-3xl font-bold text-gray-900 leading-tight">
-                Customer <span class="text-[#C0420A] font-light italic">Management</span>
-            </h1>
+            <div class="flex items-center gap-3 flex-wrap">
+                <h1 class="font-serif text-2xl sm:text-3xl font-bold text-gray-900 leading-tight">
+                    Customer <span class="text-[#C0420A] font-light italic">Management</span>
+                </h1>
+                {{-- Guide Button --}}
+                <button type="button" 
+                        onclick="window.startSpotlightTour('admin-customers-guide')"
+                        class="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-black uppercase tracking-wider transition-all shadow-xs cursor-pointer group shrink-0"
+                        style="background-color: #FFF5F2; color: #C0422A; border: 1.5px solid #C0422A;"
+                        onmouseover="this.style.backgroundColor='#C0422A'; this.style.color='#FFFFFF';"
+                        onmouseout="this.style.backgroundColor='#FFF5F2'; this.style.color='#C0422A';"
+                        title="Start Interactive Customer Guide">
+                    <svg class="w-4 h-4 transition-transform group-hover:rotate-12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                    </svg>
+                    <span>Customer Guide</span>
+                </button>
+            </div>
             <p class="text-[11px] text-gray-400 font-medium">Manage registered marketplace buyers and their account status</p>
         </div>
 
         {{-- Larger Search Bar in front of Customer Management --}}
-        <div class="flex-1 max-w-xl lg:max-w-2xl w-full">
+        <div id="tour-admin-users-search" class="flex-1 max-w-xl lg:max-w-2xl w-full">
             <form method="GET" class="flex items-center gap-2 w-full">
                 @if(request('status'))
                     <input type="hidden" name="status" value="{{ request('status') }}">
@@ -67,7 +82,7 @@
         $isActive  = $currentStatus === 'active';
         $isBlocked = $currentStatus === 'blocked';
     @endphp
-    <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+    <div id="tour-admin-users-stats" class="grid grid-cols-1 sm:grid-cols-3 gap-3">
         {{-- Total --}}
         <a href="{{ request()->fullUrlWithQuery(['status' => null, 'page' => 1]) }}"
            class="group relative rounded-2xl px-4 py-3 flex items-center justify-between border transition-all duration-200 cursor-pointer {{ $isTotal ? 'bg-white border-gray-900 ring-2 ring-gray-900/15 shadow-sm -translate-y-0.5' : 'bg-white border-gray-100 hover:border-gray-300 hover:shadow-sm hover:-translate-y-0.5' }}">
@@ -142,7 +157,7 @@
         </div>
 
         {{-- Table card --}}
-        <div class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+        <div id="tour-admin-users-table" class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
             <div class="overflow-x-auto no-scrollbar">
                 <table class="w-full text-left min-w-145">
                     <thead>
@@ -150,7 +165,7 @@
                             <th class="px-5 py-2.5 text-[9px] font-black uppercase tracking-widest text-gray-400 w-[38%]">Customer</th>
                             <th class="px-4 py-2.5 text-[9px] font-black uppercase tracking-widest text-gray-400 w-[22%] hidden lg:table-cell">Joined</th>
                             <th class="px-4 py-2.5 text-[9px] font-black uppercase tracking-widest text-gray-400 w-[18%]">Status</th>
-                            <th class="px-5 py-2.5 text-[9px] font-black uppercase tracking-widest text-gray-400 w-[22%] text-right">Actions</th>
+                            <th id="tour-admin-users-actions" class="px-5 py-2.5 text-[9px] font-black uppercase tracking-widest text-gray-400 w-[22%] text-right">Actions</th>
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-gray-50">
@@ -353,4 +368,17 @@
         </div>
     </div>
 </div>
+
+<x-spotlight-tour
+    tourId="admin-customers-guide"
+    :autoStart="false"
+    :steps="[
+        ['selector' => '#tour-admin-users-header',  'title' => 'Customer Management',      'description' => 'Oversee all registered marketplace buyers, monitor registration history, and handle account privileges.'],
+        ['selector' => '#tour-admin-users-search',  'title' => 'Customer Search',           'description' => 'Quickly lookup customers across the entire platform by typing their full name or registered email address.'],
+        ['selector' => '#tour-admin-users-stats',   'title' => 'Quick Status Filters',      'description' => 'Segment and filter customer records instantly between Total, Active buyers, and Blocked accounts.'],
+        ['selector' => '#tour-admin-users-table',   'title' => 'Customer Directory Table',  'description' => 'View profile avatars, names, contact emails, join dates, and real-time account status badges.'],
+        ['selector' => '#tour-admin-users-actions', 'title' => 'Moderation Controls',        'description' => 'Manage account access: suspend or unban users with audit notes, or safely purge duplicate/spam records.']
+    ]"
+/>
+
 @endsection

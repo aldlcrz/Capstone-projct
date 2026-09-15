@@ -139,7 +139,7 @@
 }">
 
     {{-- ═══ PAGE HEADER + SEARCH BAR ═══ --}}
-    <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+    <div id="tour-admin-products-header" class="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
         {{-- Left: Title & Subtitle --}}
         <div class="text-left space-y-0.5 shrink-0">
             <div class="inline-flex items-center gap-2">
@@ -147,14 +147,29 @@
                 <span class="text-gray-300 text-xs">·</span>
                 <span class="text-[9px] font-bold uppercase tracking-[0.2em] text-gray-400">Admin Center</span>
             </div>
-            <h1 class="font-serif text-2xl sm:text-3xl font-bold text-gray-900 leading-tight">
-                Product <span class="text-[#C0420A] font-light italic">Catalog &amp; Moderation</span>
-            </h1>
+            <div class="flex items-center gap-3 flex-wrap">
+                <h1 class="font-serif text-2xl sm:text-3xl font-bold text-gray-900 leading-tight">
+                    Product <span class="text-[#C0420A] font-light italic">Catalog &amp; Moderation</span>
+                </h1>
+                {{-- Guide Button --}}
+                <button type="button" 
+                        onclick="window.startSpotlightTour('admin-products-guide')"
+                        class="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-black uppercase tracking-wider transition-all shadow-xs cursor-pointer group shrink-0"
+                        style="background-color: #FFF5F2; color: #C0422A; border: 1.5px solid #C0422A;"
+                        onmouseover="this.style.backgroundColor='#C0422A'; this.style.color='#FFFFFF';"
+                        onmouseout="this.style.backgroundColor='#FFF5F2'; this.style.color='#C0422A';"
+                        title="Start Interactive Product Guide">
+                    <svg class="w-4 h-4 transition-transform group-hover:rotate-12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                    </svg>
+                    <span>Product Guide</span>
+                </button>
+            </div>
             <p class="text-[11px] text-gray-400 font-medium">Review artisan submissions, verify craftsmanship standards, and oversee catalog inventory</p>
         </div>
 
         {{-- Larger Search Bar in front of Header --}}
-        <div class="flex-1 max-w-xl lg:max-w-2xl w-full">
+        <div id="tour-admin-products-search" class="flex-1 max-w-xl lg:max-w-2xl w-full">
             <form method="GET" class="flex items-center gap-2 w-full">
                 @if(request('status'))
                     <input type="hidden" name="status" value="{{ request('status') }}">
@@ -180,7 +195,7 @@
         $isRejected  = $currentStatus === 'rejected';
         $isAll       = $currentStatus === 'all';
     @endphp
-    <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+    <div id="tour-admin-products-filters" class="grid grid-cols-2 sm:grid-cols-4 gap-3">
         {{-- Total / All --}}
         <a href="{{ request()->fullUrlWithQuery(['status' => 'all', 'page' => 1]) }}"
            class="group relative rounded-2xl px-4 py-3 flex items-center justify-between border transition-all duration-200 cursor-pointer {{ $isAll ? 'bg-white border-gray-900 ring-2 ring-gray-900/15 shadow-sm -translate-y-0.5' : 'bg-white border-gray-100 hover:border-gray-300 hover:shadow-sm hover:-translate-y-0.5' }}">
@@ -269,7 +284,7 @@
         </div>
 
         {{-- View Switcher: Table vs Grid --}}
-        <div class="flex items-center gap-1 bg-gray-100 p-0.5 rounded-xl border border-gray-200/60 shadow-2xs">
+        <div id="tour-admin-products-views" class="flex items-center gap-1 bg-gray-100 p-0.5 rounded-xl border border-gray-200/60 shadow-2xs">
             <button type="button" @click="setViewMode('table')"
                     :class="viewMode === 'table' ? 'bg-white text-gray-900 shadow-xs font-bold' : 'text-gray-400 hover:text-gray-700 font-medium'"
                     class="flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[10px] transition-all cursor-pointer">
@@ -286,7 +301,7 @@
     </div>
 
     {{-- ═══ 1. TABLE VIEW (Default) ═══ --}}
-    <div x-show="viewMode === 'table'" class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+    <div id="tour-admin-products-table" x-show="viewMode === 'table'" class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
         <div class="overflow-x-auto no-scrollbar">
             <table class="w-full text-left min-w-155">
                 <thead>
@@ -295,7 +310,7 @@
                         <th class="px-4 py-2.5 text-[9px] font-black uppercase tracking-widest text-gray-400 w-[20%] hidden md:table-cell">Artisan &amp; Shop</th>
                         <th class="px-4 py-2.5 text-[9px] font-black uppercase tracking-widest text-gray-400 w-[14%]">Price</th>
                         <th class="px-4 py-2.5 text-[9px] font-black uppercase tracking-widest text-gray-400 w-[14%]">Status</th>
-                        <th class="px-5 py-2.5 text-[9px] font-black uppercase tracking-widest text-gray-400 w-[16%] text-right">Actions</th>
+                        <th id="tour-admin-products-actions" class="px-5 py-2.5 text-[9px] font-black uppercase tracking-widest text-gray-400 w-[16%] text-right">Actions</th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-gray-50">
@@ -958,4 +973,18 @@
     </div>
 
 </div>
+
+<x-spotlight-tour
+    tourId="admin-products-guide"
+    :autoStart="false"
+    :steps="[
+        ['selector' => '#tour-admin-products-header',  'title' => 'Product Moderation Hub',  'description' => 'Verify craftsmanship standards, review artisan submissions, and maintain quality across the LumBarong catalog.'],
+        ['selector' => '#tour-admin-products-search',  'title' => 'Product & Fabric Search', 'description' => 'Search products by title, description, artisan workshop, or material specifications.'],
+        ['selector' => '#tour-admin-products-filters', 'title' => 'Moderation Queues',       'description' => 'Switch between Pending submissions awaiting approval, Live active listings, Rejected items, or All products.'],
+        ['selector' => '#tour-admin-products-views',   'title' => 'View Modes (Table/Grid)', 'description' => 'Toggle between the dense data table layout and the visual photo grid to inspect pieces comfortably.'],
+        ['selector' => '#tour-admin-products-table',   'title' => 'Catalog Inventory Table', 'description' => 'Review product pieces, pricing, category tags, seller workshops, and moderation statuses.'],
+        ['selector' => '#tour-admin-products-actions', 'title' => 'Moderation Actions',       'description' => 'Inspect full high-res photos and variations, Approve for immediate publication, Reject with feedback, or Purge items.']
+    ]"
+/>
+
 @endsection

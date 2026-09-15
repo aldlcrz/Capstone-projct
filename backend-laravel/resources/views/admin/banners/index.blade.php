@@ -9,19 +9,34 @@
 })">
 
     {{-- Page Header --}}
-    <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+    <div id="tour-admin-banners-header" class="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
             <div class="text-[9px] font-black tracking-widest text-[#C0422A] uppercase flex items-center gap-1.5 mb-1.5">
                 <span>PROMOTIONS & HERO</span>
                 <span class="text-gray-300">·</span>
                 <span>ADMIN CENTER</span>
             </div>
-            <h1 class="font-serif text-2xl sm:text-3xl font-bold text-gray-900">
-                Homepage <span class="text-[#C0422A] font-light italic">Promotions</span>
-            </h1>
+            <div class="flex items-center gap-3 flex-wrap">
+                <h1 class="font-serif text-2xl sm:text-3xl font-bold text-gray-900">
+                    Homepage <span class="text-[#C0422A] font-light italic">Promotions</span>
+                </h1>
+                {{-- Guide Button --}}
+                <button type="button" 
+                        onclick="window.startSpotlightTour('admin-banners-guide')"
+                        class="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-black uppercase tracking-wider transition-all shadow-xs cursor-pointer group shrink-0"
+                        style="background-color: #FFF5F2; color: #C0422A; border: 1.5px solid #C0422A;"
+                        onmouseover="this.style.backgroundColor='#C0422A'; this.style.color='#FFFFFF';"
+                        onmouseout="this.style.backgroundColor='#FFF5F2'; this.style.color='#C0422A';"
+                        title="Start Interactive Promotions Guide">
+                    <svg class="w-4 h-4 transition-transform group-hover:rotate-12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                    </svg>
+                    <span>Promotions Guide</span>
+                </button>
+            </div>
             <p class="text-[11px] text-gray-500 mt-1 font-medium">Curate artisan spotlights, seasonal hero campaigns, and banner sequence across the marketplace homepage.</p>
         </div>
-        <div class="flex items-center gap-3">
+        <div id="tour-admin-banners-new" class="flex items-center gap-3">
             <button @click="openAddModal()"
                 class="inline-flex items-center gap-2 px-5 py-2.5 bg-[#3D2B1F] text-white rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-[#C0422A] shadow-xs hover:shadow-md transition-all cursor-pointer">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -41,7 +56,7 @@
     @endphp
 
     {{-- 4-Metric Stats Bar --}}
-    <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+    <div id="tour-admin-banners-metrics" class="grid grid-cols-2 sm:grid-cols-4 gap-3">
         <div class="bg-white rounded-2xl border border-gray-100 shadow-xs px-4 py-3.5 flex items-center gap-3 hover:shadow-md transition-all">
             <div class="w-9 h-9 rounded-xl bg-gray-50 border border-gray-100 flex items-center justify-center shrink-0">
                 <svg class="w-4 h-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -124,7 +139,7 @@
                 </button>
             </div>
         @else
-            <div class="bg-white rounded-3xl border border-gray-100 overflow-hidden shadow-xs">
+            <div id="tour-admin-banners-table" class="bg-white rounded-3xl border border-gray-100 overflow-hidden shadow-xs">
                 <div class="overflow-x-auto">
                     <table class="w-full text-left border-collapse">
                         <thead>
@@ -134,7 +149,7 @@
                                 <th class="px-5 py-4 text-[10px] font-black text-gray-500 uppercase tracking-widest">Promotion Details</th>
                                 <th class="px-5 py-4 text-[10px] font-black text-gray-500 uppercase tracking-widest w-48">Schedule</th>
                                 <th class="px-5 py-4 text-[10px] font-black text-gray-500 uppercase tracking-widest text-center w-32">Status</th>
-                                <th class="px-5 py-4 text-[10px] font-black text-gray-500 uppercase tracking-widest text-right w-36">Actions</th>
+                                <th id="tour-admin-banners-actions" class="px-5 py-4 text-[10px] font-black text-gray-500 uppercase tracking-widest text-right w-36">Actions</th>
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-gray-50">
@@ -837,4 +852,17 @@ function promotionManager(initialData) {
     };
 }
 </script>
+
+<x-spotlight-tour
+    tourId="admin-banners-guide"
+    :autoStart="false"
+    :steps="[
+        ['selector' => '#tour-admin-banners-header',  'title' => 'Homepage Promotions Hub',  'description' => 'Curate hero showcase carousels, seasonal campaigns, and marketing announcements on the main marketplace landing page.'],
+        ['selector' => '#tour-admin-banners-new',     'title' => 'Create New Campaign',       'description' => 'Design a new banner campaign with custom photography or link directly to a verified artisan shop/product.'],
+        ['selector' => '#tour-admin-banners-metrics', 'title' => 'Campaign Health Stats',     'description' => 'Real-time counters tracking Total Campaigns, Currently Live slides, Queued future promotions, and Offline banners.'],
+        ['selector' => '#tour-admin-banners-table',   'title' => 'Hero Priority Sequence',   'description' => 'Manage carousel order with up/down arrows (Slot #1 is front-and-center), monitor schedules, and toggle active states.'],
+        ['selector' => '#tour-admin-banners-actions', 'title' => 'Campaign Management',      'description' => 'Edit promotion wording and imagery, toggle live visibility, or remove outdated campaigns.']
+    ]"
+/>
+
 @endsection

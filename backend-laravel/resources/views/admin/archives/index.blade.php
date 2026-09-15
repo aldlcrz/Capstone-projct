@@ -98,7 +98,7 @@
 }">
 
     {{-- ═══ PAGE HEADER + SEARCH BAR ═══ --}}
-    <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+    <div id="tour-admin-archives-header" class="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
         {{-- Left: Title & Subtitle --}}
         <div class="text-left space-y-0.5 shrink-0">
             <div class="inline-flex items-center gap-2">
@@ -106,14 +106,29 @@
                 <span class="text-gray-300 text-xs">·</span>
                 <span class="text-[9px] font-bold uppercase tracking-[0.2em] text-gray-400">System Governance</span>
             </div>
-            <h1 class="font-serif text-2xl sm:text-3xl font-bold text-gray-900 leading-tight">
-                Deleted <span class="text-[#C0420A] font-light italic">Registry</span>
-            </h1>
+            <div class="flex items-center gap-3 flex-wrap">
+                <h1 class="font-serif text-2xl sm:text-3xl font-bold text-gray-900 leading-tight">
+                    Deleted <span class="text-[#C0420A] font-light italic">Registry</span>
+                </h1>
+                {{-- Guide Button --}}
+                <button type="button" 
+                        onclick="window.startSpotlightTour('admin-archives-guide')"
+                        class="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-black uppercase tracking-wider transition-all shadow-xs cursor-pointer group shrink-0"
+                        style="background-color: #FFF5F2; color: #C0422A; border: 1.5px solid #C0422A;"
+                        onmouseover="this.style.backgroundColor='#C0422A'; this.style.color='#FFFFFF';"
+                        onmouseout="this.style.backgroundColor='#FFF5F2'; this.style.color='#C0422A';"
+                        title="Start Interactive Archive Guide">
+                    <svg class="w-4 h-4 transition-transform group-hover:rotate-12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                    </svg>
+                    <span>Archive Guide</span>
+                </button>
+            </div>
             <p class="text-[11px] text-gray-400 font-medium">Soft-deleted records — eligible for restoration or permanent purge</p>
         </div>
 
         {{-- Larger Search Bar in front of Header --}}
-        <div class="flex-1 max-w-xl lg:max-w-2xl w-full">
+        <div id="tour-admin-archives-search" class="flex-1 max-w-xl lg:max-w-2xl w-full">
             <form method="GET" class="flex items-center gap-2 w-full">
                 @if(request('type'))
                     <input type="hidden" name="type" value="{{ request('type') }}">
@@ -140,7 +155,7 @@
         $isCustomer = $currentType === 'customer';
         $isSeller   = $currentType === 'seller';
     @endphp
-    <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
+    <div id="tour-admin-archives-filters" class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
         {{-- Total / All --}}
         <a href="{{ request()->fullUrlWithQuery(['type' => 'all', 'page' => 1]) }}"
            class="group relative rounded-2xl px-3.5 py-3 flex items-center justify-between border transition-all duration-200 cursor-pointer {{ $isAll ? 'bg-white border-gray-900 ring-2 ring-gray-900/15 shadow-sm -translate-y-0.5' : 'bg-white border-gray-100 hover:border-gray-300 hover:shadow-sm hover:-translate-y-0.5' }}">
@@ -249,7 +264,7 @@
     </div>
 
     {{-- ═══ ARCHIVE TABLE ═══ --}}
-    <div class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+    <div id="tour-admin-archives-table" class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
         <div class="overflow-x-auto no-scrollbar">
             <table class="w-full text-left min-w-160">
                 <thead>
@@ -258,7 +273,7 @@
                         <th class="px-4 py-2.5 text-[9px] font-black uppercase tracking-widest text-gray-400 w-[14%]">Type</th>
                         <th class="px-4 py-2.5 text-[9px] font-black uppercase tracking-widest text-gray-400 w-[18%] hidden md:table-cell">Archived Info</th>
                         <th class="px-4 py-2.5 text-[9px] font-black uppercase tracking-widest text-gray-400 w-[16%] hidden sm:table-cell">Retention</th>
-                        <th class="px-5 py-2.5 text-[9px] font-black uppercase tracking-widest text-gray-400 w-[16%] text-right">Actions</th>
+                        <th id="tour-admin-archives-actions" class="px-5 py-2.5 text-[9px] font-black uppercase tracking-widest text-gray-400 w-[16%] text-right">Actions</th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-gray-50">
@@ -765,4 +780,17 @@
     </div>
 
 </div>
+
+<x-spotlight-tour
+    tourId="admin-archives-guide"
+    :autoStart="false"
+    :steps="[
+        ['selector' => '#tour-admin-archives-header',  'title' => 'Deleted Registry (Archives)', 'description' => 'System safety net storing soft-deleted products, categories, customers, and sellers with complete metadata snapshots.'],
+        ['selector' => '#tour-admin-archives-search',  'title' => 'Search Archives',            'description' => 'Quickly locate archived records by original name, unique identifier, deletion reason, or deleting admin.'],
+        ['selector' => '#tour-admin-archives-filters', 'title' => 'Category & Type Filters',    'description' => 'Isolate archived items by model type: Products, Categories, Customers, or Sellers.'],
+        ['selector' => '#tour-admin-archives-table',   'title' => 'Archive Ledger Table',       'description' => 'Review historical snapshots, deletion timestamps, 30-day retention count, and origin data.'],
+        ['selector' => '#tour-admin-archives-actions', 'title' => 'Restore or Purge',           'description' => 'Safely restore records back to live marketplace status with 1 click, or permanently purge them forever.']
+    ]"
+/>
+
 @endsection

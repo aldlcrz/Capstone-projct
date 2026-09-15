@@ -8,13 +8,28 @@
 <div class="space-y-8">
 
     {{-- ── Header ── --}}
-    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+    <div id="tour-admin-dash-header" class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
             <div class="text-[10px] font-bold text-[#C0422A] uppercase tracking-[0.2em] mb-1">Enterprise Analytics</div>
-            <h1 class="font-serif text-3xl font-bold text-black">Dashboard <span class="text-[#C0420A] font-light italic">Insights</span></h1>
+            <div class="flex items-center gap-3 flex-wrap">
+                <h1 class="font-serif text-3xl font-bold text-black">Dashboard <span class="text-[#C0420A] font-light italic">Insights</span></h1>
+                {{-- Guide Button --}}
+                <button type="button" 
+                        onclick="window.startSpotlightTour('admin-dashboard-guide')"
+                        class="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-black uppercase tracking-wider transition-all shadow-xs cursor-pointer group shrink-0"
+                        style="background-color: #FFF5F2; color: #C0422A; border: 1.5px solid #C0422A;"
+                        onmouseover="this.style.backgroundColor='#C0422A'; this.style.color='#FFFFFF';"
+                        onmouseout="this.style.backgroundColor='#FFF5F2'; this.style.color='#C0422A';"
+                        title="Start Interactive Dashboard Guide">
+                    <svg class="w-4 h-4 transition-transform group-hover:rotate-12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                    </svg>
+                    <span>Dashboard Guide</span>
+                </button>
+            </div>
             <p class="text-xs text-gray-600 font-medium mt-1">{{ now()->format('l, F j, Y') }} · Platform overview</p>
         </div>
-        <div class="flex items-center gap-2">
+        <div id="tour-admin-dash-export" class="flex items-center gap-2">
             <a href="/admin/export-global-report"
                 class="flex items-center gap-2 px-5 py-2.5 bg-[#3D2B1F] text-white rounded-xl text-[10px] font-bold uppercase tracking-widest hover:bg-[#C0422A] transition-all">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
@@ -24,7 +39,7 @@
     </div>
 
     {{-- Date Filter Toolbar --}}
-    <form method="GET" action="{{ route('admin.dashboard') }}" x-data="{ selectedPreset: '{{ $filters['preset'] ?? 'all_time' }}' }" class="bg-white p-4 rounded-2xl border border-gray-100 shadow-sm flex flex-wrap items-center justify-between gap-4">
+    <form id="tour-admin-dash-filters" method="GET" action="{{ route('admin.dashboard') }}" x-data="{ selectedPreset: '{{ $filters['preset'] ?? 'all_time' }}' }" class="bg-white p-4 rounded-2xl border border-gray-100 shadow-sm flex flex-wrap items-center justify-between gap-4">
         <div class="flex flex-wrap items-center gap-3">
             <div class="flex items-center gap-2">
                 <svg class="w-4 h-4 text-[#C0422A]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
@@ -63,7 +78,7 @@
 
     {{-- ── Pending Action Alerts ── --}}
     @if($pendingTotal > 0)
-    <div class="bg-amber-50 border border-amber-200 rounded-2xl p-4 flex flex-wrap items-center gap-3">
+    <div id="tour-admin-dash-actions" class="bg-amber-50 border border-amber-200 rounded-2xl p-4 flex flex-wrap items-center gap-3">
         <div class="flex items-center gap-2 text-amber-700">
             <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
             <span class="text-[10px] font-black uppercase tracking-widest">{{ $pendingTotal }} Action{{ $pendingTotal !== 1 ? 's' : '' }} Required</span>
@@ -78,7 +93,7 @@
     @endif
 
     {{-- ── KPI Cards ── --}}
-    <div id="tour-admin-metrics" class="grid grid-cols-2 lg:grid-cols-4 gap-4">
+    <div id="tour-admin-dash-kpis" class="grid grid-cols-2 lg:grid-cols-4 gap-4">
         @php
         $kpis = [
             ['label' => 'Total Revenue',    'value' => $stats['totalSales'],    'sub' => 'All-time gross sales',         'color' => 'text-[#C0422A]', 'bg' => 'bg-red-50',    'icon' => 'M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z'],
@@ -108,7 +123,7 @@
     </div>
 
     {{-- ── Charts Row ── --}}
-    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+    <div id="tour-admin-dash-charts" class="grid grid-cols-1 lg:grid-cols-3 gap-6">
 
         {{-- Revenue Sparkline (7 days) --}}
         <div class="lg:col-span-2 bg-white rounded-3xl border border-gray-100 shadow-sm p-6">
@@ -290,6 +305,19 @@
     </div>
 
 </div>
+
+<x-spotlight-tour
+    tourId="admin-dashboard-guide"
+    :autoStart="false"
+    :steps="[
+        ['selector' => '#tour-admin-dash-header',  'title' => 'Dashboard Insights',         'description' => 'Welcome to your executive command center. Get a complete bird\'s-eye view of revenue, metrics, and operations across LumBarong.'],
+        ['selector' => '#tour-admin-dash-export',  'title' => 'Export Global CSV',          'description' => 'Instantly download a platform-wide CSV audit report containing sales, active sellers, order logs, and system summaries.'],
+        ['selector' => '#tour-admin-dash-filters', 'title' => 'Date Range & Presets',       'description' => 'Analyze performance across specific intervals like Today, Last 7 Days, This Month, or custom date ranges.'],
+        ['selector' => '#tour-admin-dash-actions', 'title' => 'Pending Action Alerts',       'description' => 'Urgent action notifications requiring your moderation: pending products, new seller verification, or user reports.'],
+        ['selector' => '#tour-admin-dash-kpis',    'title' => 'Platform KPIs',              'description' => 'Key executive metrics tracking Gross Revenue, Net Profit, Order Volume, Average Order Value, and Active User counts.'],
+        ['selector' => '#tour-admin-dash-charts',  'title' => 'Visual Trends & Analytics',  'description' => 'Interactive visualizations tracking daily revenue velocity, fulfillment statuses, and customer/seller registration growth.']
+    ]"
+/>
 
 @push('scripts')
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>

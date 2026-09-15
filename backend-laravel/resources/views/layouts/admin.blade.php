@@ -493,17 +493,7 @@
     <x-broadcast-notification />
     <x-modal-scroll-lock />
 
-    <x-spotlight-tour
-        tour-id="admin"
-        :user-id="Auth::id()"
-        :auto-start="true"
-        :steps="[
-            ['selector' => '#tour-admin-metrics',        'title' => 'Platform Analytics',     'text' => 'This dashboard gives you a real-time overview of revenue, orders, active customers, and verified sellers on LumBarong.'],
-            ['selector' => '#tour-admin-sellers-nav',    'title' => 'Manage Sellers',          'text' => 'Review and approve seller applications, monitor shop performance, and manage artisan accounts from the Sellers section.'],
-            ['selector' => '#tour-admin-products-nav',   'title' => 'Product Control',         'text' => 'Approve, flag, or remove product listings to ensure all items meet LumBarong quality and content standards.'],
-            ['selector' => '#tour-admin-governance-nav', 'title' => 'Reports & Governance',    'text' => 'Review customer and seller reports, take action on flagged content, and maintain platform integrity from the Reports section.'],
-        ]"
-    />
+
     @stack('scripts')
     <script>
         function adminApp() {
