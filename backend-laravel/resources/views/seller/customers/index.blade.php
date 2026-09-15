@@ -3,7 +3,7 @@
 @section('content')
 <div class="space-y-4 sm:space-y-6 max-w-5xl pb-28 lg:pb-12 px-2 sm:px-6" x-data="{ search: '', modalOpen: false, customer: null, viewTab: 'info' }">
     {{-- Header --}}
-    <div class="flex flex-col sm:flex-row sm:items-end justify-between gap-3 sm:gap-4 pb-2 border-b" style="border-color: #E8DECB;">
+    <div id="tour-customers-header" class="flex flex-col sm:flex-row sm:items-end justify-between gap-3 sm:gap-4 pb-2 border-b" style="border-color: #E8DECB;">
         <div>
             <div class="flex items-center gap-2 mb-1">
                 <span class="text-[9px] font-extrabold uppercase tracking-[0.25em]" style="color: #C49520;">✦ Client Relations</span>
@@ -16,15 +16,29 @@
             <p class="text-xs font-medium mt-1" style="color: #766C60;">View customer purchasing history, direct communication channels, and total spending.</p>
         </div>
         
-        {{-- Search Input --}}
-        <div class="relative w-full sm:w-72">
-            <input type="text" x-model="search" placeholder="Search by name or email..." class="w-full h-10 sm:h-11 pl-9 pr-4 rounded-xl text-xs font-semibold shadow-xs outline-none transition-all" style="background: #FDF8EE; border: 1px solid #E8DECB; color: #1E1915;" onfocus="this.style.borderColor='#C49520'; this.style.background='#FFF';" onblur="this.style.borderColor='#E8DECB'; this.style.background='#FDF8EE';">
-            <svg class="w-4 h-4 absolute left-3 top-3 sm:top-3.5" style="color: #766C60;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+        {{-- Actions: Search & Guide Button --}}
+        <div class="flex items-center gap-2.5 w-full sm:w-auto">
+            {{-- Search Input --}}
+            <div id="tour-customers-search" class="relative flex-1 sm:w-72">
+                <input type="text" x-model="search" placeholder="Search by name or email..." class="w-full h-10 sm:h-11 pl-9 pr-4 rounded-xl text-xs font-semibold shadow-xs outline-none transition-all" style="background: #FDF8EE; border: 1px solid #E8DECB; color: #1E1915;" onfocus="this.style.borderColor='#C49520'; this.style.background='#FFF';" onblur="this.style.borderColor='#E8DECB'; this.style.background='#FDF8EE';">
+                <svg class="w-4 h-4 absolute left-3 top-3 sm:top-3.5" style="color: #766C60;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+            </div>
+
+            {{-- Guide Button --}}
+            <button type="button" 
+                    onclick="window.startSpotlightTour('seller-customers-guide')"
+                    class="h-10 sm:h-11 px-3.5 rounded-xl text-xs font-extrabold tracking-wider uppercase transition-all shadow-xs flex items-center gap-1.5 cursor-pointer shrink-0"
+                    style="background: #FDF8EE; border: 1px solid #C49520; color: #7A5505;"
+                    onmouseover="this.style.background='#1E1915'; this.style.color='#DFC97A'; this.style.borderColor='#1E1915';"
+                    onmouseout="this.style.background='#FDF8EE'; this.style.color='#7A5505'; this.style.borderColor='#C49520';">
+                <span class="text-xs">✦</span>
+                <span class="hidden sm:inline">Guide</span>
+            </button>
         </div>
     </div>
 
     {{-- Customer Statistics Summary Cards --}}
-    <div class="grid grid-cols-3 gap-2 sm:gap-4">
+    <div id="tour-customers-stats" class="grid grid-cols-3 gap-2 sm:gap-4">
         <div class="rounded-2xl sm:rounded-3xl p-3 sm:p-5 shadow-xs space-y-0.5 sm:space-y-1 text-center sm:text-left" style="background: #FFFCF7; border: 1px solid #E8DECB;">
             <div class="text-[8px] sm:text-[10px] font-bold uppercase tracking-wider truncate" style="color: #766C60;">Customers</div>
             <div class="text-base sm:text-2xl font-black font-sans" style="color: #1E1915;">{{ count($customerList) }}</div>
@@ -45,7 +59,7 @@
     </div>
 
     {{-- Customer Capsule List --}}
-    <div class="space-y-2.5 sm:space-y-3">
+    <div id="tour-customers-list" class="space-y-2.5 sm:space-y-3">
         @forelse($customerList as $cust)
             <div x-show="!search || '{{ strtolower($cust['name']) }}'.includes(search.toLowerCase()) || '{{ strtolower($cust['email']) }}'.includes(search.toLowerCase())"
                  @click="customer = {{ json_encode($cust) }}; viewTab = 'info'; modalOpen = true"
@@ -218,5 +232,42 @@
             </div>
         </div>
     </div>
+
+    {{-- Spotlight Tour Guide --}}
+    @php
+        $customerTourSteps = [
+            [
+                'selector' => '#tour-customers-header',
+                'title' => '👥 Client Relations Directory',
+                'text' => 'Welcome to your Client Directory! Here you can monitor all customers who have commissioned handcrafted creations from your shop, tracking their purchasing habits and lifetime value.',
+                'position' => 'bottom'
+            ],
+            [
+                'selector' => '#tour-customers-search',
+                'title' => '🔍 Search & Filter Clients',
+                'text' => 'Quickly lookup specific clients by typing their name or registered email address to view their personalized order history.',
+                'position' => 'bottom'
+            ],
+            [
+                'selector' => '#tour-customers-stats',
+                'title' => '📊 Client Summary Metrics',
+                'text' => 'High-level dashboard overview showing your total count of registered buyers, completed orders placed, and cumulative lifetime revenue generated.',
+                'position' => 'bottom'
+            ],
+            [
+                'selector' => '#tour-customers-list',
+                'title' => '🗂️ Client Profiles & Spend Capsules',
+                'text' => 'Each capsule highlights the buyer avatar, full name, email, order count, and total spend. Click any customer row to open their detailed dossier!',
+                'position' => 'top'
+            ],
+            [
+                'title' => '📑 Detailed Client Dossier & Messaging',
+                'text' => 'When viewing a client, you can inspect their phone number, average spend per order, itemized purchase breakdown, and start a direct chat via the "Message" button.',
+                'position' => 'center'
+            ],
+        ];
+    @endphp
+
+    <x-spotlight-tour tourId="seller-customers-guide" :steps="$customerTourSteps" :autoStart="false" />
 </div>
 @endsection

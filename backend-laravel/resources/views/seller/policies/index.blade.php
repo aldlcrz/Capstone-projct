@@ -11,7 +11,7 @@
 })">
 
     {{-- Breadcrumb & Header --}}
-    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white p-6 sm:p-8 rounded-3xl border border-gray-100 shadow-xs">
+    <div id="tour-policies-header" class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white p-6 sm:p-8 rounded-3xl border border-gray-100 shadow-xs">
         <div>
             <div class="flex items-center gap-2 mb-2">
                 <a href="{{ route('seller.profile') }}" class="text-[10px] font-bold text-gray-400 uppercase tracking-widest hover:text-[#C49520] transition-colors flex items-center gap-1">
@@ -27,10 +27,21 @@
             </p>
         </div>
 
-        <div class="flex items-center gap-2">
-            <button type="button" @click="showPreviewModal = true" class="px-4 py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-xl text-xs font-bold uppercase tracking-widest flex items-center gap-2 transition-all cursor-pointer">
+        <div class="flex items-center gap-2.5">
+            <button id="tour-policies-preview" type="button" @click="showPreviewModal = true" class="px-4 py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-xl text-xs font-bold uppercase tracking-widest flex items-center gap-2 transition-all cursor-pointer">
                 <svg class="w-4 h-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
                 <span>Buyer Preview</span>
+            </button>
+
+            {{-- Guide Button --}}
+            <button type="button" 
+                    onclick="window.startSpotlightTour('seller-policies-guide')"
+                    class="h-10.5 px-3.5 rounded-xl text-xs font-extrabold tracking-wider uppercase transition-all shadow-xs flex items-center gap-1.5 cursor-pointer shrink-0"
+                    style="background: #FDF8EE; border: 1px solid #C49520; color: #7A5505;"
+                    onmouseover="this.style.background='#1E1915'; this.style.color='#DFC97A'; this.style.borderColor='#1E1915';"
+                    onmouseout="this.style.background='#FDF8EE'; this.style.color='#7A5505'; this.style.borderColor='#C49520';">
+                <span class="text-xs">✦</span>
+                <span>Guide</span>
             </button>
         </div>
     </div>
@@ -48,7 +59,7 @@
         @method('PUT')
 
         {{-- Cancellation Policy Card --}}
-        <div class="bg-white rounded-3xl p-6 sm:p-8 border border-gray-100 shadow-sm space-y-4 relative overflow-hidden">
+        <div id="tour-policies-cancellation" class="bg-white rounded-3xl p-6 sm:p-8 border border-gray-100 shadow-sm space-y-4 relative overflow-hidden">
             <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-gray-100 pb-4">
                 <div class="flex items-center gap-2.5">
                     <div class="w-8 h-8 rounded-xl bg-amber-50 border border-amber-200/60 flex items-center justify-center text-amber-600 font-bold">
@@ -68,7 +79,7 @@
             </div>
 
             {{-- AI Actions Bar --}}
-            <div class="bg-linear-to-r from-amber-50/70 via-[#FDF9F4] to-orange-50/70 p-3.5 rounded-2xl border border-amber-200/50 flex flex-wrap items-center justify-between gap-2">
+            <div id="tour-policies-ai-cancellation" class="bg-linear-to-r from-amber-50/70 via-[#FDF9F4] to-orange-50/70 p-3.5 rounded-2xl border border-amber-200/50 flex flex-wrap items-center justify-between gap-2">
                 <div class="flex items-center gap-1.5 text-xs font-bold text-amber-950">
                     <span class="inline-block animate-pulse text-amber-600">✨</span>
                     <span>AI Policy Assistant:</span>
@@ -126,7 +137,7 @@
         </div>
 
         {{-- Refund & Return Policy Card --}}
-        <div class="bg-white rounded-3xl p-6 sm:p-8 border border-gray-100 shadow-sm space-y-4 relative overflow-hidden">
+        <div id="tour-policies-refund" class="bg-white rounded-3xl p-6 sm:p-8 border border-gray-100 shadow-sm space-y-4 relative overflow-hidden">
             <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-gray-100 pb-4">
                 <div class="flex items-center gap-2.5">
                     <div class="w-8 h-8 rounded-xl bg-blue-50 border border-blue-200/60 flex items-center justify-center text-blue-600 font-bold">
@@ -146,7 +157,7 @@
             </div>
 
             {{-- AI Actions Bar --}}
-            <div class="bg-linear-to-r from-blue-50/70 via-[#FDF9F4] to-cyan-50/70 p-3.5 rounded-2xl border border-blue-200/50 flex flex-wrap items-center justify-between gap-2">
+            <div id="tour-policies-ai-refund" class="bg-linear-to-r from-blue-50/70 via-[#FDF9F4] to-cyan-50/70 p-3.5 rounded-2xl border border-blue-200/50 flex flex-wrap items-center justify-between gap-2">
                 <div class="flex items-center gap-1.5 text-xs font-bold text-blue-950">
                     <span class="inline-block animate-pulse text-blue-600">✨</span>
                     <span>AI Policy Assistant:</span>
@@ -370,4 +381,47 @@ function policiesApp(config) {
     };
 }
 </script>
+
+    @php
+        $policiesTourSteps = [
+            [
+                'target' => '#tour-policies-header',
+                'title' => 'Shop Cancellation & Refund Policies',
+                'content' => 'Set custom store policies for order cancellations, sizing exchanges, returns, and damages. These terms are showcased on your public storefront and directly inside customer checkout screens.',
+                'position' => 'bottom'
+            ],
+            [
+                'target' => '#tour-policies-cancellation',
+                'title' => 'Order Cancellation Rules',
+                'content' => 'Specify the conditions under which buyers may cancel their orders (e.g., within 12 hours, before payment confirmation, or strictly prior to fabric cutting). Custom policies override the platform default.',
+                'position' => 'top'
+            ],
+            [
+                'target' => '#tour-policies-ai-cancellation',
+                'title' => 'AI Cancellation Assistant',
+                'content' => 'Select a tone (Standard, Strict Made-to-Order, or Flexible) and click "Generate with AI" or "Improve Draft". You can also type in Tagalog/Taglish and translate seamlessly into refined English.',
+                'position' => 'bottom'
+            ],
+            [
+                'target' => '#tour-policies-refund',
+                'title' => 'Refund, Return & Exchange Rules',
+                'content' => 'Clarify rules regarding sizing adjustments, custom tailoring exceptions, defective garments, and unboxing video requirements to protect your shop from fraudulent claims.',
+                'position' => 'top'
+            ],
+            [
+                'target' => '#tour-policies-ai-refund',
+                'title' => 'AI Refund Assistant & Quick Presets',
+                'content' => 'Draft professional refund terms with AI or click standard quick presets below the text area (e.g., Standard Artisan, Strict Tailor-Made, or 7-Day Sizing Exchange).',
+                'position' => 'bottom'
+            ],
+            [
+                'target' => '#tour-policies-preview',
+                'title' => 'Live Buyer Preview',
+                'content' => 'Click "Buyer Preview" at any time to see the exact modal and layout your customers will see when viewing your policies during checkout and on your storefront.',
+                'position' => 'left'
+            ]
+        ];
+    @endphp
+
+    <x-spotlight-tour tourId="seller-policies-guide" :steps="$policiesTourSteps" :autoStart="false" />
 @endsection

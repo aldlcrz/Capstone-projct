@@ -229,7 +229,7 @@
              style="background-color:#FDFBF7;border:1px solid #EAE2D2;border-radius:28px;box-shadow:0 20px 50px rgba(0,0,0,0.06);padding:28px 24px;color:#1E1915;">
 
             {{-- Top Header with Heraldic Laurel Wreath & Home Link --}}
-            <div class="flex items-center justify-between gap-4">
+            <div id="tour-profile-header" class="flex items-center justify-between gap-4">
                 <div class="flex items-center gap-3.5 min-w-0">
                     <div style="width:48px;height:48px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
                         <svg width="46" height="46" viewBox="0 0 48 48" fill="none">
@@ -256,6 +256,17 @@
                         </p>
                     </div>
                 </div>
+
+                {{-- Guide Button --}}
+                <button type="button" 
+                        onclick="window.startSpotlightTour('seller-profile-guide')"
+                        class="h-9.5 px-3 rounded-xl text-xs font-extrabold tracking-wider uppercase transition-all shadow-xs flex items-center gap-1.5 cursor-pointer shrink-0"
+                        style="background: #FAF5EA; border: 1px solid #C49520; color: #7A5505;"
+                        onmouseover="this.style.background='#1E1915'; this.style.color='#DFC97A'; this.style.borderColor='#1E1915';"
+                        onmouseout="this.style.background='#FAF5EA'; this.style.color='#7A5505'; this.style.borderColor='#C49520';">
+                    <span class="text-xs">✦</span>
+                    <span>Guide</span>
+                </button>
             </div>
 
             {{-- Star Divider --}}
@@ -280,7 +291,7 @@
             @endif
 
             {{-- DESKTOP HERO BANNER (Visible only on lg screens >= 1024px) --}}
-            <div class="hidden lg:flex items-center justify-between gap-6 p-6 bg-white border border-[#ECE3D2] rounded-2xl shadow-xs mb-6">
+            <div id="tour-profile-hero" class="hidden lg:flex items-center justify-between gap-6 p-6 bg-white border border-[#ECE3D2] rounded-2xl shadow-xs mb-6">
                 <div class="flex items-center gap-5 min-w-0">
                     {{-- Gold-Ringed Avatar --}}
                     <div class="w-20 h-20 min-w-20 rounded-full p-[2.5px] bg-linear-to-br from-[#996515] via-[#E6CA65] to-[#996515] shadow-md shrink-0">
@@ -365,7 +376,7 @@
             </div>
 
             {{-- Artisan Quick Metrics Row --}}
-            <div class="grid grid-cols-2 sm:grid-cols-4 gap-2.5 sm:gap-3 mb-6">
+            <div id="tour-profile-metrics" class="grid grid-cols-2 sm:grid-cols-4 gap-2.5 sm:gap-3 mb-6">
                 <a href="{{ route('seller.products.index') }}" style="text-decoration:none;background-color:#FFFFFF;border:1px solid #ECE3D2;border-radius:15px;padding:12px 6px;text-align:center;box-shadow:0 1px 4px rgba(0,0,0,0.02);display:block;transition:all 0.2s;" class="hover:border-[#C49520] hover:scale-102">
                     <div style="font-size:16px;font-weight:800;color:#C49520;" class="font-sans">{{ $sellerListingCount }}</div>
                     <div style="font-size:8.5px;font-weight:700;color:#8C827A;text-transform:uppercase;letter-spacing:0.04em;margin-top:2px;">Creations</div>
@@ -388,7 +399,7 @@
             <div class="grid grid-cols-1 lg:grid-cols-3 gap-4 lg:gap-5">
 
                 {{-- COLUMN 1: Account & Shop Settings --}}
-                <div class="flex flex-col gap-3">
+                <div id="tour-profile-col-account" class="flex flex-col gap-3">
                     <h3 style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.14em;color:#996515;margin:0 0 4px 2px;">
                         Account &amp; Settings
                     </h3>
@@ -465,7 +476,7 @@
                 </div>
 
                 {{-- COLUMN 2: Creations & Operations --}}
-                <div class="flex flex-col gap-3">
+                <div id="tour-profile-col-operations" class="flex flex-col gap-3">
                     <h3 style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.14em;color:#996515;margin:0 0 4px 2px;">
                         Creations &amp; Operations
                     </h3>
@@ -536,7 +547,7 @@
                 </div>
 
                 {{-- COLUMN 3: Insights & Store --}}
-                <div class="flex flex-col gap-3">
+                <div id="tour-profile-col-insights" class="flex flex-col gap-3">
                     <h3 style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.14em;color:#996515;margin:0 0 4px 2px;">
                         Insights &amp; Store
                     </h3>
@@ -1616,4 +1627,47 @@
         }
     }
     </script>
+
+    @php
+        $profileTourSteps = [
+            [
+                'target' => '#tour-profile-header',
+                'title' => 'My Profile & Account',
+                'content' => 'This is your central artisan shop administration hub. Manage your public profile, business credentials, payouts, orders, catalogue, and shop settings.',
+                'position' => 'bottom'
+            ],
+            [
+                'target' => '#tour-profile-hero',
+                'title' => 'Artisan Storefront Identity',
+                'content' => 'Displays your official artisan shop name, verified badge, and contact details. Click "Edit Profile" to update your avatar photo, mobile number, and artisan shop biography.',
+                'position' => 'bottom'
+            ],
+            [
+                'target' => '#tour-profile-metrics',
+                'title' => 'Artisan Quick Metrics',
+                'content' => 'At-a-glance performance snapshot displaying total live Creations, overall Orders received, aggregate Sales revenue, and buyer Star Rating.',
+                'position' => 'bottom'
+            ],
+            [
+                'target' => '#tour-profile-col-account',
+                'title' => 'Account & Security Settings',
+                'content' => 'Open "Account Setting" to manage your email with 2-step verification, update your shop story, and review legal verification documents. Configure your GCash & Maya payout accounts or change your password.',
+                'position' => 'right'
+            ],
+            [
+                'target' => '#tour-profile-col-operations',
+                'title' => 'Creations & Operations',
+                'content' => 'Quickly navigate to your full Products Catalogue (with low stock / pending item alerts) and your Orders & Dispatch fulfillment center.',
+                'position' => 'bottom'
+            ],
+            [
+                'target' => '#tour-profile-col-insights',
+                'title' => 'Insights & Shop Policies',
+                'content' => 'View your Customer Directory with purchase histories, dive into detailed Shop Analytics & Reports, or customize your Shop Cancellation & Refund Policies.',
+                'position' => 'left'
+            ]
+        ];
+    @endphp
+
+    <x-spotlight-tour tourId="seller-profile-guide" :steps="$profileTourSteps" :autoStart="false" />
 @endsection

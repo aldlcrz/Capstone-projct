@@ -1106,7 +1106,7 @@ function sellerOrdersManager() {
     </div>
 
     {{-- Header --}}
-    <div class="flex flex-col sm:flex-row sm:items-end justify-between gap-3 sm:gap-4 pb-2 border-b" style="border-color: #E8DECB;">
+    <div id="tour-orders-header" class="flex flex-col sm:flex-row sm:items-end justify-between gap-3 sm:gap-4 pb-2 border-b" style="border-color: #E8DECB;">
         <div>
             <div class="flex items-center gap-2 mb-1">
                 <span class="text-[9px] font-extrabold uppercase tracking-[0.25em]" style="color: #C49520;">✦ Shop Orders</span>
@@ -1119,14 +1119,28 @@ function sellerOrdersManager() {
             <p class="text-xs font-medium mt-1" style="color: #766C60;">Track bespoke commissions, customer delivery details, and fulfillment state.</p>
         </div>
         
-        {{-- Search Input --}}
-        <div class="relative w-full sm:w-72">
-            <input type="text" x-model="searchTerm" placeholder="Search order ID or customer..."
-                class="w-full h-10 sm:h-11 pl-9 pr-4 rounded-xl text-xs font-semibold shadow-xs outline-none transition-all"
-                style="background: #FDF8EE; border: 1px solid #E8DECB; color: #1E1915;"
-                onfocus="this.style.borderColor='#C49520'; this.style.background='#FFF';"
-                onblur="this.style.borderColor='#E8DECB'; this.style.background='#FDF8EE';">
-            <svg class="w-4 h-4 absolute left-3 top-3 sm:top-3.5" style="color: #766C60;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+        {{-- Actions: Search & Guide Button --}}
+        <div class="flex items-center gap-2.5 w-full sm:w-auto">
+            {{-- Search Input --}}
+            <div id="tour-orders-search" class="relative flex-1 sm:w-72">
+                <input type="text" x-model="searchTerm" placeholder="Search order ID or customer..."
+                    class="w-full h-10 sm:h-11 pl-9 pr-4 rounded-xl text-xs font-semibold shadow-xs outline-none transition-all"
+                    style="background: #FDF8EE; border: 1px solid #E8DECB; color: #1E1915;"
+                    onfocus="this.style.borderColor='#C49520'; this.style.background='#FFF';"
+                    onblur="this.style.borderColor='#E8DECB'; this.style.background='#FDF8EE';">
+                <svg class="w-4 h-4 absolute left-3 top-3 sm:top-3.5" style="color: #766C60;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+            </div>
+
+            {{-- Guide Button --}}
+            <button type="button" 
+                    onclick="window.startSpotlightTour('seller-orders-guide')"
+                    class="h-10 sm:h-11 px-3.5 rounded-xl text-xs font-extrabold tracking-wider uppercase transition-all shadow-xs flex items-center gap-1.5 cursor-pointer shrink-0"
+                    style="background: #FDF8EE; border: 1px solid #C49520; color: #7A5505;"
+                    onmouseover="this.style.background='#1E1915'; this.style.color='#DFC97A'; this.style.borderColor='#1E1915';"
+                    onmouseout="this.style.background='#FDF8EE'; this.style.color='#7A5505'; this.style.borderColor='#C49520';">
+                <span class="text-xs">✦</span>
+                <span class="hidden sm:inline">Guide</span>
+            </button>
         </div>
     </div>
 
@@ -1157,7 +1171,7 @@ function sellerOrdersManager() {
             }
         }
     </style>
-    <div class="seller-order-tabs-container no-scrollbar -mx-4 px-4 sm:mx-0 sm:px-0">
+    <div id="tour-orders-tabs" class="seller-order-tabs-container no-scrollbar -mx-4 px-4 sm:mx-0 sm:px-0">
         <div class="seller-order-tabs-track border-b pb-3" style="border-color: #E8DECB;">
             @php
                 $statusTabs = [
@@ -1192,7 +1206,7 @@ function sellerOrdersManager() {
     </div>
 
     {{-- Order Capsule List --}}
-    <div class="space-y-2.5 sm:space-y-3">
+    <div id="tour-orders-list" class="space-y-2.5 sm:space-y-3">
         <template x-if="filtered.length === 0">
             <div class="rounded-3xl p-10 text-center space-y-2 shadow-xs" style="background: #FFFCF7; border: 1px solid #E8DECB;">
                 <div class="w-12 h-12 rounded-2xl flex items-center justify-center mx-auto text-xl" style="background: #FDF8EE; color: #C49520; border: 1px solid #E8DECB;">🛍️</div>
@@ -2630,5 +2644,52 @@ function sellerOrdersManager() {
             </div>
         </div>
     </div>
+
+    {{-- Spotlight Tour Guide --}}
+    @php
+        $ordersTourSteps = [
+            [
+                'selector' => '#tour-orders-header',
+                'title' => '📦 Fulfillment Ledger & Orders',
+                'text' => 'Welcome to your Client Orders ledger! Here you manage every customer order from bespoke tailoring request through packaging, dispatch, delivery, and completion.',
+                'position' => 'bottom'
+            ],
+            [
+                'selector' => '#tour-orders-search',
+                'title' => '🔍 Instant Order Search',
+                'text' => 'Rapidly find orders by typing the Order ID (e.g. #LB-XXXX), buyer name, or shipping courier tracking number.',
+                'position' => 'bottom'
+            ],
+            [
+                'selector' => '#tour-orders-tabs',
+                'title' => '🏷️ Order Lifecycle Filter Tabs',
+                'text' => 'Switch between order stages: Pending (awaiting artisan action), To Ship, Shipped, In Transit, Delivered, Completed, and Special Requests (Cancellation / Returns).',
+                'position' => 'bottom'
+            ],
+            [
+                'selector' => '#tour-orders-list',
+                'title' => '📋 Order Dossiers & Tracking',
+                'text' => 'Each capsule displays the order code, status badge, customer avatar, items summary, and total amount. Click any order row to open its full management dossier!',
+                'position' => 'top'
+            ],
+            [
+                'title' => '🚚 Logistics, Courier & Tracking Setup',
+                'text' => 'Inside the order modal, you can select accredited couriers (J&T Express, LBC, Ninja Van, Flash, etc.), enter the tracking number, and transition fulfillment status.',
+                'position' => 'center'
+            ],
+            [
+                'title' => '📸 Live Packing Photo Proof',
+                'text' => 'Capture camera snapshots or upload photo proof of the packaged Lumban garment before dispatching to provide peace of mind and dispute protection.',
+                'position' => 'center'
+            ],
+            [
+                'title' => '↩️ Cancellations & Return Requests',
+                'text' => 'Review buyer cancellation inquiries or inspection photos for return requests. You can approve with automatic stock recovery or decline with an artisan explanation.',
+                'position' => 'center'
+            ],
+        ];
+    @endphp
+
+    <x-spotlight-tour tourId="seller-orders-guide" :steps="$ordersTourSteps" :autoStart="false" />
 </div>
 @endsection

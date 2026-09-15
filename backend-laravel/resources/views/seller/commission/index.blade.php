@@ -2,14 +2,28 @@
 
 @section('content')
 <div class="space-y-6 sm:space-y-8 max-w-6xl pb-28 lg:pb-12 px-2 sm:px-6">
-    <div>
-        <div class="text-[10px] font-bold text-[#C49520] uppercase tracking-[0.2em] mb-1">✦ Financial Settlement</div>
-        <h1 class="font-serif text-2xl sm:text-3xl font-bold text-[#1E1915]">Seller <span class="text-[#766C60] font-light italic">Commission Payment</span></h1>
-        <p class="text-xs text-[#766C60] mt-1 font-medium">Settle your monthly platform commission to maintain an active seller shop account.</p>
+    {{-- Header with Guide Button --}}
+    <div id="tour-commission-header" class="flex flex-col sm:flex-row sm:items-end justify-between gap-3 sm:gap-4 pb-2 border-b" style="border-color: #E8DECB;">
+        <div>
+            <div class="text-[10px] font-bold text-[#C49520] uppercase tracking-[0.2em] mb-1">✦ Financial Settlement</div>
+            <h1 class="font-serif text-2xl sm:text-3xl font-bold text-[#1E1915]">Seller <span class="text-[#766C60] font-light italic">Commission Payment</span></h1>
+            <p class="text-xs text-[#766C60] mt-1 font-medium">Settle your monthly platform commission to maintain an active seller shop account.</p>
+        </div>
+
+        {{-- Guide Button --}}
+        <button type="button" 
+                onclick="window.startSpotlightTour('seller-commission-guide')"
+                class="h-10 sm:h-11 px-3.5 rounded-xl text-xs font-extrabold tracking-wider uppercase transition-all shadow-xs flex items-center gap-1.5 cursor-pointer shrink-0 self-start sm:self-auto"
+                style="background: #FDF8EE; border: 1px solid #C49520; color: #7A5505;"
+                onmouseover="this.style.background='#1E1915'; this.style.color='#DFC97A'; this.style.borderColor='#1E1915';"
+                onmouseout="this.style.background='#FDF8EE'; this.style.color='#7A5505'; this.style.borderColor='#C49520';">
+            <span class="text-xs">✦</span>
+            <span>Guide</span>
+        </button>
     </div>
 
     {{-- Monthly Summary Card --}}
-    <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-6">
+    <div id="tour-commission-summary" class="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-6">
         <div class="rounded-2xl sm:rounded-3xl p-4 sm:p-6 shadow-xs space-y-1 sm:space-y-2" style="background: #FFFCF7; border: 1px solid #E8DECB;">
             <div class="text-[10px] font-bold uppercase tracking-widest text-[#766C60]">Current Period</div>
             <div class="text-xl sm:text-2xl font-bold font-sans text-[#1E1915]">{{ \Carbon\Carbon::parse($period . '-01')->format('F Y') }}</div>
@@ -41,7 +55,7 @@
     {{-- Super Admin Payment Accounts & Submit Form --}}
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-5 sm:gap-8">
         {{-- Payment Methods / QR Codes --}}
-        <div class="rounded-2xl sm:rounded-3xl p-5 sm:p-8 shadow-xs space-y-4 sm:space-y-6" style="background: #FFFCF7; border: 1px solid #E8DECB;">
+        <div id="tour-commission-accounts" class="rounded-2xl sm:rounded-3xl p-5 sm:p-8 shadow-xs space-y-4 sm:space-y-6" style="background: #FFFCF7; border: 1px solid #E8DECB;">
             <h3 class="text-xs font-black uppercase tracking-widest text-[#1E1915] flex items-center gap-2">
                 <svg class="w-4 h-4 text-[#C49520]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>
                 Super Admin Payment Accounts
@@ -73,7 +87,7 @@
         </div>
 
         {{-- Submit Payment Proof Form --}}
-        <div class="rounded-2xl sm:rounded-3xl p-5 sm:p-8 shadow-xs space-y-4 sm:space-y-6" style="background: #FFFCF7; border: 1px solid #E8DECB;">
+        <div id="tour-commission-form" class="rounded-2xl sm:rounded-3xl p-5 sm:p-8 shadow-xs space-y-4 sm:space-y-6" style="background: #FFFCF7; border: 1px solid #E8DECB;">
             <h3 class="text-xs font-black uppercase tracking-widest text-[#1E1915] flex items-center gap-2">
                 <svg class="w-4 h-4 text-[#C49520]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path></svg>
                 Submit Commission Payment Proof
@@ -122,7 +136,7 @@
     </div>
 
     {{-- Payment History Table --}}
-    <div class="rounded-2xl sm:rounded-3xl shadow-xs overflow-hidden space-y-4" style="background: #FFFCF7; border: 1px solid #E8DECB;">
+    <div id="tour-commission-history" class="rounded-2xl sm:rounded-3xl shadow-xs overflow-hidden space-y-4" style="background: #FFFCF7; border: 1px solid #E8DECB;">
         <div class="px-4 sm:px-6 py-4 border-b flex items-center justify-between" style="border-color: #E8DECB;">
             <h3 class="text-xs sm:text-sm font-black uppercase tracking-widest text-[#1E1915]">Commission Settlement History</h3>
         </div>
@@ -170,5 +184,43 @@
             </table>
         </div>
     </div>
+
+    {{-- Spotlight Tour Guide --}}
+    @php
+        $commissionTourSteps = [
+            [
+                'selector' => '#tour-commission-header',
+                'title' => '💵 Financial Settlement & Commission',
+                'text' => 'Welcome to your Commission Settlement hub! Here you review monthly platform sales commission dues and submit payment proofs to keep your artisan shop verified and active.',
+                'position' => 'bottom'
+            ],
+            [
+                'selector' => '#tour-commission-summary',
+                'title' => '📈 Monthly Sales & Net Due Summary',
+                'text' => 'Track the active billing period, your total gross sales, commission tier percentage, and the net commission amount due by the 10th of each month.',
+                'position' => 'bottom'
+            ],
+            [
+                'selector' => '#tour-commission-accounts',
+                'title' => '💳 Super Admin Payment Accounts',
+                'text' => 'Official LumBarong platform GCash and Maya account numbers and scannable QR codes for seamless commission remittances.',
+                'position' => 'top'
+            ],
+            [
+                'selector' => '#tour-commission-form',
+                'title' => '📤 Submit Commission Payment Proof',
+                'text' => 'After transferring your dues, select the payment method, enter your transaction reference number, and upload the receipt screenshot for rapid Super Admin verification.',
+                'position' => 'top'
+            ],
+            [
+                'selector' => '#tour-commission-history',
+                'title' => '📜 Settlement History & Status Audit',
+                'text' => 'Audit past monthly billing cycles, payment reference codes, and real-time verification statuses (Paid, Verification Pending, or Unpaid).',
+                'position' => 'top'
+            ],
+        ];
+    @endphp
+
+    <x-spotlight-tour tourId="seller-commission-guide" :steps="$commissionTourSteps" :autoStart="false" />
 </div>
 @endsection

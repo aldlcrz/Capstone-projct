@@ -4,7 +4,7 @@
 <div class="space-y-5 sm:space-y-6 max-w-7xl pb-28 lg:pb-12" x-data="sellerReportsHub()">
 
     {{-- ══ HEADER ══════════════════════════════════════════════════════════ --}}
-    <div class="flex flex-col sm:flex-row sm:items-end justify-between gap-4 pb-4 border-b" style="border-color: #E8DECB;">
+    <div id="tour-reports-header" class="flex flex-col sm:flex-row sm:items-end justify-between gap-4 pb-4 border-b" style="border-color: #E8DECB;">
         <div>
             <div class="flex items-center gap-2 mb-1">
                 <span class="text-[9px] font-extrabold uppercase tracking-[0.25em]" style="color: #C49520;">✦ Trust &amp; Safety</span>
@@ -19,19 +19,32 @@
             </p>
         </div>
 
-        {{-- Search Bar --}}
-        <div class="relative w-full sm:w-72 shrink-0">
-            <input type="text" x-model="searchQuery" placeholder="Search case ID, reason, or topic..."
-                class="w-full h-10 sm:h-11 pl-9 pr-4 rounded-xl text-xs font-semibold shadow-xs outline-none transition-all"
-                style="background: #FDF8EE; border: 1px solid #E8DECB; color: #1E1915;"
-                onfocus="this.style.borderColor='#C49520'; this.style.background='#FFF';"
-                onblur="this.style.borderColor='#E8DECB'; this.style.background='#FDF8EE';">
-            <svg class="w-4 h-4 absolute left-3 top-3 sm:top-3.5" style="color: #766C60;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+        <div class="flex items-center gap-2.5 w-full sm:w-auto">
+            {{-- Search Bar --}}
+            <div class="relative w-full sm:w-72 shrink-0">
+                <input type="text" x-model="searchQuery" placeholder="Search case ID, reason, or topic..."
+                    class="w-full h-10 sm:h-11 pl-9 pr-4 rounded-xl text-xs font-semibold shadow-xs outline-none transition-all"
+                    style="background: #FDF8EE; border: 1px solid #E8DECB; color: #1E1915;"
+                    onfocus="this.style.borderColor='#C49520'; this.style.background='#FFF';"
+                    onblur="this.style.borderColor='#E8DECB'; this.style.background='#FDF8EE';">
+                <svg class="w-4 h-4 absolute left-3 top-3 sm:top-3.5" style="color: #766C60;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+            </div>
+
+            {{-- Guide Button --}}
+            <button type="button" 
+                    onclick="window.startSpotlightTour('seller-reports-guide')"
+                    class="h-10 sm:h-11 px-3.5 rounded-xl text-xs font-extrabold tracking-wider uppercase transition-all shadow-xs flex items-center gap-1.5 cursor-pointer shrink-0"
+                    style="background: #FAF5EA; border: 1px solid #C49520; color: #7A5505;"
+                    onmouseover="this.style.background='#1E1915'; this.style.color='#DFC97A'; this.style.borderColor='#1E1915';"
+                    onmouseout="this.style.background='#FAF5EA'; this.style.color='#7A5505'; this.style.borderColor='#C49520';">
+                <span class="text-xs">✦</span>
+                <span>Guide</span>
+            </button>
         </div>
     </div>
 
     {{-- ══ METRIC OVERVIEW CAPSULES (4-Pill Luxury Row) ════════════════════ --}}
-    <div class="grid grid-cols-2 sm:grid-cols-4 gap-2.5 sm:gap-4">
+    <div id="tour-reports-metrics" class="grid grid-cols-2 sm:grid-cols-4 gap-2.5 sm:gap-4">
         {{-- Total Reports --}}
         <div class="p-3.5 sm:p-4 rounded-2xl transition-all" 
              style="background: #FFFFFF; border: 1px solid #ECE3D2; box-shadow: 0 1px 4px rgba(30,25,21,0.03);">
@@ -80,7 +93,7 @@
     </div>
 
     {{-- ══ TRUST & SAFETY PRINCIPLE NOTICE (Sleek Collapsible Banner) ═════ --}}
-    <div class="rounded-2xl p-4 sm:p-4.5 transition-all"
+    <div id="tour-reports-notice" class="rounded-2xl p-4 sm:p-4.5 transition-all"
          style="background: #FDF8EE; border: 1px solid #E8DECB;">
         <div class="flex items-start sm:items-center justify-between gap-3">
             <div class="flex items-center gap-3">
@@ -107,7 +120,7 @@
     </div>
 
     {{-- ══ STATUS TABS & TYPE FILTER (System Module Bar) ════════════════════ --}}
-    <div class="space-y-3">
+    <div id="tour-reports-filters" class="space-y-3">
         {{-- Status Filter Tabs (Horizontal Scrollable Module Tabs) --}}
         <div class="overflow-x-auto no-scrollbar -mx-4 px-4 sm:mx-0 sm:px-0">
             <div class="flex items-center gap-2 border-b pb-3 min-w-max" style="border-color: #E8DECB;">
@@ -164,15 +177,16 @@
     </div>
 
     {{-- ══ REPORTS CAPSULE LIST ═════════════════════════════════════════════ --}}
-    @if($reports->isEmpty())
-        <div class="py-16 sm:py-20 text-center rounded-3xl p-10 space-y-2 shadow-xs" style="background: #FFFCF7; border: 1px solid #E8DECB;">
-            <div class="w-12 h-12 rounded-2xl flex items-center justify-center mx-auto text-xl" style="background: #FDF8EE; color: #C49520; border: 1px solid #E8DECB;">🛡️</div>
-            <h3 class="font-serif text-sm font-bold uppercase tracking-wider" style="color: #1E1915;">No Reports Found</h3>
-            <p class="text-[11px]" style="color: #766C60;">Your shop has a clean Trust &amp; Safety record. Keep delivering authentic creations to maintain it.</p>
-        </div>
-    @else
-        <div class="space-y-3">
-            @foreach($reports as $report)
+    <div id="tour-reports-list">
+        @if($reports->isEmpty())
+            <div class="py-16 sm:py-20 text-center rounded-3xl p-10 space-y-2 shadow-xs" style="background: #FFFCF7; border: 1px solid #E8DECB;">
+                <div class="w-12 h-12 rounded-2xl flex items-center justify-center mx-auto text-xl" style="background: #FDF8EE; color: #C49520; border: 1px solid #E8DECB;">🛡️</div>
+                <h3 class="font-serif text-sm font-bold uppercase tracking-wider" style="color: #1E1915;">No Reports Found</h3>
+                <p class="text-[11px]" style="color: #766C60;">Your shop has a clean Trust &amp; Safety record. Keep delivering authentic creations to maintain it.</p>
+            </div>
+        @else
+            <div class="space-y-3">
+                @foreach($reports as $report)
                 @php
                     $evidenceList = $report->getEvidenceList();
                     $evidenceCount = count($evidenceList);
@@ -290,6 +304,7 @@
             @endforeach
         </div>
     @endif
+    </div>
 
     {{-- ══ DETAILED CASE MODAL ══════════════════════════════════════════════ --}}
     <div x-show="showCaseModal"
@@ -640,4 +655,41 @@ function sellerReportsHub() {
     };
 }
 </script>
+
+    @php
+        $reportsTourSteps = [
+            [
+                'target' => '#tour-reports-header',
+                'title' => 'Reports & Concerns Trust Hub',
+                'content' => 'Review and manage buyer concerns, intellectual property notices, and compliance queries submitted regarding your artisan shop or listings.',
+                'position' => 'bottom'
+            ],
+            [
+                'target' => '#tour-reports-metrics',
+                'title' => 'Trust & Case Metrics',
+                'content' => 'Track your lifetime case volume: Total Reports received, cases currently Under Review, Resolved cases, and actual Confirmed Policy Violations.',
+                'position' => 'bottom'
+            ],
+            [
+                'target' => '#tour-reports-notice',
+                'title' => 'Fair Review Standard',
+                'content' => 'A submitted report does NOT mean an immediate penalty. Every report undergoes neutral investigation by LumBarong admins. You always have the right to inspect evidence and submit a formal seller statement.',
+                'position' => 'bottom'
+            ],
+            [
+                'target' => '#tour-reports-filters',
+                'title' => 'Status & Type Filters',
+                'content' => 'Filter cases by status (All, Under Review, Pending, Resolved, Dismissed) or switch between Account-level and Product-level concerns.',
+                'position' => 'bottom'
+            ],
+            [
+                'target' => '#tour-reports-list',
+                'title' => 'Case Ledger & Official Response',
+                'content' => 'Click any case capsule to inspect buyer claims and evidence photos. You can upload proof images and write your official artisan response directly into the case record.',
+                'position' => 'top'
+            ]
+        ];
+    @endphp
+
+    <x-spotlight-tour tourId="seller-reports-guide" :steps="$reportsTourSteps" :autoStart="false" />
 @endsection
