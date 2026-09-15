@@ -10,7 +10,7 @@
      aria-modal="true">
 
     {{-- Backdrop --}}
-    <div class="fixed inset-0 bg-black/75 backdrop-blur-sm transition-opacity"
+    <div class="fixed inset-0 bg-black/80 backdrop-blur-md transition-opacity"
          x-show="isOpen"
          x-transition:enter="ease-out duration-300"
          x-transition:enter-start="opacity-0"
@@ -21,7 +21,8 @@
          @click="closeDemo()"></div>
 
     <div class="flex min-h-full items-center justify-center p-3 sm:p-4 text-center">
-        <div class="relative w-full max-w-2xl transform overflow-hidden rounded-3xl bg-[#FFFCF7] text-left align-middle shadow-2xl transition-all border border-[#E8DECB]"
+        <div class="relative w-full max-w-2xl transform overflow-hidden rounded-3xl text-left align-middle shadow-2xl transition-all"
+             style="background-color: #FFFCF7; border: 1px solid #E8DECB;"
              x-show="isOpen"
              x-transition:enter="ease-out duration-300"
              x-transition:enter-start="opacity-0 scale-95 translate-y-4"
@@ -32,25 +33,28 @@
              @click.stop>
 
             {{-- Top Banner: Demo Mode Indicator --}}
-            <div class="bg-[#1E1915] text-[#FFFCF7] px-5 py-3 flex items-center justify-between border-b border-[#3B3228]">
+            <div class="px-5 py-3.5 flex items-center justify-between border-b"
+                 style="background-color: #1E1915; border-color: #3B3228;">
                 <div class="flex items-center gap-2.5">
-                    <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-extrabold uppercase tracking-wider bg-[#C49520] text-[#1E1915]">
+                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-extrabold uppercase tracking-wider"
+                          style="background-color: #C49520; color: #1E1915;">
                         Interactive Demo
                     </span>
-                    <span class="text-xs font-medium text-[#E8DECB]/90 hidden sm:inline">
+                    <span class="text-xs font-semibold text-white/90 hidden sm:inline">
                         Experience the complete ordering lifecycle (100% risk-free)
                     </span>
                 </div>
                 <button type="button"
                         @click="closeDemo()"
-                        class="text-gray-400 hover:text-white text-sm font-bold w-7 h-7 rounded-full flex items-center justify-center hover:bg-white/10 transition-colors"
+                        class="text-gray-300 hover:text-white text-sm font-bold w-7 h-7 rounded-full flex items-center justify-center hover:bg-white/15 transition-colors"
                         title="Close Demo">
                     ✕
                 </button>
             </div>
 
             {{-- Step Navigation Stepper --}}
-            <div class="bg-[#FDF8EE] px-4 sm:px-6 py-3 border-b border-[#E8DECB] overflow-x-auto no-scrollbar">
+            <div class="px-4 sm:px-6 py-3 border-b overflow-x-auto no-scrollbar"
+                 style="background-color: #FDF8EE; border-color: #E8DECB;">
                 <div class="flex items-center justify-between min-w-[360px] gap-2">
                     <template x-for="(s, index) in steps" :key="index">
                         <button type="button"
@@ -58,13 +62,13 @@
                                 class="flex items-center gap-2 text-left transition-all group cursor-pointer"
                                 :class="{ 'opacity-100': currentStep === index, 'opacity-60 hover:opacity-90': currentStep !== index }">
                             <span class="w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-extrabold shrink-0 transition-colors"
-                                  :class="currentStep === index ? 'bg-[#C49520] text-white shadow-sm' : (currentStep > index ? 'bg-[#1E1915] text-white' : 'bg-[#E8DECB] text-[#766C60]')">
+                                  :style="currentStep === index ? 'background-color: #C49520; color: #FFFFFF;' : (currentStep > index ? 'background-color: #1E1915; color: #FFFFFF;' : 'background-color: #E8DECB; color: #766C60;')">
                                 <span x-show="currentStep <= index" x-text="index + 1"></span>
                                 <span x-show="currentStep > index">✓</span>
                             </span>
                             <div class="min-w-0">
-                                <div class="text-[9px] uppercase tracking-wider font-bold text-[#A89887]" x-text="'Step ' + (index + 1)"></div>
-                                <div class="text-xs font-bold text-[#1E1915] truncate" x-text="s.shortTitle"></div>
+                                <div class="text-[9px] uppercase tracking-wider font-extrabold" style="color: #A89887;" x-text="'Step ' + (index + 1)"></div>
+                                <div class="text-xs font-bold" style="color: #1E1915;" x-text="s.shortTitle"></div>
                             </div>
                         </button>
                     </template>
@@ -72,36 +76,36 @@
             </div>
 
             {{-- Step Content Area --}}
-            <div class="p-5 sm:p-7 max-h-[70vh] overflow-y-auto">
+            <div class="p-5 sm:p-7 max-h-[70vh] overflow-y-auto" style="background-color: #FFFCF7;">
 
                 {{-- STEP 1: Product Customization & Sizing --}}
                 <div x-show="currentStep === 0" x-transition class="space-y-5">
                     <div class="flex items-start justify-between gap-3">
                         <div>
-                            <span class="text-[10px] font-bold uppercase tracking-widest text-[#C49520]">Step 1: Choose Fit & Style</span>
-                            <h3 class="font-serif text-xl sm:text-2xl font-bold text-[#1E1915]">Heritage Piña-Seda Barong Tagalog</h3>
-                            <p class="text-xs text-[#766C60] mt-1">Sold by <strong class="text-[#1E1915]">Lumban Master Tailors Guild</strong> (Verified Artisan)</p>
+                            <span class="text-[10px] font-extrabold uppercase tracking-widest" style="color: #C49520;">Step 1: Choose Fit & Style</span>
+                            <h3 class="font-serif text-xl sm:text-2xl font-extrabold leading-tight mt-0.5" style="color: #1E1915;">Heritage Piña-Seda Barong Tagalog</h3>
+                            <p class="text-xs mt-1" style="color: #5C5247;">Sold by <strong style="color: #1E1915;">Lumban Master Tailors Guild</strong> (Verified Artisan)</p>
                         </div>
-                        <div class="text-right">
-                            <div class="text-xl font-extrabold text-[#1E1915]">₱4,850.00</div>
+                        <div class="text-right shrink-0">
+                            <div class="text-xl font-black" style="color: #1E1915;">₱4,850.00</div>
                             <span class="inline-block text-[9px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">Free Shipping</span>
                         </div>
                     </div>
 
                     {{-- Fabric Selector --}}
                     <div class="space-y-2">
-                        <label class="text-xs font-bold text-[#1E1915] flex items-center justify-between">
+                        <label class="text-xs font-bold flex items-center justify-between" style="color: #1E1915;">
                             <span>Select Fabric Type:</span>
-                            <span class="text-[11px] font-medium text-[#C49520]" x-text="selectedFabric"></span>
+                            <span class="text-[11px] font-extrabold" style="color: #C49520;" x-text="selectedFabric"></span>
                         </label>
                         <div class="grid grid-cols-3 gap-2">
                             <template x-for="f in fabrics" :key="f.name">
                                 <button type="button"
                                         @click="selectedFabric = f.name"
-                                        class="p-3 rounded-2xl border text-left transition-all"
-                                        :class="selectedFabric === f.name ? 'border-[#C49520] bg-[#FFF9ED] ring-1 ring-[#C49520]' : 'border-[#E8DECB] bg-white hover:border-[#C49520]/50'">
-                                    <div class="text-xs font-bold text-[#1E1915]" x-text="f.name"></div>
-                                    <div class="text-[10px] text-[#766C60]" x-text="f.desc"></div>
+                                        class="p-3 rounded-2xl border text-left transition-all cursor-pointer"
+                                        :style="selectedFabric === f.name ? 'background-color: #FFF9ED; border: 2px solid #C49520;' : 'background-color: #FFFFFF; border: 1px solid #E8DECB;'">
+                                    <div class="text-xs font-bold" style="color: #1E1915;" x-text="f.name"></div>
+                                    <div class="text-[10px]" style="color: #5C5247;" x-text="f.desc"></div>
                                 </button>
                             </template>
                         </div>
@@ -110,8 +114,8 @@
                     {{-- Size Selector (Standard vs Made-to-Measure) --}}
                     <div class="space-y-2">
                         <div class="flex items-center justify-between">
-                            <label class="text-xs font-bold text-[#1E1915]">Select Sizing:</label>
-                            <button type="button" @click="isCustomSize = !isCustomSize" class="text-[11px] font-bold text-[#C49520] underline hover:text-[#1E1915]">
+                            <label class="text-xs font-bold" style="color: #1E1915;">Select Sizing:</label>
+                            <button type="button" @click="isCustomSize = !isCustomSize" class="text-[11px] font-bold underline cursor-pointer" style="color: #C49520;">
                                 <span x-text="isCustomSize ? 'Switch to Standard Sizes' : 'Request Made-to-Measure (+₱0)'"></span>
                             </button>
                         </div>
@@ -121,43 +125,46 @@
                             <template x-for="sz in ['S', 'M', 'L', 'XL', '2XL', '3XL']" :key="sz">
                                 <button type="button"
                                         @click="selectedSize = sz"
-                                        class="w-12 h-10 rounded-xl border text-xs font-bold transition-all flex items-center justify-center"
-                                        :class="selectedSize === sz ? 'bg-[#1E1915] text-white border-[#1E1915] shadow-sm' : 'bg-white text-[#1E1915] border-[#E8DECB] hover:border-[#C49520]'">
+                                        class="w-12 h-10 rounded-xl border text-xs font-bold transition-all flex items-center justify-center cursor-pointer shadow-xs"
+                                        :style="selectedSize === sz ? 'background-color: #1E1915; color: #FFFFFF; border: 1px solid #1E1915;' : 'background-color: #FFFFFF; color: #1E1915; border: 1px solid #E8DECB;'">
                                     <span x-text="sz"></span>
                                 </button>
                             </template>
                         </div>
 
                         {{-- Made to Measure Input Preview --}}
-                        <div x-show="isCustomSize" class="p-3.5 rounded-2xl bg-white border border-[#E8DECB] space-y-2.5">
-                            <div class="text-xs font-bold text-[#1E1915] flex items-center gap-1.5">
+                        <div x-show="isCustomSize" class="p-4 rounded-2xl border space-y-2.5" style="background-color: #FFFFFF; border-color: #E8DECB;">
+                            <div class="text-xs font-bold flex items-center gap-1.5" style="color: #1E1915;">
                                 <span>📐 Custom Tailoring Measurements (Inches)</span>
                             </div>
                             <div class="grid grid-cols-3 gap-2">
                                 <div>
-                                    <label class="text-[10px] text-[#766C60]">Chest</label>
-                                    <input type="text" value="38 in" readonly class="w-full text-xs font-bold bg-[#FDF8EE] border border-[#E8DECB] rounded-lg px-2.5 py-1.5 text-center">
+                                    <label class="text-[10px] font-semibold" style="color: #5C5247;">Chest</label>
+                                    <input type="text" value="38 in" readonly class="w-full text-xs font-bold rounded-lg px-2.5 py-1.5 text-center" style="background-color: #FDF8EE; border: 1px solid #E8DECB; color: #1E1915;">
                                 </div>
                                 <div>
-                                    <label class="text-[10px] text-[#766C60]">Shoulder</label>
-                                    <input type="text" value="17.5 in" readonly class="w-full text-xs font-bold bg-[#FDF8EE] border border-[#E8DECB] rounded-lg px-2.5 py-1.5 text-center">
+                                    <label class="text-[10px] font-semibold" style="color: #5C5247;">Shoulder</label>
+                                    <input type="text" value="17.5 in" readonly class="w-full text-xs font-bold rounded-lg px-2.5 py-1.5 text-center" style="background-color: #FDF8EE; border: 1px solid #E8DECB; color: #1E1915;">
                                 </div>
                                 <div>
-                                    <label class="text-[10px] text-[#766C60]">Sleeve Length</label>
-                                    <input type="text" value="24.5 in" readonly class="w-full text-xs font-bold bg-[#FDF8EE] border border-[#E8DECB] rounded-lg px-2.5 py-1.5 text-center">
+                                    <label class="text-[10px] font-semibold" style="color: #5C5247;">Sleeve Length</label>
+                                    <input type="text" value="24.5 in" readonly class="w-full text-xs font-bold rounded-lg px-2.5 py-1.5 text-center" style="background-color: #FDF8EE; border: 1px solid #E8DECB; color: #1E1915;">
                                 </div>
                             </div>
                             <p class="text-[10px] text-gray-500 italic">Custom measurements will be sent directly to the artisan's tailoring workshop.</p>
                         </div>
                     </div>
 
-                    <div class="pt-3 border-t border-[#E8DECB] flex items-center justify-between">
-                        <div class="text-xs text-[#766C60]">
-                            Selected: <strong class="text-[#1E1915]" x-text="isCustomSize ? 'Custom Made-to-Measure (' + selectedFabric + ')' : 'Size ' + selectedSize + ' (' + selectedFabric + ')'"></strong>
+                    <div class="pt-3 border-t flex items-center justify-between" style="border-color: #E8DECB;">
+                        <div class="text-xs" style="color: #5C5247;">
+                            Selected: <strong style="color: #1E1915;" x-text="isCustomSize ? 'Custom Made-to-Measure (' + selectedFabric + ')' : 'Size ' + selectedSize + ' (' + selectedFabric + ')'"></strong>
                         </div>
                         <button type="button"
                                 @click="goToStep(1)"
-                                class="px-5 py-2.5 rounded-full bg-[#1E1915] text-white text-xs font-bold hover:bg-[#C49520] transition-all shadow-md flex items-center gap-1.5">
+                                style="background-color: #1E1915; color: #FFFFFF;"
+                                onmouseover="this.style.backgroundColor='#C49520';"
+                                onmouseout="this.style.backgroundColor='#1E1915';"
+                                class="px-5 py-2.5 rounded-full text-xs font-bold transition-all shadow-md flex items-center gap-1.5 cursor-pointer">
                             <span>Add to Cart & Next →</span>
                         </button>
                     </div>
@@ -167,61 +174,64 @@
                 <div x-show="currentStep === 1" x-transition class="space-y-5">
                     <div class="flex items-start justify-between">
                         <div>
-                            <span class="text-[10px] font-bold uppercase tracking-widest text-[#C49520]">Step 2: Review Shopping Cart</span>
-                            <h3 class="font-serif text-xl sm:text-2xl font-bold text-[#1E1915]">Your Shopping Bag</h3>
-                            <p class="text-xs text-[#766C60] mt-1">Review items grouped by verified artisan shops.</p>
+                            <span class="text-[10px] font-extrabold uppercase tracking-widest" style="color: #C49520;">Step 2: Review Shopping Cart</span>
+                            <h3 class="font-serif text-xl sm:text-2xl font-extrabold mt-0.5" style="color: #1E1915;">Your Shopping Bag</h3>
+                            <p class="text-xs mt-1" style="color: #5C5247;">Review items grouped by verified artisan shops.</p>
                         </div>
                     </div>
 
                     {{-- Cart Shop Card --}}
-                    <div class="p-4 rounded-2xl bg-white border border-[#E8DECB] space-y-3">
+                    <div class="p-4 rounded-2xl border space-y-3" style="background-color: #FFFFFF; border-color: #E8DECB;">
                         <div class="flex items-center justify-between border-b border-gray-100 pb-2">
                             <div class="flex items-center gap-2">
                                 <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
-                                <span class="text-xs font-bold text-[#1E1915]">Lumban Master Tailors Guild</span>
+                                <span class="text-xs font-bold" style="color: #1E1915;">Lumban Master Tailors Guild</span>
                             </div>
-                            <span class="text-[10px] font-bold uppercase tracking-wider text-[#C49520]">Laguna, PH</span>
+                            <span class="text-[10px] font-extrabold uppercase tracking-wider" style="color: #C49520;">Laguna, PH</span>
                         </div>
 
                         <div class="flex items-center gap-3">
-                            <div class="w-14 h-14 rounded-xl bg-[#FDF8EE] border border-[#E8DECB] flex items-center justify-center text-2xl shrink-0">
+                            <div class="w-14 h-14 rounded-xl border flex items-center justify-center text-2xl shrink-0" style="background-color: #FDF8EE; border-color: #E8DECB;">
                                 👔
                             </div>
                             <div class="flex-1 min-w-0">
-                                <h4 class="text-xs font-bold text-[#1E1915] truncate">Heritage Piña-Seda Barong Tagalog</h4>
-                                <div class="text-[11px] text-[#766C60]" x-text="(isCustomSize ? 'Custom Fit' : 'Size: ' + selectedSize) + ' • ' + selectedFabric"></div>
-                                <div class="text-xs font-extrabold text-[#1E1915] mt-1">₱4,850.00 <span class="text-[10px] font-normal text-gray-500">× 1</span></div>
+                                <h4 class="text-xs font-bold truncate" style="color: #1E1915;">Heritage Piña-Seda Barong Tagalog</h4>
+                                <div class="text-[11px]" style="color: #5C5247;" x-text="(isCustomSize ? 'Custom Fit' : 'Size: ' + selectedSize) + ' • ' + selectedFabric"></div>
+                                <div class="text-xs font-extrabold mt-1" style="color: #1E1915;">₱4,850.00 <span class="text-[10px] font-normal text-gray-500">× 1</span></div>
                             </div>
                         </div>
                     </div>
 
                     {{-- Summary Box --}}
-                    <div class="p-4 rounded-2xl bg-[#FDF8EE] border border-[#E8DECB] space-y-2 text-xs">
-                        <div class="flex justify-between text-[#766C60]">
+                    <div class="p-4 rounded-2xl border space-y-2 text-xs" style="background-color: #FDF8EE; border-color: #E8DECB;">
+                        <div class="flex justify-between" style="color: #5C5247;">
                             <span>Items Subtotal (1 item)</span>
-                            <span class="font-bold text-[#1E1915]">₱4,850.00</span>
+                            <span class="font-bold" style="color: #1E1915;">₱4,850.00</span>
                         </div>
-                        <div class="flex justify-between text-[#766C60]">
+                        <div class="flex justify-between" style="color: #5C5247;">
                             <span>Estimated Shipping (Luzon)</span>
                             <span class="font-bold text-emerald-700">₱0.00 (Free)</span>
                         </div>
-                        <div class="flex justify-between text-[#766C60]">
+                        <div class="flex justify-between" style="color: #5C5247;">
                             <span>Voucher (LUMBARONGWELCOME)</span>
-                            <span class="font-bold text-[#C49520]">-₱200.00</span>
+                            <span class="font-bold" style="color: #C49520;">-₱200.00</span>
                         </div>
-                        <div class="pt-2 border-t border-[#E8DECB] flex justify-between text-sm font-extrabold text-[#1E1915]">
+                        <div class="pt-2 border-t flex justify-between text-sm font-extrabold" style="border-color: #E8DECB; color: #1E1915;">
                             <span>Estimated Total:</span>
                             <span>₱4,650.00</span>
                         </div>
                     </div>
 
-                    <div class="pt-3 border-t border-[#E8DECB] flex items-center justify-between">
-                        <button type="button" @click="goToStep(0)" class="px-4 py-2 rounded-full bg-gray-100 hover:bg-gray-200 text-gray-700 text-xs font-bold">
+                    <div class="pt-3 border-t flex items-center justify-between" style="border-color: #E8DECB;">
+                        <button type="button" @click="goToStep(0)" class="px-4 py-2 rounded-full bg-gray-100 hover:bg-gray-200 text-gray-700 text-xs font-bold cursor-pointer">
                             ← Back
                         </button>
                         <button type="button"
                                 @click="goToStep(2)"
-                                class="px-5 py-2.5 rounded-full bg-[#1E1915] text-white text-xs font-bold hover:bg-[#C49520] transition-all shadow-md flex items-center gap-1.5">
+                                style="background-color: #1E1915; color: #FFFFFF;"
+                                onmouseover="this.style.backgroundColor='#C49520';"
+                                onmouseout="this.style.backgroundColor='#1E1915';"
+                                class="px-5 py-2.5 rounded-full text-xs font-bold transition-all shadow-md flex items-center gap-1.5 cursor-pointer">
                             <span>Proceed to Checkout →</span>
                         </button>
                     </div>
@@ -230,36 +240,36 @@
                 {{-- STEP 3: Checkout & Payment Choice --}}
                 <div x-show="currentStep === 2" x-transition class="space-y-5">
                     <div>
-                        <span class="text-[10px] font-bold uppercase tracking-widest text-[#C49520]">Step 3: Fast & Secure Checkout</span>
-                        <h3 class="font-serif text-xl sm:text-2xl font-bold text-[#1E1915]">Delivery & Payment</h3>
-                        <p class="text-xs text-[#766C60] mt-1">Select your shipping destination and preferred payment method.</p>
+                        <span class="text-[10px] font-extrabold uppercase tracking-widest" style="color: #C49520;">Step 3: Fast & Secure Checkout</span>
+                        <h3 class="font-serif text-xl sm:text-2xl font-extrabold mt-0.5" style="color: #1E1915;">Delivery & Payment</h3>
+                        <p class="text-xs mt-1" style="color: #5C5247;">Select your shipping destination and preferred payment method.</p>
                     </div>
 
                     {{-- Address Selection --}}
-                    <div class="p-4 rounded-2xl bg-white border border-[#E8DECB] space-y-2">
+                    <div class="p-4 rounded-2xl border space-y-2" style="background-color: #FFFFFF; border-color: #E8DECB;">
                         <div class="flex items-center justify-between">
-                            <span class="text-xs font-bold text-[#1E1915] flex items-center gap-1.5">
+                            <span class="text-xs font-bold flex items-center gap-1.5" style="color: #1E1915;">
                                 📍 Delivery Address
                             </span>
-                            <span class="text-[10px] font-bold text-[#C49520] uppercase tracking-wider">Default</span>
+                            <span class="text-[10px] font-extrabold uppercase tracking-wider" style="color: #C49520;">Default</span>
                         </div>
-                        <p class="text-xs text-[#766C60] leading-relaxed">
-                            <strong class="text-[#1E1915]">Juan Dela Cruz</strong> (+63 917 123 4567)<br>
+                        <p class="text-xs leading-relaxed" style="color: #5C5247;">
+                            <strong style="color: #1E1915;">Juan Dela Cruz</strong> (+63 917 123 4567)<br>
                             Unit 402, Heritage Residences, Quezon City, Metro Manila
                         </p>
                     </div>
 
                     {{-- Payment Method Selection --}}
                     <div class="space-y-2">
-                        <label class="text-xs font-bold text-[#1E1915]">Select Payment Method (Simulation):</label>
+                        <label class="text-xs font-bold" style="color: #1E1915;">Select Payment Method (Simulation):</label>
                         <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
                             <template x-for="p in paymentMethods" :key="p.id">
                                 <button type="button"
                                         @click="selectedPayment = p.id"
-                                        class="p-3 rounded-2xl border text-center transition-all flex flex-col items-center justify-center gap-1"
-                                        :class="selectedPayment === p.id ? 'border-[#C49520] bg-[#FFF9ED] ring-1 ring-[#C49520]' : 'border-[#E8DECB] bg-white hover:border-[#C49520]/50'">
+                                        class="p-3 rounded-2xl border text-center transition-all flex flex-col items-center justify-center gap-1 cursor-pointer"
+                                        :style="selectedPayment === p.id ? 'background-color: #FFF9ED; border: 2px solid #C49520;' : 'background-color: #FFFFFF; border: 1px solid #E8DECB;'">
                                     <span class="text-xl" x-text="p.icon"></span>
-                                    <span class="text-xs font-bold text-[#1E1915]" x-text="p.name"></span>
+                                    <span class="text-xs font-bold" style="color: #1E1915;" x-text="p.name"></span>
                                 </button>
                             </template>
                         </div>
@@ -267,21 +277,22 @@
 
                     {{-- Special Instructions to Artisan --}}
                     <div class="space-y-1">
-                        <label class="text-xs font-bold text-[#1E1915]">Special Artisan Note (Optional):</label>
+                        <label class="text-xs font-bold" style="color: #1E1915;">Special Artisan Note (Optional):</label>
                         <input type="text"
                                placeholder="e.g. Please expedite for wedding on Saturday, need classic mandarin collar."
                                value="Kindly ensure soft inner collar lining. Thank you!"
                                readonly
-                               class="w-full text-xs bg-[#FDF8EE] border border-[#E8DECB] rounded-xl p-3 text-[#1E1915]">
+                               class="w-full text-xs rounded-xl p-3"
+                               style="background-color: #FDF8EE; border: 1px solid #E8DECB; color: #1E1915;">
                     </div>
 
-                    <div class="pt-3 border-t border-[#E8DECB] flex items-center justify-between">
-                        <button type="button" @click="goToStep(1)" class="px-4 py-2 rounded-full bg-gray-100 hover:bg-gray-200 text-gray-700 text-xs font-bold">
+                    <div class="pt-3 border-t flex items-center justify-between" style="border-color: #E8DECB;">
+                        <button type="button" @click="goToStep(1)" class="px-4 py-2 rounded-full bg-gray-100 hover:bg-gray-200 text-gray-700 text-xs font-bold cursor-pointer">
                             ← Back
                         </button>
                         <button type="button"
                                 @click="goToStep(3); startTrackingSimulation();"
-                                class="px-6 py-2.5 rounded-full bg-emerald-700 text-white text-xs font-bold hover:bg-emerald-800 transition-all shadow-md flex items-center gap-1.5">
+                                class="px-6 py-2.5 rounded-full bg-emerald-700 text-white text-xs font-bold hover:bg-emerald-800 transition-all shadow-md flex items-center gap-1.5 cursor-pointer">
                             <span>Simulate Place Order ✓</span>
                         </button>
                     </div>
@@ -291,17 +302,17 @@
                 <div x-show="currentStep === 3" x-transition class="space-y-5">
                     <div class="flex items-start justify-between">
                         <div>
-                            <span class="text-[10px] font-bold uppercase tracking-widest text-[#C49520]">Step 4: Order Lifecycle & Tracking</span>
-                            <h3 class="font-serif text-xl sm:text-2xl font-bold text-[#1E1915]">Real-Time Order Tracking</h3>
-                            <p class="text-xs text-[#766C60] mt-1">Experience how your order progresses from workshop to your doorstep.</p>
+                            <span class="text-[10px] font-extrabold uppercase tracking-widest" style="color: #C49520;">Step 4: Order Lifecycle & Tracking</span>
+                            <h3 class="font-serif text-xl sm:text-2xl font-extrabold mt-0.5" style="color: #1E1915;">Real-Time Order Tracking</h3>
+                            <p class="text-xs mt-1" style="color: #5C5247;">Experience how your order progresses from workshop to your doorstep.</p>
                         </div>
-                        <span class="text-xs font-mono font-bold bg-[#1E1915] text-[#C49520] px-3 py-1 rounded-full">
+                        <span class="text-xs font-mono font-bold px-3 py-1 rounded-full shrink-0" style="background-color: #1E1915; color: #C49520;">
                             #LMB-DEMO-8821
                         </span>
                     </div>
 
                     {{-- Interactive Status Stepper --}}
-                    <div class="p-4 rounded-2xl bg-white border border-[#E8DECB] space-y-4">
+                    <div class="p-4 rounded-2xl border space-y-4" style="background-color: #FFFFFF; border-color: #E8DECB;">
                         <div class="grid grid-cols-4 gap-2 text-center relative">
                             {{-- Step 1: Placed --}}
                             <div class="space-y-1.5">
@@ -309,18 +320,18 @@
                                      :class="orderStatusStage >= 1 ? 'bg-emerald-600 text-white shadow-sm' : 'bg-gray-200 text-gray-500'">
                                     1
                                 </div>
-                                <div class="text-[10px] font-bold text-[#1E1915]">Order Placed</div>
-                                <div class="text-[9px] text-[#766C60]">Confirmed</div>
+                                <div class="text-[10px] font-bold" style="color: #1E1915;">Order Placed</div>
+                                <div class="text-[9px]" style="color: #5C5247;">Confirmed</div>
                             </div>
 
                             {{-- Step 2: Tailoring / Packing Proof --}}
                             <div class="space-y-1.5">
                                 <div class="w-8 h-8 rounded-full mx-auto flex items-center justify-center text-xs font-bold transition-all"
-                                     :class="orderStatusStage >= 2 ? 'bg-[#C49520] text-white shadow-sm ring-2 ring-[#C49520]/30' : 'bg-gray-200 text-gray-500'">
+                                     :style="orderStatusStage >= 2 ? 'background-color: #C49520; color: #FFFFFF;' : 'background-color: #E5E7EB; color: #6B7280;'">
                                     2
                                 </div>
-                                <div class="text-[10px] font-bold text-[#1E1915]">Artisan Prep</div>
-                                <div class="text-[9px] text-[#766C60]">Packing Proof</div>
+                                <div class="text-[10px] font-bold" style="color: #1E1915;">Artisan Prep</div>
+                                <div class="text-[9px]" style="color: #5C5247;">Packing Proof</div>
                             </div>
 
                             {{-- Step 3: Shipped --}}
@@ -329,8 +340,8 @@
                                      :class="orderStatusStage >= 3 ? 'bg-blue-600 text-white shadow-sm' : 'bg-gray-200 text-gray-500'">
                                     3
                                 </div>
-                                <div class="text-[10px] font-bold text-[#1E1915]">Dispatched</div>
-                                <div class="text-[9px] text-[#766C60]">In Transit</div>
+                                <div class="text-[10px] font-bold" style="color: #1E1915;">Dispatched</div>
+                                <div class="text-[9px]" style="color: #5C5247;">In Transit</div>
                             </div>
 
                             {{-- Step 4: Delivered & Review --}}
@@ -339,59 +350,62 @@
                                      :class="orderStatusStage >= 4 ? 'bg-emerald-700 text-white shadow-sm' : 'bg-gray-200 text-gray-500'">
                                     4
                                 </div>
-                                <div class="text-[10px] font-bold text-[#1E1915]">Delivered</div>
-                                <div class="text-[9px] text-[#766C60]">Confirm & Review</div>
+                                <div class="text-[10px] font-bold" style="color: #1E1915;">Delivered</div>
+                                <div class="text-[9px]" style="color: #5C5247;">Confirm & Review</div>
                             </div>
                         </div>
 
                         {{-- Dynamic Stage Description Box --}}
-                        <div class="p-3.5 rounded-xl bg-[#FDF8EE] border border-[#E8DECB] text-xs space-y-1.5">
-                            <div class="font-bold text-[#1E1915] flex items-center gap-2">
-                                <span class="w-2 h-2 rounded-full bg-[#C49520] animate-pulse"></span>
+                        <div class="p-3.5 rounded-xl border text-xs space-y-1.5" style="background-color: #FDF8EE; border-color: #E8DECB;">
+                            <div class="font-bold flex items-center gap-2" style="color: #1E1915;">
+                                <span class="w-2 h-2 rounded-full animate-pulse" style="background-color: #C49520;"></span>
                                 <span x-text="stageDetails[orderStatusStage].title"></span>
                             </div>
-                            <p class="text-[#766C60] leading-relaxed" x-text="stageDetails[orderStatusStage].desc"></p>
+                            <p class="leading-relaxed" style="color: #5C5247;" x-text="stageDetails[orderStatusStage].desc"></p>
                         </div>
                     </div>
 
                     {{-- Interactive Simulation Trigger Controls --}}
-                    <div class="p-4 rounded-2xl bg-[#FFF9ED] border border-[#E8DECB] space-y-2">
-                        <div class="text-xs font-bold text-[#1E1915]">⚡ Simulate Order Progression (Click to Test):</div>
+                    <div class="p-4 rounded-2xl border space-y-2" style="background-color: #FFF9ED; border-color: #E8DECB;">
+                        <div class="text-xs font-bold" style="color: #1E1915;">⚡ Simulate Order Progression (Click to Test):</div>
                         <div class="flex flex-wrap gap-2">
                             <button type="button"
                                     @click="orderStatusStage = 1"
-                                    class="px-3 py-1.5 rounded-lg text-[11px] font-bold border transition-all"
-                                    :class="orderStatusStage === 1 ? 'bg-[#1E1915] text-white border-[#1E1915]' : 'bg-white text-gray-700 border-gray-200 hover:border-gray-400'">
+                                    class="px-3 py-1.5 rounded-lg text-[11px] font-bold border transition-all cursor-pointer"
+                                    :style="orderStatusStage === 1 ? 'background-color: #1E1915; color: #FFFFFF; border-color: #1E1915;' : 'background-color: #FFFFFF; color: #1E1915; border-color: #E8DECB;'">
                                 1. Order Placed
                             </button>
                             <button type="button"
                                     @click="orderStatusStage = 2"
-                                    class="px-3 py-1.5 rounded-lg text-[11px] font-bold border transition-all"
-                                    :class="orderStatusStage === 2 ? 'bg-[#1E1915] text-white border-[#1E1915]' : 'bg-white text-gray-700 border-gray-200 hover:border-gray-400'">
+                                    class="px-3 py-1.5 rounded-lg text-[11px] font-bold border transition-all cursor-pointer"
+                                    :style="orderStatusStage === 2 ? 'background-color: #1E1915; color: #FFFFFF; border-color: #1E1915;' : 'background-color: #FFFFFF; color: #1E1915; border-color: #E8DECB;'">
                                 2. Artisan Tailoring & Photo Proof
                             </button>
                             <button type="button"
                                     @click="orderStatusStage = 3"
-                                    class="px-3 py-1.5 rounded-lg text-[11px] font-bold border transition-all"
-                                    :class="orderStatusStage === 3 ? 'bg-[#1E1915] text-white border-[#1E1915]' : 'bg-white text-gray-700 border-gray-200 hover:border-gray-400'">
+                                    class="px-3 py-1.5 rounded-lg text-[11px] font-bold border transition-all cursor-pointer"
+                                    :style="orderStatusStage === 3 ? 'background-color: #1E1915; color: #FFFFFF; border-color: #1E1915;' : 'background-color: #FFFFFF; color: #1E1915; border-color: #E8DECB;'">
                                 3. Shipped / Courier
                             </button>
                             <button type="button"
                                     @click="orderStatusStage = 4"
-                                    class="px-3 py-1.5 rounded-lg text-[11px] font-bold border transition-all"
-                                    :class="orderStatusStage === 4 ? 'bg-[#1E1915] text-white border-[#1E1915]' : 'bg-white text-gray-700 border-gray-200 hover:border-gray-400'">
+                                    class="px-3 py-1.5 rounded-lg text-[11px] font-bold border transition-all cursor-pointer"
+                                    :style="orderStatusStage === 4 ? 'background-color: #1E1915; color: #FFFFFF; border-color: #1E1915;' : 'background-color: #FFFFFF; color: #1E1915; border-color: #E8DECB;'">
                                 4. Delivered & Confirm
                             </button>
                         </div>
                     </div>
 
-                    <div class="pt-3 border-t border-[#E8DECB] flex items-center justify-between">
-                        <button type="button" @click="goToStep(0)" class="px-4 py-2 rounded-full bg-gray-100 hover:bg-gray-200 text-gray-700 text-xs font-bold">
+                    <div class="pt-3 border-t flex items-center justify-between" style="border-color: #E8DECB;">
+                        <button type="button" @click="goToStep(0)" class="px-4 py-2 rounded-full bg-gray-100 hover:bg-gray-200 text-gray-700 text-xs font-bold cursor-pointer">
                             ↺ Restart Demo
                         </button>
                         <button type="button"
                                 @click="closeDemo()"
-                                class="px-6 py-2.5 rounded-full bg-[#1E1915] text-white text-xs font-bold hover:bg-[#C49520] transition-all shadow-md">
+                                style="background-color: #1E1915; color: #FFFFFF;"
+                                onmouseover="this.style.backgroundColor='#C49520';"
+                                onmouseout="this.style.backgroundColor='#1E1915';"
+                                class="px-6 py-2.5 rounded-full text-xs font-bold transition-all shadow-md cursor-pointer">
                             I'm Ready to Shop Real Barongs ✨
                         </button>
                     </div>
