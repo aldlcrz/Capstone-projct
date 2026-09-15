@@ -33,6 +33,7 @@
              showAccountSettingsModal: false,
              showEditModal: false,
              showPaymentModal: false,
+             showPaymentHistoryModal: false,
              showLegalModal: false,
              showDocPreview: false,
              previewDocUrl: '',
