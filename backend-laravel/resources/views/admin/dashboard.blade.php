@@ -6,6 +6,7 @@
     $statusData   = $orderStatuses->values()->toArray();
     $statusLabels = $orderStatuses->keys()->toArray();
     $colorMap     = ['Completed'=>'#22c55e','Pending'=>'#f59e0b','Processing'=>'#3b82f6','Shipped'=>'#8b5cf6','Cancelled'=>'#ef4444','Delivered'=>'#10b981'];
+    $statusBg     = ['Completed'=>'bg-green-500','Pending'=>'bg-amber-500','Processing'=>'bg-blue-500','Shipped'=>'bg-purple-500','Cancelled'=>'bg-red-500','Delivered'=>'bg-emerald-500'];
     $statusColorsList = array_map(fn($s) => $colorMap[$s] ?? '#9ca3af', $statusLabels);
 @endphp
 
@@ -156,7 +157,7 @@
                 @foreach($orderStatuses as $status => $count)
                 <div class="flex items-center justify-between">
                     <div class="flex items-center gap-2">
-                        <div class="w-2 h-2 rounded-full shrink-0" style="background-color: {{ $colorMap[$status] ?? '#9ca3af' }};"></div>
+                        <div class="w-2 h-2 rounded-full shrink-0 {{ $statusBg[$status] ?? 'bg-gray-400' }}"></div>
                         <span class="text-[9px] font-bold text-gray-600 uppercase tracking-wider">{{ $status }}</span>
                     </div>
                     <span class="text-[9px] font-black text-black">{{ $count }}</span>
@@ -206,7 +207,7 @@
                 </div>
                 @php $maxRev = $topSellers->first()->revenue ?: 1; @endphp
                 <div class="h-1 bg-gray-100 rounded-full overflow-hidden -mt-1">
-                    <div class="h-full bg-[#C0422A]/30 rounded-full" style="width: {{ round(($row->revenue / $maxRev) * 100) }}%;"></div>
+                    <div class="h-full bg-[#C0422A]/30 rounded-full" :style="'width: {{ round(($row->revenue / $maxRev) * 100) }}%'"></div>
                 </div>
                 @endforeach
             </div>
@@ -234,7 +235,7 @@
                 </div>
                 @php $maxUnits = $topProducts->first()->units ?: 1; @endphp
                 <div class="h-1 bg-gray-100 rounded-full overflow-hidden -mt-1">
-                    <div class="h-full bg-blue-400/30 rounded-full" style="width: {{ round(($row->units / $maxUnits) * 100) }}%;"></div>
+                    <div class="h-full bg-blue-400/30 rounded-full" :style="'width: {{ round(($row->units / $maxUnits) * 100) }}%'"></div>
                 </div>
                 @endforeach
             </div>
