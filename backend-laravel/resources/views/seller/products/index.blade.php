@@ -121,23 +121,37 @@ document.addEventListener('alpine:init', () => {
                 <span class="text-xs" style="color: #E8DECB;">•</span>
                 <span class="text-[10px] font-semibold tracking-wider uppercase" style="color: #766C60;">Lumban Artisan Registry</span>
             </div>
-            <h1 class="font-serif text-2xl sm:text-3xl lg:text-4xl font-bold tracking-tight" style="color: #1E1915;">
-                Your <span class="italic font-normal" style="color: #766C60;">Creations</span>
-            </h1>
+            <div class="flex items-center gap-3 flex-wrap">
+                <h1 class="font-serif text-2xl sm:text-3xl lg:text-4xl font-bold tracking-tight" style="color: #1E1915;">
+                    Your <span class="italic font-normal" style="color: #766C60;">Creations</span>
+                </h1>
+                <button type="button" 
+                        id="tour-products-guide-btn" 
+                        onclick="window.startSpotlightTour('seller-products')"
+                        class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold transition-all shadow-xs cursor-pointer" 
+                        style="background: #FAF5E6; border: 1px solid #D4AF37; color: #8C6D1F;"
+                        onmouseover="this.style.background='#D4AF37'; this.style.color='#FFFFFF';"
+                        onmouseout="this.style.background='#FAF5E6'; this.style.color='#8C6D1F';">
+                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                    </svg>
+                    <span>Catalogue Guide</span>
+                </button>
+            </div>
             <p class="text-xs sm:text-sm font-medium mt-1" style="color: #766C60;">
                 Manage your handcrafted creations, variants, and inventory catalogue.
             </p>
         </div>
-        <div class="flex items-center gap-2.5 sm:gap-3 flex-wrap">
-            <button @click="showSizeGuideModal = true" type="button" class="flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold transition-all shadow-xs" style="background: #FDF8EE; border: 1px solid #E8DECB; color: #1E1915;" onmouseover="this.style.borderColor='#C49520';" onmouseout="this.style.borderColor='#E8DECB';">
+        <div id="tour-products-action-bar" class="flex items-center gap-2.5 sm:gap-3 flex-wrap">
+            <button id="tour-products-sizeguides-btn" @click="showSizeGuideModal = true" type="button" class="flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold transition-all shadow-xs" style="background: #FDF8EE; border: 1px solid #E8DECB; color: #1E1915;" onmouseover="this.style.borderColor='#C49520';" onmouseout="this.style.borderColor='#E8DECB';">
                 <svg class="w-4 h-4" style="color: #C49520;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z"></path></svg>
                 <span>Size Guides</span>
             </button>
-            <a href="{{ route('seller.products.archives') }}" class="flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold transition-all shadow-xs" style="background: #FDF8EE; border: 1px solid #E8DECB; color: #1E1915;" onmouseover="this.style.borderColor='#C49520';" onmouseout="this.style.borderColor='#E8DECB';">
+            <a id="tour-products-archives-btn" href="{{ route('seller.products.archives') }}" class="flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold transition-all shadow-xs" style="background: #FDF8EE; border: 1px solid #E8DECB; color: #1E1915;" onmouseover="this.style.borderColor='#C49520';" onmouseout="this.style.borderColor='#E8DECB';">
                 <svg class="w-4 h-4" style="color: #766C60;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4"></path></svg>
                 <span>Archives</span>
             </a>
-            <a href="{{ route('seller.products.create') }}" class="flex items-center gap-2 px-5 py-2.5 text-white rounded-xl text-xs font-bold transition-all shadow-xs" style="background: #1E1915;" onmouseover="this.style.background='#C49520';" onmouseout="this.style.background='#1E1915';">
+            <a id="tour-products-add-btn" href="{{ route('seller.products.create') }}" class="flex items-center gap-2 px-5 py-2.5 text-white rounded-xl text-xs font-bold transition-all shadow-xs" style="background: #1E1915;" onmouseover="this.style.background='#C49520';" onmouseout="this.style.background='#1E1915';">
                 <svg class="w-4 h-4" style="color: #C49520;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
                 <span>Add Product</span>
             </a>
@@ -152,9 +166,9 @@ document.addEventListener('alpine:init', () => {
     @endphp
 
     {{-- Filter Toolbar & Real-Time Search Bar --}}
-    <div class="p-3.5 sm:p-4 rounded-2xl sm:rounded-3xl flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 shadow-xs" style="background: #FFFCF7; border: 1px solid #E8DECB;">
+    <div id="tour-products-filter-toolbar" class="p-3.5 sm:p-4 rounded-2xl sm:rounded-3xl flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 shadow-xs" style="background: #FFFCF7; border: 1px solid #E8DECB;">
         {{-- Status Filter Tabs (Pill System) --}}
-        <div class="flex items-center gap-2 overflow-x-auto no-scrollbar pb-1 sm:pb-0">
+        <div id="tour-products-filter-tabs" class="flex items-center gap-2 overflow-x-auto no-scrollbar pb-1 sm:pb-0">
             <button @click="activeTab = 'all'"
                 :style="activeTab === 'all' ? 'background:#1E1915; color:#FFFCF7; border:1px solid #C49520;' : 'background:#FDF8EE; color:#1E1915; border:1px solid #E8DECB;'"
                 class="px-4 py-2 rounded-xl text-[10px] font-extrabold uppercase tracking-widest transition-all shrink-0 flex items-center gap-1.5 cursor-pointer shadow-2xs">
@@ -192,7 +206,7 @@ document.addEventListener('alpine:init', () => {
         </div>
 
         {{-- Live Search Input --}}
-        <div class="relative w-full sm:w-72">
+        <div id="tour-products-search-bar" class="relative w-full sm:w-72">
             <input type="text"
                 x-model="search"
                 placeholder="Search creations..."
@@ -207,6 +221,8 @@ document.addEventListener('alpine:init', () => {
         </div>
     </div>
 
+    {{-- Creation Listings Area --}}
+    <div id="tour-products-grid" class="space-y-6 sm:space-y-8">
     {{-- SECTION 1: DRAFTS --}}
     <div x-show="activeTab === 'all' || activeTab === 'drafts'" class="space-y-5">
         @if($draftProducts->isNotEmpty())
@@ -717,7 +733,7 @@ document.addEventListener('alpine:init', () => {
                 </div>
             </div>
         @endif
-
+    </div>{{-- end #tour-products-grid --}}
 
     {{-- Size Guide Management Modal (Artisan Luxury Theme) --}}
     <div x-show="showSizeGuideModal" style="display: none;" class="fixed inset-0 bg-black/60 backdrop-blur-xs z-50 flex items-center justify-center p-4" x-transition>
@@ -1021,4 +1037,42 @@ document.addEventListener('alpine:init', () => {
     </div>
 
 </div>{{-- end x-data="sellerProducts()" --}}
+
+{{-- Spotlight Tour Guide for Catalogue Management --}}
+@php
+    $catalogueTourSteps = [
+        [
+            'target' => '#tour-products-guide-btn',
+            'title' => '✨ Catalogue Management Guide',
+            'description' => 'Welcome to your Shop Catalogue! Here you can manage all your handcrafted Lumban garments, organize style variants, monitor verification statuses, and update inventory.'
+        ],
+        [
+            'target' => '#tour-products-action-bar',
+            'title' => '⚡ Quick Catalogue Actions',
+            'description' => 'Access essential catalogue tools: configure your artisan Size Guides for standard buyer measurements, view your Archived items, or launch the Add Product wizard.'
+        ],
+        [
+            'target' => '#tour-products-filter-tabs',
+            'title' => '🏷️ Status Filter Tabs',
+            'description' => 'Easily filter creations by lifecycle status: Approved (live on marketplace), Pending Review (awaiting Lumban quality check), Drafts (saved work), or Needs Revision.'
+        ],
+        [
+            'target' => '#tour-products-search-bar',
+            'title' => '🔍 Real-Time Search',
+            'description' => 'Instantly filter your catalogue by garment name, embroidery style (Calado, Burda), or description keywords as you type.'
+        ],
+        [
+            'target' => '#tour-products-grid',
+            'title' => '📦 Product Inventory & Actions',
+            'description' => 'Manage individual creation cards: review current stock levels, view customer ratings and reply to buyer reviews, edit listing details, or archive items.'
+        ],
+        [
+            'target' => '#tour-products-add-btn',
+            'title' => '✨ Add New Heritage Piece',
+            'description' => 'Ready to list a new piece? Click Add Product anytime to open the 3-step listing creation wizard with media uploads, sizing matrix, and AI storytelling.'
+        ]
+    ];
+@endphp
+
+<x-spotlight-tour tour-id="seller-products" :steps="$catalogueTourSteps" />
 @endsection

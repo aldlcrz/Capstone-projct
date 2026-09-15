@@ -29,9 +29,22 @@
                     </svg>
                 </div>
                 <div>
-                    <h1 style="font-family:ui-serif,Georgia,Cambria,serif;font-size:24px;font-weight:700;color:#1E1915;letter-spacing:-0.01em;line-height:1.2;margin:0;">
-                        New Heritage Piece
-                    </h1>
+                    <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+                        <h1 style="font-family:ui-serif,Georgia,Cambria,serif;font-size:24px;font-weight:700;color:#1E1915;letter-spacing:-0.01em;line-height:1.2;margin:0;">
+                            New Heritage Piece
+                        </h1>
+                        <button type="button" 
+                                id="tour-create-guide-btn" 
+                                onclick="window.startSpotlightTour('seller-product-create')"
+                                style="display:inline-flex;align-items:center;gap:6px;padding:4px 12px;border-radius:9999px;font-size:12px;font-weight:700;background:#FAF5E6;border:1px solid #D4AF37;color:#8C6D1F;cursor:pointer;transition:all 0.2s;"
+                                onmouseover="this.style.background='#D4AF37'; this.style.color='#FFFFFF';"
+                                onmouseout="this.style.background='#FAF5E6'; this.style.color='#8C6D1F';">
+                            <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                            </svg>
+                            <span>Creation Guide</span>
+                        </button>
+                    </div>
                     <p style="font-size:13px;color:#78716C;margin-top:3px;margin-bottom:0;">
                         List a new handcrafted Lumban creation for discerning buyers
                     </p>
@@ -39,7 +52,7 @@
             </div>
 
             {{-- Floating Stepper Card (Exact from screenshot) --}}
-            <div style="background:#FFFFFF;border:1px solid #ECE3D2;border-radius:18px;padding:9px 18px;display:flex;align-items:center;gap:12px;box-shadow:0 2px 8px rgba(0,0,0,0.03);">
+            <div id="tour-create-stepper-card" style="background:#FFFFFF;border:1px solid #ECE3D2;border-radius:18px;padding:9px 18px;display:flex;align-items:center;gap:12px;box-shadow:0 2px 8px rgba(0,0,0,0.03);">
                 <div style="width:38px;height:38px;border-radius:12px;background:#FDF8EE;border:1px solid #EEDBBA;display:flex;align-items:center;justify-content:center;color:#C49520;flex-shrink:0;">
                     <template x-if="step === 1">
                         <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.8">
@@ -136,7 +149,7 @@
         <div x-show="step === 1" style="background-color:#FFFFFF !important;border:1px solid #ECE3D2 !important;border-radius:28px !important;box-shadow:0 8px 30px rgba(0,0,0,0.03) !important;color:#1E1915 !important;" class="p-5 sm:p-8 space-y-6">
             
             {{-- 1. Product Media & Variants --}}
-            <div class="space-y-4">
+            <div class="space-y-4" id="tour-create-media-variants">
                 <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px;">
                     <div>
                         <h2 style="font-family:ui-serif,Georgia,Cambria,serif;font-size:18px;font-weight:700;color:#1E1915;margin:0;line-height:1.2;">
@@ -436,7 +449,7 @@
             </div>
 
             {{-- 2. Who is this for? (Target Tag) & Category Selection --}}
-            <div class="space-y-4">
+            <div class="space-y-4" id="tour-create-target-category">
                 {{-- Who is this for? (Target Tag) --}}
                 <div class="space-y-2.5">
                     <div style="display:flex;align-items:center;justify-content:space-between;">
@@ -603,7 +616,7 @@
             </div>
 
             {{-- Footer Action Bar --}}
-            <div style="margin-top:28px;padding-top:20px;border-top:1px solid #F2ECE1;display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;">
+            <div id="tour-create-step1-footer" style="margin-top:28px;padding-top:20px;border-top:1px solid #F2ECE1;display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;">
                 <div>
                     <div style="font-size:13px;font-weight:700;color:#1E1915;display:flex;align-items:center;gap:6px;">
                         <span>Next: Complete Product Details</span>
@@ -3131,4 +3144,37 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 });
 </script>
+
+{{-- Spotlight Tour Guide for Product Creation Wizard --}}
+@php
+    $createTourSteps = [
+        [
+            'target' => '#tour-create-guide-btn',
+            'title' => '✨ Product Creation Guide',
+            'description' => 'Welcome to the Heritage Piece Listing Wizard! This step-by-step assistant guides you through creating, pricing, and publishing your handcrafted Lumban creations.'
+        ],
+        [
+            'target' => '#tour-create-stepper-card',
+            'title' => '🧭 3-Step Wizard Navigation',
+            'description' => 'The listing process is divided into 3 intuitive phases: 1) Media & Core Info, 2) Pricing & Sizing Matrix, and 3) Artisan Story & Direct Payouts.'
+        ],
+        [
+            'target' => '#tour-create-media-variants',
+            'title' => '📸 Cover Media & Style Variants',
+            'description' => 'Upload your primary 1:1 cover image and high-resolution embroidery detail photos. Click "+ Add Another Variant" to add multiple style or color options with their own photos and names under a single listing.'
+        ],
+        [
+            'target' => '#tour-create-target-category',
+            'title' => '👥 Target Audience & Categories',
+            'description' => 'Choose your target demographic (Men, Women, or Kids). Garment categories (such as Barong Tagalog, Filipiniana, or Bolero) will automatically adjust based on your selection.'
+        ],
+        [
+            'target' => '#tour-create-step1-footer',
+            'title' => '🚀 Real-Time Validation & Next Steps',
+            'description' => 'Live validation tags confirm required inputs. Click "Save & Continue" to advance to Step 2 for Heritage Sizing & Pricing, or use "Save as Draft" in Step 3 to continue anytime!'
+        ]
+    ];
+@endphp
+
+<x-spotlight-tour tour-id="seller-product-create" :steps="$createTourSteps" />
 @endsection
