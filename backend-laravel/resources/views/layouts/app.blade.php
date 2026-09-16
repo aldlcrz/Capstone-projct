@@ -288,14 +288,6 @@
                                         </svg>
                                         <span>Try Ordering Demo</span>
                                     </button>
-                                    <button type="button"
-                                            @click="$dispatch('start-spotlight-tour', { tourId: 'customer' }); open = false;"
-                                            class="group flex items-center gap-3 px-4 py-3 w-full text-left text-[11px] font-bold text-gray-600 hover:bg-gray-50 hover:text-black transition-all">
-                                        <svg class="w-4 h-4 text-gray-400 group-hover:text-black transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                                        </svg>
-                                        <span>Take System Tour</span>
-                                    </button>
                                 @endif
                                 <form x-ref="logoutForm" action="{{ route('logout') }}" method="POST" class="border-t border-gray-50 mt-1">
                                     @csrf

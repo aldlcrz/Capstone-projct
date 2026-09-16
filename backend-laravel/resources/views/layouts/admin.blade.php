@@ -275,15 +275,6 @@
                                 </div>
                             </div>
 
-                            <div class="py-1">
-                                <button type="button"
-                                        @click="$dispatch('start-spotlight-tour', { tourId: 'admin' }); profileOpen = false;"
-                                        class="flex items-center gap-2.5 px-4 py-2 w-full text-left text-xs font-semibold text-gray-700 hover:bg-gray-50 transition-all">
-                                    <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-                                    <span>Take System Tour</span>
-                                </button>
-                            </div>
-
                             <div class="p-2 border-t border-gray-100 bg-gray-50">
                                 <form x-ref="dropdownLogoutForm" action="{{ route('logout') }}" method="POST">
                                     @csrf
