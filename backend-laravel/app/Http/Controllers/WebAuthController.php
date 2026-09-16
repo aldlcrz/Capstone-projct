@@ -662,9 +662,34 @@ class WebAuthController extends Controller
                 return back()->withErrors(['email' => 'Unable to retrieve email from your Google account.']);
             }
 
-            $user = User::where('email', $email)
+            $user = User::withTrashed()
+                ->where('email', $email)
                 ->orWhere('googleId', $googleId)
                 ->first();
+
+            // Check if account is in PENDING_DELETION or soft-deleted
+            if ($user && ($user->status === 'pending_deletion' || $user->trashed() || $user->deletion_scheduled_at !== null)) {
+                // Check if 7 days have expired
+                if ($user->permanent_deletion_at && $user->permanent_deletion_at->lte(now())) {
+                    $cleanup = new \App\Console\Commands\ProcessScheduledAccountDeletions();
+                    $cleanup->permanentlyDeleteAccount($user);
+                    $user = null;
+                } else {
+                    $expiresAt = $user->permanent_deletion_at ?: now()->addDays(7);
+                    $daysLeft = max(1, (int) ceil(now()->floatDiffInDays($expiresAt, false)));
+
+                    session([
+                        'restore_account_user_id'   => $user->id,
+                        'restore_account_email'     => $user->email,
+                        'restore_account_name'      => $user->name,
+                        'restore_account_role'      => $user->role,
+                        'restore_account_expires'   => $expiresAt->format('F d, Y \a\t h:i A'),
+                        'restore_account_days_left' => $daysLeft,
+                    ]);
+
+                    return redirect()->route('login')->with('restore_account_prompt', true);
+                }
+            }
 
             // If account is NOT in database, suggest sign-up and prefill their Google info
             if (!$user) {

@@ -509,7 +509,7 @@
                     Are you sure you want to restore your account?
                 </h2>
                 <p class="text-xs text-gray-500 mt-1 font-medium">
-                    Welcome back, <strong class="text-gray-800">{{ session('restore_user_name') }}</strong> ({{ session('restore_user_email') }})
+                    Welcome back, <strong class="text-gray-800">{{ session('restore_account_name') ?? session('restore_user_name') }}</strong> ({{ session('restore_account_email') ?? session('restore_user_email') }})
                 </p>
             </div>
 
@@ -518,7 +518,7 @@
                     Your account is currently scheduled for deletion. You still have time to restore it. If you restore your account, your account will become active again and all your data remains intact.
                 </p>
                 <div class="text-[11px] text-amber-900 font-medium">
-                    Scheduled permanent deletion: <strong>{{ session('restore_permanent_at') }}</strong> (approx. {{ session('restore_days_left', 7) }} day(s) remaining).
+                    Scheduled permanent deletion: <strong>{{ session('restore_account_expires') ?? session('restore_permanent_at') }}</strong> (approx. {{ session('restore_account_days_left') ?? session('restore_days_left', 7) }} day(s) remaining).
                 </div>
             </div>
 
