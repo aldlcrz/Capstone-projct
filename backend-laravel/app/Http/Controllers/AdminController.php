@@ -783,13 +783,11 @@ class AdminController extends Controller
         $filter = $request->filter;
 
         if ($filter === 'pending') {
-            $query->where('isVerified', false)->whereNotIn('status', ['blocked', 'suspended', 'rejected']);
+            $query->where('isVerified', false)->whereNotIn('status', ['blocked', 'suspended', 'rejected', 'frozen']);
         } elseif ($filter === 'rejected') {
             $query->where('status', 'rejected');
         } elseif ($filter === 'suspended') {
             $query->whereIn('status', ['blocked', 'suspended']);
-        } elseif ($filter === 'frozen') {
-            $query->where('status', 'frozen');
         } elseif ($filter === 'all') {
             // all sellers
         } else {
@@ -807,7 +805,6 @@ class AdminController extends Controller
             'verified'  => User::where('role', 'seller')->where('isVerified', true)->where('status', 'active')->count(),
             'pending'   => User::where('role', 'seller')->where('isVerified', false)->whereNotIn('status', ['blocked', 'suspended', 'rejected', 'frozen'])->count(),
             'suspended' => User::where('role', 'seller')->whereIn('status', ['blocked', 'suspended'])->count(),
-            'frozen'    => User::where('role', 'seller')->where('status', 'frozen')->count(),
             'rejected'  => User::where('role', 'seller')->where('status', 'rejected')->count(),
         ];
         return view('admin.sellers', compact('sellers', 'pendingSellers', 'counts'));

@@ -59,9 +59,8 @@
         $isPending   = $currentFilter === 'pending';
         $isRejected  = $currentFilter === 'rejected';
         $isSuspended = $currentFilter === 'suspended';
-        $isFrozen    = $currentFilter === 'frozen';
     @endphp
-    <div id="tour-admin-sellers-filters" class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
+    <div id="tour-admin-sellers-filters" class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
         {{-- Total / All --}}
         <a href="{{ request()->fullUrlWithQuery(['filter' => 'all', 'page' => 1]) }}"
            class="group relative rounded-2xl px-3.5 py-3 flex items-center justify-between border transition-all duration-200 cursor-pointer {{ $isAll ? 'bg-white border-gray-900 ring-2 ring-gray-900/15 shadow-sm -translate-y-0.5' : 'bg-white border-gray-100 hover:border-gray-300 hover:shadow-sm hover:-translate-y-0.5' }}">
@@ -127,23 +126,6 @@
             </div>
             @if($isSuspended)
                 <span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[8px] font-black uppercase tracking-wider bg-red-600 text-white shadow-xs">Active</span>
-            @endif
-        </a>
-
-        {{-- Frozen (Unpaid Commission) --}}
-        <a href="{{ request()->fullUrlWithQuery(['filter' => 'frozen', 'page' => 1]) }}"
-           class="group relative rounded-2xl px-3.5 py-3 flex items-center justify-between border transition-all duration-200 cursor-pointer {{ $isFrozen ? 'bg-orange-50/50 border-orange-500 ring-2 ring-orange-500/20 shadow-sm -translate-y-0.5' : 'bg-white border-orange-100 hover:border-orange-300 hover:shadow-sm hover:-translate-y-0.5' }}">
-            <div class="flex items-center gap-2.5">
-                <div class="w-7 h-7 rounded-xl flex items-center justify-center shrink-0 transition-colors {{ $isFrozen ? 'bg-orange-500 text-white' : 'bg-orange-50 text-orange-500 group-hover:bg-orange-100' }}">
-                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
-                </div>
-                <div>
-                    <div class="text-sm sm:text-base font-black text-gray-900 leading-none">{{ $counts['frozen'] ?? 0 }}</div>
-                    <div class="text-[9px] font-bold uppercase tracking-wider text-orange-500 mt-0.5">Frozen</div>
-                </div>
-            </div>
-            @if($isFrozen)
-                <span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[8px] font-black uppercase tracking-wider bg-orange-500 text-white shadow-xs">Active</span>
             @endif
         </a>
 
@@ -1417,7 +1399,7 @@ function sellerManager() {
     :steps="[
         ['selector' => '#tour-admin-sellers-header',  'title' => 'Seller Management',      'description' => 'Review and manage artisan accounts, oversee shop compliance, and process merchant verification applications.'],
         ['selector' => '#tour-admin-sellers-search',  'title' => 'Artisan Search',          'description' => 'Find specific sellers by name, registered email, or dedicated shop workshop name.'],
-        ['selector' => '#tour-admin-sellers-filters', 'title' => 'Status Filter Bar',       'description' => 'Quickly toggle between Approved sellers, Pending verifications, Rejected, Suspended, or Frozen accounts.'],
+        ['selector' => '#tour-admin-sellers-filters', 'title' => 'Status Filter Bar',       'description' => 'Quickly toggle between Approved sellers, Pending verifications, Rejected, or Suspended accounts.'],
         ['selector' => '#tour-admin-sellers-table',   'title' => 'Artisan Seller Directory','description' => 'Comprehensive table showing shop details, active inventory count, registration dates, and verification status.'],
         ['selector' => '#tour-admin-sellers-actions', 'title' => 'Seller Actions & Audit',  'description' => 'Inspect legal documents (BIR, Barangay permits), approve or reject applications, view live storefronts, or adjust account standing.']
     ]"
