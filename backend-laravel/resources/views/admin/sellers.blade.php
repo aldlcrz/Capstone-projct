@@ -228,14 +228,14 @@
         {{-- Table card --}}
         <div id="tour-admin-sellers-table" class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
             <div class="overflow-x-auto no-scrollbar">
-                <table class="w-full text-left min-w-160">
+                <table class="w-full text-left min-w-180">
                     <thead>
                         <tr class="border-b border-gray-100 bg-gray-50/60">
-                            <th class="px-5 py-2.5 text-[9px] font-black uppercase tracking-widest text-gray-400 w-[36%]">Seller &amp; Shop</th>
-                            <th class="px-4 py-2.5 text-[9px] font-black uppercase tracking-widest text-gray-400 w-[18%] hidden md:table-cell">Inventory</th>
-                            <th class="px-4 py-2.5 text-[9px] font-black uppercase tracking-widest text-gray-400 w-[16%] hidden lg:table-cell">Joined</th>
-                            <th class="px-4 py-2.5 text-[9px] font-black uppercase tracking-widest text-gray-400 w-[14%]">Status</th>
-                            <th id="tour-admin-sellers-actions" class="px-5 py-2.5 text-[9px] font-black uppercase tracking-widest text-gray-400 w-[16%] text-right">Actions</th>
+                            <th class="px-5 py-3 text-[9px] font-black uppercase tracking-widest text-gray-400 w-[32%]">Seller &amp; Shop</th>
+                            <th class="px-4 py-3 text-[9px] font-black uppercase tracking-widest text-gray-400 w-[16%] hidden md:table-cell">Inventory</th>
+                            <th class="px-4 py-3 text-[9px] font-black uppercase tracking-widest text-gray-400 w-[16%] hidden lg:table-cell">Joined</th>
+                            <th class="px-4 py-3 text-[9px] font-black uppercase tracking-widest text-gray-400 w-[14%]">Status</th>
+                            <th id="tour-admin-sellers-actions" class="px-5 py-3 text-[9px] font-black uppercase tracking-widest text-gray-400 w-[22%] text-right">Actions</th>
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-gray-50">
@@ -284,20 +284,26 @@
                                     default     => 'bg-emerald-500',
                                 };
                                 $statusLabel = match($normStatus) {
-                                    'suspended' => 'Suspended — Policy Violation',
-                                    'rejected'  => ($seller->rejection_type === 'ineligible' ? 'Rejected — Ineligible' : 'Rejected — Correction Required'),
-                                    'frozen'    => 'Frozen — Unpaid Commission',
-                                    'pending'   => 'Pending Approval',
-                                    default     => 'Active / Approved',
+                                    'suspended' => 'Suspended',
+                                    'rejected'  => 'Rejected',
+                                    'frozen'    => 'Frozen',
+                                    'pending'   => 'Pending',
+                                    default     => 'Active',
                                 };
                             @endphp
                             <tr class="hover:bg-gray-50/50 transition-colors group">
                                 {{-- Seller & Shop --}}
-                                <td class="px-5 py-3.5">
+                                <td class="px-5 py-4">
                                     <div class="flex items-center gap-3.5">
-                                        <div class="w-9 h-9 rounded-full bg-gray-100 ring-2 ring-gray-200 flex items-center justify-center font-bold text-xs text-[#C0422A] shrink-0 overflow-hidden transition-all shadow-xs"
+                                        <div class="w-9 h-9 rounded-full bg-gray-100 ring-2 ring-gray-200 flex items-center justify-center font-bold text-xs text-gray-700 shrink-0 overflow-hidden transition-all shadow-xs"
                                              style="width: 36px; height: 36px; min-width: 36px; min-height: 36px; max-width: 36px; max-height: 36px;">
-                                            {{ strtoupper(substr($seller->name, 0, 1)) }}
+                                            @if($seller->profilePhoto)
+                                                <img src="{{ str_starts_with($seller->profilePhoto, 'http') || str_starts_with($seller->profilePhoto, '/') ? $seller->profilePhoto : asset('storage/' . $seller->profilePhoto) }}"
+                                                     class="w-full h-full object-cover"
+                                                     style="width: 36px; height: 36px; min-width: 36px; min-height: 36px; max-width: 36px; max-height: 36px; object-fit: cover;">
+                                            @else
+                                                <span class="text-xs font-bold text-gray-600">{{ strtoupper(substr($seller->name, 0, 1)) }}</span>
+                                            @endif
                                         </div>
                                         <div class="min-w-0">
                                             <div class="flex items-center gap-2 flex-wrap">
@@ -334,7 +340,7 @@
                                 </td>
 
                                 {{-- Inventory --}}
-                                <td class="px-4 py-3.5 hidden md:table-cell">
+                                <td class="px-4 py-4 hidden md:table-cell">
                                     <div class="text-[11px] text-gray-600 font-medium">
                                         <strong class="text-gray-900 font-bold">{{ $seller->products_count ?? 0 }}</strong> prods
                                         <span class="text-gray-300 mx-1">·</span>
@@ -343,12 +349,12 @@
                                 </td>
 
                                 {{-- Joined Date --}}
-                                <td class="px-4 py-3.5 hidden lg:table-cell">
+                                <td class="px-4 py-4 hidden lg:table-cell">
                                     <span class="text-[11px] text-gray-500 font-medium whitespace-nowrap">{{ $seller->createdAt ? $seller->createdAt->format('M d, Y') : '—' }}</span>
                                 </td>
 
                                 {{-- Status --}}
-                                <td class="px-4 py-3.5">
+                                <td class="px-4 py-4">
                                     <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold {{ $statusClass }}">
                                         <span class="w-1.5 h-1.5 rounded-full {{ $statusDot }}"></span>
                                         {{ $statusLabel }}
@@ -356,8 +362,8 @@
                                 </td>
 
                                 {{-- Actions --}}
-                                <td class="px-5 py-3.5">
-                                    <div class="flex items-center justify-end gap-1.5">
+                                <td class="px-5 py-4">
+                                    <div class="flex items-center justify-end gap-2">
                                         @if($normStatus === 'pending')
                                             <button type="button" @click="openReview({{ json_encode($sData) }})"
                                                 class="px-2.5 py-1 bg-emerald-50 text-emerald-700 border border-emerald-200/80 rounded-lg text-[10px] font-bold uppercase tracking-wider hover:bg-emerald-600 hover:text-white transition-all cursor-pointer">
