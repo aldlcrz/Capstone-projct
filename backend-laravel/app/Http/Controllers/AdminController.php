@@ -387,33 +387,6 @@ class AdminController extends Controller
         return response()->json(['message' => 'User blocked successfully']);
     }
 
-    public function freezeUser(Request $request, string $id)
-    {
-        $user = User::find($id);
-        if (!$user) return response()->json(['message' => 'User not found'], 404);
-
-        $reason = $request->input('reason');
-        if (!$reason) return response()->json(['message' => 'Reason is required'], 400);
-
-        $user->status = 'frozen';
-        $user->violationReason = $reason;
-        $user->save();
-
-        return response()->json(['message' => 'User frozen successfully']);
-    }
-
-    public function unfreezeUser(string $id)
-    {
-        $user = User::find($id);
-        if (!$user) return response()->json(['message' => 'User not found'], 404);
-
-        $user->status = 'active';
-        $user->violationReason = null;
-        $user->save();
-
-        return response()->json(['message' => 'User unfrozen successfully']);
-    }
-
     public function getSettings()
     {
         $settings = SystemSetting::all()->pluck('value', 'key');
@@ -1157,90 +1130,6 @@ class AdminController extends Controller
             return redirect()->route('admin.sellers')->with('success', 'Seller account restored to active status.');
         } catch (\Throwable $e) {
             return redirect()->route('admin.sellers')->with('error', 'Error restoring seller: ' . $e->getMessage());
-        }
-    }
-
-    public function freezeSeller(Request $request, string $id)
-    {
-        try {
-            $user = User::findOrFail($id);
-            $currentStatus = $this->getNormalizedSellerStatus($user);
-
-            if ($currentStatus !== 'active') {
-                return redirect()->route('admin.sellers')->with('error', "Cannot freeze seller with status '{$currentStatus}'. Only active sellers can be frozen.");
-            }
-
-            $reason = trim((string)$request->input('reason', 'Administrative shop freeze / Commission audit pending'));
-            $user->status = 'frozen';
-            $user->save();
-
-            \App\Models\SellerStatusAudit::create([
-                'seller_id'       => $user->id,
-                'admin_id'        => Auth::id(),
-                'previous_status' => $currentStatus,
-                'new_status'      => 'frozen',
-                'reason'          => $reason,
-            ]);
-
-            try {
-                $this->sendNotification(
-                    $user->id,
-                    'Shop Frozen',
-                    "Your artisan shop has been frozen. Reason: {$reason}",
-                    'system',
-                    null,
-                    'seller'
-                );
-            } catch (\Throwable $e) {
-                Log::warning('Notification error on freezeSeller: ' . $e->getMessage());
-            }
-
-            return redirect()->route('admin.sellers')->with('success', 'Seller account frozen successfully.');
-        } catch (\Throwable $e) {
-            Log::error('freezeSeller fatal error: ' . $e->getMessage());
-            return redirect()->route('admin.sellers')->with('error', 'Error freezing seller: ' . $e->getMessage());
-        }
-    }
-
-    public function unfreezeSeller(string $id)
-    {
-        try {
-            $user = User::findOrFail($id);
-            $currentStatus = $this->getNormalizedSellerStatus($user);
-
-            if ($currentStatus !== 'frozen') {
-                return redirect()->route('admin.sellers')->with('error', "Only frozen accounts can be unfrozen.");
-            }
-
-            $user->status = 'active';
-            $user->isVerified = true;
-            $user->save();
-
-            \App\Models\SellerStatusAudit::create([
-                'seller_id'       => $user->id,
-                'admin_id'        => Auth::id(),
-                'previous_status' => $currentStatus,
-                'new_status'      => 'active',
-                'reason'          => 'Account unfrozen / restored to active status by administrator',
-            ]);
-
-            try {
-                $this->sendNotification(
-                    $user->id,
-                    'Shop Unfrozen',
-                    'Your artisan workshop account has been unfrozen and returned to active status.',
-                    'system',
-                    '/seller/dashboard',
-                    'seller'
-                );
-            } catch (\Throwable $e) {
-                Log::warning('Notification error on unfreezeSeller: ' . $e->getMessage());
-            }
-
-            return redirect()->route('admin.sellers')->with('success', 'Seller account unfrozen and restored to active status.');
-        } catch (\Throwable $e) {
-            Log::error('unfreezeSeller fatal error: ' . $e->getMessage());
-            return redirect()->route('admin.sellers')->with('error', 'Error unfreezing seller: ' . $e->getMessage());
         }
     }
 

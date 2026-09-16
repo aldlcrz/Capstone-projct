@@ -118,8 +118,6 @@ Route::prefix('v1')->group(function () {
         Route::patch('/admin/users/{id}/verify', [AdminController::class, 'verifySeller']);
         Route::post('/admin/users/{id}/reject', [AdminController::class, 'rejectSeller']);
         Route::post('/admin/users/{id}/block', [AdminController::class, 'blockUser']);
-        Route::post('/admin/users/{id}/freeze', [AdminController::class, 'freezeUser']);
-        Route::post('/admin/users/{id}/unfreeze', [AdminController::class, 'unfreezeUser']);
         
         Route::get('/admin/products/pending', [AdminController::class, 'getPendingProducts']);
         Route::patch('/admin/products/{id}/approve', [AdminController::class, 'approveProduct']);

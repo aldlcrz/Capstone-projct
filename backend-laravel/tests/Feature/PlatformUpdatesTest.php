@@ -487,7 +487,7 @@ class PlatformUpdatesTest extends TestCase
         $this->assertStringContainsString('2026-08', session('errors')->first('email'));
     }
 
-    public function test_admin_can_manually_freeze_and_unfreeze_seller(): void
+    public function test_admin_cannot_freeze_or_unfreeze_seller_because_it_is_superadmin_only(): void
     {
         /** @var User $admin */
         $admin = User::factory()->create([
@@ -505,18 +505,15 @@ class PlatformUpdatesTest extends TestCase
             'status' => 'active',
         ]);
 
-        // Freeze seller manually
+        // Attempting to freeze seller via admin route should return 404 (route removed)
         $freezeResponse = $this->actingAs($admin)->patch("/admin/sellers/{$seller->id}/freeze", [
             'reason' => 'Administrative shop hold / Pending audit',
         ]);
-        $freezeResponse->assertRedirect(route('admin.sellers'));
+        $freezeResponse->assertNotFound();
 
-        $seller->refresh();
-        $this->assertEquals('frozen', $seller->status);
-
-        // Unfreeze seller manually
+        // Attempting to unfreeze seller via admin route should return 404 (route removed)
         $unfreezeResponse = $this->actingAs($admin)->patch("/admin/sellers/{$seller->id}/unfreeze");
-        $unfreezeResponse->assertRedirect(route('admin.sellers'));
+        $unfreezeResponse->assertNotFound();
 
         $seller->refresh();
         $this->assertEquals('active', $seller->status);
