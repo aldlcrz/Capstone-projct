@@ -289,20 +289,57 @@
                 {{-- Shop Name (Required) --}}
                 <div class="space-y-2">
                     <label class="text-[10px] font-bold uppercase tracking-widest px-5 block text-gray-500">Shop / Workshop Name <span class="text-[#C0422A]">*</span></label>
-                    <input 
-                        type="text" 
-                        name="shopName" 
-                        x-model="shopName"
-                        @input="delete errors.shopName; saveState()"
-                        required
-                        placeholder="e.g. Juan's Traditional Embroidery"
-                        class="w-full h-14 bg-[#F9F6F2] rounded-full px-8 text-sm font-medium border-2 {{ $errors->has('shopName') ? 'border-red-400' : 'border-transparent' }} focus:border-[#C0422A] focus:bg-white outline-none transition-all"
-                        :class="errors.shopName ? 'border-red-400!' : ''"
-                    >
-                    <p x-show="errors.shopName" x-text="errors.shopName" class="text-xs font-bold text-red-500 px-5 mt-1" x-cloak></p>
-                    @error('shopName')
-                        <p class="text-xs font-bold text-red-500 px-5 mt-1">{{ $message }}</p>
-                    @enderror
+                    <div class="relative">
+                        <input 
+                            type="text" 
+                            name="shopName" 
+                            x-model="shopName"
+                            @input="onShopNameInput()"
+                            required
+                            placeholder="e.g. Juan's Traditional Embroidery"
+                            class="w-full h-14 bg-[#F9F6F2] rounded-full px-8 pr-12 text-sm font-medium border-2 {{ $errors->has('shopName') ? 'border-red-400' : 'border-transparent' }} focus:border-[#C0422A] focus:bg-white outline-none transition-all"
+                            :class="errors.shopName || shopNameStatus === 'taken' ? 'border-red-400!' : (shopNameStatus === 'available' ? 'border-emerald-500!' : '')"
+                        >
+                        <!-- Live Status Icon inside Input -->
+                        <div class="absolute right-5 top-1/2 -translate-y-1/2 flex items-center justify-center pointer-events-none">
+                            <template x-if="shopNameStatus === 'checking'">
+                                <svg class="animate-spin h-5 w-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path>
+                                </svg>
+                            </template>
+                            <template x-if="shopNameStatus === 'available'">
+                                <svg class="h-5 w-5 text-emerald-600" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
+                                </svg>
+                            </template>
+                            <template x-if="shopNameStatus === 'taken' || errors.shopName">
+                                <svg class="h-5 w-5 text-red-500" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" />
+                                </svg>
+                            </template>
+                        </div>
+                    </div>
+
+                    <!-- Live Feedback Text -->
+                    <div class="px-5">
+                        <template x-if="shopNameStatus === 'checking'">
+                            <p class="text-[11px] font-semibold text-gray-500 flex items-center gap-1.5 mt-1">
+                                <span>Checking shop name availability...</span>
+                            </p>
+                        </template>
+                        <template x-if="shopNameStatus === 'available' && !errors.shopName">
+                            <p class="text-[11px] font-bold text-emerald-600 flex items-center gap-1.5 mt-1">
+                                <span>✓ Shop name is available!</span>
+                            </p>
+                        </template>
+                        <template x-if="shopNameStatus === 'taken' || errors.shopName">
+                            <p class="text-[11px] font-bold text-red-500 flex items-center gap-1.5 mt-1" x-text="errors.shopName || shopNameMessage"></p>
+                        </template>
+                        @error('shopName')
+                            <p class="text-xs font-bold text-red-500 mt-1">{{ $message }}</p>
+                        @enderror
+                    </div>
                 </div>
 
                 {{-- Requirements Cards --}}
@@ -465,6 +502,9 @@
                 terms_consent: cfg.terms_consent || (sessionStorage.getItem('seller_reg_terms_consent') === '1'),
                 showPass: false,
                 showConfirm: false,
+                shopNameStatus: 'idle', // 'idle' | 'checking' | 'available' | 'taken'
+                shopNameMessage: '',
+                shopNameTimer: null,
                 errors: {},
                 docs: {
                     residency: { name: '', size: '', error: '' },
@@ -473,6 +513,46 @@
                 },
                 init() {
                     this.saveState();
+                    if (this.shopName && this.shopName.trim().length >= 2) {
+                        this.checkShopNameAsync(this.shopName.trim());
+                    }
+                },
+                onShopNameInput() {
+                    delete this.errors.shopName;
+                    this.saveState();
+                    const val = (this.shopName || '').trim();
+                    if (val.length < 2) {
+                        this.shopNameStatus = 'idle';
+                        this.shopNameMessage = '';
+                        if (this.shopNameTimer) clearTimeout(this.shopNameTimer);
+                        return;
+                    }
+                    this.shopNameStatus = 'checking';
+                    if (this.shopNameTimer) clearTimeout(this.shopNameTimer);
+                    this.shopNameTimer = setTimeout(() => {
+                        this.checkShopNameAsync(val);
+                    }, 350);
+                },
+                async checkShopNameAsync(val) {
+                    try {
+                        const res = await fetch(`/auth/check-shop-name?name=${encodeURIComponent(val)}`, {
+                            headers: { 'Accept': 'application/json' }
+                        });
+                        if (res.ok) {
+                            const data = await res.json();
+                            if (data.available) {
+                                this.shopNameStatus = 'available';
+                                this.shopNameMessage = data.message || 'Shop name is available!';
+                                delete this.errors.shopName;
+                            } else {
+                                this.shopNameStatus = 'taken';
+                                this.shopNameMessage = data.message || 'This shop name is already taken.';
+                                this.errors.shopName = this.shopNameMessage;
+                            }
+                        }
+                    } catch (e) {
+                        this.shopNameStatus = 'idle';
+                    }
                 },
                 saveState() {
                     if (this.name) sessionStorage.setItem('seller_reg_name', this.name);
@@ -569,6 +649,13 @@
                         event.preventDefault();
                         this.step = 2;
                         this.errors.shopName = 'Please provide your official artisan shop name.';
+                        return;
+                    }
+
+                    if (this.shopNameStatus === 'taken') {
+                        event.preventDefault();
+                        this.step = 2;
+                        this.errors.shopName = this.shopNameMessage || 'This shop name is already taken. Please choose a unique name.';
                         return;
                     }
 

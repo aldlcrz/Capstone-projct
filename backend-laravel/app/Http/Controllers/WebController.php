@@ -157,7 +157,8 @@ class WebController extends Controller
 
         try {
             $dbSellers = User::where('role', 'seller')
-                ->where('status', '!=', 'blocked')
+                ->where('isVerified', true)
+                ->where('status', 'active')
                 ->get();
 
             foreach ($dbSellers as $seller) {
@@ -219,25 +220,6 @@ class WebController extends Controller
             }
         } catch (\Throwable $e) {
             // Ignore DB schema exceptions
-        }
-
-        if ($topShops->isEmpty()) {
-            try {
-                $anySellers = User::where('role', 'seller')->get();
-                foreach ($anySellers as $s) {
-                    $topShops->push((object)[
-                        'id' => $s->id,
-                        'name' => $s->shopName ?: ($s->name ?: 'Lumban Shop'),
-                        'description' => $s->shopDescription ?: 'Handcrafted Barong Tagalog specialists.',
-                        'location' => 'Lumban, Laguna',
-                        'avatar' => $s->profile_photo_url ?: '/images/logo-icon.png',
-                        'rating' => '0.0',
-                        'review_count' => 0,
-                        'total_sold' => 0,
-                        'products_count' => 0,
-                    ]);
-                }
-            } catch (\Throwable $e2) {}
         }
 
         return $topShops->sortByDesc('total_sold')->sortByDesc('products_count')->values();
@@ -319,13 +301,21 @@ class WebController extends Controller
     public function sellerShop(string $id)
     {
         $seller = User::where('role', 'seller')
-            ->where('status', '!=', 'blocked')
             ->where(function($q) use ($id) {
                 $q->where('id', $id)
                   ->orWhere('shopName', $id)
                   ->orWhere('shopName', urldecode($id));
             })
             ->firstOrFail();
+
+        $isOwnerOrStaff = Auth::check() && (
+            Auth::id() === $seller->id ||
+            in_array(Auth::user()->role, ['admin', 'superadmin', 'super_admin'])
+        );
+
+        if (!$isOwnerOrStaff && (!$seller->isVerified || strtolower($seller->status ?? '') !== 'active')) {
+            abort(404, 'Artisan shop is currently unavailable.');
+        }
 
         return view('shops.show', ['id' => $seller->id]);
     }

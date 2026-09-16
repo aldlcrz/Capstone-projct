@@ -11,6 +11,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Auth;
 
 class UserController extends Controller
 {
@@ -100,8 +101,17 @@ class UserController extends Controller
             ->orWhere('shopName', urldecode($id))
             ->first();
 
-        if (!$seller) {
+        if (!$seller || $seller->role !== 'seller') {
             return response()->json(['message' => 'Seller not found'], 404);
+        }
+
+        $isOwnerOrStaff = Auth::check() && (
+            Auth::id() === $seller->id ||
+            in_array(Auth::user()->role, ['admin', 'superadmin', 'super_admin'])
+        );
+
+        if (!$isOwnerOrStaff && (!$seller->isVerified || strtolower($seller->status ?? '') !== 'active')) {
+            return response()->json(['message' => 'Artisan shop is currently unavailable or pending verification.'], 404);
         }
 
         $sellerId = $seller->id;

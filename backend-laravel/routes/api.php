@@ -14,6 +14,7 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\AddressController;
 use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\UploadController;
+use App\Http\Controllers\WebAuthController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -80,6 +81,7 @@ Route::prefix('v1')->group(function () {
 
     // Public seller profile (for shop pages)
     Route::get('/user/seller/{id}', [UserController::class, 'getSellerInfo']);
+    Route::get('/auth/check-shop-name', [WebAuthController::class, 'checkShopName']);
 
     // Chat Routes
     Route::middleware('auth:sanctum')->group(function () {

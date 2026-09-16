@@ -48,6 +48,7 @@ Route::middleware('guest')->group(function () {
     Route::get('/register', [WebAuthController::class, 'showRegister'])->name('register');
     Route::get('/seller/register', [WebAuthController::class, 'showSellerRegister'])->name('seller.register');
     Route::post('/seller/register', [WebAuthController::class, 'sellerRegister'])->name('seller.register.submit');
+    Route::get('/auth/check-shop-name', [WebAuthController::class, 'checkShopName'])->name('auth.check-shop-name');
 
     // Email Verification Routes
     Route::get('/verify-email', [WebAuthController::class, 'showVerifyEmail'])->name('verify.email');

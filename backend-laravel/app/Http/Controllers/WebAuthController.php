@@ -310,7 +310,24 @@ class WebAuthController extends Controller
             'password'             => 'required|string|min:6|confirmed',
             'residencyCertificate' => 'required|file|mimes:jpg,jpeg,png,pdf,webp|max:20480',
             'birDocument'          => 'required|file|mimes:jpg,jpeg,png,pdf,webp|max:20480',
-            'shopName'             => 'required|string|max:255',
+            'shopName'             => [
+                'required',
+                'string',
+                'max:255',
+                function ($attribute, $value, $fail) {
+                    $trimmed = trim($value);
+                    if (empty($trimmed)) {
+                        $fail('Please provide your official artisan shop name.');
+                        return;
+                    }
+                    $exists = User::where('role', 'seller')
+                        ->whereRaw('LOWER(TRIM(shopName)) = ?', [strtolower($trimmed)])
+                        ->exists();
+                    if ($exists) {
+                        $fail('The shop name "' . $trimmed . '" is already taken by another artisan. Please choose a unique shop name.');
+                    }
+                }
+            ],
             'businessPermit'       => 'required|file|mimes:jpg,jpeg,png,pdf,webp|max:20480',
             'terms_consent'        => 'required|accepted',
         ], [
@@ -916,12 +933,12 @@ class WebAuthController extends Controller
 
         if ($request->hasFile('avatar')) {
             $file = $request->file('avatar');
-            $filename = time() . '_' . \Illuminate\Support\Str::random(8) . '.' . $file->getClientOriginalExtension();
+            $filename = time() . '_' . Str::random(8) . '.' . $file->getClientOriginalExtension();
             $file->move(public_path('uploads/avatars'), $filename);
             $user->profilePhoto = '/uploads/avatars/' . $filename;
         } elseif ($request->hasFile('profilePhoto')) {
             $file = $request->file('profilePhoto');
-            $filename = time() . '_' . \Illuminate\Support\Str::random(8) . '.' . $file->getClientOriginalExtension();
+            $filename = time() . '_' . Str::random(8) . '.' . $file->getClientOriginalExtension();
             $file->move(public_path('uploads/avatars'), $filename);
             $user->profilePhoto = '/uploads/avatars/' . $filename;
         }
@@ -1055,7 +1072,7 @@ class WebAuthController extends Controller
             $user->mobileNumber = $cleanMobile;
         }
 
-        if (\Illuminate\Support\Facades\Schema::hasColumn('users', 'is_onboarded')) {
+        if (Schema::hasColumn('users', 'is_onboarded')) {
             $user->is_onboarded = true;
         }
         $user->save();
@@ -1074,7 +1091,7 @@ class WebAuthController extends Controller
         /** @var User $user */
         $user = Auth::user();
         if ($user) {
-            if (\Illuminate\Support\Facades\Schema::hasColumn('users', 'is_onboarded')) {
+            if (Schema::hasColumn('users', 'is_onboarded')) {
                 $user->is_onboarded = true;
                 $user->save();
             }
@@ -1752,7 +1769,7 @@ class WebAuthController extends Controller
             session()->forget('pending_intent');
 
             if ($productId) {
-                $product = \App\Models\Product::with('seller')->find($productId);
+                $product = Product::with('seller')->find($productId);
                 if ($product) {
                     if ($action === 'add_to_cart' || $action === 'buy_now') {
                         $cart = session()->get('cart', []);
@@ -1879,7 +1896,7 @@ class WebAuthController extends Controller
             if (method_exists($user, 'tokens')) {
                 $user->tokens()->delete();
             }
-            if (\Illuminate\Support\Facades\Schema::hasTable('sessions')) {
+            if (Schema::hasTable('sessions')) {
                 DB::table('sessions')->where('user_id', $userId)->delete();
             }
         } catch (\Throwable $e) {
@@ -1901,6 +1918,41 @@ class WebAuthController extends Controller
         $request->session()->regenerateToken();
 
         return redirect()->route('home')->with('success', 'Your account has been successfully deleted. You can re-register anytime with your email address.');
+    }
+
+    /**
+     * Check artisan shop name availability (duplicate detector).
+     */
+    public function checkShopName(Request $request)
+    {
+        $name = trim((string)($request->query('name') ?? $request->input('name') ?? ''));
+        if (mb_strlen($name) < 2) {
+            return response()->json([
+                'available' => true,
+                'message'   => '',
+            ]);
+        }
+
+        $query = User::where('role', 'seller')
+            ->whereRaw('LOWER(TRIM(shopName)) = ?', [strtolower($name)]);
+
+        if (Auth::check()) {
+            $query->where('id', '!=', Auth::id());
+        }
+
+        $exists = $query->exists();
+
+        if ($exists) {
+            return response()->json([
+                'available' => false,
+                'message'   => "The shop name '{$name}' is already taken. Please choose a unique shop name.",
+            ]);
+        }
+
+        return response()->json([
+            'available' => true,
+            'message'   => "Shop name '{$name}' is available!",
+        ]);
     }
 }
 

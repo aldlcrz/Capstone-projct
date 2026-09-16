@@ -788,6 +788,22 @@ class DashboardController extends Controller
             }
         }
 
+        // Validate Shop Name Uniqueness for sellers
+        $targetShopName = trim((string)($request->input('shopName') ?? $request->input('name') ?? ''));
+        if (!empty($targetShopName) && $user->role === 'seller') {
+            $existingShop = User::where('role', 'seller')
+                ->where('id', '!=', $user->id)
+                ->whereRaw('LOWER(TRIM(shopName)) = ?', [strtolower($targetShopName)])
+                ->first();
+            if ($existingShop) {
+                $dupShopMsg = 'The artisan shop name "' . $targetShopName . '" is already registered to another seller. Please choose a unique shop name.';
+                if ($request->expectsJson() || $request->ajax() || $request->wantsJson()) {
+                    return response()->json(['success' => false, 'message' => $dupShopMsg], 422);
+                }
+                return redirect()->back()->withInput()->with('error', $dupShopMsg);
+            }
+        }
+
         $user->name                = $request->name ?? $user->name;
         if ($request->has('mobileNumber')) $user->mobileNumber = $request->mobileNumber;
         if ($request->has('shopName')) $user->shopName = $request->shopName ?? $user->shopName ?? $user->name;
@@ -1071,6 +1087,7 @@ class DashboardController extends Controller
      */
     public function submitPendingDocuments(Request $request)
     {
+        /** @var \App\Models\User|null $seller */
         $seller = Auth::user();
         if (!$seller || $seller->role !== 'seller') {
             return redirect()->route('login');
