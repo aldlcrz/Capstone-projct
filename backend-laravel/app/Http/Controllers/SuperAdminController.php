@@ -159,6 +159,9 @@ class SuperAdminController extends Controller
         // Build per-seller commission data for the selected period
         $sellers = User::where('role', 'seller')
             ->where('isVerified', true)
+            ->with(['commissionRecords' => function ($q) {
+                $q->orderByDesc('period');
+            }])
             ->orderBy('name')
             ->get()
             ->map(function (User $seller) use ($period, $year, $month, $rate) {
@@ -171,24 +174,63 @@ class SuperAdminController extends Controller
 
                 $commissionAmount = round($totalSales * ($rate / 100), 2);
 
-                // Get or build commission record
-                $record = CommissionRecord::where('sellerId', $seller->id)
-                    ->where('period', $period)
-                    ->first();
+                // Get or build commission record for selected period
+                $record = $seller->commissionRecords->firstWhere('period', $period);
+
+                // Calculate all-time metrics for this seller
+                $allTimeSales = (float) Order::whereNotIn('status', ['Cancelled'])
+                    ->where('sellerId', $seller->id)
+                    ->sum('totalAmount');
+
+                $allTimePaid = (float) $seller->commissionRecords->where('status', 'paid')->sum('commissionAmount');
+
+                // Total outstanding balance across all unpaid records + current period if not in records yet
+                $unpaidRecords = $seller->commissionRecords->where('status', 'unpaid');
+                $totalOutstandingBalance = (float) $unpaidRecords->sum('commissionAmount');
+                if (!$record && $commissionAmount > 0) {
+                    $totalOutstandingBalance += $commissionAmount;
+                }
+
+                // Format history list
+                $history = $seller->commissionRecords->map(function ($r) {
+                    $proofUrl = null;
+                    if ($r->paymentProof) {
+                        $clean = ltrim($r->paymentProof, '/');
+                        $proofUrl = str_starts_with($clean, 'http') ? $clean : (str_starts_with($clean, 'uploads/') ? asset($clean) : asset('storage/' . $clean));
+                    }
+                    return [
+                        'id'               => $r->id,
+                        'period'           => $r->period,
+                        'totalSales'       => (float) $r->totalSales,
+                        'commissionRate'   => (float) $r->commissionRate,
+                        'commissionAmount' => (float) $r->commissionAmount,
+                        'status'           => $r->status,
+                        'dueDate'          => $r->dueDate ? \Carbon\Carbon::parse($r->dueDate)->format('M d, Y') : null,
+                        'paidAt'           => $r->paidAt ? \Carbon\Carbon::parse($r->paidAt)->format('M d, Y h:i A') : null,
+                        'paymentMethod'    => $r->paymentMethod,
+                        'referenceNumber'  => $r->referenceNumber,
+                        'paymentProof'     => $proofUrl,
+                        'notes'            => $r->notes,
+                    ];
+                })->values()->all();
 
                 return [
-                    'seller'           => $seller,
-                    'totalSales'       => $totalSales,
-                    'commissionRate'   => $rate,
-                    'commissionAmount' => $commissionAmount,
-                    'status'           => $record?->status ?? 'unpaid',
-                    'paidAt'           => $record?->paidAt,
-                    'dueDate'          => $record?->dueDate,
-                    'notes'            => $record?->notes,
-                    'recordId'         => $record?->id,
-                    'paymentMethod'    => $record?->paymentMethod,
-                    'referenceNumber'  => $record?->referenceNumber,
-                    'paymentProof'     => $record?->paymentProof,
+                    'seller'                  => $seller,
+                    'totalSales'              => $totalSales,
+                    'commissionRate'          => $rate,
+                    'commissionAmount'        => $commissionAmount,
+                    'status'                  => $record?->status ?? 'unpaid',
+                    'paidAt'                  => $record?->paidAt,
+                    'dueDate'                 => $record?->dueDate,
+                    'notes'                   => $record?->notes,
+                    'recordId'                => $record?->id,
+                    'paymentMethod'           => $record?->paymentMethod,
+                    'referenceNumber'         => $record?->referenceNumber,
+                    'paymentProof'            => $record?->paymentProof,
+                    'allTimeSales'            => $allTimeSales,
+                    'allTimePaid'             => $allTimePaid,
+                    'totalOutstandingBalance' => $totalOutstandingBalance,
+                    'history'                 => $history,
                 ];
             });
 

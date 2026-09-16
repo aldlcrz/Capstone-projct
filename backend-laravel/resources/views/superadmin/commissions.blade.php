@@ -190,18 +190,19 @@
                     @endphp
                     <tr class="hover:bg-gray-50/80 transition-colors {{ $isFrozen ? 'bg-blue-50/40' : '' }}">
                         <td class="px-6 py-4">
-                            <div class="flex items-center gap-3">
-                                <div class="w-10 h-10 rounded-xl {{ $isFrozen ? 'bg-blue-100 text-blue-600 border border-blue-200' : 'bg-black text-white' }} flex items-center justify-center font-bold text-sm shrink-0">
+                            <div class="flex items-center gap-3 cursor-pointer group" @click="openStatementModal(@js($s))" title="Click to view full balance and ledger statement">
+                                <div class="w-10 h-10 rounded-xl {{ $isFrozen ? 'bg-blue-100 text-blue-600 border border-blue-200' : 'bg-black text-white' }} flex items-center justify-center font-bold text-sm shrink-0 group-hover:scale-105 group-hover:bg-[#C0420A] group-hover:text-white transition-all shadow-xs">
                                     {{ strtoupper(substr($s['seller']->shopName ?: $s['seller']->name, 0, 1)) }}
                                 </div>
-                                <div>
-                                    <div class="text-sm font-bold text-gray-900 flex items-center gap-2">
-                                        {{ $s['seller']->shopName ?: $s['seller']->name }}
+                                <div class="min-w-0">
+                                    <div class="text-sm font-bold text-gray-900 group-hover:text-[#C0420A] transition-colors flex items-center gap-2">
+                                        <span class="truncate">{{ $s['seller']->shopName ?: $s['seller']->name }}</span>
                                         @if($isFrozen)
-                                            <span class="px-2 py-0.5 bg-blue-100 text-blue-700 border border-blue-200 text-[8px] font-bold rounded-full uppercase">Frozen</span>
+                                            <span class="px-2 py-0.5 bg-blue-100 text-blue-700 border border-blue-200 text-[8px] font-bold rounded-full uppercase shrink-0">Frozen</span>
                                         @endif
+                                        <svg class="w-3.5 h-3.5 text-gray-400 group-hover:text-[#C0420A] group-hover:translate-x-0.5 transition-all shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
                                     </div>
-                                    <div class="text-[10px] text-gray-400">{{ $s['seller']->name }} • {{ $s['seller']->email }}</div>
+                                    <div class="text-[10px] text-gray-400 truncate">{{ $s['seller']->name }} • {{ $s['seller']->email }}</div>
                                 </div>
                             </div>
                         </td>
@@ -539,12 +540,276 @@
             </form>
         </div>
     </div>
+
+    <!-- 4. Artisan Statement & Commission Ledger Modal -->
+    <div x-show="showStatementModal"
+         x-cloak
+         style="display: none;"
+         class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm overflow-y-auto"
+         @click.self="showStatementModal = false">
+        
+        <div class="relative bg-white rounded-3xl max-w-4xl w-full p-6 sm:p-8 shadow-2xl border border-gray-100 my-8 space-y-6 max-h-[90vh] overflow-y-auto no-scrollbar"
+             x-transition:enter="transition ease-out duration-200"
+             x-transition:enter-start="opacity-0 scale-95"
+             x-transition:enter-end="opacity-100 scale-100"
+             x-transition:leave="transition ease-in duration-150"
+             x-transition:leave-start="opacity-100 scale-100"
+             x-transition:leave-end="opacity-0 scale-95">
+
+            <!-- Modal Header -->
+            <div class="flex items-start justify-between border-b border-gray-100 pb-5">
+                <div class="flex items-center gap-4">
+                    <div class="w-14 h-14 rounded-2xl bg-[#3D2B1F] text-white flex items-center justify-center font-bold text-xl shadow-xs shrink-0">
+                        <span x-text="(selectedSeller?.seller?.shopName || selectedSeller?.seller?.name || 'A').substring(0, 1).toUpperCase()"></span>
+                    </div>
+                    <div>
+                        <div class="inline-flex items-center gap-2">
+                            <span class="text-[9px] font-black uppercase tracking-[0.25em] text-[#C0422A]">Artisan Financial Statement</span>
+                            <span class="text-gray-300 text-xs">·</span>
+                            <span class="text-[9px] font-bold uppercase tracking-[0.2em] text-gray-400">Commission Ledger</span>
+                        </div>
+                        <h2 class="font-serif text-xl sm:text-2xl font-bold text-gray-900 flex items-center gap-2 mt-0.5">
+                            <span x-text="selectedSeller?.seller?.shopName || selectedSeller?.seller?.name"></span>
+                            <template x-if="selectedSeller?.seller?.isVerified">
+                                <span class="w-5 h-5 rounded-full bg-blue-50 text-blue-600 border border-blue-200 flex items-center justify-center text-[10px] font-black" title="Verified Artisan">✓</span>
+                            </template>
+                            <template x-if="selectedSeller?.seller?.status === 'frozen'">
+                                <span class="px-2 py-0.5 bg-blue-100 text-blue-700 border border-blue-200 text-[9px] font-bold rounded-full uppercase">Frozen</span>
+                            </template>
+                        </h2>
+                        <div class="flex items-center gap-3 text-xs text-gray-400 mt-1 flex-wrap font-medium">
+                            <span x-text="selectedSeller?.seller?.name"></span>
+                            <span>•</span>
+                            <span class="font-mono text-gray-600" x-text="selectedSeller?.seller?.email"></span>
+                            <template x-if="selectedSeller?.seller?.mobileNumber">
+                                <span class="font-mono text-gray-500" x-text="'• ' + selectedSeller?.seller?.mobileNumber"></span>
+                            </template>
+                            <template x-if="selectedSeller?.seller?.shopCity">
+                                <span class="text-gray-500" x-text="'• ' + selectedSeller?.seller?.shopCity + (selectedSeller?.seller?.shopProvince ? ', ' + selectedSeller?.seller?.shopProvince : '')"></span>
+                            </template>
+                        </div>
+                    </div>
+                </div>
+
+                <button type="button" @click="showStatementModal = false" class="text-gray-400 hover:text-gray-700 p-2 rounded-xl hover:bg-gray-100 transition-colors cursor-pointer">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                </button>
+            </div>
+
+            <!-- Key Financial Summary KPIs -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5">
+                <!-- 1. Total Outstanding Balance (Must Pay) -->
+                <div :class="selectedSeller?.totalOutstandingBalance > 0 ? 'bg-rose-50/70 border-rose-200 text-rose-900 ring-2 ring-rose-500/10' : 'bg-emerald-50/60 border-emerald-200 text-emerald-900'"
+                     class="rounded-2xl border p-4 shadow-xs flex flex-col justify-between">
+                    <div>
+                        <div class="flex items-center justify-between">
+                            <span class="text-[9px] font-black uppercase tracking-wider" :class="selectedSeller?.totalOutstandingBalance > 0 ? 'text-rose-600' : 'text-emerald-600'">Outstanding Balance</span>
+                            <span class="w-2 h-2 rounded-full" :class="selectedSeller?.totalOutstandingBalance > 0 ? 'bg-rose-500 animate-pulse' : 'bg-emerald-500'"></span>
+                        </div>
+                        <div class="text-2xl font-black font-mono mt-1" :class="selectedSeller?.totalOutstandingBalance > 0 ? 'text-rose-700' : 'text-emerald-700'"
+                             x-text="formatMoney(selectedSeller?.totalOutstandingBalance)"></div>
+                    </div>
+                    <div class="text-[10px] mt-2 font-medium" :class="selectedSeller?.totalOutstandingBalance > 0 ? 'text-rose-600' : 'text-emerald-600'">
+                        <span x-text="selectedSeller?.totalOutstandingBalance > 0 ? 'Total unpaid platform fees due across all periods' : '✓ All billing periods fully settled'"></span>
+                    </div>
+                </div>
+
+                <!-- 2. Current Billing Period Fee -->
+                <div class="bg-white rounded-2xl border border-gray-200 p-4 shadow-xs flex flex-col justify-between">
+                    <div>
+                        <div class="flex items-center justify-between">
+                            <span class="text-[9px] font-bold text-gray-400 uppercase tracking-wider">Period ({{ $period }}) Fee</span>
+                            <span class="text-[9px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full"
+                                  :class="selectedSeller?.status === 'paid' ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800'"
+                                  x-text="selectedSeller?.status === 'paid' ? 'Paid' : 'Unpaid'"></span>
+                        </div>
+                        <div class="text-xl font-black font-mono text-[#C0422A] mt-1" x-text="formatMoney(selectedSeller?.commissionAmount)"></div>
+                    </div>
+                    <div class="text-[10px] text-gray-400 mt-2 font-medium">
+                        Period Sales: <span class="font-bold text-gray-800" x-text="formatMoney(selectedSeller?.totalSales)"></span>
+                    </div>
+                </div>
+
+                <!-- 3. All-Time Lifetime Sales -->
+                <div class="bg-white rounded-2xl border border-gray-200 p-4 shadow-xs flex flex-col justify-between">
+                    <div>
+                        <span class="text-[9px] font-bold text-gray-400 uppercase tracking-wider">Lifetime Gross Sales</span>
+                        <div class="text-xl font-black font-mono text-gray-900 mt-1" x-text="formatMoney(selectedSeller?.allTimeSales)"></div>
+                    </div>
+                    <div class="text-[10px] text-gray-400 mt-2 font-medium">
+                        Cumulative customer order volume
+                    </div>
+                </div>
+
+                <!-- 4. Lifetime Paid Commissions -->
+                <div class="bg-white rounded-2xl border border-gray-200 p-4 shadow-xs flex flex-col justify-between">
+                    <div>
+                        <span class="text-[9px] font-bold text-gray-400 uppercase tracking-wider">Commissions Settled</span>
+                        <div class="text-xl font-black font-mono text-emerald-600 mt-1" x-text="formatMoney(selectedSeller?.allTimePaid)"></div>
+                    </div>
+                    <div class="text-[10px] text-gray-400 mt-2 font-medium">
+                        Realized revenue contributed
+                    </div>
+                </div>
+            </div>
+
+            <!-- Current Period Payment Submission (If Reference or Proof Exists) -->
+            <template x-if="selectedSeller?.referenceNumber || selectedSeller?.paymentProof">
+                <div class="bg-blue-50/60 border border-blue-200 rounded-2xl p-5 space-y-3">
+                    <div class="flex items-center justify-between border-b border-blue-200/80 pb-3">
+                        <div class="flex items-center gap-2">
+                            <span class="text-xs font-bold text-blue-900 uppercase tracking-wider">💳 Latest Remittance Submission ({{ $period }})</span>
+                            <template x-if="selectedSeller?.status === 'paid'">
+                                <span class="px-2 py-0.5 bg-emerald-100 text-emerald-800 text-[9px] font-bold rounded-full uppercase">Verified &amp; Paid</span>
+                            </template>
+                        </div>
+                        <template x-if="selectedSeller?.status !== 'paid'">
+                            <button type="button"
+                                    @click="openMarkPaidModal(selectedSeller?.seller?.id, selectedSeller?.seller?.shopName || selectedSeller?.seller?.name, selectedSeller?.seller?.email, selectedSeller?.commissionAmount, selectedSeller?.paymentMethod, selectedSeller?.referenceNumber, selectedSeller?.paymentProof); showStatementModal = false;"
+                                    class="px-3.5 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-[10px] font-bold uppercase tracking-wider transition-all cursor-pointer shadow-xs">
+                                ✓ Verify &amp; Mark Paid
+                            </button>
+                        </template>
+                    </div>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
+                        <div class="space-y-2">
+                            <div>
+                                <span class="text-[10px] text-gray-500 font-bold uppercase tracking-widest block">Payment Channel</span>
+                                <span class="font-bold text-gray-900" x-text="selectedSeller?.paymentMethod || 'Manual Transfer'"></span>
+                            </div>
+                            <div>
+                                <span class="text-[10px] text-gray-500 font-bold uppercase tracking-widest block">Reference / Transaction Number</span>
+                                <span class="font-mono font-bold text-blue-700 bg-white px-3 py-1 rounded-lg border border-blue-200 inline-block mt-0.5" x-text="selectedSeller?.referenceNumber || 'N/A'"></span>
+                            </div>
+                        </div>
+
+                        <template x-if="selectedSeller?.paymentProof">
+                            <div>
+                                <span class="text-[10px] text-gray-500 font-bold uppercase tracking-widest block mb-1">Attached Receipt Proof</span>
+                                <a :href="'/storage/' + selectedSeller?.paymentProof" target="_blank"
+                                   class="inline-block group relative overflow-hidden rounded-xl border border-blue-200 bg-white p-1 max-w-xs shadow-xs">
+                                    <img :src="'/storage/' + selectedSeller?.paymentProof" class="w-full max-h-32 object-contain rounded-lg group-hover:scale-105 transition-transform" alt="Proof Receipt">
+                                    <div class="text-[10px] text-blue-600 font-bold text-center mt-1 group-hover:underline">🔍 Click to inspect full receipt</div>
+                                </a>
+                            </div>
+                        </template>
+                    </div>
+                </div>
+            </template>
+
+            <!-- Complete Billing History Table -->
+            <div class="bg-white rounded-2xl border border-gray-200 overflow-hidden shadow-xs space-y-0">
+                <div class="px-5 py-3.5 bg-gray-50/80 border-b border-gray-200 flex items-center justify-between">
+                    <div>
+                        <h4 class="text-xs font-bold text-gray-900 uppercase tracking-wider">Billing &amp; Settlement History</h4>
+                        <p class="text-[10px] text-gray-400 font-medium">All historical monthly commission records for this artisan</p>
+                    </div>
+                    <span class="text-[10px] font-bold text-gray-500 bg-white px-2.5 py-1 rounded-full border border-gray-200"
+                          x-text="(selectedSeller?.history?.length || 0) + ' Records'"></span>
+                </div>
+
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left text-xs">
+                        <thead>
+                            <tr class="bg-[#F8F7F4] border-b border-gray-100 text-gray-400 uppercase tracking-widest font-bold text-[9px]">
+                                <th class="px-5 py-3">Period</th>
+                                <th class="px-5 py-3">Gross Sales</th>
+                                <th class="px-5 py-3">Commission Due</th>
+                                <th class="px-5 py-3">Status</th>
+                                <th class="px-5 py-3">Due Date</th>
+                                <th class="px-5 py-3">Settlement Reference</th>
+                                <th class="px-5 py-3">Settled On</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-gray-100 font-medium">
+                            <template x-if="!selectedSeller?.history || selectedSeller?.history?.length === 0">
+                                <tr>
+                                    <td colspan="7" class="px-5 py-8 text-center text-gray-400 italic">
+                                        No billing cycles recorded for this artisan yet.
+                                    </td>
+                                </tr>
+                            </template>
+
+                            <template x-for="rec in (selectedSeller?.history || [])" :key="rec.id || rec.period">
+                                <tr class="hover:bg-gray-50/80 transition-colors">
+                                    <td class="px-5 py-3 font-bold font-mono text-gray-900" x-text="rec.period"></td>
+                                    <td class="px-5 py-3 font-mono font-bold text-gray-800" x-text="formatMoney(rec.totalSales)"></td>
+                                    <td class="px-5 py-3 font-mono font-bold text-[#C0422A]" x-text="formatMoney(rec.commissionAmount)"></td>
+                                    <td class="px-5 py-3">
+                                        <span class="px-2 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider"
+                                              :class="rec.status === 'paid' ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' : 'bg-rose-50 text-rose-700 border border-rose-200'"
+                                              x-text="rec.status === 'paid' ? '✓ Paid' : 'Unpaid'"></span>
+                                    </td>
+                                    <td class="px-5 py-3 text-gray-400 font-mono text-[11px]" x-text="rec.dueDate || '7th of month'"></td>
+                                    <td class="px-5 py-3">
+                                        <template x-if="rec.referenceNumber">
+                                            <div class="space-y-0.5">
+                                                <span class="font-mono text-xs font-bold text-gray-800 block" x-text="rec.referenceNumber"></span>
+                                                <template x-if="rec.paymentProof">
+                                                    <a :href="rec.paymentProof" target="_blank" class="text-[10px] text-[#C0422A] hover:underline font-bold">🔍 Proof Receipt</a>
+                                                </template>
+                                            </div>
+                                        </template>
+                                        <template x-if="!rec.referenceNumber">
+                                            <span class="text-gray-300 italic text-[10px]">None submitted</span>
+                                        </template>
+                                    </td>
+                                    <td class="px-5 py-3 text-gray-400 font-mono text-[11px]" x-text="rec.paidAt || '—'"></td>
+                                </tr>
+                            </template>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Modal Footer & Actions -->
+            <div class="flex items-center justify-between pt-4 border-t border-gray-100 flex-wrap gap-3">
+                <a :href="'/superadmin/sellers?search=' + encodeURIComponent(selectedSeller?.seller?.shopName || selectedSeller?.seller?.name || '')"
+                   class="inline-flex items-center gap-1.5 text-xs font-bold text-gray-600 hover:text-[#C0422A] transition-colors">
+                    <span>Manage Shop in Artisan Registry →</span>
+                </a>
+
+                <div class="flex items-center gap-2">
+                    <template x-if="selectedSeller?.seller?.status === 'frozen'">
+                        <button type="button"
+                                @click="openUnfreezeModal(selectedSeller?.seller?.id, selectedSeller?.seller?.shopName || selectedSeller?.seller?.name, selectedSeller?.seller?.email, selectedSeller?.seller?.violationReason, selectedSeller?.paymentMethod, selectedSeller?.referenceNumber, selectedSeller?.paymentProof); showStatementModal = false;"
+                                class="px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-xl uppercase tracking-wider transition-all cursor-pointer shadow-xs">
+                            🔓 Unfreeze Account
+                        </button>
+                    </template>
+                    <template x-if="selectedSeller?.seller?.status !== 'frozen' && selectedSeller?.totalOutstandingBalance > 0">
+                        <button type="button"
+                                @click="openFreezeModal(selectedSeller?.seller?.id, selectedSeller?.seller?.shopName || selectedSeller?.seller?.name, selectedSeller?.commissionAmount); showStatementModal = false;"
+                                class="px-4 py-2.5 bg-rose-50 text-rose-700 border border-rose-200 hover:bg-rose-600 hover:text-white text-xs font-bold rounded-xl uppercase tracking-wider transition-all cursor-pointer">
+                            ❄️ Freeze Account
+                        </button>
+                    </template>
+
+                    <button type="button" @click="showStatementModal = false" class="px-5 py-2.5 bg-gray-100 text-gray-700 hover:bg-gray-200 text-xs font-bold rounded-xl uppercase tracking-wider transition-all cursor-pointer">
+                        Close Statement
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
 
 @push('scripts')
 <script>
     function commissionsPage() {
         return {
+            // Statement Modal State
+            showStatementModal: false,
+            selectedSeller: null,
+            openStatementModal(sellerData) {
+                this.selectedSeller = sellerData;
+                this.showStatementModal = true;
+            },
+            formatMoney(val) {
+                return '₱' + parseFloat(val || 0).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
+            },
+
             // Freeze Modal State
             showModal: false,
             targetSellerId: '',
