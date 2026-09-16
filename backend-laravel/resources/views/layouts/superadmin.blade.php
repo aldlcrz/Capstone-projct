@@ -28,6 +28,11 @@
                         '2/1': '2 / 1',
                     },
                     zIndex: {
+                        '40': '40',
+                        '50': '50',
+                        '60': '60',
+                        '70': '70',
+                        '80': '80',
                         '9999': '9999',
                     }
                 }
@@ -312,7 +317,7 @@
             </header>
 
             <!-- Page Content -->
-            <main class="flex-1 overflow-y-auto p-4 lg:p-10 pb-24">
+            <main id="superadmin-main" class="flex-1 overflow-y-auto p-4 lg:p-10 pb-24">
                 <div class="max-w-300 mx-auto">
                     {{-- Floating Toast Notifications --}}
                     <div 

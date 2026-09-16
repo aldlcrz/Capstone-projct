@@ -293,562 +293,607 @@
     </div>
 
     <!-- 1. Freeze Confirmation Modal -->
-    <div x-show="showModal"
-         x-transition:enter="transition ease-out duration-200"
-         x-transition:enter-start="opacity-0 scale-95"
-         x-transition:enter-end="opacity-100 scale-100"
-         x-transition:leave="transition ease-in duration-150"
-         x-transition:leave-start="opacity-100 scale-100"
-         x-transition:leave-end="opacity-0 scale-95"
-         class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-xs"
-         style="display: none;"
-         x-cloak>
+    <template x-teleport="body">
+        <div x-show="showModal"
+             x-transition:enter="transition ease-out duration-200"
+             x-transition:enter-start="opacity-0 scale-95"
+             x-transition:enter-end="opacity-100 scale-100"
+             x-transition:leave="transition ease-in duration-150"
+             x-transition:leave-start="opacity-100 scale-100"
+             x-transition:leave-end="opacity-0 scale-95"
+             @keydown.escape.window="showModal = false"
+             @click.self="showModal = false"
+             class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm"
+             style="display: none;"
+             x-cloak>
 
-        <div class="bg-white rounded-3xl p-6 max-w-md w-full shadow-2xl border border-gray-100 space-y-5">
-            <div class="flex items-center gap-3 text-rose-600">
-                <div class="w-10 h-10 rounded-2xl bg-rose-50 border border-rose-200 flex items-center justify-center font-bold text-lg shrink-0">
-                    ⚠️
+            <div class="bg-white rounded-3xl p-6 max-w-md w-full shadow-2xl border border-gray-100 space-y-5" @click.stop>
+                <div class="flex items-center gap-3 text-rose-600">
+                    <div class="w-10 h-10 rounded-2xl bg-rose-50 border border-rose-200 flex items-center justify-center font-bold text-lg shrink-0">
+                        ⚠️
+                    </div>
+                    <div>
+                        <h3 class="text-base font-bold text-gray-900">Confirm Account Freeze</h3>
+                        <p class="text-xs text-gray-400">Governance enforcement lock</p>
+                    </div>
                 </div>
-                <div>
-                    <h3 class="text-base font-bold text-gray-900">Confirm Account Freeze</h3>
-                    <p class="text-xs text-gray-400">Governance enforcement lock</p>
+
+                <div class="text-xs text-gray-600 leading-relaxed space-y-2 bg-gray-50/80 p-4 rounded-2xl border border-gray-100">
+                    <p>Are you sure you want to freeze shop <strong class="text-gray-900" x-text="targetShopName"></strong>?</p>
+                    <div class="space-y-1 text-gray-500">
+                        <div>• Current Unpaid Commission: <strong class="text-[#C0422A]">₱<span x-text="targetAmount"></span></strong></div>
+                        <div>• Products remain visible, but checkout &amp; seller login are locked.</div>
+                    </div>
                 </div>
+
+                <form x-bind:action="freezeUrl" method="POST" class="space-y-4">
+                    @csrf @method('PATCH')
+                    <input type="hidden" name="period" value="{{ $period }}">
+
+                    <div>
+                        <label class="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1.5">Reason for Freeze</label>
+                        <input type="text" name="reason" x-bind:value="'Unpaid commission for period {{ $period }} (₱' + targetAmount + ')'" required
+                               class="w-full px-3.5 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-gray-900 text-xs focus:outline-none focus:border-[#C0422A] transition-all">
+                    </div>
+
+                    <div class="flex items-center justify-end gap-3 pt-2">
+                        <button type="button" @click="showModal = false" class="px-4 py-2.5 bg-gray-100 text-gray-700 hover:bg-gray-200 rounded-xl text-xs font-bold uppercase tracking-wider transition-all cursor-pointer">
+                            Cancel
+                        </button>
+                        <button type="submit" class="px-5 py-2.5 bg-rose-600 hover:bg-rose-700 text-white font-bold rounded-xl text-xs uppercase tracking-wider transition-all cursor-pointer shadow-xs">
+                            Confirm Freeze
+                        </button>
+                    </div>
+                </form>
             </div>
-
-            <div class="text-xs text-gray-600 leading-relaxed space-y-2 bg-gray-50/80 p-4 rounded-2xl border border-gray-100">
-                <p>Are you sure you want to freeze shop <strong class="text-gray-900" x-text="targetShopName"></strong>?</p>
-                <div class="space-y-1 text-gray-500">
-                    <div>• Current Unpaid Commission: <strong class="text-[#C0422A]">₱<span x-text="targetAmount"></span></strong></div>
-                    <div>• Products remain visible, but checkout &amp; seller login are locked.</div>
-                </div>
-            </div>
-
-            <form x-bind:action="freezeUrl" method="POST" class="space-y-4">
-                @csrf @method('PATCH')
-                <input type="hidden" name="period" value="{{ $period }}">
-
-                <div>
-                    <label class="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1.5">Reason for Freeze</label>
-                    <input type="text" name="reason" x-bind:value="'Unpaid commission for period {{ $period }} (₱' + targetAmount + ')'" required
-                           class="w-full px-3.5 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-gray-900 text-xs focus:outline-none focus:border-[#C0422A] transition-all">
-                </div>
-
-                <div class="flex items-center justify-end gap-3 pt-2">
-                    <button type="button" @click="showModal = false" class="px-4 py-2.5 bg-gray-100 text-gray-700 hover:bg-gray-200 rounded-xl text-xs font-bold uppercase tracking-wider transition-all cursor-pointer">
-                        Cancel
-                    </button>
-                    <button type="submit" class="px-5 py-2.5 bg-rose-600 hover:bg-rose-700 text-white font-bold rounded-xl text-xs uppercase tracking-wider transition-all cursor-pointer shadow-xs">
-                        Confirm Freeze
-                    </button>
-                </div>
-            </form>
         </div>
-    </div>
+    </template>
 
     <!-- 2. Mark Paid Proof Confirmation Modal -->
-    <div x-show="showMarkPaidModal"
-         x-transition:enter="transition ease-out duration-200"
-         x-transition:enter-start="opacity-0 scale-95"
-         x-transition:enter-end="opacity-100 scale-100"
-         x-transition:leave="transition ease-in duration-150"
-         x-transition:leave-start="opacity-100 scale-100"
-         x-transition:leave-end="opacity-0 scale-95"
-         class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-xs"
-         style="display: none;"
-         x-cloak>
+    <template x-teleport="body">
+        <div x-show="showMarkPaidModal"
+             x-transition:enter="transition ease-out duration-200"
+             x-transition:enter-start="opacity-0 scale-95"
+             x-transition:enter-end="opacity-100 scale-100"
+             x-transition:leave="transition ease-in duration-150"
+             x-transition:leave-start="opacity-100 scale-100"
+             x-transition:leave-end="opacity-0 scale-95"
+             @keydown.escape.window="showMarkPaidModal = false"
+             @click.self="showMarkPaidModal = false"
+             class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm"
+             style="display: none;"
+             x-cloak>
 
-        <div class="bg-white rounded-3xl p-6 max-w-lg w-full shadow-2xl border border-gray-100 space-y-5 max-h-[90vh] overflow-y-auto">
-            <div class="flex items-center gap-3 text-emerald-600">
-                <div class="w-10 h-10 rounded-2xl bg-emerald-50 border border-emerald-200 flex items-center justify-center font-bold text-lg shrink-0">
-                    💳
+            <div class="bg-white rounded-3xl p-6 max-w-lg w-full shadow-2xl border border-gray-100 space-y-5 max-h-[90vh] overflow-y-auto" @click.stop>
+                <div class="flex items-center gap-3 text-emerald-600">
+                    <div class="w-10 h-10 rounded-2xl bg-emerald-50 border border-emerald-200 flex items-center justify-center font-bold text-lg shrink-0">
+                        💳
+                    </div>
+                    <div>
+                        <h3 class="text-base font-bold text-gray-900">Confirm Mark Commission as Paid</h3>
+                        <p class="text-xs text-gray-400">Review seller payment verification proof before proceeding</p>
+                    </div>
                 </div>
-                <div>
-                    <h3 class="text-base font-bold text-gray-900">Confirm Mark Commission as Paid</h3>
-                    <p class="text-xs text-gray-400">Review seller payment verification proof before proceeding</p>
-                </div>
-            </div>
 
-            <!-- Seller & Amount Summary -->
-            <div class="bg-gray-50/80 border border-gray-100 rounded-2xl p-4 space-y-2 text-xs">
-                <div class="flex justify-between items-center">
-                    <span class="text-gray-400 font-bold uppercase tracking-wider text-[10px]">Shop / Seller:</span>
-                    <span class="font-bold text-gray-900" x-text="markPaidShopName"></span>
+                <!-- Seller & Amount Summary -->
+                <div class="bg-gray-50/80 border border-gray-100 rounded-2xl p-4 space-y-2 text-xs">
+                    <div class="flex justify-between items-center">
+                        <span class="text-gray-400 font-bold uppercase tracking-wider text-[10px]">Shop / Seller:</span>
+                        <span class="font-bold text-gray-900" x-text="markPaidShopName"></span>
+                    </div>
+                    <div class="flex justify-between items-center">
+                        <span class="text-gray-400 font-bold uppercase tracking-wider text-[10px]">Seller Email:</span>
+                        <span class="text-gray-600" x-text="markPaidEmail"></span>
+                    </div>
+                    <div class="flex justify-between items-center border-t border-gray-200/80 pt-2">
+                        <span class="text-gray-400 font-bold uppercase tracking-wider text-[10px]">Period &amp; Amount Due:</span>
+                        <span class="font-bold text-[#C0422A] text-sm">₱<span x-text="markPaidAmount"></span> ({{ $period }})</span>
+                    </div>
                 </div>
-                <div class="flex justify-between items-center">
-                    <span class="text-gray-400 font-bold uppercase tracking-wider text-[10px]">Seller Email:</span>
-                    <span class="text-gray-600" x-text="markPaidEmail"></span>
-                </div>
-                <div class="flex justify-between items-center border-t border-gray-200/80 pt-2">
-                    <span class="text-gray-400 font-bold uppercase tracking-wider text-[10px]">Period &amp; Amount Due:</span>
-                    <span class="font-bold text-[#C0422A] text-sm">₱<span x-text="markPaidAmount"></span> ({{ $period }})</span>
-                </div>
-            </div>
 
-            <!-- Submitted Payment Proof Details -->
-            <div class="space-y-3">
-                <h4 class="text-xs font-bold text-gray-500 uppercase tracking-widest">Submitted Payment Proof</h4>
+                <!-- Submitted Payment Proof Details -->
+                <div class="space-y-3">
+                    <h4 class="text-xs font-bold text-gray-500 uppercase tracking-widest">Submitted Payment Proof</h4>
 
-                <template x-if="markPaidRef || markPaidProof">
-                    <div class="bg-blue-50/70 border border-blue-200 rounded-2xl p-4 space-y-3">
-                        <div class="flex items-center justify-between">
-                            <span class="text-[10px] font-bold text-blue-700 uppercase tracking-widest">Payment Gateway</span>
-                            <span class="px-2.5 py-0.5 bg-blue-600 text-white rounded-full font-bold uppercase text-[9px]" x-text="markPaidMethod || 'GCash/Maya'"></span>
+                    <template x-if="markPaidRef || markPaidProof">
+                        <div class="bg-blue-50/70 border border-blue-200 rounded-2xl p-4 space-y-3">
+                            <div class="flex items-center justify-between">
+                                <span class="text-[10px] font-bold text-blue-700 uppercase tracking-widest">Payment Gateway</span>
+                                <span class="px-2.5 py-0.5 bg-blue-600 text-white rounded-full font-bold uppercase text-[9px]" x-text="markPaidMethod || 'GCash/Maya'"></span>
+                            </div>
+
+                            <template x-if="markPaidRef">
+                                <div>
+                                    <span class="text-[10px] text-gray-500 font-bold uppercase tracking-widest block">Reference / Transaction Number</span>
+                                    <span class="font-mono text-sm font-bold text-gray-900 bg-white px-3 py-1.5 rounded-xl border border-blue-200 block mt-1 select-all" x-text="markPaidRef"></span>
+                                </div>
+                            </template>
+
+                            <template x-if="markPaidProof">
+                                <div>
+                                    <span class="text-[10px] text-gray-500 font-bold uppercase tracking-widest block mb-1">Screenshot Proof Image</span>
+                                    <button type="button" @click="openProofModal('/storage/' + markPaidProof, markPaidShopName + ' · Payment Receipt', markPaidRef)" class="block w-full group relative overflow-hidden rounded-xl border border-blue-200 bg-white cursor-pointer text-left">
+                                        <img x-bind:src="'/storage/' + markPaidProof" class="w-full max-h-48 object-contain p-2 group-hover:scale-105 transition-all">
+                                        <div class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center text-white text-xs font-bold transition-all">
+                                            🔍 Click to Expand Proof Modal
+                                        </div>
+                                    </button>
+                                </div>
+                            </template>
                         </div>
+                    </template>
 
-                        <template x-if="markPaidRef">
-                            <div>
-                                <span class="text-[10px] text-gray-500 font-bold uppercase tracking-widest block">Reference / Transaction Number</span>
-                                <span class="font-mono text-sm font-bold text-gray-900 bg-white px-3 py-1.5 rounded-xl border border-blue-200 block mt-1 select-all" x-text="markPaidRef"></span>
-                            </div>
-                        </template>
-
-                        <template x-if="markPaidProof">
-                            <div>
-                                <span class="text-[10px] text-gray-500 font-bold uppercase tracking-widest block mb-1">Screenshot Proof Image</span>
-                                <button type="button" @click="openProofModal('/storage/' + markPaidProof, markPaidShopName + ' · Payment Receipt', markPaidRef)" class="block w-full group relative overflow-hidden rounded-xl border border-blue-200 bg-white cursor-pointer text-left">
-                                    <img x-bind:src="'/storage/' + markPaidProof" class="w-full max-h-48 object-contain p-2 group-hover:scale-105 transition-all">
-                                    <div class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center text-white text-xs font-bold transition-all">
-                                        🔍 Click to Expand Proof Modal
-                                    </div>
-                                </button>
-                            </div>
-                        </template>
-                    </div>
-                </template>
-
-                <template x-if="!markPaidRef && !markPaidProof">
-                    <div class="bg-amber-50 border border-amber-200 rounded-2xl p-4 text-xs text-amber-700 flex items-center gap-2 font-medium">
-                        <svg class="w-5 h-5 shrink-0 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
-                        </svg>
-                        <span>No payment reference number or screenshot proof was uploaded by the seller for this period.</span>
-                    </div>
-                </template>
-            </div>
-
-            <!-- Action Form -->
-            <form x-bind:action="markPaidUrl" method="POST" class="space-y-4 pt-2 border-t border-gray-100">
-                @csrf @method('PATCH')
-                <input type="hidden" name="period" value="{{ $period }}">
-
-                <div class="flex items-center justify-end gap-3">
-                    <button type="button" @click="showMarkPaidModal = false" class="px-4 py-2.5 bg-gray-100 text-gray-700 hover:bg-gray-200 rounded-xl text-xs font-bold uppercase tracking-wider transition-all cursor-pointer">
-                        Cancel
-                    </button>
-                    <button type="submit" class="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl text-xs uppercase tracking-wider transition-all shadow-md cursor-pointer">
-                        ✓ Confirm &amp; Mark Paid
-                    </button>
+                    <template x-if="!markPaidRef && !markPaidProof">
+                        <div class="bg-amber-50 border border-amber-200 rounded-2xl p-4 text-xs text-amber-700 flex items-center gap-2 font-medium">
+                            <svg class="w-5 h-5 shrink-0 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
+                            </svg>
+                            <span>No payment reference number or screenshot proof was uploaded by the seller for this period.</span>
+                        </div>
+                    </template>
                 </div>
-            </form>
+
+                <!-- Action Form -->
+                <form x-bind:action="markPaidUrl" method="POST" class="space-y-4 pt-2 border-t border-gray-100">
+                    @csrf @method('PATCH')
+                    <input type="hidden" name="period" value="{{ $period }}">
+
+                    <div class="flex items-center justify-end gap-3">
+                        <button type="button" @click="showMarkPaidModal = false" class="px-4 py-2.5 bg-gray-100 text-gray-700 hover:bg-gray-200 rounded-xl text-xs font-bold uppercase tracking-wider transition-all cursor-pointer">
+                            Cancel
+                        </button>
+                        <button type="submit" class="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl text-xs uppercase tracking-wider transition-all shadow-md cursor-pointer">
+                            ✓ Confirm &amp; Mark Paid
+                        </button>
+                    </div>
+                </form>
+            </div>
         </div>
-    </div>
+    </template>
 
     <!-- 3. Unfreeze Proof Confirmation Modal -->
-    <div x-show="showUnfreezeModal"
-         x-transition:enter="transition ease-out duration-200"
-         x-transition:enter-start="opacity-0 scale-95"
-         x-transition:enter-end="opacity-100 scale-100"
-         x-transition:leave="transition ease-in duration-150"
-         x-transition:leave-start="opacity-100 scale-100"
-         x-transition:leave-end="opacity-0 scale-95"
-         class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-xs"
-         style="display: none;"
-         x-cloak>
+    <template x-teleport="body">
+        <div x-show="showUnfreezeModal"
+             x-transition:enter="transition ease-out duration-200"
+             x-transition:enter-start="opacity-0 scale-95"
+             x-transition:enter-end="opacity-100 scale-100"
+             x-transition:leave="transition ease-in duration-150"
+             x-transition:leave-start="opacity-100 scale-100"
+             x-transition:leave-end="opacity-0 scale-95"
+             @keydown.escape.window="showUnfreezeModal = false"
+             @click.self="showUnfreezeModal = false"
+             class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm"
+             style="display: none;"
+             x-cloak>
 
-        <div class="bg-white rounded-3xl p-6 max-w-lg w-full shadow-2xl border border-gray-100 space-y-5 max-h-[90vh] overflow-y-auto">
-            <div class="flex items-center gap-3 text-blue-600">
-                <div class="w-10 h-10 rounded-2xl bg-blue-50 border border-blue-200 flex items-center justify-center font-bold text-lg shrink-0">
-                    🔓
-                </div>
-                <div>
-                    <h3 class="text-base font-bold text-gray-900">Confirm Account Unfreeze</h3>
-                    <p class="text-xs text-gray-400">Restore seller shop access and marketplace checkout</p>
-                </div>
-            </div>
-
-            <!-- Seller Summary -->
-            <div class="bg-gray-50/80 border border-gray-100 rounded-2xl p-4 space-y-2 text-xs">
-                <div class="flex justify-between items-center">
-                    <span class="text-gray-400 font-bold uppercase tracking-wider text-[10px]">Shop / Seller:</span>
-                    <span class="font-bold text-gray-900" x-text="unfreezeShopName"></span>
-                </div>
-                <div class="flex justify-between items-center">
-                    <span class="text-gray-400 font-bold uppercase tracking-wider text-[10px]">Seller Email:</span>
-                    <span class="text-gray-600" x-text="unfreezeEmail"></span>
-                </div>
-                <template x-if="unfreezeReason">
-                    <div class="flex justify-between items-center border-t border-gray-200/80 pt-2">
-                        <span class="text-gray-400 font-bold uppercase tracking-wider text-[10px]">Freeze Reason:</span>
-                        <span class="text-blue-700 font-semibold italic text-[11px]" x-text="unfreezeReason"></span>
+            <div class="bg-white rounded-3xl p-6 max-w-lg w-full shadow-2xl border border-gray-100 space-y-5 max-h-[90vh] overflow-y-auto" @click.stop>
+                <div class="flex items-center gap-3 text-blue-600">
+                    <div class="w-10 h-10 rounded-2xl bg-blue-50 border border-blue-200 flex items-center justify-center font-bold text-lg shrink-0">
+                        🔓
                     </div>
-                </template>
-            </div>
+                    <div>
+                        <h3 class="text-base font-bold text-gray-900">Confirm Account Unfreeze</h3>
+                        <p class="text-xs text-gray-400">Restore seller shop access and marketplace checkout</p>
+                    </div>
+                </div>
 
-            <!-- Submitted Payment Proof Details -->
-            <div class="space-y-3">
-                <h4 class="text-xs font-bold text-gray-500 uppercase tracking-widest">Submitted Payment Proof</h4>
-
-                <template x-if="unfreezeRef || unfreezeProof">
-                    <div class="bg-blue-50/70 border border-blue-200 rounded-2xl p-4 space-y-3">
-                        <div class="flex items-center justify-between">
-                            <span class="text-[10px] font-bold text-blue-700 uppercase tracking-widest">Payment Gateway</span>
-                            <span class="px-2.5 py-0.5 bg-blue-600 text-white rounded-full font-bold uppercase text-[9px]" x-text="unfreezeMethod || 'GCash/Maya'"></span>
+                <!-- Seller Summary -->
+                <div class="bg-gray-50/80 border border-gray-100 rounded-2xl p-4 space-y-2 text-xs">
+                    <div class="flex justify-between items-center">
+                        <span class="text-gray-400 font-bold uppercase tracking-wider text-[10px]">Shop / Seller:</span>
+                        <span class="font-bold text-gray-900" x-text="unfreezeShopName"></span>
+                    </div>
+                    <div class="flex justify-between items-center">
+                        <span class="text-gray-400 font-bold uppercase tracking-wider text-[10px]">Seller Email:</span>
+                        <span class="text-gray-600" x-text="unfreezeEmail"></span>
+                    </div>
+                    <template x-if="unfreezeReason">
+                        <div class="flex justify-between items-center border-t border-gray-200/80 pt-2">
+                            <span class="text-gray-400 font-bold uppercase tracking-wider text-[10px]">Freeze Reason:</span>
+                            <span class="text-blue-700 font-semibold italic text-[11px]" x-text="unfreezeReason"></span>
                         </div>
-
-                        <template x-if="unfreezeRef">
-                            <div>
-                                <span class="text-[10px] text-gray-500 font-bold uppercase tracking-widest block">Reference / Transaction Number</span>
-                                <span class="font-mono text-sm font-bold text-gray-900 bg-white px-3 py-1.5 rounded-xl border border-blue-200 block mt-1 select-all" x-text="unfreezeRef"></span>
-                            </div>
-                        </template>
-
-                        <template x-if="unfreezeProof">
-                            <div>
-                                <span class="text-[10px] text-gray-500 font-bold uppercase tracking-widest block mb-1">Screenshot Proof Image</span>
-                                <button type="button" @click="openProofModal('/storage/' + unfreezeProof, unfreezeShopName + ' · Proof Receipt', unfreezeRef)" class="block w-full group relative overflow-hidden rounded-xl border border-blue-200 bg-white cursor-pointer text-left">
-                                    <img x-bind:src="'/storage/' + unfreezeProof" class="w-full max-h-48 object-contain p-2 group-hover:scale-105 transition-all">
-                                    <div class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center text-white text-xs font-bold transition-all">
-                                        🔍 Click to Expand Proof Modal
-                                    </div>
-                                </button>
-                            </div>
-                        </template>
-                    </div>
-                </template>
-
-                <template x-if="!unfreezeRef && !unfreezeProof">
-                    <div class="bg-amber-50 border border-amber-200 rounded-2xl p-4 text-xs text-amber-700 flex items-center gap-2 font-medium">
-                        <svg class="w-5 h-5 shrink-0 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
-                        </svg>
-                        <span>No payment reference number or screenshot proof uploaded.</span>
-                    </div>
-                </template>
-            </div>
-
-            <!-- Action Form -->
-            <form x-bind:action="unfreezeUrl" method="POST" class="space-y-4 pt-2 border-t border-gray-100">
-                @csrf @method('PATCH')
-
-                <div class="flex items-center justify-end gap-3">
-                    <button type="button" @click="showUnfreezeModal = false" class="px-4 py-2.5 bg-gray-100 text-gray-700 hover:bg-gray-200 rounded-xl text-xs font-bold uppercase tracking-wider transition-all cursor-pointer">
-                        Cancel
-                    </button>
-                    <button type="submit" class="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl text-xs uppercase tracking-wider transition-all shadow-md cursor-pointer">
-                        🔓 Confirm &amp; Unfreeze Account
-                    </button>
+                    </template>
                 </div>
-            </form>
+
+                <!-- Submitted Payment Proof Details -->
+                <div class="space-y-3">
+                    <h4 class="text-xs font-bold text-gray-500 uppercase tracking-widest">Submitted Payment Proof</h4>
+
+                    <template x-if="unfreezeRef || unfreezeProof">
+                        <div class="bg-blue-50/70 border border-blue-200 rounded-2xl p-4 space-y-3">
+                            <div class="flex items-center justify-between">
+                                <span class="text-[10px] font-bold text-blue-700 uppercase tracking-widest">Payment Gateway</span>
+                                <span class="px-2.5 py-0.5 bg-blue-600 text-white rounded-full font-bold uppercase text-[9px]" x-text="unfreezeMethod || 'GCash/Maya'"></span>
+                            </div>
+
+                            <template x-if="unfreezeRef">
+                                <div>
+                                    <span class="text-[10px] text-gray-500 font-bold uppercase tracking-widest block">Reference / Transaction Number</span>
+                                    <span class="font-mono text-sm font-bold text-gray-900 bg-white px-3 py-1.5 rounded-xl border border-blue-200 block mt-1 select-all" x-text="unfreezeRef"></span>
+                                </div>
+                            </template>
+
+                            <template x-if="unfreezeProof">
+                                <div>
+                                    <span class="text-[10px] text-gray-500 font-bold uppercase tracking-widest block mb-1">Screenshot Proof Image</span>
+                                    <button type="button" @click="openProofModal('/storage/' + unfreezeProof, unfreezeShopName + ' · Proof Receipt', unfreezeRef)" class="block w-full group relative overflow-hidden rounded-xl border border-blue-200 bg-white cursor-pointer text-left">
+                                        <img x-bind:src="'/storage/' + unfreezeProof" class="w-full max-h-48 object-contain p-2 group-hover:scale-105 transition-all">
+                                        <div class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center text-white text-xs font-bold transition-all">
+                                            🔍 Click to Expand Proof Modal
+                                        </div>
+                                    </button>
+                                </div>
+                            </template>
+                        </div>
+                    </template>
+
+                    <template x-if="!unfreezeRef && !unfreezeProof">
+                        <div class="bg-amber-50 border border-amber-200 rounded-2xl p-4 text-xs text-amber-700 flex items-center gap-2 font-medium">
+                            <svg class="w-5 h-5 shrink-0 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
+                            </svg>
+                            <span>No payment reference number or screenshot proof uploaded.</span>
+                        </div>
+                    </template>
+                </div>
+
+                <!-- Action Form -->
+                <form x-bind:action="unfreezeUrl" method="POST" class="space-y-4 pt-2 border-t border-gray-100">
+                    @csrf @method('PATCH')
+
+                    <div class="flex items-center justify-end gap-3">
+                        <button type="button" @click="showUnfreezeModal = false" class="px-4 py-2.5 bg-gray-100 text-gray-700 hover:bg-gray-200 rounded-xl text-xs font-bold uppercase tracking-wider transition-all cursor-pointer">
+                            Cancel
+                        </button>
+                        <button type="submit" class="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl text-xs uppercase tracking-wider transition-all shadow-md cursor-pointer">
+                            🔓 Confirm &amp; Unfreeze Account
+                        </button>
+                    </div>
+                </form>
+            </div>
         </div>
-    </div>
+    </template>
 
     <!-- 4. Artisan Statement & Commission Ledger Modal -->
-    <div x-show="showStatementModal"
-         x-cloak
-         style="display: none;"
-         class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm overflow-y-auto"
-         @click.self="showStatementModal = false">
-        
-        <div class="relative bg-white rounded-3xl max-w-4xl w-full p-6 sm:p-8 shadow-2xl border border-gray-100 my-8 space-y-6 max-h-[90vh] overflow-y-auto no-scrollbar"
-             x-transition:enter="transition ease-out duration-200"
-             x-transition:enter-start="opacity-0 scale-95"
-             x-transition:enter-end="opacity-100 scale-100"
-             x-transition:leave="transition ease-in duration-150"
-             x-transition:leave-start="opacity-100 scale-100"
-             x-transition:leave-end="opacity-0 scale-95">
+    <template x-teleport="body">
+        <div x-show="showStatementModal"
+             x-cloak
+             style="display: none;"
+             class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm overflow-y-auto"
+             @keydown.escape.window="if (!showProofModal) showStatementModal = false"
+             @click.self="showStatementModal = false">
+            
+            <div class="relative bg-white rounded-3xl max-w-4xl w-full p-6 sm:p-8 shadow-2xl border border-gray-100 my-8 space-y-6 max-h-[90vh] overflow-y-auto no-scrollbar"
+                 @click.stop
+                 x-transition:enter="transition ease-out duration-200"
+                 x-transition:enter-start="opacity-0 scale-95"
+                 x-transition:enter-end="opacity-100 scale-100"
+                 x-transition:leave="transition ease-in duration-150"
+                 x-transition:leave-start="opacity-100 scale-100"
+                 x-transition:leave-end="opacity-0 scale-95">
 
-            <!-- Modal Header -->
-            <div class="flex items-start justify-between border-b border-gray-100 pb-5">
-                <div class="flex items-center gap-4">
-                    <div class="w-14 h-14 rounded-2xl bg-[#3D2B1F] text-white flex items-center justify-center font-bold text-xl shadow-xs shrink-0">
-                        <span x-text="(selectedSeller?.seller?.shopName || selectedSeller?.seller?.name || 'A').substring(0, 1).toUpperCase()"></span>
-                    </div>
-                    <div>
-                        <div class="inline-flex items-center gap-2">
-                            <span class="text-[9px] font-black uppercase tracking-[0.25em] text-[#C0422A]">Artisan Financial Statement</span>
-                            <span class="text-gray-300 text-xs">·</span>
-                            <span class="text-[9px] font-bold uppercase tracking-[0.2em] text-gray-400">Commission Ledger</span>
+                <!-- Modal Header -->
+                <div class="flex items-start justify-between border-b border-gray-100 pb-5">
+                    <div class="flex items-center gap-4">
+                        <div class="w-14 h-14 rounded-2xl bg-[#3D2B1F] text-white flex items-center justify-center font-bold text-xl shadow-xs shrink-0">
+                            <span x-text="(selectedSeller?.seller?.shopName || selectedSeller?.seller?.name || 'A').substring(0, 1).toUpperCase()"></span>
                         </div>
-                        <h2 class="font-serif text-xl sm:text-2xl font-bold text-gray-900 flex items-center gap-2 mt-0.5">
-                            <span x-text="selectedSeller?.seller?.shopName || selectedSeller?.seller?.name"></span>
-                            <template x-if="selectedSeller?.seller?.isVerified">
-                                <span class="w-5 h-5 rounded-full bg-blue-50 text-blue-600 border border-blue-200 flex items-center justify-center text-[10px] font-black" title="Verified Artisan">✓</span>
-                            </template>
-                            <template x-if="selectedSeller?.seller?.status === 'frozen'">
-                                <span class="px-2 py-0.5 bg-blue-100 text-blue-700 border border-blue-200 text-[9px] font-bold rounded-full uppercase">Frozen</span>
-                            </template>
-                        </h2>
-                        <div class="flex items-center gap-3 text-xs text-gray-400 mt-1 flex-wrap font-medium">
-                            <span x-text="selectedSeller?.seller?.name"></span>
-                            <span>•</span>
-                            <span class="font-mono text-gray-600" x-text="selectedSeller?.seller?.email"></span>
-                            <template x-if="selectedSeller?.seller?.mobileNumber">
-                                <span class="font-mono text-gray-500" x-text="'• ' + selectedSeller?.seller?.mobileNumber"></span>
-                            </template>
-                            <template x-if="selectedSeller?.seller?.shopCity">
-                                <span class="text-gray-500" x-text="'• ' + selectedSeller?.seller?.shopCity + (selectedSeller?.seller?.shopProvince ? ', ' + selectedSeller?.seller?.shopProvince : '')"></span>
-                            </template>
+                        <div>
+                            <div class="inline-flex items-center gap-2">
+                                <span class="text-[9px] font-black uppercase tracking-[0.25em] text-[#C0422A]">Artisan Financial Statement</span>
+                                <span class="text-gray-300 text-xs">·</span>
+                                <span class="text-[9px] font-bold uppercase tracking-[0.2em] text-gray-400">Commission Ledger</span>
+                            </div>
+                            <h2 class="font-serif text-xl sm:text-2xl font-bold text-gray-900 flex items-center gap-2 mt-0.5">
+                                <span x-text="selectedSeller?.seller?.shopName || selectedSeller?.seller?.name"></span>
+                                <template x-if="selectedSeller?.seller?.isVerified">
+                                    <span class="w-5 h-5 rounded-full bg-blue-50 text-blue-600 border border-blue-200 flex items-center justify-center text-[10px] font-black" title="Verified Artisan">✓</span>
+                                </template>
+                                <template x-if="selectedSeller?.seller?.status === 'frozen'">
+                                    <span class="px-2 py-0.5 bg-blue-100 text-blue-700 border border-blue-200 text-[9px] font-bold rounded-full uppercase">Frozen</span>
+                                </template>
+                            </h2>
+                            <div class="flex items-center gap-3 text-xs text-gray-400 mt-1 flex-wrap font-medium">
+                                <span x-text="selectedSeller?.seller?.name"></span>
+                                <span>•</span>
+                                <span class="font-mono text-gray-600" x-text="selectedSeller?.seller?.email"></span>
+                                <template x-if="selectedSeller?.seller?.mobileNumber">
+                                    <span class="font-mono text-gray-500" x-text="'• ' + selectedSeller?.seller?.mobileNumber"></span>
+                                </template>
+                                <template x-if="selectedSeller?.seller?.shopCity">
+                                    <span class="text-gray-500" x-text="'• ' + selectedSeller?.seller?.shopCity + (selectedSeller?.seller?.shopProvince ? ', ' + selectedSeller?.seller?.shopProvince : '')"></span>
+                                </template>
+                            </div>
+                        </div>
+                    </div>
+
+                    <button type="button" @click="showStatementModal = false" class="text-gray-400 hover:text-gray-700 p-2 rounded-xl hover:bg-gray-100 transition-colors cursor-pointer">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                    </button>
+                </div>
+
+                <!-- Key Financial Summary KPIs -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5">
+                    <!-- 1. Total Outstanding Balance (Must Pay) -->
+                    <div :class="selectedSeller?.totalOutstandingBalance > 0 ? 'bg-rose-50/70 border-rose-200 text-rose-900 ring-2 ring-rose-500/10' : 'bg-emerald-50/60 border-emerald-200 text-emerald-900'"
+                         class="rounded-2xl border p-4 shadow-xs flex flex-col justify-between">
+                        <div>
+                            <div class="flex items-center justify-between">
+                                <span class="text-[9px] font-black uppercase tracking-wider" :class="selectedSeller?.totalOutstandingBalance > 0 ? 'text-rose-600' : 'text-emerald-600'">Outstanding Balance</span>
+                                <span class="w-2 h-2 rounded-full" :class="selectedSeller?.totalOutstandingBalance > 0 ? 'bg-rose-500 animate-pulse' : 'bg-emerald-500'"></span>
+                            </div>
+                            <div class="text-2xl font-black font-mono mt-1" :class="selectedSeller?.totalOutstandingBalance > 0 ? 'text-rose-700' : 'text-emerald-700'"
+                                 x-text="formatMoney(selectedSeller?.totalOutstandingBalance)"></div>
+                        </div>
+                        <div class="text-[10px] mt-2 font-medium" :class="selectedSeller?.totalOutstandingBalance > 0 ? 'text-rose-600' : 'text-emerald-600'">
+                            <span x-text="selectedSeller?.totalOutstandingBalance > 0 ? 'Total unpaid platform fees due across all periods' : '✓ All billing periods fully settled'"></span>
+                        </div>
+                    </div>
+
+                    <!-- 2. Current Billing Period Fee -->
+                    <div class="bg-white rounded-2xl border border-gray-200 p-4 shadow-xs flex flex-col justify-between">
+                        <div>
+                            <div class="flex items-center justify-between">
+                                <span class="text-[9px] font-bold text-gray-400 uppercase tracking-wider">Period ({{ $period }}) Fee</span>
+                                <span class="text-[9px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full"
+                                      :class="selectedSeller?.status === 'paid' ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800'"
+                                      x-text="selectedSeller?.status === 'paid' ? 'Paid' : 'Unpaid'"></span>
+                            </div>
+                            <div class="text-xl font-black font-mono text-[#C0422A] mt-1" x-text="formatMoney(selectedSeller?.commissionAmount)"></div>
+                        </div>
+                        <div class="text-[10px] text-gray-400 mt-2 font-medium">
+                            Period Sales: <span class="font-bold text-gray-800" x-text="formatMoney(selectedSeller?.totalSales)"></span>
+                        </div>
+                    </div>
+
+                    <!-- 3. All-Time Lifetime Sales -->
+                    <div class="bg-white rounded-2xl border border-gray-200 p-4 shadow-xs flex flex-col justify-between">
+                        <div>
+                            <span class="text-[9px] font-bold text-gray-400 uppercase tracking-wider">Lifetime Gross Sales</span>
+                            <div class="text-xl font-black font-mono text-gray-900 mt-1" x-text="formatMoney(selectedSeller?.allTimeSales)"></div>
+                        </div>
+                        <div class="text-[10px] text-gray-400 mt-2 font-medium">
+                            Cumulative customer order volume
+                        </div>
+                    </div>
+
+                    <!-- 4. Lifetime Paid Commissions -->
+                    <div class="bg-white rounded-2xl border border-gray-200 p-4 shadow-xs flex flex-col justify-between">
+                        <div>
+                            <span class="text-[9px] font-bold text-gray-400 uppercase tracking-wider">Commissions Settled</span>
+                            <div class="text-xl font-black font-mono text-emerald-600 mt-1" x-text="formatMoney(selectedSeller?.allTimePaid)"></div>
+                        </div>
+                        <div class="text-[10px] text-gray-400 mt-2 font-medium">
+                            Realized revenue contributed
                         </div>
                     </div>
                 </div>
 
-                <button type="button" @click="showStatementModal = false" class="text-gray-400 hover:text-gray-700 p-2 rounded-xl hover:bg-gray-100 transition-colors cursor-pointer">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
-                </button>
-            </div>
-
-            <!-- Key Financial Summary KPIs -->
-            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5">
-                <!-- 1. Total Outstanding Balance (Must Pay) -->
-                <div :class="selectedSeller?.totalOutstandingBalance > 0 ? 'bg-rose-50/70 border-rose-200 text-rose-900 ring-2 ring-rose-500/10' : 'bg-emerald-50/60 border-emerald-200 text-emerald-900'"
-                     class="rounded-2xl border p-4 shadow-xs flex flex-col justify-between">
-                    <div>
-                        <div class="flex items-center justify-between">
-                            <span class="text-[9px] font-black uppercase tracking-wider" :class="selectedSeller?.totalOutstandingBalance > 0 ? 'text-rose-600' : 'text-emerald-600'">Outstanding Balance</span>
-                            <span class="w-2 h-2 rounded-full" :class="selectedSeller?.totalOutstandingBalance > 0 ? 'bg-rose-500 animate-pulse' : 'bg-emerald-500'"></span>
-                        </div>
-                        <div class="text-2xl font-black font-mono mt-1" :class="selectedSeller?.totalOutstandingBalance > 0 ? 'text-rose-700' : 'text-emerald-700'"
-                             x-text="formatMoney(selectedSeller?.totalOutstandingBalance)"></div>
-                    </div>
-                    <div class="text-[10px] mt-2 font-medium" :class="selectedSeller?.totalOutstandingBalance > 0 ? 'text-rose-600' : 'text-emerald-600'">
-                        <span x-text="selectedSeller?.totalOutstandingBalance > 0 ? 'Total unpaid platform fees due across all periods' : '✓ All billing periods fully settled'"></span>
-                    </div>
-                </div>
-
-                <!-- 2. Current Billing Period Fee -->
-                <div class="bg-white rounded-2xl border border-gray-200 p-4 shadow-xs flex flex-col justify-between">
-                    <div>
-                        <div class="flex items-center justify-between">
-                            <span class="text-[9px] font-bold text-gray-400 uppercase tracking-wider">Period ({{ $period }}) Fee</span>
-                            <span class="text-[9px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full"
-                                  :class="selectedSeller?.status === 'paid' ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800'"
-                                  x-text="selectedSeller?.status === 'paid' ? 'Paid' : 'Unpaid'"></span>
-                        </div>
-                        <div class="text-xl font-black font-mono text-[#C0422A] mt-1" x-text="formatMoney(selectedSeller?.commissionAmount)"></div>
-                    </div>
-                    <div class="text-[10px] text-gray-400 mt-2 font-medium">
-                        Period Sales: <span class="font-bold text-gray-800" x-text="formatMoney(selectedSeller?.totalSales)"></span>
-                    </div>
-                </div>
-
-                <!-- 3. All-Time Lifetime Sales -->
-                <div class="bg-white rounded-2xl border border-gray-200 p-4 shadow-xs flex flex-col justify-between">
-                    <div>
-                        <span class="text-[9px] font-bold text-gray-400 uppercase tracking-wider">Lifetime Gross Sales</span>
-                        <div class="text-xl font-black font-mono text-gray-900 mt-1" x-text="formatMoney(selectedSeller?.allTimeSales)"></div>
-                    </div>
-                    <div class="text-[10px] text-gray-400 mt-2 font-medium">
-                        Cumulative customer order volume
-                    </div>
-                </div>
-
-                <!-- 4. Lifetime Paid Commissions -->
-                <div class="bg-white rounded-2xl border border-gray-200 p-4 shadow-xs flex flex-col justify-between">
-                    <div>
-                        <span class="text-[9px] font-bold text-gray-400 uppercase tracking-wider">Commissions Settled</span>
-                        <div class="text-xl font-black font-mono text-emerald-600 mt-1" x-text="formatMoney(selectedSeller?.allTimePaid)"></div>
-                    </div>
-                    <div class="text-[10px] text-gray-400 mt-2 font-medium">
-                        Realized revenue contributed
-                    </div>
-                </div>
-            </div>
-
-            <!-- Current Period Payment Submission (If Reference or Proof Exists) -->
-            <template x-if="selectedSeller?.referenceNumber || selectedSeller?.paymentProof">
-                <div class="bg-blue-50/60 border border-blue-200 rounded-2xl p-5 space-y-3">
-                    <div class="flex items-center justify-between border-b border-blue-200/80 pb-3">
-                        <div class="flex items-center gap-2">
-                            <span class="text-xs font-bold text-blue-900 uppercase tracking-wider">💳 Latest Remittance Submission ({{ $period }})</span>
-                            <template x-if="selectedSeller?.status === 'paid'">
-                                <span class="px-2 py-0.5 bg-emerald-100 text-emerald-800 text-[9px] font-bold rounded-full uppercase">Verified &amp; Paid</span>
+                <!-- Current Period Payment Submission (If Reference or Proof Exists) -->
+                <template x-if="selectedSeller?.referenceNumber || selectedSeller?.paymentProof">
+                    <div class="bg-blue-50/60 border border-blue-200 rounded-2xl p-5 space-y-3">
+                        <div class="flex items-center justify-between border-b border-blue-200/80 pb-3">
+                            <div class="flex items-center gap-2">
+                                <span class="text-xs font-bold text-blue-900 uppercase tracking-wider">💳 Latest Remittance Submission ({{ $period }})</span>
+                                <template x-if="selectedSeller?.status === 'paid'">
+                                    <span class="px-2 py-0.5 bg-emerald-100 text-emerald-800 text-[9px] font-bold rounded-full uppercase">Verified &amp; Paid</span>
+                                </template>
+                            </div>
+                            <template x-if="selectedSeller?.status !== 'paid'">
+                                <button type="button"
+                                        @click="openMarkPaidModal(selectedSeller?.seller?.id, selectedSeller?.seller?.shopName || selectedSeller?.seller?.name, selectedSeller?.seller?.email, selectedSeller?.commissionAmount, selectedSeller?.paymentMethod, selectedSeller?.referenceNumber, selectedSeller?.paymentProof); showStatementModal = false;"
+                                        class="px-3.5 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-[10px] font-bold uppercase tracking-wider transition-all cursor-pointer shadow-xs">
+                                    ✓ Verify &amp; Mark Paid
+                                </button>
                             </template>
                         </div>
-                        <template x-if="selectedSeller?.status !== 'paid'">
+
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
+                            <div class="space-y-2">
+                                <div>
+                                    <span class="text-[10px] text-gray-500 font-bold uppercase tracking-widest block">Payment Channel</span>
+                                    <span class="font-bold text-gray-900" x-text="selectedSeller?.paymentMethod || 'Manual Transfer'"></span>
+                                </div>
+                                <div>
+                                    <span class="text-[10px] text-gray-500 font-bold uppercase tracking-widest block">Reference / Transaction Number</span>
+                                    <span class="font-mono font-bold text-blue-700 bg-white px-3 py-1 rounded-lg border border-blue-200 inline-block mt-0.5" x-text="selectedSeller?.referenceNumber || 'N/A'"></span>
+                                </div>
+                            </div>
+
+                            <template x-if="selectedSeller?.paymentProof">
+                                <div>
+                                    <span class="text-[10px] text-gray-500 font-bold uppercase tracking-widest block mb-1">Attached Receipt Proof</span>
+                                    <button type="button"
+                                            @click="openProofModal(selectedSeller?.paymentProof, (selectedSeller?.seller?.shopName || selectedSeller?.seller?.name) + ' · Remittance Proof', selectedSeller?.referenceNumber)"
+                                            class="inline-block group relative overflow-hidden rounded-xl border border-blue-200 bg-white p-1 max-w-xs shadow-xs cursor-pointer text-left">
+                                        <img :src="'/storage/' + selectedSeller?.paymentProof" class="w-full max-h-32 object-contain rounded-lg group-hover:scale-105 transition-transform" alt="Proof Receipt">
+                                        <div class="text-[10px] text-blue-600 font-bold text-center mt-1 group-hover:underline">🔍 Click to inspect receipt modal</div>
+                                    </button>
+                                </div>
+                            </template>
+                        </div>
+                    </div>
+                </template>
+
+                <!-- Complete Billing History Table -->
+                <div class="bg-white rounded-2xl border border-gray-200 overflow-hidden shadow-xs space-y-0">
+                    <div class="px-5 py-3.5 bg-gray-50/80 border-b border-gray-200 flex items-center justify-between">
+                        <div>
+                            <h4 class="text-xs font-bold text-gray-900 uppercase tracking-wider">Billing &amp; Settlement History</h4>
+                            <p class="text-[10px] text-gray-400 font-medium">All historical monthly commission records for this artisan</p>
+                        </div>
+                        <span class="text-[10px] font-bold text-gray-500 bg-white px-2.5 py-1 rounded-full border border-gray-200"
+                              x-text="(selectedSeller?.history?.length || 0) + ' Records'"></span>
+                    </div>
+
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left text-xs">
+                            <thead>
+                                <tr class="bg-[#F8F7F4] border-b border-gray-100 text-gray-400 uppercase tracking-widest font-bold text-[9px]">
+                                    <th class="px-5 py-3">Period</th>
+                                    <th class="px-5 py-3">Gross Sales</th>
+                                    <th class="px-5 py-3">Commission Due</th>
+                                    <th class="px-5 py-3">Status</th>
+                                    <th class="px-5 py-3">Due Date</th>
+                                    <th class="px-5 py-3">Settlement Reference</th>
+                                    <th class="px-5 py-3">Settled On</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-gray-100 font-medium">
+                                <template x-if="!selectedSeller?.history || selectedSeller?.history?.length === 0">
+                                    <tr>
+                                        <td colspan="7" class="px-5 py-8 text-center text-gray-400 italic">
+                                            No billing cycles recorded for this artisan yet.
+                                        </td>
+                                    </tr>
+                                </template>
+
+                                <template x-for="rec in (selectedSeller?.history || [])" :key="rec.id || rec.period">
+                                    <tr class="hover:bg-gray-50/80 transition-colors">
+                                        <td class="px-5 py-3 font-bold font-mono text-gray-900" x-text="rec.period"></td>
+                                        <td class="px-5 py-3 font-mono font-bold text-gray-800" x-text="formatMoney(rec.totalSales)"></td>
+                                        <td class="px-5 py-3 font-mono font-bold text-[#C0422A]" x-text="formatMoney(rec.commissionAmount)"></td>
+                                        <td class="px-5 py-3">
+                                            <span class="px-2 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider"
+                                                  :class="rec.status === 'paid' ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' : 'bg-rose-50 text-rose-700 border border-rose-200'"
+                                                  x-text="rec.status === 'paid' ? '✓ Paid' : 'Unpaid'"></span>
+                                        </td>
+                                        <td class="px-5 py-3 text-gray-400 font-mono text-[11px]" x-text="rec.dueDate || '7th of month'"></td>
+                                        <td class="px-5 py-3">
+                                            <template x-if="rec.referenceNumber">
+                                                <div class="space-y-0.5">
+                                                    <span class="font-mono text-xs font-bold text-gray-800 block" x-text="rec.referenceNumber"></span>
+                                                    <template x-if="rec.paymentProof">
+                                                        <button type="button"
+                                                                @click="openProofModal(rec.paymentProof, (selectedSeller?.seller?.shopName || selectedSeller?.seller?.name) + ' (' + rec.period + ') · Proof Receipt', rec.referenceNumber)"
+                                                                class="text-[10px] text-[#C0422A] hover:underline font-bold cursor-pointer inline-flex items-center gap-1">
+                                                            🔍 Proof Receipt
+                                                        </button>
+                                                    </template>
+                                                </div>
+                                            </template>
+                                            <template x-if="!rec.referenceNumber">
+                                                <span class="text-gray-300 italic text-[10px]">None submitted</span>
+                                            </template>
+                                        </td>
+                                        <td class="px-5 py-3 text-gray-400 font-mono text-[11px]" x-text="rec.paidAt || '—'"></td>
+                                    </tr>
+                                </template>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Modal Footer & Actions -->
+                <div class="flex items-center justify-between pt-4 border-t border-gray-100 flex-wrap gap-3">
+                    <a :href="'/superadmin/sellers?search=' + encodeURIComponent(selectedSeller?.seller?.shopName || selectedSeller?.seller?.name || '')"
+                       class="inline-flex items-center gap-1.5 text-xs font-bold text-gray-600 hover:text-[#C0422A] transition-colors">
+                        <span>Manage Shop in Artisan Registry →</span>
+                    </a>
+
+                    <div class="flex items-center gap-2">
+                        <template x-if="selectedSeller?.seller?.status === 'frozen'">
                             <button type="button"
-                                    @click="openMarkPaidModal(selectedSeller?.seller?.id, selectedSeller?.seller?.shopName || selectedSeller?.seller?.name, selectedSeller?.seller?.email, selectedSeller?.commissionAmount, selectedSeller?.paymentMethod, selectedSeller?.referenceNumber, selectedSeller?.paymentProof); showStatementModal = false;"
-                                    class="px-3.5 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-[10px] font-bold uppercase tracking-wider transition-all cursor-pointer shadow-xs">
-                                ✓ Verify &amp; Mark Paid
+                                    @click="openUnfreezeModal(selectedSeller?.seller?.id, selectedSeller?.seller?.shopName || selectedSeller?.seller?.name, selectedSeller?.seller?.email, selectedSeller?.seller?.violationReason, selectedSeller?.paymentMethod, selectedSeller?.referenceNumber, selectedSeller?.paymentProof); showStatementModal = false;"
+                                    class="px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-xl uppercase tracking-wider transition-all cursor-pointer shadow-xs">
+                                🔓 Unfreeze Account
                             </button>
                         </template>
-                    </div>
-
-                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
-                        <div class="space-y-2">
-                            <div>
-                                <span class="text-[10px] text-gray-500 font-bold uppercase tracking-widest block">Payment Channel</span>
-                                <span class="font-bold text-gray-900" x-text="selectedSeller?.paymentMethod || 'Manual Transfer'"></span>
-                            </div>
-                            <div>
-                                <span class="text-[10px] text-gray-500 font-bold uppercase tracking-widest block">Reference / Transaction Number</span>
-                                <span class="font-mono font-bold text-blue-700 bg-white px-3 py-1 rounded-lg border border-blue-200 inline-block mt-0.5" x-text="selectedSeller?.referenceNumber || 'N/A'"></span>
-                            </div>
-                        </div>
-
-                        <template x-if="selectedSeller?.paymentProof">
-                            <div>
-                                <span class="text-[10px] text-gray-500 font-bold uppercase tracking-widest block mb-1">Attached Receipt Proof</span>
-                                <button type="button"
-                                        @click="openProofModal(selectedSeller?.paymentProof, (selectedSeller?.seller?.shopName || selectedSeller?.seller?.name) + ' · Remittance Proof', selectedSeller?.referenceNumber)"
-                                        class="inline-block group relative overflow-hidden rounded-xl border border-blue-200 bg-white p-1 max-w-xs shadow-xs cursor-pointer text-left">
-                                    <img :src="'/storage/' + selectedSeller?.paymentProof" class="w-full max-h-32 object-contain rounded-lg group-hover:scale-105 transition-transform" alt="Proof Receipt">
-                                    <div class="text-[10px] text-blue-600 font-bold text-center mt-1 group-hover:underline">🔍 Click to inspect receipt modal</div>
-                                </button>
-                            </div>
+                        <template x-if="selectedSeller?.seller?.status !== 'frozen' && selectedSeller?.totalOutstandingBalance > 0">
+                            <button type="button"
+                                    @click="openFreezeModal(selectedSeller?.seller?.id, selectedSeller?.seller?.shopName || selectedSeller?.seller?.name, selectedSeller?.commissionAmount); showStatementModal = false;"
+                                    class="px-4 py-2.5 bg-rose-50 text-rose-700 border border-rose-200 hover:bg-rose-600 hover:text-white text-xs font-bold rounded-xl uppercase tracking-wider transition-all cursor-pointer">
+                                ❄️ Freeze Account
+                            </button>
                         </template>
+
+                        <button type="button" @click="showStatementModal = false" class="px-5 py-2.5 bg-gray-100 text-gray-700 hover:bg-gray-200 text-xs font-bold rounded-xl uppercase tracking-wider transition-all cursor-pointer">
+                            Close Statement
+                        </button>
                     </div>
-                </div>
-            </template>
-
-            <!-- Complete Billing History Table -->
-            <div class="bg-white rounded-2xl border border-gray-200 overflow-hidden shadow-xs space-y-0">
-                <div class="px-5 py-3.5 bg-gray-50/80 border-b border-gray-200 flex items-center justify-between">
-                    <div>
-                        <h4 class="text-xs font-bold text-gray-900 uppercase tracking-wider">Billing &amp; Settlement History</h4>
-                        <p class="text-[10px] text-gray-400 font-medium">All historical monthly commission records for this artisan</p>
-                    </div>
-                    <span class="text-[10px] font-bold text-gray-500 bg-white px-2.5 py-1 rounded-full border border-gray-200"
-                          x-text="(selectedSeller?.history?.length || 0) + ' Records'"></span>
-                </div>
-
-                <div class="overflow-x-auto">
-                    <table class="w-full text-left text-xs">
-                        <thead>
-                            <tr class="bg-[#F8F7F4] border-b border-gray-100 text-gray-400 uppercase tracking-widest font-bold text-[9px]">
-                                <th class="px-5 py-3">Period</th>
-                                <th class="px-5 py-3">Gross Sales</th>
-                                <th class="px-5 py-3">Commission Due</th>
-                                <th class="px-5 py-3">Status</th>
-                                <th class="px-5 py-3">Due Date</th>
-                                <th class="px-5 py-3">Settlement Reference</th>
-                                <th class="px-5 py-3">Settled On</th>
-                            </tr>
-                        </thead>
-                        <tbody class="divide-y divide-gray-100 font-medium">
-                            <template x-if="!selectedSeller?.history || selectedSeller?.history?.length === 0">
-                                <tr>
-                                    <td colspan="7" class="px-5 py-8 text-center text-gray-400 italic">
-                                        No billing cycles recorded for this artisan yet.
-                                    </td>
-                                </tr>
-                            </template>
-
-                            <template x-for="rec in (selectedSeller?.history || [])" :key="rec.id || rec.period">
-                                <tr class="hover:bg-gray-50/80 transition-colors">
-                                    <td class="px-5 py-3 font-bold font-mono text-gray-900" x-text="rec.period"></td>
-                                    <td class="px-5 py-3 font-mono font-bold text-gray-800" x-text="formatMoney(rec.totalSales)"></td>
-                                    <td class="px-5 py-3 font-mono font-bold text-[#C0422A]" x-text="formatMoney(rec.commissionAmount)"></td>
-                                    <td class="px-5 py-3">
-                                        <span class="px-2 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider"
-                                              :class="rec.status === 'paid' ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' : 'bg-rose-50 text-rose-700 border border-rose-200'"
-                                              x-text="rec.status === 'paid' ? '✓ Paid' : 'Unpaid'"></span>
-                                    </td>
-                                    <td class="px-5 py-3 text-gray-400 font-mono text-[11px]" x-text="rec.dueDate || '7th of month'"></td>
-                                    <td class="px-5 py-3">
-                                        <template x-if="rec.referenceNumber">
-                                            <div class="space-y-0.5">
-                                                <span class="font-mono text-xs font-bold text-gray-800 block" x-text="rec.referenceNumber"></span>
-                                                <template x-if="rec.paymentProof">
-                                                    <button type="button"
-                                                            @click="openProofModal(rec.paymentProof, (selectedSeller?.seller?.shopName || selectedSeller?.seller?.name) + ' (' + rec.period + ') · Proof Receipt', rec.referenceNumber)"
-                                                            class="text-[10px] text-[#C0422A] hover:underline font-bold cursor-pointer inline-flex items-center gap-1">
-                                                        🔍 Proof Receipt
-                                                    </button>
-                                                </template>
-                                            </div>
-                                        </template>
-                                        <template x-if="!rec.referenceNumber">
-                                            <span class="text-gray-300 italic text-[10px]">None submitted</span>
-                                        </template>
-                                    </td>
-                                    <td class="px-5 py-3 text-gray-400 font-mono text-[11px]" x-text="rec.paidAt || '—'"></td>
-                                </tr>
-                            </template>
-                        </tbody>
-                    </table>
                 </div>
             </div>
+        </div>
+    </template>
 
-            <!-- Modal Footer & Actions -->
-            <div class="flex items-center justify-between pt-4 border-t border-gray-100 flex-wrap gap-3">
-                <a :href="'/superadmin/sellers?search=' + encodeURIComponent(selectedSeller?.seller?.shopName || selectedSeller?.seller?.name || '')"
-                   class="inline-flex items-center gap-1.5 text-xs font-bold text-gray-600 hover:text-[#C0422A] transition-colors">
-                    <span>Manage Shop in Artisan Registry →</span>
-                </a>
+    <!-- 5. Dedicated Proof of Payment Zoom Modal (Z-Index 60 to appear over any other modal) -->
+    <template x-teleport="body">
+        <div x-show="showProofModal"
+             x-cloak
+             style="display: none;"
+             class="fixed inset-0 z-60 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md"
+             @keydown.escape.window="showProofModal = false"
+             @click.self="showProofModal = false">
+            
+            <div class="relative bg-white rounded-3xl max-w-2xl w-full p-6 sm:p-7 shadow-2xl border border-gray-100 space-y-4 max-h-[92vh] flex flex-col"
+                 @click.stop
+                 x-transition:enter="transition ease-out duration-200"
+                 x-transition:enter-start="opacity-0 scale-95"
+                 x-transition:enter-end="opacity-100 scale-100"
+                 x-transition:leave="transition ease-in duration-150"
+                 x-transition:leave-start="opacity-100 scale-100"
+                 x-transition:leave-end="opacity-0 scale-95">
+                
+                <div class="flex items-center justify-between border-b border-gray-100 pb-3 shrink-0">
+                    <div>
+                        <div class="inline-flex items-center gap-2">
+                            <span class="text-[9px] font-black uppercase tracking-[0.2em] text-[#C0422A]">Remittance Verification</span>
+                            <span class="text-gray-300 text-xs">·</span>
+                            <span class="text-[9px] font-bold uppercase tracking-wider text-gray-400">Proof Preview</span>
+                        </div>
+                        <h3 class="font-serif text-lg sm:text-xl font-bold text-gray-900 mt-0.5" x-text="proofTitle || 'Proof of Payment Receipt'"></h3>
+                        <template x-if="proofRef">
+                            <div class="text-xs font-mono text-blue-700 font-bold mt-1 bg-blue-50 px-2.5 py-1 rounded-lg border border-blue-200 inline-block" x-text="'Ref #: ' + proofRef"></div>
+                        </template>
+                    </div>
+                    <button type="button" @click="showProofModal = false" class="text-gray-400 hover:text-gray-700 p-2 rounded-xl hover:bg-gray-100 transition-colors cursor-pointer" title="Close Preview">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                    </button>
+                </div>
 
-                <div class="flex items-center gap-2">
-                    <template x-if="selectedSeller?.seller?.status === 'frozen'">
-                        <button type="button"
-                                @click="openUnfreezeModal(selectedSeller?.seller?.id, selectedSeller?.seller?.shopName || selectedSeller?.seller?.name, selectedSeller?.seller?.email, selectedSeller?.seller?.violationReason, selectedSeller?.paymentMethod, selectedSeller?.referenceNumber, selectedSeller?.paymentProof); showStatementModal = false;"
-                                class="px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-xl uppercase tracking-wider transition-all cursor-pointer shadow-xs">
-                            🔓 Unfreeze Account
-                        </button>
-                    </template>
-                    <template x-if="selectedSeller?.seller?.status !== 'frozen' && selectedSeller?.totalOutstandingBalance > 0">
-                        <button type="button"
-                                @click="openFreezeModal(selectedSeller?.seller?.id, selectedSeller?.seller?.shopName || selectedSeller?.seller?.name, selectedSeller?.commissionAmount); showStatementModal = false;"
-                                class="px-4 py-2.5 bg-rose-50 text-rose-700 border border-rose-200 hover:bg-rose-600 hover:text-white text-xs font-bold rounded-xl uppercase tracking-wider transition-all cursor-pointer">
-                            ❄️ Freeze Account
-                        </button>
-                    </template>
+                <div class="flex-1 overflow-auto bg-[#F8F7F4] rounded-2xl border border-gray-200 p-3 flex items-center justify-center min-h-64 max-h-[64vh]">
+                    <img :src="proofImageUrl" class="max-h-[60vh] max-w-full object-contain rounded-xl shadow-xs" alt="Payment Proof">
+                </div>
 
-                    <button type="button" @click="showStatementModal = false" class="px-5 py-2.5 bg-gray-100 text-gray-700 hover:bg-gray-200 text-xs font-bold rounded-xl uppercase tracking-wider transition-all cursor-pointer">
-                        Close Statement
+                <div class="flex items-center justify-between pt-2 shrink-0 flex-wrap gap-2">
+                    <a :href="proofImageUrl" target="_blank" download class="inline-flex items-center gap-2 px-4 py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-xl text-xs font-bold transition-all">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+                        <span>Open in Full Tab / Download</span>
+                    </a>
+                    <button type="button" @click="showProofModal = false" class="px-6 py-2.5 bg-[#1F2937] hover:bg-[#C0422A] text-white text-xs font-bold uppercase tracking-wider rounded-xl transition-all cursor-pointer shadow-xs">
+                        Close Preview
                     </button>
                 </div>
             </div>
         </div>
-    </div>
-
-    <!-- 5. Dedicated Proof of Payment Zoom Modal (Z-Index 60 to appear over any other modal) -->
-    <div x-show="showProofModal"
-         x-cloak
-         style="display: none;"
-         class="fixed inset-0 z-60 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm"
-         @click.self="showProofModal = false">
-        
-        <div class="relative bg-white rounded-3xl max-w-2xl w-full p-6 shadow-2xl border border-gray-100 overflow-hidden space-y-4 max-h-[92vh] flex flex-col"
-             x-transition:enter="transition ease-out duration-200"
-             x-transition:enter-start="opacity-0 scale-95"
-             x-transition:enter-end="opacity-100 scale-100"
-             x-transition:leave="transition ease-in duration-150"
-             x-transition:leave-start="opacity-100 scale-100"
-             x-transition:leave-end="opacity-0 scale-95">
-            
-            <div class="flex items-center justify-between border-b border-gray-100 pb-3 shrink-0">
-                <div>
-                    <div class="text-[9px] font-black uppercase tracking-widest text-[#C0422A]">Remittance Verification</div>
-                    <h3 class="font-serif text-lg font-bold text-gray-900" x-text="proofTitle || 'Proof of Payment Receipt'"></h3>
-                    <template x-if="proofRef">
-                        <div class="text-xs font-mono text-blue-700 font-bold mt-0.5" x-text="'Ref #: ' + proofRef"></div>
-                    </template>
-                </div>
-                <button type="button" @click="showProofModal = false" class="text-gray-400 hover:text-gray-700 p-2 rounded-xl hover:bg-gray-100 transition-colors cursor-pointer">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
-                </button>
-            </div>
-
-            <div class="flex-1 overflow-auto bg-[#F8F7F4] rounded-2xl border border-gray-200 p-2 flex items-center justify-center min-h-60 max-h-[65vh]">
-                <img :src="proofImageUrl" class="max-h-[60vh] max-w-full object-contain rounded-xl shadow-xs" alt="Payment Proof">
-            </div>
-
-            <div class="flex items-center justify-between pt-2 shrink-0">
-                <a :href="proofImageUrl" target="_blank" download class="inline-flex items-center gap-1.5 px-3.5 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-xl text-xs font-bold transition-all">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
-                    <span>Open in Full Tab / Download</span>
-                </a>
-                <button type="button" @click="showProofModal = false" class="px-5 py-2 bg-[#3D2B1F] hover:bg-[#C0422A] text-white text-xs font-bold uppercase tracking-wider rounded-xl transition-all cursor-pointer shadow-xs">
-                    Close Preview
-                </button>
-            </div>
-        </div>
-    </div>
+    </template>
 </div>
 
 @push('scripts')
 <script>
     function commissionsPage() {
         return {
+            init() {
+                this.$watch('showModal', () => this.syncScrollLock());
+                this.$watch('showUnfreezeModal', () => this.syncScrollLock());
+                this.$watch('showMarkPaidModal', () => this.syncScrollLock());
+                this.$watch('showStatementModal', () => this.syncScrollLock());
+                this.$watch('showProofModal', () => this.syncScrollLock());
+            },
+            syncScrollLock() {
+                const isAnyOpen = this.showModal || this.showUnfreezeModal || this.showMarkPaidModal || this.showStatementModal || this.showProofModal;
+                const mainEl = document.getElementById('superadmin-main') || document.querySelector('main');
+                if (isAnyOpen) {
+                    document.body.style.overflow = 'hidden';
+                    document.documentElement.style.overflow = 'hidden';
+                    if (mainEl) mainEl.style.overflow = 'hidden';
+                } else {
+                    document.body.style.overflow = '';
+                    document.documentElement.style.overflow = '';
+                    if (mainEl) mainEl.style.overflow = '';
+                }
+            },
+
             // Statement Modal State
             showStatementModal: false,
             selectedSeller: null,

@@ -1,13 +1,15 @@
 <script>
 (function() {
     function toggleBodyScrollLock() {
-        // Find top-level modal containers only (ignore child nested backdrops)
         const modals = document.querySelectorAll('div.fixed.inset-0');
         let isAnyModalOpen = false;
 
         modals.forEach(function(el) {
-            // Skip non-modal elements like mobile drawers or elements hidden by Alpine
-            if (el.classList.contains('lg:hidden') && el.classList.contains('flex') && !el.classList.contains('bg-black/60') && !el.classList.contains('bg-black/50') && !el.classList.contains('backdrop-blur-sm')) {
+            // Skip non-modal elements like mobile drawers or non-backdrop overlays
+            if (el.classList.contains('lg:hidden') && el.classList.contains('flex') && 
+                !el.classList.contains('bg-black/80') && !el.classList.contains('bg-black/70') && 
+                !el.classList.contains('bg-black/60') && !el.classList.contains('bg-black/50') && 
+                !el.classList.contains('backdrop-blur-sm') && !el.classList.contains('backdrop-blur-md')) {
                 return;
             }
 
@@ -27,12 +29,28 @@
             }
         });
 
+        const scrollContainers = document.querySelectorAll('main, #superadmin-main, #admin-main, #seller-main');
+
         if (isAnyModalOpen) {
             document.body.style.overflow = 'hidden';
             document.documentElement.style.overflow = 'hidden';
+            scrollContainers.forEach(function(container) {
+                if (container.style.overflow !== 'hidden') {
+                    container.dataset.prevOverflow = container.style.overflowY || container.style.overflow || '';
+                    container.style.overflow = 'hidden';
+                }
+            });
         } else {
             document.body.style.overflow = '';
             document.documentElement.style.overflow = '';
+            scrollContainers.forEach(function(container) {
+                if (container.dataset.prevOverflow !== undefined) {
+                    container.style.overflow = container.dataset.prevOverflow;
+                    delete container.dataset.prevOverflow;
+                } else {
+                    container.style.overflow = '';
+                }
+            });
         }
     }
 
@@ -49,5 +67,6 @@
     });
 
     window.addEventListener('popstate', toggleBodyScrollLock);
+    window.addEventListener('resize', toggleBodyScrollLock);
 })();
 </script>
