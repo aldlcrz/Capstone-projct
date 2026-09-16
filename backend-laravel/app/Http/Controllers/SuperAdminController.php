@@ -501,11 +501,11 @@ class SuperAdminController extends Controller
     public function sellers(Request $request)
     {
         $search = trim($request->input('search', ''));
-        $status = $request->input('status', 'all');
+        $filter = $request->input('filter', $request->input('status', ''));
         $rate   = $this->getCommissionRate();
 
         $query = User::where('role', 'seller')
-            ->withCount('products');
+            ->withCount(['products', 'orders']);
 
         if ($search) {
             $query->where(function ($q) use ($search) {
@@ -515,43 +515,44 @@ class SuperAdminController extends Controller
             });
         }
 
-        if ($status === 'active') {
-            $query->where(function($q) {
+        if ($filter === 'pending' || $filter === 'unverified') {
+            $query->where('isVerified', false)->whereNotIn('status', ['blocked', 'suspended', 'rejected', 'frozen']);
+        } elseif ($filter === 'rejected') {
+            $query->where('status', 'rejected');
+        } elseif ($filter === 'suspended') {
+            $query->whereIn('status', ['blocked', 'suspended']);
+        } elseif ($filter === 'frozen') {
+            $query->where('status', 'frozen');
+        } elseif ($filter === 'all') {
+            // all sellers
+        } else {
+            // Default view (Approved Sellers): strictly verified active sellers
+            $query->where('isVerified', true)->where(function($q) {
                 $q->whereNull('status')->orWhere('status', 'active');
             });
-        } elseif ($status === 'frozen') {
-            $query->where('status', 'frozen');
-        } elseif ($status === 'unverified') {
-            $query->where('isVerified', false);
         }
 
-        $sellers = $query->orderByDesc('createdAt')
-            ->paginate(15)
-            ->through(function (User $seller) use ($rate) {
-                $sales = (float) Order::whereNotIn('status', ['Cancelled'])
-                    ->where('sellerId', $seller->id)
-                    ->sum('totalAmount');
-                $unpaid = (float) CommissionRecord::where('sellerId', $seller->id)
-                    ->where('status', 'unpaid')
-                    ->sum('commissionAmount');
+        $sellers = $query->with(['commissionRecords' => function($q) {
+            $q->where('status', 'unpaid')->orderBy('period', 'desc');
+        }])->orderByDesc('createdAt')->paginate(20);
 
-                return [
-                    'id'             => $seller->id,
-                    'name'           => $seller->name,
-                    'shop_name'      => $seller->shopName ?: $seller->name,
-                    'email'          => $seller->email,
-                    'phone'          => $seller->phone ?: '—',
-                    'is_verified'    => (bool) $seller->isVerified,
-                    'status'         => $seller->status ?? 'active',
-                    'products_count' => $seller->products_count,
-                    'total_sales'    => $sales,
-                    'total_profit'   => round($sales * ($rate / 100), 2),
-                    'unpaid_debt'    => $unpaid,
-                    'created_at'     => $seller->createdAt,
-                ];
-            });
+        $pendingSellers = User::where('role', 'seller')
+            ->where('isVerified', false)
+            ->whereNotIn('status', ['blocked', 'suspended', 'rejected', 'frozen'])
+            ->get();
 
-        return view('superadmin.sellers', compact('sellers', 'search', 'status', 'rate'));
+        $counts = [
+            'all'       => User::where('role', 'seller')->count(),
+            'verified'  => User::where('role', 'seller')->where('isVerified', true)->where(function($q) {
+                $q->whereNull('status')->orWhere('status', 'active');
+            })->count(),
+            'pending'   => User::where('role', 'seller')->where('isVerified', false)->whereNotIn('status', ['blocked', 'suspended', 'rejected', 'frozen'])->count(),
+            'frozen'    => User::where('role', 'seller')->where('status', 'frozen')->count(),
+            'suspended' => User::where('role', 'seller')->whereIn('status', ['blocked', 'suspended'])->count(),
+            'rejected'  => User::where('role', 'seller')->where('status', 'rejected')->count(),
+        ];
+
+        return view('superadmin.sellers', compact('sellers', 'pendingSellers', 'counts', 'search', 'filter', 'rate'));
     }
 
     public function verifySeller(string $id)
@@ -571,6 +572,8 @@ class SuperAdminController extends Controller
             'new_status'      => 'active',
             'reason'          => 'Verified and approved by Super Admin',
         ]);
+
+        $this->sendNotification($seller->id, 'Seller verification approved', 'Your artisan workshop is now verified and can access seller tools.', 'system', '/seller/dashboard', 'seller');
 
         return back()->with('success', "Artisan shop '{$seller->shopName}' is now verified.");
     }
@@ -593,6 +596,8 @@ class SuperAdminController extends Controller
             'new_status'      => 'rejected',
             'reason'          => $reason,
         ]);
+
+        $this->sendNotification($seller->id, 'Seller application rejected', "Your application was rejected: {$reason}", 'system', '/seller/dashboard', 'seller');
 
         return back()->with('success', "Artisan shop '{$seller->shopName}' registration has been rejected.");
     }
@@ -617,35 +622,70 @@ class SuperAdminController extends Controller
         return back()->with('success', "Artisan shop '{$seller->shopName}' verification removed.");
     }
 
-    public function toggleShopStatus(string $id)
+    public function suspendSeller(Request $request, string $id)
     {
         $seller = User::where('role', 'seller')->findOrFail($id);
-        $prevStatus = $seller->status ?? 'active';
-        $newStatus = ($prevStatus === 'active') ? 'frozen' : 'active';
-        $seller->status = $newStatus;
+        $reason = $request->input('reason', 'Policy violation');
+        $prevStatus = $seller->status;
+
+        $seller->status = 'suspended';
+        $seller->violationReason = $reason;
         $seller->save();
 
         \App\Models\SellerStatusAudit::create([
             'seller_id'       => $seller->id,
             'admin_id'        => Auth::id(),
             'previous_status' => $prevStatus,
-            'new_status'      => $newStatus,
-            'reason'          => 'Shop freeze status toggled by Super Admin',
+            'new_status'      => 'suspended',
+            'reason'          => $reason,
         ]);
 
-        return redirect()->back()->with('success', "Artisan shop '{$seller->name}' status updated to {$seller->status}.");
+        $this->sendNotification($seller->id, 'Account Suspended', "Your seller account has been suspended: {$reason}", 'system', '/seller/dashboard', 'seller');
+
+        return back()->with('success', "Artisan shop '{$seller->shopName}' has been suspended.");
     }
 
-    public function deleteShop(string $id)
+    public function unsuspendSeller(string $id)
     {
         $seller = User::where('role', 'seller')->findOrFail($id);
+        $prevStatus = $seller->status;
+
+        $seller->status = 'active';
+        $seller->violationReason = null;
+        $seller->save();
+
+        \App\Models\SellerStatusAudit::create([
+            'seller_id'       => $seller->id,
+            'admin_id'        => Auth::id(),
+            'previous_status' => $prevStatus,
+            'new_status'      => 'active',
+            'reason'          => 'Unsuspended by Super Admin',
+        ]);
+
+        $this->sendNotification($seller->id, 'Account Restored', "Your seller account suspension has been lifted.", 'system', '/seller/dashboard', 'seller');
+
+        return back()->with('success', "Artisan shop '{$seller->shopName}' has been restored to active status.");
+    }
+
+    public function deleteSeller(Request $request, string $id)
+    {
+        $seller = User::where('role', 'seller')->findOrFail($id);
+        $reason = $request->input('reason', 'Administrative deletion by Super Admin');
+        $name = $seller->name;
+
+        try {
+            \App\Models\ArchivedRecord::archive('seller', $seller, $reason);
+        } catch (\Throwable $e) {
+            \Log::warning('Archive error on deleteSeller: ' . $e->getMessage());
+        }
+
         $seller->status = 'suspended';
-        $seller->violationReason = 'Shop removed by super administrator.';
-        $seller->delete(); // Soft delete via SoftDeletes
+        $seller->violationReason = $reason;
+        $seller->delete();
 
         Product::where('sellerId', $id)->update(['status' => 'inactive']);
 
-        return redirect()->back()->with('success', "Artisan shop '{$seller->name}' has been deactivated and soft-deleted.");
+        return back()->with('success', "Artisan shop '{$name}' has been deleted and archived.");
     }
 
     public function toggleStatus(string $id)
@@ -698,7 +738,7 @@ class SuperAdminController extends Controller
     public function customers(Request $request)
     {
         $search = trim($request->input('search', ''));
-        $status = $request->input('status', 'all');
+        $status = $request->input('status', '');
 
         $query = User::where(function($q) {
             $q->whereIn('role', ['customer', 'buyer', 'user'])
@@ -717,31 +757,29 @@ class SuperAdminController extends Controller
             $query->where(function($q) {
                 $q->whereNull('status')->orWhere('status', 'active');
             });
-        } elseif ($status === 'banned') {
+        } elseif ($status === 'blocked' || $status === 'banned') {
             $query->whereIn('status', ['banned', 'blocked']);
         }
 
-        $customers = $query->orderByDesc('createdAt')
-            ->paginate(15)
-            ->through(function (User $user) {
-                $ordersCount = Order::where('customerId', $user->id)->count();
-                $totalSpent  = (float) Order::where('customerId', $user->id)
-                    ->whereNotIn('status', ['Cancelled'])
-                    ->sum('totalAmount');
+        $customers = $query->withCount('orders')
+            ->orderByDesc('createdAt')
+            ->paginate(20);
 
-                return [
-                    'id'           => $user->id,
-                    'name'         => $user->name,
-                    'email'        => $user->email,
-                    'phone'        => $user->phone ?: '—',
-                    'status'       => in_array($user->status, ['banned', 'blocked']) ? 'banned' : ($user->status ?? 'active'),
-                    'orders_count' => $ordersCount,
-                    'total_spent'  => $totalSpent,
-                    'created_at'   => $user->createdAt,
-                ];
-            });
+        $counts = [
+            'all'     => User::where(function($q) {
+                $q->whereIn('role', ['customer', 'buyer', 'user'])->orWhereNull('role');
+            })->whereNotIn('role', ['seller', 'admin', 'superadmin'])->count(),
+            'active'  => User::where(function($q) {
+                $q->whereIn('role', ['customer', 'buyer', 'user'])->orWhereNull('role');
+            })->whereNotIn('role', ['seller', 'admin', 'superadmin'])->where(function($q) {
+                $q->whereNull('status')->orWhere('status', 'active');
+            })->count(),
+            'blocked' => User::where(function($q) {
+                $q->whereIn('role', ['customer', 'buyer', 'user'])->orWhereNull('role');
+            })->whereNotIn('role', ['seller', 'admin', 'superadmin'])->whereIn('status', ['banned', 'blocked'])->count(),
+        ];
 
-        return view('superadmin.customers', compact('customers', 'search', 'status'));
+        return view('superadmin.customers', compact('customers', 'search', 'status', 'counts'));
     }
 
     public function banCustomer(Request $request, string $id)
@@ -807,6 +845,53 @@ class SuperAdminController extends Controller
         }
 
         return redirect()->route('superadmin.customers')->with('success', "Customer account '{$customer->name}' has been unbanned and notification sent.");
+    }
+
+    public function deleteCustomer(Request $request, string $id)
+    {
+        try {
+            $user = User::findOrFail($id);
+            $reason = $request->input('reason', 'Administrative deletion by Super Admin');
+            $customerName = $user->name;
+            $customerEmail = $user->email;
+            $customerId = $user->id;
+
+            if ($customerEmail) {
+                try {
+                    $mailable = new \App\Mail\CustomerDeletedMail($customerName, $reason);
+                    \App\Services\EmailNotificationService::sendNotification(
+                        $customerEmail,
+                        $mailable,
+                        'customer_deleted',
+                        $customerId,
+                        'User',
+                        $customerId
+                    );
+                } catch (\Throwable $me) {
+                    Log::warning('Email sending failed on deleteCustomer: ' . $me->getMessage());
+                }
+            }
+
+            try {
+                if (\Illuminate\Support\Facades\Schema::hasTable('sessions')) {
+                    DB::table('sessions')->where('user_id', $customerId)->delete();
+                }
+                if (method_exists($user, 'tokens')) {
+                    $user->tokens()->delete();
+                }
+            } catch (\Throwable $e) {}
+
+            try {
+                \App\Models\ArchivedRecord::archive('customer', $user, $reason);
+            } catch (\Throwable $ae) {
+                Log::warning('Archive error on deleteCustomer: ' . $ae->getMessage());
+            }
+
+            $user->delete();
+            return redirect()->route('superadmin.customers')->with('success', "Customer {$customerName} permanently deleted and archived.");
+        } catch (\Throwable $e) {
+            return redirect()->route('superadmin.customers')->with('error', 'Error deleting customer: ' . $e->getMessage());
+        }
     }
 
     // ─── Maintenance Mode & 1-Click Cache Utility ─────────────────────────────

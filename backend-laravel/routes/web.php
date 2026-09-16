@@ -328,11 +328,18 @@ Route::middleware(['auth', 'superadmin'])->prefix('superadmin')->group(function 
 
     // Customer & Seller Management
     Route::get('/sellers', [SuperAdminController::class, 'sellers'])->name('superadmin.sellers');
-    Route::patch('/sellers/{id}/verify', [SuperAdminController::class, 'verifySeller'])->name('superadmin.sellers.verify');
-    Route::patch('/sellers/{id}/unverify', [SuperAdminController::class, 'unverifySeller'])->name('superadmin.sellers.unverify');
+    Route::match(['post', 'patch'], '/sellers/{id}/verify', [SuperAdminController::class, 'verifySeller'])->name('superadmin.sellers.verify');
+    Route::match(['post', 'patch'], '/sellers/{id}/reject', [SuperAdminController::class, 'rejectSeller'])->name('superadmin.sellers.reject');
+    Route::match(['post', 'patch'], '/sellers/{id}/unverify', [SuperAdminController::class, 'unverifySeller'])->name('superadmin.sellers.unverify');
+    Route::match(['post', 'patch'], '/sellers/{id}/freeze', [SuperAdminController::class, 'freezeShop'])->name('superadmin.sellers.freeze');
+    Route::match(['post', 'patch'], '/sellers/{id}/unfreeze', [SuperAdminController::class, 'unfreezeShop'])->name('superadmin.sellers.unfreeze');
+    Route::match(['post', 'patch'], '/sellers/{id}/suspend', [SuperAdminController::class, 'suspendSeller'])->name('superadmin.sellers.suspend');
+    Route::match(['post', 'patch'], '/sellers/{id}/unsuspend', [SuperAdminController::class, 'unsuspendSeller'])->name('superadmin.sellers.unsuspend');
+    Route::delete('/sellers/{id}', [SuperAdminController::class, 'deleteSeller'])->name('superadmin.sellers.delete');
     Route::get('/customers', [SuperAdminController::class, 'customers'])->name('superadmin.customers');
     Route::match(['post', 'patch'], '/customers/{id}/ban', [SuperAdminController::class, 'banCustomer'])->name('superadmin.customers.ban');
     Route::match(['post', 'patch'], '/customers/{id}/unban', [SuperAdminController::class, 'unbanCustomer'])->name('superadmin.customers.unban');
+    Route::delete('/customers/{id}', [SuperAdminController::class, 'deleteCustomer'])->name('superadmin.customers.delete');
 
     // Subscriptions
     Route::get('/subscriptions', [SuperAdminController::class, 'subscriptions'])->name('superadmin.subscriptions.index');
