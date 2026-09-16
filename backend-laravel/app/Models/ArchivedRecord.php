@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Str;
 
 class ArchivedRecord extends Model
@@ -42,8 +43,14 @@ class ArchivedRecord extends Model
 
     /**
      * Archive an entity before deletion.
+     *
+     * @param string $type
+     * @param Model|array $entity
+     * @param string|null $reason
+     * @param string|null $archivedBy
+     * @return self
      */
-    public static function archive(string $type, $entity, ?string $reason = null, ?string $archivedBy = null): self
+    public static function archive(string $type, Model|array $entity, ?string $reason = null, ?string $archivedBy = null): self
     {
         $name = 'Unknown';
         $identifier = null;
@@ -85,7 +92,7 @@ class ArchivedRecord extends Model
             'identifier'  => $identifier,
             'reason'      => $reason ?: 'Administrative deletion',
             'metadata'    => $metadata,
-            'archived_by' => $archivedBy ?: (auth()->user()->name ?? 'Administrator'),
+            'archived_by' => $archivedBy ?: (Auth::user()?->name ?? 'Administrator'),
         ]);
     }
 }

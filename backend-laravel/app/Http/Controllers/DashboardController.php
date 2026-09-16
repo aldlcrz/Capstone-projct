@@ -158,7 +158,7 @@ class DashboardController extends Controller
      *
      * @param string $sellerId
      * @param Request|null $request
-     * @return array<string, mixed>
+     * @return array
      */
     private function buildSellerDashboardData(string $sellerId, ?Request $request = null): array
     {
