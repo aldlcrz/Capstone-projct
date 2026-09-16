@@ -1178,11 +1178,20 @@ STRICT DOMAIN LIMITS & SECURITY:
             $imageData = base64_encode(file_get_contents($imagePath));
 
             $amountPrompt = $expectedAmount > 0 ? " Expected payment amount is around ₱" . number_format($expectedAmount, 2) . "." : "";
-            $prompt = "Analyze this uploaded image for a Philippine e-commerce store (LumBarong). "
-                . "1. Is this a legitimate mobile payment receipt or transaction screenshot (from {$method}, GCash, Maya, or Philippine bank)? "
-                . "Or is it an unrelated image (such as clothing, people, scenery, general product photo, meme, social media post screenshot, or costume)? "
-                . "2. Does it contain the payment reference number '{$ref}'?{$amountPrompt} "
-                . "Respond strictly in JSON: {\"status\": \"PASS\"|\"REVIEW\"|\"REJECT\", \"is_receipt\": boolean, \"ref_matched\": boolean, \"confidence\": number, \"detected_ref\": string, \"message\": string}";
+            $prompt = "You are an automated OCR and receipt verification engine for LumBarong Philippine e-commerce store.\n"
+                . "Analyze this attached image.\n"
+                . "TASK 1: Is this a legitimate mobile payment receipt or transaction screenshot (from {$method}, GCash, Maya, or Philippine bank)? Or is it an unrelated image (clothing, people, scenery, general product photo, meme, etc.)?\n"
+                . "TASK 2: OCR and extract the exact payment Reference Number from the receipt. For GCash, look for a 13-digit reference number (e.g., '1002345678901' or 'Ref No. 1002 345 678 901' or starting with 100). For Maya, look for a 12-digit reference number (or Reference ID). Return ONLY the clean numeric digits in detected_ref.\n"
+                . "TASK 3: " . ($ref ? "Compare detected reference with entered reference '{$ref}'." : "Set ref_matched to true if a valid reference number is detected.") . "{$amountPrompt}\n\n"
+                . "Respond strictly in JSON format:\n"
+                . "{\n"
+                . "  \"status\": \"PASS\"|\"REVIEW\"|\"REJECT\",\n"
+                . "  \"is_receipt\": boolean,\n"
+                . "  \"ref_matched\": boolean,\n"
+                . "  \"confidence\": number,\n"
+                . "  \"detected_ref\": \"<digits only or empty>\",\n"
+                . "  \"message\": \"<concise explanation>\"\n"
+                . "}";
 
             $payload = [
                 'contents' => [
@@ -1223,26 +1232,35 @@ STRICT DOMAIN LIMITS & SECURITY:
                             $parsed = json_decode($m[0], true);
                             if (is_array($parsed)) {
                                 $isReceipt = (bool) ($parsed['is_receipt'] ?? false);
-                                $refMatched = (bool) ($parsed['ref_matched'] ?? false);
-                                $detectedRef = trim((string) ($parsed['detected_ref'] ?? ''));
+                                $rawDetectedRef = trim((string) ($parsed['detected_ref'] ?? ''));
+                                // Clean detected reference to digits only
+                                $detectedRef = preg_replace('/\D/', '', $rawDetectedRef);
 
-                                // Strict reference check if detected on receipt
-                                if ($ref && $detectedRef && str_replace([' ', '-'], '', $detectedRef) !== str_replace([' ', '-'], '', $ref)) {
-                                    $refMatched = false;
+                                $cleanRef = preg_replace('/\D/', '', $ref);
+                                $refMatched = (bool) ($parsed['ref_matched'] ?? false);
+
+                                if ($cleanRef && $detectedRef) {
+                                    $refMatched = ($cleanRef === $detectedRef);
+                                } elseif (!$cleanRef && $detectedRef) {
+                                    $refMatched = true;
                                 }
 
                                 $tier = strtoupper(trim((string) ($parsed['status'] ?? '')));
                                 if (!$isReceipt) {
                                     $tier = 'REJECT';
-                                } elseif (!$refMatched) {
+                                } elseif (!$refMatched && $cleanRef && $detectedRef) {
                                     $tier = 'REVIEW';
+                                } elseif ($isReceipt && $detectedRef) {
+                                    $tier = 'PASS';
                                 } elseif (!in_array($tier, ['PASS', 'REVIEW', 'REJECT'], true)) {
                                     $tier = 'PASS';
                                 }
 
                                 $msg = (string) ($parsed['message'] ?? 'Receipt screening complete.');
-                                if ($isReceipt && !$refMatched && $detectedRef) {
-                                    $msg = "Reference number mismatch: Detected \"{$detectedRef}\" on image, but entered \"{$ref}\". Artisan manual verification required.";
+                                if ($isReceipt && $cleanRef && $detectedRef && $cleanRef !== $detectedRef) {
+                                    $msg = "Reference number mismatch: Detected \"{$detectedRef}\" on image, but entered \"{$cleanRef}\". Artisan manual verification required.";
+                                } elseif ($isReceipt && $detectedRef && !$cleanRef) {
+                                    $msg = "✓ Detected {$method} Reference Number: {$detectedRef}.";
                                 }
 
                                 return [

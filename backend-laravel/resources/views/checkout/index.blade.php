@@ -399,9 +399,20 @@
                                                          ? 'Receipt Verification Passed' 
                                                          : (aiVerificationResult.status === 'REVIEW' ? 'Manual Verification Required' : 'Receipt Verification Rejected')"></div>
                                                 <p class="text-[11px] font-medium leading-relaxed" x-text="aiVerificationResult.message"></p>
-                                                <template x-if="aiVerificationResult.status === 'REVIEW' && !aiVerificationResult.ref_matched && aiVerificationResult.detected_ref">
-                                                    <div class="text-[10px] font-mono bg-amber-100/70 text-amber-900 px-2 py-1 rounded-lg mt-1 inline-block">
-                                                        Detected Ref: <span class="font-bold" x-text="aiVerificationResult.detected_ref"></span>
+                                                <template x-if="aiVerificationResult.detected_ref">
+                                                    <div class="flex items-center gap-2 mt-1.5 flex-wrap">
+                                                        <div class="text-[10px] font-mono bg-blue-50 text-blue-900 border border-blue-200 px-2 py-1 rounded-lg inline-flex items-center gap-1.5 shadow-2xs">
+                                                            <svg class="w-3 h-3 text-blue-600 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+                                                            <span>Detected Ref:</span>
+                                                            <span class="font-bold" x-text="aiVerificationResult.detected_ref"></span>
+                                                        </div>
+                                                        <button type="button" 
+                                                                @click="paymentRef = aiVerificationResult.detected_ref.replace(/\D/g, ''); ocrExtracted = true; validateRef(); checkServerReference();"
+                                                                x-show="paymentRef !== aiVerificationResult.detected_ref.replace(/\D/g, '')"
+                                                                class="text-[10px] font-bold text-[#C0422A] hover:underline px-2.5 py-1 bg-[#C0422A]/10 hover:bg-[#C0422A]/20 rounded-md transition-colors cursor-pointer inline-flex items-center gap-1">
+                                                            <span>Use Detected Ref</span>
+                                                            <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                                                        </button>
                                                     </div>
                                                 </template>
                                             </div>
@@ -469,19 +480,26 @@
                         </button>
                         <button type="button" 
                                 @click="requestPlaceOrder()" 
-                                :disabled="aiChecking"
-                                :class="aiChecking ? 'opacity-60 cursor-not-allowed bg-[#C0422A]/80' : 'hover:bg-[#A33622] active:scale-[0.99] cursor-pointer shadow-lg shadow-[#C0422A]/20'"
+                                :disabled="aiChecking || isPlacingOrder"
+                                :class="(aiChecking || isPlacingOrder) ? 'opacity-60 cursor-not-allowed bg-[#C0422A]/80' : 'hover:bg-[#A33622] active:scale-[0.99] cursor-pointer shadow-lg shadow-[#C0422A]/20'"
                                 class="flex-1 bg-[#C0422A] text-white py-4 rounded-xl text-sm font-bold transition-all flex items-center justify-center gap-2">
-                            <span x-show="!aiChecking" class="inline-flex items-center gap-2">
+                            <span x-show="!aiChecking && !isPlacingOrder" class="inline-flex items-center gap-2">
                                 <span>Place Order</span>
                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
                             </span>
-                            <span x-show="aiChecking" x-cloak class="inline-flex items-center gap-2">
+                            <span x-show="aiChecking && !isPlacingOrder" x-cloak class="inline-flex items-center gap-2">
                                 <svg class="w-4 h-4 animate-spin text-white" fill="none" viewBox="0 0 24 24">
                                     <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
                                     <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                                 </svg>
                                 <span>Scanning Receipt...</span>
+                            </span>
+                            <span x-show="isPlacingOrder" x-cloak class="inline-flex items-center gap-2">
+                                <svg class="w-4 h-4 animate-spin text-white" fill="none" viewBox="0 0 24 24">
+                                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                </svg>
+                                <span>Placing Order...</span>
                             </span>
                         </button>
                     </div>
@@ -554,16 +572,23 @@
                     </button>
                     <button type="button" 
                             @click="requestPlaceOrder()" 
-                            :disabled="aiChecking"
-                            :class="aiChecking ? 'opacity-60 cursor-not-allowed bg-[#C0422A]/80' : 'hover:bg-[#A33622] active:scale-95 cursor-pointer shadow-lg'"
+                            :disabled="aiChecking || isPlacingOrder"
+                            :class="(aiChecking || isPlacingOrder) ? 'opacity-60 cursor-not-allowed bg-[#C0422A]/80' : 'hover:bg-[#A33622] active:scale-95 cursor-pointer shadow-lg'"
                             class="px-6 py-3 bg-[#C0422A] text-white text-xs font-bold uppercase tracking-widest rounded-xl transition-all flex items-center gap-1.5">
-                        <span x-show="!aiChecking">Place Order</span>
-                        <span x-show="aiChecking" x-cloak class="flex items-center gap-1.5">
+                        <span x-show="!aiChecking && !isPlacingOrder">Place Order</span>
+                        <span x-show="aiChecking && !isPlacingOrder" x-cloak class="flex items-center gap-1.5">
                             <svg class="w-3.5 h-3.5 animate-spin text-white" fill="none" viewBox="0 0 24 24">
                                 <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
                                 <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                             </svg>
                             <span>Scanning...</span>
+                        </span>
+                        <span x-show="isPlacingOrder" x-cloak class="flex items-center gap-1.5">
+                            <svg class="w-3.5 h-3.5 animate-spin text-white" fill="none" viewBox="0 0 24 24">
+                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                            </svg>
+                            <span>Placing...</span>
                         </span>
                     </button>
                 </div>
@@ -697,9 +722,34 @@
                     Go Back
                 </button>
                 <button type="button" @click="confirmPlaceOrder()"
-                    class="flex-1 py-3.5 rounded-xl bg-[#C0422A] hover:bg-[#A33622] text-white text-[10px] font-bold uppercase tracking-widest cursor-pointer shadow-md shadow-[#C0422A]/20 active:scale-95 transition-all">
-                    Yes, Place Order
+                    :disabled="isPlacingOrder"
+                    :class="isPlacingOrder ? 'opacity-60 cursor-not-allowed bg-[#C0422A]/80' : 'hover:bg-[#A33622] cursor-pointer shadow-md shadow-[#C0422A]/20 active:scale-95'"
+                    class="flex-1 py-3.5 rounded-xl bg-[#C0422A] text-white text-[10px] font-bold uppercase tracking-widest transition-all flex items-center justify-center gap-2">
+                    <span x-show="!isPlacingOrder">Yes, Place Order</span>
+                    <span x-show="isPlacingOrder" x-cloak class="inline-flex items-center gap-2">
+                        <svg class="w-3.5 h-3.5 animate-spin text-white" fill="none" viewBox="0 0 24 24">
+                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                        <span>Placing Order...</span>
+                    </span>
                 </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Fullscreen Loading Overlay during Order Placement -->
+    <div x-show="isPlacingOrder" x-cloak class="fixed inset-0 z-120 bg-black/70 backdrop-blur-xs flex flex-col items-center justify-center p-4 text-center">
+        <div class="bg-white rounded-3xl p-8 max-w-sm w-full shadow-2xl border border-gray-100 flex flex-col items-center gap-4 animate-in fade-in zoom-in-95 duration-200">
+            <div class="w-16 h-16 rounded-2xl bg-[#FDF9F4] border border-[#C0422A]/20 flex items-center justify-center text-[#C0422A]">
+                <svg class="w-8 h-8 animate-spin" fill="none" viewBox="0 0 24 24">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+            </div>
+            <div>
+                <h4 class="font-serif text-lg font-bold text-gray-900">Placing Your Order</h4>
+                <p class="text-xs text-gray-500 mt-1 leading-relaxed">Please wait while we secure your order and verify payment details. Do not refresh or close this page.</p>
             </div>
         </div>
     </div>
@@ -1020,6 +1070,7 @@ function checkoutApp(initialAddress, initialAddresses, defaultPaymentMethod) {
         isRefDuplicate: false,
         refCheckTimer: null,
         aiChecking: false,
+        isPlacingOrder: false,
         aiVerificationResult: null,
 
         init() {
@@ -1145,8 +1196,76 @@ function checkoutApp(initialAddress, initialAddresses, defaultPaymentMethod) {
                 } else {
                     this.filePreview = '';
                 }
-                // Run AI receipt analysis
+                // Run Client-Side OCR & AI receipt analysis in parallel
+                this.runClientOcrExtraction(file);
                 this.runAiReceiptVerification();
+            }
+        },
+
+        runClientOcrExtraction(file) {
+            if (!file || !file.type.startsWith('image/')) return;
+
+            const extractFromText = (rawText) => {
+                if (!rawText) return;
+                const cleanText = rawText.replace(/[\r\n]+/g, ' ');
+                const isGcash = (this.paymentMethod || '').toLowerCase().includes('gcash');
+                let foundRef = null;
+
+                if (isGcash) {
+                    const gcashLabeled = cleanText.match(/(?:ref(?:erence)?\s*(?:no\.?|num(?:ber)?|id)?[:\s]*)(\d[\d\s\-]{11,18}\d)/i);
+                    if (gcashLabeled) {
+                        const digits = gcashLabeled[1].replace(/\D/g, '');
+                        if (digits.length === 13) foundRef = digits;
+                    }
+                    if (!foundRef) {
+                        const exact13 = cleanText.match(/\b(100\d{10}|\d{13})\b/);
+                        if (exact13) foundRef = exact13[1].replace(/\D/g, '');
+                    }
+                    if (!foundRef) {
+                        const looseMatches = cleanText.match(/(\d[\d\s\-]{11,18}\d)/g);
+                        if (looseMatches) {
+                            for (const m of looseMatches) {
+                                const d = m.replace(/\D/g, '');
+                                if (d.length === 13) { foundRef = d; break; }
+                            }
+                        }
+                    }
+                } else {
+                    const mayaLabeled = cleanText.match(/(?:ref(?:erence)?\s*(?:no\.?|num(?:ber)?|id)?[:\s]*)(\d[\d\s\-]{10,16}\d)/i);
+                    if (mayaLabeled) {
+                        const digits = mayaLabeled[1].replace(/\D/g, '');
+                        if (digits.length === 12) foundRef = digits;
+                    }
+                    if (!foundRef) {
+                        const exact12 = cleanText.match(/\b(\d{12})\b/);
+                        if (exact12) foundRef = exact12[1].replace(/\D/g, '');
+                    }
+                }
+
+                if (foundRef && (!this.paymentRef || !this.isRefValid())) {
+                    this.paymentRef = foundRef;
+                    this.ocrExtracted = true;
+                    this.validateRef();
+                    this.checkServerReference();
+                }
+            };
+
+            if (typeof window.Tesseract !== 'undefined') {
+                window.Tesseract.recognize(file, 'eng')
+                    .then(({ data: { text } }) => extractFromText(text))
+                    .catch(() => {});
+            } else {
+                const script = document.createElement('script');
+                script.src = 'https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js';
+                script.async = true;
+                script.onload = () => {
+                    if (typeof window.Tesseract !== 'undefined') {
+                        window.Tesseract.recognize(file, 'eng')
+                            .then(({ data: { text } }) => extractFromText(text))
+                            .catch(() => {});
+                    }
+                };
+                document.head.appendChild(script);
             }
         },
 
@@ -1175,13 +1294,17 @@ function checkoutApp(initialAddress, initialAddresses, defaultPaymentMethod) {
             .then(res => res.json())
             .then(data => {
                 this.aiVerificationResult = data;
-                if (data.detected_ref && !this.paymentRef) {
-                    this.paymentRef = data.detected_ref;
-                    this.ocrExtracted = true;
-                    this.validateRef();
-                    this.checkServerReference();
-                } else if (data.detected_ref && this.paymentRef === data.detected_ref) {
-                    this.ocrExtracted = true;
+                if (data.detected_ref) {
+                    const cleanDetected = data.detected_ref.replace(/\D/g, '');
+                    const isGcash = this.paymentMethod === 'GCash';
+                    const targetLen = isGcash ? 13 : 12;
+
+                    if (cleanDetected.length === targetLen || cleanDetected.length >= 10) {
+                        this.paymentRef = cleanDetected;
+                        this.ocrExtracted = true;
+                        this.validateRef();
+                        this.checkServerReference();
+                    }
                 }
                 if (data.is_receipt === false) {
                     this.screenshotError = data.message || 'Attached file is not a valid receipt.';
@@ -1578,6 +1701,7 @@ function checkoutApp(initialAddress, initialAddresses, defaultPaymentMethod) {
             window.scrollTo({ top: 0, behavior: 'smooth' });
         },
         requestPlaceOrder() {
+            if (this.isPlacingOrder) return;
             if (this.aiChecking) {
                 this.screenshotError = 'Please wait while receipt scanning is in progress.';
                 return;
@@ -1606,6 +1730,7 @@ function checkoutApp(initialAddress, initialAddresses, defaultPaymentMethod) {
             this.showConfirmModal = true;
         },
         confirmPlaceOrder() {
+            if (this.isPlacingOrder) return;
             if (this.aiChecking) {
                 this.showConfirmModal = false;
                 this.screenshotError = 'Please wait while receipt scanning is in progress.';
@@ -1621,6 +1746,7 @@ function checkoutApp(initialAddress, initialAddresses, defaultPaymentMethod) {
                 document.getElementById('paymentScreenshotInput')?.focus();
                 return;
             }
+            this.isPlacingOrder = true;
             this.showConfirmModal = false;
             document.getElementById('checkout-form')?.submit();
         }
