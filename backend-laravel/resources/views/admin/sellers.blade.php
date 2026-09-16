@@ -470,7 +470,7 @@
                 {{-- Applicant Details Grid --}}
                 <div class="bg-[#F9F6F2] rounded-2xl p-5 border border-[#E5DDD5] space-y-4">
                     <div class="text-[10px] font-black uppercase tracking-widest text-[#8C7B70]">Applicant Information</div>
-                    <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 text-xs">
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 text-xs">
                         <div>
                             <span class="text-gray-400 block text-[10px] font-bold uppercase">Full Registry Name</span>
                             <span class="font-bold text-gray-900" x-text="selectedSeller.name"></span>
@@ -478,14 +478,6 @@
                         <div>
                             <span class="text-gray-400 block text-[10px] font-bold uppercase">Secure Email</span>
                             <span class="font-bold text-gray-900 truncate block" x-text="selectedSeller.email"></span>
-                        </div>
-                        <div>
-                            <span class="text-gray-400 block text-[10px] font-bold uppercase">Mobile Number</span>
-                            <span class="font-bold text-gray-900" x-text="selectedSeller.mobileNumber"></span>
-                        </div>
-                        <div>
-                            <span class="text-gray-400 block text-[10px] font-bold uppercase">GCash Account</span>
-                            <span class="font-bold text-gray-900" x-text="selectedSeller.gcashNumber"></span>
                         </div>
                         <div>
                             <span class="text-gray-400 block text-[10px] font-bold uppercase">Workshop / Shop Name</span>
@@ -497,10 +489,6 @@
                         <div>
                             <span class="text-gray-400 block text-[10px] font-bold uppercase">Application Date</span>
                             <span class="font-bold text-gray-900" x-text="selectedSeller.createdAt"></span>
-                        </div>
-                        <div class="sm:col-span-2 md:col-span-3">
-                            <span class="text-gray-400 block text-[10px] font-bold uppercase">Workshop Address</span>
-                            <span class="font-semibold text-gray-800" x-text="selectedSeller.shopAddress"></span>
                         </div>
                     </div>
                 </div>
@@ -514,11 +502,11 @@
 
                     <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                         
-                        {{-- 1. Residency Certificate --}}
+                        {{-- 1. Proof of Lumban Residency --}}
                         <div class="bg-white rounded-2xl border border-gray-200 p-4 flex flex-col justify-between space-y-3 shadow-sm hover:border-[#C0422A] transition-colors">
                             <div>
                                 <div class="flex items-center justify-between mb-2">
-                                    <span class="text-[10px] font-black uppercase tracking-wider text-gray-500">1. Residency Cert</span>
+                                    <span class="text-[10px] font-black uppercase tracking-wider text-gray-500">1. Proof of Lumban Residency</span>
                                     <template x-if="selectedSeller.residencyCertificate">
                                         <span class="text-[9px] font-bold text-green-700 bg-green-50 px-2 py-0.5 rounded-full border border-green-200">Attached</span>
                                     </template>
@@ -528,7 +516,7 @@
                                 </div>
                                 <div class="h-36 rounded-xl bg-gray-50 border border-gray-100 flex items-center justify-center overflow-hidden relative group">
                                     <template x-if="selectedSeller.residencyCertificate">
-                                        <img :src="selectedSeller.residencyCertificate" class="w-full h-full object-cover group-hover:scale-105 transition-transform cursor-pointer" @click="openPreview(selectedSeller.residencyCertificate, 'Residency Certificate')">
+                                        <img :src="selectedSeller.residencyCertificate" class="w-full h-full object-cover group-hover:scale-105 transition-transform cursor-pointer" @click="openPreview(selectedSeller.residencyCertificate, 'Proof of Lumban Residency')">
                                     </template>
                                     <template x-if="!selectedSeller.residencyCertificate">
                                         <div class="text-center p-3 text-gray-400">
@@ -540,7 +528,7 @@
                             </div>
                             <template x-if="selectedSeller.residencyCertificate">
                                 <div class="flex gap-2">
-                                    <button type="button" @click="openPreview(selectedSeller.residencyCertificate, 'Residency Certificate')" class="flex-1 py-1.5 bg-gray-100 hover:bg-gray-200 text-gray-800 rounded-lg text-[10px] font-bold transition-all cursor-pointer text-center">
+                                    <button type="button" @click="openPreview(selectedSeller.residencyCertificate, 'Proof of Lumban Residency')" class="flex-1 py-1.5 bg-gray-100 hover:bg-gray-200 text-gray-800 rounded-lg text-[10px] font-bold transition-all cursor-pointer text-center">
                                         Preview
                                     </button>
                                     <a :href="selectedSeller.residencyCertificate" target="_blank" download class="px-3 py-1.5 bg-[#3D2B1F] text-white hover:bg-[#C0422A] rounded-lg text-[10px] font-bold transition-all text-center">
