@@ -33,33 +33,66 @@ class ProcessScheduledAccountDeletions extends Command
     /**
      * Execute the console command.
      */
+    /**
+     * Safely output line message if CLI output is available.
+     */
+    protected function writeLine(string $message): void
+    {
+        if ($this->output) {
+            $this->line($message);
+        }
+    }
+
+    /**
+     * Safely output info message if CLI output is available.
+     */
+    protected function writeInfo(string $message): void
+    {
+        if ($this->output) {
+            $this->info($message);
+        }
+    }
+
+    /**
+     * Safely output error message if CLI output is available.
+     */
+    protected function writeError(string $message): void
+    {
+        if ($this->output) {
+            $this->error($message);
+        }
+    }
+
+    /**
+     * Execute the console command.
+     */
     public function handle()
     {
         $now = now();
-        $this->info("Checking for expired pending deletion accounts at {$now}...");
+        $this->writeInfo("Checking for expired pending deletion accounts at {$now}...");
 
         // Query all accounts in pending_deletion status whose 7-day recovery period has expired
         $expiredUsers = User::withTrashed()
-            ->where(function ($query) use ($now) {
+            ->where(function ($query) {
                 $query->where('status', 'pending_deletion')
                     ->orWhereNotNull('deletion_scheduled_at');
             })
             ->whereNotNull('permanent_deletion_at')
-            ->where('permanent_deletion_at', '<=', $now)
+            ->where('permanent_deletion_at', '<=', now())
             ->get();
 
         if ($expiredUsers->isEmpty()) {
-            $this->info('No expired accounts to process.');
+            $this->writeInfo('No expired accounts to process.');
             return 0;
         }
 
-        $this->info("Found {$expiredUsers->count()} account(s) ready for permanent deletion.");
+        $this->writeInfo("Found {$expiredUsers->count()} account(s) ready for permanent deletion.");
 
         foreach ($expiredUsers as $user) {
             $this->permanentlyDeleteAccount($user);
         }
 
-        $this->info('Permanent deletion process completed.');
+        $this->writeInfo('Permanent deletion process completed.');
         return 0;
     }
 
@@ -73,7 +106,7 @@ class ProcessScheduledAccountDeletions extends Command
         $userName = $user->name;
         $role = $user->role;
 
-        $this->line("Permanently deleting {$role} account: {$userName} ({$userEmail}) [ID: {$userId}]...");
+        $this->writeLine("Permanently deleting {$role} account: {$userName} ({$userEmail}) [ID: {$userId}]...");
 
         try {
             DB::beginTransaction();
@@ -125,7 +158,7 @@ class ProcessScheduledAccountDeletions extends Command
             }
 
             // 3. Clean up active sessions & tokens
-            if (method_exists($user, 'tokens')) {
+            if (Schema::hasTable('personal_access_tokens') && method_exists($user, 'tokens')) {
                 $user->tokens()->delete();
             }
             if (Schema::hasTable('sessions')) {
@@ -139,11 +172,11 @@ class ProcessScheduledAccountDeletions extends Command
             DB::commit();
 
             Log::info("Account permanently deleted: {$userEmail} (ID: {$userId}, Role: {$role}).");
-            $this->info("✓ Successfully permanently deleted {$userEmail}.");
+            $this->writeInfo("✓ Successfully permanently deleted {$userEmail}.");
         } catch (\Throwable $e) {
             DB::rollBack();
             Log::error("Failed to permanently delete account {$userId}: " . $e->getMessage());
-            $this->error("✗ Failed to delete {$userEmail}: " . $e->getMessage());
+            $this->writeError("✗ Failed to delete {$userEmail}: " . $e->getMessage());
         }
     }
 }

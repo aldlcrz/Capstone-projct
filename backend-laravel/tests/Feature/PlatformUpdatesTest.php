@@ -31,15 +31,25 @@ class PlatformUpdatesTest extends TestCase
 
         $this->actingAs($user);
 
-        // Soft delete account
+        // Soft delete account with DELETE confirmation
         $response = $this->post('/profile/delete-account', [
-            'password' => 'Password123!',
-            'confirm_deletion' => '1',
+            'confirm' => 'DELETE',
         ]);
 
-        $response->assertRedirect('/');
-        $this->assertSoftDeleted('users', ['id' => $user->id]);
+        $response->assertRedirect(route('login'));
         $this->assertGuest();
+        
+        $user->refresh();
+        $this->assertEquals('pending_deletion', $user->status);
+        $this->assertNotNull($user->deletion_scheduled_at);
+        $this->assertNotNull($user->permanent_deletion_at);
+
+        // Fast forward expiration to test permanent deletion
+        $user->permanent_deletion_at = now()->subMinute();
+        $user->save();
+
+        \Illuminate\Support\Facades\Artisan::call('accounts:process-deletions');
+        $this->assertNull(User::withTrashed()->find($user->id));
 
         // Register new account with the exact same Gmail
         $regResponse = $this->post('/register', [
@@ -62,14 +72,12 @@ class PlatformUpdatesTest extends TestCase
 
         $verifyResponse->assertRedirect();
         
-        // Assert new active user exists in DB alongside the soft-deleted one
+        // Assert new active user exists in DB
         $this->assertDatabaseHas('users', [
             'name' => 'Juan New Account',
             'email' => 'juandelacruz@gmail.com',
             'deleted_at' => null,
         ]);
-
-        $this->assertEquals(2, User::withTrashed()->where('email', 'juandelacruz@gmail.com')->count());
     }
 
     /** @test */

@@ -2028,31 +2028,19 @@ class WebAuthController extends Controller
 
             // 2. Products & Variants
             $products = \App\Models\Product::where('sellerId', $user->id)
-                ->with(['variants', 'category'])
                 ->get()
                 ->map(function ($prod) {
                     return [
                         'id'          => $prod->id,
                         'name'        => $prod->name,
-                        'category'    => $prod->category?->name ?? 'Barong Tagalog',
                         'price'       => $prod->price,
                         'stock'       => $prod->stock,
                         'status'      => $prod->status,
                         'description' => $prod->description,
-                        'fabric'      => $prod->fabric,
-                        'embroidery'  => $prod->embroidery,
-                        'collar_type' => $prod->collarType,
-                        'variants'    => $prod->variants->map(function ($v) {
-                            return [
-                                'id'           => $v->id,
-                                'variant_name' => $v->variant_name,
-                                'sku'          => $v->sku,
-                                'size'         => $v->size,
-                                'color'        => $v->color,
-                                'price'        => $v->price,
-                                'stock'        => $v->stock,
-                            ];
-                        }),
+                        'sku'         => $prod->sku,
+                        'fabric_type' => $prod->fabric_type,
+                        'collar_type' => $prod->collar_type,
+                        'variations'  => $prod->variations ?? [],
                         'created_at'  => $prod->createdAt?->toIso8601String(),
                     ];
                 });
@@ -2215,7 +2203,7 @@ class WebAuthController extends Controller
         }
 
         // Validate explicit confirmation input
-        $confirm = strtoupper(trim((string) $request->input('confirm', $request->input('confirmation', ''))));
+        $confirm = trim((string) $request->input('confirm', $request->input('confirmation', '')));
         if ($confirm !== 'DELETE') {
             return back()->withErrors(['confirm' => 'Please type DELETE exactly to confirm account deletion.']);
         }
@@ -2247,7 +2235,7 @@ class WebAuthController extends Controller
 
         // 2. Clean up active sessions & tokens
         try {
-            if (method_exists($user, 'tokens')) {
+            if (Schema::hasTable('personal_access_tokens') && method_exists($user, 'tokens')) {
                 $user->tokens()->delete();
             }
             if (Schema::hasTable('sessions')) {
