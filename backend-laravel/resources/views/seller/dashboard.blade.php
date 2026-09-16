@@ -55,11 +55,7 @@
                 </svg>
             </div>
 
-            @if(($filters['preset'] ?? 'all_time') !== 'all_time')
-                <a href="{{ route('seller.dashboard') }}" class="text-[10px] font-bold uppercase tracking-widest px-2 py-1.5 rounded-lg transition-colors" style="color: #766C60;" onmouseover="this.style.color='#C49520';" onmouseout="this.style.color='#766C60';">
-                    Reset ✕
-                </a>
-            @endif
+
 
             {{-- Export Button (Espresso theme) --}}
             <a href="{{ route('seller.export', request()->all()) }}" class="flex items-center gap-2 px-4 py-2 text-white rounded-xl text-xs font-bold shrink-0 transition-all shadow-xs" style="background: #1E1915;" onmouseover="this.style.background='#C49520';" onmouseout="this.style.background='#1E1915';">

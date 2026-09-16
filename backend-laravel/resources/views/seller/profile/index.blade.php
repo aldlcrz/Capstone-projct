@@ -341,41 +341,42 @@
             </div>
 
             {{-- MOBILE PROFILE USER CARD (Visible on screens < lg) --}}
-            <div class="lg:hidden" style="position:relative;padding-top:10px;margin-bottom:20px;">
-                {{-- Floating Gold-Ringed Avatar (Strict fixed square to prevent distortion) --}}
-                <div style="width:96px;height:96px;min-width:96px;max-width:96px;min-height:96px;max-height:96px;border-radius:50%;padding:2.5px;background:linear-gradient(135deg,#996515,#E6CA65,#996515);box-shadow:0 4px 14px rgba(0,0,0,0.12);margin:0 auto -48px auto;position:relative;z-index:10;display:block;flex-shrink:0;">
-                    <div style="width:100%;height:100%;border-radius:50%;overflow:hidden;background-color:#FAF8F5;display:flex;align-items:center;justify-content:center;position:relative;">
+            <div class="lg:hidden relative pt-4 mb-6">
+                {{-- Floating Gold-Ringed Avatar --}}
+                <div class="w-20 h-20 min-w-20 rounded-full p-[2.5px] bg-linear-to-br from-[#996515] via-[#E6CA65] to-[#996515] shadow-md mx-auto -mb-10 relative z-10 block shrink-0">
+                    <div class="w-full h-full rounded-full overflow-hidden bg-[#FAF8F5] flex items-center justify-center">
                         @if($user->profile_photo_url)
-                            <img src="{{ $user->profile_photo_url }}" 
-                                 style="width:100%;height:100%;border-radius:50%;object-fit:cover;display:block;"
-                                 alt="{{ $user->name }}">
+                            <img src="{{ $user->profile_photo_url }}" class="w-full h-full rounded-full object-cover" alt="{{ $user->name }}">
                         @else
-                            <span style="font-size:32px;font-weight:800;color:#996515;">{{ strtoupper(substr($user->name, 0, 1)) }}</span>
+                            <span class="text-2xl font-black text-[#996515]">{{ strtoupper(substr($user->name, 0, 1)) }}</span>
                         @endif
                     </div>
                 </div>
 
                 {{-- User Info Card --}}
-                <div class="bg-white border border-[#ECE3D2] rounded-2xl pt-14 pb-4 px-4 sm:px-5 shadow-2xs flex items-center justify-between gap-3 relative">
-                    <div class="text-left min-w-0 flex-1">
-                        <h2 class="font-serif text-lg sm:text-xl font-bold text-[#1E1915] tracking-tight leading-tight m-0 truncate">
-                            {{ $user->name }}
-                        </h2>
-                        <p class="text-xs sm:text-[13px] text-[#78716C] mt-1 mb-0 truncate">
-                            <span class="break-all">{{ $user->email }}</span> &bull; <span class="text-[#A16D19] font-semibold">Artisan Shop</span>
-                        </p>
-                    </div>
-
-                    {{-- Edit Button --}}
+                <div class="bg-white border border-[#ECE3D2] rounded-2xl pt-13 pb-4 px-4 shadow-xs text-center relative">
+                    {{-- Edit Button (Top Right corner) --}}
                     <button type="button"
                             @click="showEditModal = true"
-                            class="w-10 h-10 rounded-xl bg-[#FAF6EE] border border-[#E2D9C8] flex items-center justify-center text-[#78716C] hover:border-[#C49520] hover:text-[#1E1915] cursor-pointer shrink-0 shadow-2xs transition-all active:scale-95"
+                            class="absolute top-3 right-3 w-8 h-8 rounded-xl bg-[#FAF6EE] border border-[#E2D9C8] flex items-center justify-center text-[#78716C] hover:border-[#C49520] hover:text-[#1E1915] cursor-pointer shadow-2xs transition-all active:scale-95"
                             title="Edit Profile">
-                        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/>
                             <path stroke-linecap="round" stroke-linejoin="round" d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/>
                         </svg>
                     </button>
+
+                    <h2 class="font-serif text-xl font-bold text-[#1E1915] tracking-tight m-0">
+                        {{ $user->name }}
+                    </h2>
+                    <div class="inline-flex items-center gap-1 px-2.5 py-0.5 mt-1.5 rounded-full bg-[#FAF5EA] border border-[#E6D8BA] text-[#996515] text-[10px] font-extrabold uppercase tracking-wider">
+                        <svg class="w-3 h-3 text-[#C49520]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+                        <span>Verified Artisan Shop</span>
+                    </div>
+                    <p class="text-xs text-[#78716C] mt-2 mb-0 break-all">
+                        {{ $user->email }}
+                        @if($user->phone_number) &bull; {{ $user->phone_number }} @endif
+                    </p>
                 </div>
             </div>
 
