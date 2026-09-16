@@ -728,6 +728,14 @@
                         onmouseout="this.style.background='transparent';">
                         Discard / Delete Draft
                     </button>
+
+                    <a href="{{ route('seller.products.index') }}"
+                        class="w-full py-2.5 rounded-xl font-bold text-[10px] uppercase tracking-widest text-center transition-all cursor-pointer block no-underline"
+                        style="border: 1px solid #E8DECB; color: #6B5D4D; background: transparent;"
+                        onmouseover="this.style.background='#FDF8EE'; this.style.color='#1E1915';"
+                        onmouseout="this.style.background='transparent'; this.style.color='#6B5D4D';">
+                        Cancel
+                    </a>
                 @else
                     {{-- For active/pending: Save Changes --}}
                     <button type="submit"
@@ -747,6 +755,14 @@
                         onmouseout="this.style.background='transparent';">
                         Archive / Delete Listing
                     </button>
+
+                    <a href="{{ route('seller.products.index') }}"
+                        class="w-full py-2.5 rounded-xl font-bold text-[10px] uppercase tracking-widest text-center transition-all cursor-pointer block no-underline"
+                        style="border: 1px solid #E8DECB; color: #6B5D4D; background: transparent;"
+                        onmouseover="this.style.background='#FDF8EE'; this.style.color='#1E1915';"
+                        onmouseout="this.style.background='transparent'; this.style.color='#6B5D4D';">
+                        Cancel
+                    </a>
                 @endif
             </div>
         </div>
@@ -760,6 +776,11 @@
                 </div>
             </div>
             <div class="flex items-center gap-2 shrink-0">
+                <a href="{{ route('seller.products.index') }}"
+                    class="px-3 py-2 rounded-xl text-[11px] font-bold uppercase tracking-wider transition-all cursor-pointer no-underline"
+                    style="border: 1px solid #E8DECB; color: #6B5D4D; background: #FDF8EE;">
+                    Cancel
+                </a>
                 <button type="button"
                     @click="deleteModal = true; deleteProductId = '{{ $product->id }}'; deleteProductName = '{{ addslashes($product->name) }}'"
                     class="p-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer"
@@ -773,6 +794,7 @@
                     <button type="button" @click="submitAsDraft()" class="px-3 py-2 rounded-xl text-[11px] font-extrabold uppercase tracking-wider transition-all cursor-pointer" style="background: #FDF8EE; border: 1px solid #C49520; color: #7A5505;">
                         Save Draft
                     </button>
+
                     <button type="submit" onclick="document.getElementById('formActionInput').value = 'publish'" class="px-4 py-2 text-white rounded-xl text-[11px] font-black uppercase tracking-widest shadow-md transition-all cursor-pointer" style="background: #1E1915;" onmouseover="this.style.background='#C49520';" onmouseout="this.style.background='#1E1915';">
                         Publish
                     </button>

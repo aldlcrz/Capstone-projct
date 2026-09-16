@@ -37,6 +37,7 @@
              showLegalModal: false,
              showDocPreview: false,
              showDeleteAccountModal: false,
+             showDownloadInfoModal: false,
              deleteAccountConfirmation: '',
              previewDocUrl: '',
              previewDocTitle: '',
@@ -482,8 +483,9 @@
                     </a>
 
                     {{-- Download Your Information --}}
-                    <a href="{{ route('profile.download-information') }}"
-                       style="background-color:#FFFFFF;border:1px solid #ECE3D2;border-radius:16px;padding:14px 16px;display:flex;align-items:center;justify-content:space-between;box-shadow:0 2px 6px rgba(0,0,0,0.02);cursor:pointer;width:100%;text-align:left;transition:all 0.2s;text-decoration:none;"
+                    <button type="button"
+                       @click="showDownloadInfoModal = true"
+                       style="background-color:#FFFFFF;border:1px solid #ECE3D2;border-radius:16px;padding:14px 16px;display:flex;align-items:center;justify-content:space-between;box-shadow:0 2px 6px rgba(0,0,0,0.02);cursor:pointer;width:100%;text-align:left;transition:all 0.2s;"
                        class="hover:border-[#C49520] hover:bg-[#FDFBF7] group">
                         <div style="display:flex;align-items:center;gap:12px;">
                             <div style="width:38px;height:38px;border-radius:11px;background-color:#FAF5EA;border:1px solid #E6D8BA;display:flex;align-items:center;justify-content:center;color:#B88728;flex-shrink:0;" class="group-hover:scale-105 transition-transform">
@@ -499,7 +501,8 @@
                         <svg width="16" height="16" fill="none" stroke="#8C827A" viewBox="0 0 24 24" stroke-width="2.2" class="group-hover:translate-x-0.5 transition-transform">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/>
                         </svg>
-                    </a>
+                    </button>
+
 
                     {{-- Delete Account Action (7-Day Soft Delete Lifecycle) --}}
                     <div class="pt-2 border-t border-[#EAE1D0]">
@@ -824,8 +827,9 @@
                     </a>
 
                     {{-- 5. Download Your Information --}}
-                    <a href="{{ route('profile.download-information') }}"
-                       style="background-color:#FFFFFF;border:1px solid #ECE3D2;border-radius:16px;padding:14px 16px;display:flex;align-items:center;justify-content:space-between;box-shadow:0 2px 6px rgba(0,0,0,0.02);cursor:pointer;width:100%;text-align:left;transition:all 0.2s;text-decoration:none;"
+                    <button type="button"
+                       @click="showAccountSettingsModal = false; showDownloadInfoModal = true"
+                       style="background-color:#FFFFFF;border:1px solid #ECE3D2;border-radius:16px;padding:14px 16px;display:flex;align-items:center;justify-content:space-between;box-shadow:0 2px 6px rgba(0,0,0,0.02);cursor:pointer;width:100%;text-align:left;transition:all 0.2s;"
                        class="hover:border-[#C49520] hover:bg-[#FDFBF7] group">
                         <div style="display:flex;align-items:center;gap:12px;">
                             <div style="width:38px;height:38px;border-radius:11px;background-color:#FAF5EA;border:1px solid #E6D8BA;display:flex;align-items:center;justify-content:center;color:#B88728;flex-shrink:0;" class="group-hover:scale-105 transition-transform">
@@ -841,7 +845,7 @@
                         <svg width="16" height="16" fill="none" stroke="#8C827A" viewBox="0 0 24 24" stroke-width="2.2" class="group-hover:translate-x-0.5 transition-transform">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/>
                         </svg>
-                    </a>
+                    </button>
 
                     {{-- 6. Delete Account (Soft Delete with 7-day Recovery) --}}
                     <div class="pt-2 border-t border-[#EAE1D0]">
@@ -866,6 +870,73 @@
                         </button>
                     </div>
                 </div>
+
+        {{-- Download Information Confirmation Modal --}}
+        <div x-show="showDownloadInfoModal"
+             x-cloak
+             style="display:none;"
+             class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs"
+             x-transition:enter="transition ease-out duration-200"
+             x-transition:enter-start="opacity-0 scale-95"
+             x-transition:enter-end="opacity-100 scale-100"
+             x-transition:leave="transition ease-in duration-150"
+             x-transition:leave-start="opacity-100 scale-100"
+             x-transition:leave-end="opacity-0 scale-95"
+             @keydown.escape.window="showDownloadInfoModal = false">
+
+            <div class="relative w-full max-w-md bg-white rounded-3xl p-6 sm:p-7 shadow-2xl border border-gray-100 space-y-5"
+                 @click.away="showDownloadInfoModal = false">
+
+                <div class="flex items-center justify-between pb-3 border-b border-gray-100">
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 rounded-2xl bg-amber-50 text-[#C49520] border border-amber-200 flex items-center justify-center">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
+                            </svg>
+                        </div>
+                        <div>
+                            <h3 class="text-base font-extrabold text-gray-900">Download Your Information</h3>
+                            <p class="text-[10px] text-gray-400 font-medium">Export Complete Account Data Archive</p>
+                        </div>
+                    </div>
+                    <button type="button" @click="showDownloadInfoModal = false" class="text-gray-400 hover:text-black transition-colors p-1 cursor-pointer">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                    </button>
+                </div>
+
+                <div class="bg-[#FAF7F0] border border-[#EAE1D0] rounded-2xl p-4 text-left space-y-2.5">
+                    <p class="text-xs text-[#1E1915] font-bold leading-relaxed">
+                        You are about to export a secure ZIP archive of your account data:
+                    </p>
+                    <ul class="text-[11.5px] text-[#78716C] space-y-1.5 list-disc pl-4 font-normal">
+                        <li><strong>Profile &amp; Shop Details</strong>: Contact info, shop profile, and address records.</li>
+                        <li><strong>Product Listings</strong>: All active, pending, and draft craft pieces.</li>
+                        <li><strong>Orders &amp; Commissions</strong>: Complete order logs, customer details, and payout histories.</li>
+                    </ul>
+                </div>
+
+                <div class="text-[11px] text-gray-500 bg-gray-50 rounded-xl p-3 border border-gray-100 flex items-start gap-2">
+                    <span class="text-amber-600 text-xs">ℹ️</span>
+                    <span>Your download will begin immediately once confirmed. The file will be delivered as a secure <code>.zip</code> file.</span>
+                </div>
+
+                <div class="flex items-center gap-3 pt-2">
+                    <button type="button"
+                            @click="showDownloadInfoModal = false"
+                            class="flex-1 py-2.5 px-4 rounded-xl border border-gray-200 text-gray-700 text-xs font-bold uppercase tracking-wider hover:bg-gray-50 transition-all cursor-pointer">
+                        Cancel
+                    </button>
+                    <a href="{{ route('profile.download-information') }}"
+                       @click="showDownloadInfoModal = false"
+                       class="flex-1 py-2.5 px-4 rounded-xl bg-[#1E1915] hover:bg-[#C49520] text-white text-xs font-bold uppercase tracking-wider text-center transition-all cursor-pointer shadow-md no-underline flex items-center justify-center gap-1.5">
+                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
+                        </svg>
+                        <span>Confirm &amp; Download</span>
+                    </a>
+                </div>
+            </div>
+        </div>
 
         {{-- Seller Delete Account Confirmation Modal --}}
         <div x-show="showDeleteAccountModal"
@@ -915,15 +986,16 @@
                         <div class="text-[11.5px] font-bold text-[#1E1915]">Download Your Information</div>
                         <div class="text-[10.5px] text-[#78716C]">Save your products, orders &amp; commissions (ZIP)</div>
                     </div>
-                    <a href="{{ route('profile.download-information') }}"
-                       target="_blank"
-                       class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white border border-[#D5C7B0] text-[#1E1915] text-[11px] font-extrabold uppercase tracking-wider hover:bg-[#1E1915] hover:text-[#DFC97A] hover:border-[#1E1915] transition-all shrink-0 no-underline shadow-2xs">
+                    <button type="button"
+                       @click="showDownloadInfoModal = true"
+                       class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white border border-[#D5C7B0] text-[#1E1915] text-[11px] font-extrabold uppercase tracking-wider hover:bg-[#1E1915] hover:text-[#DFC97A] hover:border-[#1E1915] transition-all shrink-0 cursor-pointer shadow-2xs">
                         <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
                         </svg>
                         <span>Download</span>
-                    </a>
+                    </button>
                 </div>
+
 
                 <form action="{{ route('seller.delete-account') }}" method="POST" class="space-y-4">
                     @csrf
