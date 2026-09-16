@@ -226,14 +226,14 @@
          }">
 
         {{-- Main Container: Compact card on mobile, wide 3-column dashboard on large screens --}}
-        <div class="w-full max-w-165 lg:max-w-5xl mx-auto transition-all duration-300"
-             style="background-color:#FDFBF7;border:1px solid #EAE2D2;border-radius:28px;box-shadow:0 20px 50px rgba(0,0,0,0.06);padding:28px 24px;color:#1E1915;">
+        <div class="w-full max-w-165 lg:max-w-5xl mx-auto transition-all duration-300 px-4 py-5 sm:px-6 sm:py-7"
+             style="background-color:#FDFBF7;border:1px solid #EAE2D2;border-radius:28px;box-shadow:0 20px 50px rgba(0,0,0,0.06);color:#1E1915;">
 
             {{-- Top Header with Heraldic Laurel Wreath & Home Link --}}
-            <div id="tour-profile-header" class="flex items-center justify-between gap-4">
-                <div class="flex items-center gap-3.5 min-w-0">
-                    <div style="width:48px;height:48px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
-                        <svg width="46" height="46" viewBox="0 0 48 48" fill="none">
+            <div id="tour-profile-header" class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4">
+                <div class="flex items-center gap-3 min-w-0">
+                    <div style="width:44px;height:44px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+                        <svg width="42" height="42" viewBox="0 0 48 48" fill="none">
                             <!-- Central Medallion -->
                             <circle cx="24" cy="23" r="10.5" stroke="#C49520" stroke-width="1" stroke-dasharray="2 1.5"/>
                             <circle cx="24" cy="23" r="8.5" stroke="#C49520" stroke-width="0.8"/>
@@ -248,29 +248,31 @@
                             <path d="M19 36c3 1.2 7 1.2 10 0" stroke="#C49520" stroke-width="1.3" stroke-linecap="round"/>
                         </svg>
                     </div>
-                    <div>
-                        <h1 style="font-family:ui-serif,Georgia,Cambria,serif;font-size:23px;font-weight:700;color:#1E1915;letter-spacing:-0.01em;line-height:1.2;margin:0;">
+                    <div class="min-w-0">
+                        <h1 class="text-xl sm:text-2xl font-bold font-serif text-[#1E1915] tracking-tight leading-tight m-0">
                             My Profile &amp; Account
                         </h1>
-                        <p style="font-size:13px;color:#78716C;margin-top:3px;margin-bottom:0;">
+                        <p class="text-xs sm:text-[13px] text-[#78716C] mt-0.5 mb-0">
                             Personal information &amp; artisan shop settings
                         </p>
                     </div>
                 </div>
 
                 {{-- Guide Button --}}
-                <button type="button" 
-                        onclick="window.startSpotlightTour('seller-profile-guide')"
-                        class="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-full text-xs font-black uppercase tracking-wider transition-all shadow-xs cursor-pointer group shrink-0"
-                        style="background-color: #FDF8EE; color: #C49520; border: 1.5px solid #C49520;"
-                        onmouseover="this.style.backgroundColor='#C49520'; this.style.color='#FFFFFF';"
-                        onmouseout="this.style.backgroundColor='#FDF8EE'; this.style.color='#C49520';"
-                        title="Start Interactive Profile Guide">
-                    <svg class="w-4 h-4 transition-transform group-hover:rotate-12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                    </svg>
-                    <span>Profile Guide</span>
-                </button>
+                <div class="flex items-center justify-end sm:justify-start">
+                    <button type="button" 
+                            onclick="window.startSpotlightTour('seller-profile-guide')"
+                            class="inline-flex items-center gap-1.5 px-3.5 py-1.5 sm:py-2 rounded-full text-xs font-black uppercase tracking-wider transition-all shadow-xs cursor-pointer group shrink-0"
+                            style="background-color: #FDF8EE; color: #C49520; border: 1.5px solid #C49520;"
+                            onmouseover="this.style.backgroundColor='#C49520'; this.style.color='#FFFFFF';"
+                            onmouseout="this.style.backgroundColor='#FDF8EE'; this.style.color='#C49520';"
+                            title="Start Interactive Profile Guide">
+                        <svg class="w-3.5 h-3.5 transition-transform group-hover:rotate-12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                        </svg>
+                        <span>Profile Guide</span>
+                    </button>
+                </div>
             </div>
 
             {{-- Star Divider --}}
@@ -354,24 +356,22 @@
                 </div>
 
                 {{-- User Info Card --}}
-                <div style="background-color:#FFFFFF;border:1px solid #ECE3D2;border-radius:20px;padding:58px 22px 20px 22px;box-shadow:0 2px 8px rgba(0,0,0,0.03);display:flex;align-items:center;justify-content:space-between;position:relative;">
-                    <div style="text-align:left;min-width:0;padding-right:12px;">
-                        <h2 style="font-family:ui-serif,Georgia,serif;font-size:20px;font-weight:700;color:#1E1915;letter-spacing:-0.01em;line-height:1.2;margin:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">
+                <div class="bg-white border border-[#ECE3D2] rounded-2xl pt-14 pb-4 px-4 sm:px-5 shadow-2xs flex items-center justify-between gap-3 relative">
+                    <div class="text-left min-w-0 flex-1">
+                        <h2 class="font-serif text-lg sm:text-xl font-bold text-[#1E1915] tracking-tight leading-tight m-0 truncate">
                             {{ $user->name }}
                         </h2>
-                        <p style="font-size:13px;color:#78716C;margin:3px 0 0 0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">
-                            {{ $user->email }} &bull; <span style="color:#A16D19;font-weight:600;">Artisan Shop</span>
+                        <p class="text-xs sm:text-[13px] text-[#78716C] mt-1 mb-0 truncate">
+                            <span class="break-all">{{ $user->email }}</span> &bull; <span class="text-[#A16D19] font-semibold">Artisan Shop</span>
                         </p>
                     </div>
 
                     {{-- Edit Button --}}
                     <button type="button"
                             @click="showEditModal = true"
-                            style="width:42px;height:42px;border-radius:12px;background-color:#FAF6EE;border:1px solid #E2D9C8;display:flex;align-items:center;justify-content:center;color:#78716C;cursor:pointer;flex-shrink:0;box-shadow:0 1px 3px rgba(0,0,0,0.05);transition:all 0.2s;"
-                            onmouseover="this.style.borderColor='#C49520'; this.style.color='#1E1915';"
-                            onmouseout="this.style.borderColor='#E2D9C8'; this.style.color='#78716C';"
+                            class="w-10 h-10 rounded-xl bg-[#FAF6EE] border border-[#E2D9C8] flex items-center justify-center text-[#78716C] hover:border-[#C49520] hover:text-[#1E1915] cursor-pointer shrink-0 shadow-2xs transition-all active:scale-95"
                             title="Edit Profile">
-                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/>
                             <path stroke-linecap="round" stroke-linejoin="round" d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/>
                         </svg>
