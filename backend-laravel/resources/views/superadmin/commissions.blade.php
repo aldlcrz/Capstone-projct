@@ -241,10 +241,11 @@
                                             <div class="font-mono text-gray-900 font-bold">Ref: {{ $s['referenceNumber'] }}</div>
                                         @endif
                                         @if($s['paymentProof'])
-                                            <a href="{{ asset('storage/' . $s['paymentProof']) }}" target="_blank" 
-                                               class="inline-flex items-center gap-1 text-[10px] text-[#C0422A] hover:underline font-bold">
+                                            <button type="button"
+                                                    @click="openProofModal('{{ asset('storage/' . ltrim($s['paymentProof'], '/')) }}', '{{ $shopName }} · Proof of Payment', '{{ $s['referenceNumber'] ?? '' }}')"
+                                                    class="inline-flex items-center gap-1 text-[10px] text-[#C0422A] hover:underline font-bold cursor-pointer">
                                                 🔍 View Proof
-                                            </a>
+                                            </button>
                                         @endif
                                     @else
                                         <div class="text-gray-400">Due by 7th of next month</div>
@@ -404,12 +405,12 @@
                         <template x-if="markPaidProof">
                             <div>
                                 <span class="text-[10px] text-gray-500 font-bold uppercase tracking-widest block mb-1">Screenshot Proof Image</span>
-                                <a x-bind:href="'/storage/' + markPaidProof" target="_blank" class="block group relative overflow-hidden rounded-xl border border-blue-200 bg-white">
+                                <button type="button" @click="openProofModal('/storage/' + markPaidProof, markPaidShopName + ' · Payment Receipt', markPaidRef)" class="block w-full group relative overflow-hidden rounded-xl border border-blue-200 bg-white cursor-pointer text-left">
                                     <img x-bind:src="'/storage/' + markPaidProof" class="w-full max-h-48 object-contain p-2 group-hover:scale-105 transition-all">
                                     <div class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center text-white text-xs font-bold transition-all">
-                                        🔍 Click to Expand Proof
+                                        🔍 Click to Expand Proof Modal
                                     </div>
-                                </a>
+                                </button>
                             </div>
                         </template>
                     </div>
@@ -504,12 +505,12 @@
                         <template x-if="unfreezeProof">
                             <div>
                                 <span class="text-[10px] text-gray-500 font-bold uppercase tracking-widest block mb-1">Screenshot Proof Image</span>
-                                <a x-bind:href="'/storage/' + unfreezeProof" target="_blank" class="block group relative overflow-hidden rounded-xl border border-blue-200 bg-white">
+                                <button type="button" @click="openProofModal('/storage/' + unfreezeProof, unfreezeShopName + ' · Proof Receipt', unfreezeRef)" class="block w-full group relative overflow-hidden rounded-xl border border-blue-200 bg-white cursor-pointer text-left">
                                     <img x-bind:src="'/storage/' + unfreezeProof" class="w-full max-h-48 object-contain p-2 group-hover:scale-105 transition-all">
                                     <div class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center text-white text-xs font-bold transition-all">
-                                        🔍 Click to Expand Proof
+                                        🔍 Click to Expand Proof Modal
                                     </div>
-                                </a>
+                                </button>
                             </div>
                         </template>
                     </div>
@@ -687,11 +688,12 @@
                         <template x-if="selectedSeller?.paymentProof">
                             <div>
                                 <span class="text-[10px] text-gray-500 font-bold uppercase tracking-widest block mb-1">Attached Receipt Proof</span>
-                                <a :href="'/storage/' + selectedSeller?.paymentProof" target="_blank"
-                                   class="inline-block group relative overflow-hidden rounded-xl border border-blue-200 bg-white p-1 max-w-xs shadow-xs">
+                                <button type="button"
+                                        @click="openProofModal(selectedSeller?.paymentProof, (selectedSeller?.seller?.shopName || selectedSeller?.seller?.name) + ' · Remittance Proof', selectedSeller?.referenceNumber)"
+                                        class="inline-block group relative overflow-hidden rounded-xl border border-blue-200 bg-white p-1 max-w-xs shadow-xs cursor-pointer text-left">
                                     <img :src="'/storage/' + selectedSeller?.paymentProof" class="w-full max-h-32 object-contain rounded-lg group-hover:scale-105 transition-transform" alt="Proof Receipt">
-                                    <div class="text-[10px] text-blue-600 font-bold text-center mt-1 group-hover:underline">🔍 Click to inspect full receipt</div>
-                                </a>
+                                    <div class="text-[10px] text-blue-600 font-bold text-center mt-1 group-hover:underline">🔍 Click to inspect receipt modal</div>
+                                </button>
                             </div>
                         </template>
                     </div>
@@ -747,7 +749,11 @@
                                             <div class="space-y-0.5">
                                                 <span class="font-mono text-xs font-bold text-gray-800 block" x-text="rec.referenceNumber"></span>
                                                 <template x-if="rec.paymentProof">
-                                                    <a :href="rec.paymentProof" target="_blank" class="text-[10px] text-[#C0422A] hover:underline font-bold">🔍 Proof Receipt</a>
+                                                    <button type="button"
+                                                            @click="openProofModal(rec.paymentProof, (selectedSeller?.seller?.shopName || selectedSeller?.seller?.name) + ' (' + rec.period + ') · Proof Receipt', rec.referenceNumber)"
+                                                            class="text-[10px] text-[#C0422A] hover:underline font-bold cursor-pointer inline-flex items-center gap-1">
+                                                        🔍 Proof Receipt
+                                                    </button>
                                                 </template>
                                             </div>
                                         </template>
@@ -793,6 +799,50 @@
             </div>
         </div>
     </div>
+
+    <!-- 5. Dedicated Proof of Payment Zoom Modal (Z-Index 60 to appear over any other modal) -->
+    <div x-show="showProofModal"
+         x-cloak
+         style="display: none;"
+         class="fixed inset-0 z-60 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm"
+         @click.self="showProofModal = false">
+        
+        <div class="relative bg-white rounded-3xl max-w-2xl w-full p-6 shadow-2xl border border-gray-100 overflow-hidden space-y-4 max-h-[92vh] flex flex-col"
+             x-transition:enter="transition ease-out duration-200"
+             x-transition:enter-start="opacity-0 scale-95"
+             x-transition:enter-end="opacity-100 scale-100"
+             x-transition:leave="transition ease-in duration-150"
+             x-transition:leave-start="opacity-100 scale-100"
+             x-transition:leave-end="opacity-0 scale-95">
+            
+            <div class="flex items-center justify-between border-b border-gray-100 pb-3 shrink-0">
+                <div>
+                    <div class="text-[9px] font-black uppercase tracking-widest text-[#C0422A]">Remittance Verification</div>
+                    <h3 class="font-serif text-lg font-bold text-gray-900" x-text="proofTitle || 'Proof of Payment Receipt'"></h3>
+                    <template x-if="proofRef">
+                        <div class="text-xs font-mono text-blue-700 font-bold mt-0.5" x-text="'Ref #: ' + proofRef"></div>
+                    </template>
+                </div>
+                <button type="button" @click="showProofModal = false" class="text-gray-400 hover:text-gray-700 p-2 rounded-xl hover:bg-gray-100 transition-colors cursor-pointer">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                </button>
+            </div>
+
+            <div class="flex-1 overflow-auto bg-[#F8F7F4] rounded-2xl border border-gray-200 p-2 flex items-center justify-center min-h-60 max-h-[65vh]">
+                <img :src="proofImageUrl" class="max-h-[60vh] max-w-full object-contain rounded-xl shadow-xs" alt="Payment Proof">
+            </div>
+
+            <div class="flex items-center justify-between pt-2 shrink-0">
+                <a :href="proofImageUrl" target="_blank" download class="inline-flex items-center gap-1.5 px-3.5 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-xl text-xs font-bold transition-all">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+                    <span>Open in Full Tab / Download</span>
+                </a>
+                <button type="button" @click="showProofModal = false" class="px-5 py-2 bg-[#3D2B1F] hover:bg-[#C0422A] text-white text-xs font-bold uppercase tracking-wider rounded-xl transition-all cursor-pointer shadow-xs">
+                    Close Preview
+                </button>
+            </div>
+        </div>
+    </div>
 </div>
 
 @push('scripts')
@@ -808,6 +858,23 @@
             },
             formatMoney(val) {
                 return '₱' + parseFloat(val || 0).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
+            },
+
+            // Proof Zoom Modal State
+            showProofModal: false,
+            proofImageUrl: '',
+            proofTitle: '',
+            proofRef: '',
+            openProofModal(url, title = 'Proof of Payment Receipt', ref = '') {
+                if (!url) return;
+                let fullUrl = url;
+                if (!url.startsWith('http') && !url.startsWith('/storage/') && !url.startsWith('/uploads/')) {
+                    fullUrl = '/storage/' + url.replace(/^\//, '');
+                }
+                this.proofImageUrl = fullUrl;
+                this.proofTitle = title;
+                this.proofRef = ref;
+                this.showProofModal = true;
             },
 
             // Freeze Modal State
