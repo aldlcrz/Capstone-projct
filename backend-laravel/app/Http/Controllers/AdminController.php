@@ -1449,11 +1449,13 @@ class AdminController extends Controller
                     }
                     // Reactivate account status and sync attributes
                     $existingUser->status = 'active';
+                    $existingUser->violationReason = null;
+                    $existingUser->suspension_reason = null;
                     $existingUser->role = $type === 'seller' ? 'seller' : ($existingUser->role ?: 'customer');
+                    $existingUser->isVerified = true;
                     if (!empty($meta['name'])) $existingUser->name = $meta['name'];
                     if (!empty($meta['shopName'])) $existingUser->shopName = $meta['shopName'];
                     if (!empty($meta['mobileNumber'])) $existingUser->mobileNumber = $meta['mobileNumber'];
-                    if (isset($meta['isVerified'])) $existingUser->isVerified = (bool) $meta['isVerified'];
                     if (!empty($meta['profilePhoto'])) $existingUser->profilePhoto = $meta['profilePhoto'];
                     if (!empty($meta['residencyCertificate'])) $existingUser->residencyCertificate = $meta['residencyCertificate'];
                     if (!empty($meta['businessPermit'])) $existingUser->businessPermit = $meta['businessPermit'];
@@ -1465,18 +1467,26 @@ class AdminController extends Controller
                     if (isset($meta['isGcashAvailable'])) $existingUser->isGcashAvailable = (bool) $meta['isGcashAvailable'];
                     if (isset($meta['isMayaAvailable'])) $existingUser->isMayaAvailable = (bool) $meta['isMayaAvailable'];
                     $existingUser->save();
+
+                    // Restore seller's creations back to active / approved status
+                    if ($type === 'seller') {
+                        Product::where('sellerId', $existingUser->id)
+                            ->whereIn('status', ['inactive', 'archived', 'rejected'])
+                            ->update(['status' => 'approved']);
+                    }
                 } else {
                     // Create fresh user if row was completely absent
-                    User::create([
+                    $createdUser = User::create([
                         'id'                   => $record->item_id ?: (string) \Illuminate\Support\Str::uuid(),
                         'name'                 => $meta['name'] ?? $record->name,
                         'email'                => $email,
-                        'password'             => $meta['password'] ?? bcrypt(\Illuminate\Support\Str::random(16)),
+                        'password'             => $meta['password'] ?? \Illuminate\Support\Facades\Hash::make('password'),
                         'role'                 => $type === 'seller' ? 'seller' : 'customer',
                         'status'               => 'active',
-                        'shopName'             => $meta['shopName'] ?? null,
+                        'isVerified'           => true,
+                        'hasPasswordSet'       => true,
+                        'shopName'             => $meta['shopName'] ?? ($record->name ?? 'Artisan Shop'),
                         'mobileNumber'         => $meta['mobileNumber'] ?? null,
-                        'isVerified'           => $meta['isVerified'] ?? ($type === 'seller' ? false : true),
                         'profilePhoto'         => $meta['profilePhoto'] ?? null,
                         'residencyCertificate' => $meta['residencyCertificate'] ?? null,
                         'businessPermit'       => $meta['businessPermit'] ?? null,
@@ -1485,9 +1495,15 @@ class AdminController extends Controller
                         'gcashQrCode'          => $meta['gcashQrCode'] ?? null,
                         'mayaNumber'           => $meta['mayaNumber'] ?? null,
                         'mayaQrCode'           => $meta['mayaQrCode'] ?? null,
-                        'isGcashAvailable'     => $meta['isGcashAvailable'] ?? false,
+                        'isGcashAvailable'     => $meta['isGcashAvailable'] ?? true,
                         'isMayaAvailable'      => $meta['isMayaAvailable'] ?? false,
                     ]);
+
+                    if ($type === 'seller' && $createdUser) {
+                        Product::where('sellerId', $createdUser->id)
+                            ->whereIn('status', ['inactive', 'archived', 'rejected'])
+                            ->update(['status' => 'approved']);
+                    }
                 }
             }
 

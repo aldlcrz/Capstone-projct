@@ -52,7 +52,7 @@ class ArchivedRecord extends Model
 
         if ($entity instanceof Model) {
             $itemId = (string) $entity->getKey();
-            $metadata = $entity->toArray();
+            $metadata = $entity->getAttributes();
         } elseif (is_array($entity)) {
             $itemId = $entity['id'] ?? null;
             $metadata = $entity;
