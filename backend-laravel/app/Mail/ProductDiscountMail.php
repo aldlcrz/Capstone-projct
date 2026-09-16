@@ -10,16 +10,16 @@ class ProductDiscountMail extends Mailable
 {
     use Queueable, SerializesModels;
 
-    public $customerName;
-    public $userName;
-    public $productName;
-    public $shopName;
-    public $originalPrice;
-    public $oldPrice;
-    public $salePrice;
-    public $newPrice;
-    public $discountPercentage;
-    public $productId;
+    public string $customerName;
+    public string $userName;
+    public string $productName;
+    public string $shopName;
+    public float $originalPrice;
+    public float $oldPrice;
+    public float $salePrice;
+    public float $newPrice;
+    public float $discountPercentage;
+    public string $productId;
 
     public function __construct(
         string $customerName,

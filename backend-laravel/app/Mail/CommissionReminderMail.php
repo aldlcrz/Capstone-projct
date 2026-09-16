@@ -10,16 +10,16 @@ class CommissionReminderMail extends Mailable
 {
     use Queueable, SerializesModels;
 
-    public $sellerName;
-    public $shopName;
-    public $period;
-    public $amountDue;
-    public $unpaidAmount;
-    public $dueDateFormatted;
-    public $reminderType;
-    public $reminderTitle;
-    public $reminderMessage;
-    public $badgeClass;
+    public string $sellerName;
+    public ?string $shopName;
+    public string $period;
+    public float $amountDue;
+    public float $unpaidAmount;
+    public string $dueDateFormatted;
+    public string $reminderType;
+    public string $reminderTitle;
+    public string $reminderMessage;
+    public string $badgeClass;
 
     public function __construct(
         string $sellerName,

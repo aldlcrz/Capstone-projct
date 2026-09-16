@@ -10,10 +10,10 @@ class NewOrderSellerMail extends Mailable
 {
     use Queueable, SerializesModels;
 
-    public $sellerName;
-    public $orderId;
-    public $totalAmount;
-    public $customerName;
+    public string $sellerName;
+    public string $orderId;
+    public float $totalAmount;
+    public ?string $customerName;
 
     public function __construct(string $sellerName, string $orderId, float $totalAmount, ?string $customerName = null)
     {

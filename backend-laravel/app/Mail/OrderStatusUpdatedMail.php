@@ -10,11 +10,11 @@ class OrderStatusUpdatedMail extends Mailable
 {
     use Queueable, SerializesModels;
 
-    public $customerName;
-    public $userName;
-    public $orderId;
-    public $status;
-    public $statusMessage;
+    public string $customerName;
+    public string $userName;
+    public string $orderId;
+    public string $status;
+    public ?string $statusMessage;
 
     public function __construct(string $customerName, string $orderId, string $status, ?string $statusMessage = null)
     {

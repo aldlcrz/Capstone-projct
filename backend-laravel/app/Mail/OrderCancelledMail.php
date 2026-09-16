@@ -10,11 +10,11 @@ class OrderCancelledMail extends Mailable
 {
     use Queueable, SerializesModels;
 
-    public $recipientName;
-    public $userName;
-    public $orderId;
-    public $reason;
-    public $actionUrl;
+    public string $recipientName;
+    public string $userName;
+    public string $orderId;
+    public ?string $reason;
+    public ?string $actionUrl;
 
     public function __construct(string $recipientName, string $orderId, ?string $reason = null, ?string $actionUrl = null)
     {

@@ -10,12 +10,12 @@ class NewProductAvailableMail extends Mailable
 {
     use Queueable, SerializesModels;
 
-    public $customerName;
-    public $userName;
-    public $productName;
-    public $shopName;
-    public $price;
-    public $productId;
+    public string $customerName;
+    public string $userName;
+    public string $productName;
+    public string $shopName;
+    public float $price;
+    public string $productId;
 
     public function __construct(string $customerName, string $productName, string $shopName, float $price, string $productId)
     {
