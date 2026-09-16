@@ -674,9 +674,9 @@ class SuperAdminController extends Controller
         $name = $seller->name;
 
         try {
-            \App\Models\ArchivedRecord::archive('seller', $seller, $reason);
+            ArchivedRecord::archive('seller', $seller, $reason);
         } catch (\Throwable $e) {
-            \Log::warning('Archive error on deleteSeller: ' . $e->getMessage());
+            Log::warning('Archive error on deleteSeller: ' . $e->getMessage());
         }
 
         $seller->status = 'suspended';
@@ -882,7 +882,7 @@ class SuperAdminController extends Controller
             } catch (\Throwable $e) {}
 
             try {
-                \App\Models\ArchivedRecord::archive('customer', $user, $reason);
+                ArchivedRecord::archive('customer', $user, $reason);
             } catch (\Throwable $ae) {
                 Log::warning('Archive error on deleteCustomer: ' . $ae->getMessage());
             }

@@ -25,7 +25,7 @@
             <h1 class="font-serif text-2xl sm:text-3xl font-bold text-[#3D2B1F]">
                 Premium <span class="text-[#C0422A] italic">Subscriptions</span>
             </h1>
-            <p class="text-xs text-gray-500 mt-1">Review seller subscription upgrades, approve proof of payment receipts, and configure receiving accounts.</p>
+            <p class="text-xs text-gray-500 mt-1">Review seller subscription upgrades and approve proof of payment receipts.</p>
         </div>
     </div>
 
@@ -41,11 +41,6 @@
             :class="tab === 'history' ? 'bg-[#3D2B1F] text-white shadow-sm' : 'bg-white border border-[#E5DDD5] text-gray-600 hover:border-gray-400'"
             class="px-4 py-2 rounded-xl text-xs font-bold transition-all shrink-0 flex items-center gap-2 cursor-pointer">
             <span>Verification History</span>
-        </button>
-        <button @click="tab = 'settings'"
-            :class="tab === 'settings' ? 'bg-[#3D2B1F] text-white shadow-sm' : 'bg-white border border-[#E5DDD5] text-gray-600 hover:border-gray-400'"
-            class="px-4 py-2 rounded-xl text-xs font-bold transition-all shrink-0 flex items-center gap-2 cursor-pointer">
-            <span>Receiving Accounts</span>
         </button>
     </div>
 
@@ -189,52 +184,6 @@
                 @endif
             </div>
         @endif
-    </div>
-
-    <!-- Tab 3: Receiving Settings -->
-    <div x-show="tab === 'settings'" class="space-y-4" style="display: none;">
-        <div class="bg-white rounded-3xl border border-[#E5DDD5] p-6 sm:p-8 max-w-2xl shadow-xs">
-            <div class="border-b border-gray-100 pb-4 mb-6">
-                <span class="text-[10px] font-black uppercase tracking-widest text-[#C0422A]">Financial Gateway</span>
-                <h3 class="font-serif text-xl font-bold text-[#3D2B1F]">Subscription Receiving Accounts</h3>
-                <p class="text-xs text-gray-500 mt-1">These payment account details are presented to sellers when they upgrade their account tier.</p>
-            </div>
-
-            <form action="{{ route('superadmin.subscriptions.settings') }}" method="POST" enctype="multipart/form-data" class="space-y-5">
-                @csrf
-                <div>
-                    <label class="block text-[10px] font-black uppercase tracking-widest text-gray-500 mb-1.5">GCash Account Name</label>
-                    <input type="text" name="gcashName" value="{{ old('gcashName', $admin->gcashName ?? '') }}" placeholder="e.g. LumBarong Marketplace"
-                           class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-xs font-medium focus:bg-white focus:outline-none focus:border-[#C0422A] transition-all">
-                </div>
-
-                <div>
-                    <label class="block text-[10px] font-black uppercase tracking-widest text-gray-500 mb-1.5">GCash Account Number</label>
-                    <input type="text" name="gcashNumber" value="{{ old('gcashNumber', $admin->gcashNumber ?? '') }}" placeholder="e.g. 0917 123 4567"
-                           class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-xs font-medium focus:bg-white focus:outline-none focus:border-[#C0422A] transition-all">
-                </div>
-
-                <div>
-                    <label class="block text-[10px] font-black uppercase tracking-widest text-gray-500 mb-1.5">GCash QR Code Image</label>
-                    @php
-                        $adminQrClean = ltrim($admin->gcashQr ?? '', '/');
-                        $adminQrUrl = $adminQrClean ? (str_starts_with($adminQrClean, 'uploads/') ? asset($adminQrClean) : (str_starts_with($adminQrClean, 'http') ? $admin->gcashQr : asset('storage/' . $adminQrClean))) : null;
-                    @endphp
-                    @if($adminQrUrl)
-                        <div class="w-36 h-36 rounded-2xl overflow-hidden bg-gray-100 border border-gray-200 mb-3 shadow-xs">
-                            <img src="{{ $adminQrUrl }}" class="w-full h-full object-cover" alt="GCash QR">
-                        </div>
-                    @endif
-                    <input type="file" name="gcashQr" accept="image/*" class="text-xs text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-[#3D2B1F] file:text-white hover:file:bg-[#C0422A] file:cursor-pointer transition-all">
-                </div>
-
-                <div class="pt-4 border-t border-gray-100 flex justify-end">
-                    <button type="submit" class="px-6 py-2.5 bg-[#3D2B1F] hover:bg-[#C0422A] text-white text-xs font-bold uppercase tracking-widest rounded-xl transition-all shadow-xs cursor-pointer">
-                        Save Receiving Settings
-                    </button>
-                </div>
-            </form>
-        </div>
     </div>
 
     {{-- Zoom Receipt Modal --}}

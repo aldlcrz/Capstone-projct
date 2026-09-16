@@ -885,44 +885,48 @@ class ProductManagementController extends Controller
                 ->with('error', 'You do not have permission to restore this product.');
         }
 
-        // Prevent restoring if a product with this ID already exists
-        if (!empty($record->item_id) && Product::find($record->item_id)) {
-            return redirect()->route('seller.products.archives')
-                ->with('error', 'A product with this ID is already active in your catalogue.');
-        }
-
         try {
-            Product::create([
-                'id'                  => $record->item_id ?: (string) Str::uuid(),
-                'name'                => $meta['name'] ?? $record->name,
-                'description'         => $meta['description'] ?? null,
-                'price'               => $meta['price'] ?? 0,
-                'costPerPiece'        => $meta['costPerPiece'] ?? 0,
-                'stock'               => $meta['stock'] ?? 0,
-                'sizes'               => $meta['sizes'] ?? null,
-                'categories'          => $meta['categories'] ?? null,
-                'image'               => $meta['image'] ?? null,
-                'shippingFee'         => $meta['shippingFee'] ?? 0,
-                'shippingDays'        => $meta['shippingDays'] ?? null,
-                'sellerId'            => $sellerId,
-                'status'              => 'pending',
-                'sku'                 => $meta['sku'] ?? null,
-                'fabric_type'         => $meta['fabric_type'] ?? null,
-                'collar_type'         => $meta['collar_type'] ?? null,
-                'artisan_region'      => $meta['artisan_region'] ?? null,
-                'CategoryId'          => $meta['CategoryId'] ?? null,
-                'target_group'        => $meta['target_group'] ?? null,
-                'size_stocks'         => $meta['size_stocks'] ?? null,
-                'has_variants'        => $meta['has_variants'] ?? false,
-                'variations'          => $meta['variations'] ?? null,
-                'is_on_sale'          => $meta['is_on_sale'] ?? false,
-                'discount_percentage' => $meta['discount_percentage'] ?? 0,
-                'is_gcash_available'  => $meta['is_gcash_available'] ?? false,
-                'gcash_number'        => $meta['gcash_number'] ?? null,
-                'is_maya_available'   => $meta['is_maya_available'] ?? false,
-                'maya_number'         => $meta['maya_number'] ?? null,
-                'size_guide_image'    => $meta['size_guide_image'] ?? null,
-            ]);
+            $existingProduct = !empty($record->item_id) ? Product::find($record->item_id) : null;
+            if ($existingProduct) {
+                $existingProduct->update([
+                    'status' => 'pending',
+                    'name'   => $meta['name'] ?? $existingProduct->name,
+                    'price'  => $meta['price'] ?? $existingProduct->price,
+                    'stock'  => $meta['stock'] ?? $existingProduct->stock,
+                ]);
+            } else {
+                Product::create([
+                    'id'                  => $record->item_id ?: (string) Str::uuid(),
+                    'name'                => $meta['name'] ?? $record->name,
+                    'description'         => $meta['description'] ?? null,
+                    'price'               => $meta['price'] ?? 0,
+                    'costPerPiece'        => $meta['costPerPiece'] ?? 0,
+                    'stock'               => $meta['stock'] ?? 0,
+                    'sizes'               => $meta['sizes'] ?? null,
+                    'categories'          => $meta['categories'] ?? null,
+                    'image'               => $meta['image'] ?? null,
+                    'shippingFee'         => $meta['shippingFee'] ?? 0,
+                    'shippingDays'        => $meta['shippingDays'] ?? null,
+                    'sellerId'            => $sellerId,
+                    'status'              => 'pending',
+                    'sku'                 => $meta['sku'] ?? null,
+                    'fabric_type'         => $meta['fabric_type'] ?? null,
+                    'collar_type'         => $meta['collar_type'] ?? null,
+                    'artisan_region'      => $meta['artisan_region'] ?? null,
+                    'CategoryId'          => $meta['CategoryId'] ?? null,
+                    'target_group'        => $meta['target_group'] ?? null,
+                    'size_stocks'         => $meta['size_stocks'] ?? null,
+                    'has_variants'        => $meta['has_variants'] ?? false,
+                    'variations'          => $meta['variations'] ?? null,
+                    'is_on_sale'          => $meta['is_on_sale'] ?? false,
+                    'discount_percentage' => $meta['discount_percentage'] ?? 0,
+                    'is_gcash_available'  => $meta['is_gcash_available'] ?? false,
+                    'gcash_number'        => $meta['gcash_number'] ?? null,
+                    'is_maya_available'   => $meta['is_maya_available'] ?? false,
+                    'maya_number'         => $meta['maya_number'] ?? null,
+                    'size_guide_image'    => $meta['size_guide_image'] ?? null,
+                ]);
+            }
 
             $record->delete();
 

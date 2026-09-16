@@ -379,11 +379,9 @@ Route::middleware(['auth', 'superadmin'])->prefix('superadmin')->group(function 
     // Developer & System Tools
     Route::get('/maintenance', [SuperAdminController::class, 'maintenance'])->name('superadmin.maintenance');
     Route::post('/maintenance/toggle', [SuperAdminController::class, 'toggleMaintenance'])->name('superadmin.maintenance.toggle');
-    Route::post('/maintenance/clear-cache', [SuperAdminController::class, 'clearCache'])->name('superadmin.maintenance.clear-cache');
     Route::get('/audit-logs', [SuperAdminController::class, 'auditLogs'])->name('superadmin.audit-logs');
     Route::get('/error-logs', [SuperAdminController::class, 'errorLogs'])->name('superadmin.error-logs');
     Route::post('/error-logs/clear', [SuperAdminController::class, 'clearErrorLogs'])->name('superadmin.error-logs.clear');
-    Route::get('/platform', [SuperAdminController::class, 'platform'])->name('superadmin.platform');
 });
 
 // ─── Storage & Upload Fallback Routes ──────────────────────────────────────────

@@ -17,84 +17,13 @@
         </div>
 
         <div class="flex items-center gap-2 flex-wrap">
-            {{-- 1-Click Clear Cache Button --}}
-            <form action="{{ route('superadmin.maintenance.clear-cache') }}" method="POST">
-                @csrf
-                <button type="submit" class="px-4 py-2.5 bg-white hover:bg-[#F8F7F4] text-gray-700 border border-gray-200 rounded-xl text-[10px] font-bold uppercase tracking-widest transition-all shadow-xs flex items-center gap-2 cursor-pointer">
-                    <svg class="w-4 h-4 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
-                    <span>Clear Cache</span>
-                </button>
-            </form>
-
             <a href="{{ route('superadmin.commissions') }}" class="px-5 py-2.5 bg-[#3D2B1F] hover:bg-[#C0422A] text-white font-bold rounded-xl text-[10px] uppercase tracking-widest transition-all shadow-sm flex items-center gap-2">
                 <span>Profit Breakdown →</span>
             </a>
         </div>
     </div>
 
-    <!-- ── 1. SYSTEM & DEVELOPER VITALS (TOP STRIP) ── -->
-    <div class="bg-white border border-gray-100 rounded-2xl p-6 shadow-sm">
-        <div class="flex items-center justify-between border-b border-gray-100 pb-3 mb-4">
-            <div class="text-[10px] font-bold text-gray-400 uppercase tracking-widest flex items-center gap-2">
-                <svg class="w-4 h-4 text-[#C0422A]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 3v2m6-2v2M9 19v2m6-2v2M5 9H3m2 6H3m18-6h-2m2 6h-2M7 19h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v10a2 2 0 002 2zM9 9h6v6H9V9z"/></svg>
-                <span>Server &amp; Platform Health</span>
-            </div>
-            <a href="{{ route('superadmin.platform') }}" class="text-[10px] font-bold uppercase tracking-widest text-[#C0422A] hover:underline">
-                Detailed Platform Specs →
-            </a>
-        </div>
-
-        <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 text-xs">
-            <div class="p-3.5 bg-gray-50/80 rounded-xl border border-gray-100">
-                <div class="text-[9px] font-bold text-gray-400 uppercase tracking-wider mb-1">Environment</div>
-                <div class="font-bold text-gray-800 flex items-center gap-1.5">
-                    <span class="w-2 h-2 rounded-full {{ $systemHealth['environment'] === 'production' ? 'bg-emerald-500' : 'bg-amber-500' }}"></span>
-                    <span class="capitalize font-mono">{{ $systemHealth['environment'] }}</span>
-                </div>
-            </div>
-
-            <div class="p-3.5 bg-gray-50/80 rounded-xl border border-gray-100">
-                <div class="text-[9px] font-bold text-gray-400 uppercase tracking-wider mb-1">PHP / Laravel</div>
-                <div class="font-bold text-gray-800 font-mono">
-                    {{ $systemHealth['php_version'] }} / v{{ $systemHealth['laravel_version'] }}
-                </div>
-            </div>
-
-            <div class="p-3.5 bg-gray-50/80 rounded-xl border border-gray-100">
-                <div class="text-[9px] font-bold text-gray-400 uppercase tracking-wider mb-1">Database Size</div>
-                <div class="font-bold text-gray-800 font-mono">
-                    {{ $systemHealth['db_size'] }}
-                </div>
-            </div>
-
-            <div class="p-3.5 bg-gray-50/80 rounded-xl border border-gray-100">
-                <div class="text-[9px] font-bold text-gray-400 uppercase tracking-wider mb-1">Memory Usage</div>
-                <div class="font-bold text-gray-800 font-mono">
-                    {{ $systemHealth['memory_usage'] }}
-                </div>
-            </div>
-
-            <div class="p-3.5 bg-gray-50/80 rounded-xl border border-gray-100">
-                <div class="text-[9px] font-bold text-gray-400 uppercase tracking-wider mb-1">Disk Free</div>
-                <div class="font-bold text-gray-800 font-mono">
-                    {{ $systemHealth['disk_free'] }}
-                </div>
-            </div>
-
-            <div class="p-3.5 bg-gray-50/80 rounded-xl border border-gray-100">
-                <div class="text-[9px] font-bold text-gray-400 uppercase tracking-wider mb-1">System Mode</div>
-                <div>
-                    @if($systemHealth['is_maintenance'])
-                        <span class="px-2 py-0.5 bg-amber-100 text-amber-800 rounded font-bold text-[9px] uppercase tracking-wider">Maintenance</span>
-                    @else
-                        <span class="px-2 py-0.5 bg-emerald-100 text-emerald-800 rounded font-bold text-[9px] uppercase tracking-wider">Live Normal</span>
-                    @endif
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- ── 2. FINANCIAL & GOVERNANCE KPIS ── -->
+    <!-- ── FINANCIAL & GOVERNANCE KPIS ── -->
     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <!-- Total Platform Sales -->
         <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-5 flex flex-col gap-3 hover:shadow-md transition-all">

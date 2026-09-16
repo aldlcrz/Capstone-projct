@@ -23,9 +23,8 @@
     </div>
     @endif
 
-    <!-- Status Cards Grid -->
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <!-- Maintenance Mode Toggle Card -->
+    <!-- Maintenance Mode Toggle Card -->
+    <div class="max-w-2xl">
         <div class="bg-white border border-[#E5DDD5] rounded-3xl p-6 sm:p-8 shadow-xs space-y-6 flex flex-col justify-between">
             <div class="space-y-4">
                 <div class="flex items-center justify-between border-b border-gray-100 pb-4">
@@ -68,48 +67,6 @@
                             ⚠️ Enable Maintenance Mode
                         </button>
                     @endif
-                </form>
-            </div>
-        </div>
-
-        <!-- 1-Click Cache Purge Card -->
-        <div class="bg-white border border-[#E5DDD5] rounded-3xl p-6 sm:p-8 shadow-xs space-y-6 flex flex-col justify-between">
-            <div class="space-y-4">
-                <div class="flex items-center justify-between border-b border-gray-100 pb-4">
-                    <span class="text-[10px] font-black uppercase tracking-widest text-[#C0422A]">Framework Acceleration</span>
-                    <span class="px-3 py-1 bg-blue-50 text-blue-700 border border-blue-200 rounded-full text-[10px] font-black uppercase tracking-wider">
-                        ⚡ Instant Flush
-                    </span>
-                </div>
-
-                <div class="space-y-1">
-                    <h3 class="font-serif text-lg font-bold text-[#3D2B1F]">1-Click Cache Purge &amp; Rebuild</h3>
-                    <p class="text-xs text-gray-500 leading-relaxed">
-                        Instantly flushes compiled Blade views, route caches, application config, and session stores. Use this immediately after deploying changes or when debugging cached templates.
-                    </p>
-                </div>
-
-                <div class="p-4 rounded-2xl bg-[#F7F3EE] border border-[#E5DDD5] space-y-2 text-xs text-gray-700 font-mono">
-                    <div class="flex items-center gap-2">
-                        <span class="text-emerald-600 font-bold">✓</span> <span>php artisan optimize:clear</span>
-                    </div>
-                    <div class="flex items-center gap-2">
-                        <span class="text-emerald-600 font-bold">✓</span> <span>php artisan view:clear</span>
-                    </div>
-                    <div class="flex items-center gap-2">
-                        <span class="text-emerald-600 font-bold">✓</span> <span>php artisan config:clear</span>
-                    </div>
-                    <div class="flex items-center gap-2">
-                        <span class="text-emerald-600 font-bold">✓</span> <span>php artisan route:clear</span>
-                    </div>
-                </div>
-
-                <form action="{{ route('superadmin.maintenance.clear-cache') }}" method="POST">
-                    @csrf
-                    <button type="submit" class="w-full py-3 bg-[#3D2B1F] hover:bg-[#C0422A] text-white font-bold text-xs uppercase tracking-widest rounded-xl transition-all cursor-pointer shadow-xs flex items-center justify-center gap-2">
-                        <svg class="w-4 h-4 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
-                        <span>Purge All System Caches</span>
-                    </button>
                 </form>
             </div>
         </div>

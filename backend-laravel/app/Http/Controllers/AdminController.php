@@ -1360,63 +1360,135 @@ class AdminController extends Controller
         try {
             $record = \App\Models\ArchivedRecord::findOrFail($id);
             $type = $record->item_type;
-            $meta = $record->metadata ?? [];
+            $meta = is_array($record->metadata) ? $record->metadata : (json_decode($record->metadata ?? '[]', true) ?? []);
 
             if ($type === 'product') {
-                if (!empty($record->item_id) && Product::find($record->item_id)) {
-                    return redirect()->back()->with('error', 'A product with this ID is already active in the catalog.');
+                $existingProduct = Product::find($record->item_id);
+                if ($existingProduct) {
+                    $existingProduct->update(['status' => 'pending']);
+                } else {
+                    Product::create([
+                        'id'                  => $record->item_id ?: (string) \Illuminate\Support\Str::uuid(),
+                        'name'                => $meta['name'] ?? $record->name,
+                        'description'         => $meta['description'] ?? null,
+                        'price'               => $meta['price'] ?? 0,
+                        'costPerPiece'        => $meta['costPerPiece'] ?? 0,
+                        'stock'               => $meta['stock'] ?? 0,
+                        'sizes'               => $meta['sizes'] ?? null,
+                        'categories'          => $meta['categories'] ?? null,
+                        'image'               => $meta['image'] ?? null,
+                        'sellerId'            => $meta['sellerId'] ?? null,
+                        'status'              => 'pending',
+                        'sku'                 => $meta['sku'] ?? null,
+                        'fabric_type'         => $meta['fabric_type'] ?? null,
+                        'collar_type'         => $meta['collar_type'] ?? null,
+                        'artisan_region'      => $meta['artisan_region'] ?? null,
+                        'CategoryId'          => $meta['CategoryId'] ?? null,
+                        'target_group'        => $meta['target_group'] ?? null,
+                        'size_stocks'         => $meta['size_stocks'] ?? null,
+                        'has_variants'        => $meta['has_variants'] ?? false,
+                        'variations'          => $meta['variations'] ?? null,
+                        'is_on_sale'          => $meta['is_on_sale'] ?? false,
+                        'discount_percentage' => $meta['discount_percentage'] ?? 0,
+                        'is_gcash_available'  => $meta['is_gcash_available'] ?? false,
+                        'gcash_number'        => $meta['gcash_number'] ?? null,
+                        'is_maya_available'   => $meta['is_maya_available'] ?? false,
+                        'maya_number'         => $meta['maya_number'] ?? null,
+                        'size_guide_image'    => $meta['size_guide_image'] ?? null,
+                    ]);
                 }
-                Product::create([
-                    'id'                  => $record->item_id ?: (string) \Illuminate\Support\Str::uuid(),
-                    'name'                => $meta['name'] ?? $record->name,
-                    'description'         => $meta['description'] ?? null,
-                    'price'               => $meta['price'] ?? 0,
-                    'costPerPiece'        => $meta['costPerPiece'] ?? 0,
-                    'stock'               => $meta['stock'] ?? 0,
-                    'sizes'               => $meta['sizes'] ?? null,
-                    'categories'          => $meta['categories'] ?? null,
-                    'image'               => $meta['image'] ?? null,
-                    'sellerId'            => $meta['sellerId'] ?? null,
-                    'status'              => 'pending',
-                    'sku'                 => $meta['sku'] ?? null,
-                    'fabric_type'         => $meta['fabric_type'] ?? null,
-                    'collar_type'         => $meta['collar_type'] ?? null,
-                    'artisan_region'      => $meta['artisan_region'] ?? null,
-                    'CategoryId'          => $meta['CategoryId'] ?? null,
-                    'target_group'        => $meta['target_group'] ?? null,
-                    'size_stocks'         => $meta['size_stocks'] ?? null,
-                    'is_on_sale'          => $meta['is_on_sale'] ?? false,
-                    'discount_percentage' => $meta['discount_percentage'] ?? 0,
-                ]);
             } elseif ($type === 'category') {
                 $catName = $meta['name'] ?? $record->name;
-                if (\App\Models\Category::whereRaw('LOWER(TRIM(name)) = ?', [strtolower(trim($catName))])->exists()) {
-                    return redirect()->back()->with('error', 'A category with this name already exists.');
+                $existingCategory = \App\Models\Category::where('id', $record->item_id)
+                    ->orWhereRaw('LOWER(TRIM(name)) = ?', [strtolower(trim($catName))])
+                    ->first();
+                if ($existingCategory) {
+                    $existingCategory->update([
+                        'name'         => $catName,
+                        'description'  => $meta['description'] ?? $existingCategory->description,
+                        'target_group' => $meta['target_group'] ?? $existingCategory->target_group,
+                        'image'        => $meta['image'] ?? $existingCategory->image,
+                    ]);
+                } else {
+                    \App\Models\Category::create([
+                        'id'           => $record->item_id ?: (string) \Illuminate\Support\Str::uuid(),
+                        'name'         => $catName,
+                        'description'  => $meta['description'] ?? null,
+                        'target_group' => $meta['target_group'] ?? [],
+                        'image'        => $meta['image'] ?? '/uploads/categories/pina_formal.png',
+                    ]);
                 }
-                \App\Models\Category::create([
-                    'id'           => $record->item_id ?: (string) \Illuminate\Support\Str::uuid(),
-                    'name'         => $catName,
-                    'description'  => $meta['description'] ?? null,
-                    'target_group' => $meta['target_group'] ?? [],
-                    'image'        => $meta['image'] ?? '/uploads/categories/pina_formal.png',
-                ]);
             } elseif ($type === 'customer' || $type === 'seller') {
                 $email = $meta['email'] ?? $record->identifier;
-                if ($email && User::where('email', $email)->exists()) {
-                    return redirect()->back()->with('error', "A user with email {$email} already exists in the system.");
+
+                // Check if ANOTHER active user with a different ID already uses this email
+                if ($email) {
+                    $conflictUser = User::where('email', $email)
+                        ->when($record->item_id, function ($q) use ($record) {
+                            $q->where('id', '!=', $record->item_id);
+                        })
+                        ->first();
+                    if ($conflictUser) {
+                        return redirect()->back()->with('error', "Another active user with email '{$email}' already exists in the system.");
+                    }
                 }
-                User::create([
-                    'id'           => $record->item_id ?: (string) \Illuminate\Support\Str::uuid(),
-                    'name'         => $meta['name'] ?? $record->name,
-                    'email'        => $email,
-                    'password'     => $meta['password'] ?? bcrypt(\Illuminate\Support\Str::random(16)),
-                    'role'         => $type === 'seller' ? 'seller' : 'customer',
-                    'status'       => 'active',
-                    'shopName'     => $meta['shopName'] ?? null,
-                    'mobileNumber' => $meta['mobileNumber'] ?? null,
-                    'isVerified'   => $meta['isVerified'] ?? ($type === 'seller' ? false : true),
-                    'profilePhoto' => $meta['profilePhoto'] ?? null,
-                ]);
+
+                // Check if user exists in database (including soft-deleted)
+                $existingUser = null;
+                if (!empty($record->item_id)) {
+                    $existingUser = User::withTrashed()->find($record->item_id);
+                }
+                if (!$existingUser && $email) {
+                    $existingUser = User::withTrashed()->where('email', $email)->first();
+                }
+
+                if ($existingUser) {
+                    // Restore soft-deleted record if trashed
+                    if ($existingUser->trashed()) {
+                        $existingUser->restore();
+                    }
+                    // Reactivate account status and sync attributes
+                    $existingUser->status = 'active';
+                    $existingUser->role = $type === 'seller' ? 'seller' : ($existingUser->role ?: 'customer');
+                    if (!empty($meta['name'])) $existingUser->name = $meta['name'];
+                    if (!empty($meta['shopName'])) $existingUser->shopName = $meta['shopName'];
+                    if (!empty($meta['mobileNumber'])) $existingUser->mobileNumber = $meta['mobileNumber'];
+                    if (isset($meta['isVerified'])) $existingUser->isVerified = (bool) $meta['isVerified'];
+                    if (!empty($meta['profilePhoto'])) $existingUser->profilePhoto = $meta['profilePhoto'];
+                    if (!empty($meta['residencyCertificate'])) $existingUser->residencyCertificate = $meta['residencyCertificate'];
+                    if (!empty($meta['businessPermit'])) $existingUser->businessPermit = $meta['businessPermit'];
+                    if (!empty($meta['birDocument'])) $existingUser->birDocument = $meta['birDocument'];
+                    if (!empty($meta['gcashNumber'])) $existingUser->gcashNumber = $meta['gcashNumber'];
+                    if (!empty($meta['gcashQrCode'])) $existingUser->gcashQrCode = $meta['gcashQrCode'];
+                    if (!empty($meta['mayaNumber'])) $existingUser->mayaNumber = $meta['mayaNumber'];
+                    if (!empty($meta['mayaQrCode'])) $existingUser->mayaQrCode = $meta['mayaQrCode'];
+                    if (isset($meta['isGcashAvailable'])) $existingUser->isGcashAvailable = (bool) $meta['isGcashAvailable'];
+                    if (isset($meta['isMayaAvailable'])) $existingUser->isMayaAvailable = (bool) $meta['isMayaAvailable'];
+                    $existingUser->save();
+                } else {
+                    // Create fresh user if row was completely absent
+                    User::create([
+                        'id'                   => $record->item_id ?: (string) \Illuminate\Support\Str::uuid(),
+                        'name'                 => $meta['name'] ?? $record->name,
+                        'email'                => $email,
+                        'password'             => $meta['password'] ?? bcrypt(\Illuminate\Support\Str::random(16)),
+                        'role'                 => $type === 'seller' ? 'seller' : 'customer',
+                        'status'               => 'active',
+                        'shopName'             => $meta['shopName'] ?? null,
+                        'mobileNumber'         => $meta['mobileNumber'] ?? null,
+                        'isVerified'           => $meta['isVerified'] ?? ($type === 'seller' ? false : true),
+                        'profilePhoto'         => $meta['profilePhoto'] ?? null,
+                        'residencyCertificate' => $meta['residencyCertificate'] ?? null,
+                        'businessPermit'       => $meta['businessPermit'] ?? null,
+                        'birDocument'          => $meta['birDocument'] ?? null,
+                        'gcashNumber'          => $meta['gcashNumber'] ?? null,
+                        'gcashQrCode'          => $meta['gcashQrCode'] ?? null,
+                        'mayaNumber'           => $meta['mayaNumber'] ?? null,
+                        'mayaQrCode'           => $meta['mayaQrCode'] ?? null,
+                        'isGcashAvailable'     => $meta['isGcashAvailable'] ?? false,
+                        'isMayaAvailable'      => $meta['isMayaAvailable'] ?? false,
+                    ]);
+                }
             }
 
             $record->delete();
@@ -1432,6 +1504,16 @@ class AdminController extends Controller
         try {
             $record = \App\Models\ArchivedRecord::findOrFail($id);
             $name = $record->name;
+            $type = $record->item_type;
+
+            // If user was soft-deleted, force delete it upon purging archive
+            if (($type === 'customer' || $type === 'seller') && !empty($record->item_id)) {
+                $user = User::withTrashed()->find($record->item_id);
+                if ($user && $user->trashed()) {
+                    $user->forceDelete();
+                }
+            }
+
             $record->delete();
             return redirect()->back()->with('success', "Archived record '{$name}' permanently purged.");
         } catch (\Throwable $e) {
