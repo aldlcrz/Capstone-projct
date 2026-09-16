@@ -23,10 +23,8 @@
     <div class="mx-auto max-w-5xl px-4 sm:px-6 lg:px-8 mb-6">
         <div class="bg-white rounded-md shadow-sm border border-stone-200 flex flex-col md:flex-row overflow-hidden">
             
-            <!-- Left Side: Dark/Gold Premium Banner -->
-            <div class="w-full md:w-95 p-5 flex flex-col justify-between shrink-0 relative overflow-hidden transition-all duration-500"
-                 :class="seller?.isPremium ? 'border-r border-yellow-500/10' : 'bg-[#1A1A1A]'"
-                 :style="seller?.isPremium ? 'background: linear-gradient(to bottom, #2E2A24, #1A1A1A);' : ''">
+            <!-- Left Side: Artisan Workshop Header -->
+            <div class="w-full md:w-95 p-5 flex flex-col justify-between shrink-0 relative overflow-hidden bg-[#1A1A1A]">
                 <div class="absolute inset-0 opacity-[0.03] bg-white mix-blend-overlay"></div>
                 <div class="relative z-10 flex gap-4 items-center">
                     <div class="w-18 h-18 rounded-full border border-white/20 bg-stone-100 overflow-hidden shrink-0 flex items-center justify-center font-serif text-3xl text-stone-400">
@@ -42,11 +40,6 @@
                             <span x-text="seller?.shopName || 'Artisan Workshop'"></span>
                             <template x-if="seller?.isVerified">
                                 <svg class="w-3.5 h-3.5 text-[#A1D4B1]" fill="currentColor" viewBox="0 0 20 20" title="Verified Store"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path></svg>
-                            </template>
-                            <template x-if="seller?.isPremium">
-                                <span class="inline-flex items-center gap-1 px-2 py-0.5 bg-yellow-500/20 border border-yellow-500/30 text-yellow-400 text-[8px] font-bold uppercase tracking-wider rounded-full" title="Premium Artisan">
-                                    👑 Premium
-                                </span>
                             </template>
                         </h1>
                         <div class="text-white/60 text-[11px] mt-1.5 flex items-center gap-1 font-medium tracking-wide">

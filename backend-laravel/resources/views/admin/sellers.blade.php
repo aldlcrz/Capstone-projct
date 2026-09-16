@@ -945,9 +945,7 @@
                 <div class="bg-white rounded-2xl shadow-sm border border-stone-200 flex flex-col md:flex-row overflow-hidden">
                     
                     {{-- Left Side: Branding / Banner --}}
-                    <div class="w-full md:w-96 p-5 sm:p-6 flex flex-col justify-between shrink-0 relative overflow-hidden"
-                         :class="shopSeller?.isPremium ? 'border-r border-yellow-500/20' : 'bg-[#1A1A1A]'"
-                         :style="shopSeller?.isPremium ? 'background: linear-gradient(to bottom, #2E2A24, #1A1A1A);' : ''">
+                    <div class="w-full md:w-96 p-5 sm:p-6 flex flex-col justify-between shrink-0 relative overflow-hidden bg-[#1A1A1A]">
                         <div class="absolute inset-0 opacity-[0.04] bg-white mix-blend-overlay"></div>
                         <div class="relative z-10 flex gap-4 items-center">
                             <div class="w-16 h-16 sm:w-18 sm:h-18 rounded-full border-2 border-white/20 bg-stone-100 overflow-hidden shrink-0 flex items-center justify-center font-serif text-2xl sm:text-3xl text-stone-400 shadow-md">
@@ -964,11 +962,6 @@
                                     <template x-if="shopSeller?.isVerified">
                                         <span class="inline-flex items-center gap-0.5 text-[#A1D4B1] text-xs font-bold" title="Verified Store">
                                             <svg class="w-3.5 h-3.5 fill-current" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path></svg>
-                                        </span>
-                                    </template>
-                                    <template x-if="shopSeller?.isPremium">
-                                        <span class="inline-flex items-center gap-1 px-2 py-0.5 bg-yellow-500/20 border border-yellow-500/30 text-yellow-400 text-[8px] font-black uppercase tracking-wider rounded-full">
-                                            👑 Premium
                                         </span>
                                     </template>
                                 </h2>

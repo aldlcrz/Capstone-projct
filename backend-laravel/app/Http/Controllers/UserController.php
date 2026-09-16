@@ -138,7 +138,6 @@ class UserController extends Controller
             'joined' => $joined,
             'isVerified' => (bool)$seller->isVerified,
             'profilePhoto' => $seller->profilePhoto ?? $seller->profile_photo_url ?? null,
-            'isPremium' => method_exists($seller, 'isPremiumActive') ? (bool)$seller->isPremiumActive() : false,
             'cancellation_policy' => method_exists($seller, 'getCancellationPolicy') ? $seller->getCancellationPolicy() : '',
             'refund_policy' => method_exists($seller, 'getRefundPolicy') ? $seller->getRefundPolicy() : '',
         ]);

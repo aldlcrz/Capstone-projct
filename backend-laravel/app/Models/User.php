@@ -31,7 +31,7 @@ class User extends Authenticatable
         'hasPasswordSet', 'loginAttempts', 'loginLockedUntil', 'bio', 'username',
         'gender', 'birthday', 'resetPasswordToken', 'resetPasswordExpires',
         'shopName', 'shopDescription', 'cancellation_policy', 'refund_policy', 'businessPermit', 'cart',
-        'isPremium', 'premiumEndsAt', 'is_onboarded', 'deleted_at',
+        'is_onboarded', 'deleted_at',
         'deletion_scheduled_at', 'permanent_deletion_at',
     ];
 
@@ -107,8 +107,6 @@ class User extends Authenticatable
             'isGcashAvailable'  => 'boolean',
             'createdAt'         => 'datetime',
             'updatedAt'         => 'datetime',
-            'isPremium'         => 'boolean',
-            'premiumEndsAt'     => 'datetime',
             'size_guides'       => 'array',
             'is_onboarded'      => 'boolean',
             'deletion_scheduled_at' => 'datetime',
@@ -121,7 +119,11 @@ class User extends Authenticatable
      */
     public function isOnboarded(): bool
     {
-        return true;
+        if ($this->is_onboarded) {
+            return true;
+        }
+
+        return !empty($this->gcashNumber) || !empty($this->mayaNumber) || $this->products()->count() > 0;
     }
 
     // Relationships
@@ -141,27 +143,9 @@ class User extends Authenticatable
         return $this->hasMany(Address::class, 'userId')->orderByDesc('isDefault');
     }
 
-    public function subscriptions()
-    {
-        return $this->hasMany(SellerSubscription::class, 'userId')->orderByDesc('createdAt');
-    }
-
     public function commissionRecords()
     {
         return $this->hasMany(CommissionRecord::class, 'sellerId');
-    }
-
-    /**
-     * Check if the seller has an active premium subscription.
-     * Integrates self-healing automatic expiry.
-     */
-    public function isPremiumActive(): bool
-    {
-        if ($this->isPremium && $this->premiumEndsAt && $this->premiumEndsAt->isPast()) {
-            $this->isPremium = false;
-            $this->save();
-        }
-        return (bool) $this->isPremium;
     }
 
     /**

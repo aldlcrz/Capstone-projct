@@ -251,6 +251,14 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->group(function () {
     // Admin Notifications
     Route::get('/notifications', [AdminController::class, 'notifications'])->name('admin.notifications.index');
     Route::post('/notifications/read-all', [AdminController::class, 'readAllNotifications'])->name('admin.notifications.read-all');
+
+    // System Settings & Maintenance
+    Route::get('/settings', [AdminSettingsController::class, 'index'])->name('admin.settings');
+    Route::post('/settings', [AdminSettingsController::class, 'update'])->name('admin.settings.update');
+    Route::get('/maintenance', [AdminSettingsController::class, 'maintenance'])->name('admin.maintenance');
+    Route::post('/maintenance/toggle', [AdminSettingsController::class, 'toggleMaintenance'])->name('admin.maintenance.toggle');
+    Route::get('/audit-logs', [AdminSettingsController::class, 'auditLogs'])->name('admin.audit-logs');
+    Route::get('/platform', [AdminSettingsController::class, 'platform'])->name('admin.platform');
 });
 
 // Seller Routes
@@ -344,12 +352,6 @@ Route::middleware(['auth', 'superadmin'])->prefix('superadmin')->group(function 
     Route::match(['post', 'patch'], '/customers/{id}/ban', [SuperAdminController::class, 'banCustomer'])->name('superadmin.customers.ban');
     Route::match(['post', 'patch'], '/customers/{id}/unban', [SuperAdminController::class, 'unbanCustomer'])->name('superadmin.customers.unban');
     Route::delete('/customers/{id}', [SuperAdminController::class, 'deleteCustomer'])->name('superadmin.customers.delete');
-
-    // Subscriptions
-    Route::get('/subscriptions', [SuperAdminController::class, 'subscriptions'])->name('superadmin.subscriptions.index');
-    Route::post('/subscriptions/{id}/approve', [SuperAdminController::class, 'approveSubscription'])->name('superadmin.subscriptions.approve');
-    Route::post('/subscriptions/{id}/reject', [SuperAdminController::class, 'rejectSubscription'])->name('superadmin.subscriptions.reject');
-    Route::post('/subscriptions/settings', [SuperAdminController::class, 'updateSubscriptionSettings'])->name('superadmin.subscriptions.settings');
 
     // Categories
     Route::get('/categories', [SuperAdminController::class, 'categories'])->name('superadmin.categories.index');

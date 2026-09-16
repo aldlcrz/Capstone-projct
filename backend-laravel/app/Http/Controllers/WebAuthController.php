@@ -207,6 +207,9 @@ class WebAuthController extends Controller
                 if (!$user->isVerified) {
                     return redirect()->route('seller.verification-pending');
                 }
+                if (!$user->isOnboarded()) {
+                    return redirect()->route('seller.onboarding');
+                }
                 return redirect()->route('seller.dashboard');
             }
 
@@ -1224,7 +1227,23 @@ class WebAuthController extends Controller
 
     public function showSellerOnboarding()
     {
-        return redirect()->route('seller.dashboard');
+        /** @var User $user */
+        $user = Auth::user();
+        if (!$user || $user->role !== 'seller') {
+            return redirect()->route('login');
+        }
+
+        if ($user->isOnboarded()) {
+            return redirect()->route('seller.dashboard');
+        }
+
+        $categories = \App\Models\Category::orderBy('name')->get();
+        $hasGcash = !empty($user->gcashNumber);
+        $hasMaya = !empty($user->mayaNumber);
+        $hasPolicies = !empty($user->cancellation_policy) || !empty($user->refund_policy);
+        $productsCount = $user->products()->count();
+
+        return view('seller.onboarding', compact('user', 'categories', 'hasGcash', 'hasMaya', 'hasPolicies', 'productsCount'));
     }
 
     public function saveSellerOnboarding(Request $request)

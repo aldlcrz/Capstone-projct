@@ -34,9 +34,6 @@ class WebController extends Controller
         $query = Product::where('status', 'approved')
             ->select('products.*')
             ->selectSub(function($q) {
-                $q->select('isPremium')->from('users')->whereColumn('users.id', 'products.sellerId');
-            }, 'seller_is_premium')
-            ->selectSub(function($q) {
                 $q->selectRaw('COALESCE(SUM(order_items.quantity), 0)')
                     ->from('order_items')
                     ->join('orders', 'order_items.orderId', '=', 'orders.id')
@@ -129,6 +126,19 @@ class WebController extends Controller
             ->orderBy('order_index', 'asc')
             ->orderBy('created_at', 'desc')
             ->get();
+
+        // Enforce strictly one product per shop in hero banner display
+        $seenSellerIds = [];
+        $banners = $banners->filter(function (Banner $banner) use (&$seenSellerIds) {
+            $sellerId = $banner->getAssociatedSellerId();
+            if ($sellerId !== null) {
+                if (in_array($sellerId, $seenSellerIds, true)) {
+                    return false; // Deduplicate: only 1 product per shop
+                }
+                $seenSellerIds[] = $sellerId;
+            }
+            return true;
+        })->values();
 
         if ($banners->isEmpty()) {
             $defaultBanner = new Banner([

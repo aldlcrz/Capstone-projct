@@ -9,7 +9,7 @@
                 <span class="text-[9px] font-extrabold uppercase tracking-[0.25em]" style="color: #C49520;">✦ Shop Overview</span>
                 <span class="text-xs" style="color: #E8DECB;">•</span>
                 <span class="text-[10px] font-semibold tracking-wider uppercase" style="color: #766C60;">
-                    {{ auth()->user()->isPremiumActive() ? 'Premium Artisan' : 'Verified Artisan' }}
+                    Verified Artisan
                 </span>
             </div>
             <div class="flex items-center gap-3 flex-wrap">

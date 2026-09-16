@@ -43,7 +43,7 @@ class ReportTest extends TestCase
         // Verify seller received in-app notification
         $this->assertEquals(1, \App\Models\Notification::where('userId', $seller->id)->count());
         $sellerNotification = \App\Models\Notification::where('userId', $seller->id)->first();
-        $this->assertEquals('⚠️ Integrity Violation Notice', $sellerNotification->title);
+        $this->assertEquals('⚠️ Concern Filed Under Review', $sellerNotification->title);
         $this->assertEquals('seller', $sellerNotification->targetRole);
     }
 }

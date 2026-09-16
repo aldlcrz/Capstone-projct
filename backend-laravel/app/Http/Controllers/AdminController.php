@@ -546,22 +546,7 @@ class AdminController extends Controller
                 $u->products_count, $u->createdAt?->format('Y-m-d'),
             ]));
 
-        // ── SECTION 8 — Premium Subscriptions ───────────────────────────────
-        $section('Premium Subscriptions');
-        fputcsv($out, ['Seller Name','Shop Name','Plan','Status','Amount (PHP)','Starts','Expires','Requested']);
-        \App\Models\SellerSubscription::with('user:id,name,shopName')->orderByDesc('createdAt')->get()
-            ->each(fn($s) => fputcsv($out, [
-                $s->user->name     ?? 'N/A',
-                $s->user->shopName ?? 'N/A',
-                $s->planName       ?? 'N/A',
-                $s->status,
-                number_format($s->amount ?? 0, 2),
-                $s->startsAt?->format('Y-m-d')  ?? 'N/A',
-                $s->endsAt?->format('Y-m-d')    ?? 'N/A',
-                $s->createdAt?->format('Y-m-d'),
-            ]));
-
-        // ── SECTION 9 — Platform Reports ────────────────────────────────────
+        // ── SECTION 8 — Platform Reports ────────────────────────────────────
         $section('Platform Reports');
         fputcsv($out, ['ID','Reporter','Reported User','Reason','Status','Action Taken','Date']);
         \App\Models\Report::with(['reporter:id,name','reported:id,name'])->orderByDesc('createdAt')->get()

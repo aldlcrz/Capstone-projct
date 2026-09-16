@@ -924,17 +924,11 @@
                         @else
                             <img src="{{ asset('uploads/products/default.jpg') }}" class="w-full h-full object-cover" alt="Artisan">
                         @endif
-                        @if($product->seller && $product->seller->isPremiumActive())
-                            <span class="absolute -top-1 -right-1 text-sm bg-yellow-400 border border-white rounded-full w-5 h-5 flex items-center justify-center shadow-xs z-10">👑</span>
-                        @endif
                     </div>
                     <div>
                         <div class="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-0.5">Artisan</div>
                         <div class="text-sm font-bold text-black flex items-center gap-1.5">
                             {{ $product->artisan ?? 'Lumban Master Craft' }}
-                            @if($product->seller && $product->seller->isPremiumActive())
-                                <span class="px-2 py-0.5 bg-yellow-100 border border-yellow-200 text-yellow-700 text-[8px] font-black uppercase tracking-wider rounded-full">👑 Premium</span>
-                            @endif
                         </div>
                         
                         <div class="mt-2 flex items-center gap-2 flex-wrap">

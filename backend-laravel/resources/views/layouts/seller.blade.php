@@ -313,7 +313,7 @@
                             <div class="min-w-0 text-left hidden sm:block pr-1">
                                 <div class="text-xs font-bold truncate leading-tight font-sans" style="color: #1E1915;">{{ Auth::user()->name }}</div>
                                 <div class="text-[9px] font-extrabold uppercase tracking-wider mt-0.5 font-sans" style="color: #A16D19;">
-                                    {{ Auth::user()->isPremiumActive() ? '✦ Premium Artisan' : 'Verified Artisan' }}
+                                    Verified Artisan
                                 </div>
                             </div>
                         </a>

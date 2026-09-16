@@ -178,6 +178,23 @@ class AdminBannerController extends Controller
             'is_active'        => 'nullable|boolean',
         ]);
 
+        $isActive = $request->has('is_active') ? (bool)$request->is_active : true;
+
+        // Enforce strictly 1 product/banner per shop for active banners
+        if ($isActive) {
+            $sellerId = $this->resolveSellerIdFromRequest($request);
+            if ($sellerId) {
+                $existingBanner = Banner::findActiveBannerForSeller($sellerId);
+                if ($existingBanner) {
+                    $shop = User::find($sellerId);
+                    $shopName = $shop?->shopName ?: $shop?->name ?: 'This artisan shop';
+                    return redirect()->back()
+                        ->withInput()
+                        ->withErrors(['button_url_1' => "Only one product per shop is allowed to display in hero banners. {$shopName} already has an active banner (\"" . ($existingBanner->title ?: 'Existing Banner') . "\")."]);
+                }
+            }
+        }
+
         $imagePath = '';
         if ($request->hasFile('image')) {
             $file = $request->file('image');
@@ -219,7 +236,7 @@ class AdminBannerController extends Controller
             'order_index'   => $targetOrder,
             'start_date'    => $request->start_date ? date('Y-m-d H:i:s', strtotime($request->start_date)) : null,
             'end_date'      => $request->end_date ? date('Y-m-d H:i:s', strtotime($request->end_date)) : null,
-            'is_active'     => $request->has('is_active') ? (bool)$request->is_active : true,
+            'is_active'     => $isActive,
         ]);
 
         $this->normalizeOrderIndexes();
@@ -246,6 +263,23 @@ class AdminBannerController extends Controller
             'is_active'        => 'nullable|boolean',
         ]);
 
+        $isActive = $request->has('is_active') ? (bool)$request->is_active : false;
+
+        // Enforce strictly 1 product/banner per shop for active banners
+        if ($isActive) {
+            $sellerId = $this->resolveSellerIdFromRequest($request) ?: $banner->getAssociatedSellerId();
+            if ($sellerId) {
+                $existingBanner = Banner::findActiveBannerForSeller($sellerId, (int)$banner->id);
+                if ($existingBanner) {
+                    $shop = User::find($sellerId);
+                    $shopName = $shop?->shopName ?: $shop?->name ?: 'This artisan shop';
+                    return redirect()->back()
+                        ->withInput()
+                        ->withErrors(['button_url_1' => "Only one product per shop is allowed to display in hero banners. {$shopName} already has an active banner (\"" . ($existingBanner->title ?: 'Existing Banner') . "\")."]);
+                }
+            }
+        }
+
         $targetOrder = (int) ($request->order_index ?: $banner->order_index);
         if ($targetOrder < 1) {
             $targetOrder = 1;
@@ -261,7 +295,7 @@ class AdminBannerController extends Controller
             'order_index'   => $targetOrder,
             'start_date'    => $request->start_date ? date('Y-m-d H:i:s', strtotime($request->start_date)) : null,
             'end_date'      => $request->end_date ? date('Y-m-d H:i:s', strtotime($request->end_date)) : null,
-            'is_active'     => $request->has('is_active') ? (bool)$request->is_active : false,
+            'is_active'     => $isActive,
         ];
 
         if ($request->hasFile('image')) {
@@ -335,7 +369,21 @@ class AdminBannerController extends Controller
     public function toggleActive(string $id)
     {
         $banner = Banner::findOrFail($id);
-        $banner->is_active = !$banner->is_active;
+        $newActiveState = !$banner->is_active;
+
+        if ($newActiveState) {
+            $sellerId = $banner->getAssociatedSellerId();
+            if ($sellerId) {
+                $existingBanner = Banner::findActiveBannerForSeller($sellerId, (int)$banner->id);
+                if ($existingBanner) {
+                    $shop = User::find($sellerId);
+                    $shopName = $shop?->shopName ?: $shop?->name ?: 'This artisan shop';
+                    return redirect()->back()->with('error', "Cannot activate banner. Only one product per shop is allowed to display in hero banners. {$shopName} already has an active banner (\"" . ($existingBanner->title ?: 'Existing Banner') . "\").");
+                }
+            }
+        }
+
+        $banner->is_active = $newActiveState;
         $banner->save();
 
         return redirect()->back()->with('success', 'Promotion visibility updated.');
@@ -344,6 +392,16 @@ class AdminBannerController extends Controller
     public function approve(string $id)
     {
         $banner = Banner::findOrFail($id);
+        $sellerId = $banner->getAssociatedSellerId();
+        if ($sellerId) {
+            $existingBanner = Banner::findActiveBannerForSeller($sellerId, (int)$banner->id);
+            if ($existingBanner) {
+                $shop = User::find($sellerId);
+                $shopName = $shop?->shopName ?: $shop?->name ?: 'This artisan shop';
+                return redirect()->back()->with('error', "Cannot approve banner as active. Only one product per shop is allowed to display in hero banners. {$shopName} already has an active banner (\"" . ($existingBanner->title ?: 'Existing Banner') . "\").");
+            }
+        }
+
         $banner->update([
             'status'           => 'approved',
             'is_active'        => true,
@@ -357,7 +415,7 @@ class AdminBannerController extends Controller
                 'message'    => 'Your requested hero banner "' . ($banner->title ?: 'Untitled') . '" has been approved and is now live on the homepage!',
                 'targetRole' => 'seller',
                 'isRead'     => false,
-                'link'       => '/seller/banners',
+                'link'       => '/admin/banners',
             ]);
         }
 
@@ -384,12 +442,58 @@ class AdminBannerController extends Controller
                 'message'    => 'Your requested hero banner "' . ($banner->title ?: 'Untitled') . '" was rejected. Reason: ' . $request->rejection_reason,
                 'targetRole' => 'seller',
                 'isRead'     => false,
-                'link'       => '/seller/banners',
+                'link'       => '/admin/banners',
             ]);
         }
 
         return redirect()->back()->with('success', 'Banner request rejected.');
     }
+
+    /**
+     * Resolve associated seller/shop ID from an incoming request.
+     */
+    private function resolveSellerIdFromRequest(Request $request): ?string
+    {
+        $urls = array_filter([$request->button_url_1, $request->button_url_2]);
+        foreach ($urls as $url) {
+            if (preg_match('#(?:/|^)products/([a-zA-Z0-9\-_]+)#i', $url, $m)) {
+                $product = Product::find($m[1]);
+                if ($product && $product->sellerId) {
+                    return (string)$product->sellerId;
+                }
+            }
+            if (preg_match('#(?:/|^)shops/([a-zA-Z0-9\-_]+)#i', $url, $m)) {
+                return (string)$m[1];
+            }
+        }
+
+        if ($request->filled('preset_image_url')) {
+            $presetUrl = $request->preset_image_url;
+            $product = Product::where('image', $presetUrl)
+                ->orWhere('image', ltrim($presetUrl, '/'))
+                ->orWhere('image', 'like', '%' . basename($presetUrl))
+                ->first();
+            if ($product && $product->sellerId) {
+                return (string)$product->sellerId;
+            }
+        }
+
+        if ($request->filled('subtitle')) {
+            $sub = trim($request->subtitle);
+            $seller = User::where('role', 'seller')
+                ->where(function ($q) use ($sub) {
+                    $q->where('shopName', $sub)
+                      ->orWhere('name', $sub);
+                })->first();
+            if ($seller) {
+                return (string)$seller->id;
+            }
+        }
+
+        return null;
+    }
+
+
 
     /**
      * Atomically compacts display order indices so they run 1, 2, 3, ... without gaps.

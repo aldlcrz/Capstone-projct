@@ -113,7 +113,7 @@ class AdminSettingsTest extends TestCase
         $response->assertStatus(503);
 
         // 7. Admins should bypass maintenance
-        $response = $this->actingAs($this->admin)->get('/');
+        $response = $this->actingAs($this->admin)->get('/admin/dashboard');
         $response->assertStatus(200);
     }
 
@@ -162,7 +162,7 @@ class AdminSettingsTest extends TestCase
         // Default all tab
         $response = $this->actingAs($this->admin)->get('/admin/audit-logs');
         $response->assertStatus(200);
-        $response->assertSee('Audit Logs');
+        $response->assertSeeText('Audit Logs');
         $response->assertSee('Placed Order');
         $response->assertSee('Listed Product');
         $response->assertSee('Registered Account');

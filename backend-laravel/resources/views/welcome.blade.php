@@ -771,9 +771,6 @@
                 @if($product->artisan)
                     <p class="text-[10px] text-gray-400 mt-0.5 font-medium flex items-center gap-1">
                         by {{ $product->artisan }}
-                        @if($product->seller && $product->seller->isPremiumActive())
-                            <span class="text-yellow-500 font-extrabold text-[9px]" title="Premium Seller">👑</span>
-                        @endif
                     </p>
                 @endif
             </div>

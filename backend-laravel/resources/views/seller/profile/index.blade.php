@@ -1101,7 +1101,7 @@
                                     </p>
                                 </div>
                             </div>
-                            <a href="{{ url('/seller/subscription') }}" class="shrink-0 px-2.5 py-1 bg-orange-600 text-white rounded-lg text-[10px] font-bold uppercase tracking-wider hover:bg-orange-700 transition-all">
+                            <a href="{{ route('seller.commission') }}" class="shrink-0 px-2.5 py-1 bg-orange-600 text-white rounded-lg text-[10px] font-bold uppercase tracking-wider hover:bg-orange-700 transition-all">
                                 Settle Now
                             </a>
                         </div>

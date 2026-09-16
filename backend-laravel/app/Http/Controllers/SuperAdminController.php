@@ -9,7 +9,6 @@ use App\Models\CommissionRecord;
 use App\Models\Notification;
 use App\Models\Order;
 use App\Models\Product;
-use App\Models\SellerSubscription;
 use App\Models\SystemSetting;
 use App\Models\User;
 use Carbon\Carbon;
@@ -391,7 +390,7 @@ class SuperAdminController extends Controller
             '🔒 Account Frozen — Commission Overdue',
             "Your shop has been frozen due to unpaid monthly commission for {$period}. Please settle your balance to restore access.",
             'system',
-            '/seller/subscription',
+            '/seller/commission',
             'seller'
         );
 
@@ -487,7 +486,7 @@ class SuperAdminController extends Controller
                 '⚠️ Commission Due in 7 Days',
                 "Your monthly commission of ₱" . number_format($commissionAmount, 2) . " for {$period} is due on " . $dueDate->format('F d, Y') . ". Please settle to avoid account restriction.",
                 'system',
-                '/seller/subscription',
+                '/seller/commission',
                 'seller'
             );
         }
@@ -530,7 +529,7 @@ class SuperAdminController extends Controller
                 '🔒 Account Auto-Frozen — Overdue Commission',
                 "Your account has been automatically frozen because your monthly commission of ₱" . number_format($record->commissionAmount, 2) . " for {$overduePeriod} was not paid by the due date. Please settle your outstanding commission to restore access.",
                 'system',
-                '/seller/subscription',
+                '/seller/commission',
                 'seller'
             );
 
@@ -1448,61 +1447,5 @@ class SuperAdminController extends Controller
             });
 
         return view('superadmin.banners', compact('banners', 'sellerBanners', 'pendingCount', 'categories', 'sellers', 'allProducts'));
-    }
-
-    // ─── Premium Subscriptions ────────────────────────────────────────────────
-
-    public function subscriptions(Request $request)
-    {
-        $pending = SellerSubscription::with('user')
-            ->where('status', 'pending')
-            ->orderBy('createdAt', 'desc')
-            ->get();
-
-        $history = SellerSubscription::with('user')
-            ->where('status', '!=', 'pending')
-            ->orderBy('createdAt', 'desc')
-            ->paginate(15);
-
-        $admin = User::where('role', 'superadmin')->first() ?: User::where('role', 'admin')->first();
-
-        return view('superadmin.subscriptions', compact('pending', 'history', 'admin'));
-    }
-
-    public function approveSubscription(string $id)
-    {
-        return (new AdminSubscriptionController)->approve($id);
-    }
-
-    public function rejectSubscription(Request $request, string $id)
-    {
-        return (new AdminSubscriptionController)->reject($request, $id);
-    }
-
-    public function updateSubscriptionSettings(Request $request)
-    {
-        $request->validate([
-            'gcashName'   => 'nullable|string|max:100',
-            'gcashNumber' => 'nullable|string|max:30',
-            'gcashQr'     => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:5120',
-        ]);
-
-        $admin = User::where('role', 'superadmin')->first() ?: User::where('role', 'admin')->first();
-        if ($admin) {
-            $admin->gcashName   = $request->gcashName;
-            $admin->gcashNumber = $request->gcashNumber;
-
-            if ($request->hasFile('gcashQr')) {
-                $file = $request->file('gcashQr');
-                $filename = 'gcash_qr_' . time() . '_' . uniqid() . '.' . $file->getClientOriginalExtension();
-                $path = 'uploads/admin/' . $filename;
-                $file->move(public_path('uploads/admin'), $filename);
-                $admin->gcashQr = '/' . $path;
-            }
-
-            $admin->save();
-        }
-
-        return redirect()->back()->with('success', 'Subscription payment receiving settings updated successfully.');
     }
 }

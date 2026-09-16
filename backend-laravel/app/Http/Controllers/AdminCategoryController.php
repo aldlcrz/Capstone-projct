@@ -38,11 +38,10 @@ class AdminCategoryController extends Controller
             'description' => 'nullable|string',
             'target_group' => 'required|array|min:1',
             'target_group.*' => 'in:Men,Women,Kids',
-            'image' => 'required|image|mimes:jpeg,png,jpg,gif,webp|max:5120',
+            'image' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:5120',
         ], [
             'target_group.required' => 'Please select at least one tag (Men, Women, or Kids).',
             'target_group.min' => 'Please select at least one tag (Men, Women, or Kids).',
-            'image.required' => 'A category image is required.',
         ]);
 
         // Case-insensitive duplicate name check

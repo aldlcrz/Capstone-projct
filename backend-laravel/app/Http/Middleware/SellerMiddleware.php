@@ -35,8 +35,8 @@ class SellerMiddleware
                 }
 
                 if ($user->status === 'frozen') {
-                    // Allow frozen sellers to access subscription/commission payment settlement routes
-                    if ($request->is('seller/subscription*') || $request->is('seller/commissions*') || $request->is('api/seller/subscription*') || $request->is('api/seller/commissions*')) {
+                    // Allow frozen sellers to access commission payment settlement routes
+                    if ($request->is('seller/commission*') || $request->is('api/seller/commission*')) {
                         return $next($request);
                     }
 
