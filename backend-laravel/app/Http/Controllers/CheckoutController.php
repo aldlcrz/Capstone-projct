@@ -445,7 +445,7 @@ class CheckoutController extends Controller
                 }
 
                 if ($sellerUser && $sellerUser->email) {
-                    $sMail = new \App\Mail\NewOrderSellerMail($sellerUser->name, $orderId, (float) $totalAmount);
+                    $sMail = new \App\Mail\NewOrderSellerMail($sellerUser->name, $orderId, (float) $totalAmount, $customerUser?->name);
                     \App\Services\EmailNotificationService::sendNotification($sellerUser->email, $sMail, 'new_order', $sellerUser->id, 'Order', $orderId);
                 }
                 

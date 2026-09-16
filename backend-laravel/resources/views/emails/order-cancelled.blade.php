@@ -1,7 +1,7 @@
 @extends('emails.layout')
 
 @section('content')
-<div class="greeting">Hello, {{ $userName }}!</div>
+<div class="greeting">Hello, {{ $recipientName ?? ($userName ?? 'Valued Customer') }}!</div>
 <span class="badge badge-danger">Order Cancelled</span>
 <p>Your order <strong>#{{ $orderId }}</strong> has been cancelled.</p>
 @if(!empty($reason))

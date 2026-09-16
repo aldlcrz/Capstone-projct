@@ -11,6 +11,7 @@ class NewProductAvailableMail extends Mailable
     use Queueable, SerializesModels;
 
     public $customerName;
+    public $userName;
     public $productName;
     public $shopName;
     public $price;
@@ -19,6 +20,7 @@ class NewProductAvailableMail extends Mailable
     public function __construct(string $customerName, string $productName, string $shopName, float $price, string $productId)
     {
         $this->customerName = $customerName;
+        $this->userName     = $customerName;
         $this->productName  = $productName;
         $this->shopName     = $shopName;
         $this->price        = $price;

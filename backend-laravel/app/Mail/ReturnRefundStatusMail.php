@@ -11,17 +11,21 @@ class ReturnRefundStatusMail extends Mailable
     use Queueable, SerializesModels;
 
     public $customerName;
+    public $userName;
     public $orderId;
     public $status;
     public $comments;
+    public $reason;
     public $requestType;
 
     public function __construct(string $customerName, string $orderId, string $status, ?string $comments = null, string $requestType = 'Return/Refund')
     {
         $this->customerName = $customerName;
+        $this->userName     = $customerName;
         $this->orderId      = $orderId;
         $this->status       = $status;
         $this->comments     = $comments;
+        $this->reason       = $comments;
         $this->requestType  = $requestType;
         $this->subject      = "Update on Your {$requestType} Request for Order #{$orderId}";
     }

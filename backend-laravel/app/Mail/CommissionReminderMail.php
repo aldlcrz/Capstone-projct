@@ -11,8 +11,10 @@ class CommissionReminderMail extends Mailable
     use Queueable, SerializesModels;
 
     public $sellerName;
+    public $shopName;
     public $period;
     public $amountDue;
+    public $unpaidAmount;
     public $dueDateFormatted;
     public $reminderType;
     public $reminderTitle;
@@ -27,11 +29,14 @@ class CommissionReminderMail extends Mailable
         string $reminderType, // '7_days_before', '3_days_before', 'on_due_date', 'overdue'
         string $reminderTitle,
         string $reminderMessage,
-        string $badgeClass = 'badge-warning'
+        string $badgeClass = 'badge-warning',
+        ?string $shopName = null
     ) {
         $this->sellerName       = $sellerName;
+        $this->shopName         = $shopName ?? $sellerName;
         $this->period           = $period;
         $this->amountDue        = $amountDue;
+        $this->unpaidAmount     = $amountDue;
         $this->dueDateFormatted = $dueDateFormatted;
         $this->reminderType     = $reminderType;
         $this->reminderTitle    = $reminderTitle;

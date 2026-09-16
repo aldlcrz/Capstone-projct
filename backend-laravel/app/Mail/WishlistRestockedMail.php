@@ -11,6 +11,7 @@ class WishlistRestockedMail extends Mailable
     use Queueable, SerializesModels;
 
     public string $customerName;
+    public string $userName;
     public string $productName;
     public string $shopName;
     public float $price;
@@ -28,6 +29,7 @@ class WishlistRestockedMail extends Mailable
         ?string $imageUrl = null
     ) {
         $this->customerName = $customerName;
+        $this->userName     = $customerName;
         $this->productName  = $productName;
         $this->shopName     = $shopName;
         $this->price        = $price;

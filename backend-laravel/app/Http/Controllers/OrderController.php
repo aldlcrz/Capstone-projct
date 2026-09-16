@@ -200,7 +200,7 @@ class OrderController extends Controller
                 }
 
                 if ($sellerUser && $sellerUser->email) {
-                    $sMail = new \App\Mail\NewOrderSellerMail($sellerUser->name, $order->id, (float) $calculatedTotal);
+                    $sMail = new \App\Mail\NewOrderSellerMail($sellerUser->name, $order->id, (float) $calculatedTotal, $customerUser?->name);
                     \App\Services\EmailNotificationService::sendNotification($sellerUser->email, $sMail, 'new_order', $sellerUser->id, 'Order', $order->id);
                 }
 

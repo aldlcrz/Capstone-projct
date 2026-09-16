@@ -13,13 +13,15 @@ class NewOrderSellerMail extends Mailable
     public $sellerName;
     public $orderId;
     public $totalAmount;
+    public $customerName;
 
-    public function __construct(string $sellerName, string $orderId, float $totalAmount)
+    public function __construct(string $sellerName, string $orderId, float $totalAmount, ?string $customerName = null)
     {
-        $this->sellerName  = $sellerName;
-        $this->orderId     = $orderId;
-        $this->totalAmount = $totalAmount;
-        $this->subject     = "New Order Received! Order #{$orderId}";
+        $this->sellerName   = $sellerName;
+        $this->orderId      = $orderId;
+        $this->totalAmount  = $totalAmount;
+        $this->customerName = $customerName;
+        $this->subject      = "New Order Received! Order #{$orderId}";
     }
 
     public function build()

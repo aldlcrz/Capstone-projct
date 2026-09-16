@@ -11,10 +11,13 @@ class ProductDiscountMail extends Mailable
     use Queueable, SerializesModels;
 
     public $customerName;
+    public $userName;
     public $productName;
     public $shopName;
     public $originalPrice;
+    public $oldPrice;
     public $salePrice;
+    public $newPrice;
     public $discountPercentage;
     public $productId;
 
@@ -28,10 +31,13 @@ class ProductDiscountMail extends Mailable
         string $productId
     ) {
         $this->customerName       = $customerName;
+        $this->userName           = $customerName;
         $this->productName        = $productName;
         $this->shopName           = $shopName;
         $this->originalPrice      = $originalPrice;
+        $this->oldPrice           = $originalPrice;
         $this->salePrice          = $salePrice;
+        $this->newPrice           = $salePrice;
         $this->discountPercentage = $discountPercentage;
         $this->productId          = $productId;
         $this->subject            = "Special Discount: {$discountPercentage}% OFF on \"{$productName}\"!";

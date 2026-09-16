@@ -11,6 +11,7 @@ class OrderStatusUpdatedMail extends Mailable
     use Queueable, SerializesModels;
 
     public $customerName;
+    public $userName;
     public $orderId;
     public $status;
     public $statusMessage;
@@ -18,6 +19,7 @@ class OrderStatusUpdatedMail extends Mailable
     public function __construct(string $customerName, string $orderId, string $status, ?string $statusMessage = null)
     {
         $this->customerName  = $customerName;
+        $this->userName      = $customerName;
         $this->orderId       = $orderId;
         $this->status        = $status;
         $this->statusMessage = $statusMessage;

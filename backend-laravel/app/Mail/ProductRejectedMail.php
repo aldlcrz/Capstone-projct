@@ -14,6 +14,7 @@ class ProductRejectedMail extends Mailable
     public $productName;
     public $productId;
     public $rejectionReason;
+    public $reason;
 
     public function __construct(string $sellerName, string $productName, string $productId, string $rejectionReason)
     {
@@ -21,6 +22,7 @@ class ProductRejectedMail extends Mailable
         $this->productName     = $productName;
         $this->productId       = $productId;
         $this->rejectionReason = $rejectionReason;
+        $this->reason          = $rejectionReason;
         $this->subject         = "Product Submission Update: \"{$productName}\" Requires Revision";
     }
 
