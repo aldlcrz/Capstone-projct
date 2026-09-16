@@ -11,6 +11,7 @@ class SellerRejectedMail extends Mailable
     use Queueable, SerializesModels;
 
     public string $sellerName;
+    public string $userName;
     public string $shopName;
     public string $reason;
     public string $rejectionType;
@@ -18,6 +19,7 @@ class SellerRejectedMail extends Mailable
     public function __construct(string $sellerName, ?string $shopName = null, ?string $reason = null, string $rejectionType = 'document_correction')
     {
         $this->sellerName    = $sellerName;
+        $this->userName      = $sellerName;
         $this->shopName      = $shopName ?? 'Artisan Workshop';
         $this->reason        = $reason ?? 'Application did not meet seller verification standards.';
         $this->rejectionType = $rejectionType;

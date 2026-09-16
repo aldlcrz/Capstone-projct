@@ -3,7 +3,7 @@
 @section('content')
 <div class="greeting">Notice: Artisan Account Deletion</div>
 <span class="badge badge-danger">🛑 Account Closed</span>
-<p>Hello <strong>{{ $userName }}</strong>,</p>
+<p>Hello <strong>{{ $sellerName ?? ($userName ?? 'Artisan') }}</strong>,</p>
 <p>This is a formal notification that your artisan seller account for <strong>{{ $shopName }}</strong> has been deleted and archived from the LumBarong platform.</p>
 
 <div style="background: #fee2e2; border-left: 4px solid #ef4444; padding: 14px 16px; border-radius: 8px; margin: 18px 0;">

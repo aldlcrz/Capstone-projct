@@ -1087,7 +1087,7 @@ class DashboardController extends Controller
      */
     public function submitPendingDocuments(Request $request)
     {
-        /** @var \App\Models\User|null $seller */
+        /** @var User|null $seller */
         $seller = Auth::user();
         if (!$seller || $seller->role !== 'seller') {
             return redirect()->route('login');

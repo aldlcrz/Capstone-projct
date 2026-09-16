@@ -3,7 +3,7 @@
 @section('content')
 <div class="greeting">Notice: Workshop Status Update</div>
 <span class="badge badge-danger">⚠️ Account Suspended</span>
-<p>Hello <strong>{{ $userName }}</strong>,</p>
+<p>Hello <strong>{{ $sellerName ?? ($userName ?? 'Artisan') }}</strong>,</p>
 <p>This is a formal notification that your artisan workshop <strong>{{ $shopName }}</strong> has been temporarily suspended from the LumBarong platform.</p>
 
 <div style="background: #fee2e2; border-left: 4px solid #ef4444; padding: 14px 16px; border-radius: 8px; margin: 18px 0;">

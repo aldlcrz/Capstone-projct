@@ -11,11 +11,13 @@ class SellerRestoredMail extends Mailable
     use Queueable, SerializesModels;
 
     public $sellerName;
+    public $userName;
     public $shopName;
 
     public function __construct(string $sellerName, ?string $shopName = null)
     {
         $this->sellerName = $sellerName;
+        $this->userName   = $sellerName;
         $this->shopName   = $shopName ?? 'Artisan Workshop';
         $this->subject    = "Artisan Account Restored - LumBarong";
     }

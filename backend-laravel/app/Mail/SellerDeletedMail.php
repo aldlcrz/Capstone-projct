@@ -11,12 +11,14 @@ class SellerDeletedMail extends Mailable
     use Queueable, SerializesModels;
 
     public $sellerName;
+    public $userName;
     public $shopName;
     public $reason;
 
     public function __construct(string $sellerName, ?string $shopName = null, ?string $reason = null)
     {
         $this->sellerName = $sellerName;
+        $this->userName   = $sellerName;
         $this->shopName   = $shopName ?? 'Artisan Workshop';
         $this->reason     = $reason ?? 'Administrative account cleanup.';
         $this->subject    = "Artisan Account Deletion Notice - LumBarong";
