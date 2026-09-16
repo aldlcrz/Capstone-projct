@@ -32,6 +32,7 @@ class User extends Authenticatable
         'gender', 'birthday', 'resetPasswordToken', 'resetPasswordExpires',
         'shopName', 'shopDescription', 'cancellation_policy', 'refund_policy', 'businessPermit', 'cart',
         'isPremium', 'premiumEndsAt', 'is_onboarded', 'deleted_at',
+        'deletion_scheduled_at', 'permanent_deletion_at',
     ];
 
 
@@ -110,6 +111,8 @@ class User extends Authenticatable
             'premiumEndsAt'     => 'datetime',
             'size_guides'       => 'array',
             'is_onboarded'      => 'boolean',
+            'deletion_scheduled_at' => 'datetime',
+            'permanent_deletion_at' => 'datetime',
         ];
     }
 

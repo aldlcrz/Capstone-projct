@@ -196,6 +196,26 @@
                         <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/>
                     </svg>
                 </a>
+
+                {{-- Download Your Information --}}
+                <a href="{{ route('profile.download-information') }}"
+                   style="background-color:#FFFFFF;border:1px solid #ECE3D2;border-radius:16px;padding:14px 16px;display:flex;align-items:center;justify-content:space-between;box-shadow:0 2px 6px rgba(0,0,0,0.02);cursor:pointer;width:100%;text-align:left;transition:all 0.2s;text-decoration:none;"
+                   class="hover:border-[#C49520] hover:bg-[#FDFBF7] group">
+                    <div style="display:flex;align-items:center;gap:12px;">
+                        <div style="width:38px;height:38px;border-radius:11px;background-color:#FAF5EA;border:1px solid #E6D8BA;display:flex;align-items:center;justify-content:center;color:#B88728;flex-shrink:0;" class="group-hover:scale-105 transition-transform">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
+                            </svg>
+                        </div>
+                        <div>
+                            <span style="font-size:13.5px;font-weight:700;color:#1E1915;display:block;">Download Your Information</span>
+                            <span style="font-size:11px;color:#8C827A;display:block;margin-top:1px;">Export your account archive (ZIP)</span>
+                        </div>
+                    </div>
+                    <svg width="16" height="16" fill="none" stroke="#8C827A" viewBox="0 0 24 24" stroke-width="2.2" class="group-hover:translate-x-0.5 transition-transform">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/>
+                    </svg>
+                </a>
             </div>
 
             {{-- COLUMN 2: Shipping & Delivery --}}
@@ -329,7 +349,7 @@
                     </form>
                 </div>
 
-                {{-- Delete Account Action (Soft Delete) --}}
+                {{-- Delete Account Action (7-Day Soft Delete Lifecycle) --}}
                 <div class="pt-2 border-t border-[#EAE1D0]">
                     <button type="button"
                             @click="deleteAccountConfirmation = ''; showDeleteAccountModal = true"
@@ -343,7 +363,7 @@
                             </div>
                             <div>
                                 <div style="font-size:13px;font-weight:700;">Delete Account</div>
-                                <div style="font-size:11px;color:#C53030;margin-top:1px;" class="group-hover:text-red-100">Permanently close account (Soft Delete)</div>
+                                <div style="font-size:11px;color:#C53030;margin-top:1px;" class="group-hover:text-red-100">Schedule account deletion (7-day recovery)</div>
                             </div>
                         </div>
                         <svg width="15" height="15" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.2" class="group-hover:translate-x-0.5 transition-transform">
@@ -378,8 +398,8 @@
                         ⚠️
                     </div>
                     <div>
-                        <h3 class="text-base font-extrabold text-gray-900">Delete Your Account</h3>
-                        <p class="text-[10px] text-gray-400 font-medium">Safe soft-delete process</p>
+                        <h3 class="text-base font-extrabold text-gray-900">Delete your account</h3>
+                        <p class="text-[10px] text-gray-400 font-medium">7-Day Account Deletion &amp; Recovery</p>
                     </div>
                 </div>
                 <button type="button" @click="showDeleteAccountModal = false; deleteAccountConfirmation = ''" class="text-gray-400 hover:text-black transition-colors p-1">
@@ -388,32 +408,45 @@
             </div>
 
             <div class="bg-amber-50/80 border border-amber-200 rounded-2xl p-4 text-left space-y-2">
-                <p class="text-xs text-amber-950 font-medium leading-relaxed">
-                    <strong>Notice:</strong> Are you sure you want to delete your account, <strong>{{ $user->name }}</strong>?
+                <p class="text-xs text-amber-950 font-bold leading-relaxed">
+                    Your account will be scheduled for deletion.
                 </p>
-                <ul class="text-[11px] text-amber-900 space-y-1 list-disc pl-4 font-normal">
-                    <li>Your profile and active sessions will be deactivated immediately.</li>
-                    <li>Account records are archived safely using <strong>soft-delete</strong>.</li>
-                    <li>You will be permitted to register again anytime in the future using this same Gmail address: <strong>{{ $user->email }}</strong>.</li>
+                <ul class="text-[11.5px] text-amber-900 space-y-1.5 list-disc pl-4 font-normal">
+                    <li>You have <strong>7 days</strong> to restore it by logging in.</li>
+                    <li>After 7 days, the account will be permanently deleted and cannot be restored.</li>
+                    <li>Your active session will be signed out immediately upon confirmation.</li>
                 </ul>
+            </div>
+
+            {{-- Optional Download Information before deletion --}}
+            <div class="p-3.5 bg-[#FAF7F0] border border-[#EAE1D0] rounded-2xl flex items-center justify-between gap-3">
+                <div class="min-w-0">
+                    <div class="text-[11.5px] font-bold text-[#1E1915]">Download Your Information</div>
+                    <div class="text-[10.5px] text-[#78716C]">Save your profile, orders &amp; reviews (ZIP)</div>
+                </div>
+                <a href="{{ route('profile.download-information') }}"
+                   target="_blank"
+                   class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white border border-[#D5C7B0] text-[#1E1915] text-[11px] font-extrabold uppercase tracking-wider hover:bg-[#1E1915] hover:text-[#DFC97A] hover:border-[#1E1915] transition-all shrink-0 no-underline shadow-2xs">
+                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
+                    </svg>
+                    <span>Download</span>
+                </a>
             </div>
 
             <form action="{{ route('profile.delete-account') }}" method="POST" class="space-y-4">
                 @csrf
                 <div class="space-y-1.5">
-                    <label class="text-[10px] font-bold text-gray-500 uppercase tracking-wider block">Reason for leaving (Optional)</label>
-                    <textarea name="reason" rows="2" placeholder="Tell us why you are deleting your account..." class="w-full px-3.5 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-xs font-medium outline-none focus:border-red-500 focus:bg-white transition-colors"></textarea>
-                </div>
-
-                <div class="space-y-1.5">
                     <label class="text-[10px] font-bold text-gray-700 uppercase tracking-wider block">
-                        To confirm deletion, type <span class="text-red-600 font-extrabold select-all">DELETE</span> below:
+                        Type <span class="text-red-600 font-extrabold select-all">DELETE</span> to confirm
                     </label>
                     <input type="text"
+                           name="confirm"
                            x-model="deleteAccountConfirmation"
                            placeholder="Type DELETE to confirm"
                            class="w-full px-3.5 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-xs font-bold outline-none focus:border-red-500 focus:bg-white transition-colors uppercase tracking-wider"
-                           autocomplete="off">
+                           autocomplete="off"
+                           required>
                 </div>
 
                 <div class="flex items-center gap-3 pt-2">
@@ -423,10 +456,10 @@
                         Cancel
                     </button>
                     <button type="submit"
-                            :disabled="deleteAccountConfirmation.trim().toUpperCase() !== 'DELETE'"
-                            :class="deleteAccountConfirmation.trim().toUpperCase() === 'DELETE' ? 'bg-red-600 hover:bg-red-700 text-white shadow-md active:scale-95 cursor-pointer' : 'bg-gray-200 text-gray-400 cursor-not-allowed border border-gray-200'"
+                            :disabled="deleteAccountConfirmation.trim() !== 'DELETE'"
+                            :class="deleteAccountConfirmation.trim() === 'DELETE' ? 'bg-red-600 hover:bg-red-700 text-white shadow-md active:scale-95 cursor-pointer' : 'bg-gray-200 text-gray-400 cursor-not-allowed border border-gray-200'"
                             class="flex-1 py-2.5 px-4 rounded-xl text-xs font-bold uppercase tracking-wider transition-all">
-                        Confirm Delete
+                        Permanently delete my account
                     </button>
                 </div>
             </form>

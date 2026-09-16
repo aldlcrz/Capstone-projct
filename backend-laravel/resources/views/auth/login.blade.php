@@ -493,6 +493,57 @@
     </div>
     @endif
 
+    {{-- 7-Day Account Restoration Prompt Modal --}}
+    @if(session('restore_account_prompt'))
+    <div class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-xs animate-fade-in">
+        <div class="w-full max-w-md bg-white rounded-3xl sm:rounded-4xl p-6 sm:p-8 shadow-2xl border border-amber-200 space-y-5 text-center relative overflow-hidden">
+            <!-- Top Accent Strip -->
+            <div class="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-amber-500 via-[#C49520] to-amber-600"></div>
+
+            <div class="w-16 h-16 rounded-full bg-amber-50 border-2 border-amber-200 text-amber-600 flex items-center justify-center text-2xl mx-auto shadow-inner">
+                ⏳
+            </div>
+
+            <div>
+                <h2 class="font-serif text-xl sm:text-2xl font-black text-gray-900">
+                    Are you sure you want to restore your account?
+                </h2>
+                <p class="text-xs text-gray-500 mt-1 font-medium">
+                    Welcome back, <strong class="text-gray-800">{{ session('restore_user_name') }}</strong> ({{ session('restore_user_email') }})
+                </p>
+            </div>
+
+            <div class="p-4 rounded-2xl bg-amber-50/80 border border-amber-200 text-left space-y-2">
+                <p class="text-xs text-amber-950 font-semibold leading-relaxed">
+                    Your account is currently scheduled for deletion. You still have time to restore it. If you restore your account, your account will become active again and all your data remains intact.
+                </p>
+                <div class="text-[11px] text-amber-900 font-medium">
+                    Scheduled permanent deletion: <strong>{{ session('restore_permanent_at') }}</strong> (approx. {{ session('restore_days_left', 7) }} day(s) remaining).
+                </div>
+            </div>
+
+            <div class="space-y-3 pt-2">
+                <form action="{{ route('account.restore') }}" method="POST">
+                    @csrf
+                    <button type="submit"
+                            class="w-full py-3.5 px-6 rounded-2xl bg-emerald-600 hover:bg-emerald-700 active:scale-98 text-white font-bold text-xs uppercase tracking-wider transition-all shadow-md flex items-center justify-center gap-2 cursor-pointer">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
+                        <span>Restore My Account</span>
+                    </button>
+                </form>
+
+                <form action="{{ route('account.restore.cancel') }}" method="POST">
+                    @csrf
+                    <button type="submit"
+                            class="w-full py-3 px-6 rounded-2xl bg-gray-100 hover:bg-gray-200 active:scale-98 text-gray-700 font-bold text-xs uppercase tracking-wider transition-all border border-gray-200 cursor-pointer">
+                        Keep Account Scheduled for Deletion
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+    @endif
+
 <script>
     // In-App Browser Detection (Messenger / Facebook / Instagram / Line / etc.)
     (function() {

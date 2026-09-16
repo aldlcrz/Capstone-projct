@@ -36,6 +36,8 @@
              showPaymentHistoryModal: false,
              showLegalModal: false,
              showDocPreview: false,
+             showDeleteAccountModal: false,
+             deleteAccountConfirmation: '',
              previewDocUrl: '',
              previewDocTitle: '',
              paymentEditing: false,
@@ -478,6 +480,49 @@
                             <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/>
                         </svg>
                     </a>
+
+                    {{-- Download Your Information --}}
+                    <a href="{{ route('profile.download-information') }}"
+                       style="background-color:#FFFFFF;border:1px solid #ECE3D2;border-radius:16px;padding:14px 16px;display:flex;align-items:center;justify-content:space-between;box-shadow:0 2px 6px rgba(0,0,0,0.02);cursor:pointer;width:100%;text-align:left;transition:all 0.2s;text-decoration:none;"
+                       class="hover:border-[#C49520] hover:bg-[#FDFBF7] group">
+                        <div style="display:flex;align-items:center;gap:12px;">
+                            <div style="width:38px;height:38px;border-radius:11px;background-color:#FAF5EA;border:1px solid #E6D8BA;display:flex;align-items:center;justify-content:center;color:#B88728;flex-shrink:0;" class="group-hover:scale-105 transition-transform">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
+                                </svg>
+                            </div>
+                            <div>
+                                <span style="font-size:14px;font-weight:700;color:#1E1915;display:block;">Download Your Information</span>
+                                <span style="font-size:11.5px;color:#8C827A;display:block;margin-top:1px;">Export products, orders &amp; shop data (ZIP)</span>
+                            </div>
+                        </div>
+                        <svg width="16" height="16" fill="none" stroke="#8C827A" viewBox="0 0 24 24" stroke-width="2.2" class="group-hover:translate-x-0.5 transition-transform">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/>
+                        </svg>
+                    </a>
+
+                    {{-- Delete Account Action (7-Day Soft Delete Lifecycle) --}}
+                    <div class="pt-2 border-t border-[#EAE1D0]">
+                        <button type="button"
+                                @click="deleteAccountConfirmation = ''; showDeleteAccountModal = true"
+                                style="background-color:#FFF5F5;border:1px solid #FED7D7;border-radius:16px;padding:12px 16px;display:flex;align-items:center;justify-content:space-between;box-shadow:0 2px 6px rgba(0,0,0,0.02);cursor:pointer;width:100%;text-align:left;transition:all 0.2s;color:#9B2C2C;"
+                                class="hover:bg-red-700 hover:text-white hover:border-red-700 group">
+                            <div style="display:flex;align-items:center;gap:12px;">
+                                <div style="width:34px;height:34px;border-radius:10px;background-color:#FED7D7;border:1px solid #FEB2B2;display:flex;align-items:center;justify-content:center;color:#9B2C2C;flex-shrink:0;" class="group-hover:bg-white group-hover:text-red-700 transition-colors">
+                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                                    </svg>
+                                </div>
+                                <div>
+                                    <div style="font-size:13px;font-weight:700;">Delete Account</div>
+                                    <div style="font-size:11px;color:#C53030;margin-top:1px;" class="group-hover:text-red-100">Schedule shop deletion (7-day recovery)</div>
+                                </div>
+                            </div>
+                            <svg width="15" height="15" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.2" class="group-hover:translate-x-0.5 transition-transform">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/>
+                            </svg>
+                        </button>
+                    </div>
                 </div>
 
                 {{-- COLUMN 2: Creations & Operations --}}
@@ -777,8 +822,138 @@
                             <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/>
                         </svg>
                     </a>
+
+                    {{-- 5. Download Your Information --}}
+                    <a href="{{ route('profile.download-information') }}"
+                       style="background-color:#FFFFFF;border:1px solid #ECE3D2;border-radius:16px;padding:14px 16px;display:flex;align-items:center;justify-content:space-between;box-shadow:0 2px 6px rgba(0,0,0,0.02);cursor:pointer;width:100%;text-align:left;transition:all 0.2s;text-decoration:none;"
+                       class="hover:border-[#C49520] hover:bg-[#FDFBF7] group">
+                        <div style="display:flex;align-items:center;gap:12px;">
+                            <div style="width:38px;height:38px;border-radius:11px;background-color:#FAF5EA;border:1px solid #E6D8BA;display:flex;align-items:center;justify-content:center;color:#B88728;flex-shrink:0;" class="group-hover:scale-105 transition-transform">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
+                                </svg>
+                            </div>
+                            <div>
+                                <span style="font-size:14px;font-weight:700;color:#1E1915;display:block;">Download Your Information</span>
+                                <span style="font-size:11.5px;color:#8C827A;display:block;margin-top:1px;">Export products, orders &amp; shop archive (ZIP)</span>
+                            </div>
+                        </div>
+                        <svg width="16" height="16" fill="none" stroke="#8C827A" viewBox="0 0 24 24" stroke-width="2.2" class="group-hover:translate-x-0.5 transition-transform">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/>
+                        </svg>
+                    </a>
+
+                    {{-- 6. Delete Account (Soft Delete with 7-day Recovery) --}}
+                    <div class="pt-2 border-t border-[#EAE1D0]">
+                        <button type="button"
+                                @click="showAccountSettingsModal = false; deleteAccountConfirmation = ''; showDeleteAccountModal = true"
+                                style="background-color:#FFF5F5;border:1px solid #FED7D7;border-radius:16px;padding:12px 16px;display:flex;align-items:center;justify-content:space-between;box-shadow:0 2px 6px rgba(0,0,0,0.02);cursor:pointer;width:100%;text-align:left;transition:all 0.2s;color:#9B2C2C;"
+                                class="hover:bg-red-700 hover:text-white hover:border-red-700 group">
+                            <div style="display:flex;align-items:center;gap:12px;">
+                                <div style="width:34px;height:34px;border-radius:10px;background-color:#FED7D7;border:1px solid #FEB2B2;display:flex;align-items:center;justify-content:center;color:#9B2C2C;flex-shrink:0;" class="group-hover:bg-white group-hover:text-red-700 transition-colors">
+                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                                    </svg>
+                                </div>
+                                <div>
+                                    <div style="font-size:13px;font-weight:700;">Delete Account</div>
+                                    <div style="font-size:11px;color:#C53030;margin-top:1px;" class="group-hover:text-red-100">Schedule shop deletion (7-day recovery)</div>
+                                </div>
+                            </div>
+                            <svg width="15" height="15" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.2" class="group-hover:translate-x-0.5 transition-transform">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/>
+                            </svg>
+                        </button>
+                    </div>
                 </div>
 
+        {{-- Seller Delete Account Confirmation Modal --}}
+        <div x-show="showDeleteAccountModal"
+             x-cloak
+             style="display:none;"
+             class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs"
+             x-transition:enter="transition ease-out duration-200"
+             x-transition:enter-start="opacity-0 scale-95"
+             x-transition:enter-end="opacity-100 scale-100"
+             x-transition:leave="transition ease-in duration-150"
+             x-transition:leave-start="opacity-100 scale-100"
+             x-transition:leave-end="opacity-0 scale-95"
+             @keydown.escape.window="showDeleteAccountModal = false; deleteAccountConfirmation = ''">
+
+            <div class="relative w-full max-w-md bg-white rounded-3xl p-6 sm:p-7 shadow-2xl border border-gray-100 space-y-5"
+                 @click.away="showDeleteAccountModal = false; deleteAccountConfirmation = ''">
+
+                <div class="flex items-center justify-between pb-3 border-b border-gray-100">
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 rounded-2xl bg-red-50 text-red-600 flex items-center justify-center text-lg">
+                            ⚠️
+                        </div>
+                        <div>
+                            <h3 class="text-base font-extrabold text-gray-900">Delete your seller account</h3>
+                            <p class="text-[10px] text-gray-400 font-medium">7-Day Account Deletion &amp; Recovery</p>
+                        </div>
+                    </div>
+                    <button type="button" @click="showDeleteAccountModal = false; deleteAccountConfirmation = ''" class="text-gray-400 hover:text-black transition-colors p-1">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                    </button>
+                </div>
+
+                <div class="bg-amber-50/80 border border-amber-200 rounded-2xl p-4 text-left space-y-2">
+                    <p class="text-xs text-amber-950 font-bold leading-relaxed">
+                        Your seller account and shop will be scheduled for deletion.
+                    </p>
+                    <ul class="text-[11.5px] text-amber-900 space-y-1.5 list-disc pl-4 font-normal">
+                        <li>You have <strong>7 days</strong> to restore it by logging in.</li>
+                        <li>After 7 days, your shop and products will be permanently removed.</li>
+                        <li>Your active artisan session will be signed out immediately upon confirmation.</li>
+                    </ul>
+                </div>
+
+                {{-- Optional Download Information before deletion --}}
+                <div class="p-3.5 bg-[#FAF7F0] border border-[#EAE1D0] rounded-2xl flex items-center justify-between gap-3">
+                    <div class="min-w-0">
+                        <div class="text-[11.5px] font-bold text-[#1E1915]">Download Your Information</div>
+                        <div class="text-[10.5px] text-[#78716C]">Save your products, orders &amp; commissions (ZIP)</div>
+                    </div>
+                    <a href="{{ route('profile.download-information') }}"
+                       target="_blank"
+                       class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white border border-[#D5C7B0] text-[#1E1915] text-[11px] font-extrabold uppercase tracking-wider hover:bg-[#1E1915] hover:text-[#DFC97A] hover:border-[#1E1915] transition-all shrink-0 no-underline shadow-2xs">
+                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
+                        </svg>
+                        <span>Download</span>
+                    </a>
+                </div>
+
+                <form action="{{ route('seller.delete-account') }}" method="POST" class="space-y-4">
+                    @csrf
+                    <div class="space-y-1.5">
+                        <label class="text-[10px] font-bold text-gray-700 uppercase tracking-wider block">
+                            Type <span class="text-red-600 font-extrabold select-all">DELETE</span> to confirm
+                        </label>
+                        <input type="text"
+                               name="confirm"
+                               x-model="deleteAccountConfirmation"
+                               placeholder="Type DELETE to confirm"
+                               class="w-full px-3.5 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-xs font-bold outline-none focus:border-red-500 focus:bg-white transition-colors uppercase tracking-wider"
+                               autocomplete="off"
+                               required>
+                    </div>
+
+                    <div class="flex items-center gap-3 pt-2">
+                        <button type="button"
+                                @click="showDeleteAccountModal = false; deleteAccountConfirmation = ''"
+                                class="flex-1 py-2.5 px-4 rounded-xl border border-gray-200 text-gray-700 text-xs font-bold uppercase tracking-wider hover:bg-gray-50 transition-all cursor-pointer">
+                            Cancel
+                        </button>
+                        <button type="submit"
+                                :disabled="deleteAccountConfirmation.trim() !== 'DELETE'"
+                                :class="deleteAccountConfirmation.trim() === 'DELETE' ? 'bg-red-600 hover:bg-red-700 text-white shadow-md active:scale-95 cursor-pointer' : 'bg-gray-200 text-gray-400 cursor-not-allowed border border-gray-200'"
+                                class="flex-1 py-2.5 px-4 rounded-xl text-xs font-bold uppercase tracking-wider transition-all">
+                            Permanently delete my account
+                        </button>
+                    </div>
+                </form>
             </div>
         </div>
 

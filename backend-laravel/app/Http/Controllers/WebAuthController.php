@@ -45,12 +45,41 @@ class WebAuthController extends Controller
         ]);
 
         $email = strtolower(trim($request->email));
-        $user = User::where('email', $email)->first();
+        $user = User::withTrashed()->where('email', $email)->first();
 
         if (!$user || !Hash::check($request->password, $user->password)) {
             return back()->withErrors([
                 'email' => 'Invalid email or password.',
             ])->onlyInput('email');
+        }
+
+        // Check if account is in PENDING_DELETION or soft-deleted
+        if ($user->status === 'pending_deletion' || $user->trashed() || $user->deletion_scheduled_at !== null) {
+            // Check if 7 days have expired
+            if ($user->permanent_deletion_at && $user->permanent_deletion_at->lte(now())) {
+                // Permanently clean up expired account
+                $cleanup = new \App\Console\Commands\ProcessScheduledAccountDeletions();
+                $cleanup->permanentlyDeleteAccount($user);
+
+                return back()->withErrors([
+                    'email' => 'Invalid email or password.',
+                ])->onlyInput('email');
+            }
+
+            // Within 7-day recovery window: show restore prompt modal
+            $expiresAt = $user->permanent_deletion_at ?: now()->addDays(7);
+            $daysLeft = max(1, (int) ceil(now()->floatDiffInDays($expiresAt, false)));
+
+            session([
+                'restore_account_user_id'   => $user->id,
+                'restore_account_email'     => $user->email,
+                'restore_account_name'      => $user->name,
+                'restore_account_role'      => $user->role,
+                'restore_account_expires'   => $expiresAt->format('F d, Y \a\t h:i A'),
+                'restore_account_days_left' => $daysLeft,
+            ]);
+
+            return back()->with('restore_account_prompt', true);
         }
 
         if (Auth::attempt(['email' => $email, 'password' => $request->password])) {
@@ -207,6 +236,27 @@ class WebAuthController extends Controller
         $email = strtolower(trim($request->email));
         $name = trim($request->name);
 
+        // Check if an existing account with this email is pending deletion
+        $pendingUser = User::withTrashed()
+            ->where('email', $email)
+            ->where(function ($q) {
+                $q->where('status', 'pending_deletion')
+                  ->orWhereNotNull('deletion_scheduled_at');
+            })
+            ->first();
+
+        if ($pendingUser) {
+            // Check if 7 days have expired
+            if ($pendingUser->permanent_deletion_at && $pendingUser->permanent_deletion_at->lte(now())) {
+                $cleanup = new \App\Console\Commands\ProcessScheduledAccountDeletions();
+                $cleanup->permanentlyDeleteAccount($pendingUser);
+            } else {
+                return back()->withErrors([
+                    'email' => 'This account is currently scheduled for deletion. Please log in with your credentials to restore your existing account.'
+                ])->withInput();
+            }
+        }
+
         // Delete any stale unverified active user record with this email so it doesn't block re-registering
         $staleUser = User::where('email', $email)->where('isVerified', false)->first();
         if ($staleUser) {
@@ -298,6 +348,29 @@ class WebAuthController extends Controller
 
     public function sellerRegister(Request $request)
     {
+        $email = strtolower(trim($request->email));
+
+        // Check if an existing account with this email is pending deletion
+        $pendingUser = User::withTrashed()
+            ->where('email', $email)
+            ->where(function ($q) {
+                $q->where('status', 'pending_deletion')
+                  ->orWhereNotNull('deletion_scheduled_at');
+            })
+            ->first();
+
+        if ($pendingUser) {
+            // Check if 7 days have expired
+            if ($pendingUser->permanent_deletion_at && $pendingUser->permanent_deletion_at->lte(now())) {
+                $cleanup = new \App\Console\Commands\ProcessScheduledAccountDeletions();
+                $cleanup->permanentlyDeleteAccount($pendingUser);
+            } else {
+                return back()->withErrors([
+                    'email' => 'This account is currently scheduled for deletion. Please log in with your credentials to restore your existing account.'
+                ])->withInput();
+            }
+        }
+
         $validator = Validator::make($request->all(), [
             'name'                 => 'required|string|max:255',
             'email'                => [
@@ -1859,7 +1932,230 @@ class WebAuthController extends Controller
     }
 
     /**
-     * Customer & User Self-Requested Account Deletion (Soft Delete Only).
+     * Download Authenticated User's Account Information (Customer & Seller ZIP Export).
+     */
+    public function downloadMyInformation(Request $request)
+    {
+        /** @var User|null $user */
+        $user = Auth::user();
+        if (!$user) {
+            return redirect()->route('login');
+        }
+
+        $role = $user->role;
+        $dateStr = now()->format('Y-m-d');
+        $zipFilename = "lumbarong-" . ($role === 'seller' ? 'seller' : 'customer') . "-export-{$dateStr}.zip";
+        $tempZipPath = tempnam(sys_get_temp_dir(), 'lum_export_');
+
+        $zip = new \ZipArchive();
+        if ($zip->open($tempZipPath, \ZipArchive::CREATE | \ZipArchive::OVERWRITE) !== true) {
+            return back()->with('error', 'Unable to create export archive. Please try again.');
+        }
+
+        if ($role === 'seller') {
+            // 1. Seller Profile
+            $profileData = [
+                'id'                  => $user->id,
+                'shop_name'           => $user->shopName ?: $user->name,
+                'owner_name'          => $user->name,
+                'username'            => $user->username,
+                'email'               => $user->email,
+                'mobile_number'       => $user->mobileNumber,
+                'shop_story'          => $user->shopDescription,
+                'shop_address'        => [
+                    'house_no'    => $user->shopHouseNo,
+                    'street'      => $user->shopStreet,
+                    'barangay'    => $user->shopBarangay,
+                    'city'        => $user->shopCity,
+                    'province'    => $user->shopProvince,
+                    'postal_code' => $user->shopPostalCode,
+                ],
+                'cancellation_policy' => $user->cancellation_policy,
+                'refund_policy'       => $user->refund_policy,
+                'social_links'        => $user->socialLinks,
+                'account_created_at'  => $user->createdAt?->toIso8601String(),
+            ];
+            $zip->addFromString('account-information.json', json_encode($profileData, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES));
+
+            // 2. Products & Variants
+            $products = \App\Models\Product::where('sellerId', $user->id)
+                ->with(['variants', 'category'])
+                ->get()
+                ->map(function ($prod) {
+                    return [
+                        'id'          => $prod->id,
+                        'name'        => $prod->name,
+                        'category'    => $prod->category?->name ?? 'Barong Tagalog',
+                        'price'       => $prod->price,
+                        'stock'       => $prod->stock,
+                        'status'      => $prod->status,
+                        'description' => $prod->description,
+                        'fabric'      => $prod->fabric,
+                        'embroidery'  => $prod->embroidery,
+                        'collar_type' => $prod->collarType,
+                        'variants'    => $prod->variants->map(function ($v) {
+                            return [
+                                'id'           => $v->id,
+                                'variant_name' => $v->variant_name,
+                                'sku'          => $v->sku,
+                                'size'         => $v->size,
+                                'color'        => $v->color,
+                                'price'        => $v->price,
+                                'stock'        => $v->stock,
+                            ];
+                        }),
+                        'created_at'  => $prod->createdAt?->toIso8601String(),
+                    ];
+                });
+            $zip->addFromString('products.json', json_encode($products, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES));
+
+            // 3. Orders received by seller
+            $orders = \App\Models\Order::where('sellerId', $user->id)
+                ->with('items')
+                ->get()
+                ->map(function ($order) {
+                    return [
+                        'order_id'          => $order->id,
+                        'status'            => $order->status,
+                        'total_amount'      => $order->totalAmount,
+                        'shipping_fee'      => $order->shippingFee,
+                        'payment_method'    => $order->paymentMethod,
+                        'payment_reference' => $order->paymentReference,
+                        'order_date'        => $order->createdAt?->toIso8601String(),
+                        'items'             => $order->items->map(function ($item) {
+                            return [
+                                'product_name' => $item->productName,
+                                'variant_name' => $item->variantName,
+                                'quantity'     => $item->quantity,
+                                'price'        => $item->price,
+                                'subtotal'     => $item->subtotal,
+                            ];
+                        }),
+                    ];
+                });
+            $zip->addFromString('orders.json', json_encode($orders, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES));
+
+            // 4. Commissions
+            $commissions = \App\Models\CommissionRecord::where('sellerId', $user->id)
+                ->get()
+                ->map(function ($c) {
+                    return [
+                        'id'                => $c->id,
+                        'period'            => $c->period,
+                        'total_sales'       => $c->totalSales,
+                        'commission_rate'   => $c->commissionRate,
+                        'commission_amount' => $c->commissionAmount,
+                        'status'            => $c->status,
+                        'reference_number'  => $c->referenceNumber,
+                        'created_at'        => $c->createdAt?->toIso8601String(),
+                    ];
+                });
+            $zip->addFromString('commissions.json', json_encode($commissions, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES));
+
+            // README
+            $readme = "LumBarong Seller Information Export\n"
+                . "Generated on: " . now()->toFormattedDateString() . "\n"
+                . "Shop: " . ($user->shopName ?: $user->name) . "\n"
+                . "Email: " . $user->email . "\n\n"
+                . "Contents:\n"
+                . "- account-information.json: Artisan profile, contact & shop policies\n"
+                . "- products.json: Product catalog, descriptions, inventory & variants\n"
+                . "- orders.json: Customer orders fulfilled\n"
+                . "- commissions.json: Marketplace commission settlement history\n";
+            $zip->addFromString('README.txt', $readme);
+        } else {
+            // Customer Export
+            $profileData = [
+                'id'                 => $user->id,
+                'name'               => $user->name,
+                'username'           => $user->username,
+                'email'              => $user->email,
+                'mobile_number'      => $user->mobileNumber,
+                'gender'             => $user->gender,
+                'birthday'           => $user->birthday,
+                'bio'                => $user->bio,
+                'account_created_at' => $user->createdAt?->toIso8601String(),
+            ];
+            $zip->addFromString('account-information.json', json_encode($profileData, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES));
+
+            // Saved delivery addresses
+            $addresses = \App\Models\Address::where('userId', $user->id)->get()->map(function ($addr) {
+                return [
+                    'recipient_name' => $addr->recipientName,
+                    'phone'          => $addr->phone,
+                    'house_no'       => $addr->houseNo,
+                    'street'         => $addr->street,
+                    'barangay'       => $addr->barangay,
+                    'city'           => $addr->city,
+                    'province'       => $addr->province,
+                    'postal_code'    => $addr->postalCode,
+                    'is_default'     => (bool)$addr->isDefault,
+                ];
+            });
+            $zip->addFromString('addresses.json', json_encode($addresses, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES));
+
+            // Customer Order history
+            $orders = \App\Models\Order::where('customerId', $user->id)
+                ->with('items')
+                ->get()
+                ->map(function ($order) {
+                    return [
+                        'order_id'          => $order->id,
+                        'status'            => $order->status,
+                        'total_amount'      => $order->totalAmount,
+                        'shipping_fee'      => $order->shippingFee,
+                        'payment_method'    => $order->paymentMethod,
+                        'payment_reference' => $order->paymentReference,
+                        'order_date'        => $order->createdAt?->toIso8601String(),
+                        'items'             => $order->items->map(function ($item) {
+                            return [
+                                'product_name' => $item->productName,
+                                'variant_name' => $item->variantName,
+                                'quantity'     => $item->quantity,
+                                'price'        => $item->price,
+                                'subtotal'     => $item->subtotal,
+                            ];
+                        }),
+                    ];
+                });
+            $zip->addFromString('orders.json', json_encode($orders, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES));
+
+            // Customer Reviews
+            $reviews = \App\Models\Review::where('customerId', $user->id)
+                ->with('product:id,name')
+                ->get()
+                ->map(function ($rev) {
+                    return [
+                        'product'     => $rev->product?->name ?? 'Product',
+                        'rating'      => $rev->rating,
+                        'comment'     => $rev->comment,
+                        'review_date' => $rev->createdAt?->toIso8601String(),
+                    ];
+                });
+            $zip->addFromString('reviews.json', json_encode($reviews, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES));
+
+            // README
+            $readme = "LumBarong Customer Information Export\n"
+                . "Generated on: " . now()->toFormattedDateString() . "\n"
+                . "Customer: " . $user->name . "\n"
+                . "Email: " . $user->email . "\n\n"
+                . "Contents:\n"
+                . "- account-information.json: Account profile details\n"
+                . "- addresses.json: Saved shipping delivery addresses\n"
+                . "- orders.json: Purchase history and item details\n"
+                . "- reviews.json: Product reviews and ratings submitted\n";
+            $zip->addFromString('README.txt', $readme);
+        }
+
+        $zip->close();
+
+        return response()->download($tempZipPath, $zipFilename, [
+            'Content-Type' => 'application/zip',
+        ])->deleteFileAfterSend(true);
+    }
+
+    /**
+     * Customer & Seller Self-Requested Account Deletion (7-Day Soft Delete & Scheduled Deletion).
      */
     public function deleteAccount(Request $request)
     {
@@ -1869,29 +2165,38 @@ class WebAuthController extends Controller
             return redirect()->route('login');
         }
 
+        // Validate explicit confirmation input
+        $confirm = strtoupper(trim((string) $request->input('confirm', $request->input('confirmation', ''))));
+        if ($confirm !== 'DELETE') {
+            return back()->withErrors(['confirm' => 'Please type DELETE exactly to confirm account deletion.']);
+        }
+
         $userId = $user->id;
         $userName = $user->name;
         $userEmail = $user->email;
-        $reason = $request->input('reason', 'User self-requested account deletion');
+        $role = $user->role;
+        $reason = $request->input('reason', 'User self-requested 7-day scheduled account deletion');
 
-        // Send notification email before deletion
+        // 1. Send notification email before scheduling deletion
         if ($userEmail) {
             try {
-                $mailable = new \App\Mail\CustomerDeletedMail($userName, $reason);
+                $mailable = $role === 'seller'
+                    ? new \App\Mail\SellerDeletedMail($userName, $reason)
+                    : new \App\Mail\CustomerDeletedMail($userName, $reason);
                 EmailNotificationService::sendNotification(
                     $userEmail,
                     $mailable,
-                    'customer_deleted',
+                    $role === 'seller' ? 'seller_deleted' : 'customer_deleted',
                     $userId,
                     'User',
                     $userId
                 );
             } catch (\Throwable $e) {
-                Log::warning('Email sending failed on user self-delete: ' . $e->getMessage());
+                Log::warning('Email sending failed on user scheduled deletion: ' . $e->getMessage());
             }
         }
 
-        // Clean up active sessions & tokens
+        // 2. Clean up active sessions & tokens
         try {
             if (method_exists($user, 'tokens')) {
                 $user->tokens()->delete();
@@ -1900,24 +2205,88 @@ class WebAuthController extends Controller
                 DB::table('sessions')->where('user_id', $userId)->delete();
             }
         } catch (\Throwable $e) {
-            Log::warning('Session cleanup on self-delete: ' . $e->getMessage());
+            Log::warning('Session cleanup on scheduled deletion: ' . $e->getMessage());
         }
 
-        // Archive before soft-delete
+        // 3. Archive snapshot
         try {
-            \App\Models\ArchivedRecord::archive('customer', $user, $reason);
+            \App\Models\ArchivedRecord::archive($role === 'seller' ? 'seller' : 'customer', $user, $reason);
         } catch (\Throwable $ae) {
-            Log::warning('Archive error on self-delete: ' . $ae->getMessage());
+            Log::warning('Archive error on scheduled deletion: ' . $ae->getMessage());
         }
 
-        // Perform Soft Delete (populates deleted_at, keeps record safe)
-        $user->delete();
+        // 4. Update status to PENDING_DELETION and set 7-day recovery period
+        $user->status = 'pending_deletion';
+        $user->deletion_scheduled_at = now();
+        $user->permanent_deletion_at = now()->addDays(7);
+        $user->deleted_at = now();
+        $user->save();
 
         Auth::logout();
         $request->session()->invalidate();
         $request->session()->regenerateToken();
 
-        return redirect()->route('home')->with('success', 'Your account has been successfully deleted. You can re-register anytime with your email address.');
+        return redirect()->route('login')->with('info', 'Your account has been scheduled for deletion. You have 7 days to restore your account by logging in again. After 7 days, it will be permanently deleted.');
+    }
+
+    /**
+     * Restore an account that is currently pending deletion.
+     */
+    public function restoreAccount(Request $request)
+    {
+        $userId = session('restore_account_user_id');
+        if (!$userId) {
+            return redirect()->route('login')->withErrors(['email' => 'Restore session expired. Please log in again.']);
+        }
+
+        /** @var User|null $user */
+        $user = User::withTrashed()->find($userId);
+        if (!$user) {
+            session()->forget(['restore_account_user_id', 'restore_account_email', 'restore_account_name', 'restore_account_role', 'restore_account_expires', 'restore_account_days_left']);
+            return redirect()->route('login')->withErrors(['email' => 'Account not found or already permanently deleted.']);
+        }
+
+        // Check if 7 days expired
+        if ($user->permanent_deletion_at && $user->permanent_deletion_at->lte(now())) {
+            $cleanup = new \App\Console\Commands\ProcessScheduledAccountDeletions();
+            $cleanup->permanentlyDeleteAccount($user);
+            session()->forget(['restore_account_user_id', 'restore_account_email', 'restore_account_name', 'restore_account_role', 'restore_account_expires', 'restore_account_days_left']);
+            return redirect()->route('login')->withErrors(['email' => 'The 7-day recovery period has expired. This account can no longer be restored.']);
+        }
+
+        // Restore the original account to ACTIVE
+        $user->status = 'active';
+        $user->deletion_scheduled_at = null;
+        $user->permanent_deletion_at = null;
+        $user->deleted_at = null;
+        $user->save();
+
+        session()->forget(['restore_account_user_id', 'restore_account_email', 'restore_account_name', 'restore_account_role', 'restore_account_expires', 'restore_account_days_left']);
+
+        Auth::login($user);
+        $request->session()->regenerate();
+        $user->sessionVersion = ((int) ($user->sessionVersion ?? 1)) + 1;
+        $user->save();
+        session(['login_session_version' => $user->sessionVersion]);
+
+        $redirectRoute = match ($user->role) {
+            'superadmin' => 'superadmin.dashboard',
+            'admin'      => 'admin.dashboard',
+            'seller'     => 'seller.dashboard',
+            default      => 'home',
+        };
+
+        return redirect()->route($redirectRoute)->with('success', 'Welcome back, ' . $user->name . '! Your account has been successfully restored and is now active.');
+    }
+
+    /**
+     * Cancel restore prompt and keep the account scheduled for deletion.
+     */
+    public function cancelRestore(Request $request)
+    {
+        session()->forget(['restore_account_user_id', 'restore_account_email', 'restore_account_name', 'restore_account_role', 'restore_account_expires', 'restore_account_days_left']);
+
+        return redirect()->route('login')->with('info', 'Your account remains scheduled for deletion. You can restore it anytime before the 7-day deadline expires by logging in again.');
     }
 
     /**

@@ -8,6 +8,7 @@ Artisan::command('inspire', function () {
 })->purpose('Display an inspiring quote');
 
 Illuminate\Support\Facades\Schedule::command('commission:send-reminders')->daily();
+Illuminate\Support\Facades\Schedule::command('accounts:process-deletions')->hourly();
 
 Artisan::command('mail:test {email}', function ($email) {
     try {

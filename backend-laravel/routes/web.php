@@ -64,6 +64,8 @@ Route::middleware('guest')->group(function () {
     Route::post('/reset-password', [WebAuthController::class, 'resetPassword'])->name('password.update.submit');
 
     Route::post('/login', [WebAuthController::class, 'login']);
+    Route::post('/account/restore', [WebAuthController::class, 'restoreAccount'])->name('account.restore');
+    Route::post('/account/restore/cancel', [WebAuthController::class, 'cancelRestore'])->name('account.restore.cancel');
     Route::post('/register', [WebAuthController::class, 'register']);
     Route::post('/auth/google', [WebAuthController::class, 'handleGoogleLogin'])->name('auth.google');
     Route::post('/auth/google/signup', [WebAuthController::class, 'handleGoogleSignup'])->name('auth.google.signup');
@@ -103,8 +105,10 @@ Route::middleware('auth')->group(function () {
     // Customer My Reports
     Route::get('/profile/reports', [ReportController::class, 'customerReportsView'])->name('profile.reports');
 
-    // Account Self-Deletion (Soft Delete)
+    // Account Self-Deletion (7-Day Soft Delete) & Data Export
+    Route::get('/profile/download-information', [WebAuthController::class, 'downloadMyInformation'])->name('profile.download-information');
     Route::post('/profile/delete-account', [WebAuthController::class, 'deleteAccount'])->name('profile.delete-account');
+    Route::post('/seller/delete-account', [WebAuthController::class, 'deleteAccount'])->name('seller.delete-account');
 
     // Cart
     Route::get('/cart', [CartController::class, 'index'])->name('cart.index');
