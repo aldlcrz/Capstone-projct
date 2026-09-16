@@ -830,9 +830,21 @@ class WebAuthController extends Controller
                 return back()->withErrors(['email' => 'Unable to retrieve email from your Google account.']);
             }
 
-            $user = User::where('email', $email)
+            $user = User::withTrashed()
+                ->where('email', $email)
                 ->orWhere('googleId', $googleId)
                 ->first();
+
+            // If account is in PENDING_DELETION or soft-deleted
+            if ($user && ($user->status === 'pending_deletion' || $user->trashed() || $user->deletion_scheduled_at !== null)) {
+                if ($user->permanent_deletion_at && $user->permanent_deletion_at->lte(now())) {
+                    $cleanup = new \App\Console\Commands\ProcessScheduledAccountDeletions();
+                    $cleanup->permanentlyDeleteAccount($user);
+                    $user = null;
+                } else {
+                    return redirect()->route('login')->with('info', 'An account with this Google email is currently scheduled for deletion. Please log in to restore your account.');
+                }
+            }
 
             // If account ALREADY exists, tell them to log in
             if ($user) {
@@ -881,9 +893,21 @@ class WebAuthController extends Controller
                 return back()->withErrors(['email' => 'Unable to retrieve email from your Google account.']);
             }
 
-            $user = User::where('email', $email)
+            $user = User::withTrashed()
+                ->where('email', $email)
                 ->orWhere('googleId', $googleId)
                 ->first();
+
+            // If account is in PENDING_DELETION or soft-deleted
+            if ($user && ($user->status === 'pending_deletion' || $user->trashed() || $user->deletion_scheduled_at !== null)) {
+                if ($user->permanent_deletion_at && $user->permanent_deletion_at->lte(now())) {
+                    $cleanup = new \App\Console\Commands\ProcessScheduledAccountDeletions();
+                    $cleanup->permanentlyDeleteAccount($user);
+                    $user = null;
+                } else {
+                    return redirect()->route('login')->with('info', 'An account with this Google email is currently scheduled for deletion. Please log in to restore your account.');
+                }
+            }
 
             // If account ALREADY exists, redirect to login
             if ($user) {
