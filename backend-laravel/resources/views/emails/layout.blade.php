@@ -20,8 +20,6 @@
         }
         table {
             border-collapse: collapse;
-            mso-table-lspace: 0pt;
-            mso-table-rspace: 0pt;
         }
         .canvas {
             background-color: #FAF8F5;
@@ -258,6 +256,11 @@
             }
         }
     </style>
+    <!--[if mso]>
+    <style type="text/css">
+        table { border-collapse: collapse; mso-table-lspace: 0pt; mso-table-rspace: 0pt; }
+    </style>
+    <![endif]-->
 </head>
 <body>
     <div class="canvas">
