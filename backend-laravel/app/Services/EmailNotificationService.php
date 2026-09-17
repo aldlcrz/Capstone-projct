@@ -28,7 +28,7 @@ class EmailNotificationService
             'email'           => strtolower($email),
             'code'            => $code,
             'type'            => $type,
-            'expires_at'      => Carbon::now()->addMinutes(10),
+            'expires_at'      => Carbon::now()->addMinutes(5),
             'resend_count'    => 0,
             'failed_attempts' => 0,
             'last_sent_at'    => Carbon::now(),

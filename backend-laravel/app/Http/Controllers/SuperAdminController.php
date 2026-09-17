@@ -45,6 +45,9 @@ class SuperAdminController extends Controller
                 return back()->withErrors(['email' => 'Access denied. Super Admin only.']);
             }
             $request->session()->regenerate();
+            if (!Auth::user()->hasSeenGuide()) {
+                session()->flash('show_first_login_guide', true);
+            }
             return redirect()->route('superadmin.dashboard');
         }
 

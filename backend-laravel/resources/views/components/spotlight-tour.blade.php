@@ -53,6 +53,7 @@
                     if (!isDone && this.autoStart && this.steps.length > 0) {
                         setTimeout(() => {
                             this.startTour();
+                            this.markTourSeen();
                         }, 800);
                     }
 
@@ -63,6 +64,26 @@
                     window.addEventListener('scroll', () => {
                         if (this.isActive) this.updatePosition();
                     }, { passive: true });
+                },
+
+                markTourSeen() {
+                    try {
+                        localStorage.setItem(this.storageKey, 'true');
+                    } catch(e) {}
+
+                    const tokenMeta = document.querySelector('meta[name="csrf-token"]');
+                    const token = tokenMeta ? tokenMeta.getAttribute('content') : '';
+                    if (token) {
+                        fetch('/guide/dismiss', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'X-CSRF-TOKEN': token,
+                                'Accept': 'application/json'
+                            },
+                            body: JSON.stringify({ tourId: this.tourId })
+                        }).catch(() => {});
+                    }
                 },
 
                 startTour() {
@@ -94,9 +115,7 @@
 
                 dismissTour() {
                     this.isActive = false;
-                    try {
-                        localStorage.setItem(this.storageKey, 'true');
-                    } catch(e) {}
+                    this.markTourSeen();
                 },
 
                 prevStep() {

@@ -491,10 +491,11 @@
     <x-confirmation-modal />
     <x-modal-scroll-lock />
 
+    @if(request()->routeIs('seller.dashboard'))
     <x-spotlight-tour
         tour-id="seller"
         :user-id="Auth::id()"
-        :auto-start="true"
+        :auto-start="(bool) (session('show_first_login_guide') && !Auth::user()->hasSeenGuide())"
         :steps="[
             ['selector' => '#tour-seller-guide-btn',      'title' => 'Dashboard Tour Guide',              'text' => 'Welcome to your Artisan Guide! You can click this icon anytime to explore how your dashboard metrics, graphs, and fulfillment pipelines work.'],
             ['selector' => '#tour-seller-header-filter',  'title' => 'Date Filter & Export Report',       'text' => 'Use the date preset dropdown to filter your dashboard metrics (Today, 7 Days, 30 Days, All Time) or click Export Report to download comprehensive financial sheets.'],
@@ -506,6 +507,7 @@
             ['selector' => '#tour-seller-signatures',     'title' => 'Heritage Signatures & Activity',   'text' => 'Displays your top-selling handcrafted Barongs ranked by volume and earnings, plus a live stream of recent customer purchases with their current fulfillment status.'],
         ]"
     />
+    @endif
     @stack('scripts')
 </body>
 </html>

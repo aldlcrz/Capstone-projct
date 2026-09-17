@@ -638,7 +638,7 @@
     <x-spotlight-tour
         tour-id="customer"
         :user-id="Auth::id()"
-        :auto-start="true"
+        :auto-start="(bool) (session('show_first_login_guide') && !Auth::user()->hasSeenGuide())"
         :steps="[
             ['selector' => '#tour-search-bar',       'title' => 'Search Products',     'text' => 'Use the search bar to find Barong Tagalog, sellers, and styles by name or keyword.'],
             ['selector' => '#shop-by-category-section',  'title' => 'Shop by Category',    'text' => 'Browse our curated categories — from Wedding Barong to Filipiniana Gowns — to quickly narrow down your style.'],

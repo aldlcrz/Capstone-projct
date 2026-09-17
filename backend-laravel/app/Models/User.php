@@ -45,7 +45,7 @@ class User extends Authenticatable
         'hasPasswordSet', 'loginAttempts', 'loginLockedUntil', 'bio', 'username',
         'gender', 'birthday', 'resetPasswordToken', 'resetPasswordExpires',
         'shopName', 'shopDescription', 'cancellation_policy', 'refund_policy', 'businessPermit', 'cart',
-        'is_onboarded', 'deleted_at',
+        'is_onboarded', 'has_seen_guide', 'deleted_at',
         'deletion_scheduled_at', 'permanent_deletion_at',
     ];
 
@@ -123,9 +123,22 @@ class User extends Authenticatable
             'updatedAt'         => 'datetime',
             'size_guides'       => 'array',
             'is_onboarded'      => 'boolean',
+            'has_seen_guide'    => 'boolean',
             'deletion_scheduled_at' => 'datetime',
             'permanent_deletion_at' => 'datetime',
         ];
+    }
+
+    /**
+     * Determine if user has seen or dismissed the onboarding guide.
+     */
+    public function hasSeenGuide(): bool
+    {
+        if (\Illuminate\Support\Facades\Schema::hasColumn('users', 'has_seen_guide')) {
+            return (bool) ($this->has_seen_guide ?? false);
+        }
+
+        return (bool) session('has_seen_guide_' . $this->id, false);
     }
 
     /**

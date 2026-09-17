@@ -310,7 +310,7 @@
 
 <x-spotlight-tour
     tourId="admin-dashboard-guide"
-    :autoStart="false"
+    :autoStart="(bool) (session('show_first_login_guide') && !Auth::user()->hasSeenGuide())"
     :steps="[
         ['selector' => '#tour-admin-dash-header',           'title' => 'Dashboard Insights',         'description' => 'Welcome to your executive command center. Monitor platform-wide transactions, sales performance, active sellers, and operational health in real time.'],
         ['selector' => '#tour-admin-dash-export',           'title' => 'Export Global CSV Report',   'description' => 'Download comprehensive audit reports containing sales figures, order fulfillment logs, active artisan shops, and financial breakdowns.'],

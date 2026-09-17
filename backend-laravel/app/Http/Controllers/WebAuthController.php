@@ -220,6 +220,10 @@ class WebAuthController extends Controller
                 $user->update(['cart' => json_encode($mergedCart)]);
             }
 
+            if (!$user->hasSeenGuide()) {
+                session()->flash('show_first_login_guide', true);
+            }
+
             if ($user->role === 'superadmin') return redirect()->route('superadmin.dashboard');
             if ($user->role === 'admin') return redirect()->route('admin.dashboard');
             if ($user->role === 'seller') {
@@ -520,7 +524,18 @@ class WebAuthController extends Controller
             session(['verify_email' => strtolower(trim($request->email))]);
         }
         $email = session('verify_email') ?? (Auth::check() ? Auth::user()->email : null);
-        return view('auth.verify-email', compact('email'));
+
+        $remainingSeconds = 300;
+        if ($email) {
+            $verification = EmailVerification::where('email', strtolower($email))
+                ->where('type', 'registration')
+                ->first();
+            if ($verification && $verification->expires_at) {
+                $remainingSeconds = max(0, now()->diffInSeconds($verification->expires_at, false));
+            }
+        }
+
+        return view('auth.verify-email', compact('email', 'remainingSeconds'));
     }
 
     public function verifyEmail(Request $request)
@@ -602,6 +617,10 @@ class WebAuthController extends Controller
                 $user->save();
                 session(['login_session_version' => $user->sessionVersion]);
 
+                if (!$user->hasSeenGuide()) {
+                    session()->flash('show_first_login_guide', true);
+                }
+
                 $contextRedirect = $this->restorePendingContext($user, $request);
                 if ($contextRedirect) return $contextRedirect;
 
@@ -636,9 +655,12 @@ class WebAuthController extends Controller
         }
 
         $existing = EmailVerification::where('email', $email)->where('type', 'registration')->first();
-        if ($existing && $existing->last_sent_at && $existing->last_sent_at->diffInSeconds(now()) < 60) {
-            $secondsLeft = 60 - $existing->last_sent_at->diffInSeconds(now());
-            return back()->withErrors(['code' => "Please wait {$secondsLeft} seconds before requesting a new code."]);
+        if ($existing && !$existing->isExpired()) {
+            $secondsLeft = max(1, now()->diffInSeconds($existing->expires_at, false));
+            $minutes = floor($secondsLeft / 60);
+            $secs = $secondsLeft % 60;
+            $timeStr = sprintf('%02d:%02d', $minutes, $secs);
+            return back()->withErrors(['code' => "Please wait {$timeStr} before requesting a new code."]);
         }
 
         $verification = EmailNotificationService::createVerificationCode($email, 'registration');
@@ -823,6 +845,10 @@ class WebAuthController extends Controller
             $user->sessionVersion = ((int) ($user->sessionVersion ?? 1)) + 1;
             $user->save();
             session(['login_session_version' => $user->sessionVersion]);
+
+            if (!$user->hasSeenGuide()) {
+                session()->flash('show_first_login_guide', true);
+            }
 
             if ($user->role === 'seller') {
                 if (!$user->isVerified) {
@@ -2440,6 +2466,24 @@ class WebAuthController extends Controller
             'available' => true,
             'message'   => "Shop name '{$name}' is available!",
         ]);
+    }
+
+    /**
+     * Mark the onboarding guide as seen/dismissed for the authenticated user.
+     */
+    public function dismissGuide(Request $request)
+    {
+        /** @var User|null $user */
+        $user = Auth::user();
+        if ($user instanceof User) {
+            if (Schema::hasColumn('users', 'has_seen_guide')) {
+                $user->has_seen_guide = true;
+                $user->save();
+            }
+            session(['has_seen_guide_' . $user->id => true]);
+        }
+
+        return response()->json(['success' => true]);
     }
 }
 

@@ -29,7 +29,24 @@
          x-data="{
              email: '{{ session('verify_email', $email ?? (auth()->user()->email ?? '')) }}',
              code: '',
-             showAiHelper: false
+             timeLeft: {{ (int) ($remainingSeconds ?? 300) }},
+             timerInterval: null,
+             init() {
+                 if (this.timeLeft > 0) {
+                     this.timerInterval = setInterval(() => {
+                         if (this.timeLeft > 0) {
+                             this.timeLeft--;
+                         } else {
+                             clearInterval(this.timerInterval);
+                         }
+                     }, 1000);
+                 }
+             },
+             get formattedTime() {
+                 const m = Math.floor(Math.max(0, this.timeLeft) / 60);
+                 const s = Math.max(0, this.timeLeft) % 60;
+                 return String(m).padStart(2, '0') + ':' + String(s).padStart(2, '0');
+             }
          }">
         
         <div class="relative mb-6 text-center">
@@ -104,6 +121,26 @@
                 @enderror
             </div>
 
+            <!-- Real-time 5-minute countdown display -->
+            <div class="flex items-center justify-center pt-1 pb-1">
+                <template x-if="timeLeft > 0">
+                    <div class="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-amber-50 border border-amber-200/80 text-amber-800 text-xs font-semibold shadow-xs">
+                        <svg class="w-3.5 h-3.5 text-amber-600 animate-pulse" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        <span>Code expires in: <strong class="font-mono font-bold text-amber-900" x-text="formattedTime">05:00</strong></span>
+                    </div>
+                </template>
+                <template x-if="timeLeft <= 0">
+                    <div class="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-red-50 border border-red-200 text-red-700 text-xs font-semibold shadow-xs">
+                        <svg class="w-3.5 h-3.5 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        <span>Code expired. Please request a new code below.</span>
+                    </div>
+                </template>
+            </div>
+
             <button type="submit" 
                     :disabled="code.length !== 6"
                     :class="code.length === 6 ? 'bg-[#3D2B1F] hover:bg-[#C0422A] shadow-xl shadow-black/10 cursor-pointer' : 'bg-gray-300 opacity-60 cursor-not-allowed'"
@@ -117,8 +154,25 @@
             <form action="{{ route('verify.email.resend') }}" method="POST">
                 @csrf
                 <input type="hidden" name="email" :value="email">
-                <button type="submit" class="text-xs font-bold text-[#C0422A] hover:underline cursor-pointer">
-                    Resend Code to Gmail
+                
+                <!-- While timer > 0: Locked/Disabled -->
+                <button type="button" 
+                        x-show="timeLeft > 0"
+                        disabled 
+                        class="text-xs font-semibold text-gray-400 bg-gray-100 px-4 py-2 rounded-full cursor-not-allowed inline-flex items-center gap-1.5 transition-all">
+                    <span>Resend Code to Gmail</span>
+                    <span class="font-mono text-[11px] text-gray-500 font-bold" x-text="'(wait ' + formattedTime + ')'"></span>
+                </button>
+
+                <!-- When timer reaches 0: Clickable -->
+                <button type="submit" 
+                        x-show="timeLeft <= 0"
+                        x-cloak
+                        class="text-xs font-bold text-white bg-[#C0422A] hover:bg-[#A03520] px-5 py-2.5 rounded-full cursor-pointer inline-flex items-center gap-2 shadow-md hover:shadow-lg transition-all">
+                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                    </svg>
+                    <span>Resend Code to Gmail</span>
                 </button>
             </form>
             <p class="mt-3 text-[10px] text-gray-400 leading-relaxed px-2">

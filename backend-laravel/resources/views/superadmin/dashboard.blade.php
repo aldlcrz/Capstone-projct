@@ -3,7 +3,7 @@
 @section('content')
 <div class="space-y-8">
     <!-- Header with Quick Developer Bar -->
-    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+    <div id="tour-superadmin-dash-header" class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
             <div class="inline-flex items-center gap-2">
                 <span class="text-[9px] font-black uppercase tracking-[0.25em] text-[#C0422A]">System &amp; Governance</span>
@@ -17,14 +17,19 @@
         </div>
 
         <div class="flex items-center gap-2 flex-wrap">
-            <a href="{{ route('superadmin.commissions') }}" class="px-5 py-2.5 bg-[#3D2B1F] hover:bg-[#C0422A] text-white font-bold rounded-xl text-[10px] uppercase tracking-widest transition-all shadow-sm flex items-center gap-2">
+            <button type="button"
+                    onclick="window.startSpotlightTour ? window.startSpotlightTour('superadmin-dashboard-guide') : null"
+                    class="px-4 py-2.5 bg-white hover:bg-gray-50 text-gray-700 font-bold rounded-xl text-[10px] uppercase tracking-widest border border-gray-200 transition-all shadow-sm flex items-center gap-1.5">
+                <span>💡 Guide</span>
+            </button>
+            <a id="tour-superadmin-dash-breakdown" href="{{ route('superadmin.commissions') }}" class="px-5 py-2.5 bg-[#3D2B1F] hover:bg-[#C0422A] text-white font-bold rounded-xl text-[10px] uppercase tracking-widest transition-all shadow-sm flex items-center gap-2">
                 <span>Profit Breakdown →</span>
             </a>
         </div>
     </div>
 
     <!-- ── FINANCIAL & GOVERNANCE KPIS ── -->
-    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+    <div id="tour-superadmin-dash-kpis" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <!-- Total Platform Sales -->
         <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-5 flex flex-col gap-3 hover:shadow-md transition-all">
             <div class="flex items-center justify-between">
@@ -213,4 +218,15 @@
         </div>
     </div>
 </div>
+
+<x-spotlight-tour
+    tourId="superadmin-dashboard-guide"
+    :autoStart="(bool) (session('show_first_login_guide') && !Auth::user()->hasSeenGuide())"
+    :steps="[
+        ['selector' => '#tour-superadmin-dash-header',    'title' => 'Executive Command Center',        'text' => 'Welcome to supreme governance. Monitor platform revenues, oversee active sellers, audit system health, and enforce platform-wide policies.'],
+        ['selector' => '#tour-superadmin-dash-kpis',      'title' => 'Financial & Governance KPIs',      'text' => 'High-level executive metrics tracking Gross Sales (GMV), platform commission earnings, collected vs outstanding fees, and buyer/seller population counts.'],
+        ['selector' => '#tour-superadmin-dash-breakdown', 'title' => 'Profit & Commission Breakdown',   'text' => 'Access comprehensive commission calculations, invoice settlement statuses, and custom payout configurations.']
+    ]"
+/>
 @endsection
+

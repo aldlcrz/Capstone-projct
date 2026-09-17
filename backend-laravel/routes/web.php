@@ -75,6 +75,9 @@ Route::middleware('guest')->group(function () {
 Route::post('/submit-commission-payment', [WebAuthController::class, 'submitCommissionPayment'])->name('commission.submit-payment');
 
 Route::middleware('auth')->group(function () {
+    // Dismiss and mark onboarding guide as completed
+    Route::post('/guide/dismiss', [WebAuthController::class, 'dismissGuide'])->name('guide.dismiss');
+
     // Session Heartbeat for Single-Device Login Detection
     Route::get('/auth/session-heartbeat', [WebAuthController::class, 'sessionHeartbeat'])->name('auth.session-heartbeat');
 
