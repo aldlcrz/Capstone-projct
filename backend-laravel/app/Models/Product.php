@@ -6,6 +6,25 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Str;
 
+/**
+ * @property string $id
+ * @property string $sellerId
+ * @property string $name
+ * @property string|null $description
+ * @property string|float|int|null $price
+ * @property string|float|int|null $costPerPiece
+ * @property int $stock
+ * @property string|float|int|null $shippingFee
+ * @property int $shippingDays
+ * @property string $status
+ * @property array|null $sizes
+ * @property array|null $categories
+ * @property array|null $image
+ * @property string|null $CategoryId
+ * @property string|null $target_group
+ * @property \Illuminate\Support\Carbon|\Carbon\CarbonInterface|string|null $createdAt
+ * @property \Illuminate\Support\Carbon|\Carbon\CarbonInterface|string|null $updatedAt
+ */
 class Product extends Model
 {
     use HasFactory;

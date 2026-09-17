@@ -4,7 +4,6 @@ namespace App\Console\Commands;
 
 use App\Models\Address;
 use App\Models\ArchivedRecord;
-use App\Models\CartItem;
 use App\Models\Product;
 use App\Models\Review;
 use App\Models\User;
@@ -71,11 +70,20 @@ class ProcessScheduledAccountDeletions extends Command
         $now = now();
         $this->writeInfo("Checking for expired pending deletion accounts at {$now}...");
 
+        if (!Schema::hasColumn('users', 'permanent_deletion_at')) {
+            $this->writeInfo('permanent_deletion_at column does not exist yet in users table. Skipping cleanup.');
+            return 0;
+        }
+
+        $hasScheduledCol = Schema::hasColumn('users', 'deletion_scheduled_at');
+
         // Query all accounts in pending_deletion status whose 7-day recovery period has expired
         $expiredUsers = User::withTrashed()
-            ->where(function ($query) {
-                $query->where('status', 'pending_deletion')
-                    ->orWhereNotNull('deletion_scheduled_at');
+            ->where(function ($query) use ($hasScheduledCol) {
+                $query->where('status', 'pending_deletion');
+                if ($hasScheduledCol) {
+                    $query->orWhereNotNull('deletion_scheduled_at');
+                }
             })
             ->whereNotNull('permanent_deletion_at')
             ->where('permanent_deletion_at', '<=', now())
@@ -153,7 +161,7 @@ class ProcessScheduledAccountDeletions extends Command
 
                 // Delete cart items if table exists
                 if (Schema::hasTable('cart_items')) {
-                    CartItem::where('userId', $userId)->delete();
+                    DB::table('cart_items')->where('userId', $userId)->delete();
                 }
             }
 

@@ -5,7 +5,11 @@ namespace App\Http\Controllers;
 use App\Models\User;
 use App\Models\Product;
 use App\Models\Category;
+use App\Models\Order;
+use App\Models\Address;
+use App\Models\Review;
 use App\Models\CommissionRecord;
+use App\Models\ArchivedRecord;
 use App\Models\EmailVerification;
 use App\Mail\PasswordChangeVerificationMail;
 use App\Mail\EmailChangeOldVerificationMail;
@@ -54,9 +58,13 @@ class WebAuthController extends Controller
         }
 
         // Check if account is in PENDING_DELETION or soft-deleted
-        if ($user->status === 'pending_deletion' || $user->trashed() || $user->deletion_scheduled_at !== null) {
+        $isPendingDeletion = $user->status === 'pending_deletion'
+            || $user->trashed()
+            || (!empty($user->deletion_scheduled_at));
+
+        if ($isPendingDeletion) {
             // Check if 7 days have expired
-            if ($user->permanent_deletion_at && $user->permanent_deletion_at->lte(now())) {
+            if (!empty($user->permanent_deletion_at) && $user->permanent_deletion_at->lte(now())) {
                 // Permanently clean up expired account
                 $cleanup = new \App\Console\Commands\ProcessScheduledAccountDeletions();
                 $cleanup->permanentlyDeleteAccount($user);
@@ -67,7 +75,7 @@ class WebAuthController extends Controller
             }
 
             // Within 7-day recovery window: show restore prompt modal
-            $expiresAt = $user->permanent_deletion_at ?: now()->addDays(7);
+            $expiresAt = (!empty($user->permanent_deletion_at)) ? $user->permanent_deletion_at : now()->addDays(7);
             $daysLeft = max(1, (int) ceil(now()->floatDiffInDays($expiresAt, false)));
 
             session([
@@ -137,6 +145,17 @@ class WebAuthController extends Controller
 
             // Seller whose application is awaiting admin verification or correction: allow login directly into document portal
             if ($user->role === 'seller' && (!$user->isVerified || $user->status === 'pending' || $user->status === 'rejected')) {
+                // Ensure seller has verified their email address before accessing the portal
+                $hasUnverifiedEmail = EmailVerification::where('email', $user->email)
+                    ->where('type', 'registration')
+                    ->exists();
+
+                if ($hasUnverifiedEmail) {
+                    Auth::logout();
+                    session(['verify_email' => $user->email]);
+                    return redirect()->route('verify.email')->with('info', 'Please verify your Gmail address before accessing your artisan portal.');
+                }
+
                 $request->session()->regenerate();
                 $user->sessionVersion = ((int) ($user->sessionVersion ?? 1)) + 1;
                 $user->save();
@@ -240,17 +259,20 @@ class WebAuthController extends Controller
         $name = trim($request->name);
 
         // Check if an existing account with this email is pending deletion
+        $hasScheduledCol = Schema::hasColumn('users', 'deletion_scheduled_at');
         $pendingUser = User::withTrashed()
             ->where('email', $email)
-            ->where(function ($q) {
-                $q->where('status', 'pending_deletion')
-                  ->orWhereNotNull('deletion_scheduled_at');
+            ->where(function ($q) use ($hasScheduledCol) {
+                $q->where('status', 'pending_deletion');
+                if ($hasScheduledCol) {
+                    $q->orWhereNotNull('deletion_scheduled_at');
+                }
             })
             ->first();
 
         if ($pendingUser) {
             // Check if 7 days have expired
-            if ($pendingUser->permanent_deletion_at && $pendingUser->permanent_deletion_at->lte(now())) {
+            if (!empty($pendingUser->permanent_deletion_at) && $pendingUser->permanent_deletion_at->lte(now())) {
                 $cleanup = new \App\Console\Commands\ProcessScheduledAccountDeletions();
                 $cleanup->permanentlyDeleteAccount($pendingUser);
             } else {
@@ -354,17 +376,20 @@ class WebAuthController extends Controller
         $email = strtolower(trim($request->email));
 
         // Check if an existing account with this email is pending deletion
+        $hasScheduledCol = Schema::hasColumn('users', 'deletion_scheduled_at');
         $pendingUser = User::withTrashed()
             ->where('email', $email)
-            ->where(function ($q) {
-                $q->where('status', 'pending_deletion')
-                  ->orWhereNotNull('deletion_scheduled_at');
+            ->where(function ($q) use ($hasScheduledCol) {
+                $q->where('status', 'pending_deletion');
+                if ($hasScheduledCol) {
+                    $q->orWhereNotNull('deletion_scheduled_at');
+                }
             })
             ->first();
 
         if ($pendingUser) {
             // Check if 7 days have expired
-            if ($pendingUser->permanent_deletion_at && $pendingUser->permanent_deletion_at->lte(now())) {
+            if (!empty($pendingUser->permanent_deletion_at) && $pendingUser->permanent_deletion_at->lte(now())) {
                 $cleanup = new \App\Console\Commands\ProcessScheduledAccountDeletions();
                 $cleanup->permanentlyDeleteAccount($pendingUser);
             } else {
@@ -456,18 +481,24 @@ class WebAuthController extends Controller
         ];
 
         if ($request->hasFile('residencyCertificate')) {
-            $path = $request->file('residencyCertificate')->move(public_path('uploads/requirements'), time().'_residency.'.$request->file('residencyCertificate')->getClientOriginalExtension());
-            $data['residencyCertificate'] = '/uploads/requirements/'.basename($path);
+            $file = $request->file('residencyCertificate');
+            $filename = time() . '_residency_' . Str::random(8) . '.' . $file->getClientOriginalExtension();
+            $path = $file->move(public_path('uploads/requirements'), $filename);
+            $data['residencyCertificate'] = '/uploads/requirements/' . basename($path);
         }
 
         if ($request->hasFile('birDocument')) {
-            $path = $request->file('birDocument')->move(public_path('uploads/requirements'), time().'_bir.'.$request->file('birDocument')->getClientOriginalExtension());
-            $data['birDocument'] = '/uploads/requirements/'.basename($path);
+            $file = $request->file('birDocument');
+            $filename = time() . '_bir_' . Str::random(8) . '.' . $file->getClientOriginalExtension();
+            $path = $file->move(public_path('uploads/requirements'), $filename);
+            $data['birDocument'] = '/uploads/requirements/' . basename($path);
         }
 
         if ($request->hasFile('businessPermit')) {
-            $path = $request->file('businessPermit')->move(public_path('uploads/requirements'), time().'_permit.'.$request->file('businessPermit')->getClientOriginalExtension());
-            $data['businessPermit'] = '/uploads/requirements/'.basename($path);
+            $file = $request->file('businessPermit');
+            $filename = time() . '_permit_' . Str::random(8) . '.' . $file->getClientOriginalExtension();
+            $path = $file->move(public_path('uploads/requirements'), $filename);
+            $data['businessPermit'] = '/uploads/requirements/' . basename($path);
         }
 
         $user = User::create($data);
@@ -477,13 +508,6 @@ class WebAuthController extends Controller
         $verification = EmailNotificationService::createVerificationCode($email, 'registration');
         $mailable = new \App\Mail\VerificationCodeMail($user->name, $verification->code);
         EmailNotificationService::sendNotification($email, $mailable, 'email_verification', $user->id, 'User', $user->id);
-
-        \App\Models\Notification::sendToAdmins(
-            'New Seller Application',
-            "Artisan {$user->name} has submitted a verification application for shop '{$user->shopName}'.",
-            'system',
-            '/admin/sellers'
-        );
 
         session(['verify_email' => $email]);
 
@@ -529,10 +553,19 @@ class WebAuthController extends Controller
 
                 if ($existingUser->role === 'seller') {
                     $existingUser->isVerified = false;
-                    $existingUser->status     = 'active';
+                    $existingUser->status     = 'pending';
                     $existingUser->save();
 
                     EmailNotificationService::consumeCode($email, 'registration');
+
+                    // Notify admins now that seller has verified their email address
+                    \App\Models\Notification::sendToAdmins(
+                        'New Seller Application',
+                        "Artisan {$existingUser->name} has submitted a verification application for shop '{$existingUser->shopName}'.",
+                        'system',
+                        '/admin/sellers'
+                    );
+
                     Auth::logout();
                     session()->forget('verify_email');
                     session()->forget('pending_registration');
@@ -671,14 +704,14 @@ class WebAuthController extends Controller
                 ->first();
 
             // Check if account is in PENDING_DELETION or soft-deleted
-            if ($user && ($user->status === 'pending_deletion' || $user->trashed() || $user->deletion_scheduled_at !== null)) {
+            if ($user && ($user->status === 'pending_deletion' || $user->trashed() || !empty($user->deletion_scheduled_at))) {
                 // Check if 7 days have expired
-                if ($user->permanent_deletion_at && $user->permanent_deletion_at->lte(now())) {
+                if (!empty($user->permanent_deletion_at) && $user->permanent_deletion_at->lte(now())) {
                     $cleanup = new \App\Console\Commands\ProcessScheduledAccountDeletions();
                     $cleanup->permanentlyDeleteAccount($user);
                     $user = null;
                 } else {
-                    $expiresAt = $user->permanent_deletion_at ?: now()->addDays(7);
+                    $expiresAt = (!empty($user->permanent_deletion_at)) ? $user->permanent_deletion_at : now()->addDays(7);
                     $daysLeft = max(1, (int) ceil(now()->floatDiffInDays($expiresAt, false)));
 
                     session([
@@ -839,8 +872,8 @@ class WebAuthController extends Controller
                 ->first();
 
             // If account is in PENDING_DELETION or soft-deleted
-            if ($user && ($user->status === 'pending_deletion' || $user->trashed() || $user->deletion_scheduled_at !== null)) {
-                if ($user->permanent_deletion_at && $user->permanent_deletion_at->lte(now())) {
+            if ($user && ($user->status === 'pending_deletion' || $user->trashed() || !empty($user->deletion_scheduled_at))) {
+                if (!empty($user->permanent_deletion_at) && $user->permanent_deletion_at->lte(now())) {
                     $cleanup = new \App\Console\Commands\ProcessScheduledAccountDeletions();
                     $cleanup->permanentlyDeleteAccount($user);
                     $user = null;
@@ -902,8 +935,8 @@ class WebAuthController extends Controller
                 ->first();
 
             // If account is in PENDING_DELETION or soft-deleted
-            if ($user && ($user->status === 'pending_deletion' || $user->trashed() || $user->deletion_scheduled_at !== null)) {
-                if ($user->permanent_deletion_at && $user->permanent_deletion_at->lte(now())) {
+            if ($user && ($user->status === 'pending_deletion' || $user->trashed() || !empty($user->deletion_scheduled_at))) {
+                if (!empty($user->permanent_deletion_at) && $user->permanent_deletion_at->lte(now())) {
                     $cleanup = new \App\Console\Commands\ProcessScheduledAccountDeletions();
                     $cleanup->permanentlyDeleteAccount($user);
                     $user = null;
@@ -1237,7 +1270,7 @@ class WebAuthController extends Controller
             return redirect()->route('seller.dashboard');
         }
 
-        $categories = \App\Models\Category::orderBy('name')->get();
+        $categories = Category::orderBy('name')->get();
         $hasGcash = !empty($user->gcashNumber);
         $hasMaya = !empty($user->mayaNumber);
         $hasPolicies = !empty($user->cancellation_policy) || !empty($user->refund_policy);
@@ -1314,13 +1347,13 @@ class WebAuthController extends Controller
                 $prod->sellerId     = $user->id;
                 $prod->name         = trim($request->product_name);
                 $prod->description  = trim($request->product_description ?: 'Handcrafted authentic artisan creation from Lumban, Laguna.');
-                $prod->price        = (float) $request->product_price;
+                $prod->price        = number_format((float) $request->product_price, 2, '.', '');
                 $prod->stock        = (int) ($request->product_stock ?? 1);
                 $prod->CategoryId   = $categoryId;
                 $prod->categories   = [$categoryName];
                 $prod->image        = $imgArray;
                 $prod->status       = 'pending';
-                $prod->shippingFee  = 0;
+                $prod->shippingFee  = '0.00';
                 $prod->shippingDays = 3;
                 $prod->target_group = 'Men';
                 $prod->sizes        = ['S', 'M', 'L', 'XL'];
@@ -2021,186 +2054,9 @@ class WebAuthController extends Controller
         }
 
         if ($role === 'seller') {
-            // 1. Seller Profile
-            $profileData = [
-                'id'                  => $user->id,
-                'shop_name'           => $user->shopName ?: $user->name,
-                'owner_name'          => $user->name,
-                'username'            => $user->username,
-                'email'               => $user->email,
-                'mobile_number'       => $user->mobileNumber,
-                'shop_story'          => $user->shopDescription,
-                'shop_address'        => [
-                    'house_no'    => $user->shopHouseNo,
-                    'street'      => $user->shopStreet,
-                    'barangay'    => $user->shopBarangay,
-                    'city'        => $user->shopCity,
-                    'province'    => $user->shopProvince,
-                    'postal_code' => $user->shopPostalCode,
-                ],
-                'cancellation_policy' => $user->cancellation_policy,
-                'refund_policy'       => $user->refund_policy,
-                'social_links'        => $user->socialLinks,
-                'account_created_at'  => $user->createdAt?->toIso8601String(),
-            ];
-            $zip->addFromString('account-information.json', json_encode($profileData, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES));
-
-            // 2. Products & Variants
-            $products = \App\Models\Product::where('sellerId', $user->id)
-                ->get()
-                ->map(function ($prod) {
-                    return [
-                        'id'          => $prod->id,
-                        'name'        => $prod->name,
-                        'price'       => $prod->price,
-                        'stock'       => $prod->stock,
-                        'status'      => $prod->status,
-                        'description' => $prod->description,
-                        'sku'         => $prod->sku,
-                        'fabric_type' => $prod->fabric_type,
-                        'collar_type' => $prod->collar_type,
-                        'variations'  => $prod->variations ?? [],
-                        'created_at'  => $prod->createdAt?->toIso8601String(),
-                    ];
-                });
-            $zip->addFromString('products.json', json_encode($products, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES));
-
-            // 3. Orders received by seller
-            $orders = \App\Models\Order::where('sellerId', $user->id)
-                ->with('items')
-                ->get()
-                ->map(function ($order) {
-                    return [
-                        'order_id'          => $order->id,
-                        'status'            => $order->status,
-                        'total_amount'      => $order->totalAmount,
-                        'shipping_fee'      => $order->shippingFee,
-                        'payment_method'    => $order->paymentMethod,
-                        'payment_reference' => $order->paymentReference,
-                        'order_date'        => $order->createdAt?->toIso8601String(),
-                        'items'             => $order->items->map(function ($item) {
-                            return [
-                                'product_name' => $item->productName,
-                                'variant_name' => $item->variantName,
-                                'quantity'     => $item->quantity,
-                                'price'        => $item->price,
-                                'subtotal'     => $item->subtotal,
-                            ];
-                        }),
-                    ];
-                });
-            $zip->addFromString('orders.json', json_encode($orders, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES));
-
-            // 4. Commissions
-            $commissions = \App\Models\CommissionRecord::where('sellerId', $user->id)
-                ->get()
-                ->map(function ($c) {
-                    return [
-                        'id'                => $c->id,
-                        'period'            => $c->period,
-                        'total_sales'       => $c->totalSales,
-                        'commission_rate'   => $c->commissionRate,
-                        'commission_amount' => $c->commissionAmount,
-                        'status'            => $c->status,
-                        'reference_number'  => $c->referenceNumber,
-                        'created_at'        => $c->createdAt?->toIso8601String(),
-                    ];
-                });
-            $zip->addFromString('commissions.json', json_encode($commissions, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES));
-
-            // README
-            $readme = "LumBarong Seller Information Export\n"
-                . "Generated on: " . now()->toFormattedDateString() . "\n"
-                . "Shop: " . ($user->shopName ?: $user->name) . "\n"
-                . "Email: " . $user->email . "\n\n"
-                . "Contents:\n"
-                . "- account-information.json: Artisan profile, contact & shop policies\n"
-                . "- products.json: Product catalog, descriptions, inventory & variants\n"
-                . "- orders.json: Customer orders fulfilled\n"
-                . "- commissions.json: Marketplace commission settlement history\n";
-            $zip->addFromString('README.txt', $readme);
+            $this->exportSellerData($zip, $user);
         } else {
-            // Customer Export
-            $profileData = [
-                'id'                 => $user->id,
-                'name'               => $user->name,
-                'username'           => $user->username,
-                'email'              => $user->email,
-                'mobile_number'      => $user->mobileNumber,
-                'gender'             => $user->gender,
-                'birthday'           => $user->birthday,
-                'bio'                => $user->bio,
-                'account_created_at' => $user->createdAt?->toIso8601String(),
-            ];
-            $zip->addFromString('account-information.json', json_encode($profileData, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES));
-
-            // Saved delivery addresses
-            $addresses = \App\Models\Address::where('userId', $user->id)->get()->map(function ($addr) {
-                return [
-                    'recipient_name' => $addr->recipientName,
-                    'phone'          => $addr->phone,
-                    'house_no'       => $addr->houseNo,
-                    'street'         => $addr->street,
-                    'barangay'       => $addr->barangay,
-                    'city'           => $addr->city,
-                    'province'       => $addr->province,
-                    'postal_code'    => $addr->postalCode,
-                    'is_default'     => (bool)$addr->isDefault,
-                ];
-            });
-            $zip->addFromString('addresses.json', json_encode($addresses, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES));
-
-            // Customer Order history
-            $orders = \App\Models\Order::where('customerId', $user->id)
-                ->with('items')
-                ->get()
-                ->map(function ($order) {
-                    return [
-                        'order_id'          => $order->id,
-                        'status'            => $order->status,
-                        'total_amount'      => $order->totalAmount,
-                        'shipping_fee'      => $order->shippingFee,
-                        'payment_method'    => $order->paymentMethod,
-                        'payment_reference' => $order->paymentReference,
-                        'order_date'        => $order->createdAt?->toIso8601String(),
-                        'items'             => $order->items->map(function ($item) {
-                            return [
-                                'product_name' => $item->productName,
-                                'variant_name' => $item->variantName,
-                                'quantity'     => $item->quantity,
-                                'price'        => $item->price,
-                                'subtotal'     => $item->subtotal,
-                            ];
-                        }),
-                    ];
-                });
-            $zip->addFromString('orders.json', json_encode($orders, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES));
-
-            // Customer Reviews
-            $reviews = \App\Models\Review::where('customerId', $user->id)
-                ->with('product:id,name')
-                ->get()
-                ->map(function ($rev) {
-                    return [
-                        'product'     => $rev->product?->name ?? 'Product',
-                        'rating'      => $rev->rating,
-                        'comment'     => $rev->comment,
-                        'review_date' => $rev->createdAt?->toIso8601String(),
-                    ];
-                });
-            $zip->addFromString('reviews.json', json_encode($reviews, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES));
-
-            // README
-            $readme = "LumBarong Customer Information Export\n"
-                . "Generated on: " . now()->toFormattedDateString() . "\n"
-                . "Customer: " . $user->name . "\n"
-                . "Email: " . $user->email . "\n\n"
-                . "Contents:\n"
-                . "- account-information.json: Account profile details\n"
-                . "- addresses.json: Saved shipping delivery addresses\n"
-                . "- orders.json: Purchase history and item details\n"
-                . "- reviews.json: Product reviews and ratings submitted\n";
-            $zip->addFromString('README.txt', $readme);
+            $this->exportCustomerData($zip, $user);
         }
 
         $zip->close();
@@ -2208,6 +2064,198 @@ class WebAuthController extends Controller
         return response()->download($tempZipPath, $zipFilename, [
             'Content-Type' => 'application/zip',
         ])->deleteFileAfterSend(true);
+    }
+
+    /**
+     * Build seller export files for ZIP download.
+     */
+    protected function exportSellerData(\ZipArchive $zip, User $user): void
+    {
+        // 1. Seller Profile
+        $profileData = [
+            'id'                  => $user->id,
+            'shop_name'           => $user->shopName ?: $user->name,
+            'owner_name'          => $user->name,
+            'username'            => $user->username,
+            'email'               => $user->email,
+            'mobile_number'       => $user->mobileNumber,
+            'shop_story'          => $user->shopDescription,
+            'shop_address'        => [
+                'house_no'    => $user->shopHouseNo,
+                'street'      => $user->shopStreet,
+                'barangay'    => $user->shopBarangay,
+                'city'        => $user->shopCity,
+                'province'    => $user->shopProvince,
+                'postal_code' => $user->shopPostalCode,
+            ],
+            'cancellation_policy' => $user->cancellation_policy,
+            'refund_policy'       => $user->refund_policy,
+            'social_links'        => $user->socialLinks,
+            'account_created_at'  => $user->createdAt?->toIso8601String(),
+        ];
+        $zip->addFromString('account-information.json', json_encode($profileData, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES));
+
+        // 2. Products & Variants
+        $products = Product::where('sellerId', $user->id)
+            ->get()
+            ->map(function ($prod) {
+                return [
+                    'id'          => $prod->id,
+                    'name'        => $prod->name,
+                    'price'       => $prod->price,
+                    'stock'       => $prod->stock,
+                    'status'      => $prod->status,
+                    'description' => $prod->description,
+                    'sku'         => $prod->sku,
+                    'fabric_type' => $prod->fabric_type,
+                    'collar_type' => $prod->collar_type,
+                    'variations'  => $prod->variations ?? [],
+                    'created_at'  => $prod->createdAt?->toIso8601String(),
+                ];
+            });
+        $zip->addFromString('products.json', json_encode($products, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES));
+
+        // 3. Orders received by seller
+        $orders = Order::where('sellerId', $user->id)
+            ->with('items')
+            ->get()
+            ->map(function ($order) {
+                return [
+                    'order_id'          => $order->id,
+                    'status'            => $order->status,
+                    'total_amount'      => $order->totalAmount,
+                    'shipping_fee'      => $order->shippingFee,
+                    'payment_method'    => $order->paymentMethod,
+                    'payment_reference' => $order->paymentReference,
+                    'order_date'        => $order->createdAt?->toIso8601String(),
+                    'items'             => $order->items->map(function ($item) {
+                        return [
+                            'product_name' => $item->productName,
+                            'variant_name' => $item->variantName,
+                            'quantity'     => $item->quantity,
+                            'price'        => $item->price,
+                            'subtotal'     => $item->subtotal,
+                        ];
+                    }),
+                ];
+            });
+        $zip->addFromString('orders.json', json_encode($orders, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES));
+
+        // 4. Commissions
+        $commissions = CommissionRecord::where('sellerId', $user->id)
+            ->get()
+            ->map(function ($c) {
+                return [
+                    'id'                => $c->id,
+                    'period'            => $c->period,
+                    'total_sales'       => $c->totalSales,
+                    'commission_rate'   => $c->commissionRate,
+                    'commission_amount' => $c->commissionAmount,
+                    'status'            => $c->status,
+                    'reference_number'  => $c->referenceNumber,
+                    'created_at'        => $c->createdAt?->toIso8601String(),
+                ];
+            });
+        $zip->addFromString('commissions.json', json_encode($commissions, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES));
+
+        // README
+        $readme = "LumBarong Seller Information Export\n"
+            . "Generated on: " . now()->toFormattedDateString() . "\n"
+            . "Shop: " . ($user->shopName ?: $user->name) . "\n"
+            . "Email: " . $user->email . "\n\n"
+            . "Contents:\n"
+            . "- account-information.json: Artisan profile, contact & shop policies\n"
+            . "- products.json: Product catalog, descriptions, inventory & variants\n"
+            . "- orders.json: Customer orders fulfilled\n"
+            . "- commissions.json: Marketplace commission settlement history\n";
+        $zip->addFromString('README.txt', $readme);
+    }
+
+    /**
+     * Build customer export files for ZIP download.
+     */
+    protected function exportCustomerData(\ZipArchive $zip, User $user): void
+    {
+        $profileData = [
+            'id'                 => $user->id,
+            'name'               => $user->name,
+            'username'           => $user->username,
+            'email'              => $user->email,
+            'mobile_number'      => $user->mobileNumber,
+            'gender'             => $user->gender,
+            'birthday'           => $user->birthday,
+            'bio'                => $user->bio,
+            'account_created_at' => $user->createdAt?->toIso8601String(),
+        ];
+        $zip->addFromString('account-information.json', json_encode($profileData, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES));
+
+        // Saved delivery addresses
+        $addresses = Address::where('userId', $user->id)->get()->map(function ($addr) {
+            return [
+                'recipient_name' => $addr->recipientName,
+                'phone'          => $addr->phone,
+                'house_no'       => $addr->houseNo,
+                'street'         => $addr->street,
+                'barangay'       => $addr->barangay,
+                'city'           => $addr->city,
+                'province'       => $addr->province,
+                'postal_code'    => $addr->postalCode,
+                'is_default'     => (bool)$addr->isDefault,
+            ];
+        });
+        $zip->addFromString('addresses.json', json_encode($addresses, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES));
+
+        // Customer Order history
+        $orders = Order::where('customerId', $user->id)
+            ->with('items')
+            ->get()
+            ->map(function ($order) {
+                return [
+                    'order_id'          => $order->id,
+                    'status'            => $order->status,
+                    'total_amount'      => $order->totalAmount,
+                    'shipping_fee'      => $order->shippingFee,
+                    'payment_method'    => $order->paymentMethod,
+                    'payment_reference' => $order->paymentReference,
+                    'order_date'        => $order->createdAt?->toIso8601String(),
+                    'items'             => $order->items->map(function ($item) {
+                        return [
+                            'product_name' => $item->productName,
+                            'variant_name' => $item->variantName,
+                            'quantity'     => $item->quantity,
+                            'price'        => $item->price,
+                            'subtotal'     => $item->subtotal,
+                        ];
+                    }),
+                ];
+            });
+        $zip->addFromString('orders.json', json_encode($orders, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES));
+
+        // Customer Reviews
+        $reviews = Review::where('customerId', $user->id)
+            ->with('product:id,name')
+            ->get()
+            ->map(function ($rev) {
+                return [
+                    'product'     => $rev->product?->name ?? 'Product',
+                    'rating'      => $rev->rating,
+                    'comment'     => $rev->comment,
+                    'review_date' => $rev->createdAt?->toIso8601String(),
+                ];
+            });
+        $zip->addFromString('reviews.json', json_encode($reviews, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES));
+
+        // README
+        $readme = "LumBarong Customer Information Export\n"
+            . "Generated on: " . now()->toFormattedDateString() . "\n"
+            . "Customer: " . $user->name . "\n"
+            . "Email: " . $user->email . "\n\n"
+            . "Contents:\n"
+            . "- account-information.json: Account profile details\n"
+            . "- addresses.json: Saved shipping delivery addresses\n"
+            . "- orders.json: Purchase history and item details\n"
+            . "- reviews.json: Product reviews and ratings submitted\n";
+        $zip->addFromString('README.txt', $readme);
     }
 
     /**
@@ -2231,7 +2279,7 @@ class WebAuthController extends Controller
         $userName = $user->name;
         $userEmail = $user->email;
         $role = $user->role;
-        $reason = $request->input('reason', 'User self-requested 7-day scheduled account deletion');
+        $reason = trim((string) $request->input('reason', 'User self-requested account deletion'));
 
         // 1. Send notification email before scheduling deletion
         if ($userEmail) {
@@ -2252,11 +2300,17 @@ class WebAuthController extends Controller
             }
         }
 
-        // 2. Clean up active sessions & tokens
-        try {
-            if (Schema::hasTable('personal_access_tokens') && method_exists($user, 'tokens')) {
+        // 2. Invalidate all Sanctum API tokens
+        if (Schema::hasTable('personal_access_tokens') && method_exists($user, 'tokens')) {
+            try {
                 $user->tokens()->delete();
+            } catch (\Throwable $e) {
+                Log::warning('Token cleanup on scheduled deletion: ' . $e->getMessage());
             }
+        }
+
+        // 2. Clear server-side session rows if sessions table is present
+        try {
             if (Schema::hasTable('sessions')) {
                 DB::table('sessions')->where('user_id', $userId)->delete();
             }
@@ -2266,15 +2320,19 @@ class WebAuthController extends Controller
 
         // 3. Archive snapshot
         try {
-            \App\Models\ArchivedRecord::archive($role === 'seller' ? 'seller' : 'customer', $user, $reason);
+            ArchivedRecord::archive($role === 'seller' ? 'seller' : 'customer', $user, $reason);
         } catch (\Throwable $ae) {
             Log::warning('Archive error on scheduled deletion: ' . $ae->getMessage());
         }
 
         // 4. Update status to PENDING_DELETION and set 7-day recovery period
         $user->status = 'pending_deletion';
-        $user->deletion_scheduled_at = now();
-        $user->permanent_deletion_at = now()->addDays(7);
+        if (Schema::hasColumn('users', 'deletion_scheduled_at')) {
+            $user->deletion_scheduled_at = \Illuminate\Support\Carbon::instance(now());
+        }
+        if (Schema::hasColumn('users', 'permanent_deletion_at')) {
+            $user->permanent_deletion_at = \Illuminate\Support\Carbon::instance(now()->addDays(7));
+        }
         $user->deleted_at = now();
         $user->save();
 
@@ -2303,7 +2361,7 @@ class WebAuthController extends Controller
         }
 
         // Check if 7 days expired
-        if ($user->permanent_deletion_at && $user->permanent_deletion_at->lte(now())) {
+        if (!empty($user->permanent_deletion_at) && $user->permanent_deletion_at->lte(now())) {
             $cleanup = new \App\Console\Commands\ProcessScheduledAccountDeletions();
             $cleanup->permanentlyDeleteAccount($user);
             session()->forget(['restore_account_user_id', 'restore_account_email', 'restore_account_name', 'restore_account_role', 'restore_account_expires', 'restore_account_days_left']);
@@ -2312,8 +2370,12 @@ class WebAuthController extends Controller
 
         // Restore the original account to ACTIVE
         $user->status = 'active';
-        $user->deletion_scheduled_at = null;
-        $user->permanent_deletion_at = null;
+        if (Schema::hasColumn('users', 'deletion_scheduled_at')) {
+            $user->deletion_scheduled_at = null;
+        }
+        if (Schema::hasColumn('users', 'permanent_deletion_at')) {
+            $user->permanent_deletion_at = null;
+        }
         $user->deleted_at = null;
         $user->save();
 

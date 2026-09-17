@@ -120,7 +120,7 @@ class AuthController extends Controller
                 \Illuminate\Validation\Rule::unique('users', 'email')->whereNull('deleted_at')
             ],
             'password' => 'required|string|min:6',
-            'role' => 'nullable|string|in:customer,seller,admin',
+            'role' => 'nullable|string|in:customer,seller',
             'mobileNumber' => 'required_if:role,seller|string',
             'gcashNumber' => 'required_if:role,seller|string',
             'isAdult' => 'nullable',
@@ -130,13 +130,15 @@ class AuthController extends Controller
             return response()->json(['message' => 'Validation error', 'errors' => $validator->errors()], 400);
         }
 
+        $isSeller = ($request->role === 'seller');
+
         $data = [
             'name' => $request->name,
             'email' => strtolower($request->email),
             'password' => Hash::make($request->password),
-            'role' => $request->role ?? 'customer',
-            'isVerified' => $request->role === 'seller' ? false : true,
-            'status' => 'active',
+            'role' => $isSeller ? 'seller' : 'customer',
+            'isVerified' => !$isSeller,
+            'status' => $isSeller ? 'pending' : 'active',
             'isAdult' => $request->isAdult === 'true' || $request->isAdult === true,
         ];
 

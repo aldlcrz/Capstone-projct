@@ -1,3 +1,8 @@
+<script>
+    window.lumbarongChatUserId = @json(auth()->id() ? (string) auth()->id() : '');
+    window.lumbarongIsLoggedIn = @json(auth()->check());
+</script>
+
 <script type="application/json" id="chat-widget-config">
 {!! json_encode([
     'currentUserId' => (string) (Auth::id() ?? ''),
@@ -8,6 +13,22 @@
 
 <script>
 (function() {
+    function getDefaultAiMessages() {
+        return [
+            {
+                role: 'assistant',
+                text: 'Mabuhay! I am your **Lumbarong Smart Assistant** from Lumban, Laguna. How may I assist you today? You can ask me for wedding recommendations, fabric comparisons (Piña vs. Jusi vs. Cocoon), or live tracking for your recent orders.',
+                products: [],
+                refinements: [
+                    { label: '🤵 Wedding Recommendations', prompt: 'Recommend a Barong for a wedding groom' },
+                    { label: '🧵 Fabric Guide', prompt: 'What is the difference between Piña and Jusi?' },
+                    { label: '🎓 Graduation under ₱3,500', prompt: 'Show graduation Barongs under ₱3,500' },
+                    { label: '📦 Track My Order', prompt: 'Where is my order?' }
+                ]
+            }
+        ];
+    }
+
     function registerChatWidget() {
         if (window._chatWidgetRegistered) return;
         window._chatWidgetRegistered = true;
@@ -25,37 +46,94 @@
             messages: [],
             activeUser: null,
             newMessage: '',
-            currentUserId: _chatConfig.currentUserId || '',
-            isLoggedIn: Boolean(_chatConfig.isLoggedIn),
+            currentUserId: window.lumbarongChatUserId || _chatConfig.currentUserId || '',
+            isLoggedIn: typeof window.lumbarongIsLoggedIn === 'boolean' ? window.lumbarongIsLoggedIn : Boolean(_chatConfig.isLoggedIn),
             pollInterval: null,
 
             // Smart Support State & Session Context Memory
             aiInput: '',
             aiLoading: false,
             sessionContext: {},
-            aiMessages: [
-                {
-                    role: 'assistant',
-                    text: 'Mabuhay! I am your **Lumbarong Smart Assistant** from Lumban, Laguna. How may I assist you today? You can ask me for wedding recommendations, fabric comparisons (Piña vs. Jusi vs. Cocoon), or live tracking for your recent orders.',
-                    products: [],
-                    refinements: [
-                        { label: '🤵 Wedding Recommendations', prompt: 'Recommend a Barong for a wedding groom' },
-                        { label: '🧵 Fabric Guide', prompt: 'What is the difference between Piña and Jusi?' },
-                        { label: '🎓 Graduation under ₱3,500', prompt: 'Show graduation Barongs under ₱3,500' },
-                        { label: '📦 Track My Order', prompt: 'Where is my order?' }
-                    ]
+            aiMessages: getDefaultAiMessages(),
+
+            getStorageKey() {
+                return (this.isLoggedIn && this.currentUserId)
+                    ? 'lumbarong_ai_chat_user_' + this.currentUserId
+                    : 'lumbarong_ai_chat_guest';
+            },
+
+            loadStoredAiChat() {
+                try {
+                    const raw = sessionStorage.getItem(this.getStorageKey());
+                    if (raw) {
+                        const parsed = JSON.parse(raw);
+                        if (
+                            parsed &&
+                            Array.isArray(parsed.aiMessages) &&
+                            parsed.aiMessages.length > 0 &&
+                            parsed.sessionContext &&
+                            typeof parsed.sessionContext === 'object'
+                        ) {
+                            this.aiMessages = parsed.aiMessages;
+                            this.sessionContext = parsed.sessionContext || {};
+                            return;
+                        }
+                    }
+                } catch (e) {
+                    console.warn('Failed to parse stored LumBarong AI chat:', e);
+                    try { sessionStorage.removeItem(this.getStorageKey()); } catch (err) {}
                 }
-            ],
+                this.aiMessages = getDefaultAiMessages();
+                this.sessionContext = {};
+            },
+
+            saveAiChat() {
+                try {
+                    const payload = {
+                        aiMessages: this.aiMessages,
+                        sessionContext: this.sessionContext || {}
+                    };
+                    sessionStorage.setItem(this.getStorageKey(), JSON.stringify(payload));
+                } catch (e) {
+                    console.warn('Unable to persist LumBarong AI chat to sessionStorage:', e);
+                }
+            },
+
+            clearAiChat() {
+                try {
+                    sessionStorage.removeItem(this.getStorageKey());
+                } catch (e) {}
+                this.sessionContext = {};
+                this.aiMessages = getDefaultAiMessages();
+                this.scrollAiToBottom();
+            },
+
+            confirmClearChat() {
+                if (window.confirm('Clear conversation? This will reset the LumBarong Smart Assistant.')) {
+                    this.clearAiChat();
+                }
+            },
+
+            syncBodyScrollLock() {
+                document.body.classList.toggle('chat-open', Boolean(this.isOpen));
+            },
 
             init() {
+                this.loadStoredAiChat();
+
                 window.addEventListener('toggle-chat', () => {
                     this.toggleChat();
                 });
 
                 window.addEventListener('open-chat', (e) => {
                     this.isOpen = true;
+                    this.syncBodyScrollLock();
                     this.mainMode = 'artisan';
                     this.startConversation(e.detail.sellerId, e.detail.sellerName);
+                });
+
+                window.addEventListener('pagehide', () => {
+                    document.body.classList.remove('chat-open');
                 });
 
                 if (window._autoOpenChat && window._autoOpenChat.sellerId) {
@@ -63,6 +141,7 @@
                     delete window._autoOpenChat;
                     setTimeout(() => {
                         this.isOpen = true;
+                        this.syncBodyScrollLock();
                         this.mainMode = 'artisan';
                         this.startConversation(autoData.sellerId, autoData.sellerName || 'Artisan');
                     }, 300);
@@ -71,6 +150,7 @@
 
             toggleChat() {
                 this.isOpen = !this.isOpen;
+                this.syncBodyScrollLock();
                 if (this.isOpen && this.mainMode === 'artisan' && this.isLoggedIn) {
                     this.loadConversations();
                 }
@@ -93,6 +173,7 @@
                 this.aiMessages.push({ role: 'user', text: query, products: [], refinements: [] });
                 this.aiInput = '';
                 this.aiLoading = true;
+                this.saveAiChat();
                 this.scrollAiToBottom();
 
                 const history = this.aiMessages.slice(-6).map(m => ({
@@ -132,6 +213,7 @@
                         products: data.products || [],
                         refinements: data.refinements || []
                     });
+                    this.saveAiChat();
                     this.scrollAiToBottom();
                 })
                 .catch(err => {
@@ -147,6 +229,7 @@
                             { label: '⭐ Best Sellers', prompt: 'Show me your best selling Barongs' }
                         ]
                     });
+                    this.saveAiChat();
                     this.scrollAiToBottom();
                 });
             },
@@ -353,6 +436,7 @@
 
             closeChat() {
                 this.isOpen = false;
+                this.syncBodyScrollLock();
                 if (this.pollInterval) clearInterval(this.pollInterval);
             }
         });
@@ -372,6 +456,10 @@
 </script>
 
 <style>
+body.chat-open {
+    overflow: hidden !important;
+}
+
 .lumbarong-chat-wrapper {
     position: fixed;
     right: 24px;
@@ -382,6 +470,12 @@
 .lumbarong-chat-wrapper.chat-is-open {
     z-index: 99999 !important;
 }
+.lumbarong-chat-shield {
+    position: fixed;
+    inset: 0;
+    z-index: 99990;
+    touch-action: none;
+}
 .lumbarong-chat-window {
     position: fixed;
     right: 24px;
@@ -390,8 +484,12 @@
     max-width: calc(100vw - 32px);
     height: 560px;
     max-height: calc(100vh - 110px);
-    z-index: 99999;
+    z-index: 100000;
     box-shadow: 0 20px 40px rgba(0,0,0,0.25);
+    overscroll-behavior: contain;
+}
+.lumbarong-chat-scroll-area {
+    overscroll-behavior: contain;
 }
 
 /* Mobile Screens: Position floating button cleanly above bottom bars */
@@ -417,16 +515,32 @@
         width: auto !important;
         max-width: none !important;
         max-height: 560px !important;
+        z-index: 100000 !important;
+        overscroll-behavior: contain;
     }
 }
 </style>
 
 <div x-data="chatWidget" class="lumbarong-chat-wrapper" :class="isOpen ? 'chat-is-open' : ''">
+    <!-- Transparent Interaction Shield to absorb outside gestures & close on outside tap -->
+    <div 
+        x-show="isOpen" 
+        @click="closeChat()" 
+        x-transition:enter="transition-opacity duration-200"
+        x-transition:enter-start="opacity-0"
+        x-transition:enter-end="opacity-100"
+        x-transition:leave="transition-opacity duration-150"
+        x-transition:leave-start="opacity-100"
+        x-transition:leave-end="opacity-0"
+        class="lumbarong-chat-shield bg-black/5 lg:bg-transparent"
+        x-cloak
+    ></div>
+
     <!-- Floating Trigger Button -->
     <button 
         type="button"
         @click="toggleChat()"
-        style="width: 56px; height: 56px; background-color: #1F1F1F; box-shadow: 0 10px 25px rgba(0,0,0,0.35); border: 2px solid rgba(255,255,255,0.25);"
+        style="width: 56px; height: 56px; background-color: #1F1F1F; box-shadow: 0 10px 25px rgba(0,0,0,0.35); border: 2px solid rgba(255,255,255,0.25); position: relative; z-index: 100001;"
         class="rounded-full text-white flex items-center justify-center hover:scale-105 active:scale-95 transition-all duration-300 relative group cursor-pointer"
         aria-label="Open LumBarong Support & Chat"
     >
@@ -488,7 +602,22 @@
                         </a>
                     </template>
 
-                    <button @click="closeChat()" class="p-1.5 hover:bg-white/10 rounded-xl transition-colors cursor-pointer text-gray-300 hover:text-white" title="Close">
+                    <!-- Clear Chat History (Smart Assistant mode) -->
+                    <template x-if="mainMode === 'ai' && aiMessages.length > 1">
+                        <button 
+                            type="button"
+                            @click="confirmClearChat()" 
+                            class="p-1.5 hover:bg-white/10 rounded-xl transition-colors cursor-pointer text-gray-300 hover:text-red-300" 
+                            title="Clear conversation"
+                            aria-label="Clear conversation"
+                        >
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                            </svg>
+                        </button>
+                    </template>
+
+                    <button @click="closeChat()" class="p-1.5 hover:bg-white/10 rounded-xl transition-colors cursor-pointer text-gray-300 hover:text-white" title="Close" aria-label="Close chat">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
                     </button>
                 </div>
@@ -532,7 +661,7 @@
             </div>
 
             <!-- Chat Messages Stream -->
-            <div x-ref="aiMsgBox" class="flex-1 overflow-y-auto no-scrollbar p-3.5 space-y-4">
+            <div x-ref="aiMsgBox" class="flex-1 overflow-y-auto no-scrollbar p-3.5 space-y-4 lumbarong-chat-scroll-area">
                 <template x-for="(msg, idx) in aiMessages" :key="idx">
                     <div class="flex flex-col" :class="msg.role === 'user' ? 'items-end' : 'items-start'">
                         <!-- Message Bubble -->
@@ -664,7 +793,7 @@
 
             <!-- Messages Stream -->
             <div x-show="activeTab === 'messages'" class="flex-1 flex flex-col min-h-0">
-                <div x-ref="artisanMsgBox" class="flex-1 overflow-y-auto no-scrollbar p-4 space-y-3 bg-[#FAF7F2]/50">
+                <div x-ref="artisanMsgBox" class="flex-1 overflow-y-auto no-scrollbar p-4 space-y-3 bg-[#FAF7F2]/50 lumbarong-chat-scroll-area">
                     <template x-for="(msg, mIdx) in (Array.isArray(messages) ? messages : [])" :key="msg.id || mIdx">
                         <div class="flex flex-col" :class="String(msg.senderId) === String(currentUserId) ? 'items-end' : 'items-start'">
                             <div class="max-w-[82%] px-4 py-2.5 rounded-2xl text-xs leading-relaxed"

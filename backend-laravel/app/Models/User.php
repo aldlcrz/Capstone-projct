@@ -9,6 +9,20 @@ use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
 use Illuminate\Support\Str;
 
+/**
+ * @property string $id
+ * @property string $name
+ * @property string $email
+ * @property string $password
+ * @property string $role
+ * @property string $status
+ * @property bool $isVerified
+ * @property \Illuminate\Support\Carbon|\Carbon\CarbonInterface|string|null $deletion_scheduled_at
+ * @property \Illuminate\Support\Carbon|\Carbon\CarbonInterface|string|null $permanent_deletion_at
+ * @property \Illuminate\Support\Carbon|\Carbon\CarbonInterface|string|null $deleted_at
+ * @property \Illuminate\Support\Carbon|\Carbon\CarbonInterface|string|null $createdAt
+ * @property \Illuminate\Support\Carbon|\Carbon\CarbonInterface|string|null $updatedAt
+ */
 class User extends Authenticatable
 {
     use HasApiTokens, HasFactory, Notifiable, SoftDeletes;
