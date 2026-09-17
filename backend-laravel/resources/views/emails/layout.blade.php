@@ -7,12 +7,12 @@
     <title>{{ $title ?? 'LumBarong Notification' }}</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,600;0,700;0,800;1,600&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
         body {
             font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-            background-color: #F6F2EC;
-            color: #2D241E;
+            background-color: #FAF8F5;
+            color: #1E1915;
             margin: 0;
             padding: 0;
             -webkit-text-size-adjust: 100%;
@@ -23,105 +23,163 @@
             mso-table-lspace: 0pt;
             mso-table-rspace: 0pt;
         }
+        .canvas {
+            background-color: #FAF8F5;
+            padding: 32px 14px;
+        }
         .container {
-            max-width: 560px;
-            margin: 36px auto;
-            background-color: #FFFFFF;
-            border-radius: 20px;
+            max-width: 580px;
+            margin: 0 auto;
+            background-color: #FDFBF7;
+            border-radius: 28px;
             overflow: hidden;
-            box-shadow: 0 16px 44px -8px rgba(30, 25, 21, 0.08), 0 0 0 1px rgba(212, 175, 55, 0.16);
-            border: 1px solid #EAE3D9;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.06);
+            border: 1px solid #EAE2D2;
         }
-        .gold-bar {
-            height: 3px;
-            background: linear-gradient(90deg, #9C782F 0%, #E8CA65 50%, #9C782F 100%);
-            background-color: #D4AF37;
-            font-size: 0;
-            line-height: 0;
+        .header-section {
+            padding: 26px 26px 0 26px;
         }
-        .header {
-            background-color: #1E1915;
-            background: linear-gradient(160deg, #181310 0%, #291A14 50%, #1A1512 100%);
-            padding: 34px 32px 30px 32px;
-            text-align: center;
-            border-bottom: 2px solid #C49520;
-        }
-        .header h1 {
-            color: #FFFFFF;
-            margin: 12px 0 0 0;
-            font-family: 'Playfair Display', Georgia, 'Times New Roman', serif;
-            font-size: 27px;
-            font-weight: 800;
-            letter-spacing: 3px;
-            text-transform: uppercase;
-        }
-        .header p {
-            color: #D4AF37;
-            margin: 6px 0 0 0;
-            font-size: 10px;
-            text-transform: uppercase;
-            letter-spacing: 3px;
-            font-weight: 700;
-            font-family: 'Plus Jakarta Sans', Arial, sans-serif;
-        }
-        .body {
-            padding: 38px 36px 32px 36px;
-            line-height: 1.75;
-            color: #483E35;
-            font-size: 14.5px;
-        }
-        .greeting {
-            font-family: 'Playfair Display', Georgia, 'Times New Roman', serif;
-            font-size: 23px;
+        .header-title {
+            font-family: ui-serif, Georgia, Cambria, 'Times New Roman', serif;
+            font-size: 22px;
             font-weight: 700;
             color: #1E1915;
-            margin-bottom: 16px;
-            letter-spacing: -0.3px;
+            letter-spacing: -0.01em;
+            line-height: 1.2;
+            margin: 0;
         }
-        .code-vault, .code-box {
-            background-color: #FAF7F2;
-            background: linear-gradient(180deg, #FBF9F5 0%, #F5EFE6 100%);
-            border: 1px solid #E2D6C5;
-            border-radius: 16px;
-            padding: 26px 16px 22px 16px;
-            text-align: center;
-            margin: 28px 0;
-            box-shadow: inset 0 1px 0 rgba(255,255,255,0.8), 0 4px 14px rgba(61,43,31,0.04);
+        .header-subtitle {
+            font-size: 12.5px;
+            color: #78716C;
+            margin: 3px 0 0 0;
         }
-        .code-vault-label {
-            font-size: 10px;
-            font-weight: 800;
-            color: #8C7866;
-            letter-spacing: 2.5px;
-            text-transform: uppercase;
-            margin-bottom: 18px;
-            font-family: 'Plus Jakarta Sans', Arial, sans-serif;
-        }
-        .code-number {
-            font-size: 36px;
-            font-weight: 900;
-            letter-spacing: 10px;
-            color: #1E1915;
-            font-family: 'Playfair Display', Georgia, monospace;
-            display: inline-block;
-        }
-        .code-expiry {
-            font-size: 11.5px;
-            color: #8C590E;
-            margin-top: 16px;
-            font-weight: 700;
-        }
-        .badge {
-            display: inline-block;
-            padding: 6px 14px;
-            border-radius: 20px;
+        .header-badge {
+            background-color: #FAF6EE;
+            border: 1px solid #E2D9C8;
+            color: #78716C;
             font-size: 11px;
             font-weight: 700;
             text-transform: uppercase;
             letter-spacing: 0.5px;
+            padding: 5px 12px;
+            border-radius: 12px;
+            display: inline-block;
+            text-decoration: none;
+        }
+        .star-divider {
+            width: 100%;
+            margin: 18px 0 20px 0;
+        }
+        .star-divider-line {
+            border-top: 1px solid #EAE1D0;
+        }
+        .star-divider-center {
+            padding: 0 10px;
+            color: #C49520;
+            font-size: 12px;
+            font-weight: bold;
+            line-height: 1;
+            text-align: center;
+        }
+        .body-section {
+            padding: 0 24px 26px 24px;
+        }
+        .hero-card {
+            background-color: #FFFFFF;
+            border: 1px solid #ECE3D2;
+            border-radius: 20px;
+            padding: 24px 24px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.02);
+            color: #1E1915;
+        }
+        .verified-pill {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 9999px;
+            background-color: #FAF5EA;
+            border: 1px solid #E6D8BA;
+            color: #996515;
+            font-size: 11px;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
             margin-bottom: 14px;
         }
-        .badge-info { background: #F0F5FA; color: #1E4E79; border: 1px solid #D6E4F0; }
+        .greeting {
+            font-family: ui-serif, Georgia, Cambria, 'Times New Roman', serif;
+            font-size: 22px;
+            font-weight: 700;
+            color: #1E1915;
+            letter-spacing: -0.01em;
+            margin: 0 0 12px 0;
+            line-height: 1.25;
+        }
+        .body-text {
+            font-size: 14px;
+            line-height: 1.7;
+            color: #574F47;
+            margin: 0 0 18px 0;
+        }
+        .code-vault, .code-box {
+            background-color: #FAF6EE;
+            background: linear-gradient(135deg, #FAF6EE 0%, #F2E9DA 100%);
+            border: 1px solid #DECBB1;
+            border-radius: 18px;
+            padding: 24px 16px 20px 16px;
+            text-align: center;
+            margin: 22px 0;
+            box-shadow: 0 4px 14px rgba(153, 101, 21, 0.05);
+        }
+        .code-vault-label {
+            font-size: 10.5px;
+            font-weight: 800;
+            color: #996515;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            margin-bottom: 16px;
+        }
+        .code-number {
+            font-size: 34px;
+            font-weight: 800;
+            letter-spacing: 8px;
+            color: #1E1915;
+            font-family: ui-serif, Georgia, monospace;
+            display: inline-block;
+        }
+        .code-expiry {
+            font-size: 11.5px;
+            color: #996515;
+            margin-top: 14px;
+            font-weight: 700;
+        }
+        .digit-tile {
+            width: 44px;
+            height: 54px;
+            background-color: #FFFFFF;
+            border: 1.5px solid #DFCDB0;
+            border-radius: 12px;
+            font-family: ui-serif, Georgia, Cambria, serif;
+            font-size: 26px;
+            font-weight: 800;
+            color: #1E1915;
+            text-align: center;
+            vertical-align: middle;
+            box-shadow: 0 2px 6px rgba(153, 101, 21, 0.08);
+        }
+        .digit-cell {
+            padding: 0 4px;
+        }
+        .badge {
+            display: inline-block;
+            padding: 5px 12px;
+            border-radius: 9999px;
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 12px;
+        }
+        .badge-info { background: #FAF5EA; color: #996515; border: 1px solid #E6D8BA; }
         .badge-warning { background: #FEF9EE; color: #92580C; border: 1px solid #F8E5BA; }
         .badge-danger { background: #FDF2F2; color: #991B1B; border: 1px solid #F8CECE; }
         .badge-success { background: #F0FDF4; color: #166534; border: 1px solid #C5EED0; }
@@ -129,55 +187,62 @@
         .security-notice-box {
             background-color: #FAF8F5;
             border-left: 3px solid #C49520;
-            border-radius: 4px 12px 12px 4px;
+            border-top: 1px solid #ECE3D2;
+            border-right: 1px solid #ECE3D2;
+            border-bottom: 1px solid #ECE3D2;
+            border-radius: 14px;
             padding: 14px 18px;
             font-size: 12.5px;
             color: #6E5F52;
             line-height: 1.6;
-            margin-top: 24px;
+            margin-top: 20px;
         }
 
-        .footer {
-            background-color: #F8F5F0;
-            padding: 28px 32px;
+        .footer-section {
+            background-color: #FAF8F5;
+            padding: 22px 24px;
             text-align: center;
-            border-top: 1px solid #EFEAE2;
+            border-top: 1px solid #EAE1D0;
             font-size: 12px;
-            color: #8C7E72;
+            color: #78716C;
         }
-        .footer-no-reply {
-            background-color: #EDE7DE;
-            color: #5A4E42;
-            border: 1px solid #DFD6C9;
-            padding: 5px 14px;
-            border-radius: 20px;
+        .footer-pill {
+            background-color: #FAF5EA;
+            color: #996515;
+            border: 1px solid #E6D8BA;
+            padding: 4px 12px;
+            border-radius: 9999px;
             display: inline-block;
-            font-weight: 700;
+            font-weight: 800;
             font-size: 10px;
-            letter-spacing: 1px;
+            letter-spacing: 0.5px;
             text-transform: uppercase;
-            margin-bottom: 14px;
+            margin-bottom: 10px;
         }
 
         @media only screen and (max-width: 540px) {
+            .canvas {
+                padding: 12px 8px !important;
+            }
             .container {
-                width: 94% !important;
-                margin: 16px auto !important;
-                border-radius: 14px !important;
+                width: 100% !important;
+                border-radius: 18px !important;
             }
-            .header {
-                padding: 26px 16px 22px 16px !important;
+            .header-section {
+                padding: 20px 16px 0 16px !important;
             }
-            .header h1 {
-                font-size: 23px !important;
-                letter-spacing: 2px !important;
+            .header-title {
+                font-size: 20px !important;
             }
-            .body {
-                padding: 28px 18px 22px 18px !important;
-                font-size: 14px !important;
+            .body-section {
+                padding: 0 14px 20px 14px !important;
+            }
+            .hero-card {
+                padding: 18px 16px !important;
+                border-radius: 16px !important;
             }
             .code-vault, .code-box {
-                padding: 20px 8px 16px 8px !important;
+                padding: 18px 6px 16px 6px !important;
             }
             .digit-tile {
                 width: 38px !important;
@@ -188,36 +253,76 @@
             .digit-cell {
                 padding: 0 2px !important;
             }
-            .footer {
-                padding: 22px 16px !important;
+            .footer-section {
+                padding: 18px 16px !important;
             }
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <div class="gold-bar"></div>
-        <div class="header">
-            <!-- Royal Heritage Medallion Seal (Pure HTML/CSS - Never blocked by spam or image filters) -->
-            <table role="presentation" border="0" cellpadding="0" cellspacing="0" style="margin: 0 auto;">
-                <tr>
-                    <td align="center" style="width: 56px; height: 56px; background: radial-gradient(circle, #3D2B1F 0%, #1E1915 100%); border: 1.5px solid #D4AF37; border-radius: 50%; box-shadow: 0 4px 14px rgba(0,0,0,0.4), inset 0 0 0 2px rgba(212, 175, 55, 0.25); text-align: center; vertical-align: middle;">
-                        <span style="font-family: 'Playfair Display', Georgia, 'Times New Roman', serif; font-size: 20px; font-weight: 700; color: #F5E6C8; letter-spacing: 2px; line-height: 56px; display: inline-block; padding-left: 2px;">LB</span>
-                    </td>
-                </tr>
-            </table>
-            <h1>LumBarong</h1>
-            <p>✦ &nbsp; Filipino Heritage &middot; Modern Elegance &nbsp; ✦</p>
-        </div>
-        <div class="body">
-            @yield('content')
-        </div>
-        <div class="footer">
-            <div class="footer-no-reply">
-                🛡️ Automated Official Notification &bull; Do Not Reply
+    <div class="canvas">
+        <div class="container">
+            {{-- Top Header matching My Profile & Account theme --}}
+            <div class="header-section">
+                <table role="presentation" width="100%" border="0" cellpadding="0" cellspacing="0">
+                    <tr>
+                        <td align="left" style="vertical-align: middle;">
+                            <table role="presentation" border="0" cellpadding="0" cellspacing="0">
+                                <tr>
+                                    {{-- Heraldic Laurel Wreath Medallion in Gold (#C49520) --}}
+                                    <td style="width: 44px; height: 44px; vertical-align: middle; padding-right: 12px;">
+                                        <table role="presentation" border="0" cellpadding="0" cellspacing="0">
+                                            <tr>
+                                                <td align="center" style="width: 44px; height: 44px; background-color: #FAF5EA; border: 1.5px solid #C49520; border-radius: 50%; text-align: center; vertical-align: middle; box-shadow: 0 2px 8px rgba(196, 149, 32, 0.15);">
+                                                    <span style="font-family: ui-serif, Georgia, serif; font-size: 18px; font-weight: bold; color: #996515; line-height: 44px; display: inline-block;">LB</span>
+                                                </td>
+                                            </tr>
+                                        </table>
+                                    </td>
+                                    <td style="vertical-align: middle;">
+                                        <h1 class="header-title">LumBarong</h1>
+                                        <p class="header-subtitle">Filipino Heritage &middot; Authentic Artisan Marketplace</p>
+                                    </td>
+                                </tr>
+                            </table>
+                        </td>
+                        <td align="right" style="vertical-align: middle;">
+                            <span class="header-badge">✦ Security</span>
+                        </td>
+                    </tr>
+                </table>
+
+                {{-- Star Divider matching the Profile theme --}}
+                <table role="presentation" class="star-divider" border="0" cellpadding="0" cellspacing="0">
+                    <tr>
+                        <td class="star-divider-line" style="width: 46%;"></td>
+                        <td class="star-divider-center" style="width: 8%;">✦</td>
+                        <td class="star-divider-line" style="width: 46%;"></td>
+                    </tr>
+                </table>
             </div>
-            <p style="margin: 0 0 6px 0; font-size: 12px; color: #877769;">This is an automated notification from LumBarong. Direct email replies are not monitored.</p>
-            <p style="margin: 0; font-size: 11px; color: #A6998C;">Handcrafted with Filipino Pride &bull; Lumban, Laguna, Philippines &bull; &copy; {{ date('Y') }} LumBarong Inc. All rights reserved.</p>
+
+            {{-- Main Body Card Content --}}
+            <div class="body-section">
+                <div class="hero-card">
+                    @yield('content')
+                </div>
+            </div>
+
+            {{-- Footer matching the Profile & Account theme --}}
+            <div class="footer-section">
+                <div>
+                    <span class="footer-pill">
+                        🛡️ Automated Security Notification &bull; Do Not Reply
+                    </span>
+                </div>
+                <p style="margin: 6px 0 3px 0; font-size: 12px; color: #78716C;">
+                    Handcrafted with Filipino Pride &bull; Lumban, Laguna, Philippines
+                </p>
+                <p style="margin: 0; font-size: 11px; color: #A89F95;">
+                    &copy; {{ date('Y') }} LumBarong Inc. All rights reserved.
+                </p>
+            </div>
         </div>
     </div>
 </body>

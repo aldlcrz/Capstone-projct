@@ -1,12 +1,14 @@
 @extends('emails.layout')
 
 @section('content')
+<span class="badge badge-warning">🛡️ Password Verification</span>
+
 <div class="greeting">Password Change Verification</div>
 
-<p style="margin: 0 0 16px 0; color: #483E35; font-size: 14.5px; line-height: 1.75;">
+<p class="body-text">
     Hello <strong>{{ $userName ?? 'Esteemed Patron' }}</strong>,
 </p>
-<p style="margin: 0 0 16px 0; color: #483E35; font-size: 14.5px; line-height: 1.75;">
+<p class="body-text">
     You requested to update the password for your LumBarong account. Please enter the following 6-digit confirmation code on your verification screen:
 </p>
 
@@ -17,6 +19,6 @@
 ])
 
 <div class="security-notice-box">
-    <strong style="color: #2D231B;">Security Notice:</strong> If you did not request this password change, please review your account security immediately.
+    <strong style="color: #1E1915;">Security Notice:</strong> If you did not request this password change, please review your account security immediately.
 </div>
 @endsection

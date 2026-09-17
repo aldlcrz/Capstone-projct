@@ -1,12 +1,14 @@
 @extends('emails.layout')
 
 @section('content')
+<span class="badge badge-info">✉️ New Email Verification</span>
+
 <div class="greeting">Verify Your New Email Address</div>
 
-<p style="margin: 0 0 16px 0; color: #483E35; font-size: 14.5px; line-height: 1.75;">
+<p class="body-text">
     Hello <strong>{{ $userName ?? 'Esteemed Patron' }}</strong>,
 </p>
-<p style="margin: 0 0 16px 0; color: #483E35; font-size: 14.5px; line-height: 1.75;">
+<p class="body-text">
     Please use the following 6-digit confirmation code on your verification screen to confirm ownership of this new email address:
 </p>
 
@@ -17,6 +19,6 @@
 ])
 
 <div class="security-notice-box">
-    <strong style="color: #2D231B;">Security Notice:</strong> If you did not request to link this email to a LumBarong account, please ignore this message.
+    <strong style="color: #1E1915;">Security Notice:</strong> If you did not request to link this email to a LumBarong account, please ignore this message.
 </div>
 @endsection
