@@ -158,18 +158,18 @@
                 @csrf
                 <input type="hidden" name="email" :value="email">
                 
-                <!-- While 60s resend cooldown > 0: Locked/Disabled -->
+                <!-- While timer > 0: Locked/Disabled until code expires -->
                 <button type="button" 
-                        x-show="resendCooldown > 0"
+                        x-show="timeLeft > 0"
                         disabled 
                         class="text-xs font-semibold text-gray-400 bg-gray-100 px-4 py-2 rounded-full cursor-not-allowed inline-flex items-center gap-1.5 transition-all">
                     <span>Resend Code to Gmail</span>
-                    <span class="font-mono text-[11px] text-gray-500 font-bold" x-text="'(wait ' + resendCooldown + 's)'"></span>
+                    <span class="font-mono text-[11px] text-gray-500 font-bold" x-text="'(wait ' + formattedTime + ')'"></span>
                 </button>
 
-                <!-- When 60s cooldown reaches 0: Clickable -->
+                <!-- When timer reaches 0: Clickable -->
                 <button type="submit" 
-                        x-show="resendCooldown <= 0"
+                        x-show="timeLeft <= 0"
                         x-cloak
                         class="text-xs font-bold text-white bg-[#C0422A] hover:bg-[#A03520] px-5 py-2.5 rounded-full cursor-pointer inline-flex items-center gap-2 shadow-md hover:shadow-lg transition-all">
                     <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">

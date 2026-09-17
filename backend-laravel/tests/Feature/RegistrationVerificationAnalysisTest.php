@@ -246,9 +246,9 @@ class RegistrationVerificationAnalysisTest extends TestCase
     }
 
     /**
-     * Test 60-second resend cooldown blocks immediate resend requests
+     * Test resend is blocked while current 5-minute code is still active
      */
-    public function test_resend_cooldown_blocks_under_60_seconds(): void
+    public function test_resend_blocked_while_code_active(): void
     {
         $email = 'cooldown.test@gmail.com';
 
@@ -261,15 +261,15 @@ class RegistrationVerificationAnalysisTest extends TestCase
             'terms_consent'         => '1',
         ]);
 
-        // 2. Immediately attempt resend within 60s
+        // 2. Immediately attempt resend while active
         $resend = $this->post(route('verify.email.resend'), ['email' => $email]);
         $resend->assertSessionHasErrors('code');
     }
 
     /**
-     * Test resend allowed after 60 seconds and overwrites the verification record in place
+     * Test resend allowed after 5-minute code expires and overwrites the verification record in place
      */
-    public function test_resend_allowed_after_60_seconds_and_overwrites_code(): void
+    public function test_resend_allowed_after_code_expires_and_overwrites_code(): void
     {
         $email = 'overwrite.test@gmail.com';
 
@@ -283,11 +283,10 @@ class RegistrationVerificationAnalysisTest extends TestCase
         ]);
 
         $initialVerification = EmailVerification::where('email', $email)->where('type', 'registration')->first();
-        $initialCode = $initialVerification->code;
         $this->assertEquals(0, $initialVerification->resend_count);
 
-        // Fast-forward last_sent_at by 65 seconds
-        $initialVerification->update(['last_sent_at' => now()->subSeconds(65)]);
+        // Fast-forward expires_at so the code is expired
+        $initialVerification->update(['expires_at' => now()->subMinute()]);
 
         // 2. Request resend
         $resend = $this->post(route('verify.email.resend'), ['email' => $email]);
@@ -319,11 +318,11 @@ class RegistrationVerificationAnalysisTest extends TestCase
 
         $verification = EmailVerification::where('email', $email)->where('type', 'registration')->first();
 
-        // Simulate 5 resends within the same hour
+        // Simulate 5 resends within the same hour and code expired
         $verification->update([
             'resend_count'             => 5,
             'resend_window_started_at' => now()->subMinutes(10),
-            'last_sent_at'             => now()->subSeconds(70), // cooldown passed
+            'expires_at'               => now()->subMinute(),
         ]);
 
         // 6th resend request should be blocked
@@ -348,11 +347,11 @@ class RegistrationVerificationAnalysisTest extends TestCase
 
         $verification = EmailVerification::where('email', $email)->where('type', 'registration')->first();
 
-        // Simulate 5 resends, but window started 65 minutes ago (expired window)
+        // Simulate 5 resends, but window started 65 minutes ago (expired window), and code expired
         $verification->update([
             'resend_count'             => 5,
             'resend_window_started_at' => now()->subMinutes(65),
-            'last_sent_at'             => now()->subSeconds(70), // cooldown passed
+            'expires_at'               => now()->subMinute(),
         ]);
 
         // Resend request should be allowed and reset resend_count to 1

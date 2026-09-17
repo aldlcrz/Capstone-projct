@@ -674,10 +674,13 @@ class WebAuthController extends Controller
 
         $existing = EmailVerification::where('email', $email)->where('type', 'registration')->first();
         if ($existing) {
-            // Check 60-second cooldown
-            if ($existing->isCooldownActive(60)) {
-                $secondsLeft = $existing->remainingCooldownSeconds(60);
-                return back()->withErrors(['code' => "Please wait {$secondsLeft}s before requesting a new code."]);
+            // Block resending while current 5-minute code is still active
+            if (!$existing->isExpired()) {
+                $secondsLeft = max(1, now()->diffInSeconds($existing->expires_at, false));
+                $minutes = floor($secondsLeft / 60);
+                $secs = $secondsLeft % 60;
+                $timeStr = sprintf('%02d:%02d', $minutes, $secs);
+                return back()->withErrors(['code' => "Please wait {$timeStr} until your current code expires before requesting a new code."]);
             }
 
             // Check 5 resends per rolling 1-hour window limit
