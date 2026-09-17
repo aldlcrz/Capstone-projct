@@ -246,19 +246,12 @@
 </head>
 <body>
     @php
-        $logoSrc = null;
-        $logoPath = public_path('images/logo-icon.png');
-        if (file_exists($logoPath)) {
-            if (isset($message) && is_object($message) && method_exists($message, 'embed')) {
-                try {
-                    $logoSrc = $message->embed($logoPath);
-                } catch (\Throwable $e) {
-                    $logoSrc = null;
-                }
-            }
-            if (!$logoSrc) {
-                $logoSrc = 'data:image/png;base64,' . base64_encode(file_get_contents($logoPath));
-            }
+        $appUrl = config('app.url');
+        // Use public HTTPS URL to prevent email clients (like Gmail) from treating the logo as an attachment
+        if (!$appUrl || str_contains($appUrl, 'localhost') || str_contains($appUrl, '127.0.0.1')) {
+            $logoSrc = 'https://raw.githubusercontent.com/aldlcrz/Capstone-projct/main/backend-laravel/public/images/logo-icon.png';
+        } else {
+            $logoSrc = rtrim($appUrl, '/') . '/images/logo-icon.png';
         }
     @endphp
 
