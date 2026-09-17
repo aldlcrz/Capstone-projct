@@ -30,17 +30,20 @@
              email: '{{ session('verify_email', $email ?? (auth()->user()->email ?? '')) }}',
              code: '',
              timeLeft: {{ (int) ($remainingSeconds ?? 300) }},
+             resendCooldown: {{ (int) ($resendCooldown ?? 0) }},
              timerInterval: null,
              init() {
-                 if (this.timeLeft > 0) {
-                     this.timerInterval = setInterval(() => {
-                         if (this.timeLeft > 0) {
-                             this.timeLeft--;
-                         } else {
-                             clearInterval(this.timerInterval);
-                         }
-                     }, 1000);
-                 }
+                 this.timerInterval = setInterval(() => {
+                     if (this.timeLeft > 0) {
+                         this.timeLeft--;
+                     }
+                     if (this.resendCooldown > 0) {
+                         this.resendCooldown--;
+                     }
+                     if (this.timeLeft <= 0 && this.resendCooldown <= 0) {
+                         clearInterval(this.timerInterval);
+                     }
+                 }, 1000);
              },
              get formattedTime() {
                  const m = Math.floor(Math.max(0, this.timeLeft) / 60);
@@ -155,18 +158,18 @@
                 @csrf
                 <input type="hidden" name="email" :value="email">
                 
-                <!-- While timer > 0: Locked/Disabled -->
+                <!-- While 60s resend cooldown > 0: Locked/Disabled -->
                 <button type="button" 
-                        x-show="timeLeft > 0"
+                        x-show="resendCooldown > 0"
                         disabled 
                         class="text-xs font-semibold text-gray-400 bg-gray-100 px-4 py-2 rounded-full cursor-not-allowed inline-flex items-center gap-1.5 transition-all">
                     <span>Resend Code to Gmail</span>
-                    <span class="font-mono text-[11px] text-gray-500 font-bold" x-text="'(wait ' + formattedTime + ')'"></span>
+                    <span class="font-mono text-[11px] text-gray-500 font-bold" x-text="'(wait ' + resendCooldown + 's)'"></span>
                 </button>
 
-                <!-- When timer reaches 0: Clickable -->
+                <!-- When 60s cooldown reaches 0: Clickable -->
                 <button type="submit" 
-                        x-show="timeLeft <= 0"
+                        x-show="resendCooldown <= 0"
                         x-cloak
                         class="text-xs font-bold text-white bg-[#C0422A] hover:bg-[#A03520] px-5 py-2.5 rounded-full cursor-pointer inline-flex items-center gap-2 shadow-md hover:shadow-lg transition-all">
                     <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">

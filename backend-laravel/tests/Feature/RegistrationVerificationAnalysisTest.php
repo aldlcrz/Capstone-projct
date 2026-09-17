@@ -36,7 +36,13 @@ class RegistrationVerificationAnalysisTest extends TestCase
         ]);
 
         $response->assertRedirect(route('verify.email'));
-        $this->assertDatabaseMissing('users', ['email' => $email]); // Not yet in DB
+        
+        // User record is created in DB with isVerified = false, status = 'pending'
+        $user = User::where('email', $email)->first();
+        $this->assertNotNull($user, 'User record must exist in DB upon registration');
+        $this->assertEquals('customer', $user->role);
+        $this->assertEquals('pending', $user->status);
+        $this->assertFalse((bool)$user->isVerified);
 
         $verification = EmailVerification::where('email', $email)->where('type', 'registration')->first();
         $this->assertNotNull($verification, 'Verification code must be created');
@@ -51,8 +57,7 @@ class RegistrationVerificationAnalysisTest extends TestCase
         $verifyResponse->assertRedirect('/');
         $this->assertAuthenticated();
 
-        $user = User::where('email', $email)->first();
-        $this->assertNotNull($user);
+        $user->refresh();
         $this->assertEquals('customer', $user->role);
         $this->assertEquals('active', $user->status);
         $this->assertTrue((bool)$user->isVerified);
@@ -228,6 +233,149 @@ class RegistrationVerificationAnalysisTest extends TestCase
             'businessPermit'       => UploadedFile::fake()->image('permit.jpg'),
             'birDocument'          => UploadedFile::fake()->create('bir.pdf', 500),
             'terms_consent'        => '1',
+        ]);
+
+        // Attempt login without verifying OTP
+        $response = $this->post('/login', [
+            'email'    => $email,
+            'password' => 'Secret123',
+        ]);
+
+        $response->assertRedirect(route('verify.email'));
+        $this->assertGuest();
+    }
+
+    /**
+     * Test 60-second resend cooldown blocks immediate resend requests
+     */
+    public function test_resend_cooldown_blocks_under_60_seconds(): void
+    {
+        $email = 'cooldown.test@gmail.com';
+
+        // 1. Initial registration
+        $this->post('/register', [
+            'name'                  => 'Cooldown User',
+            'email'                 => $email,
+            'password'              => 'SecurePass123',
+            'password_confirmation' => 'SecurePass123',
+            'terms_consent'         => '1',
+        ]);
+
+        // 2. Immediately attempt resend within 60s
+        $resend = $this->post(route('verify.email.resend'), ['email' => $email]);
+        $resend->assertSessionHasErrors('code');
+    }
+
+    /**
+     * Test resend allowed after 60 seconds and overwrites the verification record in place
+     */
+    public function test_resend_allowed_after_60_seconds_and_overwrites_code(): void
+    {
+        $email = 'overwrite.test@gmail.com';
+
+        // 1. Initial registration
+        $this->post('/register', [
+            'name'                  => 'Overwrite User',
+            'email'                 => $email,
+            'password'              => 'SecurePass123',
+            'password_confirmation' => 'SecurePass123',
+            'terms_consent'         => '1',
+        ]);
+
+        $initialVerification = EmailVerification::where('email', $email)->where('type', 'registration')->first();
+        $initialCode = $initialVerification->code;
+        $this->assertEquals(0, $initialVerification->resend_count);
+
+        // Fast-forward last_sent_at by 65 seconds
+        $initialVerification->update(['last_sent_at' => now()->subSeconds(65)]);
+
+        // 2. Request resend
+        $resend = $this->post(route('verify.email.resend'), ['email' => $email]);
+        $resend->assertSessionHas('success');
+
+        // Verify only 1 record exists (not duplicated or deleted)
+        $this->assertEquals(1, EmailVerification::where('email', $email)->where('type', 'registration')->count());
+
+        $updatedVerification = EmailVerification::where('email', $email)->where('type', 'registration')->first();
+        $this->assertEquals(1, $updatedVerification->resend_count);
+        $this->assertTrue($updatedVerification->expires_at->gt(now()->addMinutes(4)));
+    }
+
+    /**
+     * Test maximum 5 resends per rolling 1-hour window
+     */
+    public function test_resend_hourly_rate_limit_blocks_after_5_resends(): void
+    {
+        $email = 'ratelimit.test@gmail.com';
+
+        // 1. Initial registration
+        $this->post('/register', [
+            'name'                  => 'Rate Limit User',
+            'email'                 => $email,
+            'password'              => 'SecurePass123',
+            'password_confirmation' => 'SecurePass123',
+            'terms_consent'         => '1',
+        ]);
+
+        $verification = EmailVerification::where('email', $email)->where('type', 'registration')->first();
+
+        // Simulate 5 resends within the same hour
+        $verification->update([
+            'resend_count'             => 5,
+            'resend_window_started_at' => now()->subMinutes(10),
+            'last_sent_at'             => now()->subSeconds(70), // cooldown passed
+        ]);
+
+        // 6th resend request should be blocked
+        $resend = $this->post(route('verify.email.resend'), ['email' => $email]);
+        $resend->assertSessionHasErrors('code');
+    }
+
+    /**
+     * Test hourly window resets after 1 hour passes
+     */
+    public function test_resend_hourly_window_resets_after_1_hour(): void
+    {
+        $email = 'resetwindow.test@gmail.com';
+
+        $this->post('/register', [
+            'name'                  => 'Reset User',
+            'email'                 => $email,
+            'password'              => 'SecurePass123',
+            'password_confirmation' => 'SecurePass123',
+            'terms_consent'         => '1',
+        ]);
+
+        $verification = EmailVerification::where('email', $email)->where('type', 'registration')->first();
+
+        // Simulate 5 resends, but window started 65 minutes ago (expired window)
+        $verification->update([
+            'resend_count'             => 5,
+            'resend_window_started_at' => now()->subMinutes(65),
+            'last_sent_at'             => now()->subSeconds(70), // cooldown passed
+        ]);
+
+        // Resend request should be allowed and reset resend_count to 1
+        $resend = $this->post(route('verify.email.resend'), ['email' => $email]);
+        $resend->assertSessionHas('success');
+
+        $refreshed = EmailVerification::where('email', $email)->where('type', 'registration')->first();
+        $this->assertEquals(1, $refreshed->resend_count);
+    }
+
+    /**
+     * Test unverified customer attempting login is redirected to verify-email
+     */
+    public function test_unverified_customer_login_redirected_to_verify_email(): void
+    {
+        $email = 'unverified.customer@gmail.com';
+
+        $this->post('/register', [
+            'name'                  => 'Pending Customer',
+            'email'                 => $email,
+            'password'              => 'Secret123',
+            'password_confirmation' => 'Secret123',
+            'terms_consent'         => '1',
         ]);
 
         // Attempt login without verifying OTP

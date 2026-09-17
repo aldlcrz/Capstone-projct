@@ -13,25 +13,57 @@ use Illuminate\Support\Facades\Log;
 class EmailNotificationService
 {
     /**
-     * Generate a unique 6-digit verification code.
+     * Generate or overwrite a 6-digit verification code.
+     * Preserves single verification record per email/type to maintain rate limit history.
      */
     public static function createVerificationCode(string $email, string $type = 'registration'): EmailVerification
     {
-        // Delete any existing code for this email and type
-        EmailVerification::where('email', strtolower($email))
-            ->where('type', $type)
-            ->delete();
-
+        $normalizedEmail = strtolower(trim($email));
         $code = str_pad((string) random_int(100000, 999999), 6, '0', STR_PAD_LEFT);
 
+        // DEV / Testing / Demo OTP logging (gated to non-production / debug)
+        if (app()->environment('local', 'testing') || config('app.debug') || env('OTP_DEBUG', false)) {
+            Log::info("[DEV/DEMO OTP] Verification code for {$normalizedEmail} ({$type}): {$code}");
+        }
+
+        $existing = EmailVerification::where('email', $normalizedEmail)
+            ->where('type', $type)
+            ->first();
+
+        if ($existing) {
+            // Check rolling 1-hour window
+            $isWithinWindow = $existing->resend_window_started_at &&
+                $existing->resend_window_started_at->gt(Carbon::now()->subHour());
+
+            $windowStartedAt = $isWithinWindow
+                ? $existing->resend_window_started_at
+                : Carbon::now();
+
+            $newResendCount = $isWithinWindow
+                ? ((int) $existing->resend_count + 1)
+                : 1;
+
+            $existing->update([
+                'code'                     => $code,
+                'expires_at'               => Carbon::now()->addMinutes(5),
+                'last_sent_at'             => Carbon::now(),
+                'resend_count'             => $newResendCount,
+                'resend_window_started_at' => $windowStartedAt,
+                'failed_attempts'          => 0,
+            ]);
+
+            return $existing->fresh();
+        }
+
         return EmailVerification::create([
-            'email'           => strtolower($email),
-            'code'            => $code,
-            'type'            => $type,
-            'expires_at'      => Carbon::now()->addMinutes(5),
-            'resend_count'    => 0,
-            'failed_attempts' => 0,
-            'last_sent_at'    => Carbon::now(),
+            'email'                    => $normalizedEmail,
+            'code'                     => $code,
+            'type'                     => $type,
+            'expires_at'               => Carbon::now()->addMinutes(5),
+            'resend_count'             => 0,
+            'resend_window_started_at' => Carbon::now(),
+            'last_sent_at'             => Carbon::now(),
+            'failed_attempts'          => 0,
         ]);
     }
 
@@ -58,7 +90,10 @@ class EmailNotificationService
             return false;
         }
 
-        if ($verification->code !== trim($code)) {
+        $inputCode = trim($code);
+        $matches = ($verification->code === $inputCode) || \Illuminate\Support\Facades\Hash::check($inputCode, $verification->code);
+
+        if (!$matches) {
             EmailVerification::where('email', strtolower($email))->where('type', $type)->increment('failed_attempts');
             if (((int) $verification->failed_attempts + 1) >= 5) {
                 EmailVerification::where('email', strtolower($email))->where('type', $type)->delete();

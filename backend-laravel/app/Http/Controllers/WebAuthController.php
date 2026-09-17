@@ -336,19 +336,28 @@ class WebAuthController extends Controller
             $profilePhoto = $googleSignup['picture'] ?? null;
         }
 
-        // Account is NOT created in DB until verification code is entered!
+        // Create pending customer in DB (isVerified = false, status = 'pending')
+        $user = User::updateOrCreate(
+            ['email' => $email],
+            [
+                'name'           => $name,
+                'username'       => null,
+                'password'       => Hash::make($request->password),
+                'role'           => 'customer',
+                'status'         => 'pending',
+                'isVerified'     => false,
+                'googleId'       => $googleId,
+                'profilePhoto'   => $profilePhoto,
+                'hasPasswordSet' => true,
+            ]
+        );
+
         session([
             'pending_registration' => [
                 'name'              => $name,
                 'username'          => null,
                 'email'             => $email,
-                'password'          => Hash::make($request->password),
                 'role'              => 'customer',
-                'status'            => 'active',
-                'isVerified'        => true,
-                'googleId'          => $googleId,
-                'profilePhoto'      => $profilePhoto,
-                'hasPasswordSet'    => true,
             ],
             'verify_email' => $email,
         ]);
@@ -357,13 +366,13 @@ class WebAuthController extends Controller
         // Generate verification code and send email
         $verification = EmailNotificationService::createVerificationCode($email, 'registration');
         $mailable = new \App\Mail\VerificationCodeMail($name, $verification->code);
-        $sent = EmailNotificationService::sendNotification($email, $mailable, 'email_verification');
+        $sent = EmailNotificationService::sendNotification($email, $mailable, 'email_verification', $user->id, 'User', $user->id);
 
         if (!$sent) {
             return redirect()->route('verify.email')->with('warning', 'Verification code created, but sending email may be delayed. Please check your Gmail or click Resend.');
         }
 
-        return redirect()->route('verify.email')->with('success', 'Verification code sent to your Gmail! Enter the 6-digit code below to create and activate your account.');
+        return redirect()->route('verify.email')->with('success', 'Verification code sent to your Gmail! Enter the 6-digit code below to activate your account.');
     }
 
     public function showSellerRegister()
@@ -526,16 +535,20 @@ class WebAuthController extends Controller
         $email = session('verify_email') ?? (Auth::check() ? Auth::user()->email : null);
 
         $remainingSeconds = 300;
+        $resendCooldown = 0;
         if ($email) {
             $verification = EmailVerification::where('email', strtolower($email))
                 ->where('type', 'registration')
                 ->first();
-            if ($verification && $verification->expires_at) {
-                $remainingSeconds = max(0, now()->diffInSeconds($verification->expires_at, false));
+            if ($verification) {
+                if ($verification->expires_at) {
+                    $remainingSeconds = max(0, now()->diffInSeconds($verification->expires_at, false));
+                }
+                $resendCooldown = $verification->remainingCooldownSeconds(60);
             }
         }
 
-        return view('auth.verify-email', compact('email', 'remainingSeconds'));
+        return view('auth.verify-email', compact('email', 'remainingSeconds', 'resendCooldown'));
     }
 
     public function verifyEmail(Request $request)
@@ -556,7 +569,7 @@ class WebAuthController extends Controller
                 return back()->withErrors(['code' => 'Invalid or expired verification code. Please request a new code if expired.']);
             }
 
-            // 1. Check if an active user already exists in DB (e.g. unverified registration or seller application)
+            // 1. Check if an active/pending user already exists in DB (customer registration or seller application)
             $existingUser = User::where('email', $email)->first();
             $pending = session('pending_registration');
             $user = null;
@@ -587,6 +600,7 @@ class WebAuthController extends Controller
 
                     return redirect()->route('login')->with('info', 'Your email address has been verified! Your artisan application is now submitted and is awaiting admin approval.');
                 } else {
+                    // Activate customer account
                     $existingUser->isVerified = true;
                     $existingUser->status     = 'active';
                     $existingUser->save();
@@ -595,12 +609,16 @@ class WebAuthController extends Controller
                 }
             } elseif ($pending && isset($pending['email']) && strtolower($pending['email']) === $email) {
                 try {
+                    $pending['isVerified'] = true;
+                    $pending['status']     = 'active';
                     $user = User::create($pending);
                 } catch (\Throwable $e) {
                     // Fallback for environments with legacy unique constraints on trashed rows
                     $trashed = User::onlyTrashed()->where('email', $email)->first();
                     if ($trashed) {
                         $trashed->forceDelete();
+                        $pending['isVerified'] = true;
+                        $pending['status']     = 'active';
                         $user = User::create($pending);
                     } else {
                         throw $e;
@@ -624,7 +642,7 @@ class WebAuthController extends Controller
                 $contextRedirect = $this->restorePendingContext($user, $request);
                 if ($contextRedirect) return $contextRedirect;
 
-                return redirect('/')->with('success', 'Your Gmail address has been verified and your account is now created!');
+                return redirect('/')->with('success', 'Your Gmail address has been verified and your account is now active!');
             }
 
             return redirect()->route('register')->with('error', 'Registration session expired. Please register again.');
@@ -645,33 +663,39 @@ class WebAuthController extends Controller
         $userName = 'Customer';
         $userId = null;
 
-        if ($pending && isset($pending['email']) && strtolower($pending['email']) === $email) {
-            $userName = $pending['name'] ?? 'Customer';
-        } elseif ($user) {
+        if ($user) {
             $userName = $user->name;
             $userId = $user->id;
+        } elseif ($pending && isset($pending['name'])) {
+            $userName = $pending['name'];
         } else {
             return back()->withErrors(['email' => 'No pending registration found for this Gmail address. Please register first.']);
         }
 
         $existing = EmailVerification::where('email', $email)->where('type', 'registration')->first();
-        if ($existing && !$existing->isExpired()) {
-            $secondsLeft = max(1, now()->diffInSeconds($existing->expires_at, false));
-            $minutes = floor($secondsLeft / 60);
-            $secs = $secondsLeft % 60;
-            $timeStr = sprintf('%02d:%02d', $minutes, $secs);
-            return back()->withErrors(['code' => "Please wait {$timeStr} before requesting a new code."]);
+        if ($existing) {
+            // Check 60-second cooldown
+            if ($existing->isCooldownActive(60)) {
+                $secondsLeft = $existing->remainingCooldownSeconds(60);
+                return back()->withErrors(['code' => "Please wait {$secondsLeft}s before requesting a new code."]);
+            }
+
+            // Check 5 resends per rolling 1-hour window limit
+            if ($existing->isHourlyLimitReached(5)) {
+                $minutesLeft = $existing->remainingHourlyWaitMinutes();
+                return back()->withErrors(['code' => "You have reached the maximum of 5 verification resends for this hour. Please wait {$minutesLeft} minute(s) before requesting another code."]);
+            }
         }
 
         $verification = EmailNotificationService::createVerificationCode($email, 'registration');
         $mailable = new \App\Mail\VerificationCodeMail($userName, $verification->code);
         $sent = EmailNotificationService::sendNotification($email, $mailable, 'email_verification', $userId, 'User', $userId);
 
-        if (!$sent) {
-            return back()->withErrors(['code' => 'Unable to send verification code to your Gmail address at this time. Please try again.']);
-        }
-
         session(['verify_email' => $email]);
+
+        if (!$sent) {
+            return back()->with('warning', 'A new verification code was generated, but the email delivery failed or was delayed by Gmail. Please check your Gmail connection or try again shortly.');
+        }
 
         return back()->with('success', 'A new 6-digit verification code has been sent to your Gmail address.');
     }
