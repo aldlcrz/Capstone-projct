@@ -64,6 +64,34 @@ class RegistrationVerificationAnalysisTest extends TestCase
     }
 
     /**
+     * Test verification code input with spaces, hyphens, or formatting is sanitized and accepted
+     */
+    public function test_verification_code_with_spaces_or_formatting_is_sanitized_and_accepted(): void
+    {
+        $email = 'spaced.code@gmail.com';
+
+        $this->post('/register', [
+            'name'                  => 'Spaced User',
+            'email'                 => $email,
+            'password'              => 'SecurePass123',
+            'password_confirmation' => 'SecurePass123',
+            'terms_consent'         => '1',
+        ]);
+
+        $verification = EmailVerification::where('email', $email)->where('type', 'registration')->first();
+        // Insert space in the middle: e.g. "479 818" or " 479-818 "
+        $splitCode = substr($verification->code, 0, 3) . ' ' . substr($verification->code, 3);
+
+        $verifyResponse = $this->post('/verify-email', [
+            'email' => $email,
+            'code'  => '  ' . $splitCode . '  ',
+        ]);
+
+        $verifyResponse->assertRedirect('/');
+        $this->assertAuthenticated();
+    }
+
+    /**
      * Customer Validation Errors:
      * - Name with special symbols rejected
      * - Password without numbers rejected

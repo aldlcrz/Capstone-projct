@@ -559,11 +559,14 @@ class WebAuthController extends Controller
                 return back()->withErrors(['email' => 'Please enter your registered Gmail address.']);
             }
 
+            $rawCode = preg_replace('/\D/', '', (string) ($request->code ?? ''));
+            $request->merge(['code' => $rawCode]);
+
             $request->validate([
                 'code' => 'required|string|size:6',
             ]);
 
-            $isValid = EmailNotificationService::verifyCode($email, $request->code, 'registration');
+            $isValid = EmailNotificationService::verifyCode($email, $rawCode, 'registration');
 
             if (!$isValid) {
                 return back()->withErrors(['code' => 'Invalid or expired verification code. Please request a new code if expired.']);
@@ -1072,13 +1075,16 @@ class WebAuthController extends Controller
 
     public function verifyResetCode(Request $request)
     {
+        $rawCode = preg_replace('/\D/', '', (string) ($request->code ?? ''));
+        $request->merge(['code' => $rawCode]);
+
         $request->validate([
             'email' => 'required|email',
             'code'  => 'required|string|size:6',
         ]);
 
         $email = strtolower(trim($request->email));
-        $isValid = EmailNotificationService::verifyCode($email, $request->code, 'password_reset');
+        $isValid = EmailNotificationService::verifyCode($email, $rawCode, 'password_reset');
 
         if (!$isValid) {
             return back()->withErrors(['code' => 'Invalid or expired password reset code (maximum 5 attempts allowed per code).']);

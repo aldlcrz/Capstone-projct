@@ -112,10 +112,16 @@
                 <input type="text" 
                        name="code" 
                        x-model="code"
+                       @input="code = $event.target.value.replace(/\D/g, '').slice(0, 6)"
+                       @paste.prevent="
+                           const pasted = ($event.clipboardData || window.clipboardData).getData('text');
+                           code = pasted.replace(/\D/g, '').slice(0, 6);
+                       "
                        maxlength="6" 
                        required 
                        pattern="[0-9]{6}" 
                        inputmode="numeric"
+                       autocomplete="one-time-code"
                        placeholder="" 
                        autofocus
                        class="w-full text-center text-3xl font-black tracking-[0.35em] px-4 py-3 bg-[#F9F6F2] border-2 {{ $errors->has('code') ? 'border-red-400' : 'border-transparent' }} focus:border-[#C0422A] focus:bg-white rounded-2xl outline-none transition-all">
