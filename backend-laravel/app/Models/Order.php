@@ -222,4 +222,20 @@ class Order extends Model
     {
         return $this->hasMany(ReturnRequest::class, 'orderId')->orderBy('createdAt', 'desc');
     }
+
+    /**
+     * Get all payment transaction attempts for this order.
+     */
+    public function paymentTransactions()
+    {
+        return $this->hasMany(PaymentTransaction::class, 'order_id')->orderBy('created_at', 'asc');
+    }
+
+    /**
+     * Get the latest payment transaction attempt for this order.
+     */
+    public function latestPaymentTransaction()
+    {
+        return $this->hasOne(PaymentTransaction::class, 'order_id')->latestOfMany('created_at');
+    }
 }

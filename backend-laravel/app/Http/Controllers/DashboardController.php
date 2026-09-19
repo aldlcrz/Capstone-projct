@@ -154,6 +154,166 @@ class DashboardController extends Controller
     }
 
     /**
+     * Compute sales summary totals for seller dashboard.
+     *
+     * @param Collection $allActiveOrders
+     * @param Collection $activeOrders
+     * @param Collection $orders
+     * @return array
+     */
+    private function calculateSellerSalesSummary($allActiveOrders, $activeOrders, $orders): array
+    {
+        $now = Carbon::now();
+        $todayStart = $now->copy()->startOfDay();
+        $weeklyStart = $now->copy()->subDays(6)->startOfDay();
+        $monthlyStart = $now->copy()->subDays(29)->startOfDay();
+
+        $todaySales = (float) $allActiveOrders
+            ->filter(fn ($o) => Carbon::parse($o->createdAt)->gte($todayStart))
+            ->sum('totalAmount');
+
+        $weeklySales = (float) $allActiveOrders
+            ->filter(fn ($o) => Carbon::parse($o->createdAt)->gte($weeklyStart))
+            ->sum('totalAmount');
+
+        $monthlySales = (float) $allActiveOrders
+            ->filter(fn ($o) => Carbon::parse($o->createdAt)->gte($monthlyStart))
+            ->sum('totalAmount');
+
+        $totalRevenue = (float) $activeOrders->sum('totalAmount');
+        $orderCount = $activeOrders->count();
+
+        // Order Pipeline buckets
+        $statusDistribution = [
+            'pending' => 0,
+            'processing' => 0,
+            'shipped' => 0,
+            'completed' => 0,
+            'cancelled' => 0,
+        ];
+        foreach ($orders as $order) {
+            $bucket = $this->resolveOrderStatusBucket($order->status);
+            $statusDistribution[$bucket]++;
+        }
+
+        // Custom Orders count (items with custom size or bespoke notes)
+        $customOrdersCount = $orders->filter(function ($order) {
+            if ($order->items) {
+                foreach ($order->items as $item) {
+                    $size = strtolower($item->size ?? '');
+                    $notes = strtolower($item->notes ?? '');
+                    if ($size === 'custom' || str_contains($notes, 'custom') || str_contains($notes, 'embroidery')) {
+                        return true;
+                    }
+                }
+            }
+            return false;
+        })->count();
+
+        return [
+            'todaySales' => $todaySales,
+            'weeklySales' => $weeklySales,
+            'monthlySales' => $monthlySales,
+            'totalRevenue' => $totalRevenue,
+            'totalOrders' => $orderCount,
+            'statusDistribution' => $statusDistribution,
+            'pendingOrders' => $statusDistribution['pending'],
+            'customOrders' => $customOrdersCount,
+            'readyToShip' => $statusDistribution['processing'],
+            'completedOrders' => $statusDistribution['completed'],
+        ];
+    }
+
+    /**
+     * Compute store performance metrics for seller dashboard.
+     *
+     * @param string $sellerId
+     * @param Collection $products
+     * @param int $orderCount
+     * @param Collection $customerList
+     * @return array
+     */
+    private function calculateSellerStorePerformance(string $sellerId, $products, int $orderCount, $customerList): array
+    {
+        $storeRating = (float) DB::table('reviews')
+            ->join('products', 'reviews.productId', '=', 'products.id')
+            ->where('products.sellerId', $sellerId)
+            ->avg('reviews.rating') ?: 5.0;
+
+        $totalFollowers = DB::table('wishlists')
+            ->join('products', 'wishlists.product_id', '=', 'products.id')
+            ->where('products.sellerId', $sellerId)
+            ->distinct('wishlists.user_id')
+            ->count('wishlists.user_id');
+
+        $productViews = max((int) $products->sum('views'), 1);
+        if (Schema::hasTable('product_views')) {
+            $pvCount = ProductView::where('seller_id', $sellerId)->count();
+            $productViews = max($productViews, $pvCount);
+        }
+
+        $conversionRate = $productViews > 0
+            ? number_format(min(100.0, ($orderCount / $productViews) * 100), 1)
+            : '0.0';
+
+        $repeatCustomersCount = $customerList->filter(fn ($c) => (int) data_get($c, 'orderCount') > 1)->count();
+
+        return [
+            'rating' => round($storeRating, 1),
+            'followers' => $totalFollowers,
+            'productViews' => $productViews,
+            'conversionRate' => "{$conversionRate}%",
+            'repeatCustomers' => $repeatCustomersCount,
+            'totalCustomers' => $customerList->count(),
+        ];
+    }
+
+    /**
+     * Compute seller quick alerts and inventory metrics.
+     *
+     * @param string $sellerId
+     * @param Collection $allActiveOrders
+     * @param Collection $products
+     * @return array
+     */
+    private function calculateSellerAlertsAndInventory(string $sellerId, $allActiveOrders, $products): array
+    {
+        $now = Carbon::now();
+        $newOrdersAlertCount = $allActiveOrders->filter(fn ($o) => Carbon::parse($o->createdAt)->gte($now->copy()->subHours(24)))->count();
+
+        $lowStockProducts = $products->filter(fn ($p) => (int) $p->stock > 0 && (int) $p->stock <= 5)->values();
+        $outOfStockProducts = $products->filter(fn ($p) => (int) $p->stock === 0)->values();
+
+        $newReviewsCount = DB::table('reviews')
+            ->join('products', 'reviews.productId', '=', 'products.id')
+            ->where('products.sellerId', $sellerId)
+            ->where('reviews.createdAt', '>=', $now->copy()->subDays(7))
+            ->count();
+
+        $unreadMessagesCount = Schema::hasTable('messages')
+            ? DB::table('messages')->where('receiverId', $sellerId)->where('read', false)->count()
+            : 0;
+
+        $inventoryHealth = [
+            'total' => $products->count(),
+            'lowStock' => $lowStockProducts->count(),
+            'outOfStock' => $outOfStockProducts->count(),
+            'healthy' => max(0, $products->count() - $lowStockProducts->count() - $outOfStockProducts->count()),
+        ];
+
+        return [
+            'quickAlerts' => [
+                'newOrders' => $newOrdersAlertCount,
+                'lowStock' => $lowStockProducts->count(),
+                'newReviews' => $newReviewsCount,
+                'messages' => $unreadMessagesCount,
+            ],
+            'inventoryHealth' => $inventoryHealth,
+            'lowStockProducts' => $lowStockProducts,
+        ];
+    }
+
+    /**
      * Build seller dashboard dataset.
      *
      * @param string $sellerId
@@ -190,150 +350,42 @@ class DashboardController extends Controller
             ->select('id', 'name', 'price', 'stock', 'status', 'views')
             ->get();
 
+        $customerList = $this->compileSellerCustomerList($allActiveOrders);
+
         // 1. SALES SUMMARY CALCULATIONS
-        $now = Carbon::now();
-        $todayStart = $now->copy()->startOfDay();
-        $weeklyStart = $now->copy()->subDays(6)->startOfDay();
-        $monthlyStart = $now->copy()->subDays(29)->startOfDay();
-
-        $todaySales = (float) $allActiveOrders
-            ->filter(fn ($o) => Carbon::parse($o->createdAt)->gte($todayStart))
-            ->sum('totalAmount');
-
-        $weeklySales = (float) $allActiveOrders
-            ->filter(fn ($o) => Carbon::parse($o->createdAt)->gte($weeklyStart))
-            ->sum('totalAmount');
-
-        $monthlySales = (float) $allActiveOrders
-            ->filter(fn ($o) => Carbon::parse($o->createdAt)->gte($monthlyStart))
-            ->sum('totalAmount');
-
-        $totalRevenue = (float) $activeOrders->sum('totalAmount');
-        $orderCount = $activeOrders->count();
-
-        // Order Pipeline buckets
-        $statusDistribution = [
-            'pending' => 0,
-            'processing' => 0,
-            'shipped' => 0,
-            'completed' => 0,
-            'cancelled' => 0,
-        ];
-        foreach ($orders as $order) {
-            $bucket = $this->resolveOrderStatusBucket($order->status);
-            $statusDistribution[$bucket]++;
-        }
-
-        $pendingOrdersCount = $statusDistribution['pending'];
-        $readyToShipCount = $statusDistribution['processing'];
-        $completedOrdersCount = $statusDistribution['completed'];
-
-        // Custom Orders count (items with custom size or bespoke notes)
-        $customOrdersCount = $orders->filter(function ($order) {
-            if ($order->items) {
-                foreach ($order->items as $item) {
-                    $size = strtolower($item->size ?? '');
-                    $notes = strtolower($item->notes ?? '');
-                    if ($size === 'custom' || str_contains($notes, 'custom') || str_contains($notes, 'embroidery')) {
-                        return true;
-                    }
-                }
-            }
-            return false;
-        })->count();
+        $salesSummary = $this->calculateSellerSalesSummary($allActiveOrders, $activeOrders, $orders);
+        $statusDistribution = $salesSummary['statusDistribution'];
 
         // 2. STORE PERFORMANCE METRICS
-        $storeRating = (float) DB::table('reviews')
-            ->join('products', 'reviews.productId', '=', 'products.id')
-            ->where('products.sellerId', $sellerId)
-            ->avg('reviews.rating') ?: 5.0;
+        $storePerformance = $this->calculateSellerStorePerformance($sellerId, $products, (int) $salesSummary['totalOrders'], $customerList);
 
-        $totalFollowers = DB::table('wishlists')
-            ->join('products', 'wishlists.product_id', '=', 'products.id')
-            ->where('products.sellerId', $sellerId)
-            ->distinct('wishlists.user_id')
-            ->count('wishlists.user_id');
-
-        $productViews = max((int) $products->sum('views'), 1);
-        if (Schema::hasTable('product_views')) {
-            $pvCount = ProductView::where('seller_id', $sellerId)->count();
-            $productViews = max($productViews, $pvCount);
-        }
-
-        $conversionRate = $productViews > 0
-            ? number_format(min(100.0, ($orderCount / $productViews) * 100), 1)
-            : '0.0';
-
-        // Customer List & Repeat Customers
-        $customerList = $this->compileSellerCustomerList($allActiveOrders);
-        $repeatCustomersCount = $customerList->filter(fn ($c) => (int) data_get($c, 'orderCount') > 1)->count();
-
-        // 3. QUICK ALERTS
-        $newOrdersAlertCount = $allActiveOrders->filter(fn ($o) => Carbon::parse($o->createdAt)->gte($now->copy()->subHours(24)))->count();
-
-        $lowStockProducts = $products->filter(fn ($p) => (int) $p->stock > 0 && (int) $p->stock <= 5)->values();
-        $outOfStockProducts = $products->filter(fn ($p) => (int) $p->stock === 0)->values();
-
-        $newReviewsCount = DB::table('reviews')
-            ->join('products', 'reviews.productId', '=', 'products.id')
-            ->where('products.sellerId', $sellerId)
-            ->where('reviews.createdAt', '>=', $now->copy()->subDays(7))
-            ->count();
-
-        $unreadMessagesCount = Schema::hasTable('messages')
-            ? DB::table('messages')->where('receiverId', $sellerId)->where('read', false)->count()
-            : 0;
+        // 3. QUICK ALERTS & INVENTORY
+        $alertsAndInventory = $this->calculateSellerAlertsAndInventory($sellerId, $allActiveOrders, $products);
+        $quickAlerts = $alertsAndInventory['quickAlerts'];
+        $inventoryHealth = $alertsAndInventory['inventoryHealth'];
+        $lowStockProducts = $alertsAndInventory['lowStockProducts'];
 
         $topProducts = $this->fetchSellerTopProducts($sellerId, $from, $to);
         $revenueChart = $this->buildSellerRevenueChart($activeOrders, $from, $to);
         $maxChartRevenue = max(array_column($revenueChart, 'revenue')) ?: 1;
 
-        $inventoryHealth = [
-            'total' => $products->count(),
-            'lowStock' => $lowStockProducts->count(),
-            'outOfStock' => $outOfStockProducts->count(),
-            'healthy' => max(0, $products->count() - $lowStockProducts->count() - $outOfStockProducts->count()),
-        ];
-
         $dateFilter['chart_label'] = ($from && $to) ? ($dateFilter['label'] ?? 'Custom Period') : 'Last 7 Days';
 
         return [
             'filters' => $dateFilter,
-            'salesSummary' => [
-                'todaySales' => $todaySales,
-                'weeklySales' => $weeklySales,
-                'monthlySales' => $monthlySales,
-                'totalRevenue' => $totalRevenue,
-                'totalOrders' => $orderCount,
-                'pendingOrders' => $pendingOrdersCount,
-                'customOrders' => $customOrdersCount,
-                'readyToShip' => $readyToShipCount,
-                'completedOrders' => $completedOrdersCount,
-            ],
-            'storePerformance' => [
-                'rating' => round($storeRating, 1),
-                'followers' => $totalFollowers,
-                'productViews' => $productViews,
-                'conversionRate' => "{$conversionRate}%",
-                'repeatCustomers' => $repeatCustomersCount,
-                'totalCustomers' => $customerList->count(),
-            ],
-            'quickAlerts' => [
-                'newOrders' => $newOrdersAlertCount,
-                'lowStock' => $lowStockProducts->count(),
-                'newReviews' => $newReviewsCount,
-                'messages' => $unreadMessagesCount,
-            ],
+            'salesSummary' => $salesSummary,
+            'storePerformance' => $storePerformance,
+            'quickAlerts' => $quickAlerts,
             'summary' => [
-                'revenue' => $totalRevenue,
-                'orders' => $orderCount,
+                'revenue' => $salesSummary['totalRevenue'],
+                'orders' => $salesSummary['totalOrders'],
                 'customers' => $customerList->count(),
-                'conversionRate' => "{$conversionRate}%",
-                'thisMonthRevenue' => $monthlySales,
+                'conversionRate' => $storePerformance['conversionRate'],
+                'thisMonthRevenue' => $salesSummary['monthlySales'],
                 'revenueChange' => 0,
-                'averageOrderValue' => $orderCount > 0 ? $totalRevenue / $orderCount : 0,
-                'productViews' => $productViews,
-                'pendingOrders' => $pendingOrdersCount,
+                'averageOrderValue' => $salesSummary['totalOrders'] > 0 ? $salesSummary['totalRevenue'] / $salesSummary['totalOrders'] : 0,
+                'productViews' => $storePerformance['productViews'],
+                'pendingOrders' => $salesSummary['pendingOrders'],
                 'approvedProducts' => $products->where('status', 'approved')->count(),
             ],
             'inventoryHealth' => $inventoryHealth,

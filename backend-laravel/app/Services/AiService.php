@@ -1127,170 +1127,344 @@ STRICT DOMAIN LIMITS & SECURITY:
     // ==========================================
 
     /**
-     * Check if a payment reference number has already been used.
+     * Check if a payment reference number is active or previously verified in payment_transactions.
      */
-    public static function isDuplicateReference(string $referenceNumber): array
+    public static function isDuplicateReference(string $referenceNumber, ?string $excludeOrderId = null): array
     {
-        $clean = trim($referenceNumber);
+        $clean = preg_replace('/\D/', '', trim($referenceNumber));
         if (!$clean) {
             return ['is_duplicate' => false, 'message' => ''];
         }
 
         try {
-            $exists = Order::where('paymentReference', $clean)->exists();
-            if ($exists) {
+            $query = \App\Models\PaymentTransaction::where('active_reference', $clean);
+            if ($excludeOrderId) {
+                $query->where('order_id', '!=', $excludeOrderId);
+            }
+            $existing = $query->first();
+
+            if ($existing) {
+                if ($existing->status === 'VERIFIED') {
+                    return [
+                        'is_duplicate' => true,
+                        'status' => 'VERIFIED',
+                        'collision_type' => 'VERIFIED_DUPLICATE',
+                        'message' => '❌ Security Alert: This payment reference number has already been verified for another completed order.'
+                    ];
+                }
+                if ($existing->status === 'UNVERIFIED') {
+                    return [
+                        'is_duplicate' => true,
+                        'status' => 'UNVERIFIED',
+                        'collision_type' => 'ACTIVE_REFERENCE_COLLISION',
+                        'message' => '⚠️ Notice: This payment reference number is currently claimed by another ongoing checkout awaiting manual seller verification.'
+                    ];
+                }
+            }
+        } catch (\Throwable $e) {
+            // Fallback to Order table if table not yet migrated
+            $orderQuery = Order::where('paymentReference', $clean)
+                ->whereNotIn('paymentStatus', ['Payment Rejected', 'failed'])
+                ->whereNotIn('status', ['Cancelled']);
+            if ($excludeOrderId) {
+                $orderQuery->where('id', '!=', $excludeOrderId);
+            }
+            if ($orderQuery->exists()) {
                 return [
                     'is_duplicate' => true,
+                    'status' => 'VERIFIED',
                     'message' => '❌ Security Alert: This payment reference number has already been used in another order.'
                 ];
             }
-        } catch (\Throwable $e) {
-            // In case table not available
         }
 
         return [
             'is_duplicate' => false,
-            'message' => '✓ Payment reference is unique.'
+            'status' => 'AVAILABLE',
+            'message' => '✓ Payment reference is unique and available.'
         ];
     }
 
     /**
      * AI Screening of Uploaded Receipt Image against reference number, payment method, and expected amount.
-     * Returns a 3-tier status: 'PASS', 'REVIEW', or 'REJECT'.
-     * Final payment verification is always confirmed by the seller/artisan against their wallet balance.
+     * Gemini extracts the evidence; Laravel acts as the authoritative security & decision authority.
      */
-    public static function verifyReceipt(string $imagePath, string $referenceNumber, string $paymentMethod = 'GCash', float $expectedAmount = 0.0): array
-    {
+    public static function verifyReceipt(
+        string $imagePath,
+        string $referenceNumber,
+        string $paymentMethod = 'GCash',
+        float $expectedAmount = 0.0,
+        ?string $originalName = null,
+        ?string $excludeOrderId = null
+    ): array {
         $ref = trim($referenceNumber);
         $method = trim($paymentMethod);
 
-        // 1. Try Gemini Vision if API key configured
+        // 1. Try Gemini Vision for evidence extraction
+        $evidence = self::extractReceiptEvidence($imagePath, $method);
+
+        if ($evidence !== null) {
+            return self::evaluateReceiptEvidence($evidence, $ref, $method, $expectedAmount, $excludeOrderId);
+        }
+
+        // 2. Fallback to Intelligent Built-in Heuristics
+        return self::heuristicReceiptAnalysis($imagePath, $ref, $method, $expectedAmount, $originalName, $excludeOrderId);
+    }
+
+    /**
+     * Pure Evidence Extractor via Gemini Vision.
+     */
+    public static function extractReceiptEvidence(string $imagePath, string $method = 'GCash'): ?array
+    {
         $apiKey = self::getApiKey();
-        if ($apiKey && file_exists($imagePath)) {
-            $rawMime = @mime_content_type($imagePath) ?: 'image/jpeg';
-            $mimeType = match (strtolower($rawMime)) {
-                'image/png' => 'image/png',
-                'image/webp' => 'image/webp',
-                'image/heic' => 'image/heic',
-                'image/heif' => 'image/heif',
-                default => 'image/jpeg'
-            };
-            $imageData = base64_encode(file_get_contents($imagePath));
+        if (!$apiKey || !file_exists($imagePath)) {
+            return null;
+        }
 
-            $amountPrompt = $expectedAmount > 0 ? " Expected payment amount is around ₱" . number_format($expectedAmount, 2) . "." : "";
-            $prompt = "You are an automated OCR and receipt verification engine for LumBarong Philippine e-commerce store.\n"
-                . "Analyze this attached image.\n"
-                . "TASK 1: Is this a legitimate mobile payment receipt or transaction screenshot (from {$method}, GCash, Maya, or Philippine bank)? Or is it an unrelated image (clothing, people, scenery, general product photo, meme, etc.)?\n"
-                . "TASK 2: OCR and extract the exact payment Reference Number from the receipt. For GCash, look for a 13-digit reference number (e.g., '1002345678901' or 'Ref No. 1002 345 678 901' or starting with 100). For Maya, look for a 12-digit reference number (or Reference ID). Return ONLY the clean numeric digits in detected_ref.\n"
-                . "TASK 3: " . ($ref ? "Compare detected reference with entered reference '{$ref}'." : "Set ref_matched to true if a valid reference number is detected.") . "{$amountPrompt}\n\n"
-                . "Respond strictly in JSON format:\n"
-                . "{\n"
-                . "  \"status\": \"PASS\"|\"REVIEW\"|\"REJECT\",\n"
-                . "  \"is_receipt\": boolean,\n"
-                . "  \"ref_matched\": boolean,\n"
-                . "  \"confidence\": number,\n"
-                . "  \"detected_ref\": \"<digits only or empty>\",\n"
-                . "  \"message\": \"<concise explanation>\"\n"
-                . "}";
+        $rawMime = @mime_content_type($imagePath) ?: 'image/jpeg';
+        $mimeType = match (strtolower($rawMime)) {
+            'image/png' => 'image/png',
+            'image/webp' => 'image/webp',
+            'image/heic' => 'image/heic',
+            'image/heif' => 'image/heif',
+            default => 'image/jpeg'
+        };
+        $imageData = base64_encode(file_get_contents($imagePath));
 
-            $payload = [
-                'contents' => [
-                    [
-                        'parts' => [
-                            ['text' => $prompt],
-                            [
-                                'inline_data' => [
-                                    'mime_type' => $mimeType,
-                                    'data' => $imageData
-                                ]
+        $prompt = "You are an automated OCR and receipt data extraction engine for LumBarong Philippine e-commerce store.\n"
+            . "Analyze this attached image and extract raw evidence strictly in JSON format without markdown wrapping:\n"
+            . "{\n"
+            . "  \"is_receipt\": boolean,\n"
+            . "  \"wallet\": \"GCash\"|\"Maya\"|\"Bank\"|\"Unknown\",\n"
+            . "  \"reference\": \"<clean digits only, e.g. 13 digits for GCash or 12 digits for Maya, or empty string>\",\n"
+            . "  \"detected_amount\": <exact numeric amount paid as float e.g. 1500.00, or null if unreadable>,\n"
+            . "  \"amount_confidence\": <confidence between 0.0 and 1.0>,\n"
+            . "  \"reference_confidence\": <confidence between 0.0 and 1.0>,\n"
+            . "  \"confidence\": <overall confidence between 0.0 and 1.0>\n"
+            . "}\n"
+            . "Look carefully for mobile payment confirmation screens. For GCash, reference numbers are 13 digits (typically starting with 100). For Maya, references are 12 digits.";
+
+        $payload = [
+            'contents' => [
+                [
+                    'parts' => [
+                        ['text' => $prompt],
+                        [
+                            'inline_data' => [
+                                'mime_type' => $mimeType,
+                                'data' => $imageData
                             ]
                         ]
                     ]
                 ]
-            ];
+            ]
+        ];
 
-            $configuredModel = config('services.gemini.model') ?: env('GEMINI_MODEL', 'gemini-flash-latest');
-            $visionModels = array_unique(array_filter([
-                $configuredModel,
-                'gemini-flash-latest',
-                'gemini-3.5-flash',
-                'gemini-3.7-flash',
-                'gemini-3.6-flash'
-            ]));
+        $configuredModel = config('services.gemini.model') ?: env('GEMINI_MODEL', 'gemini-flash-latest');
+        $visionModels = array_unique(array_filter([
+            $configuredModel,
+            'gemini-flash-latest',
+            'gemini-2.5-flash',
+            'gemini-2.0-flash',
+            'gemini-1.5-flash'
+        ]));
 
-            foreach ($visionModels as $vModel) {
-                try {
-                    $url = "https://generativelanguage.googleapis.com/v1beta/models/{$vModel}:generateContent?key={$apiKey}";
-                    $res = Http::withOptions([
-                        'curl' => [CURLOPT_IPRESOLVE => CURL_IPRESOLVE_V4],
-                        'verify' => false,
-                    ])->timeout(15)->post($url, $payload);
-                    if ($res->successful()) {
-                        $json = $res->json();
-                        $rawText = $json['candidates'][0]['content']['parts'][0]['text'] ?? '';
-                        if (preg_match('/\{[\s\S]*\}/', $rawText, $m)) {
-                            $parsed = json_decode($m[0], true);
-                            if (is_array($parsed)) {
-                                $isReceipt = (bool) ($parsed['is_receipt'] ?? false);
-                                $rawDetectedRef = trim((string) ($parsed['detected_ref'] ?? ''));
-                                // Clean detected reference to digits only
-                                $detectedRef = preg_replace('/\D/', '', $rawDetectedRef);
+        foreach ($visionModels as $vModel) {
+            try {
+                $url = "https://generativelanguage.googleapis.com/v1beta/models/{$vModel}:generateContent?key={$apiKey}";
+                $res = Http::withOptions([
+                    'curl' => [CURLOPT_IPRESOLVE => CURL_IPRESOLVE_V4],
+                    'verify' => false,
+                ])->timeout(15)->post($url, $payload);
 
-                                $cleanRef = preg_replace('/\D/', '', $ref);
-                                $refMatched = (bool) ($parsed['ref_matched'] ?? false);
-
-                                if ($cleanRef && $detectedRef) {
-                                    $refMatched = ($cleanRef === $detectedRef);
-                                } elseif (!$cleanRef && $detectedRef) {
-                                    $refMatched = true;
-                                }
-
-                                $tier = strtoupper(trim((string) ($parsed['status'] ?? '')));
-                                if (!$isReceipt) {
-                                    $tier = 'REJECT';
-                                } elseif (!$refMatched && $cleanRef && $detectedRef) {
-                                    $tier = 'REVIEW';
-                                } elseif ($isReceipt && $detectedRef) {
-                                    $tier = 'PASS';
-                                } elseif (!in_array($tier, ['PASS', 'REVIEW', 'REJECT'], true)) {
-                                    $tier = 'PASS';
-                                }
-
-                                $msg = (string) ($parsed['message'] ?? 'Receipt screening complete.');
-                                if ($isReceipt && $cleanRef && $detectedRef && $cleanRef !== $detectedRef) {
-                                    $msg = "Reference number mismatch: Detected \"{$detectedRef}\" on image, but entered \"{$cleanRef}\". Artisan manual verification required.";
-                                } elseif ($isReceipt && $detectedRef && !$cleanRef) {
-                                    $msg = "✓ Detected {$method} Reference Number: {$detectedRef}.";
-                                }
-
-                                return [
-                                    'status' => $tier,
-                                    'is_receipt' => $isReceipt,
-                                    'ref_matched' => $refMatched,
-                                    'confidence' => (int) ($parsed['confidence'] ?? 85),
-                                    'detected_ref' => $detectedRef,
-                                    'needs_seller_verification' => true,
-                                    'message' => $msg
-                                ];
-                            }
+                if ($res->successful()) {
+                    $json = $res->json();
+                    $rawText = $json['candidates'][0]['content']['parts'][0]['text'] ?? '';
+                    if (preg_match('/\{[\s\S]*\}/', $rawText, $m)) {
+                        $parsed = json_decode($m[0], true);
+                        if (is_array($parsed) && isset($parsed['is_receipt'])) {
+                            return [
+                                'is_receipt'           => (bool) $parsed['is_receipt'],
+                                'wallet'               => trim((string) ($parsed['wallet'] ?? $method)),
+                                'reference'            => preg_replace('/\D/', '', (string) ($parsed['reference'] ?? '')),
+                                'detected_amount'      => isset($parsed['detected_amount']) && is_numeric($parsed['detected_amount']) ? (float) $parsed['detected_amount'] : null,
+                                'amount_confidence'    => isset($parsed['amount_confidence']) && is_numeric($parsed['amount_confidence']) ? (float) $parsed['amount_confidence'] : 0.85,
+                                'reference_confidence' => isset($parsed['reference_confidence']) && is_numeric($parsed['reference_confidence']) ? (float) $parsed['reference_confidence'] : 0.85,
+                                'confidence'           => isset($parsed['confidence']) && is_numeric($parsed['confidence']) ? (float) $parsed['confidence'] : 0.85,
+                            ];
                         }
                     }
-                } catch (\Throwable $e) {
-                    Log::warning("Gemini Vision ({$vModel}) receipt check failed: " . $e->getMessage());
                 }
+            } catch (\Throwable $e) {
+                Log::warning("Gemini Vision ({$vModel}) receipt check failed: " . $e->getMessage());
             }
         }
 
-        // 2. Intelligent Built-in Heuristic Receipt Classifier
-        return self::heuristicReceiptAnalysis($imagePath, $ref, $method, $expectedAmount);
+        return null;
     }
 
     /**
-     * Built-in Heuristic Receipt & Image Analysis.
+     * Authoritative Laravel Security & Business Decision Engine.
      */
-    private static function heuristicReceiptAnalysis(string $imagePath, string $ref, string $method, float $expectedAmount = 0.0): array
-    {
-        $filename = strtolower(basename($imagePath));
+    public static function evaluateReceiptEvidence(
+        array $evidence,
+        string $referenceNumber,
+        string $paymentMethod,
+        float $expectedAmount = 0.0,
+        ?string $excludeOrderId = null
+    ): array {
+        $cleanEnteredRef = preg_replace('/\D/', '', trim($referenceNumber));
+        $cleanDetectedRef = preg_replace('/\D/', '', (string) ($evidence['reference'] ?? ''));
+        $isReceipt = (bool) ($evidence['is_receipt'] ?? false);
+        $wallet = (string) ($evidence['wallet'] ?? $paymentMethod);
+        $detectedAmount = $evidence['detected_amount'] ?? null;
+        $amountConf = (float) ($evidence['amount_confidence'] ?? 0.85);
+        $refConf = (float) ($evidence['reference_confidence'] ?? 0.85);
+        $overallConf = (float) ($evidence['confidence'] ?? 0.85);
+
+        // Rule 1: Clearly not a receipt screenshot -> REJECT
+        if (!$isReceipt) {
+            return [
+                'status'                    => 'REJECT',
+                'is_receipt'                => false,
+                'wallet'                    => $wallet,
+                'ref_matched'               => false,
+                'amount_matched'            => false,
+                'detected_ref'              => '',
+                'detected_amount'           => null,
+                'amount_confidence'         => 0.0,
+                'reference_confidence'      => 0.0,
+                'confidence'                => $overallConf,
+                'needs_seller_verification' => true,
+                'message'                   => 'The attached file does not appear to be a mobile payment receipt screenshot. Please upload an authentic transaction confirmation.'
+            ];
+        }
+
+        // Rule 2: Check database active_reference (concurrency & replay protection)
+        $refToCheck = $cleanEnteredRef ?: $cleanDetectedRef;
+        if ($refToCheck) {
+            $dupCheck = self::isDuplicateReference($refToCheck, $excludeOrderId);
+            if ($dupCheck['is_duplicate']) {
+                return [
+                    'status'                    => 'REJECT',
+                    'collision_type'            => $dupCheck['collision_type'] ?? 'REFERENCE_COLLISION',
+                    'is_receipt'                => true,
+                    'wallet'                    => $wallet,
+                    'ref_matched'               => false,
+                    'amount_matched'            => false,
+                    'detected_ref'              => $cleanDetectedRef,
+                    'detected_amount'           => $detectedAmount,
+                    'amount_confidence'         => $amountConf,
+                    'reference_confidence'      => $refConf,
+                    'confidence'                => $overallConf,
+                    'needs_seller_verification' => true,
+                    'message'                   => $dupCheck['message']
+                ];
+            }
+        }
+
+        // Rule 3: Amount Validation against Expected Order Total
+        // Deterministic policy:
+        // - Exact match (within ₱0.01) -> PASS (provided reference matches)
+        // - Severe underpayment (< 90% of expected amount) -> REJECT
+        // - Minor mismatch / Overpayment / Unclear -> REVIEW (manual seller verification required)
+        $amountMatched = false;
+        $amountStatus = 'MATCH'; // MATCH, UNCLEAR, REJECT_UNDERPAY, REVIEW_MISMATCH, REVIEW_OVERPAY
+
+        if ($expectedAmount > 0) {
+            if ($detectedAmount === null || $amountConf < 0.70) {
+                $amountStatus = 'UNCLEAR';
+            } else {
+                $diff = abs($detectedAmount - $expectedAmount);
+                if ($diff < 0.01) {
+                    $amountMatched = true;
+                    $amountStatus = 'MATCH';
+                } elseif ($detectedAmount < ($expectedAmount * 0.90)) {
+                    // Severe underpayment (e.g. ₱10 or ₱500 on a ₱1,000 order) -> REJECT
+                    $amountStatus = 'REJECT_UNDERPAY';
+                } elseif ($detectedAmount > $expectedAmount) {
+                    // Overpayment (e.g. ₱1,100 on a ₱1,000 order) -> REVIEW for manual seller confirmation
+                    $amountStatus = 'REVIEW_OVERPAY';
+                } else {
+                    // Minor discrepancy / near amount (e.g. ₱950 or ₱999 on a ₱1,000 order) -> REVIEW
+                    $amountStatus = 'REVIEW_MISMATCH';
+                }
+            }
+        } else {
+            $amountMatched = true;
+            $amountStatus = 'MATCH';
+        }
+
+        if ($amountStatus === 'REJECT_UNDERPAY') {
+            return [
+                'status'                    => 'REJECT',
+                'is_receipt'                => true,
+                'wallet'                    => $wallet,
+                'ref_matched'               => ($cleanEnteredRef === $cleanDetectedRef),
+                'amount_matched'            => false,
+                'detected_ref'              => $cleanDetectedRef,
+                'detected_amount'           => $detectedAmount,
+                'amount_confidence'         => $amountConf,
+                'reference_confidence'      => $refConf,
+                'confidence'                => $overallConf,
+                'needs_seller_verification' => true,
+                'message'                   => "Amount mismatch: The receipt shows ₱" . number_format($detectedAmount, 2) . ", but the order total is ₱" . number_format($expectedAmount, 2) . ". Payment cannot be accepted."
+            ];
+        }
+
+        // Rule 4: Reference Number Matching
+        $refMatched = true;
+        if ($cleanEnteredRef && $cleanDetectedRef) {
+            $refMatched = ($cleanEnteredRef === $cleanDetectedRef);
+        } elseif (!$cleanEnteredRef && $cleanDetectedRef) {
+            $refMatched = true;
+        }
+
+        // Rule 5: Final Tier Determination (PASS vs REVIEW)
+        if ($refMatched && $amountStatus === 'MATCH' && ($cleanEnteredRef || $cleanDetectedRef)) {
+            $status = 'PASS';
+            $msg = "✓ Receipt verified ({$wallet} Ref: " . ($cleanEnteredRef ?: $cleanDetectedRef) . " · Amount: ₱" . number_format($detectedAmount ?? $expectedAmount, 2) . ").";
+        } else {
+            $status = 'REVIEW';
+            if (!$refMatched) {
+                $msg = "Reference mismatch: Receipt shows \"{$cleanDetectedRef}\", but entered \"{$cleanEnteredRef}\". Manual seller review required.";
+            } elseif ($amountStatus === 'UNCLEAR') {
+                $msg = "Receipt amount is unreadable or uncertain. Seller will manually verify payment in their wallet before fulfillment.";
+            } elseif ($amountStatus === 'REVIEW_OVERPAY') {
+                $msg = "Amount overpayment detected: Receipt shows ₱" . number_format((float)$detectedAmount, 2) . " vs order total ₱" . number_format($expectedAmount, 2) . ". Manual seller review required.";
+            } else {
+                $msg = "Amount discrepancy: Receipt shows ₱" . number_format((float)$detectedAmount, 2) . " vs order total ₱" . number_format($expectedAmount, 2) . ". Manual seller review required.";
+            }
+        }
+
+        return [
+            'status'                    => $status,
+            'is_receipt'                => true,
+            'wallet'                    => $wallet,
+            'ref_matched'               => $refMatched,
+            'amount_matched'            => $amountMatched,
+            'detected_ref'              => $cleanDetectedRef,
+            'detected_amount'           => $detectedAmount,
+            'amount_confidence'         => $amountConf,
+            'reference_confidence'      => $refConf,
+            'confidence'                => $overallConf,
+            'needs_seller_verification' => true,
+            'message'                   => $msg
+        ];
+    }
+
+    /**
+     * Built-in Heuristic Receipt & Image Analysis (Offline/Fallback).
+     */
+    private static function heuristicReceiptAnalysis(
+        string $imagePath,
+        string $ref,
+        string $method,
+        float $expectedAmount = 0.0,
+        ?string $originalName = null,
+        ?string $excludeOrderId = null
+    ): array {
+        $filename = strtolower($originalName ?: basename($imagePath));
 
         // Keywords that clearly indicate an unrelated non-receipt photo
         $nonReceiptKeywords = [
@@ -1302,12 +1476,18 @@ STRICT DOMAIN LIMITS & SECURITY:
         foreach ($nonReceiptKeywords as $kw) {
             if (str_contains($filename, $kw)) {
                 return [
-                    'status' => 'REJECT',
-                    'is_receipt' => false,
-                    'ref_matched' => false,
-                    'confidence' => 95,
+                    'status'                    => 'REJECT',
+                    'is_receipt'                => false,
+                    'wallet'                    => $method,
+                    'ref_matched'               => false,
+                    'amount_matched'            => false,
+                    'detected_ref'              => '',
+                    'detected_amount'           => null,
+                    'amount_confidence'         => 0.0,
+                    'reference_confidence'      => 0.0,
+                    'confidence'                => 0.95,
                     'needs_seller_verification' => true,
-                    'message' => 'The attached file appears to be a general photo/product image, not a ' . $method . ' transaction receipt screenshot. Please attach your actual payment confirmation screenshot.'
+                    'message'                   => 'The attached file appears to be a general photo/product image, not a ' . $method . ' transaction receipt screenshot. Please attach your actual payment confirmation screenshot.'
                 ];
             }
         }
@@ -1319,31 +1499,65 @@ STRICT DOMAIN LIMITS & SECURITY:
                 $width = $imgInfo[0];
                 $height = $imgInfo[1];
 
-                // Square 1:1 or landscape images (width >= height) are almost never mobile payment receipt screenshots (which are vertical mobile screenshots)
+                // Square 1:1 or landscape images (width >= height) are almost never mobile payment receipt screenshots
                 if ($width > 0 && $height > 0) {
                     $ratio = $height / $width;
                     if ($ratio < 1.15 && !str_contains($filename, 'receipt') && !str_contains($filename, 'screenshot') && !str_contains($filename, 'gcash') && !str_contains($filename, 'maya')) {
                         return [
-                            'status' => 'REJECT',
-                            'is_receipt' => false,
-                            'ref_matched' => false,
-                            'confidence' => 88,
+                            'status'                    => 'REJECT',
+                            'is_receipt'                => false,
+                            'wallet'                    => $method,
+                            'ref_matched'               => false,
+                            'amount_matched'            => false,
+                            'detected_ref'              => '',
+                            'detected_amount'           => null,
+                            'amount_confidence'         => 0.0,
+                            'reference_confidence'      => 0.0,
+                            'confidence'                => 0.88,
                             'needs_seller_verification' => true,
-                            'message' => 'The uploaded image dimensions indicate a general photo or square image rather than a vertical ' . $method . ' mobile receipt screenshot.'
+                            'message'                   => 'The uploaded image dimensions indicate a general photo or square image rather than a vertical ' . $method . ' mobile receipt screenshot.'
                         ];
                     }
                 }
             }
         }
 
-        // Heuristic fallback: image passed geometry screening, but reference match cannot be verified without OCR/Gemini
+        // Check duplicate reference in database
+        $cleanRef = preg_replace('/\D/', '', trim($ref));
+        if ($cleanRef) {
+            $dupCheck = self::isDuplicateReference($cleanRef, $excludeOrderId);
+            if ($dupCheck['is_duplicate']) {
+                return [
+                    'status'                    => 'REJECT',
+                    'is_receipt'                => true,
+                    'wallet'                    => $method,
+                    'ref_matched'               => false,
+                    'amount_matched'            => false,
+                    'detected_ref'              => '',
+                    'detected_amount'           => null,
+                    'amount_confidence'         => 0.0,
+                    'reference_confidence'      => 0.0,
+                    'confidence'                => 0.95,
+                    'needs_seller_verification' => true,
+                    'message'                   => $dupCheck['message']
+                ];
+            }
+        }
+
+        // Heuristic fallback: image passed geometry screening, but reference/amount match requires artisan check
         return [
-            'status' => 'REVIEW',
-            'is_receipt' => true,
-            'ref_matched' => false,
-            'confidence' => 55,
+            'status'                    => 'REVIEW',
+            'is_receipt'                => true,
+            'wallet'                    => $method,
+            'ref_matched'               => false,
+            'amount_matched'            => false,
+            'detected_ref'              => '',
+            'detected_amount'           => null,
+            'amount_confidence'         => 0.50,
+            'reference_confidence'      => 0.50,
+            'confidence'                => 0.55,
             'needs_seller_verification' => true,
-            'message' => "Image geometry is consistent with a vertical mobile screenshot. The artisan will verify the {$method} reference number and amount in their wallet before proceeding."
+            'message'                   => "Image geometry is consistent with a vertical mobile screenshot. The artisan will verify the {$method} reference number and amount in their wallet before proceeding."
         ];
     }
 

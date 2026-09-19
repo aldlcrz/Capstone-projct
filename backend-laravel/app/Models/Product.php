@@ -141,6 +141,28 @@ class Product extends Model
     }
 
     /**
+     * Get the sizes attribute, filtering out any Custom size.
+     */
+    public function getSizesAttribute(array|string|null $value = null): array
+    {
+        if (is_null($value)) {
+            return ['S', 'M', 'L', 'XL', 'XXL'];
+        }
+
+        $decoded = is_string($value) ? json_decode($value, true) : $value;
+        if (!is_array($decoded)) {
+            return ['S', 'M', 'L', 'XL', 'XXL'];
+        }
+
+        $filtered = array_values(array_filter($decoded, function($sz) {
+            $name = is_array($sz) ? ($sz['size'] ?? $sz['name'] ?? '') : $sz;
+            return strtolower(trim((string)$name)) !== 'custom';
+        }));
+
+        return !empty($filtered) ? $filtered : ['S', 'M', 'L', 'XL', 'XXL'];
+    }
+
+    /**
      * Get the image attribute, validating physical file existence on disk.
      */
     public function getImageAttribute(array|string|null $value = null): array

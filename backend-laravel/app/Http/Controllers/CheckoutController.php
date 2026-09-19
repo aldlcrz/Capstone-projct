@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Order;
 use App\Models\OrderItem;
 use App\Models\Address;
+use App\Models\PaymentTransaction;
 use App\Models\Product;
 use App\Models\User;
 use App\Support\VariationFormatter;
@@ -230,10 +231,17 @@ class CheckoutController extends Controller
                         }
                     }
 
-                    // Security: Reject already-used payment reference numbers
-                    $isDuplicate = Order::where('paymentReference', $raw)->exists();
+                    // Security: Reject already-used or currently claimed active payment reference numbers
+                    $isDuplicate = PaymentTransaction::where('active_reference', $raw)->exists();
+                    if (!$isDuplicate) {
+                        // Fallback check against legacy orders if not yet backfilled
+                        $isDuplicate = Order::where('paymentReference', $raw)
+                            ->whereNotIn('status', ['Cancelled', 'Declined'])
+                            ->where('paymentStatus', '!=', 'Payment Rejected')
+                            ->exists();
+                    }
                     if ($isDuplicate) {
-                        $fail('This payment reference number has already been used in another order. Please provide a new and unique payment reference.');
+                        $fail('This payment reference number is already tied to an active or verified order. Please provide a new and unique payment reference.');
                         return;
                     }
                 },
@@ -299,14 +307,17 @@ class CheckoutController extends Controller
                 $totalExpectedAmount += ($sellerSubtotal + $maxShipping);
             }
 
-            // 3. Server-side Receipt Screening (reject obvious non-receipts)
+            // 3. Server-side Receipt Screening (reject obvious non-receipts and amount mismatches)
+            $screening = null;
             if ($request->hasFile('paymentScreenshot')) {
                 $tempPath = $request->file('paymentScreenshot')->getRealPath();
+                $origName = $request->file('paymentScreenshot')->getClientOriginalName();
                 $screening = \App\Services\AiService::verifyReceipt(
                     $tempPath,
                     $request->paymentReference,
                     $request->paymentMethod,
-                    $totalExpectedAmount
+                    $totalExpectedAmount,
+                    $origName
                 );
 
                 if (($screening['status'] ?? '') === 'REJECT' || !($screening['is_receipt'] ?? true)) {
@@ -361,11 +372,39 @@ class CheckoutController extends Controller
                     'notes' => 'Order placed by customer. Payment proof submitted, awaiting artisan verification.',
                 ]);
 
+                $storedPath = null;
                 if ($request->hasFile('paymentScreenshot')) {
-                    $path = $request->file('paymentScreenshot')->store('payments', 'public');
-                    $order->paymentProof = $path;
+                    $storedPath = $request->file('paymentScreenshot')->store('payments', 'public');
+                    $order->paymentProof = $storedPath;
                     $order->save();
                 }
+
+                // Create PaymentTransaction attempt linked to this order
+                $rawRef = trim((string) $request->paymentReference);
+                $detectedAmt = isset($screening['detected_amount']) && is_numeric($screening['detected_amount'])
+                    ? (float) $screening['detected_amount']
+                    : null;
+                $tier = in_array(($screening['status'] ?? ''), ['PASS', 'REVIEW', 'REJECT'])
+                    ? $screening['status']
+                    : 'REVIEW';
+
+                PaymentTransaction::create([
+                    'order_id' => $orderId,
+                    'customer_id' => Auth::id(),
+                    'seller_id' => $sellerId,
+                    'reference_number' => $rawRef,
+                    'active_reference' => $rawRef,
+                    'wallet_type' => $request->paymentMethod,
+                    'expected_amount' => $totalAmount,
+                    'detected_amount' => $detectedAmt,
+                    'amount_confidence' => $screening['amount_confidence'] ?? null,
+                    'reference_confidence' => $screening['reference_confidence'] ?? null,
+                    'confidence' => $screening['confidence'] ?? null,
+                    'status' => 'UNVERIFIED',
+                    'verification_tier' => $tier,
+                    'receipt_path' => $storedPath,
+                    'notes' => $screening['message'] ?? 'Initial submission at checkout',
+                ]);
 
                 // Ensure snapshot columns exist in order_items table on database
                 OrderItem::ensureSnapshotColumnsExist();
@@ -475,6 +514,12 @@ class CheckoutController extends Controller
 
             return redirect()->route('orders')->with('success', 'Order placed successfully!');
 
+        } catch (\Illuminate\Database\QueryException $e) {
+            DB::rollBack();
+            if ($e->getCode() == 23000 || str_contains($e->getMessage(), 'active_reference') || str_contains($e->getMessage(), 'UNIQUE constraint failed')) {
+                return redirect()->back()->withInput()->with('error', 'This payment reference has already been claimed by another active order. Please provide a new and unique payment reference.');
+            }
+            return redirect()->back()->withInput()->with('error', 'Failed to place order: ' . $e->getMessage());
         } catch (\Exception $e) {
             DB::rollBack();
             return redirect()->back()->with('error', 'Failed to place order: ' . $e->getMessage());

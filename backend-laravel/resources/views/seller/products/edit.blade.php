@@ -250,8 +250,8 @@
                     $currentSizes = is_array($product->sizes) ? $product->sizes : (json_decode($product->sizes ?? '[]', true) ?? []);
                     $currentSizeStocks = is_array($product->size_stocks) ? $product->size_stocks : (json_decode($product->size_stocks ?? '[]', true) ?? []);
                 @endphp
-                <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-2.5">
-                    @foreach(['S', 'M', 'L', 'XL', 'XXL', 'Custom'] as $size)
+                <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-2.5">
+                    @foreach(['S', 'M', 'L', 'XL', 'XXL'] as $size)
                         @php
                             $hasSize = in_array($size, $currentSizes);
                             $sizeStock = $currentSizeStocks[$size] ?? 0;
@@ -1921,7 +1921,7 @@ function validateProductForm(e, isEdit = true) {
     const sizingSection = document.getElementById('sizing-section');
     
     if (checkedSizes.length === 0) {
-        errors.push('Please select at least one Heritage Size (e.g. S, M, L, XL, XXL, Custom).');
+        errors.push('Please select at least one Heritage Size (e.g. S, M, L, XL, XXL).');
         if (sizingSection) sizingSection.classList.add('border-red-500');
     } else {
         let invalidStockCount = 0;

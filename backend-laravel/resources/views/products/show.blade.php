@@ -146,31 +146,8 @@
                 { name: 'Black', hex: '#18181B' },
                 { name: 'Classic Cream', hex: '#F5EAD9' }
             ],
-            customMeasurements: {
-                neck: '',
-                shoulder: '',
-                sleeves: '',
-                armhole: '',
-                fullLength: '',
-                chest: '',
-                waist: '',
-                notes: ''
-            },
             effectiveSize: function() {
-                if (!this.selectedSize) return '';
-                if (this.selectedSize === 'Custom' || this.selectedSize.toLowerCase().includes('custom')) {
-                    var parts = [];
-                    if (this.customMeasurements.neck) parts.push('Neck: ' + this.customMeasurements.neck);
-                    if (this.customMeasurements.shoulder) parts.push('Shoulder: ' + this.customMeasurements.shoulder);
-                    if (this.customMeasurements.sleeves) parts.push('Sleeves: ' + this.customMeasurements.sleeves);
-                    if (this.customMeasurements.armhole) parts.push('Armhole: ' + this.customMeasurements.armhole);
-                    if (this.customMeasurements.fullLength) parts.push('Length: ' + this.customMeasurements.fullLength);
-                    if (this.customMeasurements.chest) parts.push('Chest: ' + this.customMeasurements.chest);
-                    if (this.customMeasurements.waist) parts.push('Waist: ' + this.customMeasurements.waist);
-                    if (this.customMeasurements.notes) parts.push('Notes: ' + this.customMeasurements.notes);
-                    return 'Custom (' + (parts.length > 0 ? parts.join(', ') : 'Tailored Sizing') + ')';
-                }
-                return this.selectedSize;
+                return this.selectedSize || '';
             },
             toggleWishlist: async function() {
                 var hasSizes = Object.keys(this.sizeStocks || {}).length > 0;
@@ -496,16 +473,17 @@
                         </div>
                         <div class="flex flex-wrap gap-2.5">
                             @php
-                                $sizes = is_string($product->sizes) ? json_decode($product->sizes, true) : $product->sizes;
-                                if (empty($sizes)) {
-                                    $sizes = ['XS', 'S', 'M', 'L', 'XL', 'XXL', 'Custom'];
+                                $rawSizes = is_string($product->sizes) ? json_decode($product->sizes, true) : $product->sizes;
+                                if (empty($rawSizes)) {
+                                    $sizes = ['S', 'M', 'L', 'XL', 'XXL'];
                                 } else {
-                                    $hasCustom = false;
-                                    foreach($sizes as $sz) {
+                                    $sizes = array_values(array_filter($rawSizes, function($sz) {
                                         $name = is_array($sz) ? ($sz['size'] ?? $sz['name'] ?? '') : $sz;
-                                        if (strtolower($name) === 'custom') { $hasCustom = true; break; }
+                                        return strtolower(trim((string)$name)) !== 'custom';
+                                    }));
+                                    if (empty($sizes)) {
+                                        $sizes = ['S', 'M', 'L', 'XL', 'XXL'];
                                     }
-                                    if (!$hasCustom) { $sizes[] = 'Custom'; }
                                 }
                             @endphp
                             @foreach($sizes as $size)
@@ -525,58 +503,6 @@
                                     <span class="{{ !$hasSizeStock ? 'text-gray-300 line-through font-normal' : '' }}">{{ $sizeName }}</span>
                                 </button>
                             @endforeach
-                        </div>
-
-                        {{-- Custom Measurements Input Card --}}
-                        <div x-show="selectedSize && (selectedSize === 'Custom' || selectedSize.toLowerCase().includes('custom'))"
-                             x-cloak
-                             x-transition
-                             class="mt-3.5 p-4 bg-[#FDF9F4] border border-[#C0422A]/20 rounded-2xl space-y-3 relative">
-                            <div class="flex items-center justify-between">
-                                <span class="text-xs font-extrabold text-[#C0422A] uppercase tracking-wider">✂️ Tailored Custom Sizing</span>
-                                <button type="button" 
-                                        @click="selectedSize = null" 
-                                        class="w-6 h-6 rounded-full bg-white border border-gray-200 hover:border-gray-400 hover:text-black text-gray-400 flex items-center justify-center transition-all cursor-pointer shadow-2xs active:scale-95"
-                                        title="Close custom sizing">
-                                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12"/></svg>
-                                </button>
-                            </div>
-                            <p class="text-[11px] text-gray-500 font-medium">Input your body measurements in inches (in) or centimetres (cm):</p>
-                            
-                            <div class="grid grid-cols-2 sm:grid-cols-4 gap-2.5 text-xs">
-                                <div>
-                                    <label class="font-bold text-gray-700 block mb-1">Neck</label>
-                                    <input type="text" x-model="customMeasurements.neck" placeholder="e.g. 15.5 in / 39 cm" class="w-full h-8.5 px-3 bg-white border border-gray-200 rounded-xl text-xs outline-none focus:border-[#C0422A] transition-colors">
-                                </div>
-                                <div>
-                                    <label class="font-bold text-gray-700 block mb-1">Shoulder</label>
-                                    <input type="text" x-model="customMeasurements.shoulder" placeholder="e.g. 17.5 in / 44 cm" class="w-full h-8.5 px-3 bg-white border border-gray-200 rounded-xl text-xs outline-none focus:border-[#C0422A] transition-colors">
-                                </div>
-                                <div>
-                                    <label class="font-bold text-gray-700 block mb-1">Sleeves</label>
-                                    <input type="text" x-model="customMeasurements.sleeves" placeholder="e.g. 24 in / 60 cm" class="w-full h-8.5 px-3 bg-white border border-gray-200 rounded-xl text-xs outline-none focus:border-[#C0422A] transition-colors">
-                                </div>
-                                <div>
-                                    <label class="font-bold text-gray-700 block mb-1">Armhole</label>
-                                    <input type="text" x-model="customMeasurements.armhole" placeholder="e.g. 19 in / 48 cm" class="w-full h-8.5 px-3 bg-white border border-gray-200 rounded-xl text-xs outline-none focus:border-[#C0422A] transition-colors">
-                                </div>
-                                <div>
-                                    <label class="font-bold text-gray-700 block mb-1">Length</label>
-                                    <input type="text" x-model="customMeasurements.fullLength" placeholder="e.g. 29 in / 74 cm" class="w-full h-8.5 px-3 bg-white border border-gray-200 rounded-xl text-xs outline-none focus:border-[#C0422A] transition-colors">
-                                </div>
-                                <div>
-                                    <label class="font-bold text-gray-700 block mb-1">Chest</label>
-                                    <input type="text" x-model="customMeasurements.chest" placeholder="e.g. 38 in / 96 cm" class="w-full h-8.5 px-3 bg-white border border-gray-200 rounded-xl text-xs outline-none focus:border-[#C0422A] transition-colors">
-                                </div>
-                                <div>
-                                    <label class="font-bold text-gray-700 block mb-1">Waist</label>
-                                    <input type="text" x-model="customMeasurements.waist" placeholder="e.g. 32 in / 81 cm" class="w-full h-8.5 px-3 bg-white border border-gray-200 rounded-xl text-xs outline-none focus:border-[#C0422A] transition-colors">
-                                </div>
-                            </div>
-                            <div>
-                                <label class="font-bold text-gray-700 block mb-1 text-xs">Special Sizing Notes (Optional)</label>
-                                <input type="text" x-model="customMeasurements.notes" placeholder="e.g. Loose fit for wedding ceremony" class="w-full h-8.5 px-3 bg-white border border-gray-200 rounded-xl text-xs outline-none focus:border-[#C0422A] transition-colors">
-                            </div>
                         </div>
                     </div>
 

@@ -61,7 +61,7 @@
             try { sz = JSON.parse(sz); } catch(e) { sz = sz.split(',').map(s => s.trim()); }
         }
         if (Array.isArray(sz)) {
-            return sz.map(item => typeof item === 'object' ? (item.size || item.name || '') : item).filter(Boolean);
+            return sz.map(item => typeof item === 'object' ? (item.size || item.name || '') : item).filter(Boolean).filter(s => s.toLowerCase() !== 'custom');
         }
         return [];
     },

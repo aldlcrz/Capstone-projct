@@ -731,8 +731,8 @@
                     </span>
                 </div>
 
-                <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-2.5 pt-1">
-                    @foreach(['S', 'M', 'L', 'XL', 'XXL', 'Custom'] as $size)
+                <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-2.5 pt-1">
+                    @foreach(['S', 'M', 'L', 'XL', 'XXL'] as $size)
                         <div style="background-color:#FAF8F5;border:1px solid #E2D9C8;border-radius:16px;padding:12px;text-align:center;box-shadow:0 1px 3px rgba(0,0,0,0.02);transition:all 0.2s;" class="space-y-2 hover:border-[#C49520]">
                             <label style="display:flex;align-items:center;justify-content:center;gap:6px;font-size:12px;font-weight:700;text-transform:uppercase;color:#1E1915;cursor:pointer;">
                                 <input type="checkbox" 
@@ -2391,7 +2391,7 @@ function addProductManager() {
                     sizeSec.classList.add('border-red-500', 'ring-2', 'ring-red-400');
                     sizeSec.scrollIntoView({ behavior: 'smooth', block: 'center' });
                 }
-                triggerAppModal('Size Selection Required', 'Please check at least one Heritage Size (e.g. S, M, L, XL, XXL, Custom) and assign available stock to continue.', 'warning');
+                triggerAppModal('Size Selection Required', 'Please check at least one Heritage Size (e.g. S, M, L, XL, XXL) and assign available stock to continue.', 'warning');
                 return;
             }
 
@@ -2747,7 +2747,7 @@ function validateProductForm(e, isEdit = false) {
     const sizingSection = document.getElementById('tour-create-step2-sizing') || document.getElementById('sizing-section');
     
     if (checkedSizes.length === 0) {
-        errors.push('Please select at least one Heritage Size (e.g. S, M, L, XL, XXL, Custom).');
+        errors.push('Please select at least one Heritage Size (e.g. S, M, L, XL, XXL).');
         if (sizingSection) sizingSection.classList.add('border-red-500');
     } else {
         let invalidStockCount = 0;
@@ -3204,7 +3204,7 @@ document.addEventListener('DOMContentLoaded', () => {
         [
             'selector' => '#tour-create-guide-btn',
             'title' => '✨ Step 2: Pricing & Sizing Guide',
-            'text' => 'Welcome to Step 2! Configure available stock quantities for standard sizes (S, M, L, XL, XXL, Custom) and set fair artisan prices.'
+            'text' => 'Welcome to Step 2! Configure available stock quantities for standard sizes (S, M, L, XL, XXL) and set fair artisan prices.'
         ],
         [
             'selector' => '#tour-create-step2-completeness',
@@ -3214,7 +3214,7 @@ document.addEventListener('DOMContentLoaded', () => {
         [
             'selector' => '#tour-create-step2-sizing',
             'title' => '📐 Heritage Sizing & Inventory Matrix',
-            'text' => 'Check the sizes you offer (S to XXL or Custom) and specify current available inventory stock for each size. Stock is auto-calculated.'
+            'text' => 'Check the sizes you offer (S to XXL) and specify current available inventory stock for each size. Stock is auto-calculated.'
         ],
         [
             'selector' => '#tour-create-step2-pricing',

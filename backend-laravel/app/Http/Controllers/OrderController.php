@@ -10,6 +10,7 @@ use App\Models\User;
 use App\Models\SystemSetting;
 use App\Models\Notification;
 use App\Models\OrderStatusHistory;
+use App\Models\PaymentTransaction;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -342,6 +343,20 @@ class OrderController extends Controller
         if ($canonicalTarget === 'To Ship') {
             $order->paymentStatus = 'Verified';
             $order->paymentRejectionReason = null;
+
+            // Seller verification authority: officially marks transaction attempt as VERIFIED
+            try {
+                $tx = $order->latestPaymentTransaction;
+                if ($tx) {
+                    $tx->update([
+                        'status' => 'VERIFIED',
+                        'verified_at' => now(),
+                        'notes' => 'Payment verified and accepted by seller.',
+                    ]);
+                }
+            } catch (\Throwable $e) {
+                Log::warning("Could not mark PaymentTransaction as VERIFIED for order {$order->id}: " . $e->getMessage());
+            }
         }
         $order->save();
 
@@ -564,6 +579,20 @@ class OrderController extends Controller
             $order->cancellationReason = "Payment rejected: {$reason}";
             $order->save();
 
+            // Release active reference claim by transitioning PaymentTransaction to REJECTED
+            try {
+                $tx = $order->latestPaymentTransaction;
+                if ($tx) {
+                    $tx->update([
+                        'status' => 'REJECTED',
+                        'active_reference' => null,
+                        'notes' => "Rejected by seller. Reason: {$reason}",
+                    ]);
+                }
+            } catch (\Throwable $e) {
+                Log::warning("Could not update PaymentTransaction to REJECTED for order {$order->id}: " . $e->getMessage());
+            }
+
             OrderStatusHistory::create([
                 'orderId' => $order->id,
                 'previousStatus' => $prevStatus,
@@ -638,9 +667,12 @@ class OrderController extends Controller
                         $fail('Maya reference number must be exactly 12 digits.');
                         return;
                     }
-                    $isDuplicate = Order::where('paymentReference', $raw)->where('id', '!=', $order->id)->exists();
+                    // Duplicate check: cannot use a reference that is active or verified in another transaction
+                    $isDuplicate = PaymentTransaction::where('active_reference', $raw)
+                        ->where('order_id', '!=', $order->id)
+                        ->exists();
                     if ($isDuplicate) {
-                        $fail('This payment reference number has already been used in another order.');
+                        $fail('This payment reference number is already tied to an active or verified order. Please provide a new and unique payment reference.');
                         return;
                     }
                 }
@@ -648,13 +680,17 @@ class OrderController extends Controller
             'paymentScreenshot' => 'required|image|max:10240',
         ]);
 
+        $screening = null;
+        $path = null;
         if ($request->hasFile('paymentScreenshot')) {
             $tempPath = $request->file('paymentScreenshot')->getRealPath();
+            $origName = $request->file('paymentScreenshot')->getClientOriginalName();
             $screening = \App\Services\AiService::verifyReceipt(
                 $tempPath,
                 $request->paymentReference,
                 $order->paymentMethod,
-                (float) $order->totalAmount
+                (float) $order->totalAmount,
+                $origName
             );
 
             if (($screening['status'] ?? '') === 'REJECT' || !($screening['is_receipt'] ?? true)) {
@@ -667,10 +703,41 @@ class OrderController extends Controller
             $order->paymentProof = $path;
         }
 
-        $order->paymentReference = trim($request->paymentReference);
+        $rawRef = trim($request->paymentReference);
+        $order->paymentReference = $rawRef;
         $order->paymentStatus = 'Payment Submitted';
         $order->paymentRejectionReason = null;
         $order->save();
+
+        // Multi-attempt audit trail: Create a new PaymentTransaction attempt for this resubmission
+        try {
+            $detectedAmt = isset($screening['detected_amount']) && is_numeric($screening['detected_amount'])
+                ? (float) $screening['detected_amount']
+                : null;
+            $tier = in_array(($screening['status'] ?? ''), ['PASS', 'REVIEW', 'REJECT'])
+                ? $screening['status']
+                : 'REVIEW';
+
+            PaymentTransaction::create([
+                'order_id' => $order->id,
+                'customer_id' => $user->id,
+                'seller_id' => $order->sellerId,
+                'reference_number' => $rawRef,
+                'active_reference' => $rawRef,
+                'wallet_type' => $order->paymentMethod,
+                'expected_amount' => (float) $order->totalAmount,
+                'detected_amount' => $detectedAmt,
+                'amount_confidence' => $screening['amount_confidence'] ?? null,
+                'reference_confidence' => $screening['reference_confidence'] ?? null,
+                'confidence' => $screening['confidence'] ?? null,
+                'status' => 'UNVERIFIED',
+                'verification_tier' => $tier,
+                'receipt_path' => $path,
+                'notes' => $screening['message'] ?? 'Customer payment proof resubmission',
+            ]);
+        } catch (\Throwable $e) {
+            Log::warning("Could not record resubmitted PaymentTransaction attempt for order {$order->id}: " . $e->getMessage());
+        }
 
         OrderStatusHistory::create([
             'orderId' => $order->id,
@@ -692,7 +759,7 @@ class OrderController extends Controller
 
         return response()->json([
             'message' => 'Payment proof resubmitted successfully. Awaiting artisan verification.',
-            'order' => $order->load(['seller', 'items.product', 'statusHistories'])
+            'order' => $order->load(['seller', 'items.product', 'statusHistories', 'paymentTransactions'])
         ]);
     }
 
@@ -848,6 +915,20 @@ class OrderController extends Controller
             $order->cancellationReason = $reason;
             $order->save();
 
+            // Release active reference claim for unverified transactions when order is cancelled
+            try {
+                $tx = $order->latestPaymentTransaction;
+                if ($tx && $tx->status === 'UNVERIFIED') {
+                    $tx->update([
+                        'status' => 'VOID',
+                        'active_reference' => null,
+                        'notes' => "Order cancelled: {$reason}",
+                    ]);
+                }
+            } catch (\Throwable $e) {
+                Log::warning("Could not release active reference for cancelled order {$order->id}: " . $e->getMessage());
+            }
+
             OrderStatusHistory::create([
                 'orderId' => $order->id,
                 'previousStatus' => $prevStatus,
@@ -951,6 +1032,20 @@ class OrderController extends Controller
             $prevStatus = $order->status;
             $order->status = 'Cancelled';
             $order->save();
+
+            // Release active reference claim for unverified transactions upon cancellation approval
+            try {
+                $tx = $order->latestPaymentTransaction;
+                if ($tx && $tx->status === 'UNVERIFIED') {
+                    $tx->update([
+                        'status' => 'VOID',
+                        'active_reference' => null,
+                        'notes' => 'Order cancellation approved by artisan.',
+                    ]);
+                }
+            } catch (\Throwable $e) {
+                Log::warning("Could not release active reference for approved cancellation of order {$order->id}: " . $e->getMessage());
+            }
 
             OrderStatusHistory::create([
                 'orderId' => $order->id,

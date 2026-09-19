@@ -235,8 +235,9 @@ class AiController extends Controller
 
         $file = $request->file('receipt');
         $tempPath = $file->getRealPath();
+        $origName = $file->getClientOriginalName();
 
-        $result = AiService::verifyReceipt($tempPath, $ref, $method, $totalAmount);
+        $result = AiService::verifyReceipt($tempPath, $ref, $method, $totalAmount, $origName);
 
         return response()->json($result);
     }

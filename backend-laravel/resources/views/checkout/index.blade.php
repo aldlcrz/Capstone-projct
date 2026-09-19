@@ -399,20 +399,34 @@
                                                          ? 'Receipt Verification Passed' 
                                                          : (aiVerificationResult.status === 'REVIEW' ? 'Manual Verification Required' : 'Receipt Verification Rejected')"></div>
                                                 <p class="text-[11px] font-medium leading-relaxed" x-text="aiVerificationResult.message"></p>
-                                                <template x-if="aiVerificationResult.detected_ref">
+                                                <template x-if="aiVerificationResult.detected_ref || aiVerificationResult.detected_amount !== undefined">
                                                     <div class="flex items-center gap-2 mt-1.5 flex-wrap">
-                                                        <div class="text-[10px] font-mono bg-blue-50 text-blue-900 border border-blue-200 px-2 py-1 rounded-lg inline-flex items-center gap-1.5 shadow-2xs">
-                                                            <svg class="w-3 h-3 text-blue-600 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
-                                                            <span>Detected Ref:</span>
-                                                            <span class="font-bold" x-text="aiVerificationResult.detected_ref"></span>
-                                                        </div>
-                                                        <button type="button" 
-                                                                @click="paymentRef = aiVerificationResult.detected_ref.replace(/\D/g, ''); ocrExtracted = true; validateRef(); checkServerReference();"
-                                                                x-show="paymentRef !== aiVerificationResult.detected_ref.replace(/\D/g, '')"
-                                                                class="text-[10px] font-bold text-[#C0422A] hover:underline px-2.5 py-1 bg-[#C0422A]/10 hover:bg-[#C0422A]/20 rounded-md transition-colors cursor-pointer inline-flex items-center gap-1">
-                                                            <span>Use Detected Ref</span>
-                                                            <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
-                                                        </button>
+                                                        <template x-if="aiVerificationResult.detected_ref">
+                                                            <div class="text-[10px] font-mono bg-blue-50 text-blue-900 border border-blue-200 px-2 py-1 rounded-lg inline-flex items-center gap-1.5 shadow-2xs">
+                                                                <svg class="w-3 h-3 text-blue-600 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+                                                                <span>Ref:</span>
+                                                                <span class="font-bold" x-text="aiVerificationResult.detected_ref"></span>
+                                                            </div>
+                                                        </template>
+                                                        <template x-if="aiVerificationResult.detected_amount !== null && aiVerificationResult.detected_amount !== undefined">
+                                                            <div class="text-[10px] font-mono px-2 py-1 rounded-lg inline-flex items-center gap-1.5 shadow-2xs"
+                                                                 :class="Math.abs(Number(aiVerificationResult.detected_amount) - {{ (float)($grandTotal ?? 0) }}) < 0.01 
+                                                                     ? 'bg-emerald-100/70 text-emerald-900 border border-emerald-300' 
+                                                                     : 'bg-amber-100/70 text-amber-900 border border-amber-300'">
+                                                                <span>Receipt Amount:</span>
+                                                                <span class="font-bold" x-text="'₱' + Number(aiVerificationResult.detected_amount).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })"></span>
+                                                                <span x-show="Math.abs(Number(aiVerificationResult.detected_amount) - {{ (float)($grandTotal ?? 0) }}) < 0.01" class="text-emerald-700">✓ Match</span>
+                                                            </div>
+                                                        </template>
+                                                        <template x-if="aiVerificationResult.detected_ref">
+                                                            <button type="button" 
+                                                                    @click="paymentRef = aiVerificationResult.detected_ref.replace(/\D/g, ''); ocrExtracted = true; validateRef(); checkServerReference();"
+                                                                    x-show="paymentRef !== aiVerificationResult.detected_ref.replace(/\D/g, '')"
+                                                                    class="text-[10px] font-bold text-[#C0422A] hover:underline px-2.5 py-1 bg-[#C0422A]/10 hover:bg-[#C0422A]/20 rounded-md transition-colors cursor-pointer inline-flex items-center gap-1">
+                                                                <span>Use Detected Ref</span>
+                                                                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                                                            </button>
+                                                        </template>
                                                     </div>
                                                 </template>
                                             </div>
@@ -1072,16 +1086,16 @@ function checkoutApp(initialAddress, initialAddresses, defaultPaymentMethod) {
         aiChecking: false,
         isPlacingOrder: false,
         aiVerificationResult: null,
+        scanId: 0,
+        fileScanned: false,
 
         init() {
             this.$watch('paymentMethod', () => {
                 if (this.paymentRef) {
                     this.validateRef();
+                    this.checkServerReference();
                 } else {
                     this.refError = '';
-                }
-                if (this.fileName) {
-                    this.runAiReceiptVerification();
                 }
             });
         },
@@ -1091,7 +1105,7 @@ function checkoutApp(initialAddress, initialAddresses, defaultPaymentMethod) {
             if (this.paymentRef) {
                 const isValidFormat = this.validateRef();
                 if (isValidFormat) {
-                    // Debounce duplicate check to server
+                    // Debounce duplicate check to server (DB uniqueness only, never re-scans image)
                     clearTimeout(this.refCheckTimer);
                     this.refCheckTimer = setTimeout(() => {
                         this.checkServerReference();
@@ -1119,20 +1133,16 @@ function checkoutApp(initialAddress, initialAddresses, defaultPaymentMethod) {
             .then(res => res.json())
             .then(data => {
                 if (data.is_duplicate) {
-                    this.refError = '❌ Security Alert: This payment reference number has already been used in another order.';
+                    this.refError = data.message || '❌ Security Alert: This payment reference number has already been used in another order.';
                     this.isRefDuplicate = true;
                 } else if (!data.is_valid && data.message) {
                     this.refError = data.message;
                     this.isRefDuplicate = false;
                 } else {
                     this.isRefDuplicate = false;
-                    if (this.refError.includes('Security Alert') || this.refError.includes('already been used')) {
+                    if (this.refError.includes('Security Alert') || this.refError.includes('already been used') || this.refError.includes('Invalid payment reference')) {
                         this.refError = '';
                     }
-                }
-                // Also trigger AI receipt check if image is already attached
-                if (this.fileName && !this.isRefDuplicate) {
-                    this.runAiReceiptVerification();
                 }
             })
             .catch(() => {});
@@ -1184,9 +1194,7 @@ function checkoutApp(initialAddress, initialAddresses, defaultPaymentMethod) {
                 if (file.size > 10 * 1024 * 1024) {
                     this.screenshotError = 'File size exceeds 10MB limit.';
                     e.target.value = '';
-                    this.fileName = '';
-                    this.filePreview = '';
-                    this.aiVerificationResult = null;
+                    this.removeFile();
                     return;
                 }
                 this.screenshotError = '';
@@ -1196,76 +1204,8 @@ function checkoutApp(initialAddress, initialAddresses, defaultPaymentMethod) {
                 } else {
                     this.filePreview = '';
                 }
-                // Run Client-Side OCR & AI receipt analysis in parallel
-                this.runClientOcrExtraction(file);
+                // Scan exactly once per uploaded file via authoritative Gemini Vision
                 this.runAiReceiptVerification();
-            }
-        },
-
-        runClientOcrExtraction(file) {
-            if (!file || !file.type.startsWith('image/')) return;
-
-            const extractFromText = (rawText) => {
-                if (!rawText) return;
-                const cleanText = rawText.replace(/[\r\n]+/g, ' ');
-                const isGcash = (this.paymentMethod || '').toLowerCase().includes('gcash');
-                let foundRef = null;
-
-                if (isGcash) {
-                    const gcashLabeled = cleanText.match(/(?:ref(?:erence)?\s*(?:no\.?|num(?:ber)?|id)?[:\s]*)(\d[\d\s\-]{11,18}\d)/i);
-                    if (gcashLabeled) {
-                        const digits = gcashLabeled[1].replace(/\D/g, '');
-                        if (digits.length === 13) foundRef = digits;
-                    }
-                    if (!foundRef) {
-                        const exact13 = cleanText.match(/\b(100\d{10}|\d{13})\b/);
-                        if (exact13) foundRef = exact13[1].replace(/\D/g, '');
-                    }
-                    if (!foundRef) {
-                        const looseMatches = cleanText.match(/(\d[\d\s\-]{11,18}\d)/g);
-                        if (looseMatches) {
-                            for (const m of looseMatches) {
-                                const d = m.replace(/\D/g, '');
-                                if (d.length === 13) { foundRef = d; break; }
-                            }
-                        }
-                    }
-                } else {
-                    const mayaLabeled = cleanText.match(/(?:ref(?:erence)?\s*(?:no\.?|num(?:ber)?|id)?[:\s]*)(\d[\d\s\-]{10,16}\d)/i);
-                    if (mayaLabeled) {
-                        const digits = mayaLabeled[1].replace(/\D/g, '');
-                        if (digits.length === 12) foundRef = digits;
-                    }
-                    if (!foundRef) {
-                        const exact12 = cleanText.match(/\b(\d{12})\b/);
-                        if (exact12) foundRef = exact12[1].replace(/\D/g, '');
-                    }
-                }
-
-                if (foundRef && (!this.paymentRef || !this.isRefValid())) {
-                    this.paymentRef = foundRef;
-                    this.ocrExtracted = true;
-                    this.validateRef();
-                    this.checkServerReference();
-                }
-            };
-
-            if (typeof window.Tesseract !== 'undefined') {
-                window.Tesseract.recognize(file, 'eng')
-                    .then(({ data: { text } }) => extractFromText(text))
-                    .catch(() => {});
-            } else {
-                const script = document.createElement('script');
-                script.src = 'https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js';
-                script.async = true;
-                script.onload = () => {
-                    if (typeof window.Tesseract !== 'undefined') {
-                        window.Tesseract.recognize(file, 'eng')
-                            .then(({ data: { text } }) => extractFromText(text))
-                            .catch(() => {});
-                    }
-                };
-                document.head.appendChild(script);
             }
         },
 
@@ -1273,6 +1213,9 @@ function checkoutApp(initialAddress, initialAddresses, defaultPaymentMethod) {
             const fileInput = document.getElementById('paymentScreenshotInput');
             const file = fileInput && fileInput.files && fileInput.files[0];
             if (!file) return;
+
+            // Increment scan identity to guard against race conditions and stale responses
+            const currentScanId = ++this.scanId;
 
             const csrfToken = document.querySelector('input[name=_token]')?.value || '';
             const formData = new FormData();
@@ -1284,16 +1227,35 @@ function checkoutApp(initialAddress, initialAddresses, defaultPaymentMethod) {
             this.aiChecking = true;
             this.aiVerificationResult = null;
 
+            // Bounded failure path: 25-second timeout via AbortController
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 25000);
+
             fetch('/ai/receipt/verify', {
                 method: 'POST',
                 headers: {
                     'X-CSRF-TOKEN': csrfToken
                 },
-                body: formData
+                body: formData,
+                signal: controller.signal
             })
-            .then(res => res.json())
+            .then(res => {
+                clearTimeout(timeoutId);
+                if (!res.ok) {
+                    throw new Error(`Server returned HTTP ${res.status}`);
+                }
+                return res.json();
+            })
             .then(data => {
+                clearTimeout(timeoutId);
+                // Stale response guard: Ignore if user selected a different file
+                if (currentScanId !== this.scanId) {
+                    return;
+                }
+
                 this.aiVerificationResult = data;
+                this.fileScanned = true;
+
                 if (data.detected_ref) {
                     const cleanDetected = data.detected_ref.replace(/\D/g, '');
                     const isGcash = this.paymentMethod === 'GCash';
@@ -1303,6 +1265,7 @@ function checkoutApp(initialAddress, initialAddresses, defaultPaymentMethod) {
                         this.paymentRef = cleanDetected;
                         this.ocrExtracted = true;
                         this.validateRef();
+                        // Only checks DB uniqueness, NEVER re-scans the image
                         this.checkServerReference();
                     }
                 }
@@ -1312,18 +1275,32 @@ function checkoutApp(initialAddress, initialAddresses, defaultPaymentMethod) {
                     this.screenshotError = '';
                 }
             })
-            .catch(() => {
+            .catch(err => {
+                clearTimeout(timeoutId);
+                if (currentScanId !== this.scanId) {
+                    return;
+                }
+
+                // Clean bounded failure path: fallback to manual seller review so checkout is never stuck
+                this.fileScanned = true;
                 this.aiVerificationResult = {
+                    status: 'REVIEW',
                     is_receipt: true,
-                    message: '✓ Receipt screenshot attached.'
+                    ref_matched: true,
+                    message: 'Receipt attached. Seller will manually verify payment details during order fulfillment.'
                 };
+                this.screenshotError = '';
             })
             .finally(() => {
-                this.aiChecking = false;
+                if (currentScanId === this.scanId) {
+                    this.aiChecking = false;
+                }
             });
         },
 
         removeFile() {
+            this.scanId++;
+            this.fileScanned = false;
             const input = document.getElementById('paymentScreenshotInput');
             if (input) input.value = '';
             this.fileName = '';

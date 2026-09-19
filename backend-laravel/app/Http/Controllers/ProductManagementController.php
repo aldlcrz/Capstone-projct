@@ -143,8 +143,8 @@ class ProductManagementController extends Controller
                 'category_ids.required'   => 'Please select at least one Product Category.',
                 'category_ids.min'        => 'Please select at least one Product Category.',
                 'target_group.required'   => 'Please select who this product is for (Men, Women, or Kids).',
-                'sizes.required'          => 'Please select at least one Heritage Size (e.g. S, M, L, XL, XXL, Custom).',
-                'sizes.min'               => 'Please select at least one Heritage Size (e.g. S, M, L, XL, XXL, Custom).',
+                'sizes.required'          => 'Please select at least one Heritage Size (e.g. S, M, L, XL, XXL).',
+                'sizes.min'               => 'Please select at least one Heritage Size (e.g. S, M, L, XL, XXL).',
                 'size_stocks.*.max'       => 'Size stock quantity cannot exceed 10,000 units.',
             ]);
 
@@ -174,7 +174,9 @@ class ProductManagementController extends Controller
                 return redirect()->back()->withInput()->with('error', 'Please enable at least one complete payment method with both a mobile number and a QR code.');
             }
 
-            $selectedSizes = $request->sizes ?? [];
+            $selectedSizes = array_values(array_filter($request->sizes ?? [], function($s) {
+                return strtolower(trim((string)$s)) !== 'custom';
+            }));
             $sizeStocks = is_array($request->size_stocks) ? array_filter($request->size_stocks, function($key) use ($selectedSizes) {
                 return in_array($key, $selectedSizes);
             }, ARRAY_FILTER_USE_KEY) : [];
@@ -185,7 +187,9 @@ class ProductManagementController extends Controller
             }
         }
 
-        $selectedSizes = $request->sizes ?? [];
+        $selectedSizes = array_values(array_filter($request->sizes ?? [], function($s) {
+            return strtolower(trim((string)$s)) !== 'custom';
+        }));
         $sizeStocks = is_array($request->size_stocks) ? array_filter($request->size_stocks, function($key) use ($selectedSizes) {
             return in_array($key, $selectedSizes);
         }, ARRAY_FILTER_USE_KEY) : [];
@@ -505,8 +509,8 @@ class ProductManagementController extends Controller
                 'size_stocks.*.max'     => 'Size stock quantity cannot exceed 10,000 units.',
                 'CategoryId.required'   => 'Please select a Product Category.',
                 'target_group.required' => 'Please select who this product is for (Men, Women, or Kids).',
-                'sizes.required'        => 'Please select at least one Heritage Size (e.g. S, M, L, XL, XXL, Custom).',
-                'sizes.min'             => 'Please select at least one Heritage Size (e.g. S, M, L, XL, XXL, Custom).',
+                'sizes.required'        => 'Please select at least one Heritage Size (e.g. S, M, L, XL, XXL).',
+                'sizes.min'             => 'Please select at least one Heritage Size (e.g. S, M, L, XL, XXL).',
             ]);
 
             $user = Auth::user();
@@ -536,7 +540,9 @@ class ProductManagementController extends Controller
                 return redirect()->back()->withInput()->with('error', 'Please enable at least one complete payment method with both a mobile number and a QR code.');
             }
 
-            $selectedSizes = $request->sizes ?? [];
+            $selectedSizes = array_values(array_filter($request->sizes ?? [], function($s) {
+                return strtolower(trim((string)$s)) !== 'custom';
+            }));
             $sizeStocks = is_array($request->size_stocks) ? array_filter($request->size_stocks, function($key) use ($selectedSizes) {
                 return in_array($key, $selectedSizes);
             }, ARRAY_FILTER_USE_KEY) : [];
@@ -547,7 +553,9 @@ class ProductManagementController extends Controller
             }
         }
 
-        $selectedSizes = $request->sizes ?? [];
+        $selectedSizes = array_values(array_filter($request->sizes ?? [], function($s) {
+            return strtolower(trim((string)$s)) !== 'custom';
+        }));
         $sizeStocks = is_array($request->size_stocks) ? array_filter($request->size_stocks, function($key) use ($selectedSizes) {
             return in_array($key, $selectedSizes);
         }, ARRAY_FILTER_USE_KEY) : [];

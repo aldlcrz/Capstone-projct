@@ -89,7 +89,7 @@
                             </template>
                         </div>
                         <div class="flex gap-2">
-                            <input type="text" x-model="newSize" placeholder="Add custom size..." class="flex-1 px-4 py-2 bg-gray-50 border border-gray-100 rounded-xl text-xs outline-none focus:border-[#C0420A]">
+                            <input type="text" x-model="newSize" placeholder="Add size..." class="flex-1 px-4 py-2 bg-gray-50 border border-gray-100 rounded-xl text-xs outline-none focus:border-[#C0420A]">
                             <button type="button" @click="addSize" class="px-4 py-2 bg-black text-white rounded-xl text-[10px] font-bold uppercase tracking-widest hover:bg-[#C0420A] transition-all">Add</button>
                         </div>
                     </div>
