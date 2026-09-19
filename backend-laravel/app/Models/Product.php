@@ -163,12 +163,12 @@ class Product extends Model
     }
 
     /**
-     * Get the image attribute, validating physical file existence on disk.
+     * Get the image attribute as an array of paths.
      */
     public function getImageAttribute(array|string|null $value = null): array
     {
         if (is_null($value)) {
-            return ['products/default.jpg'];
+            return ['uploads/products/default.jpg'];
         }
 
         $decoded = is_string($value) ? json_decode($value, true) : $value;
@@ -181,31 +181,10 @@ class Product extends Model
             if (!$img || $img === 'Array' || $img === '[]' || $img === '[') {
                 continue;
             }
-            $cleanPath = preg_replace('/^(storage|uploads)\//', '', str_replace('\\', '/', $img));
-            $cleanPath = ltrim($cleanPath, '/');
-
-            $candidates = [
-                public_path('uploads/' . $cleanPath),
-                public_path('uploads/products/' . $cleanPath),
-                storage_path('app/public/' . $cleanPath),
-                storage_path('app/public/products/' . $cleanPath),
-                public_path('storage/' . $cleanPath),
-            ];
-
-            $exists = false;
-            foreach ($candidates as $filePath) {
-                if (file_exists($filePath) && is_file($filePath)) {
-                    $exists = true;
-                    break;
-                }
-            }
-
-            if ($exists || str_starts_with($img, 'http://') || str_starts_with($img, 'https://')) {
-                $validImages[] = $img;
-            }
+            $validImages[] = $img;
         }
 
-        return !empty($validImages) ? $validImages : ['products/default.jpg'];
+        return !empty($validImages) ? $validImages : ['uploads/products/default.jpg'];
     }
 
     /**
@@ -256,18 +235,31 @@ class Product extends Model
      */
     public function getImageUrl($image = null)
     {
-        $img = $image ?? $this->image;
+        $img = $image;
 
-        if (is_array($img)) {
-            $img = $img[0] ?? null;
-        } elseif (is_string($img)) {
-            $decoded = json_decode($img, true);
-            if (is_array($decoded) && !empty($decoded)) {
-                $img = $decoded[0];
+        if (is_null($img)) {
+            $raw = $this->getAttributes()['image'] ?? null;
+            if (is_array($raw)) {
+                $img = $raw[0] ?? null;
+            } elseif (is_string($raw)) {
+                $decoded = json_decode($raw, true);
+                if (is_array($decoded) && !empty($decoded)) {
+                    $img = $decoded[0];
+                } else {
+                    $img = $raw;
+                }
+            }
+            if (is_null($img)) {
+                $imgArray = $this->image;
+                $img = is_array($imgArray) ? ($imgArray[0] ?? null) : $imgArray;
             }
         }
 
-        if (!$img || $img === 'Array' || $img === '[]' || $img === '[') {
+        if (is_array($img)) {
+            $img = $img[0] ?? null;
+        }
+
+        if (!$img || $img === 'Array' || $img === '[]' || $img === '[' || $img === 'products/default.jpg' || $img === 'uploads/products/default.jpg' || $img === 'default.jpg') {
             return '/uploads/products/default.jpg';
         }
 
@@ -278,29 +270,23 @@ class Product extends Model
             return $img;
         }
 
-        $cleanPath = preg_replace('/^(storage|uploads)\//', '', $img);
-        $cleanPath = ltrim(str_replace('\\', '/', $cleanPath), '/');
-
-        $candidates = [
-            public_path('uploads/' . $cleanPath),
-            public_path('uploads/products/' . $cleanPath),
-            storage_path('app/public/' . $cleanPath),
-            storage_path('app/public/products/' . $cleanPath),
-            public_path('storage/' . $cleanPath),
-            public_path($img),
-        ];
-
-        foreach ($candidates as $filePath) {
-            if (file_exists($filePath) && is_file($filePath)) {
-                if (str_contains($filePath, 'public/uploads') || str_contains($filePath, 'public\uploads')) {
-                    return str_starts_with($cleanPath, 'products/') ? '/uploads/' . $cleanPath : '/uploads/products/' . $cleanPath;
-                }
-                return str_starts_with($cleanPath, 'products/') ? '/storage/' . $cleanPath : '/storage/products/' . $cleanPath;
-            }
+        // Canonical new storage paths: products/... or payments/...
+        if (str_starts_with($img, 'products/') || str_starts_with($img, 'payments/')) {
+            return '/storage/' . $img;
         }
 
-        // File does not exist physically on disk — return default product placeholder directly
-        return '/uploads/products/default.jpg';
+        // Stored with storage/ prefix
+        if (str_starts_with($img, 'storage/')) {
+            return '/' . $img;
+        }
+
+        // Legacy path handling: check if explicitly stored under uploads/
+        if (str_starts_with($img, 'uploads/')) {
+            return '/' . $img;
+        }
+
+        // Fallback for bare legacy filenames
+        return '/uploads/products/' . $img;
     }
 
     /**
@@ -351,6 +337,52 @@ class Product extends Model
             return $img;
         }
 
-        return '/' . $img;
+        if (str_starts_with($img, 'uploads/')) {
+            return '/' . $img;
+        }
+
+        return '/storage/' . $img;
+    }
+
+    /**
+     * Get the resolved URL for the product's GCash QR code.
+     */
+    public function getGcashQrUrl(): ?string
+    {
+        if (!$this->gcash_qr_code) {
+            return null;
+        }
+
+        if (str_starts_with($this->gcash_qr_code, 'http://') || str_starts_with($this->gcash_qr_code, 'https://')) {
+            return $this->gcash_qr_code;
+        }
+
+        $clean = ltrim(str_replace('\\', '/', $this->gcash_qr_code), '/');
+        if (str_starts_with($clean, 'uploads/')) {
+            return '/' . $clean;
+        }
+
+        return '/storage/' . $clean;
+    }
+
+    /**
+     * Get the resolved URL for the product's Maya QR code.
+     */
+    public function getMayaQrUrl(): ?string
+    {
+        if (!$this->maya_qr_code) {
+            return null;
+        }
+
+        if (str_starts_with($this->maya_qr_code, 'http://') || str_starts_with($this->maya_qr_code, 'https://')) {
+            return $this->maya_qr_code;
+        }
+
+        $clean = ltrim(str_replace('\\', '/', $this->maya_qr_code), '/');
+        if (str_starts_with($clean, 'uploads/')) {
+            return '/' . $clean;
+        }
+
+        return '/storage/' . $clean;
     }
 }

@@ -127,6 +127,12 @@
             <div>
                 <span style="font-size:13px;font-weight:700;color:#7A5505;">Unsaved draft recovered!</span>
                 <span style="font-size:12px;color:#8C7355;margin-left:4px;">We restored your creation inputs from your previous session.</span>
+                <template x-if="variants[0] && variants[0].imagePreview && !variants[0].hasActualFile">
+                    <div style="font-size:12px;font-weight:700;color:#D97706;margin-top:4px;display:flex;align-items:center;gap:5px;">
+                        <span>⚠️</span>
+                        <span>Photo preview restored from draft. Please re-select the image file before publishing.</span>
+                    </div>
+                </template>
             </div>
         </div>
         <button type="button" 
@@ -226,7 +232,7 @@
                         <input type="file" 
                                id="variant_file_0"
                                name="variant_image_0" 
-                               accept="image/jpeg,image/png,image/webp,image/jpg" 
+                               accept="image/jpeg,image/png,image/webp,image/jpg,image/heic,image/heif,.heic,.heif" 
                                class="hidden" 
                                @change="handleCoverPhotoUpload($event)">
 
@@ -234,7 +240,7 @@
                                id="gallery_files_input" 
                                name="images[]" 
                                multiple 
-                               accept="image/jpeg,image/png,image/webp,image/jpg" 
+                               accept="image/jpeg,image/png,image/webp,image/jpg,image/heic,image/heif,.heic,.heif" 
                                class="hidden" 
                                @change="handleGalleryFilesUpload($event)">
 
@@ -243,7 +249,7 @@
                             {{-- Slot 0: Upload Cover Photo Big Card --}}
                             <label for="variant_file_0" 
                                    id="variant_upload_box_0"
-                                   style="width:130px;height:140px;border-radius:18px;border:1.5px dashed #E2D9C8;background-color:#FAF8F5;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;cursor:pointer;flex-shrink:0;transition:all 0.2s;padding:10px;"
+                                   style="width:130px;height:140px;border-radius:18px;border:1.5px dashed #E2D9C8;background-color:#FAF8F5;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;cursor:pointer;flex-shrink:0;transition:all 0.2s;padding:10px;position:relative;"
                                    onmouseover="this.style.borderColor='#C49520';this.style.backgroundColor='#FFFFFF';"
                                    onmouseout="this.style.borderColor='#E2D9C8';this.style.backgroundColor='#FAF8F5';">
                                 <div style="color:#C49520;margin-bottom:6px;">
@@ -255,21 +261,43 @@
                                     </svg>
                                 </div>
                                 <span style="font-size:11.5px;font-weight:700;color:#1E1915;line-height:1.2;">Upload Cover Photo</span>
-                                <span style="font-size:9.5px;color:#78716C;margin-top:4px;">JPG, PNG, WEBP</span>
-                                <span style="font-size:9px;color:#A8A096;margin-top:2px;">Recommended: 1:1</span>
+                                <span style="font-size:9.5px;color:#78716C;margin-top:4px;">JPG, PNG, WEBP, HEIC</span>
+                                <span style="font-size:9px;color:#A8A096;margin-top:2px;">Auto-compressed</span>
+                                <template x-if="variants[0] && variants[0].imagePreview && !variants[0].hasActualFile">
+                                    <span style="font-size:8.5px;font-weight:800;color:#D97706;background:#FEF3C7;padding:2px 6px;border-radius:6px;margin-top:4px;">
+                                        ⚠️ Re-select File
+                                    </span>
+                                </template>
                             </label>
 
                             {{-- Slot 1: Cover Photo Thumbnail / Watermark Box --}}
                             <div style="width:105px;height:140px;border-radius:18px;border:1px solid #ECE3D2;background-color:#FAF8F5;position:relative;flex-shrink:0;overflow:hidden;display:flex;flex-direction:column;align-items:center;justify-content:space-between;padding:8px 6px;">
                                 {{-- Top-left Cover badge --}}
-                                <div style="align-self:flex-start;background:#7A5505;color:#FFFFFF;font-size:8.5px;font-weight:800;padding:2px 7px;border-radius:6px;text-transform:uppercase;letter-spacing:0.04em;">
-                                    Cover
-                                </div>
+                                <template x-if="!variants[0].imagePreview">
+                                    <div style="align-self:flex-start;background:#7A5505;color:#FFFFFF;font-size:8.5px;font-weight:800;padding:2px 7px;border-radius:6px;text-transform:uppercase;letter-spacing:0.04em;">
+                                        Cover
+                                    </div>
+                                </template>
+                                <template x-if="variants[0].imagePreview && variants[0].hasActualFile">
+                                    <div style="align-self:flex-start;background:#10B981;color:#FFFFFF;font-size:8.5px;font-weight:800;padding:2px 7px;border-radius:6px;text-transform:uppercase;letter-spacing:0.04em;display:flex;align-items:center;gap:3px;z-index:10;">
+                                        <span>✓</span> <span>Ready</span>
+                                    </div>
+                                </template>
+                                <template x-if="variants[0].imagePreview && !variants[0].hasActualFile">
+                                    <div style="align-self:flex-start;background:#D97706;color:#FFFFFF;font-size:8px;font-weight:800;padding:2px 6px;border-radius:6px;text-transform:uppercase;letter-spacing:0.03em;display:flex;align-items:center;gap:2px;z-index:10;">
+                                        <span>⚠️</span> <span>Re-attach</span>
+                                    </div>
+                                </template>
 
                                 {{-- If image uploaded, show preview --}}
                                 <template x-if="variants[0].imagePreview">
                                     <div style="position:absolute;inset:0;z-index:5;">
                                         <img :src="variants[0].imagePreview" style="width:100%;height:100%;object-fit:cover;">
+                                        <template x-if="!variants[0].hasActualFile">
+                                            <div style="position:absolute;bottom:0;left:0;right:0;background:rgba(217,119,6,0.92);color:#FFFFFF;font-size:8.5px;font-weight:800;text-align:center;padding:3px 2px;line-height:1.2;cursor:pointer;" onclick="document.getElementById('variant_file_0').click()">
+                                                Tap to re-select
+                                            </div>
+                                        </template>
                                         <div class="absolute inset-0 bg-black/40 opacity-0 hover:opacity-100 transition-opacity flex flex-col items-center justify-center text-white text-[10px] font-bold uppercase gap-1">
                                             <label for="variant_file_0" class="cursor-pointer">Change</label>
                                         </div>
@@ -278,6 +306,17 @@
                                                 style="position:absolute;top:4px;right:4px;width:18px;height:18px;background-color:#DC2626;color:#FFFFFF;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:900;border:none;cursor:pointer;z-index:10;">
                                             ✕
                                         </button>
+                                    </div>
+                                </template>
+
+                                {{-- Optimizing Loading Overlay --}}
+                                <template x-if="variants[0].isOptimizing">
+                                    <div style="position:absolute;inset:0;background:rgba(255,255,255,0.9);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:15;">
+                                        <svg class="animate-spin h-5 w-5 text-[#C49520]" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path>
+                                        </svg>
+                                        <span style="font-size:8.5px;font-weight:800;color:#7A5505;margin-top:4px;">Compressing...</span>
                                     </div>
                                 </template>
 
@@ -393,10 +432,18 @@
                                                 <span style="font-size:9px;font-weight:700;color:#7A5505;margin-top:2px;">Photo</span>
                                             </div>
                                         </template>
+                                        <template x-if="variant.isOptimizing">
+                                            <div style="position:absolute;inset:0;background:rgba(255,255,255,0.9);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:15;">
+                                                <svg class="animate-spin h-4 w-4 text-[#C49520]" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path>
+                                                </svg>
+                                            </div>
+                                        </template>
                                         <input type="file" 
                                                :id="'variant_file_' + index" 
                                                :name="'variant_image_' + index" 
-                                               accept="image/jpeg,image/png,image/webp,image/jpg" 
+                                               accept="image/jpeg,image/png,image/webp,image/jpg,image/heic,image/heif,.heic,.heif" 
                                                class="hidden" 
                                                @change="handleVariantFile($event, index)">
                                     </label>
@@ -1625,7 +1672,113 @@ function getProductInitData() {
             return JSON.parse(el.textContent);
         }
     } catch (e) {}
-    return {};
+/**
+ * Optimized Image Processing Pipeline (Phases 3 & 4)
+ * - Automatic HEIC/HEIF conversion for iPhone photos using heic2any
+ * - Canvas downscale to maximum 1600px dimension
+ * - High-efficiency JPEG/WebP compression (~85% quality)
+ * - Produces an optimized File object suitable for standard multipart/form-data upload
+ */
+async function processClientImage(file, maxDimension = 1600, quality = 0.85) {
+    if (!file) return null;
+
+    let processingFile = file;
+
+    // Phase 4: Handle HEIC / HEIF conversion client-side
+    const isHeic = file.type === 'image/heic' || 
+                   file.type === 'image/heif' || 
+                   /\.(heic|heif)$/i.test(file.name || '');
+
+    if (isHeic) {
+        try {
+            if (typeof window.heic2any === 'undefined') {
+                await new Promise((resolve, reject) => {
+                    const script = document.createElement('script');
+                    script.src = 'https://cdn.jsdelivr.net/npm/heic2any@0.0.4/dist/heic2any.min.js';
+                    script.onload = resolve;
+                    script.onerror = () => reject(new Error('Failed to load HEIC converter library.'));
+                    document.head.appendChild(script);
+                });
+            }
+            const convertedBlob = await window.heic2any({
+                blob: file,
+                toType: 'image/jpeg',
+                quality: quality
+            });
+            const blobResult = Array.isArray(convertedBlob) ? convertedBlob[0] : convertedBlob;
+            const newName = (file.name || 'image').replace(/\.(heic|heif)$/i, '.jpg');
+            processingFile = new File([blobResult], newName, { type: 'image/jpeg' });
+        } catch (heicErr) {
+            console.warn('HEIC client-side conversion skipped or failed:', heicErr);
+        }
+    }
+
+    // Phase 3: Resize & Compress via HTML5 Canvas
+    return new Promise((resolve) => {
+        if (processingFile.type === 'image/gif' || processingFile.type === 'image/svg+xml') {
+            const reader = new FileReader();
+            reader.onload = (e) => resolve({ file: processingFile, preview: e.target.result });
+            reader.readAsDataURL(processingFile);
+            return;
+        }
+
+        const img = new Image();
+        const objectUrl = URL.createObjectURL(processingFile);
+
+        img.onload = () => {
+            URL.revokeObjectURL(objectUrl);
+            let width = img.naturalWidth || img.width;
+            let height = img.naturalHeight || img.height;
+
+            if (width > maxDimension || height > maxDimension) {
+                if (width > height) {
+                    height = Math.round((height * maxDimension) / width);
+                    width = maxDimension;
+                } else {
+                    width = Math.round((width * maxDimension) / height);
+                    height = maxDimension;
+                }
+            }
+
+            const canvas = document.createElement('canvas');
+            canvas.width = width;
+            canvas.height = height;
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(img, 0, 0, width, height);
+
+            const targetMime = (processingFile.type === 'image/png' && processingFile.size < 600 * 1024) 
+                ? 'image/png' 
+                : 'image/jpeg';
+
+            canvas.toBlob((blob) => {
+                if (!blob) {
+                    const reader = new FileReader();
+                    reader.onload = (e) => resolve({ file: processingFile, preview: e.target.result });
+                    reader.readAsDataURL(processingFile);
+                    return;
+                }
+
+                const ext = targetMime === 'image/png' ? '.png' : '.jpg';
+                const baseName = (processingFile.name || 'product').replace(/\.[^/.]+$/, '');
+                const optimizedFile = new File([blob], baseName + ext, {
+                    type: targetMime,
+                    lastModified: Date.now()
+                });
+
+                const previewUrl = canvas.toDataURL(targetMime, quality);
+                resolve({ file: optimizedFile, preview: previewUrl });
+            }, targetMime, quality);
+        };
+
+        img.onerror = () => {
+            URL.revokeObjectURL(objectUrl);
+            const reader = new FileReader();
+            reader.onload = (e) => resolve({ file: processingFile, preview: e.target.result });
+            reader.readAsDataURL(processingFile);
+        };
+
+        img.src = objectUrl;
+    });
 }
 
 function addProductManager() {
@@ -1897,9 +2050,9 @@ function addProductManager() {
 
         // Media State: Variant 1 (Cover Photo) + Additional Gallery Photos
         variants: [
-            { id: 0, name: '', file: null, imagePreview: null }
+            { id: 0, name: '', file: null, imagePreview: null, hasActualFile: false, isOptimizing: false }
         ],
-        galleryImages: [], // array of { file, preview }
+        galleryImages: [], // array of { file, preview, hasActualFile }
 
         get imageCount() {
             let count = this.variants.filter(v => v && v.imagePreview !== null).length;
@@ -2064,56 +2217,33 @@ function addProductManager() {
                     if (mf) mf.style.display = draft.isMayaAvailable ? '' : 'none';
                 }
 
-                // Restore variants & cover photo
+                // Restore variants & cover photo (Preview only; explicit re-attachment required to publish)
                 if (Array.isArray(draft.variants) && draft.variants.length > 0) {
                     this.variants = draft.variants.map((v, idx) => {
-                        let fileObj = null;
-                        if (v.imagePreview) {
-                            fileObj = dataURLtoFile(v.imagePreview, 'variant_' + idx + '.png');
-                            if (fileObj && typeof DataTransfer !== 'undefined') {
-                                const dt = new DataTransfer();
-                                dt.items.add(fileObj);
-                                const fileInput = document.getElementById('variant_file_' + idx);
-                                if (fileInput) fileInput.files = dt.files;
-                            }
-                        }
                         return {
                             id: v.id ?? idx,
                             name: v.name || '',
-                            file: fileObj,
-                            imagePreview: v.imagePreview || null
+                            file: null, // Deliberately null: avoid phantom DataTransfer objects
+                            imagePreview: v.imagePreview || null,
+                            hasActualFile: false, // Prevents ghost preview false-positive
+                            isOptimizing: false
                         };
                     });
                 }
 
-                // Restore gallery images
+                // Restore gallery images (Preview only)
                 if (Array.isArray(draft.galleryImages) && draft.galleryImages.length > 0) {
                     this.galleryImages = draft.galleryImages.map(g => {
-                        let fileObj = null;
-                        if (g.preview) {
-                            fileObj = dataURLtoFile(g.preview, 'gallery_photo.png');
-                        }
                         return {
-                            file: fileObj,
-                            preview: g.preview
+                            file: null,
+                            preview: g.preview,
+                            hasActualFile: false
                         };
                     });
                 }
 
                 this.hasRestoredDraft = true;
                 this.calculateFillRate();
-
-                this.$nextTick(() => {
-                    this.variants.forEach((v, idx) => {
-                        if (v.file && typeof DataTransfer !== 'undefined') {
-                            const dt = new DataTransfer();
-                            dt.items.add(v.file);
-                            const fileInput = document.getElementById('variant_file_' + idx);
-                            if (fileInput) fileInput.files = dt.files;
-                        }
-                    });
-                    this.syncGalleryFileInput();
-                });
             } catch (e) {
                 console.warn('Could not restore draft:', e);
             }
@@ -2125,30 +2255,49 @@ function addProductManager() {
             window.location.href = window.location.pathname;
         },
 
-        handleCoverPhotoUpload(event) {
-            const file = event.target.files[0];
-            if (file) {
-                if (file.size > 5 * 1024 * 1024) {
-                    triggerAppModal('Image Exceeds 5MB', 'Selected photo exceeds the 5MB size limit.', 'warning');
-                    event.target.value = '';
-                    return;
-                }
-                this.variants[0].file = file;
-                const reader = new FileReader();
-                reader.onload = (e) => {
-                    this.variants[0].imagePreview = e.target.result;
+        async handleCoverPhotoUpload(event) {
+            const file = event.target.files && event.target.files[0];
+            if (!file) return;
+
+            if (file.size > 25 * 1024 * 1024) {
+                triggerAppModal('File Too Large', 'Original image exceeds 25MB limit. Please choose a smaller photo.', 'warning');
+                event.target.value = '';
+                return;
+            }
+
+            this.variants[0].isOptimizing = true;
+            try {
+                const result = await processClientImage(file, 1600, 0.85);
+                if (result && result.file) {
+                    this.variants[0].file = result.file;
+                    this.variants[0].imagePreview = result.preview;
+                    this.variants[0].hasActualFile = true;
+
+                    if (typeof DataTransfer !== 'undefined') {
+                        const dt = new DataTransfer();
+                        dt.items.add(result.file);
+                        const fileInput = document.getElementById('variant_file_0');
+                        if (fileInput) fileInput.files = dt.files;
+                    }
+
                     const box = document.getElementById('variant_upload_box_0');
-                    if (box) box.classList.remove('border-red-500');
+                    if (box) box.classList.remove('border-red-500', 'border-amber-500', 'ring-2', 'ring-amber-400');
                     this.calculateFillRate();
                     this.scheduleDraftSave();
-                };
-                reader.readAsDataURL(file);
+                }
+            } catch (err) {
+                console.error('Failed to process cover photo:', err);
+                triggerAppModal('Image Error', 'Could not optimize photo. Please try a different image.', 'warning');
+            } finally {
+                this.variants[0].isOptimizing = false;
             }
         },
 
         removeCoverPhoto() {
             this.variants[0].file = null;
             this.variants[0].imagePreview = null;
+            this.variants[0].hasActualFile = false;
+            this.variants[0].isOptimizing = false;
             const input = document.getElementById('variant_file_0');
             if (input) input.value = '';
             this.calculateFillRate();
@@ -2169,26 +2318,29 @@ function addProductManager() {
             }
         },
 
-        handleGalleryFilesUpload(event) {
-            const files = Array.from(event.target.files);
+        async handleGalleryFilesUpload(event) {
+            const files = Array.from(event.target.files || []);
             if (!files.length) return;
 
-            files.forEach(file => {
-                if (file.size > 5 * 1024 * 1024) return;
-                const reader = new FileReader();
-                reader.onload = (e) => {
-                    if (this.galleryImages.length < 10) {
+            for (const file of files) {
+                if (this.galleryImages.length >= 10) break;
+                if (file.size > 25 * 1024 * 1024) continue;
+                try {
+                    const result = await processClientImage(file, 1600, 0.85);
+                    if (result && result.file) {
                         this.galleryImages.push({
-                            file: file,
-                            preview: e.target.result
+                            file: result.file,
+                            preview: result.preview,
+                            hasActualFile: true
                         });
-                        this.syncGalleryFileInput();
-                        this.calculateFillRate();
-                        this.scheduleDraftSave();
                     }
-                };
-                reader.readAsDataURL(file);
-            });
+                } catch (err) {
+                    console.warn('Gallery image processing warning:', err);
+                }
+            }
+            this.syncGalleryFileInput();
+            this.calculateFillRate();
+            this.scheduleDraftSave();
         },
 
         removeGalleryImage(index) {
@@ -2202,7 +2354,7 @@ function addProductManager() {
 
         addVariantRow() {
             const nextId = this.variants.length;
-            this.variants.push({ id: nextId, name: '', file: null, imagePreview: null });
+            this.variants.push({ id: nextId, name: '', file: null, imagePreview: null, hasActualFile: false, isOptimizing: false });
             this.calculateFillRate();
             this.scheduleDraftSave();
         },
@@ -2214,28 +2366,53 @@ function addProductManager() {
             this.scheduleDraftSave();
         },
 
-        handleVariantFile(event, index) {
-            const file = event.target.files[0];
-            if (file) {
-                if (file.size > 5 * 1024 * 1024) {
-                    triggerAppModal('Image Exceeds 5MB', 'Selected photo exceeds the 5MB size limit.', 'warning');
-                    event.target.value = '';
-                    return;
-                }
-                this.variants[index].file = file;
-                const reader = new FileReader();
-                reader.onload = (e) => {
-                    this.variants[index].imagePreview = e.target.result;
+        async handleVariantFile(event, index) {
+            const file = event.target.files && event.target.files[0];
+            if (!file) return;
+
+            if (file.size > 25 * 1024 * 1024) {
+                triggerAppModal('File Too Large', 'Original image exceeds 25MB limit. Please choose a smaller photo.', 'warning');
+                event.target.value = '';
+                return;
+            }
+
+            if (this.variants[index]) {
+                this.variants[index].isOptimizing = true;
+            }
+
+            try {
+                const result = await processClientImage(file, 1600, 0.85);
+                if (result && result.file && this.variants[index]) {
+                    this.variants[index].file = result.file;
+                    this.variants[index].imagePreview = result.preview;
+                    this.variants[index].hasActualFile = true;
+
+                    if (typeof DataTransfer !== 'undefined') {
+                        const dt = new DataTransfer();
+                        dt.items.add(result.file);
+                        const fileInput = document.getElementById('variant_file_' + index);
+                        if (fileInput) fileInput.files = dt.files;
+                    }
+
                     this.calculateFillRate();
                     this.scheduleDraftSave();
-                };
-                reader.readAsDataURL(file);
+                }
+            } catch (err) {
+                console.error('Failed to process variant photo:', err);
+            } finally {
+                if (this.variants[index]) {
+                    this.variants[index].isOptimizing = false;
+                }
             }
         },
 
         removeVariantImage(index) {
-            this.variants[index].file = null;
-            this.variants[index].imagePreview = null;
+            if (this.variants[index]) {
+                this.variants[index].file = null;
+                this.variants[index].imagePreview = null;
+                this.variants[index].hasActualFile = false;
+                this.variants[index].isOptimizing = false;
+            }
             const fileInput = document.getElementById('variant_file_' + index);
             if (fileInput) fileInput.value = '';
             this.calculateFillRate();
@@ -2816,8 +2993,10 @@ function validateProductForm(e, isEdit = false) {
             console.warn('Pre-submit file sync warning:', syncErr);
         }
 
+        const v1 = alpineData?.variants?.[0];
         const v1FileInput = document.getElementById('variant_file_0');
         const hasV1File = Boolean(v1FileInput && v1FileInput.files && v1FileInput.files.length > 0);
+        const hasV1Actual = Boolean(v1 && v1.hasActualFile && v1.file);
         
         let hasAnyVariantFile = false;
         document.querySelectorAll('input[name^="variant_image_"]').forEach(inp => {
@@ -2827,7 +3006,11 @@ function validateProductForm(e, isEdit = false) {
         const galleryInput = document.getElementById('gallery_files_input');
         const hasGalleryFiles = Boolean(galleryInput && galleryInput.files && galleryInput.files.length > 0);
 
-        if (!hasV1File && !hasAnyVariantFile && !hasGalleryFiles) {
+        if (v1 && v1.imagePreview && !hasV1File && !hasV1Actual) {
+            errors.push('The cover photo preview was restored from a saved draft. Please tap the cover photo slot to re-select the image file before publishing.');
+            const v1Box = document.getElementById('variant_upload_box_0');
+            if (v1Box) v1Box.classList.add('border-amber-500', 'ring-2', 'ring-amber-400');
+        } else if (!hasV1File && !hasV1Actual && !hasAnyVariantFile && !hasGalleryFiles) {
             errors.push('Please upload the main product photo for Variant 1 (Cover Photo).');
             const v1Box = document.getElementById('variant_upload_box_0');
             if (v1Box) v1Box.classList.add('border-red-500');

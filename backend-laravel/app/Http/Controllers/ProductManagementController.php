@@ -212,18 +212,15 @@ class ProductManagementController extends Controller
             $product->size_stocks = $sizeStocks;
             $product->stock = $totalStock;
 
-            // Ensure storage directories exist on Hostinger / server
-            \Illuminate\Support\Facades\Storage::disk('public')->makeDirectory('qrcodes');
-            \Illuminate\Support\Facades\Storage::disk('public')->makeDirectory('products');
+            $storedFiles = [];
 
             // Per-product payment availability and overrides
             $product->is_gcash_available = $request->has('product_is_gcash_available');
             $product->gcash_number       = $request->filled('gcashNumber') ? $request->gcashNumber : null;
             if ($request->hasFile('gcashQrCode')) {
-                $file = $request->file('gcashQrCode');
-                $filename = time() . '_gcash_' . Str::random(6) . '.' . $file->getClientOriginalExtension();
-                $file->move(public_path('uploads/qrcodes'), $filename);
-                $product->gcash_qr_code = 'uploads/qrcodes/' . $filename;
+                $storedPath = $request->file('gcashQrCode')->store('payments/qrcodes', 'public');
+                $storedFiles[] = $storedPath;
+                $product->gcash_qr_code = $storedPath;
             } else {
                 $product->gcash_qr_code = null;
             }
@@ -231,20 +228,18 @@ class ProductManagementController extends Controller
             $product->is_maya_available  = $request->has('product_is_maya_available');
             $product->maya_number        = $request->filled('mayaNumber') ? $request->mayaNumber : null;
             if ($request->hasFile('mayaQrCode')) {
-                $file = $request->file('mayaQrCode');
-                $filename = time() . '_maya_' . Str::random(6) . '.' . $file->getClientOriginalExtension();
-                $file->move(public_path('uploads/qrcodes'), $filename);
-                $product->maya_qr_code = 'uploads/qrcodes/' . $filename;
+                $storedPath = $request->file('mayaQrCode')->store('payments/qrcodes', 'public');
+                $storedFiles[] = $storedPath;
+                $product->maya_qr_code = $storedPath;
             } else {
                 $product->maya_qr_code = null;
             }
 
             // Custom Size Guide Image & Measurements
             if ($request->hasFile('size_guide_image')) {
-                $file = $request->file('size_guide_image');
-                $filename = time() . '_sizeguide_' . Str::random(6) . '.' . $file->getClientOriginalExtension();
-                $file->move(public_path('uploads/sizeguides'), $filename);
-                $product->size_guide_image = 'uploads/sizeguides/' . $filename;
+                $storedPath = $request->file('size_guide_image')->store('products/sizeguides', 'public');
+                $storedFiles[] = $storedPath;
+                $product->size_guide_image = $storedPath;
             } else {
                 $product->size_guide_image = null;
             }
@@ -263,37 +258,11 @@ class ProductManagementController extends Controller
             $product->is_on_sale          = $request->boolean('is_on_sale');
             $product->discount_percentage = $product->is_on_sale ? ($request->discount_percentage ?? 0) : null;
 
-            // Auto-heal missing variations columns and status column if migration was not run yet
-            try {
-                if (\Illuminate\Support\Facades\Schema::hasTable('products')) {
-                    if (!\Illuminate\Support\Facades\Schema::hasColumn('products', 'has_variants')) {
-                        \Illuminate\Support\Facades\Schema::table('products', function (\Illuminate\Database\Schema\Blueprint $table) {
-                            $table->boolean('has_variants')->default(false)->after('target_group');
-                        });
-                    }
-                    if (!\Illuminate\Support\Facades\Schema::hasColumn('products', 'variations')) {
-                        \Illuminate\Support\Facades\Schema::table('products', function (\Illuminate\Database\Schema\Blueprint $table) {
-                            $table->json('variations')->nullable()->after('has_variants');
-                        });
-                    }
-                    // Ensure status column accepts 'draft', 'pending', 'approved', 'rejected', 'archived'
-                    \Illuminate\Support\Facades\DB::statement("ALTER TABLE `products` MODIFY `status` VARCHAR(50) NOT NULL DEFAULT 'pending'");
-                }
-            } catch (\Throwable $e) {
-                \Illuminate\Support\Facades\Log::warning('Could not auto-add variation columns or modify status: ' . $e->getMessage());
-            }
-
-            // Ensure product upload directory exists
-            if (!file_exists(public_path('uploads/products'))) {
-                @mkdir(public_path('uploads/products'), 0777, true);
-            }
-
             $savedVariations = [];
             $images = [];
             $uploadedHashes = [];
 
             // 1. Process Variant 1 (Main / Cover Style)
-            // Name: from variant_names[0] or mirrors product name
             $v1Name = trim($request->input('variant_names.0', '')) ?: trim($product->name);
             $v1File = null;
             if ($request->hasFile('variant_image_0') && $request->file('variant_image_0')->isValid()) {
@@ -312,17 +281,14 @@ class ProductManagementController extends Controller
             }
 
             if ($v1File) {
-                $v1FileName = time() . '_v1_' . Str::random(8) . '.' . $v1File->getClientOriginalExtension();
-                $v1File->move(public_path('uploads/products'), $v1FileName);
-                $v1Path = 'uploads/products/' . $v1FileName;
-                $images[] = $v1Path;
+                $storedPath = $v1File->store('products/cover', 'public');
+                $storedFiles[] = $storedPath;
+                $images[] = $storedPath;
                 $savedVariations[] = [
                     'name'  => $v1Name,
-                    'image' => $v1Path,
+                    'image' => $storedPath,
                 ];
-                if (file_exists(public_path($v1Path))) {
-                    $uploadedHashes[] = md5_file(public_path($v1Path));
-                }
+                $uploadedHashes[] = md5_file($v1File->getRealPath());
             }
 
             // 2. Process Additional Variants (Variant 2, 3, etc.)
@@ -349,19 +315,23 @@ class ProductManagementController extends Controller
                 }
 
                 if ($vFile) {
-                    $vFileName = time() . "_v{$numIdx}_" . Str::random(8) . '.' . $vFile->getClientOriginalExtension();
-                    $vFile->move(public_path('uploads/products'), $vFileName);
-                    $vImgPath = 'uploads/products/' . $vFileName;
+                    $hash = md5_file($vFile->getRealPath());
+                    if (in_array($hash, $uploadedHashes)) {
+                        continue;
+                    }
+                    $uploadedHashes[] = $hash;
 
-                    $images[] = $vImgPath;
+                    $storedPath = $vFile->store('products/variants', 'public');
+                    $storedFiles[] = $storedPath;
+                    $images[] = $storedPath;
                     $savedVariations[] = [
                         'name'  => $vName,
-                        'image' => $vImgPath,
+                        'image' => $storedPath,
                     ];
                 }
             }
 
-            // 3. Fallback: Check if any general legacy images were passed
+            // 3. Fallback / Additional Gallery Images
             if ($request->hasFile('images')) {
                 foreach ($request->file('images') as $i => $image) {
                     if ($i === 0 && !empty($v1File)) continue;
@@ -370,21 +340,20 @@ class ProductManagementController extends Controller
                     if (in_array($hash, $uploadedHashes)) continue;
                     $uploadedHashes[] = $hash;
 
-                    $filename = time() . '_' . Str::random(8) . '.' . $image->getClientOriginalExtension();
-                    $image->move(public_path('uploads/products'), $filename);
-                    $images[] = 'uploads/products/' . $filename;
+                    $storedPath = $image->store('products/gallery', 'public');
+                    $storedFiles[] = $storedPath;
+                    $images[] = $storedPath;
                 }
             }
 
             $product->status = $isDraft ? 'draft' : 'pending'; // Draft vs Pending Admin Approval
             $product->image = !empty($images) ? $images : ['products/default.jpg'];
-            if (\Illuminate\Support\Facades\Schema::hasColumn('products', 'has_variants')) {
-                $product->has_variants = count($savedVariations) > 1;
-            }
-            if (\Illuminate\Support\Facades\Schema::hasColumn('products', 'variations')) {
-                $product->variations = !empty($savedVariations) ? $savedVariations : null;
-            }
+            $product->has_variants = count($savedVariations) > 1;
+            $product->variations = !empty($savedVariations) ? $savedVariations : null;
+
+            \Illuminate\Support\Facades\DB::beginTransaction();
             $product->save();
+            \Illuminate\Support\Facades\DB::commit();
 
             if (!$isDraft) {
                 // Notify admins about the new product listing
@@ -399,7 +368,18 @@ class ProductManagementController extends Controller
 
             return redirect()->route('seller.products.index')->with('success', 'Product saved as draft.');
 
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
+            if (\Illuminate\Support\Facades\DB::transactionLevel() > 0) {
+                \Illuminate\Support\Facades\DB::rollBack();
+            }
+            // Delete newly uploaded files to prevent orphaned leaks on disk
+            if (!empty($storedFiles)) {
+                foreach ($storedFiles as $storedFile) {
+                    try {
+                        \Illuminate\Support\Facades\Storage::disk('public')->delete($storedFile);
+                    } catch (\Throwable $delEx) {}
+                }
+            }
             return redirect()->back()->withInput()->with('error', 'Failed to save product: ' . $e->getMessage());
         }
     }
@@ -578,6 +558,8 @@ class ProductManagementController extends Controller
         $product->size_stocks  = $sizeStocks;
         $product->stock        = $totalStock;
 
+        $storedFiles = [];
+
         // Per-product payment availability and overrides
         $product->is_gcash_available = $request->has('product_is_gcash_available');
         if ($request->filled('gcashNumber')) {
@@ -585,10 +567,9 @@ class ProductManagementController extends Controller
         }
 
         if ($request->hasFile('gcashQrCode')) {
-            $file = $request->file('gcashQrCode');
-            $filename = time() . '_gcash_' . Str::random(6) . '.' . $file->getClientOriginalExtension();
-            $file->move(public_path('uploads/qrcodes'), $filename);
-            $product->gcash_qr_code = 'uploads/qrcodes/' . $filename;
+            $storedPath = $request->file('gcashQrCode')->store('payments/qrcodes', 'public');
+            $storedFiles[] = $storedPath;
+            $product->gcash_qr_code = $storedPath;
         }
 
         $product->is_maya_available = $request->has('product_is_maya_available');
@@ -597,18 +578,16 @@ class ProductManagementController extends Controller
         }
 
         if ($request->hasFile('mayaQrCode')) {
-            $file = $request->file('mayaQrCode');
-            $filename = time() . '_maya_' . Str::random(6) . '.' . $file->getClientOriginalExtension();
-            $file->move(public_path('uploads/qrcodes'), $filename);
-            $product->maya_qr_code = 'uploads/qrcodes/' . $filename;
+            $storedPath = $request->file('mayaQrCode')->store('payments/qrcodes', 'public');
+            $storedFiles[] = $storedPath;
+            $product->maya_qr_code = $storedPath;
         }
 
         // Custom Size Guide Image & Measurements
         if ($request->hasFile('size_guide_image')) {
-            $file = $request->file('size_guide_image');
-            $filename = time() . '_sizeguide_' . Str::random(6) . '.' . $file->getClientOriginalExtension();
-            $file->move(public_path('uploads/sizeguides'), $filename);
-            $product->size_guide_image = 'uploads/sizeguides/' . $filename;
+            $storedPath = $request->file('size_guide_image')->store('products/sizeguides', 'public');
+            $storedFiles[] = $storedPath;
+            $product->size_guide_image = $storedPath;
         }
 
         $sizeMeasurements = $request->input('size_guide_measurements', []);
@@ -633,11 +612,14 @@ class ProductManagementController extends Controller
         if ($request->has('remove_images')) {
             $toRemove = (array) $request->remove_images;
             $currentImages = array_filter($currentImages, fn($img) => !in_array($img, $toRemove));
-            // Delete physical files for local storage paths
             foreach ($toRemove as $img) {
                 if (!str_starts_with($img, 'http')) {
                     $cleanImg = preg_replace('/^(storage|uploads)\//', '', $img);
                     $cleanImg = ltrim(str_replace('\\', '/', $cleanImg), '/');
+                    try {
+                        \Illuminate\Support\Facades\Storage::disk('public')->delete($cleanImg);
+                        \Illuminate\Support\Facades\Storage::disk('public')->delete('products/' . $cleanImg);
+                    } catch (\Throwable $delEx) {}
                     if (file_exists(public_path('uploads/' . $cleanImg))) {
                         @unlink(public_path('uploads/' . $cleanImg));
                     }
@@ -653,28 +635,17 @@ class ProductManagementController extends Controller
             $newImages = [];
             $existingHashes = [];
 
-            foreach ($currentImages as $existingImgPath) {
-                $cleanPath = preg_replace('/^(storage|uploads)\//', '', str_replace('\\', '/', $existingImgPath));
-                $cleanPath = ltrim($cleanPath, '/');
-                $fullPath = public_path('uploads/' . $cleanPath);
-                if (!file_exists($fullPath)) {
-                    $fullPath = public_path('uploads/products/' . $cleanPath);
-                }
-                if (file_exists($fullPath) && is_file($fullPath)) {
-                    $existingHashes[] = md5_file($fullPath);
-                }
-            }
-
             foreach ($request->file('images') as $image) {
+                if (!$image->isValid()) continue;
                 $hash = md5_file($image->getRealPath());
                 if (in_array($hash, $existingHashes)) {
                     continue; // Skip duplicate image file
                 }
                 $existingHashes[] = $hash;
 
-                $filename = time() . '_' . Str::random(8) . '.' . $image->getClientOriginalExtension();
-                $image->move(public_path('uploads/products'), $filename);
-                $newImages[] = 'uploads/products/' . $filename;
+                $storedPath = $image->store('products/gallery', 'public');
+                $storedFiles[] = $storedPath;
+                $newImages[] = $storedPath;
             }
             $currentImages = array_merge($newImages, array_values($currentImages));
         }
@@ -695,9 +666,9 @@ class ProductManagementController extends Controller
                 $vImgPath = null;
                 if ($request->hasFile("variant_image_{$numIdx}") && $request->file("variant_image_{$numIdx}")->isValid()) {
                     $vFile = $request->file("variant_image_{$numIdx}");
-                    $vFileName = time() . "_v{$numIdx}_" . Str::random(8) . '.' . $vFile->getClientOriginalExtension();
-                    $vFile->move(public_path('uploads/products'), $vFileName);
-                    $vImgPath = 'uploads/products/' . $vFileName;
+                    $storedPath = $vFile->store('products/variants', 'public');
+                    $storedFiles[] = $storedPath;
+                    $vImgPath = $storedPath;
                     $currentImages[] = $vImgPath;
                 } elseif (isset($existingVariations[$numIdx]['image'])) {
                     $vImgPath = $existingVariations[$numIdx]['image'];
@@ -716,7 +687,24 @@ class ProductManagementController extends Controller
         }
 
         $product->image = !empty($currentImages) ? array_values($currentImages) : ['products/default.jpg'];
-        $product->save();
+
+        try {
+            \Illuminate\Support\Facades\DB::beginTransaction();
+            $product->save();
+            \Illuminate\Support\Facades\DB::commit();
+        } catch (\Throwable $e) {
+            if (\Illuminate\Support\Facades\DB::transactionLevel() > 0) {
+                \Illuminate\Support\Facades\DB::rollBack();
+            }
+            if (!empty($storedFiles)) {
+                foreach ($storedFiles as $storedFile) {
+                    try {
+                        \Illuminate\Support\Facades\Storage::disk('public')->delete($storedFile);
+                    } catch (\Throwable $delEx) {}
+                }
+            }
+            return redirect()->back()->withInput()->with('error', 'Failed to update product: ' . $e->getMessage());
+        }
 
         if ($isDraftAction) {
             return redirect()->route('seller.products.index')->with('success', 'Product draft saved successfully.');

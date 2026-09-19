@@ -7,11 +7,11 @@
         'hasGcashNumber' => !empty($product->gcash_number) || !empty($seller->gcashNumber),
         'hasGcashQr'     => !empty($product->gcash_qr_code) || !empty($seller->gcashQrCode),
         'gcashNumber'    => $product->gcash_number ?: ($seller->gcashNumber ?? ''),
-        'gcashQrUrl'     => $product->gcash_qr_code ? (str_starts_with($product->gcash_qr_code, 'http') ? $product->gcash_qr_code : asset($product->gcash_qr_code)) : ($seller->gcashQrCode ? (str_starts_with($seller->gcashQrCode, 'http') ? $seller->gcashQrCode : asset($seller->gcashQrCode)) : null),
+        'gcashQrUrl'     => $product->getGcashQrUrl() ?: ($seller->gcashQrCode ? (str_starts_with($seller->gcashQrCode, 'http') ? $seller->gcashQrCode : asset($seller->gcashQrCode)) : null),
         'hasMayaNumber'  => !empty($product->maya_number) || !empty($seller->mayaNumber),
         'hasMayaQr'      => !empty($product->maya_qr_code) || !empty($seller->mayaQrCode),
         'mayaNumber'     => $product->maya_number ?: ($seller->mayaNumber ?? ''),
-        'mayaQrUrl'      => $product->maya_qr_code ? (str_starts_with($product->maya_qr_code, 'http') ? $product->maya_qr_code : asset($product->maya_qr_code)) : ($seller->mayaQrCode ? (str_starts_with($seller->mayaQrCode, 'http') ? $seller->mayaQrCode : asset($seller->mayaQrCode)) : null),
+        'mayaQrUrl'      => $product->getMayaQrUrl() ?: ($seller->mayaQrCode ? (str_starts_with($seller->mayaQrCode, 'http') ? $seller->mayaQrCode : asset($seller->mayaQrCode)) : null),
     ];
 @endphp
 <style>
@@ -1210,13 +1210,13 @@
         'hasGcashNumber' => !empty($product->gcash_number) || !empty($seller->gcashNumber),
         'hasGcashQr' => !empty($product->gcash_qr_code) || !empty($seller->gcashQrCode),
         'gcashNumber' => (string) ($product->gcash_number ?: ($seller->gcashNumber ?? '')),
-        'gcashQrUrl' => $product->gcash_qr_code ? asset($product->gcash_qr_code) : ($seller->gcashQrCode ? asset($seller->gcashQrCode) : null),
+        'gcashQrUrl' => $product->getGcashQrUrl() ?: ($seller->gcashQrCode ? (str_starts_with($seller->gcashQrCode, 'http') ? $seller->gcashQrCode : asset($seller->gcashQrCode)) : null),
         'isGcashOn' => (bool) old('product_is_gcash_available', $product->is_gcash_available),
         
         'hasMayaNumber' => !empty($product->maya_number) || !empty($seller->mayaNumber),
         'hasMayaQr' => !empty($product->maya_qr_code) || !empty($seller->mayaQrCode),
         'mayaNumber' => (string) ($product->maya_number ?: ($seller->mayaNumber ?? '')),
-        'mayaQrUrl' => $product->maya_qr_code ? asset($product->maya_qr_code) : ($seller->mayaQrCode ? asset($seller->mayaQrCode) : null),
+        'mayaQrUrl' => $product->getMayaQrUrl() ?: ($seller->mayaQrCode ? (str_starts_with($seller->mayaQrCode, 'http') ? $seller->mayaQrCode : asset($seller->mayaQrCode)) : null),
         'isMayaOn' => (bool) old('product_is_maya_available', $product->is_maya_available),
     ];
 @endphp
