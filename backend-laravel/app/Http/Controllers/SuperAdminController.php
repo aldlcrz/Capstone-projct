@@ -40,12 +40,14 @@ class SuperAdminController extends Controller
         ]);
 
         if (Auth::attempt($credentials)) {
-            if (Auth::user()->role !== 'superadmin') {
+            /** @var \App\Models\User $user */
+            $user = Auth::user();
+            if ($user->role !== 'superadmin') {
                 Auth::logout();
                 return back()->withErrors(['email' => 'Access denied. Super Admin only.']);
             }
             $request->session()->regenerate();
-            if (!Auth::user()->hasSeenGuide()) {
+            if (!$user->hasSeenGuide()) {
                 session()->flash('show_first_login_guide', true);
             }
             return redirect()->route('superadmin.dashboard');
@@ -207,8 +209,8 @@ class SuperAdminController extends Controller
                         'commissionRate'   => (float) $r->commissionRate,
                         'commissionAmount' => (float) $r->commissionAmount,
                         'status'           => $r->status,
-                        'dueDate'          => $r->dueDate ? \Carbon\Carbon::parse($r->dueDate)->format('M d, Y') : null,
-                        'paidAt'           => $r->paidAt ? \Carbon\Carbon::parse($r->paidAt)->format('M d, Y h:i A') : null,
+                        'dueDate'          => $r->dueDate ? Carbon::parse($r->dueDate)->format('M d, Y') : null,
+                        'paidAt'           => $r->paidAt ? Carbon::parse($r->paidAt)->format('M d, Y h:i A') : null,
                         'paymentMethod'    => $r->paymentMethod,
                         'referenceNumber'  => $r->referenceNumber,
                         'paymentProof'     => $proofUrl,
@@ -560,7 +562,9 @@ class SuperAdminController extends Controller
         }
 
         if ($filter === 'pending' || $filter === 'unverified') {
-            $query->where('isVerified', false)->whereNotIn('status', ['blocked', 'suspended', 'rejected', 'frozen']);
+            $query->where('isVerified', false)
+                  ->where('status', 'pending')
+                  ->whereNotNull('email_verified_at');
         } elseif ($filter === 'rejected') {
             $query->where('status', 'rejected');
         } elseif ($filter === 'suspended') {
@@ -568,7 +572,8 @@ class SuperAdminController extends Controller
         } elseif ($filter === 'frozen') {
             $query->where('status', 'frozen');
         } elseif ($filter === 'all') {
-            // all sellers
+            // all legitimate sellers (excluding unverified drafts and expired attempts)
+            $query->whereNotIn('status', ['awaiting_email_verification', 'expired']);
         } else {
             // Default view (Approved Sellers): strictly verified active sellers
             $query->where('isVerified', true)->where(function($q) {
@@ -582,15 +587,16 @@ class SuperAdminController extends Controller
 
         $pendingSellers = User::where('role', 'seller')
             ->where('isVerified', false)
-            ->whereNotIn('status', ['blocked', 'suspended', 'rejected', 'frozen'])
+            ->where('status', 'pending')
+            ->whereNotNull('email_verified_at')
             ->get();
 
         $counts = [
-            'all'       => User::where('role', 'seller')->count(),
+            'all'       => User::where('role', 'seller')->whereNotIn('status', ['awaiting_email_verification', 'expired'])->count(),
             'verified'  => User::where('role', 'seller')->where('isVerified', true)->where(function($q) {
                 $q->whereNull('status')->orWhere('status', 'active');
             })->count(),
-            'pending'   => User::where('role', 'seller')->where('isVerified', false)->whereNotIn('status', ['blocked', 'suspended', 'rejected', 'frozen'])->count(),
+            'pending'   => User::where('role', 'seller')->where('isVerified', false)->where('status', 'pending')->whereNotNull('email_verified_at')->count(),
             'frozen'    => User::where('role', 'seller')->where('status', 'frozen')->count(),
             'suspended' => User::where('role', 'seller')->whereIn('status', ['blocked', 'suspended'])->count(),
             'rejected'  => User::where('role', 'seller')->where('status', 'rejected')->count(),

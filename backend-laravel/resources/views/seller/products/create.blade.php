@@ -145,7 +145,7 @@
     </div>
 
     {{-- Main Product Form --}}
-    <form action="{{ route('seller.products.store') }}" method="POST" id="productForm" enctype="multipart/form-data" onsubmit="return validateProductForm(event, false)" class="space-y-6">
+    <form action="{{ route('seller.products.store') }}" method="POST" id="productForm" enctype="multipart/form-data" onsubmit="return handleProductFormSubmit(event, false)" class="space-y-6">
         @csrf
         <input type="hidden" name="action" id="formActionInput" value="publish">
 
@@ -1710,6 +1710,20 @@ function getProductInitData() {
  * - High-efficiency JPEG/WebP compression (~85% quality)
  * - Produces an optimized File object suitable for standard multipart/form-data upload
  */
+window._pendingImageJobs = window._pendingImageJobs || new Set();
+
+function trackImageJob(promise) {
+    if (window._pendingImageJobs && promise) {
+        window._pendingImageJobs.add(promise);
+        promise.finally(() => {
+            if (window._pendingImageJobs) {
+                window._pendingImageJobs.delete(promise);
+            }
+        });
+    }
+    return promise;
+}
+
 async function processClientImage(file, maxDimension = 1600, quality = 0.85) {
     if (!file) return null;
 
@@ -1745,7 +1759,7 @@ async function processClientImage(file, maxDimension = 1600, quality = 0.85) {
     }
 
     // Phase 3: Resize & Compress via HTML5 Canvas
-    return new Promise((resolve) => {
+    const compressionPromise = new Promise((resolve) => {
         if (processingFile.type === 'image/gif' || processingFile.type === 'image/svg+xml') {
             const reader = new FileReader();
             reader.onload = (e) => resolve({ file: processingFile, preview: e.target.result });
@@ -1808,8 +1822,8 @@ async function processClientImage(file, maxDimension = 1600, quality = 0.85) {
             reader.readAsDataURL(processingFile);
         };
 
-        img.src = objectUrl;
     });
+    return trackImageJob(compressionPromise);
 }
 
 function addProductManager() {
@@ -2788,7 +2802,16 @@ function addProductManager() {
             }
         },
 
-        submitAsDraft() {
+        async submitAsDraft() {
+            if (window._pendingImageJobs && window._pendingImageJobs.size > 0) {
+                try {
+                    await Promise.all(Array.from(window._pendingImageJobs));
+                } catch (e) {}
+            }
+            if (typeof this.syncGalleryFileInput === 'function') {
+                this.syncGalleryFileInput();
+            }
+            _isSubmittingForm = true;
             _leaveAllowed = true;
             clearProductDraft();
             document.getElementById('formActionInput').value = 'draft';
@@ -2927,12 +2950,85 @@ function updateDiscountPreview() {
     }
 }
 
+let _isSubmittingForm = false;
+
+async function handleProductFormSubmit(e, isEdit = false) {
+    if (_isSubmittingForm) {
+        return true;
+    }
+
+    if (e && typeof e.preventDefault === 'function') {
+        e.preventDefault();
+    }
+
+    // 1. If any image optimization jobs are still pending, await all of them!
+    if (window._pendingImageJobs && window._pendingImageJobs.size > 0) {
+        const submitBtn = document.querySelector('button[type="submit"]');
+        let origBtnHtml = '';
+        if (submitBtn) {
+            submitBtn.disabled = true;
+            origBtnHtml = submitBtn.innerHTML;
+            submitBtn.innerHTML = '<svg class="animate-spin h-4 w-4 text-white inline-block mr-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path></svg> Optimizing photos...';
+        }
+
+        try {
+            await Promise.all(Array.from(window._pendingImageJobs));
+        } catch (jobErr) {
+            console.warn('Image optimization job encountered an error:', jobErr);
+        }
+
+        if (submitBtn) {
+            submitBtn.disabled = false;
+            if (origBtnHtml) submitBtn.innerHTML = origBtnHtml;
+        }
+    }
+
+    // 2. Pre-sync any Alpine variant/gallery files to DOM inputs
+    try {
+        const alpineEl = document.querySelector('[x-data="addProductManager()"]');
+        const alpineData = alpineEl && window.Alpine ? Alpine.$data(alpineEl) : null;
+        if (alpineData) {
+            if (Array.isArray(alpineData.variants)) {
+                alpineData.variants.forEach((v, idx) => {
+                    const el = document.getElementById('variant_file_' + idx);
+                    if (el && (!el.files || el.files.length === 0) && v.file && typeof DataTransfer !== 'undefined') {
+                        const dt = new DataTransfer();
+                        dt.items.add(v.file);
+                        el.files = dt.files;
+                    }
+                });
+            }
+            if (typeof alpineData.syncGalleryFileInput === 'function') {
+                alpineData.syncGalleryFileInput();
+            }
+        }
+    } catch (syncErr) {
+        console.warn('Pre-submit file sync warning:', syncErr);
+    }
+
+    // 3. Run validation
+    const isValid = validateProductForm(e, isEdit);
+    if (!isValid) {
+        return false;
+    }
+
+    // 4. Form is valid -> submit!
+    _isSubmittingForm = true;
+    _leaveAllowed = true;
+    clearProductDraft();
+    const form = document.getElementById('productForm');
+    if (form) {
+        form.submit();
+    }
+    return true;
+}
+
 function validateProductForm(e, isEdit = false) {
     const action = document.getElementById('formActionInput')?.value;
     if (action === 'draft') {
         const nameInput = document.querySelector('input[name="name"]');
         if (!nameInput || !nameInput.value.trim()) {
-            e.preventDefault();
+            if (e && typeof e.preventDefault === 'function') e.preventDefault();
             triggerAppModal('Draft Name Required', 'Please enter at least a product name to save a draft.', 'warning');
             return false;
         }
@@ -3060,10 +3156,10 @@ function validateProductForm(e, isEdit = false) {
 
     // 5. Product Imagery (Variant 1 is required)
     if (!isEdit) {
-        // Pre-sync any Alpine variant/gallery files to DOM inputs
+        let alpineData = null;
         try {
             const alpineEl = document.querySelector('[x-data="addProductManager()"]');
-            const alpineData = alpineEl && window.Alpine ? Alpine.$data(alpineEl) : null;
+            alpineData = alpineEl && window.Alpine ? Alpine.$data(alpineEl) : null;
             if (alpineData && Array.isArray(alpineData.variants)) {
                 alpineData.variants.forEach((v, idx) => {
                     const el = document.getElementById('variant_file_' + idx);

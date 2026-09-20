@@ -412,8 +412,51 @@ class CheckoutController extends Controller
                 $hasProductNameCol = \Illuminate\Support\Facades\Schema::hasColumn('order_items', 'product_name');
                 $hasProductImageCol = \Illuminate\Support\Facades\Schema::hasColumn('order_items', 'product_image');
 
+                // 1. Group/aggregate demands and validate per-product & per-size requirements
+                $requestedQuantities = [];
+                $requestedSizes = [];
                 foreach ($items as $item) {
-                    $product = Product::find($item['id']);
+                    $pId = (string) $item['id'];
+                    $qty = max(1, (int)$item['quantity']);
+                    $requestedQuantities[$pId] = ($requestedQuantities[$pId] ?? 0) + $qty;
+                    if (!empty($item['size'])) {
+                        $sizeKey = (string) $item['size'];
+                        $requestedSizes[$pId][$sizeKey] = ($requestedSizes[$pId][$sizeKey] ?? 0) + $qty;
+                    }
+                }
+
+                // 2. Sort product IDs deterministically to prevent deadlock across concurrent checkout transactions
+                $sortedProductIds = collect(array_keys($requestedQuantities))->sort()->values();
+
+                // 3. Lock each product row in sorted deterministic order and validate inventory
+                $lockedProducts = [];
+                foreach ($sortedProductIds as $pId) {
+                    $product = Product::whereKey($pId)->lockForUpdate()->first();
+                    if (!$product) {
+                        throw new \Exception("A product in your cart is no longer available.");
+                    }
+
+                    $totalDemand = $requestedQuantities[$pId];
+                    if ($product->stock < $totalDemand) {
+                        throw new \Exception("Insufficient stock for \"{$product->name}\". Only {$product->stock} piece(s) available (requested: {$totalDemand}).");
+                    }
+
+                    // Validate per-size stock if tracked
+                    if (!empty($product->size_stocks) && isset($requestedSizes[$pId])) {
+                        $sizeStocks = $product->size_stocks;
+                        foreach ($requestedSizes[$pId] as $sz => $szQty) {
+                            $availSizeStock = isset($sizeStocks[$sz]) ? (int)$sizeStocks[$sz] : null;
+                            if ($availSizeStock !== null && $availSizeStock < $szQty) {
+                                throw new \Exception("Insufficient stock for size \"{$sz}\" of \"{$product->name}\". Only {$availSizeStock} available (requested: {$szQty}).");
+                            }
+                        }
+                    }
+
+                    $lockedProducts[$pId] = $product;
+                }
+
+                foreach ($items as $item) {
+                    $product = $lockedProducts[$item['id']] ?? null;
 
                     $orderItemData = [
                         'id' => (string) Str::uuid(),
@@ -434,29 +477,31 @@ class CheckoutController extends Controller
                     }
 
                     OrderItem::create($orderItemData);
+                }
 
-                    // Update stock
-                    if ($product) {
-                        $product->stock -= $item['quantity'];
-                        
-                        // Deduct from size stock if set
-                        if (!empty($product->size_stocks) && isset($item['size'])) {
-                            $sizeStocks = $product->size_stocks;
-                            if (isset($sizeStocks[$item['size']])) {
-                                $sizeStocks[$item['size']] = max(0, $sizeStocks[$item['size']] - $item['quantity']);
-                                $product->size_stocks = $sizeStocks;
+                // 4. Deduct inventory atomically across locked products
+                foreach ($lockedProducts as $pId => $product) {
+                    $deductQty = $requestedQuantities[$pId];
+
+                    if (!empty($product->size_stocks) && isset($requestedSizes[$pId])) {
+                        $sizeStocks = $product->size_stocks;
+                        foreach ($requestedSizes[$pId] as $sz => $szQty) {
+                            if (isset($sizeStocks[$sz])) {
+                                $sizeStocks[$sz] = max(0, ((int)$sizeStocks[$sz]) - $szQty);
                             }
                         }
-                        
-                        $product->save();
+                        $product->size_stocks = $sizeStocks;
+                    }
 
-                        // Low/Out of Stock Warnings
-                        $freshStock = $product->fresh()->stock;
-                        if ($freshStock <= 0) {
-                            \App\Models\Notification::send($sellerId, '⚠️ Out of Stock', "\"{$product->name}\" is now out of stock.", 'system', '/seller/products', 'seller');
-                        } elseif ($freshStock <= 5) {
-                            \App\Models\Notification::send($sellerId, 'Low Stock Alert', "\"{$product->name}\" has only {$freshStock} items left.", 'system', '/seller/products', 'seller');
-                        }
+                    $product->stock = max(0, $product->stock - $deductQty);
+                    $product->save();
+
+                    // Low/Out of Stock Warnings
+                    $freshStock = $product->stock;
+                    if ($freshStock <= 0) {
+                        \App\Models\Notification::send($sellerId, '⚠️ Out of Stock', "\"{$product->name}\" is now out of stock.", 'system', '/seller/products', 'seller');
+                    } elseif ($freshStock <= 5) {
+                        \App\Models\Notification::send($sellerId, 'Low Stock Alert', "\"{$product->name}\" has only {$freshStock} items left.", 'system', '/seller/products', 'seller');
                     }
                 }
                 

@@ -25,9 +25,42 @@
         this.inspectProduct = null;
         this.inspectImages = [];
     },
+    normalizePath(path) {
+        if (!path) return '';
+        let p = String(path).replace(/\\/g, '/').trim().replace(/^\/+/, '');
+        if (p.startsWith('storage/')) p = p.substring(8);
+        else if (p.startsWith('uploads/')) p = p.substring(8);
+        return p.replace(/^\/+/, '');
+    },
     getProductImages(product) {
         if (!product) return ['/uploads/products/default.jpg'];
         let imgs = [];
+        let seen = new Set();
+
+        const addCandidate = (raw) => {
+            if (!raw) return;
+            let path = typeof raw === 'object' ? (raw.url || raw.image || raw.path || '') : String(raw);
+            if (!path || path === 'Array' || path === '[]' || path === '[') return;
+            let canonical = this.normalizePath(path);
+            if (!canonical || seen.has(canonical)) return;
+            seen.add(canonical);
+            imgs.push(this.getProductImage(path));
+        };
+
+        // 1. Variant cover images first (Variant 1 cover)
+        if (product.variations) {
+            let vars = product.variations;
+            if (typeof vars === 'string') {
+                try { vars = JSON.parse(vars); } catch(e) {}
+            }
+            if (Array.isArray(vars)) {
+                vars.forEach(v => {
+                    if (v && (v.image || v.url)) addCandidate(v.image || v.url);
+                });
+            }
+        }
+
+        // 2. Product gallery images
         let raw = product.image;
         if (typeof raw === 'string') {
             try {
@@ -36,29 +69,11 @@
             } catch(e) {}
         }
         if (Array.isArray(raw)) {
-            raw.forEach(item => {
-                let u = typeof item === 'object' ? (item.url || '') : item;
-                if (u) imgs.push(this.getProductImage(u));
-            });
+            raw.forEach(item => addCandidate(item));
         } else if (raw) {
-            imgs.push(this.getProductImage(raw));
+            addCandidate(raw);
         }
 
-        if (product.variations) {
-            let vars = product.variations;
-            if (typeof vars === 'string') {
-                try { vars = JSON.parse(vars); } catch(e) {}
-            }
-            if (Array.isArray(vars)) {
-                vars.forEach(v => {
-                    let u = v.url || v.image;
-                    if (u) {
-                        let full = this.getProductImage(u);
-                        if (!imgs.includes(full)) imgs.push(full);
-                    }
-                });
-            }
-        }
         return imgs.length > 0 ? imgs : ['/uploads/products/default.jpg'];
     },
     getProductSizes(product) {
@@ -332,12 +347,13 @@
                                 'rejected' => 'Rejected',
                                 default    => 'Pending',
                             };
+                            $photoCount = count(\App\Support\VariationFormatter::buildGalleryImages($product->image, $product));
                         @endphp
                         <tr class="hover:bg-gray-50/50 transition-colors group">
                             {{-- Product Thumbnail & Title --}}
                             <td class="px-5 py-2">
                                 <div class="flex items-center gap-2.5">
-                                    <div class="w-9 h-9 rounded-xl bg-stone-100 border border-gray-100 overflow-hidden shrink-0 cursor-pointer shadow-2xs group-hover:ring-2 group-hover:ring-[#C0422A]/20 transition-all"
+                                    <div class="w-9 h-9 rounded-xl bg-stone-100 border border-gray-100 overflow-hidden shrink-0 cursor-pointer shadow-2xs group-hover:ring-2 group-hover:ring-[#C0422A]/20 transition-all relative"
                                          style="width: 36px; height: 36px; min-width: 36px; min-height: 36px; max-width: 36px; max-height: 36px;"
                                          @click="openInspect(@js($product))"
                                          title="Quick Inspect">
@@ -365,6 +381,12 @@
                                             </span>
                                             <span class="text-gray-300">·</span>
                                             <span class="truncate">{{ $product->createdAt ? $product->createdAt->format('M d, Y') : '—' }}</span>
+                                            @if($photoCount > 1)
+                                                <span class="text-gray-300">·</span>
+                                                <span class="inline-flex items-center gap-0.5 px-1.5 py-0.2 rounded bg-amber-50 text-amber-800 border border-amber-200/80 text-[8px] font-bold" title="{{ $photoCount }} photos">
+                                                    📷 {{ $photoCount }}
+                                                </span>
+                                            @endif
                                         </div>
                                     </div>
                                 </div>
@@ -507,6 +529,15 @@
                             @if($product->is_on_sale && (float)($product->discount_percentage ?? 0) > 0)
                                 <div class="absolute bottom-2.5 left-2.5 px-2 py-0.5 bg-[#C0422A] text-white rounded-md text-[8px] font-black uppercase tracking-wider shadow-xs">
                                     {{ round($product->discount_percentage) }}% OFF
+                                </div>
+                            @endif
+
+                            @php
+                                $gridPhotoCount = count(\App\Support\VariationFormatter::buildGalleryImages($product->image, $product));
+                            @endphp
+                            @if($gridPhotoCount > 1)
+                                <div class="absolute bottom-2.5 right-2.5 px-2 py-0.5 bg-black/75 backdrop-blur-md rounded-md text-white text-[9px] font-bold flex items-center gap-1 shadow-xs">
+                                    📷 {{ $gridPhotoCount }}
                                 </div>
                             @endif
 
@@ -655,6 +686,11 @@
                                         <span x-text="Math.round(inspectProduct.discount_percentage) + '% OFF'"></span>
                                     </span>
                                 </template>
+
+                                <div class="absolute bottom-3 right-3 px-2.5 py-1 rounded-full bg-black/70 backdrop-blur-xs text-white text-[10px] font-bold flex items-center gap-1 shadow-sm">
+                                    <svg class="w-3 h-3 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                                    <span x-text="(inspectActiveImage + 1) + ' / ' + inspectImages.length"></span>
+                                </div>
                             </div>
 
                             {{-- Thumbnails --}}

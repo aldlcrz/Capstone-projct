@@ -3,7 +3,9 @@
 @section('content')
 @php
     use App\Support\VariationFormatter;
-    $productVariations = VariationFormatter::buildVariations($product->image, $product);
+    $galleryImages = VariationFormatter::buildGalleryImages($product->image, $product);
+    $styleVariants = VariationFormatter::buildStyleVariants($product);
+    $productVariations = $styleVariants; // Backward compatibility
     $isAdminUser = Auth::check() && in_array(Auth::user()->role, ['admin', 'superadmin']);
     $isProductOwner = Auth::check() && Auth::user()->role === 'seller' && Auth::id() === $product->sellerId;
     $productStatus = strtolower($product->status ?? 'pending');
@@ -63,13 +65,16 @@
         });
     });
 
-    function productDetail(defaultStock, sizeStocks, variations) {
+    function productDetail(defaultStock, sizeStocks, galleryImages, styleVariants) {
         var dataEl = document.getElementById('product-page-data');
         var dataset = dataEl ? dataEl.dataset : {};
         var isWishlistedInitial = dataset.isWishlisted === 'true';
         var productId = dataset.productId || '';
         var defaultProductImageUrl = dataset.defaultImageUrl || '';
         var csrfToken = dataset.csrfToken || '';
+
+        var galleryList = Array.isArray(galleryImages) ? galleryImages : [];
+        var styleList = Array.isArray(styleVariants) ? styleVariants : [];
 
         return {
             selectedSize: '',
@@ -78,8 +83,29 @@
             stock: defaultStock || 1,
             sizeStocks: sizeStocks || {},
             activeImage: 0,
-            variations: variations || [],
+            galleryImages: galleryList,
+            styleVariants: styleList,
+            selectedStyle: styleList.length > 0 ? styleList[0].id : 0,
             selectedVariation: 0,
+            // Compatibility accessor for any legacy references
+            get variations() {
+                return this.galleryImages;
+            },
+            selectStyleVariant: function(variant) {
+                this.selectedStyle = variant.id;
+                this.selectedVariation = variant.id;
+                if (variant.image_path || variant.image || variant.image_url) {
+                    var targetPath = variant.image_path;
+                    var targetUrl = variant.image || variant.image_url;
+                    var imgIdx = this.galleryImages.findIndex(function(img) {
+                        return (targetPath && img.path === targetPath) || 
+                               (targetUrl && (img.url === targetUrl || img.path === targetUrl));
+                    });
+                    if (imgIdx !== -1) {
+                        this.activeImage = imgIdx;
+                    }
+                }
+            },
             showSizeGuide: false,
             adminRejectModal: false,
             adminRejectReason: '',
@@ -101,7 +127,6 @@
             openZoomModal(idx) {
                 if (idx !== undefined) {
                     this.activeImage = idx;
-                    this.selectedVariation = idx;
                 }
                 this.isZoomed = false;
                 this.zoomOriginX = 50;
@@ -201,7 +226,12 @@
                 return '/uploads/products/' + url;
             },
             selectedVariationLabel: function() {
-                return (this.variations && this.variations[this.selectedVariation]) ? (this.variations[this.selectedVariation].label || 'Original') : 'Original';
+                if (this.styleVariants && this.styleVariants.length > 0) {
+                    var self = this;
+                    var found = this.styleVariants.find(function(v) { return v.id === self.selectedStyle; });
+                    return found ? (found.name || 'Original') : (this.styleVariants[0]?.name || 'Original');
+                }
+                return 'Original';
             },
             updateStock: function(size) {
                 this.selectedSize = size;
@@ -271,7 +301,7 @@
         };
     }
 </script>
-<div class="max-w-6xl mx-auto py-4 lg:py-6" x-data="productDetail({{ (int)($product->stock ?? 1) }}, @js($product->size_stocks ?? (object)[]), @js($productVariations))">
+<div class="max-w-6xl mx-auto py-4 lg:py-6" x-data="productDetail({{ (int)($product->stock ?? 1) }}, @js($product->size_stocks ?? (object)[]), @js($galleryImages), @js($styleVariants))">
     @if($isAdminUser)
     <!-- Admin Context Header Bar -->
     <div class="mb-5 px-4 py-3 rounded-2xl flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-md"
@@ -341,13 +371,13 @@
                 
                 <!-- Vertical Gallery Thumbnails (Left side) -->
                 <div class="flex sm:flex-col gap-3 overflow-x-auto sm:overflow-y-auto max-h-115 no-scrollbar shrink-0 w-full sm:w-20">
-                    <template x-for="(variation, index) in variations" :key="index">
+                    <template x-for="(img, index) in galleryImages" :key="index">
                         <button 
-                            @click="activeImage = index; selectedVariation = index"
+                            @click="activeImage = index"
                             class="relative w-14 h-18 sm:w-16 sm:h-20 rounded-xl overflow-hidden shrink-0 border-2 transition-all shadow-2xs"
                             :class="activeImage === index ? 'border-amber-600 ring-2 ring-amber-500/20 opacity-100 scale-98' : 'border-gray-200 opacity-60 hover:opacity-100'"
                         >
-                            <img :src="imageUrl(variation.url)" onerror="this.src='/uploads/products/default.jpg'" class="w-full h-full object-cover">
+                            <img :src="imageUrl(img.url)" onerror="this.src='/uploads/products/default.jpg'" class="w-full h-full object-cover">
                         </button>
                     </template>
                 </div>
@@ -359,10 +389,10 @@
                     title="Click to inspect and zoom"
                 >
                     <!-- Main Image Display -->
-                    <template x-for="(variation, index) in variations" :key="index">
+                    <template x-for="(img, index) in galleryImages" :key="index">
                         <img 
                             x-show="activeImage === index"
-                            :src="imageUrl(variation.url)"
+                            :src="imageUrl(img.url)"
                             onerror="this.src='/uploads/products/default.jpg'"
                             class="w-full h-full object-contain group-hover:scale-105 transition-transform duration-300 ease-out p-1"
                             alt="{{ $product->name }}"
@@ -440,26 +470,28 @@
                     </div>
 
                     <!-- Style / Variation Selection (When product has multiple variants) -->
-                    <div x-show="variations && variations.length > 1" class="mb-6" x-cloak>
+                    <div x-show="styleVariants && styleVariants.length > 1" class="mb-6" x-cloak>
                         <div class="flex items-center justify-between mb-2">
                             <span class="text-xs font-bold text-gray-900">
                                 Style / Variation: <span class="text-[#C0420A] font-black" x-text="selectedVariationLabel()"></span>
                             </span>
-                            <span class="text-[10px] text-gray-400 font-semibold" x-text="variations.length + ' styles'"></span>
+                            <span class="text-[10px] text-gray-400 font-semibold" x-text="styleVariants.length + ' styles'"></span>
                         </div>
                         <div class="flex flex-wrap gap-2.5">
-                            <template x-for="(variation, index) in variations" :key="index">
+                            <template x-for="(variant, index) in styleVariants" :key="variant.id">
                                 <button 
-                                    @click="activeImage = index; selectedVariation = index"
+                                    @click="selectStyleVariant(variant)"
                                     type="button"
                                     class="px-3.5 py-2 rounded-xl flex items-center gap-2 text-xs font-bold border transition-all cursor-pointer shadow-2xs group"
-                                    :class="selectedVariation === index 
+                                    :class="selectedStyle === variant.id 
                                         ? 'border-[#C0420A] bg-[#C0420A]/5 text-[#C0420A] ring-2 ring-[#C0420A]/20 font-black' 
                                         : 'border-gray-200 text-gray-700 bg-white hover:border-gray-400 font-semibold'"
                                 >
-                                    <img :src="imageUrl(variation.url)" onerror="this.src='/uploads/products/default.jpg'" class="w-6 h-6 rounded-lg object-cover">
-                                    <span x-text="variation.label || ('Style ' + (index + 1))"></span>
-                                    <span x-show="selectedVariation === index" class="w-3.5 h-3.5 rounded-full bg-[#C0420A] text-white flex items-center justify-center text-[8px] font-bold">✓</span>
+                                    <template x-if="variant.image_url || variant.image">
+                                        <img :src="imageUrl(variant.image_url || variant.image)" onerror="this.src='/uploads/products/default.jpg'" class="w-6 h-6 rounded-lg object-cover">
+                                    </template>
+                                    <span x-text="variant.name || ('Style ' + (index + 1))"></span>
+                                    <span x-show="selectedStyle === variant.id" class="w-3.5 h-3.5 rounded-full bg-[#C0420A] text-white flex items-center justify-center text-[8px] font-bold">✓</span>
                                 </button>
                             </template>
                         </div>
@@ -797,10 +829,10 @@
                 @touchmove.prevent="handleModalTouch($event)"
                 @touchend="handleModalMouseLeave()"
             >
-                <template x-for="(variation, index) in variations" :key="index">
+                <template x-for="(img, index) in galleryImages" :key="index">
                     <img 
                         x-show="activeImage === index"
-                        :src="imageUrl(variation.url)"
+                        :src="imageUrl(img.url)"
                         onerror="this.src='/uploads/products/default.jpg'"
                         class="w-full h-full object-contain pointer-events-none transition-transform duration-75 ease-out"
                         :class="isZoomed ? 'scale-[2.4]' : 'scale-100'"
@@ -823,16 +855,16 @@
             <div 
                 class="p-3.5 bg-black border-t border-neutral-800 flex items-center justify-center gap-2 overflow-x-auto no-scrollbar" 
                 style="background-color: #000000 !important; background: #000000 !important;" 
-                x-show="variations && variations.length > 1"
+                x-show="galleryImages && galleryImages.length > 1"
             >
-                <template x-for="(variation, index) in variations" :key="index">
+                <template x-for="(img, index) in galleryImages" :key="index">
                     <button 
                         type="button"
-                        @click="activeImage = index; selectedVariation = index"
+                        @click="activeImage = index"
                         class="w-12 h-14 rounded-lg overflow-hidden border-2 transition-all cursor-pointer shrink-0 bg-neutral-900 shadow-md"
                         :class="activeImage === index ? 'border-[#C0420A] ring-2 ring-[#C0420A] scale-105' : 'border-neutral-700 opacity-60 hover:opacity-100'"
                     >
-                        <img :src="imageUrl(variation.url)" class="w-full h-full object-cover">
+                        <img :src="imageUrl(img.url)" class="w-full h-full object-cover">
                     </button>
                 </template>
             </div>

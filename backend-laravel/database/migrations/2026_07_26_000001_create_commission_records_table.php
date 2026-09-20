@@ -20,7 +20,7 @@ return new class extends Migration
             $table->decimal('totalSales', 12, 2)->default(0);
             $table->decimal('commissionRate', 5, 2)->default(5.00); // 5%
             $table->decimal('commissionAmount', 12, 2)->default(0);
-            $table->enum('status', ['unpaid', 'paid', 'waived'])->default('unpaid');
+            $table->enum('status', ['unpaid', 'paid', 'waived', 'verification_pending'])->default('unpaid');
             $table->timestamp('dueDate')->nullable(); // end of month + grace period
             $table->timestamp('paidAt')->nullable();
             $table->boolean('warningNotified')->default(false); // 1-week warning sent?

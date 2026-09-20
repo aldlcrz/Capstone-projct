@@ -36,7 +36,7 @@ class SellerMiddleware
 
                 if ($user->status === 'frozen') {
                     // Allow frozen sellers to access commission payment settlement routes
-                    if ($request->is('seller/commission*') || $request->is('api/seller/commission*')) {
+                    if ($request->is('seller/commission*') || $request->is('api/seller/commission*') || $request->is('submit-commission-payment') || $request->routeIs('commission.submit-payment')) {
                         return $next($request);
                     }
 
@@ -53,6 +53,23 @@ class SellerMiddleware
                         return response()->json(['message' => $msg], 403);
                     }
                     return redirect('/login')->withErrors(['email' => $msg]);
+                }
+
+                // Unverified email check with route exemption to prevent redirect loops
+                if ($user->status === 'awaiting_email_verification' || is_null($user->email_verified_at)) {
+                    if ($request->routeIs(['verify.email', 'verify.email.*', 'seller.verify-email', 'seller.verify-email.*', 'logout']) ||
+                        $request->is('verify-email*') || $request->is('seller/verify-email*') || $request->is('resend-verification*') || $request->is('logout*')) {
+                        return $next($request);
+                    }
+
+                    if ($request->expectsJson() || $request->is('api/*') || $request->ajax()) {
+                        return response()->json([
+                            'message'  => 'Email verification required.',
+                            'redirect' => route('seller.verify-email'),
+                        ], 403);
+                    }
+
+                    return redirect()->route('seller.verify-email');
                 }
 
                 if (!$user->isVerified || $user->status === 'pending' || $user->status === 'rejected') {

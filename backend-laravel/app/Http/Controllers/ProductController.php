@@ -155,8 +155,9 @@ class ProductController extends Controller
             return response()->json(['message' => 'Product not found'], 404);
         }
 
-        // Restriction: Only owner or admin can see unapproved products
-        if ($product->status !== 'approved' && (!$request->user() || ($request->user()->role !== 'admin' && $request->user()->id !== $product->sellerId))) {
+        // Restriction: Only owner or admin/superadmin can see unapproved products
+        $currentUser = $request->user();
+        if ($product->status !== 'approved' && (!$currentUser || (!in_array($currentUser->role, ['admin', 'superadmin'], true) && $currentUser->id !== $product->sellerId))) {
             return response()->json(['message' => 'This product is currently under review or has been rejected.'], 403);
         }
 

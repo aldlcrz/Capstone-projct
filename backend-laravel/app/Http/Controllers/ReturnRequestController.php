@@ -7,6 +7,7 @@ use App\Models\Order;
 use App\Models\Notification;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 
 class ReturnRequestController extends Controller
 {
@@ -220,7 +221,13 @@ class ReturnRequestController extends Controller
                 'userRole' => 'seller',
                 'notes' => 'Return request approved by artisan.' . ($comment ? " Instructions: {$comment}" : ''),
             ]);
-        } catch (\Throwable $e) {}
+        } catch (\Throwable $e) {
+            Log::error('Failed to create return status history on approve.', [
+                'return_request_id' => $returnRequest->id,
+                'order_id' => $order->id,
+                'exception' => $e,
+            ]);
+        }
 
         // Notify customer
         try {
@@ -232,7 +239,14 @@ class ReturnRequestController extends Controller
                 route('orders.show', $order->id),
                 'customer'
             );
-        } catch (\Throwable $e) {}
+        } catch (\Throwable $e) {
+            Log::error('Failed to send in-app notification on return approve.', [
+                'return_request_id' => $returnRequest->id,
+                'order_id' => $order->id,
+                'customer_id' => $order->customerId,
+                'exception' => $e,
+            ]);
+        }
 
         // Send email notification
         try {
@@ -241,7 +255,13 @@ class ReturnRequestController extends Controller
                 $mailable = new \App\Mail\ReturnRefundStatusMail($customerUser->name, $order->id, 'Approved', $comment, 'Return');
                 \App\Services\EmailNotificationService::sendNotification($customerUser->email, $mailable, 'return_refund_update', $customerUser->id, 'Order', $order->id);
             }
-        } catch (\Throwable $e) {}
+        } catch (\Throwable $e) {
+            Log::error('Failed to send email notification on return approve.', [
+                'return_request_id' => $returnRequest->id,
+                'order_id' => $order->id,
+                'exception' => $e,
+            ]);
+        }
 
         return response()->json([
             'success' => true,
@@ -290,7 +310,13 @@ class ReturnRequestController extends Controller
                 'userRole' => 'seller',
                 'notes' => 'Return request declined by artisan. Reason: ' . $reason,
             ]);
-        } catch (\Throwable $e) {}
+        } catch (\Throwable $e) {
+            Log::error('Failed to create return status history on reject.', [
+                'return_request_id' => $returnRequest->id,
+                'order_id' => $order->id,
+                'exception' => $e,
+            ]);
+        }
 
         // Notify customer
         try {
@@ -302,7 +328,14 @@ class ReturnRequestController extends Controller
                 route('orders.show', $order->id),
                 'customer'
             );
-        } catch (\Throwable $e) {}
+        } catch (\Throwable $e) {
+            Log::error('Failed to send in-app notification on return reject.', [
+                'return_request_id' => $returnRequest->id,
+                'order_id' => $order->id,
+                'customer_id' => $order->customerId,
+                'exception' => $e,
+            ]);
+        }
 
         // Send email notification
         try {
@@ -311,7 +344,13 @@ class ReturnRequestController extends Controller
                 $mailable = new \App\Mail\ReturnRefundStatusMail($customerUser->name, $order->id, 'Rejected', $reason, 'Return');
                 \App\Services\EmailNotificationService::sendNotification($customerUser->email, $mailable, 'return_refund_update', $customerUser->id, 'Order', $order->id);
             }
-        } catch (\Throwable $e) {}
+        } catch (\Throwable $e) {
+            Log::error('Failed to send email notification on return reject.', [
+                'return_request_id' => $returnRequest->id,
+                'order_id' => $order->id,
+                'exception' => $e,
+            ]);
+        }
 
         return response()->json([
             'success' => true,

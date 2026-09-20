@@ -461,16 +461,13 @@
             </div>
 
             <!-- Submit Payment Proof Form -->
+            @auth
             <form action="{{ route('commission.submit-payment') }}" method="POST" enctype="multipart/form-data" class="bg-[#F9F6F2] border border-[#E5DDD5] rounded-2xl sm:rounded-3xl p-3.5 sm:p-5 text-left space-y-3">
                 @csrf
                 <input type="hidden" name="payment_method" :value="activeTab === 'gcash' ? 'GCash' : 'Maya'">
                 <div class="pb-1 border-b border-gray-200 flex items-center justify-between">
                     <span class="text-[10px] font-black uppercase tracking-wider text-gray-700">Submit Payment Proof</span>
                     <span class="text-[9px] text-gray-400 font-medium">* Required fields</span>
-                </div>
-                <div>
-                    <label class="text-[9px] sm:text-[10px] font-bold text-gray-500 uppercase tracking-widest block mb-1">Your Email *</label>
-                    <input type="email" name="email" value="{{ old('email') }}" required placeholder="your.email@gmail.com" class="w-full h-10 sm:h-11 bg-white rounded-xl px-3.5 text-xs font-medium border border-gray-200 focus:border-[#C0422A] outline-none shadow-2xs">
                 </div>
                 <div>
                     <label class="text-[9px] sm:text-[10px] font-bold text-gray-500 uppercase tracking-widest block mb-1">Reference Number / Transaction ID *</label>
@@ -489,6 +486,16 @@
                     <span>Submit Payment Proof</span>
                 </button>
             </form>
+            @else
+            <div class="bg-[#F9F6F2] border border-[#E5DDD5] rounded-2xl sm:rounded-3xl p-5 text-center space-y-3">
+                <p class="text-xs text-gray-700 font-medium leading-relaxed">
+                    Please log in to your artisan account to securely submit your commission settlement proof.
+                </p>
+                <button type="button" @click="showSettlementModal = false" class="w-full py-2.5 bg-[#C0422A] hover:bg-[#A03520] text-white rounded-xl font-bold uppercase tracking-wider text-xs transition-all shadow-sm cursor-pointer">
+                    Log In to Settle
+                </button>
+            </div>
+            @endauth
         </div>
     </div>
     @endif
@@ -498,7 +505,7 @@
     <div class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-xs animate-fade-in">
         <div class="w-full max-w-md bg-white rounded-3xl sm:rounded-4xl p-6 sm:p-8 shadow-2xl border border-amber-200 space-y-5 text-center relative overflow-hidden">
             <!-- Top Accent Strip -->
-            <div class="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-amber-500 via-[#C49520] to-amber-600"></div>
+            <div class="absolute top-0 left-0 right-0 h-1.5 bg-linear-to-r from-amber-500 via-[#C49520] to-amber-600"></div>
 
             <div class="w-16 h-16 rounded-full bg-amber-50 border-2 border-amber-200 text-amber-600 flex items-center justify-center text-2xl mx-auto shadow-inner">
                 ⏳

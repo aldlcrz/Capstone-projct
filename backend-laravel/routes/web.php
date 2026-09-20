@@ -50,11 +50,6 @@ Route::middleware('guest')->group(function () {
     Route::post('/seller/register', [WebAuthController::class, 'sellerRegister'])->name('seller.register.submit');
     Route::get('/auth/check-shop-name', [WebAuthController::class, 'checkShopName'])->name('auth.check-shop-name');
 
-    // Email Verification Routes
-    Route::get('/verify-email', [WebAuthController::class, 'showVerifyEmail'])->name('verify.email');
-    Route::post('/verify-email', [WebAuthController::class, 'verifyEmail'])->name('verify.email.submit');
-    Route::post('/resend-verification', [WebAuthController::class, 'resendVerificationCode'])->name('verify.email.resend');
-
     // 6-Digit Code Password Reset Routes
     Route::get('/forgot-password', function() { return view('auth.forgot-password'); })->name('password.request');
     Route::post('/forgot-password', [WebAuthController::class, 'forgotPassword'])->name('password.email');
@@ -69,10 +64,17 @@ Route::middleware('guest')->group(function () {
     Route::post('/register', [WebAuthController::class, 'register']);
     Route::post('/auth/google', [WebAuthController::class, 'handleGoogleLogin'])->name('auth.google');
     Route::post('/auth/google/signup', [WebAuthController::class, 'handleGoogleSignup'])->name('auth.google.signup');
-    Route::post('/auth/google/seller/signup', [WebAuthController::class, 'handleGoogleSellerSignup'])->name('auth.google.seller.signup');
 });
 
-Route::post('/submit-commission-payment', [WebAuthController::class, 'submitCommissionPayment'])->name('commission.submit-payment');
+// Email Verification Routes (accessible by guests and authenticated unverified users)
+Route::get('/verify-email', [WebAuthController::class, 'showVerifyEmail'])->name('verify.email');
+Route::get('/seller/verify-email', [WebAuthController::class, 'showVerifyEmail'])->name('seller.verify-email');
+Route::post('/verify-email', [WebAuthController::class, 'verifyEmail'])->name('verify.email.submit');
+Route::post('/resend-verification', [WebAuthController::class, 'resendVerificationCode'])->name('verify.email.resend');
+
+Route::middleware(['auth', 'seller'])->group(function () {
+    Route::post('/submit-commission-payment', [WebAuthController::class, 'submitCommissionPayment'])->name('commission.submit-payment');
+});
 
 Route::middleware('auth')->group(function () {
     // Dismiss and mark onboarding guide as completed

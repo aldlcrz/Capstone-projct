@@ -117,7 +117,7 @@ class AdminController extends Controller
     {
         return [
             'products'      => Product::where('status', 'pending')->count(),
-            'sellers'       => User::where('role', 'seller')->where('isVerified', false)->where('status', '!=', 'blocked')->count(),
+            'sellers'       => User::where('role', 'seller')->where('isVerified', false)->where('status', 'pending')->whereNotNull('email_verified_at')->count(),
             'banners'       => \App\Models\Banner::whereNotNull('userId')->where('status', 'pending')->count(),
             'reports'       => \App\Models\Report::where('status', 'Pending')->count(),
         ];
@@ -442,7 +442,7 @@ class AdminController extends Controller
         fputcsv($out, ['Average Order Value',  'PHP ' . number_format($aov, 2)]);
         fputcsv($out, ['Total Customers',      User::where('role', 'customer')->count()]);
         fputcsv($out, ['Verified Sellers',     User::where('role', 'seller')->where('isVerified', true)->count()]);
-        fputcsv($out, ['Pending Sellers',      User::where('role', 'seller')->where('isVerified', false)->where('status', '!=', 'blocked')->count()]);
+        fputcsv($out, ['Pending Sellers',      User::where('role', 'seller')->where('isVerified', false)->where('status', 'pending')->whereNotNull('email_verified_at')->count()]);
         fputcsv($out, ['Total Products',       Product::count()]);
         fputcsv($out, ['Approved Products',    Product::where('status', 'approved')->count()]);
         fputcsv($out, ['Pending Products',     Product::where('status', 'pending')->count()]);
@@ -768,13 +768,16 @@ class AdminController extends Controller
         $filter = $request->filter;
 
         if ($filter === 'pending') {
-            $query->where('isVerified', false)->whereNotIn('status', ['blocked', 'suspended', 'rejected', 'frozen']);
+            $query->where('isVerified', false)
+                  ->where('status', 'pending')
+                  ->whereNotNull('email_verified_at');
         } elseif ($filter === 'rejected') {
             $query->where('status', 'rejected');
         } elseif ($filter === 'suspended') {
             $query->whereIn('status', ['blocked', 'suspended']);
         } elseif ($filter === 'all') {
-            // all sellers
+            // all legitimate sellers (excluding unverified drafts and expired attempts)
+            $query->whereNotIn('status', ['awaiting_email_verification', 'expired']);
         } else {
             // Default view (Approved Sellers): strictly only verified active sellers
             $query->where('isVerified', true)->where('status', 'active');
@@ -784,11 +787,15 @@ class AdminController extends Controller
             $q->where('status', 'unpaid')->orderBy('period', 'desc');
         }])->orderBy('createdAt', 'desc')->paginate(20);
 
-        $pendingSellers = User::where('role', 'seller')->where('isVerified', false)->whereNotIn('status', ['blocked', 'suspended', 'rejected', 'frozen'])->get();
+        $pendingSellers = User::where('role', 'seller')
+            ->where('isVerified', false)
+            ->where('status', 'pending')
+            ->whereNotNull('email_verified_at')
+            ->get();
         $counts = [
-            'all'       => User::where('role', 'seller')->count(),
+            'all'       => User::where('role', 'seller')->whereNotIn('status', ['awaiting_email_verification', 'expired'])->count(),
             'verified'  => User::where('role', 'seller')->where('isVerified', true)->where('status', 'active')->count(),
-            'pending'   => User::where('role', 'seller')->where('isVerified', false)->whereNotIn('status', ['blocked', 'suspended', 'rejected', 'frozen'])->count(),
+            'pending'   => User::where('role', 'seller')->where('isVerified', false)->where('status', 'pending')->whereNotNull('email_verified_at')->count(),
             'suspended' => User::where('role', 'seller')->whereIn('status', ['blocked', 'suspended'])->count(),
             'rejected'  => User::where('role', 'seller')->where('status', 'rejected')->count(),
         ];

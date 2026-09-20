@@ -47,6 +47,7 @@ class User extends Authenticatable
         'shopName', 'shopDescription', 'cancellation_policy', 'refund_policy', 'businessPermit', 'cart',
         'is_onboarded', 'has_seen_guide', 'deleted_at',
         'deletion_scheduled_at', 'permanent_deletion_at',
+        'registration_expires_at', 'email_verified_at',
     ];
 
 
@@ -126,6 +127,8 @@ class User extends Authenticatable
             'has_seen_guide'    => 'boolean',
             'deletion_scheduled_at' => 'datetime',
             'permanent_deletion_at' => 'datetime',
+            'registration_expires_at' => 'datetime',
+            'email_verified_at'       => 'datetime',
         ];
     }
 
@@ -298,6 +301,49 @@ class User extends Authenticatable
 
     public function getEmailVerifiedAtAttribute()
     {
-        return !empty($this->attributes['isVerified']) ? ($this->attributes['updated_at'] ?? now()) : null;
+        if (array_key_exists('email_verified_at', $this->attributes)) {
+            return $this->attributes['email_verified_at'];
+        }
+        return !empty($this->attributes['isVerified']) ? ($this->attributes['updatedAt'] ?? $this->attributes['updated_at'] ?? now()) : null;
+    }
+
+    /**
+     * Scope query to sellers that actively occupy a shop name.
+     * Active, pending (email verified), frozen, and suspended sellers occupy the name.
+     * Awaiting-email-verification sellers only occupy the name if their registration has not expired.
+     * Rejected and expired sellers release the name.
+     *
+     * @param \Illuminate\Database\Eloquent\Builder $query
+     */
+    public function scopeOccupiesShopName(\Illuminate\Database\Eloquent\Builder $query, string $name, ?string $excludeUserId = null)
+    {
+        $normalized = strtolower(trim($name));
+
+        $query->where('role', 'seller')
+            ->whereRaw('LOWER(TRIM(shopName)) = ?', [$normalized])
+            ->where(function ($q) {
+                $q->whereIn('status', [
+                    'active',
+                    'pending',
+                    'frozen',
+                    'suspended',
+                ])
+                ->orWhere(function ($sub) {
+                    $sub->where('status', 'awaiting_email_verification')
+                        ->where(function ($exp) {
+                            $exp->where('registration_expires_at', '>', now())
+                                ->orWhere(function ($fallback) {
+                                    $fallback->whereNull('registration_expires_at')
+                                             ->where('createdAt', '>', now()->subHours(2));
+                                });
+                        });
+                });
+            });
+
+        if ($excludeUserId) {
+            $query->where('id', '!=', $excludeUserId);
+        }
+
+        return $query;
     }
 }

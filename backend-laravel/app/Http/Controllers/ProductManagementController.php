@@ -334,8 +334,7 @@ class ProductManagementController extends Controller
             // 3. Fallback / Additional Gallery Images
             if ($request->hasFile('images')) {
                 foreach ($request->file('images') as $i => $image) {
-                    if ($i === 0 && !empty($v1File)) continue;
-                    if (!$image->isValid()) continue;
+                    if (!$image || !$image->isValid()) continue;
                     $hash = md5_file($image->getRealPath());
                     if (in_array($hash, $uploadedHashes)) continue;
                     $uploadedHashes[] = $hash;

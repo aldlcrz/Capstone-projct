@@ -434,9 +434,7 @@ class WebAuthController extends Controller
                         $fail('Please provide your official artisan shop name.');
                         return;
                     }
-                    $exists = User::where('role', 'seller')
-                        ->whereRaw('LOWER(TRIM(shopName)) = ?', [strtolower($trimmed)])
-                        ->exists();
+                    $exists = User::occupiesShopName($trimmed)->exists();
                     if ($exists) {
                         $fail('The shop name "' . $trimmed . '" is already taken by another artisan. Please choose a unique shop name.');
                     }
@@ -467,7 +465,7 @@ class WebAuthController extends Controller
         $email = strtolower(trim($request->email));
 
         $staleSeller = User::withTrashed()->where('email', $email)->first();
-        if ($staleSeller && (!$staleSeller->isVerified || $staleSeller->trashed())) {
+        if ($staleSeller && (!$staleSeller->isVerified || $staleSeller->status === 'expired' || $staleSeller->status === 'awaiting_email_verification' || $staleSeller->trashed())) {
             $staleSeller->forceDelete();
         }
         $googleSignup = session('google_seller_signup');
@@ -479,18 +477,20 @@ class WebAuthController extends Controller
         }
 
         $data = [
-            'name'         => $request->name,
-            'email'        => $email,
-            'password'     => Hash::make($request->password),
-            'mobileNumber' => null,
-            'gcashNumber'  => null,
-            'shopName'     => trim($request->shopName),
-            'shopAddress'  => null,
-            'role'         => 'seller',
-            'status'       => 'pending',
-            'isVerified'   => false, // Requires Gmail verification & admin approval
-            'googleId'     => $googleId,
-            'profilePhoto' => $profilePhoto,
+            'name'                    => $request->name,
+            'email'                   => $email,
+            'password'                => Hash::make($request->password),
+            'mobileNumber'            => null,
+            'gcashNumber'             => null,
+            'shopName'                => trim($request->shopName),
+            'shopAddress'             => null,
+            'role'                    => 'seller',
+            'status'                  => 'awaiting_email_verification',
+            'isVerified'              => false, // Requires Gmail verification & admin approval
+            'email_verified_at'       => null,
+            'registration_expires_at' => now()->addHours(2),
+            'googleId'                => $googleId,
+            'profilePhoto'            => $profilePhoto,
         ];
 
         if ($request->hasFile('residencyCertificate')) {
@@ -583,8 +583,10 @@ class WebAuthController extends Controller
                 }
 
                 if ($existingUser->role === 'seller') {
-                    $existingUser->isVerified = false;
-                    $existingUser->status     = 'pending';
+                    $existingUser->email_verified_at       = now();
+                    $existingUser->isVerified              = false;
+                    $existingUser->status                  = 'pending';
+                    $existingUser->registration_expires_at = null;
                     $existingUser->save();
 
                     EmailNotificationService::consumeCode($email, 'registration');
@@ -604,8 +606,10 @@ class WebAuthController extends Controller
                     return redirect()->route('login')->with('info', 'Your email address has been verified! Your artisan application is now submitted and is awaiting admin approval.');
                 } else {
                     // Activate customer account
-                    $existingUser->isVerified = true;
-                    $existingUser->status     = 'active';
+                    $existingUser->email_verified_at       = now();
+                    $existingUser->isVerified              = true;
+                    $existingUser->status                  = 'active';
+                    $existingUser->registration_expires_at = null;
                     $existingUser->save();
                     $user = $existingUser;
                     session()->forget('pending_registration');
@@ -1168,7 +1172,8 @@ class WebAuthController extends Controller
     public function submitCommissionPayment(Request $request)
     {
         $request->validate([
-            'email'            => 'required|email',
+            'email'            => 'nullable|email',
+            'commission_id'    => 'nullable|string',
             'payment_method'   => 'nullable|string',
             'reference_number' => 'required|string|max:100',
             'payment_proof'    => 'nullable|file|mimes:jpg,jpeg,png,webp,jfif,gif,pdf|max:20480',
@@ -1181,10 +1186,10 @@ class WebAuthController extends Controller
             return back()->withErrors(['payment_proof' => 'Please upload a screenshot or image of your payment proof receipt.'])->withInput();
         }
 
-        $user = User::where('email', strtolower(trim($request->email)))->first();
-
-        if (!$user) {
-            return back()->withErrors(['email' => 'User account not found.'])->withInput();
+        // Strict authorization: enforce authenticated seller ownership
+        $user = $request->user();
+        if (!$user || $user->role !== 'seller') {
+            abort(403, 'Unauthorized. Artisan sellers only.');
         }
 
         try {
@@ -1192,33 +1197,50 @@ class WebAuthController extends Controller
             $proofPath = $file->store('commission_proofs', 'public');
             $reference = trim($request->reference_number);
 
-            // Find overdue or unpaid commission records for this seller
-            $unpaidRecords = CommissionRecord::where('sellerId', $user->id)
-                ->where('status', '!=', 'paid')
-                ->orderBy('dueDate', 'asc')
-                ->get();
+            if ($request->filled('commission_id')) {
+                $record = CommissionRecord::where('sellerId', $user->id)
+                    ->where('id', $request->commission_id)
+                    ->firstOrFail();
 
-            if ($unpaidRecords->isNotEmpty()) {
-                foreach ($unpaidRecords as $record) {
-                    $record->paymentMethod   = $paymentMethod;
-                    $record->referenceNumber = $reference;
-                    $record->paymentProof    = $proofPath;
-                    if ($request->filled('notes')) {
-                        $record->notes = trim($request->notes);
-                    }
-                    $record->save();
+                $record->paymentMethod   = $paymentMethod;
+                $record->referenceNumber = $reference;
+                $record->paymentProof    = $proofPath;
+                if ($request->filled('notes')) {
+                    $record->notes = trim($request->notes);
                 }
+                $record->status = 'verification_pending';
+                $record->save();
             } else {
-                $currentPeriod = date('Y-m');
-                CommissionRecord::updateOrCreate(
-                    ['sellerId' => $user->id, 'period' => $currentPeriod],
-                    [
-                        'paymentMethod'   => $paymentMethod,
-                        'referenceNumber' => $reference,
-                        'paymentProof'    => $proofPath,
-                        'notes'           => $request->notes ? trim($request->notes) : null,
-                    ]
-                );
+                // Find overdue or unpaid commission records for this authenticated seller ONLY
+                $unpaidRecords = CommissionRecord::where('sellerId', $user->id)
+                    ->where('status', '!=', 'paid')
+                    ->orderBy('dueDate', 'asc')
+                    ->get();
+
+                if ($unpaidRecords->isNotEmpty()) {
+                    foreach ($unpaidRecords as $record) {
+                        $record->paymentMethod   = $paymentMethod;
+                        $record->referenceNumber = $reference;
+                        $record->paymentProof    = $proofPath;
+                        if ($request->filled('notes')) {
+                            $record->notes = trim($request->notes);
+                        }
+                        $record->status = 'verification_pending';
+                        $record->save();
+                    }
+                } else {
+                    $currentPeriod = date('Y-m');
+                    CommissionRecord::updateOrCreate(
+                        ['sellerId' => $user->id, 'period' => $currentPeriod],
+                        [
+                            'paymentMethod'   => $paymentMethod,
+                            'referenceNumber' => $reference,
+                            'paymentProof'    => $proofPath,
+                            'status'          => 'verification_pending',
+                            'notes'           => $request->notes ? trim($request->notes) : null,
+                        ]
+                    );
+                }
             }
 
             // Send Super Admin Notification
@@ -1236,6 +1258,8 @@ class WebAuthController extends Controller
             return back()
                 ->with('payment_submitted', 'Your payment proof and reference number have been submitted successfully! Super Admin will verify and restore access soon.')
                 ->with('success', 'Payment proof submitted successfully!');
+        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+            abort(404, 'Commission record not found or does not belong to you.');
         } catch (\Throwable $e) {
             Log::error('Commission payment submission error: ' . $e->getMessage() . ' at ' . $e->getFile() . ':' . $e->getLine());
             return back()->withErrors(['email' => 'Failed to submit payment: ' . $e->getMessage()])->withInput();
@@ -2479,14 +2503,8 @@ class WebAuthController extends Controller
             ]);
         }
 
-        $query = User::where('role', 'seller')
-            ->whereRaw('LOWER(TRIM(shopName)) = ?', [strtolower($name)]);
-
-        if (Auth::check()) {
-            $query->where('id', '!=', Auth::id());
-        }
-
-        $exists = $query->exists();
+        $excludeUserId = Auth::check() ? Auth::id() : null;
+        $exists = User::occupiesShopName($name, $excludeUserId)->exists();
 
         if ($exists) {
             return response()->json([
