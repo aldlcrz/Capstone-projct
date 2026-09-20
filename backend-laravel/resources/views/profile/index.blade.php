@@ -657,11 +657,12 @@
     {{-- Saved Address Modal --}}
     <div x-show="showAddressModal"
          x-cloak
-         class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs"
+         class="fixed inset-0 flex items-center justify-center p-3 sm:p-4 bg-black/60 backdrop-blur-xs"
+         style="z-index: 9000;"
          x-transition
          @click.self="if (!showDeleteConfirmModal && !addEditModalOpen) showAddressModal = false">
 
-        <div style="background-color:#FDFBF7;border:1px solid #EAE2D2;border-radius:28px;box-shadow:0 25px 60px rgba(0,0,0,0.18);padding:24px;width:100%;max-width:520px;max-height:85vh;display:flex;flex-direction:column;gap:16px;position:relative;">
+        <div style="background-color:#FDFBF7;border:1px solid #EAE2D2;border-radius:24px;box-shadow:0 25px 60px rgba(0,0,0,0.18);padding:20px;width:100%;max-width:520px;max-height:88vh;max-height:88dvh;display:flex;flex-direction:column;gap:14px;position:relative;overflow:hidden;">
 
             {{-- Modal Header --}}
             <div style="display:flex;align-items:center;justify-content:space-between;padding-bottom:14px;border-bottom:1px solid #ECE3D2;flex-shrink:0;">
@@ -776,217 +777,233 @@
                     </div>
                 </template>
             </div>
+        </div>
+    </div>
 
-            {{-- Inner Add / Edit Form Modal Popup --}}
-            <div x-show="addEditModalOpen" class="fixed inset-0 z-60 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs" style="z-index: 60;" x-cloak>
-                <div style="background-color:#FDFBF7;border:1px solid #EAE2D2;border-radius:28px;box-shadow:0 25px 60px rgba(0,0,0,0.22);padding:24px;width:100%;max-width:480px;max-height:85vh;overflow-y:auto;position:relative;" 
-                     @click.away="addEditModalOpen = false">
+    {{-- Add / Edit Form Modal Popup (Independent sibling modal with z-index: 9999) --}}
+    <div x-show="addEditModalOpen" 
+         class="fixed inset-0 flex items-center justify-center p-3 sm:p-4 bg-black/60 backdrop-blur-xs" 
+         style="z-index: 9999;" 
+         @click.self="addEditModalOpen = false"
+         x-cloak>
+        <div style="background-color:#FDFBF7;border:1px solid #EAE2D2;border-radius:24px;box-shadow:0 25px 60px rgba(0,0,0,0.25);width:100%;max-width:480px;max-height:88vh;max-height:88dvh;display:flex;flex-direction:column;position:relative;overflow:hidden;">
 
-                    {{-- Form Header --}}
-                    <div style="display:flex;align-items:center;justify-content:space-between;padding-bottom:12px;border-bottom:1px solid #ECE3D2;margin-bottom:14px;">
-                        <h4 style="font-family:ui-serif,Georgia,Cambria,serif;font-size:17px;font-weight:700;color:#1E1915;margin:0;" 
+            {{-- Form Header (Fixed Top) --}}
+            <div style="display:flex;align-items:center;justify-content:space-between;padding:16px 20px 12px 20px;border-bottom:1px solid #ECE3D2;background-color:#FDFBF7;flex-shrink:0;">
+                <div style="display:flex;align-items:center;gap:10px;">
+                    <div style="width:34px;height:34px;border-radius:10px;background-color:#FAF5EA;border:1px solid #E6D8BA;display:flex;align-items:center;justify-content:center;color:#B88728;flex-shrink:0;">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 21s-7-4.35-7-10a7 7 0 1114 0c0 5.65-7 10-7 10z"/>
+                            <circle cx="12" cy="11" r="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+                        </svg>
+                    </div>
+                    <div>
+                        <h4 style="font-family:ui-serif,Georgia,Cambria,serif;font-size:16px;font-weight:700;color:#1E1915;line-height:1.2;margin:0;" 
                             x-text="editAddressId ? 'Edit Address' : 'Add New Address'"></h4>
-                        <button type="button" 
-                                @click="addEditModalOpen = false" 
-                                style="width:30px;height:30px;border-radius:8px;background-color:#FAF5EA;border:1px solid #E6D8BA;color:#78716C;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all 0.2s;"
-                                class="hover:bg-[#1E1915] hover:text-[#DFC97A] hover:border-[#1E1915]">
-                            <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.2"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
-                        </button>
-                    </div>
-
-                    <div class="space-y-3.5 text-xs">
-                        {{-- Real-Time Interactive Map Location Pinpointer --}}
-                        <div class="space-y-2 pb-3 border-b border-[#ECE3D2]">
-                            <div class="flex items-center justify-between gap-2">
-                                <label style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:#996515;margin:0;">
-                                    Pin Exact Delivery Location
-                                </label>
-                                <button type="button"
-                                        @click="locateUserGps()"
-                                        :disabled="isLocatingGps"
-                                        style="background-color:#FAF5EA;border:1px solid #E6D8BA;color:#8C6212;padding:5px 10px;border-radius:10px;font-size:11px;font-weight:700;display:inline-flex;align-items:center;gap:6px;cursor:pointer;transition:all 0.2s;white-space:nowrap;"
-                                        class="hover:bg-[#EAE2D2] disabled:opacity-50 shadow-xs">
-                                    <template x-if="isLocatingGps">
-                                        <svg class="w-3.5 h-3.5 animate-spin text-[#8C6212]" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
-                                    </template>
-                                    <template x-if="!isLocatingGps">
-                                        <svg class="w-3.5 h-3.5 text-[#8C6212]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
-                                    </template>
-                                    <span x-text="isLocatingGps ? 'Locating GPS...' : 'Use Current Location'"></span>
-                                </button>
-                            </div>
-
-                            {{-- Map Search Input --}}
-                            <div style="position:relative;display:flex;align-items:center;width:100%;">
-                                <div style="position:absolute;left:11px;display:flex;align-items:center;pointer-events:none;color:#8C827A;z-index:5;">
-                                    <svg width="15" height="15" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
-                                </div>
-                                <input type="text"
-                                       x-model="mapSearchQuery"
-                                       @keydown.enter.prevent="searchMapLocation()"
-                                       placeholder="Search street, barangay, or landmark to drop pin..."
-                                       style="width:100%;height:38px;padding-left:36px;padding-right:80px;background-color:#FFFFFF;border:1px solid #D8CEBE;border-radius:12px;font-size:12px;color:#1E1915;outline:none;box-shadow:inset 0 1px 2px rgba(0,0,0,0.03);transition:border-color 0.2s;"
-                                       class="focus:border-[#996515]">
-                                <button type="button"
-                                        @click="searchMapLocation()"
-                                        :disabled="pinSearching"
-                                        style="position:absolute;right:4px;height:30px;padding:0 12px;background-color:#1E1915;color:#DFC97A;border:none;border-radius:8px;font-size:10px;font-weight:800;letter-spacing:0.08em;text-transform:uppercase;cursor:pointer;transition:all 0.2s;display:flex;align-items:center;justify-content:center;z-index:5;"
-                                        class="hover:bg-black disabled:opacity-50">
-                                    <span x-text="pinSearching ? '...' : 'Search'"></span>
-                                </button>
-                            </div>
-
-                            {{-- Leaflet Map Container --}}
-                            <div style="height:190px;border-radius:14px;overflow:hidden;border:1px solid #ECE3D2;position:relative;z-index:10;box-shadow:inset 0 1px 4px rgba(0,0,0,0.06);"
-                                 x-ref="addressMapContainer"></div>
-
-                            {{-- Detected Location Bar --}}
-                            <div class="p-2.5 bg-[#FAF8F5] border border-[#ECE3D2] rounded-xl flex items-center justify-between gap-2 text-[10px]">
-                                <div class="flex items-center gap-1.5 min-w-0">
-                                    <span class="w-2 h-2 rounded-full bg-emerald-500 shrink-0 animate-pulse"></span>
-                                    <span class="text-[#78716C] font-medium truncate" x-text="detectedLocationName || 'Drag pin or tap on map to lock coordinates'"></span>
-                                </div>
-                                <span class="shrink-0 px-2 py-0.5 bg-[#1E1915] text-[#DFC97A] text-[9px] font-black rounded-md uppercase tracking-wider"
-                                      x-text="addressForm.latitude && addressForm.longitude ? 'Pin Locked' : 'Set Pin'"></span>
-                            </div>
-                        </div>
-
-                        {{-- Full Name --}}
-                        <div>
-                            <label class="font-bold text-gray-700 mb-1 block">Full Name *</label>
-                            <input x-model="addressForm.recipientName"
-                                   @input="fieldErrors.recipientName = ''; addressForm.recipientName = addressForm.recipientName.replace(/[^a-zA-Z\u00C0-\u024F\s.'-]/g, '')"
-                                   type="text" placeholder="Recipient's full name (letters only)"
-                                   maxlength="30"
-                                   :class="fieldErrors.recipientName ? 'border-red-400 bg-red-50' : 'border-[#D8CEBE]'"
-                                   style="width:100%;height:38px;padding:0 12px;background-color:#FFFFFF;border-radius:12px;outline:none;font-size:12.5px;transition:border-color 0.2s;"
-                                   class="border focus:border-[#996515]">
-                            <p x-show="fieldErrors.recipientName" x-text="fieldErrors.recipientName" class="mt-1 text-[10px] text-red-500 font-semibold"></p>
-                        </div>
-                        {{-- Phone Number --}}
-                        <div>
-                            <label class="font-bold text-gray-700 mb-1 block">Phone Number *</label>
-                            <input x-model="addressForm.phone"
-                                   @input="fieldErrors.phone = ''; addressForm.phone = addressForm.phone.replace(/[^0-9+]/g, '')"
-                                   type="text" placeholder="e.g. 09XXXXXXXXX"
-                                   maxlength="11"
-                                   :class="fieldErrors.phone ? 'border-red-400 bg-red-50' : 'border-[#D8CEBE]'"
-                                   style="width:100%;height:38px;padding:0 12px;background-color:#FFFFFF;border-radius:12px;outline:none;font-size:12.5px;transition:border-color 0.2s;"
-                                   class="border focus:border-[#996515]">
-                            <p x-show="fieldErrors.phone" x-text="fieldErrors.phone" class="mt-1 text-[10px] text-red-500 font-semibold"></p>
-                        </div>
-
-                        {{-- Location Dropdown Selector --}}
-                        <div class="relative">
-                            <label class="font-bold text-gray-700 mb-1 block">Region, Province, City, Barangay *</label>
-                            <div @click="toggleLocationDropdown(); fieldErrors.location = ''"
-                                 :class="fieldErrors.location ? 'border-red-400 bg-red-50' : 'border-[#D8CEBE] bg-[#FFFFFF]'"
-                                 style="width:100%;height:38px;padding:0 12px;border-radius:12px;display:flex;align-items:center;justify-content:space-between;cursor:pointer;transition:border-color 0.2s;"
-                                 class="border">
-                                <span class="truncate" :class="getLocationSummary() ? 'text-gray-900 font-semibold' : 'text-gray-400'" x-text="getLocationSummary() || 'Select Region, Province, City, Barangay'"></span>
-                                <svg class="w-4 h-4 text-gray-400" :class="locationDropdownOpen ? 'rotate-180' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
-                            </div>
-                            <p x-show="fieldErrors.location" x-text="fieldErrors.location" class="mt-1 text-[10px] text-red-500 font-semibold"></p>
-
-                            <div x-show="locationDropdownOpen" @click.away="locationDropdownOpen = false"
-                                 style="position:absolute;left:0;right:0;z-index:50;margin-top:4px;background-color:#FFFFFF;border:1px solid #ECE3D2;border-radius:14px;box-shadow:0 10px 30px rgba(0,0,0,0.12);overflow:hidden;display:flex;flex-direction:column;max-height:250px;" x-cloak>
-                                <div class="flex border-b border-gray-100 bg-[#FAF8F5] text-[10px] font-bold text-gray-500">
-                                    <button @click="activeTab = 'region'" type="button" :class="activeTab === 'region' ? 'text-[#996515] bg-white border-b-2 border-[#996515]' : ''" class="flex-1 py-2 text-center">Region</button>
-                                    <button @click="if(selectedRegion && hasProvinces) activeTab = 'province'" type="button" :disabled="!selectedRegion || !hasProvinces" :class="activeTab === 'province' ? 'text-[#996515] bg-white border-b-2 border-[#996515]' : ''" class="flex-1 py-2 text-center disabled:opacity-40">Province</button>
-                                    <button @click="if(selectedProvince || (selectedRegion && !hasProvinces)) activeTab = 'city'" type="button" :disabled="!selectedProvince && (hasProvinces || !selectedRegion)" :class="activeTab === 'city' ? 'text-[#996515] bg-white border-b-2 border-[#996515]' : ''" class="flex-1 py-2 text-center disabled:opacity-40">City</button>
-                                    <button @click="if(selectedCity) activeTab = 'barangay'" type="button" :disabled="!selectedCity" :class="activeTab === 'barangay' ? 'text-[#996515] bg-white border-b-2 border-[#996515]' : ''" class="flex-1 py-2 text-center disabled:opacity-40">Barangay</button>
-                                </div>
-                                <div class="p-1.5 border-b border-gray-100 bg-gray-50/50">
-                                    <input type="text" x-model="locationSearch" :placeholder="'Search ' + activeTab + '...'" class="w-full h-7 px-2 border border-gray-200 rounded-md text-[11px]">
-                                </div>
-                                <div class="flex-1 overflow-y-auto max-h-40 divide-y divide-gray-50 text-[11px]">
-                                    <template x-if="activeTab === 'region' && !loadingGeoData">
-                                        <div>
-                                            <template x-for="reg in filteredGeoList(regionsList)" :key="reg.code">
-                                                <button type="button" @click="selectRegion(reg)" class="w-full text-left px-3 py-1.5 hover:bg-gray-50 block truncate" x-text="reg.name"></button>
-                                            </template>
-                                        </div>
-                                    </template>
-                                    <template x-if="activeTab === 'province' && !loadingGeoData">
-                                        <div>
-                                            <template x-for="prov in filteredGeoList(provincesList)" :key="prov.code">
-                                                <button type="button" @click="selectProvince(prov)" class="w-full text-left px-3 py-1.5 hover:bg-gray-50 block truncate" x-text="prov.name"></button>
-                                            </template>
-                                        </div>
-                                    </template>
-                                    <template x-if="activeTab === 'city' && !loadingGeoData">
-                                        <div>
-                                            <template x-for="ct in filteredGeoList(citiesList)" :key="ct.code">
-                                                <button type="button" @click="selectCity(ct)" class="w-full text-left px-3 py-1.5 hover:bg-gray-50 block truncate" x-text="ct.name"></button>
-                                            </template>
-                                        </div>
-                                    </template>
-                                    <template x-if="activeTab === 'barangay' && !loadingGeoData">
-                                        <div>
-                                            <template x-for="bgy in filteredGeoList(barangaysList)" :key="bgy.code">
-                                                <button type="button" @click="selectBarangay(bgy)" class="w-full text-left px-3 py-1.5 hover:bg-gray-50 block truncate" x-text="bgy.name"></button>
-                                            </template>
-                                        </div>
-                                    </template>
-                                </div>
-                            </div>
-                        </div>
-
-                        {{-- Street --}}
-                        <div>
-                            <label class="font-bold text-gray-700 mb-1 block">Street Name, Building, House No. *</label>
-                            <input x-model="addressForm.houseNo"
-                                   @input="fieldErrors.houseNo = ''"
-                                   type="text" placeholder="e.g. Unit 402, Sunset Bldg, Main St."
-                                   maxlength="150"
-                                   :class="fieldErrors.houseNo ? 'border-red-400 bg-red-50' : 'border-[#D8CEBE]'"
-                                   style="width:100%;height:38px;padding:0 12px;background-color:#FFFFFF;border-radius:12px;outline:none;font-size:12.5px;transition:border-color 0.2s;"
-                                   class="border focus:border-[#996515]">
-                            <p x-show="fieldErrors.houseNo" x-text="fieldErrors.houseNo" class="mt-1 text-[10px] text-red-500 font-semibold"></p>
-                        </div>
-
-                        {{-- Postal Code --}}
-                        <div>
-                            <label class="font-bold text-gray-700 mb-1 block">Postal Code</label>
-                            <input x-model="addressForm.postalCode"
-                                   @input="fieldErrors.postalCode = ''; addressForm.postalCode = addressForm.postalCode.replace(/[^0-9]/g, '')"
-                                   type="text" placeholder="e.g. 1000"
-                                   maxlength="4"
-                                   :class="fieldErrors.postalCode ? 'border-red-400 bg-red-50' : 'border-[#D8CEBE]'"
-                                   style="width:100%;height:38px;padding:0 12px;background-color:#FFFFFF;border-radius:12px;outline:none;font-size:12.5px;transition:border-color 0.2s;"
-                                   class="border focus:border-[#996515]">
-                            <p x-show="fieldErrors.postalCode" x-text="fieldErrors.postalCode" class="mt-1 text-[10px] text-red-500 font-semibold"></p>
-                        </div>
-
-                        <label class="flex items-center gap-2 cursor-pointer pt-1">
-                            <input type="checkbox" x-model="addressForm.isDefault" class="accent-[#996515]">
-                            <span class="text-xs font-semibold text-gray-700">Set as default shipping address</span>
-                        </label>
-                    </div>
-
-                    <div style="display:flex;align-items:center;gap:12px;padding-top:16px;border-top:1px solid #ECE3D2;margin-top:6px;">
-                        <button type="button" 
-                                @click="addEditModalOpen = false" 
-                                style="flex:1;height:42px;background-color:#FAF8F5;border:1.5px solid #D8CEBE;color:#59514A;border-radius:14px;font-size:12px;font-weight:700;cursor:pointer;transition:all 0.2s;display:flex;align-items:center;justify-content:center;gap:6px;"
-                                class="hover:bg-[#EAE2D2] hover:text-[#1E1915]">
-                            <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.2"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
-                            <span>Cancel</span>
-                        </button>
-                        <button type="button" 
-                                @click="saveAddress()" 
-                                :disabled="savingAddress" 
-                                style="flex:1.4;height:42px;background:linear-gradient(135deg,#1E1915 0%,#2D241E 50%,#1E1915 100%);color:#DFC97A;border:1.5px solid #C49520;border-radius:14px;font-size:12px;font-weight:800;letter-spacing:0.07em;text-transform:uppercase;cursor:pointer;box-shadow:0 4px 14px rgba(196,149,32,0.22);transition:all 0.2s;display:flex;align-items:center;justify-content:center;gap:8px;"
-                                class="hover:bg-black hover:scale-[1.01] active:scale-[0.98] disabled:opacity-50">
-                            <template x-if="savingAddress">
-                                <svg class="w-4 h-4 animate-spin text-[#DFC97A]" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
-                            </template>
-                            <template x-if="!savingAddress">
-                                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
-                            </template>
-                            <span x-text="savingAddress ? 'Saving...' : 'Save Address'"></span>
-                        </button>
+                        <p style="font-size:10.5px;color:#78716C;margin:2px 0 0 0;">Lumban delivery pin & details</p>
                     </div>
                 </div>
+                <button type="button" 
+                        @click="addEditModalOpen = false" 
+                        style="width:30px;height:30px;border-radius:8px;background-color:#FAF5EA;border:1px solid #E6D8BA;color:#78716C;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all 0.2s;"
+                        class="hover:bg-[#1E1915] hover:text-[#DFC97A] hover:border-[#1E1915]">
+                    <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.2"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
+                </button>
+            </div>
+
+            {{-- Form Body (Scrollable Middle) --}}
+            <div class="space-y-3.5 text-xs overflow-y-auto" style="padding:16px 20px;flex:1;">
+                {{-- Real-Time Interactive Map Location Pinpointer --}}
+                <div class="space-y-2 pb-3 border-b border-[#ECE3D2]">
+                    <div class="flex items-center justify-between gap-2">
+                        <label style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:#996515;margin:0;">
+                            Pin Exact Delivery Location
+                        </label>
+                        <button type="button"
+                                @click="locateUserGps()"
+                                :disabled="isLocatingGps"
+                                style="background-color:#FAF5EA;border:1px solid #E6D8BA;color:#8C6212;padding:5px 10px;border-radius:10px;font-size:11px;font-weight:700;display:inline-flex;align-items:center;gap:6px;cursor:pointer;transition:all 0.2s;white-space:nowrap;"
+                                class="hover:bg-[#EAE2D2] disabled:opacity-50 shadow-xs">
+                            <template x-if="isLocatingGps">
+                                <svg class="w-3.5 h-3.5 animate-spin text-[#8C6212]" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+                            </template>
+                            <template x-if="!isLocatingGps">
+                                <svg class="w-3.5 h-3.5 text-[#8C6212]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+                            </template>
+                            <span x-text="isLocatingGps ? 'Locating GPS...' : 'Use Current Location'"></span>
+                        </button>
+                    </div>
+
+                    {{-- Map Search Input --}}
+                    <div style="position:relative;display:flex;align-items:center;width:100%;">
+                        <div style="position:absolute;left:11px;display:flex;align-items:center;pointer-events:none;color:#8C827A;z-index:5;">
+                            <svg width="15" height="15" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+                        </div>
+                        <input type="text"
+                               x-model="mapSearchQuery"
+                               @keydown.enter.prevent="searchMapLocation()"
+                               placeholder="Search street, barangay, or landmark to drop pin..."
+                               style="width:100%;height:38px;padding-left:36px;padding-right:80px;background-color:#FFFFFF;border:1px solid #D8CEBE;border-radius:12px;font-size:12px;color:#1E1915;outline:none;box-shadow:inset 0 1px 2px rgba(0,0,0,0.03);transition:border-color 0.2s;"
+                               class="focus:border-[#996515]">
+                        <button type="button"
+                                @click="searchMapLocation()"
+                                :disabled="pinSearching"
+                                style="position:absolute;right:4px;height:30px;padding:0 12px;background-color:#1E1915;color:#DFC97A;border:none;border-radius:8px;font-size:10px;font-weight:800;letter-spacing:0.08em;text-transform:uppercase;cursor:pointer;transition:all 0.2s;display:flex;align-items:center;justify-content:center;z-index:5;"
+                                class="hover:bg-black disabled:opacity-50">
+                            <span x-text="pinSearching ? '...' : 'Search'"></span>
+                        </button>
+                    </div>
+
+                    {{-- Leaflet Map Container --}}
+                    <div style="height:190px;border-radius:14px;overflow:hidden;border:1px solid #ECE3D2;position:relative;z-index:10;box-shadow:inset 0 1px 4px rgba(0,0,0,0.06);"
+                         x-ref="addressMapContainer"></div>
+
+                    {{-- Detected Location Bar --}}
+                    <div class="p-2.5 bg-[#FAF8F5] border border-[#ECE3D2] rounded-xl flex items-center justify-between gap-2 text-[10px]">
+                        <div class="flex items-center gap-1.5 min-w-0">
+                            <span class="w-2 h-2 rounded-full bg-emerald-500 shrink-0 animate-pulse"></span>
+                            <span class="text-[#78716C] font-medium truncate" x-text="detectedLocationName || 'Drag pin or tap on map to lock coordinates'"></span>
+                        </div>
+                        <span class="shrink-0 px-2 py-0.5 bg-[#1E1915] text-[#DFC97A] text-[9px] font-black rounded-md uppercase tracking-wider"
+                              x-text="addressForm.latitude && addressForm.longitude ? 'Pin Locked' : 'Set Pin'"></span>
+                    </div>
+                </div>
+
+                {{-- Full Name --}}
+                <div>
+                    <label class="font-bold text-gray-700 mb-1 block">Full Name *</label>
+                    <input x-model="addressForm.recipientName"
+                           @input="fieldErrors.recipientName = ''; addressForm.recipientName = addressForm.recipientName.replace(/[^a-zA-Z\u00C0-\u024F\s.'-]/g, '')"
+                           type="text" placeholder="Recipient's full name (letters only)"
+                           maxlength="30"
+                           :class="fieldErrors.recipientName ? 'border-red-400 bg-red-50' : 'border-[#D8CEBE]'"
+                           style="width:100%;height:38px;padding:0 12px;background-color:#FFFFFF;border-radius:12px;outline:none;font-size:12.5px;transition:border-color 0.2s;"
+                           class="border focus:border-[#996515]">
+                    <p x-show="fieldErrors.recipientName" x-text="fieldErrors.recipientName" class="mt-1 text-[10px] text-red-500 font-semibold"></p>
+                </div>
+                {{-- Phone Number --}}
+                <div>
+                    <label class="font-bold text-gray-700 mb-1 block">Phone Number *</label>
+                    <input x-model="addressForm.phone"
+                           @input="fieldErrors.phone = ''; addressForm.phone = addressForm.phone.replace(/[^0-9+]/g, '')"
+                           type="text" placeholder="e.g. 09XXXXXXXXX"
+                           maxlength="11"
+                           :class="fieldErrors.phone ? 'border-red-400 bg-red-50' : 'border-[#D8CEBE]'"
+                           style="width:100%;height:38px;padding:0 12px;background-color:#FFFFFF;border-radius:12px;outline:none;font-size:12.5px;transition:border-color 0.2s;"
+                           class="border focus:border-[#996515]">
+                    <p x-show="fieldErrors.phone" x-text="fieldErrors.phone" class="mt-1 text-[10px] text-red-500 font-semibold"></p>
+                </div>
+
+                {{-- Location Dropdown Selector --}}
+                <div class="relative">
+                    <label class="font-bold text-gray-700 mb-1 block">Region, Province, City, Barangay *</label>
+                    <div @click="toggleLocationDropdown(); fieldErrors.location = ''"
+                         :class="fieldErrors.location ? 'border-red-400 bg-red-50' : 'border-[#D8CEBE] bg-[#FFFFFF]'"
+                         style="width:100%;height:38px;padding:0 12px;border-radius:12px;display:flex;align-items:center;justify-content:space-between;cursor:pointer;transition:border-color 0.2s;"
+                         class="border">
+                        <span class="truncate" :class="getLocationSummary() ? 'text-gray-900 font-semibold' : 'text-gray-400'" x-text="getLocationSummary() || 'Select Region, Province, City, Barangay'"></span>
+                        <svg class="w-4 h-4 text-gray-400" :class="locationDropdownOpen ? 'rotate-180' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+                    </div>
+                    <p x-show="fieldErrors.location" x-text="fieldErrors.location" class="mt-1 text-[10px] text-red-500 font-semibold"></p>
+
+                    <div x-show="locationDropdownOpen" @click.away="locationDropdownOpen = false"
+                         style="position:absolute;left:0;right:0;z-index:50;margin-top:4px;background-color:#FFFFFF;border:1px solid #ECE3D2;border-radius:14px;box-shadow:0 10px 30px rgba(0,0,0,0.12);overflow:hidden;display:flex;flex-direction:column;max-height:250px;" x-cloak>
+                        <div class="flex border-b border-gray-100 bg-[#FAF8F5] text-[10px] font-bold text-gray-500">
+                            <button @click="activeTab = 'region'" type="button" :class="activeTab === 'region' ? 'text-[#996515] bg-white border-b-2 border-[#996515]' : ''" class="flex-1 py-2 text-center">Region</button>
+                            <button @click="if(selectedRegion && hasProvinces) activeTab = 'province'" type="button" :disabled="!selectedRegion || !hasProvinces" :class="activeTab === 'province' ? 'text-[#996515] bg-white border-b-2 border-[#996515]' : ''" class="flex-1 py-2 text-center disabled:opacity-40">Province</button>
+                            <button @click="if(selectedProvince || (selectedRegion && !hasProvinces)) activeTab = 'city'" type="button" :disabled="!selectedProvince && (hasProvinces || !selectedRegion)" :class="activeTab === 'city' ? 'text-[#996515] bg-white border-b-2 border-[#996515]' : ''" class="flex-1 py-2 text-center disabled:opacity-40">City</button>
+                            <button @click="if(selectedCity) activeTab = 'barangay'" type="button" :disabled="!selectedCity" :class="activeTab === 'barangay' ? 'text-[#996515] bg-white border-b-2 border-[#996515]' : ''" class="flex-1 py-2 text-center disabled:opacity-40">Barangay</button>
+                        </div>
+                        <div class="p-1.5 border-b border-gray-100 bg-gray-50/50">
+                            <input type="text" x-model="locationSearch" :placeholder="'Search ' + activeTab + '...'" class="w-full h-7 px-2 border border-gray-200 rounded-md text-[11px]">
+                        </div>
+                        <div class="flex-1 overflow-y-auto max-h-40 divide-y divide-gray-50 text-[11px]">
+                            <template x-if="activeTab === 'region' && !loadingGeoData">
+                                <div>
+                                    <template x-for="reg in filteredGeoList(regionsList)" :key="reg.code">
+                                        <button type="button" @click="selectRegion(reg)" class="w-full text-left px-3 py-1.5 hover:bg-gray-50 block truncate" x-text="reg.name"></button>
+                                    </template>
+                                </div>
+                            </template>
+                            <template x-if="activeTab === 'province' && !loadingGeoData">
+                                <div>
+                                    <template x-for="prov in filteredGeoList(provincesList)" :key="prov.code">
+                                        <button type="button" @click="selectProvince(prov)" class="w-full text-left px-3 py-1.5 hover:bg-gray-50 block truncate" x-text="prov.name"></button>
+                                    </template>
+                                </div>
+                            </template>
+                            <template x-if="activeTab === 'city' && !loadingGeoData">
+                                <div>
+                                    <template x-for="ct in filteredGeoList(citiesList)" :key="ct.code">
+                                        <button type="button" @click="selectCity(ct)" class="w-full text-left px-3 py-1.5 hover:bg-gray-50 block truncate" x-text="ct.name"></button>
+                                    </template>
+                                </div>
+                            </template>
+                            <template x-if="activeTab === 'barangay' && !loadingGeoData">
+                                <div>
+                                    <template x-for="bgy in filteredGeoList(barangaysList)" :key="bgy.code">
+                                        <button type="button" @click="selectBarangay(bgy)" class="w-full text-left px-3 py-1.5 hover:bg-gray-50 block truncate" x-text="bgy.name"></button>
+                                    </template>
+                                </div>
+                            </template>
+                        </div>
+                    </div>
+                </div>
+
+                {{-- Street --}}
+                <div>
+                    <label class="font-bold text-gray-700 mb-1 block">Street Name, Building, House No. *</label>
+                    <input x-model="addressForm.houseNo"
+                           @input="fieldErrors.houseNo = ''"
+                           type="text" placeholder="e.g. Unit 402, Sunset Bldg, Main St."
+                           maxlength="150"
+                           :class="fieldErrors.houseNo ? 'border-red-400 bg-red-50' : 'border-[#D8CEBE]'"
+                           style="width:100%;height:38px;padding:0 12px;background-color:#FFFFFF;border-radius:12px;outline:none;font-size:12.5px;transition:border-color 0.2s;"
+                           class="border focus:border-[#996515]">
+                    <p x-show="fieldErrors.houseNo" x-text="fieldErrors.houseNo" class="mt-1 text-[10px] text-red-500 font-semibold"></p>
+                </div>
+
+                {{-- Postal Code --}}
+                <div>
+                    <label class="font-bold text-gray-700 mb-1 block">Postal Code</label>
+                    <input x-model="addressForm.postalCode"
+                           @input="fieldErrors.postalCode = ''; addressForm.postalCode = addressForm.postalCode.replace(/[^0-9]/g, '')"
+                           type="text" placeholder="e.g. 1000"
+                           maxlength="4"
+                           :class="fieldErrors.postalCode ? 'border-red-400 bg-red-50' : 'border-[#D8CEBE]'"
+                           style="width:100%;height:38px;padding:0 12px;background-color:#FFFFFF;border-radius:12px;outline:none;font-size:12.5px;transition:border-color 0.2s;"
+                           class="border focus:border-[#996515]">
+                    <p x-show="fieldErrors.postalCode" x-text="fieldErrors.postalCode" class="mt-1 text-[10px] text-red-500 font-semibold"></p>
+                </div>
+
+                <label class="flex items-center gap-2 cursor-pointer pt-1">
+                    <input type="checkbox" x-model="addressForm.isDefault" class="accent-[#996515]">
+                    <span class="text-xs font-semibold text-gray-700">Set as default shipping address</span>
+                </label>
+            </div>
+
+            {{-- Form Footer (Fixed Bottom - ALWAYS visible and accessible on mobile) --}}
+            <div style="display:flex;align-items:center;gap:12px;padding:12px 20px 16px 20px;border-top:1px solid #ECE3D2;background-color:#FAF8F5;flex-shrink:0;box-shadow:0 -4px 14px rgba(0,0,0,0.04);">
+                <button type="button" 
+                        @click="addEditModalOpen = false" 
+                        style="flex:1;height:42px;background-color:#FFFFFF;border:1.5px solid #D8CEBE;color:#59514A;border-radius:14px;font-size:12px;font-weight:700;cursor:pointer;transition:all 0.2s;display:flex;align-items:center;justify-content:center;gap:6px;"
+                        class="hover:bg-[#EAE2D2] hover:text-[#1E1915]">
+                    <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.2"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
+                    <span>Cancel</span>
+                </button>
+                <button type="button" 
+                        @click="saveAddress()" 
+                        :disabled="savingAddress" 
+                        style="flex:1.4;height:42px;background:linear-gradient(135deg,#1E1915 0%,#2D241E 50%,#1E1915 100%);color:#DFC97A;border:1.5px solid #C49520;border-radius:14px;font-size:12px;font-weight:800;letter-spacing:0.07em;text-transform:uppercase;cursor:pointer;box-shadow:0 4px 14px rgba(196,149,32,0.22);transition:all 0.2s;display:flex;align-items:center;justify-content:center;gap:8px;"
+                        class="hover:bg-black hover:scale-[1.01] active:scale-[0.98] disabled:opacity-50">
+                    <template x-if="savingAddress">
+                        <svg class="w-4 h-4 animate-spin text-[#DFC97A]" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+                    </template>
+                    <template x-if="!savingAddress">
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+                    </template>
+                    <span x-text="savingAddress ? 'Saving...' : 'Save Address'"></span>
+                </button>
             </div>
         </div>
     </div>
@@ -995,7 +1012,7 @@
     <div x-show="showDeleteConfirmModal"
          x-cloak
          class="fixed inset-0 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs"
-         style="z-index: 9999;"
+         style="z-index: 10000;"
          @click.self="showDeleteConfirmModal = false">
 
         <div style="background-color:#FDFBF7;border:1px solid #EAE2D2;border-radius:28px;padding:24px;box-shadow:0 25px 60px rgba(0,0,0,0.22);width:100%;max-width:340px;text-align:center;display:flex;flex-direction:column;gap:14px;position:relative;">
