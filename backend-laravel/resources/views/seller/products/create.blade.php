@@ -1672,6 +1672,8 @@ function getProductInitData() {
             return JSON.parse(el.textContent);
         }
     } catch (e) {}
+    return {};
+}
 /**
  * Optimized Image Processing Pipeline (Phases 3 & 4)
  * - Automatic HEIC/HEIF conversion for iPhone photos using heic2any
