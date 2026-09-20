@@ -240,12 +240,19 @@
                                id="gallery_files_input" 
                                name="images[]" 
                                multiple 
+                               class="hidden">
+
+                        <input type="file" 
+                               id="gallery_picker_input" 
+                               multiple 
                                accept="image/jpeg,image/png,image/webp,image/jpg,image/heic,image/heif,.heic,.heif" 
                                class="hidden" 
                                @change="handleGalleryFilesUpload($event)">
 
                         {{-- 6-Slot Horizontal Row --}}
-                        <div class="flex items-center gap-3 overflow-x-auto pb-2 pt-1">
+                        <div class="flex items-center gap-3 overflow-x-auto pb-2 pt-1"
+                             @dragover.prevent
+                             @drop.prevent="handleGalleryDrop($event)">
                             {{-- Slot 0: Upload Cover Photo Big Card --}}
                             <label for="variant_file_0" 
                                    id="variant_upload_box_0"
@@ -337,7 +344,7 @@
                             </div>
 
                             {{-- Dynamic Uploaded Gallery Photos --}}
-                            <template x-for="(gImg, gIdx) in galleryImages" :key="gIdx">
+                            <template x-for="(gImg, gIdx) in galleryImages" :key="gImg.uid">
                                 <div style="width:105px;height:140px;border-radius:18px;border:1px solid #ECE3D2;background-color:#FAF8F5;position:relative;flex-shrink:0;overflow:hidden;display:flex;flex-direction:column;align-items:center;justify-content:space-between;padding:8px 6px;">
                                     <div style="position:absolute;inset:0;z-index:5;">
                                         <img :src="gImg.preview" style="width:100%;height:100%;object-fit:cover;">
@@ -352,9 +359,27 @@
                                 </div>
                             </template>
 
-                            {{-- Empty Placeholder Slots (up to 3 minimum for mockup appearance) --}}
+                            {{-- Optimizing Gallery Card (shows when compressing gallery photos) --}}
+                            <template x-if="isOptimizingGallery">
+                                <div style="width:105px;height:140px;border-radius:18px;border:1.5px dashed #C49520;background:#FAF8F5;display:flex;flex-direction:column;align-items:center;justify-content:center;flex-shrink:0;padding:8px;">
+                                    <svg class="animate-spin h-6 w-6 text-[#C49520]" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path>
+                                    </svg>
+                                    <span style="font-size:9px;font-weight:800;color:#7A5505;margin-top:6px;text-align:center;">Compressing...</span>
+                                </div>
+                            </template>
+
+                            {{-- Empty Placeholder Slots (Interactive: click or drag & drop to upload) --}}
                             <template x-for="pIdx in Math.max(0, 3 - galleryImages.length)" :key="'ph_' + pIdx">
-                                <div style="width:105px;height:140px;border-radius:18px;border:1px solid #ECE3D2;background-color:#FAF8F5;position:relative;flex-shrink:0;overflow:hidden;display:flex;flex-direction:column;align-items:center;justify-content:space-between;padding:8px 6px;">
+                                <button type="button" 
+                                        @click="triggerGalleryUpload()" 
+                                        @dragover.prevent
+                                        @drop.prevent="handleGalleryDrop($event)"
+                                        style="width:105px;height:140px;border-radius:18px;border:1px solid #ECE3D2;background-color:#FAF8F5;position:relative;flex-shrink:0;overflow:hidden;display:flex;flex-direction:column;align-items:center;justify-content:space-between;padding:8px 6px;cursor:pointer;transition:all 0.2s;outline:none;"
+                                        onmouseover="this.style.borderColor='#C49520';this.style.backgroundColor='#FFFDF9';this.style.transform='translateY(-1px)';"
+                                        onmouseout="this.style.borderColor='#ECE3D2';this.style.backgroundColor='#FAF8F5';this.style.transform='none';"
+                                        title="Click to add photo">
                                     <div style="opacity:0.25;margin-top:auto;margin-bottom:auto;">
                                         <svg width="42" height="42" viewBox="0 0 48 48" fill="none">
                                             <circle cx="24" cy="23" r="8.5" stroke="#C49520" stroke-width="1"/>
@@ -363,18 +388,22 @@
                                             <path d="M33 32.5c4-3.5 6-8.5 6-14 0-3.5-1-6.5-2.5-9" stroke="#C49520" stroke-width="1.3" stroke-linecap="round"/>
                                         </svg>
                                     </div>
-                                    <span style="font-size:11px;font-weight:700;color:#A8A096;z-index:6;" x-text="galleryImages.length + pIdx + 1"></span>
-                                </div>
+                                    <span style="font-size:11px;font-weight:700;color:#A8A096;z-index:6;" x-text="galleryImages.length + pIdx + 2"></span>
+                                </button>
                             </template>
 
                             {{-- Add More Button --}}
-                            <label for="gallery_files_input" 
-                                   style="width:105px;height:140px;border-radius:18px;border:1.5px dashed #E2D9C8;background-color:#FFFFFF;display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;transition:all 0.2s;padding:10px;"
-                                   onmouseover="this.style.borderColor='#C49520';this.style.backgroundColor='#FAF8F5';"
-                                   onmouseout="this.style.borderColor='#E2D9C8';this.style.backgroundColor='#FFFFFF';">
-                                <span style="color:#C49520;font-size:20px;font-weight:700;line-height:1;margin-bottom:6px;">+</span>
+                            <button type="button" 
+                                    @click="triggerGalleryUpload()" 
+                                    @dragover.prevent
+                                    @drop.prevent="handleGalleryDrop($event)"
+                                    style="width:105px;height:140px;border-radius:18px;border:1.5px dashed #E2D9C8;background-color:#FFFFFF;display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;transition:all 0.2s;padding:10px;outline:none;"
+                                    onmouseover="this.style.borderColor='#C49520';this.style.backgroundColor='#FAF8F5';this.style.transform='translateY(-1px)';"
+                                    onmouseout="this.style.borderColor='#E2D9C8';this.style.backgroundColor='#FFFFFF';this.style.transform='none';"
+                                    title="Add more photos">
+                                <span style="color:#C49520;font-size:22px;font-weight:700;line-height:1;margin-bottom:6px;">+</span>
                                 <span style="font-size:11px;font-weight:700;color:#78716C;">Add More</span>
-                            </label>
+                            </button>
                         </div>
 
                         {{-- Informational Subtext Notes (Exact from screenshot) --}}
@@ -2054,7 +2083,9 @@ function addProductManager() {
         variants: [
             { id: 0, name: '', file: null, imagePreview: null, hasActualFile: false, isOptimizing: false }
         ],
-        galleryImages: [], // array of { file, preview, hasActualFile }
+        galleryImages: [], // array of { uid, file, preview, hasActualFile }
+        _galleryUidCounter: 1, // Unique ID counter for stable x-for keys
+        isOptimizingGallery: false,
 
         get imageCount() {
             let count = this.variants.filter(v => v && v.imagePreview !== null).length;
@@ -2237,6 +2268,7 @@ function addProductManager() {
                 if (Array.isArray(draft.galleryImages) && draft.galleryImages.length > 0) {
                     this.galleryImages = draft.galleryImages.map(g => {
                         return {
+                            uid: this._galleryUidCounter++,
                             file: null,
                             preview: g.preview,
                             hasActualFile: false
@@ -2320,29 +2352,83 @@ function addProductManager() {
             }
         },
 
+        triggerGalleryUpload() {
+            if (this.galleryImages.length >= 10) {
+                if (typeof triggerAppModal === 'function') {
+                    triggerAppModal('Photo Limit Reached', 'You can upload a maximum of 10 gallery photos.', 'warning');
+                } else {
+                    alert('You can upload a maximum of 10 gallery photos.');
+                }
+                return;
+            }
+            const picker = document.getElementById('gallery_picker_input');
+            if (picker) {
+                picker.value = '';
+                picker.click();
+            }
+        },
+
+        handleGalleryDrop(event) {
+            const dt = event.dataTransfer;
+            if (dt && dt.files && dt.files.length) {
+                this.processGalleryFileList(Array.from(dt.files));
+            }
+        },
+
         async handleGalleryFilesUpload(event) {
             const files = Array.from(event.target.files || []);
+            event.target.value = ''; // Always clear picker so selecting the same file triggers change
             if (!files.length) return;
+            await this.processGalleryFileList(files);
+        },
 
-            for (const file of files) {
-                if (this.galleryImages.length >= 10) break;
-                if (file.size > 25 * 1024 * 1024) continue;
-                try {
-                    const result = await processClientImage(file, 1600, 0.85);
-                    if (result && result.file) {
-                        this.galleryImages.push({
-                            file: result.file,
-                            preview: result.preview,
-                            hasActualFile: true
-                        });
-                    }
-                } catch (err) {
-                    console.warn('Gallery image processing warning:', err);
+        async processGalleryFileList(files) {
+            if (!files || !files.length) return;
+
+            if (this.galleryImages.length >= 10) {
+                if (typeof triggerAppModal === 'function') {
+                    triggerAppModal('Limit Reached', 'You can upload up to 10 additional product images.', 'warning');
                 }
+                return;
             }
-            this.syncGalleryFileInput();
-            this.calculateFillRate();
-            this.scheduleDraftSave();
+
+            this.isOptimizingGallery = true;
+            try {
+                for (const file of files) {
+                    if (this.galleryImages.length >= 10) break;
+                    if (file.size > 25 * 1024 * 1024) {
+                        if (typeof triggerAppModal === 'function') {
+                            triggerAppModal('File Too Large', `Photo "${file.name}" exceeds the 25MB limit. Please choose a smaller photo.`, 'warning');
+                        }
+                        continue;
+                    }
+                    if (!file.type.startsWith('image/') && !/\.(jpe?g|png|webp|heic|heif)$/i.test(file.name || '')) {
+                        if (typeof triggerAppModal === 'function') {
+                            triggerAppModal('Invalid File', `"${file.name}" is not a supported image file.`, 'warning');
+                        }
+                        continue;
+                    }
+
+                    try {
+                        const result = await processClientImage(file, 1600, 0.85);
+                        if (result && result.file) {
+                            this.galleryImages.push({
+                                uid: this._galleryUidCounter++,
+                                file: result.file,
+                                preview: result.preview,
+                                hasActualFile: true
+                            });
+                        }
+                    } catch (err) {
+                        console.warn('Gallery image processing warning:', err);
+                    }
+                }
+                this.syncGalleryFileInput();
+                this.calculateFillRate();
+                this.scheduleDraftSave();
+            } finally {
+                this.isOptimizingGallery = false;
+            }
         },
 
         removeGalleryImage(index) {
