@@ -225,7 +225,6 @@
                             <label style="font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:0.06em;color:#1E1915;">
                                 VARIANT IMAGES <span style="color:#DC2626;">*</span>
                             </label>
-                            <span style="font-size:12px;color:#A8A096;cursor:help;" title="Upload the cover photo and additional angles or details for Variant 1">ⓘ</span>
                         </div>
 
                         {{-- Hidden inputs to store real files for Laravel form submission --}}
@@ -1760,9 +1759,25 @@ async function processClientImage(file, maxDimension = 1600, quality = 0.85) {
 
     // Phase 3: Resize & Compress via HTML5 Canvas
     const compressionPromise = new Promise((resolve) => {
+        let isResolved = false;
+        const finalize = (result) => {
+            if (isResolved) return;
+            isResolved = true;
+            clearTimeout(safetyTimeout);
+            resolve(result);
+        };
+
+        // Safety timeout: Never hang for more than 4 seconds
+        const safetyTimeout = setTimeout(() => {
+            console.warn('Image processing reached safety timeout, using direct file fallback.');
+            const fallbackPreview = URL.createObjectURL(processingFile);
+            finalize({ file: processingFile, preview: fallbackPreview });
+        }, 4000);
+
         if (processingFile.type === 'image/gif' || processingFile.type === 'image/svg+xml') {
             const reader = new FileReader();
-            reader.onload = (e) => resolve({ file: processingFile, preview: e.target.result });
+            reader.onload = (e) => finalize({ file: processingFile, preview: e.target.result });
+            reader.onerror = () => finalize({ file: processingFile, preview: URL.createObjectURL(processingFile) });
             reader.readAsDataURL(processingFile);
             return;
         }
@@ -1797,9 +1812,7 @@ async function processClientImage(file, maxDimension = 1600, quality = 0.85) {
 
             canvas.toBlob((blob) => {
                 if (!blob) {
-                    const reader = new FileReader();
-                    reader.onload = (e) => resolve({ file: processingFile, preview: e.target.result });
-                    reader.readAsDataURL(processingFile);
+                    finalize({ file: processingFile, preview: canvas.toDataURL(targetMime, quality) });
                     return;
                 }
 
@@ -1811,17 +1824,20 @@ async function processClientImage(file, maxDimension = 1600, quality = 0.85) {
                 });
 
                 const previewUrl = canvas.toDataURL(targetMime, quality);
-                resolve({ file: optimizedFile, preview: previewUrl });
+                finalize({ file: optimizedFile, preview: previewUrl });
             }, targetMime, quality);
         };
 
         img.onerror = () => {
             URL.revokeObjectURL(objectUrl);
             const reader = new FileReader();
-            reader.onload = (e) => resolve({ file: processingFile, preview: e.target.result });
+            reader.onload = (e) => finalize({ file: processingFile, preview: e.target.result });
+            reader.onerror = () => finalize({ file: processingFile, preview: URL.createObjectURL(processingFile) });
             reader.readAsDataURL(processingFile);
         };
 
+        // CRITICAL: Trigger image load!
+        img.src = objectUrl;
     });
     return trackImageJob(compressionPromise);
 }
