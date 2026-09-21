@@ -302,7 +302,39 @@ class WebController extends Controller
             }
         }
 
-        return view('products.show', compact('product', 'soldCount', 'recommended', 'isWishlisted'));
+        // Real-time seller metrics
+        $sellerTotalSold = 0;
+        $sellerProductCount = 0;
+        $sellerAvgRating = null;
+        if ($product->sellerId) {
+            try {
+                $sellerTotalSold = (int) DB::table('order_items')
+                    ->join('orders', 'order_items.orderId', '=', 'orders.id')
+                    ->where('orders.sellerId', $product->sellerId)
+                    ->whereIn('orders.status', ['Delivered', 'Completed', 'completed', 'delivered'])
+                    ->sum('order_items.quantity');
+
+                if (!$sellerTotalSold) {
+                    $sellerTotalSold = (int) Order::where('sellerId', $product->sellerId)
+                        ->whereIn('status', ['Delivered', 'Completed', 'completed', 'delivered'])
+                        ->count();
+                }
+
+                $sellerProductCount = (int) Product::where('sellerId', $product->sellerId)
+                    ->where('status', 'approved')
+                    ->count();
+
+                $sellerAvgRating = Review::whereHas('product', function($q) use ($product) {
+                    $q->where('sellerId', $product->sellerId);
+                })->avg('rating');
+            } catch (\Throwable $e) {
+                $sellerTotalSold = 0;
+                $sellerProductCount = 0;
+                $sellerAvgRating = null;
+            }
+        }
+
+        return view('products.show', compact('product', 'soldCount', 'recommended', 'isWishlisted', 'sellerTotalSold', 'sellerProductCount', 'sellerAvgRating'));
     }
 
     /**

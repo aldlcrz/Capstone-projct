@@ -526,7 +526,6 @@
     <div 
         id="mobile-bottom-action-bar"
         class="lg:hidden"
-        style="position: fixed !important; bottom: 0 !important; left: 0 !important; right: 0 !important; z-index: 99999 !important; background: #FFFFFF !important; border-top: 1px solid #E5E7EB !important; box-shadow: 0 -4px 20px rgba(0,0,0,0.12) !important; padding: 6px 12px !important; display: flex !important; align-items: center !important; gap: 8px !important; width: 100% !important; box-sizing: border-box !important;"
     >
         {{-- Store Icon Link --}}
         <a href="{{ ($product->sellerId || ($product->seller->id ?? null)) ? '/shops/' . ($product->sellerId ?? $product->seller->id) : '/' }}" 
@@ -700,15 +699,12 @@
                     @else
                         <span>Lumban Specials Promo</span>
                     @endif
-                    <div class="flex items-center gap-1 font-mono text-[11px] font-black">
-                        <span class="text-gray-300">|</span>
-                        <template x-if="countdownActive">
+                    <template x-if="countdownActive">
+                        <div class="flex items-center gap-1 font-mono text-[11px] font-black">
+                            <span class="text-gray-300">|</span>
                             <span x-text="countdownHours + ':' + countdownMinutes + ':' + countdownSeconds">00:23:27</span>
-                        </template>
-                        <template x-if="!countdownActive">
-                            <span>Special Offer</span>
-                        </template>
-                    </div>
+                        </div>
+                    </template>
                 </div>
 
                 {{-- Primary Bold Price --}}
@@ -1890,7 +1886,7 @@
 
         <!-- Lower Section: Description & Info (Mobile order-2, Desktop lg:order-1) -->
         <div id="details" class="order-2 lg:order-1 mt-4 lg:mt-16 pt-3 lg:pt-10 border-t border-gray-100 scroll-mt-24">
-            {{-- ═══ Mobile Store / Artisan Card (Matching Picture 2) ═══ --}}
+            {{-- ═══ Mobile Store / Artisan Card (Real-time Database Metrics) ═══ --}}
             <div class="lg:hidden bg-white mb-4">
                 <div class="flex items-center justify-between pb-3 border-b border-gray-100">
                     <div class="flex items-center gap-3">
@@ -1898,24 +1894,28 @@
                             <img src="{{ $product->seller->profile_photo_url ?? asset('uploads/products/default.jpg') }}" class="w-full h-full object-cover" onerror="this.src='/uploads/products/default.jpg'">
                         </div>
                         <div>
-                            <h4 class="text-sm font-bold text-gray-900">{{ $product->artisan ?? $product->seller->shopName ?? 'YM&Filipino' }}</h4>
+                            <h4 class="text-sm font-bold text-gray-900">{{ $product->artisan ?? $product->seller->shopName ?? $product->seller->name ?? 'Artisan Store' }}</h4>
                             <div class="flex items-center gap-1.5 text-[11px] text-gray-500 mt-0.5">
-                                <span class="text-amber-600 font-semibold">Seller Ratings 82%</span>
+                                @if(!is_null($sellerAvgRating) && $sellerAvgRating > 0)
+                                    <span class="text-amber-600 font-semibold">Seller Rating {{ number_format(($sellerAvgRating / 5) * 100, 0) }}%</span>
+                                @else
+                                    <span class="text-amber-600 font-semibold">New Artisan</span>
+                                @endif
                                 <span>|</span>
                                 <span class="text-emerald-600 font-medium">Online</span>
                             </div>
                         </div>
                     </div>
-                    <a href="/shops/{{ $product->sellerId }}" class="px-3.5 py-1.5 bg-[#FF0055] hover:bg-[#E0004C] text-white text-xs font-bold rounded transition-colors shadow-2xs cursor-pointer">
+                    <a href="/shops/{{ $product->sellerId ?? ($product->seller->id ?? '') }}" class="px-3.5 py-1.5 bg-[#FF0055] hover:bg-[#E0004C] text-white text-xs font-bold rounded transition-colors shadow-2xs cursor-pointer">
                         Visit Store
                     </a>
                 </div>
                 <div class="flex items-center justify-between text-[10px] text-gray-600 py-2.5 font-medium border-b border-gray-100">
-                    <span>🛍️ 6K Sold by Store</span>
+                    <span>🛍️ {{ (int)($sellerTotalSold ?? 0) > 0 ? number_format($sellerTotalSold) : '0' }} Sold by Store</span>
                     <span class="text-gray-300">|</span>
-                    <span>👜 New Arrival</span>
+                    <span>👜 {{ (int)($sellerProductCount ?? 0) }} {{ (int)($sellerProductCount ?? 0) === 1 ? 'Product' : 'Products' }}</span>
                     <span class="text-gray-300">|</span>
-                    <span>🚚 Fast Shipping: 100%</span>
+                    <span>📍 {{ $product->seller->shopCity ?? $product->seller->city ?? 'Lumban' }}</span>
                 </div>
             </div>
 
@@ -2030,11 +2030,7 @@
                 @endforeach
             </div>
 
-            {{-- 14 Days Free Return Change of Mind Banner (Matching Picture 2 bottom) --}}
-            <div class="mx-2.5 my-3 p-2.5 bg-gray-50 rounded-lg flex items-center justify-center gap-1.5 text-xs text-gray-600 border border-gray-100">
-                <span class="w-4 h-4 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center text-[10px] font-bold">✓</span>
-                <span class="text-[11px] font-medium text-gray-700">14 Days Free Return • Change of mind returns</span>
-            </div>
+
         </div>
 
         {{-- ═══ Desktop Recommendations View (Existing 100% Untouched on lg:) ═══ --}}
@@ -2444,11 +2440,7 @@
                 </button>
             </div>
 
-            <!-- Lazada 14 Days Free Return Strip -->
-            <div class="mx-3 sm:mx-4 px-3 py-1.5 rounded bg-blue-50/80 border border-blue-100 flex items-center gap-1.5 text-[11px] text-blue-900 font-medium shrink-0">
-                <span class="w-3.5 h-3.5 rounded-full bg-blue-600 text-white flex items-center justify-center text-[9px] font-bold shrink-0">✓</span>
-                <span>14 Days Free Return · Change of mind returns</span>
-            </div>
+
 
             <!-- Scrollable Content: 2-Column Color Family Grid, Sizes, Quantity -->
             <div class="p-3 sm:p-4 overflow-y-auto space-y-4 flex-1">
@@ -2584,6 +2576,34 @@
 </script>
 
 <style>
+/* Mobile sticky bottom action bar: strictly mobile only */
+#mobile-bottom-action-bar {
+    display: none !important;
+}
+@media (max-width: 1023px) {
+    #mobile-bottom-action-bar {
+        position: fixed !important;
+        bottom: 0 !important;
+        left: 0 !important;
+        right: 0 !important;
+        z-index: 99999 !important;
+        background: #FFFFFF !important;
+        border-top: 1px solid #E5E7EB !important;
+        box-shadow: 0 -4px 20px rgba(0,0,0,0.12) !important;
+        padding: 6px 12px !important;
+        display: flex !important;
+        align-items: center !important;
+        gap: 8px !important;
+        width: 100% !important;
+        box-sizing: border-box !important;
+    }
+}
+@media (min-width: 1024px) {
+    #mobile-bottom-action-bar {
+        display: none !important;
+    }
+}
+
 /* Hide the floating circular chat widget button on mobile in product view since Chat is integrated in the sticky bottom action bar */
 @media (max-width: 1023px) {
     .lumbarong-chat-wrapper > button {

@@ -423,7 +423,7 @@
         @endif
 
         <!-- Page Content -->
-        <main class="flex-1 w-full max-w-360 mx-auto {{ request()->is('products*') ? 'px-0 sm:px-4 pt-0 sm:pt-4 pb-20 lg:pb-8' : (request()->is('checkout*') ? 'px-4 pt-2 sm:pt-4 lg:pt-6 lg:px-12 pb-0 lg:pb-6' : 'px-4 pt-2 sm:pt-4 lg:pt-6 lg:px-12 pb-28 lg:pb-8') }}">
+        <main class="flex-1 w-full max-w-360 mx-auto {{ request()->is('products*') ? 'px-0 sm:px-4 lg:px-12 pt-0 sm:pt-4 lg:pt-6 pb-20 lg:pb-8' : (request()->is('checkout*') ? 'px-4 pt-2 sm:pt-4 lg:pt-6 lg:px-12 pb-0 lg:pb-6' : 'px-4 pt-2 sm:pt-4 lg:pt-6 lg:px-12 pb-28 lg:pb-8') }}">
             @yield('content')
         </main>
 
