@@ -70,12 +70,13 @@ class ProductManagementController extends Controller
 
         // Check whether at least one product image was uploaded
         $hasImage = $request->hasFile('variant_image_0')
+            || $request->hasFile('variant_images_0')
             || ($request->hasFile('images') && !empty(array_filter((array)$request->file('images'), fn($f) => $f && $f->isValid())))
             || ($request->hasFile('variant_images') && !empty(array_filter((array)$request->file('variant_images'), fn($f) => $f && $f->isValid())));
 
         if (!$hasImage) {
             foreach ($request->allFiles() as $k => $f) {
-                if (str_starts_with($k, 'variant_image_') && $f && $f->isValid()) {
+                if ((str_starts_with($k, 'variant_image_') || str_starts_with($k, 'variant_images_')) && !empty($f)) {
                     $hasImage = true;
                     break;
                 }
@@ -84,8 +85,8 @@ class ProductManagementController extends Controller
 
         if (!$isDraft && !$hasImage) {
             return redirect()->back()->withInput()->withErrors([
-                'images' => 'Please upload at least one product image (Cover Photo for Variant 1).',
-            ])->with('error', 'Please upload at least one product image (Cover Photo for Variant 1).');
+                'images' => 'Please upload at least one product image for Variant 1 (minimum 1, maximum 3 images per variation).',
+            ])->with('error', 'Please upload at least one product image for Variant 1 (minimum 1, maximum 3 images per variation).');
         }
 
         if ($isDraft) {
@@ -124,6 +125,9 @@ class ProductManagementController extends Controller
             foreach ($request->allFiles() as $fileKey => $fileVal) {
                 if (str_starts_with($fileKey, 'variant_image_')) {
                     $rules[$fileKey] = 'nullable|image|mimes:jpeg,png,jpg,webp|max:5120';
+                } elseif (str_starts_with($fileKey, 'variant_images_')) {
+                    $rules[$fileKey] = 'nullable|array|max:3';
+                    $rules[$fileKey . '.*'] = 'nullable|image|mimes:jpeg,png,jpg,webp|max:5120';
                 }
             }
 
@@ -268,78 +272,72 @@ class ProductManagementController extends Controller
                 'file_keys' => array_keys($request->allFiles()),
             ]);
 
-            // 1. Process Variant 1 (Main / Cover Style)
-            $v1Name = trim($request->input('variant_names.0', '')) ?: trim($product->name);
-            $v1File = null;
-            $firstImageUsedAsCover = false;
-
-            if ($request->hasFile('variant_image_0')) {
-                $rawV0 = $request->file('variant_image_0');
-                $v1File = is_array($rawV0) ? ($rawV0[0] ?? null) : $rawV0;
-            } elseif ($request->hasFile('variant_images.0')) {
-                $rawV0 = $request->file('variant_images.0');
-                $v1File = is_array($rawV0) ? ($rawV0[0] ?? null) : $rawV0;
-            } elseif ($request->hasFile('images') && is_array($request->file('images')) && count($request->file('images')) > 0 && $request->file('images')[0]->isValid()) {
-                $v1File = $request->file('images')[0];
-                $firstImageUsedAsCover = true;
-            } else {
-                foreach ($request->allFiles() as $k => $f) {
-                    if (str_starts_with($k, 'variant_image_')) {
-                        $v1File = is_array($f) ? ($f[0] ?? null) : $f;
-                        if ($v1File && $v1File->isValid()) {
-                            break;
-                        }
-                    }
-                }
-            }
-
-            if ($v1File && $v1File->isValid()) {
-                $storedPath = $v1File->store('products/cover', 'public');
-                $storedFiles[] = $storedPath;
-                $images[] = $storedPath;
-                $savedVariations[] = [
-                    'name'  => $v1Name,
-                    'image' => $storedPath,
-                ];
-            }
-
-            // 2. Process Additional Variants (Variant 2, 3, etc.)
+            // Process all variations (Variant 1 Main Style + Additional Variants)
             $variantIndexes = $request->input('variant_indexes', []);
             if (!is_array($variantIndexes) || empty($variantIndexes)) {
                 $rawNames = $request->input('variant_names', []);
-                $variantIndexes = is_array($rawNames) ? array_keys($rawNames) : [];
+                $variantIndexes = is_array($rawNames) && !empty($rawNames) ? array_keys($rawNames) : [0];
             }
+            // Ensure variant 0 is first if present
+            if (in_array(0, $variantIndexes)) {
+                $variantIndexes = array_merge([0], array_diff($variantIndexes, [0]));
+            } elseif (!in_array(0, $variantIndexes) && ($request->hasFile('variant_image_0') || $request->hasFile('variant_images_0') || $request->hasFile('images'))) {
+                array_unshift($variantIndexes, 0);
+            }
+
+            $storedVariantFileNames = [];
 
             foreach ($variantIndexes as $idx) {
                 $numIdx = (int)$idx;
-                if ($numIdx === 0) continue; // Already processed Variant 1
-
                 $vName = trim($request->input("variant_names.{$numIdx}", $request->input("variant_name_{$numIdx}", '')));
                 if (empty($vName)) {
-                    $vName = 'Style ' . ($numIdx + 1);
+                    $vName = ($numIdx === 0) ? ($product->name ?: 'Main Style') : ('Style ' . ($numIdx + 1));
                 }
 
-                $vFile = null;
-                if ($request->hasFile("variant_image_{$numIdx}")) {
-                    $rawV = $request->file("variant_image_{$numIdx}");
-                    $vFile = is_array($rawV) ? ($rawV[0] ?? null) : $rawV;
+                $rawFiles = [];
+                if ($request->hasFile("variant_images_{$numIdx}")) {
+                    $raw = $request->file("variant_images_{$numIdx}");
+                    $rawFiles = is_array($raw) ? $raw : [$raw];
                 } elseif ($request->hasFile("variant_images.{$numIdx}")) {
-                    $rawV = $request->file("variant_images.{$numIdx}");
-                    $vFile = is_array($rawV) ? ($rawV[0] ?? null) : $rawV;
+                    $raw = $request->file("variant_images.{$numIdx}");
+                    $rawFiles = is_array($raw) ? $raw : [$raw];
+                } elseif ($request->hasFile("variant_image_{$numIdx}")) {
+                    $raw = $request->file("variant_image_{$numIdx}");
+                    $rawFiles = is_array($raw) ? $raw : [$raw];
+                } elseif ($numIdx === 0 && $request->hasFile('images')) {
+                    $raw = $request->file('images');
+                    $rawFiles = is_array($raw) ? $raw : [$raw];
                 }
 
-                if ($vFile && $vFile->isValid()) {
-                    $storedPath = $vFile->store('products/variants', 'public');
+                // Filter valid files and enforce min 1, max 3
+                $validFiles = array_slice(array_filter($rawFiles, fn($f) => $f && $f->isValid()), 0, 3);
+
+                if (!$isDraft && empty($validFiles)) {
+                    return redirect()->back()->withInput()->withErrors([
+                        "variant_images_{$numIdx}" => "Each variation requires at least 1 image (maximum 3 images). Missing image for '{$vName}'.",
+                    ])->with('error', "Each variation requires at least 1 image (maximum 3 images). Please upload 1 to 3 images for '{$vName}'.");
+                }
+
+                $variantPaths = [];
+                foreach ($validFiles as $fIdx => $file) {
+                    $subDir = ($numIdx === 0 && $fIdx === 0) ? 'products/cover' : 'products/variants';
+                    $storedPath = $file->store($subDir, 'public');
                     $storedFiles[] = $storedPath;
+                    $variantPaths[] = $storedPath;
                     $images[] = $storedPath;
+                    $storedVariantFileNames[] = $file->getClientOriginalName() . '_' . $file->getSize();
+                }
+
+                if (!empty($variantPaths)) {
                     $savedVariations[] = [
-                        'name'  => $vName,
-                        'image' => $storedPath,
+                        'name'   => $vName,
+                        'image'  => $variantPaths[0],
+                        'images' => $variantPaths,
                     ];
                 }
             }
 
-            // 3. Fallback / Additional Gallery Images
+            // Fallback / Additional Gallery Images (if any uploaded under images[] and not duplicate)
             if ($request->hasFile('images')) {
                 $galleryFiles = $request->file('images');
                 if (!is_array($galleryFiles)) {
@@ -347,20 +345,14 @@ class ProductManagementController extends Controller
                 }
                 foreach ($galleryFiles as $i => $image) {
                     if (!$image || !$image->isValid()) continue;
-
-                    // Skip if this image was already used as the cover
-                    if ($firstImageUsedAsCover && $i === 0) {
-                        continue;
+                    $fileKey = $image->getClientOriginalName() . '_' . $image->getSize();
+                    if (in_array($fileKey, $storedVariantFileNames)) {
+                        continue; // Skip image already processed as a variant image
                     }
-
-                    // Skip duplicate if exactly the same upload as variant 1 cover
-                    if ($v1File && $image->getClientOriginalName() === $v1File->getClientOriginalName() && $image->getSize() === $v1File->getSize() && md5_file($image->getRealPath()) === md5_file($v1File->getRealPath())) {
-                        continue;
-                    }
-
                     $storedPath = $image->store('products/gallery', 'public');
                     $storedFiles[] = $storedPath;
                     $images[] = $storedPath;
+                    $storedVariantFileNames[] = $fileKey;
                 }
             }
 
@@ -371,8 +363,8 @@ class ProductManagementController extends Controller
 
             \Illuminate\Support\Facades\Log::info('[ProductImagePipeline:Store]', [
                 'product_id' => $product->id,
-                'has_cover' => $v1File ? true : false,
-                'cover_path' => $v1File ? ($savedVariations[0]['image'] ?? null) : null,
+                'has_cover' => !empty($savedVariations),
+                'cover_path' => $savedVariations[0]['image'] ?? null,
                 'variants_count' => count($savedVariations),
                 'gallery_received' => $request->hasFile('images') ? count($request->file('images')) : 0,
                 'stored_total' => count($images),
@@ -692,27 +684,46 @@ class ProductManagementController extends Controller
                     $vName = ($numIdx === 0) ? ($product->name ?: 'Main Style') : ('Style ' . ($numIdx + 1));
                 }
 
-                $vImgPath = null;
-                if ($request->hasFile("variant_image_{$numIdx}") && $request->file("variant_image_{$numIdx}")->isValid()) {
-                    $vFile = $request->file("variant_image_{$numIdx}");
-                    $subDir = ($numIdx === 0) ? 'products/cover' : 'products/variants';
-                    $storedPath = $vFile->store($subDir, 'public');
-                    $storedFiles[] = $storedPath;
-                    $vImgPath = $storedPath;
-                    
-                    if ($numIdx === 0) {
-                        // Place new cover at index 0 of product.image
-                        array_unshift($currentImages, $vImgPath);
-                    } else {
-                        $currentImages[] = $vImgPath;
+                $rawFiles = [];
+                if ($request->hasFile("variant_images_{$numIdx}")) {
+                    $raw = $request->file("variant_images_{$numIdx}");
+                    $rawFiles = is_array($raw) ? $raw : [$raw];
+                } elseif ($request->hasFile("variant_images.{$numIdx}")) {
+                    $raw = $request->file("variant_images.{$numIdx}");
+                    $rawFiles = is_array($raw) ? $raw : [$raw];
+                } elseif ($request->hasFile("variant_image_{$numIdx}")) {
+                    $raw = $request->file("variant_image_{$numIdx}");
+                    $rawFiles = is_array($raw) ? $raw : [$raw];
+                }
+
+                $validFiles = array_slice(array_filter($rawFiles, fn($f) => $f && $f->isValid()), 0, 3);
+                $variantPaths = [];
+
+                if (!empty($validFiles)) {
+                    foreach ($validFiles as $fIdx => $file) {
+                        $subDir = ($numIdx === 0 && $fIdx === 0) ? 'products/cover' : 'products/variants';
+                        $storedPath = $file->store($subDir, 'public');
+                        $storedFiles[] = $storedPath;
+                        $variantPaths[] = $storedPath;
+                        if ($numIdx === 0 && $fIdx === 0) {
+                            array_unshift($currentImages, $storedPath);
+                        } else {
+                            $currentImages[] = $storedPath;
+                        }
                     }
-                } elseif (isset($existingVariations[$numIdx]['image'])) {
-                    $vImgPath = $existingVariations[$numIdx]['image'];
+                } elseif (isset($existingVariations[$numIdx])) {
+                    $existVar = $existingVariations[$numIdx];
+                    if (!empty($existVar['images']) && is_array($existVar['images'])) {
+                        $variantPaths = $existVar['images'];
+                    } elseif (!empty($existVar['image'])) {
+                        $variantPaths = [$existVar['image']];
+                    }
                 }
 
                 $updatedVariations[] = [
-                    'name'  => $vName,
-                    'image' => $vImgPath,
+                    'name'   => $vName,
+                    'image'  => $variantPaths[0] ?? null,
+                    'images' => $variantPaths,
                 ];
             }
         }

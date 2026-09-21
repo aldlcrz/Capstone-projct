@@ -154,39 +154,16 @@
         {{-- ========================================================================= --}}
         <div x-show="step === 1" style="background-color:#FFFFFF !important;border:1px solid #ECE3D2 !important;border-radius:28px !important;box-shadow:0 8px 30px rgba(0,0,0,0.03) !important;color:#1E1915 !important;" class="p-5 sm:p-8 space-y-6">
             
-            {{-- 1. Product Media & Variants --}}
+            {{-- 1. What are you listing today? --}}
             <div class="space-y-4" id="tour-create-media-variants">
-                <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px;">
-                    <div>
-                        <h2 style="font-family:ui-serif,Georgia,Cambria,serif;font-size:18px;font-weight:700;color:#1E1915;margin:0;line-height:1.2;">
-                            1. Product Media & Variants <span style="color:#DC2626;">*</span>
-                        </h2>
-                        <p style="font-size:12px;color:#78716C;margin-top:4px;margin-bottom:0;">
-                            Variant 1 is your main style and will be shown as the primary listing.
-                        </p>
-                    </div>
-                    <span style="background-color:#FDF8EE;border:1px solid #EEDBBA;color:#7A5505;font-size:11px;font-weight:700;border-radius:20px;padding:3px 12px;flex-shrink:0;" x-text="variants.length + ' style(s) added'"></span>
+                <div>
+                    <h2 style="font-family:ui-serif,Georgia,Cambria,serif;font-size:18px;font-weight:700;color:#1E1915;margin:0;line-height:1.2;">
+                        1. What are you listing today? <span style="color:#DC2626;">*</span>
+                    </h2>
+                    <p style="font-size:12px;color:#78716C;margin-top:4px;margin-bottom:0;">
+                        Provide the product name, then upload images for each variation (min 1, max 3 photos per variation).
+                    </p>
                 </div>
-
-                {{-- Variant 1: Main Product Style & Cover Photo Card --}}
-                <div style="background-color:#FFFFFF !important;border:1px solid #ECE3D2 !important;border-radius:20px !important;padding:22px !important;box-shadow:0 1px 4px rgba(0,0,0,0.02) !important;" class="space-y-4" id="variant_card_0">
-                    <div style="display:flex;align-items:center;justify-content:space-between;padding-bottom:12px;border-bottom:1px solid #F2ECE1;">
-                        <div style="display:flex;align-items:center;gap:8px;">
-                            <span style="width:22px;height:22px;border-radius:50%;background-color:#9E6B15;color:#FFFFFF;display:inline-flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;flex-shrink:0;">1</span>
-                            <span style="font-family:ui-serif,Georgia,serif;font-size:15px;font-weight:700;color:#1E1915;">
-                                Variant 1 (Main Style / Cover)
-                            </span>
-                            <span style="background-color:#FDF8EE;border:1px solid #EEDBBA;color:#7A5505;font-size:9.5px;font-weight:800;border-radius:20px;padding:2px 8px;text-transform:uppercase;letter-spacing:0.05em;">Cover Image</span>
-                        </div>
-                        <div style="display:flex;align-items:center;gap:4px;color:#10B981;font-size:12px;font-weight:700;">
-                            <span>✓</span>
-                            <span>Primary Listing</span>
-                        </div>
-                    </div>
-
-                    {{-- Hidden inputs for Variant 1 mapping --}}
-                    <input type="hidden" name="variant_indexes[]" value="0">
-                    <input type="hidden" name="variant_names[0]" :value="productName || 'Original Style'">
 
                     {{-- Product Name (English) --}}
                     <div class="space-y-1.5">
@@ -219,308 +196,159 @@
                         </div>
                     </div>
 
-                    {{-- Variant Images Row (Exact 6 Slots Layout from Screenshot) --}}
-                    <div class="space-y-2 pt-1">
-                        <div style="display:flex;align-items:center;gap:5px;">
-                            <label style="font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:0.06em;color:#1E1915;">
-                                VARIANT IMAGES <span style="color:#DC2626;">*</span>
-                            </label>
+                    {{-- Product Variations & Images Section --}}
+                    <div class="space-y-4 pt-2">
+                        <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;">
+                            <div>
+                                <label style="font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:0.06em;color:#1E1915;">
+                                    Product Variations & Images <span style="color:#DC2626;">*</span>
+                                </label>
+                                <p style="font-size:11.5px;color:#78716C;margin:2px 0 0 0;">
+                                    Upload product images for each variation (min 1, max 3 photos per variation).
+                                </p>
+                            </div>
+                            <span style="font-size:11px;font-weight:700;background:#FDF8EE;border:1px solid #EEDBBA;color:#7A5505;padding:3px 12px;border-radius:20px;" 
+                                  x-text="variants.length + ' Variation' + (variants.length > 1 ? 's' : '')"></span>
                         </div>
 
                         {{-- Hidden inputs to store real files for Laravel form submission --}}
-                        <input type="file" 
-                               id="variant_file_0"
-                               name="variant_image_0" 
-                               accept="image/jpeg,image/png,image/webp,image/jpg,image/heic,image/heif,.heic,.heif" 
-                               multiple
-                               class="hidden" 
-                               @change="handleCoverPhotoUpload($event)">
+                        <input type="file" id="gallery_files_input" name="images[]" multiple class="hidden">
 
-                        <input type="file" 
-                               id="gallery_files_input" 
-                               name="images[]" 
-                               multiple 
-                               class="hidden">
-
-                        <input type="file" 
-                               id="gallery_picker_input" 
-                               multiple 
-                               accept="image/jpeg,image/png,image/webp,image/jpg,image/heic,image/heif,.heic,.heif" 
-                               class="hidden" 
-                               @change="handleGalleryFilesUpload($event)">
-
-                        {{-- 6-Slot Horizontal Row --}}
-                        <div class="flex items-center gap-3 overflow-x-auto pb-2 pt-1"
-                             @dragover.prevent
-                             @drop.prevent="handleGalleryDrop($event)">
-                            {{-- Slot 0: Upload Cover Photo Big Card --}}
-                            <label for="variant_file_0" 
-                                   id="variant_upload_box_0"
-                                   style="width:130px;height:140px;border-radius:18px;border:1.5px dashed #E2D9C8;background-color:#FAF8F5;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;cursor:pointer;flex-shrink:0;transition:all 0.2s;padding:10px;position:relative;"
-                                   onmouseover="this.style.borderColor='#C49520';this.style.backgroundColor='#FFFFFF';"
-                                   onmouseout="this.style.borderColor='#E2D9C8';this.style.backgroundColor='#FAF8F5';">
-                                <div style="color:#C49520;margin-bottom:6px;">
-                                    <svg width="26" height="26" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.8">
-                                        <rect x="3" y="3" width="18" height="18" rx="4" ry="4"/>
-                                        <circle cx="8.5" cy="8.5" r="1.5" fill="currentColor"/>
-                                        <path d="M21 15l-5-5L5 21"/>
-                                        <path d="M16 7l.5 1 1 .5-1 .5-.5 1-.5-1-1-.5 1-.5.5-1z" fill="currentColor"/>
-                                    </svg>
-                                </div>
-                                <span style="font-size:11.5px;font-weight:700;color:#1E1915;line-height:1.2;">Upload Cover Photo</span>
-                                <span style="font-size:9.5px;color:#78716C;margin-top:4px;">JPG, PNG, WEBP, HEIC</span>
-                                <span style="font-size:9px;color:#A8A096;margin-top:2px;">Auto-compressed</span>
-                                <template x-if="variants[0] && variants[0].imagePreview && !variants[0].hasActualFile">
-                                    <span style="font-size:8.5px;font-weight:800;color:#D97706;background:#FEF3C7;padding:2px 6px;border-radius:6px;margin-top:4px;">
-                                        ⚠️ Re-select File
-                                    </span>
-                                </template>
-                            </label>
-
-                            {{-- Slot 1: Cover Photo Thumbnail / Watermark Box --}}
-                            <div style="width:105px;height:140px;border-radius:18px;border:1px solid #ECE3D2;background-color:#FAF8F5;position:relative;flex-shrink:0;overflow:hidden;display:flex;flex-direction:column;align-items:center;justify-content:space-between;padding:8px 6px;">
-                                {{-- Top-left Cover badge --}}
-                                <template x-if="!variants[0].imagePreview">
-                                    <div style="align-self:flex-start;background:#7A5505;color:#FFFFFF;font-size:8.5px;font-weight:800;padding:2px 7px;border-radius:6px;text-transform:uppercase;letter-spacing:0.04em;">
-                                        Cover
-                                    </div>
-                                </template>
-                                <template x-if="variants[0].imagePreview && variants[0].hasActualFile">
-                                    <div style="align-self:flex-start;background:#10B981;color:#FFFFFF;font-size:8.5px;font-weight:800;padding:2px 7px;border-radius:6px;text-transform:uppercase;letter-spacing:0.04em;display:flex;align-items:center;gap:3px;z-index:10;">
-                                        <span>✓</span> <span>Ready</span>
-                                    </div>
-                                </template>
-                                <template x-if="variants[0].imagePreview && !variants[0].hasActualFile">
-                                    <div style="align-self:flex-start;background:#D97706;color:#FFFFFF;font-size:8px;font-weight:800;padding:2px 6px;border-radius:6px;text-transform:uppercase;letter-spacing:0.03em;display:flex;align-items:center;gap:2px;z-index:10;">
-                                        <span>⚠️</span> <span>Re-attach</span>
-                                    </div>
-                                </template>
-
-                                {{-- If image uploaded, show preview --}}
-                                <template x-if="variants[0].imagePreview">
-                                    <div style="position:absolute;inset:0;z-index:5;">
-                                        <img :src="variants[0].imagePreview" style="width:100%;height:100%;object-fit:cover;">
-                                        <template x-if="!variants[0].hasActualFile">
-                                            <div style="position:absolute;bottom:0;left:0;right:0;background:rgba(217,119,6,0.92);color:#FFFFFF;font-size:8.5px;font-weight:800;text-align:center;padding:3px 2px;line-height:1.2;cursor:pointer;" onclick="document.getElementById('variant_file_0').click()">
-                                                Tap to re-select
-                                            </div>
-                                        </template>
-                                        <div class="absolute inset-0 bg-black/40 opacity-0 hover:opacity-100 transition-opacity flex flex-col items-center justify-center text-white text-[10px] font-bold uppercase gap-1">
-                                            <label for="variant_file_0" class="cursor-pointer">Change</label>
+                        {{-- Variation Cards Loop --}}
+                        <div class="space-y-3.5">
+                            <template x-for="(variant, index) in variants" :key="variant.id">
+                                <div style="background-color:#FFFFFF !important;border:1px solid #ECE3D2 !important;border-radius:18px !important;padding:16px !important;box-shadow:0 2px 8px rgba(0,0,0,0.02) !important;" 
+                                     :id="'variant_card_' + index"
+                                     class="space-y-3.5 transition-all">
+                                    {{-- Card Header --}}
+                                    <div style="display:flex;align-items:center;justify-content:space-between;padding-bottom:10px;border-bottom:1px solid #F2ECE1;">
+                                        <div style="display:flex;align-items:center;gap:8px;">
+                                            <span style="width:22px;height:22px;border-radius:50%;background-color:#9E6B15;color:#FFFFFF;display:inline-flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;" x-text="index + 1"></span>
+                                            <span style="font-family:ui-serif,Georgia,serif;font-size:14.5px;font-weight:700;color:#1E1915;" x-text="index === 0 ? 'Variant 1 (Main Style)' : ('Variant ' + (index + 1))"></span>
+                                            <span style="background-color:#FAF8F5;border:1px solid #E2D9C8;color:#78716C;font-size:9px;font-weight:700;border-radius:20px;padding:2px 8px;text-transform:uppercase;letter-spacing:0.04em;" x-text="index === 0 ? 'Default Style' : 'Style Option'"></span>
                                         </div>
-                                        <button type="button" 
-                                                @click="removeCoverPhoto()" 
-                                                style="position:absolute;top:4px;right:4px;width:18px;height:18px;background-color:#DC2626;color:#FFFFFF;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:900;border:none;cursor:pointer;z-index:10;">
-                                            ✕
-                                        </button>
+                                        <template x-if="index > 0">
+                                            <button type="button" 
+                                                    @click="removeVariantRow(index)" 
+                                                    style="font-size:12px;font-weight:600;color:#DC2626;background:none;border:none;cursor:pointer;display:flex;align-items:center;gap:4px;">
+                                                <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+                                                <span>Remove</span>
+                                            </button>
+                                        </template>
                                     </div>
-                                </template>
 
-                                {{-- Optimizing Loading Overlay --}}
-                                <template x-if="variants[0].isOptimizing">
-                                    <div style="position:absolute;inset:0;background:rgba(255,255,255,0.9);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:15;">
-                                        <svg class="animate-spin h-5 w-5 text-[#C49520]" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path>
-                                        </svg>
-                                        <span style="font-size:8.5px;font-weight:800;color:#7A5505;margin-top:4px;">Compressing...</span>
-                                    </div>
-                                </template>
-
-                                {{-- Faint Laurel Emblem Watermark if empty --}}
-                                <template x-if="!variants[0].imagePreview">
-                                    <div style="opacity:0.25;margin-top:auto;margin-bottom:auto;">
-                                        <svg width="42" height="42" viewBox="0 0 48 48" fill="none">
-                                            <circle cx="24" cy="23" r="8.5" stroke="#C49520" stroke-width="1"/>
-                                            <path d="M24 17.5l1.6 3.4 3.7.5-2.7 2.6.6 3.7-3.2-1.7-3.2 1.7.6-3.7-2.7-2.6 3.7-.5L24 17.5z" fill="#C49520"/>
-                                            <path d="M15 32.5c-4-3.5-6-8.5-6-14 0-3.5 1-6.5 2.5-9" stroke="#C49520" stroke-width="1.3" stroke-linecap="round"/>
-                                            <path d="M33 32.5c4-3.5 6-8.5 6-14 0-3.5-1-6.5-2.5-9" stroke="#C49520" stroke-width="1.3" stroke-linecap="round"/>
-                                        </svg>
-                                    </div>
-                                </template>
-
-                                {{-- Gold Star at bottom --}}
-                                <div style="color:#C49520;font-size:12px;font-weight:900;z-index:6;">★</div>
-                            </div>
-
-                            {{-- Dynamic Uploaded Gallery Photos --}}
-                            <template x-for="(gImg, gIdx) in galleryImages" :key="gImg.uid">
-                                <div style="width:105px;height:140px;border-radius:18px;border:1px solid #ECE3D2;background-color:#FAF8F5;position:relative;flex-shrink:0;overflow:hidden;display:flex;flex-direction:column;align-items:center;justify-content:space-between;padding:8px 6px;">
-                                    <div style="position:absolute;inset:0;z-index:5;">
-                                        <img :src="gImg.preview" style="width:100%;height:100%;object-fit:cover;">
-                                        <button type="button" 
-                                                @click="removeGalleryImage(gIdx)" 
-                                                style="position:absolute;top:4px;right:4px;width:18px;height:18px;background-color:#DC2626;color:#FFFFFF;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:900;border:none;cursor:pointer;z-index:10;"
-                                                title="Remove photo">
-                                            ✕
-                                        </button>
-                                    </div>
-                                    <span style="font-size:11px;font-weight:700;color:#A8A096;z-index:6;" x-text="gIdx + 2"></span>
-                                </div>
-                            </template>
-
-                            {{-- Optimizing Gallery Card (shows when compressing gallery photos) --}}
-                            <template x-if="isOptimizingGallery">
-                                <div style="width:105px;height:140px;border-radius:18px;border:1.5px dashed #C49520;background:#FAF8F5;display:flex;flex-direction:column;align-items:center;justify-content:center;flex-shrink:0;padding:8px;">
-                                    <svg class="animate-spin h-6 w-6 text-[#C49520]" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path>
-                                    </svg>
-                                    <span style="font-size:9px;font-weight:800;color:#7A5505;margin-top:6px;text-align:center;">Compressing...</span>
-                                </div>
-                            </template>
-
-                            {{-- Empty Placeholder Slots (Interactive: click or drag & drop to upload) --}}
-                            <template x-for="pIdx in Math.max(0, 3 - galleryImages.length)" :key="'ph_' + pIdx">
-                                <button type="button" 
-                                        @click="triggerGalleryUpload()" 
-                                        @dragover.prevent
-                                        @drop.prevent="handleGalleryDrop($event)"
-                                        style="width:105px;height:140px;border-radius:18px;border:1px solid #ECE3D2;background-color:#FAF8F5;position:relative;flex-shrink:0;overflow:hidden;display:flex;flex-direction:column;align-items:center;justify-content:space-between;padding:8px 6px;cursor:pointer;transition:all 0.2s;outline:none;"
-                                        onmouseover="this.style.borderColor='#C49520';this.style.backgroundColor='#FFFDF9';this.style.transform='translateY(-1px)';"
-                                        onmouseout="this.style.borderColor='#ECE3D2';this.style.backgroundColor='#FAF8F5';this.style.transform='none';"
-                                        title="Click to add photo">
-                                    <div style="opacity:0.25;margin-top:auto;margin-bottom:auto;">
-                                        <svg width="42" height="42" viewBox="0 0 48 48" fill="none">
-                                            <circle cx="24" cy="23" r="8.5" stroke="#C49520" stroke-width="1"/>
-                                            <path d="M24 17.5l1.6 3.4 3.7.5-2.7 2.6.6 3.7-3.2-1.7-3.2 1.7.6-3.7-2.7-2.6 3.7-.5L24 17.5z" fill="#C49520"/>
-                                            <path d="M15 32.5c-4-3.5-6-8.5-6-14 0-3.5 1-6.5 2.5-9" stroke="#C49520" stroke-width="1.3" stroke-linecap="round"/>
-                                            <path d="M33 32.5c4-3.5 6-8.5 6-14 0-3.5-1-6.5-2.5-9" stroke="#C49520" stroke-width="1.3" stroke-linecap="round"/>
-                                        </svg>
-                                    </div>
-                                    <span style="font-size:11px;font-weight:700;color:#A8A096;z-index:6;" x-text="galleryImages.length + pIdx + 2"></span>
-                                </button>
-                            </template>
-
-                            {{-- Add More Button --}}
-                            <button type="button" 
-                                    @click="triggerGalleryUpload()" 
-                                    @dragover.prevent
-                                    @drop.prevent="handleGalleryDrop($event)"
-                                    style="width:105px;height:140px;border-radius:18px;border:1.5px dashed #E2D9C8;background-color:#FFFFFF;display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;transition:all 0.2s;padding:10px;outline:none;"
-                                    onmouseover="this.style.borderColor='#C49520';this.style.backgroundColor='#FAF8F5';this.style.transform='translateY(-1px)';"
-                                    onmouseout="this.style.borderColor='#E2D9C8';this.style.backgroundColor='#FFFFFF';this.style.transform='none';"
-                                    title="Add more photos">
-                                <span style="color:#C49520;font-size:22px;font-weight:700;line-height:1;margin-bottom:6px;">+</span>
-                                <span style="font-size:11px;font-weight:700;color:#78716C;">Add More</span>
-                            </button>
-                        </div>
-
-                        {{-- Informational Subtext Notes (Exact from screenshot) --}}
-                        <div class="space-y-1 pt-2">
-                            <p style="font-size:11.5px;color:#78716C;margin:0;display:flex;align-items:center;gap:6px;">
-                                <span style="color:#C49520;font-size:12px;">✨</span>
-                                <span>This photo will be showcased as the main thumbnail across the store, search, and catalogue.</span>
-                            </p>
-                            <p style="font-size:11.5px;color:#7A5505;font-weight:600;margin:0;display:flex;align-items:center;gap:6px;">
-                                <span style="color:#C49520;font-size:12px;font-weight:900;">+</span>
-                                <span>Add other colors, fabrics, or sleeve styles? Click "Add Another Variant" below.</span>
-                            </p>
-                        </div>
-                    </div>
-                </div>
-
-                {{-- Additional Variants (Variant 2, 3, etc. if seller adds) --}}
-                <div class="space-y-3">
-                    <template x-for="(variant, index) in variants" :key="variant.id">
-                        <template x-if="index > 0">
-                            <div style="background-color:#FFFFFF !important;border:1px solid #ECE3D2 !important;border-radius:18px !important;padding:16px !important;box-shadow:0 2px 6px rgba(0,0,0,0.02) !important;" class="space-y-3">
-                                <div style="display:flex;align-items:center;justify-content:space-between;padding-bottom:8px;border-bottom:1px solid #F2ECE1;">
-                                    <div style="display:flex;align-items:center;gap:8px;">
-                                        <span style="width:20px;height:20px;border-radius:50%;background-color:#9E6B15;color:#FFFFFF;display:inline-flex;align-items:center;justify-content:center;font-size:10px;font-weight:800;" x-text="index + 1"></span>
-                                        <span style="font-family:ui-serif,Georgia,serif;font-size:14px;font-weight:700;color:#1E1915;" x-text="'Variant ' + (index + 1)"></span>
-                                        <span style="background-color:#FAF8F5;border:1px solid #E2D9C8;color:#78716C;font-size:9px;font-weight:700;border-radius:20px;padding:2px 8px;text-transform:uppercase;letter-spacing:0.04em;">Style Option</span>
-                                    </div>
-                                    <button type="button" 
-                                            @click="removeVariantRow(index)" 
-                                            style="font-size:12px;font-weight:600;color:#DC2626;background:none;border:none;cursor:pointer;display:flex;align-items:center;gap:4px;">
-                                        <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
-                                        <span>Remove</span>
-                                    </button>
-                                </div>
-
-                                <input type="hidden" name="variant_indexes[]" :value="index" :disabled="index === 0">
-
-                                <div style="display:flex;align-items:center;gap:14px;">
-                                    {{-- Variant Image Box --}}
-                                    <div style="width:80px;height:80px;position:relative;flex-shrink:0;">
-                                        <label :for="'variant_file_' + index"
-                                               style="width:80px;height:80px;border-radius:14px;border:1.5px dashed #E2D9C8;background-color:#FAF8F5;display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;overflow:hidden;position:relative;transition:all 0.2s;"
-                                               onmouseover="this.style.borderColor='#C49520';this.style.backgroundColor='#FFFFFF';"
-                                               onmouseout="this.style.borderColor='#E2D9C8';this.style.backgroundColor='#FAF8F5';">
-                                            <template x-if="variant.imagePreview">
-                                                <div style="position:relative;width:100%;height:100%;">
-                                                    <img :src="variant.imagePreview" style="width:100%;height:100%;object-fit:cover;">
-                                                    <div class="absolute inset-0 bg-black/30 opacity-0 hover:opacity-100 transition-opacity flex items-center justify-center text-white text-[9px] font-bold uppercase">
-                                                        Change
-                                                    </div>
-                                                </div>
-                                            </template>
-                                            <template x-if="!variant.imagePreview">
-                                                <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:4px;">
-                                                    <span style="color:#C49520;font-size:16px;line-height:1;">+</span>
-                                                    <span style="font-size:9px;font-weight:700;color:#7A5505;margin-top:2px;">Photo</span>
-                                                </div>
-                                            </template>
-                                            <template x-if="variant.isOptimizing">
-                                                <div style="position:absolute;inset:0;background:rgba(255,255,255,0.9);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:15;">
-                                                    <svg class="animate-spin h-4 w-4 text-[#C49520]" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                                                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                                                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path>
-                                                    </svg>
-                                                </div>
-                                            </template>
-                                            <input type="file" 
-                                                   :id="'variant_file_' + index" 
-                                                   :name="'variant_image_' + index" 
-                                                   accept="image/jpeg,image/png,image/webp,image/jpg,image/heic,image/heif,.heic,.heif" 
-                                                   multiple
-                                                   class="hidden" 
-                                                   :disabled="index === 0"
-                                                   @change="handleVariantFile($event, index)">
-                                        </label>
-                                        <button type="button" 
-                                                x-show="variant.imagePreview"
-                                                @click="removeVariantImage(index)" 
-                                                style="position:absolute;top:-5px;right:-5px;width:20px;height:20px;background-color:#DC2626;color:#FFFFFF;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:900;border:none;cursor:pointer;"
-                                                title="Remove photo">
-                                            ✕
-                                        </button>
-                                    </div>
+                                    {{-- Hidden file inputs for submission and file picker --}}
+                                    <input type="hidden" name="variant_indexes[]" :value="index">
+                                    <input type="file" :id="'variant_files_' + index" :name="'variant_images_' + index + '[]'" multiple class="hidden">
+                                    <input type="file" :id="'variant_file_' + index" :name="'variant_image_' + index" class="hidden">
+                                    <input type="file" 
+                                           :id="'variant_picker_' + index" 
+                                           accept="image/jpeg,image/png,image/webp,image/jpg,image/heic,image/heif,.heic,.heif" 
+                                           multiple 
+                                           class="hidden" 
+                                           @change="handleVariantImagesUpload($event, index)">
 
                                     {{-- Variant Name Input --}}
-                                    <div style="flex:1;min-width:0;">
+                                    <div>
                                         <label style="font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:0.04em;color:#1E1915;display:block;margin-bottom:4px;">
-                                            Variant Name <span style="color:#DC2626;">*</span>
+                                            Variant Name <span style="color:#DC2626;" x-show="index > 0">*</span>
                                         </label>
                                         <input type="text" 
                                                :name="'variant_names[' + index + ']'" 
-                                               :disabled="index === 0"
                                                x-model="variant.name" 
-                                               placeholder="e.g. Emerald Green, Ivory Piña, Short Sleeve..." 
+                                               :placeholder="index === 0 ? 'e.g. Classic Ivory (Optional, defaults to product name)' : 'e.g. Emerald Green, Ivory Piña, Short Sleeve...'" 
                                                style="width:100%;padding:10px 14px;background-color:#FAF8F5;border:1px solid #E2D9C8;border-radius:12px;font-size:13px;font-weight:600;color:#1E1915;outline:none;transition:all 0.2s;"
                                                onfocus="this.style.borderColor='#C49520';this.style.backgroundColor='#FFFFFF';"
                                                onblur="this.style.borderColor='#E2D9C8';this.style.backgroundColor='#FAF8F5';">
                                     </div>
-                                </div>
-                            </div>
-                        </template>
-                    </template>
-                </div>
 
-                {{-- Add Another Variant Button (Clean non-breaking layout for mobile & desktop) --}}
-                <div>
-                    <button type="button" 
-                            @click="addVariantRow()" 
-                            style="width:100%;padding:11px 16px;border-radius:16px;border:1.5px dashed #C49520;background-color:#FAF8F5;color:#1E1915;display:flex;align-items:center;justify-content:center;gap:8px;cursor:pointer;transition:all 0.2s;text-align:center;"
-                            onmouseover="this.style.backgroundColor='#FDFBF7';this.style.borderColor='#7A5505';"
-                            onmouseout="this.style.backgroundColor='#FAF8F5';this.style.borderColor='#C49520';">
-                        <span style="width:20px;height:20px;border-radius:50%;background-color:#FDF8EE;border:1px solid #EEDBBA;color:#7A5505;display:inline-flex;align-items:center;justify-content:center;font-size:14px;font-weight:800;flex-shrink:0;">+</span>
-                        <span style="font-size:13px;font-weight:700;color:#1E1915;white-space:nowrap;">Add Another Variant</span>
-                        <span style="font-size:11px;font-weight:500;color:#78716C;white-space:nowrap;" class="hidden sm:inline">(Optional Style / Color)</span>
-                        <span style="font-size:11px;font-weight:500;color:#78716C;white-space:nowrap;" class="sm:hidden">(Optional)</span>
-                    </button>
-                </div>
+                                    {{-- Product Images Uploader for this Variation (Min 1, Max 3) --}}
+                                    <div class="space-y-2">
+                                        <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:6px;">
+                                            <label style="font-size:10.5px;font-weight:800;text-transform:uppercase;letter-spacing:0.04em;color:#1E1915;">
+                                                Upload Product Image <span style="color:#DC2626;">*</span>
+                                                <span style="font-size:9.5px;font-weight:600;color:#78716C;text-transform:none;letter-spacing:normal;">(Min 1, Max 3)</span>
+                                            </label>
+                                            <span style="font-size:10.5px;font-weight:700;" 
+                                                  :style="variant.images && variant.images.length >= 1 ? 'color:#059669;' : 'color:#DC2626;'" 
+                                                  x-text="(variant.images ? variant.images.length : 0) + ' / 3 uploaded' + (variant.images && variant.images.length >= 1 ? ' ✓' : ' (At least 1 required)')"></span>
+                                        </div>
+
+                                        {{-- Image Cards Row (Flex layout: previews + upload button) --}}
+                                        <div class="flex items-center gap-3 overflow-x-auto pb-1 pt-1" :id="'variant_img_row_' + index">
+                                            {{-- Uploaded Images Previews --}}
+                                            <template x-for="(img, imgIdx) in (variant.images || [])" :key="img.uid">
+                                                <div style="width:110px;height:140px;border-radius:16px;border:1px solid #ECE3D2;background-color:#FAF8F5;position:relative;flex-shrink:0;overflow:hidden;box-shadow:0 1px 4px rgba(0,0,0,0.03);">
+                                                    <img :src="img.preview" style="width:100%;height:100%;object-fit:cover;">
+                                                    {{-- Photo Badge --}}
+                                                    <span style="position:absolute;top:5px;left:5px;background:rgba(30,25,21,0.78);color:#FFFFFF;font-size:8px;font-weight:800;padding:2px 6px;border-radius:6px;text-transform:uppercase;letter-spacing:0.03em;z-index:10;"
+                                                          x-text="(index === 0 && imgIdx === 0) ? 'Primary' : ('Photo ' + (imgIdx + 1))"></span>
+                                                    {{-- Re-select Warning if from restored draft without File --}}
+                                                    <template x-if="!img.hasActualFile">
+                                                        <div style="position:absolute;bottom:0;left:0;right:0;background:rgba(217,119,6,0.92);color:#FFFFFF;font-size:8px;font-weight:800;text-align:center;padding:3px 2px;line-height:1.2;cursor:pointer;z-index:10;" 
+                                                             @click="triggerVariantPicker(index)">
+                                                            Tap to re-select
+                                                        </div>
+                                                    </template>
+                                                    {{-- Remove Button --}}
+                                                    <button type="button" 
+                                                            @click="removeVariantImageAt(index, imgIdx)" 
+                                                            style="position:absolute;top:5px;right:5px;width:18px;height:18px;background-color:#DC2626;color:#FFFFFF;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:900;border:none;cursor:pointer;z-index:15;" 
+                                                            title="Remove photo">
+                                                        ✕
+                                                    </button>
+                                                </div>
+                                            </template>
+
+                                            {{-- Optimizing Loading Card --}}
+                                            <template x-if="variant.isOptimizing">
+                                                <div style="width:110px;height:140px;border-radius:16px;border:1.5px dashed #C49520;background:#FAF8F5;display:flex;flex-direction:column;align-items:center;justify-content:center;flex-shrink:0;padding:8px;">
+                                                    <svg class="animate-spin h-5 w-5 text-[#C49520]" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path>
+                                                    </svg>
+                                                    <span style="font-size:8.5px;font-weight:800;color:#7A5505;margin-top:6px;text-align:center;">Compressing...</span>
+                                                </div>
+                                            </template>
+
+                                            {{-- Upload Button (Shown while count < 3) --}}
+                                            <template x-if="!variant.images || variant.images.length < 3">
+                                                <button type="button" 
+                                                        @click="triggerVariantPicker(index)" 
+                                                        :id="'variant_upload_btn_' + index"
+                                                        style="width:110px;height:140px;border-radius:16px;border:1.5px dashed #E2D9C8;background-color:#FAF8F5;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;cursor:pointer;flex-shrink:0;transition:all 0.2s;padding:10px;outline:none;"
+                                                        onmouseover="this.style.borderColor='#C49520';this.style.backgroundColor='#FFFFFF';"
+                                                        onmouseout="this.style.borderColor='#E2D9C8';this.style.backgroundColor='#FAF8F5';">
+                                                    <div style="color:#C49520;margin-bottom:4px;">
+                                                        <svg width="22" height="22" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                                                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/>
+                                                        </svg>
+                                                    </div>
+                                                    <span style="font-size:11px;font-weight:700;color:#1E1915;line-height:1.2;">Upload Photo</span>
+                                                    <span style="font-size:9px;color:#78716C;margin-top:4px;" x-text="'Slot ' + ((variant.images ? variant.images.length : 0) + 1) + ' of 3'"></span>
+                                                    <span style="font-size:8px;color:#A8A096;margin-top:2px;">Auto-compressed</span>
+                                                </button>
+                                            </template>
+                                        </div>
+                                    </div>
+                                </div>
+                            </template>
+                        </div>
+
+                        {{-- Add Another Variant Button --}}
+                        <div>
+                            <button type="button" 
+                                    @click="addVariantRow()" 
+                                    style="width:100%;padding:11px 16px;border-radius:16px;border:1.5px dashed #C49520;background-color:#FAF8F5;color:#1E1915;display:flex;align-items:center;justify-content:center;gap:8px;cursor:pointer;transition:all 0.2s;text-align:center;"
+                                    onmouseover="this.style.backgroundColor='#FDFBF7';this.style.borderColor='#7A5505';"
+                                    onmouseout="this.style.backgroundColor='#FAF8F5';this.style.borderColor='#C49520';">
+                                <span style="width:20px;height:20px;border-radius:50%;background-color:#FDF8EE;border:1px solid #EEDBBA;color:#7A5505;display:inline-flex;align-items:center;justify-content:center;font-size:14px;font-weight:800;flex-shrink:0;">+</span>
+                                <span style="font-size:13px;font-weight:700;color:#1E1915;white-space:nowrap;">Add Another Variant</span>
+                                <span style="font-size:11px;font-weight:500;color:#78716C;white-space:nowrap;" class="hidden sm:inline">(Optional Style / Color)</span>
+                                <span style="font-size:11px;font-weight:500;color:#78716C;white-space:nowrap;" class="sm:hidden">(Optional)</span>
+                            </button>
+                        </div>
+                    </div>
             </div>
 
             {{-- Centered Golden Diamond Divider (Exact from Screenshot) --}}
@@ -2115,16 +1943,20 @@ function addProductManager() {
             return '✓ Price & shipping configured';
         },
 
-        // Media State: Variant 1 (Cover Photo) + Additional Gallery Photos
+        // Media State: Variations & Images (Min 1, Max 3 images per variation)
         variants: [
-            { id: 0, name: '', file: null, imagePreview: null, hasActualFile: false, isOptimizing: false }
+            { id: 0, name: '', images: [], file: null, imagePreview: null, hasActualFile: false, isOptimizing: false }
         ],
-        galleryImages: [], // array of { uid, file, preview, hasActualFile }
+        _variantImageUidCounter: 1,
+        galleryImages: [], // optional gallery fallback
         _galleryUidCounter: 1, // Unique ID counter for stable x-for keys
         isOptimizingGallery: false,
 
         get imageCount() {
-            let count = this.variants.filter(v => v && v.imagePreview !== null).length;
+            let count = 0;
+            this.variants.forEach(v => {
+                if (v && Array.isArray(v.images)) count += v.images.length;
+            });
             count += this.galleryImages.length;
             return count;
         },
@@ -2145,7 +1977,7 @@ function addProductManager() {
                     (this.productName && this.productName.trim()) ||
                     (this.selectedCategories && this.selectedCategories.length) ||
                     (this.price && parseFloat(this.price) > 0) ||
-                    (this.variants[0] && this.variants[0].imagePreview) ||
+                    (this.variants[0] && ((this.variants[0].images && this.variants[0].images.length > 0) || this.variants[0].imagePreview)) ||
                     (this.description && this.description.trim())
                 );
 
@@ -2175,7 +2007,12 @@ function addProductManager() {
                     sizeStocks: sizeStocks,
                     isOnSale: document.getElementById('discountToggle')?.checked || false,
                     discountPercentage: document.getElementById('discountPercentage')?.value || '',
-                    variants: this.variants.map(v => ({ id: v.id, name: v.name, imagePreview: v.imagePreview })),
+                    variants: this.variants.map(v => ({
+                        id: v.id,
+                        name: v.name,
+                        images: Array.isArray(v.images) ? v.images.map(img => ({ preview: img.preview })) : [],
+                        imagePreview: v.imagePreview
+                    })),
                     galleryImages: this.galleryImages.map(g => ({ preview: g.preview })),
                     isGcashAvailable: document.getElementById('gcash_toggle_create')?.checked ?? true,
                     isMayaAvailable: document.getElementById('maya_toggle_create')?.checked ?? false,
@@ -2286,15 +2123,32 @@ function addProductManager() {
                     if (mf) mf.style.display = draft.isMayaAvailable ? '' : 'none';
                 }
 
-                // Restore variants & cover photo (Preview only; explicit re-attachment required to publish)
+                // Restore variants & product images (Preview only; explicit re-attachment or auto-recovery)
                 if (Array.isArray(draft.variants) && draft.variants.length > 0) {
                     this.variants = draft.variants.map((v, idx) => {
+                        let restoredImages = [];
+                        if (Array.isArray(v.images) && v.images.length > 0) {
+                            restoredImages = v.images.map(img => ({
+                                uid: this._variantImageUidCounter++,
+                                file: null,
+                                preview: img.preview,
+                                hasActualFile: false
+                            }));
+                        } else if (v.imagePreview) {
+                            restoredImages = [{
+                                uid: this._variantImageUidCounter++,
+                                file: null,
+                                preview: v.imagePreview,
+                                hasActualFile: false
+                            }];
+                        }
                         return {
                             id: v.id ?? idx,
                             name: v.name || '',
-                            file: null, // Deliberately null: avoid phantom DataTransfer objects
-                            imagePreview: v.imagePreview || null,
-                            hasActualFile: false, // Prevents ghost preview false-positive
+                            images: restoredImages,
+                            file: null,
+                            imagePreview: restoredImages[0] ? restoredImages[0].preview : (v.imagePreview || null),
+                            hasActualFile: false,
                             isOptimizing: false
                         };
                     });
@@ -2325,61 +2179,146 @@ function addProductManager() {
             window.location.href = window.location.pathname;
         },
 
-        async handleCoverPhotoUpload(event) {
-            const files = Array.from(event.target.files || []);
-            if (!files.length) return;
-
-            // First file → cover photo for variant 0; extras → gallery
-            const [coverFile, ...extraFiles] = files;
-
-            if (coverFile.size > 25 * 1024 * 1024) {
-                triggerAppModal('File Too Large', 'Cover image exceeds 25MB limit. Please choose a smaller photo.', 'warning');
-                event.target.value = '';
-                return;
-            }
-
-            this.variants[0].isOptimizing = true;
-            try {
-                const result = await processClientImage(coverFile, 1600, 0.85);
-                if (result && result.file) {
-                    this.variants[0].file = result.file;
-                    this.variants[0].imagePreview = result.preview;
-                    this.variants[0].hasActualFile = true;
-
-                    if (typeof DataTransfer !== 'undefined') {
-                        const dt = new DataTransfer();
-                        dt.items.add(result.file);
-                        const fileInput = document.getElementById('variant_file_0');
-                        if (fileInput) fileInput.files = dt.files;
-                    }
-
-                    const box = document.getElementById('variant_upload_box_0');
-                    if (box) box.classList.remove('border-red-500', 'border-amber-500', 'ring-2', 'ring-amber-400');
-                    this.calculateFillRate();
-                    this.scheduleDraftSave();
-                }
-            } catch (err) {
-                console.error('Failed to process cover photo:', err);
-                triggerAppModal('Image Error', 'Could not optimize photo. Please try a different image.', 'warning');
-            } finally {
-                this.variants[0].isOptimizing = false;
-            }
-
-            // Send any extra selected files straight to the gallery
-            if (extraFiles.length > 0) {
-                await this.processGalleryFileList(extraFiles);
+        triggerVariantPicker(index) {
+            const picker = document.getElementById('variant_picker_' + index);
+            if (picker) {
+                picker.value = '';
+                picker.click();
             }
         },
 
-        removeCoverPhoto() {
-            this.variants[0].file = null;
-            this.variants[0].imagePreview = null;
-            this.variants[0].hasActualFile = false;
-            this.variants[0].isOptimizing = false;
-            const input = document.getElementById('variant_file_0');
-            if (input) input.value = '';
-            this.calculateFillRate();
-            this.scheduleDraftSave();
+        async handleVariantImagesUpload(event, index) {
+            const files = Array.from(event.target.files || []);
+            event.target.value = '';
+            if (!files.length) return;
+
+            const variant = this.variants[index];
+            if (!variant) return;
+
+            if (!Array.isArray(variant.images)) {
+                variant.images = [];
+            }
+
+            const remainingSlots = 3 - variant.images.length;
+            if (remainingSlots <= 0) {
+                triggerAppModal('Photo Limit Reached', 'Each variation can have a maximum of 3 photos.', 'warning');
+                return;
+            }
+
+            const filesToProcess = files.slice(0, remainingSlots);
+            if (files.length > remainingSlots) {
+                triggerAppModal('Maximum 3 Photos', `You can only upload up to 3 photos per variation. The first ${remainingSlots} photo(s) will be added.`, 'info');
+            }
+
+            variant.isOptimizing = true;
+            try {
+                for (const file of filesToProcess) {
+                    if (file.size > 25 * 1024 * 1024) {
+                        triggerAppModal('File Too Large', `Photo "${file.name}" exceeds 25MB limit. Please choose a smaller photo.`, 'warning');
+                        continue;
+                    }
+                    if (!file.type.startsWith('image/') && !/\.(jpe?g|png|webp|heic|heif)$/i.test(file.name || '')) {
+                        triggerAppModal('Invalid File', `"${file.name}" is not a supported image file.`, 'warning');
+                        continue;
+                    }
+
+                    try {
+                        const result = await processClientImage(file, 1600, 0.85);
+                        if (result && result.file) {
+                            variant.images.push({
+                                uid: this._variantImageUidCounter++,
+                                file: result.file,
+                                preview: result.preview,
+                                hasActualFile: true
+                            });
+                        }
+                    } catch (err) {
+                        console.error('Variant photo processing error:', err);
+                    }
+                }
+
+                if (variant.images.length > 0) {
+                    variant.file = variant.images[0].file;
+                    variant.imagePreview = variant.images[0].preview;
+                    variant.hasActualFile = variant.images[0].hasActualFile;
+                }
+
+                this.syncVariantInputs(index);
+
+                const card = document.getElementById('variant_card_' + index);
+                if (card) card.classList.remove('border-red-500', 'ring-2', 'ring-red-400');
+
+                this.calculateFillRate();
+                this.scheduleDraftSave();
+            } finally {
+                variant.isOptimizing = false;
+            }
+        },
+
+        removeVariantImageAt(variantIndex, imageIndex) {
+            const variant = this.variants[variantIndex];
+            if (!variant || !Array.isArray(variant.images)) return;
+
+            if (imageIndex >= 0 && imageIndex < variant.images.length) {
+                variant.images.splice(imageIndex, 1);
+
+                if (variant.images.length > 0) {
+                    variant.file = variant.images[0].file;
+                    variant.imagePreview = variant.images[0].preview;
+                    variant.hasActualFile = variant.images[0].hasActualFile;
+                } else {
+                    variant.file = null;
+                    variant.imagePreview = null;
+                    variant.hasActualFile = false;
+                }
+
+                this.syncVariantInputs(variantIndex);
+                this.calculateFillRate();
+                this.scheduleDraftSave();
+            }
+        },
+
+        syncVariantInputs(variantIndex) {
+            try {
+                const variant = this.variants[variantIndex];
+                if (!variant) return;
+
+                if (typeof DataTransfer !== 'undefined') {
+                    // Multi-file input
+                    const dtMulti = new DataTransfer();
+                    if (Array.isArray(variant.images)) {
+                        variant.images.forEach(img => {
+                            if (img.file) dtMulti.items.add(img.file);
+                        });
+                    }
+                    const multiInput = document.getElementById('variant_files_' + variantIndex);
+                    if (multiInput) multiInput.files = dtMulti.files;
+
+                    // Single-file legacy input
+                    const dtSingle = new DataTransfer();
+                    if (variant.file) {
+                        dtSingle.items.add(variant.file);
+                    } else if (Array.isArray(variant.images) && variant.images[0] && variant.images[0].file) {
+                        dtSingle.items.add(variant.images[0].file);
+                    }
+                    const singleInput = document.getElementById('variant_file_' + variantIndex);
+                    if (singleInput) singleInput.files = dtSingle.files;
+
+                    // Sync primary images to gallery_files_input for full backward compatibility
+                    const dtGallery = new DataTransfer();
+                    this.variants.forEach(v => {
+                        if (Array.isArray(v.images)) {
+                            v.images.forEach(img => {
+                                if (img.file) dtGallery.items.add(img.file);
+                            });
+                        }
+                    });
+                    const galleryInput = document.getElementById('gallery_files_input');
+                    if (galleryInput) galleryInput.files = dtGallery.files;
+                }
+            } catch (err) {
+                console.warn('Could not sync variant inputs:', err);
+            }
         },
 
         syncGalleryFileInput() {
@@ -2486,7 +2425,7 @@ function addProductManager() {
 
         addVariantRow() {
             const nextId = this.variants.length;
-            this.variants.push({ id: nextId, name: '', file: null, imagePreview: null, hasActualFile: false, isOptimizing: false });
+            this.variants.push({ id: nextId, name: '', images: [], file: null, imagePreview: null, hasActualFile: false, isOptimizing: false });
             this.calculateFillRate();
             this.scheduleDraftSave();
         },
@@ -2499,64 +2438,11 @@ function addProductManager() {
         },
 
         async handleVariantFile(event, index) {
-            const files = Array.from(event.target.files || []);
-            if (!files.length) return;
-
-            // First file → variant cover; extras → gallery
-            const [coverFile, ...extraFiles] = files;
-
-            if (coverFile.size > 25 * 1024 * 1024) {
-                triggerAppModal('File Too Large', 'Original image exceeds 25MB limit. Please choose a smaller photo.', 'warning');
-                event.target.value = '';
-                return;
-            }
-
-            if (this.variants[index]) {
-                this.variants[index].isOptimizing = true;
-            }
-
-            try {
-                const result = await processClientImage(coverFile, 1600, 0.85);
-                if (result && result.file && this.variants[index]) {
-                    this.variants[index].file = result.file;
-                    this.variants[index].imagePreview = result.preview;
-                    this.variants[index].hasActualFile = true;
-
-                    if (typeof DataTransfer !== 'undefined') {
-                        const dt = new DataTransfer();
-                        dt.items.add(result.file);
-                        const fileInput = document.getElementById('variant_file_' + index);
-                        if (fileInput) fileInput.files = dt.files;
-                    }
-
-                    this.calculateFillRate();
-                    this.scheduleDraftSave();
-                }
-            } catch (err) {
-                console.error('Failed to process variant photo:', err);
-            } finally {
-                if (this.variants[index]) {
-                    this.variants[index].isOptimizing = false;
-                }
-            }
-
-            // Send any extra selected files straight to the gallery
-            if (extraFiles.length > 0) {
-                await this.processGalleryFileList(extraFiles);
-            }
+            await this.handleVariantImagesUpload(event, index);
         },
 
         removeVariantImage(index) {
-            if (this.variants[index]) {
-                this.variants[index].file = null;
-                this.variants[index].imagePreview = null;
-                this.variants[index].hasActualFile = false;
-                this.variants[index].isOptimizing = false;
-            }
-            const fileInput = document.getElementById('variant_file_' + index);
-            if (fileInput) fileInput.value = '';
-            this.calculateFillRate();
-            this.scheduleDraftSave();
+            this.removeVariantImageAt(index, 0);
         },
 
         // Real-time categories state
@@ -2636,8 +2522,11 @@ function addProductManager() {
             const hasName = Boolean(this.productName && this.productName.trim().length >= 3);
             const hasCategory = this.selectedCategories.length > 0;
             const hasTarget = Boolean(this.targetGroup && ['Men', 'Women', 'Kids'].includes(this.targetGroup));
-            const hasMainImage = Boolean(this.variants[0] && this.variants[0].imagePreview !== null);
-            return hasName && hasCategory && hasTarget && hasMainImage;
+            const allVariantsHaveImages = this.variants.length > 0 && this.variants.every(v => {
+                const count = (v.images && Array.isArray(v.images)) ? v.images.length : (v.imagePreview ? 1 : 0);
+                return count >= 1 && count <= 3;
+            });
+            return hasName && hasCategory && hasTarget && allVariantsHaveImages;
         },
 
         goToStep2() {
@@ -2646,14 +2535,30 @@ function addProductManager() {
                 el.classList.remove('border-red-500', 'ring-2', 'ring-red-400');
             });
 
-            if (!this.variants[0] || !this.variants[0].imagePreview) {
-                const v1Box = document.getElementById('variant_upload_box_0');
-                if (v1Box) {
-                    v1Box.classList.add('border-red-500', 'ring-2', 'ring-red-400');
-                    v1Box.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            // Validate that every variation has at least 1 image and at most 3 images
+            for (let i = 0; i < this.variants.length; i++) {
+                const v = this.variants[i];
+                const count = (v.images && Array.isArray(v.images)) ? v.images.length : (v.imagePreview ? 1 : 0);
+                if (count < 1) {
+                    const card = document.getElementById('variant_card_' + i);
+                    if (card) {
+                        card.classList.add('border-red-500', 'ring-2', 'ring-red-400');
+                        card.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    }
+                    const vName = i === 0 ? 'Variant 1 (Main Style)' : ('Variant ' + (i + 1));
+                    triggerAppModal('Product Image Required', `Please upload at least 1 product image for ${vName} (min 1, max 3 photos).`, 'warning');
+                    return;
                 }
-                triggerAppModal('Cover Photo Required', 'Please upload at least the primary product cover photo before proceeding to Step 2.', 'warning');
-                return;
+                if (count > 3) {
+                    const card = document.getElementById('variant_card_' + i);
+                    if (card) {
+                        card.classList.add('border-red-500', 'ring-2', 'ring-red-400');
+                        card.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    }
+                    const vName = i === 0 ? 'Variant 1 (Main Style)' : ('Variant ' + (i + 1));
+                    triggerAppModal('Maximum 3 Photos', `${vName} has ${count} photos. Maximum is 3 photos per variation.`, 'warning');
+                    return;
+                }
             }
 
             if (!this.productName || this.productName.trim().length < 3) {
@@ -3028,42 +2933,35 @@ async function handleProductFormSubmit(e, isEdit = false) {
         if (alpineData) {
             if (Array.isArray(alpineData.variants)) {
                 alpineData.variants.forEach((v, idx) => {
-                    const el = document.getElementById('variant_file_' + idx);
-                    if (el && typeof DataTransfer !== 'undefined') {
-                        let fileToAttach = v.file;
-                        // Fallback: If File object is missing but data URL exists, reconstruct file
-                        if (!fileToAttach && v.imagePreview && typeof v.imagePreview === 'string' && v.imagePreview.startsWith('data:image') && typeof dataURLtoFile === 'function') {
-                            fileToAttach = dataURLtoFile(v.imagePreview, (idx === 0 ? 'cover' : 'variant_' + idx) + '.jpg');
-                            v.file = fileToAttach;
+                    if (Array.isArray(v.images)) {
+                        v.images.forEach((img, imgIdx) => {
+                            if (!img.file && img.preview && typeof img.preview === 'string' && img.preview.startsWith('data:image') && typeof dataURLtoFile === 'function') {
+                                img.file = dataURLtoFile(img.preview, `variant_${idx}_img_${imgIdx}.jpg`);
+                                img.hasActualFile = true;
+                            }
+                        });
+                        if (v.images.length > 0 && !v.file && v.images[0].file) {
+                            v.file = v.images[0].file;
                             v.hasActualFile = true;
                         }
-                        if (fileToAttach) {
-                            const dt = new DataTransfer();
-                            dt.items.add(fileToAttach);
-                            el.files = dt.files;
-                        }
+                    } else if (v.imagePreview && !v.file && typeof v.imagePreview === 'string' && v.imagePreview.startsWith('data:image') && typeof dataURLtoFile === 'function') {
+                        v.file = dataURLtoFile(v.imagePreview, `variant_${idx}.jpg`);
+                        v.hasActualFile = true;
+                    }
+
+                    if (typeof alpineData.syncVariantInputs === 'function') {
+                        alpineData.syncVariantInputs(idx);
                     }
                 });
             }
             if (typeof alpineData.syncGalleryFileInput === 'function') {
-                // Also reconstruct any gallery files if needed
-                if (Array.isArray(alpineData.galleryImages)) {
-                    alpineData.galleryImages.forEach((g, gIdx) => {
-                        if (!g.file && g.preview && typeof g.preview === 'string' && g.preview.startsWith('data:image') && typeof dataURLtoFile === 'function') {
-                            g.file = dataURLtoFile(g.preview, 'gallery_' + gIdx + '.jpg');
-                            g.hasActualFile = true;
-                        }
-                    });
-                }
                 alpineData.syncGalleryFileInput();
             }
 
-            const variantFileInput = document.getElementById('variant_file_0');
-            const galleryFileInput = document.getElementById('gallery_files_input');
+            const variantFileInput = document.getElementById('variant_files_0') || document.getElementById('variant_file_0');
             console.log('[ImagePipeline:SubmitDiagnostics]', {
-                coverFilesCount: variantFileInput ? variantFileInput.files.length : 0,
-                galleryAlpineCount: Array.isArray(alpineData.galleryImages) ? alpineData.galleryImages.length : 0,
-                galleryInputFilesCount: galleryFileInput ? galleryFileInput.files.length : 0,
+                variantCount: alpineData.variants.length,
+                variant0FilesCount: variantFileInput ? variantFileInput.files.length : 0,
                 pendingJobsCount: window._pendingImageJobs ? window._pendingImageJobs.size : 0,
             });
         }
@@ -3219,7 +3117,7 @@ function validateProductForm(e, isEdit = false) {
         if (catContainer) catContainer.classList.add('border-red-500');
     }
 
-    // 5. Product Imagery (Variant 1 is required)
+    // 5. Product Imagery (Each variation requires min 1, max 3 photos)
     if (!isEdit) {
         let alpineData = null;
         try {
@@ -3227,42 +3125,38 @@ function validateProductForm(e, isEdit = false) {
             alpineData = alpineEl && window.Alpine ? Alpine.$data(alpineEl) : null;
             if (alpineData && Array.isArray(alpineData.variants)) {
                 alpineData.variants.forEach((v, idx) => {
-                    const el = document.getElementById('variant_file_' + idx);
-                    if (el && (!el.files || el.files.length === 0) && v.file && typeof DataTransfer !== 'undefined') {
-                        const dt = new DataTransfer();
-                        dt.items.add(v.file);
-                        el.files = dt.files;
+                    if (typeof alpineData.syncVariantInputs === 'function') {
+                        alpineData.syncVariantInputs(idx);
                     }
                 });
-                if (typeof alpineData.syncGalleryFileInput === 'function') {
-                    alpineData.syncGalleryFileInput();
-                }
             }
         } catch (syncErr) {
-            console.warn('Pre-submit file sync warning:', syncErr);
+            console.warn('Pre-submit variant sync warning:', syncErr);
         }
 
-        const v1 = alpineData?.variants?.[0];
-        const v1FileInput = document.getElementById('variant_file_0');
-        const hasV1File = Boolean(v1FileInput && v1FileInput.files && v1FileInput.files.length > 0);
-        const hasV1Actual = Boolean(v1 && v1.hasActualFile && v1.file);
-        
-        let hasAnyVariantFile = false;
-        document.querySelectorAll('input[name^="variant_image_"]').forEach(inp => {
-            if (inp.files && inp.files.length > 0) hasAnyVariantFile = true;
-        });
+        if (alpineData && Array.isArray(alpineData.variants)) {
+            alpineData.variants.forEach((v, idx) => {
+                const vName = idx === 0 ? 'Variant 1 (Main Style)' : (`Variant ${idx + 1}` + (v.name ? ` - ${v.name}` : ''));
+                const images = Array.isArray(v.images) ? v.images : [];
+                const filesInput = document.getElementById('variant_files_' + idx);
+                const fileInput = document.getElementById('variant_file_' + idx);
+                const hasInputFiles = (filesInput && filesInput.files && filesInput.files.length > 0) || (fileInput && fileInput.files && fileInput.files.length > 0);
+                const hasActualFiles = images.some(img => img.hasActualFile && img.file);
 
-        const galleryInput = document.getElementById('gallery_files_input');
-        const hasGalleryFiles = Boolean(galleryInput && galleryInput.files && galleryInput.files.length > 0);
-
-        if (v1 && v1.imagePreview && !hasV1File && !hasV1Actual) {
-            errors.push('The cover photo preview was restored from a saved draft. Please tap the cover photo slot to re-select the image file before publishing.');
-            const v1Box = document.getElementById('variant_upload_box_0');
-            if (v1Box) v1Box.classList.add('border-amber-500', 'ring-2', 'ring-amber-400');
-        } else if (!hasV1File && !hasV1Actual && !hasAnyVariantFile && !hasGalleryFiles) {
-            errors.push('Please upload the main product photo for Variant 1 (Cover Photo).');
-            const v1Box = document.getElementById('variant_upload_box_0');
-            if (v1Box) v1Box.classList.add('border-red-500');
+                if (images.length === 0 && !hasInputFiles) {
+                    errors.push(`Please upload at least 1 product image for ${vName} (min 1, max 3 photos).`);
+                    const card = document.getElementById('variant_card_' + idx);
+                    if (card) card.classList.add('border-red-500');
+                } else if (images.length > 0 && !hasActualFiles && !hasInputFiles) {
+                    errors.push(`The photos for ${vName} were restored from a draft. Please re-select the image files before publishing.`);
+                    const card = document.getElementById('variant_card_' + idx);
+                    if (card) card.classList.add('border-amber-500', 'ring-2', 'ring-amber-400');
+                } else if (images.length > 3) {
+                    errors.push(`${vName} has ${images.length} photos. Maximum is 3 photos per variation.`);
+                    const card = document.getElementById('variant_card_' + idx);
+                    if (card) card.classList.add('border-red-500');
+                }
+            });
         }
     }
 
@@ -3608,7 +3502,7 @@ document.addEventListener('DOMContentLoaded', () => {
         [
             'selector' => '#tour-create-guide-btn',
             'title' => '✨ Step 1: Media & Core Info Guide',
-            'text' => 'Welcome to Step 1! Here you upload your product\'s primary cover image, add multiple style/color variants, and define the target demographic.'
+            'text' => 'Welcome to Step 1! Here you enter your product details and upload 1 to 3 photos for each variation.'
         ],
         [
             'selector' => '#tour-create-stepper-card',
@@ -3617,8 +3511,8 @@ document.addEventListener('DOMContentLoaded', () => {
         ],
         [
             'selector' => '#tour-create-media-variants',
-            'title' => '📸 Cover Media & Style Variants',
-            'text' => 'Upload your primary 1:1 cover image and high-resolution embroidery detail photos. Click "+ Add Another Variant" to add multiple style or color options with their own photos and names under a single listing.'
+            'title' => '📸 Variations & Product Images',
+            'text' => 'Upload 1 to 3 product images for each variation. Click "+ Add Another Variant" to add additional style or color options with their own photos and names.'
         ],
         [
             'selector' => '#tour-create-target-category',

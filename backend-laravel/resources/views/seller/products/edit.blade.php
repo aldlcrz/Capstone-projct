@@ -517,7 +517,7 @@
                                         </template>
                                         <input type="file" 
                                                :id="'variant_file_' + index" 
-                                               :name="'variant_image_' + index" 
+                                               :name="'variant_images_' + index + '[]'" 
                                                accept="image/jpeg,image/png,image/webp,image/jpg" 
                                                multiple
                                                class="hidden" 

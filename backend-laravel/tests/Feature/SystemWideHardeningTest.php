@@ -224,6 +224,119 @@ class SystemWideHardeningTest extends TestCase
         $editResponse->assertSee('/storage/' . $variations[1]['image']);
     }
 
+    public function test_seller_upload_variations_with_multiple_images_min_1_max_3_stored_properly(): void
+    {
+        Storage::fake('public');
+        $seller = $this->createSeller();
+        $category = \App\Models\Category::create([
+            'name' => 'Custom Barongs',
+            'target_group' => ['Men'],
+            'description' => 'Custom Embroidered Barongs',
+        ]);
+
+        $v0_img1 = UploadedFile::fake()->image('v0_front.jpg', 600, 600);
+        $v0_img2 = UploadedFile::fake()->image('v0_back.jpg', 600, 600);
+        $v1_img1 = UploadedFile::fake()->image('v1_front.jpg', 600, 600);
+        $v1_img2 = UploadedFile::fake()->image('v1_detail.jpg', 600, 600);
+        $v1_img3 = UploadedFile::fake()->image('v1_cuff.jpg', 600, 600);
+        $qrCode = UploadedFile::fake()->image('seller_qr.png', 400, 400);
+
+        $payload = [
+            'action' => 'publish',
+            'name' => 'Laguna Pina Barong',
+            'category_ids' => [$category->id],
+            'CategoryId' => $category->id,
+            'target_group' => 'Men',
+            'price' => 3500,
+            'shippingFee' => 100,
+            'shippingDays' => 3,
+            'sizes' => ['L'],
+            'size_stocks' => ['L' => 15],
+            'description' => 'Detailed multi-angle artisan barong.',
+            'product_is_gcash_available' => '1',
+            'gcashNumber' => '09171234567',
+            'gcashQrCode' => $qrCode,
+            'variant_indexes' => [0, 1],
+            'variant_names' => [0 => 'Natural Pina', 1 => 'Midnight Blue'],
+            'variant_images_0' => [$v0_img1, $v0_img2],
+            'variant_images_1' => [$v1_img1, $v1_img2, $v1_img3],
+        ];
+
+        $response = $this->actingAs($seller)->post(route('seller.products.store'), $payload);
+        $response->assertSessionHasNoErrors();
+        $response->assertRedirect(route('seller.products.index'));
+
+        $product = Product::where('sellerId', $seller->id)->first();
+        $this->assertNotNull($product);
+
+        $variations = $product->variations;
+        $this->assertCount(2, $variations);
+
+        // Variant 0: 2 images
+        $this->assertEquals('Natural Pina', $variations[0]['name']);
+        $this->assertCount(2, $variations[0]['images']);
+        $this->assertEquals($variations[0]['images'][0], $variations[0]['image']);
+        $this->assertStringStartsWith('products/cover/', $variations[0]['images'][0]);
+        $this->assertStringStartsWith('products/variants/', $variations[0]['images'][1]);
+
+        // Variant 1: 3 images
+        $this->assertEquals('Midnight Blue', $variations[1]['name']);
+        $this->assertCount(3, $variations[1]['images']);
+        $this->assertEquals($variations[1]['images'][0], $variations[1]['image']);
+        $this->assertStringStartsWith('products/variants/', $variations[1]['images'][0]);
+        $this->assertStringStartsWith('products/variants/', $variations[1]['images'][1]);
+        $this->assertStringStartsWith('products/variants/', $variations[1]['images'][2]);
+
+        // Product primary image is Variant 0 Image 1
+        $this->assertEquals($variations[0]['images'][0], $product->image[0]);
+
+        // All 5 images exist in public storage
+        foreach ($variations[0]['images'] as $path) {
+            $this->assertTrue(Storage::disk('public')->exists($path));
+        }
+        foreach ($variations[1]['images'] as $path) {
+            $this->assertTrue(Storage::disk('public')->exists($path));
+        }
+    }
+
+    public function test_seller_upload_variation_without_images_fails_validation(): void
+    {
+        Storage::fake('public');
+        $seller = $this->createSeller();
+        $category = \App\Models\Category::create([
+            'name' => 'Special Barongs',
+            'target_group' => ['Men'],
+            'description' => 'Special Barongs',
+        ]);
+
+        $v0_img1 = UploadedFile::fake()->image('v0_front.jpg', 600, 600);
+        $qrCode = UploadedFile::fake()->image('seller_qr.png', 400, 400);
+
+        $payload = [
+            'action' => 'publish',
+            'name' => 'Incomplete Variant Barong',
+            'category_ids' => [$category->id],
+            'CategoryId' => $category->id,
+            'target_group' => 'Men',
+            'price' => 2500,
+            'shippingFee' => 100,
+            'shippingDays' => 3,
+            'sizes' => ['M'],
+            'size_stocks' => ['M' => 5],
+            'description' => 'Incomplete variant test barong.',
+            'product_is_gcash_available' => '1',
+            'gcashNumber' => '09171234567',
+            'gcashQrCode' => $qrCode,
+            'variant_indexes' => [0, 1],
+            'variant_names' => [0 => 'Style 1', 1 => 'Style 2 Missing Images'],
+            'variant_images_0' => [$v0_img1],
+            // variant_images_1 is intentionally omitted
+        ];
+
+        $response = $this->actingAs($seller)->post(route('seller.products.store'), $payload);
+        $response->assertSessionHasErrors(['variant_images_1']);
+    }
+
     // ─────────────────────────────────────────────────────────────────────────
     // 2. API Admin Authorization Hardening
     // ─────────────────────────────────────────────────────────────────────────
