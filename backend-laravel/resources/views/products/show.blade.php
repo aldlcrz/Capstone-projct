@@ -5,6 +5,7 @@
     use App\Support\VariationFormatter;
     $galleryImages = VariationFormatter::buildGalleryImages($product->image, $product);
     $styleVariants = VariationFormatter::buildStyleVariants($product);
+    $variantCards = VariationFormatter::buildVariantImageCards($product, $galleryImages);
     $productVariations = $styleVariants; // Backward compatibility
     $isAdminUser = Auth::check() && in_array(Auth::user()->role, ['admin', 'superadmin']);
     $isProductOwner = Auth::check() && Auth::user()->role === 'seller' && Auth::id() === $product->sellerId;
@@ -65,7 +66,7 @@
         });
     });
 
-    function productDetail(defaultStock, sizeStocks, galleryImages, styleVariants, saleEndsAt) {
+    function productDetail(defaultStock, sizeStocks, galleryImages, styleVariants, saleEndsAt, variantCards) {
         var dataEl = document.getElementById('product-page-data');
         var dataset = dataEl ? dataEl.dataset : {};
         var isWishlistedInitial = dataset.isWishlisted === 'true';
@@ -75,6 +76,7 @@
 
         var galleryList = Array.isArray(galleryImages) ? galleryImages : [];
         var styleList = Array.isArray(styleVariants) ? styleVariants : [];
+        var cardsList = Array.isArray(variantCards) ? variantCards : [];
 
         return {
             selectedSize: '',
@@ -85,11 +87,36 @@
             activeImage: 0,
             galleryImages: galleryList,
             styleVariants: styleList,
+            variantCards: cardsList,
+            selectedCardId: cardsList.length > 0 ? cardsList[0].card_id : null,
             selectedStyle: styleList.length > 0 ? styleList[0].id : 0,
             selectedVariation: 0,
             // Compatibility accessor for any legacy references
             get variations() {
                 return this.galleryImages;
+            },
+            isCardActive: function(card) {
+                if (this.selectedCardId !== null && this.selectedCardId !== undefined) {
+                    return this.selectedCardId === card.card_id;
+                }
+                return this.selectedStyle === card.variant_id;
+            },
+            selectVariantCard: function(card) {
+                this.selectedCardId = card.card_id;
+                this.selectedStyle = card.variant_id;
+                this.selectedVariation = card.variant_id;
+                if (card.gallery_index !== undefined && card.gallery_index !== -1 && card.gallery_index !== null) {
+                    this.activeImage = card.gallery_index;
+                } else {
+                    var self = this;
+                    var idx = this.galleryImages.findIndex(function(img) {
+                        return (img.url && card.image_url && img.url === card.image_url) ||
+                               (img.path && card.image_path && img.path === card.image_path);
+                    });
+                    if (idx !== -1) {
+                        this.activeImage = idx;
+                    }
+                }
             },
             selectImage: function(index) {
                 this.activeImage = index;
@@ -100,6 +127,15 @@
                     if (found) {
                         this.selectedStyle = targetId;
                         this.selectedVariation = targetId;
+                        var self = this;
+                        var matchCard = this.variantCards.find(function(c) {
+                            return c.variant_id === targetId && c.gallery_index === index;
+                        }) || this.variantCards.find(function(c) {
+                            return c.variant_id === targetId;
+                        });
+                        if (matchCard) {
+                            this.selectedCardId = matchCard.card_id;
+                        }
                     }
                 }
             },
@@ -107,6 +143,12 @@
                 this.selectedStyle = variant.id;
                 this.selectedVariation = variant.id;
                 var self = this;
+                var matchCard = this.variantCards.find(function(c) {
+                    return c.variant_id === variant.id;
+                });
+                if (matchCard) {
+                    this.selectedCardId = matchCard.card_id;
+                }
                 var imgIdx = this.galleryImages.findIndex(function(img) {
                     return img.variant_id === variant.id;
                 });
@@ -141,6 +183,15 @@
                 this.buyNowMode = mode || 'buy_now';
                 this.showBuyNowSheet = true;
                 document.body.style.overflow = 'hidden';
+                var self = this;
+                var match = this.variantCards.find(function(c) {
+                    return c.variant_id === self.selectedStyle && c.gallery_index === self.activeImage;
+                }) || this.variantCards.find(function(c) {
+                    return c.variant_id === self.selectedStyle;
+                });
+                if (match) {
+                    this.selectedCardId = match.card_id;
+                }
             },
             closeBuyNowSheet() {
                 this.showBuyNowSheet = false;
@@ -427,7 +478,7 @@
         };
     }
 </script>
-<div class="max-w-6xl mx-auto py-4 lg:py-6 pb-24 lg:pb-6" x-data="productDetail({{ (int)($product->stock ?? 1) }}, @js($product->size_stocks ?? (object)[]), @js($galleryImages), @js($styleVariants), '{{ $product->sale_ends_at ? $product->sale_ends_at->toISOString() : '' }}')">
+<div class="max-w-6xl mx-auto py-4 lg:py-6 pb-24 lg:pb-6" x-data="productDetail({{ (int)($product->stock ?? 1) }}, @js($product->size_stocks ?? (object)[]), @js($galleryImages), @js($styleVariants), '{{ $product->sale_ends_at ? $product->sale_ends_at->toISOString() : '' }}', @js($variantCards))">
     @if($isAdminUser)
     <!-- Admin Context Header Bar -->
     <div class="mb-5 px-4 py-3 rounded-2xl flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-md"
@@ -2530,16 +2581,70 @@
 
 
 
-            <!-- Scrollable Content: 2-Column Color Family Grid, Sizes, Quantity -->
+            <!-- Scrollable Content: Available Designs Cards, Sizes, Quantity -->
             <div class="p-3 sm:p-4 overflow-y-auto space-y-4 flex-1">
-                <!-- Color Family / Available Variations (2-Column Grid matching Lazada Image 3) -->
-                <template x-if="styleVariants && styleVariants.length > 0">
+                <!-- Available Designs (Visual Cards matching Reference Image 1) -->
+                <template x-if="variantCards && variantCards.length > 0">
                     <div>
-                        <div class="mb-2">
-                            <span class="text-xs font-black text-gray-900">Color Family</span>
+                        <div class="flex items-center justify-between mb-2">
+                            <div class="flex items-center gap-1.5">
+                                <span class="text-xs font-black text-gray-900">Available Designs</span>
+                                <span class="text-xs font-bold text-gray-400" x-text="'(' + styleVariants.length + ')'"></span>
+                            </div>
                         </div>
                         
-                        <!-- 2-Column Grid of Variant Pill Cards -->
+                        <!-- Horizontal Scrollable Row of Visual Design Cards -->
+                        <div class="relative">
+                            <div class="flex gap-2.5 overflow-x-auto pb-2 pt-0.5 px-0.5 scrollbar-none snap-x" style="-webkit-overflow-scrolling: touch;">
+                                <template x-for="card in variantCards" :key="card.card_id">
+                                    <button 
+                                        type="button" 
+                                        @click="selectVariantCard(card)"
+                                        class="shrink-0 w-24 sm:w-28 rounded-xl border flex flex-col text-left transition-all cursor-pointer overflow-hidden bg-white shadow-2xs snap-start group"
+                                        :class="isCardActive(card) 
+                                            ? 'border-[#A67C2E] ring-2 ring-[#A67C2E] bg-amber-50/20 shadow-xs' 
+                                            : 'border-gray-200 hover:border-gray-300'"
+                                    >
+                                        <!-- Portrait Image (Matching Reference Image 1) -->
+                                        <div class="w-full h-24 sm:h-28 bg-gray-50 relative overflow-hidden shrink-0 border-b border-gray-100">
+                                            <img :src="imageUrl(card.image_url || card.image_path)" 
+                                                 onerror="this.src='/uploads/products/default.jpg'"
+                                                 class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-200">
+                                            
+                                            <!-- Checkmark Badge on Active Card -->
+                                            <template x-if="isCardActive(card)">
+                                                <div class="absolute top-1.5 right-1.5 w-4 h-4 rounded-full bg-[#A67C2E] text-white flex items-center justify-center text-[9px] font-black shadow-xs">
+                                                    ✓
+                                                </div>
+                                            </template>
+                                        </div>
+
+                                        <!-- Card Info: Variation Name + Urgency/Stock Badge -->
+                                        <div class="p-1.5 sm:p-2 flex flex-col items-center justify-center text-center flex-1 bg-white">
+                                            <span class="text-[11px] font-bold text-gray-900 truncate w-full leading-tight" 
+                                                  :class="isCardActive(card) ? 'text-[#A67C2E]' : 'text-gray-900'"
+                                                  x-text="card.variant_name">
+                                            </span>
+                                            <span class="text-[9.5px] font-medium text-gray-400 truncate w-full mt-0.5 leading-none"
+                                                  x-text="stock <= 3 && stock > 0 ? '【Only ' + stock + ' left!】' : '【Available】'">
+                                            </span>
+                                        </div>
+                                    </button>
+                                </template>
+                            </div>
+
+                            <!-- Scroll Indicator Bar (Matching Reference Image 1) -->
+                            <template x-if="variantCards && variantCards.length > 2">
+                                <div class="w-10 h-1 bg-gray-200 rounded-full mx-auto mt-1 opacity-60"></div>
+                            </template>
+                        </div>
+                    </div>
+                </template>
+                <template x-if="(!variantCards || variantCards.length === 0) && styleVariants && styleVariants.length > 0">
+                    <div>
+                        <div class="mb-2">
+                            <span class="text-xs font-black text-gray-900">Available Designs</span>
+                        </div>
                         <div class="grid grid-cols-2 gap-2">
                             <template x-for="v in styleVariants" :key="v.id">
                                 <button 

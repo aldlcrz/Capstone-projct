@@ -170,6 +170,118 @@ class VariationFormatter
     }
 
     /**
+     * Build the list of visual design cards for mobile Buy Now modal,
+     * where each uploaded photo belonging to a variant is shown with the variant's name.
+     *
+     * @return array<int, array{card_id: int, variant_id: int, variant_name: string, image_url: string, image_path: string, gallery_index: int}>
+     */
+    public static function buildVariantImageCards(?\App\Models\Product $product = null, array $galleryImages = []): array
+    {
+        if (!$product || empty($product->variations) || !is_array($product->variations)) {
+            return [];
+        }
+
+        if (empty($galleryImages)) {
+            $galleryImages = self::buildGalleryImages($product->image, $product);
+        }
+
+        $cards = [];
+        $cardId = 0;
+        $seenPaths = [];
+
+        foreach ($product->variations as $varIdx => $v) {
+            if (!is_array($v)) {
+                continue;
+            }
+
+            $varName = trim((string) ($v['name'] ?? ''));
+            if ($varName === '') {
+                $varName = self::labelForIndex($varIdx);
+            }
+
+            // 1. Gather all photos explicitly belonging to this variant from galleryImages
+            $variantPhotos = [];
+            foreach ($galleryImages as $gIdx => $g) {
+                if (isset($g['variant_id']) && (int)$g['variant_id'] === (int)$varIdx) {
+                    $variantPhotos[] = [
+                        'url'           => $g['url'],
+                        'path'          => $g['path'] ?? self::normalizePath($g['url']),
+                        'gallery_index' => $gIdx,
+                    ];
+                }
+            }
+
+            // 2. Also check if $v['images'] or $v['image'] has images not yet in $variantPhotos
+            $rawImagesList = [];
+            if (!empty($v['images']) && is_array($v['images'])) {
+                $rawImagesList = $v['images'];
+            } elseif (!empty($v['image'])) {
+                $rawImagesList = [$v['image']];
+            }
+
+            foreach ($rawImagesList as $raw) {
+                $rawPath = is_array($raw) ? ($raw['url'] ?? $raw['path'] ?? '') : (string)$raw;
+                if (!$rawPath) continue;
+
+                $norm = self::normalizePath($rawPath);
+                $alreadyInList = false;
+                foreach ($variantPhotos as $vp) {
+                    if (self::pathsMatch($norm, $vp['path'])) {
+                        $alreadyInList = true;
+                        break;
+                    }
+                }
+
+                if (!$alreadyInList) {
+                    $url = $product->getImageUrl($rawPath);
+                    $matchedGIdx = 0;
+                    foreach ($galleryImages as $gIdx => $g) {
+                        if (self::pathsMatch($norm, $g['path'] ?? '')) {
+                            $matchedGIdx = $gIdx;
+                            break;
+                        }
+                    }
+                    $variantPhotos[] = [
+                        'url'           => $url,
+                        'path'          => $norm,
+                        'gallery_index' => $matchedGIdx,
+                    ];
+                }
+            }
+
+            // 3. Fallback: if variant has no photos at all, use default cover
+            if (empty($variantPhotos)) {
+                $defaultUrl = $product->getImageUrl();
+                $variantPhotos[] = [
+                    'url'           => $defaultUrl,
+                    'path'          => 'products/default.jpg',
+                    'gallery_index' => 0,
+                ];
+            }
+
+            // 4. Create a card for each photo belonging to this variant
+            foreach ($variantPhotos as $photo) {
+                $dedupKey = $varIdx . '_' . $photo['path'];
+                if (isset($seenPaths[$dedupKey])) {
+                    continue;
+                }
+                $seenPaths[$dedupKey] = true;
+
+                $cards[] = [
+                    'card_id'       => $cardId++,
+                    'variant_id'    => (int)$varIdx,
+                    'variant_name'  => $varName,
+                    'image_url'     => $photo['url'],
+                    'image_path'    => $photo['path'],
+                    'gallery_index' => (int)$photo['gallery_index'],
+                ];
+            }
+        }
+
+        return $cards;
+    }
+
+    /**
      * Legacy compatibility wrapper.
      */
     public static function buildVariations(mixed $images, ?\App\Models\Product $product = null): array
