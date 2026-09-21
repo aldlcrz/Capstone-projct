@@ -2,7 +2,23 @@
 
 @section('content')
 <div class="space-y-8">
+
+{{-- ── Database Error Banner ── --}}
+@if(!empty($dbError))
+<div class="bg-red-50 border border-red-300 rounded-2xl p-4 flex items-start gap-3">
+    <svg class="w-5 h-5 text-red-500 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+    </svg>
+    <div>
+        <div class="text-sm font-bold text-red-700">Database Connection Error</div>
+        <div class="text-xs text-red-600 mt-0.5">{{ $dbError }}</div>
+        <div class="text-xs text-red-500 mt-1 font-medium">Please start your MySQL server (e.g. via XAMPP Control Panel) and refresh the page.</div>
+    </div>
+</div>
+@endif
+
     <!-- Header with Quick Developer Bar -->
+
     <div id="tour-superadmin-dash-header" class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
             <div class="inline-flex items-center gap-2">

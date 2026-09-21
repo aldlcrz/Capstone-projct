@@ -94,7 +94,7 @@
                                     'label' => 'Promotions',
                                     'path'  => 'admin/banners',
                                     'icon'  => '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>',
-                                    'badge' => \App\Models\Banner::whereNotNull('userId')->where('status','pending')->count()
+                                    'badge' => (function() { try { return \App\Models\Banner::whereNotNull('userId')->where('status','pending')->count(); } catch (\Throwable $e) { return 0; } })()
                                 ]
                             ]
                         ];
@@ -169,15 +169,19 @@
                     <!-- Admin Notifications -->
                     <div x-data="{ open: false }" class="relative" @mouseenter="open = true" @mouseleave="open = false">
                         @php
-                            $unreadCount = \App\Models\Notification::where('userId', Auth::id())
-                                ->where('targetRole', 'admin')
-                                ->where('isRead', false)
-                                ->count();
-                            $recentNotifications = \App\Models\Notification::where('userId', Auth::id())
-                                ->where('targetRole', 'admin')
-                                ->orderBy('createdAt', 'desc')
-                                ->limit(5)
-                                ->get();
+                            $unreadCount = 0;
+                            $recentNotifications = collect([]);
+                            try {
+                                $unreadCount = \App\Models\Notification::where('userId', Auth::id())
+                                    ->where('targetRole', 'admin')
+                                    ->where('isRead', false)
+                                    ->count();
+                                $recentNotifications = \App\Models\Notification::where('userId', Auth::id())
+                                    ->where('targetRole', 'admin')
+                                    ->orderBy('createdAt', 'desc')
+                                    ->limit(5)
+                                    ->get();
+                            } catch (\Throwable $e) {}
                         @endphp
                         <button class="relative w-10 h-10 flex items-center justify-center rounded-xl bg-[#F8F7F4] text-[#4B5563] hover:text-[#C0420A] transition-all border border-gray-200">
                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">

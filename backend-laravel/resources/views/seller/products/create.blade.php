@@ -232,6 +232,7 @@
                                id="variant_file_0"
                                name="variant_image_0" 
                                accept="image/jpeg,image/png,image/webp,image/jpg,image/heic,image/heif,.heic,.heif" 
+                               multiple
                                class="hidden" 
                                @change="handleCoverPhotoUpload($event)">
 
@@ -472,6 +473,7 @@
                                                :id="'variant_file_' + index" 
                                                :name="'variant_image_' + index" 
                                                accept="image/jpeg,image/png,image/webp,image/jpg,image/heic,image/heif,.heic,.heif" 
+                                               multiple
                                                class="hidden" 
                                                @change="handleVariantFile($event, index)">
                                     </label>
@@ -2320,18 +2322,21 @@ function addProductManager() {
         },
 
         async handleCoverPhotoUpload(event) {
-            const file = event.target.files && event.target.files[0];
-            if (!file) return;
+            const files = Array.from(event.target.files || []);
+            if (!files.length) return;
 
-            if (file.size > 25 * 1024 * 1024) {
-                triggerAppModal('File Too Large', 'Original image exceeds 25MB limit. Please choose a smaller photo.', 'warning');
+            // First file → cover photo for variant 0; extras → gallery
+            const [coverFile, ...extraFiles] = files;
+
+            if (coverFile.size > 25 * 1024 * 1024) {
+                triggerAppModal('File Too Large', 'Cover image exceeds 25MB limit. Please choose a smaller photo.', 'warning');
                 event.target.value = '';
                 return;
             }
 
             this.variants[0].isOptimizing = true;
             try {
-                const result = await processClientImage(file, 1600, 0.85);
+                const result = await processClientImage(coverFile, 1600, 0.85);
                 if (result && result.file) {
                     this.variants[0].file = result.file;
                     this.variants[0].imagePreview = result.preview;
@@ -2354,6 +2359,11 @@ function addProductManager() {
                 triggerAppModal('Image Error', 'Could not optimize photo. Please try a different image.', 'warning');
             } finally {
                 this.variants[0].isOptimizing = false;
+            }
+
+            // Send any extra selected files straight to the gallery
+            if (extraFiles.length > 0) {
+                await this.processGalleryFileList(extraFiles);
             }
         },
 
@@ -2485,10 +2495,13 @@ function addProductManager() {
         },
 
         async handleVariantFile(event, index) {
-            const file = event.target.files && event.target.files[0];
-            if (!file) return;
+            const files = Array.from(event.target.files || []);
+            if (!files.length) return;
 
-            if (file.size > 25 * 1024 * 1024) {
+            // First file → variant cover; extras → gallery
+            const [coverFile, ...extraFiles] = files;
+
+            if (coverFile.size > 25 * 1024 * 1024) {
                 triggerAppModal('File Too Large', 'Original image exceeds 25MB limit. Please choose a smaller photo.', 'warning');
                 event.target.value = '';
                 return;
@@ -2499,7 +2512,7 @@ function addProductManager() {
             }
 
             try {
-                const result = await processClientImage(file, 1600, 0.85);
+                const result = await processClientImage(coverFile, 1600, 0.85);
                 if (result && result.file && this.variants[index]) {
                     this.variants[index].file = result.file;
                     this.variants[index].imagePreview = result.preview;
@@ -2521,6 +2534,11 @@ function addProductManager() {
                 if (this.variants[index]) {
                     this.variants[index].isOptimizing = false;
                 }
+            }
+
+            // Send any extra selected files straight to the gallery
+            if (extraFiles.length > 0) {
+                await this.processGalleryFileList(extraFiles);
             }
         },
 

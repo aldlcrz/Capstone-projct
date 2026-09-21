@@ -19,32 +19,68 @@ class AdminController extends Controller
     public function dashboard(Request $request): \Illuminate\View\View
     {
         $preset = $request->query('date_preset', $request->query('range', 'all_time'));
-        $stats = json_decode($this->getGlobalStats($request)->getContent(), true);
-
-        $recentActivity = Notification::where('targetRole', 'admin')
-            ->orderBy('createdAt', 'desc')
-            ->limit(8)
-            ->get();
 
         $filters = [
-            'preset' => $preset,
+            'preset'     => $preset,
             'start_date' => $request->query('start_date', ''),
-            'end_date' => $request->query('end_date', ''),
+            'end_date'   => $request->query('end_date', ''),
         ];
+
+        // Safe default values used when the DB is unreachable
+        $emptyStats = [
+            'totalSales'   => '₱0.00',
+            'totalCapital' => '₱0.00',
+            'totalRevenue' => '₱0.00',
+            'totalProfit'  => '₱0.00',
+            'totalOrders'  => '0',
+            'activeCustomers' => '0',
+            'liveProducts' => '0',
+        ];
+
+        try {
+            $stats          = json_decode($this->getGlobalStats($request)->getContent(), true) ?? $emptyStats;
+            $recentActivity = Notification::where('targetRole', 'admin')
+                ->orderBy('createdAt', 'desc')
+                ->limit(8)
+                ->get();
+            $revenueTrend   = $this->getRevenueTrend();
+            $orderStatuses  = $this->getOrderStatusBreakdown();
+            $topSellers     = $this->getTopSellers();
+            $topProducts    = $this->getTopProducts();
+            $pendingActions = $this->getPendingActionCounts();
+            $userTrend      = $this->getUserRegistrationTrend();
+            $aov            = (float) (Order::whereNotIn('status', ['Cancelled'])->avg('totalAmount') ?? 0);
+            $userCounts     = $this->getUserCounts();
+            $dbError        = null;
+        } catch (\Throwable $e) {
+            Log::error('Admin dashboard DB error: ' . $e->getMessage());
+            $dbError        = 'Could not connect to the database. Please ensure MySQL is running. (' . $e->getMessage() . ')';
+            $stats          = $emptyStats;
+            $recentActivity = collect();
+            $revenueTrend   = collect();
+            $orderStatuses  = collect();
+            $topSellers     = collect();
+            $topProducts    = collect();
+            $pendingActions = ['products' => 0, 'sellers' => 0, 'banners' => 0, 'reports' => 0];
+            $userTrend      = collect();
+            $aov            = 0.0;
+            $userCounts     = ['customers' => 0, 'sellers' => 0, 'admins' => 0, 'new_customers_7d' => 0, 'new_sellers_7d' => 0];
+        }
 
         return view('admin.dashboard', [
             'range'          => $preset,
             'filters'        => $filters,
             'stats'          => $stats,
             'recentActivity' => $recentActivity,
-            'revenueTrend'   => $this->getRevenueTrend(),
-            'orderStatuses'  => $this->getOrderStatusBreakdown(),
-            'topSellers'     => $this->getTopSellers(),
-            'topProducts'    => $this->getTopProducts(),
-            'pendingActions' => $this->getPendingActionCounts(),
-            'userTrend'      => $this->getUserRegistrationTrend(),
-            'aov'            => (float) (Order::whereNotIn('status', ['Cancelled'])->avg('totalAmount') ?? 0),
-            'userCounts'     => $this->getUserCounts(),
+            'revenueTrend'   => $revenueTrend,
+            'orderStatuses'  => $orderStatuses,
+            'topSellers'     => $topSellers,
+            'topProducts'    => $topProducts,
+            'pendingActions' => $pendingActions,
+            'userTrend'      => $userTrend,
+            'aov'            => $aov,
+            'userCounts'     => $userCounts,
+            'dbError'        => $dbError ?? null,
         ]);
     }
 

@@ -79,9 +79,14 @@
                 <!-- Navigation -->
                 <nav class="flex-1 space-y-6 overflow-y-auto no-scrollbar">
                     @php
-                        $unpaidCommissionsCount = \App\Models\CommissionRecord::where('status', 'unpaid')->count();
-                        $pendingProductsCount = \App\Models\Product::where('status', 'pending')->count();
-                        $pendingBannersCount = \App\Models\Banner::whereNotNull('userId')->where('status', 'pending')->count();
+                        $unpaidCommissionsCount = 0;
+                        $pendingProductsCount   = 0;
+                        $pendingBannersCount    = 0;
+                        try {
+                            $unpaidCommissionsCount = \App\Models\CommissionRecord::where('status', 'unpaid')->count();
+                            $pendingProductsCount   = \App\Models\Product::where('status', 'pending')->count();
+                            $pendingBannersCount    = \App\Models\Banner::whereNotNull('userId')->where('status', 'pending')->count();
+                        } catch (\Throwable $e) {}
 
                         $sidebarGroups = [
                             'GOVERNANCE & FINANCE' => [

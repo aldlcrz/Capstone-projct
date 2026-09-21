@@ -68,79 +68,107 @@ class SuperAdminController extends Controller
 
     public function dashboard()
     {
-        $rate = $this->getCommissionRate();
-        $currentPeriod = Carbon::now()->format('Y-m');
+        try {
+            $rate = $this->getCommissionRate();
+            $currentPeriod = Carbon::now()->format('Y-m');
 
-        // Platform-wide totals
-        $totalSalesAllTime = (float) Order::whereNotIn('status', ['Cancelled'])->sum('totalAmount');
-        $totalSalesThisMonth = (float) Order::whereNotIn('status', ['Cancelled'])
-            ->whereYear('createdAt', Carbon::now()->year)
-            ->whereMonth('createdAt', Carbon::now()->month)
-            ->sum('totalAmount');
+            // Platform-wide totals
+            $totalSalesAllTime = (float) Order::whereNotIn('status', ['Cancelled'])->sum('totalAmount');
+            $totalSalesThisMonth = (float) Order::whereNotIn('status', ['Cancelled'])
+                ->whereYear('createdAt', Carbon::now()->year)
+                ->whereMonth('createdAt', Carbon::now()->month)
+                ->sum('totalAmount');
 
-        $totalCommissionAllTime    = round($totalSalesAllTime * ($rate / 100), 2);
-        $totalCommissionThisMonth  = round($totalSalesThisMonth * ($rate / 100), 2);
+            $totalCommissionAllTime    = round($totalSalesAllTime * ($rate / 100), 2);
+            $totalCommissionThisMonth  = round($totalSalesThisMonth * ($rate / 100), 2);
 
-        $totalCollected = (float) CommissionRecord::where('status', 'paid')->sum('commissionAmount');
-        $totalOutstanding = (float) CommissionRecord::where('status', 'unpaid')->sum('commissionAmount');
+            $totalCollected = (float) CommissionRecord::where('status', 'paid')->sum('commissionAmount');
+            $totalOutstanding = (float) CommissionRecord::where('status', 'unpaid')->sum('commissionAmount');
 
-        $customerCount   = User::where(function($q) {
-            $q->whereIn('role', ['customer', 'buyer', 'user'])
-              ->orWhereNull('role');
-        })->whereNotIn('role', ['seller', 'admin', 'superadmin'])->count();
+            $customerCount   = User::where(function($q) {
+                $q->whereIn('role', ['customer', 'buyer', 'user'])
+                  ->orWhereNull('role');
+            })->whereNotIn('role', ['seller', 'admin', 'superadmin'])->count();
 
-        $sellerCount     = User::where('role', 'seller')->count();
-        $verifiedSellers = User::where('role', 'seller')->where('isVerified', true)->count();
-        $frozenCount     = User::where('role', 'seller')->where('status', 'frozen')->count();
-        $unpaidCount     = CommissionRecord::where('status', 'unpaid')->count();
-        $productCount    = Product::count();
-        $orderCount      = Order::count();
+            $sellerCount     = User::where('role', 'seller')->count();
+            $verifiedSellers = User::where('role', 'seller')->where('isVerified', true)->count();
+            $frozenCount     = User::where('role', 'seller')->where('status', 'frozen')->count();
+            $unpaidCount     = CommissionRecord::where('status', 'unpaid')->count();
+            $productCount    = Product::count();
+            $orderCount      = Order::count();
 
-        // Top 5 Profit Shops Leaderboard
-        $topShops = User::where('role', 'seller')
-            ->get()
-            ->map(function (User $seller) use ($rate) {
-                $sales = (float) Order::whereNotIn('status', ['Cancelled'])
-                    ->where('sellerId', $seller->id)
-                    ->sum('totalAmount');
-                $ordersCount = Order::whereNotIn('status', ['Cancelled'])
-                    ->where('sellerId', $seller->id)
-                    ->count();
-                return [
-                    'id'          => $seller->id,
-                    'name'        => $seller->name,
-                    'shop_name'   => $seller->shopName ?: $seller->name,
-                    'sales'       => $sales,
-                    'orders'      => $ordersCount,
-                    'commission'  => round($sales * ($rate / 100), 2),
-                    'status'      => $seller->status ?? 'active',
-                    'is_verified' => (bool)$seller->isVerified,
-                ];
-            })
-            ->sortByDesc('sales')
-            ->take(5)
-            ->values();
+            // Top 5 Profit Shops Leaderboard
+            $topShops = User::where('role', 'seller')
+                ->get()
+                ->map(function (User $seller) use ($rate) {
+                    $sales = (float) Order::whereNotIn('status', ['Cancelled'])
+                        ->where('sellerId', $seller->id)
+                        ->sum('totalAmount');
+                    $ordersCount = Order::whereNotIn('status', ['Cancelled'])
+                        ->where('sellerId', $seller->id)
+                        ->count();
+                    return [
+                        'id'          => $seller->id,
+                        'name'        => $seller->name,
+                        'shop_name'   => $seller->shopName ?: $seller->name,
+                        'sales'       => $sales,
+                        'orders'      => $ordersCount,
+                        'commission'  => round($sales * ($rate / 100), 2),
+                        'status'      => $seller->status ?? 'active',
+                        'is_verified' => (bool)$seller->isVerified,
+                    ];
+                })
+                ->sortByDesc('sales')
+                ->take(5)
+                ->values();
 
-        // System Health & Vitals
-        $systemHealth = [
-            'php_version'     => PHP_VERSION,
-            'laravel_version' => app()->version(),
-            'environment'     => app()->environment(),
-            'is_maintenance'  => $this->isInMaintenance(),
-            'cache_driver'    => config('cache.default', 'file'),
-            'db_size'         => $this->getDbSize(),
-            'memory_usage'    => round(memory_get_usage(true) / 1024 / 1024, 1) . ' MB',
-            'memory_limit'    => ini_get('memory_limit'),
-            'disk_free'       => $this->getDiskFree(),
-        ];
+            // System Health & Vitals
+            $systemHealth = [
+                'php_version'     => PHP_VERSION,
+                'laravel_version' => app()->version(),
+                'environment'     => app()->environment(),
+                'is_maintenance'  => $this->isInMaintenance(),
+                'cache_driver'    => config('cache.default', 'file'),
+                'db_size'         => $this->getDbSize(),
+                'memory_usage'    => round(memory_get_usage(true) / 1024 / 1024, 1) . ' MB',
+                'memory_limit'    => ini_get('memory_limit'),
+                'disk_free'       => $this->getDiskFree(),
+            ];
 
-        $recentErrorCount = $this->countLogErrors();
+            $recentErrorCount = $this->countLogErrors();
 
-        // Recent commission records
-        $recentRecords = CommissionRecord::with('seller')
-            ->orderByDesc('created_at')
-            ->limit(8)
-            ->get();
+            // Recent commission records
+            $recentRecords = CommissionRecord::with('seller')
+                ->orderByDesc('created_at')
+                ->limit(8)
+                ->get();
+
+            $dbError = null;
+        } catch (\Throwable $e) {
+            Log::error('SuperAdmin dashboard DB error: ' . $e->getMessage());
+            $dbError = 'Could not connect to the database. Please ensure MySQL is running. (' . $e->getMessage() . ')';
+
+            $rate = 0; $currentPeriod = Carbon::now()->format('Y-m');
+            $totalSalesAllTime = 0; $totalSalesThisMonth = 0;
+            $totalCommissionAllTime = 0; $totalCommissionThisMonth = 0;
+            $totalCollected = 0; $totalOutstanding = 0;
+            $customerCount = 0; $sellerCount = 0; $verifiedSellers = 0;
+            $frozenCount = 0; $unpaidCount = 0; $productCount = 0; $orderCount = 0;
+            $topShops = collect();
+            $systemHealth = [
+                'php_version'     => PHP_VERSION,
+                'laravel_version' => app()->version(),
+                'environment'     => app()->environment(),
+                'is_maintenance'  => false,
+                'cache_driver'    => config('cache.default', 'file'),
+                'db_size'         => 'N/A',
+                'memory_usage'    => round(memory_get_usage(true) / 1024 / 1024, 1) . ' MB',
+                'memory_limit'    => ini_get('memory_limit'),
+                'disk_free'       => 'N/A',
+            ];
+            $recentErrorCount = 0;
+            $recentRecords = collect();
+        }
 
         return view('superadmin.dashboard', compact(
             'rate', 'totalSalesAllTime', 'totalSalesThisMonth',
@@ -148,7 +176,7 @@ class SuperAdminController extends Controller
             'totalCollected', 'totalOutstanding',
             'customerCount', 'sellerCount', 'verifiedSellers', 'frozenCount', 'unpaidCount',
             'productCount', 'orderCount', 'topShops', 'systemHealth',
-            'recentErrorCount', 'recentRecords', 'currentPeriod'
+            'recentErrorCount', 'recentRecords', 'currentPeriod', 'dbError'
         ));
     }
 

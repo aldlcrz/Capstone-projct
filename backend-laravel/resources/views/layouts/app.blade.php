@@ -99,7 +99,12 @@
                         <button type="button" @click="open = !open" class="relative w-9 h-9 sm:w-10 sm:h-10 flex items-center justify-center rounded-full text-gray-600 hover:bg-gray-100 hover:text-black transition-all">
                             <svg class="w-4.5 h-4.5 sm:w-5 sm:h-5" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"></path></svg>
                             @auth
-                                @php $unreadNotifications = \App\Models\Notification::where('userId', Auth::id())->where('targetRole', 'customer')->where('isRead', false)->count(); @endphp
+                                @php
+                                    $unreadNotifications = 0;
+                                    try {
+                                        $unreadNotifications = \App\Models\Notification::where('userId', Auth::id())->where('targetRole', 'customer')->where('isRead', false)->count();
+                                    } catch (\Throwable $e) {}
+                                @endphp
                                 @if($unreadNotifications > 0)
                                     <span class="absolute top-1.5 right-1.5 w-2.5 h-2.5 bg-amber-500 rounded-full border-2 border-white"></span>
                                 @endif
@@ -128,7 +133,12 @@
                                     @endif
                                 </div>
                                 <div class="max-h-96 overflow-y-auto no-scrollbar">
-                                    @php $recentNotifications = \App\Models\Notification::where('userId', Auth::id())->where('targetRole', 'customer')->latest('createdAt')->take(5)->get(); @endphp
+                                    @php
+                                        $recentNotifications = collect([]);
+                                        try {
+                                            $recentNotifications = \App\Models\Notification::where('userId', Auth::id())->where('targetRole', 'customer')->latest('createdAt')->take(5)->get();
+                                        } catch (\Throwable $e) {}
+                                    @endphp
                                     @forelse($recentNotifications as $notif)
                                         <a href="{{ $notif->link ?? '#' }}" class="flex items-start gap-3 p-4 hover:bg-gray-50 transition-all border-b border-gray-50 last:border-0">
                                             <div class="w-2 h-2 mt-1.5 rounded-full {{ $notif->isRead ? 'bg-gray-200' : 'bg-red-500' }} shrink-0"></div>

@@ -519,6 +519,7 @@
                                                :id="'variant_file_' + index" 
                                                :name="'variant_image_' + index" 
                                                accept="image/jpeg,image/png,image/webp,image/jpg" 
+                                               multiple
                                                class="hidden" 
                                                @change="handleVariantFile($event, index)">
                                     </label>
@@ -1322,18 +1323,42 @@ function editProductManager() {
         },
 
         handleVariantFile(event, index) {
-            const file = event.target.files[0];
-            if (file) {
-                if (file.size > 5 * 1024 * 1024) {
-                    triggerAppModal('Image Exceeds 5MB', 'Selected photo exceeds the 5MB size limit.', 'warning');
-                    event.target.value = '';
-                    return;
+            const files = Array.from(event.target.files || []);
+            if (!files.length) return;
+
+            // First file → variant cover preview
+            const [coverFile, ...extraFiles] = files;
+
+            if (coverFile.size > 5 * 1024 * 1024) {
+                triggerAppModal('Image Exceeds 5MB', 'Selected photo exceeds the 5MB size limit.', 'warning');
+                event.target.value = '';
+                return;
+            }
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                this.variants[index].imagePreview = e.target.result;
+            };
+            reader.readAsDataURL(coverFile);
+
+            // Extra files → append to main gallery (reuse existing editProductImagesDT mechanism)
+            if (extraFiles.length > 0) {
+                const fakeInput = document.getElementById('imageUploadInput');
+                if (fakeInput && typeof editProductImagesDT !== 'undefined') {
+                    const dt = new DataTransfer();
+                    // Copy existing files
+                    Array.from(editProductImagesDT.files).forEach(f => dt.items.add(f));
+                    // Add extras that aren't oversized or duplicate
+                    let skipped = 0;
+                    extraFiles.forEach(f => {
+                        if (f.size > 5 * 1024 * 1024) { skipped++; return; }
+                        const dup = Array.from(dt.files).some(x => x.name === f.name && x.size === f.size);
+                        if (!dup) dt.items.add(f);
+                    });
+                    editProductImagesDT = dt;
+                    fakeInput.files = dt.files;
+                    if (typeof renderEditImagePreviews === 'function') renderEditImagePreviews();
+                    if (skipped > 0) triggerAppModal('Image Exceeds 5MB', skipped + ' extra photo(s) exceeded 5MB and were skipped.', 'warning');
                 }
-                const reader = new FileReader();
-                reader.onload = (e) => {
-                    this.variants[index].imagePreview = e.target.result;
-                };
-                reader.readAsDataURL(file);
             }
         },
 
