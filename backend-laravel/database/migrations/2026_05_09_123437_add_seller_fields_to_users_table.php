@@ -19,7 +19,11 @@ return new class extends Migration
                 $table->text('shopDescription')->nullable()->after('shopName');
             }
             if (!Schema::hasColumn('users', 'businessPermit')) {
-                $table->string('businessPermit')->nullable()->after('validId');
+                if (Schema::hasColumn('users', 'validId')) {
+                    $table->string('businessPermit')->nullable()->after('validId');
+                } else {
+                    $table->string('businessPermit')->nullable();
+                }
             }
         });
     }
