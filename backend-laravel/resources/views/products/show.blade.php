@@ -674,15 +674,6 @@
                     <svg class="w-4 h-4 text-gray-400 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
                 </div>
 
-                {{-- Categories & Style Tags --}}
-                <div class="flex items-center gap-2 text-[11px] text-amber-800 mt-2 font-medium flex-wrap">
-                    <span class="flex items-center gap-0.5 text-amber-900 font-bold">Oversized fit <span class="text-gray-400 font-normal">›</span></span>
-                    <span class="text-gray-300">|</span>
-                    <span>Ethnic tribal style</span>
-                    <span class="text-gray-300">|</span>
-                    <span>Business formal</span>
-                </div>
-
                 {{-- Ratings & Social Action Icons Row (Heart, Share, Chat) --}}
                 <div class="flex items-center justify-between pt-3 mt-2.5 border-t border-gray-50 text-xs">
                     <div class="flex items-center gap-1.5 text-gray-700">
@@ -1449,31 +1440,6 @@
                     @endif
                 </div>
 
-                {{-- ═══ Ask the Buyers Q&A Box (Matching Picture 2) ═══ --}}
-                <div class="mt-2 pt-3 pb-3 border-t border-gray-100 bg-white">
-                    <div class="flex items-center justify-between mb-2.5">
-                        <span class="text-xs font-bold text-gray-900">Ask the buyers</span>
-                        <button type="button" @click="chatWithSeller('{{ $product->sellerId }}', '{{ e($product->seller->shopName ?? 'Artisan') }}')" class="text-[11px] text-gray-500 hover:text-black flex items-center gap-0.5 cursor-pointer">
-                            View All <span class="text-xs">›</span>
-                        </button>
-                    </div>
-                    <div class="space-y-2">
-                        <div class="flex items-center gap-2 text-xs text-gray-700 bg-gray-50/90 px-2.5 py-1.5 rounded-lg border border-gray-100">
-                            <span class="w-5 h-5 rounded-full bg-amber-100 text-amber-800 text-[10px] flex items-center justify-center font-bold">👤</span>
-                            <span class="truncate">kaya po ba nang sunday</span>
-                        </div>
-                        <div class="flex items-center gap-2 text-xs text-gray-700 bg-gray-50/90 px-2.5 py-1.5 rounded-lg border border-gray-100">
-                            <span class="w-5 h-5 rounded-full bg-pink-100 text-pink-800 text-[10px] flex items-center justify-center font-bold">👤</span>
-                            <span class="truncate">hi po kaya poba ma deliver sa monday</span>
-                        </div>
-                    </div>
-                    <div class="mt-3 text-center">
-                        <button type="button" @click="chatWithSeller('{{ $product->sellerId }}', '{{ e($product->seller->shopName ?? 'Artisan') }}')" class="text-xs font-bold text-[#FF0055] hover:underline flex items-center justify-center gap-1 mx-auto cursor-pointer">
-                            <span>Ask the Question from Buyer</span>
-                            <span class="text-sm">›</span>
-                        </button>
-                    </div>
-                </div>
             </div>
 
             {{-- ═══ Desktop Reviews Section (Existing 100% Untouched on lg:) ═══ --}}
