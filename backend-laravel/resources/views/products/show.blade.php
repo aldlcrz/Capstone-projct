@@ -495,24 +495,6 @@
                 </div>
             </form>
         </div>
-
-        {{-- AI Assistant Icon --}}
-        <button type="button" @click="window.dispatchEvent(new CustomEvent('toggle-chat'))" class="p-1 text-gray-700 hover:text-[#00B4D8] transition-colors cursor-pointer shrink-0" title="Smart Assistant">
-            <div class="w-6 h-6 rounded-full bg-blue-50 border border-blue-200 flex items-center justify-center text-[11px] font-bold text-blue-600">
-                🤖
-            </div>
-        </button>
-
-        {{-- Cart Icon with 99+ Badge --}}
-        <a href="/cart" class="p-1 text-gray-700 hover:text-black relative shrink-0" title="Cart">
-            <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/></svg>
-            <span class="absolute -top-1 -right-1 bg-[#FF0055] text-white text-[8px] font-black px-1 min-w-4 h-4 rounded-full flex items-center justify-center border border-white">99+</span>
-        </a>
-
-        {{-- Overflow Action Menu --}}
-        <button type="button" @click="navigator.share ? navigator.share({title: '{{ addslashes($product->name) }}', url: window.location.href}) : (navigator.clipboard.writeText(window.location.href), Alpine.store('toast') && Alpine.store('toast').trigger('Link copied to clipboard!'))" class="p-1 text-gray-700 hover:text-black cursor-pointer shrink-0" title="Options">
-            <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><circle cx="5" cy="12" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="19" cy="12" r="2"/></svg>
-        </button>
     </div>
 
     <!-- Mobile Tab Bar (Overview | Reviews | Product Details | Recommendation) - Matching Picture 4 -->
@@ -599,11 +581,6 @@
                         </div>
                     @endif
 
-                    {{-- Mobile Only: Top-Right Segmented Controller [Photos | Size] --}}
-                    <div class="lg:hidden absolute top-3 right-3 z-10 bg-black/40 backdrop-blur-md rounded-full p-0.5 flex items-center text-[11px] font-bold text-white shadow-sm">
-                        <span class="px-2.5 py-0.5 rounded-full bg-white text-gray-900 shadow-2xs">Photos</span>
-                        <button type="button" @click.stop="openSizeGuideModal()" class="px-2.5 py-0.5 rounded-full hover:text-white/80 cursor-pointer">Size</button>
-                    </div>
 
                     {{-- Mobile Only: Bottom-Left Triple Badge (Daily Free Shipping | Coins | Free Return) --}}
                     <div class="lg:hidden absolute bottom-0 left-0 z-10 flex items-stretch shadow-xs pointer-events-none rounded-tr-lg overflow-hidden text-[9px] font-black leading-none uppercase tracking-tight">
@@ -718,34 +695,10 @@
                         <span class="text-gray-500">{{ (int)($soldCount ?? 160) }} sold</span>
                     </div>
 
-                    <div class="flex items-center gap-3 text-gray-600">
-                        {{-- Wishlist Heart --}}
-                        <button type="button" @click="toggleWishlist()" class="p-1 hover:text-[#FF0055] transition-colors cursor-pointer" title="Save to Wishlist">
-                            <svg class="w-5 h-5" :class="isWishlisted ? 'fill-[#FF0055] text-[#FF0055]' : 'fill-none stroke-current'" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/></svg>
-                        </button>
-                        {{-- Share --}}
-                        <button type="button" @click="navigator.share ? navigator.share({title: '{{ addslashes($product->name) }}', url: window.location.href}) : (navigator.clipboard.writeText(window.location.href), Alpine.store('toast') && Alpine.store('toast').trigger('Link copied to clipboard!'))" class="p-1 hover:text-black transition-colors cursor-pointer" title="Share Product">
-                            <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"/></svg>
-                        </button>
-                        {{-- Chat --}}
-                        <button type="button" @click="chatWithSeller('{{ $product->sellerId ?? ($product->seller->id ?? 0) }}', '{{ addslashes($product->seller->shopName ?? $product->seller->name ?? 'Artisan') }}')" class="p-1 hover:text-[#00B4D8] transition-colors cursor-pointer" title="Chat with Seller">
-                            <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/></svg>
-                        </button>
-                    </div>
                 </div>
             </div>
 
-            {{-- ═══ Mobile-Only: Return Guarantee, Delivery & Variation Rows (Matching Picture 1) ═══ --}}
-            {{-- 1. 14-Day Free Return Row --}}
-            <div class="lg:hidden bg-white px-3.5 py-3 border-b border-gray-100">
-                <div class="flex items-center justify-between text-xs text-gray-800">
-                    <div class="flex items-center gap-2.5">
-                        <svg class="w-4 h-4 text-gray-500 shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 1.944A11.954 11.954 0 012.166 5C2.056 5.649 2 6.319 2 7c0 5.225 3.34 9.67 8 11.317C14.66 16.67 18 12.225 18 7c0-.682-.057-1.35-.166-2.001A11.954 11.954 0 0110 1.944zM11 14a1 1 0 11-2 0 1 1 0 012 0zm0-7a1 1 0 10-2 0v3a1 1 0 102 0V7z" clip-rule="evenodd"/></svg>
-                        <span class="font-bold text-gray-800 text-[12px]">14-Day Free Return</span>
-                    </div>
-                    <span class="text-gray-400 text-sm">›</span>
-                </div>
-            </div>
+            {{-- ═══ Mobile-Only: Delivery & Variation Rows ═══ --}}
 
             {{-- 2. Delivery Estimation Row --}}
             <div class="lg:hidden bg-white px-3.5 py-3 border-b border-gray-100">
