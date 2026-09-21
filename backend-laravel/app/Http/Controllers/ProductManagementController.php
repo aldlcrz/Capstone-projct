@@ -89,6 +89,11 @@ class ProductManagementController extends Controller
             ])->with('error', 'Please upload at least one product image for Variant 1 (minimum 1, maximum 3 images per variation).');
         }
 
+        // Auto-merge Variant 1 name into product name if name input was omitted
+        if (!$request->filled('name') && $request->filled('variant_names.0')) {
+            $request->merge(['name' => trim((string)$request->input('variant_names.0'))]);
+        }
+
         if ($isDraft) {
             $request->validate([
                 'name'                => 'required|string|max:100',
@@ -443,6 +448,11 @@ class ProductManagementController extends Controller
         // Merge CategoryId from category_ids if needed
         if (!$request->filled('CategoryId') && $request->filled('category_ids') && is_array($request->category_ids)) {
             $request->merge(['CategoryId' => $request->category_ids[0]]);
+        }
+
+        // Auto-merge Variant 1 name into product name if name input was omitted
+        if (!$request->filled('name') && $request->filled('variant_names.0')) {
+            $request->merge(['name' => trim((string)$request->input('variant_names.0'))]);
         }
 
         $isDraftAction = $request->input('action') === 'draft';

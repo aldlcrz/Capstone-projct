@@ -337,6 +337,49 @@ class SystemWideHardeningTest extends TestCase
         $response->assertSessionHasErrors(['variant_images_1']);
     }
 
+    public function test_seller_submits_product_with_name_integrated_in_variant_1(): void
+    {
+        Storage::fake('public');
+        $seller = $this->createSeller();
+        $category = \App\Models\Category::create([
+            'name' => 'Integrated Barong Category',
+            'target_group' => ['Men'],
+            'description' => 'Test Category',
+        ]);
+
+        $v0_img1 = UploadedFile::fake()->image('v0_front.jpg', 600, 600);
+        $qrCode = UploadedFile::fake()->image('seller_qr.png', 400, 400);
+
+        // Notice: 'name' field is omitted from payload, name is provided via variant_names[0]
+        $payload = [
+            'action' => 'publish',
+            'category_ids' => [$category->id],
+            'CategoryId' => $category->id,
+            'target_group' => 'Men',
+            'price' => 3800,
+            'shippingFee' => 120,
+            'shippingDays' => 4,
+            'sizes' => ['L'],
+            'size_stocks' => ['L' => 8],
+            'description' => 'Artisan barong with integrated variant 1 name.',
+            'product_is_gcash_available' => '1',
+            'gcashNumber' => '09171234567',
+            'gcashQrCode' => $qrCode,
+            'variant_indexes' => [0],
+            'variant_names' => [0 => 'Masterpiece Pina Calado Barong'],
+            'variant_images_0' => [$v0_img1],
+        ];
+
+        $response = $this->actingAs($seller)->post(route('seller.products.store'), $payload);
+        $response->assertSessionHasNoErrors();
+        $response->assertRedirect(route('seller.products.index'));
+
+        $product = Product::where('sellerId', $seller->id)->first();
+        $this->assertNotNull($product);
+        $this->assertEquals('Masterpiece Pina Calado Barong', $product->name, 'Product name should be auto-populated from variant_names[0]');
+        $this->assertCount(1, $product->image);
+    }
+
     // ─────────────────────────────────────────────────────────────────────────
     // 2. API Admin Authorization Hardening
     // ─────────────────────────────────────────────────────────────────────────
