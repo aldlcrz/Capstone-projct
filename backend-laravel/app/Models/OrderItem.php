@@ -119,6 +119,16 @@ class OrderItem extends Model
         return VariationFormatter::label($this->variation, $this->product?->image);
     }
 
+    public function getFullDisplayNameAttribute(): string
+    {
+        $name = $this->product_name ?: ($this->product?->name ?? 'Heritage Piece');
+        $var = $this->display_variation;
+        if (!empty($var) && strcasecmp($var, 'Original') !== 0 && strcasecmp($var, $name) !== 0) {
+            return $name . ' - ' . $var;
+        }
+        return $name;
+    }
+
     public function getImageUrlAttribute(): string
     {
         if (!empty($this->attributes['product_image'])) {

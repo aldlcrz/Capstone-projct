@@ -297,7 +297,7 @@
                                            onclick="event.stopPropagation();"
                                            @click.stop
                                            class="hover:text-[#C0422A] transition-colors">
-                                            {{ $item->product->name ?? 'Heritage Product' }}
+                                            {{ $item->product->name ?? 'Heritage Product' }}{{ (!empty($variationLabel) && strcasecmp($variationLabel, 'Original') !== 0 && strcasecmp($variationLabel, $item->product->name ?? '') !== 0) ? ' - ' . $variationLabel : '' }}
                                         </a>
                                     </h4>
                                     <div class="flex flex-wrap items-center gap-2 text-[9px] sm:text-[10px] font-bold text-[#8C827A] uppercase tracking-wider">

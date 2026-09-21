@@ -458,7 +458,7 @@ class CheckoutController extends Controller
                         'orderId' => $orderId,
                         'productId' => $item['id'],
                         'product_name' => $product?->name ?? ($item['name'] ?? 'Heritage Piece'),
-                        'product_image' => $product?->getImageUrl() ?? ($item['image'] ?? null),
+                        'product_image' => !empty($item['image']) ? $item['image'] : ($product ? VariationFormatter::getImageForVariation($item['variation'] ?? null, $product) : null),
                         'quantity' => $item['quantity'],
                         'price' => $item['price'],
                         'size' => $item['size'],

@@ -294,7 +294,7 @@
                                     <div class="flex-1 min-w-0">
                                         <h4 class="text-xs sm:text-sm font-extrabold text-[#1E1915] truncate uppercase tracking-tight">
                                             <a href="/products/{{ $item->productId }}" class="hover:text-[#C0422A] transition-colors">
-                                                {{ $item->product->name ?? 'Heritage Barong Piece' }}
+                                                {{ $item->product->name ?? 'Heritage Barong Piece' }}{{ (!empty($variationLabel) && strcasecmp($variationLabel, 'Original') !== 0 && strcasecmp($variationLabel, $item->product->name ?? '') !== 0) ? ' - ' . $variationLabel : '' }}
                                             </a>
                                         </h4>
                                         <div class="flex flex-wrap items-center gap-2 mt-1.5">
