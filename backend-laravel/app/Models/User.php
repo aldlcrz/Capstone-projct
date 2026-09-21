@@ -346,4 +346,24 @@ class User extends Authenticatable
 
         return $query;
     }
+
+    protected static ?bool $hasEmailVerifiedColumn = null;
+
+    /**
+     * Scope query to only include users with a verified email, if column exists in the database.
+     *
+     * @param \Illuminate\Database\Eloquent\Builder $query
+     */
+    public function scopeWhereVerifiedEmail(\Illuminate\Database\Eloquent\Builder $query)
+    {
+        if (static::$hasEmailVerifiedColumn === null) {
+            static::$hasEmailVerifiedColumn = \Illuminate\Support\Facades\Schema::hasColumn('users', 'email_verified_at');
+        }
+
+        if (static::$hasEmailVerifiedColumn) {
+            return $query->whereNotNull('email_verified_at');
+        }
+
+        return $query;
+    }
 }

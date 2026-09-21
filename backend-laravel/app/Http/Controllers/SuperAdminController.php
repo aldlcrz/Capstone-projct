@@ -592,7 +592,7 @@ class SuperAdminController extends Controller
         if ($filter === 'pending' || $filter === 'unverified') {
             $query->where('isVerified', false)
                   ->where('status', 'pending')
-                  ->whereNotNull('email_verified_at');
+                  ->whereVerifiedEmail();
         } elseif ($filter === 'rejected') {
             $query->where('status', 'rejected');
         } elseif ($filter === 'suspended') {
@@ -616,7 +616,7 @@ class SuperAdminController extends Controller
         $pendingSellers = User::where('role', 'seller')
             ->where('isVerified', false)
             ->where('status', 'pending')
-            ->whereNotNull('email_verified_at')
+            ->whereVerifiedEmail()
             ->get();
 
         $counts = [
@@ -624,7 +624,7 @@ class SuperAdminController extends Controller
             'verified'  => User::where('role', 'seller')->where('isVerified', true)->where(function($q) {
                 $q->whereNull('status')->orWhere('status', 'active');
             })->count(),
-            'pending'   => User::where('role', 'seller')->where('isVerified', false)->where('status', 'pending')->whereNotNull('email_verified_at')->count(),
+            'pending'   => User::where('role', 'seller')->where('isVerified', false)->where('status', 'pending')->whereVerifiedEmail()->count(),
             'frozen'    => User::where('role', 'seller')->where('status', 'frozen')->count(),
             'suspended' => User::where('role', 'seller')->whereIn('status', ['blocked', 'suspended'])->count(),
             'rejected'  => User::where('role', 'seller')->where('status', 'rejected')->count(),
