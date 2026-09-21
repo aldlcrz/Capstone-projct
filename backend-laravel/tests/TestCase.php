@@ -11,6 +11,8 @@ abstract class TestCase extends BaseTestCase
     {
         parent::setUp();
 
+        $this->withoutMiddleware(\Illuminate\Foundation\Http\Middleware\ValidateCsrfToken::class);
+
         if (DB::getDriverName() === 'sqlite') {
             try {
                 $pdo = DB::connection()->getPdo();

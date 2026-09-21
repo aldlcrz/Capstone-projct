@@ -255,7 +255,7 @@ class WebController extends Controller
                     ->whereIn('status', ['pending', 'processing', 'in_production', 'to ship', 'to_ship'])
                     ->count();
                 $customerStats['wishlist'] = count(session('cart', []));
-                $customerStats['reward_points'] = Auth::user()->reward_points ?? (50 * Order::where('customerId', $userId)->where('status', 'completed')->count());
+                $customerStats['reward_points'] = Auth::user()->reward_points ?? (50 * Order::where('customerId', $userId)->whereIn('status', \App\Support\OrderStatus::completedStatuses())->count());
             } catch (\Throwable $se) {
                 // Ignore stats errors
             }

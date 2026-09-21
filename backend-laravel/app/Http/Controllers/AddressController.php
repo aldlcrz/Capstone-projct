@@ -23,7 +23,12 @@ class AddressController extends Controller
                       ->orWhere('city', 'Lumban');
                 })
                 ->delete();
-        } catch (\Throwable $e) {}
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::warning('Failed to purge legacy dummy address for user', [
+                'user_id' => Auth::id(),
+                'error'   => $e->getMessage(),
+            ]);
+        }
 
         $addresses = Address::where('userId', Auth::id())
             ->orderBy('isDefault', 'desc')

@@ -691,13 +691,23 @@ class DashboardController extends Controller
             if ($request->filled('start_date')) {
                 try {
                     $query->where('createdAt', '>=', Carbon::parse($request->start_date)->startOfDay());
-                } catch (\Throwable $e) {}
+                } catch (\Throwable $e) {
+                    Log::warning('Invalid start_date filter provided to seller orders', [
+                        'start_date' => $request->start_date,
+                        'error'      => $e->getMessage(),
+                    ]);
+                }
             }
 
             if ($request->filled('end_date')) {
                 try {
                     $query->where('createdAt', '<=', Carbon::parse($request->end_date)->endOfDay());
-                } catch (\Throwable $e) {}
+                } catch (\Throwable $e) {
+                    Log::warning('Invalid end_date filter provided to seller orders', [
+                        'end_date' => $request->end_date,
+                        'error'    => $e->getMessage(),
+                    ]);
+                }
             }
 
             $orders = $query->orderBy('createdAt', 'desc')->get();
@@ -1015,10 +1025,7 @@ class DashboardController extends Controller
 
         $proofPath = '';
         if ($request->hasFile('paymentProof')) {
-            $file = $request->file('paymentProof');
-            $filename = time() . '_commission_' . \Illuminate\Support\Str::random(8) . '.' . $file->getClientOriginalExtension();
-            $file->move(public_path('uploads/payments'), $filename);
-            $proofPath = '/uploads/payments/' . $filename;
+            $proofPath = $request->file('paymentProof')->store('commission_proofs', 'public');
         }
 
         \App\Models\CommissionRecord::updateOrCreate(

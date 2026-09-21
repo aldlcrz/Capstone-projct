@@ -265,12 +265,14 @@ class ProductManagementController extends Controller
             // 1. Process Variant 1 (Main / Cover Style)
             $v1Name = trim($request->input('variant_names.0', '')) ?: trim($product->name);
             $v1File = null;
+            $firstImageUsedAsCover = false;
             if ($request->hasFile('variant_image_0') && $request->file('variant_image_0')->isValid()) {
                 $v1File = $request->file('variant_image_0');
             } elseif ($request->hasFile('variant_images.0') && $request->file('variant_images.0')->isValid()) {
                 $v1File = $request->file('variant_images.0');
             } elseif ($request->hasFile('images') && is_array($request->file('images')) && count($request->file('images')) > 0 && $request->file('images')[0]->isValid()) {
                 $v1File = $request->file('images')[0];
+                $firstImageUsedAsCover = true;
             } else {
                 foreach ($request->allFiles() as $k => $f) {
                     if (str_starts_with($k, 'variant_image_') && $f && $f->isValid()) {
@@ -288,7 +290,6 @@ class ProductManagementController extends Controller
                     'name'  => $v1Name,
                     'image' => $storedPath,
                 ];
-                $uploadedHashes[] = md5_file($v1File->getRealPath());
             }
 
             // 2. Process Additional Variants (Variant 2, 3, etc.)
@@ -315,12 +316,6 @@ class ProductManagementController extends Controller
                 }
 
                 if ($vFile) {
-                    $hash = md5_file($vFile->getRealPath());
-                    if (in_array($hash, $uploadedHashes)) {
-                        continue;
-                    }
-                    $uploadedHashes[] = $hash;
-
                     $storedPath = $vFile->store('products/variants', 'public');
                     $storedFiles[] = $storedPath;
                     $images[] = $storedPath;
@@ -333,11 +328,22 @@ class ProductManagementController extends Controller
 
             // 3. Fallback / Additional Gallery Images
             if ($request->hasFile('images')) {
-                foreach ($request->file('images') as $i => $image) {
+                $galleryFiles = $request->file('images');
+                if (!is_array($galleryFiles)) {
+                    $galleryFiles = [$galleryFiles];
+                }
+                foreach ($galleryFiles as $i => $image) {
                     if (!$image || !$image->isValid()) continue;
-                    $hash = md5_file($image->getRealPath());
-                    if (in_array($hash, $uploadedHashes)) continue;
-                    $uploadedHashes[] = $hash;
+
+                    // Skip if this image was already used as the cover
+                    if ($firstImageUsedAsCover && $i === 0) {
+                        continue;
+                    }
+
+                    // Skip duplicate if exactly the same upload as variant 1 cover
+                    if ($v1File && $image->getClientOriginalName() === $v1File->getClientOriginalName() && $image->getSize() === $v1File->getSize() && md5_file($image->getRealPath()) === md5_file($v1File->getRealPath())) {
+                        continue;
+                    }
 
                     $storedPath = $image->store('products/gallery', 'public');
                     $storedFiles[] = $storedPath;
@@ -346,9 +352,20 @@ class ProductManagementController extends Controller
             }
 
             $product->status = $isDraft ? 'draft' : 'pending'; // Draft vs Pending Admin Approval
-            $product->image = !empty($images) ? $images : ['products/default.jpg'];
+            $product->image = !empty($images) ? array_values(array_unique($images)) : ['products/default.jpg'];
             $product->has_variants = count($savedVariations) > 1;
             $product->variations = !empty($savedVariations) ? $savedVariations : null;
+
+            \Illuminate\Support\Facades\Log::info('[ProductImagePipeline:Store]', [
+                'product_id' => $product->id,
+                'has_cover' => $v1File ? true : false,
+                'cover_path' => $v1File ? ($savedVariations[0]['image'] ?? null) : null,
+                'variants_count' => count($savedVariations),
+                'gallery_received' => $request->hasFile('images') ? count($request->file('images')) : 0,
+                'stored_total' => count($images),
+                'product_image_count' => count($product->image),
+                'product_images' => $product->image,
+            ]);
 
             \Illuminate\Support\Facades\DB::beginTransaction();
             $product->save();
@@ -629,7 +646,7 @@ class ProductManagementController extends Controller
             }
         }
 
-        // Handle new image uploads (prepend new images so the newest photo becomes primary thumbnail, skip duplicates)
+        // Handle new gallery image uploads (append to preserve index 0 cover thumbnail, skip duplicates)
         if ($request->hasFile('images')) {
             $newImages = [];
             $existingHashes = [];
@@ -646,7 +663,7 @@ class ProductManagementController extends Controller
                 $storedFiles[] = $storedPath;
                 $newImages[] = $storedPath;
             }
-            $currentImages = array_merge($newImages, array_values($currentImages));
+            $currentImages = array_merge(array_values($currentImages), $newImages);
         }
 
         // Process Variants / Variations
@@ -665,10 +682,17 @@ class ProductManagementController extends Controller
                 $vImgPath = null;
                 if ($request->hasFile("variant_image_{$numIdx}") && $request->file("variant_image_{$numIdx}")->isValid()) {
                     $vFile = $request->file("variant_image_{$numIdx}");
-                    $storedPath = $vFile->store('products/variants', 'public');
+                    $subDir = ($numIdx === 0) ? 'products/cover' : 'products/variants';
+                    $storedPath = $vFile->store($subDir, 'public');
                     $storedFiles[] = $storedPath;
                     $vImgPath = $storedPath;
-                    $currentImages[] = $vImgPath;
+                    
+                    if ($numIdx === 0) {
+                        // Place new cover at index 0 of product.image
+                        array_unshift($currentImages, $vImgPath);
+                    } else {
+                        $currentImages[] = $vImgPath;
+                    }
                 } elseif (isset($existingVariations[$numIdx]['image'])) {
                     $vImgPath = $existingVariations[$numIdx]['image'];
                 }
@@ -685,7 +709,16 @@ class ProductManagementController extends Controller
             $product->has_variants = count($updatedVariations) > 1;
         }
 
-        $product->image = !empty($currentImages) ? array_values($currentImages) : ['products/default.jpg'];
+        $cleanImages = array_values(array_unique($currentImages));
+        $product->image = !empty($cleanImages) ? $cleanImages : ['products/default.jpg'];
+
+        \Illuminate\Support\Facades\Log::info('[ProductImagePipeline:Update]', [
+            'product_id' => $product->id,
+            'updated_variations_count' => count($updatedVariations),
+            'new_gallery_count' => $request->hasFile('images') ? count($request->file('images')) : 0,
+            'product_image_count' => count($product->image),
+            'product_images' => $product->image,
+        ]);
 
         try {
             \Illuminate\Support\Facades\DB::beginTransaction();

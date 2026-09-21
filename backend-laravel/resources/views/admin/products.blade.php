@@ -99,12 +99,14 @@
     approveProductSeller: '',
     approveProductPrice: '',
     approveProductImage: '',
+    approveProductImages: [],
     openApprove(product) {
         this.approveProductId = product.id;
         this.approveProductName = product.name;
         this.approveProductSeller = (product.seller ? (product.seller.shopName || product.seller.name) : 'Artisan');
         this.approveProductPrice = parseFloat(product.price || 0).toLocaleString(undefined, {minimumFractionDigits: 2});
-        this.approveProductImage = product.image ? (Array.isArray(product.image) ? product.image[0] : product.image) : '/uploads/products/default.jpg';
+        this.approveProductImages = this.getProductImages(product);
+        this.approveProductImage = this.approveProductImages[0] || '/uploads/products/default.jpg';
         this.isApproving = false;
         this.approveModal = true;
     },
@@ -855,14 +857,39 @@
                 </div>
             </div>
 
-            {{-- Summary Card --}}
-            <div class="p-3 bg-stone-50 border border-stone-200 rounded-2xl flex items-center gap-3">
-                <img :src="getProductImage(approveProductImage)" class="w-12 h-12 object-cover object-top rounded-xl border border-stone-200 shrink-0" onerror="this.src='/uploads/products/default.jpg'">
-                <div class="min-w-0">
-                    <h4 class="font-serif font-bold text-xs text-gray-900 line-clamp-1" x-text="approveProductName"></h4>
-                    <p class="text-[11px] text-gray-500">By <span class="font-semibold text-gray-700" x-text="approveProductSeller"></span></p>
-                    <p class="text-[11px] font-black text-[#C0422A]" x-text="'₱' + approveProductPrice"></p>
+            {{-- Summary Card with All Photos Inspection --}}
+            <div class="p-3.5 bg-stone-50 border border-stone-200 rounded-2xl space-y-3">
+                <div class="flex items-center gap-3">
+                    <img :src="getProductImage(approveProductImage)" class="w-14 h-14 object-cover object-top rounded-xl border border-stone-200 shrink-0 shadow-sm" onerror="this.src='/uploads/products/default.jpg'">
+                    <div class="min-w-0 flex-1">
+                        <h4 class="font-serif font-bold text-xs text-gray-900 line-clamp-1" x-text="approveProductName"></h4>
+                        <p class="text-[11px] text-gray-500">By <span class="font-semibold text-gray-700" x-text="approveProductSeller"></span></p>
+                        <div class="flex items-center justify-between mt-1">
+                            <span class="text-xs font-black text-[#C0422A]" x-text="'₱' + approveProductPrice"></span>
+                            <span class="inline-flex items-center gap-1 text-[10px] font-bold text-amber-800 bg-amber-100/80 px-2 py-0.5 rounded-full border border-amber-200">
+                                📷 <span x-text="approveProductImages.length + (approveProductImages.length === 1 ? ' photo' : ' photos')"></span>
+                            </span>
+                        </div>
+                    </div>
                 </div>
+
+                {{-- Small Gallery Thumbnails for Admin Verification --}}
+                <template x-if="approveProductImages && approveProductImages.length > 1">
+                    <div class="pt-1 border-t border-stone-200/60">
+                        <div class="text-[10px] font-semibold text-gray-500 mb-1.5">Verify Photographs:</div>
+                        <div class="flex items-center gap-2 overflow-x-auto pb-1">
+                            <template x-for="(img, tIdx) in approveProductImages" :key="tIdx">
+                                <button type="button" 
+                                        @click="approveProductImage = img"
+                                        class="relative w-10 h-10 rounded-lg overflow-hidden border-2 transition-all shrink-0 focus:outline-none"
+                                        :class="approveProductImage === img ? 'border-emerald-600 ring-2 ring-emerald-300' : 'border-stone-200 opacity-75 hover:opacity-100 hover:border-gray-400'">
+                                    <img :src="getProductImage(img)" class="w-full h-full object-cover object-top" onerror="this.src='/uploads/products/default.jpg'">
+                                    <span x-show="tIdx === 0" class="absolute bottom-0 inset-x-0 bg-black/60 text-[8px] text-white text-center font-bold">Cover</span>
+                                </button>
+                            </template>
+                        </div>
+                    </div>
+                </template>
             </div>
 
             <p class="text-xs text-gray-600 leading-relaxed font-medium">

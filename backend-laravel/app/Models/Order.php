@@ -238,4 +238,36 @@ class Order extends Model
     {
         return $this->hasOne(PaymentTransaction::class, 'order_id')->latestOfMany('created_at');
     }
+
+    /**
+     * Check if this order is fulfilled / completed.
+     */
+    public function isCompleted(): bool
+    {
+        return \App\Support\OrderStatus::isCompleted($this->status);
+    }
+
+    /**
+     * Check if this order is eligible for refund or return request.
+     */
+    public function isEligibleForReturnOrRefund(): bool
+    {
+        return \App\Support\OrderStatus::isEligibleForReturnOrRefund($this->status);
+    }
+
+    /**
+     * Scope query to only include completed / delivered orders.
+     */
+    public function scopeCompleted($query)
+    {
+        return $query->whereIn('status', \App\Support\OrderStatus::completedStatuses());
+    }
+
+    /**
+     * Scope query to only include active (non-cancelled) orders.
+     */
+    public function scopeActive($query)
+    {
+        return $query->whereNotIn('status', ['Cancelled', 'cancelled', 'cancellation pending', 'cancellation requested']);
+    }
 }

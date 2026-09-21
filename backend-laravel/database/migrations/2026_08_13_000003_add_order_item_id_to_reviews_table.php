@@ -12,7 +12,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('reviews', function (Blueprint $table) {
-            $table->char('orderItemId', 36)->collation('utf8mb4_bin')->nullable()->after('orderId');
+            $table->char('orderItemId', 36)->collation('utf8mb4_unicode_ci')->nullable()->after('orderId');
             $table->foreign('orderItemId')->references('id')->on('order_items')->onDelete('cascade');
             $table->unique('orderItemId', 'unique_order_item_review');
         });

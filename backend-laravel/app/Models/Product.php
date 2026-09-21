@@ -290,6 +290,24 @@ class Product extends Model
     }
 
     /**
+     * Get the primary cover image URL.
+     */
+    public function getPrimaryImageUrl(): string
+    {
+        return $this->getImageUrl();
+    }
+
+    /**
+     * Get all gallery photograph objects according to the canonical contract.
+     *
+     * @return array<int, array{url: string, path: string}>
+     */
+    public function getGalleryImages(): array
+    {
+        return \App\Support\VariationFormatter::buildGalleryImages($this->image, $this);
+    }
+
+    /**
      * Get all resolved URLs for all product variant images.
      */
     public function getAllImageUrls(): array

@@ -45,7 +45,7 @@ Route::prefix('v1')->group(function () {
     Route::get('/products/{id}', [ProductController::class, 'getProductById']);
     Route::post('/products/{id}/funnel-event', [ProductController::class, 'trackProductFunnelEvent']);
     
-    Route::middleware('auth:sanctum')->group(function () {
+    Route::middleware(['auth:sanctum', 'seller'])->group(function () {
         Route::get('/seller/products', [ProductController::class, 'getSellerProducts']);
         Route::post('/products', [ProductController::class, 'createProduct']);
         Route::put('/products/{id}', [ProductController::class, 'updateProduct']);
@@ -56,14 +56,17 @@ Route::prefix('v1')->group(function () {
     // Order Routes
     Route::middleware('auth:sanctum')->group(function () {
         Route::get('/orders', [OrderController::class, 'getMyOrders']);
-        Route::get('/seller/orders', [OrderController::class, 'getSellerOrders']);
         Route::post('/orders', [OrderController::class, 'createOrder']);
         Route::patch('/orders/{id}/status', [OrderController::class, 'updateOrderStatus']);
         Route::post('/orders/{id}/cancel', [OrderController::class, 'cancelOrder']);
+        Route::post('/orders/{id}/resubmit-payment', [OrderController::class, 'resubmitPayment']);
+    });
+
+    Route::middleware(['auth:sanctum', 'seller'])->group(function () {
+        Route::get('/seller/orders', [OrderController::class, 'getSellerOrders']);
         Route::post('/orders/{id}/approve-cancellation', [OrderController::class, 'approveCancellation']);
         Route::post('/orders/{id}/reject-cancellation', [OrderController::class, 'rejectCancellation']);
         Route::post('/orders/{id}/reject-payment', [OrderController::class, 'rejectPayment']);
-        Route::post('/orders/{id}/resubmit-payment', [OrderController::class, 'resubmitPayment']);
         Route::get('/seller/report/export', [OrderController::class, 'exportSellerReport']);
     });
 
@@ -101,7 +104,7 @@ Route::prefix('v1')->group(function () {
     });
 
     // Analytics Routes
-    Route::middleware('auth:sanctum')->group(function () {
+    Route::middleware(['auth:sanctum', 'seller'])->group(function () {
         Route::get('/analytics/seller', [AnalyticsController::class, 'getSellerAnalytics']);
         Route::get('/dashboard/summary', [DashboardController::class, 'getSellerDashboardSummary']);
     });
@@ -110,11 +113,13 @@ Route::prefix('v1')->group(function () {
     Route::get('/reviews/product/{productId}', [ReviewController::class, 'getProductReviews']);
     Route::middleware('auth:sanctum')->group(function () {
         Route::post('/reviews', [ReviewController::class, 'store']);
+    });
+    Route::middleware(['auth:sanctum', 'seller'])->group(function () {
         Route::get('/reviews/seller', [ReviewController::class, 'getSellerReviews']);
     });
 
-    // Admin Routes
-    Route::middleware(['auth:sanctum'])->group(function () {
+    // Admin Routes - Strictly protected with Sanctum AND Admin authorization
+    Route::middleware(['auth:sanctum', 'admin'])->group(function () {
         Route::get('/admin/stats', [AdminController::class, 'getGlobalStats']);
         Route::get('/admin/users', [AdminController::class, 'getAllUsers']);
         Route::patch('/admin/users/{id}/verify', [AdminController::class, 'verifySeller']);
@@ -143,6 +148,8 @@ Route::prefix('v1')->group(function () {
     // Refund Routes
     Route::middleware('auth:sanctum')->group(function () {
         Route::post('/refunds', [RefundController::class, 'createRefundRequest']);
+    });
+    Route::middleware(['auth:sanctum', 'seller'])->group(function () {
         Route::get('/refunds/seller', [RefundController::class, 'getSellerRefundRequests']);
         Route::patch('/refunds/{id}/status', [RefundController::class, 'updateRefundStatus']);
     });
@@ -151,11 +158,19 @@ Route::prefix('v1')->group(function () {
     Route::prefix('ai')->group(function () {
         Route::post('/stylist/chat', [\App\Http\Controllers\AiController::class, 'chatStylist']);
         Route::post('/sizing/recommend', [\App\Http\Controllers\AiController::class, 'recommendSize']);
-        Route::post('/seller/generate-description', [\App\Http\Controllers\AiController::class, 'generateSellerListing']);
-        Route::post('/seller/suggest-product', [\App\Http\Controllers\AiController::class, 'suggestProduct']);
         Route::post('/security/password-check', [\App\Http\Controllers\AiController::class, 'analyzePassword']);
-        Route::post('/payment-reference/check', [\App\Http\Controllers\AiController::class, 'checkPaymentReference']);
-        Route::post('/receipt/verify', [\App\Http\Controllers\AiController::class, 'verifyReceipt']);
+        
+        // Seller-only AI routes
+        Route::middleware(['auth:sanctum', 'seller'])->group(function () {
+            Route::post('/seller/generate-description', [\App\Http\Controllers\AiController::class, 'generateSellerListing']);
+            Route::post('/seller/suggest-product', [\App\Http\Controllers\AiController::class, 'suggestProduct']);
+        });
+
+        // Authenticated financial/payment verification AI routes
+        Route::middleware('auth:sanctum')->group(function () {
+            Route::post('/payment-reference/check', [\App\Http\Controllers\AiController::class, 'checkPaymentReference']);
+            Route::post('/receipt/verify', [\App\Http\Controllers\AiController::class, 'verifyReceipt']);
+        });
     });
 
 });

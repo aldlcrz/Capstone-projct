@@ -419,7 +419,12 @@ class AdminController extends Controller
             if (method_exists($user, 'tokens')) {
                 $user->tokens()->delete();
             }
-        } catch (\Throwable $e) {}
+        } catch (\Throwable $e) {
+            Log::warning('Failed to invalidate sessions/tokens on blockUser', [
+                'user_id' => $user->id,
+                'error'   => $e->getMessage(),
+            ]);
+        }
 
         return response()->json(['message' => 'User blocked successfully']);
     }

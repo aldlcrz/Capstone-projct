@@ -3025,7 +3025,7 @@ async function handleProductFormSubmit(e, isEdit = false) {
             if (Array.isArray(alpineData.variants)) {
                 alpineData.variants.forEach((v, idx) => {
                     const el = document.getElementById('variant_file_' + idx);
-                    if (el && (!el.files || el.files.length === 0) && v.file && typeof DataTransfer !== 'undefined') {
+                    if (el && v.file && typeof DataTransfer !== 'undefined') {
                         const dt = new DataTransfer();
                         dt.items.add(v.file);
                         el.files = dt.files;
@@ -3035,6 +3035,15 @@ async function handleProductFormSubmit(e, isEdit = false) {
             if (typeof alpineData.syncGalleryFileInput === 'function') {
                 alpineData.syncGalleryFileInput();
             }
+
+            const variantFileInput = document.getElementById('variant_file_0');
+            const galleryFileInput = document.getElementById('gallery_files_input');
+            console.log('[ImagePipeline:SubmitDiagnostics]', {
+                coverFilesCount: variantFileInput ? variantFileInput.files.length : 0,
+                galleryAlpineCount: Array.isArray(alpineData.galleryImages) ? alpineData.galleryImages.length : 0,
+                galleryInputFilesCount: galleryFileInput ? galleryFileInput.files.length : 0,
+                pendingJobsCount: window._pendingImageJobs ? window._pendingImageJobs.size : 0,
+            });
         }
     } catch (syncErr) {
         console.warn('Pre-submit file sync warning:', syncErr);

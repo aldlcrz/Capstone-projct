@@ -14,8 +14,8 @@ return new class extends Migration
                 $userCol = $table->uuid('user_id');
                 $prodCol = $table->uuid('product_id');
                 if (\Illuminate\Support\Facades\DB::getDriverName() === 'mysql') {
-                    $userCol->collation('utf8mb4_general_ci');
-                    $prodCol->collation('utf8mb4_bin');
+                    $userCol->collation('utf8mb4_unicode_ci');
+                    $prodCol->collation('utf8mb4_unicode_ci');
                 }
                 $table->timestamps();
 

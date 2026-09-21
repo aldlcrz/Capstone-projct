@@ -13,7 +13,7 @@ return new class extends Migration
     {
         Schema::table('banners', function (Blueprint $table) {
             if (Schema::getConnection()->getDriverName() === 'mysql') {
-                $table->uuid('userId')->nullable()->collation('utf8mb4_bin')->after('id');
+                $table->uuid('userId')->nullable()->collation('utf8mb4_unicode_ci')->after('id');
             } else {
                 $table->uuid('userId')->nullable()->after('id');
             }

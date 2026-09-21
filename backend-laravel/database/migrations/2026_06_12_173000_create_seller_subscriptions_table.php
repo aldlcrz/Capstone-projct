@@ -14,7 +14,7 @@ return new class extends Migration
         Schema::create('seller_subscriptions', function (Blueprint $table) {
             $table->uuid('id')->primary();
             if (Schema::getConnection()->getDriverName() === 'mysql') {
-                $table->uuid('userId')->collation('utf8mb4_bin');
+                $table->uuid('userId')->collation('utf8mb4_unicode_ci');
             } else {
                 $table->uuid('userId');
             }

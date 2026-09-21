@@ -894,7 +894,12 @@ class SuperAdminController extends Controller
             if (method_exists($customer, 'tokens')) {
                 $customer->tokens()->delete();
             }
-        } catch (\Throwable $e) {}
+        } catch (\Throwable $e) {
+            Log::warning('Session/token invalidation failed on banCustomer', [
+                'user_id' => $customer->id,
+                'error'   => $e->getMessage(),
+            ]);
+        }
 
         return redirect()->route('superadmin.customers')->with('success', "Customer account '{$customer->name}' has been banned and notification sent.");
     }
@@ -958,7 +963,12 @@ class SuperAdminController extends Controller
                 if (method_exists($user, 'tokens')) {
                     $user->tokens()->delete();
                 }
-            } catch (\Throwable $e) {}
+            } catch (\Throwable $e) {
+                Log::warning('Session/token invalidation failed on deleteCustomer', [
+                    'user_id' => $customerId,
+                    'error'   => $e->getMessage(),
+                ]);
+            }
 
             try {
                 ArchivedRecord::archive('customer', $user, $reason);
@@ -998,7 +1008,9 @@ class SuperAdminController extends Controller
         // Always ensure framework native down file is removed so admins are never locked out
         try {
             Artisan::call('up');
-        } catch (\Exception $e) {}
+        } catch (\Exception $e) {
+            Log::warning('Artisan up failed during toggleMaintenance', ['error' => $e->getMessage()]);
+        }
 
         if ($enable === '1') {
             SystemSetting::updateOrCreate(['key' => 'maintenance_mode'], ['value' => '1']);

@@ -24,31 +24,34 @@ class ProductController extends Controller
     {
         $data = is_array($product) ? $product : $product->toArray();
 
-        // Handle image URLs
+        // Handle image URLs canonically
         $images = $data['image'] ?? [];
         if (is_string($images)) {
             $images = json_decode($images, true) ?? [];
         }
 
-        $formattedImages = array_map(function ($img) use ($request) {
-            $url = is_array($img) ? ($img['url'] ?? null) : $img;
-            if (!$url) return null;
+        $productModel = is_object($product) ? $product : null;
+        $formattedImages = [];
+        foreach ((array) $images as $img) {
+            $rawPath = is_array($img) ? ($img['url'] ?? ($img['image'] ?? null)) : $img;
+            if (!$rawPath) continue;
 
-            if (preg_match('/^https?:\/\//i', $url) || str_starts_with($url, 'data:') || str_starts_with($url, 'blob:')) {
-                return $url;
+            if (preg_match('/^https?:\/\//i', $rawPath) || str_starts_with($rawPath, 'data:') || str_starts_with($rawPath, 'blob:')) {
+                $formattedImages[] = $rawPath;
+            } elseif ($productModel && method_exists($productModel, 'getImageUrl')) {
+                $formattedImages[] = $productModel->getImageUrl($rawPath);
+            } else {
+                $formattedImages[] = (new Product())->getImageUrl($rawPath);
             }
+        }
 
-            $normalized = str_replace('\\', '/', $url);
-            $normalized = ltrim($normalized, './');
+        if (empty($formattedImages)) {
+            $formattedImages[] = '/uploads/products/default.jpg';
+        }
 
-            if (str_starts_with($normalized, 'uploads/')) {
-                return $request->getSchemeAndHttpHost() . '/' . $normalized;
-            }
-
-            return str_starts_with($normalized, '/') ? $normalized : '/' . $normalized;
-        }, $images);
-
-        $data['image'] = array_values(array_filter($formattedImages));
+        $canonicalImages = array_values(array_unique($formattedImages));
+        $data['image'] = $canonicalImages;
+        $data['image_urls'] = $canonicalImages;
 
         // Handle seller
         if (isset($data['seller'])) {
@@ -222,10 +225,12 @@ class ProductController extends Controller
 
         $images = [];
         if ($request->hasFile('images')) {
-            foreach ($request->file('images') as $file) {
-                $filename = time() . '_' . $file->getClientOriginalName();
-                $file->move(public_path('uploads/products'), $filename);
-                $images[] = ['url' => '/uploads/products/' . $filename];
+            foreach ($request->file('images') as $index => $file) {
+                if ($file && $file->isValid()) {
+                    $subDir = ($index === 0) ? 'products/cover' : 'products/gallery';
+                    $storedPath = $file->store($subDir, 'public');
+                    $images[] = $storedPath;
+                }
             }
         }
 

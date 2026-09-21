@@ -26,7 +26,7 @@ class RefundController extends Controller
         $customerId = Auth::id();
         $order = Order::where('id', $request->orderId)->where('customerId', $customerId)->firstOrFail();
 
-        if ($order->status !== 'Received by Buyer' && $order->status !== 'Delivered') {
+        if (!$order->isEligibleForReturnOrRefund()) {
             return response()->json(['message' => 'Refunds are only available after receiving the item.'], 400);
         }
 

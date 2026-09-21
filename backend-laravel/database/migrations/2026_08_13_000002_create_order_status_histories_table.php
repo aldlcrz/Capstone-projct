@@ -13,11 +13,11 @@ return new class extends Migration
     {
         Schema::create('order_status_histories', function (Blueprint $table) {
             $table->uuid('id')->primary();
-            $table->char('orderId', 36)->collation('utf8mb4_bin');
+            $table->char('orderId', 36)->collation('utf8mb4_unicode_ci');
             $table->foreign('orderId')->references('id')->on('orders')->onDelete('cascade');
             $table->string('previousStatus')->nullable();
             $table->string('newStatus');
-            $table->char('updatedBy', 36)->collation('utf8mb4_bin')->nullable();
+            $table->char('updatedBy', 36)->collation('utf8mb4_unicode_ci')->nullable();
             $table->foreign('updatedBy')->references('id')->on('users')->onDelete('set null');
             $table->string('userRole')->nullable();
             $table->text('notes')->nullable();

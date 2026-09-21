@@ -47,8 +47,7 @@ class ReturnRequestController extends Controller
             return back()->with('error', 'You can only request returns for your own orders.');
         }
 
-        $allowedStatuses = ['delivered', 'completed', 'received by buyer'];
-        if (!in_array(strtolower(trim($order->status)), $allowedStatuses, true)) {
+        if (!$order->isEligibleForReturnOrRefund()) {
             if ($request->wantsJson()) {
                 return response()->json(['message' => 'Only delivered or completed orders can be returned'], 400);
             }

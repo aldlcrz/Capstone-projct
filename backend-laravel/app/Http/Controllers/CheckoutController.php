@@ -330,6 +330,7 @@ class CheckoutController extends Controller
 
             $addressData = json_decode($request->input('shippingAddress'), true);
             $orders = [];
+            $postCommitTasks = [];
             foreach ($itemsBySeller as $sellerId => $items) {
                 $sellerUser = User::find($sellerId);
                 $orderId = (string) Str::uuid();
@@ -406,12 +407,6 @@ class CheckoutController extends Controller
                     'notes' => $screening['message'] ?? 'Initial submission at checkout',
                 ]);
 
-                // Ensure snapshot columns exist in order_items table on database
-                OrderItem::ensureSnapshotColumnsExist();
-
-                $hasProductNameCol = \Illuminate\Support\Facades\Schema::hasColumn('order_items', 'product_name');
-                $hasProductImageCol = \Illuminate\Support\Facades\Schema::hasColumn('order_items', 'product_image');
-
                 // 1. Group/aggregate demands and validate per-product & per-size requirements
                 $requestedQuantities = [];
                 $requestedSizes = [];
@@ -462,19 +457,14 @@ class CheckoutController extends Controller
                         'id' => (string) Str::uuid(),
                         'orderId' => $orderId,
                         'productId' => $item['id'],
+                        'product_name' => $product?->name ?? ($item['name'] ?? 'Heritage Piece'),
+                        'product_image' => $product?->getImageUrl() ?? ($item['image'] ?? null),
                         'quantity' => $item['quantity'],
                         'price' => $item['price'],
                         'size' => $item['size'],
                         'variation' => VariationFormatter::label($item['variation'] ?? null, $product?->image)
                             ?? ($item['variation'] ?? 'Original'),
                     ];
-
-                    if ($hasProductNameCol) {
-                        $orderItemData['product_name'] = $product?->name ?? ($item['name'] ?? 'Heritage Piece');
-                    }
-                    if ($hasProductImageCol) {
-                        $orderItemData['product_image'] = $product?->getImageUrl() ?? ($item['image'] ?? null);
-                    }
 
                     OrderItem::create($orderItemData);
                 }
@@ -498,41 +488,56 @@ class CheckoutController extends Controller
 
                     // Low/Out of Stock Warnings
                     $freshStock = $product->stock;
-                    if ($freshStock <= 0) {
-                        \App\Models\Notification::send($sellerId, '⚠️ Out of Stock', "\"{$product->name}\" is now out of stock.", 'system', '/seller/products', 'seller');
-                    } elseif ($freshStock <= 5) {
-                        \App\Models\Notification::send($sellerId, 'Low Stock Alert', "\"{$product->name}\" has only {$freshStock} items left.", 'system', '/seller/products', 'seller');
+                    $prodName = $product->name;
+                    $postCommitTasks[] = function() use ($sellerId, $prodName, $freshStock) {
+                        if ($freshStock <= 0) {
+                            \App\Models\Notification::send($sellerId, '⚠️ Out of Stock', "\"{$prodName}\" is now out of stock.", 'system', '/seller/products', 'seller');
+                        } elseif ($freshStock <= 5) {
+                            \App\Models\Notification::send($sellerId, 'Low Stock Alert', "\"{$prodName}\" has only {$freshStock} items left.", 'system', '/seller/products', 'seller');
+                        }
+                    };
+                }
+                
+                // Collect side-effects to run after commit
+                $currentOrderId = $orderId;
+                $currentSellerId = $sellerId;
+                $currentTotalAmount = (float) $totalAmount;
+                $currentCustomerUser = Auth::user();
+                $currentSellerUser = $sellerUser;
+                $postCommitTasks[] = function() use ($currentOrderId, $currentSellerId, $currentTotalAmount, $currentCustomerUser, $currentSellerUser) {
+                    \App\Models\Notification::send($currentCustomerUser->id, 'Order Placed', 'Your order has been placed successfully and is awaiting confirmation.', 'order', '/orders/' . $currentOrderId, 'customer');
+                    \App\Models\Notification::send($currentSellerId, 'New order received', 'A customer has placed a new order in your shop.', 'order', '/seller/orders', 'seller');
+
+                    try {
+                        \App\Models\Message::create([
+                            'senderId'   => $currentSellerId,
+                            'receiverId' => $currentCustomerUser->id,
+                            'content'    => "Thank you for placing your order (#" . substr($currentOrderId, 0, 8) . ")! We have received your order and will prepare your handcrafted pieces with care. Feel free to message us here if you have any questions or custom requests.",
+                            'read'       => false,
+                        ]);
+                    } catch (\Throwable $e) {
+                        \Illuminate\Support\Facades\Log::warning('Automatic checkout chat message error: ' . $e->getMessage());
                     }
-                }
-                
-                // Send notifications for order placement
-                \App\Models\Notification::send(Auth::id(), 'Order Placed', 'Your order has been placed successfully and is awaiting confirmation.', 'order', '/orders/' . $orderId, 'customer');
-                \App\Models\Notification::send($sellerId, 'New order received', 'A customer has placed a new order in your shop.', 'order', '/seller/orders', 'seller');
 
-                // Automatic conversational confirmation to the buyer's thread with this seller
-                try {
-                    \App\Models\Message::create([
-                        'senderId'   => $sellerId,
-                        'receiverId' => Auth::id(),
-                        'content'    => "Thank you for placing your order (#" . substr($orderId, 0, 8) . ")! We have received your order and will prepare your handcrafted pieces with care. Feel free to message us here if you have any questions or custom requests.",
-                        'read'       => false,
-                    ]);
-                } catch (\Throwable $e) {
-                    \Illuminate\Support\Facades\Log::warning('Automatic checkout chat message error: ' . $e->getMessage());
-                }
+                    if ($currentCustomerUser && $currentCustomerUser->email) {
+                        try {
+                            $cMail = new \App\Mail\OrderStatusUpdatedMail($currentCustomerUser->name, $currentOrderId, 'Order Confirmed', 'Your order has been placed successfully and confirmed.');
+                            \App\Services\EmailNotificationService::sendNotification($currentCustomerUser->email, $cMail, 'order_status_updated', $currentCustomerUser->id, 'Order', $currentOrderId);
+                        } catch (\Throwable $e) {
+                            \Illuminate\Support\Facades\Log::warning('Customer order confirmation email failed: ' . $e->getMessage());
+                        }
+                    }
 
-                // Gmail Notifications
-                $customerUser = Auth::user();
-                if ($customerUser && $customerUser->email) {
-                    $cMail = new \App\Mail\OrderStatusUpdatedMail($customerUser->name, $orderId, 'Order Confirmed', 'Your order has been placed successfully and confirmed.');
-                    \App\Services\EmailNotificationService::sendNotification($customerUser->email, $cMail, 'order_status_updated', $customerUser->id, 'Order', $orderId);
-                }
+                    if ($currentSellerUser && $currentSellerUser->email) {
+                        try {
+                            $sMail = new \App\Mail\NewOrderSellerMail($currentSellerUser->name, $currentOrderId, $currentTotalAmount, $currentCustomerUser?->name);
+                            \App\Services\EmailNotificationService::sendNotification($currentSellerUser->email, $sMail, 'new_order', $currentSellerUser->id, 'Order', $currentOrderId);
+                        } catch (\Throwable $e) {
+                            \Illuminate\Support\Facades\Log::warning('Seller new order notification email failed: ' . $e->getMessage());
+                        }
+                    }
+                };
 
-                if ($sellerUser && $sellerUser->email) {
-                    $sMail = new \App\Mail\NewOrderSellerMail($sellerUser->name, $orderId, (float) $totalAmount, $customerUser?->name);
-                    \App\Services\EmailNotificationService::sendNotification($sellerUser->email, $sMail, 'new_order', $sellerUser->id, 'Order', $orderId);
-                }
-                
                 $orders[] = $order;
             }
 
@@ -556,6 +561,15 @@ class CheckoutController extends Controller
             }
 
             DB::commit();
+
+            // Run post-commit notifications/emails safely outside the transaction
+            foreach ($postCommitTasks as $task) {
+                try {
+                    $task();
+                } catch (\Throwable $taskEx) {
+                    \Illuminate\Support\Facades\Log::error('Post-checkout side effect failed: ' . $taskEx->getMessage(), ['exception' => $taskEx]);
+                }
+            }
 
             return redirect()->route('orders')->with('success', 'Order placed successfully!');
 

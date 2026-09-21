@@ -95,7 +95,9 @@ class AdminSettingsController extends Controller
         // Always ensure framework native down file is removed so admins are never locked out
         try {
             Artisan::call('up');
-        } catch (\Exception $e) {}
+        } catch (\Exception $e) {
+            Log::warning('Artisan up failed during admin toggleMaintenance', ['error' => $e->getMessage()]);
+        }
 
         if ($enable === '1') {
             SystemSetting::updateOrCreate(['key' => 'maintenance_mode'], ['value' => '1']);
