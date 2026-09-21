@@ -607,10 +607,25 @@ class WebAuthController extends Controller
                 }
 
                 if ($existingUser->role === 'seller') {
+                    $wasAlreadyApproved = (bool) $existingUser->isVerified && ($existingUser->status === 'active' || empty($existingUser->status));
                     $existingUser->email_verified_at       = now();
+                    $existingUser->registration_expires_at = null;
+
+                    if ($wasAlreadyApproved) {
+                        $existingUser->isVerified = true;
+                        $existingUser->status     = 'active';
+                        $existingUser->save();
+
+                        EmailNotificationService::consumeCode($email, 'registration');
+                        Auth::login($existingUser);
+                        session()->forget('verify_email');
+                        session()->forget('pending_registration');
+
+                        return redirect()->route('seller.dashboard')->with('success', 'Your email address has been verified! Welcome to your Artisan Workshop.');
+                    }
+
                     $existingUser->isVerified              = false;
                     $existingUser->status                  = 'pending';
-                    $existingUser->registration_expires_at = null;
                     $existingUser->save();
 
                     EmailNotificationService::consumeCode($email, 'registration');

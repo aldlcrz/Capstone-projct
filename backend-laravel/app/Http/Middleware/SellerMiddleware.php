@@ -55,6 +55,15 @@ class SellerMiddleware
                     return redirect('/login')->withErrors(['email' => $msg]);
                 }
 
+                // If already approved by admin (isVerified = true, status = active), do NOT block them!
+                if ($user->isVerified && ($user->status === 'active' || empty($user->status))) {
+                    if (is_null($user->email_verified_at)) {
+                        $user->email_verified_at = now();
+                        $user->saveQuietly();
+                    }
+                    return $next($request);
+                }
+
                 // Unverified email check with route exemption to prevent redirect loops
                 if ($user->status === 'awaiting_email_verification' || is_null($user->email_verified_at)) {
                     if ($request->routeIs(['verify.email', 'verify.email.*', 'seller.verify-email', 'seller.verify-email.*', 'logout']) ||

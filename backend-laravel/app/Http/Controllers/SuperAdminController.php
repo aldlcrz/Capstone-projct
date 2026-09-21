@@ -640,6 +640,7 @@ class SuperAdminController extends Controller
 
         $seller->isVerified = true;
         $seller->status     = 'active';
+        $seller->email_verified_at = $seller->email_verified_at ?? now();
         $seller->rejection_reason = null;
         $seller->save();
 

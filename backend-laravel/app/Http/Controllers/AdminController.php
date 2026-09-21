@@ -331,6 +331,7 @@ class AdminController extends Controller
 
         $user->isVerified = true;
         $user->status     = 'active';
+        $user->email_verified_at = $user->email_verified_at ?? now();
         $user->save();
 
         $this->sendNotification($user->id, 'Seller verification approved', 'Your artisan workshop is now verified and can access seller tools.', 'system', '/seller/dashboard', 'seller');
@@ -868,6 +869,7 @@ class AdminController extends Controller
 
             $user->isVerified = true;
             $user->status     = 'active';
+            $user->email_verified_at = $user->email_verified_at ?? now();
             $user->rejection_reason = null;
             $user->save();
 
