@@ -479,46 +479,47 @@
     </div>
     @endif
 
-    <!-- Mobile App Bar (Lazada Mobile Style) -->
-    <div class="lg:hidden sticky top-0 z-30 bg-white border-b border-gray-100 px-3 py-2 flex items-center gap-2.5">
-        {{-- Back Navigation Chevron --}}
-        <button type="button" onclick="window.history.length > 1 ? window.history.back() : window.location.href = '/'" class="p-1 text-gray-800 hover:text-black cursor-pointer shrink-0">
-            <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/></svg>
-        </button>
+    <!-- Mobile App Header (Sticky Search + Directory Tabs) -->
+    <div class="lg:hidden sticky top-0 z-40 bg-white border-b border-gray-100 shadow-2xs" style="position: sticky; top: 0; z-index: 40;">
+        {{-- Row 1: Back Navigation + Pink Bordered Search Box --}}
+        <div class="px-3 py-2 flex items-center gap-2.5">
+            <button type="button" onclick="window.history.length > 1 ? window.history.back() : window.location.href = '/'" class="p-1 text-gray-800 hover:text-black cursor-pointer shrink-0">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/></svg>
+            </button>
 
-        {{-- Pink Bordered Search Box with Active Search Term --}}
-        <div class="flex-1 relative">
-            <form action="/" method="GET" class="m-0">
-                <div class="flex items-center bg-white border border-[#FF0055] rounded-full pl-2.5 pr-2 py-1 shadow-2xs">
-                    <svg class="w-3.5 h-3.5 text-gray-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
-                    <input type="text" name="search" value="barong tagalog" placeholder="Search Barongs..." class="w-full bg-transparent text-gray-900 placeholder-gray-400 text-xs pl-2 pr-1 outline-none font-medium">
-                </div>
-            </form>
+            <div class="flex-1 relative">
+                <form action="/" method="GET" class="m-0">
+                    <div class="flex items-center bg-white border border-[#FF0055] rounded-full pl-2.5 pr-2 py-1 shadow-2xs">
+                        <svg class="w-3.5 h-3.5 text-gray-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+                        <input type="text" name="search" value="barong tagalog" placeholder="Search Barongs..." class="w-full bg-transparent text-gray-900 placeholder-gray-400 text-xs pl-2 pr-1 outline-none font-medium">
+                    </div>
+                </form>
+            </div>
         </div>
-    </div>
 
-    <!-- Mobile Tab Bar (Overview | Reviews | Product Details | Recommendation) - Matching Picture 4 -->
-    <div class="lg:hidden sticky top-[48px] z-20 bg-white/98 backdrop-blur-md border-b border-gray-100 flex items-center justify-around text-xs tracking-tight shadow-2xs px-1">
-        <button type="button" @click="scrollToSection('overview')" 
-                class="py-2.5 px-2 transition-all cursor-pointer border-b-2"
-                :class="activeMobileTab === 'overview' ? 'text-[#FF0055] font-bold border-[#FF0055]' : 'text-gray-500 font-medium border-transparent hover:text-gray-900'">
-            Overview
-        </button>
-        <button type="button" @click="scrollToSection('reviews')" 
-                class="py-2.5 px-2 transition-all cursor-pointer border-b-2"
-                :class="activeMobileTab === 'reviews' ? 'text-[#FF0055] font-bold border-[#FF0055]' : 'text-gray-500 font-medium border-transparent hover:text-gray-900'">
-            Reviews
-        </button>
-        <button type="button" @click="scrollToSection('details')" 
-                class="py-2.5 px-2 transition-all cursor-pointer border-b-2"
-                :class="activeMobileTab === 'details' ? 'text-[#FF0055] font-bold border-[#FF0055]' : 'text-gray-500 font-medium border-transparent hover:text-gray-900'">
-            Product Details
-        </button>
-        <button type="button" @click="scrollToSection('recommendations')" 
-                class="py-2.5 px-2 transition-all cursor-pointer border-b-2"
-                :class="activeMobileTab === 'recommendations' ? 'text-[#FF0055] font-bold border-[#FF0055]' : 'text-gray-500 font-medium border-transparent hover:text-gray-900'">
-            Recommendation
-        </button>
+        {{-- Row 2: Mobile Tab Bar (Overview | Reviews | Product Details | Recommendation) --}}
+        <div class="border-t border-gray-100 flex items-center justify-around text-xs tracking-tight px-1 bg-white">
+            <button type="button" @click="scrollToSection('overview')" 
+                    class="py-2.5 px-2 transition-all cursor-pointer border-b-2 font-semibold"
+                    :class="activeMobileTab === 'overview' ? 'text-[#FF0055] font-bold border-[#FF0055]' : 'text-gray-500 border-transparent hover:text-gray-900'">
+                Overview
+            </button>
+            <button type="button" @click="scrollToSection('reviews')" 
+                    class="py-2.5 px-2 transition-all cursor-pointer border-b-2 font-semibold"
+                    :class="activeMobileTab === 'reviews' ? 'text-[#FF0055] font-bold border-[#FF0055]' : 'text-gray-500 border-transparent hover:text-gray-900'">
+                Reviews
+            </button>
+            <button type="button" @click="scrollToSection('details')" 
+                    class="py-2.5 px-2 transition-all cursor-pointer border-b-2 font-semibold"
+                    :class="activeMobileTab === 'details' ? 'text-[#FF0055] font-bold border-[#FF0055]' : 'text-gray-500 border-transparent hover:text-gray-900'">
+                Product Details
+            </button>
+            <button type="button" @click="scrollToSection('recommendations')" 
+                    class="py-2.5 px-2 transition-all cursor-pointer border-b-2 font-semibold"
+                    :class="activeMobileTab === 'recommendations' ? 'text-[#FF0055] font-bold border-[#FF0055]' : 'text-gray-500 border-transparent hover:text-gray-900'">
+                Recommendation
+            </button>
+        </div>
     </div>
 
     <!-- Breadcrumb Navigation (Desktop Only) -->
@@ -674,16 +675,23 @@
                     <svg class="w-4 h-4 text-gray-400 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
                 </div>
 
-                {{-- Ratings & Social Action Icons Row (Heart, Share, Chat) --}}
+                {{-- Ratings & Sold Count Row --}}
                 <div class="flex items-center justify-between pt-3 mt-2.5 border-t border-gray-50 text-xs">
                     <div class="flex items-center gap-1.5 text-gray-700">
-                        <div class="flex items-center gap-1 font-bold text-amber-500">
-                            <span>★</span>
-                            <span>{{ number_format($product->avgRating ?? 4.6, 1) }}</span>
-                        </div>
-                        <span class="text-gray-400">({{ $product->reviewCount ?? 40 }})</span>
+                        @if(($product->reviewCount ?? 0) > 0)
+                            <div class="flex items-center gap-1 font-bold text-amber-500">
+                                <span>★</span>
+                                <span>{{ number_format($product->avgRating, 1) }}</span>
+                            </div>
+                            <span class="text-gray-400">({{ $product->reviewCount }})</span>
+                        @else
+                            <div class="flex items-center gap-1 text-gray-400 font-medium">
+                                <span>★</span>
+                                <span>0.0 (0)</span>
+                            </div>
+                        @endif
                         <span class="text-gray-300">|</span>
-                        <span class="text-gray-500">{{ (int)($soldCount ?? 160) }} sold</span>
+                        <span class="text-gray-500">{{ (int)($soldCount ?? 0) }} sold</span>
                     </div>
 
                 </div>
@@ -1333,111 +1341,82 @@
                     $s = (int)$r->rating;
                     if(isset($starBreakdown[$s])) $starBreakdown[$s]++;
                 }
+                $mediaReviewsCount = $product->reviews->filter(fn($r)=>!empty($r->images_list)||!empty($r->video_url))->count();
             @endphp
 
-            {{-- ═══ Mobile Reviews Directory View (Matching Picture 1 & 2) ═══ --}}
+            {{-- ═══ Mobile Reviews Directory View ═══ --}}
             <div class="lg:hidden bg-white mb-3">
                 {{-- Reviews Header Row --}}
                 <div class="flex items-center justify-between py-3 border-b border-gray-100 cursor-pointer" @click="reviewsModal = true">
-                    <span class="text-sm font-bold text-gray-900">Reviews ({{ $totalRevCount ?: 40 }})</span>
+                    <span class="text-sm font-bold text-gray-900">Reviews ({{ $totalRevCount }})</span>
                     <div class="flex items-center gap-1.5 text-xs text-gray-500">
-                        <span class="font-bold text-gray-900">{{ number_format($product->avgRating ?? 4.6, 1) }}</span>
-                        <div class="flex items-center text-amber-400 text-xs">
-                            @for($i = 1; $i <= 5; $i++)
-                                <span>{{ $i <= round($product->avgRating ?? 4.6) ? '★' : '☆' }}</span>
-                            @endfor
-                        </div>
+                        @if($totalRevCount > 0)
+                            <span class="font-bold text-gray-900">{{ number_format($product->avgRating, 1) }}</span>
+                            <div class="flex items-center text-amber-400 text-xs">
+                                @for($i = 1; $i <= 5; $i++)
+                                    <span>{{ $i <= round($product->avgRating) ? '★' : '☆' }}</span>
+                                @endfor
+                            </div>
+                        @else
+                            <span class="text-gray-400">No ratings yet</span>
+                        @endif
                         <span class="text-gray-400 text-sm">›</span>
                     </div>
                 </div>
 
-                {{-- Review Filter Chips --}}
+                {{-- Review Filter Chips (Only show if reviews exist) --}}
+                @if($totalRevCount > 0)
                 <div class="flex items-center gap-2 py-2.5 overflow-x-auto no-scrollbar border-b border-gray-100 text-[11px]">
+                    @if($mediaReviewsCount > 0)
                     <button type="button" @click="reviewsModal = true; setFilter('media')" class="px-2.5 py-1 rounded-full bg-amber-50/80 text-amber-900 border border-amber-200/60 font-medium shrink-0 flex items-center gap-1 cursor-pointer">
                         <span>📷</span>
-                        <span>With images/videos ({{ $product->reviews->filter(fn($r)=>!empty($r->images_list)||!empty($r->video_url))->count() ?: 4 }})</span>
+                        <span>With images/videos ({{ $mediaReviewsCount }})</span>
                     </button>
-                    <button type="button" @click="reviewsModal = true" class="px-2.5 py-1 rounded-full bg-amber-50/80 text-amber-900 border border-amber-200/60 font-medium shrink-0 flex items-center gap-1 cursor-pointer">
-                        <span>🛍️</span>
-                        <span>Repeat customer (9)</span>
-                    </button>
-                </div>
-
-                {{-- Review Items Preview (Matching Picture 1 & 2) --}}
-                <div class="divide-y divide-gray-100">
-                    @if($product->reviews->isNotEmpty())
-                        @foreach($product->reviews->take(3) as $rev)
-                            <div class="py-3 flex items-start justify-between gap-3">
-                                <div class="flex-1 min-w-0">
-                                    <p class="text-xs text-gray-800 line-clamp-3 leading-relaxed">
-                                        {{ $rev->comment ?: 'Design: well I just want the design and it is usable as alternate to my barong. The item is just worth the price I paid for it.' }}
-                                    </p>
-                                    <div class="flex items-center gap-2 mt-2">
-                                        <div class="flex items-center text-amber-400 text-[10px]">
-                                            @for($i = 1; $i <= 5; $i++)
-                                                <span>{{ $i <= $rev->rating ? '★' : '☆' }}</span>
-                                            @endfor
-                                        </div>
-                                        <span class="text-[11px] text-gray-500 font-medium">{{ $rev->customer->name ?? 'Pedro Vete Palac' }}</span>
-                                    </div>
-                                </div>
-                                @php
-                                    $imgList = $rev->images_list;
-                                    $topImg = !empty($imgList) ? $imgList[0] : null;
-                                @endphp
-                                @if($topImg)
-                                    <img src="{{ $topImg }}" class="w-14 h-16 object-cover rounded-lg border border-gray-100 shrink-0 cursor-pointer" @click="openLightbox('image', '{{ $topImg }}')">
-                                @elseif($product->primaryImage)
-                                    <img src="{{ $product->primaryImage->image_url }}" class="w-14 h-16 object-cover rounded-lg border border-gray-100 shrink-0 opacity-80">
-                                @endif
-                            </div>
-                        @endforeach
-                    @else
-                        {{-- Fallback matching reference screenshot if database has no reviews yet --}}
-                        <div class="py-3 flex items-start justify-between gap-3">
-                            <div class="flex-1 min-w-0">
-                                <p class="text-xs text-gray-800 leading-relaxed">
-                                    Design: well I just want the design and it is usable as alternate to my barong. the item is just worth the price I paid for it.
-                                </p>
-                                <div class="flex items-center gap-2 mt-2">
-                                    <div class="flex items-center text-amber-400 text-[10px]">
-                                        <span>★★★★★</span>
-                                    </div>
-                                    <span class="text-[11px] text-gray-500 font-medium">Pedro Vete Palac</span>
-                                </div>
-                            </div>
-                            @if($product->primaryImage)
-                                <img src="{{ $product->primaryImage->image_url }}" class="w-14 h-16 object-cover rounded-lg border border-gray-100 shrink-0">
-                            @endif
-                        </div>
-                        <div class="py-3 flex items-start justify-between gap-3">
-                            <div class="flex-1 min-w-0">
-                                <p class="text-xs text-gray-800 leading-relaxed">
-                                    Perfect fit!! Fabric is nice!!!!
-                                </p>
-                                <div class="flex items-center gap-2 mt-2">
-                                    <div class="flex items-center text-amber-400 text-[10px]">
-                                        <span>★★★★★</span>
-                                    </div>
-                                    <span class="text-[11px] text-gray-500 font-medium">Cris</span>
-                                </div>
-                            </div>
-                            @if($product->primaryImage)
-                                <img src="{{ $product->primaryImage->image_url }}" class="w-14 h-16 object-cover rounded-lg border border-gray-100 shrink-0">
-                            @endif
-                        </div>
-                        <div class="py-2.5">
-                            <p class="text-xs text-gray-800 leading-relaxed">
-                                Polyester spandex material, Retro ethnic look, cheap.
-                            </p>
-                            <div class="flex items-center gap-2 mt-1.5">
-                                <div class="flex items-center text-amber-400 text-[10px]">
-                                    <span>★★★★★</span>
-                                </div>
-                                <span class="text-[11px] text-gray-500 font-medium">*********486</span>
-                            </div>
-                        </div>
                     @endif
+                    @if(($starBreakdown[5] ?? 0) > 0)
+                    <button type="button" @click="reviewsModal = true; setFilter('5')" class="px-2.5 py-1 rounded-full bg-amber-50/80 text-amber-900 border border-amber-200/60 font-medium shrink-0 flex items-center gap-1 cursor-pointer">
+                        <span>★ 5 Stars ({{ $starBreakdown[5] }})</span>
+                    </button>
+                    @endif
+                </div>
+                @endif
+
+                {{-- Real-Time Review Items Preview --}}
+                <div class="divide-y divide-gray-100">
+                    @forelse($product->reviews->take(3) as $rev)
+                        <div class="py-3 flex items-start justify-between gap-3">
+                            <div class="flex-1 min-w-0">
+                                @if(!empty($rev->comment))
+                                    <p class="text-xs text-gray-800 line-clamp-3 leading-relaxed">
+                                        {{ $rev->comment }}
+                                    </p>
+                                @else
+                                    <p class="text-xs text-gray-400 italic">
+                                        No written feedback provided.
+                                    </p>
+                                @endif
+                                <div class="flex items-center gap-2 mt-2">
+                                    <div class="flex items-center text-amber-400 text-[10px]">
+                                        @for($i = 1; $i <= 5; $i++)
+                                            <span>{{ $i <= (int)$rev->rating ? '★' : '☆' }}</span>
+                                        @endfor
+                                    </div>
+                                    <span class="text-[11px] text-gray-500 font-medium">{{ $rev->customer->name ?? 'Verified Buyer' }}</span>
+                                </div>
+                            </div>
+                            @php
+                                $imgList = $rev->images_list;
+                                $topImg = !empty($imgList) ? $imgList[0] : null;
+                            @endphp
+                            @if($topImg)
+                                <img src="{{ $topImg }}" class="w-14 h-16 object-cover rounded-lg border border-gray-100 shrink-0 cursor-pointer" @click="openLightbox('image', '{{ $topImg }}')">
+                            @endif
+                        </div>
+                    @empty
+                        <div class="py-6 text-center text-gray-400">
+                            <p class="text-xs font-medium">No reviews yet for this product.</p>
+                        </div>
+                    @endforelse
                 </div>
 
             </div>
