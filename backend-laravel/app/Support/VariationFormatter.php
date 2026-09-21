@@ -38,24 +38,52 @@ class VariationFormatter
         $gallery = [];
         $seenPaths = [];
 
-        // 1. Gather images from $product->image or passed $images
+        // Map of canonical image path -> [variant_id, variant_name]
+        $variantImageMap = [];
+        $variantCandidateImages = [];
+
+        if ($product && !empty($product->variations) && is_array($product->variations)) {
+            foreach ($product->variations as $i => $v) {
+                if (!is_array($v)) {
+                    continue;
+                }
+                $varName = trim((string)($v['name'] ?? ''));
+                if ($varName === '') {
+                    $varName = self::labelForIndex($i);
+                }
+
+                // Collect all images belonging to this variant (from images[] array or single image)
+                $vImagesList = [];
+                if (!empty($v['images']) && is_array($v['images'])) {
+                    $vImagesList = $v['images'];
+                } elseif (!empty($v['image'])) {
+                    $vImagesList = [$v['image']];
+                }
+
+                foreach ($vImagesList as $vImg) {
+                    $rawPath = is_array($vImg) ? ($vImg['url'] ?? $vImg['path'] ?? '') : (string)$vImg;
+                    $norm = self::normalizePath($rawPath);
+                    if ($norm !== '') {
+                        if (!isset($variantImageMap[$norm])) {
+                            $variantImageMap[$norm] = [
+                                'variant_id'   => $i,
+                                'variant_name' => $varName,
+                            ];
+                        }
+                        $variantCandidateImages[] = $rawPath;
+                    }
+                }
+            }
+        }
+
+        // Gather images from $product->image or passed $images
         $rawImages = self::normalizeProductImages($images);
         if ($product && empty($rawImages)) {
             $rawImages = self::normalizeProductImages($product->image);
         }
 
-        // 2. Also collect variant cover images if defined
-        $variantImages = [];
-        if ($product && !empty($product->variations) && is_array($product->variations)) {
-            foreach ($product->variations as $v) {
-                if (is_array($v) && !empty($v['image'])) {
-                    $variantImages[] = $v['image'];
-                }
-            }
-        }
-
-        // Prepend variant images so the primary cover photo is always first
-        $allCandidates = array_merge($variantImages, $rawImages);
+        // Prepend variant images so the primary cover and variant photos are prioritized
+        $allCandidates = array_merge($variantCandidateImages, $rawImages);
 
         foreach ($allCandidates as $candidate) {
             $rawPath = is_array($candidate) ? ($candidate['url'] ?? $candidate['path'] ?? '') : (string) $candidate;
@@ -71,17 +99,32 @@ class VariationFormatter
             $seenPaths[$canonical] = true;
             $resolvedUrl = $product ? $product->getImageUrl($rawPath) : $rawPath;
 
+            $meta = $variantImageMap[$canonical] ?? null;
+
+            // Fallback: If this is the first image and no variation was explicitly assigned, attach to Variant 0 if variations exist
+            if ($meta === null && count($gallery) === 0 && $product && !empty($product->variations) && is_array($product->variations)) {
+                $firstVarName = trim((string)($product->variations[0]['name'] ?? ''));
+                $meta = [
+                    'variant_id'   => 0,
+                    'variant_name' => $firstVarName !== '' ? $firstVarName : self::labelForIndex(0),
+                ];
+            }
+
             $gallery[] = [
-                'url'  => $resolvedUrl,
-                'path' => $canonical,
+                'url'          => $resolvedUrl,
+                'path'         => $canonical,
+                'variant_id'   => $meta ? $meta['variant_id'] : null,
+                'variant_name' => $meta ? $meta['variant_name'] : null,
             ];
         }
 
         if (empty($gallery)) {
             $defaultUrl = $product ? $product->getImageUrl() : '/uploads/products/default.jpg';
             $gallery[] = [
-                'url'  => $defaultUrl,
-                'path' => 'products/default.jpg',
+                'url'          => $defaultUrl,
+                'path'         => 'products/default.jpg',
+                'variant_id'   => null,
+                'variant_name' => null,
             ];
         }
 

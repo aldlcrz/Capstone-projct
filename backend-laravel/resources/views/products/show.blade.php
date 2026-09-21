@@ -91,19 +91,35 @@
             get variations() {
                 return this.galleryImages;
             },
+            selectImage: function(index) {
+                this.activeImage = index;
+                var img = this.galleryImages && this.galleryImages[index];
+                if (img && img.variant_id !== undefined && img.variant_id !== null) {
+                    var targetId = img.variant_id;
+                    var found = this.styleVariants.find(function(v) { return v.id === targetId; });
+                    if (found) {
+                        this.selectedStyle = targetId;
+                        this.selectedVariation = targetId;
+                    }
+                }
+            },
             selectStyleVariant: function(variant) {
                 this.selectedStyle = variant.id;
                 this.selectedVariation = variant.id;
-                if (variant.image_path || variant.image || variant.image_url) {
+                var self = this;
+                var imgIdx = this.galleryImages.findIndex(function(img) {
+                    return img.variant_id === variant.id;
+                });
+                if (imgIdx === -1 && (variant.image_path || variant.image || variant.image_url)) {
                     var targetPath = variant.image_path;
                     var targetUrl = variant.image || variant.image_url;
-                    var imgIdx = this.galleryImages.findIndex(function(img) {
+                    imgIdx = this.galleryImages.findIndex(function(img) {
                         return (targetPath && img.path === targetPath) || 
                                (targetUrl && (img.url === targetUrl || img.path === targetUrl));
                     });
-                    if (imgIdx !== -1) {
-                        this.activeImage = imgIdx;
-                    }
+                }
+                if (imgIdx !== -1) {
+                    this.activeImage = imgIdx;
                 }
             },
             showSizeGuide: false,
@@ -126,7 +142,7 @@
 
             openZoomModal(idx) {
                 if (idx !== undefined) {
-                    this.activeImage = idx;
+                    this.selectImage(idx);
                 }
                 this.isZoomed = false;
                 this.zoomOriginX = 50;
@@ -373,7 +389,7 @@
                 <div class="flex sm:flex-col gap-3 overflow-x-auto sm:overflow-y-auto max-h-115 no-scrollbar shrink-0 w-full sm:w-20">
                     <template x-for="(img, index) in galleryImages" :key="index">
                         <button 
-                            @click="activeImage = index"
+                            @click="selectImage(index)"
                             class="relative w-14 h-18 sm:w-16 sm:h-20 rounded-xl overflow-hidden shrink-0 border-2 transition-all shadow-2xs"
                             :class="activeImage === index ? 'border-amber-600 ring-2 ring-amber-500/20 opacity-100 scale-98' : 'border-gray-200 opacity-60 hover:opacity-100'"
                         >
@@ -860,7 +876,7 @@
                 <template x-for="(img, index) in galleryImages" :key="index">
                     <button 
                         type="button"
-                        @click="activeImage = index"
+                        @click="selectImage(index)"
                         class="w-12 h-14 rounded-lg overflow-hidden border-2 transition-all cursor-pointer shrink-0 bg-neutral-900 shadow-md"
                         :class="activeImage === index ? 'border-[#C0420A] ring-2 ring-[#C0420A] scale-105' : 'border-neutral-700 opacity-60 hover:opacity-100'"
                     >

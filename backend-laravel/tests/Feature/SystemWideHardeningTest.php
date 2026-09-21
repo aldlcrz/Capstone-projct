@@ -297,6 +297,20 @@ class SystemWideHardeningTest extends TestCase
         foreach ($variations[1]['images'] as $path) {
             $this->assertTrue(Storage::disk('public')->exists($path));
         }
+
+        // Test VariationFormatter gallery mapping to variant_id
+        $gallery = VariationFormatter::buildGalleryImages($product->image, $product);
+        $this->assertCount(5, $gallery);
+        $this->assertEquals(0, $gallery[0]['variant_id']);
+        $this->assertEquals('Natural Pina', $gallery[0]['variant_name']);
+        $this->assertEquals(0, $gallery[1]['variant_id']);
+        $this->assertEquals('Natural Pina', $gallery[1]['variant_name']);
+        $this->assertEquals(1, $gallery[2]['variant_id']);
+        $this->assertEquals('Midnight Blue', $gallery[2]['variant_name']);
+        $this->assertEquals(1, $gallery[3]['variant_id']);
+        $this->assertEquals('Midnight Blue', $gallery[3]['variant_name']);
+        $this->assertEquals(1, $gallery[4]['variant_id']);
+        $this->assertEquals('Midnight Blue', $gallery[4]['variant_name']);
     }
 
     public function test_seller_upload_variation_without_images_fails_validation(): void
