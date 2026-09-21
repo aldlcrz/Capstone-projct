@@ -151,6 +151,79 @@ class SystemWideHardeningTest extends TestCase
         $this->assertEquals('Standard Classic', $styles[0]['name']);
     }
 
+    public function test_seller_upload_variant_1_cover_and_variant_2_style_stores_both_variants_and_images(): void
+    {
+        Storage::fake('public');
+        $seller = $this->createSeller();
+        $category = \App\Models\Category::create([
+            'name' => 'Heritage Barong',
+            'target_group' => ['Men'],
+            'description' => 'Fine Heritage Barongs',
+        ]);
+
+        $coverPhoto = UploadedFile::fake()->image('old_barong_colored.jpg', 800, 800);
+        $variantPhoto = UploadedFile::fake()->image('chix_portrait.jpg', 800, 800);
+        $galleryPhoto = UploadedFile::fake()->image('barong_sketch.jpg', 800, 800);
+        $qrCode = UploadedFile::fake()->image('seller_qr.png', 400, 400);
+
+        $payload = [
+            'action' => 'publish',
+            'name' => 'old barong',
+            'category_ids' => [$category->id],
+            'CategoryId' => $category->id,
+            'target_group' => 'Men',
+            'price' => 200,
+            'shippingFee' => 120.95,
+            'shippingDays' => 5,
+            'sizes' => ['S'],
+            'size_stocks' => ['S' => 5],
+            'description' => 'Authentic masterpiece from Lumban embroiderers.',
+            'product_is_gcash_available' => '1',
+            'gcashNumber' => '09171234567',
+            'gcashQrCode' => $qrCode,
+            'variant_image_0' => $coverPhoto,
+            'variant_image_1' => $variantPhoto,
+            'images' => [$galleryPhoto],
+            'variant_names' => [0 => 'old barong', 1 => 'chix'],
+            'variant_indexes' => [0, 1],
+        ];
+
+        $response = $this->actingAs($seller)->post(route('seller.products.store'), $payload);
+        $response->assertSessionHasNoErrors();
+        $response->assertRedirect(route('seller.products.index'));
+
+        $product = Product::where('sellerId', $seller->id)->where('name', 'old barong')->first();
+        $this->assertNotNull($product);
+
+        // Product image list must contain 3 images: Variant 1 cover, Variant 2, Gallery
+        $images = $product->image;
+        $this->assertIsArray($images);
+        $this->assertCount(3, $images, 'product.image must retain all 3 uploaded images');
+        $this->assertStringStartsWith('products/cover/', $images[0]);
+        $this->assertStringStartsWith('products/variants/', $images[1]);
+        $this->assertStringStartsWith('products/gallery/', $images[2]);
+
+        // Variations must contain both variants
+        $variations = $product->variations;
+        $this->assertCount(2, $variations);
+        $this->assertEquals('old barong', $variations[0]['name']);
+        $this->assertStringStartsWith('products/cover/', $variations[0]['image']);
+        $this->assertEquals('chix', $variations[1]['name']);
+        $this->assertStringStartsWith('products/variants/', $variations[1]['image']);
+
+        // Both variation images must exist on disk and resolve to public storage URLs
+        $this->assertTrue(Storage::disk('public')->exists($variations[0]['image']));
+        $this->assertTrue(Storage::disk('public')->exists($variations[1]['image']));
+        $this->assertEquals('/storage/' . $variations[0]['image'], $product->getImageUrl($variations[0]['image']));
+        $this->assertEquals('/storage/' . $variations[1]['image'], $product->getImageUrl($variations[1]['image']));
+
+        // Verify seller edit page renders properly and includes /storage/ in variant image preview
+        $editResponse = $this->actingAs($seller)->get(route('seller.products.edit', $product->id));
+        $editResponse->assertStatus(200);
+        $editResponse->assertSee('/storage/' . $variations[0]['image']);
+        $editResponse->assertSee('/storage/' . $variations[1]['image']);
+    }
+
     // ─────────────────────────────────────────────────────────────────────────
     // 2. API Admin Authorization Hardening
     // ─────────────────────────────────────────────────────────────────────────

@@ -1199,6 +1199,16 @@
         ];
     }
 
+    $resolvedVariations = [];
+    foreach ($productVariations as $v) {
+        $vImg = $v['image'] ?? null;
+        $resolvedVariations[] = [
+            'name' => $v['name'] ?? '',
+            'image' => $vImg,
+            'image_url' => $vImg ? $product->getImageUrl($vImg) : null,
+        ];
+    }
+
     $editInitData = [
         'productId' => (string) $product->id,
         'name' => (string) $product->name,
@@ -1207,7 +1217,7 @@
         'targetGroup' => (string) old('target_group', $product->target_group ?: 'Men'),
         'categoryId' => (string) old('CategoryId', $product->CategoryId ?: ''),
         'categoryIds' => $initialCategoryIds,
-        'variations' => $productVariations,
+        'variations' => $resolvedVariations,
         'hasGcashNumber' => !empty($product->gcash_number) || !empty($seller->gcashNumber),
         'hasGcashQr' => !empty($product->gcash_qr_code) || !empty($seller->gcashQrCode),
         'gcashNumber' => (string) ($product->gcash_number ?: ($seller->gcashNumber ?? '')),
@@ -1305,11 +1315,26 @@ function editProductManager() {
         categoriesList: parsedCats,
 
         variants: Array.isArray(initData.variations) && initData.variations.length > 0 
-            ? initData.variations.map((v, idx) => ({
-                id: idx,
-                name: v.name || (idx === 0 ? (initData.name || 'Main Style') : ('Style ' + (idx + 1))),
-                imagePreview: v.image ? (v.image.startsWith('http') ? v.image : '/' + v.image.replace(/^\//, '')) : null
-            }))
+            ? initData.variations.map((v, idx) => {
+                let preview = v.image_url || null;
+                if (!preview && v.image) {
+                    let raw = String(v.image).trim();
+                    if (raw.startsWith('http://') || raw.startsWith('https://')) {
+                        preview = raw;
+                    } else if (raw.startsWith('/storage/') || raw.startsWith('storage/')) {
+                        preview = '/' + raw.replace(/^\//, '');
+                    } else if (raw.startsWith('/uploads/') || raw.startsWith('uploads/')) {
+                        preview = '/' + raw.replace(/^\//, '');
+                    } else {
+                        preview = '/storage/' + raw.replace(/^\//, '');
+                    }
+                }
+                return {
+                    id: idx,
+                    name: v.name || (idx === 0 ? (initData.name || 'Main Style') : ('Style ' + (idx + 1))),
+                    imagePreview: preview
+                };
+            })
             : [{ id: 0, name: initData.name || 'Main Style', imagePreview: null }],
 
         addVariantRow() {

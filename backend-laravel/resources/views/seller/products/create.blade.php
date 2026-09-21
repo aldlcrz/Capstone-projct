@@ -423,84 +423,88 @@
                 {{-- Additional Variants (Variant 2, 3, etc. if seller adds) --}}
                 <div class="space-y-3">
                     <template x-for="(variant, index) in variants" :key="variant.id">
-                        <div x-show="index > 0" style="background-color:#FFFFFF !important;border:1px solid #ECE3D2 !important;border-radius:18px !important;padding:16px !important;box-shadow:0 2px 6px rgba(0,0,0,0.02) !important;" class="space-y-3">
-                            <div style="display:flex;align-items:center;justify-content:space-between;padding-bottom:8px;border-bottom:1px solid #F2ECE1;">
-                                <div style="display:flex;align-items:center;gap:8px;">
-                                    <span style="width:20px;height:20px;border-radius:50%;background-color:#9E6B15;color:#FFFFFF;display:inline-flex;align-items:center;justify-content:center;font-size:10px;font-weight:800;" x-text="index + 1"></span>
-                                    <span style="font-family:ui-serif,Georgia,serif;font-size:14px;font-weight:700;color:#1E1915;" x-text="'Variant ' + (index + 1)"></span>
-                                    <span style="background-color:#FAF8F5;border:1px solid #E2D9C8;color:#78716C;font-size:9px;font-weight:700;border-radius:20px;padding:2px 8px;text-transform:uppercase;letter-spacing:0.04em;">Style Option</span>
-                                </div>
-                                <button type="button" 
-                                        @click="removeVariantRow(index)" 
-                                        style="font-size:12px;font-weight:600;color:#DC2626;background:none;border:none;cursor:pointer;display:flex;align-items:center;gap:4px;">
-                                    <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
-                                    <span>Remove</span>
-                                </button>
-                            </div>
-
-                            <input type="hidden" name="variant_indexes[]" :value="index">
-
-                            <div style="display:flex;align-items:center;gap:14px;">
-                                {{-- Variant Image Box --}}
-                                <div style="width:80px;height:80px;position:relative;flex-shrink:0;">
-                                    <label :for="'variant_file_' + index"
-                                           style="width:80px;height:80px;border-radius:14px;border:1.5px dashed #E2D9C8;background-color:#FAF8F5;display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;overflow:hidden;position:relative;transition:all 0.2s;"
-                                           onmouseover="this.style.borderColor='#C49520';this.style.backgroundColor='#FFFFFF';"
-                                           onmouseout="this.style.borderColor='#E2D9C8';this.style.backgroundColor='#FAF8F5';">
-                                        <template x-if="variant.imagePreview">
-                                            <div style="position:relative;width:100%;height:100%;">
-                                                <img :src="variant.imagePreview" style="width:100%;height:100%;object-fit:cover;">
-                                                <div class="absolute inset-0 bg-black/30 opacity-0 hover:opacity-100 transition-opacity flex items-center justify-center text-white text-[9px] font-bold uppercase">
-                                                    Change
-                                                </div>
-                                            </div>
-                                        </template>
-                                        <template x-if="!variant.imagePreview">
-                                            <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:4px;">
-                                                <span style="color:#C49520;font-size:16px;line-height:1;">+</span>
-                                                <span style="font-size:9px;font-weight:700;color:#7A5505;margin-top:2px;">Photo</span>
-                                            </div>
-                                        </template>
-                                        <template x-if="variant.isOptimizing">
-                                            <div style="position:absolute;inset:0;background:rgba(255,255,255,0.9);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:15;">
-                                                <svg class="animate-spin h-4 w-4 text-[#C49520]" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                                                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                                                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path>
-                                                </svg>
-                                            </div>
-                                        </template>
-                                        <input type="file" 
-                                               :id="'variant_file_' + index" 
-                                               :name="'variant_image_' + index" 
-                                               accept="image/jpeg,image/png,image/webp,image/jpg,image/heic,image/heif,.heic,.heif" 
-                                               multiple
-                                               class="hidden" 
-                                               @change="handleVariantFile($event, index)">
-                                    </label>
+                        <template x-if="index > 0">
+                            <div style="background-color:#FFFFFF !important;border:1px solid #ECE3D2 !important;border-radius:18px !important;padding:16px !important;box-shadow:0 2px 6px rgba(0,0,0,0.02) !important;" class="space-y-3">
+                                <div style="display:flex;align-items:center;justify-content:space-between;padding-bottom:8px;border-bottom:1px solid #F2ECE1;">
+                                    <div style="display:flex;align-items:center;gap:8px;">
+                                        <span style="width:20px;height:20px;border-radius:50%;background-color:#9E6B15;color:#FFFFFF;display:inline-flex;align-items:center;justify-content:center;font-size:10px;font-weight:800;" x-text="index + 1"></span>
+                                        <span style="font-family:ui-serif,Georgia,serif;font-size:14px;font-weight:700;color:#1E1915;" x-text="'Variant ' + (index + 1)"></span>
+                                        <span style="background-color:#FAF8F5;border:1px solid #E2D9C8;color:#78716C;font-size:9px;font-weight:700;border-radius:20px;padding:2px 8px;text-transform:uppercase;letter-spacing:0.04em;">Style Option</span>
+                                    </div>
                                     <button type="button" 
-                                            x-show="variant.imagePreview"
-                                            @click="removeVariantImage(index)" 
-                                            style="position:absolute;top:-5px;right:-5px;width:20px;height:20px;background-color:#DC2626;color:#FFFFFF;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:900;border:none;cursor:pointer;"
-                                            title="Remove photo">
-                                        ✕
+                                            @click="removeVariantRow(index)" 
+                                            style="font-size:12px;font-weight:600;color:#DC2626;background:none;border:none;cursor:pointer;display:flex;align-items:center;gap:4px;">
+                                        <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+                                        <span>Remove</span>
                                     </button>
                                 </div>
 
-                                {{-- Variant Name Input --}}
-                                <div style="flex:1;min-width:0;">
-                                    <label style="font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:0.04em;color:#1E1915;display:block;margin-bottom:4px;">
-                                        Variant Name <span style="color:#DC2626;">*</span>
-                                    </label>
-                                    <input type="text" 
-                                           :name="'variant_names[' + index + ']'" 
-                                           x-model="variant.name" 
-                                           placeholder="e.g. Emerald Green, Ivory Piña, Short Sleeve..." 
-                                           style="width:100%;padding:10px 14px;background-color:#FAF8F5;border:1px solid #E2D9C8;border-radius:12px;font-size:13px;font-weight:600;color:#1E1915;outline:none;transition:all 0.2s;"
-                                           onfocus="this.style.borderColor='#C49520';this.style.backgroundColor='#FFFFFF';"
-                                           onblur="this.style.borderColor='#E2D9C8';this.style.backgroundColor='#FAF8F5';">
+                                <input type="hidden" name="variant_indexes[]" :value="index" :disabled="index === 0">
+
+                                <div style="display:flex;align-items:center;gap:14px;">
+                                    {{-- Variant Image Box --}}
+                                    <div style="width:80px;height:80px;position:relative;flex-shrink:0;">
+                                        <label :for="'variant_file_' + index"
+                                               style="width:80px;height:80px;border-radius:14px;border:1.5px dashed #E2D9C8;background-color:#FAF8F5;display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;overflow:hidden;position:relative;transition:all 0.2s;"
+                                               onmouseover="this.style.borderColor='#C49520';this.style.backgroundColor='#FFFFFF';"
+                                               onmouseout="this.style.borderColor='#E2D9C8';this.style.backgroundColor='#FAF8F5';">
+                                            <template x-if="variant.imagePreview">
+                                                <div style="position:relative;width:100%;height:100%;">
+                                                    <img :src="variant.imagePreview" style="width:100%;height:100%;object-fit:cover;">
+                                                    <div class="absolute inset-0 bg-black/30 opacity-0 hover:opacity-100 transition-opacity flex items-center justify-center text-white text-[9px] font-bold uppercase">
+                                                        Change
+                                                    </div>
+                                                </div>
+                                            </template>
+                                            <template x-if="!variant.imagePreview">
+                                                <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:4px;">
+                                                    <span style="color:#C49520;font-size:16px;line-height:1;">+</span>
+                                                    <span style="font-size:9px;font-weight:700;color:#7A5505;margin-top:2px;">Photo</span>
+                                                </div>
+                                            </template>
+                                            <template x-if="variant.isOptimizing">
+                                                <div style="position:absolute;inset:0;background:rgba(255,255,255,0.9);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:15;">
+                                                    <svg class="animate-spin h-4 w-4 text-[#C49520]" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path>
+                                                    </svg>
+                                                </div>
+                                            </template>
+                                            <input type="file" 
+                                                   :id="'variant_file_' + index" 
+                                                   :name="'variant_image_' + index" 
+                                                   accept="image/jpeg,image/png,image/webp,image/jpg,image/heic,image/heif,.heic,.heif" 
+                                                   multiple
+                                                   class="hidden" 
+                                                   :disabled="index === 0"
+                                                   @change="handleVariantFile($event, index)">
+                                        </label>
+                                        <button type="button" 
+                                                x-show="variant.imagePreview"
+                                                @click="removeVariantImage(index)" 
+                                                style="position:absolute;top:-5px;right:-5px;width:20px;height:20px;background-color:#DC2626;color:#FFFFFF;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:900;border:none;cursor:pointer;"
+                                                title="Remove photo">
+                                            ✕
+                                        </button>
+                                    </div>
+
+                                    {{-- Variant Name Input --}}
+                                    <div style="flex:1;min-width:0;">
+                                        <label style="font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:0.04em;color:#1E1915;display:block;margin-bottom:4px;">
+                                            Variant Name <span style="color:#DC2626;">*</span>
+                                        </label>
+                                        <input type="text" 
+                                               :name="'variant_names[' + index + ']'" 
+                                               :disabled="index === 0"
+                                               x-model="variant.name" 
+                                               placeholder="e.g. Emerald Green, Ivory Piña, Short Sleeve..." 
+                                               style="width:100%;padding:10px 14px;background-color:#FAF8F5;border:1px solid #E2D9C8;border-radius:12px;font-size:13px;font-weight:600;color:#1E1915;outline:none;transition:all 0.2s;"
+                                               onfocus="this.style.borderColor='#C49520';this.style.backgroundColor='#FFFFFF';"
+                                               onblur="this.style.borderColor='#E2D9C8';this.style.backgroundColor='#FAF8F5';">
+                                    </div>
                                 </div>
                             </div>
-                        </div>
+                        </template>
                     </template>
                 </div>
 
@@ -3025,14 +3029,32 @@ async function handleProductFormSubmit(e, isEdit = false) {
             if (Array.isArray(alpineData.variants)) {
                 alpineData.variants.forEach((v, idx) => {
                     const el = document.getElementById('variant_file_' + idx);
-                    if (el && v.file && typeof DataTransfer !== 'undefined') {
-                        const dt = new DataTransfer();
-                        dt.items.add(v.file);
-                        el.files = dt.files;
+                    if (el && typeof DataTransfer !== 'undefined') {
+                        let fileToAttach = v.file;
+                        // Fallback: If File object is missing but data URL exists, reconstruct file
+                        if (!fileToAttach && v.imagePreview && typeof v.imagePreview === 'string' && v.imagePreview.startsWith('data:image') && typeof dataURLtoFile === 'function') {
+                            fileToAttach = dataURLtoFile(v.imagePreview, (idx === 0 ? 'cover' : 'variant_' + idx) + '.jpg');
+                            v.file = fileToAttach;
+                            v.hasActualFile = true;
+                        }
+                        if (fileToAttach) {
+                            const dt = new DataTransfer();
+                            dt.items.add(fileToAttach);
+                            el.files = dt.files;
+                        }
                     }
                 });
             }
             if (typeof alpineData.syncGalleryFileInput === 'function') {
+                // Also reconstruct any gallery files if needed
+                if (Array.isArray(alpineData.galleryImages)) {
+                    alpineData.galleryImages.forEach((g, gIdx) => {
+                        if (!g.file && g.preview && typeof g.preview === 'string' && g.preview.startsWith('data:image') && typeof dataURLtoFile === 'function') {
+                            g.file = dataURLtoFile(g.preview, 'gallery_' + gIdx + '.jpg');
+                            g.hasActualFile = true;
+                        }
+                    });
+                }
                 alpineData.syncGalleryFileInput();
             }
 

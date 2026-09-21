@@ -262,27 +262,38 @@ class ProductManagementController extends Controller
             $images = [];
             $uploadedHashes = [];
 
+            \Illuminate\Support\Facades\Log::info('[ProductImagePipeline:StoreIncoming]', [
+                'has_v0' => $request->hasFile('variant_image_0'),
+                'has_images' => $request->hasFile('images'),
+                'file_keys' => array_keys($request->allFiles()),
+            ]);
+
             // 1. Process Variant 1 (Main / Cover Style)
             $v1Name = trim($request->input('variant_names.0', '')) ?: trim($product->name);
             $v1File = null;
             $firstImageUsedAsCover = false;
-            if ($request->hasFile('variant_image_0') && $request->file('variant_image_0')->isValid()) {
-                $v1File = $request->file('variant_image_0');
-            } elseif ($request->hasFile('variant_images.0') && $request->file('variant_images.0')->isValid()) {
-                $v1File = $request->file('variant_images.0');
+
+            if ($request->hasFile('variant_image_0')) {
+                $rawV0 = $request->file('variant_image_0');
+                $v1File = is_array($rawV0) ? ($rawV0[0] ?? null) : $rawV0;
+            } elseif ($request->hasFile('variant_images.0')) {
+                $rawV0 = $request->file('variant_images.0');
+                $v1File = is_array($rawV0) ? ($rawV0[0] ?? null) : $rawV0;
             } elseif ($request->hasFile('images') && is_array($request->file('images')) && count($request->file('images')) > 0 && $request->file('images')[0]->isValid()) {
                 $v1File = $request->file('images')[0];
                 $firstImageUsedAsCover = true;
             } else {
                 foreach ($request->allFiles() as $k => $f) {
-                    if (str_starts_with($k, 'variant_image_') && $f && $f->isValid()) {
-                        $v1File = $f;
-                        break;
+                    if (str_starts_with($k, 'variant_image_')) {
+                        $v1File = is_array($f) ? ($f[0] ?? null) : $f;
+                        if ($v1File && $v1File->isValid()) {
+                            break;
+                        }
                     }
                 }
             }
 
-            if ($v1File) {
+            if ($v1File && $v1File->isValid()) {
                 $storedPath = $v1File->store('products/cover', 'public');
                 $storedFiles[] = $storedPath;
                 $images[] = $storedPath;
@@ -309,13 +320,15 @@ class ProductManagementController extends Controller
                 }
 
                 $vFile = null;
-                if ($request->hasFile("variant_image_{$numIdx}") && $request->file("variant_image_{$numIdx}")->isValid()) {
-                    $vFile = $request->file("variant_image_{$numIdx}");
-                } elseif ($request->hasFile("variant_images.{$numIdx}") && $request->file("variant_images.{$numIdx}")->isValid()) {
-                    $vFile = $request->file("variant_images.{$numIdx}");
+                if ($request->hasFile("variant_image_{$numIdx}")) {
+                    $rawV = $request->file("variant_image_{$numIdx}");
+                    $vFile = is_array($rawV) ? ($rawV[0] ?? null) : $rawV;
+                } elseif ($request->hasFile("variant_images.{$numIdx}")) {
+                    $rawV = $request->file("variant_images.{$numIdx}");
+                    $vFile = is_array($rawV) ? ($rawV[0] ?? null) : $rawV;
                 }
 
-                if ($vFile) {
+                if ($vFile && $vFile->isValid()) {
                     $storedPath = $vFile->store('products/variants', 'public');
                     $storedFiles[] = $storedPath;
                     $images[] = $storedPath;
