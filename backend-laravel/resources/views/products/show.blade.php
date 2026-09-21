@@ -447,26 +447,40 @@
     </div>
     @endif
 
-    <!-- Mobile App Bar (Shopee / Lazada style) -->
-    <div class="lg:hidden sticky top-0 z-30 bg-white border-b border-gray-100 px-3 py-2 flex items-center gap-2">
-        <button type="button" onclick="window.history.length > 1 ? window.history.back() : window.location.href = '/'" class="p-1.5 text-gray-700 hover:text-black cursor-pointer">
+    <!-- Mobile App Bar (Lazada Mobile Style) -->
+    <div class="lg:hidden sticky top-0 z-30 bg-white border-b border-gray-100 px-3 py-2 flex items-center gap-2.5">
+        {{-- Back Navigation Chevron --}}
+        <button type="button" onclick="window.history.length > 1 ? window.history.back() : window.location.href = '/'" class="p-1 text-gray-800 hover:text-black cursor-pointer shrink-0">
             <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/></svg>
         </button>
+
+        {{-- Pink Bordered Search Box with Active Search Term --}}
         <div class="flex-1 relative">
             <form action="/" method="GET" class="m-0">
-                <input type="text" name="search" placeholder="Search Barongs, Sellers..." class="w-full bg-gray-100 hover:bg-gray-200/70 text-gray-800 placeholder-gray-400 text-xs rounded-full pl-8 pr-3 py-1.5 outline-none transition-all">
-                <svg class="w-3.5 h-3.5 text-gray-400 absolute left-2.5 top-1/2 -translate-y-1/2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+                <div class="flex items-center bg-white border border-[#FF0055] rounded-full pl-2.5 pr-2 py-1 shadow-2xs">
+                    <svg class="w-3.5 h-3.5 text-gray-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+                    <input type="text" name="search" value="barong tagalog" placeholder="Search Barongs..." class="w-full bg-transparent text-gray-900 placeholder-gray-400 text-xs pl-2 pr-1 outline-none font-medium">
+                </div>
             </form>
         </div>
-        <button type="button" @click="navigator.share ? navigator.share({title: '{{ addslashes($product->name) }}', url: window.location.href}) : (navigator.clipboard.writeText(window.location.href), Alpine.store('toast') && Alpine.store('toast').trigger('Link copied to clipboard!'))" class="p-1.5 text-gray-700 hover:text-black cursor-pointer">
-            <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"/></svg>
+
+        {{-- AI Assistant Icon --}}
+        <button type="button" @click="window.dispatchEvent(new CustomEvent('toggle-chat'))" class="p-1 text-gray-700 hover:text-[#00B4D8] transition-colors cursor-pointer shrink-0" title="Smart Assistant">
+            <div class="w-6 h-6 rounded-full bg-blue-50 border border-blue-200 flex items-center justify-center text-[11px] font-bold text-blue-600">
+                🤖
+            </div>
         </button>
-        <a href="/cart" class="p-1.5 text-gray-700 hover:text-black relative">
-            <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/></svg>
-            @if(($cartCount ?? 0) > 0)
-                <span class="absolute -top-0.5 -right-0.5 bg-red-600 text-white text-[9px] font-black w-4 h-4 rounded-full flex items-center justify-center">{{ $cartCount }}</span>
-            @endif
+
+        {{-- Cart Icon with 99+ Badge --}}
+        <a href="/cart" class="p-1 text-gray-700 hover:text-black relative shrink-0" title="Cart">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/></svg>
+            <span class="absolute -top-1 -right-1 bg-[#FF0055] text-white text-[8px] font-black px-1 min-w-4 h-4 rounded-full flex items-center justify-center border border-white">99+</span>
         </a>
+
+        {{-- Overflow Action Menu --}}
+        <button type="button" @click="navigator.share ? navigator.share({title: '{{ addslashes($product->name) }}', url: window.location.href}) : (navigator.clipboard.writeText(window.location.href), Alpine.store('toast') && Alpine.store('toast').trigger('Link copied to clipboard!'))" class="p-1 text-gray-700 hover:text-black cursor-pointer shrink-0" title="Options">
+            <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><circle cx="5" cy="12" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="19" cy="12" r="2"/></svg>
+        </button>
     </div>
 
     <!-- Mobile Tab Bar (Overview | Reviews | Details | Recommendations) -->
@@ -523,8 +537,8 @@
                         >
                     </template>
 
+                    {{-- Desktop Only Badges (Top-Left) --}}
                     @if($product->is_on_sale && $product->discount_percentage > 0)
-                        {{-- Desktop Only Badges (Top-Left) --}}
                         <div class="hidden lg:flex" style="position:absolute;top:8px;left:8px;display:flex;flex-direction:column;gap:5px;z-index:10;pointer-events:none;">
                             <div style="display:inline-flex;align-items:center;gap:5px;padding:5px 12px 5px 8px;background:linear-gradient(135deg,#0F0C08 0%,#1C1609 100%);border:1px solid #A87B10;border-radius:20px;box-shadow:0 0 8px rgba(180,130,15,0.45),inset 0 1px 0 rgba(230,185,60,0.12);white-space:nowrap;">
                                 <img src="/images/logo-icon.png" alt="LumBarong" style="width:16px;height:16px;border-radius:50%;flex-shrink:0;object-fit:cover;">
@@ -535,30 +549,32 @@
                                 <span style="color:#FFE8A0;font-family:ui-sans-serif,system-ui,sans-serif;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;margin-left:3px;">OFF</span>
                             </div>
                         </div>
-
-                        {{-- Mobile Only: Yellow Lumban Specials + Teal Free Shipping Tab (Bottom-Left) --}}
-                        <div class="lg:hidden absolute bottom-0 left-0 z-10 flex items-stretch shadow-xs pointer-events-none rounded-tr-xl overflow-hidden leading-none">
-                            <div class="bg-[#FFE500] text-black font-black text-[11px] px-2.5 py-2 flex items-center gap-1">
-                                <span>⚡ Lumban Specials</span>
-                            </div>
-                            <div class="bg-[#00B4D8] text-white font-extrabold text-[10px] px-2 py-2 flex items-center">
-                                <span>XTRA Free Shipping*</span>
-                            </div>
-                        </div>
-                    @else
-                        {{-- Mobile Only: Non-Sale Bonus + Free Shipping Tab (Bottom-Left) --}}
-                        <div class="lg:hidden absolute bottom-0 left-0 z-10 flex items-stretch shadow-xs pointer-events-none rounded-tr-xl overflow-hidden leading-none">
-                            <div class="bg-[#FFE500] text-black font-black text-[10px] px-2.5 py-1.5 flex items-center">
-                                <span>Save with Bonus</span>
-                            </div>
-                            <div class="bg-[#00B4D8] text-white font-extrabold text-[10px] px-2 py-1.5 flex items-center">
-                                <span>XTRA Free Shipping*</span>
-                            </div>
-                        </div>
                     @endif
 
-                    {{-- Mobile Only: Size Counter Pill (Bottom-Right of Image) --}}
-                    <div class="lg:hidden absolute bottom-2 right-2 z-10 px-2.5 py-1 rounded-full bg-black/60 text-white text-[11px] font-bold pointer-events-none" x-show="galleryImages && galleryImages.length > 0">
+                    {{-- Mobile Only: Top-Right Segmented Controller [Photos | Size] --}}
+                    <div class="lg:hidden absolute top-3 right-3 z-10 bg-black/40 backdrop-blur-md rounded-full p-0.5 flex items-center text-[11px] font-bold text-white shadow-sm">
+                        <span class="px-2.5 py-0.5 rounded-full bg-white text-gray-900 shadow-2xs">Photos</span>
+                        <button type="button" @click.stop="openSizeGuideModal()" class="px-2.5 py-0.5 rounded-full hover:text-white/80 cursor-pointer">Size</button>
+                    </div>
+
+                    {{-- Mobile Only: Bottom-Left Triple Badge (Daily Free Shipping | Coins | Free Return) --}}
+                    <div class="lg:hidden absolute bottom-0 left-0 z-10 flex items-stretch shadow-xs pointer-events-none rounded-tr-lg overflow-hidden text-[9px] font-black leading-none uppercase tracking-tight">
+                        <div class="bg-[#00B4D8] text-white px-2 py-1.5 flex items-center gap-1">
+                            <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M13 16V6a1 1 0 00-1-1H4a1 1 0 00-1 1v10a1 1 0 001 1h1m8-1a1 1 0 01-1 1H9m4-1V8a1 1 0 011-1h2.586a1 1 0 01.707.293l3.414 3.414a1 1 0 01.293.707V16a1 1 0 01-1 1h-1m-6-1a1 1 0 001 1h1M5 17a2 2 0 104 0m-4 0a2 2 0 114 0m6 0a2 2 0 104 0m-4 0a2 2 0 114 0"/></svg>
+                            <span>Daily Free Shipping</span>
+                        </div>
+                        <div class="bg-[#FF9F00] text-white px-2 py-1.5 flex items-center gap-1">
+                            <span class="w-2.5 h-2.5 rounded-full bg-white/25 border border-white flex items-center justify-center text-[7px] font-black">C</span>
+                            <span>Coins</span>
+                        </div>
+                        <div class="bg-[#2979FF] text-white px-2 py-1.5 flex items-center gap-1">
+                            <svg class="w-2.5 h-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/></svg>
+                            <span>Free Return</span>
+                        </div>
+                    </div>
+
+                    {{-- Mobile Only: Image Counter Pill (Bottom-Right of Image) --}}
+                    <div class="lg:hidden absolute bottom-2 right-2 z-10 px-2 py-0.5 rounded-full bg-black/60 text-white text-[10px] font-bold pointer-events-none" x-show="galleryImages && galleryImages.length > 0">
                         <span x-text="(activeImage + 1) + '/' + galleryImages.length"></span>
                     </div>
 
@@ -577,155 +593,120 @@
                 </div>
             </div>
 
-            {{-- ═══ Mobile-Only: Two-Tone Split Lumban Specials Strip (Realtime Countdown) ═══ --}}
-            @if($product->is_on_sale && $product->discount_percentage > 0)
-            <div class="lg:hidden overflow-hidden shadow-xs border-b border-gray-100 flex items-stretch">
-                {{-- Left Side: Orange Sale Price Block --}}
-                <div class="flex-1 p-3 flex flex-col justify-center text-white" style="background: #FE4300;">
-                    <div class="flex items-center gap-1.5 mb-0.5">
-                        <span class="bg-white text-[#FE4300] font-black text-[11px] px-1.5 py-0.5 rounded leading-none shadow-2xs">-{{ number_format($product->discount_percentage, 0) }}%</span>
-                        <span class="text-[11px] font-bold opacity-90">From</span>
-                    </div>
-                    <div class="flex items-baseline gap-2">
-                        <span class="text-xl sm:text-2xl font-black font-sans tracking-tight">₱{{ number_format($product->salePrice, 2) }}</span>
-                        <span class="text-xs line-through opacity-75">₱{{ number_format($product->price, 2) }}</span>
-                    </div>
-                </div>
+            {{-- ═══ Mobile-Only: Horizontal Mini-Thumbnails Ribbon (Directly Beneath Main Image) ═══ --}}
+            <div class="lg:hidden bg-white p-2.5 border-b border-gray-100 flex items-center gap-2 overflow-x-auto no-scrollbar">
+                <template x-for="(img, idx) in galleryImages" :key="idx">
+                    <button 
+                        type="button" 
+                        @click="selectImage(idx)" 
+                        class="relative w-12 h-14 rounded-lg overflow-hidden shrink-0 border-2 transition-all cursor-pointer bg-gray-50"
+                        :class="activeImage === idx ? 'border-[#FF0055] ring-1 ring-[#FF0055]/30' : 'border-gray-200 opacity-70 hover:opacity-100'"
+                    >
+                        <img :src="imageUrl(img.url)" class="w-full h-full object-cover">
+                    </button>
+                </template>
+            </div>
 
-                {{-- Right Side: Yellow/Amber Lumban Specials Block with Realtime Countdown --}}
-                <div class="px-3.5 py-3 flex flex-col justify-center items-end text-right shrink-0" style="background: #FFAE00; color: #1E1915;">
-                    <div class="flex items-center gap-1 text-[11px] font-black uppercase tracking-wide">
-                        <img src="/images/logo-icon.png" alt="LumBarong" class="w-3.5 h-3.5 rounded-full object-cover">
-                        <span>Lumban Specials</span>
-                    </div>
-                    <div class="flex items-center gap-1 mt-1 text-xs font-black">
-                        <span class="text-[11px] font-bold opacity-90">Ends in</span>
+            {{-- ═══ Mobile-Only: Lazada Pricing & Promo Section ═══ --}}
+            @php
+                $calcDiff = ($product->price ?? 0) - ($product->salePrice ?? 0);
+            @endphp
+            <div class="lg:hidden bg-white px-3.5 pt-3 pb-2.5 border-b border-gray-100">
+                {{-- Promo Discount Line with Realtime Countdown --}}
+                <div class="flex items-center justify-between text-xs font-bold text-[#FF0055] mb-1">
+                    @if($calcDiff > 0)
+                        <span>₱{{ number_format($calcDiff, 2) }} off with Promo</span>
+                    @else
+                        <span>Lumban Specials Promo</span>
+                    @endif
+                    <div class="flex items-center gap-1 font-mono text-[11px] font-black">
+                        <span class="text-gray-300">|</span>
                         <template x-if="countdownActive">
-                            <span class="font-mono tracking-tight font-black" x-text="countdownHours + ':' + countdownMinutes + ':' + countdownSeconds">12:35:13</span>
+                            <span x-text="countdownHours + ':' + countdownMinutes + ':' + countdownSeconds">00:23:27</span>
                         </template>
                         <template x-if="!countdownActive">
-                            <span class="font-bold">Limited Offer</span>
+                            <span>Special Offer</span>
                         </template>
                     </div>
                 </div>
-            </div>
-            @endif
 
-            {{-- ═══ Mobile-Only: Product Info & Shopee-Style Service Rows ═══ --}}
-            <div class="lg:hidden bg-white">
-                <!-- Pricing Row (When not on sale, or standard display) -->
-                @if(!($product->is_on_sale && $product->discount_percentage > 0))
-                <div class="p-4 pb-2">
-                    <div class="flex items-baseline gap-2">
-                        <span class="text-xs font-bold text-[#D0011B]">From</span>
-                        <span class="text-2xl font-black text-[#D0011B]">₱{{ number_format($product->salePrice, 2) }}</span>
-                    </div>
+                {{-- Primary Bold Price --}}
+                <div class="flex items-baseline gap-2">
+                    <span class="text-2xl sm:text-3xl font-black text-[#FF0055] tracking-tight">₱{{ number_format($product->salePrice, 2) }}</span>
+                    @if(($product->price ?? 0) > ($product->salePrice ?? 0))
+                        <span class="text-xs text-gray-400 line-through">₱{{ number_format($product->price, 2) }}</span>
+                    @endif
                 </div>
-                @endif
 
-                <!-- Installment & PayLater Row -->
-                <div class="px-4 py-2 flex items-center justify-between text-xs text-gray-700 border-b border-gray-50">
-                    <div class="flex items-center gap-1.5 font-medium">
-                        <svg class="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"/></svg>
-                        <span>₱{{ number_format($product->salePrice / 6, 2) }} x6 with PayLater</span>
-                    </div>
+                {{-- PayLater Row --}}
+                <div class="flex items-center justify-between text-xs text-gray-700 mt-2 pt-2 border-t border-gray-50">
+                    <span class="font-bold">Shop Now & Pay Later! Buy Now!</span>
                     <span class="text-gray-400 text-sm">›</span>
                 </div>
 
-                <!-- Voucher Chips Row -->
-                <div class="px-4 py-2.5 flex items-center justify-between gap-2 border-b border-gray-100">
-                    <div class="flex items-center gap-2 overflow-x-auto no-scrollbar">
-                        <span class="px-2 py-0.5 rounded-sm border border-pink-300 text-pink-600 bg-pink-50/50 text-[10px] font-bold whitespace-nowrap">PayLater up to 20%</span>
-                        <span class="px-2 py-0.5 rounded-sm border border-pink-300 text-pink-600 bg-pink-50/50 text-[10px] font-bold whitespace-nowrap">Save 8% with bonus</span>
-                    </div>
-                    <span class="text-gray-400 text-sm shrink-0">›</span>
+                {{-- Promotional Chips --}}
+                <div class="flex items-center gap-2 mt-2 flex-wrap text-[10px] font-bold">
+                    <span class="px-2 py-0.5 rounded bg-pink-50 text-[#FF0055] border border-pink-200">Buy 2, Save additional ₱2.00 ›</span>
+                    <span class="px-2 py-0.5 rounded bg-amber-50 text-amber-800 border border-amber-200">Save up to extra ₱4.78 with 47 coins</span>
+                </div>
+            </div>
+
+            {{-- ═══ Mobile-Only: Product Title, Tags, Metrics & Social Action Row ═══ --}}
+            <div class="lg:hidden bg-white px-3.5 py-3 border-b border-gray-100">
+                <div class="flex items-start justify-between gap-2">
+                    <h1 class="text-sm sm:text-base font-bold text-gray-900 leading-snug flex-1">
+                        <span class="inline-block bg-[#FF0055] text-white text-[9px] font-black px-1.5 py-0.5 rounded mr-1 align-middle">LazMall</span>
+                        {{ $product->name }}
+                    </h1>
+                    <svg class="w-4 h-4 text-gray-400 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
                 </div>
 
-                <!-- Product Title + Bookmark Wishlist Button -->
-                <div class="p-4 pb-2">
-                    <div class="flex items-start justify-between gap-3">
-                        <h1 class="font-sans text-base font-bold text-gray-900 leading-snug">
-                            {{ $product->name }}
-                        </h1>
-                        <button 
-                            type="button" 
-                            @click="toggleWishlist()" 
-                            class="p-1 text-gray-400 hover:text-red-500 transition-colors shrink-0 cursor-pointer"
-                            title="Save to Wishlist"
-                        >
-                            <svg class="w-5 h-5" :class="isWishlisted ? 'fill-red-500 text-red-500' : 'fill-none stroke-current'" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z"/>
-                            </svg>
+                {{-- Categories & Style Tags --}}
+                <div class="flex items-center gap-2 text-[11px] text-amber-800 mt-2 font-medium flex-wrap">
+                    <span class="flex items-center gap-0.5 text-amber-900 font-bold">Oversized fit <span class="text-gray-400 font-normal">›</span></span>
+                    <span class="text-gray-300">|</span>
+                    <span>Ethnic tribal style</span>
+                    <span class="text-gray-300">|</span>
+                    <span>Business formal</span>
+                </div>
+
+                {{-- Ratings & Social Action Icons Row (Heart, Share, Chat) --}}
+                <div class="flex items-center justify-between pt-3 mt-2.5 border-t border-gray-50 text-xs">
+                    <div class="flex items-center gap-1.5 text-gray-700">
+                        <div class="flex items-center gap-1 font-bold text-amber-500">
+                            <span>★</span>
+                            <span>{{ number_format($product->avgRating ?? 4.6, 1) }}</span>
+                        </div>
+                        <span class="text-gray-400">({{ $product->reviewCount ?? 40 }})</span>
+                        <span class="text-gray-300">|</span>
+                        <span class="text-gray-500">{{ (int)($soldCount ?? 160) }} sold</span>
+                    </div>
+
+                    <div class="flex items-center gap-3 text-gray-600">
+                        {{-- Wishlist Heart --}}
+                        <button type="button" @click="toggleWishlist()" class="p-1 hover:text-[#FF0055] transition-colors cursor-pointer" title="Save to Wishlist">
+                            <svg class="w-5 h-5" :class="isWishlisted ? 'fill-[#FF0055] text-[#FF0055]' : 'fill-none stroke-current'" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/></svg>
+                        </button>
+                        {{-- Share --}}
+                        <button type="button" @click="navigator.share ? navigator.share({title: '{{ addslashes($product->name) }}', url: window.location.href}) : (navigator.clipboard.writeText(window.location.href), Alpine.store('toast') && Alpine.store('toast').trigger('Link copied to clipboard!'))" class="p-1 hover:text-black transition-colors cursor-pointer" title="Share Product">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"/></svg>
+                        </button>
+                        {{-- Chat --}}
+                        <button type="button" @click="chatWithSeller('{{ $product->sellerId ?? ($product->seller->id ?? 0) }}', '{{ addslashes($product->seller->shopName ?? $product->seller->name ?? 'Artisan') }}')" class="p-1 hover:text-[#00B4D8] transition-colors cursor-pointer" title="Chat with Seller">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/></svg>
                         </button>
                     </div>
-
-                    <!-- Rating & Sold Row -->
-                    <div class="flex items-center gap-2 text-xs mt-2 text-gray-600">
-                        <div class="flex items-center gap-1 font-bold text-amber-600">
-                            <svg class="w-3.5 h-3.5 fill-amber-400 text-amber-400" viewBox="0 0 20 20">
-                                <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/>
-                            </svg>
-                            <span>{{ number_format($product->avgRating ?? 5.0, 1) }}</span>
-                        </div>
-                        <span class="text-gray-300">({{ $product->reviewCount ?? 1 }})</span>
-                        <span class="text-gray-300">|</span>
-                        <span>{{ (int)($soldCount ?? 16) }} sold</span>
-                    </div>
                 </div>
+            </div>
 
-                <!-- Shopee-Style Guarantee & Service Rows -->
-                <div class="divide-y divide-gray-100 border-t border-gray-100">
-                    {{-- Free Next-Day Delivery Row --}}
-                    <div class="p-3.5 flex items-start gap-3 text-xs">
-                        <span class="text-base leading-none mt-0.5">🚚</span>
-                        <div class="flex-1">
-                            <div class="flex items-center gap-1.5 font-bold">
-                                <span class="text-teal-700 bg-teal-50 border border-teal-200/60 px-1.5 py-0.5 rounded text-[10px]">Free next-day</span>
-                                <span class="text-gray-900">Guaranteed by {{ now()->addDays(2)->format('M d') }}</span>
-                            </div>
-                            <div class="text-[11px] text-gray-500 mt-1">
-                                Get at least ₱50 coupon if your order arrives late ⓘ
-                            </div>
-                            <div class="text-[11px] text-gray-400 mt-0.5">
-                                Shipping fee: <span class="line-through">₱{{ number_format($product->shippingFee ?? 20, 2) }}</span>
-                            </div>
-                        </div>
-                        <span class="text-gray-400 text-sm">›</span>
+            {{-- ═══ Mobile-Only: 14-Day Free Return Guarantee Row ═══ --}}
+            <div class="lg:hidden bg-white px-3.5 py-3 border-b border-gray-100">
+                <div class="flex items-center justify-between text-xs text-gray-800">
+                    <div class="flex items-center gap-2">
+                        <span class="w-4 h-4 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center font-bold text-[10px]">✓</span>
+                        <span class="font-bold">14-Day Free Return</span>
                     </div>
-
-                    {{-- Buyer Protection & COD Row --}}
-                    <div class="p-3.5 flex items-center justify-between text-xs text-gray-700">
-                        <div class="flex items-center gap-2">
-                            <svg class="w-4 h-4 text-gray-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
-                            <span>Protection for drops/spills/theft</span>
-                            <span class="text-gray-300">|</span>
-                            <span>Cash on delivery</span>
-                        </div>
-                        <span class="text-gray-400 text-sm">›</span>
-                    </div>
-
-                    {{-- Variant Options Shortcut Row --}}
-                    <button type="button" @click="openBuyNowSheet('buy_now')" class="w-full p-3.5 flex items-center justify-between text-xs text-gray-700 hover:bg-gray-50 text-left cursor-pointer transition-colors">
-                        <div class="flex items-center gap-2.5 min-w-0">
-                            <svg class="w-4 h-4 text-gray-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"/></svg>
-                            <div class="flex items-center gap-1.5 overflow-hidden">
-                                <template x-for="(img, i) in galleryImages.slice(0, 4)" :key="i">
-                                    <img :src="imageUrl(img.url)" class="w-6 h-6 rounded object-cover border border-gray-200 shrink-0">
-                                </template>
-                                <span class="ml-1 text-gray-600 font-medium truncate" x-text="(galleryImages ? galleryImages.length : 1) + ' options available'"></span>
-                            </div>
-                        </div>
-                        <span class="text-gray-400 text-sm shrink-0">›</span>
-                    </button>
-
-                    {{-- 1% Cashback Row --}}
-                    <div class="p-3.5 flex items-center justify-between text-xs text-gray-700">
-                        <div class="flex items-center gap-2">
-                            <span class="text-amber-500 font-black">🪙</span>
-                            <span><strong class="text-amber-600 font-black">1%</strong> bonus cashback</span>
-                        </div>
-                        <span class="text-gray-400 text-sm">›</span>
-                    </div>
+                    <span class="text-gray-400 text-sm">›</span>
                 </div>
             </div>
 
@@ -2176,82 +2157,57 @@
 
                     <!-- Stock warning -->
                     <template x-if="stock > 0">
-                        <div class="text-xs font-bold text-[#D0011B] flex items-center gap-1 mt-1.5">
-                            <span>♨</span>
-                            <span>Only <span x-text="stock"></span> left!!!</span>
-                        </div>
-                    </template>
-                    <template x-if="stock <= 0">
-                        <div class="text-xs font-bold text-red-600 mt-1.5">Out of stock</div>
-                    </template>
-
-                    <div class="text-xs text-gray-600 truncate mt-1">
-                        <span class="text-gray-400 font-medium">Selected:</span>
-                        <span class="font-bold text-gray-800" x-text="selectedVariationLabel()"></span><template x-if="selectedSize"><span class="font-bold text-gray-800" x-text="', ' + selectedSize"></span></template>
+                    <div class="text-[11px] font-bold text-[#FF0055] leading-none mb-0.5">
+                        @if($calcDiff > 0)
+                            <span>₱{{ number_format($calcDiff, 2) }} off with Promo</span>
+                        @else
+                            <span>Special Promo Price</span>
+                        @endif
+                    </div>
+                    <div class="flex items-baseline gap-1.5">
+                        <span class="text-xl sm:text-2xl font-black text-[#FF0055]">₱{{ number_format($product->salePrice, 2) }}</span>
+                    </div>
+                    <div class="text-[10px] font-bold text-[#FF0055] mt-0.5">Buy 2, Save additional ₱2.00</div>
+                    <div class="text-[11px] text-gray-500 font-medium truncate mt-1">
+                        <span x-text="selectedVariationLabel()"></span>,Int:<span x-text="selectedSize || 'Select size'"></span>
                     </div>
                 </div>
 
                 <!-- Close Button -->
-                <button type="button" @click="closeBuyNowSheet()" class="absolute top-3 right-3 w-8 h-8 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center text-gray-500 hover:text-black transition-colors cursor-pointer">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
+                <button type="button" @click="closeBuyNowSheet()" class="absolute top-3 right-3 text-gray-400 hover:text-black p-1 transition-colors cursor-pointer">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
                 </button>
             </div>
 
-            <!-- Lumbarong Seller Sales Orange Banner (Shopee Reference Image 2) -->
-            @if($product->is_on_sale && $product->discount_percentage > 0)
-            <div class="bg-[#FA8C16] text-white px-4 py-2 flex items-center justify-between text-xs font-bold shrink-0">
-                <div class="flex items-center gap-1.5">
-                    <img src="/images/logo-icon.png" alt="LumBarong" class="w-3.5 h-3.5 rounded-full object-cover border border-white/30">
-                    <span class="tracking-wide">Lumban Specials</span>
-                </div>
-                <div class="flex items-center gap-1">
-                    <span class="opacity-90 font-normal">Ends in</span>
-                    <template x-if="countdownActive">
-                        <span class="font-mono" x-text="countdownHours + ':' + countdownMinutes + ':' + countdownSeconds">12:35:13</span>
-                    </template>
-                    <template x-if="!countdownActive">
-                        <span>Limited Offer</span>
-                    </template>
-                </div>
+            <!-- Lazada 14 Days Free Return Strip -->
+            <div class="mx-3 sm:mx-4 px-3 py-1.5 rounded bg-blue-50/80 border border-blue-100 flex items-center gap-1.5 text-[11px] text-blue-900 font-medium shrink-0">
+                <span class="w-3.5 h-3.5 rounded-full bg-blue-600 text-white flex items-center justify-center text-[9px] font-bold shrink-0">✓</span>
+                <span>14 Days Free Return · Change of mind returns</span>
             </div>
-            @endif
 
-            <!-- Scrollable Content: Variants, Sizes, Quantity -->
-            <div class="p-4 sm:p-5 overflow-y-auto space-y-5 flex-1">
-                <!-- Available Variations / Designs (Portrait Cards) -->
+            <!-- Scrollable Content: 2-Column Color Family Grid, Sizes, Quantity -->
+            <div class="p-3 sm:p-4 overflow-y-auto space-y-4 flex-1">
+                <!-- Color Family / Available Variations (2-Column Grid matching Lazada Image 3) -->
                 <template x-if="styleVariants && styleVariants.length > 0">
                     <div>
                         <div class="flex items-center justify-between mb-2">
-                            <span class="text-xs font-black uppercase tracking-wider text-gray-800">Available Designs</span>
+                            <span class="text-xs font-black text-gray-900">Color Family</span>
+                            <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"/></svg>
                         </div>
-                        <!-- Horizontal scrollable portrait cards -->
-                        <div class="flex gap-2.5 overflow-x-auto no-scrollbar pb-1 pt-0.5 px-0.5">
+                        
+                        <!-- 2-Column Grid of Variant Pill Cards -->
+                        <div class="grid grid-cols-2 gap-2">
                             <template x-for="v in styleVariants" :key="v.id">
                                 <button 
-                                    type="button"
+                                    type="button" 
                                     @click="selectStyleVariant(v)"
-                                    class="relative w-28 shrink-0 rounded-xl overflow-hidden border-2 transition-all text-left cursor-pointer bg-white shadow-2xs group"
-                                    :class="selectedStyle === v.id ? 'border-[#D0011B] ring-2 ring-[#D0011B]/20' : 'border-gray-200 hover:border-gray-300'"
+                                    class="p-1.5 rounded-lg border flex items-center gap-2 text-left transition-all cursor-pointer bg-white shadow-2xs"
+                                    :class="selectedStyle === v.id ? 'border-[#FF0055] bg-pink-50/20 text-[#FF0055] ring-1 ring-[#FF0055]' : 'border-gray-200 text-gray-800 hover:border-gray-300'"
                                 >
-                                    <!-- Hot badge -->
-                                    <div class="absolute top-1.5 left-1.5 z-10 bg-amber-500 text-white text-[9px] font-black px-1.5 py-0.5 rounded-full flex items-center gap-0.5 shadow-xs pointer-events-none">
-                                        <span>🔥</span>
-                                        <span>Hot</span>
-                                    </div>
-                                    <!-- Portrait Image -->
-                                    <div class="w-full h-32 bg-gray-100 overflow-hidden">
-                                        <img :src="imageUrl(v.image_path || v.image_url || v.image)" onerror="this.src='/uploads/products/default.jpg'" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-200">
-                                    </div>
-                                    <!-- Name label -->
-                                    <div class="p-1.5 text-center">
-                                        <div class="text-[11px] font-bold text-gray-800 truncate" x-text="v.name"></div>
-                                    </div>
+                                    <img :src="imageUrl(v.image_path || v.image_url || v.image)" class="w-8 h-8 rounded object-cover border border-gray-200 shrink-0">
+                                    <span class="text-[11px] font-bold truncate flex-1" x-text="v.name"></span>
                                 </button>
                             </template>
-                        </div>
-                        <!-- Scroll Indicator Bar -->
-                        <div class="w-10 h-1 bg-gray-200 rounded-full mx-auto mt-2 overflow-hidden" x-show="styleVariants.length > 3">
-                            <div class="w-1/2 h-full bg-gray-400 rounded-full"></div>
                         </div>
                     </div>
                 </template>
@@ -2264,9 +2220,9 @@
                 @if(!empty($availableSizes))
                 <div>
                     <div class="flex items-center justify-between mb-2">
-                        <span class="text-xs font-black uppercase tracking-wider text-gray-800">Select Size</span>
+                        <span class="text-xs font-black text-gray-900">Size</span>
                         @if($product->size_guide_image || !empty($product->size_guide_measurements))
-                            <button type="button" onclick="openSizeGuideModal()" class="text-[11px] font-bold text-[#D0011B] hover:underline flex items-center gap-1 cursor-pointer">
+                            <button type="button" onclick="openSizeGuideModal()" class="text-[11px] font-bold text-[#FF0055] hover:underline flex items-center gap-1 cursor-pointer">
                                 📏 Size Chart
                             </button>
                         @endif
@@ -2279,8 +2235,8 @@
                         <button 
                             type="button"
                             @click="updateStock('{{ $sz }}')"
-                            class="px-4 py-2.5 rounded-xl text-xs font-bold border transition-all cursor-pointer {{ $szStock <= 0 ? 'opacity-40 line-through cursor-not-allowed bg-gray-50 text-gray-400' : '' }}"
-                            :class="selectedSize === '{{ $sz }}' ? 'border-2 border-[#D0011B] bg-[#FFF5F5] text-[#D0011B] shadow-xs' : 'border-gray-200 bg-white text-gray-800 hover:border-gray-300'"
+                            class="px-3.5 py-1.5 rounded-lg text-xs font-bold border transition-all cursor-pointer {{ $szStock <= 0 ? 'opacity-40 line-through cursor-not-allowed bg-gray-50 text-gray-400' : '' }}"
+                            :class="selectedSize === '{{ $sz }}' ? 'border-[#FF0055] bg-pink-50/20 text-[#FF0055] ring-1 ring-[#FF0055]' : 'border-gray-200 bg-white text-gray-800 hover:border-gray-300'"
                             {{ $szStock <= 0 ? 'disabled' : '' }}
                         >
                             {{ $sz }}
@@ -2293,53 +2249,38 @@
                 <!-- Quantity Stepper -->
                 <div class="flex items-center justify-between pt-2 border-t border-gray-100">
                     <div>
-                        <div class="text-xs font-bold uppercase tracking-wider text-gray-700">Quantity</div>
-                        <div class="text-[11px] text-gray-400" x-text="'Max: ' + stock + ' available'"></div>
+                        <div class="text-xs font-bold text-gray-800">Quantity</div>
+                        <div class="text-[10px] text-gray-400" x-text="'Stock: ' + stock + ' available'"></div>
                     </div>
-                    <div class="flex items-center border border-gray-200 rounded-xl overflow-hidden shadow-2xs">
-                        <button type="button" @click="if(quantity > 1) quantity--" class="w-9 h-9 flex items-center justify-center bg-gray-50 hover:bg-gray-100 text-gray-700 font-bold transition-colors cursor-pointer">
-                            -
-                        </button>
-                        <span class="w-10 text-center text-xs font-black text-gray-900" x-text="quantity"></span>
-                        <button type="button" @click="if(quantity < stock) quantity++" class="w-9 h-9 flex items-center justify-center bg-gray-50 hover:bg-gray-100 text-gray-700 font-bold transition-colors cursor-pointer">
-                            +
-                        </button>
+                    <div class="flex items-center border border-gray-200 rounded-lg overflow-hidden">
+                        <button type="button" @click="if(quantity > 1) quantity--" class="w-8 h-8 flex items-center justify-center bg-gray-50 hover:bg-gray-100 text-gray-700 font-bold transition-colors cursor-pointer">-</button>
+                        <span class="w-9 text-center text-xs font-black text-gray-900" x-text="quantity"></span>
+                        <button type="button" @click="if(quantity < stock) quantity++" class="w-8 h-8 flex items-center justify-center bg-gray-50 hover:bg-gray-100 text-gray-700 font-bold transition-colors cursor-pointer">+</button>
                     </div>
                 </div>
             </div>
 
-            <!-- Sticky Bottom Confirmation Action Buttons (Reference Image 2) -->
-            <div class="p-3 sm:p-4 border-t border-gray-100 bg-white shrink-0 flex items-center gap-2.5">
-                <!-- Button 1: Add to Cart / Select Size (Dark Gray) -->
+            <!-- Sticky Bottom Full-Width Action Button (Lazada Image 3) -->
+            <div class="p-3 sm:p-4 border-t border-gray-100 bg-white shrink-0">
                 <button 
                     type="button"
-                    @click="buyNowMode = 'add_to_cart'; executeBuyNow()"
-                    class="flex-1 py-3 px-3 rounded-xl bg-[#6E737B] hover:bg-[#5C6067] text-white font-extrabold text-xs tracking-wide shadow-sm transition-all cursor-pointer text-center"
+                    @click="executeBuyNow()"
+                    class="w-full py-3 px-4 rounded-lg text-white font-black text-xs uppercase tracking-wide shadow-md hover:brightness-105 transition-all cursor-pointer text-center flex flex-col items-center justify-center leading-tight"
+                    style="background: #FFA000;"
                 >
-                    <span x-text="selectedSize ? 'Add to Cart' : 'Select Size'">Add to Cart</span>
-                </button>
-
-                <!-- Button 2: Buy Now ✦ ₱... (Luxury Gold/Amber) -->
-                <button 
-                    type="button"
-                    @click="buyNowMode = 'buy_now'; executeBuyNow()"
-                    class="flex-1 py-3 px-3 rounded-xl text-white font-extrabold text-xs tracking-wide shadow-md hover:brightness-105 transition-all cursor-pointer text-center flex items-center justify-center gap-1"
-                    style="background: linear-gradient(135deg, #D4A359 0%, #C4903D 100%);"
-                >
-                    <span>Buy Now ✦ ₱{{ number_format($product->salePrice, 2) }}</span>
+                    <span class="text-xs font-black" x-text="buyNowMode === 'add_to_cart' ? 'Add to Cart' : 'Buy Now'">Buy Now</span>
+                    <span class="text-[10px] font-bold opacity-90" x-show="buyNowMode !== 'add_to_cart'">₱0 Shipping Fee</span>
                 </button>
             </div>
         </div>
     </div>
 
-    {{-- ═══ Mobile-Only Sticky Bottom Action Bar (Shopee Reference Image 1) ═══ --}}
-    <div class="fixed bottom-0 left-0 right-0 z-40 bg-white border-t border-gray-200 px-3 py-2 flex items-center justify-between gap-2 shadow-lg lg:hidden">
-        {{-- Shop Icon Link --}}
+    {{-- ═══ Mobile-Only Sticky Bottom Action Bar (Lazada Reference Image 2) ═══ --}}
+    <div class="fixed bottom-0 left-0 right-0 z-40 bg-white border-t border-gray-200 px-3 py-2 flex items-center gap-2 shadow-xl lg:hidden">
+        {{-- Store Icon Link --}}
         <a href="{{ ($product->sellerId || ($product->seller->id ?? null)) ? '/shops/' . ($product->sellerId ?? $product->seller->id) : '/' }}" class="flex flex-col items-center justify-center text-gray-700 hover:text-black py-1 px-2 shrink-0">
-            <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/>
-            </svg>
-            <span class="text-[10px] font-semibold tracking-tight mt-0.5">Shop</span>
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
+            <span class="text-[10px] font-bold tracking-tight mt-0.5">Store</span>
         </a>
 
         {{-- Chat Icon Button --}}
@@ -2348,33 +2289,33 @@
             @click="chatWithSeller('{{ $product->sellerId ?? ($product->seller->id ?? 0) }}', '{{ addslashes($product->seller->shopName ?? $product->seller->name ?? 'Artisan') }}')"
             class="flex flex-col items-center justify-center text-gray-700 hover:text-black py-1 px-2 shrink-0 cursor-pointer"
         >
-            <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/>
-            </svg>
-            <span class="text-[10px] font-semibold tracking-tight mt-0.5">Chat</span>
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/></svg>
+            <span class="text-[10px] font-bold tracking-tight mt-0.5">Chat</span>
         </button>
 
-        {{-- Cart Icon Link --}}
-        <a href="/cart" class="flex flex-col items-center justify-center text-gray-700 hover:text-black py-1 px-2 shrink-0 relative">
-            <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/>
-            </svg>
-            <span class="text-[10px] font-semibold tracking-tight mt-0.5">Cart</span>
-        </a>
+        {{-- Dual Lazada CTA Buttons: Buy Now (Orange) & Add to Cart (Magenta) --}}
+        <div class="flex-1 flex items-stretch gap-2 ml-1">
+            {{-- Orange Button: Buy Now ₱0 Shipping Fee --}}
+            <button 
+                type="button" 
+                @click="openBuyNowSheet('buy_now')" 
+                class="flex-1 py-2 px-2 rounded-lg text-white font-extrabold flex flex-col items-center justify-center leading-tight shadow-md cursor-pointer transition-transform active:scale-98"
+                style="background: #FFA000;"
+            >
+                <div class="text-xs font-black">Buy Now</div>
+                <div class="text-[9px] font-bold opacity-95">₱0 Shipping Fee</div>
+            </button>
 
-        {{-- Buy Now Pill Button --}}
-        <button 
-            type="button" 
-            @click="openBuyNowSheet('buy_now')" 
-            class="flex-1 py-2 px-3 rounded-full text-white font-extrabold flex flex-col items-center justify-center leading-tight shadow-md cursor-pointer ml-1 transition-transform active:scale-98"
-            style="background: linear-gradient(90deg, #FF3B62 0%, #FF2D55 100%);"
-        >
-            <div class="text-xs font-black flex items-center gap-1">
-                <span>Buy now</span>
-                <span>₱{{ number_format($product->salePrice, 2) }}</span>
-            </div>
-            <div class="text-[10px] font-medium opacity-90">Free shipping</div>
-        </button>
+            {{-- Magenta Button: Add to Cart --}}
+            <button 
+                type="button" 
+                @click="openBuyNowSheet('add_to_cart')" 
+                class="flex-1 py-2 px-2 rounded-lg text-white font-extrabold flex items-center justify-center text-xs shadow-md cursor-pointer transition-transform active:scale-98"
+                style="background: #FF0055;"
+            >
+                <span>Add to Cart</span>
+            </button>
+        </div>
     </div>
 </div>
 
