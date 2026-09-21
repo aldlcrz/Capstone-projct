@@ -395,7 +395,7 @@
         };
     }
 </script>
-<div class="max-w-6xl mx-auto py-4 lg:py-6" x-data="productDetail({{ (int)($product->stock ?? 1) }}, @js($product->size_stocks ?? (object)[]), @js($galleryImages), @js($styleVariants), '{{ $product->sale_ends_at ? $product->sale_ends_at->toISOString() : '' }}')">
+<div class="max-w-6xl mx-auto py-4 lg:py-6 pb-24 lg:pb-6" x-data="productDetail({{ (int)($product->stock ?? 1) }}, @js($product->size_stocks ?? (object)[]), @js($galleryImages), @js($styleVariants), '{{ $product->sale_ends_at ? $product->sale_ends_at->toISOString() : '' }}')">
     @if($isAdminUser)
     <!-- Admin Context Header Bar -->
     <div class="mb-5 px-4 py-3 rounded-2xl flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-md"
@@ -494,7 +494,8 @@
                     </template>
 
                     @if($product->is_on_sale && $product->discount_percentage > 0)
-                        <div style="position:absolute;top:8px;left:8px;display:flex;flex-direction:column;gap:5px;z-index:10;pointer-events:none;">
+                        {{-- Desktop Only Badges (Top-Left) --}}
+                        <div class="hidden lg:flex" style="position:absolute;top:8px;left:8px;display:flex;flex-direction:column;gap:5px;z-index:10;pointer-events:none;">
                             <div style="display:inline-flex;align-items:center;gap:5px;padding:5px 12px 5px 8px;background:linear-gradient(135deg,#0F0C08 0%,#1C1609 100%);border:1px solid #A87B10;border-radius:20px;box-shadow:0 0 8px rgba(180,130,15,0.45),inset 0 1px 0 rgba(230,185,60,0.12);white-space:nowrap;">
                                 <img src="/images/logo-icon.png" alt="LumBarong" style="width:16px;height:16px;border-radius:50%;flex-shrink:0;object-fit:cover;">
                                 <span style="color:#DFC97A;font-family:ui-sans-serif,system-ui,sans-serif;font-size:8.5px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;">Lumbarong Seller Sales</span>
@@ -504,65 +505,64 @@
                                 <span style="color:#FFE8A0;font-family:ui-sans-serif,system-ui,sans-serif;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;margin-left:3px;">OFF</span>
                             </div>
                         </div>
+
+                        {{-- Mobile Only: Yellow Flash Sale Tab (Bottom-Left of Image) --}}
+                        <div class="lg:hidden absolute bottom-0 left-0 z-10 bg-[#FFE500] text-black font-black text-xs px-3 py-1.5 rounded-tr-xl flex items-center gap-1 shadow-xs pointer-events-none">
+                            <svg class="w-3.5 h-3.5 fill-black" viewBox="0 0 24 24"><path d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+                            <span class="tracking-tight uppercase text-[11px]">Flash Sale</span>
+                        </div>
                     @endif
 
-                    <!-- Zoom Helper Hint Badge (Bottom Right) -->
-                    <div class="absolute bottom-3.5 right-3.5 z-10 px-3 py-1.5 rounded-full bg-white/90 backdrop-blur-md border border-gray-200 shadow-sm flex items-center gap-1.5 text-gray-700 pointer-events-none opacity-85 group-hover:opacity-100 transition-opacity">
+                    {{-- Mobile Only: Size Counter Pill (Bottom-Right of Image) --}}
+                    <div class="lg:hidden absolute bottom-2 right-2 z-10 px-2.5 py-1 rounded-full bg-black/60 text-white text-[11px] font-bold pointer-events-none" x-show="galleryImages && galleryImages.length > 0">
+                        <span x-text="(activeImage + 1) + '/' + galleryImages.length + ' Size'"></span>
+                    </div>
+
+                    <!-- Desktop Zoom Helper Hint Badge (Bottom Right) -->
+                    <div class="hidden lg:flex absolute bottom-3.5 right-3.5 z-10 px-3 py-1.5 rounded-full bg-white/90 backdrop-blur-md border border-gray-200 shadow-sm items-center gap-1.5 text-gray-700 pointer-events-none opacity-85 group-hover:opacity-100 transition-opacity">
                         <svg class="w-3.5 h-3.5 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m0-3h3m-3 0H7"/>
                         </svg>
                         <span class="text-[10px] font-bold tracking-tight">Click to Zoom</span>
                     </div>
 
-                    <!-- Image Counter Badge (Top Right) -->
-                    <div class="absolute top-2.5 right-2.5 z-10 px-2 py-1 rounded-full bg-black/50 text-white text-[10px] font-bold pointer-events-none" x-show="galleryImages && galleryImages.length > 1">
+                    <!-- Desktop Image Counter Badge (Top Right) -->
+                    <div class="hidden lg:block absolute top-2.5 right-2.5 z-10 px-2 py-1 rounded-full bg-black/50 text-white text-[10px] font-bold pointer-events-none" x-show="galleryImages && galleryImages.length > 1">
                         <span x-text="(activeImage + 1) + '/' + galleryImages.length"></span>
                     </div>
                 </div>
             </div>
 
-            {{-- ═══ Mobile-Only: Lumbarong Seller Sales Price Strip (Shopee-style) ═══ --}}
+            {{-- ═══ Mobile-Only: Two-Tone Split Lumbarong Seller Sales Strip (Shopee Reference Image 1) ═══ --}}
             @if($product->is_on_sale && $product->discount_percentage > 0)
-            <div class="lg:hidden -mt-1 rounded-b-2xl overflow-hidden shadow-sm border border-gray-100 border-t-0">
-                {{-- Sale Price Row --}}
-                <div style="background:linear-gradient(135deg,#FFF5E6 0%,#FFECD2 100%);padding:12px 14px;display:flex;align-items:center;justify-content:space-between;gap:8px;">
-                    <div style="display:flex;align-items:center;gap:10px;">
-                        {{-- Flash Sale Lightning Badge --}}
-                        <div style="display:inline-flex;align-items:center;gap:4px;padding:3px 8px;background:linear-gradient(90deg,#E8AD12 0%,#C8890A 100%);border-radius:4px;">
-                            <svg width="12" height="12" viewBox="0 0 24 24" fill="#FFF" stroke="none"><path d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
-                            <span style="color:#FFF;font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:0.04em;">Flash Sale</span>
-                        </div>
-                        {{-- Discount % --}}
-                        <div style="display:inline-flex;align-items:baseline;gap:2px;">
-                            <span style="color:#E02424;font-size:11px;font-weight:900;padding:2px 6px;background:#FEE2E2;border-radius:4px;">-{{ number_format($product->discount_percentage, 0) }}%</span>
-                        </div>
+            <div class="lg:hidden -mt-1 rounded-b-2xl overflow-hidden shadow-sm border border-gray-100 border-t-0 flex items-stretch">
+                {{-- Left Side: Orange Sale Price Block --}}
+                <div class="flex-1 p-3 flex flex-col justify-center text-white" style="background: #FE4300;">
+                    <div class="flex items-center gap-1.5 mb-0.5">
+                        <span class="bg-white text-[#FE4300] font-black text-[11px] px-1.5 py-0.5 rounded leading-none shadow-2xs">-{{ number_format($product->discount_percentage, 0) }}%</span>
+                        <span class="text-[11px] font-bold opacity-90">From</span>
                     </div>
-                    <div style="display:flex;align-items:baseline;gap:6px;">
-                        <span style="color:#E02424;font-size:18px;font-weight:900;font-family:ui-sans-serif,system-ui,sans-serif;">₱{{ number_format($product->salePrice) }}</span>
-                        <span style="color:#9CA3AF;font-size:12px;font-weight:600;text-decoration:line-through;">₱{{ number_format($product->price) }}</span>
+                    <div class="flex items-baseline gap-2">
+                        <span class="text-xl sm:text-2xl font-black font-sans tracking-tight">₱{{ number_format($product->salePrice, 2) }}</span>
+                        <span class="text-xs line-through opacity-75">₱{{ number_format($product->price, 2) }}</span>
                     </div>
                 </div>
-                {{-- Lumbarong Seller Sales Banner with Countdown Timer --}}
-                <div style="background:linear-gradient(90deg,#C0420A 0%,#E8580A 100%);padding:8px 14px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:6px;">
-                    <div style="display:flex;align-items:center;gap:6px;">
-                        <img src="/images/logo-icon.png" alt="LumBarong" style="width:16px;height:16px;border-radius:50%;object-fit:cover;border:1px solid rgba(255,255,255,0.3);">
-                        <span style="color:#FFFFFF;font-size:11px;font-weight:800;letter-spacing:0.04em;text-transform:uppercase;">Lumbarong Seller Sales</span>
+
+                {{-- Right Side: Yellow/Amber Lumbarong Seller Sales Block --}}
+                <div class="px-3.5 py-3 flex flex-col justify-center items-end text-right shrink-0" style="background: #FFAE00; color: #1E1915;">
+                    <div class="flex items-center gap-1 text-[11px] font-black uppercase tracking-wide">
+                        <img src="/images/logo-icon.png" alt="LumBarong" class="w-3.5 h-3.5 rounded-full object-cover">
+                        <span>Lumbarong Seller Sales</span>
                     </div>
-                    <template x-if="countdownActive">
-                        <div style="display:flex;align-items:center;gap:4px;">
-                            <span style="color:#FFE8CC;font-size:10px;font-weight:700;">ENDS IN</span>
-                            <div class="flex items-center gap-1 text-[11px] font-mono font-bold text-white">
-                                <span class="bg-black/40 px-1.5 py-0.5 rounded" x-text="countdownHours">00</span>
-                                <span>:</span>
-                                <span class="bg-black/40 px-1.5 py-0.5 rounded" x-text="countdownMinutes">00</span>
-                                <span>:</span>
-                                <span class="bg-black/40 px-1.5 py-0.5 rounded" x-text="countdownSeconds">00</span>
-                            </div>
-                        </div>
-                    </template>
-                    <template x-if="!countdownActive">
-                        <span style="color:#FFE8CC;font-size:10px;font-weight:700;">Limited Offer</span>
-                    </template>
+                    <div class="flex items-center gap-1 mt-1 text-xs font-black">
+                        <span class="text-[11px] font-bold opacity-90">Ends in</span>
+                        <template x-if="countdownActive">
+                            <span class="font-mono tracking-tight" x-text="countdownHours + ':' + countdownMinutes + ':' + countdownSeconds">12:35:13</span>
+                        </template>
+                        <template x-if="!countdownActive">
+                            <span class="font-bold">Limited Offer</span>
+                        </template>
+                    </div>
                 </div>
             </div>
             @endif
@@ -978,90 +978,83 @@
         </div>
     </div>
 
-    {{-- ─── Simple Standalone Hover-Zoom Modal ─── --}}
+    {{-- ─── Fullscreen Closer Inspection Modal (Shopee Reference Image 3) ─── --}}
     <div 
         x-show="showZoomModal" 
         x-cloak
         style="display: none; z-index: 99999;"
-        class="fixed inset-0 flex items-center justify-center p-3 sm:p-6 bg-black/65 backdrop-blur-xs select-none"
+        class="fixed inset-0 bg-black flex flex-col justify-between select-none"
         @keydown.window.escape="closeZoomModal()"
-        @click.self="closeZoomModal()"
     >
-        <div class="relative w-full max-w-2xl bg-black rounded-2xl shadow-2xl overflow-hidden border border-neutral-800 flex flex-col" style="background-color: #000000;">
-            
-            <!-- Close Button (Top Right of Modal) -->
+        <!-- Top Bar: Close Button (Left) & Counter (Right) -->
+        <div class="flex items-center justify-between p-3 sm:p-4 z-20 shrink-0">
             <button 
                 type="button" 
                 @click="closeZoomModal()"
-                class="absolute top-3 right-3 z-30 w-8 h-8 rounded-full bg-black/70 hover:bg-black text-white shadow-lg flex items-center justify-center transition-all cursor-pointer border border-white/20"
+                class="text-white hover:text-gray-300 p-2 rounded-full transition-colors cursor-pointer"
                 title="Close (Esc)"
             >
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/>
+                </svg>
             </button>
 
-            <!-- Image Counter (Top Right) -->
-            <div class="absolute top-3 right-12 z-30 px-2.5 py-1 rounded-full bg-black/60 text-white text-[11px] font-bold pointer-events-none" x-show="galleryImages && galleryImages.length > 1">
+            <div class="text-white font-bold text-sm tracking-widest px-2" x-show="galleryImages && galleryImages.length > 0">
                 <span x-text="(activeImage + 1) + '/' + galleryImages.length"></span>
             </div>
+        </div>
 
-            <!-- Large Zoom Viewer -->
-            <div 
-                class="relative w-full aspect-square sm:aspect-4/5 bg-black overflow-hidden cursor-crosshair min-h-87.5 sm:min-h-115"
-                style="background-color: #000000;"
-                @mousemove="handleModalMouseMove($event)"
-                @mouseleave="handleModalMouseLeave()"
-                @touchstart="handleModalTouch($event)"
-                @touchmove.prevent="handleModalTouch($event)"
-                @touchend="handleModalMouseLeave()"
+        <!-- Center: Large Image Viewer with Left / Right Arrows -->
+        <div 
+            class="relative flex-1 w-full flex items-center justify-center overflow-hidden cursor-crosshair px-2"
+            @mousemove="handleModalMouseMove($event)"
+            @mouseleave="handleModalMouseLeave()"
+            @touchstart="handleModalTouch($event)"
+            @touchmove.prevent="handleModalTouch($event)"
+            @touchend="handleModalMouseLeave()"
+        >
+            <!-- Prev Image Arrow -->
+            <button 
+                type="button"
+                x-show="galleryImages && galleryImages.length > 1 && activeImage > 0"
+                @click.stop="selectImage(activeImage - 1)"
+                class="absolute left-3 top-1/2 -translate-y-1/2 z-20 w-10 h-10 rounded-full bg-white/15 hover:bg-white/30 text-white flex items-center justify-center transition-all cursor-pointer backdrop-blur-xs"
             >
-                <template x-for="(img, index) in galleryImages" :key="index">
-                    <img 
-                        x-show="activeImage === index"
-                        :src="imageUrl(img.url)"
-                        onerror="this.src='/uploads/products/default.jpg'"
-                        class="w-full h-full object-contain pointer-events-none transition-transform duration-75 ease-out"
-                        :class="isZoomed ? 'scale-[2.4]' : 'scale-100'"
-                        :style="isZoomed ? { transformOrigin: `${zoomOriginX}% ${zoomOriginY}%` } : {}"
-                        alt="{{ $product->name }}"
-                    >
-                </template>
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/>
+                </svg>
+            </button>
 
-                <!-- Subtle Hover Zoom Helper (hidden on mobile touch) -->
-                <div 
-                    x-show="!isZoomed" 
-                    class="absolute bottom-3 left-3 px-2.5 py-1 rounded-md bg-black/75 text-white text-[11px] font-medium pointer-events-none hidden sm:flex items-center gap-1.5 border border-white/10"
+            <!-- Next Image Arrow -->
+            <button 
+                type="button"
+                x-show="galleryImages && galleryImages.length > 1 && activeImage < galleryImages.length - 1"
+                @click.stop="selectImage(activeImage + 1)"
+                class="absolute right-3 top-1/2 -translate-y-1/2 z-20 w-10 h-10 rounded-full bg-white/15 hover:bg-white/30 text-white flex items-center justify-center transition-all cursor-pointer backdrop-blur-xs"
+            >
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/>
+                </svg>
+            </button>
+
+            <template x-for="(img, index) in galleryImages" :key="index">
+                <img 
+                    x-show="activeImage === index"
+                    :src="imageUrl(img.url)"
+                    onerror="this.src='/uploads/products/default.jpg'"
+                    class="max-h-[78vh] max-w-[94vw] object-contain pointer-events-none transition-transform duration-75 ease-out"
+                    :class="isZoomed ? 'scale-[2.4]' : 'scale-100'"
+                    :style="isZoomed ? { transformOrigin: `${zoomOriginX}% ${zoomOriginY}%` } : {}"
+                    alt="{{ $product->name }}"
                 >
-                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m0-3h3m-3 0H7"/></svg>
-                    <span>Move mouse to zoom</span>
-                </div>
-            </div>
+            </template>
+        </div>
 
-            <!-- Variant Name Label (Bottom of Zoom, like Shopee fullscreen) -->
-            <div 
-                class="px-4 py-3 bg-black/90 text-center border-t border-neutral-800" 
-                style="background-color: rgba(0,0,0,0.9) !important;"
-                x-show="galleryImages && galleryImages[activeImage] && galleryImages[activeImage].variant_name"
-            >
-                <span class="text-white text-sm font-semibold" x-text="galleryImages[activeImage]?.variant_name || ''"></span>
-            </div>
-
-            <!-- Bottom Thumbnails Strip (Solid Black Footer) -->
-            <div 
-                class="p-3.5 bg-black border-t border-neutral-800 flex items-center justify-center gap-2 overflow-x-auto no-scrollbar" 
-                style="background-color: #000000 !important; background: #000000 !important;" 
-                x-show="galleryImages && galleryImages.length > 1"
-            >
-                <template x-for="(img, index) in galleryImages" :key="index">
-                    <button 
-                        type="button"
-                        @click="selectImage(index)"
-                        class="w-12 h-14 rounded-lg overflow-hidden border-2 transition-all cursor-pointer shrink-0 bg-neutral-900 shadow-md"
-                        :class="activeImage === index ? 'border-[#C0420A] ring-2 ring-[#C0420A] scale-105' : 'border-neutral-700 opacity-60 hover:opacity-100'"
-                    >
-                        <img :src="imageUrl(img.url)" class="w-full h-full object-cover">
-                    </button>
-                </template>
-            </div>
+        <!-- Bottom Bar: Centered Variant Label on Solid Black -->
+        <div class="p-4 bg-black text-center shrink-0 z-20">
+            <span class="text-white text-sm sm:text-base font-medium tracking-wide" 
+                  x-text="(galleryImages[activeImage]?.variant_name || '{{ $product->name }}') + (stock <= 5 && stock > 0 ? ' 【Only ' + stock + ' piece' + (stock > 1 ? 's' : '') + ' left!!!】' : '')">
+            </span>
         </div>
     </div>
 
@@ -2003,32 +1996,36 @@
             <!-- Header: Selected Variant Image + Pricing + Stock + Close Button -->
             <div class="p-4 sm:p-5 flex items-start gap-3.5 border-b border-gray-100 shrink-0 relative">
                 <!-- Thumbnail -->
-                <div class="w-20 h-24 rounded-xl overflow-hidden bg-gray-100 border border-gray-200 shrink-0 relative shadow-2xs">
+                <div class="w-20 h-24 sm:w-24 sm:h-28 rounded-xl overflow-hidden bg-gray-100 border border-gray-200 shrink-0 relative shadow-2xs">
                     <img :src="imageUrl(galleryImages[activeImage]?.url)" onerror="this.src='/uploads/products/default.jpg'" class="w-full h-full object-cover">
                 </div>
 
                 <!-- Price & Selection Info -->
                 <div class="flex-1 min-w-0 pr-6">
-                    <div class="flex items-baseline gap-2">
-                        <span class="text-xl font-black text-[#E02424]">₱{{ number_format($product->salePrice) }}</span>
+                    <div class="flex items-baseline gap-2 flex-wrap">
                         @if($product->is_on_sale && $product->discount_percentage > 0)
-                            <span class="text-xs text-gray-400 line-through font-semibold">₱{{ number_format($product->price) }}</span>
+                            <span class="bg-[#FE4300] text-white text-[10px] font-black px-1.5 py-0.5 rounded leading-none">-{{ number_format($product->discount_percentage, 0) }}%</span>
+                        @endif
+                        <span class="text-2xl sm:text-3xl font-black text-[#D0011B] leading-none">₱{{ number_format($product->salePrice, 2) }}</span>
+                        @if($product->is_on_sale && $product->discount_percentage > 0)
+                            <span class="text-xs text-gray-400 line-through font-semibold">₱{{ number_format($product->price, 2) }}</span>
                         @endif
                     </div>
 
-                    @if($product->is_on_sale && $product->discount_percentage > 0)
-                        <div class="inline-flex items-center gap-1.5 px-2 py-0.5 mt-1 rounded-full text-[10px] font-black text-white uppercase tracking-wider" style="background: linear-gradient(90deg, #C0420A 0%, #E8580A 100%);">
-                            <svg class="w-2.5 h-2.5 fill-current" viewBox="0 0 24 24"><path d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
-                            <span>Lumbarong Seller Sales</span>
+                    <!-- Stock warning -->
+                    <template x-if="stock > 0">
+                        <div class="text-xs font-bold text-[#D0011B] flex items-center gap-1 mt-1.5">
+                            <span>♨</span>
+                            <span>Only <span x-text="stock"></span> left!!!</span>
                         </div>
-                    @endif
+                    </template>
+                    <template x-if="stock <= 0">
+                        <div class="text-xs font-bold text-red-600 mt-1.5">Out of stock</div>
+                    </template>
 
-                    <div class="mt-1 text-xs text-gray-500 font-medium">
-                        Stock: <strong class="text-gray-900" x-text="stock"></strong>
-                    </div>
-
-                    <div class="text-xs text-gray-600 truncate mt-0.5">
-                        Selected: <span class="font-bold text-gray-900" x-text="(selectedSize ? selectedSize + ', ' : '') + selectedVariationLabel()"></span>
+                    <div class="text-xs text-gray-600 truncate mt-1">
+                        <span class="text-gray-400 font-medium">Selected:</span>
+                        <span class="font-bold text-gray-800" x-text="selectedVariationLabel()"></span><template x-if="selectedSize"><span class="font-bold text-gray-800" x-text="', ' + selectedSize"></span></template>
                     </div>
                 </div>
 
@@ -2038,27 +2035,61 @@
                 </button>
             </div>
 
+            <!-- Lumbarong Seller Sales Orange Banner (Shopee Reference Image 2) -->
+            @if($product->is_on_sale && $product->discount_percentage > 0)
+            <div class="bg-[#FA8C16] text-white px-4 py-2 flex items-center justify-between text-xs font-bold shrink-0">
+                <div class="flex items-center gap-1.5">
+                    <img src="/images/logo-icon.png" alt="LumBarong" class="w-3.5 h-3.5 rounded-full object-cover border border-white/30">
+                    <span class="tracking-wide">Lumbarong Seller Sales</span>
+                </div>
+                <div class="flex items-center gap-1">
+                    <span class="opacity-90 font-normal">Ends in</span>
+                    <template x-if="countdownActive">
+                        <span class="font-mono" x-text="countdownHours + ':' + countdownMinutes + ':' + countdownSeconds">12:35:13</span>
+                    </template>
+                    <template x-if="!countdownActive">
+                        <span>Limited Offer</span>
+                    </template>
+                </div>
+            </div>
+            @endif
+
             <!-- Scrollable Content: Variants, Sizes, Quantity -->
             <div class="p-4 sm:p-5 overflow-y-auto space-y-5 flex-1">
-                <!-- Available Variations / Designs -->
+                <!-- Available Variations / Designs (Portrait Cards) -->
                 <template x-if="styleVariants && styleVariants.length > 0">
                     <div>
                         <div class="flex items-center justify-between mb-2">
-                            <span class="text-xs font-bold uppercase tracking-wider text-gray-700">Select Variation / Design</span>
-                            <span class="text-[11px] font-semibold text-[#C0420A]" x-text="selectedVariationLabel()"></span>
+                            <span class="text-xs font-black uppercase tracking-wider text-gray-800">Available Designs</span>
                         </div>
-                        <div class="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                        <!-- Horizontal scrollable portrait cards -->
+                        <div class="flex gap-2.5 overflow-x-auto no-scrollbar pb-1 pt-0.5 px-0.5">
                             <template x-for="v in styleVariants" :key="v.id">
                                 <button 
                                     type="button"
                                     @click="selectStyleVariant(v)"
-                                    class="p-2 rounded-xl border flex items-center gap-2 transition-all text-left cursor-pointer"
-                                    :class="selectedStyle === v.id ? 'border-[#C0420A] bg-orange-50/50 ring-2 ring-[#C0420A]/20' : 'border-gray-200 bg-white hover:border-gray-300'"
+                                    class="relative w-28 shrink-0 rounded-xl overflow-hidden border-2 transition-all text-left cursor-pointer bg-white shadow-2xs group"
+                                    :class="selectedStyle === v.id ? 'border-[#D0011B] ring-2 ring-[#D0011B]/20' : 'border-gray-200 hover:border-gray-300'"
                                 >
-                                    <img :src="imageUrl(v.image_path || v.image_url || v.image)" onerror="this.src='/uploads/products/default.jpg'" class="w-8 h-8 rounded-lg object-cover shrink-0 border border-gray-100">
-                                    <span class="text-xs font-bold text-gray-900 truncate" x-text="v.name"></span>
+                                    <!-- Hot badge -->
+                                    <div class="absolute top-1.5 left-1.5 z-10 bg-amber-500 text-white text-[9px] font-black px-1.5 py-0.5 rounded-full flex items-center gap-0.5 shadow-xs pointer-events-none">
+                                        <span>🔥</span>
+                                        <span>Hot</span>
+                                    </div>
+                                    <!-- Portrait Image -->
+                                    <div class="w-full h-32 bg-gray-100 overflow-hidden">
+                                        <img :src="imageUrl(v.image_path || v.image_url || v.image)" onerror="this.src='/uploads/products/default.jpg'" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-200">
+                                    </div>
+                                    <!-- Name label -->
+                                    <div class="p-1.5 text-center">
+                                        <div class="text-[11px] font-bold text-gray-800 truncate" x-text="v.name"></div>
+                                    </div>
                                 </button>
                             </template>
+                        </div>
+                        <!-- Scroll Indicator Bar -->
+                        <div class="w-10 h-1 bg-gray-200 rounded-full mx-auto mt-2 overflow-hidden" x-show="styleVariants.length > 3">
+                            <div class="w-1/2 h-full bg-gray-400 rounded-full"></div>
                         </div>
                     </div>
                 </template>
@@ -2071,9 +2102,9 @@
                 @if(!empty($availableSizes))
                 <div>
                     <div class="flex items-center justify-between mb-2">
-                        <span class="text-xs font-bold uppercase tracking-wider text-gray-700">Select Size</span>
+                        <span class="text-xs font-black uppercase tracking-wider text-gray-800">Select Size</span>
                         @if($product->size_guide_image || !empty($product->size_guide_measurements))
-                            <button type="button" onclick="openSizeGuideModal()" class="text-[11px] font-bold text-[#C0420A] hover:underline flex items-center gap-1 cursor-pointer">
+                            <button type="button" onclick="openSizeGuideModal()" class="text-[11px] font-bold text-[#D0011B] hover:underline flex items-center gap-1 cursor-pointer">
                                 📏 Size Chart
                             </button>
                         @endif
@@ -2087,7 +2118,7 @@
                             type="button"
                             @click="updateStock('{{ $sz }}')"
                             class="px-4 py-2.5 rounded-xl text-xs font-bold border transition-all cursor-pointer {{ $szStock <= 0 ? 'opacity-40 line-through cursor-not-allowed bg-gray-50 text-gray-400' : '' }}"
-                            :class="selectedSize === '{{ $sz }}' ? 'border-[#1E1915] bg-[#1E1915] text-white shadow-xs' : 'border-gray-200 bg-white text-gray-800 hover:border-gray-400'"
+                            :class="selectedSize === '{{ $sz }}' ? 'border-2 border-[#D0011B] bg-[#FFF5F5] text-[#D0011B] shadow-xs' : 'border-gray-200 bg-white text-gray-800 hover:border-gray-300'"
                             {{ $szStock <= 0 ? 'disabled' : '' }}
                         >
                             {{ $sz }}
@@ -2115,18 +2146,73 @@
                 </div>
             </div>
 
-            <!-- Sticky Bottom Confirmation Action -->
-            <div class="p-4 border-t border-gray-100 bg-white shrink-0">
+            <!-- Sticky Bottom Confirmation Action Buttons (Reference Image 2) -->
+            <div class="p-3 sm:p-4 border-t border-gray-100 bg-white shrink-0 flex items-center gap-2.5">
+                <!-- Button 1: Add to Cart / Select Size (Dark Gray) -->
                 <button 
                     type="button"
-                    @click="executeBuyNow()"
-                    class="w-full h-12 rounded-xl font-extrabold text-xs tracking-wide shadow-md transition-all cursor-pointer flex items-center justify-center gap-2 text-white"
-                    :class="buyNowMode === 'buy_now' ? 'bg-[#C0420A] hover:bg-[#A83707]' : 'bg-[#1E1915] hover:bg-black'"
+                    @click="buyNowMode = 'add_to_cart'; executeBuyNow()"
+                    class="flex-1 py-3 px-3 rounded-xl bg-[#6E737B] hover:bg-[#5C6067] text-white font-extrabold text-xs tracking-wide shadow-sm transition-all cursor-pointer text-center"
                 >
-                    <span x-text="buyNowMode === 'buy_now' ? 'Confirm & Buy Now' : 'Confirm & Add to Cart'"></span>
+                    <span x-text="selectedSize ? 'Add to Cart' : 'Select Size'">Add to Cart</span>
+                </button>
+
+                <!-- Button 2: Buy Now ✦ ₱... (Luxury Gold/Amber) -->
+                <button 
+                    type="button"
+                    @click="buyNowMode = 'buy_now'; executeBuyNow()"
+                    class="flex-1 py-3 px-3 rounded-xl text-white font-extrabold text-xs tracking-wide shadow-md hover:brightness-105 transition-all cursor-pointer text-center flex items-center justify-center gap-1"
+                    style="background: linear-gradient(135deg, #D4A359 0%, #C4903D 100%);"
+                >
+                    <span>Buy Now ✦ ₱{{ number_format($product->salePrice, 2) }}</span>
                 </button>
             </div>
         </div>
+    </div>
+
+    {{-- ═══ Mobile-Only Sticky Bottom Action Bar (Shopee Reference Image 1) ═══ --}}
+    <div class="fixed bottom-0 left-0 right-0 z-40 bg-white border-t border-gray-200 px-3 py-2 flex items-center justify-between gap-2 shadow-lg lg:hidden">
+        {{-- Shop Icon Link --}}
+        <a href="{{ ($product->seller->id ?? null) ? '/shop/' . $product->seller->id : '/' }}" class="flex flex-col items-center justify-center text-gray-700 hover:text-black py-1 px-2 shrink-0">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/>
+            </svg>
+            <span class="text-[10px] font-semibold tracking-tight mt-0.5">Shop</span>
+        </a>
+
+        {{-- Chat Icon Button --}}
+        <button 
+            type="button" 
+            @click="startChatWithSeller({{ $product->seller->id ?? 0 }}, '{{ addslashes($product->seller->shopName ?? $product->seller->name ?? 'Artisan') }}')"
+            class="flex flex-col items-center justify-center text-gray-700 hover:text-black py-1 px-2 shrink-0 cursor-pointer"
+        >
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/>
+            </svg>
+            <span class="text-[10px] font-semibold tracking-tight mt-0.5">Chat</span>
+        </button>
+
+        {{-- Cart Icon Link --}}
+        <a href="/cart" class="flex flex-col items-center justify-center text-gray-700 hover:text-black py-1 px-2 shrink-0 relative">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/>
+            </svg>
+            <span class="text-[10px] font-semibold tracking-tight mt-0.5">Cart</span>
+        </a>
+
+        {{-- Buy Now Pill Button --}}
+        <button 
+            type="button" 
+            @click="openBuyNowSheet('buy_now')" 
+            class="flex-1 py-2 px-3 rounded-full text-white font-extrabold flex flex-col items-center justify-center leading-tight shadow-md cursor-pointer ml-1 transition-transform active:scale-98"
+            style="background: linear-gradient(90deg, #FF3B62 0%, #FF2D55 100%);"
+        >
+            <div class="text-xs font-black flex items-center gap-1">
+                <span>Buy now</span>
+                <span>₱{{ number_format($product->salePrice, 2) }}</span>
+            </div>
+            <div class="text-[10px] font-medium opacity-90">Free shipping</div>
+        </button>
     </div>
 </div>
 
