@@ -2506,42 +2506,49 @@
         </div>
     </div>
 
-    {{-- ═══ Mobile-Only Sticky Bottom Action Bar (Lazada Reference Image 2) ═══ --}}
-    <div class="fixed bottom-0 left-0 right-0 z-40 bg-white border-t border-gray-200 px-3 py-2 flex items-center gap-2 shadow-xl lg:hidden">
+    {{-- ═══ Mobile-Only Sticky Bottom Action Bar (Lazada Reference Image) ═══ --}}
+    <div class="fixed bottom-0 left-0 right-0 z-50 bg-white border-t border-gray-200 px-2.5 py-1.5 flex items-center gap-2 shadow-lg lg:hidden pb-[calc(0.375rem+env(safe-area-inset-bottom,0px))]">
         {{-- Store Icon Link --}}
-        <a href="{{ ($product->sellerId || ($product->seller->id ?? null)) ? '/shops/' . ($product->sellerId ?? $product->seller->id) : '/' }}" class="flex flex-col items-center justify-center text-gray-700 hover:text-black py-1 px-2 shrink-0">
-            <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
-            <span class="text-[10px] font-bold tracking-tight mt-0.5">Store</span>
+        <a href="{{ ($product->sellerId || ($product->seller->id ?? null)) ? '/shops/' . ($product->sellerId ?? $product->seller->id) : '/' }}" class="flex flex-col items-center justify-center text-gray-700 hover:text-black py-0.5 px-1.5 shrink-0">
+            <svg class="w-5 h-5 text-gray-700" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V7M3 7l2-4h14l2 4M3 7h18M10 11h4v4h-4z"/>
+            </svg>
+            <span class="text-[10px] font-medium text-gray-600 tracking-tight mt-0.5">Store</span>
         </a>
 
-        {{-- Chat Icon Button --}}
+        {{-- Chat Icon Button with Online Green Dot --}}
         <button 
             type="button" 
             @click="chatWithSeller('{{ $product->sellerId ?? ($product->seller->id ?? 0) }}', '{{ addslashes($product->seller->shopName ?? $product->seller->name ?? 'Artisan') }}')"
-            class="flex flex-col items-center justify-center text-gray-700 hover:text-black py-1 px-2 shrink-0 cursor-pointer"
+            class="flex flex-col items-center justify-center text-gray-700 hover:text-black py-0.5 px-1.5 shrink-0 cursor-pointer"
         >
-            <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/></svg>
-            <span class="text-[10px] font-bold tracking-tight mt-0.5">Chat</span>
+            <div class="relative flex items-center justify-center">
+                <svg class="w-5 h-5 text-gray-700" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/>
+                </svg>
+                <span class="absolute -bottom-0.5 -right-0.5 w-2 h-2 rounded-full bg-[#00C853] ring-1.5 ring-white"></span>
+            </div>
+            <span class="text-[10px] font-medium text-gray-600 tracking-tight mt-0.5">Chat</span>
         </button>
 
         {{-- Dual Lazada CTA Buttons: Buy Now (Orange) & Add to Cart (Magenta) --}}
-        <div class="flex-1 flex items-stretch gap-2 ml-1">
-            {{-- Orange Button: Buy Now ₱0 Shipping Fee --}}
+        <div class="flex-1 flex items-stretch gap-1.5 ml-0.5">
+            {{-- Orange Button: Buy Now / ₱0 Shipping Fee --}}
             <button 
                 type="button" 
                 @click="openBuyNowSheet('buy_now')" 
-                class="flex-1 py-2 px-2 rounded-lg text-white font-extrabold flex flex-col items-center justify-center leading-tight shadow-md cursor-pointer transition-transform active:scale-98"
+                class="flex-1 h-10 rounded-[3px] text-white font-bold flex flex-col items-center justify-center leading-tight cursor-pointer transition-transform active:scale-98"
                 style="background: #FFA000;"
             >
-                <div class="text-xs font-black">Buy Now</div>
-                <div class="text-[9px] font-bold opacity-95">₱0 Shipping Fee</div>
+                <span class="text-xs font-black tracking-tight">Buy Now</span>
+                <span class="text-[10px] font-medium opacity-95 tracking-tight">₱0 Shipping Fee</span>
             </button>
 
             {{-- Magenta Button: Add to Cart --}}
             <button 
                 type="button" 
                 @click="openBuyNowSheet('add_to_cart')" 
-                class="flex-1 py-2 px-2 rounded-lg text-white font-extrabold flex items-center justify-center text-xs shadow-md cursor-pointer transition-transform active:scale-98"
+                class="flex-1 h-10 rounded-[3px] text-white font-black flex items-center justify-center text-xs cursor-pointer transition-transform active:scale-98"
                 style="background: #FF0055;"
             >
                 <span>Add to Cart</span>

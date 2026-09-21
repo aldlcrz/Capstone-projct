@@ -46,7 +46,7 @@
 <body class="antialiased text-gray-900 max-w-full relative">
     <div class="min-h-screen flex flex-col w-full max-w-full">
         <!-- Navigation Header -->
-        <header class="sticky top-0 z-50 bg-white/95 backdrop-blur-md border-b border-gray-100 w-full shadow-xs">
+        <header class="sticky top-0 z-50 bg-white/95 backdrop-blur-md border-b border-gray-100 w-full shadow-xs {{ request()->is('products*') ? 'hidden lg:block' : '' }}">
             <div class="flex items-center justify-between px-2.5 sm:px-4 lg:px-12 py-2.5 sm:py-3.5 w-full max-w-7xl mx-auto gap-2 sm:gap-4">
                 <!-- Left: Logo & Seller Hub -->
                 <div class="flex items-center gap-2 sm:gap-6 shrink-0">
@@ -423,12 +423,12 @@
         @endif
 
         <!-- Page Content -->
-        <main class="flex-1 w-full max-w-360 mx-auto px-4 pt-2 sm:pt-4 lg:pt-6 lg:px-12 {{ request()->is('checkout*') ? 'pb-0 lg:pb-6' : 'pb-28 lg:pb-8' }}">
+        <main class="flex-1 w-full max-w-360 mx-auto {{ request()->is('products*') ? 'px-0 sm:px-4 pt-0 sm:pt-4 pb-20 lg:pb-8' : (request()->is('checkout*') ? 'px-4 pt-2 sm:pt-4 lg:pt-6 lg:px-12 pb-0 lg:pb-6' : 'px-4 pt-2 sm:pt-4 lg:pt-6 lg:px-12 pb-28 lg:pb-8') }}">
             @yield('content')
         </main>
 
         {{-- Mobile Bottom Nav --}}
-        @if(!request()->is('checkout*'))
+        @if(!request()->is('checkout*', 'products*'))
         <nav class="lg:hidden fixed bottom-0 left-0 right-0 z-50 flex items-center justify-around bg-white border-t border-gray-100 shadow-sm h-16">
             <a href="/" class="flex flex-col items-center gap-1 flex-1 {{ request()->is('/') ? 'text-black' : 'text-gray-400' }}">
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path></svg>
