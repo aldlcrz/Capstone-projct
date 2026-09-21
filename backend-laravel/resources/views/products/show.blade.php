@@ -447,8 +447,38 @@
     </div>
     @endif
 
-    <!-- Breadcrumb Navigation -->
-    <nav class="flex items-center gap-2 text-xs font-semibold text-gray-500 mb-5">
+    <!-- Mobile App Bar (Shopee / Lazada style) -->
+    <div class="lg:hidden sticky top-0 z-30 bg-white border-b border-gray-100 px-3 py-2 flex items-center gap-2">
+        <button type="button" onclick="window.history.length > 1 ? window.history.back() : window.location.href = '/'" class="p-1.5 text-gray-700 hover:text-black cursor-pointer">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/></svg>
+        </button>
+        <div class="flex-1 relative">
+            <form action="/" method="GET" class="m-0">
+                <input type="text" name="search" placeholder="Search Barongs, Sellers..." class="w-full bg-gray-100 hover:bg-gray-200/70 text-gray-800 placeholder-gray-400 text-xs rounded-full pl-8 pr-3 py-1.5 outline-none transition-all">
+                <svg class="w-3.5 h-3.5 text-gray-400 absolute left-2.5 top-1/2 -translate-y-1/2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+            </form>
+        </div>
+        <button type="button" @click="navigator.share ? navigator.share({title: '{{ addslashes($product->name) }}', url: window.location.href}) : (navigator.clipboard.writeText(window.location.href), Alpine.store('toast') && Alpine.store('toast').trigger('Link copied to clipboard!'))" class="p-1.5 text-gray-700 hover:text-black cursor-pointer">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"/></svg>
+        </button>
+        <a href="/cart" class="p-1.5 text-gray-700 hover:text-black relative">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/></svg>
+            @if(($cartCount ?? 0) > 0)
+                <span class="absolute -top-0.5 -right-0.5 bg-red-600 text-white text-[9px] font-black w-4 h-4 rounded-full flex items-center justify-center">{{ $cartCount }}</span>
+            @endif
+        </a>
+    </div>
+
+    <!-- Mobile Tab Bar (Overview | Reviews | Details | Recommendations) -->
+    <div class="lg:hidden sticky top-[48px] z-20 bg-white/95 backdrop-blur-md border-b border-gray-100 flex items-center justify-around text-xs font-semibold text-gray-600 shadow-2xs">
+        <a href="#overview" class="py-2.5 px-3 border-b-2 border-black text-black font-bold">Overview</a>
+        <a href="#reviews" class="py-2.5 px-3 border-b-2 border-transparent hover:text-black">Reviews</a>
+        <a href="#details" class="py-2.5 px-3 border-b-2 border-transparent hover:text-black">Details</a>
+        <a href="#recommendations" class="py-2.5 px-3 border-b-2 border-transparent hover:text-black">Recommendations</a>
+    </div>
+
+    <!-- Breadcrumb Navigation (Desktop Only) -->
+    <nav class="hidden lg:flex items-center gap-2 text-xs font-semibold text-gray-500 mb-5">
         <a href="/" class="hover:text-black transition-colors">Home</a>
         <span>&gt;</span>
         <a href="/?category={{ urlencode($product->category->name ?? 'Barong Tagalog') }}" class="hover:text-black transition-colors">{{ $product->category->name ?? 'Barong Tagalog' }}</a>
@@ -457,14 +487,14 @@
     </nav>
 
     <!-- Product Detail Main Container Card -->
-    <div class="bg-white rounded-3xl border border-gray-100 shadow-sm overflow-hidden p-6 sm:p-8 lg:p-10">
-        <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-start">
+    <div id="overview" class="bg-white rounded-none lg:rounded-3xl border-0 lg:border border-gray-100 shadow-none lg:shadow-sm overflow-hidden p-0 sm:p-4 lg:p-10">
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-0 lg:gap-12 items-start">
             
             <!-- Left Side: Product Images Gallery (Vertical Thumbnails + Main Image) -->
             <div class="lg:col-span-5 flex flex-col-reverse sm:flex-row gap-3 sm:gap-4 items-start">
                 
-                <!-- Vertical Gallery Thumbnails (Left side) -->
-                <div class="flex sm:flex-col gap-3 overflow-x-auto sm:overflow-y-auto max-h-115 no-scrollbar shrink-0 w-full sm:w-20">
+                <!-- Vertical Gallery Thumbnails (Desktop/Tablet Only) -->
+                <div class="hidden sm:flex sm:flex-col gap-3 overflow-x-auto sm:overflow-y-auto max-h-115 no-scrollbar shrink-0 w-full sm:w-20">
                     <template x-for="(img, index) in galleryImages" :key="index">
                         <button 
                             @click="selectImage(index)"
@@ -478,7 +508,7 @@
 
                 <!-- Main Image Display Box with Direct Click-to-Zoom Inspection -->
                 <div 
-                    class="flex-1 min-w-0 w-full relative aspect-4/5 bg-gray-50 rounded-2xl overflow-hidden border border-gray-100 shadow-xs group select-none cursor-zoom-in"
+                    class="flex-1 min-w-0 w-full relative aspect-4/5 bg-gray-50 rounded-none sm:rounded-2xl overflow-hidden border-0 sm:border border-gray-100 shadow-none sm:shadow-xs group select-none cursor-zoom-in"
                     @click="openZoomModal(activeImage)"
                     title="Click to inspect and zoom"
                 >
@@ -498,7 +528,7 @@
                         <div class="hidden lg:flex" style="position:absolute;top:8px;left:8px;display:flex;flex-direction:column;gap:5px;z-index:10;pointer-events:none;">
                             <div style="display:inline-flex;align-items:center;gap:5px;padding:5px 12px 5px 8px;background:linear-gradient(135deg,#0F0C08 0%,#1C1609 100%);border:1px solid #A87B10;border-radius:20px;box-shadow:0 0 8px rgba(180,130,15,0.45),inset 0 1px 0 rgba(230,185,60,0.12);white-space:nowrap;">
                                 <img src="/images/logo-icon.png" alt="LumBarong" style="width:16px;height:16px;border-radius:50%;flex-shrink:0;object-fit:cover;">
-                                <span style="color:#DFC97A;font-family:ui-sans-serif,system-ui,sans-serif;font-size:8.5px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;">Lumbarong Seller Sales</span>
+                                <span style="color:#DFC97A;font-family:ui-sans-serif,system-ui,sans-serif;font-size:8.5px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;">Lumban Specials</span>
                             </div>
                             <div style="display:inline-flex;align-items:baseline;padding:5px 12px;background:linear-gradient(90deg,#7A5505 0%,#C8890A 25%,#E8AD12 50%,#C8890A 75%,#7A5505 100%);border:1px solid #5C3E04;border-radius:20px;box-shadow:0 2px 10px rgba(200,137,10,0.5),inset 0 1px 0 rgba(255,220,80,0.25);white-space:nowrap;width:fit-content;">
                                 <span style="color:#FFF8E0;font-family:ui-sans-serif,system-ui,sans-serif;font-size:16px;font-weight:900;line-height:1;letter-spacing:-0.02em;">-{{ number_format($product->discount_percentage, 0) }}%</span>
@@ -506,16 +536,30 @@
                             </div>
                         </div>
 
-                        {{-- Mobile Only: Yellow Flash Sale Tab (Bottom-Left of Image) --}}
-                        <div class="lg:hidden absolute bottom-0 left-0 z-10 bg-[#FFE500] text-black font-black text-xs px-3 py-1.5 rounded-tr-xl flex items-center gap-1 shadow-xs pointer-events-none">
-                            <svg class="w-3.5 h-3.5 fill-black" viewBox="0 0 24 24"><path d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
-                            <span class="tracking-tight uppercase text-[11px]">Flash Sale</span>
+                        {{-- Mobile Only: Yellow Lumban Specials + Teal Free Shipping Tab (Bottom-Left) --}}
+                        <div class="lg:hidden absolute bottom-0 left-0 z-10 flex items-stretch shadow-xs pointer-events-none rounded-tr-xl overflow-hidden leading-none">
+                            <div class="bg-[#FFE500] text-black font-black text-[11px] px-2.5 py-2 flex items-center gap-1">
+                                <span>⚡ Lumban Specials</span>
+                            </div>
+                            <div class="bg-[#00B4D8] text-white font-extrabold text-[10px] px-2 py-2 flex items-center">
+                                <span>XTRA Free Shipping*</span>
+                            </div>
+                        </div>
+                    @else
+                        {{-- Mobile Only: Non-Sale Bonus + Free Shipping Tab (Bottom-Left) --}}
+                        <div class="lg:hidden absolute bottom-0 left-0 z-10 flex items-stretch shadow-xs pointer-events-none rounded-tr-xl overflow-hidden leading-none">
+                            <div class="bg-[#FFE500] text-black font-black text-[10px] px-2.5 py-1.5 flex items-center">
+                                <span>Save with Bonus</span>
+                            </div>
+                            <div class="bg-[#00B4D8] text-white font-extrabold text-[10px] px-2 py-1.5 flex items-center">
+                                <span>XTRA Free Shipping*</span>
+                            </div>
                         </div>
                     @endif
 
                     {{-- Mobile Only: Size Counter Pill (Bottom-Right of Image) --}}
                     <div class="lg:hidden absolute bottom-2 right-2 z-10 px-2.5 py-1 rounded-full bg-black/60 text-white text-[11px] font-bold pointer-events-none" x-show="galleryImages && galleryImages.length > 0">
-                        <span x-text="(activeImage + 1) + '/' + galleryImages.length + ' Size'"></span>
+                        <span x-text="(activeImage + 1) + '/' + galleryImages.length"></span>
                     </div>
 
                     <!-- Desktop Zoom Helper Hint Badge (Bottom Right) -->
@@ -533,9 +577,9 @@
                 </div>
             </div>
 
-            {{-- ═══ Mobile-Only: Two-Tone Split Lumbarong Seller Sales Strip (Shopee Reference Image 1) ═══ --}}
+            {{-- ═══ Mobile-Only: Two-Tone Split Lumban Specials Strip (Realtime Countdown) ═══ --}}
             @if($product->is_on_sale && $product->discount_percentage > 0)
-            <div class="lg:hidden -mt-1 rounded-b-2xl overflow-hidden shadow-sm border border-gray-100 border-t-0 flex items-stretch">
+            <div class="lg:hidden overflow-hidden shadow-xs border-b border-gray-100 flex items-stretch">
                 {{-- Left Side: Orange Sale Price Block --}}
                 <div class="flex-1 p-3 flex flex-col justify-center text-white" style="background: #FE4300;">
                     <div class="flex items-center gap-1.5 mb-0.5">
@@ -548,16 +592,16 @@
                     </div>
                 </div>
 
-                {{-- Right Side: Yellow/Amber Lumbarong Seller Sales Block --}}
+                {{-- Right Side: Yellow/Amber Lumban Specials Block with Realtime Countdown --}}
                 <div class="px-3.5 py-3 flex flex-col justify-center items-end text-right shrink-0" style="background: #FFAE00; color: #1E1915;">
                     <div class="flex items-center gap-1 text-[11px] font-black uppercase tracking-wide">
                         <img src="/images/logo-icon.png" alt="LumBarong" class="w-3.5 h-3.5 rounded-full object-cover">
-                        <span>Lumbarong Seller Sales</span>
+                        <span>Lumban Specials</span>
                     </div>
                     <div class="flex items-center gap-1 mt-1 text-xs font-black">
                         <span class="text-[11px] font-bold opacity-90">Ends in</span>
                         <template x-if="countdownActive">
-                            <span class="font-mono tracking-tight" x-text="countdownHours + ':' + countdownMinutes + ':' + countdownSeconds">12:35:13</span>
+                            <span class="font-mono tracking-tight font-black" x-text="countdownHours + ':' + countdownMinutes + ':' + countdownSeconds">12:35:13</span>
                         </template>
                         <template x-if="!countdownActive">
                             <span class="font-bold">Limited Offer</span>
@@ -567,8 +611,126 @@
             </div>
             @endif
 
-            <!-- Right Side: Details & Selectors -->
-            <div class="lg:col-span-7 flex flex-col justify-between space-y-6">
+            {{-- ═══ Mobile-Only: Product Info & Shopee-Style Service Rows ═══ --}}
+            <div class="lg:hidden bg-white">
+                <!-- Pricing Row (When not on sale, or standard display) -->
+                @if(!($product->is_on_sale && $product->discount_percentage > 0))
+                <div class="p-4 pb-2">
+                    <div class="flex items-baseline gap-2">
+                        <span class="text-xs font-bold text-[#D0011B]">From</span>
+                        <span class="text-2xl font-black text-[#D0011B]">₱{{ number_format($product->salePrice, 2) }}</span>
+                    </div>
+                </div>
+                @endif
+
+                <!-- Installment & PayLater Row -->
+                <div class="px-4 py-2 flex items-center justify-between text-xs text-gray-700 border-b border-gray-50">
+                    <div class="flex items-center gap-1.5 font-medium">
+                        <svg class="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"/></svg>
+                        <span>₱{{ number_format($product->salePrice / 6, 2) }} x6 with PayLater</span>
+                    </div>
+                    <span class="text-gray-400 text-sm">›</span>
+                </div>
+
+                <!-- Voucher Chips Row -->
+                <div class="px-4 py-2.5 flex items-center justify-between gap-2 border-b border-gray-100">
+                    <div class="flex items-center gap-2 overflow-x-auto no-scrollbar">
+                        <span class="px-2 py-0.5 rounded-sm border border-pink-300 text-pink-600 bg-pink-50/50 text-[10px] font-bold whitespace-nowrap">PayLater up to 20%</span>
+                        <span class="px-2 py-0.5 rounded-sm border border-pink-300 text-pink-600 bg-pink-50/50 text-[10px] font-bold whitespace-nowrap">Save 8% with bonus</span>
+                    </div>
+                    <span class="text-gray-400 text-sm shrink-0">›</span>
+                </div>
+
+                <!-- Product Title + Bookmark Wishlist Button -->
+                <div class="p-4 pb-2">
+                    <div class="flex items-start justify-between gap-3">
+                        <h1 class="font-sans text-base font-bold text-gray-900 leading-snug">
+                            {{ $product->name }}
+                        </h1>
+                        <button 
+                            type="button" 
+                            @click="toggleWishlist()" 
+                            class="p-1 text-gray-400 hover:text-red-500 transition-colors shrink-0 cursor-pointer"
+                            title="Save to Wishlist"
+                        >
+                            <svg class="w-5 h-5" :class="isWishlisted ? 'fill-red-500 text-red-500' : 'fill-none stroke-current'" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z"/>
+                            </svg>
+                        </button>
+                    </div>
+
+                    <!-- Rating & Sold Row -->
+                    <div class="flex items-center gap-2 text-xs mt-2 text-gray-600">
+                        <div class="flex items-center gap-1 font-bold text-amber-600">
+                            <svg class="w-3.5 h-3.5 fill-amber-400 text-amber-400" viewBox="0 0 20 20">
+                                <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/>
+                            </svg>
+                            <span>{{ number_format($product->avgRating ?? 5.0, 1) }}</span>
+                        </div>
+                        <span class="text-gray-300">({{ $product->reviewCount ?? 1 }})</span>
+                        <span class="text-gray-300">|</span>
+                        <span>{{ (int)($soldCount ?? 16) }} sold</span>
+                    </div>
+                </div>
+
+                <!-- Shopee-Style Guarantee & Service Rows -->
+                <div class="divide-y divide-gray-100 border-t border-gray-100">
+                    {{-- Free Next-Day Delivery Row --}}
+                    <div class="p-3.5 flex items-start gap-3 text-xs">
+                        <span class="text-base leading-none mt-0.5">🚚</span>
+                        <div class="flex-1">
+                            <div class="flex items-center gap-1.5 font-bold">
+                                <span class="text-teal-700 bg-teal-50 border border-teal-200/60 px-1.5 py-0.5 rounded text-[10px]">Free next-day</span>
+                                <span class="text-gray-900">Guaranteed by {{ now()->addDays(2)->format('M d') }}</span>
+                            </div>
+                            <div class="text-[11px] text-gray-500 mt-1">
+                                Get at least ₱50 coupon if your order arrives late ⓘ
+                            </div>
+                            <div class="text-[11px] text-gray-400 mt-0.5">
+                                Shipping fee: <span class="line-through">₱{{ number_format($product->shippingFee ?? 20, 2) }}</span>
+                            </div>
+                        </div>
+                        <span class="text-gray-400 text-sm">›</span>
+                    </div>
+
+                    {{-- Buyer Protection & COD Row --}}
+                    <div class="p-3.5 flex items-center justify-between text-xs text-gray-700">
+                        <div class="flex items-center gap-2">
+                            <svg class="w-4 h-4 text-gray-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
+                            <span>Protection for drops/spills/theft</span>
+                            <span class="text-gray-300">|</span>
+                            <span>Cash on delivery</span>
+                        </div>
+                        <span class="text-gray-400 text-sm">›</span>
+                    </div>
+
+                    {{-- Variant Options Shortcut Row --}}
+                    <button type="button" @click="openBuyNowSheet('buy_now')" class="w-full p-3.5 flex items-center justify-between text-xs text-gray-700 hover:bg-gray-50 text-left cursor-pointer transition-colors">
+                        <div class="flex items-center gap-2.5 min-w-0">
+                            <svg class="w-4 h-4 text-gray-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"/></svg>
+                            <div class="flex items-center gap-1.5 overflow-hidden">
+                                <template x-for="(img, i) in galleryImages.slice(0, 4)" :key="i">
+                                    <img :src="imageUrl(img.url)" class="w-6 h-6 rounded object-cover border border-gray-200 shrink-0">
+                                </template>
+                                <span class="ml-1 text-gray-600 font-medium truncate" x-text="(galleryImages ? galleryImages.length : 1) + ' options available'"></span>
+                            </div>
+                        </div>
+                        <span class="text-gray-400 text-sm shrink-0">›</span>
+                    </button>
+
+                    {{-- 1% Cashback Row --}}
+                    <div class="p-3.5 flex items-center justify-between text-xs text-gray-700">
+                        <div class="flex items-center gap-2">
+                            <span class="text-amber-500 font-black">🪙</span>
+                            <span><strong class="text-amber-600 font-black">1%</strong> bonus cashback</span>
+                        </div>
+                        <span class="text-gray-400 text-sm">›</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Side: Details & Selectors (Desktop Only - 100% Untouched) -->
+            <div class="hidden lg:flex lg:col-span-7 flex-col justify-between space-y-6">
                 <div>
                     <!-- Product Title -->
                     <h1 class="font-sans text-2xl sm:text-3xl font-extrabold text-gray-900 mb-1 leading-tight tracking-tight">
@@ -945,7 +1107,7 @@
             $locationParts = array_filter([$product->seller->shopCity ?? null, $product->seller->shopProvince ?? null]);
             $shipsFrom = !empty($locationParts) ? implode(', ', $locationParts) : ($product->seller->shopAddress ?? $product->artisan_region ?? 'Lumban, Laguna');
         @endphp
-        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-8 mt-8 border-t border-gray-100 text-xs">
+        <div class="hidden lg:grid grid-cols-1 sm:grid-cols-3 gap-4 pt-8 mt-8 border-t border-gray-100 text-xs">
             <div class="flex items-center gap-3">
                 <div class="w-9 h-9 rounded-xl bg-gray-50 flex items-center justify-center text-gray-700 shrink-0 border border-gray-100">
                     🚚
@@ -1059,7 +1221,7 @@
     </div>
 
         <!-- Lower Section: Description & Info -->
-        <div class="mt-16 pt-10 border-t border-gray-100 grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-16">
+        <div id="details" class="mt-16 pt-10 border-t border-gray-100 grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-16 scroll-mt-24">
             <div class="lg:col-span-5">
                 <h3 class="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-4">Artisan's Story</h3>
                 <div class="flex items-center gap-4">
@@ -1160,7 +1322,7 @@
             })->values();
         @endphp
 
-        <div class="mt-16 pt-10 border-t border-gray-100"
+        <div id="reviews" class="mt-16 pt-10 border-t border-gray-100 scroll-mt-24"
              x-data="{
                  allReviews: {{ json_encode($reviewsList) }},
                  reviewsModal: false,
@@ -1631,7 +1793,7 @@
 
     {{-- Recommended Products --}}
     @if($recommended->isNotEmpty())
-    <div class="mt-16">
+    <div id="recommendations" class="mt-16 scroll-mt-24">
         <div class="flex items-center justify-between mb-6">
             <div>
                 <div class="flex items-center gap-2 mb-1">
@@ -1657,7 +1819,7 @@
                         <div style="position:absolute;top:6px;left:6px;display:flex;flex-direction:column;gap:4px;z-index:10;pointer-events:none;">
                             <div style="display:inline-flex;align-items:center;gap:4px;padding:3px 8px 3px 5px;background:linear-gradient(135deg,#0F0C08 0%,#1C1609 100%);border:1px solid #A87B10;border-radius:20px;box-shadow:0 0 8px rgba(180,130,15,0.45),inset 0 1px 0 rgba(230,185,60,0.12);white-space:nowrap;">
                                 <img src="/images/logo-icon.png" alt="LumBarong" style="width:13px;height:13px;border-radius:50%;flex-shrink:0;object-fit:cover;">
-                                <span style="color:#DFC97A;font-family:ui-sans-serif,system-ui,sans-serif;font-size:7px;font-weight:700;letter-spacing:0.04em;text-transform:uppercase;">Lumbarong Seller Sales</span>
+                                <span style="color:#DFC97A;font-family:ui-sans-serif,system-ui,sans-serif;font-size:7px;font-weight:700;letter-spacing:0.04em;text-transform:uppercase;">Lumban Specials</span>
                             </div>
                             <div style="display:inline-flex;align-items:baseline;padding:3px 8px;background:linear-gradient(90deg,#7A5505 0%,#C8890A 25%,#E8AD12 50%,#C8890A 75%,#7A5505 100%);border:1px solid #5C3E04;border-radius:20px;box-shadow:0 2px 10px rgba(200,137,10,0.5),inset 0 1px 0 rgba(255,220,80,0.25);white-space:nowrap;width:fit-content;">
                                 <span style="color:#FFF8E0;font-family:ui-sans-serif,system-ui,sans-serif;font-size:13px;font-weight:900;line-height:1;letter-spacing:-0.02em;">-{{ number_format($rec->discount_percentage, 0) }}%</span>
@@ -2040,7 +2202,7 @@
             <div class="bg-[#FA8C16] text-white px-4 py-2 flex items-center justify-between text-xs font-bold shrink-0">
                 <div class="flex items-center gap-1.5">
                     <img src="/images/logo-icon.png" alt="LumBarong" class="w-3.5 h-3.5 rounded-full object-cover border border-white/30">
-                    <span class="tracking-wide">Lumbarong Seller Sales</span>
+                    <span class="tracking-wide">Lumban Specials</span>
                 </div>
                 <div class="flex items-center gap-1">
                     <span class="opacity-90 font-normal">Ends in</span>
@@ -2173,7 +2335,7 @@
     {{-- ═══ Mobile-Only Sticky Bottom Action Bar (Shopee Reference Image 1) ═══ --}}
     <div class="fixed bottom-0 left-0 right-0 z-40 bg-white border-t border-gray-200 px-3 py-2 flex items-center justify-between gap-2 shadow-lg lg:hidden">
         {{-- Shop Icon Link --}}
-        <a href="{{ ($product->seller->id ?? null) ? '/shop/' . $product->seller->id : '/' }}" class="flex flex-col items-center justify-center text-gray-700 hover:text-black py-1 px-2 shrink-0">
+        <a href="{{ ($product->sellerId || ($product->seller->id ?? null)) ? '/shops/' . ($product->sellerId ?? $product->seller->id) : '/' }}" class="flex flex-col items-center justify-center text-gray-700 hover:text-black py-1 px-2 shrink-0">
             <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/>
             </svg>
@@ -2183,7 +2345,7 @@
         {{-- Chat Icon Button --}}
         <button 
             type="button" 
-            @click="startChatWithSeller({{ $product->seller->id ?? 0 }}, '{{ addslashes($product->seller->shopName ?? $product->seller->name ?? 'Artisan') }}')"
+            @click="chatWithSeller('{{ $product->sellerId ?? ($product->seller->id ?? 0) }}', '{{ addslashes($product->seller->shopName ?? $product->seller->name ?? 'Artisan') }}')"
             class="flex flex-col items-center justify-center text-gray-700 hover:text-black py-1 px-2 shrink-0 cursor-pointer"
         >
             <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24">
@@ -2257,5 +2419,14 @@
         }
     });
 </script>
+
+<style>
+/* Hide the floating circular chat widget button on mobile in product view since Chat is integrated in the sticky bottom action bar */
+@media (max-width: 1023px) {
+    .lumbarong-chat-wrapper > button {
+        display: none !important;
+    }
+}
+</style>
 
 @endsection
