@@ -357,7 +357,11 @@ class User extends Authenticatable
     public function scopeWhereVerifiedEmail(\Illuminate\Database\Eloquent\Builder $query)
     {
         if (static::$hasEmailVerifiedColumn === null) {
-            static::$hasEmailVerifiedColumn = \Illuminate\Support\Facades\Schema::hasColumn('users', 'email_verified_at');
+            try {
+                static::$hasEmailVerifiedColumn = \Illuminate\Support\Facades\Schema::hasColumn('users', 'email_verified_at');
+            } catch (\Throwable $e) {
+                static::$hasEmailVerifiedColumn = false;
+            }
         }
 
         if (static::$hasEmailVerifiedColumn) {
