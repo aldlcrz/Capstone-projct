@@ -263,9 +263,28 @@ class ProductManagementController extends Controller
                 $product->size_guide_measurements = null;
             }
 
-            // Lumban Special discount
-            $product->is_on_sale          = $request->boolean('is_on_sale');
-            $product->discount_percentage = $product->is_on_sale ? ($request->discount_percentage ?? 0) : null;
+            // Lumbarong Seller Sales discount & duration
+            $product->is_on_sale = $request->boolean('is_on_sale');
+            if ($product->is_on_sale) {
+                $product->discount_percentage = $request->discount_percentage ?? 0;
+                $duration = $request->input('sale_duration', '1_week');
+                $allowedDurations = ['1_day', '1_week', '1_month', '3_months'];
+                if (!in_array($duration, $allowedDurations)) {
+                    $duration = '1_week';
+                }
+                $product->sale_duration = $duration;
+                $product->sale_ends_at = match ($duration) {
+                    '1_day'    => now()->addDay(),
+                    '1_week'   => now()->addWeek(),
+                    '1_month'  => now()->addMonth(),
+                    '3_months' => now()->addMonths(3),
+                    default    => now()->addWeek(),
+                };
+            } else {
+                $product->discount_percentage = null;
+                $product->sale_duration = null;
+                $product->sale_ends_at = null;
+            }
 
             $savedVariations = [];
             $images = [];
@@ -629,9 +648,28 @@ class ProductManagementController extends Controller
             $product->size_guide_measurements = array_values($cleanMeasurements);
         }
 
-        // Lumban Special discount
-        $product->is_on_sale          = $request->boolean('is_on_sale');
-        $product->discount_percentage = $product->is_on_sale ? ($request->discount_percentage ?? 0) : null;
+        // Lumbarong Seller Sales discount & duration
+        $product->is_on_sale = $request->boolean('is_on_sale');
+        if ($product->is_on_sale) {
+            $product->discount_percentage = $request->discount_percentage ?? 0;
+            $duration = $request->input('sale_duration', '1_week');
+            $allowedDurations = ['1_day', '1_week', '1_month', '3_months'];
+            if (!in_array($duration, $allowedDurations)) {
+                $duration = '1_week';
+            }
+            $product->sale_duration = $duration;
+            $product->sale_ends_at = match ($duration) {
+                '1_day'    => now()->addDay(),
+                '1_week'   => now()->addWeek(),
+                '1_month'  => now()->addMonth(),
+                '3_months' => now()->addMonths(3),
+                default    => now()->addWeek(),
+            };
+        } else {
+            $product->discount_percentage = null;
+            $product->sale_duration = null;
+            $product->sale_ends_at = null;
+        }
 
         $product->status = $isDraftAction ? 'draft' : 'pending'; // Draft vs Pending Admin Approval
 

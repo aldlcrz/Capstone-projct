@@ -11,6 +11,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Schema;
 use Carbon\Carbon;
 use Symfony\Component\HttpFoundation\StreamedResponse;
@@ -727,7 +728,7 @@ class DashboardController extends Controller
 
             return view('seller.orders.index', compact('orders', 'counts', 'status'));
         } catch (\Throwable $e) {
-            \Illuminate\Support\Facades\Log::error('Error in sellerOrders: ' . $e->getMessage());
+            Log::error('Error in sellerOrders: ' . $e->getMessage());
             $orders = collect([]);
             $counts = [
                 'all' => 0, 'pending' => 0, 'to ship' => 0, 'shipped' => 0, 'in transit' => 0,

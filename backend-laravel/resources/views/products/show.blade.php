@@ -65,7 +65,7 @@
         });
     });
 
-    function productDetail(defaultStock, sizeStocks, galleryImages, styleVariants) {
+    function productDetail(defaultStock, sizeStocks, galleryImages, styleVariants, saleEndsAt) {
         var dataEl = document.getElementById('product-page-data');
         var dataset = dataEl ? dataEl.dataset : {};
         var isWishlistedInitial = dataset.isWishlisted === 'true';
@@ -132,6 +132,84 @@
             closeAdminReject() {
                 this.adminRejectModal = false;
                 this.adminRejectReason = '';
+            },
+
+            // ─── Buy Now Bottom Sheet (Mobile Shopee-Style) ───
+            showBuyNowSheet: false,
+            buyNowMode: 'buy_now', // 'buy_now' or 'add_to_cart'
+            openBuyNowSheet(mode) {
+                this.buyNowMode = mode || 'buy_now';
+                this.showBuyNowSheet = true;
+                document.body.style.overflow = 'hidden';
+            },
+            closeBuyNowSheet() {
+                this.showBuyNowSheet = false;
+                document.body.style.overflow = '';
+            },
+            executeBuyNow() {
+                if (!this.selectedSize) {
+                    if (window.Alpine && Alpine.store('toast')) {
+                        Alpine.store('toast').trigger('Please select a size first.', 'info');
+                    }
+                    return;
+                }
+                if (this.buyNowMode === 'add_to_cart') {
+                    // Submit the hidden cart form
+                    var cartForm = document.getElementById('mainCartForm');
+                    if (cartForm) {
+                        this.submitAddToCart({ target: cartForm, preventDefault: function(){} });
+                    }
+                    this.closeBuyNowSheet();
+                    return;
+                }
+                if (!window.isLoggedIn) {
+                    var intent = {
+                        action: 'buy_now',
+                        productId: productId,
+                        quantity: this.quantity,
+                        size: this.effectiveSize(),
+                        variation: this.selectedVariationLabel(),
+                        redirectUrl: '/checkout?mode=buy_now'
+                    };
+                    try { localStorage.setItem('lumbarong_pending_intent', JSON.stringify(intent)); } catch(err) {}
+                    window.location.href = window.loginUrl;
+                    return;
+                }
+                window.location.href = '/checkout?productId=' + productId + '&size=' + encodeURIComponent(this.effectiveSize()) + '&quantity=' + this.quantity + '&variation=' + encodeURIComponent(this.selectedVariationLabel()) + '&direct=1';
+                this.closeBuyNowSheet();
+            },
+
+            // ─── Countdown Timer for Lumbarong Seller Sales ───
+            saleEndsAt: saleEndsAt || '',
+            countdownHours: '00',
+            countdownMinutes: '00',
+            countdownSeconds: '00',
+            countdownActive: false,
+            init() {
+                if (this.saleEndsAt) {
+                    this.initCountdown();
+                }
+            },
+            initCountdown() {
+                const update = () => {
+                    const diff = new Date(this.saleEndsAt).getTime() - Date.now();
+                    if (diff <= 0) {
+                        this.countdownActive = false;
+                        this.countdownHours = '00';
+                        this.countdownMinutes = '00';
+                        this.countdownSeconds = '00';
+                        return;
+                    }
+                    this.countdownActive = true;
+                    const totalHours = Math.floor(diff / (1000 * 60 * 60));
+                    const m = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+                    const s = Math.floor((diff % (1000 * 60)) / 1000);
+                    this.countdownHours = String(totalHours).padStart(2, '0');
+                    this.countdownMinutes = String(m).padStart(2, '0');
+                    this.countdownSeconds = String(s).padStart(2, '0');
+                };
+                update();
+                setInterval(update, 1000);
             },
             
             // ─── Shopee-Style Hover Zoom Inspection State ───
@@ -317,7 +395,7 @@
         };
     }
 </script>
-<div class="max-w-6xl mx-auto py-4 lg:py-6" x-data="productDetail({{ (int)($product->stock ?? 1) }}, @js($product->size_stocks ?? (object)[]), @js($galleryImages), @js($styleVariants))">
+<div class="max-w-6xl mx-auto py-4 lg:py-6" x-data="productDetail({{ (int)($product->stock ?? 1) }}, @js($product->size_stocks ?? (object)[]), @js($galleryImages), @js($styleVariants), '{{ $product->sale_ends_at ? $product->sale_ends_at->toISOString() : '' }}')">
     @if($isAdminUser)
     <!-- Admin Context Header Bar -->
     <div class="mb-5 px-4 py-3 rounded-2xl flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-md"
@@ -419,7 +497,7 @@
                         <div style="position:absolute;top:8px;left:8px;display:flex;flex-direction:column;gap:5px;z-index:10;pointer-events:none;">
                             <div style="display:inline-flex;align-items:center;gap:5px;padding:5px 12px 5px 8px;background:linear-gradient(135deg,#0F0C08 0%,#1C1609 100%);border:1px solid #A87B10;border-radius:20px;box-shadow:0 0 8px rgba(180,130,15,0.45),inset 0 1px 0 rgba(230,185,60,0.12);white-space:nowrap;">
                                 <img src="/images/logo-icon.png" alt="LumBarong" style="width:16px;height:16px;border-radius:50%;flex-shrink:0;object-fit:cover;">
-                                <span style="color:#DFC97A;font-family:ui-sans-serif,system-ui,sans-serif;font-size:8.5px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;">Lumban Special</span>
+                                <span style="color:#DFC97A;font-family:ui-sans-serif,system-ui,sans-serif;font-size:8.5px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;">Lumbarong Seller Sales</span>
                             </div>
                             <div style="display:inline-flex;align-items:baseline;padding:5px 12px;background:linear-gradient(90deg,#7A5505 0%,#C8890A 25%,#E8AD12 50%,#C8890A 75%,#7A5505 100%);border:1px solid #5C3E04;border-radius:20px;box-shadow:0 2px 10px rgba(200,137,10,0.5),inset 0 1px 0 rgba(255,220,80,0.25);white-space:nowrap;width:fit-content;">
                                 <span style="color:#FFF8E0;font-family:ui-sans-serif,system-ui,sans-serif;font-size:16px;font-weight:900;line-height:1;letter-spacing:-0.02em;">-{{ number_format($product->discount_percentage, 0) }}%</span>
@@ -435,8 +513,59 @@
                         </svg>
                         <span class="text-[10px] font-bold tracking-tight">Click to Zoom</span>
                     </div>
+
+                    <!-- Image Counter Badge (Top Right) -->
+                    <div class="absolute top-2.5 right-2.5 z-10 px-2 py-1 rounded-full bg-black/50 text-white text-[10px] font-bold pointer-events-none" x-show="galleryImages && galleryImages.length > 1">
+                        <span x-text="(activeImage + 1) + '/' + galleryImages.length"></span>
+                    </div>
                 </div>
             </div>
+
+            {{-- ═══ Mobile-Only: Lumbarong Seller Sales Price Strip (Shopee-style) ═══ --}}
+            @if($product->is_on_sale && $product->discount_percentage > 0)
+            <div class="lg:hidden -mt-1 rounded-b-2xl overflow-hidden shadow-sm border border-gray-100 border-t-0">
+                {{-- Sale Price Row --}}
+                <div style="background:linear-gradient(135deg,#FFF5E6 0%,#FFECD2 100%);padding:12px 14px;display:flex;align-items:center;justify-content:space-between;gap:8px;">
+                    <div style="display:flex;align-items:center;gap:10px;">
+                        {{-- Flash Sale Lightning Badge --}}
+                        <div style="display:inline-flex;align-items:center;gap:4px;padding:3px 8px;background:linear-gradient(90deg,#E8AD12 0%,#C8890A 100%);border-radius:4px;">
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="#FFF" stroke="none"><path d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+                            <span style="color:#FFF;font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:0.04em;">Flash Sale</span>
+                        </div>
+                        {{-- Discount % --}}
+                        <div style="display:inline-flex;align-items:baseline;gap:2px;">
+                            <span style="color:#E02424;font-size:11px;font-weight:900;padding:2px 6px;background:#FEE2E2;border-radius:4px;">-{{ number_format($product->discount_percentage, 0) }}%</span>
+                        </div>
+                    </div>
+                    <div style="display:flex;align-items:baseline;gap:6px;">
+                        <span style="color:#E02424;font-size:18px;font-weight:900;font-family:ui-sans-serif,system-ui,sans-serif;">₱{{ number_format($product->salePrice) }}</span>
+                        <span style="color:#9CA3AF;font-size:12px;font-weight:600;text-decoration:line-through;">₱{{ number_format($product->price) }}</span>
+                    </div>
+                </div>
+                {{-- Lumbarong Seller Sales Banner with Countdown Timer --}}
+                <div style="background:linear-gradient(90deg,#C0420A 0%,#E8580A 100%);padding:8px 14px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:6px;">
+                    <div style="display:flex;align-items:center;gap:6px;">
+                        <img src="/images/logo-icon.png" alt="LumBarong" style="width:16px;height:16px;border-radius:50%;object-fit:cover;border:1px solid rgba(255,255,255,0.3);">
+                        <span style="color:#FFFFFF;font-size:11px;font-weight:800;letter-spacing:0.04em;text-transform:uppercase;">Lumbarong Seller Sales</span>
+                    </div>
+                    <template x-if="countdownActive">
+                        <div style="display:flex;align-items:center;gap:4px;">
+                            <span style="color:#FFE8CC;font-size:10px;font-weight:700;">ENDS IN</span>
+                            <div class="flex items-center gap-1 text-[11px] font-mono font-bold text-white">
+                                <span class="bg-black/40 px-1.5 py-0.5 rounded" x-text="countdownHours">00</span>
+                                <span>:</span>
+                                <span class="bg-black/40 px-1.5 py-0.5 rounded" x-text="countdownMinutes">00</span>
+                                <span>:</span>
+                                <span class="bg-black/40 px-1.5 py-0.5 rounded" x-text="countdownSeconds">00</span>
+                            </div>
+                        </div>
+                    </template>
+                    <template x-if="!countdownActive">
+                        <span style="color:#FFE8CC;font-size:10px;font-weight:700;">Limited Offer</span>
+                    </template>
+                </div>
+            </div>
+            @endif
 
             <!-- Right Side: Details & Selectors -->
             <div class="lg:col-span-7 flex flex-col justify-between space-y-6">
@@ -696,18 +825,30 @@
                             </div>
                         </div>
                     @else
-                    <form action="/cart/add" method="POST" @submit.prevent="submitAddToCart($event)" class="space-y-3">
+                    {{-- Hidden form for cart submission --}}
+                    <form id="mainCartForm" action="/cart/add" method="POST" @submit.prevent="submitAddToCart($event)" style="display:none;">
                         @csrf
                         <input type="hidden" name="productId" value="{{ $product->id }}">
                         <input type="hidden" name="size" :value="effectiveSize()">
                         <input type="hidden" name="quantity" :value="quantity">
                         <input type="hidden" name="variation" :value="selectedVariationLabel()">
+                    </form>
 
+                    <div class="space-y-3">
                         {{-- WHEN IN STOCK (stock > 0) --}}
                         <div x-show="stock > 0" class="space-y-3">
-                            <div class="flex items-center gap-3">
+                            {{-- Desktop: Keep inline buttons --}}
+                            <div class="hidden lg:flex items-center gap-3">
                                 <button 
-                                    type="submit"
+                                    type="button"
+                                    @click="
+                                        if (!selectedSize) {
+                                            if (window.Alpine && Alpine.store('toast')) Alpine.store('toast').trigger('Please select a size first.', 'info');
+                                            return;
+                                        }
+                                        var cartForm = document.getElementById('mainCartForm');
+                                        if (cartForm) submitAddToCart({ target: cartForm, preventDefault: function(){} });
+                                    "
                                     :disabled="!selectedSize"
                                     class="flex-1 h-12 rounded-xl bg-black hover:bg-gray-900 text-white font-bold text-xs flex items-center justify-center gap-2 transition-colors shadow-md disabled:opacity-50 cursor-pointer"
                                 >
@@ -744,9 +885,32 @@
                                     <span x-text="!selectedSize ? 'Select Size' : 'Buy Now'">Buy Now</span>
                                 </button>
                             </div>
+
+                            {{-- Mobile: Buttons that trigger bottom sheet --}}
+                            <div class="lg:hidden flex items-center gap-3">
+                                <button 
+                                    type="button"
+                                    @click="openBuyNowSheet('add_to_cart')"
+                                    class="flex-1 h-12 rounded-xl bg-black hover:bg-gray-900 text-white font-bold text-xs flex items-center justify-center gap-2 transition-colors shadow-md cursor-pointer"
+                                >
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/>
+                                    </svg>
+                                    <span>Add to Cart</span>
+                                </button>
+
+                                <button 
+                                    type="button" 
+                                    @click="openBuyNowSheet('buy_now')"
+                                    class="flex-1 h-12 rounded-xl bg-[#C89B55] hover:bg-[#B88B45] text-white font-extrabold text-xs tracking-wide shadow-md transition-colors cursor-pointer flex items-center justify-center gap-1.5"
+                                >
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+                                    <span>Buy Now</span>
+                                </button>
+                            </div>
                         </div>
 
-                        {{-- WHEN OUT OF STOCK (stock <= 0) - Wishlist Button appears here like Lazada --}}
+                        {{-- WHEN OUT OF STOCK (stock <= 0) - Wishlist Button --}}
                         <div x-show="stock <= 0" class="space-y-3" x-cloak style="display: none;">
                             <div class="p-3 bg-red-50/80 border border-red-200 rounded-xl flex items-center justify-between text-xs">
                                 <div class="flex items-center gap-2 text-red-700 font-bold">
@@ -768,7 +932,7 @@
                                 <span x-text="isWishlisted ? '❤️ Saved in Your Wishlist' : '♡ Add to Wishlist (Save for later)'"></span>
                             </button>
                         </div>
-                    </form>
+                    </div>
                     @endif
                 </div>
             </div>
@@ -835,6 +999,11 @@
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
             </button>
 
+            <!-- Image Counter (Top Right) -->
+            <div class="absolute top-3 right-12 z-30 px-2.5 py-1 rounded-full bg-black/60 text-white text-[11px] font-bold pointer-events-none" x-show="galleryImages && galleryImages.length > 1">
+                <span x-text="(activeImage + 1) + '/' + galleryImages.length"></span>
+            </div>
+
             <!-- Large Zoom Viewer -->
             <div 
                 class="relative w-full aspect-square sm:aspect-4/5 bg-black overflow-hidden cursor-crosshair min-h-87.5 sm:min-h-115"
@@ -857,14 +1026,23 @@
                     >
                 </template>
 
-                <!-- Subtle Hover Zoom Helper -->
+                <!-- Subtle Hover Zoom Helper (hidden on mobile touch) -->
                 <div 
                     x-show="!isZoomed" 
-                    class="absolute bottom-3 left-3 px-2.5 py-1 rounded-md bg-black/75 text-white text-[11px] font-medium pointer-events-none flex items-center gap-1.5 border border-white/10"
+                    class="absolute bottom-3 left-3 px-2.5 py-1 rounded-md bg-black/75 text-white text-[11px] font-medium pointer-events-none hidden sm:flex items-center gap-1.5 border border-white/10"
                 >
                     <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m0-3h3m-3 0H7"/></svg>
                     <span>Move mouse to zoom</span>
                 </div>
+            </div>
+
+            <!-- Variant Name Label (Bottom of Zoom, like Shopee fullscreen) -->
+            <div 
+                class="px-4 py-3 bg-black/90 text-center border-t border-neutral-800" 
+                style="background-color: rgba(0,0,0,0.9) !important;"
+                x-show="galleryImages && galleryImages[activeImage] && galleryImages[activeImage].variant_name"
+            >
+                <span class="text-white text-sm font-semibold" x-text="galleryImages[activeImage]?.variant_name || ''"></span>
             </div>
 
             <!-- Bottom Thumbnails Strip (Solid Black Footer) -->
@@ -1486,7 +1664,7 @@
                         <div style="position:absolute;top:6px;left:6px;display:flex;flex-direction:column;gap:4px;z-index:10;pointer-events:none;">
                             <div style="display:inline-flex;align-items:center;gap:4px;padding:3px 8px 3px 5px;background:linear-gradient(135deg,#0F0C08 0%,#1C1609 100%);border:1px solid #A87B10;border-radius:20px;box-shadow:0 0 8px rgba(180,130,15,0.45),inset 0 1px 0 rgba(230,185,60,0.12);white-space:nowrap;">
                                 <img src="/images/logo-icon.png" alt="LumBarong" style="width:13px;height:13px;border-radius:50%;flex-shrink:0;object-fit:cover;">
-                                <span style="color:#DFC97A;font-family:ui-sans-serif,system-ui,sans-serif;font-size:7px;font-weight:700;letter-spacing:0.04em;text-transform:uppercase;">Lumban Special</span>
+                                <span style="color:#DFC97A;font-family:ui-sans-serif,system-ui,sans-serif;font-size:7px;font-weight:700;letter-spacing:0.04em;text-transform:uppercase;">Lumbarong Seller Sales</span>
                             </div>
                             <div style="display:inline-flex;align-items:baseline;padding:3px 8px;background:linear-gradient(90deg,#7A5505 0%,#C8890A 25%,#E8AD12 50%,#C8890A 75%,#7A5505 100%);border:1px solid #5C3E04;border-radius:20px;box-shadow:0 2px 10px rgba(200,137,10,0.5),inset 0 1px 0 rgba(255,220,80,0.25);white-space:nowrap;width:fit-content;">
                                 <span style="color:#FFF8E0;font-family:ui-sans-serif,system-ui,sans-serif;font-size:13px;font-weight:900;line-height:1;letter-spacing:-0.02em;">-{{ number_format($rec->discount_percentage, 0) }}%</span>
@@ -1800,6 +1978,156 @@
         </div>
     </div>
     @endif
+
+    {{-- ═══════════════════════════════════════════════════════════════════════════════ --}}
+    {{-- ─── Shopee-Style Slide-Up Buy Now / Add to Cart Bottom Sheet (Mobile & Tablet) ─── --}}
+    {{-- ═══════════════════════════════════════════════════════════════════════════════ --}}
+    <div 
+        x-show="showBuyNowSheet" 
+        x-cloak 
+        style="display: none; z-index: 99990;"
+        class="fixed inset-0 flex flex-col justify-end bg-black/60 backdrop-blur-xs transition-opacity"
+        @keydown.window.escape="closeBuyNowSheet()"
+    >
+        <!-- Backdrop Click to Close -->
+        <div class="fixed inset-0" @click="closeBuyNowSheet()"></div>
+
+        <!-- Slide-Up Panel Content -->
+        <div 
+            class="relative w-full max-w-lg mx-auto bg-white rounded-t-3xl shadow-2xl overflow-hidden flex flex-col max-h-[85vh] z-10 animate-in slide-in-from-bottom duration-300"
+            @click.stop
+        >
+            <!-- Drag Handle Bar -->
+            <div class="w-12 h-1.5 bg-gray-300 rounded-full mx-auto mt-3 shrink-0"></div>
+
+            <!-- Header: Selected Variant Image + Pricing + Stock + Close Button -->
+            <div class="p-4 sm:p-5 flex items-start gap-3.5 border-b border-gray-100 shrink-0 relative">
+                <!-- Thumbnail -->
+                <div class="w-20 h-24 rounded-xl overflow-hidden bg-gray-100 border border-gray-200 shrink-0 relative shadow-2xs">
+                    <img :src="imageUrl(galleryImages[activeImage]?.url)" onerror="this.src='/uploads/products/default.jpg'" class="w-full h-full object-cover">
+                </div>
+
+                <!-- Price & Selection Info -->
+                <div class="flex-1 min-w-0 pr-6">
+                    <div class="flex items-baseline gap-2">
+                        <span class="text-xl font-black text-[#E02424]">₱{{ number_format($product->salePrice) }}</span>
+                        @if($product->is_on_sale && $product->discount_percentage > 0)
+                            <span class="text-xs text-gray-400 line-through font-semibold">₱{{ number_format($product->price) }}</span>
+                        @endif
+                    </div>
+
+                    @if($product->is_on_sale && $product->discount_percentage > 0)
+                        <div class="inline-flex items-center gap-1.5 px-2 py-0.5 mt-1 rounded-full text-[10px] font-black text-white uppercase tracking-wider" style="background: linear-gradient(90deg, #C0420A 0%, #E8580A 100%);">
+                            <svg class="w-2.5 h-2.5 fill-current" viewBox="0 0 24 24"><path d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+                            <span>Lumbarong Seller Sales</span>
+                        </div>
+                    @endif
+
+                    <div class="mt-1 text-xs text-gray-500 font-medium">
+                        Stock: <strong class="text-gray-900" x-text="stock"></strong>
+                    </div>
+
+                    <div class="text-xs text-gray-600 truncate mt-0.5">
+                        Selected: <span class="font-bold text-gray-900" x-text="(selectedSize ? selectedSize + ', ' : '') + selectedVariationLabel()"></span>
+                    </div>
+                </div>
+
+                <!-- Close Button -->
+                <button type="button" @click="closeBuyNowSheet()" class="absolute top-3 right-3 w-8 h-8 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center text-gray-500 hover:text-black transition-colors cursor-pointer">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
+                </button>
+            </div>
+
+            <!-- Scrollable Content: Variants, Sizes, Quantity -->
+            <div class="p-4 sm:p-5 overflow-y-auto space-y-5 flex-1">
+                <!-- Available Variations / Designs -->
+                <template x-if="styleVariants && styleVariants.length > 0">
+                    <div>
+                        <div class="flex items-center justify-between mb-2">
+                            <span class="text-xs font-bold uppercase tracking-wider text-gray-700">Select Variation / Design</span>
+                            <span class="text-[11px] font-semibold text-[#C0420A]" x-text="selectedVariationLabel()"></span>
+                        </div>
+                        <div class="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                            <template x-for="v in styleVariants" :key="v.id">
+                                <button 
+                                    type="button"
+                                    @click="selectStyleVariant(v)"
+                                    class="p-2 rounded-xl border flex items-center gap-2 transition-all text-left cursor-pointer"
+                                    :class="selectedStyle === v.id ? 'border-[#C0420A] bg-orange-50/50 ring-2 ring-[#C0420A]/20' : 'border-gray-200 bg-white hover:border-gray-300'"
+                                >
+                                    <img :src="imageUrl(v.image_path || v.image_url || v.image)" onerror="this.src='/uploads/products/default.jpg'" class="w-8 h-8 rounded-lg object-cover shrink-0 border border-gray-100">
+                                    <span class="text-xs font-bold text-gray-900 truncate" x-text="v.name"></span>
+                                </button>
+                            </template>
+                        </div>
+                    </div>
+                </template>
+
+                <!-- Size Selection -->
+                @php
+                    $availableSizes = is_array($product->sizes) ? $product->sizes : json_decode($product->sizes ?? '[]', true);
+                    $availableSizes = is_array($availableSizes) ? $availableSizes : [];
+                @endphp
+                @if(!empty($availableSizes))
+                <div>
+                    <div class="flex items-center justify-between mb-2">
+                        <span class="text-xs font-bold uppercase tracking-wider text-gray-700">Select Size</span>
+                        @if($product->size_guide_image || !empty($product->size_guide_measurements))
+                            <button type="button" onclick="openSizeGuideModal()" class="text-[11px] font-bold text-[#C0420A] hover:underline flex items-center gap-1 cursor-pointer">
+                                📏 Size Chart
+                            </button>
+                        @endif
+                    </div>
+                    <div class="flex flex-wrap gap-2">
+                        @foreach($availableSizes as $sz)
+                        @php
+                            $szStock = (int)($product->size_stocks[$sz] ?? $product->stock ?? 0);
+                        @endphp
+                        <button 
+                            type="button"
+                            @click="updateStock('{{ $sz }}')"
+                            class="px-4 py-2.5 rounded-xl text-xs font-bold border transition-all cursor-pointer {{ $szStock <= 0 ? 'opacity-40 line-through cursor-not-allowed bg-gray-50 text-gray-400' : '' }}"
+                            :class="selectedSize === '{{ $sz }}' ? 'border-[#1E1915] bg-[#1E1915] text-white shadow-xs' : 'border-gray-200 bg-white text-gray-800 hover:border-gray-400'"
+                            {{ $szStock <= 0 ? 'disabled' : '' }}
+                        >
+                            {{ $sz }}
+                        </button>
+                        @endforeach
+                    </div>
+                </div>
+                @endif
+
+                <!-- Quantity Stepper -->
+                <div class="flex items-center justify-between pt-2 border-t border-gray-100">
+                    <div>
+                        <div class="text-xs font-bold uppercase tracking-wider text-gray-700">Quantity</div>
+                        <div class="text-[11px] text-gray-400" x-text="'Max: ' + stock + ' available'"></div>
+                    </div>
+                    <div class="flex items-center border border-gray-200 rounded-xl overflow-hidden shadow-2xs">
+                        <button type="button" @click="if(quantity > 1) quantity--" class="w-9 h-9 flex items-center justify-center bg-gray-50 hover:bg-gray-100 text-gray-700 font-bold transition-colors cursor-pointer">
+                            -
+                        </button>
+                        <span class="w-10 text-center text-xs font-black text-gray-900" x-text="quantity"></span>
+                        <button type="button" @click="if(quantity < stock) quantity++" class="w-9 h-9 flex items-center justify-center bg-gray-50 hover:bg-gray-100 text-gray-700 font-bold transition-colors cursor-pointer">
+                            +
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Sticky Bottom Confirmation Action -->
+            <div class="p-4 border-t border-gray-100 bg-white shrink-0">
+                <button 
+                    type="button"
+                    @click="executeBuyNow()"
+                    class="w-full h-12 rounded-xl font-extrabold text-xs tracking-wide shadow-md transition-all cursor-pointer flex items-center justify-center gap-2 text-white"
+                    :class="buyNowMode === 'buy_now' ? 'bg-[#C0420A] hover:bg-[#A83707]' : 'bg-[#1E1915] hover:bg-black'"
+                >
+                    <span x-text="buyNowMode === 'buy_now' ? 'Confirm & Buy Now' : 'Confirm & Add to Cart'"></span>
+                </button>
+            </div>
+        </div>
+    </div>
 </div>
 
 <script>

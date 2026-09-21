@@ -706,10 +706,10 @@
 
                     @if($product->is_on_sale && $product->discount_percentage > 0)
                         <div style="position:absolute;top:6px;left:6px;display:flex;flex-direction:column;gap:4px;z-index:10;pointer-events:none;">
-                            {{-- Top badge: LUMBAN SPECIAL --}}
+                            {{-- Top badge: LUMBARONG SELLER SALES --}}
                             <div style="display:inline-flex;align-items:center;gap:4px;padding:3px 8px 3px 5px;background:linear-gradient(135deg,#0F0C08 0%,#1C1609 100%);border:1px solid #A87B10;border-radius:20px;box-shadow:0 0 8px rgba(180,130,15,0.45),inset 0 1px 0 rgba(230,185,60,0.12);white-space:nowrap;">
                                 <img src="/images/logo-icon.png" alt="LumBarong" style="width:13px;height:13px;border-radius:50%;flex-shrink:0;object-fit:cover;">
-                                <span style="color:#DFC97A;font-family:ui-sans-serif,system-ui,sans-serif;font-size:7px;font-weight:700;letter-spacing:0.04em;text-transform:uppercase;">Lumban Special</span>
+                                <span style="color:#DFC97A;font-family:ui-sans-serif,system-ui,sans-serif;font-size:7px;font-weight:700;letter-spacing:0.04em;text-transform:uppercase;">Lumbarong Seller Sales</span>
                             </div>
                             {{-- Bottom badge: -10% OFF (golden gradient) --}}
                             <div style="display:inline-flex;align-items:baseline;padding:3px 8px;background:linear-gradient(90deg,#7A5505 0%,#C8890A 25%,#E8AD12 50%,#C8890A 75%,#7A5505 100%);border:1px solid #5C3E04;border-radius:20px;box-shadow:0 2px 10px rgba(200,137,10,0.5),inset 0 1px 0 rgba(255,220,80,0.25);white-space:nowrap;width:fit-content;">

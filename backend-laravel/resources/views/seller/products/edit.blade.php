@@ -355,28 +355,31 @@
                     </div>
                 </div>
 
-                {{-- Lumban Special Discount Panel --}}
+                {{-- Lumbarong Seller Sales Discount Panel --}}
                 @php
                     $isOnSale = old('is_on_sale', $product->is_on_sale ?? false);
                     $discountPct = old('discount_percentage', $product->discount_percentage ?? '');
+                    $saleDuration = old('sale_duration', $product->sale_duration ?? '1_week');
                 @endphp
-                <div class="p-4 rounded-xl border border-[#C49520]/15 bg-orange-50/20 space-y-3">
+                <div class="p-4 rounded-xl border border-[#C49520]/20 bg-orange-50/20 space-y-3">
                     <input type="hidden" name="is_on_sale" id="isOnSaleInput" value="{{ $isOnSale ? '1' : '0' }}">
+                    <input type="hidden" name="sale_duration" id="saleDurationInput" value="{{ $saleDuration }}">
 
                     <div class="flex items-center justify-between">
                         <div class="flex items-center gap-2">
                             <span class="w-2 h-2 rounded-full bg-[#C49520]"></span>
-                            <span class="text-xs font-black text-[#C49520] uppercase tracking-widest">Lumban Special Sale</span>
+                            <span class="text-xs font-black text-[#C49520] uppercase tracking-widest">Lumbarong Seller Sales</span>
+                            <span class="text-[10px] text-gray-500 font-semibold uppercase">(Optional)</span>
                         </div>
                         <label class="relative inline-flex items-center cursor-pointer shrink-0">
                             <input type="checkbox" id="discountToggle" class="sr-only peer"
                                 {{ $isOnSale ? 'checked' : '' }}
                                 onchange="toggleDiscount(this)">
-                            <div class="w-9 h-5 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-0.5 after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-[#C49520]"></div>
+                            <div class="w-9 h-5 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-0.5 after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-[#1E1915]"></div>
                         </label>
                     </div>
 
-                    <div id="discountFields" class="{{ $isOnSale ? '' : 'hidden' }} space-y-2.5 pt-2 border-t border-[#C49520]/10">
+                    <div id="discountFields" class="{{ $isOnSale ? '' : 'hidden' }} space-y-3 pt-2.5 border-t border-[#C49520]/15">
                         <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 items-end">
                             <div>
                                 <label class="text-[9px] font-bold uppercase tracking-widest text-gray-400 mb-1 block">Discount (%)</label>
@@ -388,11 +391,23 @@
                             </div>
                             <div>
                                 <label class="text-[9px] font-bold uppercase tracking-widest text-gray-400 mb-1 block">Price Preview</label>
-                                <div id="discountPreview" class="hidden w-full px-3.5 py-2.5 bg-white rounded-xl border border-[#C49520]/20 items-center justify-center gap-2 h-10.5">
+                                <div id="discountPreview" class="hidden w-full px-3.5 py-2.5 bg-white rounded-xl border border-[#C49520]/20 items-center justify-center gap-2 h-10.5 shadow-2xs">
                                     <span id="previewOriginal" class="text-xs text-gray-400 line-through font-bold"></span>
                                     <span id="previewSale" class="text-sm font-black text-[#C49520]"></span>
                                 </div>
                             </div>
+                        </div>
+
+                        {{-- Sale Duration Pill Selector --}}
+                        <div class="pt-2 border-t border-[#C49520]/15">
+                            <label class="text-[9px] font-bold uppercase tracking-widest text-gray-400 mb-1.5 block">Sale Duration</label>
+                            <div class="flex flex-wrap items-center gap-2" id="durationPillsContainer">
+                                <button type="button" onclick="selectSaleDuration('1_day')" data-duration="1_day" class="sale-duration-pill px-3.5 py-1.5 rounded-full text-xs font-bold border transition-all cursor-pointer">1 day</button>
+                                <button type="button" onclick="selectSaleDuration('1_week')" data-duration="1_week" class="sale-duration-pill px-3.5 py-1.5 rounded-full text-xs font-bold border transition-all cursor-pointer">1 week</button>
+                                <button type="button" onclick="selectSaleDuration('1_month')" data-duration="1_month" class="sale-duration-pill px-3.5 py-1.5 rounded-full text-xs font-bold border transition-all cursor-pointer">1 month</button>
+                                <button type="button" onclick="selectSaleDuration('3_months')" data-duration="3_months" class="sale-duration-pill px-3.5 py-1.5 rounded-full text-xs font-bold border transition-all cursor-pointer">3 months</button>
+                            </div>
+                            <p id="saleDurationNotice" class="text-[11px] text-[#7A5505] font-semibold mt-1.5 flex items-center gap-1"></p>
                         </div>
                     </div>
                 </div>
@@ -1863,6 +1878,8 @@ function toggleDiscount(checkbox) {
         fields.classList.remove('hidden');
         if (hiddenInput) hiddenInput.value = '1';
         updateDiscountPreview();
+        const duration = document.getElementById('saleDurationInput')?.value || '1_week';
+        selectSaleDuration(duration);
     } else {
         fields.classList.add('hidden');
         if (hiddenInput) hiddenInput.value = '0';
@@ -1870,6 +1887,32 @@ function toggleDiscount(checkbox) {
         if (preview) preview.classList.add('hidden');
         const pct = document.getElementById('discountPercentage');
         if (pct) pct.value = '';
+    }
+}
+
+function selectSaleDuration(val) {
+    const hiddenInput = document.getElementById('saleDurationInput');
+    if (hiddenInput) hiddenInput.value = val;
+    
+    document.querySelectorAll('.sale-duration-pill').forEach(pill => {
+        if (pill.getAttribute('data-duration') === val) {
+            pill.className = 'sale-duration-pill px-3.5 py-1.5 rounded-full text-xs font-bold border bg-[#1E1915] text-white border-[#1E1915] shadow-xs cursor-pointer transition-all';
+        } else {
+            pill.className = 'sale-duration-pill px-3.5 py-1.5 rounded-full text-xs font-bold border bg-white text-[#78716C] border-[#E2D9C8] hover:border-[#C49520] cursor-pointer transition-all';
+        }
+    });
+
+    const notice = document.getElementById('saleDurationNotice');
+    if (notice) {
+        const now = new Date();
+        let target = new Date();
+        if (val === '1_day') target.setDate(now.getDate() + 1);
+        else if (val === '1_week') target.setDate(now.getDate() + 7);
+        else if (val === '1_month') target.setMonth(now.getMonth() + 1);
+        else if (val === '3_months') target.setMonth(now.getMonth() + 3);
+
+        const options = { month: 'short', day: 'numeric', year: 'numeric' };
+        notice.innerHTML = `<svg class="w-3.5 h-3.5 inline text-[#C49520]" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clip-rule="evenodd"/></svg> Sale active until: <strong>${target.toLocaleDateString('en-US', options)}</strong>`;
     }
 }
 
@@ -2228,6 +2271,8 @@ document.addEventListener('DOMContentLoaded', function() {
         priceInput.addEventListener('input', updateDiscountPreview);
     }
     updateDiscountPreview();
+    const currentDuration = document.getElementById('saleDurationInput')?.value || '1_week';
+    selectSaleDuration(currentDuration);
 
     document.querySelectorAll('.target-group-radio').forEach(radio => {
         radio.addEventListener('change', function() {

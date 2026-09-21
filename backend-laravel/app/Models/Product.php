@@ -42,8 +42,8 @@ class Product extends Model
         'target_group', 'size_stocks',
         // Product Variants / Variations
         'has_variants', 'variations',
-        // Lumban Special discount
-        'is_on_sale', 'discount_percentage',
+        // Lumban Special discount / Lumbarong Seller Sales
+        'is_on_sale', 'discount_percentage', 'sale_duration', 'sale_ends_at',
         // Per-product payment overrides
         'is_gcash_available', 'gcash_number', 'gcash_qr_code',
         'is_maya_available',  'maya_number',  'maya_qr_code',
@@ -112,6 +112,7 @@ class Product extends Model
             'variations'              => 'array',
             'has_variants'            => 'boolean',
             'is_on_sale'              => 'boolean',
+            'sale_ends_at'            => 'datetime',
             'is_gcash_available'      => 'boolean',
             'is_maya_available'       => 'boolean',
         ];
@@ -188,11 +189,25 @@ class Product extends Model
     }
 
     /**
+     * Check if product sale is currently active.
+     */
+    public function isSaleActive(): bool
+    {
+        if (!$this->is_on_sale || (float)($this->discount_percentage ?? 0) <= 0) {
+            return false;
+        }
+        if ($this->sale_ends_at && $this->sale_ends_at->isPast()) {
+            return false;
+        }
+        return true;
+    }
+
+    /**
      * Get the final sale price after discount.
      */
     public function getSalePriceAttribute(): float
     {
-        if ($this->is_on_sale && $this->discount_percentage > 0) {
+        if ($this->isSaleActive()) {
             return round($this->price * (1 - $this->discount_percentage / 100), 2);
         }
         return (float) $this->price;

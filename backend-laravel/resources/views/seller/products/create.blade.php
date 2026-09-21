@@ -777,15 +777,16 @@
                     </div>
                 </div>
 
-                {{-- Lumban Special Discount Panel --}}
+                {{-- Lumbarong Seller Sales Discount Panel --}}
                 <div style="padding:14px 16px;border-radius:18px;background-color:#FDF8EE;border:1px solid #EEDBBA;">
                     <input type="hidden" name="is_on_sale" id="isOnSaleInput" value="0">
+                    <input type="hidden" name="sale_duration" id="saleDurationInput" value="1_week">
 
                     <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;">
                         <div style="display:flex;align-items:center;gap:8px;min-width:0;flex:1;">
                             <span style="width:8px;height:8px;border-radius:50%;background-color:#C49520;flex-shrink:0;display:inline-block;"></span>
                             <div style="display:flex;align-items:baseline;gap:4px 6px;flex-wrap:wrap;min-width:0;">
-                                <span style="font-size:12px;font-weight:700;color:#7A5505;text-transform:uppercase;letter-spacing:0.04em;line-height:1.2;">Special Price / Sale</span>
+                                <span style="font-size:12px;font-weight:700;color:#7A5505;text-transform:uppercase;letter-spacing:0.04em;line-height:1.2;">Lumbarong Seller Sales</span>
                                 <span style="font-size:10px;color:#78716C;font-weight:600;text-transform:uppercase;line-height:1.2;">(Optional)</span>
                             </div>
                         </div>
@@ -795,7 +796,7 @@
                         </label>
                     </div>
 
-                    <div id="discountFields" class="hidden space-y-2.5 pt-3.5 mt-3.5 border-t border-[#EEDBBA]">
+                    <div id="discountFields" class="hidden space-y-3 pt-3.5 mt-3.5 border-t border-[#EEDBBA]">
                         <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 items-end">
                             <div>
                                 <label style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.06em;color:#78716C;display:block;margin-bottom:4px;">Discount (%)</label>
@@ -816,6 +817,18 @@
                                     <span id="previewSale" class="text-sm font-black text-[#7A5505]"></span>
                                 </div>
                             </div>
+                        </div>
+
+                        {{-- Sale Duration Pill Selector --}}
+                        <div class="pt-2 border-t border-[#EEDBBA]/60">
+                            <label style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.06em;color:#78716C;display:block;margin-bottom:6px;">Sale Duration</label>
+                            <div class="flex flex-wrap items-center gap-2" id="durationPillsContainer">
+                                <button type="button" onclick="selectSaleDuration('1_day')" data-duration="1_day" class="sale-duration-pill px-3.5 py-1.5 rounded-full text-xs font-bold border transition-all cursor-pointer">1 day</button>
+                                <button type="button" onclick="selectSaleDuration('1_week')" data-duration="1_week" class="sale-duration-pill px-3.5 py-1.5 rounded-full text-xs font-bold border transition-all cursor-pointer">1 week</button>
+                                <button type="button" onclick="selectSaleDuration('1_month')" data-duration="1_month" class="sale-duration-pill px-3.5 py-1.5 rounded-full text-xs font-bold border transition-all cursor-pointer">1 month</button>
+                                <button type="button" onclick="selectSaleDuration('3_months')" data-duration="3_months" class="sale-duration-pill px-3.5 py-1.5 rounded-full text-xs font-bold border transition-all cursor-pointer">3 months</button>
+                            </div>
+                            <p id="saleDurationNotice" class="text-[11px] text-[#7A5505] font-semibold mt-1.5 flex items-center gap-1"></p>
                         </div>
                     </div>
                 </div>
@@ -2911,12 +2924,44 @@ function toggleDiscount(checkbox) {
         fields.classList.remove('hidden');
         hiddenInput.value = '1';
         updateDiscountPreview();
+        const duration = document.getElementById('saleDurationInput')?.value || '1_week';
+        selectSaleDuration(duration);
     } else {
         fields.classList.add('hidden');
         hiddenInput.value = '0';
         document.getElementById('discountPreview').classList.add('hidden');
         const pct = document.getElementById('discountPercentage');
         if (pct) pct.value = '';
+    }
+}
+
+function selectSaleDuration(val) {
+    const hiddenInput = document.getElementById('saleDurationInput');
+    if (hiddenInput) hiddenInput.value = val;
+    
+    document.querySelectorAll('.sale-duration-pill').forEach(pill => {
+        if (pill.getAttribute('data-duration') === val) {
+            pill.style.backgroundColor = '#1E1915';
+            pill.style.color = '#FFFFFF';
+            pill.style.borderColor = '#1E1915';
+        } else {
+            pill.style.backgroundColor = '#FFFFFF';
+            pill.style.color = '#78716C';
+            pill.style.borderColor = '#E2D9C8';
+        }
+    });
+
+    const notice = document.getElementById('saleDurationNotice');
+    if (notice) {
+        const now = new Date();
+        let target = new Date();
+        if (val === '1_day') target.setDate(now.getDate() + 1);
+        else if (val === '1_week') target.setDate(now.getDate() + 7);
+        else if (val === '1_month') target.setMonth(now.getMonth() + 1);
+        else if (val === '3_months') target.setMonth(now.getMonth() + 3);
+
+        const options = { month: 'short', day: 'numeric', year: 'numeric' };
+        notice.innerHTML = `<svg class="w-3.5 h-3.5 inline text-[#C49520]" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clip-rule="evenodd"/></svg> Sale active until: <strong>${target.toLocaleDateString('en-US', options)}</strong>`;
     }
 }
 

@@ -229,7 +229,7 @@
                                                         ? (\App\Support\VariationFormatter::label(
                                                             $item['variation'],
                                                             \App\Models\Product::find($item['id'] ?? null)?->image
-                                                        ) ?? $item['variation'])
+                                                        ) ?? $item['variation']) : '';
                                                     $displayTitle = (!empty($variationLabel) && strcasecmp($variationLabel, 'Original') !== 0) ? $variationLabel : $item['name'];
                                                 @endphp
                                                 <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-1 sm:gap-4">
