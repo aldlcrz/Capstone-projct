@@ -230,13 +230,13 @@
                                                             $item['variation'],
                                                             \App\Models\Product::find($item['id'] ?? null)?->image
                                                         ) ?? $item['variation'])
-                                                        : null;
+                                                    $displayTitle = (!empty($variationLabel) && strcasecmp($variationLabel, 'Original') !== 0) ? $variationLabel : $item['name'];
                                                 @endphp
                                                 <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-1 sm:gap-4">
                                                     <div class="min-w-0">
                                                         <a href="/products/{{ $item['id'] ?? '#' }}"
                                                            class="font-extrabold text-[#1E1915] hover:text-[#C0422A] transition-colors text-xs sm:text-sm block truncate uppercase tracking-tight">
-                                                            {{ $item['name'] }}
+                                                            {{ $displayTitle }}
                                                         </a>
 
                                                         {{-- Size / Variation Pill --}}
@@ -246,10 +246,6 @@
                                                                     Size: <strong class="ml-1 text-[#1E1915]">{{ $item['size'] }}</strong>
                                                                 @else
                                                                     Standard Size
-                                                                @endif
-                                                                @if(!empty($variationLabel) && strcasecmp($variationLabel, 'Original') !== 0)
-                                                                    <span class="mx-1 text-stone-300">•</span>
-                                                                    Style: <strong class="ml-1 text-[#1E1915]">{{ $variationLabel }}</strong>
                                                                 @endif
                                                             </span>
                                                         </div>

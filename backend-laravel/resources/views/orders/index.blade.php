@@ -292,19 +292,19 @@
 
                                 {{-- Title & Meta --}}
                                 <div class="flex-1 min-w-0 space-y-1">
+                                    @php
+                                        $itemTitle = (!empty($variationLabel) && strcasecmp($variationLabel, 'Original') !== 0) ? $variationLabel : ($item->product->name ?? 'Heritage Product');
+                                    @endphp
                                     <h4 class="text-xs sm:text-base font-extrabold text-[#1E1915] truncate uppercase tracking-tight">
                                         <a href="/products/{{ $item->productId }}"
                                            onclick="event.stopPropagation();"
                                            @click.stop
                                            class="hover:text-[#C0422A] transition-colors">
-                                            {{ $item->product->name ?? 'Heritage Product' }}
+                                            {{ $itemTitle }}
                                         </a>
                                     </h4>
                                     <div class="flex flex-wrap items-center gap-2 text-[9px] sm:text-[10px] font-bold text-[#8C827A] uppercase tracking-wider">
                                         @if($item->size)<span class="px-2 py-0.5 bg-[#FAF8F5] rounded-md text-[#1E1915] border border-[#EAE2D2]">Size: {{ $item->size }}</span>@endif
-                                        @if(!empty($variationLabel) && strcasecmp($variationLabel, 'Original') !== 0)
-                                            <span class="px-2 py-0.5 bg-[#FAF5EA] rounded-md text-[#996515] border border-[#E6D8BA]">Style: {{ $variationLabel }}</span>
-                                        @endif
                                         <span>Qty: {{ $item->quantity }}</span>
                                     </div>
                                 </div>

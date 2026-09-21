@@ -292,20 +292,18 @@
 
                                     {{-- Info --}}
                                     <div class="flex-1 min-w-0">
+                                        @php
+                                            $itemTitle = (!empty($variationLabel) && strcasecmp($variationLabel, 'Original') !== 0) ? $variationLabel : ($item->product->name ?? 'Heritage Barong Piece');
+                                        @endphp
                                         <h4 class="text-xs sm:text-sm font-extrabold text-[#1E1915] truncate uppercase tracking-tight">
                                             <a href="/products/{{ $item->productId }}" class="hover:text-[#C0422A] transition-colors">
-                                                {{ $item->product->name ?? 'Heritage Barong Piece' }}
+                                                {{ $itemTitle }}
                                             </a>
                                         </h4>
                                         <div class="flex flex-wrap items-center gap-2 mt-1.5">
                                             @if($item->size)
                                                 <span class="px-2 py-0.5 bg-[#FAF8F5] text-[#1E1915] text-[10px] font-bold rounded-md border border-[#ECE3D2]">
                                                     Size {{ $item->size }}
-                                                </span>
-                                            @endif
-                                            @if(!empty($variationLabel) && strcasecmp($variationLabel, 'Original') !== 0)
-                                                <span class="px-2 py-0.5 bg-[#FAF5EA] text-[#996515] text-[10px] font-bold rounded-md border border-[#E6D8BA]">
-                                                    Style: {{ $variationLabel }}
                                                 </span>
                                             @endif
                                             <span class="px-2 py-0.5 bg-[#FAF8F5] text-[#78716C] text-[10px] font-bold rounded-md border border-[#ECE3D2]">

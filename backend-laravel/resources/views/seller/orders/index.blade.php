@@ -38,11 +38,10 @@ function printSellerOrder(order) {
         : '';
 
     const itemsHtml = (order.items || []).map(function (item) {
-        const variation = item.display_variation && item.display_variation !== 'Original' ? item.display_variation : '—';
+        const itemTitle = (item.display_variation && item.display_variation !== 'Original') ? item.display_variation : (item.product_name || item.product?.name || 'Archived Heritage Piece');
         return '<tr>'
-            + '<td style="padding:8px;border-bottom:1px solid #eee;">' + (item.product_name || item.product?.name || 'Archived Heritage Piece') + '</td>'
+            + '<td style="padding:8px;border-bottom:1px solid #eee;">' + itemTitle + '</td>'
             + '<td style="padding:8px;border-bottom:1px solid #eee;">' + (item.size || '—') + '</td>'
-            + '<td style="padding:8px;border-bottom:1px solid #eee;">' + variation + '</td>'
             + '<td style="padding:8px;border-bottom:1px solid #eee;text-align:center;">' + item.quantity + '</td>'
             + '<td style="padding:8px;border-bottom:1px solid #eee;text-align:right;">₱' + Number(item.price).toLocaleString() + '</td>'
             + '<td style="padding:8px;border-bottom:1px solid #eee;text-align:right;">₱' + (Number(item.price) * item.quantity).toLocaleString() + '</td>'
@@ -70,7 +69,7 @@ function printSellerOrder(order) {
         + '<div class="box">' + formatOrderAddress(order) + '</div>'
         + '<h2>Product Details</h2>'
         + '<table><thead><tr>'
-        + '<th>Product</th><th>Size</th><th>Variation</th><th>Qty</th><th>Unit Price</th><th>Subtotal</th>'
+        + '<th>Product / Style</th><th>Size</th><th>Qty</th><th>Unit Price</th><th>Subtotal</th>'
         + '</tr></thead><tbody>' + itemsHtml + '</tbody></table>'
         + '<div class="total">Total: ₱' + Number(order.totalAmount).toLocaleString() + '</div>'
         + '<h2>Payment Information</h2>'
@@ -1708,10 +1707,9 @@ function sellerOrdersManager() {
                                             <img :src="item.image_url || productImage(item.product)" class="w-full h-full object-cover object-top" x-on:error="$event.target.src='/uploads/products/default.jpg'">
                                         </div>
                                         <div class="flex-1 min-w-0">
-                                            <h4 class="text-xs font-bold text-black truncate" x-text="item.product?.name || 'Product Item'"></h4>
+                                            <h4 class="text-xs font-bold text-black truncate" x-text="(item.display_variation && item.display_variation !== 'Original') ? item.display_variation : (item.product?.name || item.product_name || 'Product Item')"></h4>
                                             <div class="flex flex-wrap gap-2 text-[9px] font-bold text-gray-400 uppercase tracking-widest mt-1">
                                                 <span x-show="item.size" x-text="'Size: ' + item.size"></span>
-                                                <span x-show="item.display_variation && item.display_variation !== 'Original'" x-text="'Variation: ' + item.display_variation"></span>
                                             </div>
                                         </div>
                                         <div class="text-right shrink-0">
