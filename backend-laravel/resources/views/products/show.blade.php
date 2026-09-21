@@ -728,7 +728,7 @@
                             </template>
                         </div>
                         <span class="text-[11px] font-medium text-gray-800 truncate" 
-                              x-text="'&quot;Size:Int:' + (selectedSize || '4XL') + (selectedVariation ? ', ' + selectedVariationLabel() : '') + '&quot;'">
+                              x-text="(selectedVariationLabel() ? selectedVariationLabel() : 'Variations') + (selectedSize ? ' · Size: ' + selectedSize : ' · Select size')">
                         </span>
                     </div>
                     <span class="text-gray-400 text-sm shrink-0">›</span>
@@ -2476,7 +2476,7 @@
     <div 
         x-show="showBuyNowSheet" 
         x-cloak 
-        style="display: none; z-index: 99990;"
+        style="display: none; z-index: 100050 !important;"
         class="fixed inset-0 flex flex-col justify-end bg-black/60 backdrop-blur-xs transition-opacity"
         @keydown.window.escape="closeBuyNowSheet()"
     >
@@ -2514,8 +2514,11 @@
                     <div class="flex items-baseline gap-1.5">
                         <span class="text-xl sm:text-2xl font-black text-[#A67C2E]">₱{{ number_format($product->salePrice, 2) }}</span>
                     </div>
-                    <div class="text-[11px] text-gray-500 font-medium truncate mt-1">
-                        <span x-text="selectedVariationLabel()"></span>,Int:<span x-text="selectedSize || 'Select size'"></span>
+                    <div class="text-[11px] text-gray-600 font-medium truncate mt-1 flex items-center gap-1.5 flex-wrap">
+                        <span class="text-gray-900 font-semibold" x-text="selectedVariationLabel() || 'Default'"></span>
+                        <span class="text-gray-300">·</span>
+                        <span :class="selectedSize ? 'text-gray-900 font-semibold' : 'text-[#A67C2E] font-bold'" 
+                              x-text="selectedSize ? 'Size: ' + selectedSize : 'Please select a size'"></span>
                     </div>
                 </div>
 
@@ -2603,14 +2606,14 @@
             </div>
 
             <!-- Sticky Bottom Full-Width Action Button -->
-            <div class="p-3 sm:p-4 border-t border-gray-100 bg-white shrink-0">
+            <div class="p-3 sm:p-4 border-t border-gray-100 bg-white shrink-0 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
                 <button 
                     type="button"
                     @click="executeBuyNow()"
                     class="w-full py-3.5 px-4 rounded-xl text-white font-bold text-xs uppercase tracking-wider shadow-md hover:brightness-105 transition-all cursor-pointer text-center flex flex-col items-center justify-center leading-tight"
-                    style="background: linear-gradient(135deg, #C89B55 0%, #A67C2E 100%); box-shadow: 0 2px 10px rgba(166, 124, 46, 0.35);"
+                    :style="buyNowMode === 'add_to_cart' ? 'background-color: #1E1915; box-shadow: 0 2px 10px rgba(0,0,0,0.25);' : 'background: linear-gradient(135deg, #C89B55 0%, #A67C2E 100%); box-shadow: 0 2px 10px rgba(166, 124, 46, 0.35);'"
                 >
-                    <span class="text-xs font-black" x-text="buyNowMode === 'add_to_cart' ? 'Add to Cart' : 'Buy Now'">Buy Now</span>
+                    <span class="text-xs font-black" x-text="buyNowMode === 'add_to_cart' ? 'Add to Cart' : 'Buy Now'"></span>
                     <span class="text-[10px] font-semibold opacity-95" x-show="buyNowMode !== 'add_to_cart'">₱0 Shipping Fee</span>
                 </button>
             </div>
@@ -2620,6 +2623,8 @@
     {{-- ═══ Mobile-Only Sticky Bottom Action Bar (Fixed to Mobile Screen Bottom) ═══ --}}
     <div 
         id="mobile-bottom-action-bar"
+        x-show="!showBuyNowSheet"
+        x-cloak
         class="lg:hidden"
     >
         {{-- Store Icon Link --}}
@@ -2727,20 +2732,24 @@
 }
 @media (max-width: 1023px) {
     #mobile-bottom-action-bar {
-        display: flex !important;
-        position: fixed !important;
-        bottom: 0 !important;
-        left: 0 !important;
-        right: 0 !important;
-        z-index: 99999 !important;
-        background: #FFFFFF !important;
-        border-top: 1px solid #E5E7EB !important;
-        box-shadow: 0 -4px 20px rgba(0,0,0,0.10) !important;
-        padding: 8px 12px !important;
-        align-items: center !important;
-        gap: 8px !important;
-        width: 100% !important;
-        box-sizing: border-box !important;
+        display: flex;
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        z-index: 9999;
+        background: #FFFFFF;
+        border-top: 1px solid #E5E7EB;
+        box-shadow: 0 -4px 20px rgba(0,0,0,0.10);
+        padding: 8px 12px;
+        align-items: center;
+        gap: 8px;
+        width: 100%;
+        box-sizing: border-box;
+    }
+    #mobile-bottom-action-bar[style*="display: none"],
+    #mobile-bottom-action-bar[hidden] {
+        display: none !important;
     }
 }
 
