@@ -489,8 +489,8 @@
 
             <div class="flex-1 relative">
                 <form action="/" method="GET" class="m-0">
-                    <div class="flex items-center bg-white border border-[#FF0055] rounded-full pl-2.5 pr-2 py-1 shadow-2xs">
-                        <svg class="w-3.5 h-3.5 text-gray-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+                    <div class="flex items-center bg-white border border-stone-300 focus-within:border-[#C0422A] focus-within:ring-2 focus-within:ring-[#C0422A]/15 rounded-full pl-2.5 pr-2 py-1 shadow-2xs transition-all">
+                        <svg class="w-3.5 h-3.5 text-stone-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
                         <input type="text" name="search" value="barong tagalog" placeholder="Search Barongs..." class="w-full bg-transparent text-gray-900 placeholder-gray-400 text-xs pl-2 pr-1 outline-none font-medium">
                     </div>
                 </form>
@@ -501,22 +501,22 @@
         <div class="border-t border-gray-100 flex items-center justify-around text-xs tracking-tight px-1 bg-white">
             <button type="button" @click="scrollToSection('overview')" 
                     class="py-2.5 px-2 transition-all cursor-pointer border-b-2 font-semibold"
-                    :class="activeMobileTab === 'overview' ? 'text-[#FF0055] font-bold border-[#FF0055]' : 'text-gray-500 border-transparent hover:text-gray-900'">
+                    :class="activeMobileTab === 'overview' ? 'text-[#C0422A] font-bold border-[#C0422A]' : 'text-gray-500 border-transparent hover:text-gray-900'">
                 Overview
             </button>
             <button type="button" @click="scrollToSection('reviews')" 
                     class="py-2.5 px-2 transition-all cursor-pointer border-b-2 font-semibold"
-                    :class="activeMobileTab === 'reviews' ? 'text-[#FF0055] font-bold border-[#FF0055]' : 'text-gray-500 border-transparent hover:text-gray-900'">
+                    :class="activeMobileTab === 'reviews' ? 'text-[#C0422A] font-bold border-[#C0422A]' : 'text-gray-500 border-transparent hover:text-gray-900'">
                 Reviews
             </button>
             <button type="button" @click="scrollToSection('details')" 
                     class="py-2.5 px-2 transition-all cursor-pointer border-b-2 font-semibold"
-                    :class="activeMobileTab === 'details' ? 'text-[#FF0055] font-bold border-[#FF0055]' : 'text-gray-500 border-transparent hover:text-gray-900'">
+                    :class="activeMobileTab === 'details' ? 'text-[#C0422A] font-bold border-[#C0422A]' : 'text-gray-500 border-transparent hover:text-gray-900'">
                 Product Details
             </button>
             <button type="button" @click="scrollToSection('recommendations')" 
                     class="py-2.5 px-2 transition-all cursor-pointer border-b-2 font-semibold"
-                    :class="activeMobileTab === 'recommendations' ? 'text-[#FF0055] font-bold border-[#FF0055]' : 'text-gray-500 border-transparent hover:text-gray-900'">
+                    :class="activeMobileTab === 'recommendations' ? 'text-[#C0422A] font-bold border-[#C0422A]' : 'text-gray-500 border-transparent hover:text-gray-900'">
                 Recommendation
             </button>
         </div>
@@ -626,20 +626,20 @@
                         type="button" 
                         @click="selectImage(idx)" 
                         class="relative w-12 h-14 rounded-lg overflow-hidden shrink-0 border-2 transition-all cursor-pointer bg-gray-50"
-                        :class="activeImage === idx ? 'border-[#FF0055] ring-1 ring-[#FF0055]/30' : 'border-gray-200 opacity-70 hover:opacity-100'"
+                        :class="activeImage === idx ? 'border-[#C0422A] ring-2 ring-[#C0422A]/25' : 'border-gray-200 opacity-70 hover:opacity-100'"
                     >
                         <img :src="imageUrl(img.url)" class="w-full h-full object-cover">
                     </button>
                 </template>
             </div>
 
-            {{-- ═══ Mobile-Only: Lazada Pricing & Promo Section ═══ --}}
+            {{-- ═══ Mobile-Only: Pricing & Promo Section ═══ --}}
             @php
                 $calcDiff = ($product->price ?? 0) - ($product->salePrice ?? 0);
             @endphp
             <div class="lg:hidden bg-white px-3.5 pt-3 pb-2.5 border-b border-gray-100">
                 {{-- Promo Discount Line with Realtime Countdown --}}
-                <div class="flex items-center justify-between text-xs font-bold text-[#FF0055] mb-1">
+                <div class="flex items-center justify-between text-xs font-bold text-[#C0422A] mb-1">
                     @if($calcDiff > 0)
                         <span>₱{{ number_format($calcDiff, 2) }} off with Promo</span>
                     @else
@@ -655,7 +655,7 @@
 
                 {{-- Primary Bold Price --}}
                 <div class="flex items-baseline gap-2">
-                    <span class="text-2xl sm:text-3xl font-black text-[#FF0055] tracking-tight">₱{{ number_format($product->salePrice, 2) }}</span>
+                    <span class="text-2xl sm:text-3xl font-black text-[#C0422A] tracking-tight">₱{{ number_format($product->salePrice, 2) }}</span>
                     @if(($product->price ?? 0) > ($product->salePrice ?? 0))
                         <span class="text-xs text-gray-400 line-through">₱{{ number_format($product->price, 2) }}</span>
                     @endif
@@ -666,7 +666,6 @@
             <div class="lg:hidden bg-white px-3.5 py-3 border-b border-gray-100">
                 <div class="flex items-start justify-between gap-2">
                     <h1 class="text-sm sm:text-base font-bold text-gray-900 leading-snug flex-1">
-                        <span class="inline-block bg-[#FF0055] text-white text-[9px] font-black px-1.5 py-0.5 rounded mr-1 align-middle">LazMall</span>
                         {{ $product->name }}
                     </h1>
                     <svg class="w-4 h-4 text-gray-400 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
@@ -1852,7 +1851,7 @@
                             </div>
                         </div>
                     </div>
-                    <a href="/shops/{{ $product->sellerId ?? ($product->seller->id ?? '') }}" class="px-3.5 py-1.5 bg-[#FF0055] hover:bg-[#E0004C] text-white text-xs font-bold rounded transition-colors shadow-2xs cursor-pointer">
+                    <a href="/shops/{{ $product->sellerId ?? ($product->seller->id ?? '') }}" class="px-3.5 py-1.5 bg-[#1E1915] hover:bg-[#C0422A] text-white text-xs font-bold rounded-lg transition-all shadow-xs cursor-pointer">
                         Visit Store
                     </a>
                 </div>
@@ -1927,7 +1926,6 @@
         </div>
 
         </div> <!-- Closing flex flex-col -->
-    </div> <!-- Closing Product Detail Main Container Card -->
 
     {{-- Recommended Products --}}
     @if($recommended->isNotEmpty())
@@ -1950,14 +1948,14 @@
                         </a>
                         <div class="p-1.5 flex flex-col justify-between flex-1">
                             <div>
-                                <a href="/products/{{ $rec->id }}" class="text-[11px] font-medium text-gray-900 line-clamp-2 leading-tight hover:text-[#FF0055]">
+                                <a href="/products/{{ $rec->id }}" class="text-[11px] font-medium text-gray-900 line-clamp-2 leading-tight hover:text-[#C0422A]">
                                     {{ $rec->name }}
                                 </a>
                                 <div class="mt-1 flex items-baseline gap-1">
-                                    <span class="text-xs font-black text-[#FF0055]">₱{{ number_format($rec->is_on_sale ? $rec->salePrice : $rec->price, 2) }}</span>
+                                    <span class="text-xs font-black text-[#C0422A]">₱{{ number_format($rec->is_on_sale ? $rec->salePrice : $rec->price, 2) }}</span>
                                 </div>
                                 <div class="mt-0.5">
-                                    <span class="text-[9px] font-bold text-[#FF0055] bg-pink-50 px-1 py-0.2 rounded border border-pink-100 inline-block">
+                                    <span class="text-[9px] font-bold text-amber-800 bg-amber-50 px-1 py-0.2 rounded border border-amber-200/60 inline-block">
                                         Voucher applied
                                     </span>
                                 </div>
@@ -1967,7 +1965,7 @@
                                     <span class="text-amber-500 font-bold">★ {{ number_format($rec->avgRating ?? 4.9, 1) }}</span>
                                     <span>{{ (int)($rec->sold_count ?? 130) }} sold</span>
                                 </div>
-                                <a href="/products/{{ $rec->id }}" class="w-5 h-5 rounded-full bg-[#FF0055] text-white flex items-center justify-center text-xs font-bold shadow-2xs hover:bg-[#E0004C] transition-colors shrink-0 cursor-pointer">
+                                <a href="/products/{{ $rec->id }}" class="w-5 h-5 rounded-full bg-[#1E1915] text-white flex items-center justify-center text-xs font-bold shadow-2xs hover:bg-[#C0422A] transition-colors shrink-0 cursor-pointer">
                                     +
                                 </a>
                             </div>
@@ -2275,7 +2273,8 @@
                 </div>
 
             </div>
-    </div>
+        </div>
+    </div> <!-- Closing #size-guide-modal -->
     @if($isAdminUser)
     {{-- Admin Rejection Modal --}}
     <div x-show="adminRejectModal"
@@ -2364,17 +2363,17 @@
 
                     <!-- Stock warning -->
                     <template x-if="stock > 0">
-                    <div class="text-[11px] font-bold text-[#FF0055] leading-none mb-0.5">
+                    <div class="text-[11px] font-bold text-[#C0422A] leading-none mb-0.5">
                         @if($calcDiff > 0)
                             <span>₱{{ number_format($calcDiff, 2) }} off with Promo</span>
                         @else
                             <span>Special Promo Price</span>
                         @endif
                     </div>
+                    </template>
                     <div class="flex items-baseline gap-1.5">
-                        <span class="text-xl sm:text-2xl font-black text-[#FF0055]">₱{{ number_format($product->salePrice, 2) }}</span>
+                        <span class="text-xl sm:text-2xl font-black text-[#C0422A]">₱{{ number_format($product->salePrice, 2) }}</span>
                     </div>
-                    <div class="text-[10px] font-bold text-[#FF0055] mt-0.5">Buy 2, Save additional ₱2.00</div>
                     <div class="text-[11px] text-gray-500 font-medium truncate mt-1">
                         <span x-text="selectedVariationLabel()"></span>,Int:<span x-text="selectedSize || 'Select size'"></span>
                     </div>
@@ -2405,7 +2404,7 @@
                                     type="button" 
                                     @click="selectStyleVariant(v)"
                                     class="p-1.5 rounded-lg border flex items-center gap-2 text-left transition-all cursor-pointer bg-white shadow-2xs"
-                                    :class="selectedStyle === v.id ? 'border-[#FF0055] bg-pink-50/20 text-[#FF0055] ring-1 ring-[#FF0055]' : 'border-gray-200 text-gray-800 hover:border-gray-300'"
+                                    :class="selectedStyle === v.id ? 'border-[#C0422A] bg-amber-50/40 text-[#C0422A] ring-1 ring-[#C0422A]' : 'border-gray-200 text-gray-800 hover:border-gray-300'"
                                 >
                                     <img :src="imageUrl(v.image_path || v.image_url || v.image)" class="w-8 h-8 rounded object-cover border border-gray-200 shrink-0">
                                     <span class="text-[11px] font-bold truncate flex-1" x-text="v.name"></span>
@@ -2425,7 +2424,7 @@
                     <div class="flex items-center justify-between mb-2">
                         <span class="text-xs font-black text-gray-900">Size</span>
                         @if($product->size_guide_image || !empty($product->size_guide_measurements))
-                            <button type="button" onclick="openSizeGuideModal()" class="text-[11px] font-bold text-[#FF0055] hover:underline flex items-center gap-1 cursor-pointer">
+                            <button type="button" onclick="openSizeGuideModal()" class="text-[11px] font-bold text-[#C0422A] hover:underline flex items-center gap-1 cursor-pointer">
                                 📏 Size Chart
                             </button>
                         @endif
@@ -2439,7 +2438,7 @@
                             type="button"
                             @click="updateStock('{{ $sz }}')"
                             class="px-3.5 py-1.5 rounded-lg text-xs font-bold border transition-all cursor-pointer {{ $szStock <= 0 ? 'opacity-40 line-through cursor-not-allowed bg-gray-50 text-gray-400' : '' }}"
-                            :class="selectedSize === '{{ $sz }}' ? 'border-[#FF0055] bg-pink-50/20 text-[#FF0055] ring-1 ring-[#FF0055]' : 'border-gray-200 bg-white text-gray-800 hover:border-gray-300'"
+                            :class="selectedSize === '{{ $sz }}' ? 'border-[#C0422A] bg-amber-50/40 text-[#C0422A] ring-1 ring-[#C0422A]' : 'border-gray-200 bg-white text-gray-800 hover:border-gray-300'"
                             {{ $szStock <= 0 ? 'disabled' : '' }}
                         >
                             {{ $sz }}
@@ -2463,16 +2462,16 @@
                 </div>
             </div>
 
-            <!-- Sticky Bottom Full-Width Action Button (Lazada Image 3) -->
+            <!-- Sticky Bottom Full-Width Action Button -->
             <div class="p-3 sm:p-4 border-t border-gray-100 bg-white shrink-0">
                 <button 
                     type="button"
                     @click="executeBuyNow()"
-                    class="w-full py-3 px-4 rounded-lg text-white font-black text-xs uppercase tracking-wide shadow-md hover:brightness-105 transition-all cursor-pointer text-center flex flex-col items-center justify-center leading-tight"
-                    style="background: #FFA000;"
+                    class="w-full py-3.5 px-4 rounded-xl text-white font-bold text-xs uppercase tracking-wider shadow-md hover:brightness-105 transition-all cursor-pointer text-center flex flex-col items-center justify-center leading-tight"
+                    style="background: #C0422A;"
                 >
                     <span class="text-xs font-black" x-text="buyNowMode === 'add_to_cart' ? 'Add to Cart' : 'Buy Now'">Buy Now</span>
-                    <span class="text-[10px] font-bold opacity-90" x-show="buyNowMode !== 'add_to_cart'">₱0 Shipping Fee</span>
+                    <span class="text-[10px] font-semibold opacity-95" x-show="buyNowMode !== 'add_to_cart'">₱0 Shipping Fee</span>
                 </button>
             </div>
         </div>
@@ -2490,7 +2489,7 @@
             <svg class="w-5 h-5 text-gray-700" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V7M3 7l2-4h14l2 4M3 7h18M10 11h4v4h-4z"/>
             </svg>
-            <span style="font-size: 10px; color: #4B5563; font-weight: 500; margin-top: 2px;">Store</span>
+            <span style="font-size: 10px; color: #374151; font-weight: 600; margin-top: 2px;">Store</span>
         </a>
 
         {{-- Chat Icon Button with Online Green Dot --}}
@@ -2506,28 +2505,32 @@
                 </svg>
                 <span style="position: absolute; bottom: -2px; right: -2px; width: 8px; height: 8px; border-radius: 50%; background-color: #00C853; border: 1.5px solid #FFFFFF;"></span>
             </div>
-            <span style="font-size: 10px; color: #4B5563; font-weight: 500; margin-top: 2px;">Chat</span>
+            <span style="font-size: 10px; color: #374151; font-weight: 600; margin-top: 2px;">Chat</span>
         </button>
 
-        {{-- Dual Lazada CTA Buttons: Buy Now (Orange) & Add to Cart (Magenta) --}}
+        {{-- Dual CTA Buttons: Add to Cart (Charcoal / Onyx) & Buy Now (Terracotta) --}}
         <div style="flex: 1; display: flex; align-items: stretch; gap: 8px; margin-left: 4px;">
-            {{-- Orange Button: Buy Now / ₱0 Shipping Fee --}}
-            <button 
-                type="button" 
-                @click="openBuyNowSheet('buy_now')" 
-                style="flex: 1; height: 42px; border-radius: 4px; background-color: #FFA000; color: #FFFFFF; font-weight: 800; display: flex; flex-direction: column; align-items: center; justify-content: center; line-height: 1.2; border: none; cursor: pointer;"
-            >
-                <span style="font-size: 12px; font-weight: 900; letter-spacing: -0.01em;">Buy Now</span>
-                <span style="font-size: 9.5px; font-weight: 600; opacity: 0.95;">₱0 Shipping Fee</span>
-            </button>
-
-            {{-- Magenta Button: Add to Cart --}}
+            {{-- Add to Cart Button (Luxury Onyx) --}}
             <button 
                 type="button" 
                 @click="openBuyNowSheet('add_to_cart')" 
-                style="flex: 1; height: 42px; border-radius: 4px; background-color: #FF0055; color: #FFFFFF; font-weight: 900; font-size: 12px; display: flex; align-items: center; justify-content: center; border: none; cursor: pointer;"
+                style="flex: 1; height: 42px; border-radius: 8px; background-color: #1E1915; color: #FFFFFF; font-weight: 800; font-size: 12px; display: flex; align-items: center; justify-content: center; border: none; cursor: pointer; transition: all 0.15s ease;"
+                onmouseover="this.style.backgroundColor='#000000'"
+                onmouseout="this.style.backgroundColor='#1E1915'"
             >
                 <span>Add to Cart</span>
+            </button>
+
+            {{-- Buy Now Button (Heritage Terracotta) --}}
+            <button 
+                type="button" 
+                @click="openBuyNowSheet('buy_now')" 
+                style="flex: 1.15; height: 42px; border-radius: 8px; background-color: #C0422A; color: #FFFFFF; font-weight: 800; display: flex; flex-direction: column; align-items: center; justify-content: center; line-height: 1.15; border: none; cursor: pointer; transition: all 0.15s ease; box-shadow: 0 2px 8px rgba(192, 66, 42, 0.35);"
+                onmouseover="this.style.backgroundColor='#A6351F'"
+                onmouseout="this.style.backgroundColor='#C0422A'"
+            >
+                <span style="font-size: 12px; font-weight: 900; letter-spacing: -0.01em;">Buy Now</span>
+                <span style="font-size: 9.5px; font-weight: 600; opacity: 0.95;">₱0 Shipping Fee</span>
             </button>
         </div>
     </div>
@@ -2577,11 +2580,14 @@
 
 <style>
 /* Mobile sticky bottom action bar: strictly fixed to screen bottom on mobile (<1024px) */
-#mobile-bottom-action-bar {
-    display: none !important;
+@media (min-width: 1024px) {
+    #mobile-bottom-action-bar {
+        display: none !important;
+    }
 }
 @media (max-width: 1023px) {
     #mobile-bottom-action-bar {
+        display: flex !important;
         position: fixed !important;
         bottom: 0 !important;
         left: 0 !important;
@@ -2589,18 +2595,12 @@
         z-index: 99999 !important;
         background: #FFFFFF !important;
         border-top: 1px solid #E5E7EB !important;
-        box-shadow: 0 -4px 20px rgba(0,0,0,0.12) !important;
-        padding: 6px 12px !important;
-        display: flex !important;
+        box-shadow: 0 -4px 20px rgba(0,0,0,0.10) !important;
+        padding: 8px 12px !important;
         align-items: center !important;
         gap: 8px !important;
         width: 100% !important;
         box-sizing: border-box !important;
-    }
-}
-@media (min-width: 1024px) {
-    #mobile-bottom-action-bar {
-        display: none !important;
     }
 }
 
