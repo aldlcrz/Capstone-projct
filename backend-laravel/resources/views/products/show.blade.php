@@ -522,60 +522,6 @@
         </div>
     </div>
 
-    {{-- ═══ Mobile-Only Sticky Bottom Action Bar (Lazada Style - Fixed Bottom CTA) ═══ --}}
-    <div 
-        id="mobile-bottom-action-bar"
-        class="lg:hidden"
-    >
-        {{-- Store Icon Link --}}
-        <a href="{{ ($product->sellerId || ($product->seller->id ?? null)) ? '/shops/' . ($product->sellerId ?? $product->seller->id) : '/' }}" 
-           class="flex flex-col items-center justify-center text-gray-700 hover:text-black shrink-0"
-           style="text-decoration: none; min-width: 44px;">
-            <svg class="w-5 h-5 text-gray-700" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V7M3 7l2-4h14l2 4M3 7h18M10 11h4v4h-4z"/>
-            </svg>
-            <span style="font-size: 10px; color: #4B5563; font-weight: 500; margin-top: 2px;">Store</span>
-        </a>
-
-        {{-- Chat Icon Button with Online Green Dot --}}
-        <button 
-            type="button" 
-            @click="chatWithSeller('{{ $product->sellerId ?? ($product->seller->id ?? 0) }}', '{{ addslashes($product->seller->shopName ?? $product->seller->name ?? 'Artisan') }}')"
-            class="flex flex-col items-center justify-center text-gray-700 hover:text-black shrink-0 cursor-pointer"
-            style="background: transparent; border: none; padding: 0; min-width: 44px;"
-        >
-            <div style="position: relative; display: flex; align-items: center; justify-content: center;">
-                <svg class="w-5 h-5 text-gray-700" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/>
-                </svg>
-                <span style="position: absolute; bottom: -2px; right: -2px; width: 8px; height: 8px; border-radius: 50%; background-color: #00C853; border: 1.5px solid #FFFFFF;"></span>
-            </div>
-            <span style="font-size: 10px; color: #4B5563; font-weight: 500; margin-top: 2px;">Chat</span>
-        </button>
-
-        {{-- Dual Lazada CTA Buttons: Buy Now (Orange) & Add to Cart (Magenta) --}}
-        <div style="flex: 1; display: flex; align-items: stretch; gap: 8px; margin-left: 4px;">
-            {{-- Orange Button: Buy Now / ₱0 Shipping Fee --}}
-            <button 
-                type="button" 
-                @click="openBuyNowSheet('buy_now')" 
-                style="flex: 1; height: 42px; border-radius: 4px; background-color: #FFA000; color: #FFFFFF; font-weight: 800; display: flex; flex-direction: column; align-items: center; justify-content: center; line-height: 1.2; border: none; cursor: pointer;"
-            >
-                <span style="font-size: 12px; font-weight: 900; letter-spacing: -0.01em;">Buy Now</span>
-                <span style="font-size: 9.5px; font-weight: 600; opacity: 0.95;">₱0 Shipping Fee</span>
-            </button>
-
-            {{-- Magenta Button: Add to Cart --}}
-            <button 
-                type="button" 
-                @click="openBuyNowSheet('add_to_cart')" 
-                style="flex: 1; height: 42px; border-radius: 4px; background-color: #FF0055; color: #FFFFFF; font-weight: 900; font-size: 12px; display: flex; align-items: center; justify-content: center; border: none; cursor: pointer;"
-            >
-                <span>Add to Cart</span>
-            </button>
-        </div>
-    </div>
-
     <!-- Breadcrumb Navigation (Desktop Only) -->
     <nav class="hidden lg:flex items-center gap-2 text-xs font-semibold text-gray-500 mb-5">
         <a href="/" class="hover:text-black transition-colors">Home</a>
@@ -2531,6 +2477,60 @@
             </div>
         </div>
     </div>
+
+    {{-- ═══ Mobile-Only Sticky Bottom Action Bar (Fixed to Mobile Screen Bottom) ═══ --}}
+    <div 
+        id="mobile-bottom-action-bar"
+        class="lg:hidden"
+    >
+        {{-- Store Icon Link --}}
+        <a href="{{ ($product->sellerId || ($product->seller->id ?? null)) ? '/shops/' . ($product->sellerId ?? $product->seller->id) : '/' }}" 
+           class="flex flex-col items-center justify-center text-gray-700 hover:text-black shrink-0"
+           style="text-decoration: none; min-width: 44px;">
+            <svg class="w-5 h-5 text-gray-700" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V7M3 7l2-4h14l2 4M3 7h18M10 11h4v4h-4z"/>
+            </svg>
+            <span style="font-size: 10px; color: #4B5563; font-weight: 500; margin-top: 2px;">Store</span>
+        </a>
+
+        {{-- Chat Icon Button with Online Green Dot --}}
+        <button 
+            type="button" 
+            @click="chatWithSeller('{{ $product->sellerId ?? ($product->seller->id ?? 0) }}', '{{ addslashes($product->seller->shopName ?? $product->seller->name ?? 'Artisan') }}')"
+            class="flex flex-col items-center justify-center text-gray-700 hover:text-black shrink-0 cursor-pointer"
+            style="background: transparent; border: none; padding: 0; min-width: 44px;"
+        >
+            <div style="position: relative; display: flex; align-items: center; justify-content: center;">
+                <svg class="w-5 h-5 text-gray-700" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/>
+                </svg>
+                <span style="position: absolute; bottom: -2px; right: -2px; width: 8px; height: 8px; border-radius: 50%; background-color: #00C853; border: 1.5px solid #FFFFFF;"></span>
+            </div>
+            <span style="font-size: 10px; color: #4B5563; font-weight: 500; margin-top: 2px;">Chat</span>
+        </button>
+
+        {{-- Dual Lazada CTA Buttons: Buy Now (Orange) & Add to Cart (Magenta) --}}
+        <div style="flex: 1; display: flex; align-items: stretch; gap: 8px; margin-left: 4px;">
+            {{-- Orange Button: Buy Now / ₱0 Shipping Fee --}}
+            <button 
+                type="button" 
+                @click="openBuyNowSheet('buy_now')" 
+                style="flex: 1; height: 42px; border-radius: 4px; background-color: #FFA000; color: #FFFFFF; font-weight: 800; display: flex; flex-direction: column; align-items: center; justify-content: center; line-height: 1.2; border: none; cursor: pointer;"
+            >
+                <span style="font-size: 12px; font-weight: 900; letter-spacing: -0.01em;">Buy Now</span>
+                <span style="font-size: 9.5px; font-weight: 600; opacity: 0.95;">₱0 Shipping Fee</span>
+            </button>
+
+            {{-- Magenta Button: Add to Cart --}}
+            <button 
+                type="button" 
+                @click="openBuyNowSheet('add_to_cart')" 
+                style="flex: 1; height: 42px; border-radius: 4px; background-color: #FF0055; color: #FFFFFF; font-weight: 900; font-size: 12px; display: flex; align-items: center; justify-content: center; border: none; cursor: pointer;"
+            >
+                <span>Add to Cart</span>
+            </button>
+        </div>
+    </div>
 </div>
 
 <script>
@@ -2576,7 +2576,7 @@
 </script>
 
 <style>
-/* Mobile sticky bottom action bar: strictly mobile only */
+/* Mobile sticky bottom action bar: strictly fixed to screen bottom on mobile (<1024px) */
 #mobile-bottom-action-bar {
     display: none !important;
 }
