@@ -161,15 +161,45 @@
                         1. What are you listing today? <span style="color:#DC2626;">*</span>
                     </h2>
                     <p style="font-size:12px;color:#78716C;margin-top:4px;margin-bottom:0;">
-                        Configure your product variations and upload 1 to 3 photos for each variation.
+                        Enter your master product title and configure your product variations with photos.
                     </p>
                 </div>
 
-                {{-- Hidden input for form product name submission --}}
-                <input type="hidden" name="name" id="productNameHidden" :value="(variants[0] && variants[0].name) ? variants[0].name : (productName || '')">
+                {{-- Dedicated Master Product Name Field --}}
+                <div class="space-y-1.5 pt-1">
+                    <div style="display:flex;align-items:center;justify-content:space-between;">
+                        <label for="productNameInput" style="font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:0.06em;color:#1E1915;">
+                            Product Name <span style="color:#DC2626;">*</span>
+                        </label>
+                        <span style="font-size:11px;color:#A8A096;" x-text="'(' + ((productName || '').length) + '/100)'"></span>
+                    </div>
+                    <div class="relative flex items-center">
+                        <input type="text"
+                               name="name"
+                               id="productNameInput"
+                               x-model="productName"
+                               @input="calculateFillRate(); scheduleDraftSave();"
+                               placeholder="e.g. Hand-Woven Piña Barong Tagalog with Calado Embroidery"
+                               maxlength="100"
+                               required
+                               style="width:100%;padding:12px 16px;background-color:#FAF8F5;border:1.5px solid #E2D9C8;border-radius:14px;font-size:14px;font-weight:600;color:#1E1915;outline:none;transition:all 0.2s;"
+                               onfocus="this.style.borderColor='#C49520';this.style.backgroundColor='#FFFFFF';"
+                               onblur="this.style.borderColor='#E2D9C8';this.style.backgroundColor='#FAF8F5';"
+                               class="pr-10">
+                        <button type="button" 
+                                x-show="productName && productName.length > 0"
+                                @click="productName = ''; calculateFillRate(); scheduleDraftSave();"
+                                style="position:absolute;right:12px;color:#A8A096;background:none;border:none;cursor:pointer;">
+                            <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                        </button>
+                    </div>
+                    <p style="font-size:11px;color:#78716C;margin:2px 0 0 0;">
+                        This overarching title identifies your garment in search, shop catalogue, and order receipts.
+                    </p>
+                </div>
 
                 {{-- Product Variations & Images Section --}}
-                <div class="space-y-4 pt-1">
+                <div class="space-y-4 pt-2">
                     <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;">
                         <div>
                             <label style="font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:0.06em;color:#1E1915;">
@@ -196,8 +226,8 @@
                                 <div style="display:flex;align-items:center;justify-content:space-between;padding-bottom:10px;border-bottom:1px solid #F2ECE1;">
                                     <div style="display:flex;align-items:center;gap:8px;">
                                         <span style="width:22px;height:22px;border-radius:50%;background-color:#9E6B15;color:#FFFFFF;display:inline-flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;" x-text="index + 1"></span>
-                                        <span style="font-family:ui-serif,Georgia,serif;font-size:14.5px;font-weight:700;color:#1E1915;" x-text="index === 0 ? 'Variant 1 (Main Style)' : ('Variant ' + (index + 1))"></span>
-                                        <span style="background-color:#FAF8F5;border:1px solid #E2D9C8;color:#78716C;font-size:9px;font-weight:700;border-radius:20px;padding:2px 8px;text-transform:uppercase;letter-spacing:0.04em;" x-text="index === 0 ? 'Default Style' : 'Style Option'"></span>
+                                        <span style="font-family:ui-serif,Georgia,serif;font-size:14.5px;font-weight:700;color:#1E1915;" x-text="index === 0 ? 'Variant 1 (Default Style)' : ('Variant ' + (index + 1))"></span>
+                                        <span style="background-color:#FAF8F5;border:1px solid #E2D9C8;color:#78716C;font-size:9px;font-weight:700;border-radius:20px;padding:2px 8px;text-transform:uppercase;letter-spacing:0.04em;" x-text="index === 0 ? 'Original' : 'Style Option'"></span>
                                     </div>
                                     <template x-if="index > 0">
                                         <button type="button" 
@@ -220,11 +250,17 @@
                                        class="hidden" 
                                        @change="handleVariantImagesUpload($event, index)">
 
-                                {{-- Variant / Product Name Input --}}
+                                {{-- Variant Style Name Input --}}
                                 <div>
                                     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;">
                                         <label style="font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:0.04em;color:#1E1915;display:block;">
-                                            <span x-text="index === 0 ? 'Product Name / Main Style' : 'Variant Name'"></span> <span style="color:#DC2626;">*</span>
+                                            <span x-text="index === 0 ? 'Variant 1 Style / Color Name' : ('Variant ' + (index + 1) + ' Style / Color Name')"></span>
+                                            <template x-if="index > 0">
+                                                <span style="color:#DC2626;">*</span>
+                                            </template>
+                                            <template x-if="index === 0">
+                                                <span style="font-size:9.5px;font-weight:500;color:#78716C;text-transform:none;">(Optional, e.g. Classic Ivory)</span>
+                                            </template>
                                         </label>
                                         <span style="font-size:10px;color:#A8A096;font-weight:400;" x-text="'(' + ((variant.name || '').length) + '/100)'"></span>
                                     </div>
@@ -233,17 +269,17 @@
                                                :name="'variant_names[' + index + ']'" 
                                                :id="'variant_name_' + index"
                                                x-model="variant.name" 
-                                               @input="if (index === 0) { productName = variant.name; } calculateFillRate();"
-                                               :placeholder="index === 0 ? 'e.g. Hand-Woven Piña Barong Tagalog with Calado Embroidery' : 'e.g. Emerald Green, Ivory Piña, Short Sleeve...'" 
+                                               @input="calculateFillRate(); scheduleDraftSave();"
+                                               :placeholder="index === 0 ? 'e.g. Classic Ivory (Optional, defaults to product name)' : 'e.g. Emerald Green, Midnight Blue, Short Sleeve...'" 
                                                maxlength="100"
-                                               required
+                                               :required="index > 0"
                                                style="width:100%;padding:10px 14px;background-color:#FAF8F5;border:1px solid #E2D9C8;border-radius:12px;font-size:13px;font-weight:600;color:#1E1915;outline:none;transition:all 0.2s;"
                                                onfocus="this.style.borderColor='#C49520';this.style.backgroundColor='#FFFFFF';"
                                                onblur="this.style.borderColor='#E2D9C8';this.style.backgroundColor='#FAF8F5';"
                                                class="pr-8">
                                         <button type="button" 
                                                 x-show="variant.name && variant.name.length > 0"
-                                                @click="variant.name = ''; if (index === 0) { productName = ''; } calculateFillRate();"
+                                                @click="variant.name = ''; calculateFillRate(); scheduleDraftSave();"
                                                 style="position:absolute;right:10px;color:#A8A096;background:none;border:none;cursor:pointer;">
                                             <svg width="13" height="13" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
                                         </button>
@@ -2513,15 +2549,16 @@ function addProductManager() {
         },
 
         get isStep1Complete() {
-            const mainName = (this.variants[0] && this.variants[0].name) ? this.variants[0].name.trim() : (this.productName || '').trim();
-            const hasName = Boolean(mainName.length >= 3);
+            const masterName = (this.productName || '').trim() || ((this.variants[0] && this.variants[0].name) ? this.variants[0].name.trim() : '');
+            const hasName = Boolean(masterName.length >= 3);
             const hasCategory = this.selectedCategories.length > 0;
             const hasTarget = Boolean(this.targetGroup && ['Men', 'Women', 'Kids'].includes(this.targetGroup));
             const allVariantsHaveImages = this.variants.length > 0 && this.variants.every(v => {
                 const count = (v.images && Array.isArray(v.images)) ? v.images.length : (v.imagePreview ? 1 : 0);
                 return count >= 1 && count <= 3;
             });
-            return hasName && hasCategory && hasTarget && allVariantsHaveImages;
+            const additionalVariantsHaveNames = this.variants.length <= 1 || this.variants.slice(1).every(v => Boolean(v.name && v.name.trim().length > 0));
+            return hasName && hasCategory && hasTarget && allVariantsHaveImages && additionalVariantsHaveNames;
         },
 
         goToStep2() {
@@ -2530,17 +2567,46 @@ function addProductManager() {
                 el.classList.remove('border-red-500', 'ring-2', 'ring-red-400');
             });
 
-            // Validate that every variation has at least 1 image and at most 3 images
+            // 1. Validate master Product Name
+            const masterName = (this.productName || '').trim() || ((this.variants[0] && this.variants[0].name) ? this.variants[0].name.trim() : '');
+            if (!masterName || masterName.length < 3) {
+                const nameInput = document.getElementById('productNameInput') || document.getElementById('variant_name_0');
+                if (nameInput) {
+                    nameInput.classList.add('border-red-500', 'ring-2', 'ring-red-400');
+                    nameInput.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    nameInput.focus();
+                }
+                triggerAppModal('Product Name Required', 'Please provide an overarching product title with at least 3 characters (e.g. Hand-Woven Piña Barong Tagalog).', 'warning');
+                return;
+            }
+
+            // 2. Validate that every variation has at least 1 image and at most 3 images, and non-empty name for variant 2+
             for (let i = 0; i < this.variants.length; i++) {
                 const v = this.variants[i];
                 const count = (v.images && Array.isArray(v.images)) ? v.images.length : (v.imagePreview ? 1 : 0);
+                const vName = i === 0 ? 'Variant 1 (Default Style)' : ('Variant ' + (i + 1));
+
+                if (i > 0 && (!v.name || v.name.trim().length === 0)) {
+                    const card = document.getElementById('variant_card_' + i);
+                    const vInput = document.getElementById('variant_name_' + i);
+                    if (vInput) {
+                        vInput.classList.add('border-red-500', 'ring-2', 'ring-red-400');
+                        vInput.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                        vInput.focus();
+                    } else if (card) {
+                        card.classList.add('border-red-500', 'ring-2', 'ring-red-400');
+                        card.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    }
+                    triggerAppModal('Variant Name Required', `Please enter a style/color name for ${vName} (e.g. Emerald Green, Midnight Blue).`, 'warning');
+                    return;
+                }
+
                 if (count < 1) {
                     const card = document.getElementById('variant_card_' + i);
                     if (card) {
                         card.classList.add('border-red-500', 'ring-2', 'ring-red-400');
                         card.scrollIntoView({ behavior: 'smooth', block: 'center' });
                     }
-                    const vName = i === 0 ? 'Variant 1 (Main Style)' : ('Variant ' + (i + 1));
                     triggerAppModal('Product Image Required', `Please upload at least 1 product image for ${vName} (min 1, max 3 photos).`, 'warning');
                     return;
                 }
@@ -2550,22 +2616,9 @@ function addProductManager() {
                         card.classList.add('border-red-500', 'ring-2', 'ring-red-400');
                         card.scrollIntoView({ behavior: 'smooth', block: 'center' });
                     }
-                    const vName = i === 0 ? 'Variant 1 (Main Style)' : ('Variant ' + (i + 1));
                     triggerAppModal('Maximum 3 Photos', `${vName} has ${count} photos. Maximum is 3 photos per variation.`, 'warning');
                     return;
                 }
-            }
-
-            const mainName = (this.variants[0] && this.variants[0].name) ? this.variants[0].name.trim() : (this.productName || '').trim();
-            if (!mainName || mainName.length < 3) {
-                const nameInput = document.getElementById('variant_name_0') || document.getElementById('productNameInput');
-                if (nameInput) {
-                    nameInput.classList.add('border-red-500', 'ring-2', 'ring-red-400');
-                    nameInput.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                    nameInput.focus();
-                }
-                triggerAppModal('Product Name Required', 'Please provide a descriptive product name with at least 3 characters for Variant 1 (Main Style).', 'warning');
-                return;
             }
 
             if (!this.targetGroup || !['Men', 'Women', 'Kids'].includes(this.targetGroup)) {
@@ -2956,10 +3009,14 @@ async function handleProductFormSubmit(e, isEdit = false) {
                 alpineData.syncGalleryFileInput();
             }
 
-            const nameHidden = document.getElementById('productNameHidden') || document.querySelector('input[name="name"]');
-            const v0Name = (alpineData.variants && alpineData.variants[0] && alpineData.variants[0].name) ? alpineData.variants[0].name.trim() : (alpineData.productName || '').trim();
-            if (nameHidden && v0Name) {
-                nameHidden.value = v0Name;
+            const nameInput = document.getElementById('productNameInput') || document.querySelector('input[name="name"]');
+            const masterName = (nameInput && nameInput.value && nameInput.value.trim()) 
+                ? nameInput.value.trim() 
+                : ((alpineData.productName && alpineData.productName.trim()) 
+                    ? alpineData.productName.trim() 
+                    : ((alpineData.variants && alpineData.variants[0] && alpineData.variants[0].name) ? alpineData.variants[0].name.trim() : ''));
+            if (nameInput && masterName) {
+                nameInput.value = masterName;
             }
 
             const variantFileInput = document.getElementById('variant_files_0') || document.getElementById('variant_file_0');
@@ -2992,16 +3049,16 @@ async function handleProductFormSubmit(e, isEdit = false) {
 
 function validateProductForm(e, isEdit = false) {
     const action = document.getElementById('formActionInput')?.value;
-    const nameHidden = document.getElementById('productNameHidden') || document.querySelector('input[name="name"]');
+    const nameInput = document.getElementById('productNameInput') || document.querySelector('input[name="name"]');
     const variant0Input = document.getElementById('variant_name_0');
     let resolvedName = '';
-    if (variant0Input && variant0Input.value && variant0Input.value.trim()) {
+    if (nameInput && nameInput.value && nameInput.value.trim()) {
+        resolvedName = nameInput.value.trim();
+    } else if (variant0Input && variant0Input.value && variant0Input.value.trim()) {
         resolvedName = variant0Input.value.trim();
-    } else if (nameHidden && nameHidden.value && nameHidden.value.trim()) {
-        resolvedName = nameHidden.value.trim();
     }
-    if (nameHidden && resolvedName) {
-        nameHidden.value = resolvedName;
+    if (nameInput && resolvedName) {
+        nameInput.value = resolvedName;
     }
 
     if (action === 'draft') {

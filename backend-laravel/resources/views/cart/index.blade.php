@@ -236,7 +236,7 @@
                                                     <div class="min-w-0">
                                                         <a href="/products/{{ $item['id'] ?? '#' }}"
                                                            class="font-extrabold text-[#1E1915] hover:text-[#C0422A] transition-colors text-xs sm:text-sm block truncate uppercase tracking-tight">
-                                                            {{ $item['name'] }}{{ (!empty($variationLabel) && strcasecmp($variationLabel, 'Original') !== 0 && strcasecmp($variationLabel, $item['name'] ?? '') !== 0) ? ' - ' . $variationLabel : '' }}
+                                                            {{ $item['name'] }}
                                                         </a>
 
                                                         {{-- Size / Variation Pill --}}
@@ -247,9 +247,9 @@
                                                                 @else
                                                                     Standard Size
                                                                 @endif
-                                                                @if(!empty($variationLabel))
+                                                                @if(!empty($variationLabel) && strcasecmp($variationLabel, 'Original') !== 0)
                                                                     <span class="mx-1 text-stone-300">•</span>
-                                                                    Var: <strong class="ml-1 text-[#1E1915]">{{ $variationLabel }}</strong>
+                                                                    Style: <strong class="ml-1 text-[#1E1915]">{{ $variationLabel }}</strong>
                                                                 @endif
                                                             </span>
                                                         </div>
