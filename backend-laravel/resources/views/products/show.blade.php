@@ -489,7 +489,7 @@
 
             <div class="flex-1 relative">
                 <form action="/" method="GET" class="m-0">
-                    <div class="flex items-center bg-white border border-stone-300 focus-within:border-[#C0422A] focus-within:ring-2 focus-within:ring-[#C0422A]/15 rounded-full pl-2.5 pr-2 py-1 shadow-2xs transition-all">
+                    <div class="flex items-center bg-white border border-stone-300 focus-within:border-[#A67C2E] focus-within:ring-2 focus-within:ring-[#A67C2E]/15 rounded-full pl-2.5 pr-2 py-1 shadow-2xs transition-all">
                         <svg class="w-3.5 h-3.5 text-stone-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
                         <input type="text" name="search" value="barong tagalog" placeholder="Search Barongs..." class="w-full bg-transparent text-gray-900 placeholder-gray-400 text-xs pl-2 pr-1 outline-none font-medium">
                     </div>
@@ -501,22 +501,22 @@
         <div class="border-t border-gray-100 flex items-center justify-around text-xs tracking-tight px-1 bg-white">
             <button type="button" @click="scrollToSection('overview')" 
                     class="py-2.5 px-2 transition-all cursor-pointer border-b-2 font-semibold"
-                    :class="activeMobileTab === 'overview' ? 'text-[#C0422A] font-bold border-[#C0422A]' : 'text-gray-500 border-transparent hover:text-gray-900'">
+                    :class="activeMobileTab === 'overview' ? 'text-[#A67C2E] font-bold border-[#A67C2E]' : 'text-gray-500 border-transparent hover:text-gray-900'">
                 Overview
             </button>
             <button type="button" @click="scrollToSection('reviews')" 
                     class="py-2.5 px-2 transition-all cursor-pointer border-b-2 font-semibold"
-                    :class="activeMobileTab === 'reviews' ? 'text-[#C0422A] font-bold border-[#C0422A]' : 'text-gray-500 border-transparent hover:text-gray-900'">
+                    :class="activeMobileTab === 'reviews' ? 'text-[#A67C2E] font-bold border-[#A67C2E]' : 'text-gray-500 border-transparent hover:text-gray-900'">
                 Reviews
             </button>
             <button type="button" @click="scrollToSection('details')" 
                     class="py-2.5 px-2 transition-all cursor-pointer border-b-2 font-semibold"
-                    :class="activeMobileTab === 'details' ? 'text-[#C0422A] font-bold border-[#C0422A]' : 'text-gray-500 border-transparent hover:text-gray-900'">
+                    :class="activeMobileTab === 'details' ? 'text-[#A67C2E] font-bold border-[#A67C2E]' : 'text-gray-500 border-transparent hover:text-gray-900'">
                 Product Details
             </button>
             <button type="button" @click="scrollToSection('recommendations')" 
                     class="py-2.5 px-2 transition-all cursor-pointer border-b-2 font-semibold"
-                    :class="activeMobileTab === 'recommendations' ? 'text-[#C0422A] font-bold border-[#C0422A]' : 'text-gray-500 border-transparent hover:text-gray-900'">
+                    :class="activeMobileTab === 'recommendations' ? 'text-[#A67C2E] font-bold border-[#A67C2E]' : 'text-gray-500 border-transparent hover:text-gray-900'">
                 Recommendation
             </button>
         </div>
@@ -626,7 +626,7 @@
                         type="button" 
                         @click="selectImage(idx)" 
                         class="relative w-12 h-14 rounded-lg overflow-hidden shrink-0 border-2 transition-all cursor-pointer bg-gray-50"
-                        :class="activeImage === idx ? 'border-[#C0422A] ring-2 ring-[#C0422A]/25' : 'border-gray-200 opacity-70 hover:opacity-100'"
+                        :class="activeImage === idx ? 'border-[#C89B55] ring-2 ring-[#C89B55]/30' : 'border-gray-200 opacity-70 hover:opacity-100'"
                     >
                         <img :src="imageUrl(img.url)" class="w-full h-full object-cover">
                     </button>
@@ -639,7 +639,7 @@
             @endphp
             <div class="lg:hidden bg-white px-3.5 pt-3 pb-2.5 border-b border-gray-100">
                 {{-- Promo Discount Line with Realtime Countdown --}}
-                <div class="flex items-center justify-between text-xs font-bold text-[#C0422A] mb-1">
+                <div class="flex items-center justify-between text-xs font-bold text-[#A67C2E] mb-1">
                     @if($calcDiff > 0)
                         <span>₱{{ number_format($calcDiff, 2) }} off with Promo</span>
                     @else
@@ -653,9 +653,9 @@
                     </template>
                 </div>
 
-                {{-- Primary Bold Price --}}
+                {{-- Primary Bold Price (Dark Antique Gold) --}}
                 <div class="flex items-baseline gap-2">
-                    <span class="text-2xl sm:text-3xl font-black text-[#C0422A] tracking-tight">₱{{ number_format($product->salePrice, 2) }}</span>
+                    <span class="text-2xl sm:text-3xl font-black text-[#A67C2E] tracking-tight">₱{{ number_format($product->salePrice, 2) }}</span>
                     @if(($product->price ?? 0) > ($product->salePrice ?? 0))
                         <span class="text-xs text-gray-400 line-through">₱{{ number_format($product->price, 2) }}</span>
                     @endif
@@ -1831,43 +1831,94 @@
 
         <!-- Lower Section: Description & Info (Mobile order-2, Desktop lg:order-1) -->
         <div id="details" class="order-2 lg:order-1 mt-4 lg:mt-16 pt-3 lg:pt-10 border-t border-gray-100 scroll-mt-24">
-            {{-- ═══ Mobile Store / Artisan Card (Real-time Database Metrics) ═══ --}}
-            <div class="lg:hidden bg-white mb-4">
-                <div class="flex items-center justify-between pb-3 border-b border-gray-100">
-                    <div class="flex items-center gap-3">
-                        <div class="w-11 h-11 rounded-lg overflow-hidden border border-gray-200 shrink-0">
+            {{-- ═══ Mobile Store / Artisan Card (Redesigned Premium UI) ═══ --}}
+            <div class="lg:hidden bg-white rounded-2xl p-4 border border-stone-200/80 shadow-xs mb-3">
+                <div class="flex items-center justify-between pb-3 border-b border-stone-100">
+                    <div class="flex items-center gap-3 min-w-0">
+                        <div class="relative w-12 h-12 rounded-xl overflow-hidden border border-stone-200 shadow-2xs shrink-0 ring-2 ring-amber-100/60">
                             <img src="{{ $product->seller->profile_photo_url ?? asset('uploads/products/default.jpg') }}" class="w-full h-full object-cover" onerror="this.src='/uploads/products/default.jpg'">
                         </div>
-                        <div>
-                            <h4 class="text-sm font-bold text-gray-900">{{ $product->artisan ?? $product->seller->shopName ?? $product->seller->name ?? 'Artisan Store' }}</h4>
-                            <div class="flex items-center gap-1.5 text-[11px] text-gray-500 mt-0.5">
+                        <div class="min-w-0">
+                            <div class="flex items-center gap-1.5">
+                                <h4 class="text-sm font-extrabold text-stone-900 truncate">{{ $product->artisan ?? $product->seller->shopName ?? $product->seller->name ?? 'Artisan Store' }}</h4>
+                                <svg class="w-4 h-4 text-[#B8860B] shrink-0" fill="currentColor" viewBox="0 0 20 20" title="Verified Artisan">
+                                    <path fill-rule="evenodd" d="M6.267 3.455a3.066 3.066 0 001.745-.723 3.066 3.066 0 013.976 0 3.066 3.066 0 001.745.723 3.066 3.066 0 012.812 2.812c.051.643.304 1.254.723 1.745a3.066 3.066 0 010 3.976 3.066 3.066 0 00-.723 1.745 3.066 3.066 0 01-2.812 2.812 3.066 3.066 0 00-1.745.723 3.066 3.066 0 01-3.976 0 3.066 3.066 0 00-1.745-.723 3.066 3.066 0 01-2.812-2.812 3.066 3.066 0 00-.723-1.745 3.066 3.066 0 010-3.976 3.066 3.066 0 00.723-1.745 3.066 3.066 0 012.812-2.812zm7.44 5.252a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                                </svg>
+                            </div>
+                            <div class="flex items-center gap-1.5 text-[11px] mt-1 flex-wrap">
                                 @if(!is_null($sellerAvgRating) && $sellerAvgRating > 0)
-                                    <span class="text-amber-600 font-semibold">Seller Rating {{ number_format(($sellerAvgRating / 5) * 100, 0) }}%</span>
+                                    <span class="inline-flex items-center gap-0.5 text-[#946A24] bg-amber-50 border border-amber-200/60 px-2 py-0.5 rounded-full font-bold text-[10px]">
+                                        ★ {{ number_format($sellerAvgRating, 1) }} Rating
+                                    </span>
                                 @else
-                                    <span class="text-amber-600 font-semibold">New Artisan</span>
+                                    <span class="inline-flex items-center text-[#946A24] bg-amber-50 border border-amber-200/60 px-2 py-0.5 rounded-full font-bold text-[10px]">
+                                        ✨ New Artisan
+                                    </span>
                                 @endif
-                                <span>|</span>
-                                <span class="text-emerald-600 font-medium">Online</span>
+                                <span class="inline-flex items-center gap-1 text-emerald-700 bg-emerald-50 border border-emerald-200/60 px-2 py-0.5 rounded-full font-semibold text-[10px]">
+                                    <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span> Online
+                                </span>
                             </div>
                         </div>
                     </div>
-                    <a href="/shops/{{ $product->sellerId ?? ($product->seller->id ?? '') }}" class="px-3.5 py-1.5 bg-[#1E1915] hover:bg-[#C0422A] text-white text-xs font-bold rounded-lg transition-all shadow-xs cursor-pointer">
-                        Visit Store
+                    <a href="/shops/{{ $product->sellerId ?? ($product->seller->id ?? '') }}" class="px-3 py-1.5 bg-[#1E1915] hover:bg-[#A67C2E] text-white text-xs font-bold rounded-lg transition-all shadow-xs flex items-center gap-1 shrink-0 ml-2">
+                        <span>Visit Store</span>
+                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5l7 7-7 7"/></svg>
                     </a>
                 </div>
-                <div class="flex items-center justify-between text-[10px] text-gray-600 py-2.5 font-medium border-b border-gray-100">
-                    <span>🛍️ {{ (int)($sellerTotalSold ?? 0) > 0 ? number_format($sellerTotalSold) : '0' }} Sold by Store</span>
-                    <span class="text-gray-300">|</span>
-                    <span>👜 {{ (int)($sellerProductCount ?? 0) }} {{ (int)($sellerProductCount ?? 0) === 1 ? 'Product' : 'Products' }}</span>
-                    <span class="text-gray-300">|</span>
-                    <span>📍 {{ $product->seller->shopCity ?? $product->seller->city ?? 'Lumban' }}</span>
+
+                {{-- 3-Column Clean Micro-Stats Grid --}}
+                <div class="grid grid-cols-3 gap-2 pt-3 text-center">
+                    <div class="bg-stone-50/80 rounded-xl p-2.5 border border-stone-100">
+                        <div class="text-[10px] font-semibold text-stone-400 uppercase tracking-wider">Total Sold</div>
+                        <div class="text-xs font-black text-stone-900 mt-0.5">
+                            {{ (int)($sellerTotalSold ?? 0) > 0 ? number_format($sellerTotalSold) : '0' }}
+                        </div>
+                    </div>
+                    <div class="bg-stone-50/80 rounded-xl p-2.5 border border-stone-100">
+                        <div class="text-[10px] font-semibold text-stone-400 uppercase tracking-wider">Products</div>
+                        <div class="text-xs font-black text-stone-900 mt-0.5">
+                            {{ (int)($sellerProductCount ?? 0) }}
+                        </div>
+                    </div>
+                    <div class="bg-stone-50/80 rounded-xl p-2.5 border border-stone-100">
+                        <div class="text-[10px] font-semibold text-stone-400 uppercase tracking-wider">Origin</div>
+                        <div class="text-xs font-black text-stone-900 mt-0.5 truncate">
+                            {{ $product->seller->shopCity ?? $product->seller->city ?? 'Lumban' }}
+                        </div>
+                    </div>
                 </div>
             </div>
 
-            {{-- Mobile Product Details Description --}}
-            <div class="lg:hidden bg-white py-2">
-                <h3 class="text-xs font-bold text-gray-900 uppercase tracking-wider mb-2">Product Details</h3>
-                <p class="text-xs text-gray-600 leading-relaxed whitespace-pre-line">
+            {{-- Mobile Product Details Card (Enhanced Luxury UI) --}}
+            <div class="lg:hidden bg-white rounded-2xl p-4 border border-stone-200/80 shadow-xs mb-4">
+                <div class="flex items-center gap-2 mb-3 pb-2.5 border-b border-stone-100">
+                    <div class="w-4 h-[2px] bg-[#A67C2E] rounded-full"></div>
+                    <h3 class="text-xs font-extrabold text-stone-900 uppercase tracking-widest">Product Details</h3>
+                </div>
+                
+                {{-- Quick Specifications Grid --}}
+                <div class="grid grid-cols-2 gap-2 mb-3 pb-3 border-b border-stone-100 text-[11px]">
+                    <div class="flex items-center gap-1.5 text-stone-600">
+                        <span class="text-stone-400 font-medium">Category:</span>
+                        <span class="font-bold text-stone-900 truncate">{{ $product->category->name ?? 'Barong Tagalog' }}</span>
+                    </div>
+                    <div class="flex items-center gap-1.5 text-stone-600">
+                        <span class="text-stone-400 font-medium">Craft:</span>
+                        <span class="font-bold text-stone-900">Hand Embroidered</span>
+                    </div>
+                    <div class="flex items-center gap-1.5 text-stone-600">
+                        <span class="text-stone-400 font-medium">Origin:</span>
+                        <span class="font-bold text-stone-900">Lumban, Laguna</span>
+                    </div>
+                    <div class="flex items-center gap-1.5 text-stone-600">
+                        <span class="text-stone-400 font-medium">Condition:</span>
+                        <span class="font-bold text-emerald-700">Brand New</span>
+                    </div>
+                </div>
+
+                {{-- Full Description --}}
+                <p class="text-xs text-stone-700 leading-relaxed whitespace-pre-line font-normal">
                     {{ $product->description }}
                 </p>
             </div>
@@ -1930,51 +1981,149 @@
     {{-- Recommended Products --}}
     @if($recommended->isNotEmpty())
     <div id="recommendations" class="mt-8 lg:mt-16 scroll-mt-24">
-        {{-- ═══ Mobile Recommendations View (Matching Picture 2) ═══ --}}
-        <div class="lg:hidden bg-white mb-6">
-            {{-- Tabs: Same store | Similar items | Good pairings --}}
-            <div class="flex items-center justify-around border-b border-gray-100 text-xs font-semibold py-2.5 text-gray-500">
-                <span class="text-gray-500 font-medium cursor-pointer">Same store</span>
-                <span class="text-black font-bold border-b-2 border-black pb-1 cursor-pointer">Similar items</span>
-                <span class="text-gray-500 font-medium cursor-pointer">Good pairings</span>
+        {{-- ═══ Mobile Recommendations View (Interactive Tabs: Same store | Similar items | Recommended) ═══ --}}
+        <div class="lg:hidden bg-white mb-6" x-data="{ recTab: 'similar' }">
+            {{-- Tabs: Same store | Similar items | Recommended --}}
+            <div class="flex items-center justify-around border-b border-stone-200 text-xs py-2 bg-white sticky top-12 z-10">
+                <button type="button" @click="recTab = 'same_store'" 
+                        class="cursor-pointer transition-all pb-1.5 px-2 font-medium"
+                        :class="recTab === 'same_store' ? 'text-stone-900 font-bold border-b-2 border-[#A67C2E]' : 'text-stone-400 hover:text-stone-700 border-b-2 border-transparent'">
+                    Same store
+                </button>
+                <button type="button" @click="recTab = 'similar'" 
+                        class="cursor-pointer transition-all pb-1.5 px-2 font-medium"
+                        :class="recTab === 'similar' ? 'text-stone-900 font-bold border-b-2 border-[#A67C2E]' : 'text-stone-400 hover:text-stone-700 border-b-2 border-transparent'">
+                    Similar items
+                </button>
+                <button type="button" @click="recTab = 'recommended'" 
+                        class="cursor-pointer transition-all pb-1.5 px-2 font-medium"
+                        :class="recTab === 'recommended' ? 'text-stone-900 font-bold border-b-2 border-[#A67C2E]' : 'text-stone-400 hover:text-stone-700 border-b-2 border-transparent'">
+                    Recommended
+                </button>
             </div>
 
-            {{-- 3-Column Mobile Product Grid (Matching Picture 2) --}}
-            <div class="grid grid-cols-3 gap-2 p-2.5">
-                @foreach($recommended->take(6) as $rec)
-                    <div class="flex flex-col bg-white rounded-lg border border-gray-100 overflow-hidden shadow-2xs relative">
-                        <a href="/products/{{ $rec->id }}" class="block aspect-square overflow-hidden bg-gray-50">
-                            <img src="{{ $rec->getImageUrl() }}" alt="{{ $rec->name }}" class="w-full h-full object-cover">
-                        </a>
-                        <div class="p-1.5 flex flex-col justify-between flex-1">
-                            <div>
-                                <a href="/products/{{ $rec->id }}" class="text-[11px] font-medium text-gray-900 line-clamp-2 leading-tight hover:text-[#C0422A]">
-                                    {{ $rec->name }}
+            {{-- Tab 1: Same Store Products Grid --}}
+            <div x-show="recTab === 'same_store'" class="p-2.5">
+                @if(isset($sameStoreProducts) && $sameStoreProducts->isNotEmpty())
+                    <div class="grid grid-cols-3 gap-2">
+                        @foreach($sameStoreProducts->take(6) as $rec)
+                            <div class="flex flex-col bg-white rounded-lg border border-stone-100 overflow-hidden shadow-2xs relative">
+                                <a href="/products/{{ $rec->id }}" class="block aspect-square overflow-hidden bg-gray-50">
+                                    <img src="{{ $rec->getImageUrl() }}" alt="{{ $rec->name }}" class="w-full h-full object-cover">
                                 </a>
-                                <div class="mt-1 flex items-baseline gap-1">
-                                    <span class="text-xs font-black text-[#C0422A]">₱{{ number_format($rec->is_on_sale ? $rec->salePrice : $rec->price, 2) }}</span>
-                                </div>
-                                <div class="mt-0.5">
-                                    <span class="text-[9px] font-bold text-amber-800 bg-amber-50 px-1 py-0.2 rounded border border-amber-200/60 inline-block">
-                                        Voucher applied
-                                    </span>
+                                <div class="p-1.5 flex flex-col justify-between flex-1">
+                                    <div>
+                                        <a href="/products/{{ $rec->id }}" class="text-[11px] font-medium text-gray-900 line-clamp-2 leading-tight hover:text-[#A67C2E]">
+                                            {{ $rec->name }}
+                                        </a>
+                                        <div class="mt-1 flex items-baseline gap-1">
+                                            <span class="text-xs font-black text-[#A67C2E]">₱{{ number_format($rec->is_on_sale ? $rec->salePrice : $rec->price, 2) }}</span>
+                                        </div>
+                                        <div class="mt-0.5">
+                                            <span class="text-[9px] font-bold text-amber-800 bg-amber-50 px-1 py-0.2 rounded border border-amber-200/60 inline-block">
+                                                Voucher applied
+                                            </span>
+                                        </div>
+                                    </div>
+                                    <div class="mt-1.5 flex items-center justify-between">
+                                        <div class="text-[9px] text-gray-500 flex items-center gap-0.5">
+                                            <span class="text-amber-500 font-bold">★ {{ number_format($rec->avgRating ?? 5.0, 1) }}</span>
+                                        </div>
+                                        <a href="/products/{{ $rec->id }}" class="w-5 h-5 rounded-full bg-[#1E1915] text-white flex items-center justify-center text-xs font-bold shadow-2xs hover:bg-[#A67C2E] transition-colors shrink-0 cursor-pointer">
+                                            +
+                                        </a>
+                                    </div>
                                 </div>
                             </div>
-                            <div class="mt-1.5 flex items-center justify-between">
-                                <div class="text-[9px] text-gray-500 flex items-center gap-0.5">
-                                    <span class="text-amber-500 font-bold">★ {{ number_format($rec->avgRating ?? 4.9, 1) }}</span>
-                                    <span>{{ (int)($rec->sold_count ?? 130) }} sold</span>
+                        @endforeach
+                    </div>
+                @else
+                    <div class="py-8 px-4 text-center">
+                        <p class="text-xs text-stone-500 font-medium">No other items from this artisan yet.</p>
+                        <a href="/shops/{{ $product->sellerId ?? ($product->seller->id ?? '') }}" class="mt-2.5 inline-flex items-center gap-1 px-3 py-1.5 bg-[#1E1915] text-white text-[11px] font-bold rounded-lg hover:bg-[#A67C2E] transition-colors">
+                            <span>Visit Store Profile</span>
+                            <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+                        </a>
+                    </div>
+                @endif
+            </div>
+
+            {{-- Tab 2: Similar Items Grid --}}
+            <div x-show="recTab === 'similar'" class="p-2.5">
+                @php
+                    $similarList = (isset($similarProducts) && $similarProducts->isNotEmpty()) ? $similarProducts : $recommended;
+                @endphp
+                <div class="grid grid-cols-3 gap-2">
+                    @foreach($similarList->take(6) as $rec)
+                        <div class="flex flex-col bg-white rounded-lg border border-stone-100 overflow-hidden shadow-2xs relative">
+                            <a href="/products/{{ $rec->id }}" class="block aspect-square overflow-hidden bg-gray-50">
+                                <img src="{{ $rec->getImageUrl() }}" alt="{{ $rec->name }}" class="w-full h-full object-cover">
+                            </a>
+                            <div class="p-1.5 flex flex-col justify-between flex-1">
+                                <div>
+                                    <a href="/products/{{ $rec->id }}" class="text-[11px] font-medium text-gray-900 line-clamp-2 leading-tight hover:text-[#A67C2E]">
+                                        {{ $rec->name }}
+                                    </a>
+                                    <div class="mt-1 flex items-baseline gap-1">
+                                        <span class="text-xs font-black text-[#A67C2E]">₱{{ number_format($rec->is_on_sale ? $rec->salePrice : $rec->price, 2) }}</span>
+                                    </div>
+                                    <div class="mt-0.5">
+                                        <span class="text-[9px] font-bold text-amber-800 bg-amber-50 px-1 py-0.2 rounded border border-amber-200/60 inline-block">
+                                            Voucher applied
+                                        </span>
+                                    </div>
                                 </div>
-                                <a href="/products/{{ $rec->id }}" class="w-5 h-5 rounded-full bg-[#1E1915] text-white flex items-center justify-center text-xs font-bold shadow-2xs hover:bg-[#C0422A] transition-colors shrink-0 cursor-pointer">
-                                    +
-                                </a>
+                                <div class="mt-1.5 flex items-center justify-between">
+                                    <div class="text-[9px] text-gray-500 flex items-center gap-0.5">
+                                        <span class="text-amber-500 font-bold">★ {{ number_format($rec->avgRating ?? 4.9, 1) }}</span>
+                                        <span>{{ (int)($rec->sold_count ?? 130) }} sold</span>
+                                    </div>
+                                    <a href="/products/{{ $rec->id }}" class="w-5 h-5 rounded-full bg-[#1E1915] text-white flex items-center justify-center text-xs font-bold shadow-2xs hover:bg-[#A67C2E] transition-colors shrink-0 cursor-pointer">
+                                        +
+                                    </a>
+                                </div>
                             </div>
                         </div>
-                    </div>
-                @endforeach
+                    @endforeach
+                </div>
             </div>
 
-
+            {{-- Tab 3: Recommended Products Grid --}}
+            <div x-show="recTab === 'recommended'" class="p-2.5">
+                <div class="grid grid-cols-3 gap-2">
+                    @foreach($recommended->take(6) as $rec)
+                        <div class="flex flex-col bg-white rounded-lg border border-stone-100 overflow-hidden shadow-2xs relative">
+                            <a href="/products/{{ $rec->id }}" class="block aspect-square overflow-hidden bg-gray-50">
+                                <img src="{{ $rec->getImageUrl() }}" alt="{{ $rec->name }}" class="w-full h-full object-cover">
+                            </a>
+                            <div class="p-1.5 flex flex-col justify-between flex-1">
+                                <div>
+                                    <a href="/products/{{ $rec->id }}" class="text-[11px] font-medium text-gray-900 line-clamp-2 leading-tight hover:text-[#A67C2E]">
+                                        {{ $rec->name }}
+                                    </a>
+                                    <div class="mt-1 flex items-baseline gap-1">
+                                        <span class="text-xs font-black text-[#A67C2E]">₱{{ number_format($rec->is_on_sale ? $rec->salePrice : $rec->price, 2) }}</span>
+                                    </div>
+                                    <div class="mt-0.5">
+                                        <span class="text-[9px] font-bold text-amber-800 bg-amber-50 px-1 py-0.2 rounded border border-amber-200/60 inline-block">
+                                            Voucher applied
+                                        </span>
+                                    </div>
+                                </div>
+                                <div class="mt-1.5 flex items-center justify-between">
+                                    <div class="text-[9px] text-gray-500 flex items-center gap-0.5">
+                                        <span class="text-amber-500 font-bold">★ {{ number_format($rec->avgRating ?? 4.9, 1) }}</span>
+                                        <span>{{ (int)($rec->sold_count ?? 130) }} sold</span>
+                                    </div>
+                                    <a href="/products/{{ $rec->id }}" class="w-5 h-5 rounded-full bg-[#1E1915] text-white flex items-center justify-center text-xs font-bold shadow-2xs hover:bg-[#A67C2E] transition-colors shrink-0 cursor-pointer">
+                                        +
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    @endforeach
+                </div>
+            </div>
         </div>
 
         {{-- ═══ Desktop Recommendations View (Existing 100% Untouched on lg:) ═══ --}}
@@ -2351,19 +2500,10 @@
 
                 <!-- Price & Selection Info -->
                 <div class="flex-1 min-w-0 pr-6">
-                    <div class="flex items-baseline gap-2 flex-wrap">
-                        @if($product->is_on_sale && $product->discount_percentage > 0)
-                            <span class="bg-[#FE4300] text-white text-[10px] font-black px-1.5 py-0.5 rounded leading-none">-{{ number_format($product->discount_percentage, 0) }}%</span>
-                        @endif
-                        <span class="text-2xl sm:text-3xl font-black text-[#D0011B] leading-none">₱{{ number_format($product->salePrice, 2) }}</span>
-                        @if($product->is_on_sale && $product->discount_percentage > 0)
-                            <span class="text-xs text-gray-400 line-through font-semibold">₱{{ number_format($product->price, 2) }}</span>
-                        @endif
-                    </div>
-
+                    <div class="flex items-baseline gap-2 flex-wrap"></div>
                     <!-- Stock warning -->
                     <template x-if="stock > 0">
-                    <div class="text-[11px] font-bold text-[#C0422A] leading-none mb-0.5">
+                    <div class="text-[11px] font-bold text-[#A67C2E] leading-none mb-0.5">
                         @if($calcDiff > 0)
                             <span>₱{{ number_format($calcDiff, 2) }} off with Promo</span>
                         @else
@@ -2372,7 +2512,7 @@
                     </div>
                     </template>
                     <div class="flex items-baseline gap-1.5">
-                        <span class="text-xl sm:text-2xl font-black text-[#C0422A]">₱{{ number_format($product->salePrice, 2) }}</span>
+                        <span class="text-xl sm:text-2xl font-black text-[#A67C2E]">₱{{ number_format($product->salePrice, 2) }}</span>
                     </div>
                     <div class="text-[11px] text-gray-500 font-medium truncate mt-1">
                         <span x-text="selectedVariationLabel()"></span>,Int:<span x-text="selectedSize || 'Select size'"></span>
@@ -2404,7 +2544,7 @@
                                     type="button" 
                                     @click="selectStyleVariant(v)"
                                     class="p-1.5 rounded-lg border flex items-center gap-2 text-left transition-all cursor-pointer bg-white shadow-2xs"
-                                    :class="selectedStyle === v.id ? 'border-[#C0422A] bg-amber-50/40 text-[#C0422A] ring-1 ring-[#C0422A]' : 'border-gray-200 text-gray-800 hover:border-gray-300'"
+                                    :class="selectedStyle === v.id ? 'border-[#A67C2E] bg-amber-50/50 text-[#A67C2E] ring-1 ring-[#A67C2E]' : 'border-gray-200 text-gray-800 hover:border-gray-300'"
                                 >
                                     <img :src="imageUrl(v.image_path || v.image_url || v.image)" class="w-8 h-8 rounded object-cover border border-gray-200 shrink-0">
                                     <span class="text-[11px] font-bold truncate flex-1" x-text="v.name"></span>
@@ -2424,7 +2564,7 @@
                     <div class="flex items-center justify-between mb-2">
                         <span class="text-xs font-black text-gray-900">Size</span>
                         @if($product->size_guide_image || !empty($product->size_guide_measurements))
-                            <button type="button" onclick="openSizeGuideModal()" class="text-[11px] font-bold text-[#C0422A] hover:underline flex items-center gap-1 cursor-pointer">
+                            <button type="button" onclick="openSizeGuideModal()" class="text-[11px] font-bold text-[#A67C2E] hover:underline flex items-center gap-1 cursor-pointer">
                                 📏 Size Chart
                             </button>
                         @endif
@@ -2438,7 +2578,7 @@
                             type="button"
                             @click="updateStock('{{ $sz }}')"
                             class="px-3.5 py-1.5 rounded-lg text-xs font-bold border transition-all cursor-pointer {{ $szStock <= 0 ? 'opacity-40 line-through cursor-not-allowed bg-gray-50 text-gray-400' : '' }}"
-                            :class="selectedSize === '{{ $sz }}' ? 'border-[#C0422A] bg-amber-50/40 text-[#C0422A] ring-1 ring-[#C0422A]' : 'border-gray-200 bg-white text-gray-800 hover:border-gray-300'"
+                            :class="selectedSize === '{{ $sz }}' ? 'border-[#A67C2E] bg-amber-50/50 text-[#A67C2E] ring-1 ring-[#A67C2E]' : 'border-gray-200 bg-white text-gray-800 hover:border-gray-300'"
                             {{ $szStock <= 0 ? 'disabled' : '' }}
                         >
                             {{ $sz }}
@@ -2468,7 +2608,7 @@
                     type="button"
                     @click="executeBuyNow()"
                     class="w-full py-3.5 px-4 rounded-xl text-white font-bold text-xs uppercase tracking-wider shadow-md hover:brightness-105 transition-all cursor-pointer text-center flex flex-col items-center justify-center leading-tight"
-                    style="background: #C0422A;"
+                    style="background: linear-gradient(135deg, #C89B55 0%, #A67C2E 100%); box-shadow: 0 2px 10px rgba(166, 124, 46, 0.35);"
                 >
                     <span class="text-xs font-black" x-text="buyNowMode === 'add_to_cart' ? 'Add to Cart' : 'Buy Now'">Buy Now</span>
                     <span class="text-[10px] font-semibold opacity-95" x-show="buyNowMode !== 'add_to_cart'">₱0 Shipping Fee</span>
@@ -2508,7 +2648,7 @@
             <span style="font-size: 10px; color: #374151; font-weight: 600; margin-top: 2px;">Chat</span>
         </button>
 
-        {{-- Dual CTA Buttons: Add to Cart (Charcoal / Onyx) & Buy Now (Terracotta) --}}
+        {{-- Dual CTA Buttons: Add to Cart (Charcoal / Onyx) & Buy Now (Dark Antique Gold) --}}
         <div style="flex: 1; display: flex; align-items: stretch; gap: 8px; margin-left: 4px;">
             {{-- Add to Cart Button (Luxury Onyx) --}}
             <button 
@@ -2521,13 +2661,13 @@
                 <span>Add to Cart</span>
             </button>
 
-            {{-- Buy Now Button (Heritage Terracotta) --}}
+            {{-- Buy Now Button (Dark Antique Gold Gradient) --}}
             <button 
                 type="button" 
                 @click="openBuyNowSheet('buy_now')" 
-                style="flex: 1.15; height: 42px; border-radius: 8px; background-color: #C0422A; color: #FFFFFF; font-weight: 800; display: flex; flex-direction: column; align-items: center; justify-content: center; line-height: 1.15; border: none; cursor: pointer; transition: all 0.15s ease; box-shadow: 0 2px 8px rgba(192, 66, 42, 0.35);"
-                onmouseover="this.style.backgroundColor='#A6351F'"
-                onmouseout="this.style.backgroundColor='#C0422A'"
+                style="flex: 1.15; height: 42px; border-radius: 8px; background: linear-gradient(135deg, #C89B55 0%, #A67C2E 100%); color: #FFFFFF; font-weight: 800; display: flex; flex-direction: column; align-items: center; justify-content: center; line-height: 1.15; border: none; cursor: pointer; transition: all 0.15s ease; box-shadow: 0 2px 10px rgba(166, 124, 46, 0.4);"
+                onmouseover="this.style.opacity='0.92'"
+                onmouseout="this.style.opacity='1'"
             >
                 <span style="font-size: 12px; font-weight: 900; letter-spacing: -0.01em;">Buy Now</span>
                 <span style="font-size: 9.5px; font-weight: 600; opacity: 0.95;">₱0 Shipping Fee</span>

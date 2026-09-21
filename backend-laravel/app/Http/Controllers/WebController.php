@@ -334,7 +334,33 @@ class WebController extends Controller
             }
         }
 
-        return view('products.show', compact('product', 'soldCount', 'recommended', 'isWishlisted', 'sellerTotalSold', 'sellerProductCount', 'sellerAvgRating'));
+        // Same store products
+        $sameStoreProducts = collect();
+        if ($product->sellerId) {
+            $sameStoreProducts = Product::where('status', 'approved')
+                ->where('sellerId', $product->sellerId)
+                ->where('id', '!=', $product->id)
+                ->where('stock', '>', 0)
+                ->withAvg('reviews as avgRating', 'rating')
+                ->withCount('reviews as reviewCount')
+                ->limit(6)
+                ->get();
+        }
+
+        // Similar items in the same category
+        $similarProducts = collect();
+        if ($product->CategoryId) {
+            $similarProducts = Product::where('status', 'approved')
+                ->where('CategoryId', $product->CategoryId)
+                ->where('id', '!=', $product->id)
+                ->where('stock', '>', 0)
+                ->withAvg('reviews as avgRating', 'rating')
+                ->withCount('reviews as reviewCount')
+                ->limit(6)
+                ->get();
+        }
+
+        return view('products.show', compact('product', 'soldCount', 'recommended', 'isWishlisted', 'sellerTotalSold', 'sellerProductCount', 'sellerAvgRating', 'sameStoreProducts', 'similarProducts'));
     }
 
     /**
