@@ -634,21 +634,6 @@
                     @endif
 
 
-                    {{-- Mobile Only: Bottom-Left Triple Badge (Daily Free Shipping | Coins | Free Return) --}}
-                    <div class="lg:hidden absolute bottom-0 left-0 z-10 flex items-stretch shadow-xs pointer-events-none rounded-tr-lg overflow-hidden text-[9px] font-black leading-none uppercase tracking-tight">
-                        <div class="bg-[#00B4D8] text-white px-2 py-1.5 flex items-center gap-1">
-                            <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M13 16V6a1 1 0 00-1-1H4a1 1 0 00-1 1v10a1 1 0 001 1h1m8-1a1 1 0 01-1 1H9m4-1V8a1 1 0 011-1h2.586a1 1 0 01.707.293l3.414 3.414a1 1 0 01.293.707V16a1 1 0 01-1 1h-1m-6-1a1 1 0 001 1h1M5 17a2 2 0 104 0m-4 0a2 2 0 114 0m6 0a2 2 0 104 0m-4 0a2 2 0 114 0"/></svg>
-                            <span>Daily Free Shipping</span>
-                        </div>
-                        <div class="bg-[#FF9F00] text-white px-2 py-1.5 flex items-center gap-1">
-                            <span class="w-2.5 h-2.5 rounded-full bg-white/25 border border-white flex items-center justify-center text-[7px] font-black">C</span>
-                            <span>Coins</span>
-                        </div>
-                        <div class="bg-[#2979FF] text-white px-2 py-1.5 flex items-center gap-1">
-                            <svg class="w-2.5 h-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/></svg>
-                            <span>Free Return</span>
-                        </div>
-                    </div>
 
                     {{-- Mobile Only: Image Counter Pill (Bottom-Right of Image) --}}
                     <div class="lg:hidden absolute bottom-2 right-2 z-10 px-2 py-0.5 rounded-full bg-black/60 text-white text-[10px] font-bold pointer-events-none" x-show="galleryImages && galleryImages.length > 0">
@@ -746,27 +731,7 @@
 
             {{-- ═══ Mobile-Only: Delivery & Variation Rows ═══ --}}
 
-            {{-- 2. Delivery Estimation Row --}}
-            <div class="lg:hidden bg-white px-3.5 py-3 border-b border-gray-100">
-                <div class="flex items-start justify-between text-xs">
-                    <div class="flex items-start gap-2.5">
-                        <svg class="w-4 h-4 text-gray-500 mt-0.5 shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M5 5a3 3 0 015-2.236A3 3 0 0114.83 6H16a2 2 0 110 4h-5V9a1 1 0 10-2 0v1H4a2 2 0 110-4h1.17C5.06 5.687 5 5.35 5 5zm4 1V5a1 1 0 10-1.118.99A1.004 1.004 0 018 6h1zm2 0h1a1.004 1.004 0 01.118-.01A1 1 0 1011 5v1zM4.25 12A2.25 2.25 0 002 14.25v2.5A2.25 2.25 0 004.25 19h11.5A2.25 2.25 0 0018 16.75v-2.5A2.25 2.25 0 0015.75 12H4.25z" clip-rule="evenodd"/></svg>
-                        <div>
-                            <div class="font-bold text-gray-800 text-[12px]">
-                                Get by {{ now()->addDays(4)->format('j M') }}-{{ now()->addDays(9)->format('j M') }}
-                            </div>
-                            <span class="text-[11px] text-gray-400 block mt-0.5">Standard</span>
-                        </div>
-                    </div>
-                    <div class="text-right">
-                        <div class="flex items-center justify-end gap-1 text-[11px] font-bold text-[#00A86B]">
-                            <span>With Voucher ₱0.00</span>
-                            <span class="text-gray-400 text-xs">›</span>
-                        </div>
-                        <span class="text-[10px] text-gray-400 block mt-0.5">To {{ Auth::check() ? (Auth::user()->city ?? 'Metro Manila') : 'Metro Manila' }}</span>
-                    </div>
-                </div>
-            </div>
+
 
             {{-- 3. Variations Preview Row (Click opens Buy Now sheet) --}}
             <div class="lg:hidden bg-white px-3.5 py-3 border-b border-gray-100 cursor-pointer active:bg-gray-50 transition-colors" @click="openBuyNowSheet()">
