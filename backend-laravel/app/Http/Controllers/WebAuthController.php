@@ -144,15 +144,24 @@ class WebAuthController extends Controller
             }
 
             // Seller whose application is awaiting admin verification or correction: allow login directly into document portal
-            if ($user->role === 'seller' && (!$user->isVerified || $user->status === 'pending' || $user->status === 'rejected')) {
+            if ($user->role === 'seller' && (!$user->isVerified || $user->status === 'pending' || $user->status === 'rejected' || $user->status === 'awaiting_email_verification')) {
                 // Ensure seller has verified their email address before accessing the portal
-                $hasUnverifiedEmail = EmailVerification::where('email', $user->email)
-                    ->where('type', 'registration')
-                    ->exists();
+                $hasUnverifiedEmail = is_null($user->email_verified_at) || $user->status === 'awaiting_email_verification';
 
                 if ($hasUnverifiedEmail) {
                     Auth::logout();
                     session(['verify_email' => $user->email]);
+
+                    $existing = EmailVerification::where('email', $user->email)->where('type', 'registration')->first();
+                    $shouldSend = !$existing || $existing->isExpired() || ($existing->last_sent_at && $existing->last_sent_at->diffInSeconds(now()) >= 60);
+
+                    if ($shouldSend) {
+                        $verification = EmailNotificationService::createVerificationCode($user->email, 'registration');
+                        $mailable = new \App\Mail\VerificationCodeMail($user->name, $verification->code);
+                        EmailNotificationService::sendNotification($user->email, $mailable, 'email_verification', $user->id, 'User', $user->id);
+                        return redirect()->route('verify.email')->with('success', 'A 6-digit verification code has been sent to your Gmail. Please enter it below to activate your account.');
+                    }
+
                     return redirect()->route('verify.email')->with('info', 'Please verify your Gmail address before accessing your artisan portal.');
                 }
 
@@ -534,16 +543,31 @@ class WebAuthController extends Controller
         }
         $email = session('verify_email') ?? (Auth::check() ? Auth::user()->email : null);
 
-        $remainingSeconds = 300;
+        $remainingSeconds = 0;
         $resendCooldown = 0;
+
         if ($email) {
-            $verification = EmailVerification::where('email', strtolower($email))
+            $email = strtolower(trim($email));
+            $verification = EmailVerification::where('email', $email)
                 ->where('type', 'registration')
                 ->first();
-            if ($verification) {
-                if ($verification->expires_at) {
-                    $remainingSeconds = max(0, now()->diffInSeconds($verification->expires_at, false));
+
+            // Self-healing: if no code exists or it has expired, automatically generate and send a fresh code
+            if (!$verification || $verification->isExpired()) {
+                $user = User::where('email', $email)->first() ?? (Auth::check() ? Auth::user() : null);
+                if ($user && is_null($user->email_verified_at)) {
+                    $canAutoSend = !$verification || (!$verification->last_sent_at || $verification->last_sent_at->diffInSeconds(now()) >= 60);
+                    if ($canAutoSend) {
+                        $verification = EmailNotificationService::createVerificationCode($email, 'registration');
+                        $mailable = new \App\Mail\VerificationCodeMail($user->name, $verification->code);
+                        EmailNotificationService::sendNotification($email, $mailable, 'email_verification', $user->id, 'User', $user->id);
+                        session()->flash('success', 'A 6-digit verification code has been sent to your Gmail.');
+                    }
                 }
+            }
+
+            if ($verification && !$verification->isExpired()) {
+                $remainingSeconds = max(0, now()->diffInSeconds($verification->expires_at, false));
                 $resendCooldown = $verification->remainingCooldownSeconds(60);
             }
         }

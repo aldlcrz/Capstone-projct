@@ -29,7 +29,7 @@
          x-data="{
              email: '{{ session('verify_email', $email ?? (auth()->user()->email ?? '')) }}',
              code: '',
-             timeLeft: {{ (int) ($remainingSeconds ?? 300) }},
+             timeLeft: {{ (int) ($remainingSeconds ?? 0) }},
              resendCooldown: {{ (int) ($resendCooldown ?? 0) }},
              timerInterval: null,
              init() {

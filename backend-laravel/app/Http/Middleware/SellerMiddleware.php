@@ -69,6 +69,7 @@ class SellerMiddleware
                         ], 403);
                     }
 
+                    session(['verify_email' => $user->email]);
                     return redirect()->route('seller.verify-email');
                 }
 
