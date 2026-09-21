@@ -15,6 +15,7 @@ class SellerMiddleware
     public function handle(Request $request, Closure $next): Response
     {
         if (Auth::check()) {
+            /** @var \App\Models\User $user */
             $user = Auth::user();
 
             // Allow administrators and superadmins full access to seller portal
@@ -59,7 +60,7 @@ class SellerMiddleware
                 if ($user->isVerified && ($user->status === 'active' || empty($user->status))) {
                     if (is_null($user->email_verified_at)) {
                         $user->email_verified_at = now();
-                        $user->saveQuietly();
+                        $user->save();
                     }
                     return $next($request);
                 }
