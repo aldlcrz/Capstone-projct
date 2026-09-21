@@ -2042,8 +2042,13 @@
                                         </div>
                                     </div>
                                     <div class="mt-1.5 flex items-center justify-between">
-                                        <div class="text-[9px] text-gray-500 flex items-center gap-0.5">
-                                            <span class="text-amber-500 font-bold">★ {{ number_format($rec->avgRating ?? 5.0, 1) }}</span>
+                                        <div class="text-[9px] text-gray-500 flex items-center gap-1">
+                                            @if($rec->avgRating && (float)$rec->avgRating > 0)
+                                                <span class="text-amber-500 font-bold">★ {{ number_format($rec->avgRating, 1) }}</span>
+                                            @else
+                                                <span class="text-gray-400 font-medium">★ 0.0</span>
+                                            @endif
+                                            <span>{{ (int)($rec->sold_count ?? 0) }} sold</span>
                                         </div>
                                         <a href="/products/{{ $rec->id }}" class="w-5 h-5 rounded-full bg-[#1E1915] text-white flex items-center justify-center text-xs font-bold shadow-2xs hover:bg-[#A67C2E] transition-colors shrink-0 cursor-pointer">
                                             +
@@ -2090,9 +2095,13 @@
                                     </div>
                                 </div>
                                 <div class="mt-1.5 flex items-center justify-between">
-                                    <div class="text-[9px] text-gray-500 flex items-center gap-0.5">
-                                        <span class="text-amber-500 font-bold">★ {{ number_format($rec->avgRating ?? 4.9, 1) }}</span>
-                                        <span>{{ (int)($rec->sold_count ?? 130) }} sold</span>
+                                    <div class="text-[9px] text-gray-500 flex items-center gap-1">
+                                        @if($rec->avgRating && (float)$rec->avgRating > 0)
+                                            <span class="text-amber-500 font-bold">★ {{ number_format($rec->avgRating, 1) }}</span>
+                                        @else
+                                            <span class="text-gray-400 font-medium">★ 0.0</span>
+                                        @endif
+                                        <span>{{ (int)($rec->sold_count ?? 0) }} sold</span>
                                     </div>
                                     <a href="/products/{{ $rec->id }}" class="w-5 h-5 rounded-full bg-[#1E1915] text-white flex items-center justify-center text-xs font-bold shadow-2xs hover:bg-[#A67C2E] transition-colors shrink-0 cursor-pointer">
                                         +
@@ -2127,9 +2136,13 @@
                                     </div>
                                 </div>
                                 <div class="mt-1.5 flex items-center justify-between">
-                                    <div class="text-[9px] text-gray-500 flex items-center gap-0.5">
-                                        <span class="text-amber-500 font-bold">★ {{ number_format($rec->avgRating ?? 4.9, 1) }}</span>
-                                        <span>{{ (int)($rec->sold_count ?? 130) }} sold</span>
+                                    <div class="text-[9px] text-gray-500 flex items-center gap-1">
+                                        @if($rec->avgRating && (float)$rec->avgRating > 0)
+                                            <span class="text-amber-500 font-bold">★ {{ number_format($rec->avgRating, 1) }}</span>
+                                        @else
+                                            <span class="text-gray-400 font-medium">★ 0.0</span>
+                                        @endif
+                                        <span>{{ (int)($rec->sold_count ?? 0) }} sold</span>
                                     </div>
                                     <a href="/products/{{ $rec->id }}" class="w-5 h-5 rounded-full bg-[#1E1915] text-white flex items-center justify-center text-xs font-bold shadow-2xs hover:bg-[#A67C2E] transition-colors shrink-0 cursor-pointer">
                                         +

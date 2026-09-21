@@ -8,6 +8,7 @@ use App\Models\Order;
 use App\Models\Banner;
 use App\Models\User;
 use App\Models\Review;
+use App\Support\OrderStatus;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -285,10 +286,10 @@ class WebController extends Controller
         $soldCount = DB::table('order_items')
             ->join('orders', 'order_items.orderId', '=', 'orders.id')
             ->where('order_items.productId', $id)
-            ->whereIn('orders.status', ['Delivered', 'Completed', 'completed', 'delivered'])
+            ->whereIn('orders.status', OrderStatus::completedStatuses())
             ->sum('order_items.quantity') ?: 0;
 
-        $recommended = $this->getRecommendedProducts($product);
+        $recommended = $this->getRecommendedProducts($product, 6);
 
         $isWishlisted = false;
         if (Auth::check()) {
@@ -341,6 +342,14 @@ class WebController extends Controller
                 ->where('sellerId', $product->sellerId)
                 ->where('id', '!=', $product->id)
                 ->where('stock', '>', 0)
+                ->select('products.*')
+                ->selectSub(function($q) {
+                    $q->selectRaw('COALESCE(SUM(order_items.quantity), 0)')
+                        ->from('order_items')
+                        ->join('orders', 'order_items.orderId', '=', 'orders.id')
+                        ->whereColumn('order_items.productId', 'products.id')
+                        ->whereIn('orders.status', OrderStatus::completedStatuses());
+                }, 'sold_count')
                 ->withAvg('reviews as avgRating', 'rating')
                 ->withCount('reviews as reviewCount')
                 ->limit(6)
@@ -354,6 +363,14 @@ class WebController extends Controller
                 ->where('CategoryId', $product->CategoryId)
                 ->where('id', '!=', $product->id)
                 ->where('stock', '>', 0)
+                ->select('products.*')
+                ->selectSub(function($q) {
+                    $q->selectRaw('COALESCE(SUM(order_items.quantity), 0)')
+                        ->from('order_items')
+                        ->join('orders', 'order_items.orderId', '=', 'orders.id')
+                        ->whereColumn('order_items.productId', 'products.id')
+                        ->whereIn('orders.status', OrderStatus::completedStatuses());
+                }, 'sold_count')
                 ->withAvg('reviews as avgRating', 'rating')
                 ->withCount('reviews as reviewCount')
                 ->limit(6)
@@ -391,7 +408,7 @@ class WebController extends Controller
     /**
      * Get products to recommend on the product detail page.
      */
-    private function getRecommendedProducts(Product $product, int $limit = 4)
+    private function getRecommendedProducts(Product $product, int $limit = 6)
     {
         $baseQuery = fn () => Product::where('status', 'approved')
             ->where('id', '!=', $product->id)
@@ -402,7 +419,7 @@ class WebController extends Controller
                     ->from('order_items')
                     ->join('orders', 'order_items.orderId', '=', 'orders.id')
                     ->whereColumn('order_items.productId', 'products.id')
-                    ->whereIn('orders.status', ['Delivered', 'Completed', 'completed', 'delivered']);
+                    ->whereIn('orders.status', OrderStatus::completedStatuses());
             }, 'sold_count')
             ->withAvg('reviews as avgRating', 'rating')
             ->withCount('reviews as reviewCount');
